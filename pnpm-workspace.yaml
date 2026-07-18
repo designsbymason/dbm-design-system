@@ -3,3 +3,9 @@ packages:
   - "packages/*"
 allowBuilds:
   esbuild: true
+overrides:
+  # GHSA-g7r4-m6w7-qqqr: esbuild dev-server arbitrary file read on Windows,
+  # patched in 0.28.1. Pulled in transitively via Storybook/Vite/tsup (dev-only,
+  # never shipped in published packages) — pinned here since upstream hasn't
+  # bumped it yet. Flagged by GitHub Dependabot 2026-07-18.
+  esbuild: ">=0.28.1"
