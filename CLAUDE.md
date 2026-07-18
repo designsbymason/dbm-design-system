@@ -28,6 +28,7 @@ An agentic, standalone React component library — built for AI coding agents (a
 - **Static analysis:** GitHub CodeQL (free for public repos) as a CI job once there's real code to scan — catches common vulnerability patterns (XSS, injection) before merge.
 - **Component-level security:** no `dangerouslySetInnerHTML` without explicit sanitization (relevant for anything rendering user-provided content — `CodeBlock`, `Combobox`, rich text areas); no `eval` or dynamic `Function` construction; sanitize any component that accepts and renders external URLs or HTML.
 - **Publish security:** when the npm publish pipeline is built (Phase 6), use npm provenance/trusted publishing (OIDC-based, no long-lived tokens stored as secrets) rather than a classic npm token, and require 2FA on the npm account doing the publishing.
+- **`guidelines/` is public and permanent.** Never add secrets, credentials, personal identifying information, or client/business-sensitive details to any file in `guidelines/` — the repo is public and git history is effectively permanent, so anything committed there should be treated as visible forever. If a task would involve writing something sensitive into a guideline doc, stop and ask rather than proceeding.
 
 ## Repo structure
 ```
