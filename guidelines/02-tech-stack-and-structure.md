@@ -116,7 +116,4 @@ dbm-design-system/
 
 ---
 
-## Open items for next planning pass
-- Full token category breakdown (naming convention, scale values) — was the other option on the table
-- Component inventory + atomic tiering (which ~30–40 components make up v1 "complete enough")
-- CI/release workflow detail
+All three items originally tracked here as "next planning pass" work are done: the full token category breakdown lives in `03-token-system-spec.md`, component inventory + atomic tiering in `04-component-inventory.md`, and the CI/release workflow was built in Phase 1 (`.github/workflows/ci.yml`, Changesets config). Removed 2026-07-18 rather than left as stale planning notes — see `01-vision-and-goals.md` §12 for what's actually still open.
