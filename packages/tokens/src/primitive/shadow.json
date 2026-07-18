@@ -1,0 +1,47 @@
+{
+  "light": {
+    "xs": {
+      "$type": "shadow",
+      "$value": "0px 1px 2px rgba(31,30,36,0.05)"
+    },
+    "sm": {
+      "$type": "shadow",
+      "$value": "0px 1px 3px rgba(31,30,36,0.08), 0px 1px 2px rgba(31,30,36,0.04)"
+    },
+    "md": {
+      "$type": "shadow",
+      "$value": "0px 4px 6px rgba(31,30,36,0.07), 0px 2px 4px rgba(31,30,36,0.05)"
+    },
+    "lg": {
+      "$type": "shadow",
+      "$value": "0px 10px 15px rgba(31,30,36,0.08), 0px 4px 6px rgba(31,30,36,0.05)"
+    },
+    "xl": {
+      "$type": "shadow",
+      "$value": "0px 20px 25px rgba(31,30,36,0.10), 0px 8px 10px rgba(31,30,36,0.06)"
+    }
+  },
+  "dark": {
+    "xs": {
+      "$type": "shadow",
+      "$value": "0px 1px 2px rgba(0,0,0,0.30)"
+    },
+    "sm": {
+      "$type": "shadow",
+      "$value": "0px 1px 3px rgba(0,0,0,0.40), 0px 1px 2px rgba(0,0,0,0.24)"
+    },
+    "md": {
+      "$type": "shadow",
+      "$value": "0px 4px 6px rgba(0,0,0,0.36), 0px 2px 4px rgba(0,0,0,0.24)"
+    },
+    "lg": {
+      "$type": "shadow",
+      "$value": "0px 10px 15px rgba(0,0,0,0.40), 0px 4px 6px rgba(0,0,0,0.24)"
+    },
+    "xl": {
+      "$type": "shadow",
+      "$value": "0px 20px 25px rgba(0,0,0,0.45), 0px 8px 10px rgba(0,0,0,0.28)"
+    }
+  },
+  "_note": "Dark-mode shadows use higher-opacity black rather than a direct inversion, and should be paired with a 1px subtle border (color-border-subtle) on raised surfaces, since ambient shadow alone reads poorly on dark backgrounds."
+}

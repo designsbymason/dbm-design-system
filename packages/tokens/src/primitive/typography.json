@@ -1,0 +1,118 @@
+{
+  "font-family": {
+    "primary": {
+      "$type": "fontFamily",
+      "$value": [
+        "Nunito",
+        "system-ui",
+        "sans-serif"
+      ],
+      "$description": "UI, body text, controls"
+    },
+    "secondary": {
+      "$type": "fontFamily",
+      "$value": [
+        "Lora",
+        "Georgia",
+        "serif"
+      ],
+      "$description": "Editorial/display headings, quotes"
+    }
+  },
+  "font-weight": {
+    "regular": {
+      "$type": "fontWeight",
+      "$value": 400
+    },
+    "medium": {
+      "$type": "fontWeight",
+      "$value": 500
+    },
+    "semibold": {
+      "$type": "fontWeight",
+      "$value": 600
+    },
+    "bold": {
+      "$type": "fontWeight",
+      "$value": 700
+    }
+  },
+  "font-size": {
+    "xs": {
+      "$type": "dimension",
+      "$value": "0.694rem"
+    },
+    "sm": {
+      "$type": "dimension",
+      "$value": "0.833rem"
+    },
+    "base": {
+      "$type": "dimension",
+      "$value": "1.0rem"
+    },
+    "md": {
+      "$type": "dimension",
+      "$value": "clamp(1.2rem, 1.186rem + 0.071vw, 1.25rem)"
+    },
+    "lg": {
+      "$type": "dimension",
+      "$value": "clamp(1.44rem, 1.405rem + 0.175vw, 1.562rem)"
+    },
+    "xl": {
+      "$type": "dimension",
+      "$value": "clamp(1.728rem, 1.664rem + 0.322vw, 1.953rem)"
+    },
+    "2xl": {
+      "$type": "dimension",
+      "$value": "clamp(2.074rem, 1.969rem + 0.525vw, 2.441rem)"
+    },
+    "3xl": {
+      "$type": "dimension",
+      "$value": "clamp(2.488rem, 2.327rem + 0.805vw, 3.052rem)"
+    },
+    "4xl": {
+      "$type": "dimension",
+      "$value": "clamp(2.986rem, 2.749rem + 1.184vw, 3.815rem)"
+    },
+    "5xl": {
+      "$type": "dimension",
+      "$value": "clamp(3.583rem, 3.245rem + 1.693vw, 4.768rem)"
+    },
+    "6xl": {
+      "$type": "dimension",
+      "$value": "clamp(4.3rem, 3.825rem + 2.372vw, 5.96rem)"
+    }
+  },
+  "line-height": {
+    "tight": {
+      "$type": "number",
+      "$value": 1.15
+    },
+    "snug": {
+      "$type": "number",
+      "$value": 1.3
+    },
+    "normal": {
+      "$type": "number",
+      "$value": 1.5
+    },
+    "relaxed": {
+      "$type": "number",
+      "$value": 1.7
+    }
+  },
+  "letter-spacing": {
+    "tight": {
+      "$type": "dimension",
+      "$value": "-0.02em"
+    },
+    "normal": {
+      "$type": "dimension",
+      "$value": "0em"
+    },
+    "wide": {
+      "$type": "dimension",
+      "$value": "0.02em"
+    }
+  }
+}
