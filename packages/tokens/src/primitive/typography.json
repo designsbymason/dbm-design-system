@@ -40,7 +40,7 @@
   "font-size": {
     "xs": {
       "$type": "dimension",
-      "$value": "0.694rem"
+      "$value": "0.75rem"
     },
     "sm": {
       "$type": "dimension",

@@ -4,16 +4,24 @@
   "description": "Design tokens (primitive + semantic layers) for the DBM Design System.",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./build/ts/index.ts",
+  "module": "./build/ts/index.ts",
+  "types": "./build/ts/index.ts",
+  "exports": {
+    ".": "./build/ts/index.ts",
+    "./css/*.css": "./build/css/*.css"
+  },
   "files": [
-    "dist"
+    "build"
   ],
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "build": "node style-dictionary.config.js"
+  },
   "devDependencies": {
-    "@dbm-design-system/tsconfig": "workspace:*"
+    "@dbm-design-system/tsconfig": "workspace:*",
+    "style-dictionary": "^5.5.0"
   }
 }
