@@ -59,6 +59,16 @@ This is why `text.on-brand` is defined per-theme rather than as a single global 
 
 Adding a third brand theme later = one more pair of semantic JSON files (`{brand}-light.json`, `{brand}-dark.json`) referencing a new primitive color scale, following the exact same token names as the existing two. No changes needed to component code, since components should only ever reference semantic tokens, never primitives directly.
 
+## Build pipeline decisions (Phase 2)
+
+Style Dictionary 5's actual behavior diverged from a few of the phase brief's assumptions. Documented here so these don't get "fixed" as bugs in a later session — each was audited post-Phase-3 and confirmed to be the correct, standards-conforming response to a real SD5 constraint, not a shortcut.
+
+- **Built-in transforms cover fontFamily/cubicBezier.** SD5 ships `fontFamily/css` and `cubicBezier/css` out of the box — no custom transform code needed, contrary to the original assumption. Used directly in `style-dictionary.config.js`'s `CSS_TRANSFORMS`.
+- **Primitive files aren't self-namespaced.** `radius.json` and `breakpoint.json` both use bare `sm`/`md`/`lg`/`xl` at the top level, which collide on a naive merge. A custom parser (`dbm/namespace-primitives`) wraps each file's content under the namespace its DTCG aliases already expect (`color.json` → `color`, `spacing.json` → `space`, etc.); `typography.json` and `other.json` need no wrapping since their internal groups are already distinct.
+- **The built-in size/rem transform can't handle `clamp()`.** Confirmed empirically — it throws `Invalid Number` on fluid typography values. `CSS_TRANSFORMS` deliberately excludes any dimension-unit transform; all dimension `$value`s (spacing, radius, fluid font sizes) are pre-authored as final, correctly-unitted CSS strings (`"0.25rem"`, `"4px"`, `"clamp(1.2rem, 1.186rem + 0.071vw, 1.25rem)"`) at the source, so they pass through the pipeline verbatim instead of being computed by a transform.
+- **`shadow.json`'s `_note` key is stripped during parsing.** DTCG parsing expects every leaf to resolve to a `$value`; the human-readable `_note` annotation isn't a token, so the custom parser deletes it, scoped narrowly to that one file/key.
+- **Each theme is built as a separate Style Dictionary instance**, not as one config with multiple platforms. The four semantic theme files (`purple-light`, `purple-dark`, `emerald-light`, `emerald-dark`) all use identical top-level token paths (`bg.canvas`, etc.) — loading more than one into a single dictionary at once collides. `style-dictionary.config.js` builds 5 instances total: one primitives-only pass plus one per theme, each sourcing the shared primitives plus exactly one semantic file.
+
 ## Files delivered
 ```
 dbm-tokens/
