@@ -1,0 +1,39 @@
+.root {
+  align-items: center;
+  border-radius: var(--dbm-radius-full);
+  box-sizing: border-box;
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-semibold);
+  gap: var(--dbm-space-1);
+  line-height: var(--dbm-line-height-tight);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-2);
+  white-space: nowrap;
+}
+
+.toneNeutral {
+  background-color: var(--dbm-bg-subtle);
+  color: var(--dbm-text-secondary);
+}
+
+.toneInfo {
+  background-color: var(--dbm-bg-info-subtle);
+  color: var(--dbm-text-info);
+}
+
+.toneSuccess {
+  background-color: var(--dbm-bg-success-subtle);
+  color: var(--dbm-text-success);
+}
+
+.toneWarning {
+  background-color: var(--dbm-bg-warning-subtle);
+  color: var(--dbm-text-warning);
+}
+
+.toneDanger {
+  background-color: var(--dbm-bg-danger-subtle);
+  color: var(--dbm-text-danger);
+}

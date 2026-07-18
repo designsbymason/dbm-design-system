@@ -1,0 +1,36 @@
+.root {
+  animation: pulse var(--dbm-motion-duration-slower) var(--dbm-motion-easing-standard) infinite;
+  background-color: var(--dbm-bg-subtle);
+  box-sizing: border-box;
+  display: block;
+}
+
+.variantText {
+  border-radius: var(--dbm-radius-sm);
+  height: 1em;
+}
+
+.variantCircular {
+  border-radius: var(--dbm-radius-full);
+}
+
+.variantRectangular {
+  border-radius: var(--dbm-radius-md);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  50% {
+    opacity: var(--dbm-opacity-40);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    animation: none;
+  }
+}

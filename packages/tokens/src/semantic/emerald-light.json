@@ -105,7 +105,8 @@
     },
     "success": {
       "$type": "color",
-      "$value": "{color.green.700}"
+      "$value": "{color.green.800}",
+      "$description": "green.700 on bg.success-subtle (green.100) was 4.08:1, failing AA — green.800 gives 6.01:1 (verified 2026-07-18). Symptom of the HSL-derived color scales not being perceptually even across families (see the OKLCH re-derivation item in 01-vision-and-goals.md); darkening here is strictly safe since it only improves contrast against lighter surfaces."
     },
     "info": {
       "$type": "color",

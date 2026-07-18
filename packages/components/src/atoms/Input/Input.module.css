@@ -1,0 +1,92 @@
+.wrapper {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-sizing: border-box;
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  transition:
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  width: 100%;
+}
+
+.wrapper:hover:not(.disabled):not(.error) {
+  border-color: var(--dbm-border-strong);
+}
+
+.wrapper:focus-within {
+  border-color: var(--dbm-border-focus);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.wrapper.error {
+  border-color: var(--dbm-border-danger);
+}
+
+.wrapper.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.affix {
+  align-items: center;
+  color: var(--dbm-text-tertiary);
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.input {
+  background: none;
+  border: none;
+  color: var(--dbm-text-primary);
+  flex: 1 1 auto;
+  font-family: inherit;
+  font-size: inherit;
+  min-width: 0;
+  outline: none;
+  padding: 0;
+}
+
+.input::placeholder {
+  color: var(--dbm-text-tertiary);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+/* Sizes */
+
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+  padding-block: var(--dbm-space-3);
+  padding-inline: var(--dbm-space-4);
+}

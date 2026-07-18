@@ -1,0 +1,77 @@
+.root {
+  align-items: center;
+  background-color: var(--dbm-bg-brand-subtle);
+  border-radius: var(--dbm-radius-full);
+  box-sizing: border-box;
+  color: var(--dbm-text-link);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-weight: var(--dbm-font-weight-semibold);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.image {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  height: var(--dbm-icon-size-xs);
+  width: var(--dbm-icon-size-xs);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-xs);
+  height: var(--dbm-icon-size-sm);
+  width: var(--dbm-icon-size-sm);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-sm);
+  height: var(--dbm-icon-size-md);
+  width: var(--dbm-icon-size-md);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-base);
+  height: var(--dbm-icon-size-lg);
+  width: var(--dbm-icon-size-lg);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-md);
+  height: var(--dbm-icon-size-xl);
+  width: var(--dbm-icon-size-xl);
+}
+
+.status {
+  border: var(--dbm-border-width-2) solid var(--dbm-bg-surface);
+  border-radius: var(--dbm-radius-full);
+  bottom: 0;
+  box-sizing: border-box;
+  height: var(--dbm-space-3);
+  position: absolute;
+  right: 0;
+  width: var(--dbm-space-3);
+}
+
+.statusOnline {
+  background-color: var(--dbm-bg-success);
+}
+
+.statusBusy {
+  background-color: var(--dbm-bg-danger);
+}
+
+.statusAway {
+  background-color: var(--dbm-bg-warning);
+}
+
+.statusOffline {
+  background-color: var(--dbm-border-strong);
+}
