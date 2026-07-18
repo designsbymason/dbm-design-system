@@ -1,0 +1,34 @@
+.root {
+  box-sizing: border-box;
+  margin-inline: auto;
+  padding-inline: var(--dbm-space-4);
+  width: 100%;
+}
+
+.sizeSm {
+  max-width: var(--dbm-breakpoint-sm);
+}
+
+.sizeMd {
+  max-width: var(--dbm-breakpoint-md);
+}
+
+.sizeLg {
+  max-width: var(--dbm-breakpoint-lg);
+}
+
+.sizeXl {
+  max-width: var(--dbm-breakpoint-xl);
+}
+
+.size2xl {
+  max-width: var(--dbm-breakpoint-2xl);
+}
+
+.size3xl {
+  max-width: var(--dbm-breakpoint-3xl);
+}
+
+.sizeFull {
+  max-width: none;
+}

@@ -1,0 +1,84 @@
+.root {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols-base, 12), minmax(0, 1fr));
+}
+
+/*
+ * CSS custom properties cannot be referenced inside an @media condition
+ * (a CSS spec limitation, not a choice here) — these thresholds are the
+ * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six rules must be updated by hand to match.
+ */
+@media (min-width: 640px) {
+  .root {
+    grid-template-columns: repeat(var(--grid-cols-sm, var(--grid-cols-base, 12)), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .root {
+    grid-template-columns: repeat(
+      var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    grid-template-columns: repeat(
+      var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    grid-template-columns: repeat(
+      var(
+        --grid-cols-xl,
+        var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))))
+      ),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    grid-template-columns: repeat(
+      var(
+        --grid-cols-2xl,
+        var(
+          --grid-cols-xl,
+          var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))))
+        )
+      ),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    grid-template-columns: repeat(
+      var(
+        --grid-cols-3xl,
+        var(
+          --grid-cols-2xl,
+          var(
+            --grid-cols-xl,
+            var(
+              --grid-cols-lg,
+              var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
+            )
+          )
+        )
+      ),
+      minmax(0, 1fr)
+    );
+  }
+}

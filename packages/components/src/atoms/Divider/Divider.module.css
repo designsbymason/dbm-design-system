@@ -1,0 +1,36 @@
+.root {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  gap: var(--dbm-space-3);
+}
+
+.horizontal {
+  flex-direction: row;
+  width: 100%;
+}
+
+.vertical {
+  flex-direction: column;
+  height: 100%;
+}
+
+.line {
+  background: var(--dbm-border-default);
+  flex: 1 1 auto;
+}
+
+.horizontal .line {
+  height: var(--dbm-border-width-1);
+}
+
+.vertical .line {
+  width: var(--dbm-border-width-1);
+}
+
+.label {
+  color: var(--dbm-text-tertiary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-sm);
+  white-space: nowrap;
+}
