@@ -1,7 +1,8 @@
+import { ArrowSquareOutIcon } from "@dbm-design-system/icons";
 import { cx } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { forwardRef } from "react";
+import { Icon } from "../Icon";
 import styles from "./Link.module.css";
 import type { LinkProps } from "./Link.types";
 
@@ -38,9 +39,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
         ) : (
           <>
             {children}
-            {isExternal && (
-              <ArrowSquareOutIcon aria-hidden="true" className={styles.icon} size="1em" />
-            )}
+            {isExternal && <Icon icon={ArrowSquareOutIcon} size="xs" className={styles.icon} />}
           </>
         )}
       </Component>

@@ -32,6 +32,11 @@
       "$type": "color",
       "$value": "{color.red.500}"
     },
+    "danger-hover": {
+      "$type": "color",
+      "$value": "{color.red.600}",
+      "$description": "Darker than danger (unlike brand-hover, which lightens in dark mode) — red.400 only gives white text 3.24:1 contrast, failing AA; red.600 gives 6.12:1 (verified 2026-07-18)."
+    },
     "danger-subtle": {
       "$type": "color",
       "$value": "{color.red.900}"
@@ -81,6 +86,11 @@
     "on-brand": {
       "$type": "color",
       "$value": "{color.gray.950}"
+    },
+    "on-danger": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Text on a solid bg.danger fill. White on red.500 = 4.74:1, passes AA (verified 2026-07-18)."
     },
     "link": {
       "$type": "color",

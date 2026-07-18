@@ -1,0 +1,39 @@
+.root {
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.sizeXs {
+  width: var(--dbm-icon-size-xs);
+  height: var(--dbm-icon-size-xs);
+}
+
+.sizeSm {
+  width: var(--dbm-icon-size-sm);
+  height: var(--dbm-icon-size-sm);
+}
+
+.sizeMd {
+  width: var(--dbm-icon-size-md);
+  height: var(--dbm-icon-size-md);
+}
+
+.sizeLg {
+  width: var(--dbm-icon-size-lg);
+  height: var(--dbm-icon-size-lg);
+}
+
+.sizeXl {
+  width: var(--dbm-icon-size-xl);
+  height: var(--dbm-icon-size-xl);
+}
+
+.size2xl {
+  width: var(--dbm-icon-size-2xl);
+  height: var(--dbm-icon-size-2xl);
+}
+
+.size3xl {
+  width: var(--dbm-icon-size-3xl);
+  height: var(--dbm-icon-size-3xl);
+}

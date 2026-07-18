@@ -32,6 +32,10 @@
       "$type": "color",
       "$value": "{color.red.600}"
     },
+    "danger-hover": {
+      "$type": "color",
+      "$value": "{color.red.700}"
+    },
     "danger-subtle": {
       "$type": "color",
       "$value": "{color.red.100}"
@@ -81,6 +85,11 @@
     "on-brand": {
       "$type": "color",
       "$value": "{color.neutral.white}"
+    },
+    "on-danger": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Text on a solid bg.danger fill. White on red.600 = 6.12:1, passes AA (verified 2026-07-18)."
     },
     "link": {
       "$type": "color",
