@@ -94,6 +94,7 @@ async function buildPrimitives() {
     platforms: {
       css: {
         transforms: CSS_TRANSFORMS,
+        prefix: 'dbm',
         buildPath: join(BUILD_DIR, 'css') + '/',
         files: [
           {
@@ -129,6 +130,7 @@ async function buildTheme(theme) {
     platforms: {
       css: {
         transforms: CSS_TRANSFORMS,
+        prefix: 'dbm',
         buildPath: join(BUILD_DIR, 'css') + '/',
         files: [
           {
