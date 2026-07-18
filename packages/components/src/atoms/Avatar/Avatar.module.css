@@ -73,5 +73,5 @@
 }
 
 .statusOffline {
-  background-color: var(--dbm-border-strong);
+  background-color: var(--dbm-bg-neutral);
 }

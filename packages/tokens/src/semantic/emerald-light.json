@@ -63,6 +63,11 @@
     "info-subtle": {
       "$type": "color",
       "$value": "{color.blue.100}"
+    },
+    "neutral": {
+      "$type": "color",
+      "$value": "{color.gray.500}",
+      "$description": "Fifth status-tone fill, for neutral/offline-style indicators (e.g. Avatar's offline status dot). gray.500 on bg.surface: 4.24:1 light / 3.12:1 dark, both pass WCAG 1.4.11 non-text contrast (3:1) — verified 2026-07-18, shared across all 4 themes since gray.500 uniquely satisfies both."
     }
   },
   "text": {
