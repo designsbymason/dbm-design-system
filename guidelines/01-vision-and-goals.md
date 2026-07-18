@@ -167,6 +167,8 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 - **AA vs. AAA compliance target:** currently targeting AA as the floor; not yet decided whether specific high-stakes components (forms, alerts) should be held to AAA.
 - **Third brand theme:** architecture supports it, no concrete second/third brand requirement exists yet — revisit when one does.
 - **Public Storybook/docs hosting timeline:** deferred, but worth revisiting once the component set stabilizes so momentum isn't lost.
+- **Tokens package publish packaging:** `packages/tokens` currently ships raw TypeScript from `build/ts/` via `main`/`module`/`types`, unlike the tsup-compiled JS+d.ts the other four packages use. Open until `packages/components` first consumes it (Phase 3+) or npm publish (Phase 6) forces a decision.
+- **Motion easing TS format:** TS constants currently export motion easing as CSS `cubic-bezier()` strings (matching the CSS output), but the Motion library typically wants raw `[x1,y1,x2,y2]` arrays for its `easing` prop. Open until Motion integration actually happens.
 
 ---
 
