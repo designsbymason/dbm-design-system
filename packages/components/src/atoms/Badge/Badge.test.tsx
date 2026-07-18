@@ -10,7 +10,7 @@ describe("Badge", () => {
     expect(screen.getByText("New")).toBeInTheDocument();
   });
 
-  it("defaults to tone=neutral", () => {
+  it("defaults to tone=neutral, variant=subtle", () => {
     render(<Badge data-testid="badge">New</Badge>);
     expect(screen.getByTestId("badge")).toHaveStyle({
       backgroundColor: "var(--dbm-bg-subtle)",
@@ -18,7 +18,7 @@ describe("Badge", () => {
     });
   });
 
-  it("applies each tone's background/text tokens", () => {
+  it("applies each subtle tone's background/text tokens", () => {
     const { rerender } = render(
       <Badge tone="danger" data-testid="badge">
         Error
@@ -40,6 +40,38 @@ describe("Badge", () => {
     });
   });
 
+  it("applies each solid tone's background/on-tone text tokens", () => {
+    const { rerender } = render(
+      <Badge tone="danger" variant="solid" data-testid="badge">
+        Error
+      </Badge>,
+    );
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      backgroundColor: "var(--dbm-bg-danger)",
+      color: "var(--dbm-text-on-danger)",
+    });
+
+    rerender(
+      <Badge tone="success" variant="solid" data-testid="badge">
+        Active
+      </Badge>,
+    );
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      backgroundColor: "var(--dbm-bg-success)",
+      color: "var(--dbm-text-on-success)",
+    });
+
+    rerender(
+      <Badge tone="neutral" variant="solid" data-testid="badge">
+        Draft
+      </Badge>,
+    );
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      backgroundColor: "var(--dbm-bg-neutral-strong)",
+      color: "var(--dbm-text-on-neutral)",
+    });
+  });
+
   it("forwards ref to the underlying span", () => {
     const ref = createRef<HTMLSpanElement>();
     render(<Badge ref={ref}>New</Badge>);
@@ -55,11 +87,18 @@ describe("Badge", () => {
     expect(screen.getByTestId("badge")).toHaveClass("custom");
   });
 
-  it("has no accessibility violations across tones", async () => {
+  it("has no accessibility violations across tones and variants", async () => {
     const { container, rerender } = render(<Badge tone="neutral">Draft</Badge>);
     expect((await axe(container)).violations).toHaveLength(0);
 
     rerender(<Badge tone="danger">Error</Badge>);
+    expect((await axe(container)).violations).toHaveLength(0);
+
+    rerender(
+      <Badge tone="warning" variant="solid">
+        Pending
+      </Badge>,
+    );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

@@ -1,30 +1,38 @@
 import { cx } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import styles from "./Badge.module.css";
-import type { BadgeProps, BadgeTone } from "./Badge.types";
+import type { BadgeProps, BadgeTone, BadgeVariant } from "./Badge.types";
 
-const toneClass: Record<BadgeTone, string | undefined> = {
-  neutral: styles.toneNeutral,
-  info: styles.toneInfo,
-  success: styles.toneSuccess,
-  warning: styles.toneWarning,
-  danger: styles.toneDanger,
+const classFor: Record<BadgeVariant, Record<BadgeTone, string | undefined>> = {
+  subtle: {
+    neutral: styles.subtleNeutral,
+    info: styles.subtleInfo,
+    success: styles.subtleSuccess,
+    warning: styles.subtleWarning,
+    danger: styles.subtleDanger,
+  },
+  solid: {
+    neutral: styles.solidNeutral,
+    info: styles.solidInfo,
+    success: styles.solidSuccess,
+    warning: styles.solidWarning,
+    danger: styles.solidDanger,
+  },
 };
 
 /**
- * A small status/count indicator. Currently subtle-background only — a
- * solid-fill variant would need `text.on-info`/`on-success`/`on-warning`
- * tokens verified the way `text.on-danger` was for `Button`, which is out
- * of scope for this pass.
+ * A small status/count indicator, in a low-emphasis subtle-background style
+ * (default) or a high-emphasis solid-fill style.
  *
  * @example
  * ```tsx
  * <Badge tone="success">Active</Badge>
+ * <Badge tone="danger" variant="solid">Failed</Badge>
  * ```
  */
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ tone = "neutral", className, ...props }, ref) => (
-    <span ref={ref} className={cx(styles.root, toneClass[tone], className)} {...props} />
+  ({ tone = "neutral", variant = "subtle", className, ...props }, ref) => (
+    <span ref={ref} className={cx(styles.root, classFor[variant][tone], className)} {...props} />
   ),
 );
 

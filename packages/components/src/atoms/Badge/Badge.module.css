@@ -13,27 +13,52 @@
   white-space: nowrap;
 }
 
-.toneNeutral {
+.subtleNeutral {
   background-color: var(--dbm-bg-subtle);
   color: var(--dbm-text-secondary);
 }
 
-.toneInfo {
+.subtleInfo {
   background-color: var(--dbm-bg-info-subtle);
   color: var(--dbm-text-info);
 }
 
-.toneSuccess {
+.subtleSuccess {
   background-color: var(--dbm-bg-success-subtle);
   color: var(--dbm-text-success);
 }
 
-.toneWarning {
+.subtleWarning {
   background-color: var(--dbm-bg-warning-subtle);
   color: var(--dbm-text-warning);
 }
 
-.toneDanger {
+.subtleDanger {
   background-color: var(--dbm-bg-danger-subtle);
   color: var(--dbm-text-danger);
+}
+
+.solidNeutral {
+  background-color: var(--dbm-bg-neutral-strong);
+  color: var(--dbm-text-on-neutral);
+}
+
+.solidInfo {
+  background-color: var(--dbm-bg-info);
+  color: var(--dbm-text-on-info);
+}
+
+.solidSuccess {
+  background-color: var(--dbm-bg-success);
+  color: var(--dbm-text-on-success);
+}
+
+.solidWarning {
+  background-color: var(--dbm-bg-warning);
+  color: var(--dbm-text-on-warning);
+}
+
+.solidDanger {
+  background-color: var(--dbm-bg-danger);
+  color: var(--dbm-text-on-danger);
 }
