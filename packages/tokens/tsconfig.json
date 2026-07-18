@@ -2,7 +2,7 @@
   "extends": "@dbm-design-system/tsconfig/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "build/ts"
   },
-  "include": ["src"]
+  "include": ["build/ts"]
 }
