@@ -1,0 +1,26 @@
+.root {
+  box-sizing: border-box;
+  color: var(--dbm-text-link);
+  font-family: var(--dbm-font-family-primary);
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.root:visited {
+  color: var(--dbm-text-link);
+}
+
+.root:hover {
+  text-decoration-color: currentColor;
+}
+
+.root:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.icon {
+  margin-inline-start: 0.25em;
+  vertical-align: -0.125em;
+}

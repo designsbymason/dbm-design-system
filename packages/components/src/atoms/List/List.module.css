@@ -1,0 +1,23 @@
+.root {
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-base);
+  margin: 0;
+  padding-inline-start: var(--dbm-space-6);
+}
+
+.markerDisc {
+  list-style-type: disc;
+}
+
+.markerDecimal {
+  list-style-type: decimal;
+}
+
+.markerNone {
+  list-style-type: none;
+  padding-inline-start: 0;
+}

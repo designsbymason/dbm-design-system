@@ -1,0 +1,4 @@
+.root {
+  box-sizing: border-box;
+  line-height: var(--dbm-line-height-normal);
+}
