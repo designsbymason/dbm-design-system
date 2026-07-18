@@ -144,6 +144,9 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 | Neutral gray undertone | Cool, subtly purple-tinted | `03-token-system-spec.md` |
 | v1 platform scope | Web + Enterprise, shared primitives | This document |
 | Agent tooling scope for v1 | Types + JSDoc + manifest only; CLI/MCP deferred | This document |
+| npm scope | `@dbm-design-system/*` (e.g. `@dbm-design-system/components`, `.../tokens`, `.../icons`, `.../primitives`) | This document — verify final availability with `npm org ls` before first publish |
+| License | MIT | This document |
+| Repo visibility & governance | Public GitHub repo; MIT license; sole maintainer — no external pull requests merged; write access controlled via the Collaborators list (empty), not by visibility | This document |
 
 ---
 
