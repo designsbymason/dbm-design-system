@@ -163,24 +163,30 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 ## 12. Risks & open questions
 
 - **Scope risk:** "web, mobile, and enterprise, complete and comprehensive" is a large surface area for a from-zero build — v1 scope has been deliberately narrowed to web + enterprise to manage this; mobile is a defined future phase, not an abandoned goal.
-- **OKLCH re-derivation pending:** current token color scales were generated with HSL math for planning speed; should be re-derived in OKLCH for perceptual evenness before final lock (`03-token-system-spec.md`).
-- **AA vs. AAA compliance target:** currently targeting AA as the floor; not yet decided whether specific high-stakes components (forms, alerts) should be held to AAA.
+- **OKLCH re-derivation:** current token color scales were generated with HSL math for planning speed and should be re-derived in OKLCH for perceptual evenness. **Scheduled as Phase 4** (decided 2026-07-18) — right after the atom layer, before building further component tiers on top of the current HSL-derived scales. Re-deriving changes every primitive color's actual hex value, so every contrast pairing verified so far (`03-token-system-spec.md`'s running log) will need re-checking against the new values.
+- **AA vs. AAA compliance target — decided (2026-07-18):** AA stays the enforced floor everywhere (WCAG's own conformance guidance explicitly recommends against requiring AAA as a blanket policy — "not possible to satisfy all Level AAA Success Criteria for some content"). AAA (7:1 text contrast) is the target, not a hard requirement, specifically for error/critical-alert text (form validation errors, destructive-action confirmations) — the highest-stakes case where users acting on misread text has the worst consequences. This matches common practice in accessibility-mature systems (GOV.UK Design System, IBM Carbon). Several `text.danger`/`text.on-danger` pairings already land at or above 7:1 as a side effect of the Phase 3 contrast fixes; no further action needed until forms/alerts (later phases) are actually built, at which point verify their specific error-text pairings against 7:1 where achievable.
 - **Third brand theme:** architecture supports it, no concrete second/third brand requirement exists yet — revisit when one does.
 - **Public Storybook/docs hosting timeline:** deferred, but worth revisiting once the component set stabilizes so momentum isn't lost.
 - **Motion easing TS format:** TS constants currently export motion easing as CSS `cubic-bezier()` strings (matching the CSS output), but the Motion library typically wants raw `[x1,y1,x2,y2]` arrays for its `easing` prop. Open until Motion integration actually happens.
-- **`packages/icons` curation:** currently re-exports the full Phosphor set (`export * from '@phosphor-icons/react'`) rather than a curated subset, despite `02-tech-stack-and-structure.md` describing it as a "curated re-export." Narrowing to an approved icon set is a future decision, not a v1 blocker.
-- **Roadmap phase numbering (§13, below) doesn't match the phases actually used:** the roadmap here describes "Phase 2 — Core build... Phase 3 — Completion..." but the build has actually run as Phase 1 = repo scaffold, Phase 2 = token pipeline, Phase 3 = atom layer — a finer-grained sequence than this section anticipated. Flagged after Phase 3; not renumbered yet since that's a decision for the maintainer, not something to resolve silently.
+- **`packages/icons` curation:** currently re-exports the full Phosphor set (`export * from '@phosphor-icons/react'`) rather than a curated subset, despite `02-tech-stack-and-structure.md` describing it as a "curated re-export." **Decided (2026-07-18): leave it full for now** — zero cost today since tree-shaking means unused icons never ship to consumers regardless, and curating is a real design decision better made once more component patterns using icons exist. Revisit if that changes.
 
 ---
 
 ## 13. Roadmap phases (high-level)
 
-- **Phase 1 — Foundation (current):** vision, tech stack, token system, component inventory, repo scaffolding
-- **Phase 2 — Core build:** primitives layer, atoms, molecules, initial organisms; Storybook coverage; testing pipeline
-- **Phase 3 — Completion:** remaining organisms/templates, full manifest generation, npm publish pipeline
-- **Phase 4 — Surface expansion:** documentation website, public Storybook hosting
-- **Phase 5 — Agent tooling:** CLI scaffolder, MCP server, and an auto-synced component index written into `CLAUDE.md`/`AGENTS.md` on every release (mirroring Astryx's `npx astryx init` pattern) — once API is proven stable
-- **Phase 6 — Platform expansion:** Figma component library; React Native package
+Renumbered 2026-07-18 to match the phases actually run (the original version bundled vision/tech-stack/tokens/inventory/scaffolding into one "Phase 1," but in execution the token pipeline and the atom layer each turned out to be their own full session/phase). Vision, tech stack, token spec, and component inventory (`01`-`04`, this doc included) predate Phase 1 as planning input, not a phase of their own.
+
+- **Phase 1 — Repo scaffold & tooling (done):** monorepo structure, Turborepo/pnpm, shared configs, CI, security setup
+- **Phase 2 — Design token pipeline (done):** Style Dictionary build producing CSS custom properties + typed TS constants from the primitive/semantic token JSON
+- **Phase 3 — Foundational atom layer (done):** utility primitives, layout primitives, typography, core atoms (23 components); Storybook 10 setup; Vitest/RTL/jest-axe test infra
+- **Phase 4 — OKLCH color re-derivation:** re-derive the primitive color scales in OKLCH for perceptual evenness; re-verify every contrast pairing checked in `03-token-system-spec.md`'s running log against the new values before building further component tiers on top of them
+- **Phase 5 — Molecules:** FormField, Card, SearchBar, Tooltip, MenuItem, and the rest of the 🟢 v1 molecule tier per `04-component-inventory.md`
+- **Phase 6 — Organisms:** DataTable, Modal, Navbar, CommandPalette, Form, and the rest of the 🟢 v1 organism tier
+- **Phase 7 — Comprehensive pass:** remaining 🟡 v1.5 components + templates
+- **Phase 8 — Manifest & publish:** full `packages/manifest` JSON component manifest generation; npm publishing pipeline (Changesets-based)
+- **Phase 9 — Surface expansion:** documentation website, public Storybook hosting
+- **Phase 10 — Agent tooling:** CLI scaffolder, MCP server, and an auto-synced component index written into `CLAUDE.md`/`AGENTS.md` on every release (mirroring Astryx's `npx astryx init` pattern) — once API is proven stable
+- **Phase 11 — Platform expansion:** Figma component library; React Native package
 
 ---
 

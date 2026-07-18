@@ -102,7 +102,7 @@ dbm-design-system/
 | Security: dependency scanning | GitHub Dependabot | Free, native to GitHub; automated PRs for vulnerable/outdated dependencies |
 | Security: secret scanning | GitHub secret scanning + push protection | Free for public repos; a repo setting, not a dependency — must be enabled at the GitHub repo level |
 | Security: static analysis | GitHub CodeQL | Free for public repos; catches common vulnerability patterns (XSS, injection) in CI |
-| Security: publish auth | npm provenance / trusted publishing (OIDC) | No long-lived npm tokens stored as CI secrets; used when the Phase 6 publish pipeline is built |
+| Security: publish auth | npm provenance / trusted publishing (OIDC) | No long-lived npm tokens stored as CI secrets; used when the Phase 8 publish pipeline is built |
 | Manifest generation | react-docgen-typescript (custom build step in `packages/manifest`) | OSS; extracts props/types/JSDoc into the machine-readable JSON contract for agents |
 
 ---

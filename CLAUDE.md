@@ -27,7 +27,7 @@ An agentic, standalone React component library — built for AI coding agents (a
 - **Secret scanning:** GitHub secret scanning + push protection (free for public repos) should be enabled at the repo level — flag this to me if it isn't, since it's a repo setting, not something committed in code.
 - **Static analysis:** GitHub CodeQL (free for public repos) as a CI job once there's real code to scan — catches common vulnerability patterns (XSS, injection) before merge.
 - **Component-level security:** no `dangerouslySetInnerHTML` without explicit sanitization (relevant for anything rendering user-provided content — `CodeBlock`, `Combobox`, rich text areas); no `eval` or dynamic `Function` construction; sanitize any component that accepts and renders external URLs or HTML.
-- **Publish security:** when the npm publish pipeline is built (Phase 6), use npm provenance/trusted publishing (OIDC-based, no long-lived tokens stored as secrets) rather than a classic npm token, and require 2FA on the npm account doing the publishing.
+- **Publish security:** when the npm publish pipeline is built (Phase 8), use npm provenance/trusted publishing (OIDC-based, no long-lived tokens stored as secrets) rather than a classic npm token, and require 2FA on the npm account doing the publishing.
 - **`guidelines/` is public and permanent.** Never add secrets, credentials, personal identifying information, or client/business-sensitive details to any file in `guidelines/` — the repo is public and git history is effectively permanent, so anything committed there should be treated as visible forever. If a task would involve writing something sensitive into a guideline doc, stop and ask rather than proceeding.
 
 ## Repo structure
@@ -60,7 +60,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Overall project goals/scope | `guidelines/01-vision-and-goals.md` |
 
 ## Component index (planned: auto-synced)
-Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 5), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand. This mirrors Astryx's `npx astryx init`, which installs its component index directly into a project's `AGENTS.md`/`CLAUDE.md` so agents discover what's available instead of guessing or hallucinating a component that doesn't exist.
+Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand. This mirrors Astryx's `npx astryx init`, which installs its component index directly into a project's `AGENTS.md`/`CLAUDE.md` so agents discover what's available instead of guessing or hallucinating a component that doesn't exist.
 
 Until that tooling exists, treat `guidelines/04-component-inventory.md` as the authoritative (manually maintained) list.
 
