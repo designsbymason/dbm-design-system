@@ -1,0 +1,4 @@
+.root {
+  /* Structural wrapper only — must not introduce a box in the layout flow. */
+  display: contents;
+}
