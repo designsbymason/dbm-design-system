@@ -91,9 +91,9 @@ dbm-design-system/
 | Motion | CSS transitions/keyframes by default; Motion (Framer Motion successor) as an **optional peer dependency** for complex sequences | Keeps the core dependency-light; consumers who don't need rich motion don't pay for it |
 | Build (component packages) | tsup (esbuild-based) | Fast, simple ESM+CJS+d.ts output, minimal config |
 | Testing (unit/behavior) | Vitest + React Testing Library | Fast, ESM-native, pairs well with Vite/tsup toolchain |
-| Accessibility testing | jest-axe / vitest-axe | Automated a11y regression checks per component; both fully OSS |
+| Accessibility testing | jest-axe | Automated a11y regression checks per component. Settled on jest-axe over vitest-axe during Phase 3 — vitest-axe was a single early (0.1.0, Jan 2025) release with no follow-up, while jest-axe (10.0.0, actively maintained) works fine under Vitest since Vitest's `expect` is Jest-API-compatible |
 | Visual regression | Playwright's built-in screenshot/snapshot testing, self-hosted | Fully open-source and free, no SaaS account needed — trade-off is you host/diff the snapshot artifacts yourself (e.g. as CI artifacts) rather than getting Chromatic's hosted review UI |
-| Component workshop | Storybook 8 | OSS; also doubles as living documentation and the base for the future public-hosted instance |
+| Component workshop | Storybook 10 | OSS; also doubles as living documentation and the base for the future public-hosted instance. Originally pinned at 8 during planning; bumped to 10 in Phase 3 when 8 turned out to be two majors behind with React 19 peer-dependency friction — confirmed with the maintainer before deviating |
 | Docs site (later) | Next.js or Astro (both OSS frameworks) | Pairs naturally with MDX for component docs + the manifest data |
 | Static hosting (docs site + Storybook) | GitHub Pages, or Cloudflare Pages free tier | Both free for public/OSS projects with no usage-based billing risk; GitHub Pages is the simplest since the repo is already on GitHub |
 | Versioning/release | Changesets | OSS; per-package semver, changelog generation, monorepo-aware |

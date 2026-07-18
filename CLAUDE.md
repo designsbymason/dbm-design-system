@@ -47,7 +47,7 @@ guidelines/          Internal reference docs — architecture decisions, specs, 
 ```
 
 ## Stack quick reference
-TypeScript (strict) · React 18+ · Turborepo · pnpm workspaces · Radix UI Primitives · CSS Modules + CSS Custom Properties · Style Dictionary (token build) · tsup · Vitest + React Testing Library · jest-axe/vitest-axe · Storybook 8 · Changesets · GitHub Actions
+TypeScript (strict) · React 18+ · Turborepo · pnpm workspaces · Radix UI Primitives · CSS Modules + CSS Custom Properties · Style Dictionary (token build) · tsup · Vitest + React Testing Library · jest-axe · Storybook 10 · Changesets · GitHub Actions
 
 Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 
