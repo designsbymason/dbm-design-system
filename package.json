@@ -1,0 +1,22 @@
+{
+  "name": "dbm-design-system",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@11.14.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "dev": "turbo run dev",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.1",
+    "turbo": "^2.10.5"
+  }
+}

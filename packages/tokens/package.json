@@ -1,0 +1,19 @@
+{
+  "name": "@dbm-design-system/tokens",
+  "version": "0.0.0",
+  "description": "Design tokens (primitive + semantic layers) for the DBM Design System.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@dbm-design-system/tsconfig": "workspace:*"
+  }
+}
