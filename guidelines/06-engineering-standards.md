@@ -61,6 +61,27 @@ This was flagged as an open question early in planning and never fully resolved.
 - **Fix blockers properly, not around them.** When you hit a bug, a type error, a failing test, or an environment quirk, find and fix the actual root cause using best practices, industry-standard patterns, and this system's own conventions — not a suppression (`@ts-ignore`, `eslint-disable`, `any`), a hardcoded value in place of a missing token, or a temporary stand-in meant to be revisited later. If the properly-scoped fix genuinely belongs in a later phase (not just "harder than the shortcut"), say so explicitly and flag it — don't paper over it silently.
 - **Flag gaps instead of improvising.** If a task requires a decision not covered by any guideline doc, stop and ask rather than guessing — consistent with the closing line of `CLAUDE.md`.
 
+## 9. Component review & enhancement passes
+
+Beyond the initial "definition of done" (`05-component-api-conventions.md` §8, checked once when a component first ships), every component periodically gets a full review pass. The first one — covering all 23 Phase 3 atoms, one at a time — runs as Phase 4.5, before Phase 5 (Molecules) begins, since molecules compose these atoms directly and any atom-level gap gets inherited by everything built on top of it.
+
+Run each component through two tracks:
+
+**Track 1 — Objective (checklist-driven, low ambiguity):**
+- Full re-check against `05-component-api-conventions.md` §8's definition of done — re-verify, don't assume it still holds.
+- Required and recommended props: does the component's prop set match or exceed what comparable components offer in mature systems (Radix, Chakra UI, MUI, Ant Design) for the same role? A missing commonly-expected prop (a loading state, an `asChild` escape hatch, a controlled/uncontrolled pair) is a gap, not a nice-to-have.
+- Token usage: zero hardcoded values, correct semantic-token category per use.
+- Accessibility: keyboard nav, focus visibility, ARIA correctness, contrast — re-verified, not assumed still passing.
+- Responsiveness: correct behavior across the full breakpoint scale (`03-token-system-spec.md`), per §5 above.
+- Stability: error handling, SSR safety, no console noise.
+
+**Track 2 — Design quality (judgment-driven, needs restraint):**
+- **Feature-completeness relative to industry standard**: does the component do what a developer or agent would reasonably expect from a production design system's version of it? (E.g., does `Input` support a clear affordance, character count, or validation styling — not just `value`/`onChange`.)
+- **Micro-interactions, where they clarify state** — hover/focus/active transitions, loading/success feedback — consistent with the existing motion tokens and the "motion with restraint" principle (`01-vision-and-goals.md` §8, principle 5). Not every component needs one; a `Divider` doesn't.
+- **Visual execution**: premium, modern, and identifiably DBM's own rather than a generic Radix-default look — while staying entirely inside the existing token set (color, typography, spacing, radius, shadow, motion). If a new treatment needs a token that doesn't exist yet, add the token first, per `CLAUDE.md`.
+
+**Guardrail against scope creep (this is where it happens):** every Track 2 enhancement gets proposed with a specific, named rationale before it's built — "X is missing feature Y that [comparable component] has" or "the hover state is instant while every other interactive atom eases" — not a blanket "make it fancier" pass. `01-vision-and-goals.md` §4 goal 7 makes comprehensiveness and premium execution an explicit project requirement, so proposing against that goal is in-scope — but every individual addition should still trace to a concrete, stated gap, not be improvised in the moment.
+
 ## Related documents
 - `05-component-api-conventions.md` — the API-level contract this doc's engineering discipline supports
 - `03-token-system-spec.md` — breakpoints, motion tokens referenced in §4–5
