@@ -18,5 +18,6 @@ export interface ThemeProviderProps extends ComponentPropsWithoutRef<"div"> {
    * @default 'system'
    */
   mode?: ColorMode;
+  /** The subtree to render inside the theme wrapper. */
   children: ReactNode;
 }

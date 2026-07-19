@@ -2,3 +2,27 @@
   /* Structural wrapper only — must not introduce a box in the layout flow. */
   display: contents;
 }
+
+/*
+ * Applied to document.documentElement for a brief window after a brand/mode
+ * change (never on initial mount — see ThemeProvider.tsx) so every themed
+ * surface eases into its new colors instead of hard-cutting. !important is
+ * deliberate here: this is a short-lived, JS-removed override that must win
+ * over whatever transition an individual component already declares for its
+ * own hover/focus states, regardless of CSS source order.
+ */
+.themeTransition,
+.themeTransition * {
+  transition:
+    background-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    box-shadow var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .themeTransition,
+  .themeTransition * {
+    transition: none !important;
+  }
+}
