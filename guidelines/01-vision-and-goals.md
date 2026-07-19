@@ -147,6 +147,7 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 | npm scope | `@dbm-design-system/*` (e.g. `@dbm-design-system/components`, `.../tokens`, `.../icons`, `.../primitives`) | This document — verify final availability with `npm org ls` before first publish |
 | License | MIT | This document |
 | Repo visibility & governance | Public GitHub repo; MIT license; sole maintainer — no external pull requests merged; write access controlled via the Collaborators list (empty), not by visibility | This document |
+| Color-scale generation tooling | `culori` (MIT), devDependency scoped to `packages/tokens` only — used solely by the one-off OKLCH scale generation script, never shipped in any published package. Distinct from the "dependency budget" above, which governs runtime dependencies of `@dbm-design-system/components` | `03-token-system-spec.md` |
 
 ---
 
@@ -163,7 +164,7 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 ## 12. Risks & open questions
 
 - **Scope risk:** "web, mobile, and enterprise, complete and comprehensive" is a large surface area for a from-zero build — v1 scope has been deliberately narrowed to web + enterprise to manage this; mobile is a defined future phase, not an abandoned goal.
-- **OKLCH re-derivation:** current token color scales were generated with HSL math for planning speed and should be re-derived in OKLCH for perceptual evenness. **Scheduled as Phase 4** (decided 2026-07-18) — right after the atom layer, before building further component tiers on top of the current HSL-derived scales. Re-deriving changes every primitive color's actual hex value, so every contrast pairing verified so far (`03-token-system-spec.md`'s running log) will need re-checking against the new values.
+- **OKLCH re-derivation: done (Phase 4, 2026-07-18).** All 7 primitive color scales re-derived in OKLCH via `packages/tokens/scripts/generate-color-scales.mjs` (using `culori`, a devDependency scoped to `packages/tokens` — never shipped to consumers). `purple-600`/`emerald-600` kept their exact brand-mandated hex; the other 5 scales regenerated fully. Every contrast pairing was re-verified against the new values (100 checks across 4 themes); 6 categories of regression plus one pre-existing, previously-unchecked gap were found and fixed — see `03-token-system-spec.md`'s running log for details.
 - **AA vs. AAA compliance target — decided (2026-07-18):** AA stays the enforced floor everywhere (WCAG's own conformance guidance explicitly recommends against requiring AAA as a blanket policy — "not possible to satisfy all Level AAA Success Criteria for some content"). AAA (7:1 text contrast) is the target, not a hard requirement, specifically for error/critical-alert text (form validation errors, destructive-action confirmations) — the highest-stakes case where users acting on misread text has the worst consequences. This matches common practice in accessibility-mature systems (GOV.UK Design System, IBM Carbon). Several `text.danger`/`text.on-danger` pairings already land at or above 7:1 as a side effect of the Phase 3 contrast fixes; no further action needed until forms/alerts (later phases) are actually built, at which point verify their specific error-text pairings against 7:1 where achievable.
 - **Third brand theme:** architecture supports it, no concrete second/third brand requirement exists yet — revisit when one does.
 - **Public Storybook/docs hosting timeline:** deferred, but worth revisiting once the component set stabilizes so momentum isn't lost.
@@ -179,7 +180,7 @@ Renumbered 2026-07-18 to match the phases actually run (the original version bun
 - **Phase 1 — Repo scaffold & tooling (done):** monorepo structure, Turborepo/pnpm, shared configs, CI, security setup
 - **Phase 2 — Design token pipeline (done):** Style Dictionary build producing CSS custom properties + typed TS constants from the primitive/semantic token JSON
 - **Phase 3 — Foundational atom layer (done):** utility primitives, layout primitives, typography, core atoms (23 components); Storybook 10 setup; Vitest/RTL/jest-axe test infra
-- **Phase 4 — OKLCH color re-derivation:** re-derive the primitive color scales in OKLCH for perceptual evenness; re-verify every contrast pairing checked in `03-token-system-spec.md`'s running log against the new values before building further component tiers on top of them
+- **Phase 4 — OKLCH color re-derivation (done):** re-derived the primitive color scales in OKLCH for perceptual evenness; re-verified every contrast pairing checked in `03-token-system-spec.md`'s running log against the new values
 - **Phase 5 — Molecules:** FormField, Card, SearchBar, Tooltip, MenuItem, and the rest of the 🟢 v1 molecule tier per `04-component-inventory.md`
 - **Phase 6 — Organisms:** DataTable, Modal, Navbar, CommandPalette, Form, and the rest of the 🟢 v1 organism tier
 - **Phase 7 — Comprehensive pass:** remaining 🟡 v1.5 components + templates

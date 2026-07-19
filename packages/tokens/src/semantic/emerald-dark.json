@@ -34,8 +34,8 @@
     },
     "danger-hover": {
       "$type": "color",
-      "$value": "{color.red.600}",
-      "$description": "Darker than danger (unlike brand-hover, which lightens in dark mode) — red.400 only gives white text 3.24:1 contrast, failing AA; red.600 gives 6.12:1 (verified 2026-07-18)."
+      "$value": "{color.red.400}",
+      "$description": "Lighter than danger, restoring the usual dark-mode 'brighten on hover' direction (Phase 4 OKLCH regen, 2026-07-18) now that text.on-danger is gray.950 in dark mode: gray.950 on red.400 = 7.44:1. The earlier fix used red.600 (darker) specifically because it paired with white text (3.24:1 on red.400 failed then) — that constraint no longer applies now that on-danger is theme-specific."
     },
     "danger-subtle": {
       "$type": "color",
@@ -68,12 +68,12 @@
     "neutral": {
       "$type": "color",
       "$value": "{color.gray.500}",
-      "$description": "Fifth status-tone fill, for neutral/offline-style indicators (e.g. Avatar's offline status dot). gray.500 on bg.surface: 4.24:1 light / 3.12:1 dark, both pass WCAG 1.4.11 non-text contrast (3:1) — verified 2026-07-18, shared across all 4 themes since gray.500 uniquely satisfies both."
+      "$description": "Fifth status-tone fill, for neutral/offline-style indicators (e.g. Avatar's offline status dot). gray.500 on bg.surface: 3.25:1 light / 4.34:1 dark, both pass WCAG 1.4.11 non-text contrast (3:1) — re-verified 2026-07-18 (Phase 4, OKLCH regen), shared across all 4 themes since gray.500 uniquely satisfies both."
     },
     "neutral-strong": {
       "$type": "color",
       "$value": "{color.gray.600}",
-      "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) was only verified for the 3:1 non-text case and falls short of 4.5:1 text contrast with either white (4.24:1) or dark (3.9:1) text. gray.600 with white text gives 5.60:1, passing everywhere — shared across all 4 themes (verified 2026-07-18)."
+      "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) is only verified for the 3:1 non-text case. gray.600 with white text gives 4.70:1, passing everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
     }
   },
   "text": {
@@ -88,7 +88,7 @@
     "tertiary": {
       "$type": "color",
       "$value": "{color.gray.400}",
-      "$description": "gray.500 (original) on bg.surface was 3.12:1, failing AA (needs 4.5:1) for its literal-text uses (Text color=\"tertiary\", Divider label, Input placeholder). gray.400 gives 4.82:1 (verified 2026-07-18), still more muted than text.secondary (gray.300, 7.07:1)."
+      "$description": "gray.500 fails AA (needs 4.5:1) for this token's literal-text uses (Text color=\"tertiary\", Divider label, Input placeholder). gray.400 gives 6.08:1 (re-verified 2026-07-18, Phase 4 OKLCH regen), still more muted than text.secondary (gray.300)."
     },
     "disabled": {
       "$type": "color",
@@ -100,28 +100,28 @@
     },
     "on-danger": {
       "$type": "color",
-      "$value": "{color.neutral.white}",
-      "$description": "Text on a solid bg.danger fill. White on red.500 = 4.74:1, passes AA (verified 2026-07-18)."
+      "$value": "{color.gray.950}",
+      "$description": "Text on a solid bg.danger fill. Post-OKLCH-regen (Phase 4, 2026-07-18): dark-theme bg.danger is red.500, where white only gives 3.48:1. gray.950 gives 5.22:1 (and 7.44:1 against danger-hover's red.400) — this token is now theme-specific; light themes keep white (5.10:1 against red.600)."
     },
     "on-info": {
       "$type": "color",
-      "$value": "{color.neutral.white}",
-      "$description": "Text on a solid bg.info fill (Badge solid variant). White on blue.600 = 6.01:1, passes AA everywhere (verified 2026-07-18) — a single value works for both light and dark themes."
+      "$value": "{color.gray.950}",
+      "$description": "Text on a solid bg.info fill (Badge solid variant). Post-OKLCH-regen (Phase 4, 2026-07-18): dark-theme bg.info is blue.500, where white only gives 3.26:1. gray.950 gives 5.56:1 — this token is now theme-specific; light themes keep white (4.71:1 against blue.600)."
     },
     "on-success": {
       "$type": "color",
       "$value": "{color.gray.950}",
-      "$description": "Text on a solid bg.success fill (Badge solid variant). White fails badly here (green.600 = 3.30:1, green.500 = 2.48:1); gray.950 passes everywhere (5.02:1 light / 6.67:1 dark, verified 2026-07-18), matching the dark-text precedent set by text.on-brand's emerald-dark override."
+      "$description": "Text on a solid bg.success fill (Badge solid variant). Dark-theme bg.success is green.500: white fails (3.07:1), gray.950 passes at 5.91:1 (re-verified 2026-07-18, Phase 4 OKLCH regen). Light themes now use white instead — see purple-light.json / emerald-light.json."
     },
     "on-warning": {
       "$type": "color",
       "$value": "{color.gray.950}",
-      "$description": "Text on a solid bg.warning fill (Badge solid variant). White fails badly here (amber.600 = 3.07:1, amber.500 = 2.33:1); gray.950 passes everywhere (5.38:1 light / 7.11:1 dark, verified 2026-07-18)."
+      "$description": "Text on a solid bg.warning fill (Badge solid variant). Dark-theme bg.warning is amber.500: white fails (3.31:1), gray.950 passes at 5.49:1 (re-verified 2026-07-18, Phase 4 OKLCH regen). Light themes now use white instead — see purple-light.json / emerald-light.json."
     },
     "on-neutral": {
       "$type": "color",
       "$value": "{color.neutral.white}",
-      "$description": "Text on a solid bg.neutral-strong fill (Badge solid variant). White on gray.600 = 5.60:1, passes everywhere — shared across all 4 themes (verified 2026-07-18)."
+      "$description": "Text on a solid bg.neutral-strong fill (Badge solid variant). White on gray.600 = 4.70:1, passes everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
     },
     "link": {
       "$type": "color",
