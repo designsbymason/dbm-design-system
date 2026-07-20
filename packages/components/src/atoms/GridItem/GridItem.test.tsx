@@ -14,26 +14,85 @@ describe("GridItem", () => {
     expect(screen.getByText("Item")).toBeInTheDocument();
   });
 
-  it("applies colSpan as a grid-column shorthand", () => {
+  it("applies colSpan via the CSS custom property", () => {
     render(<GridItem data-testid="item" colSpan={3} />);
-    expect(screen.getByTestId("item")).toHaveStyle({ gridColumn: "span 3" });
+    expect(screen.getByTestId("item")).toHaveStyle({ "--griditem-col-span-base": "3" });
   });
 
-  it("applies rowSpan as a grid-row shorthand", () => {
+  it("applies rowSpan via the CSS custom property", () => {
     render(<GridItem data-testid="item" rowSpan={2} />);
-    expect(screen.getByTestId("item")).toHaveStyle({ gridRow: "span 2" });
+    expect(screen.getByTestId("item")).toHaveStyle({ "--griditem-row-span-base": "2" });
   });
 
-  it("combines colStart with colSpan into an explicit placement", () => {
+  it("applies colStart via the CSS custom property, alongside colSpan", () => {
     render(<GridItem data-testid="item" colStart={2} colSpan={3} />);
-    expect(screen.getByTestId("item")).toHaveStyle({ gridColumn: "2 / span 3" });
+    const el = screen.getByTestId("item");
+    expect(el).toHaveStyle({
+      "--griditem-col-start-base": "2",
+      "--griditem-col-span-base": "3",
+    });
   });
 
-  it("renders with no grid placement styles when no props are given", () => {
+  it("applies rowStart via the CSS custom property, alongside rowSpan", () => {
+    render(<GridItem data-testid="item" rowStart={2} rowSpan={2} />);
+    const el = screen.getByTestId("item");
+    expect(el).toHaveStyle({
+      "--griditem-row-start-base": "2",
+      "--griditem-row-span-base": "2",
+    });
+  });
+
+  it("applies colStart alone, defaulting span to 1 per the CSS fallback", () => {
+    render(<GridItem data-testid="item" colStart={2} />);
+    const el = screen.getByTestId("item");
+    expect(el.style.getPropertyValue("--griditem-col-start-base")).toBe("2");
+    expect(el.style.getPropertyValue("--griditem-col-span-base")).toBe("");
+  });
+
+  it("applies rowStart alone, defaulting span to 1 per the CSS fallback", () => {
+    render(<GridItem data-testid="item" rowStart={2} />);
+    const el = screen.getByTestId("item");
+    expect(el.style.getPropertyValue("--griditem-row-start-base")).toBe("2");
+    expect(el.style.getPropertyValue("--griditem-row-span-base")).toBe("");
+  });
+
+  it("sets responsive colSpan and rowSpan as per-breakpoint CSS variables", () => {
+    render(<GridItem data-testid="item" colSpan={{ base: 4, md: 2 }} rowSpan={{ base: 1, lg: 2 }} />);
+    const el = screen.getByTestId("item");
+    expect(el.style.getPropertyValue("--griditem-col-span-base")).toBe("4");
+    expect(el.style.getPropertyValue("--griditem-col-span-md")).toBe("2");
+    expect(el.style.getPropertyValue("--griditem-row-span-base")).toBe("1");
+    expect(el.style.getPropertyValue("--griditem-row-span-lg")).toBe("2");
+  });
+
+  it("renders with no grid placement custom properties when no props are given", () => {
     render(<GridItem data-testid="item" />);
     const el = screen.getByTestId("item");
-    expect(el.style.gridColumn).toBe("");
-    expect(el.style.gridRow).toBe("");
+    expect(el.style.getPropertyValue("--griditem-col-start-base")).toBe("");
+    expect(el.style.getPropertyValue("--griditem-col-span-base")).toBe("");
+    expect(el.style.getPropertyValue("--griditem-row-start-base")).toBe("");
+    expect(el.style.getPropertyValue("--griditem-row-span-base")).toBe("");
+  });
+
+  it("renders as the element passed via `as`, keeping GridItem's own placement behavior", () => {
+    render(
+      <GridItem as="li" data-testid="item" colSpan={2}>
+        Item
+      </GridItem>,
+    );
+    const el = screen.getByTestId("item");
+    expect(el.tagName).toBe("LI");
+    expect(el).toHaveStyle({ "--griditem-col-span-base": "2" });
+  });
+
+  it("forwards ref to the element rendered via `as`, not just the default div", () => {
+    const ref = createRef<HTMLLIElement>();
+    render(
+      <GridItem as="li" ref={ref}>
+        Item
+      </GridItem>,
+    );
+    expect(ref.current).toBeInstanceOf(HTMLLIElement);
   });
 
   it("forwards ref to the underlying div", () => {

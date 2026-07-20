@@ -31,7 +31,7 @@ export const ColSpan: Story = {
   ),
 };
 
-export const ExplicitPlacement: Story = {
+export const ExplicitColumnPlacement: Story = {
   name: "colStart + colSpan (explicit placement)",
   render: () => (
     <Grid columns={4} gap={4}>
@@ -42,17 +42,61 @@ export const ExplicitPlacement: Story = {
   ),
 };
 
-export const RowAndColSpan: Story = {
-  name: "rowSpan + colSpan",
+export const ExplicitRowPlacement: Story = {
+  name: "rowStart + rowSpan (explicit placement)",
   render: () => (
     <Grid columns={3} gap={4} style={{ height: "12rem" }}>
-      <GridItem rowSpan={2} style={cellStyle}>
-        rowSpan=2
+      <GridItem rowStart={2} rowSpan={2} style={cellStyle}>
+        starts at row 2, spans 2
+      </GridItem>
+      <GridItem style={cellStyle}>1x1</GridItem>
+      <GridItem style={cellStyle}>1x1</GridItem>
+    </Grid>
+  ),
+};
+
+export const RowAndColSpanCombined: Story = {
+  name: "rowSpan + colSpan on the same item",
+  render: () => (
+    <Grid columns={3} gap={4} style={{ height: "12rem" }}>
+      <GridItem rowSpan={2} colSpan={2} style={cellStyle}>
+        rowSpan=2, colSpan=2
       </GridItem>
       <GridItem style={cellStyle}>1x1</GridItem>
       <GridItem style={cellStyle}>1x1</GridItem>
       <GridItem style={cellStyle}>1x1</GridItem>
-      <GridItem style={cellStyle}>1x1</GridItem>
+    </Grid>
+  ),
+};
+
+export const ResponsiveSpan: Story = {
+  name: "Responsive colSpan (full-width on mobile, half on desktop)",
+  parameters: { chromatic: { viewports: [375, 1024] } },
+  render: () => (
+    <Grid columns={4} gap={4}>
+      <GridItem colSpan={{ base: 4, md: 2 }} style={cellStyle}>
+        colSpan: base=4, md=2
+      </GridItem>
+      <GridItem colSpan={{ base: 4, md: 2 }} style={cellStyle}>
+        colSpan: base=4, md=2
+      </GridItem>
+    </Grid>
+  ),
+};
+
+export const AsListItem: Story = {
+  name: 'Polymorphic: as="li" (real semantic list item, GridItem layout behavior)',
+  render: () => (
+    <Grid as="ul" columns={4} gap={4} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+      <GridItem as="li" colSpan={2} style={cellStyle}>
+        colSpan=2
+      </GridItem>
+      <GridItem as="li" style={cellStyle}>
+        1x1
+      </GridItem>
+      <GridItem as="li" style={cellStyle}>
+        1x1
+      </GridItem>
     </Grid>
   ),
 };

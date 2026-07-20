@@ -1,3 +1,56 @@
 .root {
-  box-sizing: border-box;
+  grid-column: var(--griditem-col-start-base, auto) / span var(--griditem-col-span-base, 1);
+  grid-row: var(--griditem-row-start-base, auto) / span var(--griditem-row-span-base, 1);
+}
+
+/*
+ * CSS custom properties cannot be referenced inside an @media condition
+ * (a CSS spec limitation, not a choice here) — these thresholds are the
+ * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six blocks must be updated by hand to match. Mirrors
+ * Grid's/Stack's identical responsive-prop mechanism. `auto / span 1`
+ * (the fallback when neither start nor span is set for an axis) is the
+ * CSS-spec-equivalent of leaving grid-column/grid-row unset entirely.
+ */
+@media (min-width: 640px) {
+  .root {
+    grid-column: var(--griditem-col-start-sm, var(--griditem-col-start-base, auto)) / span var(--griditem-col-span-sm, var(--griditem-col-span-base, 1));
+    grid-row: var(--griditem-row-start-sm, var(--griditem-row-start-base, auto)) / span var(--griditem-row-span-sm, var(--griditem-row-span-base, 1));
+  }
+}
+
+@media (min-width: 768px) {
+  .root {
+    grid-column: var(--griditem-col-start-md, var(--griditem-col-start-sm, var(--griditem-col-start-base, auto))) / span var(--griditem-col-span-md, var(--griditem-col-span-sm, var(--griditem-col-span-base, 1)));
+    grid-row: var(--griditem-row-start-md, var(--griditem-row-start-sm, var(--griditem-row-start-base, auto))) / span var(--griditem-row-span-md, var(--griditem-row-span-sm, var(--griditem-row-span-base, 1)));
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    grid-column: var(--griditem-col-start-lg, var(--griditem-col-start-md, var(--griditem-col-start-sm, var(--griditem-col-start-base, auto)))) / span var(--griditem-col-span-lg, var(--griditem-col-span-md, var(--griditem-col-span-sm, var(--griditem-col-span-base, 1))));
+    grid-row: var(--griditem-row-start-lg, var(--griditem-row-start-md, var(--griditem-row-start-sm, var(--griditem-row-start-base, auto)))) / span var(--griditem-row-span-lg, var(--griditem-row-span-md, var(--griditem-row-span-sm, var(--griditem-row-span-base, 1))));
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    grid-column: var(--griditem-col-start-xl, var(--griditem-col-start-lg, var(--griditem-col-start-md, var(--griditem-col-start-sm, var(--griditem-col-start-base, auto))))) / span var(--griditem-col-span-xl, var(--griditem-col-span-lg, var(--griditem-col-span-md, var(--griditem-col-span-sm, var(--griditem-col-span-base, 1)))));
+    grid-row: var(--griditem-row-start-xl, var(--griditem-row-start-lg, var(--griditem-row-start-md, var(--griditem-row-start-sm, var(--griditem-row-start-base, auto))))) / span var(--griditem-row-span-xl, var(--griditem-row-span-lg, var(--griditem-row-span-md, var(--griditem-row-span-sm, var(--griditem-row-span-base, 1)))));
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    grid-column: var(--griditem-col-start-2xl, var(--griditem-col-start-xl, var(--griditem-col-start-lg, var(--griditem-col-start-md, var(--griditem-col-start-sm, var(--griditem-col-start-base, auto)))))) / span var(--griditem-col-span-2xl, var(--griditem-col-span-xl, var(--griditem-col-span-lg, var(--griditem-col-span-md, var(--griditem-col-span-sm, var(--griditem-col-span-base, 1))))));
+    grid-row: var(--griditem-row-start-2xl, var(--griditem-row-start-xl, var(--griditem-row-start-lg, var(--griditem-row-start-md, var(--griditem-row-start-sm, var(--griditem-row-start-base, auto)))))) / span var(--griditem-row-span-2xl, var(--griditem-row-span-xl, var(--griditem-row-span-lg, var(--griditem-row-span-md, var(--griditem-row-span-sm, var(--griditem-row-span-base, 1))))));
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    grid-column: var(--griditem-col-start-3xl, var(--griditem-col-start-2xl, var(--griditem-col-start-xl, var(--griditem-col-start-lg, var(--griditem-col-start-md, var(--griditem-col-start-sm, var(--griditem-col-start-base, auto))))))) / span var(--griditem-col-span-3xl, var(--griditem-col-span-2xl, var(--griditem-col-span-xl, var(--griditem-col-span-lg, var(--griditem-col-span-md, var(--griditem-col-span-sm, var(--griditem-col-span-base, 1)))))));
+    grid-row: var(--griditem-row-start-3xl, var(--griditem-row-start-2xl, var(--griditem-row-start-xl, var(--griditem-row-start-lg, var(--griditem-row-start-md, var(--griditem-row-start-sm, var(--griditem-row-start-base, auto))))))) / span var(--griditem-row-span-3xl, var(--griditem-row-span-2xl, var(--griditem-row-span-xl, var(--griditem-row-span-lg, var(--griditem-row-span-md, var(--griditem-row-span-sm, var(--griditem-row-span-base, 1)))))));
+  }
 }
