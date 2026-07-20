@@ -96,3 +96,68 @@ function PortalIntoTarget({ targetId }: { targetId: string }) {
     </Portal>
   );
 }
+
+export const DisabledPortal: Story = {
+  name: "disablePortal (renders in place)",
+  render: () => (
+    <div
+      style={{
+        border: "1px dashed var(--dbm-border-default)",
+        borderRadius: "var(--dbm-radius-md)",
+        padding: "var(--dbm-space-4)",
+      }}
+    >
+      <p style={{ marginTop: 0 }}>
+        With <code>disablePortal</code>, the badge below renders exactly where it&apos;s declared
+        in JSX — no portal, no wrapper element.
+      </p>
+      <Portal disablePortal>
+        <div
+          style={{
+            background: "var(--dbm-bg-brand-subtle)",
+            borderRadius: "var(--dbm-radius-md)",
+            color: "var(--dbm-text-link)",
+            display: "inline-block",
+            padding: "var(--dbm-space-3)",
+          }}
+        >
+          Not portaled — rendered in place
+        </div>
+      </Portal>
+    </div>
+  ),
+};
+
+export const AsChild: Story = {
+  name: "asChild (no wrapper div)",
+  render: () => (
+    <div
+      style={{
+        border: "1px dashed var(--dbm-border-default)",
+        borderRadius: "var(--dbm-radius-md)",
+        padding: "var(--dbm-space-4)",
+      }}
+    >
+      <p style={{ margin: 0 }}>
+        With <code>asChild</code>, the badge below is portaled as itself — inspect devtools and
+        you&apos;ll find a single <code>&lt;span&gt;</code> at the end of <code>&lt;body&gt;</code>
+        , not a <code>&lt;span&gt;</code> nested inside an extra portal <code>&lt;div&gt;</code>.
+      </p>
+      <Portal asChild>
+        <span
+          style={{
+            background: "var(--dbm-bg-brand)",
+            borderRadius: "var(--dbm-radius-md)",
+            bottom: "var(--dbm-space-4)",
+            color: "var(--dbm-text-on-brand)",
+            padding: "var(--dbm-space-3)",
+            position: "fixed",
+            right: "var(--dbm-space-4)",
+          }}
+        >
+          Portaled as itself (asChild)
+        </span>
+      </Portal>
+    </div>
+  ),
+};
