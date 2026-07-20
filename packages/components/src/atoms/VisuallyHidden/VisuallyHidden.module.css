@@ -1,0 +1,18 @@
+/*
+ * Reveals visually-hidden content when it (or a descendant) has focus — the
+ * classic "skip link" pattern. `!important` is deliberate: this class exists
+ * specifically to override the wrapped Radix VisuallyHidden's own inline
+ * hidden styles the moment focus lands, the same "utility that must always
+ * win" rationale as ThemeProvider's `.themeTransition` class.
+ */
+.focusable:focus,
+.focusable:focus-within {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+}

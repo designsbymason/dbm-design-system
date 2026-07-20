@@ -35,6 +35,40 @@ describe("VisuallyHidden", () => {
     expect(screen.getByTestId("vh")).toHaveClass("custom");
   });
 
+  it("supports asChild, applying the hidden styles directly to the child instead of wrapping it in a span", () => {
+    render(
+      <VisuallyHidden asChild>
+        <a data-testid="slot-child" href="#x">
+          link
+        </a>
+      </VisuallyHidden>,
+    );
+    const slotChild = screen.getByTestId("slot-child");
+    expect(slotChild.tagName).toBe("A");
+    expect(slotChild).toHaveStyle({ position: "absolute" });
+  });
+
+  it("stays visually hidden when focused if focusable is not set", () => {
+    render(<VisuallyHidden tabIndex={0}>text</VisuallyHidden>);
+    const el = screen.getByText("text");
+    el.focus();
+    expect(el).toHaveFocus();
+    expect(getComputedStyle(el).position).toBe("absolute");
+  });
+
+  it("reveals content in normal layout flow when a descendant is focused if focusable is true", () => {
+    render(
+      <VisuallyHidden focusable>
+        <a href="#main">Skip to main content</a>
+      </VisuallyHidden>,
+    );
+    const link = screen.getByText("Skip to main content");
+    link.focus();
+    expect(link).toHaveFocus();
+    const wrapper = link.parentElement as HTMLElement;
+    expect(getComputedStyle(wrapper).position).toBe("static");
+  });
+
   it("has no accessibility violations", async () => {
     const { container } = render(<VisuallyHidden>Accessible text</VisuallyHidden>);
     const results = await axe(container);

@@ -39,3 +39,30 @@ export const InlineWithinText: Story = {
     </p>
   ),
 };
+
+export const SkipLink: Story = {
+  name: "focusable (skip link pattern)",
+  render: () => (
+    <div>
+      <p style={{ color: "var(--dbm-text-primary)", marginTop: 0 }}>
+        Click into this preview and press Tab — the skip link below is invisible until it
+        receives keyboard focus, then reveals itself in place.
+      </p>
+      <VisuallyHidden asChild focusable>
+        <a
+          href="#storybook-root"
+          style={{
+            background: "var(--dbm-bg-surface)",
+            border: "1px solid var(--dbm-border-focus)",
+            borderRadius: "var(--dbm-radius-sm)",
+            color: "var(--dbm-text-link)",
+            display: "inline-block",
+            padding: "var(--dbm-space-2) var(--dbm-space-3)",
+          }}
+        >
+          Skip to main content
+        </a>
+      </VisuallyHidden>
+    </div>
+  ),
+};
