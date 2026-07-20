@@ -6,5 +6,6 @@ export type BoxProps<E extends ElementType = "div"> = {
    * @default 'div'
    */
   as?: E;
+  /** The content to render inside the underlying element. */
   children?: ReactNode;
 } & Omit<ComponentPropsWithoutRef<E>, "as" | "children">;

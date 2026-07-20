@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { createRef } from "react";
+import { createRef, forwardRef } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import { describe, expect, it } from "vitest";
 import { Box } from "./Box";
 
@@ -32,6 +33,34 @@ describe("Box", () => {
     const ref = createRef<HTMLDivElement>();
     render(<Box ref={ref}>content</Box>);
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
+  });
+
+  it("forwards ref to the element rendered via `as`, not just the default div", () => {
+    const ref = createRef<HTMLButtonElement>();
+    render(
+      <Box as="button" ref={ref}>
+        content
+      </Box>,
+    );
+    expect(ref.current).toBeInstanceOf(HTMLButtonElement);
+    expect(ref.current?.tagName).toBe("BUTTON");
+  });
+
+  it("renders as a custom component passed via `as`, forwarding that component's own props", () => {
+    interface CustomProps extends ComponentPropsWithoutRef<"div"> {
+      label: string;
+    }
+    const Custom = forwardRef<HTMLDivElement, CustomProps>(({ label, ...props }, ref) => (
+      <div ref={ref} data-label={label} {...props} />
+    ));
+    Custom.displayName = "Custom";
+
+    render(
+      <Box as={Custom} label="hello" data-testid="box">
+        content
+      </Box>,
+    );
+    expect(screen.getByTestId("box")).toHaveAttribute("data-label", "hello");
   });
 
   it("forwards className and native props", () => {

@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { forwardRef } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import { Box } from "./Box";
 
 const meta: Meta<typeof Box> = {
@@ -37,6 +39,29 @@ export const AsButton: Story = {
     <Box as="button" type="button" style={{ ...demoStyle, border: "none", cursor: "pointer" }}>
       Rendered as a &lt;button&gt; — `type=&quot;button&quot;` is a real, type-checked native
       prop.
+    </Box>
+  ),
+};
+
+interface CustomLabelProps extends ComponentPropsWithoutRef<"span"> {
+  label: string;
+}
+
+const CustomLabel = forwardRef<HTMLSpanElement, CustomLabelProps>(
+  ({ label, children, ...props }, ref) => (
+    <span ref={ref} {...props}>
+      <strong>{label}: </strong>
+      {children}
+    </span>
+  ),
+);
+CustomLabel.displayName = "CustomLabel";
+
+export const AsCustomComponent: Story = {
+  name: "Polymorphic: as={CustomComponent} (renders another React component, not just a tag)",
+  render: () => (
+    <Box as={CustomLabel} label="Status" style={demoStyle}>
+      Rendered via a custom React component passed to `as` — not just an intrinsic HTML tag.
     </Box>
   ),
 };
