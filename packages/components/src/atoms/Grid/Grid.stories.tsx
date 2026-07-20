@@ -30,6 +30,15 @@ const Cells = ({ count }: { count: number }) => (
   </>
 );
 
+export const DefaultColumns: Story = {
+  name: "Default (12 columns, no columns prop)",
+  render: () => (
+    <Grid gap={2}>
+      <Cells count={12} />
+    </Grid>
+  ),
+};
+
 export const FixedColumns: Story = {
   name: "Fixed 4 columns",
   render: () => (
@@ -63,6 +72,60 @@ export const WithSpanningItems: Story = {
       <GridItem colSpan={4} style={cellStyle}>
         colSpan=4 (full width)
       </GridItem>
+    </Grid>
+  ),
+};
+
+export const ResponsiveGap: Story = {
+  name: "Responsive gap (tight on mobile, roomy from lg up)",
+  parameters: { chromatic: { viewports: [375, 1024] } },
+  render: () => (
+    <Grid columns={3} gap={{ base: 1, lg: 8 }}>
+      <Cells count={6} />
+    </Grid>
+  ),
+};
+
+export const FluidMinChildWidth: Story = {
+  name: "Fluid: minChildWidth (no explicit breakpoints)",
+  render: () => (
+    <Grid minChildWidth="8rem" gap={4}>
+      <Cells count={9} />
+    </Grid>
+  ),
+};
+
+export const DensePacking: Story = {
+  name: 'autoFlow="row dense" (backfills gaps from mixed spans)',
+  render: () => (
+    <Grid columns={4} gap={4} autoFlow="row dense">
+      <GridItem colSpan={2} style={cellStyle}>
+        colSpan=2
+      </GridItem>
+      <GridItem style={cellStyle}>1x1</GridItem>
+      <GridItem colSpan={2} style={cellStyle}>
+        colSpan=2
+      </GridItem>
+      <GridItem style={cellStyle}>1x1</GridItem>
+      <GridItem style={cellStyle}>1x1</GridItem>
+    </Grid>
+  ),
+};
+
+export const AsUnorderedList: Story = {
+  name: 'Polymorphic: as="ul" (real semantic list, Grid layout behavior)',
+  render: () => (
+    <Grid
+      as="ul"
+      columns={3}
+      gap={3}
+      style={{ listStyle: "none", margin: 0, padding: 0 }}
+    >
+      {Array.from({ length: 6 }, (_, i) => (
+        <li key={i} style={cellStyle}>
+          {i + 1}
+        </li>
+      ))}
     </Grid>
   ),
 };

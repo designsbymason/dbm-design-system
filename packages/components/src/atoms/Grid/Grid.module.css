@@ -1,6 +1,6 @@
 .root {
-  box-sizing: border-box;
   display: grid;
+  gap: var(--grid-gap-base, 0);
   grid-template-columns: repeat(var(--grid-cols-base, 12), minmax(0, 1fr));
 }
 
@@ -9,16 +9,18 @@
  * (a CSS spec limitation, not a choice here) — these thresholds are the
  * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
  * (packages/tokens/src/primitive/breakpoint.json). If those values ever
- * change, these six rules must be updated by hand to match.
+ * change, these six blocks must be updated by hand to match.
  */
 @media (min-width: 640px) {
   .root {
+    gap: var(--grid-gap-sm, var(--grid-gap-base, 0));
     grid-template-columns: repeat(var(--grid-cols-sm, var(--grid-cols-base, 12)), minmax(0, 1fr));
   }
 }
 
 @media (min-width: 768px) {
   .root {
+    gap: var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)));
     grid-template-columns: repeat(
       var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))),
       minmax(0, 1fr)
@@ -28,6 +30,7 @@
 
 @media (min-width: 1024px) {
   .root {
+    gap: var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))));
     grid-template-columns: repeat(
       var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))),
       minmax(0, 1fr)
@@ -37,6 +40,10 @@
 
 @media (min-width: 1280px) {
   .root {
+    gap: var(
+      --grid-gap-xl,
+      var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))))
+    );
     grid-template-columns: repeat(
       var(
         --grid-cols-xl,
@@ -49,6 +56,13 @@
 
 @media (min-width: 1536px) {
   .root {
+    gap: var(
+      --grid-gap-2xl,
+      var(
+        --grid-gap-xl,
+        var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))))
+      )
+    );
     grid-template-columns: repeat(
       var(
         --grid-cols-2xl,
@@ -64,6 +78,16 @@
 
 @media (min-width: 1920px) {
   .root {
+    gap: var(
+      --grid-gap-3xl,
+      var(
+        --grid-gap-2xl,
+        var(
+          --grid-gap-xl,
+          var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))))
+        )
+      )
+    );
     grid-template-columns: repeat(
       var(
         --grid-cols-3xl,
