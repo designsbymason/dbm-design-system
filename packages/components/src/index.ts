@@ -1,3 +1,5 @@
+import "./styles/global.css";
+
 export * from "./atoms/Avatar";
 export * from "./atoms/Badge";
 export * from "./atoms/Box";

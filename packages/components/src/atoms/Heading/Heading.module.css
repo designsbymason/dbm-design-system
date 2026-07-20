@@ -1,5 +1,4 @@
 .root {
-  box-sizing: border-box;
   font-family: var(--dbm-font-family-secondary);
   line-height: var(--dbm-line-height-tight);
   margin: 0;

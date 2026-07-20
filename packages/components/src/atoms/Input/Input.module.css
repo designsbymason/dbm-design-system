@@ -3,7 +3,6 @@
   background-color: var(--dbm-bg-surface);
   border: var(--dbm-border-width-1) solid var(--dbm-border-default);
   border-radius: var(--dbm-radius-md);
-  box-sizing: border-box;
   display: inline-flex;
   font-family: var(--dbm-font-family-primary);
   gap: var(--dbm-space-2);

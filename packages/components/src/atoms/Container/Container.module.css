@@ -1,5 +1,4 @@
 .root {
-  box-sizing: border-box;
   margin-inline: auto;
   padding-inline: var(--dbm-space-4);
   width: 100%;

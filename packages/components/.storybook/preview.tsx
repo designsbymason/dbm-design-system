@@ -5,6 +5,7 @@ import "@dbm-design-system/tokens/css/purple-light.css";
 import "@dbm-design-system/tokens/css/purple-dark.css";
 import "@dbm-design-system/tokens/css/emerald-light.css";
 import "@dbm-design-system/tokens/css/emerald-dark.css";
+import "../src/styles/global.css";
 
 // Token CSS is scoped under `:root[data-theme="..."]` (see packages/tokens),
 // and `:root` only ever matches the document element — never a wrapper <div> —

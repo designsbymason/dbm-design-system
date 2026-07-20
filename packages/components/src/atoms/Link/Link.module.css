@@ -1,5 +1,4 @@
 .root {
-  box-sizing: border-box;
   color: var(--dbm-text-link);
   font-family: var(--dbm-font-family-primary);
   text-decoration-line: underline;

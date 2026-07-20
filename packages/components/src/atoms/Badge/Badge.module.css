@@ -1,7 +1,6 @@
 .root {
   align-items: center;
   border-radius: var(--dbm-radius-full);
-  box-sizing: border-box;
   display: inline-flex;
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-xs);

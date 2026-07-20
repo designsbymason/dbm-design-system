@@ -1,6 +1,5 @@
 .root {
   align-items: center;
-  box-sizing: border-box;
   display: flex;
   gap: var(--dbm-space-3);
 }

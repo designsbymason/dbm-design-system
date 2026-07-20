@@ -2,7 +2,6 @@
   align-items: center;
   border: none;
   border-radius: var(--dbm-radius-md);
-  box-sizing: border-box;
   cursor: pointer;
   display: inline-flex;
   font-family: var(--dbm-font-family-primary);
@@ -118,7 +117,6 @@
   border: var(--dbm-border-width-2) solid currentColor;
   border-radius: var(--dbm-radius-full);
   border-top-color: transparent;
-  box-sizing: border-box;
   flex-shrink: 0;
   height: 1em;
   opacity: var(--dbm-opacity-80);

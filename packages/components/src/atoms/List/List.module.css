@@ -1,5 +1,4 @@
 .root {
-  box-sizing: border-box;
   color: var(--dbm-text-primary);
   display: flex;
   flex-direction: column;

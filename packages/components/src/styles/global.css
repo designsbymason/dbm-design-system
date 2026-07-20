@@ -1,0 +1,12 @@
+/*
+ * Shared, package-wide reset — loaded once via the main entry point instead
+ * of being duplicated per component. `box-sizing: border-box` was found
+ * independently declared in 19 of 21 component stylesheets during the
+ * Phase 4.5 Box review; consolidated here per the DRY rule in
+ * guidelines/06-engineering-standards.md §1.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

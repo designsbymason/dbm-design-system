@@ -1,7 +1,6 @@
 .root {
   animation: pulse var(--dbm-motion-duration-slower) var(--dbm-motion-easing-standard) infinite;
   background-color: var(--dbm-bg-subtle);
-  box-sizing: border-box;
   display: block;
 }
 

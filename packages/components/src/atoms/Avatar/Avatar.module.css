@@ -2,7 +2,6 @@
   align-items: center;
   background-color: var(--dbm-bg-brand-subtle);
   border-radius: var(--dbm-radius-full);
-  box-sizing: border-box;
   color: var(--dbm-text-link);
   display: inline-flex;
   flex-shrink: 0;
@@ -53,7 +52,6 @@
   border: var(--dbm-border-width-2) solid var(--dbm-bg-surface);
   border-radius: var(--dbm-radius-full);
   bottom: 0;
-  box-sizing: border-box;
   height: var(--dbm-space-3);
   position: absolute;
   right: 0;
