@@ -1,60 +1,79 @@
 .root {
-  box-sizing: border-box;
+  flex-direction: var(--stack-direction-base, column);
+  align-items: var(--stack-align-base, stretch);
+  justify-content: var(--stack-justify-base, flex-start);
+  flex-wrap: var(--stack-wrap-base, nowrap);
+  gap: var(--stack-gap-base, 0);
   display: flex;
 }
 
-.row {
-  flex-direction: row;
+/*
+ * CSS custom properties cannot be referenced inside an @media condition
+ * (a CSS spec limitation, not a choice here) — these thresholds are the
+ * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six blocks must be updated by hand to match. Mirrors
+ * Grid's identical responsive-prop mechanism (see Grid.module.css) —
+ * consolidated into one block per breakpoint (rather than one block per
+ * responsive prop) since Stack cascades five responsive properties at the
+ * same six thresholds.
+ */
+@media (min-width: 640px) {
+  .root {
+    flex-direction: var(--stack-direction-sm, var(--stack-direction-base, column));
+    align-items: var(--stack-align-sm, var(--stack-align-base, stretch));
+    justify-content: var(--stack-justify-sm, var(--stack-justify-base, flex-start));
+    flex-wrap: var(--stack-wrap-sm, var(--stack-wrap-base, nowrap));
+    gap: var(--stack-gap-sm, var(--stack-gap-base, 0));
+  }
 }
 
-.column {
-  flex-direction: column;
+@media (min-width: 768px) {
+  .root {
+    flex-direction: var(--stack-direction-md, var(--stack-direction-sm, var(--stack-direction-base, column)));
+    align-items: var(--stack-align-md, var(--stack-align-sm, var(--stack-align-base, stretch)));
+    justify-content: var(--stack-justify-md, var(--stack-justify-sm, var(--stack-justify-base, flex-start)));
+    flex-wrap: var(--stack-wrap-md, var(--stack-wrap-sm, var(--stack-wrap-base, nowrap)));
+    gap: var(--stack-gap-md, var(--stack-gap-sm, var(--stack-gap-base, 0)));
+  }
 }
 
-.wrap {
-  flex-wrap: wrap;
+@media (min-width: 1024px) {
+  .root {
+    flex-direction: var(--stack-direction-lg, var(--stack-direction-md, var(--stack-direction-sm, var(--stack-direction-base, column))));
+    align-items: var(--stack-align-lg, var(--stack-align-md, var(--stack-align-sm, var(--stack-align-base, stretch))));
+    justify-content: var(--stack-justify-lg, var(--stack-justify-md, var(--stack-justify-sm, var(--stack-justify-base, flex-start))));
+    flex-wrap: var(--stack-wrap-lg, var(--stack-wrap-md, var(--stack-wrap-sm, var(--stack-wrap-base, nowrap))));
+    gap: var(--stack-gap-lg, var(--stack-gap-md, var(--stack-gap-sm, var(--stack-gap-base, 0))));
+  }
 }
 
-.alignStart {
-  align-items: flex-start;
+@media (min-width: 1280px) {
+  .root {
+    flex-direction: var(--stack-direction-xl, var(--stack-direction-lg, var(--stack-direction-md, var(--stack-direction-sm, var(--stack-direction-base, column)))));
+    align-items: var(--stack-align-xl, var(--stack-align-lg, var(--stack-align-md, var(--stack-align-sm, var(--stack-align-base, stretch)))));
+    justify-content: var(--stack-justify-xl, var(--stack-justify-lg, var(--stack-justify-md, var(--stack-justify-sm, var(--stack-justify-base, flex-start)))));
+    flex-wrap: var(--stack-wrap-xl, var(--stack-wrap-lg, var(--stack-wrap-md, var(--stack-wrap-sm, var(--stack-wrap-base, nowrap)))));
+    gap: var(--stack-gap-xl, var(--stack-gap-lg, var(--stack-gap-md, var(--stack-gap-sm, var(--stack-gap-base, 0)))));
+  }
 }
 
-.alignCenter {
-  align-items: center;
+@media (min-width: 1536px) {
+  .root {
+    flex-direction: var(--stack-direction-2xl, var(--stack-direction-xl, var(--stack-direction-lg, var(--stack-direction-md, var(--stack-direction-sm, var(--stack-direction-base, column))))));
+    align-items: var(--stack-align-2xl, var(--stack-align-xl, var(--stack-align-lg, var(--stack-align-md, var(--stack-align-sm, var(--stack-align-base, stretch))))));
+    justify-content: var(--stack-justify-2xl, var(--stack-justify-xl, var(--stack-justify-lg, var(--stack-justify-md, var(--stack-justify-sm, var(--stack-justify-base, flex-start))))));
+    flex-wrap: var(--stack-wrap-2xl, var(--stack-wrap-xl, var(--stack-wrap-lg, var(--stack-wrap-md, var(--stack-wrap-sm, var(--stack-wrap-base, nowrap))))));
+    gap: var(--stack-gap-2xl, var(--stack-gap-xl, var(--stack-gap-lg, var(--stack-gap-md, var(--stack-gap-sm, var(--stack-gap-base, 0))))));
+  }
 }
 
-.alignEnd {
-  align-items: flex-end;
-}
-
-.alignStretch {
-  align-items: stretch;
-}
-
-.alignBaseline {
-  align-items: baseline;
-}
-
-.justifyStart {
-  justify-content: flex-start;
-}
-
-.justifyCenter {
-  justify-content: center;
-}
-
-.justifyEnd {
-  justify-content: flex-end;
-}
-
-.justifyBetween {
-  justify-content: space-between;
-}
-
-.justifyAround {
-  justify-content: space-around;
-}
-
-.justifyEvenly {
-  justify-content: space-evenly;
+@media (min-width: 1920px) {
+  .root {
+    flex-direction: var(--stack-direction-3xl, var(--stack-direction-2xl, var(--stack-direction-xl, var(--stack-direction-lg, var(--stack-direction-md, var(--stack-direction-sm, var(--stack-direction-base, column)))))));
+    align-items: var(--stack-align-3xl, var(--stack-align-2xl, var(--stack-align-xl, var(--stack-align-lg, var(--stack-align-md, var(--stack-align-sm, var(--stack-align-base, stretch)))))));
+    justify-content: var(--stack-justify-3xl, var(--stack-justify-2xl, var(--stack-justify-xl, var(--stack-justify-lg, var(--stack-justify-md, var(--stack-justify-sm, var(--stack-justify-base, flex-start)))))));
+    flex-wrap: var(--stack-wrap-3xl, var(--stack-wrap-2xl, var(--stack-wrap-xl, var(--stack-wrap-lg, var(--stack-wrap-md, var(--stack-wrap-sm, var(--stack-wrap-base, nowrap)))))));
+    gap: var(--stack-gap-3xl, var(--stack-gap-2xl, var(--stack-gap-xl, var(--stack-gap-lg, var(--stack-gap-md, var(--stack-gap-sm, var(--stack-gap-base, 0)))))));
+  }
 }

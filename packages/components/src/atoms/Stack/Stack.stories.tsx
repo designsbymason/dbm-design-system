@@ -101,3 +101,70 @@ export const Wrapping: Story = {
     </Stack>
   ),
 };
+
+export const ResponsiveDirection: Story = {
+  name: "Responsive direction (column on mobile, row from md up)",
+  parameters: { chromatic: { viewports: [375, 768, 1024] } },
+  render: () => (
+    <Stack direction={{ base: "column", md: "row" }} gap={4}>
+      <Swatches />
+    </Stack>
+  ),
+};
+
+export const ResponsiveEverything: Story = {
+  name: "Responsive gap, align, justify, and wrap together",
+  parameters: { chromatic: { viewports: [375, 1024] } },
+  render: () => (
+    <Stack
+      direction={{ base: "column", md: "row" }}
+      gap={{ base: 2, md: 6 }}
+      align={{ base: "stretch", md: "center" }}
+      justify={{ base: "start", md: "between" }}
+      wrap={{ base: false, md: true }}
+      style={{
+        background: "var(--dbm-bg-subtle)",
+        borderRadius: "var(--dbm-radius-md)",
+        padding: "var(--dbm-space-3)",
+      }}
+    >
+      <Swatches />
+    </Stack>
+  ),
+};
+
+export const AsUnorderedList: Story = {
+  name: 'Polymorphic: as="ul" (real semantic list, Stack layout behavior)',
+  render: () => (
+    <Stack as="ul" direction="row" gap={3} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+      <li style={swatchStyle}>One</li>
+      <li style={swatchStyle}>Two</li>
+      <li style={swatchStyle}>Three</li>
+    </Stack>
+  ),
+};
+
+export const WithDivider: Story = {
+  name: "divider (auto-inserted between children)",
+  render: () => (
+    <Stack
+      direction="row"
+      align="center"
+      style={{ color: "var(--dbm-text-primary)" }}
+      divider={
+        <div
+          aria-hidden
+          style={{
+            alignSelf: "stretch",
+            background: "var(--dbm-border-default)",
+            width: "1px",
+          }}
+        />
+      }
+    >
+      <span style={{ padding: "var(--dbm-space-2)" }}>One</span>
+      <span style={{ padding: "var(--dbm-space-2)" }}>Two</span>
+      <span style={{ padding: "var(--dbm-space-2)" }}>Three</span>
+    </Stack>
+  ),
+};
