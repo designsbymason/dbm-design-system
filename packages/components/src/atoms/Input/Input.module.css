@@ -7,7 +7,8 @@
   font-family: var(--dbm-font-family-primary);
   gap: var(--dbm-space-2);
   transition:
-    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
     opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
   width: 100%;
 }
@@ -35,6 +36,10 @@
   align-items: center;
   color: var(--dbm-text-tertiary);
   display: inline-flex;
+  flex-shrink: 0;
+}
+
+.clear {
   flex-shrink: 0;
 }
 
