@@ -1,10 +1,19 @@
-import type { Icon as PhosphorIcon, IconWeight } from "@dbm-design-system/icons";
+import type {
+  Icon as PhosphorIcon,
+  IconWeight,
+} from "@dbm-design-system/icons";
 import type { ComponentPropsWithoutRef } from "react";
 
 /** Icon size step, matching the primitive icon-size token scale. */
 export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 
-export interface IconProps extends Omit<ComponentPropsWithoutRef<"svg">, "color"> {
+/** Semantic icon color, matching the `--dbm-icon-*` token set. */
+export type IconTone = "default" | "secondary" | "brand" | "disabled";
+
+export interface IconProps extends Omit<
+  ComponentPropsWithoutRef<"svg">,
+  "color" | "role" | "aria-hidden"
+> {
   /**
    * The Phosphor icon component to render — a component reference, not a
    * string name, so unused icons stay tree-shaken and references are
@@ -24,6 +33,12 @@ export interface IconProps extends Omit<ComponentPropsWithoutRef<"svg">, "color"
    * @default 'regular'
    */
   weight?: IconWeight;
+  /**
+   * Semantic color tone, mapped to the `--dbm-icon-*` token set. Omit to
+   * inherit `currentColor` from surrounding text (e.g. an icon inside a
+   * `Button`, which should match the button's own text color).
+   */
+  tone?: IconTone;
   /**
    * Accessible label. When omitted, the icon is treated as decorative and
    * hidden from the accessibility tree — set this whenever the icon

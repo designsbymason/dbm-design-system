@@ -1,7 +1,7 @@
 import { cx } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import styles from "./Icon.module.css";
-import type { IconProps, IconSize } from "./Icon.types";
+import type { IconProps, IconSize, IconTone } from "./Icon.types";
 
 const sizeClass: Record<IconSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -13,27 +13,51 @@ const sizeClass: Record<IconSize, string | undefined> = {
   "3xl": styles.size3xl,
 };
 
+const toneClass: Record<IconTone, string | undefined> = {
+  default: styles.toneDefault,
+  secondary: styles.toneSecondary,
+  brand: styles.toneBrand,
+  disabled: styles.toneDisabled,
+};
+
 /**
  * Renders a Phosphor icon at a token-driven size. Decorative by default
  * (hidden from the accessibility tree); pass `label` when the icon conveys
- * meaning on its own.
+ * meaning on its own. Inherits `currentColor` unless `tone` is set.
  *
  * @example
  * ```tsx
  * import { Wallet } from '@dbm-design-system/icons';
  * <Icon icon={Wallet} size="lg" />
  * <Icon icon={Wallet} label="Wallet balance" />
+ * <Icon icon={Wallet} tone="brand" />
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size = "md", weight = "regular", label, className, ...props }, ref) => (
+  (
+    {
+      icon: IconComponent,
+      size = "md",
+      weight = "regular",
+      tone,
+      label,
+      className,
+      ...props
+    },
+    ref,
+  ) => (
     <IconComponent
       ref={ref}
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
       weight={weight}
-      className={cx(styles.root, sizeClass[size], className)}
+      className={cx(
+        styles.root,
+        sizeClass[size],
+        tone && toneClass[tone],
+        className,
+      )}
       {...props}
     />
   ),

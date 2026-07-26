@@ -7,10 +7,17 @@ const meta: Meta<typeof Icon> = {
   component: Icon,
   parameters: { layout: "padded" },
   argTypes: {
-    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"] },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"],
+    },
     weight: {
       control: "select",
       options: ["thin", "light", "regular", "bold", "fill", "duotone"],
+    },
+    tone: {
+      control: "select",
+      options: ["default", "secondary", "brand", "disabled"],
     },
   },
   args: {
@@ -27,9 +34,9 @@ export const Default: Story = {};
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ alignItems: "center", color: "var(--dbm-icon-brand)", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
       {(["xs", "sm", "md", "lg", "xl", "2xl", "3xl"] as const).map((size) => (
-        <Icon key={size} icon={WalletIcon} size={size} />
+        <Icon key={size} icon={WalletIcon} size={size} tone="brand" />
       ))}
     </div>
   ),
@@ -38,9 +45,28 @@ export const AllSizes: Story = {
 export const AllWeights: Story = {
   name: "All weights",
   render: () => (
-    <div style={{ alignItems: "center", color: "var(--dbm-icon-brand)", display: "flex", gap: "1rem" }}>
-      {(["thin", "light", "regular", "bold", "fill", "duotone"] as const).map((weight) => (
-        <Icon key={weight} icon={HeartIcon} weight={weight} size="lg" />
+    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+      {(["thin", "light", "regular", "bold", "fill", "duotone"] as const).map(
+        (weight) => (
+          <Icon
+            key={weight}
+            icon={HeartIcon}
+            weight={weight}
+            size="lg"
+            tone="brand"
+          />
+        ),
+      )}
+    </div>
+  ),
+};
+
+export const AllTones: Story = {
+  name: "All tones",
+  render: () => (
+    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+      {(["default", "secondary", "brand", "disabled"] as const).map((tone) => (
+        <Icon key={tone} icon={HeartIcon} size="lg" tone={tone} />
       ))}
     </div>
   ),

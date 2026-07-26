@@ -31,11 +31,47 @@ describe("Icon", () => {
     });
   });
 
-  it("defaults to size=md, weight=regular", () => {
+  it("defaults to size=md", () => {
     render(<Icon icon={WalletIcon} data-testid="icon" />);
     expect(screen.getByTestId("icon")).toHaveStyle({
       width: "var(--dbm-icon-size-md)",
       height: "var(--dbm-icon-size-md)",
+    });
+  });
+
+  it("passes weight through to the underlying icon, changing the rendered path", () => {
+    const { container: thin } = render(
+      <Icon icon={WalletIcon} weight="thin" />,
+    );
+    const { container: bold } = render(
+      <Icon icon={WalletIcon} weight="bold" />,
+    );
+    expect(thin.querySelector("svg")?.innerHTML).not.toBe(
+      bold.querySelector("svg")?.innerHTML,
+    );
+  });
+
+  it("defaults weight to regular", () => {
+    const { container: defaulted } = render(<Icon icon={WalletIcon} />);
+    const { container: explicit } = render(
+      <Icon icon={WalletIcon} weight="regular" />,
+    );
+    expect(defaulted.querySelector("svg")?.innerHTML).toBe(
+      explicit.querySelector("svg")?.innerHTML,
+    );
+  });
+
+  it("applies tone as a token-driven color, and inherits currentColor when omitted", () => {
+    const { rerender } = render(
+      <Icon icon={WalletIcon} tone="brand" data-testid="icon" />,
+    );
+    expect(screen.getByTestId("icon")).toHaveStyle({
+      color: "var(--dbm-icon-brand)",
+    });
+
+    rerender(<Icon icon={WalletIcon} data-testid="icon" />);
+    expect(screen.getByTestId("icon")).not.toHaveStyle({
+      color: "var(--dbm-icon-brand)",
     });
   });
 

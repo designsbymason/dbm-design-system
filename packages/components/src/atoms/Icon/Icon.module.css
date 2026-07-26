@@ -36,3 +36,19 @@
   width: var(--dbm-icon-size-3xl);
   height: var(--dbm-icon-size-3xl);
 }
+
+.toneDefault {
+  color: var(--dbm-icon-default);
+}
+
+.toneSecondary {
+  color: var(--dbm-icon-secondary);
+}
+
+.toneBrand {
+  color: var(--dbm-icon-brand);
+}
+
+.toneDisabled {
+  color: var(--dbm-icon-disabled);
+}
