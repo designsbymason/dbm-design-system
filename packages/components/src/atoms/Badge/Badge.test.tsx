@@ -72,6 +72,34 @@ describe("Badge", () => {
     });
   });
 
+  it("caps numeric children at max and appends a + suffix", () => {
+    render(<Badge max={99}>{100}</Badge>);
+    expect(screen.getByText("99+")).toBeInTheDocument();
+  });
+
+  it("renders numeric children as-is when at or under max", () => {
+    render(<Badge max={99}>{99}</Badge>);
+    expect(screen.getByText("99")).toBeInTheDocument();
+  });
+
+  it("ignores max for non-numeric children", () => {
+    render(<Badge max={99}>New</Badge>);
+    expect(screen.getByText("New")).toBeInTheDocument();
+  });
+
+  it("renders no visible content and is aria-hidden when dot is set", () => {
+    render(<Badge dot data-testid="badge" />);
+    const badge = screen.getByTestId("badge");
+    expect(badge).toBeEmptyDOMElement();
+    expect(badge).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("exposes role=img and is not aria-hidden when dot is set alongside an explicit aria-label", () => {
+    render(<Badge dot aria-label="Unread notifications" />);
+    const badge = screen.getByRole("img", { name: "Unread notifications" });
+    expect(badge).not.toHaveAttribute("aria-hidden");
+  });
+
   it("forwards ref to the underlying span", () => {
     const ref = createRef<HTMLSpanElement>();
     render(<Badge ref={ref}>New</Badge>);

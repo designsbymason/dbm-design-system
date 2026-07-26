@@ -28,12 +28,50 @@ const classFor: Record<BadgeVariant, Record<BadgeTone, string | undefined>> = {
  * ```tsx
  * <Badge tone="success">Active</Badge>
  * <Badge tone="danger" variant="solid">Failed</Badge>
+ * <Badge tone="danger" max={99}>{100}</Badge>
+ * <Badge tone="danger" dot aria-label="Unread notifications" />
  * ```
  */
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ tone = "neutral", variant = "subtle", className, ...props }, ref) => (
-    <span ref={ref} className={cx(styles.root, classFor[variant][tone], className)} {...props} />
-  ),
+  (
+    {
+      tone = "neutral",
+      variant = "subtle",
+      max,
+      dot = false,
+      className,
+      children,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledby,
+      ...props
+    },
+    ref,
+  ) => {
+    const content =
+      typeof children === "number" && max !== undefined && children > max
+        ? `${max}+`
+        : children;
+    const isLabeledDot = dot && Boolean(ariaLabel || ariaLabelledby);
+
+    return (
+      <span
+        ref={ref}
+        role={isLabeledDot ? "img" : undefined}
+        aria-hidden={dot && !isLabeledDot ? true : undefined}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledby}
+        className={cx(
+          styles.root,
+          classFor[variant][tone],
+          dot && styles.dot,
+          className,
+        )}
+        {...props}
+      >
+        {dot ? null : content}
+      </span>
+    );
+  },
 );
 
 Badge.displayName = "Badge";

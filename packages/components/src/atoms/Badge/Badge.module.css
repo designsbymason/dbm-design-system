@@ -61,3 +61,10 @@
   background-color: var(--dbm-bg-danger);
   color: var(--dbm-text-on-danger);
 }
+
+.dot {
+  width: var(--dbm-space-2);
+  height: var(--dbm-space-2);
+  min-width: 0;
+  padding: 0;
+}
