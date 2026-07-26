@@ -1,30 +1,182 @@
 .root {
   align-items: center;
   display: flex;
+  flex-direction: var(--divider-flex-direction-base, row);
   gap: var(--dbm-space-3);
+  height: var(--divider-height-base, auto);
+  width: var(--divider-width-base, 100%);
 }
 
-.horizontal {
-  flex-direction: row;
-  width: 100%;
+/*
+ * CSS custom properties cannot be referenced inside an @media condition
+ * (a CSS spec limitation, not a choice here) — these thresholds are the
+ * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six blocks must be updated by hand to match. Mirrors
+ * Stack's/Grid's identical responsive-prop mechanism — three properties
+ * cascade together here since a single orientation choice drives
+ * flex-direction, width, and height together. `aria-orientation` cannot be
+ * driven by CSS at all (it's a static HTML attribute), so it's kept in
+ * sync separately via matchMedia — see useResolvedOrientation.ts.
+ */
+@media (min-width: 640px) {
+  .root {
+    flex-direction: var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row));
+    height: var(--divider-height-sm, var(--divider-height-base, auto));
+    width: var(--divider-width-sm, var(--divider-width-base, 100%));
+  }
 }
 
-.vertical {
-  flex-direction: column;
-  height: 100%;
+@media (min-width: 768px) {
+  .root {
+    flex-direction: var(
+      --divider-flex-direction-md,
+      var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row))
+    );
+    height: var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto)));
+    width: var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%)));
+  }
 }
 
+@media (min-width: 1024px) {
+  .root {
+    flex-direction: var(
+      --divider-flex-direction-lg,
+      var(--divider-flex-direction-md, var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row)))
+    );
+    height: var(
+      --divider-height-lg,
+      var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto)))
+    );
+    width: var(
+      --divider-width-lg,
+      var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%)))
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    flex-direction: var(
+      --divider-flex-direction-xl,
+      var(
+        --divider-flex-direction-lg,
+        var(--divider-flex-direction-md, var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row)))
+      )
+    );
+    height: var(
+      --divider-height-xl,
+      var(--divider-height-lg, var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto))))
+    );
+    width: var(
+      --divider-width-xl,
+      var(--divider-width-lg, var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%))))
+    );
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    flex-direction: var(
+      --divider-flex-direction-2xl,
+      var(
+        --divider-flex-direction-xl,
+        var(
+          --divider-flex-direction-lg,
+          var(
+            --divider-flex-direction-md,
+            var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row))
+          )
+        )
+      )
+    );
+    height: var(
+      --divider-height-2xl,
+      var(
+        --divider-height-xl,
+        var(--divider-height-lg, var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto))))
+      )
+    );
+    width: var(
+      --divider-width-2xl,
+      var(
+        --divider-width-xl,
+        var(--divider-width-lg, var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%))))
+      )
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    flex-direction: var(
+      --divider-flex-direction-3xl,
+      var(
+        --divider-flex-direction-2xl,
+        var(
+          --divider-flex-direction-xl,
+          var(
+            --divider-flex-direction-lg,
+            var(
+              --divider-flex-direction-md,
+              var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row))
+            )
+          )
+        )
+      )
+    );
+    height: var(
+      --divider-height-3xl,
+      var(
+        --divider-height-2xl,
+        var(
+          --divider-height-xl,
+          var(
+            --divider-height-lg,
+            var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto)))
+          )
+        )
+      )
+    );
+    width: var(
+      --divider-width-3xl,
+      var(
+        --divider-width-2xl,
+        var(
+          --divider-width-xl,
+          var(--divider-width-lg, var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%))))
+        )
+      )
+    );
+  }
+}
+
+/*
+ * `flex: 1 1 auto` makes the line grow along whichever axis is currently
+ * the main axis (row or column) — the explicit width/height below only
+ * ever apply to the cross axis in practice, since flex-grow/shrink take
+ * over the main-axis dimension regardless of which axis that is. This is
+ * what lets one rule work for both orientations with no conditional CSS.
+ */
 .line {
   background: var(--dbm-border-default);
   flex: 1 1 auto;
-}
-
-.horizontal .line {
   height: var(--dbm-border-width-1);
+  width: var(--dbm-border-width-1);
 }
 
-.vertical .line {
-  width: var(--dbm-border-width-1);
+.lineDashedHorizontal {
+  background: none;
+  border-block-end: var(--dbm-border-width-1) dashed var(--dbm-border-default);
+  flex: 1 1 auto;
+  height: 0;
+}
+
+.lineDashedVertical {
+  background: none;
+  border-inline-end: var(--dbm-border-width-1) dashed var(--dbm-border-default);
+  flex: 1 1 auto;
+  width: 0;
 }
 
 .label {

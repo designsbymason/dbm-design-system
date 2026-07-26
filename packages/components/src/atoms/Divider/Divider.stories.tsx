@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Stack } from "../Stack";
 import { Divider } from "./Divider";
 
 const meta: Meta<typeof Divider> = {
@@ -51,5 +52,42 @@ export const NarrowViewport: Story = {
       <Divider label="OR" />
       <p>Content below</p>
     </div>
+  ),
+};
+
+export const VerticalWithLabel: Story = {
+  name: "Vertical with label",
+  render: () => (
+    <div style={{ color: "var(--dbm-text-primary)", display: "flex", height: "6rem" }}>
+      <span>Left</span>
+      <Divider orientation="vertical" label="OR" />
+      <span>Right</span>
+    </div>
+  ),
+};
+
+export const Dashed: Story = {
+  render: () => (
+    <div style={{ color: "var(--dbm-text-primary)" }}>
+      <p>Content above</p>
+      <Divider variant="dashed" />
+      <p>Content below</p>
+    </div>
+  ),
+};
+
+export const ResponsiveOrientation: Story = {
+  name: "Responsive orientation (horizontal on mobile, vertical from lg up)",
+  parameters: { chromatic: { viewports: [375, 1024] } },
+  render: () => (
+    <Stack
+      direction={{ base: "column", lg: "row" }}
+      gap={4}
+      style={{ color: "var(--dbm-text-primary)", minHeight: "6rem" }}
+    >
+      <span>Section A</span>
+      <Divider orientation={{ base: "horizontal", lg: "vertical" }} label="OR" />
+      <span>Section B</span>
+    </Stack>
   ),
 };
