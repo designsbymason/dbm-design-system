@@ -1,0 +1,35 @@
+.root {
+  color: var(--dbm-text-primary);
+  display: inline-block;
+  font-family: var(--dbm-font-family-primary);
+  font-weight: var(--dbm-font-weight-medium);
+  line-height: var(--dbm-line-height-normal);
+}
+
+.root.disabled {
+  color: var(--dbm-text-disabled);
+}
+
+.required {
+  color: var(--dbm-text-danger);
+}
+
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+}

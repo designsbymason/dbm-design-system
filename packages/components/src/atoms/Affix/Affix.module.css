@@ -1,0 +1,8 @@
+.wrapper {
+  position: relative;
+}
+
+.root {
+  position: sticky;
+  z-index: var(--dbm-z-index-sticky);
+}

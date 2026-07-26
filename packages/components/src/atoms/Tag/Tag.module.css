@@ -1,0 +1,97 @@
+.root {
+  align-items: center;
+  border-radius: var(--dbm-radius-full);
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  font-weight: var(--dbm-font-weight-medium);
+  gap: var(--dbm-space-1);
+  line-height: var(--dbm-line-height-tight);
+  white-space: nowrap;
+}
+
+.subtleNeutral {
+  background-color: var(--dbm-bg-subtle);
+  color: var(--dbm-text-secondary);
+}
+
+.subtleInfo {
+  background-color: var(--dbm-bg-info-subtle);
+  color: var(--dbm-text-info);
+}
+
+.subtleSuccess {
+  background-color: var(--dbm-bg-success-subtle);
+  color: var(--dbm-text-success);
+}
+
+.subtleWarning {
+  background-color: var(--dbm-bg-warning-subtle);
+  color: var(--dbm-text-warning);
+}
+
+.subtleDanger {
+  background-color: var(--dbm-bg-danger-subtle);
+  color: var(--dbm-text-danger);
+}
+
+.solidNeutral {
+  background-color: var(--dbm-bg-neutral-strong);
+  color: var(--dbm-text-on-neutral);
+}
+
+.solidInfo {
+  background-color: var(--dbm-bg-info);
+  color: var(--dbm-text-on-info);
+}
+
+.solidSuccess {
+  background-color: var(--dbm-bg-success);
+  color: var(--dbm-text-on-success);
+}
+
+.solidWarning {
+  background-color: var(--dbm-bg-warning);
+  color: var(--dbm-text-on-warning);
+}
+
+.solidDanger {
+  background-color: var(--dbm-bg-danger);
+  color: var(--dbm-text-on-danger);
+}
+
+.remove {
+  flex-shrink: 0;
+  margin-inline-end: calc(var(--dbm-space-1) * -1);
+}
+
+/* Sizes */
+
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-xs);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-sm);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-sm);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-base);
+  padding-block: var(--dbm-space-3);
+  padding-inline: var(--dbm-space-4);
+}

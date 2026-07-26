@@ -17,6 +17,18 @@
         "serif"
       ],
       "$description": "Editorial/display headings, quotes"
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": [
+        "ui-monospace",
+        "SFMono-Regular",
+        "Menlo",
+        "Consolas",
+        "Liberation Mono",
+        "monospace"
+      ],
+      "$description": "Code/monospace UI (inline Code, CodeBlock, Kbd) — a system font stack rather than a third webfont, so it loads with zero extra network requests"
     }
   },
   "font-weight": {

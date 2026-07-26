@@ -1,0 +1,21 @@
+.root {
+  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-strong);
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-secondary);
+  font-size: var(--dbm-font-size-md);
+  font-style: italic;
+  line-height: var(--dbm-line-height-relaxed);
+  margin: 0;
+  padding-inline-start: var(--dbm-space-4);
+}
+
+.footer {
+  color: var(--dbm-text-tertiary);
+  font-size: var(--dbm-font-size-sm);
+  font-style: normal;
+  margin-block-start: var(--dbm-space-2);
+}
+
+.cite {
+  font-style: normal;
+}

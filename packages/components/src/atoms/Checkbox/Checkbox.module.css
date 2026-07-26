@@ -1,0 +1,119 @@
+.root {
+  align-items: center;
+  appearance: none;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-strong);
+  border-radius: var(--dbm-radius-xs);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard);
+}
+
+.root:hover:not(:disabled):not(.error) {
+  border-color: var(--dbm-border-focus);
+}
+
+.root:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.root[data-state="checked"],
+.root[data-state="indeterminate"] {
+  background-color: var(--dbm-bg-brand);
+  border-color: var(--dbm-bg-brand);
+}
+
+.root[data-state="checked"]:hover:not(:disabled),
+.root[data-state="indeterminate"]:hover:not(:disabled) {
+  background-color: var(--dbm-bg-brand-hover);
+  border-color: var(--dbm-bg-brand-hover);
+}
+
+.root.error {
+  border-color: var(--dbm-border-danger);
+}
+
+.root:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.indicator {
+  align-items: center;
+  color: var(--dbm-text-on-brand);
+  display: flex;
+  justify-content: center;
+}
+
+.checkIcon,
+.minusIcon {
+  display: none;
+}
+
+.root[data-state="checked"] .checkIcon {
+  display: block;
+}
+
+.root[data-state="indeterminate"] .minusIcon {
+  display: block;
+}
+
+/* Sizes — box dimensions from the icon-size token scale */
+
+.sizeXs {
+  height: var(--dbm-icon-size-xs);
+  width: var(--dbm-icon-size-xs);
+}
+
+.sizeSm {
+  height: var(--dbm-icon-size-sm);
+  width: var(--dbm-icon-size-sm);
+}
+
+.sizeMd {
+  height: var(--dbm-icon-size-md);
+  width: var(--dbm-icon-size-md);
+}
+
+.sizeLg {
+  height: var(--dbm-icon-size-lg);
+  width: var(--dbm-icon-size-lg);
+}
+
+.sizeXl {
+  height: var(--dbm-icon-size-xl);
+  width: var(--dbm-icon-size-xl);
+}
+
+/* Label wrapper */
+
+.label {
+  align-items: center;
+  cursor: pointer;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+}
+
+.label.labelDisabled {
+  cursor: not-allowed;
+}
+
+.labelText {
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-base);
+  line-height: var(--dbm-line-height-normal);
+  user-select: none;
+}
+
+.labelDisabled .labelText {
+  color: var(--dbm-text-disabled);
+}

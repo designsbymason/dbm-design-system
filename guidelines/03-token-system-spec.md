@@ -15,7 +15,7 @@ Status/neutral tokens (red, amber, green, blue, gray) are **shared across both b
 | File | Contents |
 |---|---|
 | `color.json` | 11-step (50–950) scales for `purple`, `emerald`, `gray`, `red`, `amber`, `green`, `blue`, plus `neutral.white`/`neutral.black` |
-| `typography.json` | Font families (Nunito primary, Lora secondary), weights, fluid font-size scale, line-heights, letter-spacing |
+| `typography.json` | Font families (Nunito primary, Lora secondary, mono system stack for Code/Kbd — added Phase 4.5 continuation, no extra font loading), weights, fluid font-size scale, line-heights, letter-spacing |
 | `spacing.json` | 4px-base numeric scale, `0` through `32` (=128px) |
 | `radius.json` | Soft/rounded scale, `none` (0) through `full` (9999px), anchored around 6–24px for the "premium SaaS" feel |
 | `shadow.json` | Layered elevation shadows, **separate light/dark values** — dark-mode shadows are higher-opacity black, not a naive inversion, and should pair with a subtle border on raised surfaces |
@@ -69,6 +69,9 @@ This is why `text.on-brand` is defined per-theme rather than as a single global 
   - `border.focus` (emerald-light only): `emerald.500` fell to 2.92:1 against the 3:1 non-text floor. Moved to `emerald.600` (4.16:1).
   - `icon.secondary` (light themes): found failing 3:1 (`gray.400` = 2.32:1) while auditing the remaining icon tokens — not a regression (this token isn't referenced by any shipped Phase 3 component yet) but a real gap, fixed pre-emptively. Moved to `gray.500` (3.25:1).
 - All fixes verified against the full 100-check sweep plus a Storybook visual pass (both brands × both modes) before merging. See individual `$description` fields in each `semantic/*.json` file for exact per-token numbers.
+
+**Phase 4.75 (comprehensive atom completion, 2026-07-26):**
+- **New token, deliberately exempt from contrast checking:** `bg.overlay` (added for the `Backdrop` atom — the dimming scrim behind Dialog/Drawer/overlays), shared across all 4 themes as `{color.neutral.black}`. No text is ever rendered directly on it, so it isn't a WCAG contrast pairing in the way every other `bg.*`/`text.*` combination above is — opacity is applied compositionally at the component layer via the existing `opacity.*` scale rather than baked into the token, keeping color and opacity in their own separate token categories everywhere.
 
 **Not yet checked:** the full disabled-state contrast combinations (placeholder text is covered via `text.tertiary`), which typically intentionally sit below AA (expected for disabled states). `icon.disabled` is exempt for the same reason.
 

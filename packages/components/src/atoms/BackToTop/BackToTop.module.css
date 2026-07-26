@@ -1,0 +1,19 @@
+.root {
+  bottom: var(--dbm-space-6);
+  opacity: var(--dbm-opacity-0);
+  pointer-events: none;
+  position: fixed;
+  right: var(--dbm-space-6);
+  transform: translateY(var(--dbm-space-2));
+  transition:
+    opacity var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    transform var(--dbm-motion-duration-base)
+      var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-fixed);
+}
+
+.visible {
+  opacity: var(--dbm-opacity-100);
+  pointer-events: auto;
+  transform: translateY(0);
+}

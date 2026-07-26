@@ -22,6 +22,7 @@ Structural primitives everything else is built from.
 | AspectRatio | atom | 🟡 | Locks child to a ratio (video embeds, image placeholders) |
 | Center | atom | 🟡 | Centers children both axes |
 | Bleed | atom | ⚪ | Breaks child out of parent padding (editorial layouts) |
+| Affix | atom | 🟡 | Sticky-positioning wrapper (sticky table headers, filter bars) |
 | ScrollArea | molecule | 🟡 | Custom-styled scrollable region (wraps Radix ScrollArea) |
 
 ## 2. Typography
@@ -37,6 +38,7 @@ Text rendering primitives — Nunito for UI, Lora for editorial/display per the 
 | Blockquote | atom | 🟡 | Uses Lora for editorial feel |
 | List / ListItem | atom | 🟢 | Ordered/unordered, custom marker support |
 | Kbd | atom | ⚪ | Keyboard shortcut display |
+| Highlight | atom | 🟡 | Inline text-highlight span, for search-match emphasis |
 
 ## 3. Inputs & Forms
 Anything that captures user input. Largest category by necessity — this is where "comprehensive" gets tested.
@@ -46,6 +48,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Button | atom | 🟢 | Primary/secondary/tertiary/destructive/ghost variants, loading state |
 | ButtonGroup | molecule | 🟡 | Attached/segmented button set, shared border-radius |
 | IconButton | atom | 🟢 | Icon-only, requires `aria-label` |
+| CloseButton | atom | 🟢 | Dedicated dismiss control — Tag's removable variant, future Alert/Toast/Dialog close |
 | Input (text) | atom | 🟢 | With prefix/suffix slot support |
 | PasswordInput | molecule | 🟢 | Visibility toggle, wraps Input |
 | Textarea | atom | 🟢 | Auto-resize option |
@@ -128,6 +131,7 @@ Content that appears above, or reveals/hides other content.
 
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
+| Backdrop | atom | 🟢 | Dimming scrim layer behind Dialog/Drawer/overlays |
 | Dialog / Modal | organism | 🟢 | Wraps Radix Dialog |
 | Drawer / Sheet | organism | 🟢 | Side-panel variant of Dialog |
 | Popover | molecule | 🟢 | Wraps Radix Popover |
@@ -147,6 +151,7 @@ Images, icons, visual content handling.
 | Image | atom | 🟢 | Lazy-load, fallback, aspect-ratio integration |
 | ImageViewer / Lightbox | organism | ⚪ | Full-screen zoomable image view |
 | Carousel | organism | ⚪ | Wraps Radix or headless carousel logic |
+| Indicators | atom | ⚪ | Dot/step indicator row for Carousel/ImageViewer position — clickable for direct navigation |
 
 ## 9. Utility
 Non-visual/structural helpers other components are built from.
@@ -178,20 +183,20 @@ Not individual components, but composed patterns — worth planning for since As
 
 | Priority | Count |
 |---|---|
-| 🟢 v1 (core) | ~62 |
-| 🟡 v1.5 (comprehensive) | ~24 |
-| ⚪ v2/deferred | ~13 |
-| **Total planned** | **~99** |
+| 🟢 v1 (core) | ~64 |
+| 🟡 v1.5 (comprehensive) | ~26 |
+| ⚪ v2/deferred | ~14 |
+| **Total planned** | **~104** |
 
-This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to Astryx-scale coverage rather than trying to build all ~99 at once.
+This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to Astryx-scale coverage rather than trying to build all ~104 at once.
 
 ## Sequencing recommendation for actual build order
-Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others:
-1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap) + Layout primitives (Box, Stack, Grid)
-2. Typography (Text, Heading, Link)
-3. Core atoms (Button, IconButton, Icon, Badge, Avatar, Input, Skeleton, Divider)
-4. Form molecules (FormField, Checkbox, Radio, Switch, Select) — these unlock most remaining Input components
-5. Overlay foundation (Dialog, Popover, Tooltip via Radix) — these unlock Drawer, ConfirmDialog, AlertDialog, Menu
+Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 plus every other atom-tier row in this doc are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — 49 atoms total, none left unbuilt:
+1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Grid, AspectRatio, Center, Bleed, Affix)
+2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight)
+3. Core atoms (Button, IconButton, CloseButton, Icon, Badge, Tag, Avatar, Input, Textarea, Checkbox, Switch, FieldLabel/FieldError/FieldHelperText, Skeleton, Spinner, ProgressBar, ProgressCircle, Divider, Image, Tooltip, Collapse, Backdrop, BackToTop, Indicators)
+4. Form molecules (FormField, RadioGroup, Select) — Checkbox/Switch/Textarea/Tag already exist as atoms and unlock these
+5. Overlay foundation (Dialog, Popover) — Tooltip/Collapse/Backdrop already exist as atoms and unlock these; Dialog/Popover unlock Drawer, ConfirmDialog, AlertDialog, Menu
 6. Data Display core (Card, Table, DataTable, EmptyState)
 7. Navigation core (Tabs, Breadcrumb, Navbar, Sidebar)
 8. Feedback (Alert, Toast, ProgressBar, Spinner)

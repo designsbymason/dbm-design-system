@@ -1,0 +1,8 @@
+.root {
+  background-color: var(--dbm-bg-subtle);
+  border-radius: var(--dbm-radius-xs);
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-mono);
+  font-size: inherit;
+  padding-inline: var(--dbm-space-1);
+}

@@ -1,0 +1,11 @@
+.root {
+  color: var(--dbm-text-tertiary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-normal);
+  margin: 0;
+}
+
+.root.disabled {
+  color: var(--dbm-text-disabled);
+}

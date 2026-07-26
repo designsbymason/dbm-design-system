@@ -29,7 +29,7 @@ packages/components/src/{tier}/{ComponentName}/
 
 ## 3. Standard prop patterns every component follows
 
-- **Always `forwardRef`.** Every component forwards its ref to the underlying DOM element, no exceptions — this is required for Radix composition and for consumers who need direct DOM access.
+- **Always `forwardRef`.** Every component forwards its ref to the underlying DOM element — this is required for Radix composition and for consumers who need direct DOM access. **Narrow, explained exception:** a component with no single root DOM node of its own takes no `ref` prop at all, rather than forwarding to an arbitrary/wrong element — e.g. `Tooltip` (trigger is an arbitrary child, content renders in a portal) and `ClientOnly` (renders `children`/`fallback` directly, no wrapper). Each such exception must justify itself in its own component-level JSDoc, matching Radix's own precedent (`Tooltip.Root` itself takes no ref either) — this isn't a license to skip `forwardRef` for convenience.
 - **Always extend native props where applicable.** `interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> { variant?: ...; size?: ...; }` — never redeclare `onClick`, `id`, `aria-*`, etc. that HTML already provides.
 - **Always accept `className` and `style`.** The escape hatch every component needs; internal styles use CSS Modules, but consumers can extend.
 - **Controlled/uncontrolled pattern:** any component holding internal state (`Switch`, `Tabs`, `Accordion`, `Select`) accepts both `value`/`onValueChange` (controlled) and `defaultValue` (uncontrolled) — mirroring Radix's own pattern, since we're built on Radix primitives already.

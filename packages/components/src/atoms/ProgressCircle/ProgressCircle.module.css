@@ -1,0 +1,103 @@
+.root {
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.svg {
+  height: 100%;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  width: 100%;
+}
+
+.spin {
+  animation: spin var(--dbm-motion-duration-slower) linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(-90deg);
+  }
+
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation-duration: calc(var(--dbm-motion-duration-slower) * 4);
+  }
+}
+
+.track {
+  stroke: var(--dbm-bg-subtle);
+  stroke-width: 10;
+}
+
+.fill {
+  stroke-linecap: round;
+  stroke-width: 10;
+  transition: stroke-dashoffset var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+.toneBrand {
+  stroke: var(--dbm-bg-brand);
+}
+
+.toneInfo {
+  stroke: var(--dbm-bg-info);
+}
+
+.toneSuccess {
+  stroke: var(--dbm-bg-success);
+}
+
+.toneWarning {
+  stroke: var(--dbm-bg-warning);
+}
+
+.toneDanger {
+  stroke: var(--dbm-bg-danger);
+}
+
+.valueLabel {
+  align-items: center;
+  color: var(--dbm-text-primary);
+  display: flex;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-semibold);
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+}
+
+/* Sizes */
+
+.sizeXs {
+  height: var(--dbm-icon-size-xl);
+  width: var(--dbm-icon-size-xl);
+}
+
+.sizeSm {
+  height: var(--dbm-icon-size-2xl);
+  width: var(--dbm-icon-size-2xl);
+}
+
+.sizeMd {
+  height: var(--dbm-icon-size-3xl);
+  width: var(--dbm-icon-size-3xl);
+}
+
+.sizeLg {
+  height: calc(var(--dbm-icon-size-3xl) * 1.5);
+  width: calc(var(--dbm-icon-size-3xl) * 1.5);
+}
+
+.sizeXl {
+  height: calc(var(--dbm-icon-size-3xl) * 2);
+  width: calc(var(--dbm-icon-size-3xl) * 2);
+}

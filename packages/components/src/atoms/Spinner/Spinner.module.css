@@ -1,0 +1,63 @@
+.root {
+  animation: spin var(--dbm-motion-duration-slower) linear infinite;
+  border: var(--dbm-border-width-2) solid currentColor;
+  border-radius: var(--dbm-radius-full);
+  border-top-color: transparent;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    animation-duration: calc(var(--dbm-motion-duration-slower) * 4);
+  }
+}
+
+.toneDefault {
+  color: var(--dbm-icon-default);
+}
+
+.toneSecondary {
+  color: var(--dbm-icon-secondary);
+}
+
+.toneBrand {
+  color: var(--dbm-icon-brand);
+}
+
+.toneDisabled {
+  color: var(--dbm-icon-disabled);
+}
+
+/* Sizes */
+
+.sizeXs {
+  height: var(--dbm-icon-size-xs);
+  width: var(--dbm-icon-size-xs);
+}
+
+.sizeSm {
+  height: var(--dbm-icon-size-sm);
+  width: var(--dbm-icon-size-sm);
+}
+
+.sizeMd {
+  height: var(--dbm-icon-size-md);
+  width: var(--dbm-icon-size-md);
+}
+
+.sizeLg {
+  height: var(--dbm-icon-size-lg);
+  width: var(--dbm-icon-size-lg);
+}
+
+.sizeXl {
+  height: var(--dbm-icon-size-xl);
+  width: var(--dbm-icon-size-xl);
+}

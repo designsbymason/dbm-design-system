@@ -1,0 +1,37 @@
+.root {
+  display: block;
+}
+
+.content {
+  overflow: hidden;
+}
+
+.content[data-state="open"] {
+  animation: slideDown var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+.content[data-state="closed"] {
+  animation: slideUp var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+@keyframes slideDown {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+
+  to {
+    height: 0;
+  }
+}

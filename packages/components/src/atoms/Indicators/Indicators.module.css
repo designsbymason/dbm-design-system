@@ -1,0 +1,33 @@
+.root {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+}
+
+.dot {
+  background-color: var(--dbm-bg-subtle);
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  cursor: pointer;
+  height: var(--dbm-space-2);
+  padding: 0;
+  transition:
+    background-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
+    width var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  width: var(--dbm-space-2);
+}
+
+.dot:hover:not(.active) {
+  background-color: var(--dbm-border-strong);
+}
+
+.dot:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.active {
+  background-color: var(--dbm-bg-brand);
+  width: var(--dbm-space-6);
+}

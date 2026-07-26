@@ -1,0 +1,126 @@
+.root {
+  --switch-track-height: var(--dbm-icon-size-md);
+  --switch-track-width: calc(var(--switch-track-height) * 1.8);
+  --switch-thumb-inset: calc(var(--dbm-space-1) / 2);
+  --switch-thumb-size: calc(
+    var(--switch-track-height) - (var(--switch-thumb-inset) * 2)
+  );
+
+  background-color: var(--dbm-bg-subtle);
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  cursor: pointer;
+  display: inline-block;
+  flex-shrink: 0;
+  height: var(--switch-track-height);
+  padding: 0;
+  position: relative;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+  width: var(--switch-track-width);
+}
+
+.root[data-state="checked"] {
+  background-color: var(--dbm-bg-brand);
+}
+
+.root[data-state="checked"]:hover:not(:disabled) {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+.root:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.root:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.thumb {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border-radius: var(--dbm-radius-full);
+  display: flex;
+  height: var(--switch-thumb-size);
+  justify-content: center;
+  left: var(--switch-thumb-inset);
+  position: absolute;
+  top: var(--switch-thumb-inset);
+  transition: transform var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+  transform: translateX(0);
+  width: var(--switch-thumb-size);
+}
+
+.root[data-state="checked"] .thumb {
+  transform: translateX(
+    calc(
+      var(--switch-track-width) - var(--switch-thumb-size) -
+        (var(--switch-thumb-inset) * 2)
+    )
+  );
+}
+
+.checkedIcon,
+.uncheckedIcon {
+  color: var(--dbm-icon-secondary);
+  display: none;
+}
+
+.root[data-state="unchecked"] .uncheckedIcon {
+  display: block;
+}
+
+.root[data-state="checked"] .checkedIcon {
+  color: var(--dbm-icon-brand);
+  display: block;
+}
+
+/* Sizes */
+
+.sizeXs {
+  --switch-track-height: var(--dbm-icon-size-xs);
+}
+
+.sizeSm {
+  --switch-track-height: var(--dbm-icon-size-sm);
+}
+
+.sizeMd {
+  --switch-track-height: var(--dbm-icon-size-md);
+}
+
+.sizeLg {
+  --switch-track-height: var(--dbm-icon-size-lg);
+}
+
+.sizeXl {
+  --switch-track-height: var(--dbm-icon-size-xl);
+}
+
+/* Label wrapper */
+
+.label {
+  align-items: center;
+  cursor: pointer;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+}
+
+.label.labelDisabled {
+  cursor: not-allowed;
+}
+
+.labelText {
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-base);
+  line-height: var(--dbm-line-height-normal);
+  user-select: none;
+}
+
+.labelDisabled .labelText {
+  color: var(--dbm-text-disabled);
+}

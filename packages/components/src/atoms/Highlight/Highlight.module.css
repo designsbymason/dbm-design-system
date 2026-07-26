@@ -1,0 +1,25 @@
+.root {
+  border-radius: var(--dbm-radius-xs);
+  font: inherit;
+  padding-inline: var(--dbm-space-1);
+}
+
+.toneWarning {
+  background-color: var(--dbm-bg-warning-subtle);
+  color: var(--dbm-text-warning);
+}
+
+.toneSuccess {
+  background-color: var(--dbm-bg-success-subtle);
+  color: var(--dbm-text-success);
+}
+
+.toneInfo {
+  background-color: var(--dbm-bg-info-subtle);
+  color: var(--dbm-text-info);
+}
+
+.toneDanger {
+  background-color: var(--dbm-bg-danger-subtle);
+  color: var(--dbm-text-danger);
+}

@@ -1,0 +1,14 @@
+.root {
+  align-items: center;
+  color: var(--dbm-text-danger);
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-sm);
+  gap: var(--dbm-space-1);
+  line-height: var(--dbm-line-height-normal);
+  margin: 0;
+}
+
+.icon {
+  flex-shrink: 0;
+}

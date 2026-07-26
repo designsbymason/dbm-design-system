@@ -1,0 +1,86 @@
+.track {
+  background-color: var(--dbm-bg-subtle);
+  border-radius: var(--dbm-radius-full);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.fill {
+  border-radius: var(--dbm-radius-full);
+  height: 100%;
+  transition: width var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+.toneBrand {
+  background-color: var(--dbm-bg-brand);
+}
+
+.toneInfo {
+  background-color: var(--dbm-bg-info);
+}
+
+.toneSuccess {
+  background-color: var(--dbm-bg-success);
+}
+
+.toneWarning {
+  background-color: var(--dbm-bg-warning);
+}
+
+.toneDanger {
+  background-color: var(--dbm-bg-danger);
+}
+
+.indeterminate {
+  animation: indeterminate calc(var(--dbm-motion-duration-slower) * 3)
+    var(--dbm-motion-easing-standard) infinite;
+  position: absolute;
+  transition: none;
+}
+
+@keyframes indeterminate {
+  0% {
+    left: -40%;
+    width: 40%;
+  }
+
+  50% {
+    left: 20%;
+    width: 60%;
+  }
+
+  100% {
+    left: 100%;
+    width: 40%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indeterminate {
+    animation-duration: calc(var(--dbm-motion-duration-slower) * 12);
+  }
+}
+
+/* Sizes — track/fill height */
+
+.sizeXs {
+  height: var(--dbm-space-1);
+}
+
+.sizeSm {
+  height: calc(var(--dbm-space-1) * 1.5);
+}
+
+.sizeMd {
+  height: var(--dbm-space-2);
+}
+
+.sizeLg {
+  height: var(--dbm-space-3);
+}
+
+.sizeXl {
+  height: var(--dbm-space-4);
+}

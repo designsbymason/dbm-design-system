@@ -1,0 +1,10 @@
+.root {
+  background-color: var(--dbm-bg-overlay);
+  inset: 0;
+  position: fixed;
+  z-index: var(--dbm-z-index-overlay);
+}
+
+.blur {
+  backdrop-filter: blur(var(--dbm-space-2));
+}

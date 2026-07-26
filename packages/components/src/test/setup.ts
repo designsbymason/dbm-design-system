@@ -28,3 +28,36 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// jsdom doesn't implement ResizeObserver — several Radix primitives (e.g.
+// Tooltip/Popover/Select's `Content`) measure themselves with it on mount.
+// A no-op stub is enough since layout measurements aren't meaningful in
+// jsdom anyway (no real rendering engine behind it).
+class ResizeObserverStub {
+  observe() {}
+
+  unobserve() {}
+
+  disconnect() {}
+}
+
+vi.stubGlobal("ResizeObserver", ResizeObserverStub);
+
+// jsdom doesn't implement IntersectionObserver either (used by Affix's
+// stuck-state detection). A no-op default stub is enough for anything that
+// merely needs to not crash; tests that need to actually trigger a
+// callback (like Affix's own) install a more capable fake locally via
+// `vi.stubGlobal` instead.
+class IntersectionObserverStub {
+  observe() {}
+
+  unobserve() {}
+
+  disconnect() {}
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+
+vi.stubGlobal("IntersectionObserver", IntersectionObserverStub);

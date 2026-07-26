@@ -1,0 +1,49 @@
+.root {
+  display: inline-block;
+  overflow: hidden;
+  position: relative;
+}
+
+.image {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.fallback {
+  align-items: center;
+  background-color: var(--dbm-bg-subtle);
+  color: var(--dbm-text-tertiary);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.radiusXs {
+  border-radius: var(--dbm-radius-xs);
+}
+
+.radiusSm {
+  border-radius: var(--dbm-radius-sm);
+}
+
+.radiusMd {
+  border-radius: var(--dbm-radius-md);
+}
+
+.radiusLg {
+  border-radius: var(--dbm-radius-lg);
+}
+
+.radiusXl {
+  border-radius: var(--dbm-radius-xl);
+}
+
+.radius2xl {
+  border-radius: var(--dbm-radius-2xl);
+}
+
+.radiusFull {
+  border-radius: var(--dbm-radius-full);
+}

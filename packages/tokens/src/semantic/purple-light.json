@@ -74,6 +74,11 @@
       "$type": "color",
       "$value": "{color.gray.600}",
       "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) is only verified for the 3:1 non-text case. gray.600 with white text gives 4.70:1, passing everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
+    },
+    "overlay": {
+      "$type": "color",
+      "$value": "{color.neutral.black}",
+      "$description": "Dimming scrim behind Dialog/Drawer/overlays (Backdrop atom). No text sits directly on it, so it isn't a WCAG contrast pairing — opacity is applied separately, compositionally, via the opacity.* scale rather than baked into this token, matching how color and opacity stay separate token categories everywhere else. Shared across all 4 themes since dimming what's behind isn't a brand-dependent decision."
     }
   },
   "text": {

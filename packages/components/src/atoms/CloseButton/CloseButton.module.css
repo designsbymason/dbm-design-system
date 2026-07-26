@@ -1,0 +1,57 @@
+.root {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.root:hover:not(:disabled) {
+  background-color: var(--dbm-bg-subtle);
+}
+
+.root:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.root:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* Sizes — box dimensions from the icon-size token scale */
+
+.sizeXs {
+  height: var(--dbm-icon-size-xs);
+  width: var(--dbm-icon-size-xs);
+}
+
+.sizeSm {
+  height: var(--dbm-icon-size-sm);
+  width: var(--dbm-icon-size-sm);
+}
+
+.sizeMd {
+  height: var(--dbm-icon-size-md);
+  width: var(--dbm-icon-size-md);
+}
+
+.sizeLg {
+  height: var(--dbm-icon-size-lg);
+  width: var(--dbm-icon-size-lg);
+}
+
+.sizeXl {
+  height: var(--dbm-icon-size-xl);
+  width: var(--dbm-icon-size-xl);
+}
