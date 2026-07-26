@@ -7,7 +7,11 @@ const meta: Meta<typeof Skeleton> = {
   component: Skeleton,
   parameters: { layout: "padded" },
   argTypes: {
-    variant: { control: "select", options: ["text", "circular", "rectangular"] },
+    variant: {
+      control: "select",
+      options: ["text", "circular", "rectangular"],
+    },
+    animation: { control: "select", options: ["pulse", "wave", "none"] },
   },
 };
 
@@ -25,6 +29,38 @@ export const Circular: Story = {
 
 export const Rectangular: Story = {
   args: { variant: "rectangular", width: "16rem", height: "8rem" },
+};
+
+export const DefaultSizes: Story = {
+  name: "Default sizes (no width/height passed)",
+  render: () => (
+    // Column-direction flex so the rectangular skeleton stretches to fill
+    // the container width by default (cross-axis stretch) — demonstrates
+    // the same "full width, token-driven height" default it gets in a
+    // normal block-level layout, without a flex *row*'s shrink-to-fit
+    // sizing hiding it.
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+        maxWidth: "16rem",
+      }}
+    >
+      <Skeleton variant="circular" />
+      <Skeleton variant="rectangular" />
+    </div>
+  ),
+};
+
+export const WaveAnimation: Story = {
+  name: "Wave animation",
+  args: {
+    variant: "rectangular",
+    width: "16rem",
+    height: "8rem",
+    animation: "wave",
+  },
 };
 
 export const CardPlaceholder: Story = {

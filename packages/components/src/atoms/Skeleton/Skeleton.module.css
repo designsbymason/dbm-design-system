@@ -1,7 +1,22 @@
 .root {
-  animation: pulse var(--dbm-motion-duration-slower) var(--dbm-motion-easing-standard) infinite;
   background-color: var(--dbm-bg-subtle);
   display: block;
+}
+
+.animationPulse {
+  animation: pulse var(--dbm-motion-duration-slower)
+    var(--dbm-motion-easing-standard) infinite;
+}
+
+.animationWave {
+  animation: wave calc(var(--dbm-motion-duration-slower) * 2) linear infinite;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    var(--dbm-bg-surface),
+    transparent
+  );
+  background-size: 200% 100%;
 }
 
 .variantText {
@@ -9,12 +24,22 @@
   height: 1em;
 }
 
+/* Default dimensions for the two shape variants — without explicit content,
+   a block-level element's width stretches to fill its container for free,
+   but its height collapses to 0 (no content to give it intrinsic height).
+   These are pure fallbacks: the `width`/`height` props are applied as
+   inline `style`, which always wins over a class regardless of
+   specificity, so passing explicit dimensions still works exactly as
+   before. */
 .variantCircular {
   border-radius: var(--dbm-radius-full);
+  height: var(--dbm-icon-size-2xl);
+  width: var(--dbm-icon-size-2xl);
 }
 
 .variantRectangular {
   border-radius: var(--dbm-radius-md);
+  height: var(--dbm-space-24);
 }
 
 @keyframes pulse {
@@ -28,8 +53,20 @@
   }
 }
 
+@keyframes wave {
+  0% {
+    background-position: -150% 0;
+  }
+
+  100% {
+    background-position: 150% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .root {
+  .animationPulse,
+  .animationWave {
     animation: none;
+    background-image: none;
   }
 }
