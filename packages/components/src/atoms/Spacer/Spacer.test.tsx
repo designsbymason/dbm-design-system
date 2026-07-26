@@ -20,6 +20,14 @@ describe("Spacer", () => {
     expect(screen.getByTestId("spacer")).toHaveStyle({ flex: "1 0 0%" });
   });
 
+  it("does not render children, even if passed at runtime bypassing the type", () => {
+    render(
+      // @ts-expect-error children is intentionally not part of SpacerProps
+      <Spacer data-testid="spacer">Should not render</Spacer>,
+    );
+    expect(screen.queryByText("Should not render")).not.toBeInTheDocument();
+  });
+
   it("forwards ref to the underlying div", () => {
     const ref = createRef<HTMLDivElement>();
     render(<Spacer ref={ref} />);
