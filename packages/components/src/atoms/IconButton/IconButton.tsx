@@ -1,6 +1,7 @@
 import { cx } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
 import { forwardRef } from "react";
+import type { MouseEvent } from "react";
 import type { ButtonSize, ButtonVariant } from "../Button/Button.types";
 import { Icon } from "../Icon";
 import styles from "./IconButton.module.css";
@@ -22,12 +23,15 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-const iconSizeForButtonSize: Record<ButtonSize, "xs" | "sm" | "md" | "lg"> = {
+const iconSizeForButtonSize: Record<
+  ButtonSize,
+  "xs" | "sm" | "md" | "lg" | "xl"
+> = {
   xs: "xs",
   sm: "sm",
   md: "md",
   lg: "lg",
-  xl: "lg",
+  xl: "xl",
 };
 
 /**
@@ -38,6 +42,8 @@ const iconSizeForButtonSize: Record<ButtonSize, "xs" | "sm" | "md" | "lg"> = {
  * @example
  * ```tsx
  * <IconButton icon={TrashIcon} aria-label="Delete item" variant="destructive" />
+ * <IconButton icon={TrashIcon} aria-label="Delete" isLoading loadingLabel="Deleting…" />
+ * <IconButton icon={PlusIcon} aria-label="Add" rounded />
  * ```
  */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
@@ -47,24 +53,53 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       variant = "primary",
       size = "md",
       isLoading = false,
+      loadingLabel,
       asChild = false,
+      rounded = false,
       disabled,
       className,
       children,
       type = "button",
+      onClick,
+      "aria-label": ariaLabel,
       ...props
     },
     ref,
   ) => {
     const Component = asChild ? Slot : "button";
+    const isDisabled = disabled ?? isLoading;
+    // `Slot` can't take a native `disabled` attribute (the child might be
+    // an <a> or any other element) — `aria-disabled` plus this handler
+    // conveys and enforces the same state instead. Same rationale as
+    // Button's identical fix.
+    const slottedDisabled = asChild && isDisabled;
+
+    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+      if (slottedDisabled) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      onClick?.(event);
+    };
 
     return (
       <Component
         ref={ref}
         type={asChild ? undefined : type}
-        disabled={asChild ? undefined : (disabled ?? isLoading)}
+        disabled={asChild ? undefined : isDisabled}
+        aria-disabled={slottedDisabled || undefined}
         aria-busy={isLoading || undefined}
-        className={cx(styles.root, variantClass[variant], sizeClass[size], className)}
+        aria-label={isLoading ? (loadingLabel ?? ariaLabel) : ariaLabel}
+        onClick={handleClick}
+        className={cx(
+          styles.root,
+          variantClass[variant],
+          sizeClass[size],
+          rounded && styles.rounded,
+          slottedDisabled && styles.disabled,
+          className,
+        )}
         {...props}
       >
         {asChild ? (

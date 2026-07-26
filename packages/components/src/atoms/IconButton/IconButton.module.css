@@ -6,8 +6,10 @@
   display: inline-flex;
   justify-content: center;
   transition:
-    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
-    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    background-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
     opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
@@ -19,6 +21,18 @@
 .root:disabled {
   cursor: not-allowed;
   opacity: var(--dbm-opacity-40);
+}
+
+/* Mirrors `:disabled` for `asChild`, where the slotted element (e.g. an
+   <a>) can't take a native `disabled` attribute for the pseudo-class to
+   match — applied alongside `aria-disabled` instead. */
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.rounded {
+  border-radius: var(--dbm-radius-full);
 }
 
 /* Sizes: equal padding on all sides around the icon. Logical longhands
