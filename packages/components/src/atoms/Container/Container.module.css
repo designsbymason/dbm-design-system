@@ -1,7 +1,51 @@
 .root {
   margin-inline: auto;
-  padding-inline: var(--dbm-space-4);
+  padding-inline: var(--container-padding-base, var(--dbm-space-4));
   width: 100%;
+}
+
+/*
+ * CSS custom properties cannot be referenced inside an @media condition
+ * (a CSS spec limitation, not a choice here) — these thresholds are the
+ * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six blocks must be updated by hand to match. Mirrors
+ * Grid's/Stack's/GridItem's identical responsive-prop mechanism.
+ */
+@media (min-width: 640px) {
+  .root {
+    padding-inline: var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4)));
+  }
+}
+
+@media (min-width: 768px) {
+  .root {
+    padding-inline: var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4))));
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    padding-inline: var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4)))));
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    padding-inline: var(--container-padding-xl, var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4))))));
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    padding-inline: var(--container-padding-2xl, var(--container-padding-xl, var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4)))))));
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    padding-inline: var(--container-padding-3xl, var(--container-padding-2xl, var(--container-padding-xl, var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4))))))));
+  }
 }
 
 .sizeSm {

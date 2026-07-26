@@ -60,3 +60,22 @@ export const NarrowViewport: Story = {
   args: { size: "xl" },
   render: (args) => <Container {...args}>{demoContent}</Container>,
 };
+
+export const ResponsivePadding: Story = {
+  name: "Responsive paddingInline (tight on mobile, roomy from lg up)",
+  parameters: { chromatic: { viewports: [375, 1024] } },
+  render: () => (
+    <Container size="xl" paddingInline={{ base: 2, lg: 8 }}>
+      {demoContent}
+    </Container>
+  ),
+};
+
+export const AsMain: Story = {
+  name: 'Polymorphic: as="main" (real landmark element, Container layout behavior)',
+  render: () => (
+    <Container as="main" size="lg">
+      {demoContent}
+    </Container>
+  ),
+};
