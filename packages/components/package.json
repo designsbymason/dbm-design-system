@@ -28,7 +28,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@dbm-design-system/eslint-config": "workspace:*",
     "@dbm-design-system/tsconfig": "workspace:*",
+    "@playwright/test": "^1.62.0",
     "@storybook/addon-a11y": "^10.5.2",
     "@storybook/react-vite": "^10.5.2",
     "@testing-library/jest-dom": "^6.9.1",

@@ -10,6 +10,12 @@ coverage/
 storybook-static/
 *.tsbuildinfo
 
+# Playwright (visual regression) — ephemeral run output; committed *-snapshots/
+# baseline images are intentionally NOT ignored
+playwright-report/
+blob-report/
+test-results/
+
 # Env files
 .env
 .env.*
