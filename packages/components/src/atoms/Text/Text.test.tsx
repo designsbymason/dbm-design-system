@@ -41,9 +41,56 @@ describe("Text", () => {
   });
 
   it("forwards ref to the underlying element", () => {
-    const ref = createRef<HTMLElement>();
+    const ref = createRef<HTMLParagraphElement>();
     render(<Text ref={ref}>Content</Text>);
     expect(ref.current).toBeInstanceOf(HTMLParagraphElement);
+  });
+
+  it("forwards ref to the element rendered via `as`, not just the default p", () => {
+    const ref = createRef<HTMLSpanElement>();
+    render(
+      <Text as="span" ref={ref}>
+        Content
+      </Text>,
+    );
+    expect(ref.current).toBeInstanceOf(HTMLSpanElement);
+  });
+
+  it("type-checks native props of the `as` element", () => {
+    render(
+      <Text as="label" htmlFor="my-input" data-testid="text">
+        Label text
+      </Text>,
+    );
+    expect(screen.getByTestId("text")).toHaveAttribute("for", "my-input");
+  });
+
+  it("applies the secondary (editorial) font family", () => {
+    render(<Text fontFamily="secondary">Editorial copy</Text>);
+    expect(screen.getByText("Editorial copy")).toHaveStyle({
+      fontFamily: "var(--dbm-font-family-secondary)",
+    });
+  });
+
+  it("defaults to the primary font family", () => {
+    render(<Text>Default</Text>);
+    expect(screen.getByText("Default")).toHaveStyle({
+      fontFamily: "var(--dbm-font-family-primary)",
+    });
+  });
+
+  it("applies line-clamp truncation when truncate is set", () => {
+    render(
+      <Text truncate={2} data-testid="text">
+        Long text
+      </Text>,
+    );
+    expect(screen.getByTestId("text")).toHaveStyle({ WebkitLineClamp: "2" });
+  });
+
+  it("does not apply line-clamp styles by default", () => {
+    render(<Text data-testid="text">Short text</Text>);
+    expect(screen.getByTestId("text").style.webkitLineClamp).toBe("");
   });
 
   it("forwards className and native props", () => {

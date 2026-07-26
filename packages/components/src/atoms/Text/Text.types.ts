@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 /**
  * Font-size step, matching the primitive font-size token scale. Wider than
@@ -33,18 +33,47 @@ export type TextColor =
   | "success"
   | "info";
 
+/**
+ * `primary` is Nunito (UI text); `secondary` is Lora, the token system's
+ * editorial/display family — meant for longer-form reading content, which
+ * is exactly what body copy set with `Text` often is.
+ */
+export type TextFontFamily = "primary" | "secondary";
+
 export type TextElement = "p" | "span" | "div" | "label" | "legend";
 
-export interface TextProps extends ComponentPropsWithoutRef<"p"> {
+export type TextProps<E extends TextElement = "p"> = {
   /**
    * The HTML element to render as.
    * @default 'p'
    */
-  as?: TextElement;
-  /** @default 'base' */
+  as?: E;
+  /**
+   * Font size, from the full font-size token scale.
+   * @default 'base'
+   */
   size?: TextSize;
-  /** @default 'regular' */
+  /**
+   * Font weight.
+   * @default 'regular'
+   */
   weight?: TextWeight;
-  /** @default 'primary' */
+  /**
+   * Semantic text color.
+   * @default 'primary'
+   */
   color?: TextColor;
-}
+  /**
+   * Font family. `secondary` switches to Lora for editorial/long-form
+   * reading content.
+   * @default 'primary'
+   */
+  fontFamily?: TextFontFamily;
+  /**
+   * Truncates text after this many lines, with an ellipsis
+   * (`-webkit-line-clamp`, supported by all evergreen browsers).
+   */
+  truncate?: number;
+  /** The text content. */
+  children?: ReactNode;
+} & Omit<ComponentPropsWithoutRef<E>, "as" | "children">;

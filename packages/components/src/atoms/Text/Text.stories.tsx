@@ -41,7 +41,9 @@ export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
     <>
-      {(["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl"] as const).map((size) => (
+      {(
+        ["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"] as const
+      ).map((size) => (
         <Text key={size} size={size}>
           size=&quot;{size}&quot; — The quick brown fox jumps over the lazy dog.
         </Text>
@@ -85,6 +87,43 @@ export const AllColors: Story = {
         </Text>
       ))}
     </>
+  ),
+};
+
+export const FontFamily: Story = {
+  name: "Font family (primary vs secondary/editorial)",
+  render: () => (
+    <>
+      <Text fontFamily="primary">fontFamily=&quot;primary&quot; (Nunito) — body/UI copy.</Text>
+      <Text fontFamily="secondary">
+        fontFamily=&quot;secondary&quot; (Lora) — long-form editorial reading content.
+      </Text>
+    </>
+  ),
+};
+
+export const Truncate: Story = {
+  name: "truncate (line-clamp)",
+  render: () => (
+    <div style={{ maxWidth: "20rem" }}>
+      <Text truncate={2}>
+        This is a much longer piece of body copy than will fit on two lines, so it should be
+        clamped with an ellipsis after the second line instead of overflowing or wrapping onto a
+        third line and beyond.
+      </Text>
+    </div>
+  ),
+};
+
+export const AsLabel: Story = {
+  name: 'Polymorphic: as="label" (native props type-check, e.g. htmlFor)',
+  render: () => (
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-2)" }}>
+      <Text as="label" htmlFor="story-email-input" weight="medium">
+        Email address
+      </Text>
+      <input id="story-email-input" type="email" />
+    </div>
   ),
 };
 
