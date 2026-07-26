@@ -181,7 +181,7 @@ Renumbered 2026-07-18 to match the phases actually run (the original version bun
 - **Phase 2 — Design token pipeline (done):** Style Dictionary build producing CSS custom properties + typed TS constants from the primitive/semantic token JSON
 - **Phase 3 — Foundational atom layer (done):** utility primitives, layout primitives, typography, core atoms (23 components); Storybook 10 setup; Vitest/RTL/jest-axe test infra
 - **Phase 4 — OKLCH color re-derivation (done):** re-derived the primitive color scales in OKLCH for perceptual evenness; re-verified every contrast pairing checked in `03-token-system-spec.md`'s running log against the new values
-- **Phase 4.5 — Atom component review & enhancement pass:** systematic, one-at-a-time pass over all 23 Phase 3 atoms against the two-track rubric in `06-engineering-standards.md` §9 — an objective checklist re-verification (props, tokens, a11y, responsiveness, stability) plus a design-quality pass (feature-completeness, micro-interactions, premium/unique visual execution). Done before Phase 5 so molecules aren't built on top of atom-level gaps that would then need fixing in every downstream consumer.
+- **Phase 4.5 — Atom component review & enhancement pass (done):** systematic, one-at-a-time pass over all 23 Phase 3 atoms against the two-track rubric in `06-engineering-standards.md` §9 — an objective checklist re-verification (props, tokens, a11y, responsiveness, stability) plus a design-quality pass (feature-completeness, micro-interactions, premium/unique visual execution). Run before Phase 5 so molecules aren't built on top of atom-level gaps that would then need fixing in every downstream consumer.
 - **Phase 5 — Molecules:** FormField, Card, SearchBar, Tooltip, MenuItem, and the rest of the 🟢 v1 molecule tier per `04-component-inventory.md`
 - **Phase 6 — Organisms:** DataTable, Modal, Navbar, CommandPalette, Form, and the rest of the 🟢 v1 organism tier
 - **Phase 7 — Comprehensive pass:** remaining 🟡 v1.5 components + templates
@@ -195,4 +195,4 @@ Renumbered 2026-07-18 to match the phases actually run (the original version bun
 ## 14. Related documents
 - `02-tech-stack-and-structure.md` — full technical stack and monorepo layout
 - `03-token-system-spec.md` — complete token architecture and values
-- `04-component-inventory.md` — component list and atomic-design tiering (next to be written)
+- `04-component-inventory.md` — component list and atomic-design tiering

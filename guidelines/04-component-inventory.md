@@ -143,7 +143,7 @@ Images, icons, visual content handling.
 
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
-| Icon | atom | 🟢 | Phosphor wrapper — typed name prop, size/weight tokens |
+| Icon | atom | 🟢 | Phosphor wrapper — typed icon-component-reference prop (not a string name), size/weight/tone tokens |
 | Image | atom | 🟢 | Lazy-load, fallback, aspect-ratio integration |
 | ImageViewer / Lightbox | organism | ⚪ | Full-screen zoomable image view |
 | Carousel | organism | ⚪ | Wraps Radix or headless carousel logic |
