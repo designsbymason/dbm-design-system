@@ -53,14 +53,37 @@ export const CustomSpacing: Story = {
   ),
 };
 
+export const OrderedListSpecificProps: Story = {
+  name: 'as="ol" with start/reversed (ol-specific native props)',
+  render: () => (
+    <List as="ol" start={5} reversed>
+      <ListItem>Counts down from 5</ListItem>
+      <ListItem>Then 4</ListItem>
+      <ListItem>Then 3</ListItem>
+    </List>
+  ),
+};
+
+export const ResponsiveSpacing: Story = {
+  name: "Responsive spacing (tight on mobile, roomy from lg up)",
+  parameters: { chromatic: { viewports: [375, 1024] } },
+  render: () => (
+    <List spacing={{ base: 1, lg: 6 }}>
+      <ListItem>First item</ListItem>
+      <ListItem>Second item</ListItem>
+      <ListItem>Third item</ListItem>
+    </List>
+  ),
+};
+
 export const NarrowViewport: Story = {
   name: "Narrow viewport (long items wrap)",
   parameters: { chromatic: { viewports: [375] } },
   render: () => (
     <List>
       <ListItem>
-        A longer list item that should wrap gracefully at narrow viewport widths without
-        overflowing its container.
+        A longer list item that should wrap gracefully at narrow viewport widths
+        without overflowing its container.
       </ListItem>
       <ListItem>Short item</ListItem>
     </List>

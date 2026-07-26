@@ -4,8 +4,98 @@
   flex-direction: column;
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-base);
+  gap: var(--list-gap-base, var(--dbm-space-2));
   margin: 0;
   padding-inline-start: var(--dbm-space-6);
+}
+
+/*
+ * CSS custom properties cannot be referenced inside an @media condition
+ * (a CSS spec limitation, not a choice here) — these thresholds are the
+ * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six blocks must be updated by hand to match. Mirrors
+ * Stack's/Grid's/Container's identical responsive-prop mechanism.
+ */
+@media (min-width: 640px) {
+  .root {
+    gap: var(--list-gap-sm, var(--list-gap-base, var(--dbm-space-2)));
+  }
+}
+
+@media (min-width: 768px) {
+  .root {
+    gap: var(
+      --list-gap-md,
+      var(--list-gap-sm, var(--list-gap-base, var(--dbm-space-2)))
+    );
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    gap: var(
+      --list-gap-lg,
+      var(
+        --list-gap-md,
+        var(--list-gap-sm, var(--list-gap-base, var(--dbm-space-2)))
+      )
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    gap: var(
+      --list-gap-xl,
+      var(
+        --list-gap-lg,
+        var(
+          --list-gap-md,
+          var(--list-gap-sm, var(--list-gap-base, var(--dbm-space-2)))
+        )
+      )
+    );
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    gap: var(
+      --list-gap-2xl,
+      var(
+        --list-gap-xl,
+        var(
+          --list-gap-lg,
+          var(
+            --list-gap-md,
+            var(--list-gap-sm, var(--list-gap-base, var(--dbm-space-2)))
+          )
+        )
+      )
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    gap: var(
+      --list-gap-3xl,
+      var(
+        --list-gap-2xl,
+        var(
+          --list-gap-xl,
+          var(
+            --list-gap-lg,
+            var(
+              --list-gap-md,
+              var(--list-gap-sm, var(--list-gap-base, var(--dbm-space-2)))
+            )
+          )
+        )
+      )
+    );
+  }
 }
 
 .markerDisc {
