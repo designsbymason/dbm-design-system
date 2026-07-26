@@ -7,7 +7,10 @@ const meta: Meta<typeof Avatar> = {
   parameters: { layout: "padded" },
   argTypes: {
     size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
-    status: { control: "select", options: [undefined, "online", "offline", "busy", "away"] },
+    status: {
+      control: "select",
+      options: [undefined, "online", "offline", "busy", "away"],
+    },
   },
   args: {
     initials: "JD",
@@ -34,6 +37,20 @@ export const BrokenImage: Story = {
   name: "Broken image URL (falls back to initials)",
   args: {
     src: "https://example.com/does-not-exist.jpg",
+  },
+};
+
+export const IconFallback: Story = {
+  name: "Generic icon (no image, no initials)",
+  args: {
+    initials: undefined,
+  },
+};
+
+export const SquareShape: Story = {
+  name: "Square shape",
+  args: {
+    shape: "square",
   },
 };
 

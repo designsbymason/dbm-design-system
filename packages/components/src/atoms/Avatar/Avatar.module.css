@@ -18,6 +18,10 @@
   width: 100%;
 }
 
+.shapeSquare {
+  border-radius: var(--dbm-radius-md);
+}
+
 .sizeXs {
   font-size: var(--dbm-font-size-xs);
   height: var(--dbm-icon-size-xs);

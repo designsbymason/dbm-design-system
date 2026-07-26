@@ -1,2 +1,7 @@
 export { Avatar } from "./Avatar";
-export type { AvatarProps, AvatarSize, AvatarStatus } from "./Avatar.types";
+export type {
+  AvatarProps,
+  AvatarShape,
+  AvatarSize,
+  AvatarStatus,
+} from "./Avatar.types";
