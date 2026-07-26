@@ -1,6 +1,7 @@
 import { cx } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
 import { forwardRef } from "react";
+import type { MouseEvent } from "react";
 import { Icon } from "../Icon";
 import styles from "./Button.module.css";
 import type { ButtonProps, ButtonSize, ButtonVariant } from "./Button.types";
@@ -32,15 +33,17 @@ const iconSizeForButtonSize: Record<ButtonSize, "xs" | "sm" | "md"> = {
 /**
  * The primary interactive action element. Five variants (`primary` is the
  * default, high-emphasis action; `destructive` for irreversible/dangerous
- * actions), five sizes, optional leading/trailing icons, a loading state,
- * and `asChild` for composing with other elements (e.g. a router link
- * styled as a button).
+ * actions), five sizes, optional leading/trailing icons, a loading state
+ * with an optional `loadingText`, `fullWidth` for stretching to the
+ * container, and `asChild` for composing with other elements (e.g. a
+ * router link styled as a button).
  *
  * @example
  * ```tsx
  * <Button>Save</Button>
  * <Button variant="destructive" icon={TrashIcon}>Delete</Button>
- * <Button isLoading>Saving…</Button>
+ * <Button isLoading loadingText="Saving…">Save</Button>
+ * <Button fullWidth>Continue</Button>
  * <Button asChild><a href="/next">Continue</a></Button>
  * ```
  */
@@ -52,25 +55,51 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       icon,
       trailingIcon,
       isLoading = false,
+      loadingText,
       asChild = false,
+      fullWidth = false,
       disabled,
       className,
       children,
       type = "button",
+      onClick,
       ...props
     },
     ref,
   ) => {
     const Component = asChild ? Slot : "button";
     const iconSize = iconSizeForButtonSize[size];
+    const isDisabled = disabled ?? isLoading;
+    // `Slot` can't take a native `disabled` attribute (the child might be
+    // an <a> or any other element) — `aria-disabled` plus this handler
+    // conveys and enforces the same state instead.
+    const slottedDisabled = asChild && isDisabled;
+
+    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+      if (slottedDisabled) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      onClick?.(event);
+    };
 
     return (
       <Component
         ref={ref}
         type={asChild ? undefined : type}
-        disabled={asChild ? undefined : (disabled ?? isLoading)}
+        disabled={asChild ? undefined : isDisabled}
+        aria-disabled={slottedDisabled || undefined}
         aria-busy={isLoading || undefined}
-        className={cx(styles.root, variantClass[variant], sizeClass[size], className)}
+        onClick={handleClick}
+        className={cx(
+          styles.root,
+          variantClass[variant],
+          sizeClass[size],
+          fullWidth && styles.fullWidth,
+          slottedDisabled && styles.disabled,
+          className,
+        )}
         {...props}
       >
         {asChild ? (
@@ -82,8 +111,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             ) : (
               icon && <Icon icon={icon} size={iconSize} />
             )}
-            {children}
-            {!isLoading && trailingIcon && <Icon icon={trailingIcon} size={iconSize} />}
+            {isLoading ? (loadingText ?? children) : children}
+            {!isLoading && trailingIcon && (
+              <Icon icon={trailingIcon} size={iconSize} />
+            )}
           </>
         )}
       </Component>

@@ -1,7 +1,8 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { ComponentPropsWithoutRef } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "tertiary" | "ghost" | "destructive";
+export type ButtonVariant =
+  "primary" | "secondary" | "tertiary" | "ghost" | "destructive";
 export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
@@ -15,10 +16,20 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   trailingIcon?: PhosphorIcon;
   /**
    * Shows a spinner in place of the leading icon (or before the label if
-   * there is none) and disables interaction while `true`.
+   * there is none) and disables interaction while `true`. When `asChild`
+   * is also set, the slotted element can't take a native `disabled`
+   * attribute, so this instead applies `aria-disabled` plus matching
+   * dimmed styling and blocks its click handler.
    * @default false
    */
   isLoading?: boolean;
+  /**
+   * Text shown in place of `children` while `isLoading` is `true` — lets
+   * the label reflect the in-progress action (e.g. "Saving…") without the
+   * caller managing conditional children. Falls back to `children` when
+   * omitted.
+   */
+  loadingText?: string;
   /**
    * Merge props onto the single child element instead of rendering a
    * `<button>` (via Radix `Slot`). Icons and the loading spinner are not
@@ -26,4 +37,9 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    * @default false
    */
   asChild?: boolean;
+  /**
+   * Stretches the button to fill the width of its container.
+   * @default false
+   */
+  fullWidth?: boolean;
 }

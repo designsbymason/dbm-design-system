@@ -1,8 +1,8 @@
 import { WalletIcon } from "@dbm-design-system/icons";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Button } from "./Button";
 
 describe("Button", () => {
@@ -69,12 +69,83 @@ describe("Button", () => {
       </Button>,
     );
     // Only the spinner span should render, not the Wallet svg.
-    expect(screen.getByRole("button").querySelector("svg")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button").querySelector("svg"),
+    ).not.toBeInTheDocument();
   });
 
   it("respects an explicit disabled prop independent of isLoading", () => {
     render(<Button disabled>Go</Button>);
     expect(screen.getByRole("button")).toBeDisabled();
+  });
+
+  it("calls onClick when clicked", () => {
+    const onClick = vi.fn();
+    render(<Button onClick={onClick}>Go</Button>);
+    fireEvent.click(screen.getByRole("button", { name: "Go" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onClick when disabled", () => {
+    const onClick = vi.fn();
+    render(
+      <Button disabled onClick={onClick}>
+        Go
+      </Button>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Go" }));
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it('defaults to type="button" but respects an explicit type override', () => {
+    const { rerender } = render(<Button>Go</Button>);
+    expect(screen.getByRole("button")).toHaveAttribute("type", "button");
+
+    rerender(<Button type="submit">Go</Button>);
+    expect(screen.getByRole("button")).toHaveAttribute("type", "submit");
+  });
+
+  it("shows loadingText in place of children while isLoading, falling back to children otherwise", () => {
+    const { rerender } = render(
+      <Button isLoading loadingText="Saving…">
+        Save
+      </Button>,
+    );
+    expect(screen.getByRole("button", { name: "Saving…" })).toBeInTheDocument();
+
+    rerender(<Button isLoading>Save</Button>);
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  });
+
+  it("applies fullWidth styling", () => {
+    render(<Button fullWidth>Go</Button>);
+    expect(screen.getByRole("button").className).toMatch(/fullWidth/);
+  });
+
+  describe("asChild disabled/isLoading", () => {
+    it("applies aria-disabled and blocks the click handler on the slotted element", () => {
+      const onClick = vi.fn();
+      render(
+        <Button asChild disabled onClick={onClick}>
+          <a href="/next">Continue</a>
+        </Button>,
+      );
+      const link = screen.getByRole("link", { name: "Continue" });
+      expect(link).toHaveAttribute("aria-disabled", "true");
+      fireEvent.click(link);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("does not set aria-disabled when neither disabled nor isLoading is set", () => {
+      render(
+        <Button asChild>
+          <a href="/next">Continue</a>
+        </Button>,
+      );
+      expect(
+        screen.getByRole("link", { name: "Continue" }),
+      ).not.toHaveAttribute("aria-disabled");
+    });
   });
 
   it("renders the single child via Slot when asChild is set, without icons", () => {

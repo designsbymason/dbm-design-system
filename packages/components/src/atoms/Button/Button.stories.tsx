@@ -28,7 +28,9 @@ export const AllVariants: Story = {
   name: "All variants",
   render: () => (
     <div style={{ display: "flex", gap: "1rem" }}>
-      {(["primary", "secondary", "tertiary", "ghost", "destructive"] as const).map((variant) => (
+      {(
+        ["primary", "secondary", "tertiary", "ghost", "destructive"] as const
+      ).map((variant) => (
         <Button key={variant} variant={variant}>
           {variant}
         </Button>
@@ -68,14 +70,37 @@ export const Loading: Story = {
   args: { isLoading: true, children: "Saving" },
 };
 
+export const LoadingWithLoadingText: Story = {
+  name: "Loading state with loadingText",
+  args: { isLoading: true, loadingText: "Saving…", children: "Save" },
+};
+
 export const Disabled: Story = {
   args: { disabled: true },
+};
+
+export const FullWidth: Story = {
+  name: "Full width",
+  render: () => (
+    <div style={{ maxWidth: "24rem" }}>
+      <Button fullWidth>Continue</Button>
+    </div>
+  ),
 };
 
 export const AsChild: Story = {
   name: "asChild (renders as an anchor)",
   render: () => (
     <Button asChild>
+      <a href="/next">Continue as a link</a>
+    </Button>
+  ),
+};
+
+export const AsChildDisabled: Story = {
+  name: "asChild + disabled (aria-disabled, click blocked)",
+  render: () => (
+    <Button asChild disabled>
       <a href="/next">Continue as a link</a>
     </Button>
   ),
