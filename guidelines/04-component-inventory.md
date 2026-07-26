@@ -44,8 +44,10 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
 | Button | atom | 🟢 | Primary/secondary/tertiary/destructive/ghost variants, loading state |
+| ButtonGroup | molecule | 🟡 | Attached/segmented button set, shared border-radius |
 | IconButton | atom | 🟢 | Icon-only, requires `aria-label` |
 | Input (text) | atom | 🟢 | With prefix/suffix slot support |
+| PasswordInput | molecule | 🟢 | Visibility toggle, wraps Input |
 | Textarea | atom | 🟢 | Auto-resize option |
 | NumberInput | molecule | 🟢 | Stepper controls, min/max/step |
 | Select | molecule | 🟢 | Native-feel, wraps Radix Select |
