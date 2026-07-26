@@ -1,3 +1,44 @@
 .root {
   line-height: var(--dbm-line-height-normal);
 }
+
+.hasIcon {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-2);
+  list-style: none;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.interactive {
+  align-items: center;
+  border-radius: var(--dbm-radius-md);
+  cursor: pointer;
+  display: flex;
+  gap: var(--dbm-space-2);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.interactive:hover {
+  background-color: var(--dbm-bg-subtle);
+}
+
+.interactive:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.selected {
+  background-color: var(--dbm-bg-brand-subtle);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.selected:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
