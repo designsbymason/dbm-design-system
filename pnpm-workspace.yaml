@@ -9,3 +9,25 @@ overrides:
   # never shipped in published packages) — pinned here since upstream hasn't
   # bumped it yet. Flagged by GitHub Dependabot 2026-07-18.
   esbuild: ">=0.28.1"
+  # CVE-2026-14257 / GHSA-mh99-v99m-4gvg: brace-expansion DoS via unbounded
+  # expansion length, patched in 5.0.8. Two copies existed: one reached via
+  # ESLint core + Storybook's docgen-typescript plugin (minimatch@10.2.5, a
+  # plain patch-version bump, no risk); one reached via
+  # eslint-plugin-jsx-a11y/eslint-plugin-react (minimatch@3.1.5 — the last-
+  # ever 3.x release, requesting brace-expansion@^1.1.7 with no patched 1.x
+  # release available upstream). Forcing this override for the second path
+  # only works because of the minimatch@3.1.5 patch below — brace-expansion
+  # >=2 exports `{ expand }` instead of a callable default, which would
+  # otherwise crash minimatch@3.1.5's own `require('brace-expansion')` call
+  # site (confirmed empirically, not just from reading the source — a plain
+  # override without the patch throws "expand is not a function" on every
+  # lint run). Dev-only in both paths, never shipped in published packages.
+  # Flagged by GitHub Dependabot 2026-07-26.
+  brace-expansion: ">=5.0.8"
+patchedDependencies:
+  # Bridges brace-expansion's >=2 export shape (see the brace-expansion
+  # override above) so the >=5.0.8 override doesn't crash this package's
+  # own `require('brace-expansion')` call site. Purely a compatibility
+  # shim — doesn't change minimatch@3.1.5's own behavior when
+  # brace-expansion happens to resolve to a 1.x-shaped export either.
+  minimatch@3.1.5: patches/minimatch@3.1.5.patch

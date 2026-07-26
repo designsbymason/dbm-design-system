@@ -1,0 +1,24 @@
+diff --git a/minimatch.js b/minimatch.js
+index 2e4a058a130dceebf83a7bd435f5d22b765ac836..b8de0af0336c4060eca20dff3739c45167235c21 100644
+--- a/minimatch.js
++++ b/minimatch.js
+@@ -7,7 +7,18 @@ var path = (function () { try { return require('path') } catch (e) {}}()) || {
+ minimatch.sep = path.sep
+ 
+ var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
+-var expand = require('brace-expansion')
++var braceExpansionModule = require('brace-expansion')
++// brace-expansion >=2 exports `{ expand }` (a named export) instead of the
++// old `module.exports = expand` callable default this package's own
++// dependency range (`^1.1.7`) predates — bridging both shapes here lets us
++// safely override brace-expansion to a version >=5.0.8, patching
++// CVE-2026-14257 (GHSA-mh99-v99m-4gvg), without waiting on an upstream
++// minimatch@3.x release that will likely never come (3.1.5 is the last
++// release in that major). See guidelines/06-engineering-standards.md's
++// security section for the full writeup.
++var expand = typeof braceExpansionModule === 'function'
++  ? braceExpansionModule
++  : braceExpansionModule.expand
+ 
+ var plTypes = {
+   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
