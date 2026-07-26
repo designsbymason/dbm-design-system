@@ -16,17 +16,23 @@ describe("Stack", () => {
 
   it("defaults to column direction via the CSS custom property", () => {
     render(<Stack data-testid="stack" />);
-    expect(screen.getByTestId("stack")).toHaveStyle({ "--stack-direction-base": "column" });
+    expect(screen.getByTestId("stack")).toHaveStyle({
+      "--stack-direction-base": "column",
+    });
   });
 
   it("applies row direction via the CSS custom property", () => {
     render(<Stack data-testid="stack" direction="row" />);
-    expect(screen.getByTestId("stack")).toHaveStyle({ "--stack-direction-base": "row" });
+    expect(screen.getByTestId("stack")).toHaveStyle({
+      "--stack-direction-base": "row",
+    });
   });
 
   it("applies gap as a token-driven CSS variable", () => {
     render(<Stack data-testid="stack" gap={4} />);
-    expect(screen.getByTestId("stack")).toHaveStyle({ "--stack-gap-base": "var(--dbm-space-4)" });
+    expect(screen.getByTestId("stack")).toHaveStyle({
+      "--stack-gap-base": "var(--dbm-space-4)",
+    });
   });
 
   it("applies align and justify via CSS custom properties", () => {
@@ -49,16 +55,22 @@ describe("Stack", () => {
 
   it("does not wrap by default", () => {
     render(<Stack data-testid="stack" />);
-    expect(screen.getByTestId("stack")).toHaveStyle({ "--stack-wrap-base": "nowrap" });
+    expect(screen.getByTestId("stack")).toHaveStyle({
+      "--stack-wrap-base": "nowrap",
+    });
   });
 
   it("applies wrap", () => {
     render(<Stack data-testid="stack" wrap />);
-    expect(screen.getByTestId("stack")).toHaveStyle({ "--stack-wrap-base": "wrap" });
+    expect(screen.getByTestId("stack")).toHaveStyle({
+      "--stack-wrap-base": "wrap",
+    });
   });
 
   it("sets a responsive direction as per-breakpoint CSS variables", () => {
-    render(<Stack data-testid="stack" direction={{ base: "column", md: "row" }} />);
+    render(
+      <Stack data-testid="stack" direction={{ base: "column", md: "row" }} />,
+    );
     const el = screen.getByTestId("stack");
     expect(el.style.getPropertyValue("--stack-direction-base")).toBe("column");
     expect(el.style.getPropertyValue("--stack-direction-md")).toBe("row");
@@ -75,12 +87,20 @@ describe("Stack", () => {
       />,
     );
     const el = screen.getByTestId("stack");
-    expect(el.style.getPropertyValue("--stack-gap-base")).toBe("var(--dbm-space-2)");
-    expect(el.style.getPropertyValue("--stack-gap-lg")).toBe("var(--dbm-space-8)");
+    expect(el.style.getPropertyValue("--stack-gap-base")).toBe(
+      "var(--dbm-space-2)",
+    );
+    expect(el.style.getPropertyValue("--stack-gap-lg")).toBe(
+      "var(--dbm-space-8)",
+    );
     expect(el.style.getPropertyValue("--stack-align-base")).toBe("flex-start");
     expect(el.style.getPropertyValue("--stack-align-md")).toBe("center");
-    expect(el.style.getPropertyValue("--stack-justify-base")).toBe("flex-start");
-    expect(el.style.getPropertyValue("--stack-justify-md")).toBe("space-between");
+    expect(el.style.getPropertyValue("--stack-justify-base")).toBe(
+      "flex-start",
+    );
+    expect(el.style.getPropertyValue("--stack-justify-md")).toBe(
+      "space-between",
+    );
     expect(el.style.getPropertyValue("--stack-wrap-base")).toBe("wrap");
     expect(el.style.getPropertyValue("--stack-wrap-lg")).toBe("nowrap");
   });
@@ -134,7 +154,9 @@ describe("Stack", () => {
   });
 
   it("forwards className and merges custom style with the gap variable", () => {
-    render(<Stack data-testid="stack" className="custom" style={{ padding: 8 }} />);
+    render(
+      <Stack data-testid="stack" className="custom" style={{ padding: 8 }} />,
+    );
     const el = screen.getByTestId("stack");
     expect(el).toHaveClass("custom");
     expect(el).toHaveStyle({ padding: "8px" });

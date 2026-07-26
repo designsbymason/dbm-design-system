@@ -14,37 +14,100 @@
  */
 @media (min-width: 640px) {
   .root {
-    padding-inline: var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4)));
+    padding-inline: var(
+      --container-padding-sm,
+      var(--container-padding-base, var(--dbm-space-4))
+    );
   }
 }
 
 @media (min-width: 768px) {
   .root {
-    padding-inline: var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4))));
+    padding-inline: var(
+      --container-padding-md,
+      var(
+        --container-padding-sm,
+        var(--container-padding-base, var(--dbm-space-4))
+      )
+    );
   }
 }
 
 @media (min-width: 1024px) {
   .root {
-    padding-inline: var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4)))));
+    padding-inline: var(
+      --container-padding-lg,
+      var(
+        --container-padding-md,
+        var(
+          --container-padding-sm,
+          var(--container-padding-base, var(--dbm-space-4))
+        )
+      )
+    );
   }
 }
 
 @media (min-width: 1280px) {
   .root {
-    padding-inline: var(--container-padding-xl, var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4))))));
+    padding-inline: var(
+      --container-padding-xl,
+      var(
+        --container-padding-lg,
+        var(
+          --container-padding-md,
+          var(
+            --container-padding-sm,
+            var(--container-padding-base, var(--dbm-space-4))
+          )
+        )
+      )
+    );
   }
 }
 
 @media (min-width: 1536px) {
   .root {
-    padding-inline: var(--container-padding-2xl, var(--container-padding-xl, var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4)))))));
+    padding-inline: var(
+      --container-padding-2xl,
+      var(
+        --container-padding-xl,
+        var(
+          --container-padding-lg,
+          var(
+            --container-padding-md,
+            var(
+              --container-padding-sm,
+              var(--container-padding-base, var(--dbm-space-4))
+            )
+          )
+        )
+      )
+    );
   }
 }
 
 @media (min-width: 1920px) {
   .root {
-    padding-inline: var(--container-padding-3xl, var(--container-padding-2xl, var(--container-padding-xl, var(--container-padding-lg, var(--container-padding-md, var(--container-padding-sm, var(--container-padding-base, var(--dbm-space-4))))))));
+    padding-inline: var(
+      --container-padding-3xl,
+      var(
+        --container-padding-2xl,
+        var(
+          --container-padding-xl,
+          var(
+            --container-padding-lg,
+            var(
+              --container-padding-md,
+              var(
+                --container-padding-sm,
+                var(--container-padding-base, var(--dbm-space-4))
+              )
+            )
+          )
+        )
+      )
+    );
   }
 }
 

@@ -16,12 +16,16 @@ describe("GridItem", () => {
 
   it("applies colSpan via the CSS custom property", () => {
     render(<GridItem data-testid="item" colSpan={3} />);
-    expect(screen.getByTestId("item")).toHaveStyle({ "--griditem-col-span-base": "3" });
+    expect(screen.getByTestId("item")).toHaveStyle({
+      "--griditem-col-span-base": "3",
+    });
   });
 
   it("applies rowSpan via the CSS custom property", () => {
     render(<GridItem data-testid="item" rowSpan={2} />);
-    expect(screen.getByTestId("item")).toHaveStyle({ "--griditem-row-span-base": "2" });
+    expect(screen.getByTestId("item")).toHaveStyle({
+      "--griditem-row-span-base": "2",
+    });
   });
 
   it("applies colStart via the CSS custom property, alongside colSpan", () => {
@@ -57,7 +61,13 @@ describe("GridItem", () => {
   });
 
   it("sets responsive colSpan and rowSpan as per-breakpoint CSS variables", () => {
-    render(<GridItem data-testid="item" colSpan={{ base: 4, md: 2 }} rowSpan={{ base: 1, lg: 2 }} />);
+    render(
+      <GridItem
+        data-testid="item"
+        colSpan={{ base: 4, md: 2 }}
+        rowSpan={{ base: 1, lg: 2 }}
+      />,
+    );
     const el = screen.getByTestId("item");
     expect(el.style.getPropertyValue("--griditem-col-span-base")).toBe("4");
     expect(el.style.getPropertyValue("--griditem-col-span-md")).toBe("2");

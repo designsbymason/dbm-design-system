@@ -21,7 +21,9 @@ describe("Grid", () => {
 
   it("defaults to 12 base columns via the CSS custom property", () => {
     render(<Grid data-testid="grid" />);
-    expect(screen.getByTestId("grid")).toHaveStyle({ "--grid-cols-base": "12" });
+    expect(screen.getByTestId("grid")).toHaveStyle({
+      "--grid-cols-base": "12",
+    });
   });
 
   it("accepts a fixed column count", () => {
@@ -41,14 +43,20 @@ describe("Grid", () => {
 
   it("applies gap as a token-driven CSS variable", () => {
     render(<Grid data-testid="grid" gap={6} />);
-    expect(screen.getByTestId("grid")).toHaveStyle({ "--grid-gap-base": "var(--dbm-space-6)" });
+    expect(screen.getByTestId("grid")).toHaveStyle({
+      "--grid-gap-base": "var(--dbm-space-6)",
+    });
   });
 
   it("accepts a responsive gap map, setting one custom property per breakpoint", () => {
     render(<Grid data-testid="grid" gap={{ base: 2, lg: 8 }} />);
     const el = screen.getByTestId("grid");
-    expect(el.style.getPropertyValue("--grid-gap-base")).toBe("var(--dbm-space-2)");
-    expect(el.style.getPropertyValue("--grid-gap-lg")).toBe("var(--dbm-space-8)");
+    expect(el.style.getPropertyValue("--grid-gap-base")).toBe(
+      "var(--dbm-space-2)",
+    );
+    expect(el.style.getPropertyValue("--grid-gap-lg")).toBe(
+      "var(--dbm-space-8)",
+    );
   });
 
   it("overrides the column template with minChildWidth when set", () => {
@@ -60,7 +68,12 @@ describe("Grid", () => {
 
   it("applies autoFlow, autoRows, and autoColumns", () => {
     render(
-      <Grid data-testid="grid" autoFlow="row dense" autoRows="minmax(6rem, auto)" autoColumns="1fr" />,
+      <Grid
+        data-testid="grid"
+        autoFlow="row dense"
+        autoRows="minmax(6rem, auto)"
+        autoColumns="1fr"
+      />,
     );
     expect(screen.getByTestId("grid")).toHaveStyle({
       gridAutoFlow: "row dense",

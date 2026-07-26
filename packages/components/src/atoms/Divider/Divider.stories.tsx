@@ -35,7 +35,13 @@ export const HorizontalWithLabel: Story = {
 
 export const Vertical: Story = {
   render: () => (
-    <div style={{ color: "var(--dbm-text-primary)", display: "flex", height: "4rem" }}>
+    <div
+      style={{
+        color: "var(--dbm-text-primary)",
+        display: "flex",
+        height: "4rem",
+      }}
+    >
       <span>Left</span>
       <Divider orientation="vertical" />
       <span>Right</span>
@@ -58,7 +64,13 @@ export const NarrowViewport: Story = {
 export const VerticalWithLabel: Story = {
   name: "Vertical with label",
   render: () => (
-    <div style={{ color: "var(--dbm-text-primary)", display: "flex", height: "6rem" }}>
+    <div
+      style={{
+        color: "var(--dbm-text-primary)",
+        display: "flex",
+        height: "6rem",
+      }}
+    >
       <span>Left</span>
       <Divider orientation="vertical" label="OR" />
       <span>Right</span>
@@ -86,7 +98,10 @@ export const ResponsiveOrientation: Story = {
       style={{ color: "var(--dbm-text-primary)", minHeight: "6rem" }}
     >
       <span>Section A</span>
-      <Divider orientation={{ base: "horizontal", lg: "vertical" }} label="OR" />
+      <Divider
+        orientation={{ base: "horizontal", lg: "vertical" }}
+        label="OR"
+      />
       <span>Section B</span>
     </Stack>
   ),

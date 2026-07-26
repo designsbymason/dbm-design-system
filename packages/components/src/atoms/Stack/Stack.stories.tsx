@@ -7,12 +7,18 @@ const meta: Meta<typeof Stack> = {
   parameters: { layout: "padded" },
   argTypes: {
     direction: { control: "radio", options: ["row", "column"] },
-    align: { control: "select", options: ["start", "center", "end", "stretch", "baseline"] },
+    align: {
+      control: "select",
+      options: ["start", "center", "end", "stretch", "baseline"],
+    },
     justify: {
       control: "select",
       options: ["start", "center", "end", "between", "around", "evenly"],
     },
-    gap: { control: "select", options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32] },
+    gap: {
+      control: "select",
+      options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
+    },
   },
 };
 
@@ -60,7 +66,9 @@ export const AllGapSteps: Story = {
     <Stack gap={6}>
       {([0, 1, 2, 4, 8, 16, 32] as const).map((gap) => (
         <Stack key={gap} direction="row" gap={gap} align="center">
-          <span style={{ color: "var(--dbm-text-secondary)", width: "4rem" }}>gap={gap}</span>
+          <span style={{ color: "var(--dbm-text-secondary)", width: "4rem" }}>
+            gap={gap}
+          </span>
           <Swatches />
         </Stack>
       ))}
@@ -136,7 +144,12 @@ export const ResponsiveEverything: Story = {
 export const AsUnorderedList: Story = {
   name: 'Polymorphic: as="ul" (real semantic list, Stack layout behavior)',
   render: () => (
-    <Stack as="ul" direction="row" gap={3} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+    <Stack
+      as="ul"
+      direction="row"
+      gap={3}
+      style={{ listStyle: "none", margin: 0, padding: 0 }}
+    >
       <li style={swatchStyle}>One</li>
       <li style={swatchStyle}>Two</li>
       <li style={swatchStyle}>Three</li>

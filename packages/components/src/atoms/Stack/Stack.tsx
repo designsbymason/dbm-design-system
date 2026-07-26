@@ -1,7 +1,17 @@
-import { cx } from "@dbm-design-system/primitives";
-import { Children, cloneElement, forwardRef, isValidElement, Fragment } from "react";
-import type { ComponentPropsWithRef, ElementType, ReactElement, ReactNode } from "react";
-import { responsiveStyle } from "../../utils/responsiveStyle";
+import { cx, responsiveStyle } from "@dbm-design-system/primitives";
+import {
+  Children,
+  cloneElement,
+  forwardRef,
+  isValidElement,
+  Fragment,
+} from "react";
+import type {
+  ComponentPropsWithRef,
+  ElementType,
+  ReactElement,
+  ReactNode,
+} from "react";
 import styles from "./Stack.module.css";
 import type { StackAlign, StackJustify, StackProps } from "./Stack.types";
 
@@ -45,45 +55,61 @@ function withDividers(children: ReactNode, divider: ReactNode): ReactNode {
   });
 }
 
-const StackImpl = forwardRef<HTMLElement, StackProps<ElementType>>(function Stack(
-  {
-    as,
-    direction = "column",
-    gap = 0,
-    align = "stretch",
-    justify = "start",
-    wrap = false,
-    divider,
-    className,
-    style,
-    children,
-    ...props
+const StackImpl = forwardRef<HTMLElement, StackProps<ElementType>>(
+  function Stack(
+    {
+      as,
+      direction = "column",
+      gap = 0,
+      align = "stretch",
+      justify = "start",
+      wrap = false,
+      divider,
+      className,
+      style,
+      children,
+      ...props
+    },
+    ref,
+  ) {
+    const Component = as ?? "div";
+    return (
+      <Component
+        ref={ref}
+        className={cx(styles.root, className)}
+        style={{
+          ...responsiveStyle(
+            direction,
+            "--stack-direction",
+            (value: string) => value,
+          ),
+          ...responsiveStyle(
+            align,
+            "--stack-align",
+            (value: StackAlign) => ALIGN_ITEMS[value],
+          ),
+          ...responsiveStyle(
+            justify,
+            "--stack-justify",
+            (value: StackJustify) => JUSTIFY_CONTENT[value],
+          ),
+          ...responsiveStyle(wrap, "--stack-wrap", (value: boolean) =>
+            value ? "wrap" : "nowrap",
+          ),
+          ...responsiveStyle(
+            gap,
+            "--stack-gap",
+            (value: number) => `var(--dbm-space-${value})`,
+          ),
+          ...style,
+        }}
+        {...props}
+      >
+        {divider ? withDividers(children, divider) : children}
+      </Component>
+    );
   },
-  ref,
-) {
-  const Component = as ?? "div";
-  return (
-    <Component
-      ref={ref}
-      className={cx(styles.root, className)}
-      style={{
-        ...responsiveStyle(direction, "--stack-direction", (value: string) => value),
-        ...responsiveStyle(align, "--stack-align", (value: StackAlign) => ALIGN_ITEMS[value]),
-        ...responsiveStyle(
-          justify,
-          "--stack-justify",
-          (value: StackJustify) => JUSTIFY_CONTENT[value],
-        ),
-        ...responsiveStyle(wrap, "--stack-wrap", (value: boolean) => (value ? "wrap" : "nowrap")),
-        ...responsiveStyle(gap, "--stack-gap", (value: number) => `var(--dbm-space-${value})`),
-        ...style,
-      }}
-      {...props}
-    >
-      {divider ? withDividers(children, divider) : children}
-    </Component>
-  );
-});
+);
 
 /**
  * A flex layout primitive for stacking children vertically or horizontally

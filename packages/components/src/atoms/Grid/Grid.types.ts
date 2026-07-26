@@ -1,7 +1,11 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
-import type { Breakpoint, Responsive, SpaceValue } from "../../types/tokens";
+import type {
+  Breakpoint,
+  Responsive,
+  SpaceValue,
+} from "@dbm-design-system/primitives";
 
-export type { SpaceValue } from "../../types/tokens";
+export type { SpaceValue } from "@dbm-design-system/primitives";
 
 /** A breakpoint step, matching the primitive breakpoint tokens. */
 export type GridBreakpoint = Breakpoint;

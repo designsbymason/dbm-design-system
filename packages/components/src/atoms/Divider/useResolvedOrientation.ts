@@ -1,12 +1,16 @@
 import { useEffect, useLayoutEffect, useState } from "react";
-import type { Responsive } from "../../types/tokens";
+import type { Responsive } from "@dbm-design-system/primitives";
 import type { DividerOrientation } from "./Divider.types";
 
-const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 // Widest-first, matching the CSS cascade's mobile-first fallback (the
 // largest matching breakpoint with a defined value wins).
-const BREAKPOINT_QUERIES: readonly [key: "3xl" | "2xl" | "xl" | "lg" | "md" | "sm", string][] = [
+const BREAKPOINT_QUERIES: readonly [
+  key: "3xl" | "2xl" | "xl" | "lg" | "md" | "sm",
+  string,
+][] = [
   ["3xl", "(min-width: 1920px)"],
   ["2xl", "(min-width: 1536px)"],
   ["xl", "(min-width: 1280px)"],
@@ -40,7 +44,9 @@ function resolve(
  * by CSS (see Divider.module.css), so it never depends on this JS timing —
  * only the ARIA attribute does, since CSS genuinely can't reach it.
  */
-export function useResolvedOrientation(value: Responsive<DividerOrientation>): DividerOrientation {
+export function useResolvedOrientation(
+  value: Responsive<DividerOrientation>,
+): DividerOrientation {
   const isResponsive = typeof value === "object" && value !== null;
   const [resolved, setResolved] = useState<DividerOrientation>(() =>
     isResponsive ? (value.base ?? "horizontal") : value,
@@ -52,12 +58,18 @@ export function useResolvedOrientation(value: Responsive<DividerOrientation>): D
       return undefined;
     }
 
-    const update = () => setResolved(resolve(value, (query) => window.matchMedia(query).matches));
+    const update = () =>
+      setResolved(resolve(value, (query) => window.matchMedia(query).matches));
     update();
 
-    const mediaQueryLists = BREAKPOINT_QUERIES.map(([, query]) => window.matchMedia(query));
+    const mediaQueryLists = BREAKPOINT_QUERIES.map(([, query]) =>
+      window.matchMedia(query),
+    );
     mediaQueryLists.forEach((mql) => mql.addEventListener("change", update));
-    return () => mediaQueryLists.forEach((mql) => mql.removeEventListener("change", update));
+    return () =>
+      mediaQueryLists.forEach((mql) =>
+        mql.removeEventListener("change", update),
+      );
   }, [
     isResponsive,
     isResponsive ? undefined : value,

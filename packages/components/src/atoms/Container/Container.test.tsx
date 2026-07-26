@@ -22,8 +22,12 @@ describe("Container", () => {
   });
 
   it("applies the max-width for each size", () => {
-    const { rerender } = render(<Container data-testid="container" size="sm" />);
-    expect(screen.getByTestId("container")).toHaveStyle({ maxWidth: "var(--dbm-breakpoint-sm)" });
+    const { rerender } = render(
+      <Container data-testid="container" size="sm" />,
+    );
+    expect(screen.getByTestId("container")).toHaveStyle({
+      maxWidth: "var(--dbm-breakpoint-sm)",
+    });
 
     rerender(<Container data-testid="container" size="3xl" />);
     expect(screen.getByTestId("container")).toHaveStyle({
@@ -50,10 +54,16 @@ describe("Container", () => {
   });
 
   it("sets a responsive paddingInline as per-breakpoint CSS variables", () => {
-    render(<Container data-testid="container" paddingInline={{ base: 2, lg: 8 }} />);
+    render(
+      <Container data-testid="container" paddingInline={{ base: 2, lg: 8 }} />,
+    );
     const el = screen.getByTestId("container");
-    expect(el.style.getPropertyValue("--container-padding-base")).toBe("var(--dbm-space-2)");
-    expect(el.style.getPropertyValue("--container-padding-lg")).toBe("var(--dbm-space-8)");
+    expect(el.style.getPropertyValue("--container-padding-base")).toBe(
+      "var(--dbm-space-2)",
+    );
+    expect(el.style.getPropertyValue("--container-padding-lg")).toBe(
+      "var(--dbm-space-8)",
+    );
   });
 
   it("renders as the element passed via `as`, keeping Container's own layout behavior", () => {

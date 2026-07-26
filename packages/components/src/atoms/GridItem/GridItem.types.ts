@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
-import type { Responsive } from "../../types/tokens";
+import type { Responsive } from "@dbm-design-system/primitives";
 
 export type GridItemProps<E extends ElementType = "div"> = {
   /**

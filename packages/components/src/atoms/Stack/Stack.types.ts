@@ -1,11 +1,12 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
-import type { Responsive, SpaceValue } from "../../types/tokens";
+import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
 
-export type { SpaceValue } from "../../types/tokens";
+export type { SpaceValue } from "@dbm-design-system/primitives";
 
 export type StackDirection = "row" | "column";
 export type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";
-export type StackJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
+export type StackJustify =
+  "start" | "center" | "end" | "between" | "around" | "evenly";
 
 export type StackProps<E extends ElementType = "div"> = {
   /**

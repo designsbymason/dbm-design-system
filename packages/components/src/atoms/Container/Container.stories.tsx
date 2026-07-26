@@ -6,7 +6,10 @@ const meta: Meta<typeof Container> = {
   component: Container,
   parameters: { layout: "fullscreen" },
   argTypes: {
-    size: { control: "select", options: ["sm", "md", "lg", "xl", "2xl", "3xl", "full"] },
+    size: {
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "full"],
+    },
   },
 };
 
@@ -37,7 +40,11 @@ export const AllSizes: Story = {
   render: () => (
     <>
       {(["sm", "md", "lg", "xl", "2xl", "3xl", "full"] as const).map((size) => (
-        <Container key={size} size={size} style={{ marginBlockEnd: "var(--dbm-space-4)" }}>
+        <Container
+          key={size}
+          size={size}
+          style={{ marginBlockEnd: "var(--dbm-space-4)" }}
+        >
           <div
             style={{
               background: "var(--dbm-bg-brand-subtle)",

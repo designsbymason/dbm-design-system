@@ -14,7 +14,10 @@
 @media (min-width: 640px) {
   .root {
     gap: var(--grid-gap-sm, var(--grid-gap-base, 0));
-    grid-template-columns: repeat(var(--grid-cols-sm, var(--grid-cols-base, 12)), minmax(0, 1fr));
+    grid-template-columns: repeat(
+      var(--grid-cols-sm, var(--grid-cols-base, 12)),
+      minmax(0, 1fr)
+    );
   }
 }
 
@@ -30,9 +33,15 @@
 
 @media (min-width: 1024px) {
   .root {
-    gap: var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))));
+    gap: var(
+      --grid-gap-lg,
+      var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
+    );
     grid-template-columns: repeat(
-      var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))),
+      var(
+        --grid-cols-lg,
+        var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
+      ),
       minmax(0, 1fr)
     );
   }
@@ -42,12 +51,18 @@
   .root {
     gap: var(
       --grid-gap-xl,
-      var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))))
+      var(
+        --grid-gap-lg,
+        var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
+      )
     );
     grid-template-columns: repeat(
       var(
         --grid-cols-xl,
-        var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))))
+        var(
+          --grid-cols-lg,
+          var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
+        )
       ),
       minmax(0, 1fr)
     );
@@ -60,7 +75,10 @@
       --grid-gap-2xl,
       var(
         --grid-gap-xl,
-        var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))))
+        var(
+          --grid-gap-lg,
+          var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
+        )
       )
     );
     grid-template-columns: repeat(
@@ -68,7 +86,10 @@
         --grid-cols-2xl,
         var(
           --grid-cols-xl,
-          var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))))
+          var(
+            --grid-cols-lg,
+            var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
+          )
         )
       ),
       minmax(0, 1fr)
@@ -84,7 +105,10 @@
         --grid-gap-2xl,
         var(
           --grid-gap-xl,
-          var(--grid-gap-lg, var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0))))
+          var(
+            --grid-gap-lg,
+            var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
+          )
         )
       )
     );
@@ -97,7 +121,10 @@
             --grid-cols-xl,
             var(
               --grid-cols-lg,
-              var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
+              var(
+                --grid-cols-md,
+                var(--grid-cols-sm, var(--grid-cols-base, 12))
+              )
             )
           )
         )

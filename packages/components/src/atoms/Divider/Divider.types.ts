@@ -1,10 +1,13 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import type { Responsive } from "../../types/tokens";
+import type { Responsive } from "@dbm-design-system/primitives";
 
 export type DividerOrientation = "horizontal" | "vertical";
 export type DividerVariant = "solid" | "dashed";
 
-export interface DividerProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DividerProps extends Omit<
+  ComponentPropsWithoutRef<"div">,
+  "children"
+> {
   /**
    * Axis the divider runs along — a single value, or a mobile-first
    * responsive map keyed by breakpoint (e.g.

@@ -1,7 +1,6 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
-import { responsiveStyle } from "../../utils/responsiveStyle";
 import styles from "./GridItem.module.css";
 import type { GridItemProps } from "./GridItem.types";
 
@@ -12,26 +11,40 @@ type GridItemComponent = {
   displayName?: string;
 };
 
-const GridItemImpl = forwardRef<HTMLElement, GridItemProps<ElementType>>(function GridItem(
-  { as, colSpan, rowSpan, colStart, rowStart, className, style, ...props },
-  ref,
-) {
-  const Component = as ?? "div";
-  return (
-    <Component
-      ref={ref}
-      className={cx(styles.root, className)}
-      style={{
-        ...responsiveStyle(colStart, "--griditem-col-start", (value: number) => String(value)),
-        ...responsiveStyle(colSpan, "--griditem-col-span", (value: number) => String(value)),
-        ...responsiveStyle(rowStart, "--griditem-row-start", (value: number) => String(value)),
-        ...responsiveStyle(rowSpan, "--griditem-row-span", (value: number) => String(value)),
-        ...style,
-      }}
-      {...props}
-    />
-  );
-});
+const GridItemImpl = forwardRef<HTMLElement, GridItemProps<ElementType>>(
+  function GridItem(
+    { as, colSpan, rowSpan, colStart, rowStart, className, style, ...props },
+    ref,
+  ) {
+    const Component = as ?? "div";
+    return (
+      <Component
+        ref={ref}
+        className={cx(styles.root, className)}
+        style={{
+          ...responsiveStyle(
+            colStart,
+            "--griditem-col-start",
+            (value: number) => String(value),
+          ),
+          ...responsiveStyle(colSpan, "--griditem-col-span", (value: number) =>
+            String(value),
+          ),
+          ...responsiveStyle(
+            rowStart,
+            "--griditem-row-start",
+            (value: number) => String(value),
+          ),
+          ...responsiveStyle(rowSpan, "--griditem-row-span", (value: number) =>
+            String(value),
+          ),
+          ...style,
+        }}
+        {...props}
+      />
+    );
+  },
+);
 
 /**
  * A cell within a `Grid`, with props for how many columns/rows it spans and

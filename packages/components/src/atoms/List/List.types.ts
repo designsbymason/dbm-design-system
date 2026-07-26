@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import type { Responsive, SpaceValue } from "../../types/tokens";
+import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
 
 export type ListMarker = "disc" | "decimal" | "none";
 export type ListElement = "ul" | "ol";

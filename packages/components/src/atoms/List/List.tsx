@@ -1,7 +1,6 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
-import { responsiveStyle } from "../../utils/responsiveStyle";
 import { ListMarkerContext } from "./ListMarkerContext";
 import styles from "./List.module.css";
 import type { ListElement, ListMarker, ListProps } from "./List.types";

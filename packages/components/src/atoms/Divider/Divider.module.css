@@ -21,7 +21,10 @@
  */
 @media (min-width: 640px) {
   .root {
-    flex-direction: var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row));
+    flex-direction: var(
+      --divider-flex-direction-sm,
+      var(--divider-flex-direction-base, row)
+    );
     height: var(--divider-height-sm, var(--divider-height-base, auto));
     width: var(--divider-width-sm, var(--divider-width-base, 100%));
   }
@@ -33,8 +36,14 @@
       --divider-flex-direction-md,
       var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row))
     );
-    height: var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto)));
-    width: var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%)));
+    height: var(
+      --divider-height-md,
+      var(--divider-height-sm, var(--divider-height-base, auto))
+    );
+    width: var(
+      --divider-width-md,
+      var(--divider-width-sm, var(--divider-width-base, 100%))
+    );
   }
 }
 
@@ -42,15 +51,27 @@
   .root {
     flex-direction: var(
       --divider-flex-direction-lg,
-      var(--divider-flex-direction-md, var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row)))
+      var(
+        --divider-flex-direction-md,
+        var(
+          --divider-flex-direction-sm,
+          var(--divider-flex-direction-base, row)
+        )
+      )
     );
     height: var(
       --divider-height-lg,
-      var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto)))
+      var(
+        --divider-height-md,
+        var(--divider-height-sm, var(--divider-height-base, auto))
+      )
     );
     width: var(
       --divider-width-lg,
-      var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%)))
+      var(
+        --divider-width-md,
+        var(--divider-width-sm, var(--divider-width-base, 100%))
+      )
     );
   }
 }
@@ -61,16 +82,34 @@
       --divider-flex-direction-xl,
       var(
         --divider-flex-direction-lg,
-        var(--divider-flex-direction-md, var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row)))
+        var(
+          --divider-flex-direction-md,
+          var(
+            --divider-flex-direction-sm,
+            var(--divider-flex-direction-base, row)
+          )
+        )
       )
     );
     height: var(
       --divider-height-xl,
-      var(--divider-height-lg, var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto))))
+      var(
+        --divider-height-lg,
+        var(
+          --divider-height-md,
+          var(--divider-height-sm, var(--divider-height-base, auto))
+        )
+      )
     );
     width: var(
       --divider-width-xl,
-      var(--divider-width-lg, var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%))))
+      var(
+        --divider-width-lg,
+        var(
+          --divider-width-md,
+          var(--divider-width-sm, var(--divider-width-base, 100%))
+        )
+      )
     );
   }
 }
@@ -85,7 +124,10 @@
           --divider-flex-direction-lg,
           var(
             --divider-flex-direction-md,
-            var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row))
+            var(
+              --divider-flex-direction-sm,
+              var(--divider-flex-direction-base, row)
+            )
           )
         )
       )
@@ -94,14 +136,26 @@
       --divider-height-2xl,
       var(
         --divider-height-xl,
-        var(--divider-height-lg, var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto))))
+        var(
+          --divider-height-lg,
+          var(
+            --divider-height-md,
+            var(--divider-height-sm, var(--divider-height-base, auto))
+          )
+        )
       )
     );
     width: var(
       --divider-width-2xl,
       var(
         --divider-width-xl,
-        var(--divider-width-lg, var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%))))
+        var(
+          --divider-width-lg,
+          var(
+            --divider-width-md,
+            var(--divider-width-sm, var(--divider-width-base, 100%))
+          )
+        )
       )
     );
   }
@@ -119,7 +173,10 @@
             --divider-flex-direction-lg,
             var(
               --divider-flex-direction-md,
-              var(--divider-flex-direction-sm, var(--divider-flex-direction-base, row))
+              var(
+                --divider-flex-direction-sm,
+                var(--divider-flex-direction-base, row)
+              )
             )
           )
         )
@@ -133,7 +190,10 @@
           --divider-height-xl,
           var(
             --divider-height-lg,
-            var(--divider-height-md, var(--divider-height-sm, var(--divider-height-base, auto)))
+            var(
+              --divider-height-md,
+              var(--divider-height-sm, var(--divider-height-base, auto))
+            )
           )
         )
       )
@@ -144,7 +204,13 @@
         --divider-width-2xl,
         var(
           --divider-width-xl,
-          var(--divider-width-lg, var(--divider-width-md, var(--divider-width-sm, var(--divider-width-base, 100%))))
+          var(
+            --divider-width-lg,
+            var(
+              --divider-width-md,
+              var(--divider-width-sm, var(--divider-width-base, 100%))
+            )
+          )
         )
       )
     );

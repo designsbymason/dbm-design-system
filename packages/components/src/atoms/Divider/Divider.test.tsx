@@ -12,12 +12,18 @@ describe("Divider", () => {
 
   it("defaults to horizontal orientation", () => {
     render(<Divider />);
-    expect(screen.getByRole("separator")).toHaveAttribute("aria-orientation", "horizontal");
+    expect(screen.getByRole("separator")).toHaveAttribute(
+      "aria-orientation",
+      "horizontal",
+    );
   });
 
   it("applies vertical orientation", () => {
     render(<Divider orientation="vertical" />);
-    expect(screen.getByRole("separator")).toHaveAttribute("aria-orientation", "vertical");
+    expect(screen.getByRole("separator")).toHaveAttribute(
+      "aria-orientation",
+      "vertical",
+    );
   });
 
   it("renders a single line when no label is given", () => {
@@ -53,10 +59,19 @@ describe("Divider", () => {
   });
 
   it("sets a responsive orientation as per-breakpoint CSS variables driving the visual layout", () => {
-    render(<Divider data-testid="divider" orientation={{ base: "horizontal", lg: "vertical" }} />);
+    render(
+      <Divider
+        data-testid="divider"
+        orientation={{ base: "horizontal", lg: "vertical" }}
+      />,
+    );
     const el = screen.getByTestId("divider");
-    expect(el.style.getPropertyValue("--divider-flex-direction-base")).toBe("row");
-    expect(el.style.getPropertyValue("--divider-flex-direction-lg")).toBe("column");
+    expect(el.style.getPropertyValue("--divider-flex-direction-base")).toBe(
+      "row",
+    );
+    expect(el.style.getPropertyValue("--divider-flex-direction-lg")).toBe(
+      "column",
+    );
     expect(el.style.getPropertyValue("--divider-width-base")).toBe("100%");
     expect(el.style.getPropertyValue("--divider-width-lg")).toBe("auto");
     expect(el.style.getPropertyValue("--divider-height-base")).toBe("auto");
@@ -67,12 +82,17 @@ describe("Divider", () => {
     render(<Divider orientation={{ base: "horizontal", lg: "vertical" }} />);
     // jsdom's default matchMedia (see src/test/setup.ts) reports no query as
     // matching, so this resolves to the `base` entry.
-    expect(screen.getByRole("separator")).toHaveAttribute("aria-orientation", "horizontal");
+    expect(screen.getByRole("separator")).toHaveAttribute(
+      "aria-orientation",
+      "horizontal",
+    );
   });
 
   it("updates aria-orientation live when a matchMedia change listener fires", async () => {
     const listeners: Record<string, Array<() => void>> = {};
-    const currentMatches: Record<string, boolean> = { "(min-width: 1024px)": true };
+    const currentMatches: Record<string, boolean> = {
+      "(min-width: 1024px)": true,
+    };
 
     vi.stubGlobal(
       "matchMedia",
@@ -90,7 +110,10 @@ describe("Divider", () => {
 
     render(<Divider orientation={{ base: "horizontal", lg: "vertical" }} />);
     await waitFor(() =>
-      expect(screen.getByRole("separator")).toHaveAttribute("aria-orientation", "vertical"),
+      expect(screen.getByRole("separator")).toHaveAttribute(
+        "aria-orientation",
+        "vertical",
+      ),
     );
 
     // Simulate the viewport dropping back below the lg breakpoint.
@@ -98,7 +121,10 @@ describe("Divider", () => {
     listeners["(min-width: 1024px)"]?.forEach((cb) => cb());
 
     await waitFor(() =>
-      expect(screen.getByRole("separator")).toHaveAttribute("aria-orientation", "horizontal"),
+      expect(screen.getByRole("separator")).toHaveAttribute(
+        "aria-orientation",
+        "horizontal",
+      ),
     );
 
     vi.unstubAllGlobals();

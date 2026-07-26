@@ -1,9 +1,8 @@
 import { XIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
+import { cx, mergeRefs } from "@dbm-design-system/primitives";
 import { forwardRef, useRef, useState } from "react";
 import type { ChangeEvent, MouseEvent as ReactMouseEvent } from "react";
 import { IconButton } from "../IconButton";
-import { mergeRefs } from "../../utils/mergeRefs";
 import styles from "./Input.module.css";
 import type { InputProps, InputSize } from "./Input.types";
 

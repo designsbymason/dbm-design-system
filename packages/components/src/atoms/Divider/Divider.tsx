@@ -1,7 +1,6 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import type { CSSProperties } from "react";
-import { responsiveStyle } from "../../utils/responsiveStyle";
 import styles from "./Divider.module.css";
 import type { DividerOrientation, DividerProps } from "./Divider.types";
 import { useResolvedOrientation } from "./useResolvedOrientation";
@@ -14,11 +13,21 @@ function orientationStyle(value: DividerProps["orientation"]): CSSProperties {
       ? { flexDirection: "row", width: "100%", height: "auto" }
       : { flexDirection: "column", width: "auto", height: "100%" };
 
-  const flexDirection = responsiveStyle(value, "--divider-flex-direction", (o: DividerOrientation) =>
-    toAxisValues(o).flexDirection,
+  const flexDirection = responsiveStyle(
+    value,
+    "--divider-flex-direction",
+    (o: DividerOrientation) => toAxisValues(o).flexDirection,
   );
-  const width = responsiveStyle(value, "--divider-width", (o: DividerOrientation) => toAxisValues(o).width);
-  const height = responsiveStyle(value, "--divider-height", (o: DividerOrientation) => toAxisValues(o).height);
+  const width = responsiveStyle(
+    value,
+    "--divider-width",
+    (o: DividerOrientation) => toAxisValues(o).width,
+  );
+  const height = responsiveStyle(
+    value,
+    "--divider-height",
+    (o: DividerOrientation) => toAxisValues(o).height,
+  );
   return { ...flexDirection, ...width, ...height };
 }
 
@@ -44,7 +53,17 @@ function orientationStyle(value: DividerProps["orientation"]): CSSProperties {
  * ```
  */
 export const Divider = forwardRef<HTMLDivElement, DividerProps>(
-  ({ orientation = "horizontal", variant = "solid", label, className, style, ...props }, ref) => {
+  (
+    {
+      orientation = "horizontal",
+      variant = "solid",
+      label,
+      className,
+      style,
+      ...props
+    },
+    ref,
+  ) => {
     const resolvedOrientation = useResolvedOrientation(orientation);
     const lineClassName =
       variant === "dashed"

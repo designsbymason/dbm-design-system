@@ -1,7 +1,6 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
-import { responsiveStyle } from "../../utils/responsiveStyle";
 import styles from "./Grid.module.css";
 import type { GridProps } from "./Grid.types";
 
@@ -33,10 +32,18 @@ const GridImpl = forwardRef<HTMLElement, GridProps<ElementType>>(function Grid(
       ref={ref}
       className={cx(styles.root, className)}
       style={{
-        ...responsiveStyle(columns, "--grid-cols", (value: number) => String(value)),
-        ...responsiveStyle(gap, "--grid-gap", (value: number) => `var(--dbm-space-${value})`),
+        ...responsiveStyle(columns, "--grid-cols", (value: number) =>
+          String(value),
+        ),
+        ...responsiveStyle(
+          gap,
+          "--grid-gap",
+          (value: number) => `var(--dbm-space-${value})`,
+        ),
         ...(minChildWidth !== undefined
-          ? { gridTemplateColumns: `repeat(auto-fill, minmax(${minChildWidth}, 1fr))` }
+          ? {
+              gridTemplateColumns: `repeat(auto-fill, minmax(${minChildWidth}, 1fr))`,
+            }
           : {}),
         ...(autoFlow !== undefined ? { gridAutoFlow: autoFlow } : {}),
         ...(autoRows !== undefined ? { gridAutoRows: autoRows } : {}),

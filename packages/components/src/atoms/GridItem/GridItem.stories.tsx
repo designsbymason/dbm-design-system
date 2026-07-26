@@ -87,7 +87,12 @@ export const ResponsiveSpan: Story = {
 export const AsListItem: Story = {
   name: 'Polymorphic: as="li" (real semantic list item, GridItem layout behavior)',
   render: () => (
-    <Grid as="ul" columns={4} gap={4} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+    <Grid
+      as="ul"
+      columns={4}
+      gap={4}
+      style={{ listStyle: "none", margin: 0, padding: 0 }}
+    >
       <GridItem as="li" colSpan={2} style={cellStyle}>
         colSpan=2
       </GridItem>
