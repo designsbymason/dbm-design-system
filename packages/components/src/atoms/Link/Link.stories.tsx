@@ -49,3 +49,22 @@ export const InParagraph: Story = {
     </p>
   ),
 };
+
+export const UnderlineVariants: Story = {
+  name: "underline variants (always / hover / none)",
+  render: () => (
+    <p style={{ color: "var(--dbm-text-primary)" }}>
+      <Link href="/docs" underline="always">
+        underline=&quot;always&quot; (default, safe for body text)
+      </Link>
+      <br />
+      <Link href="/docs" underline="hover">
+        underline=&quot;hover&quot; (hover to reveal — for non-body-text use only)
+      </Link>
+      <br />
+      <Link href="/docs" underline="none">
+        underline=&quot;none&quot; (e.g. navigation, where color+weight distinguish it)
+      </Link>
+    </p>
+  ),
+};

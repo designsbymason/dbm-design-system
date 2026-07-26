@@ -24,6 +24,13 @@ describe("Link", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
+  it("auto-detects a protocol-relative href (//...) as external", () => {
+    render(<Link href="//example.com">Protocol-relative</Link>);
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
   it("respects an explicit `external` override", () => {
     render(
       <Link href="/internal-but-forced-external" external>
@@ -41,6 +48,37 @@ describe("Link", () => {
 
     rerender(<Link href="https://example.com">External</Link>);
     expect(document.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("adds a visually-hidden \"opens in a new tab\" cue only when external", () => {
+    const { rerender } = render(<Link href="/docs">Docs</Link>);
+    expect(screen.queryByText(/opens in a new tab/)).not.toBeInTheDocument();
+
+    rerender(<Link href="https://example.com">External</Link>);
+    expect(screen.getByText(/opens in a new tab/)).toBeInTheDocument();
+  });
+
+  it("underlines by default", () => {
+    render(<Link href="/docs" data-testid="link">Docs</Link>);
+    expect(screen.getByTestId("link").className).toMatch(/underlineAlways/);
+  });
+
+  it("applies the hover-only underline variant", () => {
+    render(
+      <Link href="/docs" underline="hover" data-testid="link">
+        Docs
+      </Link>,
+    );
+    expect(screen.getByTestId("link").className).toMatch(/underlineHover/);
+  });
+
+  it("applies the no-underline variant", () => {
+    render(
+      <Link href="/docs" underline="none" data-testid="link">
+        Docs
+      </Link>,
+    );
+    expect(screen.getByTestId("link").className).toMatch(/underlineNone/);
   });
 
   it("renders the single child via Slot when asChild is set, without the icon", () => {

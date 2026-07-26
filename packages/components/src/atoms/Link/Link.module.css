@@ -2,7 +2,6 @@
   color: var(--dbm-text-link);
   font-family: var(--dbm-font-family-primary);
   text-decoration-line: underline;
-  text-decoration-color: transparent;
   transition: text-decoration-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
@@ -10,13 +9,31 @@
   color: var(--dbm-text-link);
 }
 
-.root:hover {
-  text-decoration-color: currentColor;
-}
-
 .root:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
+}
+
+/*
+ * WCAG 1.4.1: text.link vs text.primary contrast is 1.92–2.33:1 across all
+ * four themes (checked directly), well under the 3:1 a color-only
+ * distinction would need — so the underline can't be hover-only by
+ * default, since :hover never fires for keyboard/touch users.
+ */
+.underlineAlways {
+  text-decoration-color: currentColor;
+}
+
+.underlineHover {
+  text-decoration-color: transparent;
+}
+
+.underlineHover:hover {
+  text-decoration-color: currentColor;
+}
+
+.underlineNone {
+  text-decoration-line: none;
 }
 
 .icon {
