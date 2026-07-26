@@ -1,7 +1,20 @@
 .root {
-  font-family: var(--dbm-font-family-secondary);
   line-height: var(--dbm-line-height-tight);
   margin: 0;
+}
+
+.fontFamilyPrimary {
+  font-family: var(--dbm-font-family-primary);
+}
+
+.fontFamilySecondary {
+  font-family: var(--dbm-font-family-secondary);
+}
+
+.truncate {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
 }
 
 .sizeMd {
