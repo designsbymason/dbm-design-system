@@ -1,0 +1,243 @@
+/**
+ * Global styling for the Docs page content area, targeting real class
+ * names confirmed via the rendered DOM (see
+ * guidelines/07-storybook-and-documentation-standards.md §4) rather than
+ * guessed ones — `.sbdocs-content`/`.sbdocs-preview` are addon-docs'
+ * own stable classes; h2/p/code/pre have no stable classes of their own
+ * (Storybook styles them via CSS-in-JS), so those are scoped by tag
+ * instead. `!important` is used only where Storybook's own emotion-
+ * injected styles would otherwise win on specificity.
+ */
+
+.sbdocs-content {
+  font-family: var(--dbm-font-family-primary);
+}
+
+.sbdocs-content h1 {
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-4xl);
+  font-weight: var(--dbm-font-weight-bold);
+}
+
+.sbdocs-content h2 {
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-2xl);
+  font-weight: var(--dbm-font-weight-bold);
+  margin-block: var(--dbm-space-10) var(--dbm-space-4);
+  padding-block-end: var(--dbm-space-2);
+}
+
+/* Variant/state subsection titles (see §4's "Variants" section) — nested
+   under h2, so a step down in size/weight with no border, kept distinct
+   from Storybook's default emotion-styled h3. */
+.sbdocs-content h3 {
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-md);
+  font-weight: var(--dbm-font-weight-semibold);
+  margin-block: var(--dbm-space-6) var(--dbm-space-2);
+}
+
+.sbdocs-content p,
+.sbdocs-content li {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-base);
+  line-height: var(--dbm-line-height-relaxed);
+}
+
+.sbdocs-content code {
+  background: var(--dbm-bg-subtle);
+  border-radius: var(--dbm-radius-xs);
+  font-family: var(--dbm-font-family-mono);
+  padding-inline: var(--dbm-space-1);
+}
+
+.sbdocs-content pre code {
+  background: none;
+  padding-inline: 0;
+}
+
+/* The live-preview boxes (Canvas blocks) */
+.sbdocs-preview {
+  border-radius: var(--dbm-radius-lg) !important;
+}
+
+/* Properties table (the ArgTypes block) */
+.docblock-argstable {
+  border-radius: var(--dbm-radius-md);
+  overflow: hidden;
+}
+
+/* `bg.brand-subtle` (purple-100) reads as barely-there gray in a thin
+   stripe, even though it's technically on-brand — bumped one step to the
+   primitive purple-200 for a stripe that's actually recognizable as a
+   light primary tint. A docs-only exception to "semantic tokens only"
+   (see CLAUDE.md) since no semantic step exists between bg.brand-subtle
+   and the much stronger bg.brand-hover, and this is presentational
+   Storybook infra, not shipped component code. */
+.docblock-argstable-body tr:nth-child(even) {
+  background: var(--dbm-color-purple-200);
+}
+
+.docblock-argstable code {
+  font-family: var(--dbm-font-family-mono);
+}
+
+/* Custom Properties table (.storybook/blocks/PropertiesTable.tsx) — a
+   hand-rolled replacement for the <ArgTypes> doc block, since that block
+   has no supported way to add a custom "Value options" column. Mirrors
+   .docblock-argstable's look (radius, zebra striping, mono prop names) so
+   it reads as the same table type to a user, just with one more column. */
+.dbm-proptable {
+  border-collapse: collapse;
+  border-radius: var(--dbm-radius-md);
+  overflow: hidden;
+  table-layout: auto;
+  width: 100%;
+}
+
+.dbm-proptable th {
+  background: var(--dbm-bg-subtle);
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-semibold);
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+  text-align: start;
+}
+
+.dbm-proptable td {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-relaxed);
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+  vertical-align: top;
+}
+
+.dbm-proptable tbody tr:nth-child(even) {
+  background: var(--dbm-color-purple-200);
+}
+
+.dbm-proptable td:first-child code {
+  color: var(--dbm-text-primary);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.dbm-proptable code {
+  background: var(--dbm-bg-surface);
+  border-radius: var(--dbm-radius-xs);
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-xs);
+  padding-inline: var(--dbm-space-1);
+}
+
+.dbm-proptable-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-1);
+}
+
+.dbm-proptable-empty {
+  color: var(--dbm-text-tertiary);
+}
+
+.dbm-proptable-required {
+  color: var(--dbm-text-danger);
+  margin-inline-start: var(--dbm-space-1);
+}
+
+/* Playground layout: Canvas on top, a compact controls-only panel below it
+   (see §4's "Playground" section) — not a full Controls table, and not
+   side-by-side with the Canvas (a two-column control grid needs the full
+   content width to stay readable, which a side-by-side split doesn't
+   leave room for). */
+.dbm-playground-canvas {
+  margin-block-end: var(--dbm-space-4);
+}
+
+/* Compact controls: the Controls block normally renders a full Name /
+   Description / Default / Control table — hide everything but Name (as a
+   label) and the interactive Control widget so this panel reads as a
+   settings form, not a second copy of the Properties table. Then reflow
+   into 2 columns of label+control rows via CSS multi-column on the body,
+   each row set to `break-inside: avoid` so a row never splits across
+   columns — this is deliberately NOT a `display: contents` + `grid`
+   reflow (tried first): a `<td>` left at its default
+   `display: table-cell` still runs the CSS table sizing algorithm for its
+   own content even once its ancestors are flattened via
+   `display: contents`, which made every control widget collapse to a
+   near-zero intrinsic width and wrap its content one character per line.
+   Multi-column avoids the problem entirely since the table keeps its own
+   native `display: table` layout — each `<tr>` becomes one column-flowed
+   block instead.
+
+   One outer card, not one card per row: `<td>` normally relies on the
+   table's own `border-collapse` to merge each cell's individual border
+   into shared, single-pixel row dividers — that only applies under real
+   `display: table` row layout. Once `<tr>` is forced to `display: flex`
+   (below) it drops out of that algorithm, so every cell's own default
+   border rendered in full, making each row look like its own separate
+   bordered card. Fixed by stripping the per-cell border entirely and
+   drawing exactly one border, on the table element itself. */
+.dbm-playground-controls .docblock-argstable {
+  background: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  border-radius: var(--dbm-radius-md);
+  padding: var(--dbm-space-4) var(--dbm-space-4) 0;
+  width: 100%;
+}
+
+.dbm-playground-controls .docblock-argstable-head {
+  display: none;
+}
+
+.dbm-playground-controls .docblock-argstable-body {
+  column-count: 2;
+  column-gap: var(--dbm-space-6);
+  display: block;
+}
+
+.dbm-playground-controls .docblock-argstable-body tr {
+  align-items: center;
+  border: none;
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  break-inside: avoid;
+  display: flex;
+  gap: var(--dbm-space-3);
+  padding-block: var(--dbm-space-3);
+  width: 100%;
+}
+
+.dbm-playground-controls .docblock-argstable-body td {
+  border: none;
+  padding: 0;
+}
+
+.dbm-playground-controls .docblock-argstable-body td:nth-child(2),
+.dbm-playground-controls .docblock-argstable-body td:nth-child(3) {
+  display: none;
+}
+
+.dbm-playground-controls .docblock-argstable-body td:first-child {
+  color: var(--dbm-text-secondary);
+  flex: 0 0 auto;
+  font-size: var(--dbm-font-size-sm);
+  white-space: nowrap;
+}
+
+.dbm-playground-controls .docblock-argstable-body td:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dbm-playground-controls .docblock-argstable-body td:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 40rem) {
+  .dbm-playground-controls .docblock-argstable-body {
+    column-count: 1;
+  }
+}

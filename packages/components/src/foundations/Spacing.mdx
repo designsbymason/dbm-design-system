@@ -1,0 +1,37 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout } from "../../.storybook/blocks";
+import { SpacingScale, ThemeSync } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/Spacing" />
+
+<ThemeSync />
+
+# Spacing
+
+A 4px-base numeric scale — `space.1` is `0.25rem` (4px), and every step is a multiple of that
+base. The scale is deliberately non-linear at the high end (`space.6` → `space.8` skips `7`, then
+jumps `10`, `12`, `16`, `20`, `24`, `32`) — dense UI spacing needs fine 4px granularity, while
+large layout gaps don't need every intermediate value.
+
+<SpacingScale />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Reference `space.*` for every margin, padding, and gap value in component CSS — including
+  one-off "just this once" values, which are exactly how spacing drift starts.
+- Prefer `Stack`'s `gap` prop (itself backed by `space.*`) over manual `margin` between siblings
+  when composing layouts — it's the token-driven, maintainable equivalent.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't invent an in-between spacing value (e.g. `18px`) because the nearest token "isn't quite
+  right" — that's a sign the layout's rhythm doesn't match the scale, not a reason to leave it.
+- Don't hardcode `rem`/`px` spacing values directly, even ones that happen to equal an existing
+  token's resolved value — reference the token itself, so a future scale change propagates.
+
+</Callout>
+</div>

@@ -2,7 +2,8 @@
   "bg": {
     "canvas": {
       "$type": "color",
-      "$value": "{color.gray.50}"
+      "$value": "{color.gray.100}",
+      "$description": "Swapped with subtle 2026-07-27: canvas should be the more visibly distinct page-level gray so white surface cards read as clearly popping off it; subtle should be the barely-there tint used for hover fills on those cards (see subtle's own description)."
     },
     "surface": {
       "$type": "color",
@@ -14,7 +15,8 @@
     },
     "subtle": {
       "$type": "color",
-      "$value": "{color.gray.100}"
+      "$value": "{color.gray.50}",
+      "$description": "Swapped with canvas 2026-07-27: subtle is the barely-visible tint layered on top of white bg.surface (hover fills, zebra striping) — it should sit as close to white as canvas sitting one step further out from white (gray.100)."
     },
     "brand": {
       "$type": "color",
@@ -44,6 +46,11 @@
       "$type": "color",
       "$value": "{color.amber.600}"
     },
+    "warning-hover": {
+      "$type": "color",
+      "$value": "{color.amber.700}",
+      "$description": "Hover state of bg.warning, mirroring bg.brand-hover/bg.danger-hover's one-step-darker pattern (2026-07-27). White text.on-warning on amber.700 = 6.96:1, passes AA."
+    },
     "warning-subtle": {
       "$type": "color",
       "$value": "{color.amber.100}"
@@ -53,6 +60,11 @@
       "$value": "{color.green.700}",
       "$description": "Solid fill hosting text.on-success. green.600 (pre-OKLCH-regen step) gave neither white nor gray.950 text 4.5:1 (4.39:1 / 4.13:1) — green.700 gives white text 6.50:1 (verified 2026-07-18, Phase 4)."
     },
+    "success-hover": {
+      "$type": "color",
+      "$value": "{color.green.800}",
+      "$description": "Hover state of bg.success, mirroring bg.brand-hover/bg.danger-hover's one-step-darker pattern (2026-07-27). White text.on-success on green.800 = 9.56:1, passes AA."
+    },
     "success-subtle": {
       "$type": "color",
       "$value": "{color.green.100}"
@@ -60,6 +72,11 @@
     "info": {
       "$type": "color",
       "$value": "{color.blue.600}"
+    },
+    "info-hover": {
+      "$type": "color",
+      "$value": "{color.blue.700}",
+      "$description": "Hover state of bg.info, mirroring bg.brand-hover/bg.danger-hover's one-step-darker pattern (2026-07-27). White text.on-info on blue.700 = 6.93:1, passes AA."
     },
     "info-subtle": {
       "$type": "color",
@@ -132,6 +149,11 @@
       "$type": "color",
       "$value": "{color.purple.600}"
     },
+    "brand": {
+      "$type": "color",
+      "$value": "{color.purple.600}",
+      "$description": "Accent text drawn from the brand color (2026-07-27) — for emphasis/labels, not links (see text.link). Reuses the same resolved value as text.link since both need an AA-safe brand-colored text color on bg.surface: purple.600 on white = 7.37:1. NOT a literal 'primitive step 600 in every theme' constant — emerald-light/both dark themes use a different step for the same reason text.link does (see emerald-light.json / *-dark.json)."
+    },
     "danger": {
       "$type": "color",
       "$value": "{color.red.700}"
@@ -166,6 +188,11 @@
     "focus": {
       "$type": "color",
       "$value": "{color.purple.500}"
+    },
+    "brand": {
+      "$type": "color",
+      "$value": "{color.purple.100}",
+      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from purple.500). purple.100 on white is only 1.14:1, well below the 3:1 WCAG 1.4.11 non-text floor — deliberately accepted, since this token is for decorative UI accents rather than a border that identifies a component/state boundary (which is what 1.4.11 actually governs; border.focus/border.danger remain contrast-verified since those ARE state-identifying). Literal brand.100 in every theme, unlike border.focus's per-theme step selection."
     },
     "danger": {
       "$type": "color",

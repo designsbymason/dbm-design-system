@@ -2,7 +2,8 @@
   "bg": {
     "canvas": {
       "$type": "color",
-      "$value": "{color.gray.50}"
+      "$value": "{color.gray.100}",
+      "$description": "Swapped with subtle 2026-07-27: canvas should be the more visibly distinct page-level gray so white surface cards read as clearly popping off it; subtle should be the barely-there tint used for hover fills on those cards (see subtle's own description)."
     },
     "surface": {
       "$type": "color",
@@ -14,7 +15,8 @@
     },
     "subtle": {
       "$type": "color",
-      "$value": "{color.gray.100}"
+      "$value": "{color.gray.50}",
+      "$description": "Swapped with canvas 2026-07-27: subtle is the barely-visible tint layered on top of white bg.surface (hover fills, zebra striping) — it should sit as close to white as canvas sitting one step further out from white (gray.100)."
     },
     "brand": {
       "$type": "color",
@@ -44,6 +46,11 @@
       "$type": "color",
       "$value": "{color.amber.600}"
     },
+    "warning-hover": {
+      "$type": "color",
+      "$value": "{color.amber.700}",
+      "$description": "Hover state of bg.warning, mirroring bg.brand-hover/bg.danger-hover's one-step-darker pattern (2026-07-27). White text.on-warning on amber.700 = 6.96:1, passes AA."
+    },
     "warning-subtle": {
       "$type": "color",
       "$value": "{color.amber.100}"
@@ -53,6 +60,11 @@
       "$value": "{color.green.700}",
       "$description": "Solid fill hosting text.on-success. green.600 (pre-OKLCH-regen step) gave neither white nor gray.950 text 4.5:1 (4.39:1 / 4.13:1) — green.700 gives white text 6.50:1 (verified 2026-07-18, Phase 4)."
     },
+    "success-hover": {
+      "$type": "color",
+      "$value": "{color.green.800}",
+      "$description": "Hover state of bg.success, mirroring bg.brand-hover/bg.danger-hover's one-step-darker pattern (2026-07-27). White text.on-success on green.800 = 9.56:1, passes AA."
+    },
     "success-subtle": {
       "$type": "color",
       "$value": "{color.green.100}"
@@ -60,6 +72,11 @@
     "info": {
       "$type": "color",
       "$value": "{color.blue.600}"
+    },
+    "info-hover": {
+      "$type": "color",
+      "$value": "{color.blue.700}",
+      "$description": "Hover state of bg.info, mirroring bg.brand-hover/bg.danger-hover's one-step-darker pattern (2026-07-27). White text.on-info on blue.700 = 6.93:1, passes AA."
     },
     "info-subtle": {
       "$type": "color",
@@ -133,6 +150,11 @@
       "$value": "{color.emerald.700}",
       "$description": "emerald.600 (the brand anchor) on bg.surface is 4.16:1, failing AA as literal text (a pre-existing gap, unrelated to the Phase 4 regen — it just hadn't been checked before). emerald.700 gives 6.08:1 (verified 2026-07-18, Phase 4)."
     },
+    "brand": {
+      "$type": "color",
+      "$value": "{color.emerald.700}",
+      "$description": "Accent text drawn from the brand color (2026-07-27) — for emphasis/labels, not links (see text.link). Reuses the same resolved value as text.link: emerald.600 (the literal brand anchor) on white is only 4.16:1, failing AA — emerald.700 gives 6.08:1."
+    },
     "danger": {
       "$type": "color",
       "$value": "{color.red.700}"
@@ -168,6 +190,11 @@
       "$type": "color",
       "$value": "{color.emerald.600}",
       "$description": "emerald.500 on bg.surface fell just short of the 3:1 non-text floor (2.92:1) after the Phase 4 OKLCH regen. emerald.600 gives 4.16:1 (verified 2026-07-18)."
+    },
+    "brand": {
+      "$type": "color",
+      "$value": "{color.emerald.100}",
+      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from emerald.600). emerald.100 on white is only 1.13:1, well below the 3:1 WCAG 1.4.11 non-text floor — deliberately accepted, since this token is for decorative UI accents rather than a border that identifies a component/state boundary (border.focus/border.danger remain contrast-verified since those ARE state-identifying). Literal emerald.100 in every theme, unlike border.focus's per-theme step selection."
     },
     "danger": {
       "$type": "color",

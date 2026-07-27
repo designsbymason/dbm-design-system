@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { IconButton } from "./IconButton";
 
 const meta: Meta<typeof IconButton> = {
-  title: "Atoms/Core/IconButton",
+  title: "Atoms/Inputs/IconButton",
   component: IconButton,
   parameters: { layout: "padded" },
   argTypes: {

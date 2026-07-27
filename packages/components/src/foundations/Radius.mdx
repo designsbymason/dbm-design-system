@@ -1,0 +1,38 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout } from "../../.storybook/blocks";
+import { RadiusScale, ThemeSync } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/Radius" />
+
+<ThemeSync />
+
+# Radius
+
+Increments in step with the spacing scale (`none`/0 → `xs`/2 → `sm`/4 → `md`/8 → `lg`/12 →
+`xl`/16 → `2xl`/24 → `3xl`/32px), plus `full` (9999px) for pills and circles, deliberately kept
+outside the linear ladder — a fully-rounded element's radius is "however round the element's own
+height makes it," not a fixed pixel step.
+
+<RadiusScale />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use `radius.full` for circular avatars/icons and pill-shaped controls (`Tag`, `Badge`) — it
+  always renders as a perfect circle/pill regardless of the element's own size.
+- Match radius to control size — compact controls (`Button`, `Input`) generally sit at `sm`–`md`;
+  larger containers (cards, modals) read better at `lg`–`2xl`.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't hardcode a `border-radius` value, even a value that happens to match an existing step —
+  reference the token so a future scale adjustment propagates everywhere at once.
+- Don't mix radius steps within a single compound shape (e.g. a card with one corner at `md` and
+  another at `lg`) without a specific, intentional visual reason — inconsistent rounding reads as
+  a bug, not a design choice.
+
+</Callout>
+</div>

@@ -1,8 +1,14 @@
 import type { StorybookConfig } from "@storybook/react-vite";
 
 const config: StorybookConfig = {
-  stories: ["../src/**/*.stories.@(ts|tsx)"],
-  addons: ["@storybook/addon-a11y"],
+  // `.mdx` docs pages live alongside their component's stories (see
+  // guidelines/07-storybook-and-documentation-standards.md §4) — matched
+  // separately since they don't follow the `*.stories.*` naming pattern.
+  stories: ["../src/**/*.stories.@(ts|tsx)", "../src/**/*.mdx"],
+  // `@storybook/addon-viewport` and interaction/play-function testing are
+  // both core-bundled in Storybook 10 (`storybook/viewport`,
+  // `storybook/test`) — no separate addon packages needed for either.
+  addons: ["@storybook/addon-a11y", "@storybook/addon-docs"],
   framework: {
     name: "@storybook/react-vite",
     options: {},

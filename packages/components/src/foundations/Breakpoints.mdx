@@ -1,0 +1,45 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout } from "../../.storybook/blocks";
+import { ThemeSync, TokenReferenceTable } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/Breakpoints" />
+
+<ThemeSync />
+
+# Breakpoints
+
+The responsive layout scale, extending past a typical consumer-web set at the top end to cover
+enterprise dashboard monitors — a deliberate choice given DBM's target use cases skew toward
+data-dense internal tools as much as consumer apps.
+
+<TokenReferenceTable rows={[
+  { name: "breakpoint.sm", value: "640px", usage: "Small tablets / large phones, landscape" },
+  { name: "breakpoint.md", value: "768px", usage: "Tablets" },
+  { name: "breakpoint.lg", value: "1024px", usage: "Small laptops" },
+  { name: "breakpoint.xl", value: "1280px", usage: "Standard desktop" },
+  { name: "breakpoint.2xl", value: "1536px", usage: "Large desktop" },
+  { name: "breakpoint.3xl", value: "1920px", usage: "Enterprise dashboard / large external monitors" },
+]} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Design mobile-first: base styles target the smallest viewport, with `min-width` media queries
+  layering on enhancements at each breakpoint upward — not the reverse.
+- Test every component across the full scale, not just desktop — responsive behavior is a
+  definition-of-done requirement for every component in this library, the same standing as
+  accessibility.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't hardcode a pixel breakpoint in a media query — reference `breakpoint.*` so the responsive
+  scale stays centrally defined and consistent across every component.
+- Don't design only for `xl`/`2xl` and treat smaller viewports as an afterthought — DBM
+  components are expected to work across the full scale, desktop-first-with-mobile-bolted-on-later
+  is explicitly not the standard here.
+
+</Callout>
+</div>

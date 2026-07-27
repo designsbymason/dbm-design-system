@@ -1,0 +1,227 @@
+import { Canvas, Controls, Meta } from "@storybook/addon-docs/blocks";
+import { TrashIcon } from "@dbm-design-system/icons";
+import { Callout, ComponentHeader, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { CloseButton } from "../CloseButton";
+import { IconButton } from "../IconButton";
+import { Link } from "../Link";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Button } from "./Button";
+import * as ButtonStories from "./Button.stories";
+
+<Meta of={ButtonStories} />
+
+<VisuallyHidden asChild><h2>Overview</h2></VisuallyHidden>
+
+<ComponentHeader title="Button" tier="Atom" />
+
+The primary interactive action element. Five variants (`primary` is the default, high-emphasis
+action; `destructive` for irreversible/dangerous actions), five sizes, optional leading/trailing
+icons, a loading state with an optional `loadingText`, `fullWidth` for stretching to the
+container, and `asChild` for composing with other elements (e.g. a router link styled as a
+button).
+
+### Import
+
+```tsx
+import { Button } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ButtonStories.Playground} />
+
+</div>
+<div className="dbm-playground-controls">
+
+<Controls
+  of={ButtonStories.Playground}
+  exclude={["onClick", "asChild", "aria-labelledby", "id", "className", "data-testid"]}
+/>
+
+</div>
+
+## Properties
+
+<PropertiesTable
+  of={ButtonStories}
+  order={[
+    "children",
+    "variant",
+    "size",
+    "icon",
+    "trailingIcon",
+    "isLoading",
+    "loadingText",
+    "fullWidth",
+    "asChild",
+    "type",
+    "disabled",
+    "onClick",
+    "aria-label",
+    "aria-labelledby",
+    "id",
+    "className",
+    "data-testid",
+  ]}
+/>
+
+## Variants
+
+### All variants
+
+<Canvas of={ButtonStories.AllVariants} />
+
+### All sizes
+
+<Canvas of={ButtonStories.AllSizes} />
+
+### Leading and trailing icons
+
+<Canvas of={ButtonStories.WithIcons} />
+
+### Loading state
+
+<Canvas of={ButtonStories.Loading} />
+
+### Loading state with loadingText
+
+<Canvas of={ButtonStories.LoadingWithLoadingText} />
+
+### Disabled
+
+<Canvas of={ButtonStories.Disabled} />
+
+### Full width
+
+<Canvas of={ButtonStories.FullWidth} />
+
+### asChild (renders as an anchor)
+
+<Canvas of={ButtonStories.AsChild} />
+
+### asChild + disabled
+
+<Canvas of={ButtonStories.AsChildDisabled} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use exactly one `primary` button per view/section for the single highest-emphasis action —
+  it's meant to draw the eye, and that only works if it's not competing with a second `primary`.
+- Use `destructive` for irreversible or dangerous actions (delete, remove, revoke) so its red
+  fill signals the stakes before the user reads the label.
+- Pass `loadingText` for actions whose label should change while in flight ("Save" → "Saving…")
+  instead of managing that string yourself in the parent.
+- Reach for `asChild` when the button needs to actually navigate (render an `<a>`/router `Link`)
+  rather than nesting an anchor inside a `<button>`, which is invalid HTML.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `ghost`/`tertiary` for the primary action on a screen — their low visual weight is
+  the point, and using them for the main CTA undermines the hierarchy `variant` is meant to convey.
+- Don't disable a button without also explaining why nearby (a validation message, a helper
+  text) — a disabled control with no visible reason reads as broken, not intentional.
+- Don't pass both `icon` and `asChild` expecting the icon to render — icons and the loading
+  spinner are skipped in `asChild` mode since `Slot` requires exactly one child.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to context density: `sm`/`xs` for compact toolbars and tables, `md` (the default)
+  for standard forms, `lg`/`xl` for high-emphasis marketing/landing contexts.
+- Keep labels as short, specific verbs ("Save changes", not "Submit") — this is what makes a
+  button scannable at a glance and legible to a screen reader user tabbing through a form.
+- When `isLoading` is set without explicit `disabled`, the button becomes non-interactive
+  automatically (`isDisabled = disabled ?? isLoading`) — you don't need to pass both.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard support and state come from the native button">
+
+- Renders a native `<button type="button">` by default — full keyboard support (`Tab` to focus,
+  `Enter`/`Space` to activate) comes for free from the browser, not from custom key handling.
+- `aria-busy="true"` is set automatically while `isLoading`, so assistive tech announces the
+  in-progress state.
+- In `asChild` mode, the slotted element can't take a native `disabled` attribute (it might not
+  even be a `<button>`), so `disabled` instead applies `aria-disabled` plus a click-blocking
+  handler — the visual and interactive effect matches native `disabled` even though the DOM
+  attribute can't.
+- Every `variant`'s text/background pairing is contrast-verified per `03-token-system-spec.md`'s
+  methodology — see [Design tokens used](#design-tokens-used) below for the exact tokens.
+- The loading spinner respects `prefers-reduced-motion` — its spin animation runs at a quarter
+  speed (4× the normal duration) for users who've set that OS preference, rather than being
+  disabled outright, since the spinner's motion is also its only signal that something is still
+  in progress.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Button>Save</Button>
+<Button variant="destructive" icon={TrashIcon}>Delete</Button>
+<Button isLoading loadingText="Saving…">Save</Button>
+<Button fullWidth>Continue</Button>
+<Button asChild><a href="/next">Continue</a></Button>
+<Button type="submit" data-testid="checkout-submit">Place order</Button>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand" usage="`primary` variant fill" />
+<TokenRow token="bg.brand-hover" usage="`primary` variant hover fill" />
+<TokenRow token="bg.danger" usage="`destructive` variant fill" />
+<TokenRow token="bg.danger-hover" usage="`destructive` variant hover fill" />
+<TokenRow token="bg.surface" usage="`secondary` variant fill" />
+<TokenRow token="border.default" usage="`secondary` variant border" />
+<TokenRow token="border.strong" usage="`secondary` variant hover border" />
+<TokenRow token="bg.subtle" usage="`tertiary`/`ghost` hover fill" />
+<TokenRow token="text.on-brand" usage="label color on the `primary` variant's fill" />
+<TokenRow token="text.on-danger" usage="label color on the `destructive` variant's fill" />
+<TokenRow token="text.primary" usage="label color on `secondary`/`tertiary` variants" />
+<TokenRow token="text.secondary" usage="label color on the `ghost` variant" />
+<TokenRow token="border.focus" usage="focus-visible outline" />
+<TokenRow token="radius.md" usage="corner radius (8px)" />
+<TokenRow token="radius.full" usage="loading spinner shape" />
+<TokenRow token="space.1–space.8" usage="per-size padding/gap (scales with `size`)" />
+<TokenRow token="font-size.xs–font-size.lg" usage="per-size type scale" />
+<TokenRow token="font-weight.semibold" usage="label weight" />
+<TokenRow token="line-height.tight" usage="label line-height" />
+<TokenRow token="motion.duration.fast" usage="hover/focus/loading-state transitions" />
+<TokenRow token="motion.duration.slower" usage="loading spinner rotation speed" />
+<TokenRow token="motion.easing.standard" usage="hover/focus/loading-state transitions" />
+<TokenRow token="opacity.40" usage="disabled state" />
+<TokenRow token="opacity.80" usage="spinner opacity" />
+
+## Related components
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--dbm-space-4)" }}>
+<RelatedCard
+  name="IconButton"
+  description="Icon-only variant of this same interaction pattern"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={TrashIcon} aria-label="Delete" variant="secondary" />
+</RelatedCard>
+<RelatedCard
+  name="CloseButton"
+  description="A specialized dismiss control"
+  href="/?path=/docs/atoms-inputs-closebutton--docs"
+>
+  <CloseButton aria-label="Close" />
+</RelatedCard>
+<RelatedCard
+  name="Link"
+  description="For navigation that shouldn't look like a button"
+  href="/?path=/docs/atoms-typography-link--docs"
+>
+  <Link href="#">Continue</Link>
+</RelatedCard>
+</div>

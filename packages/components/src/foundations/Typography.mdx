@@ -1,0 +1,95 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, TokenRow } from "../../.storybook/blocks";
+import { ThemeSync, TypeSpecimen } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/Typography" />
+
+<ThemeSync />
+
+# Typography
+
+## Font families
+
+<div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+<div>
+  <div style={{ fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
+    Nunito — font-family.primary
+  </div>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)" }}>
+    UI, body text, controls — used for essentially everything in this component library.
+  </p>
+</div>
+<div>
+  <div style={{ fontFamily: "var(--dbm-font-family-secondary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
+    Lora — font-family.secondary
+  </div>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)" }}>
+    Editorial/display headings and quotes (e.g. `Blockquote`) — used sparingly, for a deliberate
+    tonal shift, not as the default text face.
+  </p>
+</div>
+<div>
+  <div style={{ fontFamily: "var(--dbm-font-family-mono)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
+    ui-monospace — font-family.mono
+  </div>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)" }}>
+    Code/monospace UI (inline `Code`, `Kbd`) — a system font stack, not a third webfont, so it
+    loads with zero extra network requests.
+  </p>
+</div>
+</div>
+
+## Font weights
+
+<TokenRow token="font-weight.regular" usage="400 — body text default" />
+<TokenRow token="font-weight.medium" usage="500 — light emphasis" />
+<TokenRow token="font-weight.semibold" usage="600 — labels, button text, strong emphasis" />
+<TokenRow token="font-weight.bold" usage="700 — headings" />
+
+## Fluid type scale
+
+Built with the standard "Utopia" `clamp()` formula — two type scales (ratio 1.2 at a 320px
+viewport, 1.25 at 1440px) interpolated so text scales smoothly with the viewport instead of
+jumping between fixed breakpoint values. **Sizes at or below `base` are fixed, not fluid** —
+scaling small UI text down further on large screens adds nothing and risks going under comfortable
+reading size; fluid scaling only kicks in from `md` upward, where it creates a real, felt
+improvement in heading hierarchy across screen sizes. Resize this browser window to see the
+`md`–`6xl` rows respond; `xs`–`base` stay fixed.
+
+<TypeSpecimen />
+
+## Line height
+
+<TokenRow token="line-height.tight" usage="1.15 — large display headings" />
+<TokenRow token="line-height.snug" usage="1.3 — compact headings, button labels" />
+<TokenRow token="line-height.normal" usage="1.5 — default body text" />
+<TokenRow token="line-height.relaxed" usage="1.7 — long-form reading text (Docs page prose)" />
+
+## Letter spacing
+
+<TokenRow token="letter-spacing.tight" usage="-0.02em — large display headings" />
+<TokenRow token="letter-spacing.normal" usage="0em — default" />
+<TokenRow token="letter-spacing.wide" usage="0.02em — all-caps labels, badges" />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use `font-size.xs`–`base` for any UI chrome that should stay a stable, comfortable size
+  regardless of viewport — labels, helper text, table cells.
+- Use `font-size.md` and up for headings, where fluid scaling actually improves the reading
+  experience across screen sizes.
+- Pair `font-family.secondary` deliberately, for genuine editorial contrast — not as a default
+  heading font.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't hardcode a `px`/`rem` font size in component CSS — every size traces to a `font-size.*`
+  token, fluid or fixed.
+- Don't assume every heading needs the largest available step — match `font-size` to the actual
+  information hierarchy of the page, not just "biggest is boldest."
+
+</Callout>
+</div>

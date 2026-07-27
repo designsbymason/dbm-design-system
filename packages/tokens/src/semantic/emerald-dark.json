@@ -14,7 +14,8 @@
     },
     "subtle": {
       "$type": "color",
-      "$value": "{color.gray.800}"
+      "$value": "{color.gray.800}",
+      "$description": "Byte-identical to surface-raised (2026-07-27 review) — a hover fill (subtle) on a control inside an elevated card (surface-raised) is visually invisible as a result. Tried moving to gray.700 to fix that, but it fails AA for the real text.secondary-on-bg.subtle pairing (Tag/Badge subtleNeutral): 4.00:1, needs 4.5:1. gray.600 is worse (2.73:1). No primitive step exists between 800 and 900 to resolve the surface-raised collision without breaking contrast, so this stays at gray.800 — the collision is a real but lower-priority design nit, not a WCAG failure, and accessibility takes priority per CLAUDE.md."
     },
     "brand": {
       "$type": "color",
@@ -45,6 +46,11 @@
       "$type": "color",
       "$value": "{color.amber.500}"
     },
+    "warning-hover": {
+      "$type": "color",
+      "$value": "{color.amber.400}",
+      "$description": "Lighter than warning, restoring the usual dark-mode 'brighten on hover' direction (2026-07-27), mirroring bg.danger-hover: gray.950 text.on-warning on amber.400 = 7.76:1, passes AA."
+    },
     "warning-subtle": {
       "$type": "color",
       "$value": "{color.amber.900}"
@@ -53,6 +59,11 @@
       "$type": "color",
       "$value": "{color.green.500}"
     },
+    "success-hover": {
+      "$type": "color",
+      "$value": "{color.green.400}",
+      "$description": "Lighter than success, restoring the usual dark-mode 'brighten on hover' direction (2026-07-27), mirroring bg.danger-hover: gray.950 text.on-success on green.400 = 8.23:1, passes AA."
+    },
     "success-subtle": {
       "$type": "color",
       "$value": "{color.green.900}"
@@ -60,6 +71,11 @@
     "info": {
       "$type": "color",
       "$value": "{color.blue.500}"
+    },
+    "info-hover": {
+      "$type": "color",
+      "$value": "{color.blue.400}",
+      "$description": "Lighter than info, restoring the usual dark-mode 'brighten on hover' direction (2026-07-27), mirroring bg.danger-hover: gray.950 text.on-info on blue.400 = 7.83:1, passes AA."
     },
     "info-subtle": {
       "$type": "color",
@@ -132,6 +148,11 @@
       "$type": "color",
       "$value": "{color.emerald.400}"
     },
+    "brand": {
+      "$type": "color",
+      "$value": "{color.emerald.400}",
+      "$description": "Accent text drawn from the brand color (2026-07-27) — for emphasis/labels, not links (see text.link). Reuses the same resolved value as text.link: emerald.600 (the literal brand anchor) on gray.900 is only 3.39:1, failing AA."
+    },
     "danger": {
       "$type": "color",
       "$value": "{color.red.300}"
@@ -165,6 +186,11 @@
     "focus": {
       "$type": "color",
       "$value": "{color.emerald.400}"
+    },
+    "brand": {
+      "$type": "color",
+      "$value": "{color.emerald.100}",
+      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from emerald.400). Literal emerald.100 in every theme — this token is for decorative UI accents, not a border that identifies a component/state boundary (border.focus/border.danger remain contrast-verified since those ARE state-identifying). emerald.100 on gray.900 is 12.46:1, very high contrast in dark mode even though light mode is intentionally low."
     },
     "danger": {
       "$type": "color",

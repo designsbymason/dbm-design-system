@@ -1,0 +1,154 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout } from "../../.storybook/blocks";
+import { ColorScaleGrid, ColorSwatch, SemanticSwatchGrid, ThemeSync } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/Color" />
+
+<ThemeSync />
+
+# Color
+
+Use the **Brand** and **Mode** toolbar controls above to see every semantic swatch on this page
+re-theme live — they're all driven by the same `var(--dbm-*)` custom properties the active
+theme's stylesheet defines, the same mechanism every component uses.
+
+## Primitive scales
+
+Seven 11-step color scales (`50`–`950`), plus two fixed neutrals (pure white/black). These are
+raw values with no assigned meaning — **components should never reference a primitive color
+directly** (`var(--dbm-color-purple-600)`); always go through a semantic token (below), which is
+what actually changes per brand/mode.
+
+`purple-600` and `emerald-600` (marked ★) are the two brand-mandated anchor colors — every other
+step in those two scales is generated from a shared perceptual lightness curve, shifted so it
+passes exactly through the anchor's own lightness at step 600. The five status/neutral scales
+(gray, red, amber, green, blue) have no anchor requirement and are shared, unmodified, across
+both brand themes — status meaning (danger is red, success is green) doesn't change with brand.
+
+<div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+<ColorScaleGrid family="purple" anchor="600" />
+<ColorScaleGrid family="emerald" anchor="600" />
+<ColorScaleGrid family="gray" />
+<ColorScaleGrid family="red" />
+<ColorScaleGrid family="amber" />
+<ColorScaleGrid family="green" />
+<ColorScaleGrid family="blue" />
+
+<div>
+
+### Neutrals
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: "var(--dbm-space-2)" }}>
+<ColorSwatch color="#ffffff" label="white" sublabel="#ffffff" />
+<ColorSwatch color="#0a0912" label="black" sublabel="#0a0912" />
+</div>
+</div>
+</div>
+
+## Semantic tokens
+
+Semantic tokens are what components actually reference. Each name below resolves to a different
+primitive step depending on the active brand/mode — that indirection is the entire point (see
+[Foundations Overview](/?path=/docs/foundations-overview--docs) for why).
+
+### Background (`bg.*`)
+
+<SemanticSwatchGrid tokens={[
+  { token: "bg.canvas", usage: "Page/app background, behind all surfaces" },
+  { token: "bg.surface", usage: "Default card/panel surface" },
+  { token: "bg.surface-raised", usage: "An elevated surface (paired with a shadow)" },
+  { token: "bg.subtle", usage: "Hover fill for tertiary/ghost controls, zebra striping" },
+  { token: "bg.brand", usage: "Primary action fill (Button primary, focus accents)" },
+  { token: "bg.brand-hover", usage: "Hover state of bg.brand" },
+  { token: "bg.brand-subtle", usage: "Light brand tint — selected states, subtle highlights" },
+  { token: "bg.danger", usage: "Destructive action fill" },
+  { token: "bg.danger-hover", usage: "Hover state of bg.danger" },
+  { token: "bg.danger-subtle", usage: "Light danger tint — error banners, danger badges" },
+  { token: "bg.warning", usage: "Warning-tone solid fill" },
+  { token: "bg.warning-hover", usage: "Hover state of bg.warning" },
+  { token: "bg.warning-subtle", usage: "Light warning tint" },
+  { token: "bg.success", usage: "Success-tone solid fill" },
+  { token: "bg.success-hover", usage: "Hover state of bg.success" },
+  { token: "bg.success-subtle", usage: "Light success tint" },
+  { token: "bg.info", usage: "Info-tone solid fill" },
+  { token: "bg.info-hover", usage: "Hover state of bg.info" },
+  { token: "bg.info-subtle", usage: "Light info tint" },
+  { token: "bg.neutral", usage: "Neutral status fill (e.g. offline indicator)" },
+  { token: "bg.neutral-strong", usage: "Stronger neutral fill, for hosting text" },
+  { token: "bg.overlay", usage: "Dimming scrim behind Dialog/Drawer overlays" },
+]} />
+
+### Text (`text.*`)
+
+<SemanticSwatchGrid tokens={[
+  { token: "text.primary", usage: "Default body/heading text" },
+  { token: "text.secondary", usage: "De-emphasized text (descriptions, captions)" },
+  { token: "text.tertiary", usage: "Most muted literal text — placeholders, Divider labels" },
+  { token: "text.disabled", usage: "Text inside a disabled control" },
+  { token: "text.on-brand", usage: "Text/icons on a solid bg.brand fill" },
+  { token: "text.on-danger", usage: "Text/icons on a solid bg.danger fill" },
+  { token: "text.on-info", usage: "Text/icons on a solid bg.info fill" },
+  { token: "text.on-success", usage: "Text/icons on a solid bg.success fill" },
+  { token: "text.on-warning", usage: "Text/icons on a solid bg.warning fill" },
+  { token: "text.on-neutral", usage: "Text/icons on a solid bg.neutral-strong fill" },
+  { token: "text.link", usage: "Inline link text" },
+  { token: "text.brand", usage: "Accent text in the brand color (emphasis/labels, not links)" },
+  { token: "text.danger", usage: "Danger-tone literal text (error messages)" },
+  { token: "text.warning", usage: "Warning-tone literal text" },
+  { token: "text.success", usage: "Success-tone literal text" },
+  { token: "text.info", usage: "Info-tone literal text" },
+]} />
+
+### Border (`border.*`)
+
+<SemanticSwatchGrid tokens={[
+  { token: "border.default", usage: "Standard control/card border" },
+  { token: "border.subtle", usage: "Faint dividers and low-emphasis borders" },
+  { token: "border.strong", usage: "Hover-state border emphasis" },
+  { token: "border.focus", usage: "Focus-visible outline color" },
+  { token: "border.brand", usage: "Decorative brand-accent border (not focus/state)" },
+  { token: "border.danger", usage: "Error-state input border" },
+]} />
+
+### Icon (`icon.*`)
+
+<SemanticSwatchGrid tokens={[
+  { token: "icon.default", usage: "Default icon color" },
+  { token: "icon.secondary", usage: "Muted/decorative icon color" },
+  { token: "icon.brand", usage: "Brand-colored icon accents" },
+  { token: "icon.disabled", usage: "Icon color inside a disabled control" },
+]} />
+
+## Contrast verification
+
+Every text/background pairing above has been checked against real WCAG contrast ratios, not
+assumed — 4.5:1 for normal text, 3:1 for large text/non-text UI (icons, focus outlines). Several
+real gaps were found and fixed this way rather than by eye — a genuinely useful reminder that
+"looks readable" and "passes AA" aren't the same test:
+
+<div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+<Callout tone="info" title="Real gaps this process actually caught">
+
+- `text.success` on `bg.success-subtle` measured **4.08:1**, failing AA, despite looking fine —
+  green's steps weren't evenly spaced under the original HSL-derived color scales. Fixed by moving
+  the token to a darker step (6.01:1).
+- White text on `bg.brand` in dark mode measured **2.39:1** — badly failing. Fixed by switching
+  `text.on-brand` to a dark color in that specific theme, rather than assuming white always works
+  on a "dark enough" brand fill.
+- `text.tertiary` was being reused for both non-text icons (3:1 floor) and literal placeholder
+  text (4.5:1 floor) at a value that only cleared the lower bar. Split logic wasn't the fix —  the
+  color itself was adjusted to clear both floors at once.
+
+</Callout>
+
+<Callout tone="danger" title="Don't">
+
+- Don't introduce a new color pairing (new background behind existing text, or vice versa)
+  without running an actual contrast check — "looks fine" is exactly how the gaps above shipped
+  in the first place.
+- Don't reference a primitive color (`--dbm-color-*`) directly in component code. If no existing
+  semantic token fits, that's a sign a new semantic token is needed — add it to the token layer,
+  don't reach around it.
+
+</Callout>
+</div>

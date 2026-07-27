@@ -1,0 +1,169 @@
+import { Canvas, Controls, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Center } from "../Center";
+import { Container } from "../Container";
+import { Stack } from "../Stack";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Box } from "./Box";
+import * as BoxStories from "./Box.stories";
+
+<Meta of={BoxStories} />
+
+<VisuallyHidden asChild><h2>Overview</h2></VisuallyHidden>
+
+<ComponentHeader title="Box" tier="Atom" />
+
+The base **polymorphic** primitive most other DBM components compose — "polymorphic" here means a
+single component that can render as different underlying HTML elements or React components (via
+the `as` prop), while TypeScript still fully type-checks whichever one you choose. Renders a `div`
+by default; pass `as` to render any other element or component while keeping full type-checking on
+that element's own native props (`type` on a `button`, `href` on an `a`, arbitrary props on a
+custom component). Deliberately unopinionated — it carries no visual styling of its own (see
+[Design tokens used](#design-tokens-used) below) — so it composes cleanly underneath anything.
+
+### Import
+
+```tsx
+import { Box } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Switch `as` and inspect the rendered DOM tag (via your browser devtools) — the component itself
+never changes, only the underlying element it renders.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={BoxStories.Playground} />
+
+</div>
+<div className="dbm-playground-controls">
+
+<Controls of={BoxStories.Playground} exclude={["className"]} />
+
+</div>
+
+## Properties
+
+<PropertiesTable of={BoxStories} order={["as", "children", "className"]} />
+
+## Variants
+
+Each story below demonstrates a different facet of `as`: a plain semantic element, a native
+element with element-specific typed props, and a fully custom React component.
+
+### Polymorphic: as="section"
+
+<Canvas of={BoxStories.AsSection} />
+
+### Polymorphic: as="button" (native button props type-check)
+
+<Canvas of={BoxStories.AsButton} />
+
+### Polymorphic: as=`{CustomComponent}` (renders another React component, not just a tag)
+
+<Canvas of={BoxStories.AsCustomComponent} />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Use `Box` as the escape hatch when no other primitive fits — a one-off wrapper that needs
+  `style`/`className` but no layout semantics of its own.
+- Pass `as` to get real, type-checked native props for the element you actually need (`as="a"
+  href="..."`, `as="button" type="submit"`), instead of reaching for `dangerouslySetInnerHTML`-
+  style escape hatches or an untyped generic wrapper.
+- Reach for a more specific primitive first if one exists — `Stack` for flex layouts with a gap,
+  `Container` for a max-width content wrapper, `Center` for centering. `Box` is the fallback, not
+  the default.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Box` where `Stack`/`Grid`/`Container` already express the actual intent — those
+  compose `Box` internally and add the token-driven layout props (`gap`, `align`, `padding`) that
+  `Box` deliberately doesn't have.
+- Don't hardcode colors/spacing/radius in the `style` prop when a semantic token exists for it —
+  `Box` carries no opinion here, but every other convention in this system still applies to
+  whatever you put inside it.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat `as` the same way you'd treat choosing a native HTML tag directly — pick the element that
+  matches the actual semantics of the content (a `nav` for navigation, a `section` for a
+  standalone section with a heading), not just whatever happens to look right.
+- When passing a custom component to `as`, that component must itself forward `ref` and spread
+  unknown props — `Box` forwards its own `ref` and all extra props straight through to whatever
+  `as` resolves to, and relies on that component doing the same.
+
+## Accessibility
+
+<Callout tone="info" title="No built-in semantics — as is what makes this accessible">
+
+`Box` sets no ARIA attributes and imposes no accessibility semantics of its own — accessibility
+is entirely a function of which element `as` renders and what props you pass it. Choosing `as`
+correctly (a real `button` for a clickable region, not a `div` with a click handler) is what makes
+a `Box`-based component accessible; `Box` itself doesn't enforce this.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Default: a plain div
+<Box style={{ padding: 'var(--dbm-space-4)' }}>Content</Box>
+
+// Semantic element via `as`
+<Box as="section" aria-label="Filters">Content</Box>
+
+// Native, type-checked button props
+<Box as="button" type="submit" onClick={handleSubmit}>Save</Box>
+
+// A custom component as the render target
+<Box as={Link} href="/next">Continue</Box>
+```
+
+## Design tokens used
+
+`Box` itself references **no tokens** — it has no CSS module of its own beyond the globally-applied
+`box-sizing: border-box` reset (`src/styles/global.css`). Any visual styling comes entirely from
+what the consumer passes via `style`/`className`, which should still reference semantic tokens per
+this system's conventions.
+
+## Related components
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--dbm-space-4)" }}>
+<RelatedCard
+  name="Stack"
+  description="Flex layout with a token-driven gap, built on Box"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Container"
+  description="Max-width centered content wrapper"
+  href="/?path=/docs/atoms-layout-container--docs"
+>
+  <Container style={{ border: "1px dashed var(--dbm-border-strong)", width: "100%" }}>
+    <Box style={{ height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Container>
+</RelatedCard>
+<RelatedCard
+  name="Center"
+  description="Centers children on both axes"
+  href="/?path=/docs/atoms-layout-center--docs"
+>
+  <Center style={{ border: "1px dashed var(--dbm-border-strong)", width: "100%", height: "2.5rem" }}>
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Center>
+</RelatedCard>
+</div>

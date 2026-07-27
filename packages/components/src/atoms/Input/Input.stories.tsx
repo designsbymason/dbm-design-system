@@ -5,7 +5,7 @@ import { Icon } from "../Icon";
 import { Input } from "./Input";
 
 const meta: Meta<typeof Input> = {
-  title: "Atoms/Core/Input",
+  title: "Atoms/Inputs/Input",
   component: Input,
   parameters: { layout: "padded" },
   argTypes: {

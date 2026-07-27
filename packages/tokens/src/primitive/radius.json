@@ -5,30 +5,35 @@
   },
   "xs": {
     "$type": "dimension",
-    "$value": "4px"
+    "$value": "2px"
   },
   "sm": {
     "$type": "dimension",
-    "$value": "6px"
+    "$value": "4px"
   },
   "md": {
     "$type": "dimension",
-    "$value": "10px"
+    "$value": "8px"
   },
   "lg": {
     "$type": "dimension",
-    "$value": "16px"
+    "$value": "12px"
   },
   "xl": {
     "$type": "dimension",
-    "$value": "24px"
+    "$value": "16px"
   },
   "2xl": {
+    "$type": "dimension",
+    "$value": "24px"
+  },
+  "3xl": {
     "$type": "dimension",
     "$value": "32px"
   },
   "full": {
     "$type": "dimension",
-    "$value": "9999px"
+    "$value": "9999px",
+    "$description": "Fully rounded — pills, circular avatars/icons/spinners. Deliberately not part of the linear 0/2/4/8/12/16/24/32 ladder above it."
   }
 }

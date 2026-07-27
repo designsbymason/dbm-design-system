@@ -3,7 +3,7 @@ import { Stack } from "../Stack";
 import { Skeleton } from "./Skeleton";
 
 const meta: Meta<typeof Skeleton> = {
-  title: "Atoms/Core/Skeleton",
+  title: "Atoms/Data Display/Skeleton",
   component: Skeleton,
   parameters: { layout: "padded" },
   argTypes: {

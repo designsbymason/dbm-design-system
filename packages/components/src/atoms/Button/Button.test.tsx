@@ -39,8 +39,15 @@ describe("Button", () => {
     );
     expect(screen.getByTestId("btn")).toHaveStyle({
       fontSize: "var(--dbm-font-size-lg)",
-      paddingBlock: "var(--dbm-space-4)",
-      paddingInline: "var(--dbm-space-6)",
+      paddingBlock: "var(--dbm-space-5)",
+      paddingInline: "var(--dbm-space-8)",
+    });
+  });
+
+  it("uses the shared md radius token", () => {
+    render(<Button data-testid="btn">Go</Button>);
+    expect(screen.getByTestId("btn")).toHaveStyle({
+      borderRadius: "var(--dbm-radius-md)",
     });
   });
 

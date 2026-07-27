@@ -1,0 +1,39 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout } from "../../.storybook/blocks";
+import { IconSizeScale, ThemeSync } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/IconSizes" />
+
+<ThemeSync />
+
+# Icon sizes
+
+A 7-step scale (12px–48px), paired with Phosphor Icons (the `Icon` atom's underlying icon set) and
+kept as its own token category, separate from `font-size`, since icons and text don't need to
+scale in lockstep — a compact button pairs a small icon with `font-size.sm` text, but the icon
+step that reads correctly there isn't derived from the type scale at all.
+
+<IconSizeScale />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Match icon size to the text it sits beside — components like `Button` and `Input` internally
+  map their own `size` prop to a specific `icon-size` step (e.g. `Button`'s `md` uses
+  `icon-size.sm`) rather than always using the same icon size regardless of context.
+- Use `xl`–`3xl` sparingly, for genuinely large standalone icon usage (empty states, illustrations)
+  — not inline with text at any normal reading size.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't set an icon's pixel size directly via `style`/`width`/`height` — pass the `Icon` atom's
+  `size` prop, which maps to this scale.
+- Don't assume a larger icon always needs a proportionally larger stroke weight — Phosphor's
+  `weight` prop (`thin`/`light`/`regular`/`bold`/`fill`/`duotone`) is a separate, deliberate choice
+  from size.
+
+</Callout>
+</div>

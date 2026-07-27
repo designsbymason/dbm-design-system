@@ -1,0 +1,141 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, RelatedCard } from "../../.storybook/blocks";
+import { ThemeSync } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/Overview" />
+
+<ThemeSync />
+
+# Foundations
+
+**Design tokens** are the named, reusable values — colors, spacing, type sizes, radii, shadows,
+motion curves, and more — that stand in for hardcoded values everywhere in DBM's components. A
+component never writes `background: #5548A4`; it writes `background: var(--dbm-bg-brand)`. This
+section documents every token category DBM ships: what each scale contains, what it's for, and
+how to reference it correctly.
+
+## Why tokens, not hardcoded values
+
+A hardcoded value is a dead end — change the brand color and you're now grep-ing through every
+component that happened to use `#5548A4`. A token is a single point of change: update
+`bg.brand`'s definition once, and every component referencing it updates automatically, in every
+theme, everywhere it's used. This is also what makes DBM's four shipped themes (below) possible
+at all — components are written once, against token *names*, and never know or care which theme
+is currently active.
+
+## The 3-layer architecture
+
+DBM's tokens are organized in three layers, each with a distinct job:
+
+<Callout tone="info" title="Primitive → Semantic → Component">
+
+1. **Primitive** — raw values with no meaning attached: a color scale's 600th step, `16px`, a
+   cubic-bezier curve. Primitives don't say what they're *for*, only what they *are*. Source:
+   `packages/tokens/src/primitive/*.json`.
+2. **Semantic** — contextual meaning, expressed by referencing a primitive: `bg.brand` currently
+   points at `purple.600`, but the token consumers reference is `bg.brand`, not `purple.600`
+   itself. This indirection is what lets the same token name resolve to a different actual color
+   per brand/mode (below) — **one semantic layer file per theme**. Source:
+   `packages/tokens/src/semantic/{brand}-{mode}.json`.
+3. **Component** — scoped overrides for the rare case a specific component needs to deviate from
+   its semantic default. Deferred by design; populated only as real components need it, not
+   speculatively.
+
+</Callout>
+
+**Components reference semantic tokens only, never primitives directly.** This is the rule that
+makes the rest of this work: a component written as `color: var(--dbm-text-primary)` doesn't need
+to know or care that `text.primary` happens to resolve to `gray.900` in light mode and a
+different, lighter gray in dark mode — the indirection is already baked in one layer up. Reaching
+into a component and writing `var(--dbm-color-gray-900)` directly would silently break dark mode,
+since that literal value never changes with the active theme the way `text.primary` does.
+
+## Multi-brand, multi-mode theming
+
+DBM ships two brand themes (**Purple**, the default, and **Emerald**) crossed with two color
+modes (**Light**, **Dark**) — four theme files total, all defining the exact same set of semantic
+token *names* with different resolved values. Switch between them using the **Brand** and
+**Mode** toolbar controls at the top of this Storybook instance — every live example throughout
+these Foundations pages and every component's Docs page re-renders instantly, since they're all
+built on the same `var(--dbm-*)` custom properties the active theme's stylesheet defines.
+
+Adding a third brand later means adding one more pair of semantic JSON files with the same token
+names pointing at a new primitive color scale — no component code changes, by construction.
+
+## Naming and usage
+
+Every token resolves to a CSS custom property prefixed `--dbm-`, with dots in the token's
+dot-notation name replaced by hyphens: `bg.brand` → `--dbm-bg-brand`, `space.4` → `--dbm-space-4`.
+Reference it directly in CSS Modules: `padding: var(--dbm-space-4);`. There is no build step or
+JS import required to use a token inside a component's own `.module.css` file — the custom
+properties are already globally available once the token stylesheets are loaded (handled once, at
+the app root, by `@dbm-design-system/tokens/css/*.css`).
+
+## What's covered here
+
+<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--dbm-space-4)" }}>
+<RelatedCard name="Color" description="Primitive scales + semantic bg/text/border/icon tokens, per theme" href="/?path=/docs/foundations-color--docs">
+  <div style={{ display: "flex", gap: "var(--dbm-space-1)" }}>
+    <div style={{ width: 20, height: 20, borderRadius: "var(--dbm-radius-xs)", background: "var(--dbm-bg-brand)" }} />
+    <div style={{ width: 20, height: 20, borderRadius: "var(--dbm-radius-xs)", background: "var(--dbm-bg-danger)" }} />
+    <div style={{ width: 20, height: 20, borderRadius: "var(--dbm-radius-xs)", background: "var(--dbm-bg-success)" }} />
+  </div>
+</RelatedCard>
+<RelatedCard name="Typography" description="Font families, weights, the fluid type scale" href="/?path=/docs/foundations-typography--docs">
+  <span style={{ fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>Aa</span>
+</RelatedCard>
+<RelatedCard name="Spacing" description="The 4px-base spacing scale" href="/?path=/docs/foundations-spacing--docs">
+  <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
+    <div style={{ width: 6, height: 8, background: "var(--dbm-bg-brand)" }} />
+    <div style={{ width: 6, height: 16, background: "var(--dbm-bg-brand)" }} />
+    <div style={{ width: 6, height: 24, background: "var(--dbm-bg-brand)" }} />
+  </div>
+</RelatedCard>
+<RelatedCard name="Radius" description="Corner-rounding scale, none through fully round" href="/?path=/docs/foundations-radius--docs">
+  <div style={{ width: 28, height: 28, background: "var(--dbm-bg-brand-subtle)", border: "2px solid var(--dbm-border-focus)", borderRadius: "var(--dbm-radius-lg)" }} />
+</RelatedCard>
+<RelatedCard name="Shadows" description="Elevation scale, separate light/dark values" href="/?path=/docs/foundations-shadows--docs">
+  <div style={{ width: 28, height: 28, background: "var(--dbm-bg-surface)", borderRadius: "var(--dbm-radius-md)", boxShadow: "var(--dbm-shadow-light-md)" }} />
+</RelatedCard>
+<RelatedCard name="Motion" description="Duration + easing scale, with live demos" href="/?path=/docs/foundations-motion--docs">
+  <div style={{ width: 28, height: 12, background: "var(--dbm-bg-subtle)", borderRadius: "var(--dbm-radius-full)", position: "relative" }}>
+    <div style={{ width: 12, height: 12, background: "var(--dbm-bg-brand)", borderRadius: "var(--dbm-radius-full)", position: "absolute", left: 8 }} />
+  </div>
+</RelatedCard>
+<RelatedCard name="Icon sizes" description="The 7-step icon size scale" href="/?path=/docs/foundations-icon-sizes--docs">
+  <div style={{ display: "flex", alignItems: "flex-end", gap: 4 }}>
+    <div style={{ width: 8, height: 8, background: "var(--dbm-icon-brand)", borderRadius: "var(--dbm-radius-full)" }} />
+    <div style={{ width: 14, height: 14, background: "var(--dbm-icon-brand)", borderRadius: "var(--dbm-radius-full)" }} />
+    <div style={{ width: 20, height: 20, background: "var(--dbm-icon-brand)", borderRadius: "var(--dbm-radius-full)" }} />
+  </div>
+</RelatedCard>
+<RelatedCard name="Borders, opacity & z-index" description="Border widths, the opacity scale, layering order" href="/?path=/docs/foundations-miscellaneous--docs">
+  <div style={{ width: 28, height: 28, border: "4px solid var(--dbm-border-strong)", borderRadius: "var(--dbm-radius-sm)" }} />
+</RelatedCard>
+<RelatedCard name="Breakpoints" description="The responsive layout scale" href="/?path=/docs/foundations-breakpoints--docs">
+  <div style={{ display: "flex", gap: 2 }}>
+    <div style={{ width: 6, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: 1 }} />
+    <div style={{ width: 10, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: 1 }} />
+    <div style={{ width: 16, height: 20, background: "var(--dbm-bg-brand)", borderRadius: 1 }} />
+  </div>
+</RelatedCard>
+</div>
+
+## Where tokens live
+
+```
+packages/tokens/
+├── src/
+│   ├── primitive/     Raw values — color.json, typography.json, spacing.json,
+│   │                   radius.json, shadow.json, breakpoint.json, motion.json, other.json
+│   └── semantic/       One file per theme — purple-light.json, purple-dark.json,
+│                        emerald-light.json, emerald-dark.json
+├── build/css/          Generated CSS custom properties (what components actually load)
+└── build/ts/            Generated JS/TS objects (what these Foundations pages read from,
+                          via `@dbm-design-system/tokens`, so every value shown here is
+                          always the real, current, built value)
+```
+
+Every value on every page in this section is read live from the built token package — not
+retyped by hand — so if a token's value ever changes, these pages update automatically the next
+time Storybook rebuilds.

@@ -78,6 +78,32 @@ function toHex({ l, c, h }) {
   return formatHex(inGamut).toUpperCase();
 }
 
+// How much of the anchor's L-offset each step carries: 0 = canonical lightness
+// (unshifted, same as the free scales), 1 = full offset (exact anchor
+// continuity). 600 is always 1 by construction (it *is* the anchor).
+//
+// First attempt (2026-07-27) used a hard on/off cutoff — steps 50/100/200
+// unshifted, 300+ fully shifted — to fix purple's 50/100/200 reading as
+// gray/washed-out instead of light tints (root cause: purple-600's OKLCH L
+// sits well below the curve's own 600 midpoint, 0.46 vs 0.56, so a constant
+// offset dragged the whole light end down toward mid-gray). That fixed
+// 50-200 but left a real, measurable discontinuity in the L curve: the
+// 200->300 gap was 0.171, nearly double every other gap in the scale
+// (~0.09) — because 200 jumped to fully-unshifted while 300 stayed at the
+// old fully-shifted value with nothing in between. That cliff is what read
+// as "300 still looks gray" on inspection (2026-07-27 follow-up): 300 sat
+// perceptibly darker than a smoothly-spaced curve would put it, which reads
+// muddier at that chroma level.
+//
+// Fixed by ramping the offset in linearly across 200->600 instead of
+// snapping it on at 300. This keeps the light end (50-200) fully unshifted
+// as before, restores an even L curve with no cliff anywhere, and still
+// lands exactly on the anchor at 600.
+const OFFSET_BLEND = {
+  '50': 0, '100': 0, '200': 0, '300': 0.25, '400': 0.5, '500': 0.75,
+  '600': 1, '700': 1, '800': 1, '900': 1, '950': 1,
+};
+
 function generateAnchoredScale(hex) {
   const anchor = toOklch(hex);
   const lOffset = anchor.l - CANONICAL_L['600'];
@@ -89,7 +115,7 @@ function generateAnchoredScale(hex) {
       scale[step] = hex.toUpperCase();
       continue;
     }
-    const l = CANONICAL_L[step] + lOffset;
+    const l = CANONICAL_L[step] + lOffset * OFFSET_BLEND[step];
     const c = anchor.c * CHROMA_MULTIPLIER[step];
     scale[step] = toHex({ l, c, h: anchor.h });
   }

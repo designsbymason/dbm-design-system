@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Tag } from "./Tag";
 
 const meta: Meta<typeof Tag> = {
-  title: "Atoms/Core/Tag",
+  title: "Atoms/Data Display/Tag",
   component: Tag,
   parameters: { layout: "padded" },
   argTypes: {

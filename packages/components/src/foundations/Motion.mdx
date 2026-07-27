@@ -1,0 +1,55 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, TokenRow } from "../../.storybook/blocks";
+import { MotionScale, ThemeSync } from "../../.storybook/blocks/foundations";
+
+<Meta title="Foundations/Motion" />
+
+<ThemeSync />
+
+# Motion
+
+A duration scale (120ms–600ms) and 4 easing curves. Click **Replay** on either demo below to
+re-trigger the animation — numbers alone don't convey how a curve actually *feels*, especially the
+difference between `standard` and `emphasized`.
+
+## Duration
+
+<MotionScale dimension="duration" />
+
+<TokenRow token="motion.duration.instant" usage="0ms — no transition, immediate state change" />
+<TokenRow token="motion.duration.fast" usage="120ms — hover/focus micro-interactions" />
+<TokenRow token="motion.duration.base" usage="200ms — default transition duration" />
+<TokenRow token="motion.duration.moderate" usage="300ms — larger UI movements (Collapse, Drawer)" />
+<TokenRow token="motion.duration.slow" usage="400ms — deliberate, attention-drawing motion" />
+<TokenRow token="motion.duration.slower" usage="600ms — loading spinner rotation, ambient motion" />
+
+## Easing
+
+<MotionScale dimension="easing" />
+
+<TokenRow token="motion.easing.standard" usage="Default — most hover/focus/loading-state transitions" />
+<TokenRow token="motion.easing.decelerate" usage="Entrances — elements arriving on screen" />
+<TokenRow token="motion.easing.accelerate" usage="Exits — elements leaving the screen" />
+<TokenRow token="motion.easing.emphasized" usage="Expo-out feel for premium micro-interactions (modals/popovers entering)" />
+
+## Usage guidelines
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<Callout tone="success" title="Do">
+
+- Respect `prefers-reduced-motion` on any non-essential animation (see `Button`'s loading spinner
+  for the established pattern — slowing to 4× duration rather than disabling outright, since the
+  spinner's motion is also its only in-progress signal).
+- Use `standard` easing by default; reach for `decelerate`/`accelerate`/`emphasized` only when the
+  motion has a specific entrance/exit/premium-emphasis role to play.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't hardcode a transition duration or easing curve — every animated CSS property traces to
+  `motion.duration.*`/`motion.easing.*`.
+- Don't reach for `slow`/`slower` durations for routine hover/focus feedback — sluggish micro-
+  interactions read as unresponsive, not polished.
+
+</Callout>
+</div>

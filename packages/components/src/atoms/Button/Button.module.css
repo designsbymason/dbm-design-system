@@ -43,37 +43,37 @@
 
 .sizeXs {
   font-size: var(--dbm-font-size-xs);
-  gap: var(--dbm-space-1);
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-2);
-}
-
-.sizeSm {
-  font-size: var(--dbm-font-size-sm);
-  gap: var(--dbm-space-1);
+  gap: var(--dbm-space-2);
   padding-block: var(--dbm-space-2);
   padding-inline: var(--dbm-space-3);
 }
 
-.sizeMd {
-  font-size: var(--dbm-font-size-base);
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
   gap: var(--dbm-space-2);
-  padding-block: var(--dbm-space-2);
+  padding-block: var(--dbm-space-3);
   padding-inline: var(--dbm-space-4);
 }
 
-.sizeLg {
-  font-size: var(--dbm-font-size-md);
-  gap: var(--dbm-space-2);
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+  gap: var(--dbm-space-3);
   padding-block: var(--dbm-space-3);
   padding-inline: var(--dbm-space-5);
 }
 
-.sizeXl {
-  font-size: var(--dbm-font-size-lg);
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
   gap: var(--dbm-space-3);
   padding-block: var(--dbm-space-4);
   padding-inline: var(--dbm-space-6);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+  gap: var(--dbm-space-4);
+  padding-block: var(--dbm-space-5);
+  padding-inline: var(--dbm-space-8);
 }
 
 /* Variants */

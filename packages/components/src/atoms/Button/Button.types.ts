@@ -6,9 +6,16 @@ export type ButtonVariant =
 export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
-  /** @default 'primary' */
+  /**
+   * Visual style, signaling emphasis/hierarchy.
+   * @default 'primary'
+   */
   variant?: ButtonVariant;
-  /** @default 'md' */
+  /**
+   * Controls padding, gap, and font-size together as one step on the
+   * shared size scale.
+   * @default 'md'
+   */
   size?: ButtonSize;
   /** Leading icon — a component reference, not a string name. */
   icon?: PhosphorIcon;
@@ -42,4 +49,46 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    * @default false
    */
   fullWidth?: boolean;
+  /**
+   * The native button behavior: `submit` submits the nearest `<form>`,
+   * `reset` resets it, `button` (the default) does neither. Only relevant
+   * for a real `<button>` element — ignored in `asChild` mode, since the
+   * slotted element supplies its own semantics.
+   * @default 'button'
+   */
+  type?: "button" | "submit" | "reset";
+  /**
+   * Accessible label announced by assistive tech instead of the visible
+   * `children`. Most buttons don't need this — visible text label content
+   * already provides the accessible name — but it's required whenever the
+   * button's meaning isn't fully conveyed by its visible label (e.g. an
+   * icon-heavy button whose text is purely decorative, or to give a more
+   * descriptive name than the visible label alone provides).
+   */
+  "aria-label"?: string;
+  /**
+   * Points to the `id` of an existing, already-visible element to use as
+   * the accessible name instead — e.g. a heading the button sits next to
+   * whose text already says what the button does. Use instead of
+   * `aria-label` when that visible element's text is the better accessible
+   * name; use `aria-label` when no such element exists.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * button, or when a test or router needs a stable anchor.
+   */
+  id?: string;
+  /**
+   * Additional CSS classes for customization. Merged with the component's
+   * own internal classes rather than replacing them.
+   */
+  className?: string;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }
