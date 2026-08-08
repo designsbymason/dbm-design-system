@@ -24,7 +24,7 @@ export function TypeSpecimen({
           key={step}
           style={{
             alignItems: "baseline",
-            borderBlockEnd: "1px solid var(--dbm-border-subtle)",
+            borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
             display: "flex",
             gap: "var(--dbm-space-4)",
             paddingBlock: "var(--dbm-space-3)",
@@ -35,7 +35,7 @@ export function TypeSpecimen({
               color: "var(--dbm-text-tertiary)",
               flexShrink: 0,
               fontSize: "var(--dbm-font-size-xs)",
-              width: "3rem",
+              width: "var(--dbm-space-12)",
             }}
           >
             {step}
@@ -45,7 +45,7 @@ export function TypeSpecimen({
               color: "var(--dbm-text-tertiary)",
               flexShrink: 0,
               fontSize: "var(--dbm-font-size-xs)",
-              width: "15rem",
+              width: "var(--dbm-space-32)",
             }}
           >
             {value}

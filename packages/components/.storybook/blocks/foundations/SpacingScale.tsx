@@ -12,7 +12,7 @@ export function SpacingScale() {
     <table style={{ borderCollapse: "collapse", width: "100%" }}>
       <tbody>
         {entries.map(([step, value]) => (
-          <tr key={step} style={{ borderBlockEnd: "1px solid var(--dbm-border-subtle)" }}>
+          <tr key={step} style={{ borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)" }}>
             <td style={{ padding: "var(--dbm-space-2) var(--dbm-space-3)", whiteSpace: "nowrap" }}>
               <code>space.{step}</code>
             </td>
@@ -32,7 +32,7 @@ export function SpacingScale() {
                 style={{
                   background: "var(--dbm-bg-brand)",
                   borderRadius: "var(--dbm-radius-xs)",
-                  height: "1rem",
+                  height: "var(--dbm-space-4)",
                   width: value,
                 }}
               />

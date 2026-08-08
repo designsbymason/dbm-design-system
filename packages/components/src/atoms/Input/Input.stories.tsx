@@ -29,7 +29,7 @@ export const AllSizes: Story = {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "0.75rem",
+        gap: "var(--dbm-space-3)",
         maxWidth: "20rem",
       }}
     >

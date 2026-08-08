@@ -30,7 +30,7 @@ export const WithinText: Story = {
 export const InheritsSurroundingSize: Story = {
   name: "Inherits surrounding font size",
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
       <Text size="sm">
         Small text with <Code>inline code</Code>
       </Text>

@@ -53,7 +53,7 @@ export const SkipLink: Story = {
           href="#storybook-root"
           style={{
             background: "var(--dbm-bg-surface)",
-            border: "1px solid var(--dbm-border-focus)",
+            border: "var(--dbm-border-width-1) solid var(--dbm-border-focus)",
             borderRadius: "var(--dbm-radius-sm)",
             color: "var(--dbm-text-link)",
             display: "inline-block",

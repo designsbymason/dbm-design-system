@@ -21,7 +21,7 @@ export function RelatedCard({
     <a
       href={href}
       style={{
-        border: "1px solid var(--dbm-border-default)",
+        border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-md)",
         color: "inherit",
         display: "block",
@@ -35,7 +35,7 @@ export function RelatedCard({
           display: "flex",
           justifyContent: "center",
           marginBlockEnd: "var(--dbm-space-3)",
-          minHeight: "3rem",
+          minHeight: "var(--dbm-space-12)",
         }}
       >
         {children}

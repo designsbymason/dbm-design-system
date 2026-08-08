@@ -37,7 +37,7 @@ export const Indeterminate: Story = {
 export const AllTones: Story = {
   name: "All tones",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)", alignItems: "center" }}>
       {(["brand", "info", "success", "warning", "danger"] as const).map(
         (tone) => (
           <ProgressCircle key={tone} value={70} tone={tone} label={tone} />
@@ -50,7 +50,7 @@ export const AllTones: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)", alignItems: "center" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <ProgressCircle
           key={size}

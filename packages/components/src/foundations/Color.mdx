@@ -1,4 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
+import { primitives } from "@dbm-design-system/tokens";
 import { Callout } from "../../.storybook/blocks";
 import { ColorScaleGrid, ColorSwatch, SemanticSwatchGrid, ThemeSync } from "../../.storybook/blocks/foundations";
 
@@ -39,8 +40,8 @@ both brand themes — status meaning (danger is red, success is green) doesn't c
 ### Neutrals
 
 <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: "var(--dbm-space-2)" }}>
-<ColorSwatch color="#ffffff" label="white" sublabel="#ffffff" />
-<ColorSwatch color="#0a0912" label="black" sublabel="#0a0912" />
+<ColorSwatch color={primitives.color.neutral.white} label="white" sublabel={primitives.color.neutral.white} />
+<ColorSwatch color={primitives.color.neutral.black} label="black" sublabel={primitives.color.neutral.black} />
 </div>
 </div>
 </div>

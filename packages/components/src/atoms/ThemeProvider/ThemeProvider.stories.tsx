@@ -12,7 +12,7 @@ const Demo = () => (
   <div
     style={{
       background: "var(--dbm-bg-surface)",
-      border: "1px solid var(--dbm-border-default)",
+      border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
       borderRadius: "var(--dbm-radius-md)",
       color: "var(--dbm-text-primary)",
       padding: "var(--dbm-space-4)",
@@ -65,7 +65,7 @@ const ResolvedThemeReadout = () => {
     <div
       style={{
         background: "var(--dbm-bg-surface)",
-        border: "1px solid var(--dbm-border-default)",
+        border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-md)",
         color: "var(--dbm-text-primary)",
         padding: "var(--dbm-space-4)",

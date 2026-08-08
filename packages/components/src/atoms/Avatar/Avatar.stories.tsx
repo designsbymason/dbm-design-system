@@ -57,7 +57,7 @@ export const SquareShape: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Avatar key={size} initials="JD" alt="Jane Doe" size={size} />
       ))}
@@ -68,7 +68,7 @@ export const AllSizes: Story = {
 export const AllStatuses: Story = {
   name: "All statuses",
   render: () => (
-    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["online", "offline", "busy", "away"] as const).map((status) => (
         <Avatar key={status} initials="JD" alt="Jane Doe" status={status} />
       ))}

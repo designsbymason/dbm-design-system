@@ -89,7 +89,7 @@ export const ResponsiveGap: Story = {
 export const FluidMinChildWidth: Story = {
   name: "Fluid: minChildWidth (no explicit breakpoints)",
   render: () => (
-    <Grid minChildWidth="8rem" gap={4}>
+    <Grid minChildWidth="var(--dbm-space-32)" gap={4}>
       <Cells count={9} />
     </Grid>
   ),

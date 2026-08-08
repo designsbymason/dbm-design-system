@@ -17,7 +17,7 @@ export const Default: Story = {
   render: () => (
     <div style={{ maxWidth: "24rem" }}>
       <Collapse trigger={<Button variant="secondary">Toggle details</Button>}>
-        <Text style={{ paddingBlockStart: "0.75rem" }}>
+        <Text style={{ paddingBlockStart: "var(--dbm-space-3)" }}>
           Hidden content revealed on toggle, with an animated height
           transition.
         </Text>
@@ -34,7 +34,7 @@ export const OpenByDefault: Story = {
         defaultOpen
         trigger={<Button variant="secondary">Toggle details</Button>}
       >
-        <Text style={{ paddingBlockStart: "0.75rem" }}>
+        <Text style={{ paddingBlockStart: "var(--dbm-space-3)" }}>
           Starts expanded; click the trigger to collapse it.
         </Text>
       </Collapse>

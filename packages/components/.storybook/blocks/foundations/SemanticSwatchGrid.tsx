@@ -30,9 +30,9 @@ export function SemanticSwatchGrid({ tokens }: { tokens: SemanticToken[] }) {
             <div
               style={{
                 background: `var(${cssVar})`,
-                border: "1px solid var(--dbm-border-subtle)",
+                border: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
                 borderRadius: "var(--dbm-radius-md)",
-                height: "3rem",
+                height: "var(--dbm-space-12)",
               }}
             />
             <code style={{ fontSize: "var(--dbm-font-size-xs)" }}>{token}</code>

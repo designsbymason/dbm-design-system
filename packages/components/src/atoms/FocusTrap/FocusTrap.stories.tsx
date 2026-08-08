@@ -16,7 +16,7 @@ export default meta;
 type Story = StoryObj<typeof FocusTrap>;
 
 const fieldStyle = {
-  border: "1px solid var(--dbm-border-default)",
+  border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
   borderRadius: "var(--dbm-radius-sm)",
   display: "block",
   marginBottom: "var(--dbm-space-3)",
@@ -30,7 +30,7 @@ export const Default: Story = {
       <div
         style={{
           background: "var(--dbm-bg-surface)",
-          border: "1px solid var(--dbm-border-default)",
+          border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
           borderRadius: "var(--dbm-radius-md)",
           color: "var(--dbm-text-primary)",
           maxWidth: "20rem",

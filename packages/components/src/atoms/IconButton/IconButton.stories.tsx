@@ -28,7 +28,7 @@ export const Default: Story = {};
 export const AllVariants: Story = {
   name: "All variants",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
       {(
         ["primary", "secondary", "tertiary", "ghost", "destructive"] as const
       ).map((variant) => (
@@ -46,7 +46,7 @@ export const AllVariants: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <IconButton
           key={size}

@@ -36,7 +36,7 @@ export function MotionScale({
       <style>{`
         @keyframes dbm-motion-demo {
           from { left: 0; }
-          to { left: calc(100% - 1.5rem); }
+          to { left: calc(100% - var(--dbm-space-6)); }
         }
       `}</style>
       <button
@@ -62,7 +62,7 @@ export function MotionScale({
             key={name}
             style={{
               alignItems: "center",
-              borderBlockEnd: "1px solid var(--dbm-border-subtle)",
+              borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
               display: "flex",
               gap: "var(--dbm-space-4)",
               paddingBlock: "var(--dbm-space-3)",
@@ -85,9 +85,9 @@ export function MotionScale({
                 background: "var(--dbm-bg-subtle)",
                 borderRadius: "var(--dbm-radius-full)",
                 flexShrink: 0,
-                height: "1.5rem",
+                height: "var(--dbm-space-6)",
                 position: "relative",
-                width: "10rem",
+                width: "var(--dbm-space-32)",
               }}
             >
               <div
@@ -96,10 +96,10 @@ export function MotionScale({
                   animation: `dbm-motion-demo ${timingFor(name)}`,
                   background: "var(--dbm-bg-brand)",
                   borderRadius: "var(--dbm-radius-full)",
-                  height: "1.5rem",
+                  height: "var(--dbm-space-6)",
                   left: 0,
                   position: "absolute",
-                  width: "1.5rem",
+                  width: "var(--dbm-space-6)",
                 }}
               />
             </div>

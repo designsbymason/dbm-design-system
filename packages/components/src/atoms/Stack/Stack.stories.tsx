@@ -66,7 +66,7 @@ export const AllGapSteps: Story = {
     <Stack gap={6}>
       {([0, 1, 2, 4, 8, 16, 32] as const).map((gap) => (
         <Stack key={gap} direction="row" gap={gap} align="center">
-          <span style={{ color: "var(--dbm-text-secondary)", width: "4rem" }}>
+          <span style={{ color: "var(--dbm-text-secondary)", width: "var(--dbm-space-16)" }}>
             gap={gap}
           </span>
           <Swatches />
@@ -87,7 +87,7 @@ export const AlignAndJustify: Story = {
       style={{
         background: "var(--dbm-bg-subtle)",
         borderRadius: "var(--dbm-radius-md)",
-        height: "6rem",
+        height: "var(--dbm-space-24)",
         padding: "var(--dbm-space-3)",
       }}
     >
@@ -170,7 +170,7 @@ export const WithDivider: Story = {
           style={{
             alignSelf: "stretch",
             background: "var(--dbm-border-default)",
-            width: "1px",
+            width: "var(--dbm-border-width-1)",
           }}
         />
       }

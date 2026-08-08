@@ -32,7 +32,7 @@ export const Default: Story = {
 export const Sides: Story = {
   name: "All sides",
   render: () => (
-    <div style={{ display: "flex", gap: "2rem", padding: "3rem" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-8)", padding: "var(--dbm-space-12)" }}>
       {(["top", "right", "bottom", "left"] as const).map((side) => (
         <Tooltip key={side} content={`Side: ${side}`} side={side}>
           <Button variant="secondary">{side}</Button>

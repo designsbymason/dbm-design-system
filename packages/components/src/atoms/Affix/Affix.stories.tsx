@@ -25,8 +25,8 @@ export const StickyHeader: Story = {
               padding: "1rem 1.5rem",
               background: "var(--dbm-bg-surface)",
               borderBottom: stuck
-                ? "2px solid var(--dbm-border-strong)"
-                : "1px solid var(--dbm-border-default)",
+                ? "var(--dbm-border-width-2) solid var(--dbm-border-strong)"
+                : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
             }}
           >
             <Text weight="semibold">
@@ -34,9 +34,9 @@ export const StickyHeader: Story = {
             </Text>
           </div>
         </Affix>
-        <div style={{ padding: "1.5rem" }}>
+        <div style={{ padding: "var(--dbm-space-6)" }}>
           {Array.from({ length: 30 }, (_, i) => (
-            <Text key={i} style={{ marginBlockEnd: "1rem" }}>
+            <Text key={i} style={{ marginBlockEnd: "var(--dbm-space-4)" }}>
               Content line {i + 1}.
             </Text>
           ))}

@@ -39,8 +39,8 @@ export function ShadowScale({ mode }: { mode: "light" | "dark" }) {
               background: cardBg,
               borderRadius: "var(--dbm-radius-md)",
               boxShadow: value,
-              height: "5rem",
-              width: "5rem",
+              height: "var(--dbm-space-20)",
+              width: "var(--dbm-space-20)",
             }}
           />
           <code

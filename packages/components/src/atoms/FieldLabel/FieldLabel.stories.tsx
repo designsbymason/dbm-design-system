@@ -31,7 +31,7 @@ export const Disabled: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <FieldLabel key={size} htmlFor={`field-${size}`} size={size}>
           Size {size}

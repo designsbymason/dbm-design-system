@@ -19,7 +19,7 @@ export const Default: Story = {};
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-3)", alignItems: "center" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <CloseButton key={size} size={size} aria-label={`Close (${size})`} />
       ))}
@@ -30,8 +30,8 @@ export const AllSizes: Story = {
 export const InheritsSurroundingColor: Story = {
   name: "Inherits surrounding text color",
   render: () => (
-    <div style={{ display: "flex", gap: "1.5rem" }}>
-      <div style={{ color: "var(--dbm-text-on-danger)", background: "var(--dbm-bg-danger)", padding: "0.5rem", borderRadius: "var(--dbm-radius-md)" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-6)" }}>
+      <div style={{ color: "var(--dbm-text-on-danger)", background: "var(--dbm-bg-danger)", padding: "var(--dbm-space-2)", borderRadius: "var(--dbm-radius-md)" }}>
         <CloseButton />
       </div>
       <div style={{ color: "var(--dbm-text-link)" }}>

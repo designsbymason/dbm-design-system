@@ -17,7 +17,7 @@ export const Default: Story = {
     <Center
       style={{
         height: "12rem",
-        border: "1px dashed var(--dbm-border-default)",
+        border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
       }}
     >
       <Spinner tone="brand" label="Loading" />
@@ -31,7 +31,7 @@ export const Inline: Story = {
       Text with an{" "}
       <Center
         inline
-        style={{ border: "1px dashed var(--dbm-border-default)" }}
+        style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)" }}
       >
         inline-centered badge
       </Center>{" "}

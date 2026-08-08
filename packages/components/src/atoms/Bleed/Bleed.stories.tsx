@@ -20,7 +20,7 @@ export const Default: Story = {
   render: () => (
     <div
       style={{
-        border: "1px dashed var(--dbm-border-default)",
+        border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
         maxWidth: "28rem",
         paddingInline: "var(--dbm-space-6)",
         paddingBlock: "var(--dbm-space-4)",

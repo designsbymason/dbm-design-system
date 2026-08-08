@@ -20,7 +20,7 @@ export const Default: Story = {};
 export const AllTones: Story = {
   name: "All tones",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["warning", "success", "info", "danger"] as const).map((tone) => (
         <Highlight key={tone} tone={tone}>
           {tone}

@@ -73,6 +73,13 @@ the app root, by `@dbm-design-system/tokens/css/*.css`).
 
 ## What's covered here
 
+{/* The small mini-icon pictograms inside each card below (widths/heights of
+    2–28px) are intentionally NOT mapped to `space.*` tokens — the spacing
+    scale's granularity (4px steps from 4px, jumping to 8/12/16/20/24/32)
+    doesn't cover this range densely enough to represent a tiny illustrative
+    glyph without visibly distorting it. Colors/radii/borders inside these
+    pictograms ARE tokenized (`var(--dbm-*)`); only the literal pixel
+    dimensions are a deliberate exception, audited and confirmed 2026-08-08. */}
 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--dbm-space-4)" }}>
 <RelatedCard name="Color" description="Primitive scales + semantic bg/text/border/icon tokens, per theme" href="/?path=/docs/foundations-color--docs">
   <div style={{ display: "flex", gap: "var(--dbm-space-1)" }}>
@@ -92,7 +99,7 @@ the app root, by `@dbm-design-system/tokens/css/*.css`).
   </div>
 </RelatedCard>
 <RelatedCard name="Radius" description="Corner-rounding scale, none through fully round" href="/?path=/docs/foundations-radius--docs">
-  <div style={{ width: 28, height: 28, background: "var(--dbm-bg-brand-subtle)", border: "2px solid var(--dbm-border-focus)", borderRadius: "var(--dbm-radius-lg)" }} />
+  <div style={{ width: 28, height: 28, background: "var(--dbm-bg-brand-subtle)", border: "var(--dbm-border-width-2) solid var(--dbm-border-focus)", borderRadius: "var(--dbm-radius-lg)" }} />
 </RelatedCard>
 <RelatedCard name="Shadows" description="Elevation scale, separate light/dark values" href="/?path=/docs/foundations-shadows--docs">
   <div style={{ width: 28, height: 28, background: "var(--dbm-bg-surface)", borderRadius: "var(--dbm-radius-md)", boxShadow: "var(--dbm-shadow-light-md)" }} />
@@ -110,7 +117,7 @@ the app root, by `@dbm-design-system/tokens/css/*.css`).
   </div>
 </RelatedCard>
 <RelatedCard name="Borders, opacity & z-index" description="Border widths, the opacity scale, layering order" href="/?path=/docs/foundations-miscellaneous--docs">
-  <div style={{ width: 28, height: 28, border: "4px solid var(--dbm-border-strong)", borderRadius: "var(--dbm-radius-sm)" }} />
+  <div style={{ width: 28, height: 28, border: "var(--dbm-border-width-4) solid var(--dbm-border-strong)", borderRadius: "var(--dbm-radius-sm)" }} />
 </RelatedCard>
 <RelatedCard name="Breakpoints" description="The responsive layout scale" href="/?path=/docs/foundations-breakpoints--docs">
   <div style={{ display: "flex", gap: 2 }}>

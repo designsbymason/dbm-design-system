@@ -33,7 +33,7 @@ export const dbmStorybookTheme = create({
   appContentBg: "#FFFFFF",
   appPreviewBg: "#FFFFFF",
   appBorderColor: "#DEDDE5", // color.gray.200
-  appBorderRadius: 10, // radius.md
+  appBorderRadius: 8, // radius.md
 
   fontBase: '"Nunito", system-ui, sans-serif',
   fontCode:
@@ -57,7 +57,7 @@ export const dbmStorybookTheme = create({
   inputBg: "#FFFFFF",
   inputBorder: "#DEDDE5",
   inputTextColor: "#2C2A34",
-  inputBorderRadius: 6, // radius.sm
+  inputBorderRadius: 4, // radius.sm
 });
 
 export const dbmStorybookThemeDark = create({

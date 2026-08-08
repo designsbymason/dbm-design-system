@@ -16,9 +16,9 @@ export const Default: Story = {
   name: "Scroll the page to see it appear",
   render: () => (
     <div>
-      <div style={{ padding: "1.5rem" }}>
+      <div style={{ padding: "var(--dbm-space-6)" }}>
         {Array.from({ length: 40 }, (_, i) => (
-          <Text key={i} style={{ marginBlockEnd: "1rem" }}>
+          <Text key={i} style={{ marginBlockEnd: "var(--dbm-space-4)" }}>
             Scroll down to reveal the back-to-top button. Line {i + 1}.
           </Text>
         ))}

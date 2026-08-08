@@ -51,7 +51,7 @@ export const AspectRatio169: Story = {
 export const Rounded: Story = {
   args: { radius: "full", aspectRatio: 1 },
   render: (args) => (
-    <div style={{ width: "8rem" }}>
+    <div style={{ width: "var(--dbm-space-32)" }}>
       <Image {...args} />
     </div>
   ),

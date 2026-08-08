@@ -39,7 +39,7 @@ export const Vertical: Story = {
       style={{
         color: "var(--dbm-text-primary)",
         display: "flex",
-        height: "4rem",
+        height: "var(--dbm-space-16)",
       }}
     >
       <span>Left</span>
@@ -68,7 +68,7 @@ export const VerticalWithLabel: Story = {
       style={{
         color: "var(--dbm-text-primary)",
         display: "flex",
-        height: "6rem",
+        height: "var(--dbm-space-24)",
       }}
     >
       <span>Left</span>
@@ -95,7 +95,7 @@ export const ResponsiveOrientation: Story = {
     <Stack
       direction={{ base: "column", lg: "row" }}
       gap={4}
-      style={{ color: "var(--dbm-text-primary)", minHeight: "6rem" }}
+      style={{ color: "var(--dbm-text-primary)", minHeight: "var(--dbm-space-24)" }}
     >
       <span>Section A</span>
       <Divider

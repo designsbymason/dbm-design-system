@@ -23,7 +23,7 @@ export const Default: Story = {};
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Switch key={size} size={size} defaultChecked>
           Size {size}
@@ -35,7 +35,7 @@ export const AllSizes: Story = {
 
 export const States: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
       <Switch>Off</Switch>
       <Switch defaultChecked>On</Switch>
       <Switch disabled>Disabled</Switch>

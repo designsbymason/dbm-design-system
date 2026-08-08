@@ -18,7 +18,7 @@ export const Default: Story = {
   render: () => (
     <div
       style={{
-        border: "1px dashed var(--dbm-border-default)",
+        border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-md)",
         padding: "var(--dbm-space-4)",
       }}
@@ -54,7 +54,7 @@ export const CustomContainer: Story = {
     return (
       <div
         style={{
-          border: "1px dashed var(--dbm-border-default)",
+          border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
           borderRadius: "var(--dbm-radius-md)",
           padding: "var(--dbm-space-4)",
         }}
@@ -66,9 +66,9 @@ export const CustomContainer: Story = {
         <div
           id={targetId}
           style={{
-            border: "1px solid var(--dbm-border-strong)",
+            border: "var(--dbm-border-width-1) solid var(--dbm-border-strong)",
             borderRadius: "var(--dbm-radius-md)",
-            minHeight: "3rem",
+            minHeight: "var(--dbm-space-12)",
             padding: "var(--dbm-space-3)",
           }}
         />
@@ -102,7 +102,7 @@ export const DisabledPortal: Story = {
   render: () => (
     <div
       style={{
-        border: "1px dashed var(--dbm-border-default)",
+        border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-md)",
         padding: "var(--dbm-space-4)",
       }}
@@ -133,7 +133,7 @@ export const AsChild: Story = {
   render: () => (
     <div
       style={{
-        border: "1px dashed var(--dbm-border-default)",
+        border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-md)",
         padding: "var(--dbm-space-4)",
       }}

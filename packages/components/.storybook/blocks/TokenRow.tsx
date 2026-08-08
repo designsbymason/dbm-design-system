@@ -15,7 +15,7 @@ export function TokenRow({ token, usage }: { token: string; usage: string }) {
     <div
       style={{
         alignItems: "center",
-        borderBlockEnd: "1px solid var(--dbm-border-subtle)",
+        borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
         display: "flex",
         gap: "var(--dbm-space-3)",
         paddingBlock: "var(--dbm-space-2)",
@@ -25,11 +25,11 @@ export function TokenRow({ token, usage }: { token: string; usage: string }) {
         <span
           style={{
             background: `var(${cssVarName})`,
-            border: "1px solid var(--dbm-border-default)",
+            border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
             borderRadius: "var(--dbm-radius-sm)",
             flexShrink: 0,
-            height: "1.25rem",
-            width: "1.25rem",
+            height: "var(--dbm-space-5)",
+            width: "var(--dbm-space-5)",
           }}
         />
       )}

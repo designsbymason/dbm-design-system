@@ -29,7 +29,7 @@ export const Default: Story = {};
 export const AllTones: Story = {
   name: "All tones (subtle)",
   render: () => (
-    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
       {(["neutral", "info", "success", "warning", "danger"] as const).map(
         (tone) => (
           <Tag key={tone} tone={tone}>
@@ -44,7 +44,7 @@ export const AllTones: Story = {
 export const Solid: Story = {
   name: "All tones (solid)",
   render: () => (
-    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
       {(["neutral", "info", "success", "warning", "danger"] as const).map(
         (tone) => (
           <Tag key={tone} tone={tone} variant="solid">
@@ -59,7 +59,7 @@ export const Solid: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-2)", alignItems: "center" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Tag key={size} size={size}>
           Size {size}
@@ -83,7 +83,7 @@ export const RemovableFilterList: Story = {
       "In review",
     ]);
     return (
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
         {filters.map((filter) => (
           <Tag
             key={filter}

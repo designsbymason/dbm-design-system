@@ -25,7 +25,7 @@ export const Default: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)", alignItems: "center" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Spinner key={size} size={size} tone="brand" />
       ))}
@@ -36,7 +36,7 @@ export const AllSizes: Story = {
 export const AllTones: Story = {
   name: "All tones",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)", alignItems: "center" }}>
       {(["default", "secondary", "brand", "disabled"] as const).map((tone) => (
         <Spinner key={tone} tone={tone} />
       ))}

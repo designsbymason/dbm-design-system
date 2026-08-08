@@ -22,10 +22,10 @@ export function RadiusScale() {
           <div
             style={{
               background: "var(--dbm-bg-brand-subtle)",
-              border: "2px solid var(--dbm-border-focus)",
+              border: "var(--dbm-border-width-2) solid var(--dbm-border-focus)",
               borderRadius: value,
-              height: "4rem",
-              width: "4rem",
+              height: "var(--dbm-space-16)",
+              width: "var(--dbm-space-16)",
             }}
           />
           <code style={{ fontSize: "var(--dbm-font-size-xs)" }}>radius.{step}</code>

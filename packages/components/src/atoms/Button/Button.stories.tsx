@@ -132,7 +132,7 @@ export const Playground: Story = {};
 export const AllVariants: Story = {
   name: "All variants",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
       {(
         ["primary", "secondary", "tertiary", "ghost", "destructive"] as const
       ).map((variant) => (
@@ -147,7 +147,7 @@ export const AllVariants: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Button key={size} size={size}>
           Size {size}
@@ -160,7 +160,7 @@ export const AllSizes: Story = {
 export const WithIcons: Story = {
   name: "Leading and trailing icons",
   render: () => (
-    <div style={{ display: "flex", gap: "1rem" }}>
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
       <Button icon={WalletIcon}>Pay</Button>
       <Button trailingIcon={WalletIcon}>Pay</Button>
       {/* `icon` and `trailingIcon` are independent — both render together

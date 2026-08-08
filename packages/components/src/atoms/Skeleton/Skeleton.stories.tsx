@@ -28,7 +28,7 @@ export const Circular: Story = {
 };
 
 export const Rectangular: Story = {
-  args: { variant: "rectangular", width: "16rem", height: "8rem" },
+  args: { variant: "rectangular", width: "16rem", height: "var(--dbm-space-32)" },
 };
 
 export const DefaultSizes: Story = {
@@ -43,7 +43,7 @@ export const DefaultSizes: Story = {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "1rem",
+        gap: "var(--dbm-space-4)",
         maxWidth: "16rem",
       }}
     >
@@ -58,7 +58,7 @@ export const WaveAnimation: Story = {
   args: {
     variant: "rectangular",
     width: "16rem",
-    height: "8rem",
+    height: "var(--dbm-space-32)",
     animation: "wave",
   },
 };

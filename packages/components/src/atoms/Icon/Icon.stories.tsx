@@ -34,7 +34,7 @@ export const Default: Story = {};
 export const AllSizes: Story = {
   name: "All sizes",
   render: () => (
-    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["xs", "sm", "md", "lg", "xl", "2xl", "3xl"] as const).map((size) => (
         <Icon key={size} icon={WalletIcon} size={size} tone="brand" />
       ))}
@@ -45,7 +45,7 @@ export const AllSizes: Story = {
 export const AllWeights: Story = {
   name: "All weights",
   render: () => (
-    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["thin", "light", "regular", "bold", "fill", "duotone"] as const).map(
         (weight) => (
           <Icon
@@ -64,7 +64,7 @@ export const AllWeights: Story = {
 export const AllTones: Story = {
   name: "All tones",
   render: () => (
-    <div style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["default", "secondary", "brand", "disabled"] as const).map((tone) => (
         <Icon key={tone} icon={HeartIcon} size="lg" tone={tone} />
       ))}
