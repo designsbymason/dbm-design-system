@@ -2,8 +2,8 @@
   "bg": {
     "canvas": {
       "$type": "color",
-      "$value": "{color.gray.100}",
-      "$description": "Swapped with subtle 2026-07-27: canvas should be the more visibly distinct page-level gray so white surface cards read as clearly popping off it; subtle should be the barely-there tint used for hover fills on those cards (see subtle's own description)."
+      "$value": "{color.gray.50}",
+      "$description": "Moved from gray.100 to gray.50 (2026-08-08) at explicit direction — now byte-identical to bg.subtle, undoing the distinction the 2026-07-27 canvas/subtle swap created (that change's own rationale: canvas should read as more distinct from white than subtle). Accepted tradeoff, not an oversight. Contrast re-verified, not assumed: text.primary on this value measures 13.53:1 (was 12.41:1 on gray.100), text.secondary measures 6.59:1 (was 6.05:1) — both still comfortably clear AA, since a lighter background only improves contrast against dark text."
     },
     "surface": {
       "$type": "color",
@@ -101,6 +101,11 @@
       "$type": "color",
       "$value": "{color.neutral.black}",
       "$description": "Dimming scrim behind Dialog/Drawer/overlays (Backdrop atom). No text sits directly on it, so it isn't a WCAG contrast pairing — opacity is applied separately, compositionally, via the opacity.* scale rather than baked into this token, matching how color and opacity stay separate token categories everywhere else. Shared across all 4 themes since dimming what's behind isn't a brand-dependent decision."
+    },
+    "code": {
+      "$type": "color",
+      "$value": "{color.blue.50}",
+      "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's .dbm-tokentable code) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Not currently consumed by any published component (the real Code.tsx atom uses bg.subtle instead) — Storybook-docs-only for now."
     }
   },
   "text": {
@@ -202,6 +207,11 @@
     "danger": {
       "$type": "color",
       "$value": "{color.red.500}"
+    },
+    "code": {
+      "$type": "color",
+      "$value": "{color.blue.100}",
+      "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand. Measures 1.09:1 light / 1.28:1 dark against bg.code, an accepted tradeoff, not an oversight."
     }
   },
   "icon": {

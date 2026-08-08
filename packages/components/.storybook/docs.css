@@ -9,8 +9,21 @@
  * injected styles would otherwise win on specificity.
  */
 
+/* `padding-block-end: 60vh` (2026-08-08) is extra bottom whitespace so a
+   page's last section can be scrolled up near the top of the viewport
+   instead of staying pinned to the bottom — useful when jumping to it via
+   the right-side TOC/anchor links, where landing at the very bottom of
+   the viewport is awkward to read. `60vh` rather than a `space.*` token:
+   this is inherently viewport-relative (it needs to scale with however
+   tall the reader's window is, not with type/spacing rhythm), so no step
+   on the fixed rem spacing scale could serve this purpose — same class of
+   documented exception as the other presentational-only, non-token values
+   in this file (see the inline-code comment below). Extra scrollable
+   space below the real content, not a token substitute for any
+   component's own padding. */
 .sbdocs-content {
   font-family: var(--dbm-font-family-primary);
+  padding-block-end: 60vh;
 }
 
 .sbdocs-content h1 {
@@ -79,17 +92,24 @@
   line-height: var(--dbm-line-height-relaxed);
 }
 
-/* Inline code references (variable/token/prop names in prose) — blue-50
-   fill + blue-100 border, not a semantic token: no semantic step maps to
-   blue-50, and reaching for `bg.info`/`border.danger`-style tokens here
-   would misleadingly imply a status/info meaning a plain code reference
-   doesn't carry. Same class of documented exception to "semantic tokens
-   only" (see CLAUDE.md) as the purple-100 zebra stripe below — this is
-   presentational Storybook docs chrome, not shipped component code.
+/* Inline code references (variable/token/prop names in prose) — unified
+   (2026-08-08) with the token-table pill (`.dbm-tokentable code` below)
+   onto the same `bg.code`/`border.code`/`text.secondary` tokens, so every
+   inline `<code>` across the docs — table pill or running prose — now
+   looks identical and reacts to Brand/Mode the same way. Previously this
+   rule used fixed `blue-50`/`blue-100`/`gray-700` literals (no semantic
+   token existed for it yet), which quietly stopped reacting once dark
+   mode support landed elsewhere: verified via computed styles that it
+   rendered the same light-blue pill in both light AND dark mode, a stark
+   mismatch against the rest of a dark-mode page. Same class of fix as the
+   `.dbm-tokentable code` pill's own `blue-50`→`bg.code` migration above,
+   for the identical reason (see that rule's comment for the fuller
+   history/rationale, including why `text.secondary` — not a dedicated
+   `text.code` — is safe to use here now that the background is reactive).
 
-   `!important` on every property (2026-07-27): Storybook's own MDX
-   renderer ships a same-specificity emotion rule for backtick-code inside
-   markdown prose (`:where(p...) code`, specificity tied with
+   `!important` on every property (2026-07-27, still required): Storybook's
+   own MDX renderer ships a same-specificity emotion rule for backtick-code
+   inside markdown prose (`:where(p...) code`, specificity tied with
    `.sbdocs-content code`) that's injected after this stylesheet, so it
    was silently winning the cascade tie for any inline code written as
    markdown rather than a literal JSX `<code>` element — confirmed via
@@ -99,25 +119,17 @@
    two different-looking "code" styles on the same page depending on how
    it was authored. `!important` here (the one exception this file's
    header note allows for) makes this rule win unconditionally regardless
-   of DOM context.
-
-   `color` added explicitly (2026-08-08), fixed `gray-700` matching this
-   pill's own fixed background/border: without it, this rule inherits
-   color from its parent, which used to be `.sbdocs-content p`'s color —
-   harmless while that was also fixed `gray-700`, but once the dark-mode
-   wrapper fix (see the h3/p/li rule's comment) made `p`'s color reactive
-   again, this pill would've inherited near-white text against its own
-   still-intentionally-fixed light-blue background, reproducing the exact
-   illegible-pairing bug this whole file exists to avoid — in a spot the
-   original fix's checklist didn't cover since it predates the wrapper fix
-   entirely. */
+   of DOM context. */
 .sbdocs-content code {
-  background: var(--dbm-color-blue-50) !important;
-  border: var(--dbm-border-width-1) solid var(--dbm-color-blue-100) !important;
+  background: var(--dbm-bg-code) !important;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
   border-radius: var(--dbm-radius-sm) !important;
-  color: var(--dbm-color-gray-700) !important;
+  color: var(--dbm-text-secondary) !important;
   font-family: var(--dbm-font-family-mono) !important;
-  padding-inline: var(--dbm-space-1) !important;
+  font-size: var(--dbm-font-size-sm) !important;
+  font-weight: var(--dbm-font-weight-medium) !important;
+  padding-block: var(--dbm-space-1) !important;
+  padding-inline: var(--dbm-space-2) !important;
 }
 
 .sbdocs-content pre code {
@@ -213,18 +225,28 @@
    throughout this investigation even on the attempts where nothing
    actually painted.
 
-   Border color is `border.subtle` (2026-07-27, revised from
-   `border.default`) per explicit direction: Storybook styling should
-   only ever reference design-system tokens, not fixed primitives, even
-   where a primitive would read more clearly. Fainter than `border.default`
-   (1.14:1 against the white page vs. 1.35:1), well under the 3:1 WCAG
-   1.4.11 floor — no `border.*` step clears 3:1 in this specific context,
-   since every one was calibrated for borders between two real themed
-   surfaces, not a standalone boundary against an unthemed Storybook page
-   background. Accepted tradeoff of the token-only decision, not an
-   oversight. */
+   Border color is `border.default` (2026-08-08, reverted back from
+   `border.subtle`, which itself replaced `border.default` on 2026-07-27
+   purely to stay token-only rather than reach for a primitive — that
+   part of the reasoning still holds, `border.default` is still a
+   semantic token, not a primitive). The revert is a real bug fix, not a
+   taste change: `border.subtle` resolves to `gray.900` in dark mode, and
+   the Docs page wrapper background (`bg.surface`, what this table
+   actually sits on) is ALSO `gray.900` in dark mode — border and
+   background were byte-identical, confirmed via computed styles
+   (`getComputedStyle` returned the same `rgb(44, 42, 52)` for both), a
+   literal 1.00:1 collision rather than merely low contrast. `border.subtle`
+   only ever looked acceptable because it was last verified in light mode,
+   where `border.subtle`/`bg.surface` don't happen to collide.
+   `border.default` doesn't collide in either mode: 1.35:1 light / 1.40:1
+   dark against `bg.surface` — still under the 3:1 WCAG 1.4.11 floor, same
+   documented tradeoff as before (no `border.*` step clears 3:1 for a
+   standalone boundary against an unthemed page background; this is a
+   decorative border, not a state-identifying one — same exemption already
+   established for `border.brand` elsewhere in this file), but no longer
+   literally invisible. */
 .dbm-proptable {
-  border: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
   border-collapse: separate !important;
   border-radius: var(--dbm-radius-md);
   border-spacing: 0;
@@ -373,36 +395,68 @@
   font-size: var(--dbm-font-size-sm);
 }
 
-/* Token-name code pill — background/border reworked (2026-08-08) now that
-   the wrapper this table sits in actually goes dark with the Mode toggle
-   (see the h3/p/li rule's comment near the top of this file). Previously
-   fixed `blue-50`/`blue-100` specifically because `text.secondary` (kept
-   reactive since it was first set per explicit direction) measured only
-   1.64:1 against that fixed pill in dark mode — effectively illegible.
-   That mismatch is gone now that both halves of the pairing can be
-   reactive together: `bg.subtle` (a third, still-distinct fill from this
-   table's own two zebra-row backgrounds, `bg.surface`/`bg.brand-subtle`)
-   paired with `text.primary` measures 13.53:1 light / 9.66:1 dark —
-   comfortably AA in both modes. Border dropped entirely rather than kept
-   at a fixed blue — `bg.subtle` already reads as a distinct fill against
-   both zebra states without one, matching `.dbm-proptable code`'s own
-   no-border pill treatment.
+/* Token-table header — brand-filled, scoped to `.dbm-tokentable` only
+   (2026-08-08), so it doesn't touch `.dbm-proptable` header styling on
+   component Properties tables elsewhere. Overrides the gray `bg.subtle`/
+   `text.secondary` header inherited from `.dbm-proptable th` with
+   `bg.brand`/`text.on-brand` — the same fill/on-fill pairing already used
+   for brand-colored surfaces elsewhere (e.g. Button's primary variant),
+   so contrast is already established, not re-derived here. `!important`
+   on `color` is required to beat `.dbm-proptable th`'s own `!important`
+   `color: text.secondary` (see that rule's comment); added to `background`
+   too for symmetry/robustness even though source order alone would win
+   today, since `.dbm-proptable th`'s `background` has no `!important`. */
+.dbm-tokentable th {
+  background: var(--dbm-bg-brand) !important;
+  color: var(--dbm-text-on-brand) !important;
+}
 
-   `font-weight` stays `font-weight.medium` per the original explicit
-   direction; `font-size` stays `font-size.sm`, matching the `th`/`td`
-   rule above.
+/* Token-name code pill — moved back to a blue treatment (2026-08-08),
+   this time on dedicated `bg.code`/`border.code` semantic tokens instead
+   of the fixed `blue-50`/`blue-100` primitives this rule used originally.
+   That original fixed version was replaced earlier the same day with a
+   `bg.subtle`/`text.primary` pairing because pairing a *fixed* blue with
+   *reactive* `text.secondary` measured only 1.64:1 in dark mode — but the
+   `bg.subtle`/`text.primary` pill then visually blended into this table's
+   own zebra-striped rows once `bg.canvas` (a separate, later change) was
+   moved to equal `bg.subtle`, losing the pill's distinctness entirely.
+   `bg.code`/`border.code` solve both problems at once: genuinely reactive
+   per theme (blue.50/blue.100 light, blue.950/blue.900 dark — see
+   `guidelines/03-token-system-spec.md`), visually distinct from every
+   gray in this table regardless of what `bg.canvas`/`bg.subtle` happen to
+   resolve to, since blue isn't part of that gray-scale collision at all.
 
-   `!important` still needed on all four properties: same-or-higher-
-   specificity competing declarations elsewhere in this file
-   (`.dbm-proptable code`'s `background`/`color`, `.dbm-proptable
-   td:first-child code`'s `font-weight`, `.dbm-proptable code`'s
-   `font-size: font-size-xs`) would otherwise still win. */
+   `color` uses `text.secondary` directly (not a dedicated `text.code`
+   token, which existed briefly the same day and was removed once this
+   was confirmed) — now that `bg.code` is genuinely reactive rather than
+   fixed, the exact pairing that failed at 1.64:1 above passes cleanly:
+   `text.secondary` on `bg.code` measures 6.57:1 light / 10.53:1 dark,
+   both sides darkening/lightening together instead of one staying put.
+
+   `padding-block`/`padding-inline` split at different values (2026-08-08,
+   revised from a single `padding: space-2` on all sides) — `space-1`
+   block, `space-2` inline: a code pill reads better slightly flatter
+   top/bottom than side-to-side. `.sbdocs-content code` below was unified
+   onto this same split the same day, once it turned out to still read
+   fine sitting in running prose.
+
+   `!important` still needed on every property: same-or-higher-specificity
+   competing declarations elsewhere in this file (`.sbdocs-content code`'s
+   own `!important` background/border/radius/color/font-family/padding,
+   `.dbm-proptable code`'s `background`/`color`/`radius`/`font-size`,
+   `.dbm-proptable td:first-child code`'s `font-weight`) would otherwise
+   still win — `!important` ignores specificity/order entirely, so every
+   property this rule cares about needs its own to actually apply. */
 .dbm-tokentable code {
-  background: var(--dbm-bg-subtle) !important;
-  border: none !important;
-  color: var(--dbm-text-primary) !important;
+  background: var(--dbm-bg-code) !important;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
+  border-radius: var(--dbm-radius-sm) !important;
+  color: var(--dbm-text-secondary) !important;
+  font-family: var(--dbm-font-family-mono) !important;
   font-size: var(--dbm-font-size-sm) !important;
   font-weight: var(--dbm-font-weight-medium) !important;
+  padding-block: var(--dbm-space-1) !important;
+  padding-inline: var(--dbm-space-2) !important;
 }
 
 /* Playground layout: Canvas on top, a compact controls-only panel below it
