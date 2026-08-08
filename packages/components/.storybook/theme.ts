@@ -1,104 +1,122 @@
 import { create } from "storybook/theming/create";
+import { primitives, purpleLight, purpleDark, emeraldLight, emeraldDark } from "@dbm-design-system/tokens";
+
+type ThemeVars = ReturnType<typeof create>;
 
 /**
  * Storybook's manager UI (sidebar/toolbar chrome) and the Docs addon's own
  * typography both run outside the preview iframe, so neither has access to
- * our CSS custom properties — each of these two themes mirrors the relevant
- * *purple* semantic token values (light/dark) as literal hex/font strings
- * instead. Two themes, not one: `.storybook/manager.ts` and
- * `.storybook/DbmDocsContainer.tsx` both listen for the Mode toolbar global
- * on the addons channel and switch between these live, so the manager
- * chrome and the Docs wrapper now track the same toggle that themes
- * previewed components (see the `withTheme` decorator in preview.tsx),
- * rather than staying fixed light regardless of Mode.
+ * our CSS custom properties — each generated theme below mirrors a brand's
+ * resolved semantic token values (light/dark) as literal hex/font strings
+ * instead. `.storybook/manager.ts` and `.storybook/DbmDocsContainer.tsx`
+ * both listen for the Brand AND Mode toolbar globals on the addons channel
+ * and switch between these live via `getStorybookTheme`, so the manager
+ * chrome and the Docs wrapper now track the same two toggles that theme
+ * previewed components (see the `withTheme` decorator in preview.tsx) —
+ * this reverses an earlier decision (see git history) that manager/docs
+ * chrome would stay fixed to purple regardless of the Brand toggle.
  *
- * Hex values are taken from the already AA-contrast-verified step
- * selections in `packages/tokens/src/semantic/purple-{light,dark}.json`
- * (not re-derived here) — purple specifically, since the manager/docs
- * chrome is the tool's own identity and isn't expected to re-theme with the
- * Brand toggle the way previewed components do.
+ * Rather than hand-transcribing hex per brand/mode (drift-prone — this
+ * file used to do exactly that for purple only, and its dark variant had
+ * silently gone stale on `appBorderRadius`/`inputBorderRadius`, off by 2px
+ * from the `radius.md`/`radius.sm` tokens its own comments named), every
+ * value below is read directly from `@dbm-design-system/tokens`'s built
+ * semantic exports (`purpleLight`/`purpleDark`/`emeraldLight`/
+ * `emeraldDark` — already-resolved `{ bg, text, border, icon }` hex maps,
+ * confirmed via `node -e "require('./dist/index.cjs')"`) and the
+ * `primitives.radius` scale. Adding a third brand later means adding one
+ * import and one `BRANDS` entry below — nothing else in this file, or in
+ * `manager.ts`/`DbmDocsContainer.tsx`, needs to change.
+ *
+ * One correctness note found while building this: `text["on-brand"]` is
+ * white for purple in both modes, but for emerald it's white in light and
+ * **`#16151c` (dark text) in dark mode** — emerald.500 is light enough
+ * that white text fails contrast, so the token itself already accounts
+ * for this. `textInverseColor` below reads `t.text["on-brand"]` per
+ * brand/mode rather than assuming white, which the old purple-only file
+ * did — assuming white would have made Emerald+Dark's selected sidebar
+ * item illegible (light text on a light-green background).
  */
-export const dbmStorybookTheme = create({
-  base: "light",
 
-  brandTitle: "DBM Design System",
-  brandUrl: "https://github.com/designsbymason/dbm-design-system",
-  brandTarget: "_self",
+type Brand = "purple" | "emerald";
+type Mode = "light" | "dark";
 
-  // color.purple.600 — the brand anchor (see 03-token-system-spec.md)
-  colorPrimary: "#5548A4",
-  colorSecondary: "#5548A4",
+const SEMANTIC_TOKENS: Record<Brand, Record<Mode, typeof purpleLight>> = {
+  purple: { light: purpleLight, dark: purpleDark },
+  emerald: { light: emeraldLight, dark: emeraldDark },
+};
 
-  appBg: "#FAFAFB", // color.gray.50
-  appContentBg: "#FFFFFF",
-  appPreviewBg: "#FFFFFF",
-  appBorderColor: "#DEDDE5", // color.gray.200
-  appBorderRadius: 8, // radius.md
+// radius.md / radius.sm, read live rather than hand-typed (see file header).
+const RADIUS_MD = Number.parseInt(primitives.radius.md, 10);
+const RADIUS_SM = Number.parseInt(primitives.radius.sm, 10);
 
-  fontBase: '"Nunito", system-ui, sans-serif',
-  fontCode:
-    "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
+function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
+  const t = SEMANTIC_TOKENS[brand][mode];
+  return create({
+    base: mode,
 
-  textColor: "#2C2A34", // color.gray.900
-  textInverseColor: "#FFFFFF",
-  textMutedColor: "#5B586B", // color.gray.700
+    brandTitle: "DBM Design System",
+    brandUrl: "https://github.com/designsbymason/dbm-design-system",
+    brandTarget: "_self",
 
-  barTextColor: "#5B586B",
-  barHoverColor: "#5548A4",
-  barSelectedColor: "#5548A4",
-  barBg: "#FFFFFF",
+    colorPrimary: t.bg.brand,
+    colorSecondary: t.bg.brand,
 
-  buttonBg: "#F0F0F3", // color.gray.100
-  buttonBorder: "#DEDDE5",
+    appBg: t.bg.canvas,
+    appContentBg: t.bg.surface,
+    appPreviewBg: t.bg.surface,
+    appBorderColor: t.border.default,
+    appBorderRadius: RADIUS_MD,
 
-  booleanBg: "#F0F0F3",
-  booleanSelectedBg: "#FFFFFF",
+    fontBase: '"Nunito", system-ui, sans-serif',
+    fontCode:
+      "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
 
-  inputBg: "#FFFFFF",
-  inputBorder: "#DEDDE5",
-  inputTextColor: "#2C2A34",
-  inputBorderRadius: 4, // radius.sm
-});
+    textColor: t.text.primary,
+    textInverseColor: t.text["on-brand"],
+    textMutedColor: t.text.secondary,
 
-export const dbmStorybookThemeDark = create({
-  base: "dark",
+    barTextColor: t.text.secondary,
+    // Standardized on `bg.brand-hover` for both modes — the light theme
+    // previously reused `bg.brand` here (identical to the selected-state
+    // color, so hovering an unselected item looked the same as selecting
+    // it), while dark already used `bg.brand-hover` correctly. This gives
+    // light mode a real, distinct hover state instead of leaving that
+    // inconsistency in place.
+    barHoverColor: t.bg["brand-hover"],
+    barSelectedColor: t.bg.brand,
+    barBg: t.bg.surface,
 
-  brandTitle: "DBM Design System",
-  brandUrl: "https://github.com/designsbymason/dbm-design-system",
-  brandTarget: "_self",
+    buttonBg: t.bg.subtle,
+    buttonBorder: t.border.default,
 
-  // bg.brand (purple.500 in dark mode — a different step than light's
-  // purple.600 anchor, per purple-dark.json)
-  colorPrimary: "#746BC6",
-  colorSecondary: "#746BC6",
+    booleanBg: t.bg.subtle,
+    booleanSelectedBg: t.bg.surface,
 
-  appBg: "#16151C", // bg.canvas (gray.950)
-  appContentBg: "#2C2A34", // bg.surface (gray.900)
-  appPreviewBg: "#2C2A34",
-  appBorderColor: "#43404F", // border.default (gray.800)
-  appBorderRadius: 10, // radius.md
+    inputBg: t.bg.surface,
+    inputBorder: t.border.default,
+    inputTextColor: t.text.primary,
+    inputBorderRadius: RADIUS_SM,
+  });
+}
 
-  fontBase: '"Nunito", system-ui, sans-serif',
-  fontCode:
-    "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
+/** Add a new brand by importing its `<brand>Light`/`<brand>Dark` semantic
+ * exports above, adding a `SEMANTIC_TOKENS` entry, and adding it here. */
+export const BRANDS: Brand[] = ["purple", "emerald"];
+const MODES: Mode[] = ["light", "dark"];
 
-  textColor: "#FAFAFB", // text.primary (gray.50)
-  textInverseColor: "#FFFFFF", // text.on-brand (neutral.white in dark mode)
-  textMutedColor: "#C6C4D1", // text.secondary (gray.300)
+const registry = Object.fromEntries(
+  BRANDS.map((brand) => [
+    brand,
+    Object.fromEntries(MODES.map((mode) => [mode, buildStorybookTheme(brand, mode)])),
+  ]),
+) as Record<Brand, Record<Mode, ThemeVars>>;
 
-  barTextColor: "#C6C4D1",
-  barHoverColor: "#5548A4", // bg.brand-hover (purple.600 in dark mode)
-  barSelectedColor: "#746BC6",
-  barBg: "#2C2A34", // bg.surface
-
-  buttonBg: "#43404F", // bg.subtle (gray.800)
-  buttonBorder: "#43404F",
-
-  booleanBg: "#43404F",
-  booleanSelectedBg: "#2C2A34",
-
-  inputBg: "#2C2A34", // bg.surface
-  inputBorder: "#43404F", // border.default
-  inputTextColor: "#FAFAFB",
-  inputBorderRadius: 6, // radius.sm
-});
+/** Falls back to the first configured brand/mode if given an unrecognized
+ * or missing value — callers pass raw toolbar-global strings, which are
+ * `unknown` as far as the type system is concerned. */
+export function getStorybookTheme(brand?: string, mode?: string): ThemeVars {
+  const resolvedBrand = BRANDS.includes(brand as Brand) ? (brand as Brand) : BRANDS[0];
+  const resolvedMode = MODES.includes(mode as Mode) ? (mode as Mode) : MODES[0];
+  return registry[resolvedBrand][resolvedMode];
+}

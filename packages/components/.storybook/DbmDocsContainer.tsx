@@ -1,14 +1,15 @@
 import { DocsContainer, type DocsContainerProps } from "@storybook/addon-docs/blocks";
 import type { PropsWithChildren } from "react";
 import { useThemeGlobals } from "./blocks/foundations/useThemeGlobals";
-import { dbmStorybookTheme, dbmStorybookThemeDark } from "./theme";
+import { getStorybookTheme } from "./theme";
 
 /**
- * Reads the live Mode global straight from the attached story's own context
- * — synchronous, no subscription/cache needed — for any docs page that has
- * one (every component `ComponentName.mdx`, via `<Meta of={ComponentStories} />`).
- * Returns `undefined` on Foundations pages, which use `<Meta title="..." />`
- * with no attached CSF file, so `storyById()` has nothing to resolve.
+ * Reads the live Brand/Mode globals straight from the attached story's own
+ * context — synchronous, no subscription/cache needed — for any docs page
+ * that has one (every component `ComponentName.mdx`, via
+ * `<Meta of={ComponentStories} />`). Returns `{}` on Foundations pages,
+ * which use `<Meta title="..." />` with no attached CSF file, so
+ * `storyById()` has nothing to resolve.
  *
  * This is the ONLY reliable read on a component page (added 2026-08-08,
  * after `useThemeGlobals`'s channel-subscription approach — copied from
@@ -24,27 +25,33 @@ import { dbmStorybookTheme, dbmStorybookThemeDark } from "./theme";
  * same correct answer straight from Storybook's own live story context
  * instead of remembering a previous one.
  */
-function readModeFromAttachedStory(context: DocsContainerProps["context"]): string | undefined {
+function readGlobalsFromAttachedStory(
+  context: DocsContainerProps["context"],
+): { brand?: string; mode?: string } {
   try {
     const story = context.storyById();
-    return context.getStoryContext(story).globals?.mode as string | undefined;
+    const globals = context.getStoryContext(story).globals;
+    return {
+      brand: globals?.brand as string | undefined,
+      mode: globals?.mode as string | undefined,
+    };
   } catch {
-    return undefined;
+    return {};
   }
 }
 
 /**
  * The Docs addon's own wrapper/typography (`.sbdocs-wrapper`/`.sbdocs-content`
  * — Storybook's chrome around MDX content, not our component classes) runs
- * outside the preview iframe, so it can't read the Mode toolbar global via
- * a decorator. `Docs.tsx` (Storybook's own MDX entry point) accepts a
- * `parameters.docs.container` override and hands it `{ context, theme }` —
- * wired in `preview.tsx` in place of a static `docs.theme` — so this picks
- * the matching theme object itself, ignoring the static `theme` prop
- * `Docs.tsx` would otherwise pass through.
+ * outside the preview iframe, so it can't read the Brand/Mode toolbar
+ * globals via a decorator. `Docs.tsx` (Storybook's own MDX entry point)
+ * accepts a `parameters.docs.container` override and hands it
+ * `{ context, theme }` — wired in `preview.tsx` in place of a static
+ * `docs.theme` — so this picks the matching theme object itself, ignoring
+ * the static `theme` prop `Docs.tsx` would otherwise pass through.
  *
- * Two different sources for the live Mode value, tried in order:
- * 1. `readModeFromAttachedStory` — component pages (have an attached CSF
+ * Two different sources for the live Brand/Mode values, tried in order:
+ * 1. `readGlobalsFromAttachedStory` — component pages (have an attached CSF
  *    story). Reliable specifically because this component gets torn down
  *    and rebuilt on every globals change there (see that function's own
  *    comment) — a stateless read just recomputes correctly every time.
@@ -55,10 +62,9 @@ function readModeFromAttachedStory(context: DocsContainerProps["context"]): stri
  *    already works for `ThemeSync` there works equally well here.
  */
 export function DbmDocsContainer(props: PropsWithChildren<DocsContainerProps>) {
-  const storyMode = readModeFromAttachedStory(props.context);
-  const { mode: fallbackMode } = useThemeGlobals(props.context);
-  const mode = storyMode ?? fallbackMode;
-  return (
-    <DocsContainer {...props} theme={mode === "dark" ? dbmStorybookThemeDark : dbmStorybookTheme} />
-  );
+  const storyGlobals = readGlobalsFromAttachedStory(props.context);
+  const fallback = useThemeGlobals(props.context);
+  const brand = storyGlobals.brand ?? fallback.brand;
+  const mode = storyGlobals.mode ?? fallback.mode;
+  return <DocsContainer {...props} theme={getStorybookTheme(brand, mode)} />;
 }
