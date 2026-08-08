@@ -169,6 +169,15 @@ A second top-level Storybook sidebar group, **`Foundations`**, sorted to appear 
 
 Both bugs were invisible to `tsc`/`eslint`/`vitest` — the only way either surfaced was live browser verification (capturing real channel events via `window.__STORYBOOK_ADDONS_CHANNEL__` and checking the resolved custom property value), reinforcing the standing rule in §4.1: visually verify in a running Storybook instance, don't infer correctness from a clean typecheck.
 
+## 8. Token usage in Storybook-only code (audited 2026-08-08)
+
+Everything under `.storybook/` and every `*.stories.tsx`/Foundations `*.mdx` file is Storybook tooling, not shipped component code — but per `CLAUDE.md`'s token-first rule, it should still reference `var(--dbm-*)` tokens wherever a token exists, rather than hardcoding. A full audit (2026-08-08) found and fixed ~140 hardcoded values across `.storybook/blocks/`, Foundations docs pages, and component story demo wrappers — border widths and sizes that matched an existing token exactly, plus a few real bugs (`theme.ts`'s `appBorderRadius`/`inputBorderRadius` were mislabeled, off by 2px from the tokens their own comments named).
+
+Three standing exceptions, not oversights:
+- **`.storybook/theme.ts`** — Storybook's `theming/create()` API takes a literal JS object read by the manager UI, which runs outside our CSS entirely; every hex/px value there is traced to its source token in an inline comment instead.
+- **CSS media-query breakpoints** (`docs.css`) — `var()` cannot appear inside an `@media` condition; these stay literal, cross-referenced to the matching `breakpoint.*` token in a comment.
+- **Story-file demo-wrapper container sizing** (`width`/`maxWidth`/`height` on a story's outer wrapper `<div>`, e.g. `maxWidth: "24rem"` around an Input demo) — the `space.*` scale tops out at `space.32` (8rem) and is calibrated for gaps/padding/margins, not arbitrary layout container widths; forcing these onto the nearest token would visibly cramp story layouts. Left as literals — a deliberate scope boundary, not a gap to close later.
+
 ## Related documents
 - `03-token-system-spec.md` — the token architecture/values the Foundations pages (§7) present visually; that doc is the source of truth for *why* a value is what it is (contrast checks, anchor colors, build-pipeline decisions), the Foundations pages are the live, browsable *what*
 - `04-component-inventory.md` — the category taxonomy this doc's Storybook titles must match
