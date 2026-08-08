@@ -27,6 +27,44 @@ const subscribers = new Set<(globals: ThemeGlobals) => void>();
  * fresh subscription. */
 let listeningOnChannel: DocsContextProps["channel"] | null = null;
 
+/**
+ * **Third bug, found 2026-08-08 while adding Brand support** (after the two
+ * documented above): `lastKnownGlobals` only stays correct while something
+ * keeps updating it — but the module-reload from the first bug doesn't just
+ * *risk* going stale, it unconditionally resets `lastKnownGlobals` back to
+ * this file's hardcoded default (`{brand: "purple", mode: "light"}`) the
+ * instant it happens, and nothing corrects that reset value until the
+ * *next* toolbar interaction fires a fresh channel event. Reproduced by
+ * toggling Mode while on a component's **Docs** page specifically (not
+ * Playground/story — a Docs page embeds one `<Canvas>` per story shown
+ * inline, so it hits the reload far more often), then navigating straight
+ * to a Foundations page with no further toolbar interaction in between:
+ * the Foundations page's fallback bootstraps from the reset default,
+ * silently reverting to purple-light regardless of what's actually
+ * selected — confirmed via the live `data-theme` attribute, not just the
+ * URL (which still correctly showed the real globals throughout, proving
+ * this is a stale-cache bug in this module, not a lost toolbar event).
+ *
+ * Storybook itself already treats the URL as the authoritative record of
+ * current globals — every toggle updates `location.search` immediately via
+ * history API (`?...&globals=brand:emerald;mode:dark`), independent of this
+ * module's own lifecycle. Parsing it directly gives a synchronous snapshot
+ * that's correct regardless of whether this module has ever reloaded, so
+ * `useThemeGlobals`'s initial state reads from here instead of trusting
+ * `lastKnownGlobals` alone — the channel listener still drives every
+ * *subsequent* live update as before, this only fixes the initial value.
+ */
+function parseGlobalsFromLocation(): Partial<ThemeGlobals> {
+  const raw = new URLSearchParams(window.location.search).get("globals");
+  if (!raw) return {};
+  const parsed: Partial<ThemeGlobals> = {};
+  for (const pair of raw.split(";")) {
+    const [key, value] = pair.split(":");
+    if ((key === "brand" || key === "mode") && value) parsed[key] = value;
+  }
+  return parsed;
+}
+
 function ensureChannelListener(channel: DocsContextProps["channel"]): void {
   if (listeningOnChannel === channel) return;
   listeningOnChannel = channel;
@@ -98,7 +136,12 @@ function ensureChannelListener(channel: DocsContextProps["channel"]): void {
  * to it live.
  */
 export function useThemeGlobals(context: DocsContextProps): ThemeGlobals {
-  const [globals, setGlobals] = useState<ThemeGlobals>(lastKnownGlobals);
+  const [globals, setGlobals] = useState<ThemeGlobals>(() => {
+    const fromUrl = parseGlobalsFromLocation();
+    const resolved = { ...lastKnownGlobals, ...fromUrl };
+    lastKnownGlobals = resolved;
+    return resolved;
+  });
 
   useEffect(() => {
     ensureChannelListener(context.channel);
