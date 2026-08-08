@@ -12,6 +12,16 @@ export type ThemeGlobals = { brand: string; mode: string };
  */
 let lastKnownGlobals: ThemeGlobals = { brand: "purple", mode: "light" };
 
+/** Set the first time `mergeAndApply` (below) processes a real channel
+ * event in this module's current lifetime — see the fourth bug's comment
+ * on `useThemeGlobals` for why the initial-state logic needs to know the
+ * difference between "no live update has landed yet, so `lastKnownGlobals`
+ * might be nothing but the hardcoded default" and "a live update already
+ * landed, so `lastKnownGlobals` is actively correct and should never be
+ * second-guessed against a URL read that can lag behind it." Reset to
+ * `false` on every true module reload along with everything else here. */
+let hasReceivedLiveUpdate = false;
+
 /** Every currently-mounted `useThemeGlobals` caller that wants to be told
  * when `lastKnownGlobals` changes. Kept separate from the channel
  * subscription itself (see below) — components come and go, but the
@@ -28,31 +38,15 @@ const subscribers = new Set<(globals: ThemeGlobals) => void>();
 let listeningOnChannel: DocsContextProps["channel"] | null = null;
 
 /**
- * **Third bug, found 2026-08-08 while adding Brand support** (after the two
- * documented above): `lastKnownGlobals` only stays correct while something
- * keeps updating it — but the module-reload from the first bug doesn't just
- * *risk* going stale, it unconditionally resets `lastKnownGlobals` back to
- * this file's hardcoded default (`{brand: "purple", mode: "light"}`) the
- * instant it happens, and nothing corrects that reset value until the
- * *next* toolbar interaction fires a fresh channel event. Reproduced by
- * toggling Mode while on a component's **Docs** page specifically (not
- * Playground/story — a Docs page embeds one `<Canvas>` per story shown
- * inline, so it hits the reload far more often), then navigating straight
- * to a Foundations page with no further toolbar interaction in between:
- * the Foundations page's fallback bootstraps from the reset default,
- * silently reverting to purple-light regardless of what's actually
- * selected — confirmed via the live `data-theme` attribute, not just the
- * URL (which still correctly showed the real globals throughout, proving
- * this is a stale-cache bug in this module, not a lost toolbar event).
- *
- * Storybook itself already treats the URL as the authoritative record of
- * current globals — every toggle updates `location.search` immediately via
- * history API (`?...&globals=brand:emerald;mode:dark`), independent of this
- * module's own lifecycle. Parsing it directly gives a synchronous snapshot
- * that's correct regardless of whether this module has ever reloaded, so
- * `useThemeGlobals`'s initial state reads from here instead of trusting
- * `lastKnownGlobals` alone — the channel listener still drives every
- * *subsequent* live update as before, this only fixes the initial value.
+ * Parses the Brand/Mode toolbar globals straight out of Storybook's own URL
+ * (`?...&globals=brand:emerald;mode:dark`) — used only as a fallback for
+ * bootstrapping state right after a true module reload, when
+ * `lastKnownGlobals` can't yet be trusted (see the third and fourth bugs
+ * documented on `useThemeGlobals` below). A key missing from the query
+ * string means that global is at its declared default (Storybook omits
+ * defaults from the URL entirely), so a missing key here is not the same
+ * as "unknown" — callers merge this onto a default-seeded base, not onto
+ * an empty one.
  */
 function parseGlobalsFromLocation(): Partial<ThemeGlobals> {
   const raw = new URLSearchParams(window.location.search).get("globals");
@@ -75,6 +69,7 @@ function ensureChannelListener(channel: DocsContextProps["channel"]): void {
       brand: (nextGlobals.brand as string | undefined) ?? lastKnownGlobals.brand,
       mode: (nextGlobals.mode as string | undefined) ?? lastKnownGlobals.mode,
     };
+    hasReceivedLiveUpdate = true;
     subscribers.forEach((notify) => notify(lastKnownGlobals));
   };
   channel.on(SET_GLOBALS, mergeAndApply);
@@ -90,27 +85,57 @@ function ensureChannelListener(channel: DocsContextProps["channel"]): void {
  * *changed* keys, so each event is merged onto the previous value rather
  * than replacing it outright.
  *
- * **Second real bug found 2026-08-08, from a user bug report** (after the
- * first one below, about module reloads on component pages): navigating
- * *away* from a Foundations page and back — Foundations → a component
- * story → toggle Mode there → back to Foundations — left the Foundations
- * page showing the *old* mode from before the trip, not the one just set
- * on the story page. Root cause: the channel subscription used to live
- * inside this hook's own `useEffect`, so it unsubscribed the instant
- * `ThemeSync` unmounted (navigating away) and only resubscribed on
- * remount (navigating back) — any globals change that happened *while
- * unmounted* was never seen, so `lastKnownGlobals` went stale, and the
- * next mount's `useState(lastKnownGlobals)` bootstrap read that stale
- * value. Confirmed via a real cross-page toggle sequence with the actual
- * toolbar, not just synthetic events. Fixed by splitting the channel
- * listener out of any single component's lifecycle entirely
- * (`ensureChannelListener` above) — it attaches once and keeps updating
- * `lastKnownGlobals` for as long as the module itself is alive, whether or
- * not anything is currently rendering from it — and having each hook
- * instance separately subscribe/unsubscribe to *notifications* of that
- * cache changing (`subscribers`), which is safe to tear down per-mount
- * since missing a notification just means a re-render is skipped, not
- * that data is lost.
+ * **Fourth bug, found 2026-08-08, from a user bug report** (a regression
+ * introduced by the third bug's own fix, below): toggling Brand back to
+ * Purple — but only Purple, since it's the *default* — right after
+ * toggling to Emerald could leave a Foundations page showing Emerald
+ * forever, while the manager chrome (a completely separate listener in
+ * `manager.ts`) correctly reverted. Diagnosed with temporary instance-id
+ * logging on every render/mount/effect: **this Foundations page's
+ * `useThemeGlobals` consumers remount far more often than the "Foundations
+ * pages never trigger reload churn" assumption above suggests** — not a
+ * full module reload (module-level state survives), but React-level
+ * remounts of the calling components happen on nearly every globals
+ * change. Each such remount re-ran the third bug's fix — reading
+ * `parseGlobalsFromLocation()` and merging it onto `lastKnownGlobals` —
+ * even though `lastKnownGlobals` had *already* been correctly updated to
+ * `{brand: "purple"}` by `mergeAndApply` moments earlier, in the same
+ * event. The URL update that removes `brand` from the query string (since
+ * purple is the default) lags slightly behind the in-memory state update,
+ * so a remount landing in that gap read a **stale** URL still showing
+ * `brand:emerald` — and the third bug's merge order (`{...lastKnownGlobals,
+ * ...fromUrl}`, URL wins) let that stale read clobber the value that was
+ * already correct. Confirmed via console logging of every `mergeAndApply`
+ * call and every hook instance's init/render, not guessed: the log showed
+ * `lastKnownGlobals` correctly reaching `{brand: "purple"}`, immediately
+ * followed by a fresh instance initializing from a URL read that still
+ * said `emerald`. Fixed with `hasReceivedLiveUpdate` above — once any real
+ * channel event has landed in this module's lifetime, `lastKnownGlobals`
+ * is trusted directly and the URL is never consulted again, since the
+ * channel listener (synchronous, same-tick) is provably more current than
+ * a URL read that can lag by one render. The URL fallback still runs, as
+ * originally intended, for the one case it actually protects against: a
+ * fresh mount before any channel event has landed at all in this
+ * lifetime (e.g. immediately after the module reload the third bug
+ * describes).
+ *
+ * **Third bug, found 2026-08-08 while adding Brand support** (after the
+ * two below): `lastKnownGlobals` only stays correct while something keeps
+ * updating it — but the module-reload from the first bug doesn't just
+ * *risk* going stale, it unconditionally resets `lastKnownGlobals` back to
+ * this file's hardcoded default (`{brand: "purple", mode: "light"}`) the
+ * instant it happens, and nothing corrects that reset value until the
+ * *next* toolbar interaction fires a fresh channel event. Reproduced by
+ * toggling Mode while on a component's **Docs** page specifically (not
+ * Playground/story — a Docs page embeds one `<Canvas>` per story shown
+ * inline, so it hits the reload far more often), then navigating straight
+ * to a Foundations page with no further toolbar interaction in between:
+ * the Foundations page's fallback bootstraps from the reset default,
+ * silently reverting to purple-light regardless of what's actually
+ * selected. Fixed (initially) by parsing `location.search` for the
+ * bootstrap value instead of trusting `lastKnownGlobals` alone — refined
+ * by the fourth bug above to only do so before the first live update
+ * lands, rather than on every mount unconditionally.
  *
  * **First bug, found earlier the same day, while wiring up a second
  * consumer (`DbmDocsContainer`):** the module-level cache does NOT
@@ -126,9 +151,26 @@ function ensureChannelListener(channel: DocsContextProps["channel"]): void {
  * therefore does NOT rely on this hook when a story is attached; it reads
  * globals synchronously from the story's own context instead (see
  * `readModeFromAttachedStory` in that file) and only falls back to this
- * hook on story-less (Foundations) pages, which never trigger that reload
- * churn — this hook's cache genuinely persists there, which is exactly
- * what the second bug above depended on to even be reachable.
+ * hook on story-less (Foundations) pages.
+ *
+ * **Second bug:** navigating *away* from a Foundations page and back —
+ * Foundations → a component story → toggle Mode there → back to
+ * Foundations — left the Foundations page showing the *old* mode from
+ * before the trip. Root cause: the channel subscription used to live
+ * inside this hook's own `useEffect`, so it unsubscribed the instant
+ * `ThemeSync` unmounted and only resubscribed on remount — any globals
+ * change that happened *while unmounted* was never seen. Fixed by
+ * splitting the channel listener out of any single component's lifecycle
+ * entirely (`ensureChannelListener` above) — it attaches once and keeps
+ * updating `lastKnownGlobals` for as long as the module itself is alive,
+ * whether or not anything is currently rendering from it — and having each
+ * hook instance separately subscribe/unsubscribe to *notifications* of
+ * that cache changing (`subscribers`), which is safe to tear down
+ * per-mount since missing a notification just means a re-render is
+ * skipped, not that data is lost. This is also what makes the fourth bug's
+ * fix safe: a remounting instance re-subscribing to notifications doesn't
+ * lose anything, since it reads the always-current `lastKnownGlobals`
+ * directly at mount time instead of waiting for the next notification.
  *
  * Unlike `ThemeSync` (a side-effect-only DOM mutation that never itself
  * needs a re-render), this hook returns the value so callers that need it
@@ -137,6 +179,7 @@ function ensureChannelListener(channel: DocsContextProps["channel"]): void {
  */
 export function useThemeGlobals(context: DocsContextProps): ThemeGlobals {
   const [globals, setGlobals] = useState<ThemeGlobals>(() => {
+    if (hasReceivedLiveUpdate) return lastKnownGlobals;
     const fromUrl = parseGlobalsFromLocation();
     const resolved = { ...lastKnownGlobals, ...fromUrl };
     lastKnownGlobals = resolved;
