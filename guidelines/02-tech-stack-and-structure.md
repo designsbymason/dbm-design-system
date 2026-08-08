@@ -107,6 +107,18 @@ dbm-design-system/
 
 ---
 
+## 3.1 Dependency vulnerability remediation pattern
+
+When `pnpm audit` or a GitHub Dependabot alert flags a vulnerable package, check whether it's a **direct** dependency (bump it normally in the relevant `package.json`) or a **transitive** one pulled in by a tool we don't control the version of — this project's dependencies are almost entirely dev/build tooling (ESLint, Storybook, Vite, Vitest, Changesets), so it's usually the latter. For transitive vulnerabilities, force the resolution via `pnpm-workspace.yaml`'s top-level `overrides` field rather than waiting on the upstream consumer to bump it, following the pattern established fixing CVE-2026-14257/CVE-2026-69152 (`brace-expansion`) and a five-package sweep (`undici`, `brace-expansion`, `js-yaml` ×2, `nanoid`, `postcss`) on 2026-08-08 — both in git history if you need the full incident write-ups. Three real gotchas found empirically while doing this, not theoretical:
+
+- **Cap the upper bound, don't just set a floor.** `undici: ">=7.29.0"` (the literal patched-version floor from the advisory) let pnpm resolve to `undici@8.10.0` — the latest version satisfying that open-ended constraint — which broke every test run: `jsdom` does an internal deep `require()` into `undici`'s own file layout (not its public API) at a path that only exists in the 7.x line `jsdom` actually declares support for. The fix was `">=7.29.0 <8.0.0"`. Always check what major the actual consumer's own `package.json` declares support for (`pnpm view <consumer>@<version> dependencies`) before writing an override, and cap to match unless you've separately verified the next major is compatible.
+- **A version bump can break a consumer relying on undocumented internals or a changed export shape** — not just via the major-version case above. Fixing `brace-expansion` (a callable-default export in 1.x, a named `{ expand }` export from 2.x on) for a consumer still on `minimatch@3.1.5` (the last-ever 3.x release, hard-coded to the old shape) required pairing the override with a `patchedDependencies` entry (a 2-line pnpm patch shimming the old call site to accept either export shape) — a bare override alone crashed every lint run with `"expand is not a function"`. If a plain override breaks something, check whether the failure is really a compatibility-shape mismatch before assuming the override itself is wrong.
+- **The same package can exist at multiple coexisting majors in the tree**, each wanted by a different consumer — `js-yaml` appeared as both 3.x (via `read-yaml-file`) and 4.x (via `@changesets/parse`), both themselves only reached through `@changesets/cli`. A single blanket `js-yaml: ">=X"` key can't patch both independently without either colliding or accidentally forcing one consumer onto the wrong major. Use pnpm's parent-scoped override syntax instead — `read-yaml-file>js-yaml: ">=3.15.1 <4.0.0"` and `"@changesets/parse>js-yaml": ">=4.3.1"` — so each major gets patched in place.
+
+**Always verify after any override change**, not just `pnpm install` succeeding: `pnpm audit` (should report zero known vulnerabilities), then the full pipeline — `tsc --noEmit`, `eslint`, the full Vitest suite, and a real `pnpm -r build` across the workspace — since a broken transitive resolution (like the `undici`/`jsdom` case above) surfaces as a runtime failure in tooling, not a type or lint error.
+
+---
+
 ## 4. What's deferred (by design, not forgotten)
 
 - **CLI scaffolder / MCP server** — v1.5+, once component API is stable and manifest is proven accurate
