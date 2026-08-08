@@ -8,6 +8,11 @@ import { ThemeSync, TypeSpecimen } from "../../.storybook/blocks/foundations";
 
 # Typography
 
+Three font families, a fluid `clamp()`-based size scale that responds to viewport width without
+jumping between fixed breakpoints, and the weight/line-height/letter-spacing scales that pair with
+them. Together these cover every text style in the library — no component sets a raw `px`/`rem`
+font size, weight, or line-height outside these tokens.
+
 ## Font families
 
 <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
@@ -15,7 +20,7 @@ import { ThemeSync, TypeSpecimen } from "../../.storybook/blocks/foundations";
   <div style={{ fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
     Nunito — font-family.primary
   </div>
-  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)" }}>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-1) 0" }}>
     UI, body text, controls — used for essentially everything in this component library.
   </p>
 </div>
@@ -23,7 +28,7 @@ import { ThemeSync, TypeSpecimen } from "../../.storybook/blocks/foundations";
   <div style={{ fontFamily: "var(--dbm-font-family-secondary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
     Lora — font-family.secondary
   </div>
-  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)" }}>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-1) 0" }}>
     Editorial/display headings and quotes (e.g. `Blockquote`) — used sparingly, for a deliberate
     tonal shift, not as the default text face.
   </p>
@@ -32,7 +37,7 @@ import { ThemeSync, TypeSpecimen } from "../../.storybook/blocks/foundations";
   <div style={{ fontFamily: "var(--dbm-font-family-mono)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
     ui-monospace — font-family.mono
   </div>
-  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)" }}>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-1) 0" }}>
     Code/monospace UI (inline `Code`, `Kbd`) — a system font stack, not a third webfont, so it
     loads with zero extra network requests.
   </p>

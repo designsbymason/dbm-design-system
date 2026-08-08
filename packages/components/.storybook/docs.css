@@ -19,18 +19,51 @@
   font-weight: var(--dbm-font-weight-bold);
 }
 
+/* `margin-block`'s top value needs `!important` (2026-07-27): Storybook's
+   own MDX stylesheet has `:where(h2...):first-of-type { margin-top: 0 }`
+   — the `:first-of-type` pseudo-class makes that selector MORE specific
+   than `.sbdocs-content h2` (not just tied, unlike the code-pill case
+   above), so it silently won margin-top for whichever `##` section
+   happened to be first in a page's DOM, collapsing that one section's
+   gap from the intended 40px down to ~16px (just the preceding
+   paragraph's own margin). Invisible on component pages, where the
+   actual first h2 is the visually-hidden "Overview" heading (see
+   VisuallyHidden in every ComponentName.mdx) absorbing the zeroed
+   margin harmlessly — but every Foundations page has no such heading,
+   so its real first section was visibly tighter than every section
+   after it. Confirmed via computed margin-top (0px vs 40px) across
+   multiple Foundations pages, not assumed from one instance. */
 .sbdocs-content h2 {
   border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-2xl);
   font-weight: var(--dbm-font-weight-bold);
-  margin-block: var(--dbm-space-10) var(--dbm-space-4);
+  margin-block: var(--dbm-space-10) var(--dbm-space-4) !important;
   padding-block-end: var(--dbm-space-2);
 }
 
-/* Variant/state subsection titles (see §4's "Variants" section) — nested
-   under h2, so a step down in size/weight with no border, kept distinct
-   from Storybook's default emotion-styled h3. */
+/* Dark-mode wrapper fix (2026-08-08): `.sbdocs-content` sits inside
+   `.sbdocs-wrapper`, themed by `DbmDocsContainer.tsx` (wired via
+   `parameters.docs.container`) — the wrapper now genuinely goes dark with
+   the Mode toolbar, so h3/p/li below are reactive semantic tokens again,
+   not the fixed primitives they were between 2026-07-27 and today.
+
+   That 2026-07-27 fix existed because `.sbdocs-wrapper` was still
+   Storybook's own fixed-light-theme chrome at the time — `--dbm-text-*`
+   resolving per-theme against a background that never actually flipped
+   measured as low as 1.26–2.32:1, badly failing AA. The real fix was
+   making the *container itself* theme-reactive (`DbmDocsContainer.tsx` +
+   `.storybook/manager.ts`), not permanently pinning this file's text to
+   light-mode values — now that the premise is fixed, reverting these to
+   semantic tokens is what's actually correct going forward: `gray-700`
+   traced back to `text.secondary` (verified against `purple-light.json`,
+   not guessed).
+
+   Still theme-reactive on purpose, unaffected by any of this: the
+   Playground controls card (`.dbm-playground-controls .docblock-argstable`
+   and its `td:first-child` text below) — already paired its own reactive
+   background with reactive text on the same element, which is why it
+   never needed the fixed-primitive workaround in the first place. */
 .sbdocs-content h3 {
   color: var(--dbm-text-secondary);
   font-family: var(--dbm-font-family-primary);
@@ -46,16 +79,51 @@
   line-height: var(--dbm-line-height-relaxed);
 }
 
+/* Inline code references (variable/token/prop names in prose) — blue-50
+   fill + blue-100 border, not a semantic token: no semantic step maps to
+   blue-50, and reaching for `bg.info`/`border.danger`-style tokens here
+   would misleadingly imply a status/info meaning a plain code reference
+   doesn't carry. Same class of documented exception to "semantic tokens
+   only" (see CLAUDE.md) as the purple-100 zebra stripe below — this is
+   presentational Storybook docs chrome, not shipped component code.
+
+   `!important` on every property (2026-07-27): Storybook's own MDX
+   renderer ships a same-specificity emotion rule for backtick-code inside
+   markdown prose (`:where(p...) code`, specificity tied with
+   `.sbdocs-content code`) that's injected after this stylesheet, so it
+   was silently winning the cascade tie for any inline code written as
+   markdown rather than a literal JSX `<code>` element — confirmed via
+   the browser's matched-rules list, not assumed. JSX-authored `<code>`
+   (TokenRow, ColorSwatch hex sublabels, etc.) was unaffected since
+   Storybook's selector only matches code nested in a `<p>`, but that left
+   two different-looking "code" styles on the same page depending on how
+   it was authored. `!important` here (the one exception this file's
+   header note allows for) makes this rule win unconditionally regardless
+   of DOM context.
+
+   `color` added explicitly (2026-08-08), fixed `gray-700` matching this
+   pill's own fixed background/border: without it, this rule inherits
+   color from its parent, which used to be `.sbdocs-content p`'s color —
+   harmless while that was also fixed `gray-700`, but once the dark-mode
+   wrapper fix (see the h3/p/li rule's comment) made `p`'s color reactive
+   again, this pill would've inherited near-white text against its own
+   still-intentionally-fixed light-blue background, reproducing the exact
+   illegible-pairing bug this whole file exists to avoid — in a spot the
+   original fix's checklist didn't cover since it predates the wrapper fix
+   entirely. */
 .sbdocs-content code {
-  background: var(--dbm-bg-subtle);
-  border-radius: var(--dbm-radius-xs);
-  font-family: var(--dbm-font-family-mono);
-  padding-inline: var(--dbm-space-1);
+  background: var(--dbm-color-blue-50) !important;
+  border: var(--dbm-border-width-1) solid var(--dbm-color-blue-100) !important;
+  border-radius: var(--dbm-radius-sm) !important;
+  color: var(--dbm-color-gray-700) !important;
+  font-family: var(--dbm-font-family-mono) !important;
+  padding-inline: var(--dbm-space-1) !important;
 }
 
 .sbdocs-content pre code {
-  background: none;
-  padding-inline: 0;
+  background: none !important;
+  border: none !important;
+  padding-inline: 0 !important;
 }
 
 /* The live-preview boxes (Canvas blocks) */
@@ -69,15 +137,19 @@
   overflow: hidden;
 }
 
-/* `bg.brand-subtle` (purple-100) reads as barely-there gray in a thin
-   stripe, even though it's technically on-brand — bumped one step to the
-   primitive purple-200 for a stripe that's actually recognizable as a
-   light primary tint. A docs-only exception to "semantic tokens only"
-   (see CLAUDE.md) since no semantic step exists between bg.brand-subtle
-   and the much stronger bg.brand-hover, and this is presentational
-   Storybook infra, not shipped component code. */
+/* Zebra-stripe fill — reverted to the reactive semantic token
+   `var(--dbm-bg-brand-subtle)` (2026-08-08), now that the wrapper this
+   table sits in actually goes dark with the Mode toggle (see the h3/p/li
+   rule's comment above) — `bg.brand-subtle` resolves to `purple.50` in
+   light mode (the same fixed value this rule used from 2026-07-27 until
+   today, so light mode is visually unchanged) and `purple.950` in dark
+   mode, a real dark-purple stripe instead of a leftover light one. Prior
+   history while fixed: purple-100 → purple-200 → purple-100 → purple-50
+   (the OKLCH light-end retint, then a lightening step per explicit
+   direction) — kept here for context, no longer the live rationale now
+   that this can be theme-reactive again. */
 .docblock-argstable-body tr:nth-child(even) {
-  background: var(--dbm-color-purple-200);
+  background: var(--dbm-bg-brand-subtle);
 }
 
 .docblock-argstable code {
@@ -88,18 +160,106 @@
    hand-rolled replacement for the <ArgTypes> doc block, since that block
    has no supported way to add a custom "Value options" column. Mirrors
    .docblock-argstable's look (radius, zebra striping, mono prop names) so
-   it reads as the same table type to a user, just with one more column. */
+   it reads as the same table type to a user, just with one more column.
+
+   `border` added 2026-07-27: `border-radius` + `overflow: hidden` alone
+   clip content into a rounded rectangle, but draw no actual line — the
+   rounding was only ever visible where a colored cell (the gray-50
+   header, an even zebra row) happened to touch the edge. Odd rows and
+   any corner not backed by one of those have no fill at all, so the
+   "rounded corner" just showed the plain white page behind it, reading
+   as a square table with no border rather than a rounded card. A real
+   border makes the shape visible on every edge regardless of what row
+   happens to be there.
+
+   Getting the table's own border to actually render took three attempts
+   (2026-07-27) — recorded here since each failure looked plausible until
+   tested with an unmissable `border: 4px solid red !important` forced
+   onto `.dbm-proptable` and checking whether it actually painted:
+   1. `border-collapse: collapse` + no cell overrides — the border never
+      appeared. In the collapsed-border model a `<table>`'s own `border`
+      isn't an independent line; cell borders take precedence at every
+      grid line they touch, including the table's own outer edge. Made
+      worse by a Storybook base MDX rule that puts a FULL 1px border on
+      *every* `<th>`/`<td>` (`.css-36j50k :where(table...) tr th`/`tr td`,
+      specificity (0,1,2), genuinely higher than `.dbm-proptable th`/`td`'s
+      (0,1,1) — not just tied) — that's the cell border actually winning.
+   2. `border-collapse: separate` alone — the red border finally rendered,
+      but so did Storybook's per-cell borders on *every* cell (no longer
+      merged by `collapse`), so every `<th>`/`<td>` showed up individually
+      boxed — a dense grid instead of one outer border, which read as
+      "thick"/doubled at every edge (confirmed by measuring a 1px gap
+      between the table's own top edge and the header row's own top edge:
+      two independent lines stacking).
+   3. `border-collapse: collapse` + neutralizing Storybook's per-cell
+      border with `!important` on `th`/`td` (reasoning: cells declaring
+      `none` should make `collapse` fall through to the table's border,
+      per spec) — still invisible under the forced-red test. Whatever
+      this rendering engine does with `collapse` once ANY cell border is
+      involved, it does not fall through to the table's own border in
+      practice, spec text notwithstanding.
+
+   What actually works: `border-collapse: separate` (not `collapse`) —
+   the only setting that ever painted the table's own border in testing —
+   combined with neutralizing Storybook's per-cell border via `!important`
+   on `th`/`td` below (attempt 2's missing piece), so nothing renders a
+   competing per-cell box under `separate` either. `border-spacing: 0`
+   keeps cells flush with no visible gaps. `td` keeps exactly one
+   intentional border (`border-block-start`, the row divider) — every
+   other cell edge is `none`, so the only lines on screen are the row
+   dividers and the table's own single outer border. Verify any future
+   change here with the forced-red-border test, not computed-style
+   alone — `getComputedStyle` faithfully reports the CSS declaration
+   throughout this investigation even on the attempts where nothing
+   actually painted.
+
+   Border color is `border.subtle` (2026-07-27, revised from
+   `border.default`) per explicit direction: Storybook styling should
+   only ever reference design-system tokens, not fixed primitives, even
+   where a primitive would read more clearly. Fainter than `border.default`
+   (1.14:1 against the white page vs. 1.35:1), well under the 3:1 WCAG
+   1.4.11 floor — no `border.*` step clears 3:1 in this specific context,
+   since every one was calibrated for borders between two real themed
+   surfaces, not a standalone boundary against an unthemed Storybook page
+   background. Accepted tradeoff of the token-only decision, not an
+   oversight. */
 .dbm-proptable {
-  border-collapse: collapse;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  border-collapse: separate !important;
   border-radius: var(--dbm-radius-md);
+  border-spacing: 0;
   overflow: hidden;
   table-layout: auto;
   width: 100%;
 }
 
+/* Header/cell text and header background reverted to reactive semantic
+   tokens (2026-08-08) — see the h3/p/li rule's comment near the top of
+   this file for why the wrapper-level fix makes this safe again:
+   `gray-50` → `bg.subtle`, `gray-700` → `text.secondary`.
+
+   `color` needs `!important` on both rules — a real, previously-inert bug
+   surfaced by that same wrapper fix, not a new regression: Storybook's own
+   base MDX rule for table cells (`.css-XXXXX :where(table...) tr th`/
+   `tr td`, the exact selector already documented above for the border
+   fight) also sets `color`, from `theme.textColor` — i.e. whatever theme
+   `DbmDocsContainer` is currently passing. Its specificity (0,1,2: two
+   real type selectors, `tr`+`th`/`td`, outside the zero-specificity
+   `:where()`) has always been higher than `.dbm-proptable th`/`td`'s
+   (0,1,1), so Storybook's rule was always winning here — invisible before
+   today only because the wrapper stayed permanently light and
+   `dbmStorybookTheme.textColor` (gray-900) happened to still read fine
+   against a fixed gray-700 intent. Now that `DbmDocsContainer` passes a
+   real dark theme, that same always-losing rule resolves to pure white
+   (`dbmStorybookThemeDark.textColor`) instead of the intended
+   `text.secondary` gray — confirmed by walking the matched-rules list,
+   not assumed. `!important` makes our token the one that actually
+   applies, matching this file's own stated policy for this exact
+   collision. */
 .dbm-proptable th {
   background: var(--dbm-bg-subtle);
-  color: var(--dbm-text-secondary);
+  border: none !important;
+  color: var(--dbm-text-secondary) !important;
   font-size: var(--dbm-font-size-sm);
   font-weight: var(--dbm-font-weight-semibold);
   padding: var(--dbm-space-2) var(--dbm-space-3);
@@ -107,8 +267,9 @@
 }
 
 .dbm-proptable td {
-  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
-  color: var(--dbm-text-secondary);
+  border: none !important;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-subtle) !important;
+  color: var(--dbm-text-secondary) !important;
   font-size: var(--dbm-font-size-sm);
   line-height: var(--dbm-line-height-relaxed);
   padding: var(--dbm-space-2) var(--dbm-space-3);
@@ -116,17 +277,39 @@
 }
 
 .dbm-proptable tbody tr:nth-child(even) {
-  background: var(--dbm-color-purple-200);
+  background: var(--dbm-bg-brand-subtle);
 }
 
 .dbm-proptable td:first-child code {
-  color: var(--dbm-text-primary);
   font-weight: var(--dbm-font-weight-semibold);
 }
 
+/* `!important` required on background/color/border/radius (2026-07-27):
+   the generic `.sbdocs-content code` rule above now carries `!important`
+   on background/border/radius (to win its own specificity tie with
+   Storybook's emotion styles — see that rule's comment), which would
+   otherwise unconditionally clobber this table's intentionally different
+   pill style (surface-matched, no border, tighter radius) despite this
+   selector being more specific — !important ignores specificity/order
+   entirely.
+
+   `color` is deliberately paired with `background` on this SAME element
+   (both `--dbm-bg-surface`/`--dbm-text-primary`, both theme-reactive) —
+   this is the one place in this file where a reactive pairing is
+   correct, since this pill's background genuinely does need to match the
+   live Brand/Mode toggle. Originally `color` lived only on
+   `td:first-child code` above; every other column's code (Value
+   options/Default) had no color of its own and inherited `.dbm-proptable
+   td`'s color, which is a FIXED gray-700 (see that rule's comment) —
+   fixed dark text on a reactive `bg-surface` pill went invisible the
+   moment `bg-surface` turned dark-mode-dark. Moving `color` here, next
+   to the background it must always match, fixes it for every column at
+   once rather than special-casing the first one. */
 .dbm-proptable code {
-  background: var(--dbm-bg-surface);
-  border-radius: var(--dbm-radius-xs);
+  background: var(--dbm-bg-surface) !important;
+  border: none !important;
+  border-radius: var(--dbm-radius-xs) !important;
+  color: var(--dbm-text-primary) !important;
   font-family: var(--dbm-font-family-mono);
   font-size: var(--dbm-font-size-xs);
   padding-inline: var(--dbm-space-1);
@@ -145,6 +328,81 @@
 .dbm-proptable-required {
   color: var(--dbm-text-danger);
   margin-inline-start: var(--dbm-space-1);
+}
+
+/* TokenReferenceTable (Miscellaneous/Breakpoints — border widths, opacity,
+   z-index, breakpoints) — a second class alongside `.dbm-proptable`,
+   scoped separately so these two fixes can't leak into the Properties
+   table (Name/Value options/Description/Default), which has different
+   column-width needs and an already-correct code-pill treatment for its
+   own purpose (reactive, matching the live Brand/Mode toggle).
+
+   `table-layout: fixed` + an explicit first-column width (2026-07-27):
+   `.dbm-proptable`'s `table-layout: auto` sizes each table independently
+   based on its own longest cell content, so the "Token" column landed at
+   a different width on every one of these tables (126px/113px/148px,
+   confirmed via measurement) depending on whether the longest name was
+   `border-width.4` or `z-index.dropdown`. `11rem` matches the width
+   already established for the same purpose in `TokenRow.tsx`. `6rem` on
+   the Value column comfortably fits its longest real content
+   (`1920px`, 6 characters) without wasting space Usage's prose needs. */
+.dbm-tokentable {
+  table-layout: fixed;
+}
+
+.dbm-tokentable th:first-child,
+.dbm-tokentable td:first-child {
+  width: 11rem;
+}
+
+.dbm-tokentable th:nth-child(2),
+.dbm-tokentable td:nth-child(2) {
+  width: 6rem;
+}
+
+/* All table text at font-size.sm (2026-07-27, reverted same day from a
+   brief switch to font-size.base) — applies to header labels and every
+   data cell, so Token/Value/Usage all read at one consistent size. This
+   now matches `.dbm-proptable`'s own default `font-size-sm`, so the rule
+   is technically redundant with the inherited value, but kept explicit
+   here so this table's size is a deliberate, scoped decision rather than
+   an inherited accident — and so a future change to `.dbm-proptable`'s
+   default doesn't silently change this table too. */
+.dbm-tokentable th,
+.dbm-tokentable td {
+  font-size: var(--dbm-font-size-sm);
+}
+
+/* Token-name code pill — background/border reworked (2026-08-08) now that
+   the wrapper this table sits in actually goes dark with the Mode toggle
+   (see the h3/p/li rule's comment near the top of this file). Previously
+   fixed `blue-50`/`blue-100` specifically because `text.secondary` (kept
+   reactive since it was first set per explicit direction) measured only
+   1.64:1 against that fixed pill in dark mode — effectively illegible.
+   That mismatch is gone now that both halves of the pairing can be
+   reactive together: `bg.subtle` (a third, still-distinct fill from this
+   table's own two zebra-row backgrounds, `bg.surface`/`bg.brand-subtle`)
+   paired with `text.primary` measures 13.53:1 light / 9.66:1 dark —
+   comfortably AA in both modes. Border dropped entirely rather than kept
+   at a fixed blue — `bg.subtle` already reads as a distinct fill against
+   both zebra states without one, matching `.dbm-proptable code`'s own
+   no-border pill treatment.
+
+   `font-weight` stays `font-weight.medium` per the original explicit
+   direction; `font-size` stays `font-size.sm`, matching the `th`/`td`
+   rule above.
+
+   `!important` still needed on all four properties: same-or-higher-
+   specificity competing declarations elsewhere in this file
+   (`.dbm-proptable code`'s `background`/`color`, `.dbm-proptable
+   td:first-child code`'s `font-weight`, `.dbm-proptable code`'s
+   `font-size: font-size-xs`) would otherwise still win. */
+.dbm-tokentable code {
+  background: var(--dbm-bg-subtle) !important;
+  border: none !important;
+  color: var(--dbm-text-primary) !important;
+  font-size: var(--dbm-font-size-sm) !important;
+  font-weight: var(--dbm-font-weight-medium) !important;
 }
 
 /* Playground layout: Canvas on top, a compact controls-only panel below it

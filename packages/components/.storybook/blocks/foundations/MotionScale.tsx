@@ -5,28 +5,31 @@ const REPRESENTATIVE_EASING = primitives.motion.easing.standard;
 const REPRESENTATIVE_DURATION = primitives.motion.duration.moderate;
 
 /**
- * Foundations-only motion-scale demo — a dot that slides across a track,
- * replayable on click, isolating either the duration axis (fixed
- * "standard" easing) or the easing axis (fixed "moderate" duration) so
- * each token's effect is felt on its own rather than lost in a
- * combinatorial grid of duration × easing. Uses `left` (not
- * `transform: translateX`) so the percentage-based keyframe resolves
- * against the track's actual width regardless of viewport. Sourced live
- * from `primitives.motion`. Not part of the published package.
+ * Foundations-only motion-scale demo — one row per token, each showing the
+ * token name, its usage description, AND a replayable dot-on-a-track demo
+ * together (not the description and the demo as two separate lists) so a
+ * reader sees what a token means and how it feels in the same place.
+ * Isolates either the duration axis (fixed "standard" easing) or the
+ * easing axis (fixed "moderate" duration) so each token's effect is felt
+ * on its own rather than lost in a combinatorial grid of duration ×
+ * easing. Uses `left` (not `transform: translateX`) so the percentage-
+ * based keyframe resolves against the track's actual width regardless of
+ * viewport. Sourced live from `primitives.motion`. Not part of the
+ * published package.
  */
-export function MotionScale({ dimension }: { dimension: "duration" | "easing" }) {
+export function MotionScale({
+  dimension,
+  tokens,
+}: {
+  dimension: "duration" | "easing";
+  tokens: { name: string; usage: string }[];
+}) {
   const [replayKey, setReplayKey] = useState(0);
 
-  const rows =
+  const timingFor = (name: string) =>
     dimension === "duration"
-      ? Object.entries(primitives.motion.duration).map(([name, value]) => ({
-          name,
-          timing: `${value} ${REPRESENTATIVE_EASING}`,
-        }))
-      : Object.entries(primitives.motion.easing).map(([name, value]) => ({
-          name,
-          timing: `${REPRESENTATIVE_DURATION} ${value}`,
-        }));
+      ? `${primitives.motion.duration[name as keyof typeof primitives.motion.duration]} ${REPRESENTATIVE_EASING}`
+      : `${REPRESENTATIVE_DURATION} ${primitives.motion.easing[name as keyof typeof primitives.motion.easing]}`;
 
   return (
     <div>
@@ -53,25 +56,44 @@ export function MotionScale({ dimension }: { dimension: "duration" | "easing" })
       >
         Replay
       </button>
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
-        {rows.map((row) => (
-          <div key={row.name} style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
-            <code style={{ flexShrink: 0, fontSize: "var(--dbm-font-size-xs)", width: "8rem" }}>
-              motion.{dimension}.{row.name}
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {tokens.map(({ name, usage }) => (
+          <div
+            key={name}
+            style={{
+              alignItems: "center",
+              borderBlockEnd: "1px solid var(--dbm-border-subtle)",
+              display: "flex",
+              gap: "var(--dbm-space-4)",
+              paddingBlock: "var(--dbm-space-3)",
+            }}
+          >
+            <code style={{ flexShrink: 0, fontSize: "var(--dbm-font-size-xs)", minWidth: "11rem" }}>
+              motion.{dimension}.{name}
             </code>
+            <span
+              style={{
+                color: "var(--dbm-text-tertiary)",
+                flex: 1,
+                fontSize: "var(--dbm-font-size-sm)",
+              }}
+            >
+              {usage}
+            </span>
             <div
               style={{
                 background: "var(--dbm-bg-subtle)",
                 borderRadius: "var(--dbm-radius-full)",
-                flex: 1,
+                flexShrink: 0,
                 height: "1.5rem",
                 position: "relative",
+                width: "10rem",
               }}
             >
               <div
                 key={replayKey}
                 style={{
-                  animation: `dbm-motion-demo ${row.timing}`,
+                  animation: `dbm-motion-demo ${timingFor(name)}`,
                   background: "var(--dbm-bg-brand)",
                   borderRadius: "var(--dbm-radius-full)",
                   height: "1.5rem",

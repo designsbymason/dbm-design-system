@@ -50,7 +50,7 @@ export function TypeSpecimen({
           >
             {value}
           </code>
-          <span style={{ fontFamily, fontSize: value }}>The quick brown fox</span>
+          <span style={{ fontFamily, fontSize: value }}>Design builds meaning</span>
         </div>
       ))}
     </div>

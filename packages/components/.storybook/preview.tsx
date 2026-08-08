@@ -1,5 +1,5 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
-import { dbmStorybookTheme } from "./theme";
+import { DbmDocsContainer } from "./DbmDocsContainer";
 
 import "@dbm-design-system/tokens/css/primitives.css";
 import "@dbm-design-system/tokens/css/purple-light.css";
@@ -44,7 +44,10 @@ const preview: Preview = {
     backgrounds: { disable: true },
     a11y: { test: "error" },
     docs: {
-      theme: dbmStorybookTheme,
+      // Live-reactive to the Mode toolbar global (see DbmDocsContainer.tsx)
+      // instead of a static `theme` — this overrides Docs.tsx's own theme
+      // prop entirely, so no `theme` key is set here.
+      container: DbmDocsContainer,
       // Restricted to `h2` only (default is `h2, h3`) so the TOC reflects
       // just the template's fixed section list (Overview, Import,
       // Playground, ...) — identical across every component's Docs page —

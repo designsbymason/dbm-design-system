@@ -27,7 +27,8 @@
     },
     "brand-subtle": {
       "$type": "color",
-      "$value": "{color.emerald.900}"
+      "$value": "{color.emerald.950}",
+      "$description": "Moved from emerald.900 to emerald.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's emerald.100 → emerald.50, preserving the same relative gap from each theme's pole. text.link (emerald.400) on emerald.950 = 7.93:1, still comfortably passes AA (was 6.02:1 on emerald.900)."
     },
     "danger": {
       "$type": "color",
@@ -40,7 +41,8 @@
     },
     "danger-subtle": {
       "$type": "color",
-      "$value": "{color.red.900}"
+      "$value": "{color.red.950}",
+      "$description": "Moved from red.900 to red.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's red.100 → red.50, preserving the same relative gap from each theme's pole. text.danger (red.300) on red.950 = 10.32:1, still comfortably passes AA (was 8.22:1 on red.900)."
     },
     "warning": {
       "$type": "color",
@@ -53,7 +55,8 @@
     },
     "warning-subtle": {
       "$type": "color",
-      "$value": "{color.amber.900}"
+      "$value": "{color.amber.950}",
+      "$description": "Moved from amber.900 to amber.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's amber.100 → amber.50, preserving the same relative gap from each theme's pole. text.warning (amber.300) on amber.950 = 10.44:1, still comfortably passes AA (was 8.19:1 on amber.900)."
     },
     "success": {
       "$type": "color",
@@ -66,7 +69,8 @@
     },
     "success-subtle": {
       "$type": "color",
-      "$value": "{color.green.900}"
+      "$value": "{color.green.950}",
+      "$description": "Moved from green.900 to green.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's green.100 → green.50, preserving the same relative gap from each theme's pole. text.success (green.300) on green.950 = 10.68:1, still comfortably passes AA (was 8.19:1 on green.900)."
     },
     "info": {
       "$type": "color",
@@ -79,7 +83,8 @@
     },
     "info-subtle": {
       "$type": "color",
-      "$value": "{color.blue.900}"
+      "$value": "{color.blue.950}",
+      "$description": "Moved from blue.900 to blue.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's blue.100 → blue.50 (2026-07-27), preserving the same relative gap from each theme's pole. text.info (blue.300) on blue.950 = 10.51:1, still comfortably passes AA (was 8.20:1 on blue.900)."
     },
     "neutral": {
       "$type": "color",

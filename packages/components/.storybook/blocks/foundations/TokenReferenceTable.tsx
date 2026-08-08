@@ -14,7 +14,7 @@ export interface TokenReferenceRow {
  */
 export function TokenReferenceTable({ rows }: { rows: TokenReferenceRow[] }) {
   return (
-    <table className="dbm-proptable">
+    <table className="dbm-proptable dbm-tokentable">
       <thead>
         <tr>
           <th>Token</th>
@@ -28,9 +28,7 @@ export function TokenReferenceTable({ rows }: { rows: TokenReferenceRow[] }) {
             <td>
               <code>{row.name}</code>
             </td>
-            <td>
-              <code>{row.value}</code>
-            </td>
+            <td>{row.value}</td>
             <td>
               {row.usage ? row.usage : <span className="dbm-proptable-empty">—</span>}
             </td>

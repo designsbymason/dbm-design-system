@@ -28,7 +28,8 @@
     },
     "brand-subtle": {
       "$type": "color",
-      "$value": "{color.purple.100}"
+      "$value": "{color.purple.50}",
+      "$description": "Moved from purple.100 to purple.50 (2026-07-27), one step lighter, per explicit direction (matching bg.info-subtle's earlier move). Dark theme moved correspondingly (purple.900 → purple.950). Real consumers re-verified: Avatar's text.link (purple.600) on purple.50 = 7.03:1 (was 6.47:1 on purple.100); ListItem's selected state (text.primary, gray.900) on purple.50 = 13.46:1 — both still comfortably pass AA."
     },
     "danger": {
       "$type": "color",
@@ -40,7 +41,8 @@
     },
     "danger-subtle": {
       "$type": "color",
-      "$value": "{color.red.100}"
+      "$value": "{color.red.50}",
+      "$description": "Moved from red.100 to red.50 (2026-07-27), one step lighter, per explicit direction. Dark theme moved correspondingly (red.900 → red.950). text.danger (red.700) on red.50 = 7.05:1, still comfortably passes AA (was 6.43:1 on red.100)."
     },
     "warning": {
       "$type": "color",
@@ -53,7 +55,8 @@
     },
     "warning-subtle": {
       "$type": "color",
-      "$value": "{color.amber.100}"
+      "$value": "{color.amber.50}",
+      "$description": "Moved from amber.100 to amber.50 (2026-07-27), one step lighter, per explicit direction. Dark theme moved correspondingly (amber.900 → amber.950). text.warning (amber.800) on amber.50 = 9.74:1, still comfortably passes AA (was 8.90:1 on amber.100)."
     },
     "success": {
       "$type": "color",
@@ -67,7 +70,8 @@
     },
     "success-subtle": {
       "$type": "color",
-      "$value": "{color.green.100}"
+      "$value": "{color.green.50}",
+      "$description": "Moved from green.100 to green.50 (2026-07-27), one step lighter, per explicit direction. Dark theme moved correspondingly (green.900 → green.950). text.success (green.800) on green.50 = 9.15:1, still comfortably passes AA (was 8.42:1 on green.100)."
     },
     "info": {
       "$type": "color",
@@ -80,7 +84,8 @@
     },
     "info-subtle": {
       "$type": "color",
-      "$value": "{color.blue.100}"
+      "$value": "{color.blue.50}",
+      "$description": "Moved from blue.100 to blue.50 (2026-07-27), one step lighter, per explicit direction. Dark theme moved correspondingly (blue.900 → blue.950, the mirror-opposite extreme) to preserve the same relative gap. text.info (blue.700) on blue.50 = 6.63:1, still comfortably passes AA (was 6.10:1 on blue.100)."
     },
     "neutral": {
       "$type": "color",

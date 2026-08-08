@@ -1,5 +1,5 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, TokenRow } from "../../.storybook/blocks";
+import { Callout } from "../../.storybook/blocks";
 import { MotionScale, ThemeSync } from "../../.storybook/blocks/foundations";
 
 <Meta title="Foundations/Motion" />
@@ -14,23 +14,23 @@ difference between `standard` and `emphasized`.
 
 ## Duration
 
-<MotionScale dimension="duration" />
-
-<TokenRow token="motion.duration.instant" usage="0ms — no transition, immediate state change" />
-<TokenRow token="motion.duration.fast" usage="120ms — hover/focus micro-interactions" />
-<TokenRow token="motion.duration.base" usage="200ms — default transition duration" />
-<TokenRow token="motion.duration.moderate" usage="300ms — larger UI movements (Collapse, Drawer)" />
-<TokenRow token="motion.duration.slow" usage="400ms — deliberate, attention-drawing motion" />
-<TokenRow token="motion.duration.slower" usage="600ms — loading spinner rotation, ambient motion" />
+<MotionScale dimension="duration" tokens={[
+  { name: "instant", usage: "0ms — no transition, immediate state change" },
+  { name: "fast", usage: "120ms — hover/focus micro-interactions" },
+  { name: "base", usage: "200ms — default transition duration" },
+  { name: "moderate", usage: "300ms — larger UI movements (Collapse, Drawer)" },
+  { name: "slow", usage: "400ms — deliberate, attention-drawing motion" },
+  { name: "slower", usage: "600ms — loading spinner rotation, ambient motion" },
+]} />
 
 ## Easing
 
-<MotionScale dimension="easing" />
-
-<TokenRow token="motion.easing.standard" usage="Default — most hover/focus/loading-state transitions" />
-<TokenRow token="motion.easing.decelerate" usage="Entrances — elements arriving on screen" />
-<TokenRow token="motion.easing.accelerate" usage="Exits — elements leaving the screen" />
-<TokenRow token="motion.easing.emphasized" usage="Expo-out feel for premium micro-interactions (modals/popovers entering)" />
+<MotionScale dimension="easing" tokens={[
+  { name: "standard", usage: "Default — most hover/focus/loading-state transitions" },
+  { name: "decelerate", usage: "Entrances — elements arriving on screen" },
+  { name: "accelerate", usage: "Exits — elements leaving the screen" },
+  { name: "emphasized", usage: "Expo-out feel for premium micro-interactions (modals/popovers entering)" },
+]} />
 
 ## Usage guidelines
 
