@@ -2,21 +2,23 @@
   "bg": {
     "canvas": {
       "$type": "color",
-      "$value": "{color.gray.50}",
-      "$description": "Moved from gray.100 to gray.50 (2026-08-08) at explicit direction — now byte-identical to bg.subtle, undoing the distinction the 2026-07-27 canvas/subtle swap created (that change's own rationale: canvas should read as more distinct from white than subtle). Accepted tradeoff, not an oversight. Contrast re-verified, not assumed: text.primary on this value measures 13.53:1 (was 12.41:1 on gray.100), text.secondary measures 6.59:1 (was 6.05:1) — both still comfortably clear AA, since a lighter background only improves contrast against dark text."
+      "$value": "{color.gray.100}",
+      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.white (was briefly byte-identical to bg.surface/bg.subtle) to gray.100, one step past bg.subtle (gray.50), so it reads as a visually distinct container again. Contrast re-verified: text.primary 12.41:1, text.secondary 6.05:1 — both clear AA. Byte-identical to border.subtle (also gray.100) — nothing currently pairs the two, flagged here in case a future component draws a border.subtle border directly on bg.canvas."
     },
     "surface": {
       "$type": "color",
-      "$value": "{color.neutral.white}"
+      "$value": "{color.neutral.white}",
+      "$description": "Usage redefined (2026-08-08) to \"page, card, sheet and drawer background\" — broadens from \"card/panel surface\" to cover every default content surface, not just cards. Value unchanged (white)."
     },
     "surface-raised": {
       "$type": "color",
-      "$value": "{color.neutral.white}"
+      "$value": "{color.neutral.white}",
+      "$description": "Usage description added (2026-08-08): \"an elevated surface (paired with a shadow)\". Value unchanged (white, byte-identical to bg.surface in light mode — elevation here comes from the paired shadow, not a background difference)."
     },
     "subtle": {
       "$type": "color",
       "$value": "{color.gray.50}",
-      "$description": "Swapped with canvas 2026-07-27: subtle is the barely-visible tint layered on top of white bg.surface (hover fills, zebra striping) — it should sit as close to white as canvas sitting one step further out from white (gray.100)."
+      "$description": "Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\" — broadens from hover-fill/zebra-striping to also cover dashboard panels and general neutral accents. Value unchanged (gray.50). History: swapped with canvas 2026-07-27, when subtle was defined as the barely-visible tint layered on top of white bg.surface."
     },
     "brand": {
       "$type": "color",

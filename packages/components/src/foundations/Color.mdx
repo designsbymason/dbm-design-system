@@ -58,10 +58,10 @@ primitive step depending on the active brand/mode — that indirection is the en
 ### Background (`bg.*`)
 
 <SemanticSwatchGrid tokens={[
-  { token: "bg.canvas", usage: "Page/app background, behind all surfaces" },
-  { token: "bg.surface", usage: "Default card/panel surface" },
+  { token: "bg.surface", usage: "Page, card, sheet and drawer background" },
   { token: "bg.surface-raised", usage: "An elevated surface (paired with a shadow)" },
-  { token: "bg.subtle", usage: "Hover fill for tertiary/ghost controls, zebra striping" },
+  { token: "bg.subtle", usage: "Hover fill for tertiary/ghost controls, dashboard panel, neutral accent" },
+  { token: "bg.canvas", usage: "Canvas and playground container" },
   { token: "bg.brand", usage: "Primary action fill (Button primary, focus accents)" },
   { token: "bg.brand-hover", usage: "Hover state of bg.brand" },
   { token: "bg.brand-subtle", usage: "Light brand tint — selected states, subtle highlights" },
@@ -80,6 +80,7 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "bg.neutral", usage: "Neutral status fill (e.g. offline indicator)" },
   { token: "bg.neutral-strong", usage: "Stronger neutral fill, for hosting text" },
   { token: "bg.overlay", usage: "Dimming scrim behind Dialog/Drawer overlays" },
+  { token: "bg.code", usage: "Inline code/token-reference pill background (Storybook docs only)" },
 ]} />
 
 ### Text (`text.*`)
@@ -112,6 +113,7 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "border.focus", usage: "Focus-visible outline color" },
   { token: "border.brand", usage: "Decorative brand-accent border (not focus/state)" },
   { token: "border.danger", usage: "Error-state input border" },
+  { token: "border.code", usage: "Border for the bg.code pill above (Storybook docs only)" },
 ]} />
 
 ### Icon (`icon.*`)

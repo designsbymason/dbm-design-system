@@ -1,6 +1,6 @@
 import { addons } from "storybook/manager-api";
 import { SET_GLOBALS, UPDATE_GLOBALS } from "storybook/internal/core-events";
-import { getStorybookTheme } from "./theme";
+import { getSemanticTokens, getStorybookTheme } from "./theme";
 
 // Manager UI chrome (sidebar/toolbar/addon panels) runs outside the preview
 // iframe, so it can't read the Brand/Mode toolbar globals via a decorator
@@ -34,9 +34,31 @@ import { getStorybookTheme } from "./theme";
 let lastBrand: string | undefined;
 let lastMode: string | undefined;
 
+// The addon panel (Controls/Actions/Interactions/..., `#storybook-panel-root`
+// — confirmed via DOM inspection, a stable Storybook-assigned id regardless
+// of dock position) has no dedicated Storybook theme variable of its own:
+// its background is driven by `appContentBg`, the same variable the Docs
+// content wrapper uses (`DbmDocsContainer` passes the same theme object
+// there). Setting `appContentBg` to `bg.subtle` to color the panel would
+// also recolor every component's Docs page background, which wasn't asked
+// for. Scoped `<style>` injection targeting the panel's own id, kept in
+// sync with the same brand/mode tracking `applyTheme` already does below,
+// is the only way to color just the panel.
+let panelStyleEl: HTMLStyleElement | undefined;
+function applyPanelBg(brand: string | undefined, mode: string | undefined): void {
+  const hex = getSemanticTokens(brand, mode).bg.subtle;
+  if (!panelStyleEl) {
+    panelStyleEl = document.createElement("style");
+    panelStyleEl.id = "dbm-panel-bg-override";
+    document.head.appendChild(panelStyleEl);
+  }
+  panelStyleEl.textContent = `#storybook-panel-root { background: ${hex} !important; }`;
+}
+
 addons.setConfig({
   theme: getStorybookTheme(lastBrand, lastMode),
 });
+applyPanelBg(lastBrand, lastMode);
 
 addons.ready().then((channel) => {
   const applyTheme = (globals?: Record<string, unknown>) => {
@@ -52,6 +74,7 @@ addons.ready().then((channel) => {
     }
     if (!changed) return;
     addons.setConfig({ theme: getStorybookTheme(lastBrand, lastMode) });
+    applyPanelBg(lastBrand, lastMode);
   };
   channel.on(SET_GLOBALS, (payload) => applyTheme(payload?.globals));
   channel.on(UPDATE_GLOBALS, (payload) => applyTheme(payload?.globals));

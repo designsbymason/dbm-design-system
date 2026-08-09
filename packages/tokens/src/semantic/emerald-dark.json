@@ -2,21 +2,23 @@
   "bg": {
     "canvas": {
       "$type": "color",
-      "$value": "{color.gray.950}",
-      "$description": "Briefly moved to gray.900 (2026-08-08) to mirror the light-theme canvas move below, then reverted the same day at explicit direction back to gray.950 — dark mode's canvas stays at the scale's terminal/most-extreme dark step, distinct from bg.surface (gray.900). Only light mode's canvas actually changed (gray.100 → gray.50); dark mode nets out unchanged from before this round of edits."
+      "$value": "{color.gray.700}",
+      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.black (was briefly byte-identical to bg.surface) to gray.700, one step lighter than the reverted bg.surface (gray.800) — an intentional inversion of the usual dark-mode elevation cue (raised content is normally lighter than the canvas behind it), confirmed at explicit direction given canvas's narrower Storybook-specific usage. Known accessibility gap, accepted for now and slated for an upcoming text-color pass rather than blocking this background change: text.secondary on this value measures 4.00:1 (fails the 4.5:1 AA text floor) and text.tertiary measures 2.96:1 (fails even the 3:1 non-text floor); text.primary is fine at 6.59:1. Don't place text.secondary/tertiary literal text directly on bg.canvas until that follow-up lands."
     },
     "surface": {
       "$type": "color",
-      "$value": "{color.gray.900}"
+      "$value": "{color.gray.800}",
+      "$description": "Reverted (2026-08-08) from neutral.black back to gray.800, paired with bg.canvas moving off neutral.black in the same edit — surface and canvas are no longer byte-identical; canvas (gray.700) now reads slightly lighter than surface (gray.800), see bg.canvas's own description for why. Reintroduces a border.default/bg.surface collision (both gray.800, 1.00:1) that the neutral.black value had incidentally fixed — reverted docs.css's table-border/section-divider rule back to border.subtle (gray.900, 1.40:1 against this value) to compensate. Contrast re-verified: text.primary 9.66:1, text.secondary 5.86:1, text.tertiary 4.34:1 — all still clear AA. Usage redefined in the same edit to \"page, card, sheet and drawer background\"."
     },
     "surface-raised": {
       "$type": "color",
-      "$value": "{color.gray.800}"
+      "$value": "{color.gray.800}",
+      "$description": "Usage description added (2026-08-08): \"an elevated surface (paired with a shadow)\". Value unchanged (gray.800) — now byte-identical to bg.surface's own reverted value (see that token's description), removing the surface/raised background distinction in dark mode specifically; elevation here relies on the paired shadow instead. Confirmed at explicit direction alongside the bg.surface revert."
     },
     "subtle": {
       "$type": "color",
-      "$value": "{color.gray.800}",
-      "$description": "Byte-identical to surface-raised (2026-07-27 review) — a hover fill (subtle) on a control inside an elevated card (surface-raised) is visually invisible as a result. Tried moving to gray.700 to fix that, but it fails AA for the real text.secondary-on-bg.subtle pairing (Tag/Badge subtleNeutral): 4.00:1, needs 4.5:1. gray.600 is worse (2.73:1). No primitive step exists between 800 and 900 to resolve the surface-raised collision without breaking contrast, so this stays at gray.800 — the collision is a real but lower-priority design nit, not a WCAG failure, and accessibility takes priority per CLAUDE.md."
+      "$value": "{color.gray.900}",
+      "$description": "Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\", value moved from gray.800 to gray.900 in the same edit — also resolves the surface-raised/subtle collision noted in this token's own history below, since gray.900 is a step further from surface-raised (gray.800) than gray.800 was from itself. Contrast re-verified: text.secondary-on-bg.subtle (Tag/Badge subtleNeutral) 8.21:1 (was 4.00:1 on the gray.700 this token's history below rejected, and comfortably clear of gray.800's own value too), text.primary 13.53:1 — both clear AA. Byte-identical to border.subtle (also gray.900) — nothing currently pairs the two, flagged here as a heads-up. History: was byte-identical to surface-raised on gray.800 (2026-07-27 review) — a hover fill invisible against the elevated card it sits on; gray.700 was tried and rejected then for failing the text.secondary-on-bg.subtle pairing at 4.00:1, which is why gray.900 (not gray.700) is the value used to break the collision here."
     },
     "brand": {
       "$type": "color",
@@ -115,12 +117,13 @@
     },
     "secondary": {
       "$type": "color",
-      "$value": "{color.gray.300}"
+      "$value": "{color.gray.200}",
+      "$description": "Moved from gray.300 to gray.200 (2026-08-08) at explicit direction, driven by bg.canvas's move to gray.700 the same day: text.secondary on bg.canvas measured 4.00:1 on gray.300 (fails the 4.5:1 AA text floor), gray.200 clears it at 5.10:1. Also improves against every other bg.* pairing: 7.47:1 on bg.surface (was 5.86:1 on gray.300), 10.47:1 on bg.subtle (was 8.21:1)."
     },
     "tertiary": {
       "$type": "color",
-      "$value": "{color.gray.400}",
-      "$description": "gray.500 fails AA (needs 4.5:1) for this token's literal-text uses (Text color=\"tertiary\", Divider label, Input placeholder). gray.400 gives 6.08:1 (re-verified 2026-07-18, Phase 4 OKLCH regen), still more muted than text.secondary (gray.300)."
+      "$value": "{color.gray.300}",
+      "$description": "Moved from gray.400 to gray.300 (2026-08-08) at explicit direction, same motivation as text.secondary's move above. Still doesn't fully clear the 4.5:1 text floor against bg.canvas (gray.300 on gray.700 measures 4.00:1) — it does clear the 3:1 non-text floor there, but this token's own literal-text uses (Text color=\"tertiary\", Divider label, Input placeholder) need 4.5:1, same standard that ruled out gray.500 originally (see history below). No primitive step between 300 and 400 exists to close that last gap without also moving past text.secondary's own gray.200. Given that, `bg.canvas` should never host `text.tertiary` literal text — enforced by guideline note (see guidelines/03-token-system-spec.md) rather than by chasing a lighter value here, since 5.86:1 on bg.surface and 8.21:1 on bg.subtle (this token's actual intended surfaces) are both comfortably clear at gray.300. History: gray.500 originally failed AA (needs 4.5:1) for this token's literal-text uses; gray.400 gave 6.08:1 against the surfaces it was verified on at the time (re-verified 2026-07-18, Phase 4 OKLCH regen)."
     },
     "disabled": {
       "$type": "color",
@@ -184,7 +187,8 @@
   "border": {
     "default": {
       "$type": "color",
-      "$value": "{color.gray.800}"
+      "$value": "{color.gray.950}",
+      "$description": "Moved from gray.800 to gray.950 (2026-08-08) at explicit direction. Fixes the exact-collision with bg.surface (also gray.800, 1.00:1) noted in Phase 9 of guidelines/03-token-system-spec.md — this pairing now measures 1.80:1. Also improves against bg.canvas (1.46:1 → 2.64:1). Trade-off: gets slightly worse against bg.subtle (1.40:1 → 1.28:1). Neither the old nor the new value clears the 3:1 WCAG 1.4.11 non-text floor against any of these real component-hosting surfaces (Input/Textarea/Button/Kbd/Divider/IconButton all use this token) — a pre-existing gap this change doesn't create, confirmed and accepted rather than assumed."
     },
     "subtle": {
       "$type": "color",

@@ -62,7 +62,7 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     colorPrimary: t.bg.brand,
     colorSecondary: t.bg.brand,
 
-    appBg: t.bg.canvas,
+    appBg: t.bg.subtle,
     appContentBg: t.bg.surface,
     appPreviewBg: t.bg.surface,
     appBorderColor: t.border.default,
@@ -85,7 +85,7 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     // inconsistency in place.
     barHoverColor: t.bg["brand-hover"],
     barSelectedColor: t.bg.brand,
-    barBg: t.bg.surface,
+    barBg: t.bg.subtle,
 
     buttonBg: t.bg.subtle,
     buttonBorder: t.border.default,
@@ -119,4 +119,17 @@ export function getStorybookTheme(brand?: string, mode?: string): ThemeVars {
   const resolvedBrand = BRANDS.includes(brand as Brand) ? (brand as Brand) : BRANDS[0];
   const resolvedMode = MODES.includes(mode as Mode) ? (mode as Mode) : MODES[0];
   return registry[resolvedBrand][resolvedMode];
+}
+
+/** Raw resolved semantic tokens (`{ bg, text, border, icon }` hex maps),
+ * same brand/mode resolution as `getStorybookTheme` — for manager-side
+ * chrome that Storybook's theme API has no dedicated variable for (e.g.
+ * the addon panel background, which shares `appContentBg` with the Docs
+ * content wrapper, too coarse to target just the panel). `manager.ts`
+ * uses this to hand-inject a scoped style override for `#storybook-panel-root`
+ * instead of widening `appContentBg` and affecting the Docs wrapper too. */
+export function getSemanticTokens(brand?: string, mode?: string): typeof purpleLight {
+  const resolvedBrand = BRANDS.includes(brand as Brand) ? (brand as Brand) : BRANDS[0];
+  const resolvedMode = MODES.includes(mode as Mode) ? (mode as Mode) : MODES[0];
+  return SEMANTIC_TOKENS[resolvedBrand][resolvedMode];
 }

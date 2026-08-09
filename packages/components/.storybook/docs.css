@@ -45,7 +45,20 @@
    margin harmlessly — but every Foundations page has no such heading,
    so its real first section was visibly tighter than every section
    after it. Confirmed via computed margin-top (0px vs 40px) across
-   multiple Foundations pages, not assumed from one instance. */
+   multiple Foundations pages, not assumed from one instance.
+
+   Border color: `border.subtle` → `border.default` (2026-08-08) → back to
+   `border.subtle` (2026-08-08, same day) — same back-and-forth as
+   `.dbm-proptable`'s own border (see that rule's comment for the full
+   story). `border.subtle` was originally invisible against the Docs
+   wrapper's `bg.surface` in dark mode (both `gray.900`); switching to
+   `border.default` fixed that, but a same-day `bg.surface` value change
+   (`gray.900` → `neutral.black` → `gray.800`, see the `bg.surface` token's
+   own description) made `border.default` collide instead (both now
+   `gray.800`) while un-colliding `border.subtle` (`gray.900` again, no
+   longer matching `bg.surface`). `border.subtle` is the live answer as of
+   this file's current state — re-verify against `bg.surface`'s actual
+   value before touching either again, since this has now flipped once. */
 .sbdocs-content h2 {
   border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
   font-family: var(--dbm-font-family-primary);
@@ -225,28 +238,26 @@
    throughout this investigation even on the attempts where nothing
    actually painted.
 
-   Border color is `border.default` (2026-08-08, reverted back from
-   `border.subtle`, which itself replaced `border.default` on 2026-07-27
-   purely to stay token-only rather than reach for a primitive — that
-   part of the reasoning still holds, `border.default` is still a
-   semantic token, not a primitive). The revert is a real bug fix, not a
-   taste change: `border.subtle` resolves to `gray.900` in dark mode, and
-   the Docs page wrapper background (`bg.surface`, what this table
-   actually sits on) is ALSO `gray.900` in dark mode — border and
-   background were byte-identical, confirmed via computed styles
-   (`getComputedStyle` returned the same `rgb(44, 42, 52)` for both), a
-   literal 1.00:1 collision rather than merely low contrast. `border.subtle`
-   only ever looked acceptable because it was last verified in light mode,
-   where `border.subtle`/`bg.surface` don't happen to collide.
-   `border.default` doesn't collide in either mode: 1.35:1 light / 1.40:1
-   dark against `bg.surface` — still under the 3:1 WCAG 1.4.11 floor, same
-   documented tradeoff as before (no `border.*` step clears 3:1 for a
-   standalone boundary against an unthemed page background; this is a
-   decorative border, not a state-identifying one — same exemption already
-   established for `border.brand` elsewhere in this file), but no longer
-   literally invisible. */
+   Border color: `border.subtle` → `border.default` (2026-08-08) → back to
+   `border.subtle` (2026-08-08, same day) — flipped twice in one day, each
+   time chasing `bg.surface`'s own value, which also changed twice. First
+   flip: `border.subtle` (`gray.900` in dark mode) was byte-identical to
+   the Docs wrapper's `bg.surface` (`gray.900` then), a literal 1.00:1
+   collision confirmed via computed styles — `border.default` (`gray.800`)
+   fixed it, 1.40:1 against that `bg.surface`. Second flip: `bg.surface`
+   itself later moved (`gray.900` → `neutral.black` → `gray.800`, see that
+   token's own description), landing on `gray.800` — exactly
+   `border.default`'s value, recreating the same 1.00:1 collision one step
+   over, while `border.subtle` (`gray.900`) no longer matches and is safe
+   again (1.40:1). `border.subtle` is the live answer as of this file's
+   current state. Both are semantic tokens either way, so "stay token-only"
+   was never the actual constraint here — re-verify against `bg.surface`'s
+   actual value before changing either again, since this has now flipped
+   twice. Still under the 3:1 WCAG 1.4.11 floor either way — accepted
+   tradeoff (decorative border, not state-identifying — same exemption as
+   `border.brand` elsewhere in this file), not a regression. */
 .dbm-proptable {
-  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
   border-collapse: separate !important;
   border-radius: var(--dbm-radius-md);
   border-spacing: 0;
