@@ -38,24 +38,51 @@ const subscribers = new Set<(globals: ThemeGlobals) => void>();
 let listeningOnChannel: DocsContextProps["channel"] | null = null;
 
 /**
- * Parses the Brand/Mode toolbar globals straight out of Storybook's own URL
- * (`?...&globals=brand:emerald;mode:dark`) — used only as a fallback for
- * bootstrapping state right after a true module reload, when
- * `lastKnownGlobals` can't yet be trusted (see the third and fourth bugs
- * documented on `useThemeGlobals` below). A key missing from the query
- * string means that global is at its declared default (Storybook omits
- * defaults from the URL entirely), so a missing key here is not the same
- * as "unknown" — callers merge this onto a default-seeded base, not onto
- * an empty one.
+ * Reads the Brand/Mode toolbar globals from the channel's own event
+ * history — used only as a fallback for bootstrapping state right after a
+ * true module reload, when `lastKnownGlobals` can't yet be trusted (see
+ * the third and fourth bugs documented on `useThemeGlobals` below).
+ *
+ * **Replaced the original URL-parsing version of this function (2026-08-09,
+ * fifth bug):** that version read `?...&globals=brand:emerald;mode:dark`
+ * straight out of `window.location.search`, on the theory (borne out at
+ * the time) that Storybook's own URL sync was a reliable mirror of the
+ * live state. A user report proved that wrong: toggling Mode on a
+ * component's Docs page (which resets this whole module on every toggle —
+ * see the first bug below) to Dark then back to Light left every
+ * Foundations page showing Dark after navigating there, even though the
+ * component page itself was correctly Light. Captured the preview
+ * iframe's own `location.href` after the exact same toggle and found it
+ * permanently stuck at `globals=mode%3Adark` — not lagging by a render
+ * (the fourth bug's assumption), genuinely never updated at all, even
+ * after several seconds. Reverting to a global's *default* value (`light`
+ * is Mode's declared default) apparently doesn't reliably trigger
+ * Storybook's own URL rewrite on a Docs page in this version, so the URL
+ * fallback was reading permanently-wrong data, not stale-for-a-moment
+ * data.
+ *
+ * Fixed by reading `channel.last(UPDATE_GLOBALS)` instead — the channel
+ * (`storybook/channels`) buffers the most recent payload of every event
+ * type it's seen, independent of Storybook's separate (and here, buggy)
+ * URL-sync mechanism, and unlike `lastKnownGlobals` it isn't wiped by this
+ * module's own reload since the `Channel` instance itself is owned and
+ * kept alive by Storybook's outer preview runtime, not by this module.
+ * Confirmed live: `channel.last('updateGlobals')` correctly returned
+ * `{mode: "light"}` in the exact broken state where the URL and
+ * `channel.last('setGlobals')` both still said `"dark"` — `SET_GLOBALS`
+ * itself re-fires with stale data on every Docs-page toggle for the same
+ * reason `manager.ts` needed its own fix for a stale-`SET_GLOBALS`-echo
+ * bug (see that file), so it's checked only as a second-choice fallback
+ * here, never first.
  */
-function parseGlobalsFromLocation(): Partial<ThemeGlobals> {
-  const raw = new URLSearchParams(window.location.search).get("globals");
-  if (!raw) return {};
+function readGlobalsFromChannelHistory(channel: DocsContextProps["channel"]): Partial<ThemeGlobals> {
+  const fromUpdate = channel.last(UPDATE_GLOBALS)?.[0]?.globals as Record<string, unknown> | undefined;
+  const fromSet = channel.last(SET_GLOBALS)?.[0]?.globals as Record<string, unknown> | undefined;
+  const source = fromUpdate ?? fromSet;
+  if (!source) return {};
   const parsed: Partial<ThemeGlobals> = {};
-  for (const pair of raw.split(";")) {
-    const [key, value] = pair.split(":");
-    if ((key === "brand" || key === "mode") && value) parsed[key] = value;
-  }
+  if (typeof source.brand === "string") parsed.brand = source.brand;
+  if (typeof source.mode === "string") parsed.mode = source.mode;
   return parsed;
 }
 
@@ -180,8 +207,8 @@ function ensureChannelListener(channel: DocsContextProps["channel"]): void {
 export function useThemeGlobals(context: DocsContextProps): ThemeGlobals {
   const [globals, setGlobals] = useState<ThemeGlobals>(() => {
     if (hasReceivedLiveUpdate) return lastKnownGlobals;
-    const fromUrl = parseGlobalsFromLocation();
-    const resolved = { ...lastKnownGlobals, ...fromUrl };
+    const fromChannel = readGlobalsFromChannelHistory(context.channel);
+    const resolved = { ...lastKnownGlobals, ...fromChannel };
     lastKnownGlobals = resolved;
     return resolved;
   });

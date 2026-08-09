@@ -17,22 +17,37 @@ import { getSemanticTokens, getStorybookTheme } from "./theme";
 // from (confirmed by reading `manager-api`'s compiled source, not just its
 // `.d.ts`).
 //
-// On a docs page with an attached story (a component's `ComponentName.mdx`,
-// which embeds a `<Canvas>`), a fast double-toggle can produce a *transient*
-// flash back to the previous theme: logging every raw event during a rapid
-// dark→light toggle showed the correct `UPDATE_GLOBALS {mode: light}`
-// arrive and apply correctly, immediately followed by a **stale**
-// `SET_GLOBALS` echo still carrying `{mode: dark}` (an async round-trip
-// lagging behind, from the Canvas re-preparing its story) — which briefly
-// re-applies dark — before a final, correcting `UPDATE_GLOBALS` (this one
-// carrying the full globals snapshot) arrives a moment later and settles on
-// the right theme. Confirmed this always self-corrects within roughly a
-// couple hundred milliseconds without any special handling; not worth a
-// debounce given the last event in this codebase's toolbar interaction
-// pattern always ends up applying the true current value. The same
-// reasoning applies to Brand, added later — same channel, same events.
+// **Fifth bug, found 2026-08-09 from a user report** (this file's own
+// account of the fourth bug below turned out to be wrong — it assumed the
+// stale echo always self-corrects, but that's not true in this direction):
+// on a component's Docs page (an attached story, e.g. Button), toggling
+// Dark → Light updated the Docs page content correctly but left the
+// sidebar/toolbar/panel stuck in dark mode — Light → Dark worked fine.
+// Captured every raw channel event during a real dark→light toggle to
+// confirm rather than guess: two correct `UPDATE_GLOBALS` events landed
+// first (`{mode: "light"}`, then a full-snapshot one also saying
+// `"light"`), but a **stale `SET_GLOBALS` echo carrying `{mode: "dark"}`
+// arrived last** — with no further correcting event after it, contrary to
+// the fourth bug's note below. `applyTheme` trusted `SET_GLOBALS` and
+// `UPDATE_GLOBALS` equally, so this stale echo silently won and the
+// manager stayed on the dark theme. (The Docs page content itself doesn't
+// have this problem: a component page with an attached story reads mode
+// synchronously from the story's own context — see
+// `readModeFromAttachedStory` in `DbmDocsContainer.tsx` — never from
+// accumulated channel events, so it's structurally immune to this race.)
+// Root cause: `SET_GLOBALS` isn't the one-time init-only event its own
+// name and Storybook's docs imply — on a Docs page with an attached
+// `<Canvas>`, it re-fires on every toggle as part of the Canvas
+// re-preparing its story (same mechanism documented as the first bug in
+// `useThemeGlobals.ts`), and that re-fire can lag behind and arrive after
+// the real, live `UPDATE_GLOBALS` for the same change. Fixed by only
+// trusting `SET_GLOBALS` for the very first sync (`hasReceivedInitialSync`
+// below) — after that, only `UPDATE_GLOBALS` (confirmed live and timely in
+// every capture) is allowed to change `lastBrand`/`lastMode`. Applies to
+// both Brand and Mode — same channel, same events.
 let lastBrand: string | undefined;
 let lastMode: string | undefined;
+let hasReceivedInitialSync = false;
 
 // The addon panel (Controls/Actions/Interactions/..., `#storybook-panel-root`
 // — confirmed via DOM inspection, a stable Storybook-assigned id regardless
@@ -76,6 +91,17 @@ addons.ready().then((channel) => {
     addons.setConfig({ theme: getStorybookTheme(lastBrand, lastMode) });
     applyPanelBg(lastBrand, lastMode);
   };
-  channel.on(SET_GLOBALS, (payload) => applyTheme(payload?.globals));
-  channel.on(UPDATE_GLOBALS, (payload) => applyTheme(payload?.globals));
+  // Only the first `SET_GLOBALS` is trusted (the real init-time sync) — see
+  // the fifth bug above for why every later one is a potentially-stale
+  // re-fire that must not be allowed to clobber a value `UPDATE_GLOBALS`
+  // already applied.
+  channel.on(SET_GLOBALS, (payload) => {
+    if (hasReceivedInitialSync) return;
+    hasReceivedInitialSync = true;
+    applyTheme(payload?.globals);
+  });
+  channel.on(UPDATE_GLOBALS, (payload) => {
+    hasReceivedInitialSync = true;
+    applyTheme(payload?.globals);
+  });
 });
