@@ -40,17 +40,20 @@ export function TypeSpecimen({
           >
             {step}
           </code>
-          <code
+          <span
             style={{
-              color: "var(--dbm-text-tertiary)",
+              color: "var(--dbm-text-secondary)",
               flexShrink: 0,
-              fontSize: "var(--dbm-font-size-xs)",
+              fontSize: "var(--dbm-font-size-sm)",
+              lineHeight: "var(--dbm-line-height-relaxed)",
               width: "var(--dbm-space-32)",
             }}
           >
             {value}
-          </code>
-          <span style={{ fontFamily, fontSize: value }}>Design builds meaning</span>
+          </span>
+          <span style={{ color: "var(--dbm-text-primary)", fontFamily, fontSize: value }}>
+            Design builds meaning
+          </span>
         </div>
       ))}
     </div>

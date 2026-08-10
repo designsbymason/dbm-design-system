@@ -40,7 +40,7 @@ export function RelatedCard({
       >
         {children}
       </div>
-      <div style={{ fontWeight: "var(--dbm-font-weight-semibold)" }}>
+      <div style={{ color: "var(--dbm-text-primary)", fontWeight: "var(--dbm-font-weight-semibold)" }}>
         {name}
       </div>
       <div

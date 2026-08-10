@@ -25,6 +25,7 @@ export function ColorSwatch({
       />
       <div
         style={{
+          color: "var(--dbm-text-primary)",
           fontSize: "var(--dbm-font-size-sm)",
           fontWeight: "var(--dbm-font-weight-semibold)",
         }}

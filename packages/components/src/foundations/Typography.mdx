@@ -1,6 +1,6 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { Callout, TokenRow } from "../../.storybook/blocks";
-import { ThemeSync, TypeSpecimen } from "../../.storybook/blocks/foundations";
+import { Callout } from "../../.storybook/blocks";
+import { ThemeSync, TokenReferenceTable, TypeSpecimen } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 <Meta title="Foundations/Typography" />
@@ -18,29 +18,32 @@ font size, weight, or line-height outside these tokens.
 
 ## Font families
 
-<div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
-<div>
-  <div style={{ fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
-    Nunito — font-family.primary
+<div style={{ display: "grid", gap: "var(--dbm-space-4)", gridTemplateColumns: "repeat(3, 1fr)" }}>
+<div style={{ background: "var(--dbm-bg-surface)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-md)", padding: "var(--dbm-space-4)" }}>
+  <div style={{ color: "var(--dbm-text-primary)", fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
+    Nunito
   </div>
-  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-1) 0" }}>
+  <code style={{ fontSize: "var(--dbm-font-size-xs)" }}>font-family.primary</code>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-2) 0 0" }}>
     UI, body text, controls — used for essentially everything in this component library.
   </p>
 </div>
-<div>
-  <div style={{ fontFamily: "var(--dbm-font-family-secondary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
-    Lora — font-family.secondary
+<div style={{ background: "var(--dbm-bg-surface)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-md)", padding: "var(--dbm-space-4)" }}>
+  <div style={{ color: "var(--dbm-text-primary)", fontFamily: "var(--dbm-font-family-secondary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
+    Lora
   </div>
-  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-1) 0" }}>
+  <code style={{ fontSize: "var(--dbm-font-size-xs)" }}>font-family.secondary</code>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-2) 0 0" }}>
     Editorial/display headings and quotes (e.g. `Blockquote`) — used sparingly, for a deliberate
     tonal shift, not as the default text face.
   </p>
 </div>
-<div>
-  <div style={{ fontFamily: "var(--dbm-font-family-mono)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
-    ui-monospace — font-family.mono
+<div style={{ background: "var(--dbm-bg-surface)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-md)", padding: "var(--dbm-space-4)" }}>
+  <div style={{ color: "var(--dbm-text-primary)", fontFamily: "var(--dbm-font-family-mono)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
+    ui-monospace
   </div>
-  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-1) 0" }}>
+  <code style={{ fontSize: "var(--dbm-font-size-xs)" }}>font-family.mono</code>
+  <p style={{ color: "var(--dbm-text-tertiary)", fontSize: "var(--dbm-font-size-sm)", marginBlock: "var(--dbm-space-2) 0 0" }}>
     Code/monospace UI (inline `Code`, `Kbd`) — a system font stack, not a third webfont, so it
     loads with zero extra network requests.
   </p>
@@ -49,10 +52,12 @@ font size, weight, or line-height outside these tokens.
 
 ## Font weights
 
-<TokenRow token="font-weight.regular" usage="400 — body text default" />
-<TokenRow token="font-weight.medium" usage="500 — light emphasis" />
-<TokenRow token="font-weight.semibold" usage="600 — labels, button text, strong emphasis" />
-<TokenRow token="font-weight.bold" usage="700 — headings" />
+<TokenReferenceTable rows={[
+  { name: "font-weight.regular", value: "400", usage: "Body text default" },
+  { name: "font-weight.medium", value: "500", usage: "Light emphasis" },
+  { name: "font-weight.semibold", value: "600", usage: "Labels, button text, strong emphasis" },
+  { name: "font-weight.bold", value: "700", usage: "Headings" },
+]} />
 
 ## Fluid type scale
 
@@ -68,16 +73,20 @@ improvement in heading hierarchy across screen sizes. Resize this browser window
 
 ## Line height
 
-<TokenRow token="line-height.tight" usage="1.15 — large display headings" />
-<TokenRow token="line-height.snug" usage="1.3 — compact headings, button labels" />
-<TokenRow token="line-height.normal" usage="1.5 — default body text" />
-<TokenRow token="line-height.relaxed" usage="1.7 — long-form reading text (Docs page prose)" />
+<TokenReferenceTable rows={[
+  { name: "line-height.tight", value: "1.15", usage: "Large display headings" },
+  { name: "line-height.snug", value: "1.3", usage: "Compact headings, button labels" },
+  { name: "line-height.normal", value: "1.5", usage: "Default body text" },
+  { name: "line-height.relaxed", value: "1.7", usage: "Long-form reading text (Docs page prose)" },
+]} />
 
 ## Letter spacing
 
-<TokenRow token="letter-spacing.tight" usage="-0.02em — large display headings" />
-<TokenRow token="letter-spacing.normal" usage="0em — default" />
-<TokenRow token="letter-spacing.wide" usage="0.02em — all-caps labels, badges" />
+<TokenReferenceTable rows={[
+  { name: "letter-spacing.tight", value: "-0.02em", usage: "Large display headings" },
+  { name: "letter-spacing.normal", value: "0em", usage: "Default" },
+  { name: "letter-spacing.wide", value: "0.02em", usage: "All-caps labels, badges" },
+]} />
 
 ## Usage guidelines
 

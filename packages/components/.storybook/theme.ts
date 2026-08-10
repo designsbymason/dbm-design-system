@@ -60,7 +60,20 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     brandTarget: "_self",
 
     colorPrimary: t.bg.brand,
-    colorSecondary: t.bg.brand,
+    // `text.link`, not `bg.brand` (2026-08-09) — Storybook applies this as
+    // literal text color in at least two places: the toolbar's active
+    // Brand/Mode labels, and the Docs page's right-side TOC active-item
+    // text. `bg.brand` (purple.500 dark) was calibrated as a *background*
+    // fill paired with `text.on-brand`, not as foreground text on
+    // `bg.subtle`/`bg.surface` — measured 3.13:1 / 2.24:1 there, both
+    // failing the 4.5:1 AA text floor. `text.link` is already the vetted
+    // token for literal purple text (purple.300 dark, chosen specifically
+    // because purple.400 failed AA here too — see that token's own
+    // description); it measures 7.45:1 / 5.32:1 against the same two
+    // backgrounds. Light mode is unaffected: `text.link` and `bg.brand`
+    // are byte-identical there (both purple.600), so this is a pure
+    // dark-mode contrast fix, not a color change in light mode.
+    colorSecondary: t.text.link,
 
     appBg: t.bg.subtle,
     appContentBg: t.bg.surface,

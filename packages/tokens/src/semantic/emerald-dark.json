@@ -30,8 +30,8 @@
     },
     "brand-subtle": {
       "$type": "color",
-      "$value": "{color.emerald.950}",
-      "$description": "Moved from emerald.900 to emerald.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's emerald.100 → emerald.50, preserving the same relative gap from each theme's pole. text.link (emerald.400) on emerald.950 = 7.93:1, still comfortably passes AA (was 6.02:1 on emerald.900)."
+      "$value": "{color.gray.900}",
+      "$description": "Moved from emerald.950 to gray.900 (2026-08-09) at explicit direction, mirroring the same change on purple-dark (see that file's own description for the full rationale: gray.700 was tried and rejected first for failing text.link/icon.brand contrast and colliding with bg.canvas). text.link (emerald.400) on gray.900 measures 6.49:1, still comfortably clear of the 4.5:1 AA text floor. Drops the emerald tint from this token entirely in dark mode, same trade-off as purple's — accepted collision with bg.subtle (also gray.900) in exchange for staying distinct from bg.canvas and clearing AA."
     },
     "danger": {
       "$type": "color",
@@ -106,8 +106,8 @@
     },
     "code": {
       "$type": "color",
-      "$value": "{color.blue.950}",
-      "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's .dbm-tokentable code) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Not currently consumed by any published component (the real Code.tsx atom uses bg.subtle instead) — Storybook-docs-only for now."
+      "$value": "{color.gray.700}",
+      "$description": "Dark value moved from blue.950 to gray.700 (2026-08-09) at explicit direction — code pill drops the blue tint in dark mode specifically, moving to a neutral gray fill instead. Light mode is unchanged (blue.50). Now byte-identical to border.code's own dark value (also gray.700, see that token) — the pill's border is effectively invisible against its own fill in dark mode, an explicit flat/borderless treatment for this mode, not an oversight. text.secondary on this value still measures 5.10:1, clear of the 4.5:1 AA text floor. Original description: new token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's .dbm-tokentable code) — mirrored bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Not currently consumed by any published component (the real Code.tsx atom uses bg.subtle instead) — Storybook-docs-only for now."
     }
   },
   "text": {
@@ -213,8 +213,8 @@
     },
     "code": {
       "$type": "color",
-      "$value": "{color.blue.900}",
-      "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand. Measures 1.09:1 light / 1.28:1 dark against bg.code, an accepted tradeoff, not an oversight."
+      "$value": "{color.gray.700}",
+      "$description": "Dark value moved from blue.900 to gray.700 (2026-08-09) at explicit direction, matching bg.code's own move to gray.700 in dark mode — the two are now byte-identical there, an explicit flat/borderless pill treatment for dark mode specifically (light mode keeps the blue.100/blue.50 pairing and its visible border, unchanged). Original description: paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand. Measured 1.09:1 light / 1.28:1 dark against the old bg.code, an accepted tradeoff, not an oversight."
     }
   },
   "icon": {
@@ -228,7 +228,8 @@
     },
     "brand": {
       "$type": "color",
-      "$value": "{color.emerald.400}"
+      "$value": "{color.emerald.300}",
+      "$description": "Moved from emerald.400 to emerald.300 (2026-08-09) at explicit direction, mirroring the same change on purple-dark (see that file's own description for the full rationale: emerald.400 passed the 3:1 non-text floor against bg.surface but failed against bg.canvas). emerald.300 measures 6.07:1 on bg.surface, 4.15:1 on bg.canvas — both comfortably clear, the latter also clearing the stricter 4.5:1 text floor for headroom."
     },
     "disabled": {
       "$type": "color",

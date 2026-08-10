@@ -26,6 +26,7 @@ export function ColorScaleGrid({
     <div>
       <div
         style={{
+          color: "var(--dbm-text-primary)",
           fontWeight: "var(--dbm-font-weight-semibold)",
           marginBlockEnd: "var(--dbm-space-2)",
           textTransform: "capitalize",

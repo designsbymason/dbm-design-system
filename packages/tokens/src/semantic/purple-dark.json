@@ -31,8 +31,8 @@
     },
     "brand-subtle": {
       "$type": "color",
-      "$value": "{color.purple.950}",
-      "$description": "Moved from purple.900 to purple.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's purple.100 → purple.50, preserving the same relative gap from each theme's pole. text.link (purple.300) on purple.950 = 10.86:1, still comfortably passes AA (was 9.80:1 on purple.900)."
+      "$value": "{color.gray.900}",
+      "$description": "Moved from purple.950 to gray.900 (2026-08-09) at explicit direction, after two rejected candidates: gray.700 was tried first and rejected for two reasons — it dropped text.link (purple.300) to 3.63:1 (fails the 4.5:1 AA text floor, down from 10.86:1 on purple.950) and icon.brand (purple.400) to 2.43:1 (fails the 3:1 non-text floor); it also exactly collided with bg.canvas (also gray.700 in dark mode), making a selected/highlighted state visually indistinguishable from the plain canvas behind it. gray.900 avoids both: text.link measures 7.45:1, icon.brand measures 4.99:1, and it reads distinct from bg.canvas (2.05:1). Trade-off accepted: gray.900 is now byte-identical to bg.subtle (also gray.900), so a brand-highlighted state and a plain neutral hover-fill look the same if adjacent — same class of lower-priority overlap already accepted elsewhere in this system (e.g. bg.subtle/bg.surface-raised), not a contrast failure. Drops the purple tint from this token entirely in dark mode — brand-subtle no longer reads as \"purple\" there, only as a distinct-from-canvas-and-surface neutral highlight."
     },
     "danger": {
       "$type": "color",
@@ -107,8 +107,8 @@
     },
     "code": {
       "$type": "color",
-      "$value": "{color.blue.950}",
-      "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's .dbm-tokentable code) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Not currently consumed by any published component (the real Code.tsx atom uses bg.subtle instead) — Storybook-docs-only for now."
+      "$value": "{color.gray.700}",
+      "$description": "Dark value moved from blue.950 to gray.700 (2026-08-09) at explicit direction — code pill drops the blue tint in dark mode specifically, moving to a neutral gray fill instead. Light mode is unchanged (blue.50). Now byte-identical to border.code's own dark value (also gray.700, see that token) — the pill's border is effectively invisible against its own fill in dark mode, an explicit flat/borderless treatment for this mode, not an oversight. text.secondary on this value still measures 5.10:1, clear of the 4.5:1 AA text floor. Original description: new token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's .dbm-tokentable code) — mirrored bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Not currently consumed by any published component (the real Code.tsx atom uses bg.subtle instead) — Storybook-docs-only for now."
     }
   },
   "text": {
@@ -215,8 +215,8 @@
     },
     "code": {
       "$type": "color",
-      "$value": "{color.blue.900}",
-      "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand. Measures 1.09:1 light / 1.28:1 dark against bg.code, an accepted tradeoff, not an oversight."
+      "$value": "{color.gray.700}",
+      "$description": "Dark value moved from blue.900 to gray.700 (2026-08-09) at explicit direction, matching bg.code's own move to gray.700 in dark mode — the two are now byte-identical there, an explicit flat/borderless pill treatment for dark mode specifically (light mode keeps the blue.100/blue.50 pairing and its visible border, unchanged). Original description: paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand. Measured 1.09:1 light / 1.28:1 dark against the old bg.code, an accepted tradeoff, not an oversight."
     }
   },
   "icon": {
@@ -230,7 +230,8 @@
     },
     "brand": {
       "$type": "color",
-      "$value": "{color.purple.400}"
+      "$value": "{color.purple.300}",
+      "$description": "Moved from purple.400 to purple.300 (2026-08-09) at explicit direction. purple.400 was a real but tight pass of the 3:1 WCAG 1.4.11 non-text floor (icons are graphical/UI elements, not text, so 3:1 is the correct floor, not 4.5:1) against bg.surface — 3.56:1 — but failed outright against bg.canvas at 2.43:1, a real surface in this system (the live Storybook Canvas/Playground background). purple.300 clears both: 5.32:1 on bg.surface, 3.63:1 on bg.canvas — the latter now also clears the stricter 4.5:1 text floor, for extra headroom given icon.brand can end up adjacent to literal text using the same brand accent."
     },
     "disabled": {
       "$type": "color",

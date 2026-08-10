@@ -92,7 +92,7 @@ the app root, by `@dbm-design-system/tokens/css/*.css`).
   </div>
 </RelatedCard>
 <RelatedCard name="Typography" description="Font families, weights, the fluid type scale" href="/?path=/docs/foundations-typography--docs">
-  <span style={{ fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>Aa</span>
+  <span style={{ color: "var(--dbm-text-brand)", fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>Aa</span>
 </RelatedCard>
 <RelatedCard name="Spacing" description="The 4px-base spacing scale" href="/?path=/docs/foundations-spacing--docs">
   <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
@@ -105,7 +105,7 @@ the app root, by `@dbm-design-system/tokens/css/*.css`).
   <div style={{ width: 28, height: 28, background: "var(--dbm-bg-brand-subtle)", border: "var(--dbm-border-width-2) solid var(--dbm-border-focus)", borderRadius: "var(--dbm-radius-lg)" }} />
 </RelatedCard>
 <RelatedCard name="Shadows" description="Elevation scale, separate light/dark values" href="/?path=/docs/foundations-shadows--docs">
-  <div style={{ width: 28, height: 28, background: "var(--dbm-bg-surface)", borderRadius: "var(--dbm-radius-md)", boxShadow: "var(--dbm-shadow-light-md)" }} />
+  <div className="dbm-overview-shadow-icon" style={{ width: 28, height: 28, background: "var(--dbm-bg-surface)", borderRadius: "var(--dbm-radius-md)" }} />
 </RelatedCard>
 <RelatedCard name="Motion" description="Duration + easing scale, with live demos" href="/?path=/docs/foundations-motion--docs">
   <div style={{ width: 28, height: 12, background: "var(--dbm-bg-subtle)", borderRadius: "var(--dbm-radius-full)", position: "relative" }}>
@@ -136,14 +136,14 @@ the app root, by `@dbm-design-system/tokens/css/*.css`).
 ```
 packages/tokens/
 ├── src/
-│   ├── primitive/     Raw values — color.json, typography.json, spacing.json,
+│   ├── primitive/      Raw values — color.json, typography.json, spacing.json,
 │   │                   radius.json, shadow.json, breakpoint.json, motion.json, other.json
 │   └── semantic/       One file per theme — purple-light.json, purple-dark.json,
-│                        emerald-light.json, emerald-dark.json
+│                       emerald-light.json, emerald-dark.json
 ├── build/css/          Generated CSS custom properties (what components actually load)
-└── build/ts/            Generated JS/TS objects (what these Foundations pages read from,
-                          via `@dbm-design-system/tokens`, so every value shown here is
-                          always the real, current, built value)
+└── build/ts/           Generated JS/TS objects (what these Foundations pages read from,
+                        via `@dbm-design-system/tokens`, so every value shown here is
+                        always the real, current, built value)
 ```
 
 Every value on every page in this section is read live from the built token package — not

@@ -1,6 +1,6 @@
 import { DocsContext } from "@storybook/addon-docs/blocks";
 import { useContext } from "react";
-import { ArrowRightIcon } from "@dbm-design-system/icons";
+import { LinkIcon } from "@dbm-design-system/icons";
 import { emeraldDark, emeraldLight, primitives, purpleDark, purpleLight } from "@dbm-design-system/tokens";
 import { Icon } from "../../../src/atoms/Icon";
 import { useThemeGlobals } from "./useThemeGlobals";
@@ -113,7 +113,7 @@ export function SemanticSwatchGrid({ tokens }: { tokens: SemanticToken[] }) {
                 gap: "var(--dbm-space-1)",
               }}
             >
-              <Icon icon={ArrowRightIcon} size="xs" />
+              <Icon icon={LinkIcon} size="xs" />
               <span style={{ fontSize: "var(--dbm-font-size-xs)" }}>{primitiveName}</span>
             </div>
           </div>
