@@ -1,11 +1,13 @@
-import { Canvas, Controls, Meta } from "@storybook/addon-docs/blocks";
-import { Callout, ComponentHeader, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
 import { Center } from "../Center";
 import { Container } from "../Container";
 import { Stack } from "../Stack";
 import { VisuallyHidden } from "../VisuallyHidden";
 import { Box } from "./Box";
 import * as BoxStories from "./Box.stories";
+
+export const propOrder = ["as", "children", "className"];
 
 <Meta of={BoxStories} />
 
@@ -37,15 +39,11 @@ never changes, only the underlying element it renders.
 <Canvas of={BoxStories.Playground} />
 
 </div>
-<div className="dbm-playground-controls">
-
-<Controls of={BoxStories.Playground} exclude={["className"]} />
-
-</div>
+<PlaygroundControls of={BoxStories.Playground} exclude={["className"]} order={propOrder} />
 
 ## Properties
 
-<PropertiesTable of={BoxStories} order={["as", "children", "className"]} />
+<PropertiesTable of={BoxStories} order={propOrder} />
 
 ## Variants
 

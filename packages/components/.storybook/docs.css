@@ -86,10 +86,10 @@
    not guessed).
 
    Still theme-reactive on purpose, unaffected by any of this: the
-   Playground controls card (`.dbm-playground-controls .docblock-argstable`
-   and its `td:first-child` text below) — already paired its own reactive
-   background with reactive text on the same element, which is why it
-   never needed the fixed-primitive workaround in the first place. */
+   Playground controls panel (`PlaygroundControls.tsx`, a custom-rendered
+   React component, not CSS-targeted markup here) — already paired its own
+   reactive background with reactive text on the same element, which is
+   why it never needed the fixed-primitive workaround in the first place. */
 .sbdocs-content h3 {
   color: var(--dbm-text-secondary);
   font-family: var(--dbm-font-family-primary);
@@ -493,93 +493,23 @@
   margin-block-end: var(--dbm-space-4);
 }
 
-/* Compact controls: the Controls block normally renders a full Name /
-   Description / Default / Control table — hide everything but Name (as a
-   label) and the interactive Control widget so this panel reads as a
-   settings form, not a second copy of the Properties table. Then reflow
-   into 2 columns of label+control rows via CSS multi-column on the body,
-   each row set to `break-inside: avoid` so a row never splits across
-   columns — this is deliberately NOT a `display: contents` + `grid`
-   reflow (tried first): a `<td>` left at its default
-   `display: table-cell` still runs the CSS table sizing algorithm for its
-   own content even once its ancestors are flattened via
-   `display: contents`, which made every control widget collapse to a
-   near-zero intrinsic width and wrap its content one character per line.
-   Multi-column avoids the problem entirely since the table keeps its own
-   native `display: table` layout — each `<tr>` becomes one column-flowed
-   block instead.
-
-   One outer card, not one card per row: `<td>` normally relies on the
-   table's own `border-collapse` to merge each cell's individual border
-   into shared, single-pixel row dividers — that only applies under real
-   `display: table` row layout. Once `<tr>` is forced to `display: flex`
-   (below) it drops out of that algorithm, so every cell's own default
-   border rendered in full, making each row look like its own separate
-   bordered card. Fixed by stripping the per-cell border entirely and
-   drawing exactly one border, on the table element itself. */
-.dbm-playground-controls .docblock-argstable {
-  background: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
-  border-radius: var(--dbm-radius-md);
-  padding: var(--dbm-space-4) var(--dbm-space-4) 0;
-  width: 100%;
-}
-
-.dbm-playground-controls .docblock-argstable-head {
-  display: none;
-}
-
-.dbm-playground-controls .docblock-argstable-body {
-  column-count: 2;
+/* `PlaygroundControls.tsx`'s row grid — the one piece of that component
+   that can't be inline styles (like the rest of it), since stacking to a
+   single column on narrow viewports needs a real media query. 40rem =
+   640px, an exact match to `breakpoint.sm` — kept as a literal because CSS
+   media-query conditions cannot reference custom properties (`var()` is
+   not valid inside an `@media` expression), so this can never actually be
+   token-driven; recorded here so the match isn't lost. */
+.dbm-playground-controls-grid {
   column-gap: var(--dbm-space-6);
-  display: block;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  row-gap: var(--dbm-space-4);
 }
 
-.dbm-playground-controls .docblock-argstable-body tr {
-  align-items: center;
-  border: none;
-  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
-  break-inside: avoid;
-  display: flex;
-  gap: var(--dbm-space-3);
-  padding-block: var(--dbm-space-3);
-  width: 100%;
-}
-
-.dbm-playground-controls .docblock-argstable-body td {
-  border: none;
-  padding: 0;
-}
-
-.dbm-playground-controls .docblock-argstable-body td:nth-child(2),
-.dbm-playground-controls .docblock-argstable-body td:nth-child(3) {
-  display: none;
-}
-
-.dbm-playground-controls .docblock-argstable-body td:first-child {
-  color: var(--dbm-text-secondary);
-  flex: 0 0 auto;
-  font-size: var(--dbm-font-size-sm);
-  white-space: nowrap;
-}
-
-.dbm-playground-controls .docblock-argstable-body td:last-child {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.dbm-playground-controls .docblock-argstable-body td:last-child {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-/* 40rem = 640px, an exact match to `breakpoint.sm` — kept as a literal
-   because CSS media-query conditions cannot reference custom properties
-   (`var()` is not valid inside an @media expression), so this can never
-   actually be token-driven; recorded here so the match isn't lost. */
 @media (max-width: 40rem) {
-  .dbm-playground-controls .docblock-argstable-body {
-    column-count: 1;
+  .dbm-playground-controls-grid {
+    grid-template-columns: 1fr;
   }
 }
 

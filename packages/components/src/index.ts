@@ -22,8 +22,6 @@ export * from "./atoms/FieldError";
 export * from "./atoms/FieldHelperText";
 export * from "./atoms/FieldLabel";
 export * from "./atoms/FocusTrap";
-export * from "./atoms/Grid";
-export * from "./atoms/GridItem";
 export * from "./atoms/Heading";
 export * from "./atoms/Highlight";
 export * from "./atoms/Icon";
@@ -49,3 +47,7 @@ export * from "./atoms/Textarea";
 export * from "./atoms/ThemeProvider";
 export * from "./atoms/Tooltip";
 export * from "./atoms/VisuallyHidden";
+
+export * from "./molecules/Grid";
+export * from "./molecules/GridItem";
+export * from "./molecules/Select";

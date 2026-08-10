@@ -1,0 +1,154 @@
+/* Trigger — mirrors Input.module.css's `.wrapper` chrome (border/radius/
+   focus/error/disabled tokens) so Select and Input read as the same
+   form-field family, sitting side by side in a form. */
+.trigger {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+  transition:
+    border-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  width: 100%;
+}
+
+.trigger:hover:not(:disabled):not(.error) {
+  border-color: var(--dbm-border-strong);
+}
+
+.trigger:focus-visible {
+  border-color: var(--dbm-border-focus);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.trigger.error {
+  border-color: var(--dbm-border-danger);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.trigger [data-placeholder] {
+  color: var(--dbm-text-tertiary);
+}
+
+.icon {
+  color: var(--dbm-text-tertiary);
+  flex-shrink: 0;
+}
+
+/* Sizes — identical scale to Input.module.css so a Select and an Input at
+   the same `size` line up exactly in a shared row. */
+
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+  padding-block: var(--dbm-space-3);
+  padding-inline: var(--dbm-space-4);
+}
+
+/* Dropdown content — shadows are a fixed light/dark primitive pair, not a
+   reactive semantic token (see guidelines/03-token-system-spec.md and
+   ShadowScale.tsx's own comment), so the dark variant is selected via the
+   same `[data-theme$="-dark"]` attribute-selector pattern already used
+   elsewhere in this codebase (e.g. the Foundations Overview page's
+   Shadows-card icon) rather than a token that doesn't exist. */
+.content {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  overflow: hidden;
+  width: var(--radix-select-trigger-width);
+  z-index: var(--dbm-z-index-dropdown);
+}
+
+[data-theme$="-dark"] .content {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.viewport {
+  padding: var(--dbm-space-1);
+}
+
+.scrollButton {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  color: var(--dbm-text-tertiary);
+  cursor: default;
+  display: flex;
+  height: var(--dbm-space-6);
+  justify-content: center;
+}
+
+.scrollUpIcon {
+  transform: rotate(180deg);
+}
+
+.option {
+  align-items: center;
+  border-radius: var(--dbm-radius-sm);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--dbm-font-size-base);
+  justify-content: space-between;
+  outline: none;
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+  user-select: none;
+}
+
+.option[data-highlighted] {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.option[data-state="checked"] {
+  color: var(--dbm-text-brand);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.option[data-disabled] {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+.optionIndicator {
+  color: var(--dbm-icon-brand);
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-inline-start: var(--dbm-space-2);
+}

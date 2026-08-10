@@ -3,7 +3,7 @@ import { Grid } from "../Grid";
 import { GridItem } from "./GridItem";
 
 const meta: Meta<typeof GridItem> = {
-  title: "Atoms/Layout/GridItem",
+  title: "Molecules/Layout/GridItem",
   component: GridItem,
   parameters: { layout: "padded" },
 };

@@ -1,6 +1,7 @@
 import { useOf } from "@storybook/addon-docs/blocks";
 import type { Of } from "@storybook/addon-docs/blocks";
 import type { ReactNode } from "react";
+import { sortEntriesByOrder } from "./sortEntriesByOrder";
 
 interface ArgTypeLike {
   description?: string;
@@ -64,20 +65,10 @@ export function PropertiesTable({ of, order }: { of: Of; order?: string[] }) {
   const resolved = useOf(of, ["meta"]);
   const argTypes =
     resolved.type === "meta" ? resolved.preparedMeta.argTypes : {};
-  const rows = Object.entries(argTypes ?? {}).filter(
+  const filtered = Object.entries(argTypes ?? {}).filter(
     ([, argType]) => !(argType as ArgTypeLike)?.table?.disable,
   );
-
-  if (order) {
-    rows.sort(([a], [b]) => {
-      const aIndex = order.indexOf(a);
-      const bIndex = order.indexOf(b);
-      return (
-        (aIndex === -1 ? order.length : aIndex) -
-        (bIndex === -1 ? order.length : bIndex)
-      );
-    });
-  }
+  const rows = sortEntriesByOrder(filtered, order);
 
   return (
     <table className="dbm-proptable">

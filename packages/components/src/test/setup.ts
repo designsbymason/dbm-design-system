@@ -61,3 +61,13 @@ class IntersectionObserverStub {
 }
 
 vi.stubGlobal("IntersectionObserver", IntersectionObserverStub);
+
+// jsdom implements neither `scrollIntoView` nor the Pointer Capture API —
+// both used by Radix Select (`scrollIntoView` for keyboard-navigated
+// items/scroll buttons, pointer capture for its Trigger's click-to-open
+// handling). No-op/false stubs are enough since jsdom performs no real
+// layout or pointer capture regardless.
+Element.prototype.scrollIntoView = vi.fn();
+Element.prototype.hasPointerCapture = vi.fn(() => false);
+Element.prototype.setPointerCapture = vi.fn();
+Element.prototype.releasePointerCapture = vi.fn();
