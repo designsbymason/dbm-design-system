@@ -83,7 +83,7 @@ the app root, by `@dbm-design-system/tokens/css/*.css`).
     glyph without visibly distorting it. Colors/radii/borders inside these
     pictograms ARE tokenized (`var(--dbm-*)`); only the literal pixel
     dimensions are a deliberate exception, audited and confirmed 2026-08-08. */}
-<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--dbm-space-4)" }}>
+<div className="dbm-card-grid">
 <RelatedCard name="Color" description="Primitive scales + semantic bg/text/border/icon tokens, per theme" href="/?path=/docs/foundations-color--docs">
   <div style={{ display: "flex", gap: "var(--dbm-space-1)" }}>
     <div style={{ width: 20, height: 20, borderRadius: "var(--dbm-radius-xs)", background: "var(--dbm-bg-brand)" }} />

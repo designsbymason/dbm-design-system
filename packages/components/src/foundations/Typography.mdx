@@ -18,7 +18,7 @@ font size, weight, or line-height outside these tokens.
 
 ## Font families
 
-<div style={{ display: "grid", gap: "var(--dbm-space-4)", gridTemplateColumns: "repeat(3, 1fr)" }}>
+<div className="dbm-card-grid">
 <div style={{ background: "var(--dbm-bg-surface)", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)", borderRadius: "var(--dbm-radius-md)", padding: "var(--dbm-space-4)" }}>
   <div style={{ color: "var(--dbm-text-primary)", fontFamily: "var(--dbm-font-family-primary)", fontSize: "var(--dbm-font-size-2xl)", fontWeight: "var(--dbm-font-weight-bold)" }}>
     Nunito
@@ -90,7 +90,7 @@ improvement in heading hierarchy across screen sizes. Resize this browser window
 
 ## Usage guidelines
 
-<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
 - Use `font-size.xs`–`base` for any UI chrome that should stay a stable, comfortable size

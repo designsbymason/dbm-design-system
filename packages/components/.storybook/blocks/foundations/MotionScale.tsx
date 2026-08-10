@@ -60,6 +60,7 @@ export function MotionScale({
         {tokens.map(({ name, usage }) => (
           <div
             key={name}
+            className="dbm-motion-demo-row"
             style={{
               alignItems: "center",
               borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
@@ -68,18 +69,26 @@ export function MotionScale({
               paddingBlock: "var(--dbm-space-3)",
             }}
           >
-            <code style={{ flexShrink: 0, fontSize: "var(--dbm-font-size-xs)", minWidth: "11rem" }}>
-              motion.{dimension}.{name}
-            </code>
-            <span
-              style={{
-                color: "var(--dbm-text-tertiary)",
-                flex: 1,
-                fontSize: "var(--dbm-font-size-sm)",
-              }}
-            >
-              {usage}
-            </span>
+            {/* `code` + `usage` grouped into their own row (2026-08-10) so
+                `.dbm-motion-demo-row`'s mobile media query can stack the
+                animation track below this pair unconditionally, the same
+                fix as `TypeSpecimen`'s row for the identical reason. */}
+            <div style={{ alignItems: "center", display: "flex", flex: 1, gap: "var(--dbm-space-4)", minWidth: 0 }}>
+              <code style={{ flexShrink: 0, fontSize: "var(--dbm-font-size-xs)", minWidth: "11rem" }}>
+                motion.{dimension}.{name}
+              </code>
+              <span
+                style={{
+                  color: "var(--dbm-text-tertiary)",
+                  flex: 1,
+                  fontSize: "var(--dbm-font-size-sm)",
+                  minWidth: 0,
+                  overflowWrap: "break-word",
+                }}
+              >
+                {usage}
+              </span>
+            </div>
             <div
               style={{
                 background: "var(--dbm-bg-subtle)",

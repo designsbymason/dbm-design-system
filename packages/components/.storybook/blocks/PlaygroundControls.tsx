@@ -91,7 +91,14 @@ function ControlField({
   }
 
   return (
-    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-3)" }}>
+    <div
+      style={{
+        alignItems: "center",
+        display: "flex",
+        gap: "var(--dbm-space-3)",
+        minWidth: 0,
+      }}
+    >
       <FieldLabel
         htmlFor={fieldId}
         size="sm"

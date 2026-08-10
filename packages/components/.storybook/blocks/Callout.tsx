@@ -44,10 +44,18 @@ export function Callout({
 }) {
   const config = toneConfig[tone];
   return (
+    // `minWidth: 0` (2026-08-10) — every current usage sits in a 2-column
+    // `1fr 1fr` grid (Do/Don't cards); as a grid item this div's default
+    // `min-width: auto` refused to shrink below its content's intrinsic
+    // width whenever a list item held an unbreakable run of text (e.g.
+    // "Stack/Grid/Container", `/`-separated with no spaces), forcing the
+    // whole card — and the page — wider on a narrow viewport instead of
+    // wrapping. Confirmed live across the 9 doc pages using this pattern.
     <div
       style={{
         background: config.bg,
         borderRadius: "var(--dbm-radius-md)",
+        minWidth: 0,
         padding: "var(--dbm-space-4)",
       }}
     >

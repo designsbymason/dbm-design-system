@@ -14,34 +14,41 @@ import { primitives } from "@dbm-design-system/tokens";
 export function SpacingScale() {
   const entries = Object.entries(primitives.space).filter(([step]) => step !== "px");
   return (
-    <table className="dbm-proptable dbm-tokentable">
-      <thead>
-        <tr>
-          <th>Token</th>
-          <th>Value</th>
-          <th>Preview</th>
-        </tr>
-      </thead>
-      <tbody>
-        {entries.map(([step, value]) => (
-          <tr key={step}>
-            <td>
-              <code>space.{step}</code>
-            </td>
-            <td>{value}</td>
-            <td>
-              <div
-                style={{
-                  background: "var(--dbm-bg-brand)",
-                  borderRadius: "var(--dbm-radius-xs)",
-                  height: "var(--dbm-space-4)",
-                  width: value,
-                }}
-              />
-            </td>
+    // Scroll container (2026-08-10) — same fix as `PropertiesTable`'s:
+    // this table had no bounding box with `overflow-x: auto`, so on a
+    // narrow viewport it (and the largest `space.*` steps' preview bars,
+    // rendered at their literal token width) just overflowed the page
+    // instead of scrolling within its own box.
+    <div style={{ overflowX: "auto" }}>
+      <table className="dbm-proptable dbm-tokentable">
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Preview</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {entries.map(([step, value]) => (
+            <tr key={step}>
+              <td>
+                <code>space.{step}</code>
+              </td>
+              <td>{value}</td>
+              <td>
+                <div
+                  style={{
+                    background: "var(--dbm-bg-brand)",
+                    borderRadius: "var(--dbm-radius-xs)",
+                    height: "var(--dbm-space-4)",
+                    width: value,
+                  }}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

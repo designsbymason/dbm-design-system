@@ -71,50 +71,58 @@ export function PropertiesTable({ of, order }: { of: Of; order?: string[] }) {
   const rows = sortEntriesByOrder(filtered, order);
 
   return (
-    <table className="dbm-proptable">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Value options</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(([name, argType]) => {
-          const at = argType as ArgTypeLike;
-          const defaultSummary = at.table?.defaultValue?.summary;
-          return (
-            <tr key={name}>
-              <td>
-                <code>{name}</code>
-                {at.type?.required && (
-                  <span className="dbm-proptable-required" title="Required">
-                    *
-                  </span>
-                )}
-              </td>
-              <td>
-                <ValueOptions argType={at} />
-              </td>
-              <td>
-                {at.description ? (
-                  renderInline(at.description)
-                ) : (
-                  <span className="dbm-proptable-empty">—</span>
-                )}
-              </td>
-              <td>
-                {defaultSummary ? (
-                  <code>{defaultSummary}</code>
-                ) : (
-                  <span className="dbm-proptable-empty">—</span>
-                )}
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    // Scroll container (2026-08-10) — this table's 4 columns (Value
+    // options can hold several pills, Description holds prose) don't fit
+    // a narrow viewport; without this wrapper the table just overflowed
+    // the whole page instead of scrolling within its own box, confirmed
+    // via `.dbm-proptable`'s parent computing `overflow-x: visible` with
+    // no scroll boundary anywhere above it.
+    <div style={{ overflowX: "auto" }}>
+      <table className="dbm-proptable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Value options</th>
+            <th>Description</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([name, argType]) => {
+            const at = argType as ArgTypeLike;
+            const defaultSummary = at.table?.defaultValue?.summary;
+            return (
+              <tr key={name}>
+                <td>
+                  <code>{name}</code>
+                  {at.type?.required && (
+                    <span className="dbm-proptable-required" title="Required">
+                      *
+                    </span>
+                  )}
+                </td>
+                <td>
+                  <ValueOptions argType={at} />
+                </td>
+                <td>
+                  {at.description ? (
+                    renderInline(at.description)
+                  ) : (
+                    <span className="dbm-proptable-empty">—</span>
+                  )}
+                </td>
+                <td>
+                  {defaultSummary ? (
+                    <code>{defaultSummary}</code>
+                  ) : (
+                    <span className="dbm-proptable-empty">—</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

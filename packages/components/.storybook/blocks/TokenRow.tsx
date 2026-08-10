@@ -22,6 +22,7 @@ export function TokenRow({ token, usage }: { token: string; usage: string }) {
         borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
         display: "flex",
         gap: "var(--dbm-space-3)",
+        minWidth: 0,
         paddingBlock: "var(--dbm-space-2)",
       }}
     >
@@ -38,10 +39,24 @@ export function TokenRow({ token, usage }: { token: string; usage: string }) {
         }}
       />
       <code style={{ flexShrink: 0, minWidth: "11rem" }}>{token}</code>
+      {/* `overflowWrap: "break-word"` + `minWidth: 0` (2026-08-10) —
+          several `usage` strings (e.g. "hover/focus/loading-state
+          transitions") separate words with `/` rather than a space,
+          which isn't a break opportunity by default. `overflow-wrap`
+          alone didn't fix it: as a flex item, this span's default
+          `min-width: auto` computes an "automatic minimum size" from its
+          content that `overflow-wrap` is specifically excluded from —
+          confirmed live (the rule applied, but the span still reported a
+          width wider than its own flex row). `min-width: 0` is required
+          alongside it for the break-word wrapping to actually take
+          effect and let the span shrink on a narrow viewport instead of
+          forcing the whole row wider. */}
       <span
         style={{
           color: "var(--dbm-text-tertiary)",
           fontSize: "var(--dbm-font-size-sm)",
+          minWidth: 0,
+          overflowWrap: "break-word",
         }}
       >
         {usage}

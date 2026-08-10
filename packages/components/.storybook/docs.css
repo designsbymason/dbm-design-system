@@ -98,11 +98,21 @@
   margin-block: var(--dbm-space-6) var(--dbm-space-2);
 }
 
+/* `overflow-wrap: break-word` (2026-08-10) — prose here is
+   markdown-authored, so there's no per-usage control over whether a
+   sentence happens to contain an unbreakable run of text (e.g.
+   "Stack/Grid/Container", `/`-separated with no spaces — not a default
+   break opportunity). Without this, that kind of text refused to wrap on
+   a narrow viewport and forced its container (and often the whole page)
+   wider instead — confirmed live inside `Callout`'s Do/Don't cards, but
+   scoped at the `p`/`li` level so any future prose with the same shape is
+   covered too, not just that one component. */
 .sbdocs-content p,
 .sbdocs-content li {
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-base);
   line-height: var(--dbm-line-height-relaxed);
+  overflow-wrap: break-word;
 }
 
 /* Inline code references (variable/token/prop names in prose) — unified
@@ -134,6 +144,28 @@
    it was authored. `!important` here (the one exception this file's
    header note allows for) makes this rule win unconditionally regardless
    of DOM context. */
+/* `white-space: normal` + `max-width: 100%` + `overflow-wrap: break-word`
+   (2026-08-10) — a long unbroken inline-code string (e.g. a file path
+   like `packages/tokens/src/semantic/{brand}-{mode}.json`) has nowhere
+   else to give, and without all three, this just overflowed the page on
+   a narrow viewport instead of wrapping. Took three layered fixes, each
+   confirmed live rather than assumed:
+   1. `overflow-wrap` alone did nothing — Storybook's own MDX code styling
+      (two separate emotion rules, `.css-mbdbyp :where(li...) code` and
+      the base inline-code class) both set `white-space: nowrap`, which
+      blocks line-breaking outright regardless of `overflow-wrap`.
+   2. `white-space: normal` alone still didn't shrink it — this rule's
+      `display: inline-block` (from the same Storybook rules above)
+      shrink-to-fits to the text's full unwrapped width by default; an
+      unconstrained inline-block doesn't stop growing just because its
+      content *could* wrap.
+   3. `max-width: 100%` is what actually caps it at the containing
+      element's width, forcing the shrink-to-fit box to respect its
+      container and let `white-space`/`overflow-wrap` do their job.
+   `!important` throughout, same justification as every other property on
+   this rule (see this file's header note). Same underlying fix as
+   `.sbdocs-content p`/`li` above, for the identical reason — scoped here
+   too since `<code>` isn't covered by that rule. */
 .sbdocs-content code {
   background: var(--dbm-bg-code) !important;
   border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
@@ -142,8 +174,11 @@
   font-family: var(--dbm-font-family-mono) !important;
   font-size: var(--dbm-font-size-sm) !important;
   font-weight: var(--dbm-font-weight-medium) !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
   padding-block: var(--dbm-space-1) !important;
   padding-inline: var(--dbm-space-2) !important;
+  white-space: normal !important;
 }
 
 .sbdocs-content pre code {
@@ -449,6 +484,93 @@
 @media (max-width: 40rem) {
   .dbm-playground-controls-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Shared 3-column card grid (2026-08-10) — "Related components" on every
+   component doc page (Button/Box/...), "What's covered here" on the
+   Foundations Overview page, "Font families" on the Typography page. All
+   four were hand-rolled as an identical inline
+   `style={{gridTemplateColumns: "repeat(3, 1fr)"}}`, with no responsive
+   behavior at all — confirmed live that a fixed 3-column grid doesn't
+   shrink its items below their own min-content width, so on a narrow
+   viewport the 3rd column's card renders partly off-screen instead of
+   reflowing, and (since nothing bounds it) drags the whole page into
+   horizontal scroll right along with it.
+   `repeat(auto-fit, minmax(13.75rem, 1fr))` replaces the fixed 3-up grid
+   with one that naturally reflows to however many 220px-minimum columns
+   actually fit — 3 columns at this doc site's normal content width, 2 on
+   a narrower one, 1 on a phone — with no media query breakpoint to keep
+   in sync as card content or container width changes elsewhere. */
+.dbm-card-grid {
+  display: grid;
+  gap: var(--dbm-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+}
+
+/* Do/Don't `Callout` pair (2026-08-10) — used on 9 doc pages (every
+   component page's "Usage guidelines", most Foundations pages), always
+   hand-rolled as an identical fixed `"1fr 1fr"` grid. Unlike the 3-up card
+   grid above, two equal `1fr` tracks DO already shrink evenly as the
+   viewport narrows — the actual bug here was `Callout`'s own missing
+   `min-width: 0` (fixed directly in `Callout.tsx`), not the grid — but a
+   fixed 2-up grid still packs each Do/Don't card into an uncomfortably
+   narrow column before that fix's wrapping kicks in, well before a phone
+   viewport actually needs a single column. `auto-fit`/`minmax` gives each
+   card a real minimum (`16rem`, wider than the 3-up card grid's — this
+   content is bulleted lists, not a short label + one line of prose) and
+   lets the pair stack to one column once two of them no longer fit
+   comfortably, rather than only ever squeezing side by side. */
+.dbm-do-dont-grid {
+  display: grid;
+  gap: var(--dbm-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+/* `ColorScaleGrid`'s 11-step primitive-scale row (Color page) — 11 across
+   on wide screens (the intended "read left to right" scale layout), 3 per
+   row below `breakpoint.sm` per explicit direction (2026-08-10): an
+   earlier pass here used horizontal scroll instead, to preserve the
+   50→950 reading order, but wrapping to a fixed 3-column grid on mobile
+   was the actually-wanted result. A literal `3` here (not
+   `auto-fit`/`minmax`, unlike the card grids above) since the ask was
+   specifically "3 per row," not "however many fit." */
+.dbm-color-scale-grid {
+  display: grid;
+  gap: var(--dbm-space-2);
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+}
+
+@media (max-width: 40rem) {
+  .dbm-color-scale-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* `TypeSpecimen`'s per-size row (Typography page's "Fluid type scale") and
+   `MotionScale`'s per-token row (Motion page's Duration/Easing sections) —
+   both pair a compact "meta" group (code name + value, or code name +
+   usage text) with a larger demo (the sample text at its actual size, or
+   the animation track) that only dropped to its own line via `flex-wrap`
+   once it got physically too wide to fit — for `TypeSpecimen` that meant
+   roughly `lg` and up wrapped while `xs`–`md` stayed inline, an
+   inconsistent look across the scale (2026-08-10, explicit direction:
+   every size should wrap, not just the ones forced to). `flex-direction:
+   column` below `breakpoint.sm` makes that unconditional instead of
+   content-dependent; `align-items: flex-start` replaces each row's own
+   `baseline`/`center` cross-axis alignment (meaningless once stacked
+   vertically) — needs `!important` to beat those inline styles, per this
+   file's own stated policy for exactly this kind of collision. */
+.dbm-type-specimen-row,
+.dbm-motion-demo-row {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 40rem) {
+  .dbm-type-specimen-row,
+  .dbm-motion-demo-row {
+    align-items: flex-start !important;
+    flex-direction: column;
   }
 }
 

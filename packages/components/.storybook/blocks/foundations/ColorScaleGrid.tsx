@@ -34,13 +34,13 @@ export function ColorScaleGrid({
       >
         {family}
       </div>
-      <div
-        style={{
-          display: "grid",
-          gap: "var(--dbm-space-2)",
-          gridTemplateColumns: "repeat(11, 1fr)",
-        }}
-      >
+      {/* 11 across on wide screens, wrapping to 3-per-row on mobile
+          (`.dbm-color-scale-grid`'s own media query in docs.css) — tried
+          horizontal scroll first (2026-08-10), reasoning that the
+          left-to-right 50→950 progression shouldn't get broken across
+          rows, but reverted the same day per explicit direction: wrapping
+          reads better on a phone than a hidden-until-you-swipe strip. */}
+      <div className="dbm-color-scale-grid">
         {STEPS.map((step) => (
           <ColorSwatch
             key={step}

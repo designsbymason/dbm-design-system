@@ -12,7 +12,14 @@ import type { IconSize } from "../../../src/atoms/Icon/Icon.types";
 export function IconSizeScale() {
   const entries = Object.entries(primitives["icon-size"]) as [IconSize, string][];
   return (
-    <div style={{ alignItems: "flex-end", display: "flex", gap: "var(--dbm-space-6)" }}>
+    <div
+      style={{
+        alignItems: "flex-end",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "var(--dbm-space-6)",
+      }}
+    >
       {entries.map(([step, value]) => (
         <div
           key={step}

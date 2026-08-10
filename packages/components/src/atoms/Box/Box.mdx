@@ -64,7 +64,7 @@ element with element-specific typed props, and a fully custom React component.
 
 ## Usage guidelines
 
-<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--dbm-space-4)" }}>
+<div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
 - Use `Box` as the escape hatch when no other primitive fits — a one-off wrapper that needs
@@ -134,7 +134,7 @@ this system's conventions.
 
 ## Related components
 
-<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--dbm-space-4)" }}>
+<div className="dbm-card-grid">
 <RelatedCard
   name="Stack"
   description="Flex layout with a token-driven gap, built on Box"
