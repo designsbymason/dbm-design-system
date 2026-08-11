@@ -9,6 +9,9 @@ const config: StorybookConfig = {
   // both core-bundled in Storybook 10 (`storybook/viewport`,
   // `storybook/test`) — no separate addon packages needed for either.
   addons: ["@storybook/addon-a11y", "@storybook/addon-docs"],
+  // Served at the root path, so `./public/logo.svg` becomes `/logo.svg` —
+  // referenced as `brandImage` in theme.ts for the sidebar logo.
+  staticDirs: ["./public"],
   framework: {
     name: "@storybook/react-vite",
     options: {},
