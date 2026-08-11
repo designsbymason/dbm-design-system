@@ -1,5 +1,6 @@
 import { addons } from "storybook/manager-api";
 import { SET_GLOBALS, UPDATE_GLOBALS } from "storybook/internal/core-events";
+import { primitives } from "@dbm-design-system/tokens";
 import { getSemanticTokens, getStorybookTheme } from "./theme";
 
 // Manager UI chrome (sidebar/toolbar/addon panels) runs outside the preview
@@ -111,6 +112,179 @@ function applyGearButtonStyle(brand: string | undefined, mode: string | undefine
   `;
 }
 
+// Fixes a real functional gap, not just a style mismatch: on the mobile
+// bottom-sheet drawer, `a[aria-label="About Storybook"]` (the mobile
+// equivalent of the desktop Settings gear — see `applyGearButtonStyle`
+// above) is a genuine navigation link straight to `?path=/settings/about`,
+// not a popover trigger. Confirmed via DOM inspection at the mobile
+// viewport: `button[aria-label="Settings"]` (the desktop dropdown-menu
+// trigger) has zero instances anywhere in the tree there, not merely a
+// hidden one, and resizing back to desktop width without a full reload
+// still leaves the mobile-only `<a>` in place — this is Storybook's own
+// mobile layout substituting a different, simpler control, not a CSS
+// visibility toggle we can just reverse. So on mobile, tapping the
+// relocated gear jumped straight to the About page instead of showing a
+// menu like desktop does.
+//
+// Desktop's real dropdown has 9 items, several of which (the Show
+// sidebar/toolbar/addons-panel toggles, previous/next component/story
+// navigation) only work through Storybook's internal React `api`, which
+// isn't reachable from this file — `manager.ts` runs as a plain script
+// outside Storybook's component tree, only `storybook/manager-api`'s
+// `addons` singleton is available here. Rather than fight that boundary,
+// this reproduces just the 3 plain-navigation items as a small custom
+// popover (confirmed at explicit user direction to keep this scoped): About
+// your Storybook, Keyboard shortcuts, and Documentation — the same three
+// hrefs the desktop menu itself uses (`./?path=/settings/about`,
+// `./?path=/settings/shortcuts`, and the external
+// `https://storybook.js.org/docs/?renderer=react&ref=ui`, read directly off
+// the live desktop menu's DOM rather than guessed). Desktop's
+// `button[aria-label="Settings"]` is untouched — this menu is only ever
+// wired up to the mobile-only `<a>`.
+let mobileMenuStyleEl: HTMLStyleElement | undefined;
+function applyMobileMenuStyle(brand: string | undefined, mode: string | undefined): void {
+  const tokens = getSemanticTokens(brand, mode);
+  const shadow = primitives.shadow[mode === "dark" ? "dark" : "light"].lg;
+  if (!mobileMenuStyleEl) {
+    mobileMenuStyleEl = document.createElement("style");
+    mobileMenuStyleEl.id = "dbm-mobile-settings-menu-style";
+    document.head.appendChild(mobileMenuStyleEl);
+  }
+  mobileMenuStyleEl.textContent = `
+    #dbm-mobile-settings-menu {
+      background: ${tokens.bg.surface};
+      border: 1px solid ${tokens.border.default};
+      box-shadow: ${shadow};
+    }
+    #dbm-mobile-settings-menu a {
+      color: ${tokens.text.primary};
+    }
+    #dbm-mobile-settings-menu a:hover,
+    #dbm-mobile-settings-menu a:focus-visible {
+      background: ${tokens.bg.subtle};
+    }
+    #dbm-mobile-settings-menu .dbm-mobile-settings-menu-external {
+      color: ${tokens.text.secondary};
+    }
+  `;
+}
+
+// Structural (non-color) styling only — colors come from
+// `applyMobileMenuStyle` above so they stay theme-reactive. Anchored with
+// the same `.sidebar-header`-relative `calc(100% + 16px)` technique the
+// mobile gear itself already uses (see the brand-chrome style block
+// below), offset by its 36px height plus an 8px gap so the menu opens
+// directly under it.
+const mobileMenuLayoutStyleEl = document.createElement("style");
+mobileMenuLayoutStyleEl.id = "dbm-mobile-settings-menu-layout";
+mobileMenuLayoutStyleEl.textContent = `
+  #dbm-mobile-settings-menu {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 16px + 36px + 8px);
+    right: 0;
+    z-index: 20;
+    min-width: 210px;
+    padding: 4px;
+    border-radius: 12px;
+    font-family: "Nunito", system-ui, sans-serif;
+  }
+  #dbm-mobile-settings-menu.dbm-open {
+    display: flex;
+  }
+  #dbm-mobile-settings-menu a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.3;
+    text-decoration: none;
+  }
+`;
+document.head.appendChild(mobileMenuLayoutStyleEl);
+
+/** Finds (or lazily builds) the popover inside the *currently rendered*
+ * `.sidebar-header` — not cached across calls, since React can remount the
+ * drawer's header between opens/closes, which would otherwise leave this
+ * pointing at a detached node the same way the rest of this file avoids
+ * caching direct references to Storybook-owned elements. */
+function getOrCreateMobileMenu(): HTMLDivElement | undefined {
+  const header = document.querySelector(".sidebar-header");
+  if (!header) return undefined;
+  const existing = header.querySelector<HTMLDivElement>("#dbm-mobile-settings-menu");
+  if (existing) return existing;
+
+  const menu = document.createElement("div");
+  menu.id = "dbm-mobile-settings-menu";
+  menu.setAttribute("role", "menu");
+  menu.innerHTML = `
+    <a role="menuitem" href="./?path=/settings/about">About your Storybook</a>
+    <a role="menuitem" href="./?path=/settings/shortcuts">Keyboard shortcuts</a>
+    <a role="menuitem" href="https://storybook.js.org/docs/?renderer=react&ref=ui" target="_blank" rel="noopener noreferrer">Documentation <span class="dbm-mobile-settings-menu-external" aria-hidden="true">↗</span></a>
+  `;
+  header.appendChild(menu);
+  return menu;
+}
+
+function closeMobileMenu(): void {
+  const menu = document.querySelector("#dbm-mobile-settings-menu");
+  menu?.classList.remove("dbm-open");
+  document.querySelector('a[aria-label="About Storybook"]')?.setAttribute("aria-expanded", "false");
+}
+
+function toggleMobileMenu(trigger: Element): void {
+  const menu = getOrCreateMobileMenu();
+  if (!menu) return;
+  const willOpen = !menu.classList.contains("dbm-open");
+  menu.classList.toggle("dbm-open", willOpen);
+  trigger.setAttribute("aria-haspopup", "menu");
+  trigger.setAttribute("aria-expanded", String(willOpen));
+}
+
+// Delegated (not bound to a specific node, for the same remount-safety
+// reason as `getOrCreateMobileMenu`): intercepts taps on the mobile-only
+// gear link and opens the popover instead of letting the real navigation
+// happen, closes on an outside tap or Escape, same as a standard menu.
+//
+// **Capture phase, not bubble** — a first attempt on the bubble phase
+// still navigated straight to the About page every time. Storybook's own
+// click handling for this link lives inside React's delegated listener on
+// its root container (a descendant of `document`, ancestor of the link),
+// and calls its own `preventDefault`/`stopPropagation` as part of doing
+// its client-side route change — which happens *before* a bubble-phase
+// listener on `document` ever sees the event (capture runs
+// `window → document → … → root` first; by the time bubbling would reach
+// `document`, React's own handler already ran and stopped it). Listening
+// on `document` in the capture phase runs before React's root-level
+// handler gets the event at all, so `stopPropagation` here is what
+// actually keeps React's own routing from firing afterward — `preventDefault`
+// alone was not enough.
+document.addEventListener(
+  "click",
+  (event) => {
+    const target = event.target as Element | null;
+    const trigger = target?.closest('a[aria-label="About Storybook"]');
+    if (trigger) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleMobileMenu(trigger);
+      return;
+    }
+    const menu = document.querySelector("#dbm-mobile-settings-menu.dbm-open");
+    if (menu && !menu.contains(target)) {
+      closeMobileMenu();
+    }
+  },
+  { capture: true },
+);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMobileMenu();
+});
+
 // Storybook renders `brandImage` inside a flex anchor that fills the full
 // sidebar-header width but left-aligns its content by default — centers
 // it instead. Targets the anchor by its `title` attribute (set from
@@ -156,14 +330,21 @@ function applyGearButtonStyle(brand: string | undefined, mode: string | undefine
 // other, never both, and `body` is a stable selector root either way.
 //
 // The drawer's own "Close menu" button is enlarged (36px -> 44px box,
-// 14px -> 18px icon, matching proportions) and pinned 8px from the
+// 14px -> 18px icon, matching proportions) and pinned flush to the
 // drawer's own top-right corner — relative to `.sidebar-header` (already
 // `position: relative` above), since that header row is the top of the
 // drawer's own content, not the persistent page toolbar above it.
+//
+// The logo's vertical breathing room is Storybook's own default
+// `padding: 2px 3px` on this same `a[title="DBM Design System"]` anchor
+// (confirmed via computed styles) — widened to 20px top/bottom for a
+// roomier brand row now that the logo is a wide wordmark rather than the
+// old square mark. Left/right stay at Storybook's default 3px; only the
+// vertical value was asked for.
 const brandChromeStyleEl = document.createElement("style");
 brandChromeStyleEl.id = "dbm-brand-chrome-overrides";
 brandChromeStyleEl.textContent = `
-  a[title="DBM Design System"] { justify-content: center; }
+  a[title="DBM Design System"] { justify-content: center; padding-top: 20px; padding-bottom: 20px; }
   .sidebar-header div:has(> a[title="DBM Design System"]) { margin-right: 0; }
   .sidebar-header { position: relative; }
 
@@ -183,8 +364,8 @@ brandChromeStyleEl.textContent = `
 
   button[aria-label="Close menu"] {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 0px;
+    right: 0px;
     width: 44px;
     height: 44px;
   }
@@ -200,6 +381,7 @@ addons.setConfig({
 });
 applyPanelBg(lastBrand, lastMode);
 applyGearButtonStyle(lastBrand, lastMode);
+applyMobileMenuStyle(lastBrand, lastMode);
 
 addons.ready().then((channel) => {
   const applyTheme = (globals?: Record<string, unknown>) => {
@@ -217,6 +399,7 @@ addons.ready().then((channel) => {
     addons.setConfig({ theme: getStorybookTheme(lastBrand, lastMode) });
     applyPanelBg(lastBrand, lastMode);
     applyGearButtonStyle(lastBrand, lastMode);
+    applyMobileMenuStyle(lastBrand, lastMode);
   };
   // Only the first `SET_GLOBALS` is trusted (the real init-time sync) — see
   // the fifth bug above for why every later one is a potentially-stale
