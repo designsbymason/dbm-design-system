@@ -72,8 +72,31 @@ const preview: Preview = {
       // always sorts first within its component group, then the Playground
       // story, then everything else in file order — across different
       // components, alphabetical by title.
+      // Un-annotatable, not just unannotated — this function's own *source
+      // text* is statically extracted and `eval`'d server-side (see the
+      // comment above) as plain JS, before any TypeScript transpilation.
+      // Confirmed two ways this can't be typed, not just assumed:
+      // 1. Real inline type annotations (`(a: {...}, b: {...}) =>`) broke
+      //    `build-storybook` outright (`SyntaxError: Unexpected token ':'`
+      //    in `getStorySortParameter`).
+      // 2. JSDoc (`@param`/`@type`) doesn't error the build, but also
+      //    doesn't satisfy `tsc` — JSDoc-as-types is a `checkJs`-only
+      //    TypeScript feature, not something a real `.tsx` file gets for
+      //    an untyped arrow function, tried and confirmed against this
+      //    project's own TypeScript (5.9.3), not a stray npx-fetched one.
+      // The `@ts-expect-error` below is this function's only option, and
+      // was already implicitly-`any` (silently, since `.storybook` had no
+      // typechecking at all) before `.storybook/tsconfig.json` existed —
+      // not a regression this introduces, just the first time it's visible.
+      // @ts-expect-error — `a`/`b` can't be typed; see comment above
       storySort: (a, b) => {
-        const topLevelGroup = (title) => title.split("/")[0];
+        // `title.split("/")[0]` is `string | undefined` under
+        // `noUncheckedIndexedAccess` — a non-empty `title` always has at
+        // least one segment, so the `?? title` fallback is unreachable in
+        // practice, just satisfying the type. `title` itself can't be
+        // annotated for the same reason `a`/`b` above can't be.
+        // @ts-expect-error — `title` can't be typed; see comment above
+        const topLevelGroup = (title) => title.split("/")[0] ?? title;
         const groupPriority = ["Foundations", "Atoms"];
         const foundationsOrder = [
           "Foundations/Overview",

@@ -38,8 +38,12 @@ function ControlField({
   value: unknown;
   onChange: (value: unknown) => void;
 }) {
-  const controlType =
-    argType.control && argType.control !== false ? argType.control.type : undefined;
+  // `argType.control &&` already truthy-narrows away the `false` member of
+  // `{ type?: string; disable?: boolean } | false` (the only falsy one),
+  // so a further `!== false` check is redundant — and, now that
+  // `.storybook` is type-checked, TS flags it as a comparison that can
+  // never be false (TS2367), not just a style nit.
+  const controlType = argType.control ? argType.control.type : undefined;
   const fieldId = `playground-control-${name}`;
 
   let widget: ReactNode;
@@ -166,7 +170,9 @@ export function PlaygroundControls({
   const argTypes = story.argTypes as Record<string, ArgTypeLike>;
   const filtered = Object.entries(argTypes).filter(([name, argType]) => {
     if (exclude.includes(name)) return false;
-    if (!argType.control || argType.control === false) return false;
+    // Same redundant-comparison fix as `ControlField` above — `!argType.control`
+    // alone already excludes the `false` member.
+    if (!argType.control) return false;
     if (argType.control.disable) return false;
     return true;
   });

@@ -21,7 +21,7 @@ export function ColorScaleGrid({
   family: ColorFamily;
   anchor?: string;
 }) {
-  const scale = primitives.color[family] as Record<string, string>;
+  const scale = primitives.color[family];
   return (
     <div>
       <div

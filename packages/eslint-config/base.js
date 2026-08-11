@@ -6,7 +6,12 @@ import tseslint from "typescript-eslint";
 /** Shared base ESLint flat config for non-React DBM Design System packages. */
 export const base = tseslint.config(
   {
-    ignores: ["dist/**", "coverage/**", ".turbo/**", "node_modules/**"],
+    // `storybook-static/**` added alongside the new `build-storybook` CI
+    // step (see .github/workflows/ci.yml) — Storybook's static build output
+    // is gitignored but wasn't previously excluded from lint, so a local
+    // `pnpm build-storybook` followed by `pnpm lint` fed thousands of lines
+    // of minified/bundled JS into ESLint (confirmed: 21,000+ bogus errors).
+    ignores: ["dist/**", "coverage/**", ".turbo/**", "node_modules/**", "storybook-static/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

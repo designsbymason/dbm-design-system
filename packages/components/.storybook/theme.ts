@@ -41,7 +41,18 @@ type ThemeVars = ReturnType<typeof create>;
 type Brand = "purple" | "emerald";
 type Mode = "light" | "dark";
 
-const SEMANTIC_TOKENS: Record<Brand, Record<Mode, typeof purpleLight>> = {
+/** Recursively widens every literal string leaf (e.g. `"#5548A4"`) to
+ * `string`. Found while adding `.storybook`'s own TypeScript project
+ * (`.storybook/tsconfig.json`) — `purpleLight`/`purpleDark`/`emeraldLight`/
+ * `emeraldDark` are each inferred with their own exact hex literals, so
+ * without this, `typeof purpleLight` only structurally matches purple's
+ * light theme; every other theme object fails to type-check against it
+ * (real, previously-uncaught type errors, not a style nit — this whole
+ * project was never type-checked before that tsconfig existed). */
+type Widen<T> = T extends string ? string : { readonly [K in keyof T]: Widen<T[K]> };
+export type SemanticTokens = Widen<typeof purpleLight>;
+
+const SEMANTIC_TOKENS: Record<Brand, Record<Mode, SemanticTokens>> = {
   purple: { light: purpleLight, dark: purpleDark },
   emerald: { light: emeraldLight, dark: emeraldDark },
 };
@@ -122,6 +133,12 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
  * exports above, adding a `SEMANTIC_TOKENS` entry, and adding it here. */
 export const BRANDS: Brand[] = ["purple", "emerald"];
 const MODES: Mode[] = ["light", "dark"];
+// Explicit defaults rather than `BRANDS[0]`/`MODES[0]` — under
+// `noUncheckedIndexedAccess` (see `tsconfig.base.json`), an array index
+// access is typed `T | undefined` regardless of the array's actual fixed
+// length, so `BRANDS[0]` doesn't satisfy a `Brand`-typed fallback.
+const DEFAULT_BRAND: Brand = "purple";
+const DEFAULT_MODE: Mode = "light";
 
 const registry = Object.fromEntries(
   BRANDS.map((brand) => [
@@ -134,8 +151,8 @@ const registry = Object.fromEntries(
  * or missing value — callers pass raw toolbar-global strings, which are
  * `unknown` as far as the type system is concerned. */
 export function getStorybookTheme(brand?: string, mode?: string): ThemeVars {
-  const resolvedBrand = BRANDS.includes(brand as Brand) ? (brand as Brand) : BRANDS[0];
-  const resolvedMode = MODES.includes(mode as Mode) ? (mode as Mode) : MODES[0];
+  const resolvedBrand = BRANDS.includes(brand as Brand) ? (brand as Brand) : DEFAULT_BRAND;
+  const resolvedMode = MODES.includes(mode as Mode) ? (mode as Mode) : DEFAULT_MODE;
   return registry[resolvedBrand][resolvedMode];
 }
 
@@ -146,8 +163,8 @@ export function getStorybookTheme(brand?: string, mode?: string): ThemeVars {
  * content wrapper, too coarse to target just the panel). `manager.ts`
  * uses this to hand-inject a scoped style override for `#storybook-panel-root`
  * instead of widening `appContentBg` and affecting the Docs wrapper too. */
-export function getSemanticTokens(brand?: string, mode?: string): typeof purpleLight {
-  const resolvedBrand = BRANDS.includes(brand as Brand) ? (brand as Brand) : BRANDS[0];
-  const resolvedMode = MODES.includes(mode as Mode) ? (mode as Mode) : MODES[0];
+export function getSemanticTokens(brand?: string, mode?: string): SemanticTokens {
+  const resolvedBrand = BRANDS.includes(brand as Brand) ? (brand as Brand) : DEFAULT_BRAND;
+  const resolvedMode = MODES.includes(mode as Mode) ? (mode as Mode) : DEFAULT_MODE;
   return SEMANTIC_TOKENS[resolvedBrand][resolvedMode];
 }
