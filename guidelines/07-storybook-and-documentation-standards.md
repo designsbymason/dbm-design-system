@@ -182,6 +182,15 @@ Three standing exceptions, not oversights:
 - **CSS media-query breakpoints** (`docs.css`) — `var()` cannot appear inside an `@media` condition; these stay literal, cross-referenced to the matching `breakpoint.*` token in a comment.
 - **Story-file demo-wrapper container sizing** (`width`/`maxWidth`/`height` on a story's outer wrapper `<div>`, e.g. `maxWidth: "24rem"` around an Input demo) — the `space.*` scale tops out at `space.32` (8rem) and is calibrated for gaps/padding/margins, not arbitrary layout container widths; forcing these onto the nearest token would visibly cramp story layouts. Left as literals — a deliberate scope boundary, not a gap to close later.
 
+## 9. Manager-chrome customizations are version-fragile — re-verify after any Storybook upgrade
+
+`.storybook/manager.ts`'s sidebar/mobile-drawer customizations (brand logo layout, Settings-gear repositioning, the mobile popover, Close-button position, theme-sync via the addons channel) rely on Storybook internals that are not a stable public contract, not the official theming API:
+- `SET_GLOBALS`/`UPDATE_GLOBALS` imported from `storybook/internal/core-events` — the `/internal/` path is explicitly unstable.
+- CSS overrides keyed to `aria-label`/DOM structure discovered by inspecting rendered output (`.sidebar-header`, `button[aria-label="Settings"]`, `a[aria-label="About Storybook"]`, etc.), not documented Storybook API.
+- The mobile popover's capture-phase click interception, which depends on how Storybook currently wires its own click handling.
+
+**After merging any Storybook version bump (Dependabot PR or manual), manually re-verify in the browser, both desktop and mobile viewports, both light/dark:** the brand logo layout, the Settings gear popover (desktop) and its mobile-popover equivalent, the mobile drawer's Close-button position, and Brand/Mode theme-sync across the sidebar/toolbar/panel/Foundations pages. A clean `pnpm install`/build passing is not sufficient evidence these still work — they can silently stop matching without any error.
+
 ## Related documents
 - `03-token-system-spec.md` — the token architecture/values the Foundations pages (§7) present visually; that doc is the source of truth for *why* a value is what it is (contrast checks, anchor colors, build-pipeline decisions), the Foundations pages are the live, browsable *what*
 - `04-component-inventory.md` — the category taxonomy this doc's Storybook titles must match

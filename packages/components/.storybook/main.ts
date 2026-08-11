@@ -18,6 +18,12 @@ const config: StorybookConfig = {
   },
   // esbuild's local-css loader (see tsup.config.ts) is a build-time-only concern;
   // Vite already has native CSS Modules support, so no extra config is needed here.
+  // No paid SaaS / anonymous-usage-phone-home in the build pipeline, per
+  // CLAUDE.md's free/OSS-only + security posture — Storybook otherwise
+  // sends anonymous telemetry on most CLI commands by default.
+  core: {
+    disableTelemetry: true,
+  },
 };
 
 export default config;
