@@ -30,6 +30,7 @@
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "check-storybook-bundle-size": "node scripts/check-storybook-bundle-size.mjs",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots"
   },

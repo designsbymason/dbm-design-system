@@ -40,6 +40,9 @@ jobs:
       - name: Build Storybook
         run: pnpm --filter @dbm-design-system/components build-storybook
 
+      - name: Check Storybook bundle size
+        run: pnpm --filter @dbm-design-system/components check-storybook-bundle-size
+
       - name: Test
         run: pnpm test
 
