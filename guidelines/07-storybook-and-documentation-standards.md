@@ -120,32 +120,36 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category:
 
+**Progress audited 2026-08-12 — this list was never actually updated as work happened, despite its own stated purpose ("mark each done... so a context reset doesn't lose progress"). Real status: 2 of 47 components have a Docs page — Box and Button. Nothing else below, including the rest of Phase A, has been started.** Restated with explicit status markers so the next session doesn't have to re-derive this by checking every `.mdx` file by hand:
+
 **Phase A — template-proving:**
-1. Box
-2. Button
-3. Input
-4. Icon
-5. Text
+1. Box — ✅ done
+2. Button — ✅ done
+3. Input — ⬜ not started
+4. Icon — ⬜ not started
+5. Text — ⬜ not started
 
-**Layout** (remaining): Stack, Grid, GridItem, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix
+**Layout** (⬜ not started): Stack, Grid, GridItem, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix — note `Grid`/`GridItem` are now molecule-tier components (built, see §"Molecules" below), not atoms; kept in this list since they still need the same Docs-page treatment regardless of tier
 
-**Typography** (remaining): Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
+**Typography** (⬜ not started): Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
 
-**Inputs** (remaining): IconButton, CloseButton, Textarea, Checkbox, Switch, FieldLabel, FieldError, FieldHelperText
+**Inputs** (⬜ not started): IconButton, CloseButton, Textarea, Checkbox, Switch, FieldLabel, FieldError, FieldHelperText
 
-**Data Display**: Badge, Tag, Avatar, Skeleton
+**Data Display** (⬜ not started): Badge, Tag, Avatar, Skeleton
 
-**Navigation**: BackToTop
+**Navigation** (⬜ not started): BackToTop
 
-**Feedback**: ProgressBar, ProgressCircle, Spinner
+**Feedback** (⬜ not started): ProgressBar, ProgressCircle, Spinner
 
-**Overlay**: Tooltip, Collapse, Backdrop
+**Overlay** (⬜ not started): Tooltip, Collapse, Backdrop
 
-**Media** (remaining): Image, Indicators
+**Media** (⬜ not started): Image, Indicators
 
-**Utility**: ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly
+**Utility** (⬜ not started): ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly
 
-49 components total. Mark each done here (or reference the tracked task list) as the pass proceeds, so a context reset doesn't lose progress.
+47 atom-tier components total (corrected 2026-08-12 from a prior "49" — see `01-vision-and-goals.md` §13 and `04-component-inventory.md` for the same correction and why). Mark each done here (or reference the tracked task list) as the pass proceeds, so a context reset doesn't lose progress — this note is only useful going forward if it's actually kept current this time.
+
+**Molecules (not originally in this list — added 2026-08-12):** Phase 5 started before this Phase 4.9 pass finished (see `01-vision-and-goals.md` §13). `Grid`, `GridItem`, and `Select` are built with stories/tests but **none have a Docs page yet**. Open sequencing question, not yet decided: fold them into this same processing order (interleaved with the remaining atoms, in whatever order they were built), or treat "finish the atom tier's docs" and "start the molecule tier's docs" as two independently-trackable queues. Whoever picks this back up should decide explicitly rather than guessing.
 
 ## 7. Foundations pages (added 2026-07-27)
 
@@ -190,6 +194,19 @@ Three standing exceptions, not oversights:
 - The mobile popover's capture-phase click interception, which depends on how Storybook currently wires its own click handling.
 
 **After merging any Storybook version bump (Dependabot PR or manual), manually re-verify in the browser, both desktop and mobile viewports, both light/dark:** the brand logo layout, the Settings gear popover (desktop) and its mobile-popover equivalent, the mobile drawer's Close-button position, and Brand/Mode theme-sync across the sidebar/toolbar/panel/Foundations pages. A clean `pnpm install`/build passing is not sufficient evidence these still work — they can silently stop matching without any error.
+
+**Version history:** pinned at `10.5.2` through Phase 4.75/4.9. Bumped to `10.5.7` on 2026-08-12 (`^10.5.6` in `package.json`, resolved to the latest available patch) — the first real exercise of the re-verification checklist above, done in full (both viewports, both brands, both modes, plus the mobile popover added the same week). Nothing broke; the checklist worked as intended.
+
+## 10. CI & build reliability (added 2026-08-12)
+
+Standing infrastructure that didn't exist before this pass — none of it changes what ships in `@dbm-design-system/components`, it's entirely CI/tooling hardening around the Storybook build itself:
+
+- **`pnpm audit` in CI** (`ci.yml`) — previously only run manually/ad hoc (see `02-tech-stack-and-structure.md` §3.1's remediation pattern). Now a standing step on every push/PR.
+- **`pnpm build-storybook` in CI** (`ci.yml`) — the static production build (`storybook-static/`) was never built anywhere before this; the Playwright visual-regression suite (`test:visual`) targets the `storybook dev` dev server, not the static build, so a broken static build could previously ship undetected. Relevant given public Storybook hosting is a Phase 9 goal.
+- **Bundle-size tripwire** (`packages/components/scripts/check-storybook-bundle-size.mjs`, run in CI right after the build step above) — zero new dependencies, checks total `storybook-static/` size and the largest single Vite-bundled chunk under `assets/` against a budget. Deliberately excludes `sb-manager/`/`sb-addons/` (Storybook/addon-owned bundles, not ours to fix) from the per-chunk check. See `06-engineering-standards.md` §4 for how this relates to the still-open per-component bundle-size metric.
+- **`.storybook/**` now type-checked** — previously excluded from TypeScript entirely (`packages/components/tsconfig.json` only ever included `src`). `.storybook/tsconfig.json` (new) + a `typecheck:storybook` script chained onto `lint` closed this. Doing so surfaced several real, previously-invisible type bugs (a theme-object type that didn't actually structurally match all 4 brand/mode themes, a dead unreachable branch in a token-name lookup, `noUncheckedIndexedAccess` catching a couple of unsafe array-index fallbacks) — all fixed, not suppressed. One narrow, explained exception: `preview.tsx`'s `storySort` function can't be given real type annotations at all, confirmed by testing — its source is statically extracted and `eval`'d by Storybook as plain JS before any TypeScript transpilation, and real inline types broke `build-storybook` outright (`SyntaxError: Unexpected token ':'`). Uses a commented `@ts-expect-error` instead.
+- **`storybook-static/**` added to the shared ESLint ignore list** (`packages/eslint-config/base.js`) — found while verifying the bundle-size work: a local `build-storybook` followed by `pnpm lint` fed ~21,000 bogus errors from minified output into ESLint, since the ignore list had never needed to account for this directory existing before.
+- **Storybook telemetry disabled** (`core.disableTelemetry: true` in `main.ts`) — matches the project's free/OSS-only, no-phone-home posture (`CLAUDE.md`).
 
 ## Related documents
 - `03-token-system-spec.md` — the token architecture/values the Foundations pages (§7) present visually; that doc is the source of truth for *why* a value is what it is (contrast checks, anchor colors, build-pipeline decisions), the Foundations pages are the live, browsable *what*

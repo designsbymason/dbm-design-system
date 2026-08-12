@@ -191,11 +191,11 @@ Not individual components, but composed patterns — worth planning for since As
 This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to Astryx-scale coverage rather than trying to build all ~104 at once.
 
 ## Sequencing recommendation for actual build order
-Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 plus every other atom-tier row in this doc are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — 49 atoms total, none left unbuilt:
-1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Grid, AspectRatio, Center, Bleed, Affix)
+Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 (every atom-tier row in this doc, Grid/GridItem excepted — see the note on step 1) are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — **47 atoms total, none left unbuilt** (corrected 2026-08-12; this doc, `01-vision-and-goals.md`, and `07-storybook-and-documentation-standards.md` all previously said "49," which was simply a miscount against this doc's own table — count the atom-tier rows across all 9 categories above and it's 47):
+1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix) — corrected 2026-08-12: Grid was listed here in error; it's molecule-tier per this doc's own Layout table above and is tracked under step 4 instead.
 2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight)
 3. Core atoms (Button, IconButton, CloseButton, Icon, Badge, Tag, Avatar, Input, Textarea, Checkbox, Switch, FieldLabel/FieldError/FieldHelperText, Skeleton, Spinner, ProgressBar, ProgressCircle, Divider, Image, Tooltip, Collapse, Backdrop, BackToTop, Indicators)
-4. Form molecules (FormField, RadioGroup, Select) — Checkbox/Switch/Textarea/Tag already exist as atoms and unlock these
+4. Form molecules (FormField, RadioGroup, Select) plus Grid/GridItem — Checkbox/Switch/Textarea/Tag already exist as atoms and unlock the form ones. **Started 2026-08-09, ahead of the original plan** (this step was meant to follow Phase 4.9's full documentation pass on the atom tier — see `01-vision-and-goals.md` §13 Phase 5 — but began in parallel instead): `Grid`, `GridItem`, and `Select` are built; `FormField`/`RadioGroup` are not yet.
 5. Overlay foundation (Dialog, Popover) — Tooltip/Collapse/Backdrop already exist as atoms and unlock these; Dialog/Popover unlock Drawer, ConfirmDialog, AlertDialog, Menu
 6. Data Display core (Card, Table, DataTable, EmptyState)
 7. Navigation core (Tabs, Breadcrumb, Navbar, Sidebar)

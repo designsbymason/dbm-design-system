@@ -98,7 +98,7 @@ dbm-design-system/
 | Static hosting (docs site + Storybook) | GitHub Pages, or Cloudflare Pages free tier | Both free for public/OSS projects with no usage-based billing risk; GitHub Pages is the simplest since the repo is already on GitHub |
 | Versioning/release | Changesets | OSS; per-package semver, changelog generation, monorepo-aware |
 | Linting/formatting | ESLint + Prettier (shared config package) | OSS; consistency enforced at the workspace level |
-| CI | GitHub Actions | Free tier is generous for public repos (unlimited minutes on public repos); build, test, a11y check, visual regression, changeset release pipeline |
+| CI | GitHub Actions | Free tier is generous for public repos (unlimited minutes on public repos); lint (incl. `.storybook` typecheck), build, `pnpm audit`, `build-storybook` + a bundle-size tripwire, test, visual regression, changeset release pipeline. The audit/`build-storybook`/bundle-size steps were added 2026-08-12 — previously aspirational (see `06-engineering-standards.md` §4 and `07-storybook-and-documentation-standards.md` §10 for what each actually checks) |
 | Security: dependency scanning | GitHub Dependabot | Free, native to GitHub; automated PRs for vulnerable/outdated dependencies |
 | Security: secret scanning | GitHub secret scanning + push protection | Free for public repos; a repo setting, not a dependency — must be enabled at the GitHub repo level |
 | Security: static analysis | GitHub CodeQL | Free for public repos; catches common vulnerability patterns (XSS, injection) in CI |
