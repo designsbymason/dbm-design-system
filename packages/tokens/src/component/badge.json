@@ -1,0 +1,58 @@
+{
+  "badge": {
+    "padding-inline": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "6px",
+        "$description": "Non-dot Badge, size=xs. Increased from 3px to 6px (2026-08-16, at explicit direction) — now equal to sm/md/lg/xl, so padding-inline no longer differs across the scale at all; font-size and diameter (size.* below) are what differentiate sizes now. No home on the primitive space scale (0/4/8/12px) either way. Paired with this size's own recomputed diameter (below) to keep a single wide character (e.g. '%', measured 11.99px at font-xs) still fitting within it: 2×6 + 11.99 = 23.99px."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "6px",
+        "$description": "Non-dot Badge, size=sm. Increased from 4px to 6px (2026-08-16, at explicit direction), now equal to every other size. 2×6 + 11.99 (widest measured character at font-xs) = 23.99px, under sm's recomputed 27px diameter (below)."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "6px",
+        "$description": "Non-dot Badge, size=md. Increased from 4px to 6px (2026-08-16, at explicit direction), now equal to every other size. 2×6 + 13.22 (widest measured character at font-sm) = 25.22px, under md's recomputed 29px diameter (below)."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "6px",
+        "$description": "Non-dot Badge, size=lg. Unchanged — already 6px before xs/sm/md were raised to match it. 2×6 + 13.22 (widest measured character at font-sm) = 25.22px, under lg's 30px diameter."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "6px",
+        "$description": "Non-dot Badge, size=xl. Unchanged — already 6px before xs/sm/md were raised to match it. 2×6 + 15.67 (widest measured character at font-base) = 27.67px, under xl's 34px diameter."
+      }
+    },
+    "size": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "25px",
+        "$description": "Non-dot Badge diameter (height, and min-width for the circle-when-one-character/pill-when-more mechanism — see Badge.module.css's .size* rules), size=xs. Recomputed (2026-08-16) after padding-inline.xs rose from 3px to 6px, at explicit direction — the old 20px diameter no longer had room for a wide character at the new padding (2×6+11.99=23.99 > 20, would have broken the circle shape). 25px restores real margin: 23.99px required, ~1px of margin under 25px. Widest character measured directly in real Chrome rendering of Nunito 600, not estimated."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "27px",
+        "$description": "Non-dot Badge diameter, size=sm. Recomputed (2026-08-16) after padding-inline.sm rose from 4px to 6px. Required: 2×6 + 11.99 (widest measured character at font-xs) = 23.99px — identical requirement to xs, since both now share the same padding-inline and font-size; sized two steps above xs (27 vs 25) purely to keep the two sizes visually distinct despite that shared requirement. ~3px of margin under 27px."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "29px",
+        "$description": "Non-dot Badge diameter, size=md. Recomputed (2026-08-16) after padding-inline.md rose from 4px to 6px. Required: 2×6 + 13.22 (widest measured character at font-sm) = 25.22px. Sized to stay strictly below lg's own (unchanged) 30px diameter while clearing its own requirement with real margin (~3.8px)."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "30px",
+        "$description": "Non-dot Badge diameter, size=lg. Unchanged — lg's own padding-inline didn't change this round. 2×6 (this size's padding-inline) + 13.22 (widest measured character at font-sm) = 25.22px, ~4.8px of margin under 30px."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "34px",
+        "$description": "Non-dot Badge diameter, size=xl. Unchanged — xl's own padding-inline didn't change this round. 2×6 (this size's padding-inline) + 15.67 (widest measured character at font-base) = 27.67px, ~6.3px of margin under 34px."
+      }
+    }
+  }
+}

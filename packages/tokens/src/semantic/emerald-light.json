@@ -38,6 +38,11 @@
       "$value": "{color.emerald.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses brand-subtle's own pre-2026-07-27 value (emerald.100), same pattern as purple-light.json's bg.brand-subtle-hover. text.link (emerald.700) on emerald.100 = 5.37:1, comfortably passes AA."
     },
+    "brand-indicator": {
+      "$type": "color",
+      "$value": "{color.emerald.700}",
+      "$description": "New token (2026-08-16), found adding a `brand` tone to Badge — for non-text graphical status indicators. Reuses bg.brand's own light value directly (emerald.700 vs bg.surface = 6.08:1) since that already clears the 3:1 non-text floor comfortably. Dark theme needs a different value (emerald.400, 4.63:1) — see that theme's own description for why bg.brand's own dark value (emerald.500) only manages 3.41:1, thinner than desired for a dedicated indicator. Brand-specific (unlike the shared danger/warning/success/info-indicator tokens), since brand color itself varies per theme."
+    },
     "danger": {
       "$type": "color",
       "$value": "{color.red.600}"
@@ -55,6 +60,11 @@
       "$type": "color",
       "$value": "{color.red.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses danger-subtle's own pre-2026-07-27 value (red.100), same pattern as bg.brand-subtle-hover. text.danger (red.700) on red.100 = 6.43:1, comfortably passes AA. Shared across both brand themes, matching danger-subtle's own brand-independence."
+    },
+    "danger-indicator": {
+      "$type": "color",
+      "$value": "{color.red.500}",
+      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators (a small solid dot with no text), distinct from bg.danger (red.600), which is only verified as a background *for text* (white/gray.950 on top), a different and less strict pairing than a small graphic judged directly against bg.surface under WCAG 1.4.11's 3:1 non-text floor. red.500 vs bg.surface (white) = 3.48:1. Dark theme uses red.400 instead (4.13:1) — see that theme's own description for why bg.danger's own dark value doesn't clear this floor. Shared across both brand themes, matching every other status-tone token's brand-independence."
     },
     "warning": {
       "$type": "color",
@@ -74,6 +84,11 @@
       "$type": "color",
       "$value": "{color.amber.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses warning-subtle's own pre-2026-07-27 value (amber.100), same pattern as bg.brand-subtle-hover. text.warning (amber.800) on amber.100 = 8.90:1, comfortably passes AA. Shared across both brand themes, matching warning-subtle's own brand-independence."
+    },
+    "warning-indicator": {
+      "$type": "color",
+      "$value": "{color.amber.500}",
+      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators, distinct from bg.warning (amber.600), which is only verified as a background *for text*. amber.500 vs bg.surface (white) = 3.31:1. Dark theme uses amber.400 instead (4.31:1) — see that theme's own description for why bg.warning's own dark value only barely clears this floor. Shared across both brand themes, matching every other status-tone token's brand-independence."
     },
     "success": {
       "$type": "color",
@@ -95,6 +110,11 @@
       "$value": "{color.green.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses success-subtle's own pre-2026-07-27 value (green.100), same pattern as bg.brand-subtle-hover. text.success (green.800) on green.100 = 8.42:1, comfortably passes AA. Shared across both brand themes, matching success-subtle's own brand-independence."
     },
+    "success-indicator": {
+      "$type": "color",
+      "$value": "{color.green.500}",
+      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators, distinct from bg.success (green.700), which is only verified as a background *for text*. green.500 vs bg.surface (white) = 3.07:1 — the tightest margin of the four indicator tokens, but still clears the 3:1 floor (the same primitive step border.success already uses for the identical reason, Phase 15). Dark theme uses green.400 instead (4.57:1) — see that theme's own description for why bg.success's own dark value only barely clears this floor. Shared across both brand themes, matching every other status-tone token's brand-independence."
+    },
     "info": {
       "$type": "color",
       "$value": "{color.blue.600}"
@@ -114,10 +134,15 @@
       "$value": "{color.blue.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses info-subtle's own pre-2026-07-27 value (blue.100), same pattern as bg.brand-subtle-hover. text.info (blue.700) on blue.100 = 6.10:1, comfortably passes AA. Shared across both brand themes, matching info-subtle's own brand-independence."
     },
+    "info-indicator": {
+      "$type": "color",
+      "$value": "{color.blue.500}",
+      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators, distinct from bg.info (blue.600), which is only verified as a background *for text*. blue.500 vs bg.surface (white) = 3.26:1. Dark theme uses blue.400 instead (4.35:1) — see that theme's own description for why bg.info's own dark value only barely clears this floor. Shared across both brand themes, matching every other status-tone token's brand-independence."
+    },
     "neutral": {
       "$type": "color",
       "$value": "{color.gray.500}",
-      "$description": "Fifth status-tone fill, for neutral/offline-style indicators (e.g. Avatar's offline status dot). gray.500 on bg.surface: 3.25:1 light / 4.34:1 dark, both pass WCAG 1.4.11 non-text contrast (3:1) — re-verified 2026-07-18 (Phase 4, OKLCH regen), shared across all 4 themes since gray.500 uniquely satisfies both."
+      "$description": "Fifth status-tone fill, for neutral/offline-style indicators (e.g. Avatar's offline status dot). gray.500 on bg.surface: 3.25:1 light / 3.10:1 dark, both pass WCAG 1.4.11 non-text contrast (3:1) — re-verified 2026-07-18 (Phase 4, OKLCH regen), shared across all 4 themes since gray.500 uniquely satisfies both. (Dark figure corrected 2026-08-16 — the previously-recorded 4.34:1 was gray.400's own contrast against this same surface, not gray.500's; the token's actual value was never wrong, only this description's cited number. Found while adding bg.danger/warning/success/info-indicator, which needed the same gray.400-vs-gray.500 distinction checked carefully.)"
     },
     "neutral-strong": {
       "$type": "color",

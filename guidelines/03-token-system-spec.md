@@ -153,6 +153,30 @@ All comparably subtle to `border.brand`'s own pairings — deliberately, not a g
 
 All clear the 3:1 floor — `border.success`'s light value is the tightest at 3.07:1. Not yet consumed by any shipped component; added to complete the token set ahead of a future warning/success/info-state form control, same "add the token layer ahead of its specific consumer" precedent as `bg.code`/`text.code`/`border.code` (Phase 8). Also reordered every semantic `border.*` block (all 4 theme JSON files) and `Color.mdx`'s matching array to group each family's own base token with its own `-subtle` variant (`danger`, `danger-subtle`, `warning`, `warning-subtle`, ...) rather than by when each was added — see `07-storybook-and-documentation-standards.md` §7's order-check note for the full incident.
 
+**Phase 16 (`bg.{danger,warning,success,info}-indicator` added, 2026-08-16 — found during Badge's atom review):** Badge's `dot` mode (a small solid graphic with no text) was using `variant="subtle"`'s pastel background regardless of tone — measured directly against `bg.surface`, those `-subtle` tints come out around 1.0–1.8:1, nowhere near WCAG 1.4.11's 3:1 non-text floor, since they were only ever verified as a background *for text* sitting on top of them. Switching the dot to reuse the existing solid `bg.danger`/`bg.warning`/`bg.success`/`bg.info` fills directly (the obvious next choice) turned out not to be safe either once actually measured against `bg.surface` as a standalone graphic rather than as a text-host:
+
+| Token | Light (vs white) | Dark (vs gray.800) |
+|---|---|---|
+| `bg.danger` (existing) | red.600 = 5.10:1 | red.500 = **2.90:1 — fails** |
+| `bg.warning` (existing) | amber.600 = 4.78:1 | amber.500 = 3.05:1 — barely clears it |
+| `bg.success` (existing) | green.700 = 6.50:1 | green.500 = 3.28:1 — thin |
+| `bg.info` (existing) | blue.600 = 4.71:1 | blue.500 = 3.09:1 — barely clears it |
+
+Light mode was fine across the board; dark mode wasn't — `bg.danger` fails the floor outright, the rest pass with almost no margin. Rather than mutate those existing, already-verified (for their real purpose) tokens and risk the shared consumers that depend on their current value, added four new tokens at the same scale step `border.{warning,success,info}` already established in Phase 15 (`.500` light / `.400` dark — one step lighter in dark, this system's standard "brighten for the harder-to-see case" direction):
+
+| Token | Light (vs white) | Dark (vs gray.800) |
+|---|---|---|
+| `bg.danger-indicator` | red.500 = 3.48:1 | red.400 = 4.13:1 |
+| `bg.warning-indicator` | amber.500 = 3.31:1 | amber.400 = 4.31:1 |
+| `bg.success-indicator` | green.500 = 3.07:1 | green.400 = 4.57:1 |
+| `bg.info-indicator` | blue.500 = 3.26:1 | blue.400 = 4.35:1 |
+
+All clear the 3:1 floor — `bg.success-indicator`'s light value is the tightest at 3.07:1 (the same primitive step `border.success` already uses for the identical reason). No new neutral token was needed: `bg.neutral` (Phase 3) already solves this exact problem for the neutral/offline case, and Badge's neutral dot reuses it directly. `Color.mdx` updated with all four, positioned immediately after each family's own existing entries (matching the semantic JSON's own key order, per Phase 15's ordering rule).
+
+Same day, applying this same lens to Avatar's already-finalized status dot (`online`/`busy`/`away`) found it had the identical latent bug — it was reusing `bg.success`/`bg.danger`/`bg.warning` directly, the exact tokens shown failing/barely-passing above (`offline` already used `bg.neutral`, unaffected). Fixed by switching those three to the new `-indicator` tokens — a narrow, user-authorized fix to a finalized component, not a full review reopening.
+
+Also corrected while re-deriving these numbers: `bg.neutral`'s own `$description` had cited "4.34:1 dark" for years — that figure was actually `gray.400`'s contrast against `bg.surface`, not `gray.500`'s (the token's real value, 3.10:1 dark). The token itself was never wrong, only the number recorded in its description. Corrected across all 4 theme files.
+
 ## Multi-theme structure going forward
 
 Adding a third brand theme later = one more pair of semantic JSON files (`{brand}-light.json`, `{brand}-dark.json`) referencing a new primitive color scale, following the exact same token names as the existing two. No changes needed to component code, since components should only ever reference semantic tokens, never primitives directly.

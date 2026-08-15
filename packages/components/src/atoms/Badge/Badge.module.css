@@ -2,14 +2,75 @@
   align-items: center;
   border-radius: var(--dbm-radius-full);
   display: inline-flex;
+  justify-content: center;
   font-family: var(--dbm-font-family-primary);
-  font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-semibold);
-  gap: var(--dbm-space-1);
   line-height: var(--dbm-line-height-tight);
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-2);
   white-space: nowrap;
+}
+
+/*
+ * Sizes (text/count content). Fourth revision (2026-08-16, at explicit
+ * direction): the prior revision picked padding-inline/height from the
+ * *primitive* space scale (4/8/12px steps) and sized `min-width` against
+ * an *estimated* narrow-digit glyph width — both wrong. A real digit like
+ * "9" fit fine, but a wide single character ("%", "W") measured 30-50%
+ * wider in real Chrome rendering of Nunito 600, so the primitive scale's
+ * coarse 4px padding jumps left no room to absorb that at xs/sm/md, and
+ * those sizes rendered as pills even for one character. Padding-inline
+ * and the height/min-width pair now come from dedicated component-layer
+ * tokens (`component/badge.json`) sized against *measured* widest-
+ * character widths (not estimated) with real margin, following the same
+ * "no home on the primitive scale" precedent as Avatar's `avatar.size.*`
+ * — see each token's own $description for the exact numbers. The
+ * font-size/padding-inline *alternation* rule from the previous revision
+ * is unchanged: whichever of the two stays flat between two adjacent
+ * steps, the other one changes, so every step-up is visually driven by
+ * exactly one of them. `min-width` is what gives a single character its
+ * circular shape: with width and height forced equal, `.root`'s
+ * radius-full makes a perfect circle regardless of font-size. Content
+ * wider than that (2+ characters) naturally pushes width past
+ * `min-width` via padding-inline + the text's own width, elongating into
+ * a pill — `height` stays fixed either way, only width is ever flexible.
+ */
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  padding-inline: var(--dbm-badge-padding-inline-xs);
+  height: var(--dbm-badge-size-xs);
+  min-width: var(--dbm-badge-size-xs);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-xs);
+  padding-inline: var(--dbm-badge-padding-inline-sm);
+  height: var(--dbm-badge-size-sm);
+  min-width: var(--dbm-badge-size-sm);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-sm);
+  padding-inline: var(--dbm-badge-padding-inline-md);
+  height: var(--dbm-badge-size-md);
+  min-width: var(--dbm-badge-size-md);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-sm);
+  padding-inline: var(--dbm-badge-padding-inline-lg);
+  height: var(--dbm-badge-size-lg);
+  min-width: var(--dbm-badge-size-lg);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-base);
+  padding-inline: var(--dbm-badge-padding-inline-xl);
+  height: var(--dbm-badge-size-xl);
+  min-width: var(--dbm-badge-size-xl);
+}
+
+.subtleBrand {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
 }
 
 .subtleNeutral {
@@ -35,6 +96,11 @@
 .subtleDanger {
   background-color: var(--dbm-bg-danger-subtle);
   color: var(--dbm-text-danger);
+}
+
+.solidBrand {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
 }
 
 .solidNeutral {
@@ -63,8 +129,162 @@
 }
 
 .dot {
-  width: var(--dbm-space-2);
-  height: var(--dbm-space-2);
   min-width: 0;
   padding: 0;
+}
+
+/* Sizes (dot mode) — dot's own diameter per size step. A genuine 5-step
+   ladder (revised 2026-08-16, at explicit direction — an earlier 3-tier
+   version deliberately shared one diameter across xs/sm and another
+   across md/lg, on the reasoning that a dot has no text to size around;
+   in practice that read as sizes not changing at all, so every step now
+   gets its own distinct diameter instead). */
+.dotSizeXs {
+  width: var(--dbm-space-1);
+  height: var(--dbm-space-1);
+}
+
+.dotSizeSm {
+  width: var(--dbm-space-2);
+  height: var(--dbm-space-2);
+}
+
+.dotSizeMd {
+  width: var(--dbm-space-3);
+  height: var(--dbm-space-3);
+}
+
+.dotSizeLg {
+  width: var(--dbm-space-4);
+  height: var(--dbm-space-4);
+}
+
+.dotSizeXl {
+  width: var(--dbm-space-5);
+  height: var(--dbm-space-5);
+}
+
+/*
+ * dot's fill always uses the *-indicator tokens (or bg.neutral, its own
+ * established equivalent), never classFor[variant][tone] — the "subtle"
+ * variant's pastel tints are only ever verified as a background *for
+ * text*, not as a small standalone graphic. Measured directly against
+ * bg.surface, every -subtle token comes out around ~1.0-1.8:1, nowhere
+ * near WCAG 1.4.11's 3:1 non-text floor a dot (no text to lean on) needs.
+ * See guidelines/03-token-system-spec.md's contrast log for the numbers.
+ */
+.dotBrand {
+  background-color: var(--dbm-bg-brand-indicator);
+}
+
+.dotNeutral {
+  background-color: var(--dbm-bg-neutral);
+}
+
+.dotInfo {
+  background-color: var(--dbm-bg-info-indicator);
+}
+
+.dotSuccess {
+  background-color: var(--dbm-bg-success-indicator);
+}
+
+.dotWarning {
+  background-color: var(--dbm-bg-warning-indicator);
+}
+
+.dotDanger {
+  background-color: var(--dbm-bg-danger-indicator);
+}
+
+/*
+ * Overlay/positioning mode (the "notification dot on a bell icon" pattern
+ * MUI/Ant Design ship as their primary Badge use case — flagged as a gap
+ * against those systems). Only rendered when the `anchor` prop is set;
+ * the plain inline-label mode above is completely unaffected otherwise.
+ */
+.anchorWrapper {
+  display: inline-flex;
+  position: relative;
+}
+
+.positioned {
+  /* Overridden below by .dot (a smaller, no-text dot can tuck in further
+     without looking like it's swallowing the anchor's corner) and by
+     .overlapCircular (independently, for round anchors). Referenced by
+     every .position* rule's own top/right/bottom/left rather than
+     hardcoded per rule, so all four combinations only need to vary along
+     one shared custom property rather than four separate rule sets.
+     Fifth revision (2026-08-16, at explicit direction): moved inward
+     again, from flush (0) to space-1 (4px) — now numerically the same as
+     .dot's own inset just below. The two are separate rules for
+     independent tuning, not because they're required to differ; at this
+     depth they read fine at the same value. */
+  --badge-anchor-inset: var(--dbm-space-1);
+  position: absolute;
+  /* Same ring technique as Avatar's status dot (Avatar.module.css's
+     .status) — visually separates the badge from whatever it's
+     overlapping, using the current surface color so it "cuts into" any
+     background (a photo, a colored icon) it happens to sit on. */
+  border: var(--dbm-border-width-2) solid var(--dbm-bg-surface);
+}
+
+/* A dot can sit further into the anchor's corner than a text/count badge
+   — it's much smaller and has no readable content to protect, whereas a
+   bigger pill tucked in the same amount starts visually overlapping the
+   anchor's own content (2026-08-16, at explicit direction: the shared
+   space-1 inset introduced the same day looked right for the dot but too
+   tight for the non-dot case). */
+.positioned.dot {
+  --badge-anchor-inset: var(--dbm-space-1);
+}
+
+/* A circular anchor (e.g. an Avatar) needs the badge tucked in further
+   than a rectangular one, or it visually overhangs past the circle's own
+   silhouette — same distinction MUI's `overlap` prop makes. Mirrors the
+   dot/non-dot split above, one step up in both cases. Moved inward a
+   third time (2026-08-16, at explicit direction), from space-1 (4px) to
+   space-2 (8px) — now numerically the same as .overlapCircular.dot just
+   below, for the same reason .positioned's own inset above now matches
+   .dot: separate rules for independent tuning, not a required gap. */
+.overlapCircular {
+  --badge-anchor-inset: var(--dbm-space-2);
+}
+
+/* Moved outward (2026-08-16, at explicit direction) from space-2 (8px)
+   to space-1 (4px) — same as .positioned.dot above (dot + rectangular)
+   — then nudged back inward twice the same day: first to space-1 +
+   space-px (5px), then to space-1 + 2×space-px (6px). No single
+   primitive token sits between space-1 (4px) and space-2 (8px), so this
+   combines two real tokens via calc() rather than hardcoding a literal
+   "6px" — same technique already used for `component/badge.json`'s own
+   non-dot sizing. Left unequal to .overlapCircular's own non-dot value
+   above on purpose: this round only asked for the dot case to move, not
+   the non-dot one. */
+.overlapCircular.dot {
+  --badge-anchor-inset: calc(var(--dbm-space-1) + var(--dbm-space-px) * 2);
+}
+
+.positionTopRight {
+  top: var(--badge-anchor-inset);
+  right: var(--badge-anchor-inset);
+  transform: translate(50%, -50%);
+}
+
+.positionTopLeft {
+  top: var(--badge-anchor-inset);
+  left: var(--badge-anchor-inset);
+  transform: translate(-50%, -50%);
+}
+
+.positionBottomRight {
+  bottom: var(--badge-anchor-inset);
+  right: var(--badge-anchor-inset);
+  transform: translate(50%, 50%);
+}
+
+.positionBottomLeft {
+  bottom: var(--badge-anchor-inset);
+  left: var(--badge-anchor-inset);
+  transform: translate(-50%, 50%);
 }
