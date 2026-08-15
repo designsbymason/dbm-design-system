@@ -229,7 +229,7 @@
     "brand": {
       "$type": "color",
       "$value": "{color.purple.100}",
-      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from purple.500). purple.100 on white is only 1.14:1, well below the 3:1 WCAG 1.4.11 non-text floor — deliberately accepted, since this token is for decorative UI accents rather than a border that identifies a component/state boundary (which is what 1.4.11 actually governs; border.focus/border.danger remain contrast-verified since those ARE state-identifying). Literal brand.100 in every theme, unlike border.focus's per-theme step selection."
+      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from purple.500). purple.100 on white is only 1.14:1, well below the 3:1 WCAG 1.4.11 non-text floor — deliberately accepted, since this token is for decorative UI accents rather than a border that identifies a component/state boundary (which is what 1.4.11 actually governs; border.focus/border.danger remain contrast-verified since those ARE state-identifying). No longer literal across every theme as of 2026-08-16 — dark mode moved to purple.900 (see that file's own description) so each mode gets its own similarly-subtle contrast ratio instead of sharing one literal value that read very differently against each mode's background."
     },
     "danger": {
       "$type": "color",

@@ -91,6 +91,16 @@
   border: var(--dbm-border-width-1) solid var(--dbm-border-default);
   border-radius: var(--dbm-radius-md);
   box-shadow: var(--dbm-shadow-light-md);
+  /* Radix renders this in a `Portal` appended to `document.body`, outside
+     `.trigger`'s own tree — so it doesn't inherit font-family from
+     anywhere a consuming app happens to set it, unlike `.trigger` itself,
+     which sits inline and picks this up incidentally even without its own
+     declaration. Set explicitly here (inherited by `.option` and the
+     scroll buttons below) rather than relying on document-level styling
+     this component can't assume exists. Confirmed live, 2026-08-16: the
+     dropdown options rendered in the browser's default font, not Nunito,
+     until this was added. */
+  font-family: var(--dbm-font-family-primary);
   overflow: hidden;
   width: var(--radix-select-trigger-width);
   z-index: var(--dbm-z-index-dropdown);

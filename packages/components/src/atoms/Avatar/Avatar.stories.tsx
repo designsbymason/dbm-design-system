@@ -16,15 +16,13 @@ const meta: Meta<typeof Avatar> = {
   // that omitting them lets Storybook fall back to appending them in its
   // own order instead.
   //
-  // `control: false` (`as`, `onError`, `id`, `className`, `style`,
-  // `data-testid`) marks props that genuinely can't be meaningfully driven
-  // from this panel — a function, an element-type reference (`Stack`/
-  // `Container`'s own stories don't expose their `as` as a control
-  // either), or a value (DOM id/CSS class/inline style/test hook) that
-  // only means something wired up in real consuming code, not in an
-  // isolated Storybook canvas. These render as "-" instead of an inert
-  // "Set string"/"Set object" placeholder. Matches Button's established
-  // precedent for the native-prop subset of this list.
+  // `control: false` (`onError`, `id`, `className`, `style`, `data-testid`)
+  // marks props that genuinely can't be meaningfully driven from this
+  // panel — a function, or a value (DOM id/CSS class/inline style/test
+  // hook) that only means something wired up in real consuming code, not
+  // in an isolated Storybook canvas. These render as "-" instead of an
+  // inert "Set string"/"Set object" placeholder. Matches Button's
+  // established precedent for the native-prop subset of this list.
   // Every entry also gets an explicit `description` — Storybook's docgen
   // extracts several of these (native/redeclared props especially) with no
   // description text at all even though the row itself renders, which the
@@ -33,8 +31,19 @@ const meta: Meta<typeof Avatar> = {
   // §4 item 3 and §5's checklist). Condensed from AvatarProps' own JSDoc in
   // Avatar.types.ts, not re-derived independently.
   argTypes: {
+    // Unlike Stack/Container's own `as` (a pure semantic-tag swap, visually
+    // identical either way — those stay `control: false`), Avatar's `as`
+    // toggles genuinely different *behavior* (interactive vs. decorative:
+    // hover/focus/`disabled` only apply once `as` is set), so making it
+    // interactive here actually demonstrates something (2026-08-16). A
+    // curated `select` — `span`/`button`, the two variants Avatar's own
+    // stories actually build and test — not the full `ElementType`, which
+    // also accepts arbitrary component references a control can't
+    // represent anyway (same reasoning as `icon`/`trailingIcon`'s curated
+    // mapping on Button, rather than exposing the real prop type).
     as: {
-      control: false,
+      control: "select",
+      options: ["span", "button"],
       description:
         'The HTML element (or component) to render as — e.g. `as="button"` to make the avatar an interactive trigger, keeping its own generated content exactly as-is.',
     },
@@ -142,6 +151,7 @@ const meta: Meta<typeof Avatar> = {
   // value, same for `colorful`'s `boolean` control (unlike a bare
   // inferred boolean control, which does need one — see `colorful` below).
   args: {
+    as: "span",
     src: "",
     alt: "Jane Doe",
     onError: fn(),

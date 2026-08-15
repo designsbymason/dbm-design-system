@@ -6,7 +6,14 @@
  * own stable classes; h2/p/code/pre have no stable classes of their own
  * (Storybook styles them via CSS-in-JS), so those are scoped by tag
  * instead. `!important` is used only where Storybook's own emotion-
- * injected styles would otherwise win on specificity.
+ * injected styles would otherwise win on specificity — verify this
+ * per-property (toggle its priority via the CSSOM, compare
+ * `getComputedStyle` before/after) rather than assuming a whole rule
+ * needs it uniformly just because some of its properties do. **Audited
+ * 2026-08-16:** 9 of the file's 36 `!important` declarations turned out
+ * to be dead weight — never actually contested, just added alongside a
+ * rule's other, genuinely-necessary properties without individual
+ * verification. Trimmed; see each affected rule's own comment.
  */
 
 /* `padding-block-end: 60vh` (2026-08-08) is extra bottom whitespace so a
@@ -131,25 +138,24 @@
    rationale, including why `text.secondary` — not a dedicated `text.code`
    — is safe to use here now that the background is reactive).
 
-   `!important` on every property (2026-07-27, still required): Storybook's
-   own MDX renderer ships a same-specificity emotion rule for backtick-code
-   inside markdown prose (`:where(p...) code`, specificity tied with
-   `.sbdocs-content code`) that's injected after this stylesheet, so it
-   was silently winning the cascade tie for any inline code written as
-   markdown rather than a literal JSX `<code>` element — confirmed via
+   `!important` (2026-07-27; audited and trimmed 2026-08-16 — see below):
+   Storybook's own MDX renderer ships a same-specificity emotion rule for
+   backtick-code inside markdown prose (`:where(p...) code`, specificity
+   tied with `.sbdocs-content code`) that's injected after this stylesheet,
+   so it was silently winning the cascade tie for any inline code written
+   as markdown rather than a literal JSX `<code>` element — confirmed via
    the browser's matched-rules list, not assumed. JSX-authored `<code>`
    (TokenRow, ColorSwatch hex sublabels, etc.) was unaffected since
    Storybook's selector only matches code nested in a `<p>`, but that left
    two different-looking "code" styles on the same page depending on how
-   it was authored. `!important` here (the one exception this file's
-   header note allows for) makes this rule win unconditionally regardless
-   of DOM context. */
+   it was authored. */
 /* `white-space: normal` + `max-width: 100%` + `overflow-wrap: break-word`
    (2026-08-10) — a long unbroken inline-code string (e.g. a file path
    like `packages/tokens/src/semantic/{brand}-{mode}.json`) has nowhere
-   else to give, and without all three, this just overflowed the page on
-   a narrow viewport instead of wrapping. Took three layered fixes, each
-   confirmed live rather than assumed:
+   else to give, and without all three *properties set* (see the
+   2026-08-16 note below on which of them actually need to be *important*),
+   this just overflowed the page on a narrow viewport instead of wrapping.
+   Three layered fixes, each confirmed live rather than assumed:
    1. `overflow-wrap` alone did nothing — Storybook's own MDX code styling
       (two separate emotion rules, `.css-mbdbyp :where(li...) code` and
       the base inline-code class) both set `white-space: nowrap`, which
@@ -162,32 +168,60 @@
    3. `max-width: 100%` is what actually caps it at the containing
       element's width, forcing the shrink-to-fit box to respect its
       container and let `white-space`/`overflow-wrap` do their job.
-   `!important` throughout, same justification as every other property on
-   this rule (see this file's header note). Same underlying fix as
-   `.sbdocs-content p`/`li` above, for the identical reason — scoped here
-   too since `<code>` isn't covered by that rule. */
+   Same underlying fix as `.sbdocs-content p`/`li` above, for the identical
+   reason — scoped here too since `<code>` isn't covered by that rule.
+
+   **Audited 2026-08-16** (prompted by "is this much `!important` normal?"):
+   tested every property on this rule individually — toggle just its own
+   `!important` off via the CSSOM, compare `getComputedStyle` before/after,
+   restore — rather than assuming the whole block still needs it uniformly.
+   `background`/`border`/`border-radius`/`color`/`font-size`/`padding-
+   block`/`padding-inline`/`white-space` do still change without it (a
+   competing Storybook declaration wins), so those stay `!important`.
+   `font-family`/`font-weight`/`max-width`/`overflow-wrap` did *not* change
+   either way — nothing else declares those three specifically, so forcing
+   them was never load-bearing (most likely dragged along when this rule's
+   other properties legitimately needed it, rather than individually
+   verified at the time). Demoted to plain declarations; the *values*
+   themselves are unchanged and still required for the wrapping fix above,
+   just no longer forced. */
 .sbdocs-content code {
   background: var(--dbm-bg-code) !important;
   border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
   border-radius: var(--dbm-radius-sm) !important;
   color: var(--dbm-text-secondary) !important;
-  font-family: var(--dbm-font-family-mono) !important;
+  font-family: var(--dbm-font-family-mono);
   font-size: var(--dbm-font-size-sm) !important;
-  font-weight: var(--dbm-font-weight-medium) !important;
-  max-width: 100% !important;
-  overflow-wrap: break-word !important;
+  font-weight: var(--dbm-font-weight-medium);
+  max-width: 100%;
+  overflow-wrap: break-word;
   padding-block: var(--dbm-space-1) !important;
   padding-inline: var(--dbm-space-2) !important;
   white-space: normal !important;
 }
 
+/* `!important` removed entirely (audited 2026-08-16) — tested each
+   property individually, same method as the rule above; none of the three
+   changed with or without it. `pre code` is specific enough on its own
+   (an extra type selector beyond plain `.sbdocs-content code`) to already
+   outrank whatever this was originally written to guard against — either
+   that was never actually true, or a later Storybook/theme change removed
+   the competing declaration. Kept as plain declarations since the values
+   themselves (undoing the pill look inside a real code block) are still
+   correct, just no longer contested. */
 .sbdocs-content pre code {
-  background: none !important;
-  border: none !important;
-  padding-inline: 0 !important;
+  background: none;
+  border: none;
+  padding-inline: 0;
 }
 
-/* The live-preview boxes (Canvas blocks) */
+/* The live-preview boxes (Canvas blocks). `!important` confirmed
+   load-bearing (audited 2026-08-16, previously undocumented — this file's
+   own header note says `!important` is used only where verified
+   necessary, but this rule never actually recorded that verification):
+   toggling it off via the CSSOM dropped the computed radius from 12px
+   (`--dbm-radius-lg`, intended) to 8px, a competing Storybook rule taking
+   over. Kept as-is, just documented. */
 .sbdocs-preview {
   border-radius: var(--dbm-radius-lg) !important;
 }
@@ -377,30 +411,63 @@
    removed; token tables (which always carry both classes) render
    identically to before.
 
-   `!important` on every property still needed — same-or-higher-specificity
-   competing declarations elsewhere in this file (`.sbdocs-content code`'s
-   own `!important` background/border/radius/color/font-family/padding)
-   would otherwise still win regardless of order.
+   `!important` (audited and trimmed 2026-08-16 — see below) — same-or-
+   higher-specificity competing declarations elsewhere in this file
+   (`.sbdocs-content code`'s own rule) would otherwise still win regardless
+   of order, for the properties that actually still need it.
 
-   `white-space`/`overflow-wrap` added 2026-08-15, same `!important`
-   requirement — the Name column's `white-space: nowrap` (below) turned out
-   not to be enough on its own: `.sbdocs-content code` also sets its own
-   `white-space: normal` (plus `overflow-wrap: break-word`), which a plain
-   `td:first-child` rule can't out-specificity since it's not targeting the
-   `<code>` element itself. Confirmed live on Button's `aria-labelledby`
-   row, which was still breaking at the hyphen (`aria-` / `labelledby`)
-   with only the td-level fix in place. */
+   `white-space`/`overflow-wrap` added 2026-08-15 — the Name column's
+   `white-space: nowrap` (below) turned out not to be enough on its own:
+   `.sbdocs-content code` also sets its own `white-space: normal` (plus
+   `overflow-wrap: break-word`), which a plain `td:first-child` rule can't
+   out-specificity since it's not targeting the `<code>` element itself.
+   Confirmed live on Button's `aria-labelledby` row, which was still
+   breaking at the hyphen (`aria-` / `labelledby`) with only the td-level
+   fix in place.
+
+   `display: inline-block` added 2026-08-15 — the Value options column's
+   pills (inside `.dbm-proptable-options`, `display: flex`) rendered
+   visibly taller than the Name column's pill despite every other computed
+   property (font-size, line-height, padding, border) being identical.
+   Root cause: a `<code>` left at its default `display: inline` gets
+   CSS-blockified to `block` when it's a flex item (spec behavior, not a
+   bug) — a real block box reserves its full padding+border in its height,
+   while the Name column's still-`inline` pill doesn't reserve vertical
+   padding the same way (confirmed via `clientHeight`/`scrollHeight` both
+   reading `0`, the textbook signature of a true inline box). Forcing
+   `inline-block` explicitly makes every pill establish the same proper
+   box regardless of which container it sits in.
+
+   **Audited 2026-08-16:** same per-property CSSOM toggle test as
+   `.sbdocs-content code` above. `background`/`border`/`border-radius`/
+   `overflow-wrap`/`padding-block`/`padding-inline`/`white-space` do still
+   change without `!important` — stay forced. `color`/`display`/
+   `font-family`/`font-size`/`font-weight` did not change either way —
+   demoted to plain declarations. `display: inline-block` in particular
+   was never actually a cascade fight despite the 2026-08-15 investigation
+   above being real and necessary: blockification is unconditional CSS
+   behavior for flex items, not something a competing rule could contest,
+   so the plain declaration was always sufficient on its own — the
+   `!important` was reflexively added alongside this rule's other
+   (genuinely contested) properties rather than individually verified. */
 .dbm-proptable code {
   background: var(--dbm-bg-code) !important;
   border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
   border-radius: var(--dbm-radius-sm) !important;
-  color: var(--dbm-text-secondary) !important;
-  font-family: var(--dbm-font-family-mono) !important;
-  font-size: var(--dbm-font-size-sm) !important;
-  font-weight: var(--dbm-font-weight-medium) !important;
+  color: var(--dbm-text-secondary);
+  display: inline-block;
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-medium);
   overflow-wrap: normal !important;
-  padding-block: var(--dbm-space-1) !important;
-  padding-inline: var(--dbm-space-2) !important;
+  /* No vertical padding, tighter horizontal padding than the paragraph
+     style (`--dbm-space-1`, 4px, vs. that rule's `--dbm-space-2`, 8px) —
+     explicit direction (2026-08-16), a flatter/more compact pill for the
+     table context specifically. `--dbm-space-0` still traces to a token
+     rather than a literal `0`, consistent with this file's "every value
+     traces to a token" rule even for a zero value. */
+  padding-block: var(--dbm-space-0) !important;
+  padding-inline: var(--dbm-space-1) !important;
   white-space: nowrap !important;
 }
 

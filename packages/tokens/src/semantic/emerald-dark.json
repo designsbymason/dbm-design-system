@@ -229,8 +229,8 @@
     },
     "brand": {
       "$type": "color",
-      "$value": "{color.emerald.100}",
-      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from emerald.400). Literal emerald.100 in every theme — this token is for decorative UI accents, not a border that identifies a component/state boundary (border.focus/border.danger remain contrast-verified since those ARE state-identifying). emerald.100 on gray.900 is 12.46:1, very high contrast in dark mode even though light mode is intentionally low."
+      "$value": "{color.emerald.900}",
+      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from emerald.400). Dark value moved off the literal emerald.100 shared with light mode to emerald.900 (2026-08-16, mirroring the same change on purple-dark — see that file's own description) — emerald.100 on bg.brand-subtle (gray.900) measured 12.46:1, a stark high-contrast ring that read nothing like light mode's own low-key accent. emerald.900 on gray.900 is 1.08:1, mirroring light mode's own 1.09:1 (emerald.100 on emerald.50) — both intentionally subtle. This token is for decorative UI accents, not a border that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply here (border.focus/border.danger remain contrast-verified since those ARE state-identifying)."
     },
     "danger": {
       "$type": "color",

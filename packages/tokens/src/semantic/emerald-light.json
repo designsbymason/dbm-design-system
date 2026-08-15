@@ -231,7 +231,7 @@
     "brand": {
       "$type": "color",
       "$value": "{color.emerald.100}",
-      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from emerald.600). emerald.100 on white is only 1.13:1, well below the 3:1 WCAG 1.4.11 non-text floor — deliberately accepted, since this token is for decorative UI accents rather than a border that identifies a component/state boundary (border.focus/border.danger remain contrast-verified since those ARE state-identifying). Literal emerald.100 in every theme, unlike border.focus's per-theme step selection."
+      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from emerald.600). emerald.100 on white is only 1.13:1, well below the 3:1 WCAG 1.4.11 non-text floor — deliberately accepted, since this token is for decorative UI accents rather than a border that identifies a component/state boundary (border.focus/border.danger remain contrast-verified since those ARE state-identifying). No longer literal across every theme as of 2026-08-16 — dark mode moved to emerald.900 (see that file's own description) so each mode gets its own similarly-subtle contrast ratio instead of sharing one literal value that read very differently against each mode's background."
     },
     "danger": {
       "$type": "color",

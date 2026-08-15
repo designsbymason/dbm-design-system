@@ -105,7 +105,7 @@ function ControlField({
     >
       <FieldLabel
         htmlFor={fieldId}
-        size="sm"
+        size="md"
         style={{
           flex: "0 0 var(--dbm-space-32)",
           fontWeight: "var(--dbm-font-weight-medium)",

@@ -21,7 +21,7 @@ const withTheme: Decorator = (Story, context) => {
   return (
     <div
       style={{
-        background: "var(--dbm-bg-canvas)",
+        background: "var(--dbm-bg-subtle)",
         color: "var(--dbm-text-primary)",
         fontFamily: "var(--dbm-font-family-primary)",
         // Full viewport height only in the standalone story view — a

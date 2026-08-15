@@ -147,8 +147,15 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
       | undefined;
     // `disabled` only means anything once `as` has made this an
     // interactive element — the default `span` has no click/keyboard
-    // behavior to block in the first place.
-    const isInteractive = Boolean(as);
+    // behavior to block in the first place. Compares the *resolved*
+    // `Component` rather than `as`'s own truthiness (`Boolean(as)`,
+    // the original check) — now that Storybook's Playground can pass
+    // `as="span"` explicitly (2026-08-16, matching the real default
+    // rather than leaving it `undefined`), a truthiness check would
+    // have treated that as interactive too, applying hover/focus/
+    // cursor:pointer to a plain, non-interactive span. Confirmed live:
+    // `as="span"` and omitting `as` entirely now behave identically.
+    const isInteractive = Component !== "span";
     const isDisabled = isInteractive && disabled;
     const handleClick = (event: MouseEvent<HTMLElement>) => {
       if (isDisabled) {
@@ -246,11 +253,14 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
     // real axe "aria-allowed-role" violation once `as="button"` existed:
     // ARIA doesn't permit overriding a native interactive element's own
     // role (button/link/etc.) with `img`, since that would hide the
-    // element's actual interactive semantics from assistive tech. `as`
-    // being set means the consumer deliberately chose different native
-    // semantics, so this defers to those instead — `aria-label` still
-    // applies regardless, since it's valid on (and useful for) any element.
-    const canUseImgRole = !as;
+    // element's actual interactive semantics from assistive tech. Checks
+    // the resolved `Component` (via `isInteractive`) rather than `as`'s own
+    // truthiness (`!as`, the original check) — same bug class as
+    // `isInteractive` above: an explicit `as="span"` is truthy but still
+    // resolves to a plain span, so `!as` would have wrongly suppressed
+    // `role="img"` for it. `aria-label` still applies regardless, since
+    // it's valid on (and useful for) any element.
+    const canUseImgRole = !isInteractive;
 
     return (
       <Component
