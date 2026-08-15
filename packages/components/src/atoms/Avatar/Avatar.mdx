@@ -1,0 +1,273 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../Badge";
+import { Skeleton } from "../Skeleton";
+import { Tooltip } from "../Tooltip";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Avatar } from "./Avatar";
+import * as AvatarStories from "./Avatar.stories";
+
+export const propOrder = [
+  "as",
+  "src",
+  "alt",
+  "onError",
+  "loading",
+  "initials",
+  "name",
+  "colorful",
+  "size",
+  "shape",
+  "status",
+  "disabled",
+  "onClick",
+  "aria-label",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={AvatarStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Avatar" tier="Atom" />
+
+A person/entity avatar. Renders an image, falling back to initials (and falling back again to a
+generic person icon if there are no initials either), with an optional presence `status` dot. A
+`name` prop can auto-derive both `initials` and `alt` from one string, and seed `colorful`'s
+deterministic per-identity color. `size` accepts a responsive map for per-breakpoint sizing, and
+`as` makes the whole avatar polymorphic — render it as `button` (or any other element/component) to
+turn it into a real interactive trigger while it keeps generating its own image/initials/status
+content exactly as it does by default.
+
+### Import
+
+```tsx
+import { Avatar } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={AvatarStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={AvatarStories.Playground}
+  exclude={["as", "onError", "onClick", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={AvatarStories} order={propOrder} />
+
+## Variants
+
+### Initials (no image)
+
+<Canvas of={AvatarStories.InitialsFallback} />
+
+### With image
+
+<Canvas of={AvatarStories.WithImage} />
+
+### Broken image URL (falls back to initials)
+
+<Canvas of={AvatarStories.BrokenImage} />
+
+### Generic icon (no image, no initials)
+
+<Canvas of={AvatarStories.IconFallback} />
+
+### Square shape
+
+<Canvas of={AvatarStories.SquareShape} />
+
+### Polymorphic: as="button" (interactive trigger, keeps its own content)
+
+<Canvas of={AvatarStories.AsButton} />
+
+### Polymorphic: as="button" + colorful
+
+<Canvas of={AvatarStories.AsButtonColorful} />
+
+### Polymorphic: as="button" + square shape
+
+<Canvas of={AvatarStories.AsButtonSquare} />
+
+### Polymorphic: as="button" + disabled
+
+<Canvas of={AvatarStories.AsButtonDisabled} />
+
+### All sizes
+
+<Canvas of={AvatarStories.AllSizes} />
+
+### Responsive size
+
+<Canvas of={AvatarStories.ResponsiveSize} />
+
+### All statuses
+
+<Canvas of={AvatarStories.AllStatuses} />
+
+### Size × status matrix
+
+<Canvas of={AvatarStories.SizeStatusMatrix} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass `alt` (or `name`, which fills `alt` in for you) whenever the avatar represents a real
+  person or entity — Avatar warns in development if it would otherwise render with no accessible
+  name at all.
+- Pass `name` alone to get auto-derived `initials`, a fallback `alt`, and `colorful`'s identity
+  color from one prop, instead of repeating the same string three times.
+- Reach for `as="button"` (or `as="a"`, or a router `Link`) when the avatar itself is the click
+  target (opening a profile menu, navigating to a profile page) — it keeps Avatar's own generated
+  image/initials/status content, unlike wrapping a separate `<button>` around it.
+- Use `colorful` for lists of many different people (a roster, a comments thread) so they're
+  visually distinguishable at a glance, not just by their (sometimes identical) initials.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `initials=""` expecting `name`'s auto-derivation to fill in — an explicitly empty
+  string is still a provided value, so it's used as-is (falls through to the generic icon, same as
+  any other falsy `initials`) rather than deferring to `name`. Omit `initials` entirely instead.
+- Don't treat `colorful` as a status signal — its color is a deterministic hash of identity, not
+  meaningful information. Use `status` for anything that actually needs to communicate state
+  (online/offline/busy/away).
+- Don't set `disabled` on a default, non-interactive avatar expecting a visual effect — it only
+  does anything once `as` has made the avatar an interactive trigger.
+- Don't rely on the fallback icon tracking every breakpoint of a responsive `size` — `Icon` has no
+  responsive size of its own, so it's sized off whichever step applies at the `base` breakpoint
+  only.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the density of the surrounding UI: `xs`/`sm` for compact lists and tables, `md`
+  (the default) for standard content, `lg`/`xl` for profile headers and other high-emphasis
+  contexts.
+- Pair `status` with a real, live presence source (a websocket/polling connection) — a status dot
+  that's wrong is worse than no status dot, since it actively misleads.
+- For a loading placeholder while avatar data is still being fetched, compose with `Skeleton`
+  (`variant="circular"`) rather than expecting Avatar itself to have a loading state — swap between
+  the two based on your own data-loading state.
+- For a name tooltip on hover, compose with `Tooltip` rather than expecting Avatar to show one
+  itself — `<Tooltip content={name}><Avatar name={name} /></Tooltip>`.
+
+## Accessibility
+
+<Callout tone="info" title="An accessible name is computed for you, not just documented">
+
+- **Dev-mode warnings** (stripped in production): `src` provided without `alt`/`name`, or no
+  `src`/`initials`/`name`/`alt` at all — each warns once per instance via `console.warn`, so a
+  missing accessible name surfaces during development instead of shipping silently.
+- **`role="img"` + `aria-label`** are set automatically on the non-image fallback (initials/icon)
+  whenever a name is available, computed from `alt` (or `name`). When both a name and `status` are
+  present, they're combined into one announcement ("Jane Doe, Online") instead of two separate
+  `role="img"` stops — confirmed live that back-to-back separate announcements were noisy,
+  especially across a list of avatars. Without a name, the status dot keeps its own separate
+  announcement instead, since there's nothing to merge it into.
+- **`role="img"` is skipped when `as` renders a native interactive element** (e.g. `as="button"`)
+  — overriding a `<button>`'s own role with `img` is an "aria-allowed-role" violation (confirmed
+  via a live `axe` run), since it would hide the element's real interactive semantics from
+  assistive tech. `aria-label` still applies regardless of `as`.
+- **`disabled`** applies the native `disabled` attribute when `as="button"` specifically (the one
+  case a real HTML disabled state exists); every other interactive `as` relies on `aria-disabled`
+  plus a click-blocking handler instead, the same pattern `Button`'s own `asChild` mode uses.
+- **Keyboard support comes from whichever native element `as` renders** — a `button`/`a` avatar is
+  `Tab`-focusable and activates on `Enter`/`Space` (or navigates, for a link) with zero custom key
+  handling, the same as any other native interactive element.
+- **Focus ring shape matches the avatar's own shape**: fully round for the default `circle`, a
+  standardized `sm`-radius square for `shape="square"` — not tied to the square's own, larger
+  visual corner radius (see `05-component-api-conventions.md`'s focus-ring convention, established
+  via this component).
+- Every `colorful` family's background/text pairing, and every hover-state background, is
+  contrast-verified per this system's WCAG methodology — see
+  [Design tokens used](#design-tokens-used) below for the exact tokens.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Avatar src="/user.jpg" alt="Jane Doe" initials="JD" status="online" />
+<Avatar name="Jane Doe" status="online" />
+<Avatar name="Jane Doe" colorful />
+<Avatar alt="Jane Doe" shape="square" />
+<Avatar name="Jane Doe" size={{ base: "sm", md: "lg" }} />
+<Avatar as="button" name="Jane Doe" onClick={openProfileMenu} />
+<Avatar as="button" name="Jane Doe" disabled />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand-subtle" usage="default (non-colorful) fill" />
+<TokenRow token="bg.brand-subtle-hover" usage="default fill's hover state (as-driven interactive mode)" />
+<TokenRow token="text.link" usage="default fill's text/icon color" />
+<TokenRow token="bg.danger-subtle" usage="colorful's danger family fill" />
+<TokenRow token="bg.danger-subtle-hover" usage="colorful danger family's hover state" />
+<TokenRow token="text.danger" usage="colorful danger family's text color" />
+<TokenRow token="bg.warning-subtle" usage="colorful's warning family fill" />
+<TokenRow token="bg.warning-subtle-hover" usage="colorful warning family's hover state" />
+<TokenRow token="text.warning" usage="colorful warning family's text color" />
+<TokenRow token="bg.success-subtle" usage="colorful's success family fill" />
+<TokenRow token="bg.success-subtle-hover" usage="colorful success family's hover state" />
+<TokenRow token="text.success" usage="colorful success family's text color" />
+<TokenRow token="bg.info-subtle" usage="colorful's info family fill" />
+<TokenRow token="bg.info-subtle-hover" usage="colorful info family's hover state" />
+<TokenRow token="text.info" usage="colorful info family's text color" />
+<TokenRow token="bg.success" usage="status='online' dot color" />
+<TokenRow token="bg.danger" usage="status='busy' dot color" />
+<TokenRow token="bg.warning" usage="status='away' dot color" />
+<TokenRow token="bg.neutral" usage="status='offline' dot color" />
+<TokenRow token="bg.surface" usage="status dot's ring (border color)" />
+<TokenRow token="border.focus" usage="focus-visible outline (as-driven interactive mode)" />
+<TokenRow token="radius.full" usage="circle shape, and the round focus ring" />
+<TokenRow token="radius.md" usage="square shape's visible corners" />
+<TokenRow token="radius.sm" usage="square shape's focus-ring corners (standardized, independent of radius.md)" />
+<TokenRow token="border-width.2" usage="status dot's ring width" />
+<TokenRow token="opacity.40" usage="disabled state" />
+<TokenRow token="font-size.sm–font-size.xl" usage="per-size initials type scale" />
+<TokenRow token="font-weight.semibold" usage="initials weight" />
+<TokenRow token="motion.duration.fast" usage="hover background-color transition" />
+<TokenRow token="motion.easing.standard" usage="hover background-color transition" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Badge"
+  description="A small status/label indicator, often paired with an avatar"
+  href="/?path=/docs/atoms-data-display-badge--docs"
+>
+  <Badge tone="success">3</Badge>
+</RelatedCard>
+<RelatedCard
+  name="Skeleton"
+  description="Loading placeholder to show while avatar data is still fetching"
+  href="/?path=/docs/atoms-data-display-skeleton--docs"
+>
+  <Skeleton variant="circular" width={40} height={40} />
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="Compose with Avatar to show the full name on hover"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="Jane Doe">
+    <Avatar initials="JD" alt="Jane Doe" />
+  </Tooltip>
+</RelatedCard>
+</div>

@@ -342,6 +342,18 @@
   vertical-align: top;
 }
 
+/* Name column (2026-08-15) — `table-layout: auto` sizes every column from
+   its content, so a long Description column was squeezing the first
+   column until its `<code>` prop name wrapped onto a second line.
+   `white-space: nowrap` gives auto-layout the real minimum width it needs
+   instead of a guessed fixed pixel value, so this scales correctly
+   regardless of how long any given prop's name is (current longest:
+   `aria-labelledby`) without wasting space on shorter names. */
+.dbm-proptable th:first-child,
+.dbm-proptable td:first-child {
+  white-space: nowrap;
+}
+
 .dbm-proptable tbody tr:nth-child(even) {
   background: var(--dbm-bg-brand-subtle);
 }
@@ -368,7 +380,16 @@
    `!important` on every property still needed — same-or-higher-specificity
    competing declarations elsewhere in this file (`.sbdocs-content code`'s
    own `!important` background/border/radius/color/font-family/padding)
-   would otherwise still win regardless of order. */
+   would otherwise still win regardless of order.
+
+   `white-space`/`overflow-wrap` added 2026-08-15, same `!important`
+   requirement — the Name column's `white-space: nowrap` (below) turned out
+   not to be enough on its own: `.sbdocs-content code` also sets its own
+   `white-space: normal` (plus `overflow-wrap: break-word`), which a plain
+   `td:first-child` rule can't out-specificity since it's not targeting the
+   `<code>` element itself. Confirmed live on Button's `aria-labelledby`
+   row, which was still breaking at the hyphen (`aria-` / `labelledby`)
+   with only the td-level fix in place. */
 .dbm-proptable code {
   background: var(--dbm-bg-code) !important;
   border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
@@ -377,8 +398,10 @@
   font-family: var(--dbm-font-family-mono) !important;
   font-size: var(--dbm-font-size-sm) !important;
   font-weight: var(--dbm-font-weight-medium) !important;
+  overflow-wrap: normal !important;
   padding-block: var(--dbm-space-1) !important;
   padding-inline: var(--dbm-space-2) !important;
+  white-space: nowrap !important;
 }
 
 .dbm-proptable-options {

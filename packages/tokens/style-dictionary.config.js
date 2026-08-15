@@ -8,6 +8,7 @@ const SRC_DIR = join(__dirname, 'src');
 const BUILD_DIR = join(__dirname, 'build');
 
 const PRIMITIVE_SOURCE = join(SRC_DIR, 'primitive/*.json');
+const COMPONENT_SOURCE = join(SRC_DIR, 'component/*.json');
 
 // Primitive source files have no self-namespacing top-level key (radius.json and
 // breakpoint.json both use "sm"/"md"/"lg"/"xl", for example), so merging them as-is
@@ -44,6 +45,12 @@ StyleDictionary.registerParser({
 // and the theme files reference them via CSS var() / already-resolved TS values.
 const SEMANTIC_GROUPS = ['bg', 'text', 'border', 'icon'];
 const isSemanticToken = (token) => SEMANTIC_GROUPS.includes(token.path[0]);
+
+// Component-layer tokens (packages/tokens/src/component/*.json) are theme-independent
+// (dimensions, not colors) and self-namespaced by their own top-level key (e.g. "avatar"),
+// same convention as typography.json/other.json. Filtering on filePath rather than a
+// hardcoded namespace list means a new component/*.json file needs no config change here.
+const isComponentToken = (token) => token.filePath?.includes(`${SRC_DIR}/component/`) ?? false;
 
 const CSS_TRANSFORMS = ['attribute/cti', 'name/kebab', 'color/css', 'fontFamily/css', 'cubicBezier/css'];
 
@@ -121,6 +128,45 @@ async function buildPrimitives() {
   await sd.buildAllPlatforms();
 }
 
+// Component tokens may alias primitives (e.g. a future `{color.purple.100}` reference),
+// so the primitive source is included for resolution — same pattern as buildTheme() below
+// — but the filter keeps only the component-namespaced tokens in the actual output.
+async function buildComponents() {
+  const sd = new StyleDictionary({
+    parsers: ['dbm/namespace-primitives'],
+    source: [PRIMITIVE_SOURCE, COMPONENT_SOURCE],
+    platforms: {
+      css: {
+        transforms: CSS_TRANSFORMS,
+        prefix: 'dbm',
+        buildPath: join(BUILD_DIR, 'css') + '/',
+        files: [
+          {
+            destination: 'component-tokens.css',
+            format: 'css/variables',
+            filter: isComponentToken,
+            options: { outputReferences: true, selector: ':root' },
+          },
+        ],
+      },
+      ts: {
+        transforms: CSS_TRANSFORMS,
+        buildPath: join(BUILD_DIR, 'ts') + '/',
+        files: [
+          {
+            destination: 'component-tokens.ts',
+            format: 'dbm/typescript-const',
+            filter: isComponentToken,
+            options: { exportName: 'componentTokens' },
+          },
+        ],
+      },
+    },
+  });
+
+  await sd.buildAllPlatforms();
+}
+
 async function buildTheme(theme) {
   const exportName = toCamelCase(theme);
 
@@ -162,7 +208,7 @@ async function buildTheme(theme) {
 function writeTsBarrel() {
   // Extensionless specifiers match the "Bundler" moduleResolution used across this
   // monorepo's tsconfig (see packages/tsconfig/tsconfig.base.json).
-  const lines = ["export * from './primitives';"];
+  const lines = ["export * from './primitives';", "export * from './component-tokens';"];
   for (const theme of THEMES) {
     lines.push(`export * from './${theme}';`);
   }
@@ -172,6 +218,7 @@ function writeTsBarrel() {
 
 async function buildAll() {
   await buildPrimitives();
+  await buildComponents();
   for (const theme of THEMES) {
     await buildTheme(theme);
   }

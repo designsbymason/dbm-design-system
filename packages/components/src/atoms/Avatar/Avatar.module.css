@@ -1,15 +1,413 @@
 .root {
+  display: inline-flex;
+  flex-shrink: 0;
+  position: relative;
+  height: var(--avatar-dimension-base, var(--dbm-avatar-size-md));
+  width: var(--avatar-dimension-base, var(--dbm-avatar-size-md));
+  font-size: var(--avatar-font-size-base, var(--dbm-font-size-md));
+  /*
+    Shapes the `:focus-visible` outline only — `root` itself has no
+    background/border of its own (`overflow: visible`, unclipped, per the
+    status-dot fix above `.content`), so this never clips anything.
+    Modern browsers round `outline` to follow an element's own
+    `border-radius`; `full` here matches the circle `.content` draws by
+    default. See `.rootSquare` below for the square-shape override, and
+    guidelines/06-engineering-standards.md's focus-ring convention this
+    establishes for every other interactive component.
+  */
+  border-radius: var(--dbm-radius-full);
+  --avatar-status-size: var(
+    --avatar-status-size-base,
+    var(--dbm-avatar-status-size-md)
+  );
+}
+
+/*
+  Deliberately a smaller radius than `.shapeSquare`'s own `--dbm-radius-md`
+  (`.content`'s actual corner treatment) — the focus ring uses this
+  system's standard `sm` focus-ring radius for non-round interactive
+  elements rather than mirroring each component's own corner radius
+  exactly, so every square-ish focus ring reads consistently across
+  components regardless of how rounded that component's own corners are.
+*/
+.rootSquare {
+  border-radius: var(--dbm-radius-sm);
+}
+
+/*
+  Only applied when `as` makes the avatar an interactive trigger (see
+  Avatar.tsx's `isInteractive`) — the default `span` gets none of this.
+  Mirrors Button's own focus-visible/disabled treatment (same tokens, same
+  durations) for visual consistency across every clickable atom in this
+  system. Hover is a background-color step instead of Button's opacity
+  dim — deliberately does not touch opacity at all, even on hover, so a
+  colorful avatar's background/text pairing stays at full, verified
+  contrast rather than being see-through-dimmed.
+*/
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.interactive:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* Mirrors `:disabled` for `as` values that can't take a native `disabled`
+   attribute (e.g. `as="a"`) — applied alongside `aria-disabled` instead,
+   same reasoning as Button's own `asChild`-disabled `.disabled` class. */
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/*
+  CSS custom properties cannot be referenced inside an @media condition (a
+  CSS spec limitation, not a choice here) — these thresholds are the
+  literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+  (packages/tokens/src/primitive/breakpoint.json). If those values ever
+  change, these six blocks must be updated by hand to match. Mirrors
+  Stack's/Container's/Grid's/GridItem's identical responsive-prop
+  mechanism, adapted here to three properties driven off the single `size`
+  prop instead of one property per prop (`size` bundles a dimension, a
+  font size, and a status-dot size together per step, unlike those
+  components' single-value responsive props).
+*/
+@media (min-width: 640px) {
+  .root {
+    height: var(
+      --avatar-dimension-sm,
+      var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+    );
+    width: var(
+      --avatar-dimension-sm,
+      var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+    );
+    font-size: var(
+      --avatar-font-size-sm,
+      var(--avatar-font-size-base, var(--dbm-font-size-md))
+    );
+    --avatar-status-size: var(
+      --avatar-status-size-sm,
+      var(--avatar-status-size-base, var(--dbm-avatar-status-size-md))
+    );
+  }
+}
+
+@media (min-width: 768px) {
+  .root {
+    height: var(
+      --avatar-dimension-md,
+      var(
+        --avatar-dimension-sm,
+        var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+      )
+    );
+    width: var(
+      --avatar-dimension-md,
+      var(
+        --avatar-dimension-sm,
+        var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+      )
+    );
+    font-size: var(
+      --avatar-font-size-md,
+      var(
+        --avatar-font-size-sm,
+        var(--avatar-font-size-base, var(--dbm-font-size-md))
+      )
+    );
+    --avatar-status-size: var(
+      --avatar-status-size-md,
+      var(
+        --avatar-status-size-sm,
+        var(--avatar-status-size-base, var(--dbm-avatar-status-size-md))
+      )
+    );
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    height: var(
+      --avatar-dimension-lg,
+      var(
+        --avatar-dimension-md,
+        var(
+          --avatar-dimension-sm,
+          var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+        )
+      )
+    );
+    width: var(
+      --avatar-dimension-lg,
+      var(
+        --avatar-dimension-md,
+        var(
+          --avatar-dimension-sm,
+          var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+        )
+      )
+    );
+    font-size: var(
+      --avatar-font-size-lg,
+      var(
+        --avatar-font-size-md,
+        var(
+          --avatar-font-size-sm,
+          var(--avatar-font-size-base, var(--dbm-font-size-md))
+        )
+      )
+    );
+    --avatar-status-size: var(
+      --avatar-status-size-lg,
+      var(
+        --avatar-status-size-md,
+        var(
+          --avatar-status-size-sm,
+          var(--avatar-status-size-base, var(--dbm-avatar-status-size-md))
+        )
+      )
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    height: var(
+      --avatar-dimension-xl,
+      var(
+        --avatar-dimension-lg,
+        var(
+          --avatar-dimension-md,
+          var(
+            --avatar-dimension-sm,
+            var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+          )
+        )
+      )
+    );
+    width: var(
+      --avatar-dimension-xl,
+      var(
+        --avatar-dimension-lg,
+        var(
+          --avatar-dimension-md,
+          var(
+            --avatar-dimension-sm,
+            var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+          )
+        )
+      )
+    );
+    font-size: var(
+      --avatar-font-size-xl,
+      var(
+        --avatar-font-size-lg,
+        var(
+          --avatar-font-size-md,
+          var(
+            --avatar-font-size-sm,
+            var(--avatar-font-size-base, var(--dbm-font-size-md))
+          )
+        )
+      )
+    );
+    --avatar-status-size: var(
+      --avatar-status-size-xl,
+      var(
+        --avatar-status-size-lg,
+        var(
+          --avatar-status-size-md,
+          var(
+            --avatar-status-size-sm,
+            var(--avatar-status-size-base, var(--dbm-avatar-status-size-md))
+          )
+        )
+      )
+    );
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    height: var(
+      --avatar-dimension-2xl,
+      var(
+        --avatar-dimension-xl,
+        var(
+          --avatar-dimension-lg,
+          var(
+            --avatar-dimension-md,
+            var(
+              --avatar-dimension-sm,
+              var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+            )
+          )
+        )
+      )
+    );
+    width: var(
+      --avatar-dimension-2xl,
+      var(
+        --avatar-dimension-xl,
+        var(
+          --avatar-dimension-lg,
+          var(
+            --avatar-dimension-md,
+            var(
+              --avatar-dimension-sm,
+              var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+            )
+          )
+        )
+      )
+    );
+    font-size: var(
+      --avatar-font-size-2xl,
+      var(
+        --avatar-font-size-xl,
+        var(
+          --avatar-font-size-lg,
+          var(
+            --avatar-font-size-md,
+            var(
+              --avatar-font-size-sm,
+              var(--avatar-font-size-base, var(--dbm-font-size-md))
+            )
+          )
+        )
+      )
+    );
+    --avatar-status-size: var(
+      --avatar-status-size-2xl,
+      var(
+        --avatar-status-size-xl,
+        var(
+          --avatar-status-size-lg,
+          var(
+            --avatar-status-size-md,
+            var(
+              --avatar-status-size-sm,
+              var(--avatar-status-size-base, var(--dbm-avatar-status-size-md))
+            )
+          )
+        )
+      )
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    height: var(
+      --avatar-dimension-3xl,
+      var(
+        --avatar-dimension-2xl,
+        var(
+          --avatar-dimension-xl,
+          var(
+            --avatar-dimension-lg,
+            var(
+              --avatar-dimension-md,
+              var(
+                --avatar-dimension-sm,
+                var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+              )
+            )
+          )
+        )
+      )
+    );
+    width: var(
+      --avatar-dimension-3xl,
+      var(
+        --avatar-dimension-2xl,
+        var(
+          --avatar-dimension-xl,
+          var(
+            --avatar-dimension-lg,
+            var(
+              --avatar-dimension-md,
+              var(
+                --avatar-dimension-sm,
+                var(--avatar-dimension-base, var(--dbm-avatar-size-md))
+              )
+            )
+          )
+        )
+      )
+    );
+    font-size: var(
+      --avatar-font-size-3xl,
+      var(
+        --avatar-font-size-2xl,
+        var(
+          --avatar-font-size-xl,
+          var(
+            --avatar-font-size-lg,
+            var(
+              --avatar-font-size-md,
+              var(
+                --avatar-font-size-sm,
+                var(--avatar-font-size-base, var(--dbm-font-size-md))
+              )
+            )
+          )
+        )
+      )
+    );
+    --avatar-status-size: var(
+      --avatar-status-size-3xl,
+      var(
+        --avatar-status-size-2xl,
+        var(
+          --avatar-status-size-xl,
+          var(
+            --avatar-status-size-lg,
+            var(
+              --avatar-status-size-md,
+              var(
+                --avatar-status-size-sm,
+                var(--avatar-status-size-base, var(--dbm-avatar-status-size-md))
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+}
+
+.content {
   align-items: center;
   background-color: var(--dbm-bg-brand-subtle);
   border-radius: var(--dbm-radius-full);
   color: var(--dbm-text-link);
   display: inline-flex;
-  flex-shrink: 0;
   font-family: var(--dbm-font-family-primary);
   font-weight: var(--dbm-font-weight-semibold);
+  height: 100%;
   justify-content: center;
   overflow: hidden;
-  position: relative;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+  width: 100%;
+}
+
+/* `.interactive`'s hover background step — one for the default (brand)
+   fill and one per `colorful` family below, each moving to its own
+   `-subtle-hover` token (one primitive scale step past `-subtle`, see
+   guidelines/03-token-system-spec.md). `:not(:disabled):not(.disabled)`
+   matches `.interactive`'s own guard, so a disabled trigger never shows a
+   hover state even if technically still hovered. */
+.interactive:hover:not(:disabled):not(.disabled) > .content {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 .image {
@@ -22,44 +420,64 @@
   border-radius: var(--dbm-radius-md);
 }
 
-.sizeXs {
-  font-size: var(--dbm-font-size-xs);
-  height: var(--dbm-icon-size-xs);
-  width: var(--dbm-icon-size-xs);
+/*
+  `colorful`'s deterministic per-identity palette. Each pairs a semantic
+  "-subtle" background with its matching saturated text color — the same
+  combination already contrast-verified for exactly this text-on-tint use
+  (see guidelines/03-token-system-spec.md): danger 7.05:1 light / 10.32:1
+  dark, warning 9.74:1 / 10.44:1, success and info were already verified
+  this way. `brand` (the component's own default, `.content`'s base
+  colors above) is also a possible hash output, so it isn't redeclared
+  here as its own class.
+*/
+.colorDanger {
+  background-color: var(--dbm-bg-danger-subtle);
+  color: var(--dbm-text-danger);
 }
 
-.sizeSm {
-  font-size: var(--dbm-font-size-xs);
-  height: var(--dbm-icon-size-sm);
-  width: var(--dbm-icon-size-sm);
+.colorWarning {
+  background-color: var(--dbm-bg-warning-subtle);
+  color: var(--dbm-text-warning);
 }
 
-.sizeMd {
-  font-size: var(--dbm-font-size-sm);
-  height: var(--dbm-icon-size-md);
-  width: var(--dbm-icon-size-md);
+.colorSuccess {
+  background-color: var(--dbm-bg-success-subtle);
+  color: var(--dbm-text-success);
 }
 
-.sizeLg {
-  font-size: var(--dbm-font-size-base);
-  height: var(--dbm-icon-size-lg);
-  width: var(--dbm-icon-size-lg);
+.colorInfo {
+  background-color: var(--dbm-bg-info-subtle);
+  color: var(--dbm-text-info);
 }
 
-.sizeXl {
-  font-size: var(--dbm-font-size-md);
-  height: var(--dbm-icon-size-xl);
-  width: var(--dbm-icon-size-xl);
+/* `colorful`'s own hover step, one per family — `.content.colorX` (two
+   classes) so each outranks the default `.content`-only hover rule above
+   regardless of source order, not just because it happens to be declared
+   later. */
+.interactive:hover:not(:disabled):not(.disabled) > .content.colorDanger {
+  background-color: var(--dbm-bg-danger-subtle-hover);
+}
+
+.interactive:hover:not(:disabled):not(.disabled) > .content.colorWarning {
+  background-color: var(--dbm-bg-warning-subtle-hover);
+}
+
+.interactive:hover:not(:disabled):not(.disabled) > .content.colorSuccess {
+  background-color: var(--dbm-bg-success-subtle-hover);
+}
+
+.interactive:hover:not(:disabled):not(.disabled) > .content.colorInfo {
+  background-color: var(--dbm-bg-info-subtle-hover);
 }
 
 .status {
   border: var(--dbm-border-width-2) solid var(--dbm-bg-surface);
   border-radius: var(--dbm-radius-full);
   bottom: 0;
-  height: var(--dbm-space-3);
+  height: var(--avatar-status-size);
   position: absolute;
   right: 0;
-  width: var(--dbm-space-3);
+  width: var(--avatar-status-size);
 }
 
 .statusOnline {

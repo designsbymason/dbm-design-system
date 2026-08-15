@@ -64,26 +64,64 @@ This was flagged as an open question early in planning and never fully resolved.
 
 ## 9. Component review & enhancement passes
 
-Beyond the initial "definition of done" (`05-component-api-conventions.md` §8, checked once when a component first ships), every component periodically gets a full review pass. The first one — covering all 23 Phase 3 atoms, one at a time — runs as Phase 4.5, before Phase 5 (Molecules) begins, since molecules compose these atoms directly and any atom-level gap gets inherited by everything built on top of it.
+Beyond the initial "definition of done" (`05-component-api-conventions.md` §8, checked once when a component first ships), every component — at any tier: atom, molecule, organism, or template — periodically gets a full review pass. The first one ran as Phase 4.5, covering all 23 Phase 3 atoms one at a time, before Phase 5 (Molecules) began, since molecules compose those atoms directly and any atom-level gap gets inherited by everything built on top of it. The checklist below applies identically at every tier from here forward — molecules/organisms get their own review passes once their initial build settles, using this same list, not a scaled-down one.
 
-Run each component through two tracks:
+**Full review checklist (established 2026-08-12, at explicit direction — every item here matters, this is not an abbreviated summary).** Sections marked *(judgment)* are where the scope-creep guardrail below applies; everything else is checklist-driven re-verification, not exploratory redesign.
 
-**Track 1 — Objective (checklist-driven, low ambiguity):**
-- Full re-check against `05-component-api-conventions.md` §8's definition of done — re-verify, don't assume it still holds.
-- Required and recommended props: does the component's prop set match or exceed what comparable components offer in mature systems (Radix, Chakra UI, MUI, Ant Design) for the same role? A missing commonly-expected prop (a loading state, an `asChild` escape hatch, a controlled/uncontrolled pair) is a gap, not a nice-to-have.
-- Token usage: zero hardcoded values, correct semantic-token category per use.
-- Accessibility: keyboard nav, focus visibility, ARIA correctness, contrast — re-verified, not assumed still passing.
-- Responsiveness: correct behavior across the full breakpoint scale (`03-token-system-spec.md`), per §5 above.
-- Stability: error handling, SSR safety, no console noise.
+**Baseline correctness**
+- [ ] Full "definition of done" (`05-component-api-conventions.md` §8) re-verified top to bottom — don't assume it still holds.
+- [ ] TypeScript strict mode, no `any` anywhere.
+- [ ] JSDoc complete on the component and every prop — this is what feeds the future manifest generator; an undocumented prop is incomplete work, not polish (`CLAUDE.md`).
+- [ ] Standard prop patterns still followed (`05-component-api-conventions.md` §3): `forwardRef` (or a justified, JSDoc'd exception), `className`/`style`/`id`/`data-testid` accepted, a controlled/uncontrolled pair for any component holding internal state, `asChild` support where composability matters, component-relevant `aria-*` props explicitly redeclared for documentation visibility.
+- [ ] Zero hardcoded values — every color, spacing, font-size, radius, shadow, and duration traces to a design-system token; if a needed value has no token yet, add the token first, don't inline it.
+- [ ] Stability: no console noise in production, no silent `catch` blocks, invalid prop combinations fail loud with a dev-mode `console.warn`.
+- [ ] SSR/RSC safety — no unguarded `window`/`document`/`localStorage` access at module scope or during initial render.
+- [ ] The component is DBM's own original implementation, not copied or imported wholesale from another design system's source — Radix as the behavior/accessibility foundation is the approved pattern (`02-tech-stack-and-structure.md`); the styling, API shape, and visual identity are ours.
 
-**Track 2 — Design quality (judgment-driven, needs restraint):**
-- **Feature-completeness relative to industry standard**: does the component do what a developer or agent would reasonably expect from a production design system's version of it? (E.g., does `Input` support a clear affordance, character count, or validation styling — not just `value`/`onChange`.)
-- **Micro-interactions, where they clarify state** — hover/focus/active transitions, loading/success feedback — consistent with the existing motion tokens and the "motion with restraint" principle (`01-vision-and-goals.md` §8, principle 5). Not every component needs one; a `Divider` doesn't.
-- **Visual execution**: premium, modern, and identifiably DBM's own rather than a generic Radix-default look — while staying entirely inside the existing token set (color, typography, spacing, radius, shadow, motion). If a new treatment needs a token that doesn't exist yet, add the token first, per `CLAUDE.md`.
+**Feature completeness** *(judgment)*
+- [ ] Feature-completeness pass against the same role's component in MUI, Chakra UI, Ant Design, and Radix — name any concrete gap before adding anything ("X is missing feature Y that [comparable component] has"), not a vague "make it more complete."
+- [ ] Required and recommended props all present and sensibly defaulted — a missing commonly-expected prop (a loading state, an `asChild` escape hatch, a controlled/uncontrolled pair) is a gap, not a nice-to-have.
+- [ ] Sizes, variants, states, and types covered where they genuinely make sense for the component's role, using the shared `size`/`variant`/`tone` scales (`05-component-api-conventions.md` §2) — never a one-off component-specific scale, and never forced onto a component where they don't apply.
+- [ ] Overall feature-rich, complete, and comprehensive relative to what a developer or agent would reasonably expect from a production design system's version of this component — not a minimal/bare-bones implementation.
 
-**Guardrail against scope creep (this is where it happens):** every Track 2 enhancement gets proposed with a specific, named rationale before it's built — "X is missing feature Y that [comparable component] has" or "the hover state is instant while every other interactive atom eases" — not a blanket "make it fancier" pass. `01-vision-and-goals.md` §4 goal 7 makes comprehensiveness and premium execution an explicit project requirement, so proposing against that goal is in-scope — but every individual addition should still trace to a concrete, stated gap, not be improvised in the moment.
+**Accessibility — verified, not assumed**
+- [ ] All necessary ARIA attributes present and correct for the component's actual role (`aria-label`/`aria-labelledby`, `aria-pressed`, `aria-expanded`/`aria-controls`, `aria-haspopup`, `aria-describedby`, etc., as applicable).
+- [ ] Keyboard navigation verified by hand: tab order, visible focus indicator, Escape/Enter/Arrow-key behavior where applicable.
+- [ ] Automated accessibility test (jest-axe) passes with zero violations — **for a polymorphic (`as`-driven) component, run this against a non-default `as` value too, not just the default element.** Confirmed real finding, Avatar (2026-08-15): a `role="img"` that was correct on the default `span` became an "aria-allowed-role" violation once `as="button"` existed, since ARIA doesn't permit overriding a native interactive element's own role — invisible in the default-element test alone, since that one genuinely had no violation.
+- [ ] Any new or changed color pairing introduced by the review is contrast-checked against the methodology in `03-token-system-spec.md` — not assumed from "looks fine."
+
+**Responsiveness**
+- [ ] Correct behavior across the full breakpoint scale (`03-token-system-spec.md`) — verified live in Storybook at multiple viewport widths via the viewport toolbar addon, not just reasoned about abstractly. No fixed-desktop layout with mobile bolted on.
+
+**Design quality** *(judgment)*
+- [ ] Visual execution is modern, clean, premium, and identifiably DBM's own rather than a generic Radix-default or copied look — entirely within the existing token set (color, typography, spacing, radius, shadow, motion). If a new treatment needs a token that doesn't exist yet, add the token first.
+- [ ] Micro-interactions and animation, where they clarify a state change (hover/focus/active transitions, loading/success feedback) — consistent with the existing motion tokens and "motion with restraint" (`01-vision-and-goals.md` §8, principle 5). Not every component needs one — a `Divider` doesn't. Any continuously-repeating animation (spinners, pulses) added or changed must respect `prefers-reduced-motion` per §4 above.
+- [ ] Performance: memoize only where profiling or obvious cost justifies it, not reflexively; tree-shaking stays intact; CSS animates `transform`/`opacity` rather than layout-triggering properties where possible.
+- [ ] Scalability: composition over configuration — a component accumulating a growing list of mutually-exclusive boolean flags is a sign it should be a compound component instead (§2 above).
+
+**Guardrail against scope creep (this is where it happens):** every Feature-completeness/Design-quality enhancement gets proposed with a specific, named rationale before it's built — "X is missing feature Y that [comparable component] has" or "the hover state is instant while every other interactive atom eases" — not a blanket "make it fancier" pass. `01-vision-and-goals.md` §4 goal 7 makes comprehensiveness and premium execution an explicit project requirement, so proposing against that goal is in-scope — but every individual addition should still trace to a concrete, stated gap, not be improvised in the moment.
+
+**Theming**
+- [ ] Confirmed working in both light and dark mode, and across every shipped brand theme (currently Purple and Emerald) — verified live in a running Storybook instance via the Brand/Mode toolbar toggles, not inferred from the code. A clean typecheck/build is not sufficient evidence: this project has repeatedly found real theming bugs invisible to `tsc`/`eslint`/`vitest` that only a live browser check caught (e.g. `07-storybook-and-documentation-standards.md` §7.1).
+
+**Storybook documentation**
+- [ ] Docs page (`ComponentName.mdx`) exists, first in the component's sidebar group, following the full section template in `07-storybook-and-documentation-standards.md` §4 in full (Intro, Playground, Properties, Variants/states gallery, Usage guidelines, Best practices, Accessibility, Code examples, Design tokens used, Related components) — not an abbreviated version.
+- [ ] Properties table's prop order reads sensibly (content prop → core visual props → behavioral/state props → advanced/escape-hatch props last), via `PropertiesTable`'s `order` prop — don't assume docgen's default order already does (`07-storybook-and-documentation-standards.md` §4 item 3).
+- [ ] Playground story exists, positioned directly after the Docs page, with every prop live and interactive — nothing hardcoded via a bare `render`.
+- [ ] Every prop's Storybook control is genuinely interactive wherever it makes sense — a real `select`/`boolean`/`text`/etc. control, not an inert "Set string"/"Set boolean"/"Set object" placeholder — both in the Playground and in every individual variant story's own Controls panel, not just the Playground. Use `control: false` (renders as "–") only for props that genuinely can't or shouldn't be live-edited in Storybook.
+- [ ] Prop order in every Controls panel (the Playground's and every individual variant story's) reads sensibly — same sequence principle as the Properties table above.
+- [ ] Sidebar `title` matches the taxonomy in `07-storybook-and-documentation-standards.md` §3.
+- [ ] Docs page visually verified in a running Storybook instance — `tsc --noEmit` passing only proves the MDX compiles, it does not prove the page renders correctly (`07-storybook-and-documentation-standards.md` §4.1).
+
+**Functional verification**
+- [ ] Component functions correctly end to end — exercised live, not just read.
+- [ ] Unit test (React Testing Library) covers rendering and interaction, and passes.
+- [ ] Self-verify before reporting the review done: actually run lint, typecheck, build, and the full test suite, and report real results — don't report a review complete based on the code "looking right" (`CLAUDE.md`).
+
+**Reporting a review's findings (established 2026-08-12, at explicit direction):** present results as a single prioritized, ordered list of exactly what needs to change — added, updated, or removed — not a section-by-section narrative that also explains what already passed. Skip commentary on checklist items that already pass; only what needs action belongs in the list. Two fixed positions within that ordering: if a Playground story is missing, it's always the first item on the list; if a Docs page is missing, it's always the last.
 
 ## Related documents
 - `05-component-api-conventions.md` — the API-level contract this doc's engineering discipline supports
-- `03-token-system-spec.md` — breakpoints, motion tokens referenced in §4–5
+- `03-token-system-spec.md` — breakpoints, motion tokens referenced in §4–5, and the contrast-check methodology §9 references
+- `07-storybook-and-documentation-standards.md` — the Docs-page template and per-component Storybook checklist §9's documentation section points to
 - `CLAUDE.md` — the short entry point; this doc is the detail behind its "Core principles"

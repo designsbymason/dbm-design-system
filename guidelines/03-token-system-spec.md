@@ -6,7 +6,7 @@ Companion to `dbm-tokens/` (the actual generated token files in W3C Design Token
 
 1. **Primitive** (`primitive/*.json`) — raw values, no meaning. Color scales, spacing steps, radii, shadows, etc.
 2. **Semantic** (`semantic/*.json`) — contextual meaning, references primitives via `{color.purple.600}`-style aliases. **One file per theme** (brand × mode). This is where multi-brand and light/dark actually live — the token *names* (`bg.brand`, `text.primary`) stay identical across every theme file; only what they resolve to changes.
-3. **Component** (not yet populated) — add component-scoped overrides only when a specific component needs to deviate from its semantic default.
+3. **Component** (`component/*.json`, populated starting 2026-08-12) — component-scoped tokens for values a specific component needs that don't belong in the shared primitive/semantic scales. See "Component-layer tokens" below.
 
 Status/neutral tokens (red, amber, green, blue, gray) are **shared across both brand themes** — success is always green, danger is always red, regardless of which brand is active. Only the "brand" slots (bg.brand, text.link, border.focus, icon.brand) swap per theme. This is a deliberate consistency principle, not an oversight — status meaning shouldn't be reinterpreted by theme.
 
@@ -114,9 +114,37 @@ This is why `text.on-brand` is defined per-theme rather than as a single global 
 - `text.tertiary` dark: `gray.400` → `gray.300`, at explicit direction, same motivation. Still doesn't clear the 4.5:1 text floor against `bg.canvas` (4.00:1) — it does clear the 3:1 non-text floor there, but this token's own literal-text uses (`Text` `color="tertiary"`, Divider label, Input placeholder) need 4.5:1, the same standard that ruled out `gray.500` originally. No primitive step between `gray.300` and `gray.400` exists to close that last gap without also moving past `text.secondary`'s own new `gray.200`. Against this token's actual intended surfaces it's comfortably clear: 5.86:1 on `bg.surface`, 8.21:1 on `bg.subtle`.
 - **Rule: `text.tertiary` must never be used as literal text directly on `bg.canvas`** (any mode/brand) — it's below the AA text floor there and no available primitive step closes the gap without disturbing other, currently-passing pairings. Enforced by convention/review, not by a build-time check.
 
+**Phase 11 (`text.link` on `bg.brand-subtle` logged, 2026-08-14):** Found undocumented while reviewing Avatar (`.content`'s default background/text pairing). Not a new value or a regression — both tokens are unchanged from their existing, already-established values; this is closing a gap in the verification log itself, re-computed directly from the built theme output rather than assumed: **purple-light 7.03:1, purple-dark 7.45:1, emerald-light 5.83:1, emerald-dark 6.49:1** — all comfortably clear of the 4.5:1 AA text floor. The two dark-theme numbers match the `$description` already recorded on each theme's own `bg.brand-subtle` token (Phase 9's `purple-dark`/`emerald-dark` move to `gray.900`); the two light-theme numbers hadn't been stated anywhere before this entry.
+
+**Phase 12 (`bg.{brand,danger,warning,success,info}-subtle-hover` added, 2026-08-15):** New tokens for Avatar's hover state (`as="button"`-style interactive mode) — a subtle-background fill needed its own hover step, one primitive scale step past `-subtle` in this system's standard hover direction (darken in light mode, lighten in dark). All 5 reuse an already-generated scale step (each family's `-subtle` value from *before* its own 2026-07-27 one-step move), rather than needing a new primitive — light themes get each family's `.100` step back, dark themes get `.900` (or `gray.800` for `brand-subtle-hover` specifically, since dark `brand-subtle` itself is `gray.900`, not a brand hue — see Phase 9). Every text token that already pairs with each `-subtle` background was re-checked against the new `-subtle-hover` value directly from the built theme output:
+
+| Pairing | Light | Dark |
+|---|---|---|
+| `text.danger` / `bg.danger-subtle-hover` | 6.43:1 | 8.22:1 |
+| `text.warning` / `bg.warning-subtle-hover` | 8.90:1 | 8.19:1 |
+| `text.success` / `bg.success-subtle-hover` | 8.42:1 | 8.19:1 |
+| `text.info` / `bg.info-subtle-hover` | 6.10:1 | 8.20:1 |
+| `text.link` / `bg.brand-subtle-hover` (purple) | 6.47:1 | 5.32:1 |
+| `text.link` / `bg.brand-subtle-hover` (emerald) | 5.37:1 | 4.63:1 |
+
+All 12 clear the 4.5:1 AA text floor — the tightest is emerald-dark's brand pairing at 4.63:1. `danger`/`warning`/`success`/`info` are shared across both brand themes, matching their own `-subtle` tokens' existing brand-independence; `brand-subtle-hover` is brand-specific in light mode (distinct purple/emerald tints) and shared in dark mode (both resolve to `gray.800`, mirroring `brand-subtle` itself being gray-based in dark mode per Phase 9).
+
 ## Multi-theme structure going forward
 
 Adding a third brand theme later = one more pair of semantic JSON files (`{brand}-light.json`, `{brand}-dark.json`) referencing a new primitive color scale, following the exact same token names as the existing two. No changes needed to component code, since components should only ever reference semantic tokens, never primitives directly.
+
+## Component-layer tokens
+
+**First populated 2026-08-12 (Avatar's size scale), extended 2026-08-13 (Avatar's status-size scale, same file — `component/avatar.json` now holds two token families, `avatar.size.*` and `avatar.status-size.*`)** — the pattern below is now established, not just planned.
+
+- **File convention:** one file per component, `component/{component-name}.json`, self-namespaced under that component's own top-level key (e.g. `avatar.json` → `{ "avatar": { ... } }`) — same unwrapped convention as `typography.json`/`other.json`, so no entry in `dbm/namespace-primitives`'s `NAMESPACE_BY_FILENAME` map is needed.
+- **Theme-independent by default.** Unlike semantic tokens, component tokens aren't split per brand/mode — they're built once into `component-tokens.css`/`component-tokens.ts` and loaded globally (`:root`, no `data-theme` scoping), alongside `primitives.css`. A component token *can* alias a primitive (e.g. a future color override) if it ever needs one — the build includes the primitive source for reference resolution — but plain literal values (dimensions, etc.) are just as valid and don't require an alias.
+- **When to reach for this layer, in order of preference:**
+  1. Use an existing semantic token if one already fits.
+  2. If a component needs a numeric value on an existing primitive scale (spacing, icon-size, etc.) that just isn't the value currently in use, prefer that existing scale over inventing something new.
+  3. Only add a component-layer token when the component's design genuinely calls for a value with **no home on any existing primitive scale** — reach for this layer instead of hardcoding the literal value directly in component CSS, which the "tokens are the single source of truth" rule in `CLAUDE.md` forbids regardless of layer.
+- **Precedent — Avatar's size scale:** requested pixel values were 36/40/44/48/52px. Only 40 and 48 matched existing tokens (`space-10`, `space-12`); 36/44/52 matched nothing on any scale. Rather than distort the shared spacing scale to fit one component's needs, or silently snap to the nearest existing values (changing the requested design), `component/avatar.json` was created with `avatar.size.{xs,sm,md,lg,xl}` as literal dimension values, scoped only to Avatar.
+- **Build wiring:** `style-dictionary.config.js`'s `buildComponents()` runs a dedicated Style Dictionary instance (source: primitives + `component/*.json`, filtered to component-namespaced tokens via `token.filePath` rather than a hardcoded namespace list, so a new `component/*.json` file needs no config change) — same shape as the existing primitives-only and per-theme passes.
 
 ## Build pipeline decisions (Phase 2)
 
@@ -140,13 +168,15 @@ dbm-tokens/
 │   ├── breakpoint.json
 │   ├── motion.json
 │   └── other.json
-└── semantic/
-    ├── purple-light.json
-    ├── purple-dark.json
-    ├── emerald-light.json
-    └── emerald-dark.json
+├── semantic/
+│   ├── purple-light.json
+│   ├── purple-dark.json
+│   ├── emerald-light.json
+│   └── emerald-dark.json
+└── component/
+    └── avatar.json
 ```
 
 ## Open for next pass
-- Component-layer tokens (deferred by design — populate as components are built)
+- Component-layer tokens: pattern established (Avatar's size scale); extend to other components only as their own reviews turn up a genuine scale gap, not preemptively
 - Disabled-state contrast combinations (expected to sit below AA by design; confirm case-by-case as components use them)
