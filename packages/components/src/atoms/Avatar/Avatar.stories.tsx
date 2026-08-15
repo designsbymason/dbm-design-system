@@ -198,7 +198,13 @@ export const BrokenImage: Story = {
 export const IconFallback: Story = {
   name: "Generic icon (no image, no initials)",
   args: {
-    initials: undefined,
+    // Empty string, not undefined — undefined renders as an inert "Set
+    // string" placeholder instead of a live control (see the Playground's
+    // own `src`/`aria-label` args above for the same fix). Safe here too:
+    // Avatar.tsx's fallback logic is a truthiness check
+    // (`resolvedInitials ? ... : <icon>`), so "" falls through to the
+    // icon exactly like undefined did.
+    initials: "",
   },
 };
 
@@ -211,30 +217,60 @@ export const SquareShape: Story = {
 
 export const AsButton: Story = {
   name: 'Polymorphic: as="button" (interactive trigger, keeps its own content)',
-  render: () => (
+  // `render: (args) => ...`, not `render: () => ...` — a render function
+  // that ignores its own `args` parameter renders correctly once but makes
+  // every Controls-panel toggle a no-op, since the JSX below never reads
+  // the values the panel edits (found 2026-08-16 auditing all `render`-
+  // overriding stories; see guidelines/07-storybook-and-documentation-
+  // standards.md §5's story-controls checklist item). `args` here also
+  // fixes the previous mismatch where the panel showed `as: "span"` (the
+  // meta-level default) while the canvas visibly rendered a `<button>`.
+  args: {
+    as: "button",
+    status: "online",
+  },
+  render: (args) => (
     // onClick would open a profile menu in a real app — omitted here since
     // this story only demonstrates that `as="button"` renders a real,
     // clickable <button> while keeping Avatar's own generated content.
-    <Avatar
-      as="button"
-      initials="JD"
-      alt="Jane Doe"
-      status="online"
-      style={{ border: "none", cursor: "pointer", padding: 0 }}
-    />
+    <Avatar {...args} style={{ border: "none", cursor: "pointer", padding: 0 }} />
   ),
 };
 
 export const AsButtonColorful: Story = {
   name: 'Polymorphic: as="button" + colorful (hover steps the family-specific token, not brand)',
-  render: () => (
+  // `name`/`initials`/`alt`/`src` drive this story's entire point — four
+  // distinct identities producing four distinct color-family hashes — so a
+  // single shared control for any of them couldn't represent what's shown
+  // (which of the four would it apply to?). Suppressed via `control: false`
+  // rather than left interactive-but-silently-ignored, matching this
+  // file's own meta-level convention for props that "genuinely can't be
+  // meaningfully driven." Every other prop (as/colorful/disabled/size/
+  // shape/status) is shared across all four and stays fully controllable —
+  // confirmed live (2026-08-16): toggling `colorful` off here now
+  // correctly reverts all four to the fixed brand color. Previously this
+  // story's `render` didn't accept `args` at all, so every control
+  // silently did nothing regardless of which prop.
+  argTypes: {
+    name: { control: false },
+    initials: { control: false },
+    alt: { control: false },
+    src: { control: false },
+  },
+  args: {
+    as: "button",
+    colorful: true,
+  },
+  render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
       {["Jane Doe", "John Smith", "Alex Kim", "Maria Garcia"].map((name) => (
         <Avatar
           key={name}
-          as="button"
+          {...args}
           name={name}
-          colorful
+          initials={undefined}
+          alt={undefined}
+          src={undefined}
           style={{ border: "none", cursor: "pointer", padding: 0 }}
         />
       ))}
@@ -244,38 +280,46 @@ export const AsButtonColorful: Story = {
 
 export const AsButtonSquare: Story = {
   name: 'Polymorphic: as="button" + square shape (square focus ring, sm radius)',
-  render: () => (
-    <Avatar
-      as="button"
-      initials="JD"
-      alt="Jane Doe"
-      status="online"
-      shape="square"
-      style={{ border: "none", cursor: "pointer", padding: 0 }}
-    />
+  args: {
+    as: "button",
+    status: "online",
+    shape: "square",
+  },
+  render: (args) => (
+    <Avatar {...args} style={{ border: "none", cursor: "pointer", padding: 0 }} />
   ),
 };
 
 export const AsButtonDisabled: Story = {
   name: 'Polymorphic: as="button" + disabled',
-  render: () => (
-    <Avatar
-      as="button"
-      initials="JD"
-      alt="Jane Doe"
-      status="online"
-      disabled
-      style={{ border: "none", padding: 0 }}
-    />
-  ),
+  args: {
+    as: "button",
+    status: "online",
+    disabled: true,
+  },
+  render: (args) => <Avatar {...args} style={{ border: "none", padding: 0 }} />,
 };
 
+// The four stories below each render multiple `Avatar` instances that
+// intentionally vary along one fixed axis (size, status, or both) — no
+// single Controls-panel value could represent "every size at once," and
+// `ResponsiveSize`'s breakpoint map isn't representable by a `select`
+// control at all. Only *that* axis prop is suppressed per story
+// (`argTypes: { size: { control: false } }`, etc.) — every other prop
+// (colorful/disabled/shape/status/as/initials/...) is genuinely shared
+// across every instance in the grid and stays fully wired through `args`,
+// same as any other story (2026-08-16: reversed an earlier
+// `controls.disable`-the-whole-panel pass — that hid every control, not
+// just the one that didn't apply, which is more than the actual problem
+// called for; see guidelines/07-storybook-and-documentation-standards.md
+// §5 and 06-engineering-standards.md §9).
 export const AllSizes: Story = {
   name: "All sizes",
-  render: () => (
+  argTypes: { size: { control: false } },
+  render: (args) => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-        <Avatar key={size} initials="JD" alt="Jane Doe" size={size} />
+        <Avatar key={size} {...args} size={size} />
       ))}
     </div>
   ),
@@ -284,17 +328,17 @@ export const AllSizes: Story = {
 export const ResponsiveSize: Story = {
   name: "Responsive size (sm on mobile, xl from md up)",
   parameters: { chromatic: { viewports: [375, 1024] } },
-  render: () => (
-    <Avatar initials="JD" alt="Jane Doe" size={{ base: "sm", md: "xl" }} />
-  ),
+  argTypes: { size: { control: false } },
+  render: (args) => <Avatar {...args} size={{ base: "sm", md: "xl" }} />,
 };
 
 export const AllStatuses: Story = {
   name: "All statuses",
-  render: () => (
+  argTypes: { status: { control: false } },
+  render: (args) => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
       {(["online", "offline", "busy", "away"] as const).map((status) => (
-        <Avatar key={status} initials="JD" alt="Jane Doe" status={status} />
+        <Avatar key={status} {...args} status={status} />
       ))}
     </div>
   ),
@@ -307,7 +351,8 @@ export const AllStatuses: Story = {
 // time and wouldn't have caught it.
 export const SizeStatusMatrix: Story = {
   name: "Size × status matrix",
-  render: () => (
+  argTypes: { size: { control: false }, status: { control: false } },
+  render: (args) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <div
@@ -315,13 +360,7 @@ export const SizeStatusMatrix: Story = {
           style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}
         >
           {(["online", "offline", "busy", "away"] as const).map((status) => (
-            <Avatar
-              key={status}
-              initials="JD"
-              alt="Jane Doe"
-              size={size}
-              status={status}
-            />
+            <Avatar key={status} {...args} size={size} status={status} />
           ))}
         </div>
       ))}

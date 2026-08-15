@@ -285,6 +285,21 @@ describe("Avatar", () => {
     );
   });
 
+  it("still derives a colorful color class when name is an explicit empty string, falling through to alt", () => {
+    // Regression test: identity used to be `name ?? alt ?? initials` — an
+    // explicit `name=""` (not omitted) is non-nullish, so `??` stopped
+    // there instead of falling through to `alt`, silently disabling
+    // `colorful`. Real-world trigger: Storybook's own `args.name` default
+    // is `""` (kept non-nullish so the `name` control stays interactive),
+    // which several Avatar stories spread onto every rendered instance.
+    const { container } = render(
+      <Avatar name="" alt="Jane Doe" initials="JD" colorful />,
+    );
+    expect(container.firstElementChild?.firstElementChild?.className).toMatch(
+      /_color[A-Z]/,
+    );
+  });
+
   it("fires onError when the image fails to load, alongside the internal fallback", () => {
     const onError = vi.fn();
     render(

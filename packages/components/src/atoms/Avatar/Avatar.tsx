@@ -195,7 +195,18 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
     // aren't explicitly provided, but never overrides either once given.
     const resolvedInitials = initials ?? (name ? initialsFromName(name) : undefined);
     const resolvedAlt = alt ?? name;
-    const identity = name ?? alt ?? initials;
+    // `||`, not `??` — an explicit `name=""` (Storybook's own default, kept
+    // non-nullish so the `name` control stays genuinely interactive rather
+    // than an inert placeholder) must fall through to `alt`/`initials` the
+    // same way an omitted `name` does. `??` broke this: `"" ?? alt` short-
+    // circuits to `""` since an empty string isn't nullish, silently
+    // disabling `colorful` for any grid-style story whose `args.name`
+    // defaults to "" while `initials`/`alt` carry the real fixed identity
+    // (found 2026-08-16 wiring `args` through Avatar's AllSizes/AllStatuses/
+    // SizeStatusMatrix stories — `colorful` visibly did nothing). Safe to
+    // widen to `||` for `alt`/`initials` too: whichever ends up last in the
+    // chain has nothing further to fall through to regardless of operator.
+    const identity = name || alt || initials;
     const activeColorClass =
       colorful && identity ? colorClass[hashToColorFamily(identity)] : undefined;
 

@@ -129,6 +129,30 @@ This is why `text.on-brand` is defined per-theme rather than as a single global 
 
 All 12 clear the 4.5:1 AA text floor — the tightest is emerald-dark's brand pairing at 4.63:1. `danger`/`warning`/`success`/`info` are shared across both brand themes, matching their own `-subtle` tokens' existing brand-independence; `brand-subtle-hover` is brand-specific in light mode (distinct purple/emerald tints) and shared in dark mode (both resolve to `gray.800`, mirroring `brand-subtle` itself being gray-based in dark mode per Phase 9).
 
+**Phase 13 (`border.brand` dark-mode value diverged from light, 2026-08-16):** Dark-mode `border.brand` moved off the literal `purple.100`/`emerald.100` it shared with light mode (set in Phase 6) to `purple.900`/`emerald.900`. The literal value measured 12.38:1 (purple) / 12.46:1 (emerald) against `bg.brand-subtle` in dark mode — a stark high-contrast ring, nothing like light mode's own intentionally low-key ~1.09:1 pairing. New dark values: `purple.900` on `gray.900` = 1.32:1; `emerald.900` on `gray.900` = 1.08:1 — both now similarly subtle to their own light-mode counterpart, restoring the "decorative accent, not a state boundary" intent Phase 6 established (WCAG 1.4.11's 3:1 floor still doesn't apply here, same reasoning as before).
+
+**Phase 14 (`border.{danger,warning,success,info}-subtle` added, 2026-08-16):** Added for Avatar's `colorful` variant border-matching — until now every colorful avatar kept a fixed `border.brand` (purple) ring regardless of which status family it hashed to. Four new tokens, one per family, following `border.brand`'s exact scale-step pattern (family.100 light / family.900 dark) rather than reusing the existing `border.{danger,warning,success,info}` tokens (those are `.500`/`.400`, the stronger state-identifying borders used on Input/Select/etc. validation — a different, already-verified class of token, not decorative; see Phase 15 below). Brand-agnostic, like their matching `bg.*-subtle` tokens. Contrast against each family's own `bg.*-subtle` background:
+
+| Token | Light | Dark |
+|---|---|---|
+| `border.danger-subtle` | red.100 on red.50 = 1.10:1 | red.900 on red.950 = 1.26:1 |
+| `border.warning-subtle` | amber.100 on amber.50 = 1.09:1 | amber.900 on amber.950 = 1.27:1 |
+| `border.success-subtle` | green.100 on green.50 = 1.09:1 | green.900 on green.950 = 1.30:1 |
+| `border.info-subtle` | blue.100 on blue.50 = 1.09:1 | blue.900 on blue.950 = 1.28:1 |
+
+All comparably subtle to `border.brand`'s own pairings — deliberately, not a gap, same accepted decorative-only class as `border.brand`/`border.code`. Dark mode here does *not* neutralize to gray the way `bg.brand-subtle` does (Phase 9): each family's own `bg.*-subtle` keeps its own tint in dark mode (`red.950`, not `gray.900`), so the border pairs against that tinted background rather than gray.
+
+**Phase 15 (`border.{warning,success,info}` added, completing the state-family border set, 2026-08-16):** `border.danger` was the only status-family "strong" border — a real state-identifying border (Input/Select/Checkbox/Textarea validation), correctly subject to WCAG 1.4.11's 3:1 non-text floor unlike the decorative `-subtle` tokens above. Added matching `warning`/`success`/`info` at the same scale step (`.500` light / `.400` dark) for symmetry, verified against each token's real hosting surface (`bg.surface` — white light, `gray.800` dark, what Input/Select/etc. actually sit on) rather than assumed from the pattern match alone:
+
+| Token | Light (vs white) | Dark (vs gray.800) |
+|---|---|---|
+| `border.danger` (existing) | red.500 = 3.48:1 | red.400 = 4.13:1 |
+| `border.warning` | amber.500 = 3.31:1 | amber.400 = 4.31:1 |
+| `border.success` | green.500 = 3.07:1 | green.400 = 4.57:1 |
+| `border.info` | blue.500 = 3.26:1 | blue.400 = 4.35:1 |
+
+All clear the 3:1 floor — `border.success`'s light value is the tightest at 3.07:1. Not yet consumed by any shipped component; added to complete the token set ahead of a future warning/success/info-state form control, same "add the token layer ahead of its specific consumer" precedent as `bg.code`/`text.code`/`border.code` (Phase 8). Also reordered every semantic `border.*` block (all 4 theme JSON files) and `Color.mdx`'s matching array to group each family's own base token with its own `-subtle` variant (`danger`, `danger-subtle`, `warning`, `warning-subtle`, ...) rather than by when each was added — see `07-storybook-and-documentation-standards.md` §7's order-check note for the full incident.
+
 ## Multi-theme structure going forward
 
 Adding a third brand theme later = one more pair of semantic JSON files (`{brand}-light.json`, `{brand}-dark.json`) referencing a new primitive color scale, following the exact same token names as the existing two. No changes needed to component code, since components should only ever reference semantic tokens, never primitives directly.
