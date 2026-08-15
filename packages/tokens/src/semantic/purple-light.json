@@ -235,6 +235,41 @@
       "$type": "color",
       "$value": "{color.red.500}"
     },
+    "danger-subtle": {
+      "$type": "color",
+      "$value": "{color.red.100}",
+      "$description": "Family-matched decorative-accent border, same family.100-light/family.900-dark scale step as border.brand — not a reuse of border.danger (red.500, the stronger state-identifying border used for e.g. Input validation, where WCAG 1.4.11 actually applies). Pairs with bg.danger-subtle (red.50) for any component drawing a subtle danger-tinted ring, not limited to one specific component — first used by Avatar's `colorful` danger variant (2026-08-16), but not scoped to it. red.100 on red.50 is 1.10:1, intentionally as subtle as border.brand's 1.09:1 purple pairing. Brand-agnostic — identical value in every brand theme, same as bg.danger-subtle."
+    },
+    "warning": {
+      "$type": "color",
+      "$value": "{color.amber.500}",
+      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.500 scale step border.danger uses for red, for a warning-toned state-identifying border (e.g. a future warning-state form control)."
+    },
+    "warning-subtle": {
+      "$type": "color",
+      "$value": "{color.amber.100}",
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.warning-subtle (amber.50) for any component's warning-tinted ring, not limited to one specific component. amber.100 on amber.50 is 1.09:1. Brand-agnostic."
+    },
+    "success": {
+      "$type": "color",
+      "$value": "{color.green.500}",
+      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.500-equivalent scale step (green.500) for a success-toned state-identifying border."
+    },
+    "success-subtle": {
+      "$type": "color",
+      "$value": "{color.green.100}",
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.success-subtle (green.50) for any component's success-tinted ring, not limited to one specific component. green.100 on green.50 is 1.09:1. Brand-agnostic."
+    },
+    "info": {
+      "$type": "color",
+      "$value": "{color.blue.500}",
+      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same scale step (blue.500) for an info-toned state-identifying border."
+    },
+    "info-subtle": {
+      "$type": "color",
+      "$value": "{color.blue.100}",
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.info-subtle (blue.50) for any component's info-tinted ring, not limited to one specific component. blue.100 on blue.50 is 1.09:1. Brand-agnostic."
+    },
     "code": {
       "$type": "color",
       "$value": "{color.blue.100}",

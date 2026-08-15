@@ -238,6 +238,41 @@
       "$type": "color",
       "$value": "{color.red.400}"
     },
+    "danger-subtle": {
+      "$type": "color",
+      "$value": "{color.red.900}",
+      "$description": "Family-matched decorative-accent border, dark counterpart to border.danger-subtle (light) — follows the same purple.900-in-dark-mode pattern established for border.brand above. Not neutralized to a shared gray the way border.brand's dark value is: family accents keep their own tint in dark mode (bg.danger-subtle here is red.950, not gray.900 — see that token's own description). Pairs with bg.danger-subtle for any component's danger-tinted ring, not limited to one specific component — first used by Avatar's `colorful` danger variant (2026-08-16), but not scoped to it. red.900 on red.950 is 1.26:1, comparably subtle to border.brand's own 1.32:1 dark pairing. Brand-agnostic — identical value in every brand theme."
+    },
+    "warning": {
+      "$type": "color",
+      "$value": "{color.amber.400}",
+      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.400 scale step border.danger uses for red, for a warning-toned state-identifying border (e.g. a future warning-state form control)."
+    },
+    "warning-subtle": {
+      "$type": "color",
+      "$value": "{color.amber.900}",
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.warning-subtle for any component's warning-tinted ring, not limited to one specific component. amber.900 on amber.950 is 1.27:1. Brand-agnostic."
+    },
+    "success": {
+      "$type": "color",
+      "$value": "{color.green.400}",
+      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.400-equivalent scale step (green.400) for a success-toned state-identifying border."
+    },
+    "success-subtle": {
+      "$type": "color",
+      "$value": "{color.green.900}",
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.success-subtle for any component's success-tinted ring, not limited to one specific component. green.900 on green.950 is 1.30:1. Brand-agnostic."
+    },
+    "info": {
+      "$type": "color",
+      "$value": "{color.blue.400}",
+      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same scale step (blue.400) for an info-toned state-identifying border."
+    },
+    "info-subtle": {
+      "$type": "color",
+      "$value": "{color.blue.900}",
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.info-subtle for any component's info-tinted ring, not limited to one specific component. blue.900 on blue.950 is 1.28:1. Brand-agnostic."
+    },
     "code": {
       "$type": "color",
       "$value": "{color.gray.700}",

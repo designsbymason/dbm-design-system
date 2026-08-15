@@ -447,24 +447,36 @@
   this way. `brand` (the component's own default, `.content`'s base
   colors above) is also a possible hash output, so it isn't redeclared
   here as its own class.
+
+  Each family also overrides `.content`'s own `border-color` (base
+  `border.brand`, purple) with its own `border.{family}-subtle` token
+  (2026-08-16) — same family.100-light/family.900-dark scale step as
+  border.brand itself (see those tokens' own descriptions in
+  packages/tokens/src/semantic/*.json), just not the brand color, so a
+  colorful avatar's ring matches its own fill instead of staying purple
+  regardless of which family got hashed.
 */
 .colorDanger {
   background-color: var(--dbm-bg-danger-subtle);
+  border-color: var(--dbm-border-danger-subtle);
   color: var(--dbm-text-danger);
 }
 
 .colorWarning {
   background-color: var(--dbm-bg-warning-subtle);
+  border-color: var(--dbm-border-warning-subtle);
   color: var(--dbm-text-warning);
 }
 
 .colorSuccess {
   background-color: var(--dbm-bg-success-subtle);
+  border-color: var(--dbm-border-success-subtle);
   color: var(--dbm-text-success);
 }
 
 .colorInfo {
   background-color: var(--dbm-bg-info-subtle);
+  border-color: var(--dbm-border-info-subtle);
   color: var(--dbm-text-info);
 }
 
