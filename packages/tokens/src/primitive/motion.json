@@ -62,6 +62,16 @@
         1
       ],
       "$description": "Expo-out feel for premium micro-interactions (modals, popovers entering)"
+    },
+    "linear": {
+      "$type": "cubicBezier",
+      "$value": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "$description": "Constant-rate motion, no ease-in/ease-out. A cubic bezier from (0,0) to (1,1) is mathematically a straight line, so this renders identically to the CSS `linear` keyword — expressed as a cubicBezier token instead of a special-cased literal so it goes through the same build pipeline as every other easing token (the CSS cubicBezier/css transform, the TS array export). Added 2026-08-16 for Skeleton's wave shimmer, which previously hardcoded the literal `linear` keyword with no token backing — a continuous looping gradient sweep needs a constant rate; any of the other curves would introduce an uneven, distracting acceleration/deceleration on each loop."
     }
   }
 }

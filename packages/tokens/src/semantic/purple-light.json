@@ -149,6 +149,11 @@
       "$value": "{color.gray.600}",
       "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) is only verified for the 3:1 non-text case. gray.600 with white text gives 4.70:1, passing everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
     },
+    "skeleton": {
+      "$type": "color",
+      "$value": "{color.purple.200}",
+      "$description": "New token (2026-08-16), added for Skeleton — bg.subtle (gray.50) was the original fill, but measured directly against bg.surface (white) it is only 1.04:1, functionally invisible for a component whose entire purpose is to read as a visible placeholder shape (found reviewing Skeleton). Not a WCAG-text-contrast failure (Skeleton is decorative/aria-hidden, exempt like disabled controls) but a real functional gap — the same class of issue Phase 16's bg.*-indicator tokens closed for Badge's dot mode: an existing token verified for one purpose (bg.subtle: hover fill, dashboard panel, neutral accent) reused for a new one (a standalone visible graphic) it was never checked against. Revised same day from gray.200 to purple.200 at explicit direction, to give the skeleton fill brand identity instead of staying neutral. purple.200 vs bg.surface = 1.36:1 — effectively identical visual weight to gray.200's own 1.35:1 (deliberately matched, not coincidental), so the visibility fix carries over unchanged; only the hue changed. Brand-specific (unlike bg.neutral/bg.code's brand-agnostic precedent, since the whole point here is to carry brand identity) — see emerald-light.json for that theme's own value."
+    },
     "overlay": {
       "$type": "color",
       "$value": "{color.neutral.black}",

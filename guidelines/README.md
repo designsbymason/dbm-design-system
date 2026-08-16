@@ -14,7 +14,7 @@ Internal reference documents for the DBM Design System. This is where architectu
 | `04-component-inventory.md` | ✅ Done | Full component list, atomic-design tiering (atoms/molecules/organisms/templates), v1 scope vs. deferred |
 | `05-component-api-conventions.md` | ✅ Done | Prop naming patterns, file structure, compound component pattern, CSS/token conventions, per-component definition of done |
 | `06-engineering-standards.md` | ✅ Done | Clean code, scalability, stability/error handling, performance, responsiveness, browser/SSR targets, i18n stance, agent process rules |
-| `07-storybook-and-documentation-standards.md` | 🔄 In progress (4 of 47 components have a Docs page as of 2026-08-16) | Storybook infrastructure (docs/viewport/interaction-test addons), sidebar taxonomy, the per-component Docs-page template, the tracked processing order for the post-Phase-4.75 Storybook refinement pass, version-upgrade fragility (§9), and CI/build reliability (§10) |
+| `07-storybook-and-documentation-standards.md` | 🔄 In progress (5 of 47 components have a Docs page as of 2026-08-16) | Storybook infrastructure (docs/viewport/interaction-test addons), sidebar taxonomy, the per-component Docs-page template, the tracked processing order for the post-Phase-4.75 Storybook refinement pass, version-upgrade fragility (§9), and CI/build reliability (§10) |
 
 ## Reading order for new context (human or agent)
 

@@ -150,6 +150,11 @@
       "$value": "{color.gray.600}",
       "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) is only verified for the 3:1 non-text case. gray.600 with white text gives 4.70:1, passing everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
     },
+    "skeleton": {
+      "$type": "color",
+      "$value": "{color.gray.900}",
+      "$description": "New token (2026-08-16), added for Skeleton alongside the light-mode fix (see that theme's own description for the full rationale) — dark mode's existing gray.900 value (vs bg.surface/gray.800 = 1.40:1) was already visibly correct, confirmed live in Storybook, so this is a rename onto a dedicated token, not a value change. Light mode was revised same day to a brand-tinted purple.200/emerald.200; dark mode deliberately stays neutral gray rather than following suit, mirroring bg.brand-subtle's own established precedent (that token drops its brand tint entirely in dark mode too — purple.950 was tried and rejected there for failing text.link/icon.brand contrast and colliding with bg.canvas, see that token's own description). bg.skeleton hosts no text, so the contrast reason doesn't directly transfer, but the same underlying tension likely does: a dark, low-chroma brand tint reads as almost the same as plain gray at this end of the lightness curve, so there's no real visual payoff for the added complexity of a fourth brand-specific value. Revisit if a specific dark brand-tinted value is ever requested."
+    },
     "overlay": {
       "$type": "color",
       "$value": "{color.neutral.black}",

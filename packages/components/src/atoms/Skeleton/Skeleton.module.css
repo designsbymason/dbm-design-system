@@ -1,5 +1,5 @@
 .root {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-skeleton);
   display: block;
 }
 
@@ -8,15 +8,33 @@
     var(--dbm-motion-easing-standard) infinite;
 }
 
+/* The sweep lives on a pseudo-element animated via `transform` rather than
+   animating `background-position` on `.root` directly — `transform` (and
+   `opacity`) can run entirely on the compositor thread with no per-frame
+   repaint, unlike `background-position`, which forces a repaint on every
+   frame it changes (per this system's own performance rule,
+   06-engineering-standards.md §4). `overflow: hidden` clips the sweep to
+   this element's own border-radius (set by whichever `.variant*` class is
+   also applied to the same element) since an absolutely-positioned
+   descendant is clipped by its nearest positioned ancestor's overflow. */
 .animationWave {
-  animation: wave calc(var(--dbm-motion-duration-slower) * 2) linear infinite;
+  overflow: hidden;
+  position: relative;
+}
+
+.animationWave::after {
+  animation: wave calc(var(--dbm-motion-duration-slower) * 2)
+    var(--dbm-motion-easing-linear) infinite;
   background-image: linear-gradient(
     90deg,
     transparent,
     var(--dbm-bg-surface),
     transparent
   );
-  background-size: 200% 100%;
+  content: "";
+  inset: 0;
+  position: absolute;
+  transform: translateX(-100%);
 }
 
 .variantText {
@@ -54,19 +72,18 @@
 }
 
 @keyframes wave {
-  0% {
-    background-position: -150% 0;
-  }
-
   100% {
-    background-position: 150% 0;
+    transform: translateX(100%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animationPulse,
-  .animationWave {
+  .animationPulse {
     animation: none;
-    background-image: none;
+  }
+
+  .animationWave::after {
+    animation: none;
+    content: none;
   }
 }

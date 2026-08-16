@@ -18,6 +18,14 @@ describe("Skeleton", () => {
     );
   });
 
+  it("stays hidden from the accessibility tree even if a caller passes their own aria-hidden", () => {
+    render(<Skeleton data-testid="skeleton" aria-hidden={false} />);
+    expect(screen.getByTestId("skeleton")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+
   it("applies width and height via inline style", () => {
     render(<Skeleton data-testid="skeleton" width={120} height="2rem" />);
     const el = screen.getByTestId("skeleton");
@@ -67,6 +75,14 @@ describe("Skeleton", () => {
     const cls = screen.getByTestId("skeleton").className;
     expect(cls).not.toMatch(/animationPulse/);
     expect(cls).not.toMatch(/animationWave/);
+  });
+
+  it("does not render children, even if passed at runtime bypassing the type", () => {
+    render(
+      // @ts-expect-error children is intentionally not part of SkeletonProps
+      <Skeleton data-testid="skeleton">Should not render</Skeleton>,
+    );
+    expect(screen.queryByText("Should not render")).not.toBeInTheDocument();
   });
 
   it("forwards ref to the underlying div", () => {

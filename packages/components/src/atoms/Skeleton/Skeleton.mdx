@@ -1,0 +1,208 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Avatar } from "../Avatar";
+import { Spinner } from "../Spinner";
+import { Stack } from "../Stack";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Skeleton } from "./Skeleton";
+import * as SkeletonStories from "./Skeleton.stories";
+
+export const propOrder = [
+  "variant",
+  "width",
+  "height",
+  "animation",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={SkeletonStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Skeleton" tier="Atom" />
+
+A placeholder shape rendered in place of real content while it's still loading — a colored block
+that mimics the size and form of what's coming, rather than a generic spinner. Three variants match
+common content shapes: `text` for a line of copy (a fixed `1em` tall), `circular` for avatars and
+icons, and `rectangular` for images, cards, and other larger blocks. Two animation styles —
+`pulse` (the default, a gentle opacity fade) and `wave` (a moving gradient shimmer) — signal that
+content is still loading; `animation="none"` renders a static placeholder instead. Purely
+decorative and hidden from the accessibility tree by design — pair it with a separate live region
+(an `aria-live` element that announces changes to screen readers) elsewhere in the loading UI if
+you need to announce loading state to assistive technology. Compose multiple `Skeleton` instances
+(via `Stack` or any flex layout) to mirror a real composed layout, rather than expecting one
+instance to auto-size to arbitrary content.
+
+### Import
+
+```tsx
+import { Skeleton } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SkeletonStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={SkeletonStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={SkeletonStories} order={propOrder} />
+
+## Variants
+
+### Text
+
+<Canvas of={SkeletonStories.Text} />
+
+### Circular
+
+<Canvas of={SkeletonStories.Circular} />
+
+### Rectangular
+
+<Canvas of={SkeletonStories.Rectangular} />
+
+### Default sizes (no width/height passed)
+
+<Canvas of={SkeletonStories.DefaultSizes} />
+
+### Wave animation
+
+<Canvas of={SkeletonStories.WaveAnimation} />
+
+### Composed: card loading placeholder
+
+<Canvas of={SkeletonStories.CardPlaceholder} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Match `variant` to the real content's shape (`circular` for avatars, `text` for lines,
+  `rectangular` for images/cards) so the placeholder telegraphs the coming layout instead of
+  reading as a generic gray blob.
+- Compose multiple `Skeleton` instances (via `Stack` or plain flex) to mirror a real composed
+  layout — see "Composed: card loading placeholder" above.
+- Set explicit `width`/`height` matching the real content's actual dimensions where you know them
+  ahead of time, so nothing jumps or reflows once real content replaces the placeholder.
+- Use `animation="none"` in a dense, high-count context (a table with many skeleton cells) where
+  many simultaneous animations would be visually distracting.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't rely on `Skeleton` alone to announce loading state to assistive tech — it's `aria-hidden`
+  by design, non-overridable; pair it with a separate live region elsewhere in the loading UI if
+  you need to announce progress.
+- Don't expect a sharp, zero-radius corner from `variant="rectangular"` — it always carries this
+  system's house soft-radius; use `className`/`style` for the rare case a hard corner is genuinely
+  needed.
+- Don't pass `children` expecting content-driven auto-sizing or a wrapping "swap to real content"
+  mode — `Skeleton` is a standalone placeholder shape with neither; compose separate instances
+  instead of nesting real content inside one.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match the number and arrangement of `Skeleton` instances to the real content's actual layout,
+  not a single oversized generic block — this is what makes a loading state feel responsive rather
+  than jarring once content arrives.
+- Keep animation consistent within one loading region — mixing `pulse` and `wave` in the same view
+  reads as unpolished, even though either is a perfectly fine default on its own.
+- Prefer `pulse` (the default) for most cases; reach for `wave` when a more directional,
+  per-line reading motion helps (e.g. multi-line text placeholders).
+
+## Accessibility
+
+<Callout tone="info" title="Decorative by design — pair with a live region for real announcements">
+
+- **Always `aria-hidden="true"`, and not overridable** — this component has no accessible name or
+  role of its own and shouldn't be perceived as a UI element by assistive tech, even if a caller
+  tries to pass their own `aria-hidden`.
+- **No live region of its own.** If you need to announce "Loading…" or a completion state to
+  screen reader users, add a separate `aria-live` region elsewhere in the loading UI — `Skeleton`
+  deliberately doesn't take this on, since it's a purely visual placeholder.
+- **Both animations respect `prefers-reduced-motion`** — automatically switching to a static,
+  unanimated appearance rather than being hidden outright, so it still functions as a visible
+  placeholder without a continuous, potentially uncomfortable animation.
+- **No keyboard interaction.** `Skeleton` renders no focusable content, so there's nothing to tab
+  to and nothing to verify for keyboard navigation.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Skeleton variant="circular" width={40} height={40} />
+<Skeleton variant="text" width="80%" />
+<Skeleton variant="rectangular" animation="wave" />
+<Skeleton animation="none" />
+```
+
+```tsx
+<Stack direction="row" gap={3}>
+  <Skeleton variant="circular" width={40} height={40} />
+  <Stack gap={2} style={{ flex: 1 }}>
+    <Skeleton variant="text" width="60%" />
+    <Skeleton variant="text" width="90%" />
+  </Stack>
+</Stack>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.skeleton" usage="loading-placeholder fill — brand-tinted in light mode (purple.200/emerald.200), neutral gray in dark mode" />
+<TokenRow token="bg.surface" usage="wave animation's moving shimmer highlight color" />
+<TokenRow token="motion.duration.slower" usage="pulse animation duration (doubled, via calc(), for wave's own duration)" />
+<TokenRow token="motion.easing.standard" usage="pulse animation easing" />
+<TokenRow token="motion.easing.linear" usage="wave animation easing — a constant-rate curve for its continuous gradient sweep" />
+<TokenRow token="radius.sm" usage="text variant's corner radius" />
+<TokenRow token="radius.full" usage="circular variant's corner radius" />
+<TokenRow token="radius.md" usage="rectangular variant's corner radius — always soft, matching the house style (see Usage guidelines)" />
+<TokenRow token="icon-size.2xl" usage="circular variant's default diameter, used when no width/height is passed" />
+<TokenRow token="space.24" usage="rectangular variant's default height, used when no height is passed" />
+<TokenRow token="opacity.100" usage="pulse animation's peak opacity" />
+<TokenRow token="opacity.40" usage="pulse animation's dimmed opacity" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Spinner"
+  description="The other loading indicator in this system — indeterminate and shape-agnostic, unlike Skeleton's content-shaped placeholder"
+  href="/?path=/docs/atoms-feedback-spinner--docs"
+>
+  <Spinner label="Loading" />
+</RelatedCard>
+<RelatedCard
+  name="Avatar"
+  description="A common real-content match for Skeleton's circular variant while profile data is still loading"
+  href="/?path=/docs/atoms-data-display-avatar--docs"
+>
+  <Avatar initials="JD" alt="Jane Doe" />
+</RelatedCard>
+<RelatedCard
+  name="Stack"
+  description="Compose multiple Skeleton instances into a real layout, matching the shape of the content still loading"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Skeleton variant="circular" width={24} height={24} />
+    <Skeleton variant="text" width={48} />
+  </Stack>
+</RelatedCard>
+</div>
