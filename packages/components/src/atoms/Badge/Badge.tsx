@@ -1,5 +1,5 @@
 import { cx } from "@dbm-design-system/primitives";
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import styles from "./Badge.module.css";
 import type {
   BadgePosition,
@@ -77,9 +77,10 @@ const positionClass: Record<BadgePosition, string | undefined> = {
  * <Badge tone="brand">New</Badge>
  * <Badge tone="success" variant="subtle">Active</Badge>
  * <Badge max={99}>{100}</Badge>
+ * <Badge hideZero>{0}</Badge>
  * <Badge dot aria-label="Unread notifications" />
  * <Badge size="lg">Failed</Badge>
- * <Badge anchor={<BellIcon />} dot aria-label="Unread notifications" />
+ * <Badge anchor={<Icon icon={Bell} size="lg" />} dot aria-label="Unread notifications" />
  * ```
  */
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
@@ -89,6 +90,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       variant = "solid",
       size = "md",
       max,
+      hideZero = false,
       dot = false,
       anchor,
       position = "top-right",
@@ -107,6 +109,45 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
         : children;
     const isLabeledDot = dot && Boolean(ariaLabel || ariaLabelledby);
 
+    // Pops the badge (see Badge.module.css's .pop/@keyframes pop) whenever
+    // `content` changes to a new value after the initial mount — skipped on
+    // mount itself (prevContentRef starts equal to content, so the first
+    // effect run is a no-op) and in `dot` mode, which has no content to
+    // change. Resets to false-then-true across a frame boundary rather than
+    // just true, so two content changes landing inside one animation's
+    // duration each still restart the animation instead of the second one
+    // being a no-op (the class name/animation-name wouldn't otherwise
+    // change, so the browser has nothing to signal a restart from).
+    const prevContentRef = useRef(content);
+    const [isPopping, setIsPopping] = useState(false);
+    useEffect(() => {
+      const changed = prevContentRef.current !== content;
+      prevContentRef.current = content;
+      if (dot || !changed) return;
+      setIsPopping(false);
+      const frame = requestAnimationFrame(() => setIsPopping(true));
+      return () => cancelAnimationFrame(frame);
+    }, [content, dot]);
+
+    const hasWarnedDotChildrenRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (dot && children != null && !hasWarnedDotChildrenRef.current) {
+        hasWarnedDotChildrenRef.current = true;
+        console.warn(
+          "Badge: `children` was provided alongside `dot` — `dot` always renders as a minimal dot with no visible content, so `children` is silently ignored. Remove `dot`, or remove `children` (using `aria-label` instead if the dot needs an accessible name).",
+        );
+      }
+    }
+
+    // Placed after every hook above (rules of hooks) so this can return
+    // early without skipping any of them. Renders nothing at all — not
+    // just visually hidden — matching MUI's own `showZero={false}`
+    // default; `anchor` (if set) still renders on its own, since it's a
+    // real element the caller passed in, not part of what "zero" hides.
+    if (hideZero && !dot && children === 0) {
+      return anchor === undefined ? null : anchor;
+    }
+
     const badge = (
       <span
         ref={ref}
@@ -122,8 +163,19 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
           anchor !== undefined && styles.positioned,
           anchor !== undefined && positionClass[position],
           anchor !== undefined && overlap === "circular" && styles.overlapCircular,
+          isPopping && styles.pop,
           className,
         )}
+        // Cosmetic cleanup, not load-bearing: the effect above already
+        // forces a false-then-true toggle on every genuine content change
+        // regardless of whether this ever fires, so a stuck `pop` class
+        // between two changes doesn't break the next pop. Confirmed
+        // untestable under jsdom, which has no `AnimationEvent`
+        // implementation — React never invokes `onAnimationEnd` from a
+        // simulated dispatch there (same class of gap as this file's
+        // `getBoundingClientRect()`-in-jsdom limitation elsewhere);
+        // verified live in Storybook instead.
+        onAnimationEnd={() => setIsPopping(false)}
         {...props}
       >
         {dot ? null : content}

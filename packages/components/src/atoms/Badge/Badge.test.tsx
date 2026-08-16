@@ -1,8 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Badge } from "./Badge";
+import styles from "./Badge.module.css";
+
+const popClass = styles.pop as string;
 
 describe("Badge", () => {
   it("renders children", () => {
@@ -110,6 +113,73 @@ describe("Badge", () => {
     expect(screen.getByText("New")).toBeInTheDocument();
   });
 
+  it("renders nothing when hideZero is set and children is exactly 0", () => {
+    const { container } = render(
+      <Badge hideZero data-testid="badge">
+        {0}
+      </Badge>,
+    );
+    expect(screen.queryByTestId("badge")).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("renders only anchor, with no badge, when hideZero hides a zero-count anchored badge", () => {
+    render(
+      <Badge hideZero anchor={<span data-testid="anchor">bell</span>} data-testid="badge">
+        {0}
+      </Badge>,
+    );
+    expect(screen.getByTestId("anchor")).toBeInTheDocument();
+    expect(screen.queryByTestId("badge")).not.toBeInTheDocument();
+  });
+
+  it("still renders normally when hideZero is set but children isn't exactly 0", () => {
+    render(
+      <Badge hideZero data-testid="badge">
+        {3}
+      </Badge>,
+    );
+    expect(screen.getByTestId("badge")).toHaveTextContent("3");
+  });
+
+  it("does not hide a zero count by default (hideZero defaults to false)", () => {
+    render(<Badge data-testid="badge">{0}</Badge>);
+    expect(screen.getByTestId("badge")).toHaveTextContent("0");
+  });
+
+  it("has no effect in dot mode", () => {
+    render(<Badge dot hideZero aria-label="Unread" data-testid="badge" />);
+    expect(screen.getByTestId("badge")).toBeInTheDocument();
+  });
+
+  it("does not pop on initial mount", () => {
+    render(<Badge data-testid="badge">5</Badge>);
+    expect(screen.getByTestId("badge")).not.toHaveClass(popClass);
+  });
+
+  it("pops when content changes to a new value", async () => {
+    const { rerender } = render(<Badge data-testid="badge">5</Badge>);
+    rerender(<Badge data-testid="badge">6</Badge>);
+
+    await waitFor(() => expect(screen.getByTestId("badge")).toHaveClass(popClass));
+  });
+
+  it("does not pop when rerendered with the same content", async () => {
+    const { rerender } = render(<Badge data-testid="badge">5</Badge>);
+    rerender(<Badge data-testid="badge">5</Badge>);
+
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(screen.getByTestId("badge")).not.toHaveClass(popClass);
+  });
+
+  it("never pops in dot mode, even as its underlying tone/content context changes", async () => {
+    const { rerender } = render(<Badge dot tone="danger" data-testid="badge" />);
+    rerender(<Badge dot tone="success" data-testid="badge" />);
+
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(screen.getByTestId("badge")).not.toHaveClass(popClass);
+  });
+
   it("renders no visible content and is aria-hidden when dot is set", () => {
     render(<Badge dot data-testid="badge" />);
     const badge = screen.getByTestId("badge");
@@ -162,6 +232,27 @@ describe("Badge", () => {
     render(<Badge dot aria-label="Unread notifications" />);
     const badge = screen.getByRole("img", { name: "Unread notifications" });
     expect(badge).not.toHaveAttribute("aria-hidden");
+  });
+
+  it("does not warn when dot and children aren't combined", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<Badge dot aria-label="Unread notifications" />);
+    render(<Badge>New</Badge>);
+
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("warns once in development when children is provided alongside dot", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { rerender } = render(<Badge dot>New</Badge>);
+    rerender(<Badge dot>Newer</Badge>);
+
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("`children` was provided alongside `dot`"),
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("forwards ref to the underlying span", () => {
@@ -286,19 +377,30 @@ describe("Badge", () => {
   });
 
   it("positions the badge at the requested corner", () => {
+    // Checked via the `--badge-position-transform` custom property, not a
+    // resolved `transform` value — `.positioned` reads it back through
+    // `var(--badge-position-transform, none)` (rather than each position
+    // class setting `transform` directly) so the pop animation's own
+    // `scale(...)` can compose with it instead of one clobbering the
+    // other; jsdom doesn't resolve custom properties into the final
+    // `transform` value the way a real browser would.
     const { rerender } = render(
       <Badge anchor={<span>icon</span>} data-testid="badge">
         New
       </Badge>,
     );
-    expect(screen.getByTestId("badge")).toHaveStyle({ transform: "translate(50%, -50%)" });
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      "--badge-position-transform": "translate(50%,-50%)",
+    });
 
     rerender(
       <Badge anchor={<span>icon</span>} position="bottom-left" data-testid="badge">
         New
       </Badge>,
     );
-    expect(screen.getByTestId("badge")).toHaveStyle({ transform: "translate(-50%, 50%)" });
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      "--badge-position-transform": "translate(-50%,50%)",
+    });
   });
 
   it("has no accessibility violations across tones and variants", async () => {

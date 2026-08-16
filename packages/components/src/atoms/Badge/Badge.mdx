@@ -1,0 +1,282 @@
+import { Bell } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Avatar } from "../Avatar";
+import { IconButton } from "../IconButton";
+import { Tag } from "../Tag";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Badge } from "./Badge";
+import * as BadgeStories from "./Badge.stories";
+
+export const propOrder = [
+  "children",
+  "tone",
+  "size",
+  "variant",
+  "max",
+  "hideZero",
+  "dot",
+  "anchor",
+  "position",
+  "overlap",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={BadgeStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Badge" tier="Atom" />
+
+A small status, count, or label indicator. Six tones (`brand` is the system's own identity color,
+for things like "New"/"Beta" labels; the rest are feedback-type) across two visual weights —
+`subtle` (low-emphasis) and `solid` (high-emphasis, the default) — and a five-step `size` scale.
+Renders inline as a standalone label by default, or set `anchor` to overlap the corner of another
+element instead (the "notification dot on a bell icon" pattern) — `position` and `overlap` tune
+where and how tightly it tucks in. A numeric `children` value changing (e.g. an incrementing count)
+triggers a brief scale pop automatically, `max` caps runaway counts at a fixed `"{max}+"` ceiling
+instead of growing without limit, and `hideZero` removes the badge entirely once a live count
+drops back to `0`.
+
+### Import
+
+```tsx
+import { Badge } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={BadgeStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={BadgeStories.Playground}
+  exclude={["anchor", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={BadgeStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={BadgeStories.AllSizes} />
+
+### All tones (subtle)
+
+<Canvas of={BadgeStories.AllTonesSubtle} />
+
+### All tones (solid)
+
+<Canvas of={BadgeStories.AllTonesSolid} />
+
+### As status labels
+
+<Canvas of={BadgeStories.StatusLabels} />
+
+### As high-emphasis status labels (solid)
+
+<Canvas of={BadgeStories.SolidStatusLabels} />
+
+### Count with max overflow (99+)
+
+<Canvas of={BadgeStories.CountWithMax} />
+
+### Hide when count is zero (hideZero)
+
+<Canvas of={BadgeStories.HideZero} />
+
+### Dot indicator
+
+<Canvas of={BadgeStories.Dot} />
+
+### Anchor: notification dot on an icon
+
+<Canvas of={BadgeStories.AnchorOnIcon} />
+
+### Anchor: count on an icon
+
+<Canvas of={BadgeStories.AnchorWithCount} />
+
+### Anchor: all positions
+
+<Canvas of={BadgeStories.AllPositions} />
+
+### Anchor: overlap — rectangular vs circular anchor
+
+<Canvas of={BadgeStories.AnchorOverlapComparison} />
+
+### Composed inline (no anchor): inside a Button
+
+<Canvas of={BadgeStories.InlineInButton} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `dot` for a plain "has updates" indicator with no count, and pair it with `aria-label` (or
+  `aria-labelledby`) whenever the dot needs to convey real meaning rather than being purely
+  decorative.
+- Set `max` on any badge showing an open-ended count (unread messages, cart items) so a large
+  number doesn't grow into an unreadably long pill.
+- Set `hideZero` on a live count badge so it disappears automatically once the count drops back
+  to `0`, instead of sitting there showing an empty-looking "0".
+- Leave `anchor` unset for a badge that should just sit inline as one more element in a flex
+  layout (a count next to a label inside a `Button`, tab, or input) — `anchor` is specifically for
+  overlapping the corner of another element, not general layout.
+- Match `overlap` to the anchor's shape: `circular` for round anchors (an `Avatar`),
+  `rectangular` (the default) for everything else (an `IconButton`, a custom shape).
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `children` alongside `dot` expecting it to show — `dot` always renders as a minimal
+  dot with no visible content and silently ignores `children`; Badge warns once in development if
+  you do.
+- Don't override `variant="subtle"` on an anchored count/text badge — that pale fill is meant to
+  sit on a card/page background, and reads as barely visible floating over arbitrary anchor
+  content with no guaranteed contrasting surface behind it.
+- Don't expect `dot`'s fill to follow `variant` — a dot always uses its own contrast-verified
+  indicator token regardless of `variant`, since the `subtle` tones are only ever verified as a
+  background for text, not as a small standalone graphic.
+- Don't forget `aria-label`/`aria-labelledby` on a meaningful `dot` — an unlabeled dot renders
+  `aria-hidden` and is invisible to assistive tech even though it's visually present.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the density of the surrounding UI: `xs`/`sm` for compact lists and tables, `md`
+  (the default) for standard content, `lg`/`xl` for higher-emphasis contexts.
+- The defaults (`tone="danger"`, `variant="solid"`) suit the most common alerting case (errors,
+  unread counts) — override `tone` for other meanings (`brand` for "New"/"Beta", `success`/
+  `warning`/`info` for status) and `variant="subtle"` for lower-emphasis inline labels that
+  shouldn't compete with surrounding content.
+- For a live-updating count (unread messages, notifications), no extra wiring is needed — the pop
+  animation fires automatically whenever `children` changes to a new value.
+- Compose Badge inline (no `anchor`) inside other components' own layouts rather than trying to
+  position it manually — it's just a `display: inline-flex` span with no positioning opinions of
+  its own until `anchor` is set.
+
+## Accessibility
+
+<Callout tone="info" title="A decorative dot by default, a meaningful one when you ask for it">
+
+- **Dev-mode warning** (stripped in production): `children` provided alongside `dot` warns once
+  via `console.warn`, since `dot` always renders as a minimal dot with no visible content and
+  would otherwise silently discard it.
+- **`dot` is `aria-hidden` and purely decorative by default.** Pass `aria-label` or
+  `aria-labelledby` to give it `role="img"` and a real accessible name instead, for a dot that
+  needs to convey meaning (e.g. "3 unread notifications").
+- **A text/count badge needs no extra ARIA** — its visible `children` already provide the
+  accessible name.
+- **Every `tone` × `variant` background/text pairing is contrast-verified** against WCAG 1.4.3's
+  4.5:1 text floor. `dot` mode uses a separate set of tokens (the `-indicator` family, plus
+  `bg.neutral`), verified instead against WCAG 1.4.11's 3:1 non-text floor, since a dot has no
+  text to lean on — see [Design tokens used](#design-tokens-used) below for the exact tokens.
+- **The count-change pop animation is a one-shot transition, not a continuous/looping one**, so
+  it isn't gated behind `prefers-reduced-motion` — only continuous animation (spinners, pulses)
+  is in scope for that preference in this system.
+- **In `anchor` mode, a `bg.surface`-colored ring visually separates the badge** from whatever it
+  overlaps — purely decorative, not something assistive tech needs to know about.
+- **`hideZero` removes the badge from the DOM entirely** (not just visually) when it hides a zero
+  count, so assistive tech never announces it — `anchor`, if set, still renders on its own.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Badge>Failed</Badge>
+<Badge tone="brand">New</Badge>
+<Badge tone="success" variant="subtle">Active</Badge>
+<Badge max={99}>{100}</Badge>
+<Badge hideZero>{0}</Badge>
+<Badge dot aria-label="Unread notifications" />
+<Badge size="lg">Failed</Badge>
+<Badge anchor={<Icon icon={Bell} size="lg" />} dot aria-label="Unread notifications" />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand-subtle" usage="subtle brand fill" />
+<TokenRow token="text.brand" usage="subtle brand text" />
+<TokenRow token="bg.subtle" usage="subtle neutral fill" />
+<TokenRow token="text.secondary" usage="subtle neutral text" />
+<TokenRow token="bg.info-subtle" usage="subtle info fill" />
+<TokenRow token="text.info" usage="subtle info text" />
+<TokenRow token="bg.success-subtle" usage="subtle success fill" />
+<TokenRow token="text.success" usage="subtle success text" />
+<TokenRow token="bg.warning-subtle" usage="subtle warning fill" />
+<TokenRow token="text.warning" usage="subtle warning text" />
+<TokenRow token="bg.danger-subtle" usage="subtle danger fill" />
+<TokenRow token="text.danger" usage="subtle danger text" />
+<TokenRow token="bg.brand" usage="solid brand fill" />
+<TokenRow token="text.on-brand" usage="solid brand text" />
+<TokenRow token="bg.neutral-strong" usage="solid neutral fill" />
+<TokenRow token="text.on-neutral" usage="solid neutral text" />
+<TokenRow token="bg.info" usage="solid info fill" />
+<TokenRow token="text.on-info" usage="solid info text" />
+<TokenRow token="bg.success" usage="solid success fill" />
+<TokenRow token="text.on-success" usage="solid success text" />
+<TokenRow token="bg.warning" usage="solid warning fill" />
+<TokenRow token="text.on-warning" usage="solid warning text" />
+<TokenRow token="bg.danger" usage="solid danger fill" />
+<TokenRow token="text.on-danger" usage="solid danger text" />
+<TokenRow token="bg.brand-indicator" usage="dot mode's brand fill — verified for 3:1 against bg.surface, unlike bg.brand-subtle" />
+<TokenRow token="bg.neutral" usage="dot mode's neutral fill" />
+<TokenRow token="bg.info-indicator" usage="dot mode's info fill — verified for 3:1 against bg.surface, unlike bg.info-subtle" />
+<TokenRow token="bg.success-indicator" usage="dot mode's success fill — verified for 3:1 against bg.surface, unlike bg.success-subtle" />
+<TokenRow token="bg.warning-indicator" usage="dot mode's warning fill — verified for 3:1 against bg.surface, unlike bg.warning-subtle" />
+<TokenRow token="bg.danger-indicator" usage="dot mode's danger fill — verified for 3:1 against bg.surface, unlike bg.danger-subtle" />
+<TokenRow token="bg.surface" usage="anchor mode's separating ring color" />
+<TokenRow token="border-width.2" usage="anchor mode's separating ring width" />
+<TokenRow token="radius.full" usage="badge shape (circle for one character, pill for more)" />
+<TokenRow token="badge.padding-inline.xs–badge.padding-inline.xl" usage="per-size horizontal padding (component-specific — no home on the primitive space scale)" />
+<TokenRow token="badge.size.xs–badge.size.xl" usage="per-size height/min-width diameter (component-specific)" />
+<TokenRow token="space.1–space.5" usage="per-size dot diameter" />
+<TokenRow token="space.px" usage="combined with space.1 for the circular-overlap + dot anchor inset (no single primitive step between space.1 and space.2)" />
+<TokenRow token="font-family.primary" usage="badge text" />
+<TokenRow token="font-size.xs–font-size.base" usage="per-size type scale" />
+<TokenRow token="font-weight.semibold" usage="badge text weight" />
+<TokenRow token="line-height.tight" usage="badge text line-height" />
+<TokenRow token="motion.duration.fast" usage="count-change pop animation" />
+<TokenRow token="motion.easing.emphasized" usage="count-change pop animation" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Avatar"
+  description="A common anchor target — a status or count badge on a profile picture's corner"
+  href="/?path=/docs/atoms-data-display-avatar--docs"
+>
+  <Avatar initials="JD" alt="Jane Doe" status="online" />
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="Another common anchor target — a notification count on a bell icon"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={Bell} aria-label="Notifications" variant="secondary" />
+</RelatedCard>
+<RelatedCard
+  name="Tag"
+  description="For removable/interactive labels, unlike Badge's plain read-only role"
+  href="/?path=/docs/atoms-data-display-tag--docs"
+>
+  <Tag removable>Filter</Tag>
+</RelatedCard>
+</div>

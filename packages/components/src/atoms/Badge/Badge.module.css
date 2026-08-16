@@ -10,28 +10,43 @@
 }
 
 /*
- * Sizes (text/count content). Fourth revision (2026-08-16, at explicit
- * direction): the prior revision picked padding-inline/height from the
- * *primitive* space scale (4/8/12px steps) and sized `min-width` against
- * an *estimated* narrow-digit glyph width — both wrong. A real digit like
- * "9" fit fine, but a wide single character ("%", "W") measured 30-50%
- * wider in real Chrome rendering of Nunito 600, so the primitive scale's
- * coarse 4px padding jumps left no room to absorb that at xs/sm/md, and
- * those sizes rendered as pills even for one character. Padding-inline
- * and the height/min-width pair now come from dedicated component-layer
- * tokens (`component/badge.json`) sized against *measured* widest-
- * character widths (not estimated) with real margin, following the same
- * "no home on the primitive scale" precedent as Avatar's `avatar.size.*`
- * — see each token's own $description for the exact numbers. The
- * font-size/padding-inline *alternation* rule from the previous revision
- * is unchanged: whichever of the two stays flat between two adjacent
- * steps, the other one changes, so every step-up is visually driven by
- * exactly one of them. `min-width` is what gives a single character its
- * circular shape: with width and height forced equal, `.root`'s
- * radius-full makes a perfect circle regardless of font-size. Content
- * wider than that (2+ characters) naturally pushes width past
- * `min-width` via padding-inline + the text's own width, elongating into
- * a pill — `height` stays fixed either way, only width is ever flexible.
+ * Sizes (text/count content). Sixth revision (2026-08-16, at explicit
+ * direction — increase the right/left padding back to 6px): every size's
+ * padding-inline rose from 5px back to 6px. xs's diameter (23px) no longer
+ * had room for a wide character at that padding, forcing it back up to
+ * 25px — which then forced sm/md/lg up in turn to stay distinct from xs's
+ * new value, and xl up too so the top of the ladder kept a proportional
+ * step above lg rather than collapsing to a 1px gap. Net result: this
+ * revision's diameters (25/27/29/30/34) are identical to the fourth
+ * revision's own values below — a full reversion of the fifth revision's
+ * shrink, driven purely by padding needing to grow back, not a deliberate
+ * re-choice of the ladder. See each token's own $description in
+ * `component/badge.json` for the exact per-size margin.
+ *
+ * The fifth revision (same day, now reverted) had dropped padding-inline
+ * to 5px and every diameter to match (xs 25→23, sm 27→25, md 29→27, lg
+ * 30→28, xl 34→31), re-deriving against the same real-measured
+ * widest-glyph-widths as the fourth revision (Nunito 600, per font-size
+ * step) so the circle-for-one-character fit held at every step.
+ *
+ * The fourth revision (same day) is what first moved padding-inline/
+ * height/min-width off the *primitive* space scale (4/8/12px steps,
+ * previously paired with an *estimated* rather than measured narrow-digit
+ * glyph width — both wrong; a wide character like "%"/"W" measured 30-50%
+ * wider in real Chrome rendering than that estimate, so those coarse
+ * steps left no room to absorb it and rendered as a pill even for one
+ * character) onto dedicated component-layer tokens (`component/
+ * badge.json`), following the same "no home on the primitive scale"
+ * precedent as Avatar's `avatar.size.*`. The font-size/padding-inline
+ * *alternation* rule from that revision is unchanged: whichever of the
+ * two stays flat between two adjacent steps, the other one changes, so
+ * every step-up is visually driven by exactly one of them. `min-width` is
+ * what gives a single character its circular shape: with width and height
+ * forced equal, `.root`'s radius-full makes a perfect circle regardless
+ * of font-size. Content wider than that (2+ characters) naturally pushes
+ * width past `min-width` via padding-inline + the text's own width,
+ * elongating into a pill — `height` stays fixed either way, only width is
+ * ever flexible.
  */
 .sizeXs {
   font-size: var(--dbm-font-size-xs);
@@ -222,6 +237,12 @@
      depth they read fine at the same value. */
   --badge-anchor-inset: var(--dbm-space-1);
   position: absolute;
+  /* Read via var() rather than set directly, so .pop's animation (below)
+     can layer its own scale() on top of whichever translate() a
+     .position* rule below sets, instead of one clobbering the other —
+     `transform` only ever holds one value, and the position offset and
+     the pop animation both need to contribute to it independently. */
+  transform: var(--badge-position-transform, translate(0, 0));
   /* Same ring technique as Avatar's status dot (Avatar.module.css's
      .status) — visually separates the badge from whatever it's
      overlapping, using the current surface color so it "cuts into" any
@@ -268,23 +289,77 @@
 .positionTopRight {
   top: var(--badge-anchor-inset);
   right: var(--badge-anchor-inset);
-  transform: translate(50%, -50%);
+  --badge-position-transform: translate(50%, -50%);
 }
 
 .positionTopLeft {
   top: var(--badge-anchor-inset);
   left: var(--badge-anchor-inset);
-  transform: translate(-50%, -50%);
+  --badge-position-transform: translate(-50%, -50%);
 }
 
 .positionBottomRight {
   bottom: var(--badge-anchor-inset);
   right: var(--badge-anchor-inset);
-  transform: translate(50%, 50%);
+  --badge-position-transform: translate(50%, 50%);
 }
 
 .positionBottomLeft {
   bottom: var(--badge-anchor-inset);
   left: var(--badge-anchor-inset);
-  transform: translate(-50%, 50%);
+  --badge-position-transform: translate(-50%, 50%);
+}
+
+/*
+ * Count-change micro-interaction (finding #9, 2026-08-16): a brief scale
+ * pop whenever a text/count badge's own content value changes, so an
+ * incrementing notification count or a status-label swap reads as an
+ * update rather than static text silently changing underneath the reader
+ * — the same cue MUI's own Badge gives on value change. Triggered from
+ * Badge.tsx (compares new content against the previous render, skips the
+ * initial mount). Never applies in `dot` mode, which has no content to
+ * change.
+ *
+ * Reads the position transform back via var() (set above) rather than
+ * animating a bare `scale(...)`, so this composes correctly in anchor
+ * mode: the animation's own transform list is `var(--badge-position-
+ * transform, translate(0, 0)) scale(...)` at every keyframe stop, matching
+ * `.positioned`'s static value function-for-function, which is what lets
+ * the browser interpolate the two transform lists component-wise instead
+ * of one replacing the other outright. In standalone (non-anchor) mode the
+ * var is simply unset and resolves to its `translate(0, 0)` fallback —
+ * **must be a real transform function, not the bare `none` keyword**
+ * (found live in Storybook, 2026-08-16: the pop was invisible in every
+ * non-anchor story). `none` is only valid as `transform`'s *entire* value,
+ * not as one function in a list alongside `scale(...)` — substituting it
+ * in produces the invalid value `none scale(1.15)`, which the browser
+ * drops entirely rather than partially applying, silently no-op'ing the
+ * whole animation. `.positioned`'s own bare `var(--badge-position-
+ * transform, translate(0, 0))` (no `scale()` appended) would actually
+ * have tolerated `none` fine on its own — the two fallbacks are kept
+ * identical anyway so this custom property has one consistent resting
+ * value everywhere it's read, not two.
+ *
+ * One-shot, not looping, so `prefers-reduced-motion` doesn't apply here
+ * per `06-engineering-standards.md` §4's own carve-out for one-shot
+ * state-change transitions (only continuous/looping animation is in
+ * scope for that rule) — same precedent as this file's dot/hover states
+ * and Tooltip's own fade in/out.
+ */
+.pop {
+  animation: pop var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+@keyframes pop {
+  0% {
+    transform: var(--badge-position-transform, translate(0, 0)) scale(1);
+  }
+
+  50% {
+    transform: var(--badge-position-transform, translate(0, 0)) scale(1.15);
+  }
+
+  100% {
+    transform: var(--badge-position-transform, translate(0, 0)) scale(1);
+  }
 }

@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` is the one non-status tone — the system's own identity color, for things like "New"/"Beta" labels rather than a status. */
 export type BadgeTone = "brand" | "neutral" | "info" | "success" | "warning" | "danger";
@@ -34,6 +34,17 @@ export interface BadgeProps extends ComponentPropsWithoutRef<"span"> {
    * effect when `children` isn't a number, or `dot` is set.
    */
   max?: number;
+  /**
+   * Renders nothing at all (just `anchor`, if set) when `children` is
+   * exactly the number `0` — matching MUI's `showZero={false}` default for
+   * a live count that shouldn't show an empty "0" once it drops back to
+   * none. Has no effect when `dot` is set (a dot has no `children` to be
+   * zero), or when `children` isn't the number `0` (a string `"0"`, or any
+   * other value, still renders normally). Off by default so existing
+   * `<Badge>{0}</Badge>` usage is unaffected unless you opt in.
+   * @default false
+   */
+  hideZero?: boolean;
   /**
    * Renders as a minimal dot with no visible text or count — for a plain
    * "has updates" indicator, typically placed next to an already-labeled
@@ -76,4 +87,40 @@ export interface BadgeProps extends ComponentPropsWithoutRef<"span"> {
    * @default 'rectangular'
    */
   overlap?: BadgeOverlap;
+  /**
+   * Accessible label announced by assistive tech. Required when `dot` is
+   * set and the dot needs to convey meaning (e.g. "3 unread notifications")
+   * rather than being purely decorative — an unlabeled `dot` renders
+   * `aria-hidden` instead. Not needed for a text/count badge, since its
+   * visible `children` already provide the accessible name.
+   */
+  "aria-label"?: string;
+  /**
+   * Points to the `id` of an existing, already-visible element to use as
+   * the accessible name instead — same `dot`-labeling role as `aria-label`
+   * above, for when a nearby visible element already says what the badge
+   * means.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * badge.
+   */
+  id?: string;
+  /**
+   * Additional CSS classes for customization. Merged with the component's
+   * own internal classes rather than replacing them.
+   */
+  className?: string;
+  /**
+   * Inline styles, merged onto the component's own internal styles.
+   */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }

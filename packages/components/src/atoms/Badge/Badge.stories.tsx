@@ -21,20 +21,25 @@ const meta: Meta<typeof Badge> = {
       options: ["brand", "neutral", "info", "success", "warning", "danger"],
       description: "Feedback-type coloring, independent of `variant`.",
     },
-    variant: {
-      control: "select",
-      options: ["subtle", "solid"],
-      description: "Low-emphasis subtle-background style, or high-emphasis solid-fill.",
-    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "Padding, font-size, and gap together as one step on the shared size scale.",
     },
+    variant: {
+      control: "select",
+      options: ["subtle", "solid"],
+      description: "Low-emphasis subtle-background style, or high-emphasis solid-fill.",
+    },
     max: {
       control: "number",
       description:
         "When `children` is a number greater than `max`, displays `${max}+` instead. No effect on non-numeric `children` or when `dot` is set.",
+    },
+    hideZero: {
+      control: "boolean",
+      description:
+        "Renders nothing (just anchor, if set) when children is exactly the number 0. No effect on dot or non-zero children.",
     },
     dot: {
       control: "boolean",
@@ -63,6 +68,43 @@ const meta: Meta<typeof Badge> = {
       description:
         "`circular` tucks the badge in further, for round anchors. Has no effect unless `anchor` is set.",
     },
+    // Advanced/escape-hatch props last, matching BadgeProps' own
+    // declaration order (finding #6's "standard prop pattern" pass).
+    // `control: false` (`aria-labelledby`, `id`, `className`, `style`,
+    // `data-testid`) renders as "-" for values that only mean something
+    // wired up in real consuming code, not in an isolated Storybook
+    // canvas — same reasoning and precedent as Avatar/Button. `aria-label`
+    // is the one exception: a plain string, genuinely meaningful to type
+    // directly into this canvas, so it gets a real `control: "text"`.
+    "aria-label": {
+      control: "text",
+      description:
+        "Explicit accessible-label override. Required when `dot` is set and the dot needs to convey meaning, rather than being purely decorative.",
+    },
+    "aria-labelledby": {
+      control: false,
+      description:
+        "Points to the id of an existing, already-visible element to use as the accessible name instead.",
+    },
+    id: {
+      control: false,
+      description:
+        "Standard DOM id. Required when another element's aria-labelledby/aria-describedby needs to point at this badge.",
+    },
+    className: {
+      control: false,
+      description:
+        "Additional CSS classes for customization. Merged with the component's own internal classes.",
+    },
+    style: {
+      control: false,
+      description: "Inline styles, merged onto the component's own internal styles.",
+    },
+    "data-testid": {
+      control: false,
+      description:
+        "Test identifier for automated testing. Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    },
   },
   // Every controllable prop gets an explicit value here, matching its real
   // component default — an arg left `undefined` renders as an inert "Set
@@ -73,12 +115,20 @@ const meta: Meta<typeof Badge> = {
   args: {
     children: "Badge",
     tone: "danger",
-    variant: "solid",
     size: "md",
+    variant: "solid",
     max: 99,
+    hideZero: false,
     dot: false,
     position: "top-right",
     overlap: "rectangular",
+    // Empty-string default, not undefined — needed for this control to be
+    // genuinely interactive rather than an inert placeholder (see the
+    // comment above `args`). Safe: Badge.tsx only treats a truthy
+    // aria-label/aria-labelledby as "labeled" (`Boolean(ariaLabel ||
+    // ariaLabelledby)`), so an empty string behaves exactly like the prop
+    // being unset.
+    "aria-label": "",
   },
 };
 
@@ -194,6 +244,28 @@ export const CountWithMax: Story = {
     <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
       <Badge {...args}>{42}</Badge>
       <Badge {...args}>{100}</Badge>
+    </div>
+  ),
+};
+
+export const HideZero: Story = {
+  name: "Hide when count is zero (hideZero)",
+  // `children` is a fixed identity per instance (0 vs 3 — the whole point
+  // of this story is comparing those two specific values), same reasoning
+  // as the tone/status galleries above. Every other prop, including
+  // `hideZero` itself, stays live via `{...args}`.
+  argTypes: { children: { control: false } },
+  args: { hideZero: true, tone: "danger" },
+  render: (args) => (
+    <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
+      <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-2)" }}>
+        <span>count = 0:</span>
+        <Badge {...args}>{0}</Badge>
+      </div>
+      <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-2)" }}>
+        <span>count = 3:</span>
+        <Badge {...args}>{3}</Badge>
+      </div>
     </div>
   ),
 };

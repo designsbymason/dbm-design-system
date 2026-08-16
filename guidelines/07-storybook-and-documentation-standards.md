@@ -124,11 +124,11 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category:
 
-**Progress audited 2026-08-12, updated 2026-08-15 — this list was never actually updated as work happened, despite its own stated purpose ("mark each done... so a context reset doesn't lose progress"). Real status: 3 of 47 components have a Docs page — Box, Button, and Avatar. Nothing else below, including the rest of Phase A, has been started.** Restated with explicit status markers so the next session doesn't have to re-derive this by checking every `.mdx` file by hand:
+**Progress audited 2026-08-12, updated 2026-08-16. Real status: 4 of 47 components have a Docs page — Box, Button, Avatar, and Badge.** Restated with explicit status markers so the next session doesn't have to re-derive this by checking every `.mdx` file by hand:
 
 **Phase A — template-proving:**
 1. Box — ✅ done
-2. Button — ✅ done
+2. Button — ✅ done. **Known gap for its future `06-engineering-standards.md` §9 review pass** (found 2026-08-16, while closing the equivalent gap on Badge): `Button.types.ts` redeclares `className`/`id`/`data-testid`/`aria-label`/`aria-labelledby` per `05-component-api-conventions.md` §3, but not `style` — the one prop of that standard set left inherited-only. Not fixed here since Button is out of scope mid-Badge-review; add `style?: CSSProperties` with matching JSDoc when Button's own review pass runs.
 3. Input — ⬜ not started
 4. Icon — ⬜ not started
 5. Text — ⬜ not started
@@ -139,7 +139,7 @@ Foundational components first (prove the template before mass-applying it), then
 
 **Inputs** (⬜ not started): IconButton, CloseButton, Textarea, Checkbox, Switch, FieldLabel, FieldError, FieldHelperText
 
-**Data Display:** Avatar — ✅ done (2026-08-15, out of sequence — pulled ahead of Phase A's own remaining items and the rest of this queue at explicit direction, and went considerably deeper than the standard Docs-page pass; see `01-vision-and-goals.md` §13's Phase 4.9 entry for the full scope). **Finalized 2026-08-16** — a full review pass (`06-engineering-standards.md` §9's checklist) confirmed clean; per that section's own note, don't make further changes to Avatar (code, stories, docs, or its tokens) without asking first. Badge, Tag, Skeleton — ⬜ not started
+**Data Display:** Avatar — ✅ done (2026-08-15, out of sequence — pulled ahead of Phase A's own remaining items and the rest of this queue at explicit direction, and went considerably deeper than the standard Docs-page pass; see `01-vision-and-goals.md` §13's Phase 4.9 entry for the full scope). **Finalized 2026-08-16** — a full review pass (`06-engineering-standards.md` §9's checklist) confirmed clean; per that section's own note, don't make further changes to Avatar (code, stories, docs, or its tokens) without asking first. Badge — ✅ done (2026-08-16, out of sequence — the last item of Badge's own `06-engineering-standards.md` §9 review pass, findings #1–#10; see that review's own log for the full scope). **Finalized 2026-08-16** — a full review pass (`06-engineering-standards.md` §9's checklist) confirmed clean; per that section's own note, don't make further changes to Badge (code, stories, docs, or its tokens) without asking first. Tag, Skeleton — ⬜ not started
 
 **Navigation** (⬜ not started): BackToTop
 
