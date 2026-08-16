@@ -28,19 +28,18 @@ Building keyboard navigation, focus trapping, roving tabindex, and ARIA wiring f
 ```
 dbm-design-system/
 ├── apps/
-│   ├── docs/                    # Documentation website (Next.js, built later)
-│   └── storybook/               # Hosted Storybook instance
+│   ├── docs/                    # Documentation website (Next.js, built later) — currently an empty stub
+│   └── storybook/               # Hosted *public* Storybook instance (Phase 9) — currently an empty stub;
+│                                 # not where Storybook actually lives today, see note below
 │
 ├── packages/
 │   ├── tokens/                  # Design tokens — single source of truth
 │   │   ├── src/
-│   │   │   ├── color.json
-│   │   │   ├── typography.json
-│   │   │   ├── spacing.json
-│   │   │   ├── radius.json
-│   │   │   ├── shadow.json
-│   │   │   ├── motion.json
-│   │   │   └── breakpoints.json
+│   │   │   ├── primitive/       # Raw values, no meaning — color.json, typography.json, spacing.json,
+│   │   │   │                    # radius.json, shadow.json, breakpoint.json, motion.json, other.json
+│   │   │   ├── semantic/        # One file per theme (brand × mode) — purple-light.json, purple-dark.json,
+│   │   │   │                    # emerald-light.json, emerald-dark.json
+│   │   │   └── component/       # One file per component that needs one — avatar.json, badge.json
 │   │   ├── style-dictionary.config.js
 │   │   └── build/                # generated: css vars, JS/TS exports, (later) RN objects
 │   │
@@ -53,12 +52,15 @@ dbm-design-system/
 │   │   └── src/
 │   │
 │   ├── components/                # The actual DBM component library (this is the npm package)
-│   │   └── src/
-│   │       ├── atoms/            # Button, Input, Badge, Avatar, Icon, Text, Divider...
-│   │       ├── molecules/        # FormField, SearchBar, Card, Popover, MenuItem...
-│   │       ├── organisms/        # DataTable, Modal, Navbar, CommandPalette, Form...
-│   │       ├── templates/        # Page-level layout scaffolds (optional, later)
-│   │       └── styles/           # global.css, resets, css var consumption
+│   │   ├── src/
+│   │   │   ├── atoms/            # Built: Avatar, Badge, Button, Icon, Input... (47 shipped so far)
+│   │   │   ├── molecules/        # Built so far: Grid, GridItem, Select — FormField, Card, etc. still open
+│   │   │   ├── organisms/        # Not started yet — DataTable, Modal, Navbar, CommandPalette, Form...
+│   │   │   ├── templates/        # Not started yet — page-level layout scaffolds (optional, later)
+│   │   │   ├── foundations/      # Storybook-only Foundations pages (*.mdx) — not shipped in the package
+│   │   │   └── styles/           # global.css, resets, css var consumption
+│   │   └── .storybook/           # The real, active Storybook config/build lives HERE, not in
+│   │                              # apps/storybook/ above — see note below
 │   │
 │   ├── manifest/                  # Build tool: generates JSON component manifest from TS + JSDoc
 │   │   └── src/
@@ -73,6 +75,8 @@ dbm-design-system/
 ```
 
 **Why this split:** `tokens`, `primitives`, `icons`, and `components` are separately versioned/publishable packages. This lets consumers (or you, later, for React Native) depend on `tokens` and `primitives` independently without pulling in the full styled component set — and keeps the manifest generator decoupled from the components themselves.
+
+**Where Storybook actually lives (clarified 2026-08-16):** `apps/storybook/` was the originally-planned home for a *public-hosted* Storybook instance (Phase 9, still not built — the directory is currently just a stub `README.md`). The Storybook that's actually built and run today (`pnpm --filter @dbm-design-system/components run storybook`, the Docs pages, the `.storybook/blocks/*` MDX building blocks, everything covered in `07-storybook-and-documentation-standards.md`) lives entirely under `packages/components/.storybook/` instead — it ships alongside the component source it documents, not as a separate app. `apps/storybook/` may end up hosting a deployed build of that same instance later; it isn't a second, independent Storybook setup.
 
 ---
 

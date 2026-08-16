@@ -505,8 +505,8 @@
   border-radius: var(--dbm-radius-full);
   bottom: 0;
   height: var(--avatar-status-size);
+  inset-inline-end: 0;
   position: absolute;
-  right: 0;
   width: var(--avatar-status-size);
 }
 

@@ -17,7 +17,7 @@ An agentic, standalone React component library — built for AI coding agents (a
 - **Security is not optional.** See "Security practices" below — applies to every phase, not just repo setup.
 - **Responsive is not optional**, same standing as accessibility — every component works across the full breakpoint scale, not desktop-first with mobile bolted on later.
 - **Self-verify before reporting a task done.** Actually run lint/build/test and report real results — never report completion based on code "looking right."
-- **Never edit `guidelines/*.md` unilaterally.** These are the source of truth I control. If something needs to change, propose the specific change and why.
+- **Update `guidelines/*.md` directly as decisions are made — no need to ask first, but always surface what changed.** These are the source of truth I control, but chat scrolls away and `guidelines/*.md` persists, so record real decisions as they happen rather than gating every edit on a round trip. See `guidelines/06-engineering-standards.md` §8 for the full rule (when this applies, and the one carve-out — a rewrite of a standing process rule itself is worth flagging prominently even though it doesn't need pre-approval).
 - **Full engineering discipline** (clean code, scalability, performance, error handling, browser/SSR targets, i18n stance) is in `guidelines/06-engineering-standards.md` — read it alongside this file, not as an optional extra.
 
 ## Security practices
@@ -33,13 +33,17 @@ An agentic, standalone React component library — built for AI coding agents (a
 ## Repo structure
 ```
 apps/
-  docs/            Documentation website (Next.js/Astro — built later)
-  storybook/        Hosted Storybook instance
+  docs/            Documentation website (Next.js/Astro — built later; currently a stub)
+  storybook/        Public-hosted Storybook instance (Phase 9; currently a stub — the
+                     Storybook actually used today lives in packages/components/.storybook/,
+                     not here)
 packages/
-  tokens/           Source of truth for all design tokens (primitive + semantic layers)
+  tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
   primitives/        Headless behavior layer (wraps Radix, shared hooks)
   icons/             Phosphor Icons wrapper
-  components/        The actual DBM component library (published npm package)
+  components/        The actual DBM component library (published npm package) — also
+                     holds its own .storybook/ config and src/foundations/ (Storybook-only
+                     token reference pages, not shipped in the package)
   manifest/          Build tool: generates the JSON component manifest from TS + JSDoc
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs

@@ -75,7 +75,12 @@ export interface BadgeProps extends ComponentPropsWithoutRef<"span"> {
   anchor?: ReactNode;
   /**
    * Which corner of `anchor` the badge overlaps. Has no effect unless
-   * `anchor` is set.
+   * `anchor` is set. Intentionally a physical corner, not a logical one —
+   * `top-right` stays at the visual top-right in both LTR and RTL rather
+   * than mirroring, since `anchor` is arbitrary visual content (an icon,
+   * an avatar) rather than something tied to reading-flow direction
+   * (matches MUI's own `Badge` `anchorOrigin`, which doesn't mirror
+   * either).
    * @default 'top-right'
    */
   position?: BadgePosition;

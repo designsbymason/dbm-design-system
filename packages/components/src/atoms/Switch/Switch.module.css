@@ -5,6 +5,14 @@
   --switch-thumb-size: calc(
     var(--switch-track-height) - (var(--switch-thumb-inset) * 2)
   );
+  /* `transform: translateX()` always moves in the physical +X (visual
+     right) direction, regardless of `dir` — unlike `inset-inline-start`,
+     it has no logical equivalent. Defined once here so the RTL override
+     below only has to negate it, not duplicate the calc(). */
+  --switch-thumb-travel: calc(
+    var(--switch-track-width) - var(--switch-thumb-size) -
+      (var(--switch-thumb-inset) * 2)
+  );
 
   background-color: var(--dbm-bg-subtle);
   border: none;
@@ -44,8 +52,8 @@
   border-radius: var(--dbm-radius-full);
   display: flex;
   height: var(--switch-thumb-size);
+  inset-inline-start: var(--switch-thumb-inset);
   justify-content: center;
-  left: var(--switch-thumb-inset);
   position: absolute;
   top: var(--switch-thumb-inset);
   transition: transform var(--dbm-motion-duration-base)
@@ -55,12 +63,17 @@
 }
 
 .root[data-state="checked"] .thumb {
-  transform: translateX(
-    calc(
-      var(--switch-track-width) - var(--switch-thumb-size) -
-        (var(--switch-thumb-inset) * 2)
-    )
-  );
+  transform: translateX(var(--switch-thumb-travel));
+}
+
+/* `:dir(rtl)` (not a `[dir="rtl"]` attribute selector) so this also
+   applies when direction is inherited from an ancestor rather than set
+   directly on .root — negates the same travel distance rather than
+   recomputing it, so "checked" still lands the thumb at the track's
+   inline-end side (now the visual left) instead of sliding it further
+   past the inline-start side .thumb already sits at in RTL. */
+.root[data-state="checked"]:dir(rtl) .thumb {
+  transform: translateX(calc(-1 * var(--switch-thumb-travel)));
 }
 
 .checkedIcon,

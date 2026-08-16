@@ -2,8 +2,8 @@
   bottom: var(--dbm-space-6);
   opacity: var(--dbm-opacity-0);
   pointer-events: none;
+  inset-inline-end: var(--dbm-space-6);
   position: fixed;
-  right: var(--dbm-space-6);
   transform: translateY(var(--dbm-space-2));
   transition:
     opacity var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),

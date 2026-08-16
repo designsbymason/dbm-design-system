@@ -1,6 +1,6 @@
 # DBM Design System — Token Spec
 
-Companion to `dbm-tokens/` (the actual generated token files in W3C Design Tokens Community Group format — ready to feed into Style Dictionary and, later, the Tokens Studio Figma plugin for design-file sync).
+Companion to `packages/tokens/src/` (the actual generated token files in W3C Design Tokens Community Group format — ready to feed into Style Dictionary and, later, the Tokens Studio Figma plugin for design-file sync).
 
 ## Architecture: 3 layers
 
@@ -72,8 +72,6 @@ This is why `text.on-brand` is defined per-theme rather than as a single global 
 
 **Phase 4.75 (comprehensive atom completion, 2026-07-26):**
 - **New token, deliberately exempt from contrast checking:** `bg.overlay` (added for the `Backdrop` atom — the dimming scrim behind Dialog/Drawer/overlays), shared across all 4 themes as `{color.neutral.black}`. No text is ever rendered directly on it, so it isn't a WCAG contrast pairing in the way every other `bg.*`/`text.*` combination above is — opacity is applied compositionally at the component layer via the existing `opacity.*` scale rather than baked into the token, keeping color and opacity in their own separate token categories everywhere.
-
-**Not yet checked:** the full disabled-state contrast combinations (placeholder text is covered via `text.tertiary`), which typically intentionally sit below AA (expected for disabled states). `icon.disabled` is exempt for the same reason.
 
 **Phase 5 (Foundations Color page review, 2026-07-27) — anchored-scale light end read as gray, not a light tint:**
 - **Root cause:** `purple-600`'s OKLCH `L` (0.46) sits well below the canonical curve's own 600 midpoint (0.56), so the constant `lOffset` used to shift the rest of purple's/emerald's steps dragged purple's light end down toward mid-gray territory too. Confirmed empirically — user-flagged (screenshot comparison against `red`/`green`/`blue`'s 50–200, which are unshifted free scales and read as clean light tints).
@@ -177,6 +175,13 @@ Same day, applying this same lens to Avatar's already-finalized status dot (`onl
 
 Also corrected while re-deriving these numbers: `bg.neutral`'s own `$description` had cited "4.34:1 dark" for years — that figure was actually `gray.400`'s contrast against `bg.surface`, not `gray.500`'s (the token's real value, 3.10:1 dark). The token itself was never wrong, only the number recorded in its description. Corrected across all 4 theme files.
 
+**Phase 17 (disabled-state contrast, verified 2026-08-16 — closes what was previously logged as "not yet checked"):** confirmed real, computed numbers for every component with a disabled state, rather than leaving the WCAG exemption asserted but unmeasured. Two distinct mechanisms exist in this codebase:
+
+- **Opacity-composited (9 components — `Button`, `IconButton`, `CloseButton`, `Avatar`, `Checkbox`, `Switch`, `Input`, `Textarea`, `Select`):** `opacity: var(--dbm-opacity-40)` applied to the whole element. Modeled as a real alpha composite (`0.4×foreground + 0.6×page-background`, `bg.surface` as the representative page background every prior phase's own checks already use) rather than assumed. One representative pairing per component's own default appearance, computed for all 4 themes — full range across every theme was **1.02:1 to 2.96:1** (`Switch`'s track fill was tightest, `Input`/`Textarea`/`Select`'s value text was closest to clearing a floor). `CloseButton` excluded — its icon color is `color: inherit`, context-dependent by design, no single number applies.
+- **Direct tokens, not opacity-derived (`text.disabled`, `icon.disabled` — consumed by `FieldLabel`, `FieldHelperText`, `Heading`, `Text`, `Icon`, `Spinner`):** used as literal resolved colors, no compositing involved. `text.disabled` measured **2.14–2.32:1** against `bg.surface` across all 4 themes; `icon.disabled` measured **1.46–1.72:1**.
+
+Every number sits below both the 4.5:1 text floor and the 3:1 non-text floor, in every theme, with no surprises (nothing measured near-zero/fully-invisible either — `Switch`'s 1.02:1 is the closest, still visually present via its own shape and the paired `cursor: not-allowed`, not relying on color alone). This confirms the existing exemption is correctly applied, not just asserted: WCAG 2.1 success criteria 1.4.3 (Contrast Minimum) and 1.4.11 (Non-text Contrast) both explicitly exclude **inactive/disabled user interface components** from their contrast requirements — a disabled control reading as visibly muted is the correct, spec-sanctioned behavior, not a gap to close by raising these numbers. Nothing was changed as a result of this phase; it's a verification-only entry, matching this log's own standing rule of confirming rather than assuming.
+
 ## Multi-theme structure going forward
 
 Adding a third brand theme later = one more pair of semantic JSON files (`{brand}-light.json`, `{brand}-dark.json`) referencing a new primitive color scale, following the exact same token names as the existing two. No changes needed to component code, since components should only ever reference semantic tokens, never primitives directly.
@@ -203,10 +208,11 @@ Style Dictionary 5's actual behavior diverged from a few of the phase brief's as
 - **The built-in size/rem transform can't handle `clamp()`.** Confirmed empirically — it throws `Invalid Number` on fluid typography values. `CSS_TRANSFORMS` deliberately excludes any dimension-unit transform; all dimension `$value`s (spacing, radius, fluid font sizes) are pre-authored as final, correctly-unitted CSS strings (`"0.25rem"`, `"4px"`, `"clamp(1.2rem, 1.186rem + 0.071vw, 1.25rem)"`) at the source, so they pass through the pipeline verbatim instead of being computed by a transform.
 - **`shadow.json`'s `_note` key is stripped during parsing.** DTCG parsing expects every leaf to resolve to a `$value`; the human-readable `_note` annotation isn't a token, so the custom parser deletes it, scoped narrowly to that one file/key.
 - **Each theme is built as a separate Style Dictionary instance**, not as one config with multiple platforms. The four semantic theme files (`purple-light`, `purple-dark`, `emerald-light`, `emerald-dark`) all use identical top-level token paths (`bg.canvas`, etc.) — loading more than one into a single dictionary at once collides. `style-dictionary.config.js` builds 5 instances total: one primitives-only pass plus one per theme, each sourcing the shared primitives plus exactly one semantic file.
+- **Motion easing gets two parallel TS exports, decided 2026-08-16 (previously an open question in `01-vision-and-goals.md` §12).** `motion.easing.*` (unchanged) stays a CSS `cubic-bezier()` string — the form the built-in `cubicBezier/css` transform produces, and what the Foundations Motion page's own interactive demo (`MotionScale.tsx`) already builds a `transition` shorthand string from. A new sibling, `motion.easingArray.*`, additionally exports the same value as the raw `[x1,y1,x2,y2]` array — the form the `motion` library's own `easing` prop wants, and the one no export previously covered. Implemented generically in `dbm/typescript-const`'s `buildNestedObject` (reads `token.original.$value` for any `$type: "cubicBezier"` token, not hardcoded to `motion` specifically) rather than as a one-off — additive only, so the existing string export and its one real consumer are unaffected. No component uses the `motion` package yet (still zero imports of it anywhere in `packages/components`), so this remains unexercised until that integration actually happens — but the export shape no longer blocks it from starting.
 
 ## Files delivered
 ```
-dbm-tokens/
+packages/tokens/src/
 ├── primitive/
 │   ├── color.json
 │   ├── typography.json
@@ -222,9 +228,9 @@ dbm-tokens/
 │   ├── emerald-light.json
 │   └── emerald-dark.json
 └── component/
-    └── avatar.json
+    ├── avatar.json
+    └── badge.json
 ```
 
 ## Open for next pass
 - Component-layer tokens: pattern established (Avatar's size scale); extend to other components only as their own reviews turn up a genuine scale gap, not preemptively
-- Disabled-state contrast combinations (expected to sit below AA by design; confirm case-by-case as components use them)

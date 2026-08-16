@@ -60,6 +60,17 @@ function toCamelCase(kebab) {
 
 // Builds a plain nested object (token path -> resolved $value) for a set of tokens,
 // e.g. path ["bg", "brand"] with value "#358278" becomes { bg: { brand: "#358278" } }.
+//
+// cubicBezier tokens (motion.easing.*) additionally get a raw-array sibling export —
+// e.g. motion.easingArray.standard = [0.2, 0, 0, 1] next to motion.easing.standard =
+// "cubic-bezier(0.2, 0, 0, 1)" — since the `motion` library's own `easing` prop wants
+// the raw [x1,y1,x2,y2] array, not a CSS string, while existing CSS-string consumers
+// (Foundations' MotionScale demo builds a `transition` shorthand string from it) need
+// the string form unchanged. Additive only, generic to any cubicBezier-typed token
+// wherever it lives, not hardcoded to "motion" specifically. token.original.$value is
+// the untransformed DTCG source value (the array); token.$value is post-transform
+// (the CSS-string `cubicBezier/css` output) — confirmed via a one-off Style Dictionary
+// dump, not assumed (`original.$value` isn't otherwise documented in these terms).
 function buildNestedObject(tokens) {
   const root = {};
   for (const token of tokens) {
@@ -69,6 +80,18 @@ function buildNestedObject(tokens) {
       node = node[segment];
     }
     node[token.path.at(-1)] = token.$value;
+
+    if (token.$type === 'cubicBezier') {
+      let arrayNode = root;
+      const arrayPath = token.path.map((segment) =>
+        segment === 'easing' ? 'easingArray' : segment,
+      );
+      for (const segment of arrayPath.slice(0, -1)) {
+        arrayNode[segment] ??= {};
+        arrayNode = arrayNode[segment];
+      }
+      arrayNode[arrayPath.at(-1)] = token.original.$value;
+    }
   }
   return root;
 }

@@ -60,7 +60,8 @@ const meta: Meta<typeof Badge> = {
     position: {
       control: "select",
       options: ["top-right", "top-left", "bottom-right", "bottom-left"],
-      description: "Which corner of `anchor` the badge overlaps. Has no effect unless `anchor` is set.",
+      description:
+        "Which corner of `anchor` the badge overlaps. Has no effect unless `anchor` is set. A physical corner, not a logical one — doesn't mirror under RTL.",
     },
     overlap: {
       control: "select",

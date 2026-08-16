@@ -193,6 +193,10 @@ import { Badge } from "@dbm-design-system/components";
   overlaps — purely decorative, not something assistive tech needs to know about.
 - **`hideZero` removes the badge from the DOM entirely** (not just visually) when it hides a zero
   count, so assistive tech never announces it — `anchor`, if set, still renders on its own.
+- **`position` is a physical corner, not a logical one** — `top-right` stays at the visual
+  top-right in both LTR and RTL rather than mirroring, since `anchor` is arbitrary visual content
+  (an icon, an avatar) rather than something tied to reading-flow direction. Matches MUI's own
+  `Badge` `anchorOrigin`, which doesn't mirror either.
 
 </Callout>
 

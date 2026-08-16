@@ -37,6 +37,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check per-component bundle size
+        run: pnpm --filter @dbm-design-system/components check-component-bundle-size
+
       - name: Check Foundations token coverage
         run: pnpm --filter @dbm-design-system/components check-foundations-token-coverage
 

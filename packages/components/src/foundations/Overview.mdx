@@ -40,9 +40,13 @@ DBM's tokens are organized in three layers, each with a distinct job:
    itself. This indirection is what lets the same token name resolve to a different actual color
    per brand/mode (below) — **one semantic layer file per theme**. Source:
    `packages/tokens/src/semantic/{brand}-{mode}.json`.
-3. **Component** — scoped overrides for the rare case a specific component needs to deviate from
-   its semantic default. Deferred by design; populated only as real components need it, not
-   speculatively.
+3. **Component** — a dimension/size value a specific component's design needs that has no home on
+   any existing primitive scale (checked first, in order: an existing semantic token, then an
+   existing primitive-scale value — a new component-layer token only gets added once both of
+   those fail). Unlike semantic tokens, not theme-scoped — built once, loaded globally. Source:
+   one file per component, `packages/tokens/src/component/{component-name}.json` — full detail on
+   every token a given component defines lives on that component's own Docs page, under its own
+   "Design tokens used" section, not here.
 
 </Callout>
 
@@ -138,8 +142,9 @@ packages/tokens/
 ├── src/
 │   ├── primitive/      Raw values — color.json, typography.json, spacing.json,
 │   │                   radius.json, shadow.json, breakpoint.json, motion.json, other.json
-│   └── semantic/       One file per theme — purple-light.json, purple-dark.json,
-│                       emerald-light.json, emerald-dark.json
+│   ├── semantic/       One file per theme — purple-light.json, purple-dark.json,
+│   │                   emerald-light.json, emerald-dark.json
+│   └── component/      One file per component that needs one — avatar.json, badge.json
 ├── build/css/          Generated CSS custom properties (what components actually load)
 └── build/ts/           Generated JS/TS objects (what these Foundations pages read from,
                         via `@dbm-design-system/tokens`, so every value shown here is
