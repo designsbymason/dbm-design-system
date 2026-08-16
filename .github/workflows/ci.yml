@@ -52,7 +52,12 @@ jobs:
       - name: Test
         run: pnpm test
 
-  visual:
+  # Named for both jobs it runs, not just the original visual-regression one
+  # — @storybook/addon-vitest's "storybook" test project (added 2026-08-16)
+  # joined this job rather than getting its own, since it needs the exact
+  # same setup (workspace build + a real Chromium via Playwright) and a
+  # second full checkout/install/build cycle would just duplicate that cost.
+  browser-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -88,3 +93,13 @@ jobs:
           name: playwright-report
           path: packages/components/playwright-report/
           retention-days: 14
+
+      # Runs every story — and every story's play function — as a real
+      # Vitest test in that same Chromium instance. Known, already-triaged
+      # findings are marked `parameters.a11y.test: "todo"` at the story
+      # level (see guidelines/01-vision-and-goals.md §12); everything else
+      # stays at the global `error` default, so a real new regression here
+      # fails the build the same way a broken unit test already does.
+      - name: Run Storybook component/interaction/a11y tests
+        working-directory: packages/components
+        run: pnpm test:storybook
