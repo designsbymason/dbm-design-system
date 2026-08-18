@@ -45,12 +45,14 @@ Complex components use the compound-component pattern (matching the Radix primit
 
 ## 5. Icon props
 
-Any component with an icon slot (leading/trailing icon on `Button`, `Input`, `Alert`, etc.) accepts a **component reference**, not a string name:
+Any component with an icon slot accepts a **component reference**, not a string name:
 ```tsx
 import { Wallet } from '@phosphor-icons/react';
-<Button icon={Wallet}>Pay</Button>
+<Button leadingIcon={Wallet}>Pay</Button>
 ```
 Not a string enum (`icon="wallet"`) — this keeps tree-shaking intact (unused icons never ship) and gives full type-checking on valid icon references.
+
+**Prop name depends on how many icon slots the component has (established 2026-08-17, via Tag):** a component with exactly **one** icon slot (`IconButton`, `ListItem`) keeps the plain `icon` name — there's no position to disambiguate, so `leadingIcon` alone would read oddly for the common single-icon case. A component with **two** icon slots — one before the label, one after (`Button`, `Tag`) — uses the symmetric `leadingIcon`/`trailingIcon` pair instead of the previous asymmetric `icon`/`trailingIcon`, since an unprefixed `icon` sitting next to `trailingIcon` reads as if it might be the "main" or only icon rather than specifically the leading one. Applies retroactively to any component gaining a second icon slot later, not just new components.
 
 ## 6. CSS conventions
 

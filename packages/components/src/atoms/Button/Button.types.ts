@@ -18,7 +18,7 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    */
   size?: ButtonSize;
   /** Leading icon — a component reference, not a string name. */
-  icon?: PhosphorIcon;
+  leadingIcon?: PhosphorIcon;
   /** Trailing icon — a component reference, not a string name. */
   trailingIcon?: PhosphorIcon;
   /**

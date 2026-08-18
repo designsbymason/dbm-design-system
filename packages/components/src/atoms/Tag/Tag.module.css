@@ -64,6 +64,91 @@
   margin-inline-end: calc(var(--dbm-space-1) * -1);
 }
 
+/* Only applied to the decorative (non-`CloseButton`) remove glyph used
+   when the tag is also clickable/selectable — a real `<button>` already
+   gets a pointer cursor natively, but this plain `<span>` doesn't. */
+.removeDecorative {
+  cursor: pointer;
+}
+
+/* Interactive (clickable/selectable) mode — only applied when `onClick`
+   and/or `selected`/`defaultSelected`/`onSelectedChange` are passed
+   (Tag.tsx's `isInteractive`); a plain read-only tag gets none of this. */
+
+.interactive {
+  cursor: pointer;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+/* No separate `border-radius` needed here — `.root`'s own
+   `border-radius: var(--dbm-radius-full)` (always present on the same
+   element) is what the browser's outline-rounding follows, same as
+   CloseButton's identical `:focus-visible` block. */
+.interactive:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* One hover rule per tone × variant combo, mirroring Tag.tsx's own
+   `classFor` pairing — each reuses that combo's dedicated `*-hover`/
+   `*-subtle-hover` token (see guidelines/03-token-system-spec.md Phase 19
+   for `bg.subtle-hover`/`bg.neutral-strong-hover`, added alongside this).
+   Skipped while `.selected`, so the selected ring below stays the clear,
+   stable "this one is active" signal instead of competing with a
+   hover-darkened fill underneath it. */
+.interactive.subtleNeutral:hover:not(.selected) {
+  background-color: var(--dbm-bg-subtle-hover);
+}
+
+.interactive.subtleInfo:hover:not(.selected) {
+  background-color: var(--dbm-bg-info-subtle-hover);
+}
+
+.interactive.subtleSuccess:hover:not(.selected) {
+  background-color: var(--dbm-bg-success-subtle-hover);
+}
+
+.interactive.subtleWarning:hover:not(.selected) {
+  background-color: var(--dbm-bg-warning-subtle-hover);
+}
+
+.interactive.subtleDanger:hover:not(.selected) {
+  background-color: var(--dbm-bg-danger-subtle-hover);
+}
+
+.interactive.solidNeutral:hover:not(.selected) {
+  background-color: var(--dbm-bg-neutral-strong-hover);
+}
+
+.interactive.solidInfo:hover:not(.selected) {
+  background-color: var(--dbm-bg-info-hover);
+}
+
+.interactive.solidSuccess:hover:not(.selected) {
+  background-color: var(--dbm-bg-success-hover);
+}
+
+.interactive.solidWarning:hover:not(.selected) {
+  background-color: var(--dbm-bg-warning-hover);
+}
+
+.interactive.solidDanger:hover:not(.selected) {
+  background-color: var(--dbm-bg-danger-hover);
+}
+
+/* Selected/toggled-on state — a `currentColor` ring plus bolder text,
+   deliberately not a background swap (unlike ListItem's own `.selected`,
+   which has no tone of its own to preserve). `currentColor` resolves to
+   each combo's own already-contrast-verified text color, so one rule
+   covers all 10 tone × variant combinations without new per-combo tokens,
+   and an inset box-shadow naturally clips to `.root`'s own
+   `border-radius: var(--dbm-radius-full)` the same way `outline` does. */
+.selected {
+  box-shadow: inset 0 0 0 var(--dbm-border-width-2) currentColor;
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
 /* Sizes */
 
 .sizeXs {
@@ -74,8 +159,8 @@
 
 .sizeSm {
   font-size: var(--dbm-font-size-xs);
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-3);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-2);
 }
 
 .sizeMd {
@@ -87,11 +172,11 @@
 .sizeLg {
   font-size: var(--dbm-font-size-sm);
   padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-4);
+  padding-inline: var(--dbm-space-3);
 }
 
 .sizeXl {
   font-size: var(--dbm-font-size-base);
-  padding-block: var(--dbm-space-3);
-  padding-inline: var(--dbm-space-4);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
 }

@@ -12,7 +12,7 @@ export const propOrder = [
   "children",
   "variant",
   "size",
-  "icon",
+  "leadingIcon",
   "trailingIcon",
   "isLoading",
   "loadingText",
@@ -122,8 +122,8 @@ import { Button } from "@dbm-design-system/components";
   the point, and using them for the main CTA undermines the hierarchy `variant` is meant to convey.
 - Don't disable a button without also explaining why nearby (a validation message, a helper
   text) — a disabled control with no visible reason reads as broken, not intentional.
-- Don't pass both `icon` and `asChild` expecting the icon to render — icons and the loading
-  spinner are skipped in `asChild` mode since `Slot` requires exactly one child.
+- Don't pass both `leadingIcon`/`trailingIcon` and `asChild` expecting the icon to render — icons
+  and the loading spinner are skipped in `asChild` mode since `Slot` requires exactly one child.
 
 </Callout>
 </div>
@@ -162,7 +162,7 @@ import { Button } from "@dbm-design-system/components";
 
 ```tsx
 <Button>Save</Button>
-<Button variant="destructive" icon={TrashIcon}>Delete</Button>
+<Button variant="destructive" leadingIcon={TrashIcon}>Delete</Button>
 <Button isLoading loadingText="Saving…">Save</Button>
 <Button fullWidth>Continue</Button>
 <Button asChild><a href="/next">Continue</a></Button>

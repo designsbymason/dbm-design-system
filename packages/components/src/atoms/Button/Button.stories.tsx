@@ -13,7 +13,7 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import { Button } from "./Button";
 import type { ButtonProps } from "./Button.types";
 
-// `icon`/`trailingIcon` take component references, not strings (see
+// `leadingIcon`/`trailingIcon` take component references, not strings (see
 // guidelines/05-component-api-conventions.md §5) — Storybook's Controls
 // panel can't natively drive an arbitrary component reference, so this maps
 // a small curated set of real icons onto string keys via `argTypes.mapping`.
@@ -62,7 +62,10 @@ const meta: Meta<typeof Button> = {
     },
     size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
     type: { control: "select", options: ["button", "submit", "reset"] },
-    icon: { ...iconControl, description: "Leading icon (select 'None' to omit)." },
+    leadingIcon: {
+      ...iconControl,
+      description: "Leading icon (select 'None' to omit).",
+    },
     trailingIcon: {
       ...iconControl,
       description: "Trailing icon (select 'None' to omit).",
@@ -76,7 +79,7 @@ const meta: Meta<typeof Button> = {
     // reasons that don't reduce to a single clean rule — confirmed
     // empirically, not guessed (see guidelines/07-storybook-and-
     // documentation-standards.md §5). Declaring them here explicitly is the
-    // reliable fix, same pattern as `icon`/`trailingIcon`/`type` above.
+    // reliable fix, same pattern as `leadingIcon`/`trailingIcon`/`type` above.
     "aria-label": {
       control: "text",
       description:
@@ -110,10 +113,10 @@ const meta: Meta<typeof Button> = {
     // Storybook's `mapping` (see `iconControl` above) resolves these
     // string keys to the real icon component (or `undefined` for "None")
     // before the story renders — the args value here matches the
-    // Controls-panel select's option key, not `ButtonProps["icon"]`
+    // Controls-panel select's option key, not `ButtonProps["leadingIcon"]`
     // itself, hence the cast.
-    icon: "None" as unknown as ButtonProps["icon"],
-    trailingIcon: "None" as unknown as ButtonProps["icon"],
+    leadingIcon: "None" as unknown as ButtonProps["leadingIcon"],
+    trailingIcon: "None" as unknown as ButtonProps["leadingIcon"],
     isLoading: false,
     loadingText: "",
     fullWidth: false,
@@ -168,14 +171,14 @@ export const WithIcons: Story = {
   name: "Leading and trailing icons",
   render: () => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
-      <Button icon={WalletIcon}>Pay</Button>
+      <Button leadingIcon={WalletIcon}>Pay</Button>
       <Button trailingIcon={WalletIcon}>Pay</Button>
-      {/* `icon` and `trailingIcon` are independent — both render together
-          whenever both are passed. */}
-      <Button icon={DownloadIcon} trailingIcon={ArrowRightIcon}>
+      {/* `leadingIcon` and `trailingIcon` are independent — both render
+          together whenever both are passed. */}
+      <Button leadingIcon={DownloadIcon} trailingIcon={ArrowRightIcon}>
         Export
       </Button>
-      <Button variant="destructive" icon={TrashIcon}>
+      <Button variant="destructive" leadingIcon={TrashIcon}>
         Delete
       </Button>
     </div>

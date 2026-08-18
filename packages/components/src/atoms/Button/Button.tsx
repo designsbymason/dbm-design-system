@@ -41,7 +41,7 @@ const iconSizeForButtonSize: Record<ButtonSize, "xs" | "sm" | "md"> = {
  * @example
  * ```tsx
  * <Button>Save</Button>
- * <Button variant="destructive" icon={TrashIcon}>Delete</Button>
+ * <Button variant="destructive" leadingIcon={TrashIcon}>Delete</Button>
  * <Button isLoading loadingText="Saving…">Save</Button>
  * <Button fullWidth>Continue</Button>
  * <Button asChild><a href="/next">Continue</a></Button>
@@ -52,7 +52,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     {
       variant = "primary",
       size = "md",
-      icon,
+      leadingIcon,
       trailingIcon,
       isLoading = false,
       loadingText,
@@ -109,7 +109,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             {isLoading ? (
               <span className={styles.spinner} aria-hidden="true" />
             ) : (
-              icon && <Icon icon={icon} size={iconSize} />
+              leadingIcon && <Icon icon={leadingIcon} size={iconSize} />
             )}
             {isLoading ? (loadingText ?? children) : children}
             {!isLoading && trailingIcon && (

@@ -52,7 +52,7 @@ describe("Button", () => {
   });
 
   it("renders a leading icon", () => {
-    render(<Button icon={WalletIcon}>Balance</Button>);
+    render(<Button leadingIcon={WalletIcon}>Balance</Button>);
     expect(screen.getByRole("button").querySelector("svg")).toBeInTheDocument();
   });
 
@@ -71,7 +71,7 @@ describe("Button", () => {
 
   it("hides the leading icon in favor of the spinner when isLoading", () => {
     render(
-      <Button isLoading icon={WalletIcon}>
+      <Button isLoading leadingIcon={WalletIcon}>
         Saving
       </Button>,
     );
@@ -157,7 +157,7 @@ describe("Button", () => {
 
   it("renders the single child via Slot when asChild is set, without icons", () => {
     render(
-      <Button asChild icon={WalletIcon}>
+      <Button asChild leadingIcon={WalletIcon}>
         <a href="/next">Continue</a>
       </Button>,
     );

@@ -20,6 +20,11 @@
       "$value": "{color.gray.50}",
       "$description": "Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\" — broadens from hover-fill/zebra-striping to also cover dashboard panels and general neutral accents. Value unchanged (gray.50). History: swapped with canvas 2026-07-27, when subtle was defined as the barely-visible tint layered on top of white bg.surface."
     },
+    "subtle-hover": {
+      "$type": "color",
+      "$value": "{color.gray.100}",
+      "$description": "New token (2026-08-17), found adding Tag's whole-tag clickable/selectable mode — bg.subtle's own hover step, one primitive scale step further in the same direction bg.brand-subtle-hover/etc. already use (darken in light mode, lighten in dark mode). text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.100 = 6.05:1, comfortably passes AA."
+    },
     "brand": {
       "$type": "color",
       "$value": "{color.purple.600}"
@@ -148,6 +153,11 @@
       "$type": "color",
       "$value": "{color.gray.600}",
       "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) is only verified for the 3:1 non-text case. gray.600 with white text gives 4.70:1, passing everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
+    },
+    "neutral-strong-hover": {
+      "$type": "color",
+      "$value": "{color.gray.700}",
+      "$description": "New token (2026-08-17), found adding Tag's whole-tag clickable/selectable mode — bg.neutral-strong's own hover step. Unlike every other *-hover token, uses the SAME value (gray.700) in both light and dark themes rather than the usual darken-in-light/lighten-in-dark split: bg.neutral-strong itself is already brand-and-mode-agnostic (gray.600 in all 4 themes, see its own description above), and lightening toward gray.500 for a dark-mode hover fails AA against text.on-neutral (white on gray.500 = 3.25:1, below the 4.5:1 floor) — a documented exception, same class as bg.danger-hover/bg.brand-hover's own original dark-mode direction overrides (see 03-token-system-spec.md's Phase 3 notes). White text.on-neutral on gray.700 = 6.88:1, comfortably passes AA in both modes."
     },
     "skeleton": {
       "$type": "color",
