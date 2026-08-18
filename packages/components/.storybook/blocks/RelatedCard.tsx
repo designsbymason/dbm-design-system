@@ -18,21 +18,30 @@ export function RelatedCard({
   children: ReactNode;
 }) {
   return (
-    <a
-      href={href}
+    // The whole card used to be a single `<a>` wrapping both the preview
+    // slot and the name/description — but the preview slot renders a real
+    // live component (per this block's own doc comment above), and several
+    // of those previews are themselves interactive elements (`IconButton`,
+    // `CloseButton`, a removable `Tag`, `Link`) or contain one. Nesting a
+    // real `<a>`/`<button>` inside another `<a>` is invalid HTML —
+    // confirmed live as a React hydration warning on Button.mdx's "Link"
+    // card, where the previewed `<Link>` renders its own `<a>` directly
+    // inside this card's outer `<a>`. Splitting the link down to just the
+    // name/description keeps a real, fully keyboard-accessible navigation
+    // link (native `<a>`, not a hand-rolled ARIA button) while leaving the
+    // preview slot a plain, non-interactive container that any live
+    // component's own interactive elements can render into safely.
+    <div
       style={{
         border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
         borderRadius: "var(--dbm-radius-md)",
-        color: "inherit",
-        display: "block",
         padding: "var(--dbm-space-4)",
-        textDecoration: "none",
       }}
     >
       {/* Explicit reactive `color` (2026-08-10) — some previewed
           components (e.g. `CloseButton`) deliberately have no color of
           their own, inheriting `currentColor` from context by design (see
-          that component's own doc comment). This card's `<a>` above only
+          that component's own doc comment). This card's outer element only
           sets `color: inherit`, which — confirmed live, not assumed —
           resolves to a fixed black here: nothing between this slot and
           the document root sets an explicit `color` for `inherit` to
@@ -54,17 +63,22 @@ export function RelatedCard({
       >
         {children}
       </div>
-      <div style={{ color: "var(--dbm-text-primary)", fontWeight: "var(--dbm-font-weight-semibold)" }}>
-        {name}
-      </div>
-      <div
-        style={{
-          color: "var(--dbm-text-tertiary)",
-          fontSize: "var(--dbm-font-size-sm)",
-        }}
+      <a
+        href={href}
+        style={{ color: "inherit", display: "block", textDecoration: "none" }}
       >
-        {description}
-      </div>
-    </a>
+        <div style={{ color: "var(--dbm-text-primary)", fontWeight: "var(--dbm-font-weight-semibold)" }}>
+          {name}
+        </div>
+        <div
+          style={{
+            color: "var(--dbm-text-tertiary)",
+            fontSize: "var(--dbm-font-size-sm)",
+          }}
+        >
+          {description}
+        </div>
+      </a>
+    </div>
   );
 }
