@@ -30,6 +30,7 @@ export const Inline: Story = {
     <p>
       Text with an{" "}
       <Center
+        as="span"
         inline
         style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)" }}
       >
