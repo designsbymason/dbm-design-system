@@ -325,7 +325,7 @@
    actual value before changing either again, since this has now flipped
    twice. Still under the 3:1 WCAG 1.4.11 floor either way — accepted
    tradeoff (decorative border, not state-identifying — same exemption as
-   `border.brand` elsewhere in this file), not a regression. */
+   `border.brand-subtle` elsewhere in this file), not a regression. */
 .dbm-proptable {
   border: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
   border-collapse: separate !important;

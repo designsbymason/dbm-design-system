@@ -143,10 +143,71 @@
    each combo's own already-contrast-verified text color, so one rule
    covers all 10 tone × variant combinations without new per-combo tokens,
    and an inset box-shadow naturally clips to `.root`'s own
-   `border-radius: var(--dbm-radius-full)` the same way `outline` does. */
+   `border-radius: var(--dbm-radius-full)` the same way `outline` does.
+   Solid variants override this below — see that rule for why. */
 .selected {
   box-shadow: inset 0 0 0 var(--dbm-border-width-2) currentColor;
   font-weight: var(--dbm-font-weight-semibold);
+}
+
+/* Solid-variant override (found in review — the base rule above reads as
+   barely-there here): `currentColor` on a solid fill is the *text* color
+   (white in most themes), so an inset ring in that same color sits right
+   next to text of the identical color — it clears contrast math
+   (~5.5:1 white-on-`bg.danger`, measured, not assumed) but doesn't read
+   as a deliberate "this one is selected" signal, just a faint edge. A
+   flat ring directly against the fill doesn't fix this regardless of its
+   color — measured every candidate directly against `bg.danger`, and
+   the existing tone `border.*` tokens (the *decorative* accent step, not
+   the stronger state-identifying one) only manage ~1.45–2.1:1,
+   `border.focus` (brand purple/emerald) only ~1.1–1.2:1 — ring and fill
+   sit at similar luminance regardless of hue, and contrast is about
+   luminance, not hue difference.
+   An offset halo sidesteps this: a `bg.surface`-colored gap ring, then an
+   accent ring further out, so the accent color never sits directly
+   against the tag's own saturated fill — it contrasts against the gap
+   and the ambient page instead. The accent color is each tone's own
+   `border.{tone}-strong` token (Token spec Phase 20) — a dedicated
+   `border.*`-category step at the same primitive value the *subtle*
+   variant's `text.*`-based ring already resolves to via `currentColor`
+   above, so both variants signal "selected" with matching tone-relative
+   color without either one reaching into the other's token category
+   (`border.*`/`text.*` are kept separate specifically so each can be
+   retuned independently later). Measured against `bg.surface`, every one
+   of these clears **6.9–10.1:1 in light mode, 5.7–7.5:1 in dark** —
+   stronger than `border.focus`'s own 4.5:1 there, not just
+   tone-appropriate. Assumes the tag sits on `bg.surface` (or close to
+   it) — the same assumption CSS "ring-offset" techniques generally make;
+   not exact on an unusual background, but right for the overwhelming
+   majority of real placements. */
+.selected.solidNeutral {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-neutral-strong);
+}
+
+.selected.solidInfo {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-info-strong);
+}
+
+.selected.solidSuccess {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-success-strong);
+}
+
+.selected.solidWarning {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-warning-strong);
+}
+
+.selected.solidDanger {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-danger-strong);
 }
 
 /* Sizes */

@@ -265,28 +265,48 @@
       "$type": "color",
       "$value": "{color.gray.600}"
     },
+    "neutral-strong": {
+      "$type": "color",
+      "$value": "{color.gray.200}",
+      "$description": "New token (2026-08-19), found adding Tag's selectable solid-variant ring — dark counterpart to border.neutral-strong (light). Reuses the same primitive step text.secondary already uses in dark mode (gray.200), independently tracked. gray.200 vs bg.surface (dark) = 7.47:1."
+    },
     "focus": {
       "$type": "color",
       "$value": "{color.purple.400}"
     },
     "brand": {
       "$type": "color",
+      "$value": "{color.purple.400}",
+      "$description": "New token (2026-08-20) — dark counterpart to border.brand (light); see that token's own description for its purpose. Doesn't reuse bg.brand's own dark-mode step (purple.500) the way the light-mode value reuses bg.brand's light step — purple.500 only measures 2.24:1 against dark bg.surface, failing the 3:1 floor, since bg.brand's dark value is calibrated for hosting text on a fill, not for resolving as a thin border line against the surrounding surface. Reuses border.focus's own already-proven dark-purple step (purple.400) instead — the two tokens end up visually identical in dark mode even though they differ in light mode (purple.600 vs purple.500), a real constraint of how little contrast headroom is available for a saturated purple border against dark bg.surface, not an oversight. purple.400 vs bg.surface (dark) = 3.56:1."
+    },
+    "brand-subtle": {
+      "$type": "color",
       "$value": "{color.purple.900}",
-      "$description": "Brand-accent border, decorative-only (2026-07-27, revised from purple.400). Dark value moved off the literal brand.100 shared with light mode to purple.900 (2026-08-16) — purple.100 on bg.brand-subtle (gray.900) measured 12.38:1, a stark high-contrast ring that read nothing like light mode's own low-key accent. purple.900 on gray.900 is 1.32:1, mirroring light mode's own 1.09:1 (purple.100 on purple.50) — both intentionally subtle. This token is for decorative UI accents, not a border that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply here (border.focus/border.danger remain contrast-verified since those ARE state-identifying)."
+      "$description": "Renamed from border.brand (2026-08-20), for naming consistency with its sibling family tokens (border.danger-subtle/warning-subtle/success-subtle/info-subtle all carry the -subtle suffix for the same decorative-only role; this one hadn't, despite being the exact same kind of token). Value unchanged. Brand-accent border, decorative-only (2026-07-27, revised from purple.400). Dark value moved off the literal brand.100 shared with light mode to purple.900 (2026-08-16) — purple.100 on bg.brand-subtle (gray.900) measured 12.38:1, a stark high-contrast ring that read nothing like light mode's own low-key accent. purple.900 on gray.900 is 1.32:1, mirroring light mode's own 1.09:1 (purple.100 on purple.50) — both intentionally subtle. This token is for decorative UI accents, not a border that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply here (border.focus/border.danger remain contrast-verified since those ARE state-identifying)."
     },
     "danger": {
       "$type": "color",
       "$value": "{color.red.400}"
     },
+    "danger-strong": {
+      "$type": "color",
+      "$value": "{color.red.300}",
+      "$description": "New token (2026-08-19), found adding Tag's selectable solid-variant ring — dark counterpart to border.danger-strong (light), same rationale (border.danger sits too close in luminance to bg.danger to read as a ring directly against it; used as the accent ring in an offset halo instead, gapped from the fill by a bg.surface-colored ring first). Reuses text.danger's own primitive step in dark mode (red.300), independently tracked. red.300 vs bg.surface (dark) = 5.67:1."
+    },
     "danger-subtle": {
       "$type": "color",
       "$value": "{color.red.900}",
-      "$description": "Family-matched decorative-accent border, dark counterpart to border.danger-subtle (light) — follows the same purple.900-in-dark-mode pattern established for border.brand above. Not neutralized to a shared gray the way border.brand's dark value is: family accents keep their own tint in dark mode (bg.danger-subtle here is red.950, not gray.900 — see that token's own description). Pairs with bg.danger-subtle for any component's danger-tinted ring, not limited to one specific component — first used by Avatar's `colorful` danger variant (2026-08-16), but not scoped to it. red.900 on red.950 is 1.26:1, comparably subtle to border.brand's own 1.32:1 dark pairing. Brand-agnostic — identical value in every brand theme."
+      "$description": "Family-matched decorative-accent border, dark counterpart to border.danger-subtle (light) — follows the same purple.900-in-dark-mode pattern established for border.brand-subtle above. Not neutralized to a shared gray the way border.brand-subtle's dark value is: family accents keep their own tint in dark mode (bg.danger-subtle here is red.950, not gray.900 — see that token's own description). Pairs with bg.danger-subtle for any component's danger-tinted ring, not limited to one specific component — first used by Avatar's `colorful` danger variant (2026-08-16), but not scoped to it. red.900 on red.950 is 1.26:1, comparably subtle to border.brand-subtle's own 1.32:1 dark pairing. Brand-agnostic — identical value in every brand theme."
     },
     "warning": {
       "$type": "color",
       "$value": "{color.amber.400}",
       "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.400 scale step border.danger uses for red, for a warning-toned state-identifying border (e.g. a future warning-state form control)."
+    },
+    "warning-strong": {
+      "$type": "color",
+      "$value": "{color.amber.300}",
+      "$description": "New token (2026-08-19), dark counterpart to border.warning-strong (light), same rationale as border.danger-strong above. Reuses text.warning's own primitive step in dark mode (amber.300), independently tracked. amber.300 vs bg.surface (dark) = 5.80:1."
     },
     "warning-subtle": {
       "$type": "color",
@@ -298,6 +318,11 @@
       "$value": "{color.green.400}",
       "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.400-equivalent scale step (green.400) for a success-toned state-identifying border."
     },
+    "success-strong": {
+      "$type": "color",
+      "$value": "{color.green.300}",
+      "$description": "New token (2026-08-19), dark counterpart to border.success-strong (light), same rationale as border.danger-strong above. Reuses text.success's own primitive step in dark mode (green.300), independently tracked. green.300 vs bg.surface (dark) = 6.01:1."
+    },
     "success-subtle": {
       "$type": "color",
       "$value": "{color.green.900}",
@@ -308,6 +333,11 @@
       "$value": "{color.blue.400}",
       "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same scale step (blue.400) for an info-toned state-identifying border."
     },
+    "info-strong": {
+      "$type": "color",
+      "$value": "{color.blue.300}",
+      "$description": "New token (2026-08-19), dark counterpart to border.info-strong (light), same rationale as border.danger-strong above. Reuses text.info's own primitive step in dark mode (blue.300), independently tracked. blue.300 vs bg.surface (dark) = 5.85:1."
+    },
     "info-subtle": {
       "$type": "color",
       "$value": "{color.blue.900}",
@@ -316,7 +346,7 @@
     "code": {
       "$type": "color",
       "$value": "{color.gray.700}",
-      "$description": "Dark value moved from blue.900 to gray.700 (2026-08-09) at explicit direction, matching bg.code's own move to gray.700 in dark mode — the two are now byte-identical there, an explicit flat/borderless pill treatment for dark mode specifically (light mode keeps the blue.100/blue.50 pairing and its visible border, unchanged). Original description: paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand. Measured 1.09:1 light / 1.28:1 dark against the old bg.code, an accepted tradeoff, not an oversight."
+      "$description": "Dark value moved from blue.900 to gray.700 (2026-08-09) at explicit direction, matching bg.code's own move to gray.700 in dark mode — the two are now byte-identical there, an explicit flat/borderless pill treatment for dark mode specifically (light mode keeps the blue.100/blue.50 pairing and its visible border, unchanged). Original description: paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Measured 1.09:1 light / 1.28:1 dark against the old bg.code, an accepted tradeoff, not an oversight."
     }
   },
   "icon": {
