@@ -50,27 +50,23 @@
     },
     "danger": {
       "$type": "color",
-      "$value": "{color.red.500}"
+      "$value": "{color.red.300}",
+      "$description": "Token consolidation (2026-08-20) — moved from red.500 to red.300, one step lighter. Old value measured only 2.90:1 against dark bg.surface, an outright WCAG 1.4.11 failure for a small standalone graphic (this is what bg.danger-indicator, now retired, existed to work around). red.300 vs bg.surface (dark) = 5.67:1. text.on-danger moves to red.900 alongside this change (8.22:1 against this new value) — see that token's own description. See purple-light.json's own bg.danger description for the full shared-value rationale (bg/text/border/icon.danger now all resolve to this same step per mode)."
     },
     "danger-hover": {
       "$type": "color",
-      "$value": "{color.red.400}",
-      "$description": "Lighter than danger, restoring the usual dark-mode 'brighten on hover' direction (Phase 4 OKLCH regen, 2026-07-18) now that text.on-danger is gray.950 in dark mode: gray.950 on red.400 = 7.44:1. The earlier fix used red.600 (darker) specifically because it paired with white text (3.24:1 on red.400 failed then) — that constraint no longer applies now that on-danger is theme-specific."
+      "$value": "{color.red.200}",
+      "$description": "Token consolidation (2026-08-20) — moved from red.400 to red.200, alongside bg.danger's own dark move (red.500 → red.300) to preserve the same relative hover-lightening gap. text.on-danger (red.900 as of this change) on red.200 = 10.68:1."
     },
     "danger-subtle": {
       "$type": "color",
       "$value": "{color.red.950}",
-      "$description": "Moved from red.900 to red.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's red.100 → red.50, preserving the same relative gap from each theme's pole. text.danger (red.300) on red.950 = 10.32:1, still comfortably passes AA (was 8.22:1 on red.900)."
+      "$description": "Moved from red.900 to red.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's red.100 → red.50, preserving the same relative gap from each theme's pole. text.danger (red.300) on red.950 = 10.32:1, still comfortably passes AA (was 8.22:1 on red.900). Not part of the 2026-08-20 danger token consolidation — this tier stays its own dedicated dark tint."
     },
     "danger-subtle-hover": {
       "$type": "color",
       "$value": "{color.red.900}",
-      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses danger-subtle's own pre-2026-07-27 value (red.900), one step lighter, matching this system's standard dark-mode hover direction. text.danger (red.300) on red.900 = 8.22:1, comfortably passes AA. Shared across both brand themes, matching danger-subtle's own brand-independence."
-    },
-    "danger-indicator": {
-      "$type": "color",
-      "$value": "{color.red.400}",
-      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators. bg.danger's own dark value (red.500) measures only 2.90:1 against bg.surface (gray.800), failing WCAG 1.4.11's 3:1 non-text floor — bg.danger was only ever verified as a background *for text* (gray.950 on top), a different and less strict pairing. One step lighter (red.400) clears it at 4.13:1. Light theme uses red.500 (3.48:1) — see that theme's own description. Shared across both brand themes, matching every other status-tone token's brand-independence."
+      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses danger-subtle's own pre-2026-07-27 value (red.900), one step lighter, matching this system's standard dark-mode hover direction. text.danger (red.300) on red.900 = 8.22:1, comfortably passes AA. Shared across both brand themes, matching danger-subtle's own brand-independence. Not part of the 2026-08-20 danger token consolidation."
     },
     "warning": {
       "$type": "color",
@@ -200,8 +196,8 @@
     },
     "on-danger": {
       "$type": "color",
-      "$value": "{color.gray.950}",
-      "$description": "Text on a solid bg.danger fill. Post-OKLCH-regen (Phase 4, 2026-07-18): dark-theme bg.danger is red.500, where white only gives 3.48:1. gray.950 gives 5.22:1 (and 7.44:1 against danger-hover's red.400) — this token is now theme-specific; light themes keep white (5.10:1 against red.600)."
+      "$value": "{color.red.900}",
+      "$description": "Token consolidation (2026-08-20) — moved from gray.950 to red.900, so a solid bg.danger fill in dark mode reads as a monochromatic red surface (fill + text both red-family) rather than red fill + neutral-gray text. red.900 on bg.danger's own new dark value (red.300) = 8.22:1, more margin than the previous gray.950 pairing (5.22:1). Light themes keep white — see purple-light.json / emerald-light.json's own description."
     },
     "on-info": {
       "$type": "color",
@@ -234,7 +230,8 @@
     },
     "danger": {
       "$type": "color",
-      "$value": "{color.red.300}"
+      "$value": "{color.red.300}",
+      "$description": "Unchanged by the 2026-08-20 danger token consolidation (already red.300) — now also the shared value bg.danger, border.danger, and icon.danger resolve to in dark mode. See purple-light.json's own text.danger description for the consolidation this is part of."
     },
     "warning": {
       "$type": "color",
@@ -263,6 +260,11 @@
       "$type": "color",
       "$value": "{color.gray.600}"
     },
+    "neutral": {
+      "$type": "color",
+      "$value": "{color.gray.400}",
+      "$description": "New token (2026-08-20), dark counterpart to border.neutral (light); see that token's own description for its purpose (and why it isn't the one Tag's outline variant actually consumes). Doesn't reuse border.strong's own dark value (gray.600, only 2.14:1 against dark bg.surface — well under 3:1) for the same reason the light value doesn't. gray.400 vs bg.surface (dark) = 4.34:1, a comfortable margin."
+    },
     "neutral-strong": {
       "$type": "color",
       "$value": "{color.gray.200}",
@@ -284,17 +286,13 @@
     },
     "danger": {
       "$type": "color",
-      "$value": "{color.red.400}"
-    },
-    "danger-strong": {
-      "$type": "color",
       "$value": "{color.red.300}",
-      "$description": "New token (2026-08-19), found adding Tag's selectable solid-variant ring — dark counterpart to border.danger-strong (light), same rationale (border.danger sits too close in luminance to bg.danger to read as a ring directly against it; used as the accent ring in an offset halo instead, gapped from the fill by a bg.surface-colored ring first). Reuses text.danger's own primitive step in dark mode (red.300), independently tracked. red.300 vs bg.surface (dark) = 5.67:1."
+      "$description": "Token consolidation (2026-08-20) — moved from red.400 to red.300, absorbing border.danger-strong's former role (that token is retired — every former consumer now uses this token directly) and matching bg.danger/text.danger/icon.danger's shared dark step. red.300 vs bg.surface (dark) = 5.67:1, an improvement over the previous 4.13:1. See purple-light.json's own border.danger description for the consolidation this is part of."
     },
     "danger-subtle": {
       "$type": "color",
       "$value": "{color.red.900}",
-      "$description": "Family-matched decorative-accent border, dark counterpart to border.danger-subtle (light) — follows the same emerald.900-in-dark-mode pattern established for border.brand-subtle above. Not neutralized to a shared gray the way border.brand-subtle's dark value is: family accents keep their own tint in dark mode (bg.danger-subtle here is red.950, not gray.900 — see that token's own description). Pairs with bg.danger-subtle for any component's danger-tinted ring, not limited to one specific component — first used by Avatar's `colorful` danger variant (2026-08-16), but not scoped to it. red.900 on red.950 is 1.26:1, comparably subtle to border.brand-subtle's own 1.08:1 dark pairing. Brand-agnostic — identical value in every brand theme."
+      "$description": "Family-matched decorative-accent border, dark counterpart to border.danger-subtle (light) — follows the same emerald.900-in-dark-mode pattern established for border.brand-subtle above. Not neutralized to a shared gray the way border.brand-subtle's dark value is: family accents keep their own tint in dark mode (bg.danger-subtle here is red.950, not gray.900 — see that token's own description). Pairs with bg.danger-subtle for any component's danger-tinted ring, not limited to one specific component — first used by Avatar's `colorful` danger variant (2026-08-16), but not scoped to it. red.900 on red.950 is 1.26:1, comparably subtle to border.brand-subtle's own 1.08:1 dark pairing. Brand-agnostic — identical value in every brand theme. Not part of the 2026-08-20 danger token consolidation — this tier stays its own dedicated decorative step."
     },
     "warning": {
       "$type": "color",
@@ -304,7 +302,7 @@
     "warning-strong": {
       "$type": "color",
       "$value": "{color.amber.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.warning-strong (light), same rationale as border.danger-strong above. Reuses text.warning's own primitive step in dark mode (amber.300), independently tracked. amber.300 vs bg.surface (dark) = 5.80:1."
+      "$description": "New token (2026-08-19), dark counterpart to border.warning-strong (light), same rationale danger's own now-retired border.danger-strong originally established (Phase 20; danger's own -strong tier was folded into border.danger directly in the 2026-08-20 consolidation, but warning/success/info/neutral keep their own separate -strong tier for now). Reuses text.warning's own primitive step in dark mode (amber.300), independently tracked. amber.300 vs bg.surface (dark) = 5.80:1."
     },
     "warning-subtle": {
       "$type": "color",
@@ -319,7 +317,7 @@
     "success-strong": {
       "$type": "color",
       "$value": "{color.green.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.success-strong (light), same rationale as border.danger-strong above. Reuses text.success's own primitive step in dark mode (green.300), independently tracked. green.300 vs bg.surface (dark) = 6.01:1."
+      "$description": "New token (2026-08-19), dark counterpart to border.success-strong (light), same rationale danger's own now-retired border.danger-strong originally established (Phase 20; see border.warning-strong's own description for why danger no longer has this tier separately). Reuses text.success's own primitive step in dark mode (green.300), independently tracked. green.300 vs bg.surface (dark) = 6.01:1."
     },
     "success-subtle": {
       "$type": "color",
@@ -334,7 +332,7 @@
     "info-strong": {
       "$type": "color",
       "$value": "{color.blue.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.info-strong (light), same rationale as border.danger-strong above. Reuses text.info's own primitive step in dark mode (blue.300), independently tracked. blue.300 vs bg.surface (dark) = 5.85:1."
+      "$description": "New token (2026-08-19), dark counterpart to border.info-strong (light), same rationale danger's own now-retired border.danger-strong originally established (Phase 20; see border.warning-strong's own description for why danger no longer has this tier separately). Reuses text.info's own primitive step in dark mode (blue.300), independently tracked. blue.300 vs bg.surface (dark) = 5.85:1."
     },
     "info-subtle": {
       "$type": "color",
@@ -364,6 +362,16 @@
     "disabled": {
       "$type": "color",
       "$value": "{color.gray.700}"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "{color.red.300}",
+      "$description": "New token (2026-08-20), added as part of the danger token consolidation — dark counterpart to icon.danger (light); see that token's own description for its purpose. red.300 vs bg.surface (dark) = 5.67:1."
+    },
+    "on-danger": {
+      "$type": "color",
+      "$value": "{color.red.900}",
+      "$description": "New token (2026-08-20), added as part of the danger token consolidation — dark counterpart to icon.on-danger (light); see that token's own description for its purpose. red.900 on bg.danger's own dark value (red.300) = 8.22:1."
     }
   }
 }

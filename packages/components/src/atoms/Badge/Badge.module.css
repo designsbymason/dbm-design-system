@@ -180,13 +180,19 @@
 }
 
 /*
- * dot's fill always uses the *-indicator tokens (or bg.neutral, its own
- * established equivalent), never classFor[variant][tone] — the "subtle"
- * variant's pastel tints are only ever verified as a background *for
- * text*, not as a small standalone graphic. Measured directly against
- * bg.surface, every -subtle token comes out around ~1.0-1.8:1, nowhere
- * near WCAG 1.4.11's 3:1 non-text floor a dot (no text to lean on) needs.
- * See guidelines/03-token-system-spec.md's contrast log for the numbers.
+ * dot's fill never uses classFor[variant][tone] — the "subtle" variant's
+ * pastel tints are only ever verified as a background *for text*, not as a
+ * small standalone graphic. Measured directly against bg.surface, every
+ * -subtle token comes out around ~1.0-1.8:1, nowhere near WCAG 1.4.11's
+ * 3:1 non-text floor a dot (no text to lean on) needs. See
+ * guidelines/03-token-system-spec.md's contrast log for the numbers.
+ * Most tones use a dedicated *-indicator token (or bg.neutral, its own
+ * established equivalent) instead — danger is the one exception, using
+ * bg.danger directly: the 2026-08-20 danger token consolidation moved
+ * bg.danger's own dark value to red.300 (5.67:1 against bg.surface),
+ * clearing this same 3:1 floor directly, so bg.danger-indicator (which
+ * existed only to work around bg.danger's old, failing dark value) was
+ * retired.
  */
 .dotBrand {
   background-color: var(--dbm-bg-brand-indicator);
@@ -209,7 +215,7 @@
 }
 
 .dotDanger {
-  background-color: var(--dbm-bg-danger-indicator);
+  background-color: var(--dbm-bg-danger);
 }
 
 /*

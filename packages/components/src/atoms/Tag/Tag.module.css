@@ -9,6 +9,20 @@
   white-space: nowrap;
 }
 
+/* `brand` — the one non-status tone, the system's own identity color.
+   Same bg.brand-subtle/text.brand and bg.brand/text.on-brand pairing
+   Badge's own already-verified `brand` tone uses (Tag mirrors Badge's
+   tone scale). */
+.subtleBrand {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
+}
+
+.solidBrand {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+}
+
 .subtleNeutral {
   background-color: var(--dbm-bg-subtle);
   color: var(--dbm-text-secondary);
@@ -59,6 +73,62 @@
   color: var(--dbm-text-on-danger);
 }
 
+/* `outline` — no background of its own, framed by a real, WCAG-1.4.11-
+   verified border. Status tones use `border.{tone}-strong` (Token spec
+   Phase 20) rather than the base `border.{tone}` step — chosen so the
+   default (unselected) rim reads as a clearly deliberate frame rather
+   than a faint accent line, one visual step up from the decorative
+   `-subtle` rings. `brand` keeps the general-purpose `border.brand`
+   token (Token spec Phase 22): it has no separate `-strong` sibling,
+   and its own value was already chosen to read as a confident accent
+   border on its own. `danger` is the other exception, for a different
+   reason: the 2026-08-20 danger token consolidation folded
+   `border.danger-strong` directly into `border.danger` (that token is
+   retired), so `danger` uses the plain `border.danger` token here —
+   still the same richer step as before, just under the unified name.
+   The border is drawn as an *inset box-shadow*, not the `border`
+   property — box-shadow doesn't participate in the box model, so an
+   outline-variant tag renders at exactly the same size as a subtle/solid
+   tag of the same `size` step, with no separate padding-compensation
+   math needed. Text reuses each tone's own `text.*` color, the same one
+   `subtle*` already uses — legible against the (transparent, so
+   effectively page-background-colored) fill either way. */
+.outlineBrand {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-brand);
+  color: var(--dbm-text-brand);
+}
+
+.outlineNeutral {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-neutral-strong);
+  color: var(--dbm-text-secondary);
+}
+
+.outlineInfo {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-info-strong);
+  color: var(--dbm-text-info);
+}
+
+.outlineSuccess {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-success-strong);
+  color: var(--dbm-text-success);
+}
+
+.outlineWarning {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-warning-strong);
+  color: var(--dbm-text-warning);
+}
+
+.outlineDanger {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-danger);
+  color: var(--dbm-text-danger);
+}
+
 .remove {
   flex-shrink: 0;
   margin-inline-end: calc(var(--dbm-space-1) * -1);
@@ -97,6 +167,14 @@
    Skipped while `.selected`, so the selected ring below stays the clear,
    stable "this one is active" signal instead of competing with a
    hover-darkened fill underneath it. */
+.interactive.subtleBrand:hover:not(.selected) {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.interactive.solidBrand:hover:not(.selected) {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
 .interactive.subtleNeutral:hover:not(.selected) {
   background-color: var(--dbm-bg-subtle-hover);
 }
@@ -135,6 +213,34 @@
 
 .interactive.solidDanger:hover:not(.selected) {
   background-color: var(--dbm-bg-danger-hover);
+}
+
+/* `outline`'s own hover reuses the same `*-subtle-hover` tokens `subtle`
+   itself hovers to — a transparent-background outline tag picking up a
+   light tone tint on hover reads as "starting to fill in," a natural lead-
+   in to what `.selected` below commits to fully. */
+.interactive.outlineBrand:hover:not(.selected) {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.interactive.outlineNeutral:hover:not(.selected) {
+  background-color: var(--dbm-bg-subtle-hover);
+}
+
+.interactive.outlineInfo:hover:not(.selected) {
+  background-color: var(--dbm-bg-info-subtle-hover);
+}
+
+.interactive.outlineSuccess:hover:not(.selected) {
+  background-color: var(--dbm-bg-success-subtle-hover);
+}
+
+.interactive.outlineWarning:hover:not(.selected) {
+  background-color: var(--dbm-bg-warning-subtle-hover);
+}
+
+.interactive.outlineDanger:hover:not(.selected) {
+  background-color: var(--dbm-bg-danger-subtle-hover);
 }
 
 /* Selected/toggled-on state — a `currentColor` ring plus bolder text,
@@ -179,7 +285,23 @@
    tone-appropriate. Assumes the tag sits on `bg.surface` (or close to
    it) — the same assumption CSS "ring-offset" techniques generally make;
    not exact on an unusual background, but right for the overwhelming
-   majority of real placements. */
+   majority of real placements. `danger` is the one tone that no longer
+   has a separate `-strong` token to reuse here — the 2026-08-20 danger
+   token consolidation folded `border.danger-strong` directly into
+   `border.danger` (that token is retired), so `.selected.solidDanger`
+   below uses the plain `border.danger` token instead, at the same
+   value as before. */
+/* `solidBrand` reuses the general-purpose `border.brand` token (Token
+   spec Phase 22) rather than a new `-strong` token like the status tones
+   below — `border.brand` already exists as a real, contrast-verified
+   accent border (added speculatively for exactly this kind of future use,
+   before Tag's own `brand` tone existed yet), so no new token was needed. */
+.selected.solidBrand {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-brand);
+}
+
 .selected.solidNeutral {
   box-shadow:
     0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
@@ -207,7 +329,65 @@
 .selected.solidDanger {
   box-shadow:
     0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
-    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-danger-strong);
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-danger);
+}
+
+/* `outline`'s own selected state converges toward `solid`'s own look —
+   background switches to the tone's full fill (`bg.{tone}`, the same
+   token `solid{Tone}` uses) with the matching `text.on-{tone}` text,
+   rather than the light `-subtle` tint. The border itself is unchanged
+   from the unselected `.outline{Tone}` rule above — same border token
+   (`border.{tone}-strong`/`border.brand`/`border.danger`, whichever that
+   tone's own unselected rule uses), redeclared here only to win the
+   cascade over the generic `.selected` rule's own `currentColor` ring
+   (same box-shadow property, so without this override whichever rule
+   came second would silently replace the other rather than the two
+   combining).
+   Measured directly against the new `bg.{tone}` fill before keeping this:
+   `border.{tone}-strong` (and `border.danger`, its post-consolidation
+   equivalent) collapses to **1.45–2.12:1** there (worst case `border.brand`
+   vs `bg.brand` — literally the same color, 1.00:1). Kept anyway,
+   deliberately: once selected, the background swap is already an obvious,
+   high-contrast state signal on its own — the border at that point is
+   decorative continuity with the unselected look, not the functional
+   state boundary WCAG 1.4.11 governs, the same reasoning that already
+   lets the `-subtle` decorative border tokens elsewhere in this system
+   sit below 3:1. The unselected border, where it *is* the sole
+   state-identifying signal, stays fully contrast-verified. */
+.selected.outlineBrand {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-brand);
+}
+
+.selected.outlineNeutral {
+  background-color: var(--dbm-bg-neutral-strong);
+  color: var(--dbm-text-on-neutral);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-neutral-strong);
+}
+
+.selected.outlineInfo {
+  background-color: var(--dbm-bg-info);
+  color: var(--dbm-text-on-info);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-info-strong);
+}
+
+.selected.outlineSuccess {
+  background-color: var(--dbm-bg-success);
+  color: var(--dbm-text-on-success);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-success-strong);
+}
+
+.selected.outlineWarning {
+  background-color: var(--dbm-bg-warning);
+  color: var(--dbm-text-on-warning);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-warning-strong);
+}
+
+.selected.outlineDanger {
+  background-color: var(--dbm-bg-danger);
+  color: var(--dbm-text-on-danger);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-danger);
 }
 
 /* Sizes */

@@ -9,6 +9,7 @@ import type { TagProps, TagSize, TagTone, TagVariant } from "./Tag.types";
 
 const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
   subtle: {
+    brand: styles.subtleBrand,
     neutral: styles.subtleNeutral,
     info: styles.subtleInfo,
     success: styles.subtleSuccess,
@@ -16,11 +17,20 @@ const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
     danger: styles.subtleDanger,
   },
   solid: {
+    brand: styles.solidBrand,
     neutral: styles.solidNeutral,
     info: styles.solidInfo,
     success: styles.solidSuccess,
     warning: styles.solidWarning,
     danger: styles.solidDanger,
+  },
+  outline: {
+    brand: styles.outlineBrand,
+    neutral: styles.outlineNeutral,
+    info: styles.outlineInfo,
+    success: styles.outlineSuccess,
+    warning: styles.outlineWarning,
+    danger: styles.outlineDanger,
   },
 };
 
@@ -48,14 +58,16 @@ const removeSizeForTagSize: Record<TagSize, "xs" | "sm" | "md"> =
 /**
  * A labeled pill for categorization or active filters, with an optional
  * leading/trailing icon, an optional removable ("×") affordance, and an
- * optional clickable/selectable mode. Shares `Badge`'s tone/variant scale
- * but at larger, touch-friendly sizes suited to interactive contexts like
- * filter bars.
+ * optional clickable/selectable mode. Shares `Badge`'s tone scale but at
+ * larger, touch-friendly sizes suited to interactive contexts like filter
+ * bars — its own variant scale adds `outline` (a bordered, no-background
+ * style) on top of the subtle/solid pair Badge also has.
  *
  * @example
  * ```tsx
  * <Tag tone="info">Design</Tag>
  * <Tag leadingIcon={TagIcon} tone="success" variant="solid">Shipped</Tag>
+ * <Tag tone="brand" variant="outline">Beta</Tag>
  * <Tag trailingIcon={CaretDownIcon}>Sort by</Tag>
  * <Tag removable onRemove={() => removeFilter('status')}>Status: Active</Tag>
  * <Tag selected={isActive} onSelectedChange={setIsActive}>Design</Tag>

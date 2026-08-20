@@ -1,19 +1,26 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
-/** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. */
-export type TagTone = "neutral" | "info" | "success" | "warning" | "danger";
-export type TagVariant = "subtle" | "solid";
+/** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` is the one non-status tone — the system's own identity color, matching Badge's own tone scale (which Tag otherwise mirrors) rather than a status. */
+export type TagTone = "brand" | "neutral" | "info" | "success" | "warning" | "danger";
+export type TagVariant = "subtle" | "solid" | "outline";
 export type TagSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface TagProps extends ComponentPropsWithoutRef<"span"> {
   /**
-   * Feedback-type coloring, independent of `variant`.
+   * Feedback-type coloring, independent of `variant`. `brand` is the
+   * system's own identity color rather than a status.
    * @default 'neutral'
    */
   tone?: TagTone;
   /**
-   * Low-emphasis subtle-background style, or high-emphasis solid-fill.
+   * Low-emphasis subtle-background style, high-emphasis solid-fill, or
+   * `outline` — a bordered style with no background of its own (one not
+   * shared with Badge, whose own variant scale is subtle/solid only).
+   * A selected `outline` tag converges toward `solid`'s own look — full
+   * tone fill with on-color text — while keeping the same border it had
+   * unselected, rather than an offset-halo ring, since its own border
+   * already frames it.
    * @default 'subtle'
    */
   variant?: TagVariant;

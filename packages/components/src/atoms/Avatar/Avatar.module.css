@@ -511,22 +511,27 @@
 }
 
 /*
- * online/busy/away use the *-indicator tokens, not bg.success/danger/warning
- * directly — those are only contrast-verified as a background *for text*,
- * not as a small standalone graphic. Measured directly against bg.surface,
- * bg.danger's own dark value comes out to 2.90:1 (failing WCAG 1.4.11's
- * 3:1 non-text floor outright) and bg.warning/bg.success barely clear it
+ * online/away use the *-indicator tokens, not bg.success/warning directly —
+ * those are only contrast-verified as a background *for text*, not as a
+ * small standalone graphic. Measured directly against bg.surface,
+ * bg.warning/bg.success barely clear the 3:1 WCAG 1.4.11 non-text floor
  * (3.05:1/3.28:1) — found and fixed 2026-08-16, via the same class of bug
  * already caught and fixed on Badge's dot mode. offline already used
  * bg.neutral, its own dedicated non-text-verified token (3.10:1 dark /
- * 3.25:1 light) — no change needed there.
+ * 3.25:1 light) — no change needed there. busy is the one exception: it
+ * uses bg.danger directly, not a -indicator token — the 2026-08-20 danger
+ * token consolidation moved bg.danger's own dark value to red.300 (5.67:1
+ * against bg.surface), resolving the exact failure (2.90:1) that made a
+ * separate bg.danger-indicator necessary in the first place, so that token
+ * was retired and every former consumer, including this one, uses bg.danger
+ * directly now.
  */
 .statusOnline {
   background-color: var(--dbm-bg-success-indicator);
 }
 
 .statusBusy {
-  background-color: var(--dbm-bg-danger-indicator);
+  background-color: var(--dbm-bg-danger);
 }
 
 .statusAway {

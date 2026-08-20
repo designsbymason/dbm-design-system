@@ -108,7 +108,10 @@ describe("Tag", () => {
   });
 
   it("applies the matching class for each tone", () => {
-    const { rerender } = render(<Tag tone="neutral" data-testid="tag">Design</Tag>);
+    const { rerender } = render(<Tag tone="brand" data-testid="tag">Design</Tag>);
+    expect(screen.getByTestId("tag").className).toMatch(/subtleBrand/);
+
+    rerender(<Tag tone="neutral" data-testid="tag">Design</Tag>);
     expect(screen.getByTestId("tag").className).toMatch(/subtleNeutral/);
 
     rerender(<Tag tone="info" data-testid="tag">Design</Tag>);
@@ -126,6 +129,13 @@ describe("Tag", () => {
 
   it("applies the matching class for the solid variant, per tone", () => {
     const { rerender } = render(
+      <Tag tone="brand" variant="solid" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/solidBrand/);
+
+    rerender(
       <Tag tone="neutral" variant="solid" data-testid="tag">
         Design
       </Tag>,
@@ -138,6 +148,29 @@ describe("Tag", () => {
       </Tag>,
     );
     expect(screen.getByTestId("tag").className).toMatch(/solidDanger/);
+  });
+
+  it("applies the matching class for the outline variant, per tone", () => {
+    const { rerender } = render(
+      <Tag tone="brand" variant="outline" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/outlineBrand/);
+
+    rerender(
+      <Tag tone="neutral" variant="outline" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/outlineNeutral/);
+
+    rerender(
+      <Tag tone="danger" variant="outline" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/outlineDanger/);
   });
 
   it("defaults to size md", () => {
@@ -261,6 +294,17 @@ describe("Tag", () => {
         </Tag>,
       );
       expect(screen.getByTestId("tag").className).toMatch(/selected/);
+    });
+
+    it("applies both the outline tone class and the selected class together when an outline tag is selected", () => {
+      render(
+        <Tag variant="outline" tone="danger" selected data-testid="tag">
+          Design
+        </Tag>,
+      );
+      const className = screen.getByTestId("tag").className;
+      expect(className).toMatch(/outlineDanger/);
+      expect(className).toMatch(/selected/);
     });
 
     it("renders a real, independently focusable remove button when removable but not interactive", () => {

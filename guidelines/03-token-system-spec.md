@@ -175,6 +175,8 @@ Same day, applying this same lens to Avatar's already-finalized status dot (`onl
 
 Also corrected while re-deriving these numbers: `bg.neutral`'s own `$description` had cited "4.34:1 dark" for years — that figure was actually `gray.400`'s contrast against `bg.surface`, not `gray.500`'s (the token's real value, 3.10:1 dark). The token itself was never wrong, only the number recorded in its description. Corrected across all 4 theme files.
 
+**Note (`bg.danger-indicator` superseded):** the 2026-08-20 token consolidation (see the dedicated phase below) moved `bg.danger`'s own dark value to red.300 (5.67:1), clearing the 3:1 floor this token existed to work around — `bg.danger-indicator` was retired and every consumer moved to `bg.danger` directly. `bg.{warning,success,info,brand}-indicator` are unaffected, still in use.
+
 **Phase 17 (disabled-state contrast, verified 2026-08-16 — closes what was previously logged as "not yet checked"):** confirmed real, computed numbers for every component with a disabled state, rather than leaving the WCAG exemption asserted but unmeasured. Two distinct mechanisms exist in this codebase:
 
 - **Opacity-composited (9 components — `Button`, `IconButton`, `CloseButton`, `Avatar`, `Checkbox`, `Switch`, `Input`, `Textarea`, `Select`):** `opacity: var(--dbm-opacity-40)` applied to the whole element. Modeled as a real alpha composite (`0.4×foreground + 0.6×page-background`, `bg.surface` as the representative page background every prior phase's own checks already use) rather than assumed. One representative pairing per component's own default appearance, computed for all 4 themes — full range across every theme was **1.02:1 to 2.96:1** (`Switch`'s track fill was tightest, `Input`/`Textarea`/`Select`'s value text was closest to clearing a floor). `CloseButton` excluded — its icon color is `color: inherit`, context-dependent by design, no single number applies.
@@ -213,6 +215,8 @@ Fixed by giving `border.*` its own "strong" step per tone, at the *same* primiti
 
 `neutral` has no existing `border.danger`-style "state" tier to sit alongside (there's no tone-neutral input-validation border), so `border.neutral-strong` is a standalone addition rather than completing an existing `-strong`/base pair — placed next to `border.strong` in `Color.mdx` rather than in the danger/warning/success/info block. All 5 added to `Color.mdx`'s `border.*` array immediately after their base token, per §7's ordering rule.
 
+**Note (`border.danger-strong` superseded):** the 2026-08-20 token consolidation (see the dedicated phase below) folded this token directly into `border.danger` (same values, `red.700`/`red.300`, just under the unified name) and retired it. `border.{warning,success,info,neutral}-strong` are unaffected, still their own separate tokens.
+
 **Phase 21 (`border.brand` renamed to `border.brand-subtle`, 2026-08-20):** Naming-consistency fix, no value change — every sibling family token added since Phase 6 (`border.danger-subtle`/`warning-subtle`/`success-subtle`/`info-subtle`, Phase 14) carries the `-subtle` suffix for this exact decorative-only role (explicitly exempt from WCAG 1.4.11's 3:1 non-text floor, unlike the stronger state-identifying `border.{tone}` tokens), but the original brand token never picked up the suffix when that pattern formed around it. Renamed rather than aliased — every real consumer (`Avatar.module.css`'s default-fill ring) and every doc reference (`Avatar.mdx`, `Color.mdx`, `docs.css`) updated in the same pass, so there's exactly one live name for this token, not two. Historical phase entries above (6, 9, 13, 14) have been updated in place to the new name — the *decisions* and *numbers* they describe didn't change, only the identifier used to talk about them, so rewriting them to the current name keeps this document internally consistent rather than preserving a name that no longer resolves to anything.
 
 **Phase 22 (`border.brand` re-added, 2026-08-20 — a new, distinct token from the one renamed away in Phase 21):** Speculative addition, no component consumes it yet — a general-purpose default brand-colored border, for future use wherever a real (WCAG-1.4.11-verified, not decorative-only) brand-accent border is needed, distinct from `border.focus`'s specific keyboard-focus role. Requested as "maps to `color.purple.600`"; confirmed with the user that this should be brand-adaptive (a per-theme step, like every other `border.*`/`bg.*`/`text.*` brand token) rather than the literal purple value shared across the Emerald theme files too.
@@ -222,6 +226,57 @@ Values, computed rather than copied from an existing token wholesale:
 - **Dark mode does *not* reuse `bg.brand`'s own dark step** — `purple.500`/`emerald.500` measure only 2.24:1 / 3.41:1 against dark `bg.surface` (the first outright fails 3:1, the second clears it with almost no margin), since `bg.brand`'s dark calibration is for hosting text on a fill, not for a thin border line resolving against the surrounding surface. Reused `border.focus`'s own already-proven dark values instead (`purple.400` / `emerald.400`, 3.56:1 / 4.63:1) — `border.brand` and `border.focus` end up visually identical in dark mode despite differing in light mode (`.600`/`.700` vs `.500`/`.600`), a real constraint on how much contrast headroom a saturated brand border has against a dark surface, not an oversight.
 
 Added to `Color.mdx`'s `border.*` array immediately before `border.brand-subtle` (mirroring the danger/warning/success/info block's own "base tone, then `-strong`, then `-subtle`" ordering), per §7's ordering rule.
+
+**Phase 23 (`border.neutral` added, 2026-08-20 — found adding Tag's outline variant):** Every other tone (`danger`/`warning`/`success`/`info`/`brand`) already had a real, state-identifying `border.{tone}` token, contrast-verified against `bg.surface`. Neutral didn't — the only existing generic gray border, `border.strong`, is documented as decorative "hover-state emphasis," and measuring it (rather than assuming it would do) confirmed it genuinely fails as a real border: **2.32:1 light / 2.14:1 dark against `bg.surface`**, both well under the 3:1 WCAG 1.4.11 floor.
+
+Values, same "comfortable margin over bare-minimum" standard as `border.brand` (Phase 22) rather than the family's usual `.500`/`.400` step (which for gray specifically only clears 3.25:1 light / 3.10:1 dark — technically passing but thin):
+- **Light: `gray.600`** — 4.70:1 against `bg.surface`.
+- **Dark: `gray.400`** — 4.34:1 against `bg.surface`.
+
+Same value in both brand themes (brand-agnostic, matching `border.strong`/`border.default`'s own precedent). Added to `Color.mdx`'s `border.*` array immediately after `border.strong`, before `border.neutral-strong`, per §7's ordering rule.
+
+**Note (superseded by Phase 24 below):** Tag's outline variant, the motivating use case named above, ended up consuming `border.neutral-strong` for its own default border, not this token — see Phase 24. `border.neutral` still stands as a real, contrast-verified token completing the family, available for a future default-emphasis use.
+
+**Pitfall hit while adding this:** the first draft of this token's own `$description` used literal `border.{tone}` placeholder notation to mean "each per-tone border token." Style Dictionary scans *every* string field for `{...}` reference syntax, including `$description` — `{tone}` was parsed as an attempted token reference to a token named `tone`, which doesn't exist, and broke the build with "Reference Errors: Some token references (1) could not be found." Fixed by spelling out the tone names in prose (`border.danger/warning/success/info/brand`) instead of using bracketed placeholder notation anywhere in a token file, including descriptions — worth remembering for any future token description that wants to reference "the whole family" generically.
+
+**Phase 24 (Tag `outline` variant revised, 2026-08-19 — no new tokens, existing-token reassignment only):** Two changes to `outline`'s own CSS, requested after Phase 23 landed:
+
+1. **Default (unselected) border upgraded one tier**, from `border.{tone}` to `border.{tone}-strong` (the same Phase 20 tokens `solid`'s own selected-state halo uses) — `brand` unchanged at `border.brand` (Phase 22), since it has no `-strong` sibling and was already judged confident enough on its own. Reasoning: `outline`'s rim is the *only* visual signal it has (no fill), so it reads better one step richer than the decorative-tier default it launched with in Phase 23's companion work.
+2. **Selected state converges toward `solid`'s own look** — background switches from the `-subtle` tint to the tone's full fill (`bg.{tone}`, the exact token `solid{Tone}` uses) with matching `text.on-{tone}` text, rather than staying a light tint. The border is unchanged from the unselected state — same `border.{tone}-strong`/`border.brand` token, just redeclared to win the cascade over the generic `.selected` rule's own `currentColor` ring.
+
+**Why the same border tier survives being placed against the new fill, when it didn't for `solid`'s own ring (Phase 20):** measured `border.{tone}-strong` directly against the new `bg.{tone}` selected fill before deciding this was acceptable (this system's standing practice). Every tone measures poorly there: **danger 1.45:1, warning 2.12:1, success 1.47:1, info 1.47:1, neutral-strong-vs-neutral-strong 1.46:1, brand vs brand 1.00:1** (the exact same primitive value on both sides). Kept anyway, deliberately, unlike Phase 20's offset-halo fix: once `outline` is selected, the background swap to a full saturated fill is *already* an obvious, high-contrast state signal on its own — the border at that point is decorative continuity with the unselected look, not the sole functional state boundary WCAG 1.4.11 governs, the same reasoning that already lets the `-subtle` decorative border tokens elsewhere in this system sit below 3:1. The *unselected* border, where it genuinely is the only signal `outline` has, stays fully contrast-verified via `border.{tone}-strong`/`border.brand` (point 1 above) — this reasoning applies only once a second, higher-contrast signal (the fill) is also present.
+
+No token additions — `border.{tone}-strong` already existed (Phase 20). Border drawn via `box-shadow: inset`, not the `border` property, in both states — box-shadow doesn't participate in the box model, keeping `outline` pixel-identical in size to `subtle`/`solid` at the same `size` step. Confirmed via live `getComputedStyle` checks in both brand themes and both color modes before considering this done, matching this project's self-verification standard.
+
+**Note (`danger` superseded):** the 2026-08-20 token consolidation (below) folded `border.danger-strong` into `border.danger`, so `outlineDanger`/`selected.outlineDanger` now reference `border.danger` — same value, same reasoning above, just the unified token name. `warning`/`success`/`info`/`neutral` are unaffected.
+
+**Phase 25 (danger token consolidation, 2026-08-20 — first pass of a planned per-tone cleanup):** The token layer had been growing need-by-need, one narrow single-purpose token at a time (Phases 16, 20 above are two examples) — some of those tokens ended up with only one or two real consumers. At explicit direction, started consolidating around one shared, contrast-verified primitive step per mode, reused across `bg`/`text`/`border`/`icon` for a given tone, rather than a distinct value per narrow use case — `danger` first, as a trial run before repeating this for `warning`/`success`/`info`/`neutral`.
+
+Full contrast review (computed, not assumed) confirmed every new pairing clears AA, and two are strict improvements:
+
+| Token | Light | Dark | Light Δ | Dark Δ |
+|---|---|---|---|---|
+| `bg.danger` | `red.600` (unchanged) | `red.300` ← `red.500` | — | 5.10:1 → 5.67:1 vs `bg.surface` |
+| `bg.danger-hover` | `red.700` (unchanged) | `red.200` ← `red.400` | — | (follows `bg.danger`'s dark move) |
+| `text.on-danger` | `neutral.white` (unchanged) | `red.900` ← `gray.950` | — | 5.22:1 → 8.22:1 vs new `bg.danger` |
+| `text.danger` | `red.600` ← `red.700` | `red.300` (unchanged) | 7.39:1 → 5.10:1 vs `bg.surface` | — |
+| `border.danger` | `red.600` ← `red.500` | `red.300` ← `red.400` | 3.48:1 → 5.10:1 | 4.13:1 → 5.67:1 |
+| `icon.danger` (new) | `red.600` | `red.300` | 5.10:1 vs `bg.surface` | 5.67:1 vs `bg.surface` |
+| `icon.on-danger` (new) | `neutral.white` | `red.900` | 5.10:1 vs new `bg.danger` | 8.22:1 vs new `bg.danger` |
+
+`bg.danger-subtle`, `bg.danger-subtle-hover`, and `border.danger-subtle` are unchanged — those stay their own dedicated decorative-tint tiers, not part of the shared-step consolidation.
+
+**Two tokens retired, both because the value change above resolved the exact problem that made them necessary:**
+- **`bg.danger-indicator`** (Phase 16) existed only because `bg.danger`'s old dark value (`red.500`) measured 2.90:1 against dark `bg.surface`, an outright WCAG 1.4.11 failure for a small standalone graphic (a status dot). The new dark value (`red.300`) clears it at 5.67:1, so every former consumer — Avatar's `.statusBusy`, Badge's `.dotDanger` — now uses `bg.danger` directly.
+- **`border.danger-strong`** (Phase 20) existed as a separate richer tier because `border.danger`'s old value was too weak to serve both roles (a real input-validation border *and* a confident accent ring/frame). The new `border.danger` value (`red.600`/`red.300`) absorbs that role directly — every former consumer (Tag's `outlineDanger`/`selected.outlineDanger` border, `selected.solidDanger`'s offset-halo accent) now uses `border.danger`.
+
+**Two explicit user confirmations, since these aren't contrast questions but visual-identity ones:**
+1. Tag's outline/selected-halo border recolors from `red.700` to `red.600` in light mode (still comfortably passes, 7.39:1 → 5.10:1, but a real visible change to a just-shipped component).
+2. Dark-mode solid-danger surfaces (Button, IconButton, ProgressBar, ProgressCircle, Badge solid, Tag solid/selected-outline) shift from a `red.500` fill + near-black `gray.950` text to a lighter `red.300` fill + dark-maroon `red.900` text — a monochromatic-red look instead of red-fill-plus-neutral-text, system-wide.
+
+`icon.danger`/`icon.on-danger` are new, purely additive — no existing component referenced a dedicated icon-danger token before this (icons inside e.g. `FieldError` inherit `text.danger` via `currentColor`), so nothing had to migrate onto them; they exist now for future consumers that want an icon-specific token rather than relying on inheritance.
+
+`Color.mdx`, `Avatar.mdx`, and `Badge.mdx` updated to match — the two retired tokens' rows removed (merged into their replacement token's own `usage` text where a doc explained a specific role, e.g. Badge's dot-mode note folded into its existing `bg.danger` row), the two new `icon.*` rows added. Verified via `check-foundations-token-coverage.mjs` (the tripwire script that fails on any documented-but-nonexistent or existing-but-undocumented token) before considering the doc pass complete.
 
 ## Multi-theme structure going forward
 

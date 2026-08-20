@@ -190,7 +190,7 @@ describe("Badge", () => {
   it("uses its own contrast-verified indicator fill per tone when dot is set, ignoring variant", () => {
     const { rerender } = render(<Badge dot tone="danger" data-testid="badge" />);
     expect(screen.getByTestId("badge")).toHaveStyle({
-      backgroundColor: "var(--dbm-bg-danger-indicator)",
+      backgroundColor: "var(--dbm-bg-danger)",
     });
 
     // `variant="solid"` must not change the dot's fill — dot always uses
@@ -199,7 +199,7 @@ describe("Badge", () => {
       <Badge dot tone="danger" variant="solid" data-testid="badge" />,
     );
     expect(screen.getByTestId("badge")).toHaveStyle({
-      backgroundColor: "var(--dbm-bg-danger-indicator)",
+      backgroundColor: "var(--dbm-bg-danger)",
     });
 
     rerender(<Badge dot tone="warning" data-testid="badge" />);

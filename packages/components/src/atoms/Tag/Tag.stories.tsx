@@ -43,14 +43,15 @@ const meta: Meta<typeof Tag> = {
     },
     tone: {
       control: "select",
-      options: ["neutral", "info", "success", "warning", "danger"],
-      description: "Feedback-type coloring, independent of `variant`.",
+      options: ["brand", "neutral", "info", "success", "warning", "danger"],
+      description:
+        "Feedback-type coloring, independent of `variant`. `brand` is the system's own identity color rather than a status.",
     },
     variant: {
       control: "select",
-      options: ["subtle", "solid"],
+      options: ["subtle", "solid", "outline"],
       description:
-        "Low-emphasis subtle-background style, or high-emphasis solid-fill.",
+        "Low-emphasis subtle-background style, high-emphasis solid-fill, or a bordered style with no background of its own (selecting an outline tag adds one).",
     },
     size: {
       control: "select",
@@ -252,13 +253,13 @@ export const AllTones: Story = {
   args: { variant: "subtle" },
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
-      {(["neutral", "info", "success", "warning", "danger"] as const).map(
-        (tone) => (
-          <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
-            {tone}
-          </Tag>
-        ),
-      )}
+      {(
+        ["brand", "neutral", "info", "success", "warning", "danger"] as const
+      ).map((tone) => (
+        <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
+          {tone}
+        </Tag>
+      ))}
     </div>
   ),
 };
@@ -273,13 +274,34 @@ export const Solid: Story = {
   args: { variant: "solid" },
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
-      {(["neutral", "info", "success", "warning", "danger"] as const).map(
-        (tone) => (
-          <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
-            {tone}
-          </Tag>
-        ),
-      )}
+      {(
+        ["brand", "neutral", "info", "success", "warning", "danger"] as const
+      ).map((tone) => (
+        <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
+          {tone}
+        </Tag>
+      ))}
+    </div>
+  ),
+};
+
+export const Outline: Story = {
+  name: "All tones (outline)",
+  argTypes: {
+    tone: { control: false },
+    children: { control: false },
+    removeLabel: { control: false },
+  },
+  args: { variant: "outline" },
+  render: (args) => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
+      {(
+        ["brand", "neutral", "info", "success", "warning", "danger"] as const
+      ).map((tone) => (
+        <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
+          {tone}
+        </Tag>
+      ))}
     </div>
   ),
 };
@@ -343,6 +365,21 @@ export const Selectable: Story = {
   // what the selected look already looks like on load is separately shown
   // by `SelectableFilterGroup` below ("Design" starts selected there).
   args: { defaultSelected: false, onSelectedChange: fn(), tone: "info" },
+};
+
+export const SelectableOutline: Story = {
+  name: "Selectable (outline)",
+  // Same toggle behavior as `Selectable` above, but on the `outline`
+  // variant specifically — demonstrates that selecting it swaps in a
+  // full tone fill with on-color text (converging toward `solid`'s own
+  // look) rather than the offset-halo ring `solid`'s own selected state
+  // uses; the border itself is unchanged from its unselected color.
+  args: {
+    defaultSelected: false,
+    onSelectedChange: fn(),
+    tone: "info",
+    variant: "outline",
+  },
 };
 
 export const SelectableFilterGroup: Story = {
