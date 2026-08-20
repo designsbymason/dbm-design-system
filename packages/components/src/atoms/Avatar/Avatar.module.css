@@ -511,20 +511,21 @@
 }
 
 /*
- * online/away use the *-indicator tokens, not bg.success/warning directly —
- * those are only contrast-verified as a background *for text*, not as a
- * small standalone graphic. Measured directly against bg.surface,
- * bg.warning/bg.success barely clear the 3:1 WCAG 1.4.11 non-text floor
- * (3.05:1/3.28:1) — found and fixed 2026-08-16, via the same class of bug
- * already caught and fixed on Badge's dot mode. offline already used
- * bg.neutral, its own dedicated non-text-verified token (3.10:1 dark /
- * 3.25:1 light) — no change needed there. busy is the one exception: it
- * uses bg.danger directly, not a -indicator token — the 2026-08-20 danger
- * token consolidation moved bg.danger's own dark value to red.300 (5.67:1
- * against bg.surface), resolving the exact failure (2.90:1) that made a
- * separate bg.danger-indicator necessary in the first place, so that token
- * was retired and every former consumer, including this one, uses bg.danger
- * directly now.
+ * online uses its own *-indicator token, not bg.success directly — that's
+ * only contrast-verified as a background *for text*, not as a small
+ * standalone graphic. Measured directly against bg.surface, bg.success
+ * barely clears the 3:1 WCAG 1.4.11 non-text floor (3.28:1) — found and
+ * fixed 2026-08-16, via the same class of bug already caught and fixed on
+ * Badge's dot mode. offline already used bg.neutral, its own dedicated
+ * non-text-verified token (3.10:1 dark / 3.25:1 light) — no change needed
+ * there. busy and away are both exceptions now, using bg.danger/bg.warning
+ * directly instead of a -indicator token: the 2026-08-20 danger/warning
+ * token consolidations moved each tone's own dark value to a lighter step
+ * (red.300 / amber.300, 5.67:1 / 5.80:1 against bg.surface), resolving the
+ * exact contrast gap (an outright failure for danger, a thin pass for
+ * warning) that made separate bg.danger-indicator/bg.warning-indicator
+ * tokens necessary in the first place, so both were retired and every
+ * former consumer, including these two, uses the base bg.{tone} token now.
  */
 .statusOnline {
   background-color: var(--dbm-bg-success-indicator);
@@ -535,7 +536,7 @@
 }
 
 .statusAway {
-  background-color: var(--dbm-bg-warning-indicator);
+  background-color: var(--dbm-bg-warning);
 }
 
 .statusOffline {

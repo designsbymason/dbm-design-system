@@ -204,7 +204,7 @@ describe("Badge", () => {
 
     rerender(<Badge dot tone="warning" data-testid="badge" />);
     expect(screen.getByTestId("badge")).toHaveStyle({
-      backgroundColor: "var(--dbm-bg-warning-indicator)",
+      backgroundColor: "var(--dbm-bg-warning)",
     });
 
     rerender(<Badge dot tone="success" data-testid="badge" />);

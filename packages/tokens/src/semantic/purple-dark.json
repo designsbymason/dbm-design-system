@@ -71,27 +71,23 @@
     },
     "warning": {
       "$type": "color",
-      "$value": "{color.amber.500}"
+      "$value": "{color.amber.300}",
+      "$description": "Token consolidation (2026-08-20) — moved from amber.500 to amber.300, two steps lighter. Old value measured 3.05:1 against dark bg.surface — technically cleared WCAG 1.4.11's 3:1 non-text floor but with almost no margin (this is what bg.warning-indicator, now retired, existed to widen). amber.300 vs bg.surface (dark) = 5.80:1. text.on-warning moves to amber.900 alongside this change (8.19:1 against this new value) — see that token's own description. See purple-light.json's own bg.warning description for the full shared-value rationale (bg/text/border/icon.warning now all resolve to this same step per mode)."
     },
     "warning-hover": {
       "$type": "color",
-      "$value": "{color.amber.400}",
-      "$description": "Lighter than warning, restoring the usual dark-mode 'brighten on hover' direction (2026-07-27), mirroring bg.danger-hover: gray.950 text.on-warning on amber.400 = 7.76:1, passes AA."
+      "$value": "{color.amber.200}",
+      "$description": "Token consolidation (2026-08-20) — moved from amber.400 to amber.200, alongside bg.warning's own dark move (amber.500 → amber.300) to preserve the same relative hover-lightening gap. text.on-warning (amber.900 as of this change) on amber.200 = 10.54:1."
     },
     "warning-subtle": {
       "$type": "color",
       "$value": "{color.amber.950}",
-      "$description": "Moved from amber.900 to amber.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's amber.100 → amber.50, preserving the same relative gap from each theme's pole. text.warning (amber.300) on amber.950 = 10.44:1, still comfortably passes AA (was 8.19:1 on amber.900)."
+      "$description": "Moved from amber.900 to amber.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's amber.100 → amber.50, preserving the same relative gap from each theme's pole. text.warning (amber.300) on amber.950 = 10.44:1, still comfortably passes AA (was 8.19:1 on amber.900). Not part of the 2026-08-20 warning token consolidation — this tier stays its own dedicated dark tint."
     },
     "warning-subtle-hover": {
       "$type": "color",
       "$value": "{color.amber.900}",
-      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses warning-subtle's own pre-2026-07-27 value (amber.900), one step lighter, matching this system's standard dark-mode hover direction. text.warning (amber.300) on amber.900 = 8.19:1, comfortably passes AA. Shared across both brand themes, matching warning-subtle's own brand-independence."
-    },
-    "warning-indicator": {
-      "$type": "color",
-      "$value": "{color.amber.400}",
-      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators. bg.warning's own dark value (amber.500) measures only 3.05:1 against bg.surface (gray.800) — technically clearing WCAG 1.4.11's 3:1 non-text floor but with almost no margin, since bg.warning was only ever verified as a background *for text*, a different and less strict pairing. One step lighter (amber.400) clears it comfortably at 4.31:1. Light theme uses amber.500 (3.31:1) — see that theme's own description. Shared across both brand themes, matching every other status-tone token's brand-independence."
+      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses warning-subtle's own pre-2026-07-27 value (amber.900), one step lighter, matching this system's standard dark-mode hover direction. text.warning (amber.300) on amber.900 = 8.19:1, comfortably passes AA. Shared across both brand themes, matching warning-subtle's own brand-independence. Not part of the 2026-08-20 warning token consolidation."
     },
     "success": {
       "$type": "color",
@@ -212,8 +208,8 @@
     },
     "on-warning": {
       "$type": "color",
-      "$value": "{color.gray.950}",
-      "$description": "Text on a solid bg.warning fill (Badge solid variant). Dark-theme bg.warning is amber.500: white fails (3.31:1), gray.950 passes at 5.49:1 (re-verified 2026-07-18, Phase 4 OKLCH regen). Light themes now use white instead — see purple-light.json / emerald-light.json."
+      "$value": "{color.amber.900}",
+      "$description": "Token consolidation (2026-08-20) — moved from gray.950 to amber.900, so a solid bg.warning fill in dark mode reads as a monochromatic amber surface (fill + text both amber-family) rather than amber fill + neutral-gray text. amber.900 on bg.warning's own new dark value (amber.300) = 8.19:1, more margin than the previous gray.950 pairing (5.49:1). Light themes keep white — see purple-light.json's own description."
     },
     "on-neutral": {
       "$type": "color",
@@ -237,7 +233,8 @@
     },
     "warning": {
       "$type": "color",
-      "$value": "{color.amber.300}"
+      "$value": "{color.amber.300}",
+      "$description": "Unchanged by the 2026-08-20 warning token consolidation (already amber.300) — now also the shared value bg.warning, border.warning, and icon.warning resolve to in dark mode. See purple-light.json's own text.warning description for the consolidation this is part of."
     },
     "success": {
       "$type": "color",
@@ -298,18 +295,13 @@
     },
     "warning": {
       "$type": "color",
-      "$value": "{color.amber.400}",
-      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.400 scale step border.danger uses for red, for a warning-toned state-identifying border (e.g. a future warning-state form control)."
-    },
-    "warning-strong": {
-      "$type": "color",
       "$value": "{color.amber.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.warning-strong (light), same rationale danger's own now-retired border.danger-strong originally established (Phase 20; danger's own -strong tier was folded into border.danger directly in the 2026-08-20 consolidation, but warning/success/info/neutral keep their own separate -strong tier for now). Reuses text.warning's own primitive step in dark mode (amber.300), independently tracked. amber.300 vs bg.surface (dark) = 5.80:1."
+      "$description": "Token consolidation (2026-08-20) — moved from amber.400 to amber.300, absorbing border.warning-strong's former role (that token is retired — every former consumer now uses this token directly) and matching bg.warning/text.warning/icon.warning's shared dark step. amber.300 vs bg.surface (dark) = 5.80:1, an improvement over the previous 4.31:1. See purple-light.json's own border.warning description for the consolidation this is part of."
     },
     "warning-subtle": {
       "$type": "color",
       "$value": "{color.amber.900}",
-      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.warning-subtle for any component's warning-tinted ring, not limited to one specific component. amber.900 on amber.950 is 1.27:1. Brand-agnostic."
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.warning-subtle for any component's warning-tinted ring, not limited to one specific component. amber.900 on amber.950 is 1.27:1. Brand-agnostic. Not part of the 2026-08-20 warning token consolidation — this tier stays its own dedicated decorative step."
     },
     "success": {
       "$type": "color",
@@ -319,7 +311,7 @@
     "success-strong": {
       "$type": "color",
       "$value": "{color.green.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.success-strong (light), same rationale danger's own now-retired border.danger-strong originally established (Phase 20; see border.warning-strong's own description for why danger no longer has this tier separately). Reuses text.success's own primitive step in dark mode (green.300), independently tracked. green.300 vs bg.surface (dark) = 6.01:1."
+      "$description": "New token (2026-08-19), dark counterpart to border.success-strong (light), same rationale danger's and warning's own now-retired -strong tokens originally established (Phase 20; both were folded into their base border.* token in the 2026-08-20 consolidations, but success/info/neutral keep their own separate -strong tier for now). Reuses text.success's own primitive step in dark mode (green.300), independently tracked. green.300 vs bg.surface (dark) = 6.01:1."
     },
     "success-subtle": {
       "$type": "color",
@@ -334,7 +326,7 @@
     "info-strong": {
       "$type": "color",
       "$value": "{color.blue.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.info-strong (light), same rationale danger's own now-retired border.danger-strong originally established (Phase 20; see border.warning-strong's own description for why danger no longer has this tier separately). Reuses text.info's own primitive step in dark mode (blue.300), independently tracked. blue.300 vs bg.surface (dark) = 5.85:1."
+      "$description": "New token (2026-08-19), dark counterpart to border.info-strong (light), same rationale danger's and warning's own now-retired -strong tokens originally established (Phase 20; both were folded into their base border.* token in the 2026-08-20 consolidations, but success/info/neutral keep their own separate -strong tier for now). Reuses text.info's own primitive step in dark mode (blue.300), independently tracked. blue.300 vs bg.surface (dark) = 5.85:1."
     },
     "info-subtle": {
       "$type": "color",
@@ -374,6 +366,16 @@
       "$type": "color",
       "$value": "{color.red.900}",
       "$description": "New token (2026-08-20), added as part of the danger token consolidation — dark counterpart to icon.on-danger (light); see that token's own description for its purpose. red.900 on bg.danger's own dark value (red.300) = 8.22:1."
+    },
+    "warning": {
+      "$type": "color",
+      "$value": "{color.amber.300}",
+      "$description": "New token (2026-08-20), added as part of the warning token consolidation — dark counterpart to icon.warning (light); see that token's own description for its purpose. amber.300 vs bg.surface (dark) = 5.80:1."
+    },
+    "on-warning": {
+      "$type": "color",
+      "$value": "{color.amber.900}",
+      "$description": "New token (2026-08-20), added as part of the warning token consolidation — dark counterpart to icon.on-warning (light); see that token's own description for its purpose. amber.900 on bg.warning's own dark value (amber.300) = 8.19:1."
     }
   }
 }

@@ -81,12 +81,13 @@
    `-subtle` rings. `brand` keeps the general-purpose `border.brand`
    token (Token spec Phase 22): it has no separate `-strong` sibling,
    and its own value was already chosen to read as a confident accent
-   border on its own. `danger` is the other exception, for a different
-   reason: the 2026-08-20 danger token consolidation folded
-   `border.danger-strong` directly into `border.danger` (that token is
-   retired), so `danger` uses the plain `border.danger` token here —
-   still the same richer step as before, just under the unified name.
-   The border is drawn as an *inset box-shadow*, not the `border`
+   border on its own. `danger` and `warning` are the other exceptions,
+   for a different reason: the 2026-08-20 danger/warning token
+   consolidations folded `border.danger-strong`/`border.warning-strong`
+   directly into `border.danger`/`border.warning` (those tokens are
+   retired), so both tones use their own plain `border.{tone}` token
+   here — still the same richer step as before, just under the unified
+   name. The border is drawn as an *inset box-shadow*, not the `border`
    property — box-shadow doesn't participate in the box model, so an
    outline-variant tag renders at exactly the same size as a subtle/solid
    tag of the same `size` step, with no separate padding-compensation
@@ -119,7 +120,7 @@
 
 .outlineWarning {
   background-color: transparent;
-  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-warning-strong);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-warning);
   color: var(--dbm-text-warning);
 }
 
@@ -285,12 +286,14 @@
    tone-appropriate. Assumes the tag sits on `bg.surface` (or close to
    it) — the same assumption CSS "ring-offset" techniques generally make;
    not exact on an unusual background, but right for the overwhelming
-   majority of real placements. `danger` is the one tone that no longer
-   has a separate `-strong` token to reuse here — the 2026-08-20 danger
-   token consolidation folded `border.danger-strong` directly into
-   `border.danger` (that token is retired), so `.selected.solidDanger`
-   below uses the plain `border.danger` token instead, at the same
-   value as before. */
+   majority of real placements. `danger` and `warning` are the two tones
+   that no longer have a separate `-strong` token to reuse here — the
+   2026-08-20 danger/warning token consolidations folded
+   `border.danger-strong`/`border.warning-strong` directly into
+   `border.danger`/`border.warning` (those tokens are retired), so
+   `.selected.solidDanger`/`.selected.solidWarning` below use the plain
+   `border.danger`/`border.warning` tokens instead, at the same values
+   as before. */
 /* `solidBrand` reuses the general-purpose `border.brand` token (Token
    spec Phase 22) rather than a new `-strong` token like the status tones
    below — `border.brand` already exists as a real, contrast-verified
@@ -323,7 +326,7 @@
 .selected.solidWarning {
   box-shadow:
     0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
-    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-warning-strong);
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-warning);
 }
 
 .selected.solidDanger {
@@ -337,23 +340,28 @@
    token `solid{Tone}` uses) with the matching `text.on-{tone}` text,
    rather than the light `-subtle` tint. The border itself is unchanged
    from the unselected `.outline{Tone}` rule above — same border token
-   (`border.{tone}-strong`/`border.brand`/`border.danger`, whichever that
-   tone's own unselected rule uses), redeclared here only to win the
-   cascade over the generic `.selected` rule's own `currentColor` ring
-   (same box-shadow property, so without this override whichever rule
-   came second would silently replace the other rather than the two
-   combining).
+   (`border.{tone}-strong`/`border.brand`/`border.danger`/`border.warning`,
+   whichever that tone's own unselected rule uses), redeclared here only
+   to win the cascade over the generic `.selected` rule's own
+   `currentColor` ring (same box-shadow property, so without this
+   override whichever rule came second would silently replace the other
+   rather than the two combining).
    Measured directly against the new `bg.{tone}` fill before keeping this:
-   `border.{tone}-strong` (and `border.danger`, its post-consolidation
-   equivalent) collapses to **1.45–2.12:1** there (worst case `border.brand`
-   vs `bg.brand` — literally the same color, 1.00:1). Kept anyway,
-   deliberately: once selected, the background swap is already an obvious,
-   high-contrast state signal on its own — the border at that point is
-   decorative continuity with the unselected look, not the functional
-   state boundary WCAG 1.4.11 governs, the same reasoning that already
-   lets the `-subtle` decorative border tokens elsewhere in this system
-   sit below 3:1. The unselected border, where it *is* the sole
-   state-identifying signal, stays fully contrast-verified. */
+   for `brand`/`danger`/`warning`, whose border and fill tokens now
+   resolve to the exact same consolidated value, this is a literal
+   **1.00:1** (the border and fill are byte-identical colors) in both
+   modes. `success`/`info`/`neutral` (still on their own separate
+   `-strong` tier, not yet consolidated) fare a little better but are
+   still weak — **1.46–1.89:1**, one exception being `neutral` in dark
+   mode at 3.49:1. Kept anyway, deliberately: once selected, the
+   background swap is already an obvious, high-contrast state signal on
+   its own — the border at that point is decorative continuity with the
+   unselected look, not the functional state boundary WCAG 1.4.11
+   governs, the same reasoning that already lets the `-subtle`
+   decorative border tokens elsewhere in this system sit below 3:1. The
+   unselected border, where it *is* the sole state-identifying signal,
+   stays fully
+   contrast-verified. */
 .selected.outlineBrand {
   background-color: var(--dbm-bg-brand);
   color: var(--dbm-text-on-brand);
@@ -381,7 +389,7 @@
 .selected.outlineWarning {
   background-color: var(--dbm-bg-warning);
   color: var(--dbm-text-on-warning);
-  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-warning-strong);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-warning);
 }
 
 .selected.outlineDanger {

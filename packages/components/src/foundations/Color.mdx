@@ -72,11 +72,10 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "bg.danger-hover", usage: "Hover state of bg.danger" },
   { token: "bg.danger-subtle", usage: "Light danger tint" },
   { token: "bg.danger-subtle-hover", usage: "Hover state of bg.danger-subtle" },
-  { token: "bg.warning", usage: "Warning-tone solid fill" },
+  { token: "bg.warning", usage: "Warning-tone solid fill; also non-text graphical status indicators" },
   { token: "bg.warning-hover", usage: "Hover state of bg.warning" },
   { token: "bg.warning-subtle", usage: "Light warning tint" },
   { token: "bg.warning-subtle-hover", usage: "Hover state of bg.warning-subtle" },
-  { token: "bg.warning-indicator", usage: "Non-text graphical status indicator (Badge's dot mode, Avatar's away status dot) — verified for 3:1 against bg.surface, unlike bg.warning" },
   { token: "bg.success", usage: "Success-tone solid fill" },
   { token: "bg.success-hover", usage: "Hover state of bg.success" },
   { token: "bg.success-subtle", usage: "Light success tint" },
@@ -129,9 +128,8 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "border.brand-subtle", usage: "Decorative brand-accent border (not focus/state)" },
   { token: "border.danger", usage: "Error-state input border; also the richer accent-ring role" },
   { token: "border.danger-subtle", usage: "Decorative danger-tinted ring" },
-  { token: "border.warning", usage: "Warning-state input border" },
-  { token: "border.warning-strong", usage: "Richer warning accent ring (e.g. Tag's selected solid-warning offset halo)" },
-  { token: "border.warning-subtle", usage: "Decorative warning-tinted ring (family-matched, not brand)" },
+  { token: "border.warning", usage: "Warning-tone state-identifying border; also the richer accent-ring role" },
+  { token: "border.warning-subtle", usage: "Decorative warning-tinted ring" },
   { token: "border.success", usage: "Success-state input border" },
   { token: "border.success-strong", usage: "Richer success accent ring (e.g. Tag's selected solid-success offset halo)" },
   { token: "border.success-subtle", usage: "Decorative success-tinted ring (family-matched, not brand)" },
@@ -150,6 +148,8 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "icon.disabled", usage: "Icon color inside a disabled control" },
   { token: "icon.danger", usage: "Standalone danger-tone icon" },
   { token: "icon.on-danger", usage: "Icon on a solid bg.danger fill" },
+  { token: "icon.warning", usage: "Standalone warning-tone icon" },
+  { token: "icon.on-warning", usage: "Icon on a solid bg.warning fill" },
 ]} />
 
 ## Contrast verification
