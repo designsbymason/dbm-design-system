@@ -5,8 +5,9 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
  * safe choice for links inline within body text — WCAG 1.4.1 requires links
  * to be distinguishable from surrounding text by more than color alone
  * unless the color contrast between them is at least 3:1, which none of
- * this system's theme pairings clear (checked directly: 1.92–2.33:1 across
- * all four themes). `hover` (the previous default) only reveals the
+ * this system's theme pairings clear (checked directly: 2.99:1 light /
+ * 1.65:1 dark, the same for every theme since both text.link and
+ * text.primary are brand-agnostic). `hover` (the previous default) only reveals the
  * underline on `:hover`, which never fires for keyboard/touch users — use
  * it only where there's no surrounding flowing text to confuse the link
  * with (e.g. a future Navbar's nav links), where `none` is often more

@@ -15,10 +15,16 @@
 }
 
 /*
- * WCAG 1.4.1: text.link vs text.primary contrast is 1.92–2.33:1 across all
- * four themes (checked directly), well under the 3:1 a color-only
+ * WCAG 1.4.1: text.link vs text.primary contrast is 2.99:1 light / 1.65:1
+ * dark (checked directly; text.link was de-branded to a shared blue
+ * 2026-08-20, so these two figures now cover all four themes — text.link
+ * and text.primary are each brand-agnostic, where before this needed a
+ * range across brands). Both still well under the 3:1 a color-only
  * distinction would need — so the underline can't be hover-only by
- * default, since :hover never fires for keyboard/touch users.
+ * default, since :hover never fires for keyboard/touch users. (Light
+ * mode's 2.99:1 is close enough to the floor that re-verifying this
+ * after any future primitive-scale change is worth doing explicitly,
+ * not assuming it still holds.)
  */
 .underlineAlways {
   text-decoration-color: currentColor;

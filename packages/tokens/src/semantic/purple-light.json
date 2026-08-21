@@ -147,6 +147,11 @@
       "$type": "color",
       "$value": "{color.gray.100}",
       "$description": "Renamed from bg.subtle-hover (2026-08-20), grouped with the other neutral tokens here — no value change. Originally added 2026-08-17, found adding Tag's whole-tag clickable/selectable mode — bg.neutral-subtle's own hover step, one primitive scale step further in the same direction bg.brand-subtle-hover/etc. already use (darken in light mode, lighten in dark mode). text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.100 = 6.05:1, comfortably passes AA."
+    },
+    "code": {
+      "$type": "color",
+      "$value": "{color.blue.50}",
+      "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's inline-code and token-table pill rules) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Retired 2026-08-20 in favor of bg.info-subtle directly; restored the same day, reversing that retirement — every former bg.info-subtle-standing-in-for-bg.code consumer (docs.css's two inline-code pill rules) uses this token again. Not currently consumed by any published component — the real Code.tsx atom uses bg.neutral-subtle instead — Storybook-docs-only for now."
     }
   },
   "text": {
@@ -198,12 +203,13 @@
     },
     "link": {
       "$type": "color",
-      "$value": "{color.purple.600}"
+      "$value": "{color.blue.600}",
+      "$description": "Token update (2026-08-20), at explicit direction — moved off the brand anchor (was purple.600 in this theme, emerald.700 in the other) to a shared blue.600, now literally identical across both brand themes and both modes (this file and emerald-light.json both use blue.600; both dark files use blue.300). De-brands link color entirely — links no longer visually match the active brand identity, instead using a fixed, universal link-blue regardless of theme, matching the broader web convention this token's own name implies. blue.600 vs bg.surface (white) = 4.71:1, still comfortably passes AA (was 7.37:1 on the old purple.600 — a real margin drop, but not a near-miss). Byte-identical to text.info's own light value as a direct consequence — not a problem (separate tokens, independently tracked, just a coincidental shared step), but worth knowing. text.brand (below) is NOT changed by this — it keeps the brand-anchor value this token used to share, and its own description no longer claims equivalence with this token. Two real consumers that relied on text.link's old brand-matching behavior (Avatar's default `.content` fill, Storybook's own toolbar `colorSecondary`) were moved to text.brand instead, to preserve their existing, previously-verified appearance (see Phase 11/12 above) — every other consumer (Heading/Text/Link's own `colorLink` variants) picks up the new blue as intended."
     },
     "brand": {
       "$type": "color",
       "$value": "{color.purple.600}",
-      "$description": "Accent text drawn from the brand color (2026-07-27) — for emphasis/labels, not links (see text.link). Reuses the same resolved value as text.link since both need an AA-safe brand-colored text color on bg.surface: purple.600 on white = 7.37:1. NOT a literal 'primitive step 600 in every theme' constant — emerald-light/both dark themes use a different step for the same reason text.link does (see emerald-light.json / *-dark.json)."
+      "$description": "Accent text drawn from the brand color (2026-07-27) — for emphasis/labels, not links. Originally reused text.link's own resolved value (both needed an AA-safe brand-colored text color on bg.surface); text.link was de-branded to a shared blue (2026-08-20, see that token's own description), so this token now stands on its own — value unchanged, still purple.600 on white = 7.37:1. NOT a literal 'primitive step 600 in every theme' constant — emerald-light/both dark themes use a different step (see emerald-light.json / *-dark.json)."
     },
     "danger": {
       "$type": "color",
@@ -306,7 +312,7 @@
     "code": {
       "$type": "color",
       "$value": "{color.blue.100}",
-      "$description": "Originally paired with bg.code (2026-08-08); bg.code was retired (2026-08-20) — every former consumer (the Storybook docs inline-code pill) now sits on bg.info-subtle instead, and this token's own value is unchanged (blue.100 light / gray.700 dark, from an earlier explicit-direction move away from blue.900 so the pill read as flat/borderless in dark mode specifically). A purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Light mode is unaffected end to end: bg.code's own light value was already blue.50, byte-identical to bg.info-subtle, so 1.09:1 against blue.100 carries over exactly. Dark mode changes, though: against bg.code's old gray.700 fill this measured 1.00:1 (byte-identical, an intentional flat/borderless look); against the new bg.info-subtle fill (blue.950) it measures 2.63:1 instead — a real, visible thin border where there used to be none, still well within the decorative tier's own accepted range, but a genuine style change worth knowing about, not just a token rename."
+      "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Briefly paired with bg.info-subtle instead (2026-08-20, when bg.code was retired) and measured 2.63:1 dark against that fill; bg.code was restored the same day, reversing that retirement, so this token is back to pairing with bg.code and its own flat gray.700 dark value — 1.09:1 light / 1.00:1 dark (byte-identical to bg.code's own dark value, an intentional flat/borderless look in that mode), an accepted tradeoff, not an oversight."
     }
   },
   "icon": {

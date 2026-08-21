@@ -125,18 +125,19 @@
 /* Inline code references (variable/token/prop names in prose) — unified
    (2026-08-08) with the token-table pill (`.dbm-proptable code` below,
    the same rule every table's code pill now uses — see that rule's own
-   comment) onto the same `border.code`/`text.secondary` tokens (and,
-   since 2026-08-20, `bg.info-subtle` — see that rule's own comment for
-   why `bg.code` was retired), so every inline `<code>` across the docs —
-   table pill or running prose — still looks identical and reacts to
-   Brand/Mode the same way. Previously this rule used fixed
-   `blue-50`/`blue-100`/`gray-700` literals (no semantic token existed for
-   it yet), which quietly stopped reacting once dark mode support landed
-   elsewhere: verified via computed styles that it rendered the same
-   light-blue pill in both light AND dark mode, a stark mismatch against
-   the rest of a dark-mode page. Same class of fix as that table-pill
-   rule's own original `blue-50`→`bg.code` migration, for the identical
-   reason (see that rule's comment for the fuller history/rationale,
+   comment) onto the same `bg.code`/`border.code`/`text.secondary` tokens,
+   so every inline `<code>` across the docs — table pill or running prose —
+   now looks identical and reacts to Brand/Mode the same way. `bg.code`
+   was briefly retired in favor of `bg.info-subtle` (2026-08-20) and
+   restored the same day, reversing that retirement — see `bg.code`'s own
+   token description for the full history. Previously this rule used
+   fixed `blue-50`/`blue-100`/`gray-700` literals (no semantic token
+   existed for it yet), which quietly stopped reacting once dark mode
+   support landed elsewhere: verified via computed styles that it
+   rendered the same light-blue pill in both light AND dark mode, a
+   stark mismatch against the rest of a dark-mode page. Same class of fix
+   as that table-pill rule's own `blue-50`→`bg.code` migration, for the
+   identical reason (see that rule's comment for the fuller history/rationale,
    including why `text.secondary` — not a dedicated `text.code` — is safe
    to use here now that the background is reactive).
 
@@ -188,7 +189,7 @@
    themselves are unchanged and still required for the wrapping fix above,
    just no longer forced. */
 .sbdocs-content code {
-  background: var(--dbm-bg-info-subtle) !important;
+  background: var(--dbm-bg-code) !important;
   border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
   border-radius: var(--dbm-radius-sm) !important;
   color: var(--dbm-text-secondary) !important;
@@ -395,22 +396,18 @@
 }
 
 /* Code-pill style unified onto the Foundations token-table treatment
-   (2026-08-10, replacing a surface-matched borderless pill) — originally
-   a dedicated `bg.code`/`border.code` pair; `bg.code` was retired
-   (2026-08-20, see `guidelines/03-token-system-spec.md`) and every
-   consumer, including this rule, now uses `bg.info-subtle` instead
-   (blue.50 light / blue.950 dark — the same value `bg.code` itself had
-   in light mode, and what it had in dark mode before an earlier
-   explicit-direction move to a flat gray there; this rule's dark-mode
-   pill is blue-tinted again as a result — see `bg.info-subtle`'s own
-   token description for the full history). `border.code` is unchanged
-   (blue.100 light / gray.700 dark) and still visually distinct from
+   (2026-08-10, replacing a surface-matched borderless pill) — dedicated
+   `bg.code`/`border.code` semantic tokens, genuinely reactive per theme
+   (blue.50/blue.100 light, gray.700/gray.700 dark — `bg.code` dropped
+   its blue tint in dark mode at an earlier explicit direction, see that
+   token's own description; briefly retired in favor of `bg.info-subtle`
+   on 2026-08-20, then restored the same day, reversing that retirement
+   — see `guidelines/03-token-system-spec.md`), visually distinct from
    this table's own zebra stripe (`bg.brand-subtle` above) regardless of
    what that resolves to, since blue isn't part of the same
-   gray/brand-purple family at all. `color: text.secondary` on
-   `bg.info-subtle` measures 6.57:1 light / 13.43:1 dark — both sides
-   reacting together, unlike a fixed color pinned to a reactive
-   background.
+   gray/brand-purple family at all. `color: text.secondary` on `bg.code`
+   measures 6.57:1 light / 5.10:1 dark — both sides reacting together,
+   unlike a fixed color pinned to a reactive background.
 
    Previously this table used its own borderless, surface-matched pill and
    `.dbm-tokentable code` (Foundations token tables) carried a *second*,
@@ -460,7 +457,7 @@
    `!important` was reflexively added alongside this rule's other
    (genuinely contested) properties rather than individually verified. */
 .dbm-proptable code {
-  background: var(--dbm-bg-info-subtle) !important;
+  background: var(--dbm-bg-code) !important;
   border: var(--dbm-border-width-1) solid var(--dbm-border-code) !important;
   border-radius: var(--dbm-radius-sm) !important;
   color: var(--dbm-text-secondary);

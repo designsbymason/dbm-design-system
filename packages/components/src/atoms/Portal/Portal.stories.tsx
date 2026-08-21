@@ -87,7 +87,7 @@ function PortalIntoTarget({ targetId }: { targetId: string }) {
         style={{
           background: "var(--dbm-bg-brand-subtle)",
           borderRadius: "var(--dbm-radius-sm)",
-          color: "var(--dbm-text-link)",
+          color: "var(--dbm-text-brand)",
           padding: "var(--dbm-space-1) var(--dbm-space-2)",
         }}
       >
@@ -116,7 +116,7 @@ export const DisabledPortal: Story = {
           style={{
             background: "var(--dbm-bg-brand-subtle)",
             borderRadius: "var(--dbm-radius-md)",
-            color: "var(--dbm-text-link)",
+            color: "var(--dbm-text-brand)",
             display: "inline-block",
             padding: "var(--dbm-space-3)",
           }}

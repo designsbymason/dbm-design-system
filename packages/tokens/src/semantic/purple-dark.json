@@ -148,6 +148,11 @@
       "$type": "color",
       "$value": "{color.gray.800}",
       "$description": "Renamed from bg.subtle-hover (2026-08-20), grouped with the other neutral tokens here — no value change. Originally added 2026-08-17, found adding Tag's whole-tag clickable/selectable mode — bg.neutral-subtle's own hover step, one primitive scale step lighter (the dark-mode hover direction bg.brand-subtle-hover/etc. already use). Byte-identical to bg.surface (also gray.800, since bg.surface-raised was retired into bg.surface — see that token's own description) — a harmless collision, since nothing pairs the two directly. text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.800 = 7.47:1, comfortably passes AA."
+    },
+    "code": {
+      "$type": "color",
+      "$value": "{color.gray.700}",
+      "$description": "Dark value moved from blue.950 to gray.700 (2026-08-09) at explicit direction — code pill drops the blue tint in dark mode specifically, moving to a neutral gray fill instead. Light mode is unchanged (blue.50). Byte-identical to border.code's own dark value (also gray.700, see that token) — the pill's border is effectively invisible against its own fill in dark mode, an explicit flat/borderless treatment for this mode, not an oversight. text.secondary on this value measures 5.10:1, clear of the 4.5:1 AA text floor. Retired 2026-08-20 in favor of bg.info-subtle directly (which reintroduced a blue tint in dark mode, since bg.info-subtle's own dark value is blue.950, not this token's gray.700 — see the guideline log's own note on that reversal); restored the same day, reversing that retirement — every former consumer uses this token, and its flat gray.700 dark treatment, again."
     }
   },
   "text": {
@@ -200,13 +205,13 @@
     },
     "link": {
       "$type": "color",
-      "$value": "{color.purple.300}",
-      "$description": "purple.400 on bg.surface (gray.900) is 4.13:1, failing AA after the Phase 4 OKLCH regen. purple.300 gives 5.80:1 (verified 2026-07-18)."
+      "$value": "{color.blue.300}",
+      "$description": "Token update (2026-08-20), at explicit direction — moved off the brand anchor (was purple.300 in this theme, emerald.400 in the other) to a shared blue.300, now literally identical across both brand themes and both modes. De-brands link color entirely — see purple-light.json's own text.link description for the full rationale, including the two real consumers (Avatar's default fill, Storybook's own toolbar) moved to text.brand to preserve their previous appearance. blue.300 vs bg.surface (gray.800) = 5.85:1, still comfortably passes AA — a small improvement over the old purple.300's own real figure of 5.32:1 against this same background (this token's own previously-recorded 5.80:1 had been computed against a stale gray.900 value predating Phase 9's bg.surface revert; see text.brand's own description, corrected the same day). Byte-identical to text.info's own dark value as a direct consequence, same as light mode."
     },
     "brand": {
       "$type": "color",
       "$value": "{color.purple.300}",
-      "$description": "Accent text drawn from the brand color (2026-07-27) — for emphasis/labels, not links (see text.link). Reuses the same resolved value as text.link: purple.600 (the literal brand anchor) on gray.900 is only 1.92:1, badly failing AA — purple.300 gives 5.80:1."
+      "$description": "Accent text drawn from the brand color (2026-07-27) — for emphasis/labels, not links. Originally reused text.link's own resolved value; text.link was de-branded to a shared blue (2026-08-20, see that token's own description), so this token now stands on its own — value unchanged, still purple.300. purple.600 (the literal brand anchor) on bg.surface (gray.800) is only 1.37:1, badly failing AA — purple.300 gives 5.32:1, freshly re-verified (2026-08-20) against this token's own real gray.800 background; an earlier recorded figure of 5.80:1 here had been computed against a stale gray.900 value predating Phase 9's bg.surface revert and was never corrected until now."
     },
     "danger": {
       "$type": "color",
@@ -310,7 +315,7 @@
     "code": {
       "$type": "color",
       "$value": "{color.gray.700}",
-      "$description": "Dark value moved from blue.900 to gray.700 (2026-08-09) at explicit direction, matching bg.code's own move to gray.700 in dark mode at the time — the two were byte-identical there, an explicit flat/borderless pill treatment for dark mode specifically. bg.code was retired (2026-08-20) — every former consumer now sits on bg.info-subtle (blue.950 dark) instead, so this token's own unchanged gray.700 no longer matches its background: against bg.info-subtle it measures 2.63:1, a real, visible thin border where dark mode used to render flat/borderless. Still comfortably within the decorative-tier's own accepted range (WCAG 1.4.11 doesn't apply — this border doesn't identify a component/state boundary, same accepted class as border.brand-subtle), just a genuine style change worth knowing about, not only a token rename. Light mode is unaffected: bg.code's own light value was already blue.50, byte-identical to bg.info-subtle, so 1.09:1 against blue.100 carries over exactly."
+      "$description": "Dark value moved from blue.900 to gray.700 (2026-08-09) at explicit direction, matching bg.code's own move to gray.700 in dark mode — the two are byte-identical there, an explicit flat/borderless pill treatment for dark mode specifically (light mode keeps the blue.100/blue.50 pairing and its visible border, unchanged). Briefly paired with bg.info-subtle instead (2026-08-20, when bg.code was retired) and measured 2.63:1 against that fill; bg.code was restored the same day, reversing that retirement, so this token is back to its original byte-identical-with-bg.code dark treatment. Original description: paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle."
     }
   },
   "icon": {
