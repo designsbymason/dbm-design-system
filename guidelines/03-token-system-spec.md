@@ -175,7 +175,7 @@ Same day, applying this same lens to Avatar's already-finalized status dot (`onl
 
 Also corrected while re-deriving these numbers: `bg.neutral`'s own `$description` had cited "4.34:1 dark" for years — that figure was actually `gray.400`'s contrast against `bg.surface`, not `gray.500`'s (the token's real value, 3.10:1 dark). The token itself was never wrong, only the number recorded in its description. Corrected across all 4 theme files.
 
-**Note (`bg.danger-indicator`/`bg.warning-indicator` superseded):** the 2026-08-20 token consolidations (see the dedicated phases below) moved `bg.danger`'s own dark value to red.300 (5.67:1, up from an outright-failing 2.90:1) and `bg.warning`'s own dark value to amber.300 (5.80:1, up from a barely-passing 3.05:1) — both clear the 3:1 floor these tokens existed to work around. `bg.danger-indicator` and `bg.warning-indicator` were retired; every consumer moved to `bg.danger`/`bg.warning` directly. `bg.{success,info,brand}-indicator` are unaffected, still in use.
+**Note (`bg.danger-indicator`/`bg.warning-indicator`/`bg.success-indicator`/`bg.info-indicator` superseded):** the 2026-08-20 token consolidations (see the dedicated phases below) moved each tone's own dark value to a lighter step — `bg.danger` to red.300 (5.67:1, up from an outright-failing 2.90:1), `bg.warning` to amber.300 (5.80:1, up from a barely-passing 3.05:1), `bg.success` to green.300 (6.01:1, up from an already-fine-but-thin 3.28:1), `bg.info` to blue.300 (5.85:1, up from a barely-passing 3.09:1) — all four clear the 3:1 floor these tokens existed to work around. All four `-indicator` tokens were retired; every consumer moved to the base `bg.{tone}` token directly. `bg.brand-indicator` is unaffected, still in use — `brand` is the only tone not yet part of this consolidation series.
 
 **Phase 17 (disabled-state contrast, verified 2026-08-16 — closes what was previously logged as "not yet checked"):** confirmed real, computed numbers for every component with a disabled state, rather than leaving the WCAG exemption asserted but unmeasured. Two distinct mechanisms exist in this codebase:
 
@@ -215,7 +215,7 @@ Fixed by giving `border.*` its own "strong" step per tone, at the *same* primiti
 
 `neutral` has no existing `border.danger`-style "state" tier to sit alongside (there's no tone-neutral input-validation border), so `border.neutral-strong` is a standalone addition rather than completing an existing `-strong`/base pair — placed next to `border.strong` in `Color.mdx` rather than in the danger/warning/success/info block. All 5 added to `Color.mdx`'s `border.*` array immediately after their base token, per §7's ordering rule.
 
-**Note (`border.danger-strong`/`border.warning-strong` superseded):** the 2026-08-20 token consolidations (see the dedicated phases below) folded these directly into `border.danger` and `border.warning`, and retired both — the role survives, but not always the exact value: dark mode carries over unchanged for both (`red.300`/`amber.300`, since each `-strong` token's own dark value happened to already match the tone's new consolidated dark step), while light mode moves to the shared step (`red.700`→`red.600`, `amber.800`→`amber.600`). `border.{success,info,neutral}-strong` are unaffected, still their own separate tokens.
+**Note (`border.danger-strong`/`border.warning-strong`/`border.success-strong`/`border.info-strong` superseded):** the 2026-08-20 token consolidations (see the dedicated phases below) folded these directly into `border.danger`/`border.warning`/`border.success`/`border.info`, and retired all four — the role survives, but not always the exact value: dark mode carries over unchanged for all four (`red.300`/`amber.300`/`green.300`/`blue.300`, since each `-strong` token's own dark value happened to already match the tone's new consolidated dark step), while light mode moves to the shared step (`red.700`→`red.600`, `amber.800`→`amber.600`, `green.800`→`green.700`, `blue.700`→`blue.600`). `border.neutral-strong` is unaffected, still its own separate token — `neutral` is the only tone not yet part of this consolidation series.
 
 **Phase 21 (`border.brand` renamed to `border.brand-subtle`, 2026-08-20):** Naming-consistency fix, no value change — every sibling family token added since Phase 6 (`border.danger-subtle`/`warning-subtle`/`success-subtle`/`info-subtle`, Phase 14) carries the `-subtle` suffix for this exact decorative-only role (explicitly exempt from WCAG 1.4.11's 3:1 non-text floor, unlike the stronger state-identifying `border.{tone}` tokens), but the original brand token never picked up the suffix when that pattern formed around it. Renamed rather than aliased — every real consumer (`Avatar.module.css`'s default-fill ring) and every doc reference (`Avatar.mdx`, `Color.mdx`, `docs.css`) updated in the same pass, so there's exactly one live name for this token, not two. Historical phase entries above (6, 9, 13, 14) have been updated in place to the new name — the *decisions* and *numbers* they describe didn't change, only the identifier used to talk about them, so rewriting them to the current name keeps this document internally consistent rather than preserving a name that no longer resolves to anything.
 
@@ -248,7 +248,7 @@ Same value in both brand themes (brand-agnostic, matching `border.strong`/`borde
 
 No token additions — `border.{tone}-strong` already existed (Phase 20). Border drawn via `box-shadow: inset`, not the `border` property, in both states — box-shadow doesn't participate in the box model, keeping `outline` pixel-identical in size to `subtle`/`solid` at the same `size` step. Confirmed via live `getComputedStyle` checks in both brand themes and both color modes before considering this done, matching this project's self-verification standard.
 
-**Note (`danger`/`warning` superseded):** the 2026-08-20 token consolidations (below) folded `border.danger-strong`/`border.warning-strong` into `border.danger`/`border.warning`, so `outlineDanger`/`selected.outlineDanger` and `outlineWarning`/`selected.outlineWarning` now reference the unified `border.danger`/`border.warning` tokens — same reasoning above, just under the consolidated token name (dark-mode value unchanged for both; light-mode value shifted to the shared step). `success`/`info`/`neutral` are unaffected.
+**Note (`danger`/`warning`/`success`/`info` superseded):** the 2026-08-20 token consolidations (below) folded `border.danger-strong`/`border.warning-strong`/`border.success-strong`/`border.info-strong` into `border.danger`/`border.warning`/`border.success`/`border.info`, so `outlineDanger`/`selected.outlineDanger`, `outlineWarning`/`selected.outlineWarning`, `outlineSuccess`/`selected.outlineSuccess`, and `outlineInfo`/`selected.outlineInfo` now reference the unified tokens — same reasoning above, just under the consolidated token name (dark-mode value unchanged for all four; light-mode value shifted to the shared step). `neutral` is unaffected — the only tone left on the original `-strong` pattern once this ships.
 
 **Phase 25 (danger token consolidation, 2026-08-20 — first pass of a planned per-tone cleanup):** The token layer had been growing need-by-need, one narrow single-purpose token at a time (Phases 16, 20 above are two examples) — some of those tokens ended up with only one or two real consumers. At explicit direction, started consolidating around one shared, contrast-verified primitive step per mode, reused across `bg`/`text`/`border`/`icon` for a given tone, rather than a distinct value per narrow use case — `danger` first, as a trial run before repeating this for `warning`/`success`/`info`/`neutral`.
 
@@ -307,6 +307,60 @@ Full contrast review (computed, not assumed) confirmed every new pairing clears 
 A side effect worth naming: `border.warning` and `bg.warning` now resolve to the exact same primitive value in both modes (both `amber.600` light / `amber.300` dark), same as danger's own `border.danger`/`bg.danger` pair — so Tag's `.selected.outlineWarning` border-vs-fill contrast is now a literal 1.00:1 (border and fill are byte-identical), same as danger and brand. See that component's own `Tag.module.css` comment (`.selected.outlineBrand` block) for why this is fine: once selected, the background swap itself is the high-contrast state signal, and the border becomes decorative continuity rather than the functional boundary WCAG 1.4.11 governs.
 
 `icon.warning`/`icon.on-warning` are new, purely additive, same as danger's icon tokens. `Color.mdx`, `Avatar.mdx`, and `Badge.mdx` updated to match, following the general-usage-text standing rule established after Phase 25 (no component examples in `Color.mdx`'s own rows). Verified via `check-foundations-token-coverage.mjs` before considering the doc pass complete.
+
+**Phase 27 (success token consolidation, 2026-08-20 — third pass of the per-tone cleanup started in Phase 25):** Same approach as danger and warning — one shared, contrast-verified primitive step per mode across `bg`/`text`/`border`/`icon`.
+
+| Token | Light | Dark | Light Δ | Dark Δ |
+|---|---|---|---|---|
+| `bg.success` | `green.700` (unchanged) | `green.300` ← `green.500` | — | 3.28:1 → 6.01:1 vs `bg.surface` |
+| `bg.success-hover` | `green.800` (unchanged) | `green.200` ← `green.400` | — | (follows `bg.success`'s dark move) |
+| `text.on-success` | `neutral.white` (unchanged) | `green.900` ← `gray.950` | — | 5.91:1 → 8.19:1 vs new `bg.success` |
+| `text.success` | `green.700` ← `green.800` | `green.300` (unchanged) | 9.56:1 → 6.50:1 vs `bg.surface` | — |
+| `border.success` | `green.700` ← `green.500` | `green.300` ← `green.400` | 3.07:1 → 6.50:1 | 4.57:1 → 6.01:1 |
+| `icon.success` (new) | `green.700` | `green.300` | 6.50:1 vs `bg.surface` | 6.01:1 vs `bg.surface` |
+| `icon.on-success` (new) | `neutral.white` | `green.900` | 6.50:1 vs new `bg.success` | 8.19:1 vs new `bg.success` |
+
+`bg.success-subtle`, `bg.success-subtle-hover`, and `border.success-subtle` are unchanged, same as the previous two passes.
+
+**The healthiest of the three passes so far — no tight margins anywhere.** Unlike warning, success's own numbers already sat close to the eventual shared step before this: `bg.success` light was *already* `green.700` (zero change needed), and `text.success`/`border.success-strong` were only one step off (`green.800`) rather than warning's two-step outlier (`amber.800`). The tightest margin anywhere in this pass is **6.01:1** — nowhere near warning's 4.59:1 near-miss.
+
+**Same two retirements, and this is the safest of the three:** `bg.success-indicator`'s old dark value (`green.400`) already had real margin at 4.57:1 — not a thin pass like warning's 3.05:1, let alone danger's outright 2.90:1 failure — so retiring it is a clean improvement over an already-fine baseline, not a fix for a real gap. `border.success-strong`'s only consumer is Tag's own `Tag.module.css` (outline default/selected border, solid's selected-halo accent) — same 3 spots as danger and warning; the light-mode shift (`green.800→green.700`) is modest, closer to danger's own subtle recolor than warning's more visible jump.
+
+**Same structural note as warning:** no validation-border consumer exists for `border.success` either.
+
+**Same two confirmations:**
+1. Tag's success outline/selected-halo border recolors from `green.800` to `green.700` in light mode — a low-key shift (9.56:1→6.50:1).
+2. Dark-mode solid-success surfaces (ProgressBar, ProgressCircle, Badge solid, Tag solid/selected-outline — no Button/IconButton consumer) shift from `green.500` fill + near-black `gray.950` text to `green.300` fill + dark-green `green.900` text.
+3. `border.success` and `bg.success` now resolve to the identical value in both modes, same as danger/warning — Tag's `.selected.outlineSuccess` border-vs-fill contrast is a literal 1.00:1, joining brand/danger/warning in that group (`info`/`neutral` remain the only two tones not yet consolidated, still on their own `-strong` tier).
+
+`icon.success`/`icon.on-success` are new, purely additive. `Color.mdx`, `Avatar.mdx`, and `Badge.mdx` updated to match, following the general-usage-text standing rule from Phase 25. Verified via `check-foundations-token-coverage.mjs` before considering the doc pass complete.
+
+**Phase 28 (info token consolidation, 2026-08-20 — fourth pass of the per-tone cleanup started in Phase 25; `neutral` is the only tone left after this one):** Same approach as the previous three passes — one shared, contrast-verified primitive step per mode across `bg`/`text`/`border`/`icon`.
+
+| Token | Light | Dark | Light Δ | Dark Δ |
+|---|---|---|---|---|
+| `bg.info` | `blue.600` (unchanged) | `blue.300` ← `blue.500` | — | 3.09:1 → 5.85:1 vs `bg.surface` |
+| `bg.info-hover` | `blue.700` (unchanged) | `blue.200` ← `blue.400` | — | (follows `bg.info`'s dark move) |
+| `text.on-info` | `neutral.white` (unchanged) | `blue.900` ← `gray.950` | — | 5.56:1 → 8.20:1 vs new `bg.info` |
+| `text.info` | `blue.600` ← `blue.700` | `blue.300` (unchanged) | 6.93:1 → 4.71:1 vs `bg.surface` | — |
+| `border.info` | `blue.600` ← `blue.500` | `blue.300` ← `blue.400` | 3.26:1 → 4.71:1 | 4.35:1 → 5.85:1 |
+| `icon.info` (new) | `blue.600` | `blue.300` | 4.71:1 vs `bg.surface` | 5.85:1 vs `bg.surface` |
+| `icon.on-info` (new) | `neutral.white` | `blue.900` | 4.71:1 vs new `bg.info` | 8.20:1 vs new `bg.info` |
+
+`bg.info-subtle`, `bg.info-subtle-hover`, and `border.info-subtle` are unchanged, same as the previous three passes. One difference in consumer footprint: Avatar has no "info" status dot, so `bg.info-indicator`'s only real consumer was Badge's `.dotInfo` — one fewer file touched than the danger/warning/success passes, which each also updated an Avatar status.
+
+**The one pairing worth calling out explicitly — flagged before implementing, proceeded at explicit direction:** `text.info` against `bg.info-subtle` in light mode computes to **4.5068:1** — 0.0068 above the 4.5:1 AA floor for normal text. This is the tightest margin found across all four consolidations (danger/warning/success/info), tighter even than warning's own 4.59:1 near-miss. Every other pairing in this pass has real margin (next-tightest is 4.71:1). Accepted as-is rather than special-cased — affects Avatar's `colorInfo` avatar family, Badge's subtle-info text, and Highlight, anywhere `text.info` sits on the light info tint rather than on plain `bg.surface`. Worth re-verifying if this primitive scale is ever regenerated, since there's essentially no headroom left to absorb drift.
+
+**Same retirement pattern, safety in between danger's and success's:** `bg.info-indicator`'s old dark value (`blue.400`) already had real margin at 4.35:1 — same class of "already fine, not broken" retirement as success's, not a fix for a real gap like danger's. `border.info-strong`'s only consumer is Tag (outline default/selected border, solid's selected-halo accent) — same 3 spots as every prior pass; light-mode shift (`blue.700→blue.600`) is modest.
+
+**Same structural note:** no validation-border consumer exists for `border.info`.
+
+**Same two confirmations:**
+1. Tag's info outline/selected-halo border recolors from `blue.700` to `blue.600` in light mode (6.93:1→4.71:1).
+2. Dark-mode solid-info surfaces (ProgressBar, ProgressCircle, Badge solid, Tag solid/selected-outline — no Button/IconButton consumer) shift from `blue.500` fill + near-black `gray.950` text to `blue.300` fill + dark-navy `blue.900` text.
+3. `border.info` and `bg.info` now resolve to the identical value in both modes — Tag's `.selected.outlineInfo` border-vs-fill contrast is a literal 1.00:1, joining brand/danger/warning/success. `neutral` is now the *only* tone left where this ring measures meaningfully above 1.00:1 (1.46:1 light / 3.49:1 dark, still on its own `-strong` tier) — see Tag's own `Tag.module.css` comments, rewritten this phase to reflect neutral being the sole remaining exception rather than one of several.
+
+`icon.info`/`icon.on-info` are new, purely additive. `Color.mdx` and `Badge.mdx` updated to match (no `Avatar.mdx` change needed this pass, per the consumer-footprint note above), following the general-usage-text standing rule from Phase 25. Verified via `check-foundations-token-coverage.mjs` before considering the doc pass complete.
 
 ## Multi-theme structure going forward
 

@@ -209,12 +209,12 @@ describe("Badge", () => {
 
     rerender(<Badge dot tone="success" data-testid="badge" />);
     expect(screen.getByTestId("badge")).toHaveStyle({
-      backgroundColor: "var(--dbm-bg-success-indicator)",
+      backgroundColor: "var(--dbm-bg-success)",
     });
 
     rerender(<Badge dot tone="info" data-testid="badge" />);
     expect(screen.getByTestId("badge")).toHaveStyle({
-      backgroundColor: "var(--dbm-bg-info-indicator)",
+      backgroundColor: "var(--dbm-bg-info)",
     });
 
     rerender(<Badge dot tone="neutral" data-testid="badge" />);

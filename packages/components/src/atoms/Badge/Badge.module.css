@@ -186,14 +186,16 @@
  * -subtle token comes out around ~1.0-1.8:1, nowhere near WCAG 1.4.11's
  * 3:1 non-text floor a dot (no text to lean on) needs. See
  * guidelines/03-token-system-spec.md's contrast log for the numbers.
- * Most tones use a dedicated *-indicator token (or bg.neutral, its own
- * established equivalent) instead — danger and warning are the two
- * exceptions, using bg.danger/bg.warning directly: the 2026-08-20
- * danger/warning token consolidations moved each tone's own dark value to
- * a lighter step (red.300/amber.300, 5.67:1/5.80:1 against bg.surface),
- * clearing this same 3:1 floor directly, so bg.danger-indicator and
- * bg.warning-indicator (which existed only to work around each tone's
- * old, weaker dark value) were both retired.
+ * brand is the one remaining tone still using a dedicated *-indicator
+ * token, and neutral uses bg.neutral, its own established equivalent —
+ * danger/warning/success/info are now exceptions, using
+ * bg.danger/bg.warning/bg.success/bg.info directly: their 2026-08-20
+ * token consolidations each moved that tone's own dark value to a
+ * lighter step (red.300/amber.300/green.300/blue.300 —
+ * 5.67:1/5.80:1/6.01:1/5.85:1 against bg.surface), clearing this same
+ * 3:1 floor directly, so bg.danger-indicator/bg.warning-indicator/
+ * bg.success-indicator/bg.info-indicator (which existed only to work
+ * around each tone's old, weaker dark value) were all retired.
  */
 .dotBrand {
   background-color: var(--dbm-bg-brand-indicator);
@@ -204,11 +206,11 @@
 }
 
 .dotInfo {
-  background-color: var(--dbm-bg-info-indicator);
+  background-color: var(--dbm-bg-info);
 }
 
 .dotSuccess {
-  background-color: var(--dbm-bg-success-indicator);
+  background-color: var(--dbm-bg-success);
 }
 
 .dotWarning {

@@ -90,51 +90,43 @@
     },
     "success": {
       "$type": "color",
-      "$value": "{color.green.500}"
+      "$value": "{color.green.300}",
+      "$description": "Token consolidation (2026-08-20) — moved from green.500 to green.300, two steps lighter. Old value measured 3.28:1 against dark bg.surface — a real pass, but thinner than desired for a dedicated indicator use (this is what bg.success-indicator, now retired, existed to widen). green.300 vs bg.surface (dark) = 6.01:1. text.on-success moves to green.900 alongside this change (8.19:1 against this new value) — see that token's own description. See purple-light.json's own bg.success description for the full shared-value rationale (bg/text/border/icon.success now all resolve to this same step per mode)."
     },
     "success-hover": {
       "$type": "color",
-      "$value": "{color.green.400}",
-      "$description": "Lighter than success, restoring the usual dark-mode 'brighten on hover' direction (2026-07-27), mirroring bg.danger-hover: gray.950 text.on-success on green.400 = 8.23:1, passes AA."
+      "$value": "{color.green.200}",
+      "$description": "Token consolidation (2026-08-20) — moved from green.400 to green.200, alongside bg.success's own dark move (green.500 → green.300) to preserve the same relative hover-lightening gap. text.on-success (green.900 as of this change) on green.200 = 10.32:1."
     },
     "success-subtle": {
       "$type": "color",
       "$value": "{color.green.950}",
-      "$description": "Moved from green.900 to green.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's green.100 → green.50, preserving the same relative gap from each theme's pole. text.success (green.300) on green.950 = 10.68:1, still comfortably passes AA (was 8.19:1 on green.900)."
+      "$description": "Moved from green.900 to green.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's green.100 → green.50, preserving the same relative gap from each theme's pole. text.success (green.300) on green.950 = 10.68:1, still comfortably passes AA (was 8.19:1 on green.900). Not part of the 2026-08-20 success token consolidation — this tier stays its own dedicated dark tint."
     },
     "success-subtle-hover": {
       "$type": "color",
       "$value": "{color.green.900}",
-      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses success-subtle's own pre-2026-07-27 value (green.900), one step lighter, matching this system's standard dark-mode hover direction. text.success (green.300) on green.900 = 8.19:1, comfortably passes AA. Shared across both brand themes, matching success-subtle's own brand-independence."
-    },
-    "success-indicator": {
-      "$type": "color",
-      "$value": "{color.green.400}",
-      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators. bg.success's own dark value (green.500) measures only 3.28:1 against bg.surface (gray.800) — clearing WCAG 1.4.11's 3:1 non-text floor but thinner than desired for a dedicated indicator, since bg.success was only ever verified as a background *for text*, a different and less strict pairing. One step lighter (green.400) clears it more comfortably at 4.57:1. Light theme uses green.500 (3.07:1) — see that theme's own description. Shared across both brand themes, matching every other status-tone token's brand-independence."
+      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses success-subtle's own pre-2026-07-27 value (green.900), one step lighter, matching this system's standard dark-mode hover direction. text.success (green.300) on green.900 = 8.19:1, comfortably passes AA. Shared across both brand themes, matching success-subtle's own brand-independence. Not part of the 2026-08-20 success token consolidation."
     },
     "info": {
       "$type": "color",
-      "$value": "{color.blue.500}"
+      "$value": "{color.blue.300}",
+      "$description": "Token consolidation (2026-08-20) — moved from blue.500 to blue.300, two steps lighter. Old value measured 3.09:1 against dark bg.surface — a real pass, but thinner than desired for a dedicated indicator use (this is what bg.info-indicator, now retired, existed to widen). blue.300 vs bg.surface (dark) = 5.85:1. text.on-info moves to blue.900 alongside this change (8.20:1 against this new value) — see that token's own description. See purple-light.json's own bg.info description for the full shared-value rationale (bg/text/border/icon.info now all resolve to this same step per mode)."
     },
     "info-hover": {
       "$type": "color",
-      "$value": "{color.blue.400}",
-      "$description": "Lighter than info, restoring the usual dark-mode 'brighten on hover' direction (2026-07-27), mirroring bg.danger-hover: gray.950 text.on-info on blue.400 = 7.83:1, passes AA."
+      "$value": "{color.blue.200}",
+      "$description": "Token consolidation (2026-08-20) — moved from blue.400 to blue.200, alongside bg.info's own dark move (blue.500 → blue.300) to preserve the same relative hover-lightening gap. text.on-info (blue.900 as of this change) on blue.200 = 10.46:1."
     },
     "info-subtle": {
       "$type": "color",
       "$value": "{color.blue.950}",
-      "$description": "Moved from blue.900 to blue.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's blue.100 → blue.50 (2026-07-27), preserving the same relative gap from each theme's pole. text.info (blue.300) on blue.950 = 10.51:1, still comfortably passes AA (was 8.20:1 on blue.900)."
+      "$description": "Moved from blue.900 to blue.950 (2026-07-27), one step darker — the mirror-opposite move to the light theme's blue.100 → blue.50 (2026-07-27), preserving the same relative gap from each theme's pole. text.info (blue.300) on blue.950 = 10.51:1, still comfortably passes AA (was 8.20:1 on blue.900). Not part of the 2026-08-20 info token consolidation — this tier stays its own dedicated dark tint. Dark mode has no equivalent to light mode's razor-edge margin (see purple-light.json's own bg.info-subtle description) — text.info's dark value was already blue.300 before and after, so nothing changed here."
     },
     "info-subtle-hover": {
       "$type": "color",
       "$value": "{color.blue.900}",
-      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses info-subtle's own pre-2026-07-27 value (blue.900), one step lighter, matching this system's standard dark-mode hover direction. text.info (blue.300) on blue.900 = 8.20:1, comfortably passes AA. Shared across both brand themes, matching info-subtle's own brand-independence."
-    },
-    "info-indicator": {
-      "$type": "color",
-      "$value": "{color.blue.400}",
-      "$description": "New token (2026-08-16), found reviewing Badge's dot mode — for non-text graphical status indicators. bg.info's own dark value (blue.500) measures only 3.09:1 against bg.surface (gray.800) — technically clearing WCAG 1.4.11's 3:1 non-text floor but with almost no margin, since bg.info was only ever verified as a background *for text*, a different and less strict pairing. One step lighter (blue.400) clears it comfortably at 4.35:1. Light theme uses blue.500 (3.26:1) — see that theme's own description. Shared across both brand themes, matching every other status-tone token's brand-independence."
+      "$description": "New token (2026-08-15), added for Avatar's hover state — reuses info-subtle's own pre-2026-07-27 value (blue.900), one step lighter, matching this system's standard dark-mode hover direction. text.info (blue.300) on blue.900 = 8.20:1, comfortably passes AA. Shared across both brand themes, matching info-subtle's own brand-independence. Not part of the 2026-08-20 info token consolidation."
     },
     "neutral": {
       "$type": "color",
@@ -197,13 +189,13 @@
     },
     "on-info": {
       "$type": "color",
-      "$value": "{color.gray.950}",
-      "$description": "Text on a solid bg.info fill (Badge solid variant). Post-OKLCH-regen (Phase 4, 2026-07-18): dark-theme bg.info is blue.500, where white only gives 3.26:1. gray.950 gives 5.56:1 — this token is now theme-specific; light themes keep white (4.71:1 against blue.600)."
+      "$value": "{color.blue.900}",
+      "$description": "Token consolidation (2026-08-20) — moved from gray.950 to blue.900, so a solid bg.info fill in dark mode reads as a monochromatic blue surface (fill + text both blue-family) rather than blue fill + neutral-gray text. blue.900 on bg.info's own new dark value (blue.300) = 8.20:1, more margin than the previous gray.950 pairing (5.56:1). Light themes keep white — see purple-light.json / emerald-light.json's own description."
     },
     "on-success": {
       "$type": "color",
-      "$value": "{color.gray.950}",
-      "$description": "Text on a solid bg.success fill (Badge solid variant). Dark-theme bg.success is green.500: white fails (3.07:1), gray.950 passes at 5.91:1 (re-verified 2026-07-18, Phase 4 OKLCH regen). Light themes now use white instead — see purple-light.json / emerald-light.json."
+      "$value": "{color.green.900}",
+      "$description": "Token consolidation (2026-08-20) — moved from gray.950 to green.900, so a solid bg.success fill in dark mode reads as a monochromatic green surface (fill + text both green-family) rather than green fill + neutral-gray text. green.900 on bg.success's own new dark value (green.300) = 8.19:1, more margin than the previous gray.950 pairing (5.91:1). Light themes keep white — see purple-light.json / emerald-light.json's own description."
     },
     "on-warning": {
       "$type": "color",
@@ -236,11 +228,13 @@
     },
     "success": {
       "$type": "color",
-      "$value": "{color.green.300}"
+      "$value": "{color.green.300}",
+      "$description": "Unchanged by the 2026-08-20 success token consolidation (already green.300) — now also the shared value bg.success, border.success, and icon.success resolve to in dark mode. See purple-light.json's own text.success description for the consolidation this is part of."
     },
     "info": {
       "$type": "color",
-      "$value": "{color.blue.300}"
+      "$value": "{color.blue.300}",
+      "$description": "Unchanged by the 2026-08-20 info token consolidation (already blue.300) — now also the shared value bg.info, border.info, and icon.info resolve to in dark mode. See purple-light.json's own text.info description for the consolidation this is part of."
     }
   },
   "border": {
@@ -303,33 +297,23 @@
     },
     "success": {
       "$type": "color",
-      "$value": "{color.green.400}",
-      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same amber.400-equivalent scale step (green.400) for a success-toned state-identifying border."
-    },
-    "success-strong": {
-      "$type": "color",
       "$value": "{color.green.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.success-strong (light), same rationale danger's and warning's own now-retired -strong tokens originally established (Phase 20; both were folded into their base border.* token in the 2026-08-20 consolidations, but success/info/neutral keep their own separate -strong tier for now). Reuses text.success's own primitive step in dark mode (green.300), independently tracked. green.300 vs bg.surface (dark) = 6.01:1."
+      "$description": "Token consolidation (2026-08-20) — moved from green.400 to green.300, absorbing border.success-strong's former role (that token is retired — every former consumer now uses this token directly) and matching bg.success/text.success/icon.success's shared dark step. green.300 vs bg.surface (dark) = 6.01:1, an improvement over the previous 4.57:1. See purple-light.json's own border.success description for the consolidation this is part of."
     },
     "success-subtle": {
       "$type": "color",
       "$value": "{color.green.900}",
-      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.success-subtle for any component's success-tinted ring, not limited to one specific component. green.900 on green.950 is 1.30:1. Brand-agnostic."
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.success-subtle for any component's success-tinted ring, not limited to one specific component. green.900 on green.950 is 1.30:1. Brand-agnostic. Not part of the 2026-08-20 success token consolidation — this tier stays its own dedicated decorative step."
     },
     "info": {
       "$type": "color",
-      "$value": "{color.blue.400}",
-      "$description": "Added 2026-08-16 to complete the state-family set alongside border.danger — same scale step (blue.400) for an info-toned state-identifying border."
-    },
-    "info-strong": {
-      "$type": "color",
       "$value": "{color.blue.300}",
-      "$description": "New token (2026-08-19), dark counterpart to border.info-strong (light), same rationale danger's and warning's own now-retired -strong tokens originally established (Phase 20; both were folded into their base border.* token in the 2026-08-20 consolidations, but success/info/neutral keep their own separate -strong tier for now). Reuses text.info's own primitive step in dark mode (blue.300), independently tracked. blue.300 vs bg.surface (dark) = 5.85:1."
+      "$description": "Token consolidation (2026-08-20) — moved from blue.400 to blue.300, absorbing border.info-strong's former role (that token is retired — every former consumer now uses this token directly) and matching bg.info/text.info/icon.info's shared dark step. blue.300 vs bg.surface (dark) = 5.85:1, an improvement over the previous 4.35:1. See purple-light.json's own border.info description for the consolidation this is part of."
     },
     "info-subtle": {
       "$type": "color",
       "$value": "{color.blue.900}",
-      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.info-subtle for any component's info-tinted ring, not limited to one specific component. blue.900 on blue.950 is 1.28:1. Brand-agnostic."
+      "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.info-subtle for any component's info-tinted ring, not limited to one specific component. blue.900 on blue.950 is 1.28:1. Brand-agnostic. Not part of the 2026-08-20 info token consolidation — this tier stays its own dedicated decorative step."
     },
     "code": {
       "$type": "color",
@@ -374,6 +358,26 @@
       "$type": "color",
       "$value": "{color.amber.900}",
       "$description": "New token (2026-08-20), added as part of the warning token consolidation — dark counterpart to icon.on-warning (light); see that token's own description for its purpose. amber.900 on bg.warning's own dark value (amber.300) = 8.19:1."
+    },
+    "success": {
+      "$type": "color",
+      "$value": "{color.green.300}",
+      "$description": "New token (2026-08-20), added as part of the success token consolidation — dark counterpart to icon.success (light); see that token's own description for its purpose. green.300 vs bg.surface (dark) = 6.01:1."
+    },
+    "on-success": {
+      "$type": "color",
+      "$value": "{color.green.900}",
+      "$description": "New token (2026-08-20), added as part of the success token consolidation — dark counterpart to icon.on-success (light); see that token's own description for its purpose. green.900 on bg.success's own dark value (green.300) = 8.19:1."
+    },
+    "info": {
+      "$type": "color",
+      "$value": "{color.blue.300}",
+      "$description": "New token (2026-08-20), added as part of the info token consolidation — dark counterpart to icon.info (light); see that token's own description for its purpose. blue.300 vs bg.surface (dark) = 5.85:1."
+    },
+    "on-info": {
+      "$type": "color",
+      "$value": "{color.blue.900}",
+      "$description": "New token (2026-08-20), added as part of the info token consolidation — dark counterpart to icon.on-info (light); see that token's own description for its purpose. blue.900 on bg.info's own dark value (blue.300) = 8.20:1."
     }
   }
 }
