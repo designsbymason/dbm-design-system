@@ -85,7 +85,7 @@ export const AlignAndJustify: Story = {
       align="center"
       justify="between"
       style={{
-        background: "var(--dbm-bg-subtle)",
+        background: "var(--dbm-bg-neutral-subtle)",
         borderRadius: "var(--dbm-radius-md)",
         height: "var(--dbm-space-24)",
         padding: "var(--dbm-space-3)",
@@ -131,7 +131,7 @@ export const ResponsiveEverything: Story = {
       justify={{ base: "start", md: "between" }}
       wrap={{ base: false, md: true }}
       style={{
-        background: "var(--dbm-bg-subtle)",
+        background: "var(--dbm-bg-neutral-subtle)",
         borderRadius: "var(--dbm-radius-md)",
         padding: "var(--dbm-space-3)",
       }}

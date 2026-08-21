@@ -91,7 +91,7 @@ export function MotionScale({
             </div>
             <div
               style={{
-                background: "var(--dbm-bg-subtle)",
+                background: "var(--dbm-bg-neutral-subtle)",
                 borderRadius: "var(--dbm-radius-full)",
                 flexShrink: 0,
                 height: "var(--dbm-space-6)",

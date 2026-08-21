@@ -26,7 +26,7 @@
 }
 
 .interactive:hover {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .interactive:focus-visible {

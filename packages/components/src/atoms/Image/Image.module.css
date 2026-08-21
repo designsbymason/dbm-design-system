@@ -12,7 +12,7 @@
 
 .fallback {
   align-items: center;
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
   color: var(--dbm-text-tertiary);
   display: flex;
   height: 100%;

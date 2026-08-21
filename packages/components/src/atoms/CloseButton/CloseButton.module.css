@@ -16,7 +16,7 @@
 }
 
 .root:hover:not(:disabled) {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .root:focus-visible {

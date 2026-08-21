@@ -54,7 +54,7 @@ export const VideoEmbed: Story = {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "var(--dbm-bg-subtle)",
+            background: "var(--dbm-bg-neutral-subtle)",
             color: "var(--dbm-text-tertiary)",
           }}
         >

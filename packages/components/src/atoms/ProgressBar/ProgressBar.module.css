@@ -1,5 +1,5 @@
 .track {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
   border-radius: var(--dbm-radius-full);
   overflow: hidden;
   position: relative;

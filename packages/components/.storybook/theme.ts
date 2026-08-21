@@ -81,7 +81,7 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     // Brand/Mode labels, and the Docs page's right-side TOC active-item
     // text. `bg.brand` (purple.500 dark) was calibrated as a *background*
     // fill paired with `text.on-brand`, not as foreground text on
-    // `bg.subtle`/`bg.surface` — measured 3.13:1 / 2.24:1 there, both
+    // `bg.neutral-subtle`/`bg.surface` — measured 3.13:1 / 2.24:1 there, both
     // failing the 4.5:1 AA text floor. `text.link` is already the vetted
     // token for literal purple text (purple.300 dark, chosen specifically
     // because purple.400 failed AA here too — see that token's own
@@ -91,7 +91,7 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     // dark-mode contrast fix, not a color change in light mode.
     colorSecondary: t.text.link,
 
-    appBg: t.bg.subtle,
+    appBg: t.bg["neutral-subtle"],
     appContentBg: t.bg.surface,
     appPreviewBg: t.bg.surface,
     appBorderColor: t.border.default,
@@ -114,12 +114,12 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     // inconsistency in place.
     barHoverColor: t.bg["brand-hover"],
     barSelectedColor: t.bg.brand,
-    barBg: t.bg.subtle,
+    barBg: t.bg["neutral-subtle"],
 
-    buttonBg: t.bg.subtle,
+    buttonBg: t.bg["neutral-subtle"],
     buttonBorder: t.border.default,
 
-    booleanBg: t.bg.subtle,
+    booleanBg: t.bg["neutral-subtle"],
     booleanSelectedBg: t.bg.surface,
 
     inputBg: t.bg.surface,

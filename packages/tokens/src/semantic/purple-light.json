@@ -3,27 +3,22 @@
     "canvas": {
       "$type": "color",
       "$value": "{color.gray.100}",
-      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.white (was briefly byte-identical to bg.surface/bg.subtle) to gray.100, one step past bg.subtle (gray.50), so it reads as a visually distinct container again. Contrast re-verified: text.primary 12.41:1, text.secondary 6.05:1 — both clear AA. Byte-identical to border.subtle (also gray.100) — nothing currently pairs the two, flagged here in case a future component draws a border.subtle border directly on bg.canvas."
+      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.white (was briefly byte-identical to bg.surface/bg.neutral-subtle) to gray.100, one step past bg.neutral-subtle (gray.50), so it reads as a visually distinct container again. Contrast re-verified: text.primary 12.41:1, text.secondary 6.05:1 — both clear AA. Byte-identical to border.subtle (also gray.100) — nothing currently pairs the two, flagged here in case a future component draws a border.subtle border directly on bg.canvas."
+    },
+    "overlay": {
+      "$type": "color",
+      "$value": "{color.neutral.black}",
+      "$description": "Dimming scrim behind Dialog/Drawer/overlays (Backdrop atom). No text sits directly on it, so it isn't a WCAG contrast pairing — opacity is applied separately, compositionally, via the opacity.* scale rather than baked into this token, matching how color and opacity stay separate token categories everywhere else. Shared across all 4 themes since dimming what's behind isn't a brand-dependent decision. Reordered (2026-08-20) to sit right after bg.canvas, per explicit direction — no value change."
+    },
+    "skeleton": {
+      "$type": "color",
+      "$value": "{color.purple.200}",
+      "$description": "New token (2026-08-16), added for Skeleton — bg.subtle (gray.50, since renamed to bg.neutral-subtle) was the original fill, but measured directly against bg.surface (white) it is only 1.04:1, functionally invisible for a component whose entire purpose is to read as a visible placeholder shape (found reviewing Skeleton). Not a WCAG-text-contrast failure (Skeleton is decorative/aria-hidden, exempt like disabled controls) but a real functional gap — the same class of issue Phase 16's bg.*-indicator tokens closed for Badge's dot mode: an existing token verified for one purpose (bg.neutral-subtle: hover fill, dashboard panel, neutral accent) reused for a new one (a standalone visible graphic) it was never checked against. Revised same day from gray.200 to purple.200 at explicit direction, to give the skeleton fill brand identity instead of staying neutral. purple.200 vs bg.surface = 1.36:1 — effectively identical visual weight to gray.200's own 1.35:1 (deliberately matched, not coincidental), so the visibility fix carries over unchanged; only the hue changed. Brand-specific (unlike bg.neutral's brand-agnostic precedent, since the whole point here is to carry brand identity) — see emerald-light.json for that theme's own value. Reordered (2026-08-20) to sit right after bg.overlay, per explicit direction — no value change."
     },
     "surface": {
       "$type": "color",
       "$value": "{color.neutral.white}",
-      "$description": "Usage redefined (2026-08-08) to \"page, card, sheet and drawer background\" — broadens from \"card/panel surface\" to cover every default content surface, not just cards. Value unchanged (white)."
-    },
-    "surface-raised": {
-      "$type": "color",
-      "$value": "{color.neutral.white}",
-      "$description": "Usage description added (2026-08-08): \"an elevated surface (paired with a shadow)\". Value unchanged (white, byte-identical to bg.surface in light mode — elevation here comes from the paired shadow, not a background difference)."
-    },
-    "subtle": {
-      "$type": "color",
-      "$value": "{color.gray.50}",
-      "$description": "Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\" — broadens from hover-fill/zebra-striping to also cover dashboard panels and general neutral accents. Value unchanged (gray.50). History: swapped with canvas 2026-07-27, when subtle was defined as the barely-visible tint layered on top of white bg.surface."
-    },
-    "subtle-hover": {
-      "$type": "color",
-      "$value": "{color.gray.100}",
-      "$description": "New token (2026-08-17), found adding Tag's whole-tag clickable/selectable mode — bg.subtle's own hover step, one primitive scale step further in the same direction bg.brand-subtle-hover/etc. already use (darken in light mode, lighten in dark mode). text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.100 = 6.05:1, comfortably passes AA."
+      "$description": "Usage redefined (2026-08-08) to \"page, card, sheet and drawer background\" — broadens from \"card/panel surface\" to cover every default content surface, not just cards. Value unchanged (white). bg.surface-raised (a separate token for \"an elevated surface, paired with a shadow\") was retired (2026-08-20) — it was byte-identical to this token in every theme/mode (elevation always came from the paired shadow alone, never a background difference), so keeping two names for one value added a lookup with no payoff. Every former bg.surface-raised consumer now uses this token directly."
     },
     "brand": {
       "$type": "color",
@@ -143,20 +138,15 @@
       "$value": "{color.gray.700}",
       "$description": "New token (2026-08-17), found adding Tag's whole-tag clickable/selectable mode — bg.neutral-strong's own hover step. Unlike every other *-hover token, uses the SAME value (gray.700) in both light and dark themes rather than the usual darken-in-light/lighten-in-dark split: bg.neutral-strong itself is already brand-and-mode-agnostic (gray.600 in all 4 themes, see its own description above), and lightening toward gray.500 for a dark-mode hover fails AA against text.on-neutral (white on gray.500 = 3.25:1, below the 4.5:1 floor) — a documented exception, same class as bg.danger-hover/bg.brand-hover's own original dark-mode direction overrides (see 03-token-system-spec.md's Phase 3 notes). White text.on-neutral on gray.700 = 6.88:1, comfortably passes AA in both modes."
     },
-    "skeleton": {
+    "neutral-subtle": {
       "$type": "color",
-      "$value": "{color.purple.200}",
-      "$description": "New token (2026-08-16), added for Skeleton — bg.subtle (gray.50) was the original fill, but measured directly against bg.surface (white) it is only 1.04:1, functionally invisible for a component whose entire purpose is to read as a visible placeholder shape (found reviewing Skeleton). Not a WCAG-text-contrast failure (Skeleton is decorative/aria-hidden, exempt like disabled controls) but a real functional gap — the same class of issue Phase 16's bg.*-indicator tokens closed for Badge's dot mode: an existing token verified for one purpose (bg.subtle: hover fill, dashboard panel, neutral accent) reused for a new one (a standalone visible graphic) it was never checked against. Revised same day from gray.200 to purple.200 at explicit direction, to give the skeleton fill brand identity instead of staying neutral. purple.200 vs bg.surface = 1.36:1 — effectively identical visual weight to gray.200's own 1.35:1 (deliberately matched, not coincidental), so the visibility fix carries over unchanged; only the hue changed. Brand-specific (unlike bg.neutral/bg.code's brand-agnostic precedent, since the whole point here is to carry brand identity) — see emerald-light.json for that theme's own value."
+      "$value": "{color.gray.50}",
+      "$description": "Renamed from bg.subtle (2026-08-20), grouped with the other neutral tokens here instead of sitting up near bg.canvas/bg.surface — no value change. Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\" — broadens from hover-fill/zebra-striping to also cover dashboard panels and general neutral accents. Value unchanged (gray.50). History: swapped with canvas 2026-07-27, when this token was defined as the barely-visible tint layered on top of white bg.surface."
     },
-    "overlay": {
+    "neutral-subtle-hover": {
       "$type": "color",
-      "$value": "{color.neutral.black}",
-      "$description": "Dimming scrim behind Dialog/Drawer/overlays (Backdrop atom). No text sits directly on it, so it isn't a WCAG contrast pairing — opacity is applied separately, compositionally, via the opacity.* scale rather than baked into this token, matching how color and opacity stay separate token categories everywhere else. Shared across all 4 themes since dimming what's behind isn't a brand-dependent decision."
-    },
-    "code": {
-      "$type": "color",
-      "$value": "{color.blue.50}",
-      "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's .dbm-tokentable code) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Not currently consumed by any published component (the real Code.tsx atom uses bg.subtle instead) — Storybook-docs-only for now."
+      "$value": "{color.gray.100}",
+      "$description": "Renamed from bg.subtle-hover (2026-08-20), grouped with the other neutral tokens here — no value change. Originally added 2026-08-17, found adding Tag's whole-tag clickable/selectable mode — bg.neutral-subtle's own hover step, one primitive scale step further in the same direction bg.brand-subtle-hover/etc. already use (darken in light mode, lighten in dark mode). text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.100 = 6.05:1, comfortably passes AA."
     }
   },
   "text": {
@@ -316,7 +306,7 @@
     "code": {
       "$type": "color",
       "$value": "{color.blue.100}",
-      "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Measures 1.09:1 light / 1.28:1 dark against bg.code, an accepted tradeoff, not an oversight."
+      "$description": "Originally paired with bg.code (2026-08-08); bg.code was retired (2026-08-20) — every former consumer (the Storybook docs inline-code pill) now sits on bg.info-subtle instead, and this token's own value is unchanged (blue.100 light / gray.700 dark, from an earlier explicit-direction move away from blue.900 so the pill read as flat/borderless in dark mode specifically). A purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Light mode is unaffected end to end: bg.code's own light value was already blue.50, byte-identical to bg.info-subtle, so 1.09:1 against blue.100 carries over exactly. Dark mode changes, though: against bg.code's old gray.700 fill this measured 1.00:1 (byte-identical, an intentional flat/borderless look); against the new bg.info-subtle fill (blue.950) it measures 2.63:1 instead — a real, visible thin border where there used to be none, still well within the decorative tier's own accepted range, but a genuine style change worth knowing about, not just a token rename."
     }
   },
   "icon": {

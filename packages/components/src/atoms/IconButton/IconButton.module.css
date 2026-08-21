@@ -92,7 +92,7 @@
 }
 
 .variantTertiary:not(:disabled):hover {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .variantGhost {
@@ -101,7 +101,7 @@
 }
 
 .variantGhost:not(:disabled):hover {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .variantDestructive {

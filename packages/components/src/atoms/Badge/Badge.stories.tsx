@@ -376,7 +376,7 @@ export const AllPositions: Story = {
 // shape comparison isn't confounded by anything else changing.
 const shapeStyle = {
   alignItems: "center",
-  backgroundColor: "var(--dbm-bg-subtle)",
+  backgroundColor: "var(--dbm-bg-neutral-subtle)",
   border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
   display: "flex",
   height: "var(--dbm-space-10)",

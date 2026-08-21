@@ -1,5 +1,5 @@
 .root {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
   border-radius: var(--dbm-radius-xs);
   color: var(--dbm-text-primary);
   font-family: var(--dbm-font-family-mono);

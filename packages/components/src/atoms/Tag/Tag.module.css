@@ -24,7 +24,7 @@
 }
 
 .subtleNeutral {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
   color: var(--dbm-text-secondary);
 }
 
@@ -164,7 +164,9 @@
 /* One hover rule per tone × variant combo, mirroring Tag.tsx's own
    `classFor` pairing — each reuses that combo's dedicated `*-hover`/
    `*-subtle-hover` token (see guidelines/03-token-system-spec.md Phase 19
-   for `bg.subtle-hover`/`bg.neutral-strong-hover`, added alongside this).
+   for `bg.neutral-subtle-hover`/`bg.neutral-strong-hover`, added alongside
+   this — `bg.neutral-subtle-hover` was named `bg.subtle-hover` at the
+   time, renamed later).
    Skipped while `.selected`, so the selected ring below stays the clear,
    stable "this one is active" signal instead of competing with a
    hover-darkened fill underneath it. */
@@ -177,7 +179,7 @@
 }
 
 .interactive.subtleNeutral:hover:not(.selected) {
-  background-color: var(--dbm-bg-subtle-hover);
+  background-color: var(--dbm-bg-neutral-subtle-hover);
 }
 
 .interactive.subtleInfo:hover:not(.selected) {
@@ -225,7 +227,7 @@
 }
 
 .interactive.outlineNeutral:hover:not(.selected) {
-  background-color: var(--dbm-bg-subtle-hover);
+  background-color: var(--dbm-bg-neutral-subtle-hover);
 }
 
 .interactive.outlineInfo:hover:not(.selected) {

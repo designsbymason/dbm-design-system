@@ -32,7 +32,7 @@
 }
 
 .track {
-  stroke: var(--dbm-bg-subtle);
+  stroke: var(--dbm-bg-neutral-subtle);
   stroke-width: 10;
 }
 

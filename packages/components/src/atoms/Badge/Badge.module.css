@@ -89,7 +89,7 @@
 }
 
 .subtleNeutral {
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
   color: var(--dbm-text-secondary);
 }
 

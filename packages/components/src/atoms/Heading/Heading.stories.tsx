@@ -92,7 +92,7 @@ export const AsCardTitle: Story = {
   render: () => (
     <div
       style={{
-        background: "var(--dbm-bg-subtle)",
+        background: "var(--dbm-bg-neutral-subtle)",
         borderRadius: "var(--dbm-radius-md)",
         padding: "var(--dbm-space-4)",
       }}

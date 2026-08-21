@@ -14,7 +14,7 @@
       (var(--switch-thumb-inset) * 2)
   );
 
-  background-color: var(--dbm-bg-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
   border: none;
   border-radius: var(--dbm-radius-full);
   cursor: pointer;

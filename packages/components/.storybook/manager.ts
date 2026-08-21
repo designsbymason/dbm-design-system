@@ -55,14 +55,14 @@ let hasReceivedInitialSync = false;
 // of dock position) has no dedicated Storybook theme variable of its own:
 // its background is driven by `appContentBg`, the same variable the Docs
 // content wrapper uses (`DbmDocsContainer` passes the same theme object
-// there). Setting `appContentBg` to `bg.subtle` to color the panel would
-// also recolor every component's Docs page background, which wasn't asked
-// for. Scoped `<style>` injection targeting the panel's own id, kept in
-// sync with the same brand/mode tracking `applyTheme` already does below,
-// is the only way to color just the panel.
+// there). Setting `appContentBg` to `bg.neutral-subtle` to color the panel
+// would also recolor every component's Docs page background, which wasn't
+// asked for. Scoped `<style>` injection targeting the panel's own id, kept
+// in sync with the same brand/mode tracking `applyTheme` already does
+// below, is the only way to color just the panel.
 let panelStyleEl: HTMLStyleElement | undefined;
 function applyPanelBg(brand: string | undefined, mode: string | undefined): void {
-  const hex = getSemanticTokens(brand, mode).bg.subtle;
+  const hex = getSemanticTokens(brand, mode).bg["neutral-subtle"];
   if (!panelStyleEl) {
     panelStyleEl = document.createElement("style");
     panelStyleEl.id = "dbm-panel-bg-override";
@@ -75,9 +75,9 @@ function applyPanelBg(brand: string | undefined, mode: string | undefined): void
 // (transparent, no border, 4px radius) while "Create a new story" right
 // next to it — same 32x32 footprint — renders as Storybook's filled
 // style, driven by the `buttonBg`/`buttonBorder` theme vars `theme.ts`
-// already sets from `bg.subtle`/`border.default`. Storybook doesn't
+// already sets from `bg.neutral-subtle`/`border.default`. Storybook doesn't
 // expose a per-button style override, so this reproduces that filled
-// look on the gear by hand: `bg.subtle` fill plus an inset box-shadow in
+// look on the gear by hand: `bg.neutral-subtle` fill plus an inset box-shadow in
 // `border.default` (confirmed via computed styles that Storybook renders
 // `buttonBorder` as an inset shadow, not an actual border edge, on this
 // button). `10px` radius is likewise copied from the neighbor's computed
@@ -105,7 +105,7 @@ function applyGearButtonStyle(brand: string | undefined, mode: string | undefine
   gearButtonStyleEl.textContent = `
     button[aria-label="Settings"],
     a[aria-label="About Storybook"] {
-      background: ${tokens.bg.subtle};
+      background: ${tokens.bg["neutral-subtle"]};
       border-radius: 10px;
       box-shadow: ${tokens.border.default} 0px 0px 0px 1px inset;
     }
@@ -161,7 +161,7 @@ function applyMobileMenuStyle(brand: string | undefined, mode: string | undefine
     }
     #dbm-mobile-settings-menu a:hover,
     #dbm-mobile-settings-menu a:focus-visible {
-      background: ${tokens.bg.subtle};
+      background: ${tokens.bg["neutral-subtle"]};
     }
     #dbm-mobile-settings-menu .dbm-mobile-settings-menu-external {
       color: ${tokens.text.secondary};
