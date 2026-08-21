@@ -66,7 +66,7 @@ export const CustomContainer: Story = {
         <div
           id={targetId}
           style={{
-            border: "var(--dbm-border-width-1) solid var(--dbm-border-strong)",
+            border: "var(--dbm-border-width-1) solid var(--dbm-border-neutral)",
             borderRadius: "var(--dbm-radius-md)",
             minHeight: "var(--dbm-space-12)",
             padding: "var(--dbm-space-3)",

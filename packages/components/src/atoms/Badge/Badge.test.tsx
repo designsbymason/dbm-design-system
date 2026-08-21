@@ -83,7 +83,7 @@ describe("Badge", () => {
       </Badge>,
     );
     expect(screen.getByTestId("badge")).toHaveStyle({
-      backgroundColor: "var(--dbm-bg-neutral-strong)",
+      backgroundColor: "var(--dbm-bg-neutral)",
       color: "var(--dbm-text-on-neutral)",
     });
 
@@ -224,7 +224,7 @@ describe("Badge", () => {
 
     rerender(<Badge dot tone="brand" data-testid="badge" />);
     expect(screen.getByTestId("badge")).toHaveStyle({
-      backgroundColor: "var(--dbm-bg-brand-indicator)",
+      backgroundColor: "var(--dbm-bg-brand)",
     });
   });
 

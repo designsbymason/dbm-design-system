@@ -3,7 +3,7 @@
     "canvas": {
       "$type": "color",
       "$value": "{color.gray.100}",
-      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.white (was briefly byte-identical to bg.surface/bg.neutral-subtle) to gray.100, one step past bg.neutral-subtle (gray.50), so it reads as a visually distinct container again. Contrast re-verified: text.primary 12.41:1, text.secondary 6.05:1 — both clear AA. Byte-identical to border.subtle (also gray.100) — nothing currently pairs the two, flagged here in case a future component draws a border.subtle border directly on bg.canvas."
+      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.white (was briefly byte-identical to bg.surface/bg.neutral-subtle) to gray.100, one step past bg.neutral-subtle (gray.50), so it reads as a visually distinct container again. Contrast re-verified: text.primary 12.41:1, text.secondary 6.05:1 — both clear AA. Byte-identical to border.neutral-subtle (also gray.100) — nothing currently pairs the two, flagged here in case a future component draws a border.neutral-subtle border directly on bg.canvas."
     },
     "overlay": {
       "$type": "color",
@@ -22,11 +22,13 @@
     },
     "brand": {
       "$type": "color",
-      "$value": "{color.emerald.700}"
+      "$value": "{color.emerald.700}",
+      "$description": "Primary action fill (Button primary, focus accents); also non-text graphical status indicators (Badge's brand-tone dot mode) since bg.brand-indicator was retired into this token (2026-08-21) — see this token's own dark-file description and guidelines/03-token-system-spec.md. Light value unchanged."
     },
     "brand-hover": {
       "$type": "color",
-      "$value": "{color.emerald.800}"
+      "$value": "{color.emerald.800}",
+      "$description": "Hover state of bg.brand. Light value unchanged."
     },
     "brand-subtle": {
       "$type": "color",
@@ -37,11 +39,6 @@
       "$type": "color",
       "$value": "{color.emerald.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses brand-subtle's own pre-2026-07-27 value (emerald.100), same pattern as purple-light.json's bg.brand-subtle-hover. text.link (emerald.700) on emerald.100 = 5.37:1, comfortably passes AA."
-    },
-    "brand-indicator": {
-      "$type": "color",
-      "$value": "{color.emerald.700}",
-      "$description": "New token (2026-08-16), found adding a `brand` tone to Badge — for non-text graphical status indicators. Reuses bg.brand's own light value directly (emerald.700 vs bg.surface = 6.08:1) since that already clears the 3:1 non-text floor comfortably. Dark theme needs a different value (emerald.400, 4.63:1) — see that theme's own description for why bg.brand's own dark value (emerald.500) only manages 3.41:1, thinner than desired for a dedicated indicator. Brand-specific (unlike the shared danger/warning/success/info-indicator tokens), since brand color itself varies per theme."
     },
     "danger": {
       "$type": "color",
@@ -125,18 +122,13 @@
     },
     "neutral": {
       "$type": "color",
-      "$value": "{color.gray.500}",
-      "$description": "Fifth status-tone fill, for neutral/offline-style indicators (e.g. Avatar's offline status dot). gray.500 on bg.surface: 3.25:1 light / 3.10:1 dark, both pass WCAG 1.4.11 non-text contrast (3:1) — re-verified 2026-07-18 (Phase 4, OKLCH regen), shared across all 4 themes since gray.500 uniquely satisfies both. (Dark figure corrected 2026-08-16 — the previously-recorded 4.34:1 was gray.400's own contrast against this same surface, not gray.500's; the token's actual value was never wrong, only this description's cited number. Found while adding bg.danger/warning/success/info-indicator, which needed the same gray.400-vs-gray.500 distinction checked carefully.)"
-    },
-    "neutral-strong": {
-      "$type": "color",
       "$value": "{color.gray.600}",
-      "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) is only verified for the 3:1 non-text case. gray.600 with white text gives 4.70:1, passing everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
+      "$description": "Merged with the retired bg.neutral (gray.500, offline/dot-only fill) and renamed from bg.neutral-strong (2026-08-21) — this token covers both the neutral status-dot fill (Avatar's offline indicator, Badge's neutral dot) and the solid neutral fill for hosting text (Badge/Tag's solid-neutral variant, Tooltip's chrome). Light value unchanged (gray.600, shared across all 4 themes) — gray.600 vs bg.surface (white) = 4.70:1 (dot use, clears 3:1), white text.on-neutral on gray.600 = 4.70:1 (text use, clears 4.5:1); a single value satisfies both cases in light mode. Dark mode needed a different fix — see this token's own dark-file description."
     },
-    "neutral-strong-hover": {
+    "neutral-hover": {
       "$type": "color",
       "$value": "{color.gray.700}",
-      "$description": "New token (2026-08-17), found adding Tag's whole-tag clickable/selectable mode — bg.neutral-strong's own hover step. Unlike every other *-hover token, uses the SAME value (gray.700) in both light and dark themes rather than the usual darken-in-light/lighten-in-dark split: bg.neutral-strong itself is already brand-and-mode-agnostic (gray.600 in all 4 themes, see its own description above), and lightening toward gray.500 for a dark-mode hover fails AA against text.on-neutral (white on gray.500 = 3.25:1, below the 4.5:1 floor) — a documented exception, same class as bg.danger-hover/bg.brand-hover's own original dark-mode direction overrides (see 03-token-system-spec.md's Phase 3 notes). White text.on-neutral on gray.700 = 6.88:1, comfortably passes AA in both modes."
+      "$description": "Renamed from bg.neutral-strong-hover (2026-08-21), hover state of bg.neutral (formerly bg.neutral-strong). Light value unchanged (gray.700) — white text.on-neutral on gray.700 = 6.88:1, clears 4.5:1. Dark mode needed a different fix — see this token's own dark-file description."
     },
     "neutral-subtle": {
       "$type": "color",
@@ -174,7 +166,8 @@
     },
     "on-brand": {
       "$type": "color",
-      "$value": "{color.neutral.white}"
+      "$value": "{color.neutral.white}",
+      "$description": "Text/icons on a solid bg.brand fill. Light value unchanged (white) — dark mode's own value is now unified across both brand themes, see this token's own dark-file description."
     },
     "on-danger": {
       "$type": "color",
@@ -199,7 +192,7 @@
     "on-neutral": {
       "$type": "color",
       "$value": "{color.neutral.white}",
-      "$description": "Text on a solid bg.neutral-strong fill (Badge solid variant). White on gray.600 = 4.70:1, passes everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
+      "$description": "Text on a solid bg.neutral fill (Badge solid variant) — renamed from bg.neutral-strong, 2026-08-21. Light value unchanged (white). White on gray.600 = 4.70:1, passes."
     },
     "link": {
       "$type": "color",
@@ -237,23 +230,25 @@
       "$type": "color",
       "$value": "{color.gray.200}"
     },
-    "subtle": {
+    "neutral-subtle": {
       "$type": "color",
-      "$value": "{color.gray.100}"
-    },
-    "strong": {
-      "$type": "color",
-      "$value": "{color.gray.400}"
+      "$value": "{color.gray.100}",
+      "$description": "Renamed from border.subtle (2026-08-21), part of a border.* identifier rotation (border.subtle→border.neutral-subtle, border.strong→border.neutral, border.neutral→border.neutral-strong, border.neutral-strong→border.strong) — no values changed anywhere in this rotation, only names; see guidelines/03-token-system-spec.md for the full rationale. Faint divider/low-emphasis border tint. Storybook-chrome only today (docs.css, Foundations block components) — no published component consumes it directly."
     },
     "neutral": {
       "$type": "color",
-      "$value": "{color.gray.600}",
-      "$description": "New token (2026-08-20) — completes the border.danger/warning/success/info/brand state-identifying family for the one tone that didn't have one yet: neutral. border.strong (gray.400), the only existing generic gray border, was measured rather than assumed and fails outright as a real border — 2.32:1 against bg.surface, well under the 3:1 WCAG 1.4.11 floor (it's documented as decorative hover-state emphasis, never verified for this use). gray.600 vs bg.surface (white) = 4.70:1, a comfortable margin, not just a bare pass. Not currently consumed — Tag's outline variant ended up using border.neutral-strong (a richer step, added alongside this one) for its own default border instead, since a plain outline's rim needed to read as more deliberate than this token's own step; this one still completes the family for future default-emphasis use."
+      "$value": "{color.gray.400}",
+      "$description": "Renamed from border.strong (2026-08-21), part of the same border.* rotation (see border.neutral-subtle's own description). This is the system's most widely consumed generic gray border — the default resting border on Checkbox/Blockquote/Kbd (not hover), and the hover-state border on Select/Input/Textarea/Button's secondary variant/IconButton/Indicators. Color.mdx's own usage text ('Hover-state border emphasis') predates this full consumer list and doesn't capture the non-hover cases — a pre-existing documentation gap noted here, not something this rename introduces or fixes."
     },
     "neutral-strong": {
       "$type": "color",
+      "$value": "{color.gray.600}",
+      "$description": "Renamed from border.neutral (2026-08-21), part of a border.* identifier rotation (border.subtle→border.neutral-subtle, border.strong→border.neutral, border.neutral→border.neutral-strong, border.neutral-strong→border.strong) — no values changed anywhere in this rotation, only names; see guidelines/03-token-system-spec.md for the full rationale. Originally added (2026-08-20) to complete the border.danger/warning/success/info/brand state-identifying family for the neutral tone — the token now named border.neutral (gray.400), the only existing generic gray border at the time, was measured rather than assumed and fails outright as a real state-identifying border (2.32:1 against bg.surface, under the 3:1 WCAG 1.4.11 floor; that token is documented as hover-state/default border emphasis, not state-identification). gray.600 vs bg.surface (white) = 4.70:1, a comfortable margin. Not currently consumed — Tag's outline variant uses the token now named border.strong (gray.700, formerly this token's own sibling border.neutral-strong) for its own default border instead."
+    },
+    "strong": {
+      "$type": "color",
       "$value": "{color.gray.700}",
-      "$description": "New token (2026-08-19), found adding Tag's selectable solid-variant ring — needed a neutral border richer than border.strong (gray.400) to read clearly as an offset-halo accent against bg.surface. Reuses the same primitive step text.secondary already uses (gray.700), but as its own independently-tracked border token rather than reusing text.secondary directly — border.* and text.* are separate categories specifically so they can diverge later without side effects on each other. gray.700 vs bg.surface (white) = 6.88:1."
+      "$description": "Renamed from border.neutral-strong (2026-08-21), part of the same border.* rotation (see border.neutral-subtle's own description). Originally added (2026-08-19), found adding Tag's selectable solid-variant ring — needed a neutral border richer than the token now named border.neutral (gray.400) to read clearly as an offset-halo accent against bg.surface. Reuses the same primitive step text.secondary already uses (gray.700), but as its own independently-tracked border token rather than reusing text.secondary directly — border.* and text.* are separate categories specifically so they can diverge later without side effects on each other. gray.700 vs bg.surface (white) = 6.88:1. Now consumed directly by Tag's outline/selected-solid-neutral rings (Tag.module.css)."
     },
     "focus": {
       "$type": "color",
@@ -263,7 +258,7 @@
     "brand": {
       "$type": "color",
       "$value": "{color.emerald.700}",
-      "$description": "New token (2026-08-20) — emerald counterpart to border.brand (purple); see that token's own description for its purpose. Reuses bg.brand's own light-mode step (emerald.700, not the numerically-parallel emerald.600 — emerald needs to go one step further than purple's own analogous step to reach equivalent perceptual/contrast weight, the same reason border.focus's own emerald value sits at .600 while purple's sits at .500). emerald.700 vs bg.surface (white) = 6.08:1, clears WCAG 1.4.11's 3:1 non-text floor comfortably."
+      "$description": "New token (2026-08-20) — emerald counterpart to border.brand (purple); see that token's own description for its purpose. Reuses bg.brand's own light-mode step (emerald.700, not the numerically-parallel emerald.600 — emerald needs to go one step further than purple's own analogous step to reach equivalent perceptual/contrast weight, the same reason border.focus's own emerald value sits at .600 while purple's sits at .500). emerald.700 vs bg.surface (white) = 6.08:1, clears WCAG 1.4.11's 3:1 non-text floor comfortably. Light value unchanged."
     },
     "brand-subtle": {
       "$type": "color",

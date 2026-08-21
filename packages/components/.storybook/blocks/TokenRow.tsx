@@ -19,7 +19,7 @@ export function TokenRow({ token, usage }: { token: string; usage: string }) {
     <div
       style={{
         alignItems: "center",
-        borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
+        borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle)",
         display: "flex",
         gap: "var(--dbm-space-3)",
         minWidth: 0,

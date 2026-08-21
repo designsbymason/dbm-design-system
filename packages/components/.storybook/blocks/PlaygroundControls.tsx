@@ -182,7 +182,7 @@ export function PlaygroundControls({
     <div
       style={{
         background: "var(--dbm-bg-surface)",
-        border: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
+        border: "var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle)",
         borderRadius: "var(--dbm-radius-md)",
         padding: "var(--dbm-space-4)",
         width: "100%",

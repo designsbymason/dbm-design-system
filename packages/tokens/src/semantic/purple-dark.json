@@ -18,16 +18,17 @@
     "surface": {
       "$type": "color",
       "$value": "{color.gray.800}",
-      "$description": "Reverted (2026-08-08) from neutral.black back to gray.800, paired with bg.canvas moving off neutral.black in the same edit — surface and canvas are no longer byte-identical; canvas (gray.700) now reads slightly lighter than surface (gray.800), see bg.canvas's own description for why. Reintroduces a border.default/bg.surface collision (both gray.800, 1.00:1) that the neutral.black value had incidentally fixed — reverted docs.css's table-border/section-divider rule back to border.subtle (gray.900, 1.40:1 against this value) to compensate. Contrast re-verified: text.primary 9.66:1, text.secondary 5.86:1, text.tertiary 4.34:1 — all still clear AA. Usage redefined in the same edit to \"page, card, sheet and drawer background\". bg.surface-raised (a separate token for \"an elevated surface, paired with a shadow\") was retired (2026-08-20) — it was byte-identical to this token (both gray.800), so keeping two names for one value added a lookup with no payoff. Every former bg.surface-raised consumer now uses this token directly."
+      "$description": "Reverted (2026-08-08) from neutral.black back to gray.800, paired with bg.canvas moving off neutral.black in the same edit — surface and canvas are no longer byte-identical; canvas (gray.700) now reads slightly lighter than surface (gray.800), see bg.canvas's own description for why. Reintroduces a border.default/bg.surface collision (both gray.800, 1.00:1) that the neutral.black value had incidentally fixed — reverted docs.css's table-border/section-divider rule back to border.neutral-subtle (gray.900, 1.40:1 against this value) to compensate. Contrast re-verified: text.primary 9.66:1, text.secondary 5.86:1, text.tertiary 4.34:1 — all still clear AA. Usage redefined in the same edit to \"page, card, sheet and drawer background\". bg.surface-raised (a separate token for \"an elevated surface, paired with a shadow\") was retired (2026-08-20) — it was byte-identical to this token (both gray.800), so keeping two names for one value added a lookup with no payoff. Every former bg.surface-raised consumer now uses this token directly."
     },
     "brand": {
       "$type": "color",
-      "$value": "{color.purple.500}"
+      "$value": "{color.purple.300}",
+      "$description": "Dark value moved purple.500 → purple.300 (2026-08-21, at explicit direction) — same fix already shipped for bg.neutral (Phase 34) and bg.danger/warning/success/info (2026-08-20 consolidation): a lighter dark-mode fill paired with dark text, instead of a mid-tone fill paired with white/near-white text. purple.300 vs bg.surface (gray.800) = 5.32:1 (fill/dot distinguishability, was 3.56:1 on the old purple.500). Also absorbs the retired bg.brand-indicator (2026-08-21) — that token existed as a lighter step than bg.brand specifically because bg.brand's own old dark value didn't clear 3:1 well enough for a standalone dot (3.56:1); the new purple.300 clears it more comfortably than the old indicator token itself did, so the separate token is no longer needed — every consumer (Badge's dot mode) now uses this token directly."
     },
     "brand-hover": {
       "$type": "color",
-      "$value": "{color.purple.600}",
-      "$description": "Darker than brand (breaks the usual 'dark mode lightens on hover' direction, same deviation already established for bg.danger-hover below) — purple.400 only gives white text 3.41:1, failing AA; purple.600 gives 7.37:1 (verified 2026-07-18, Phase 4 OKLCH regen). purple.300 (lighter still) would only make it worse (2.43:1)."
+      "$value": "{color.purple.200}",
+      "$description": "Hover state of bg.brand. Dark value changed to purple.200 (2026-08-21, at explicit direction) — one step lighter than the new bg.brand dark value, matching the X.300→X.200 dark-mode hover direction every other consolidated tone already uses (bg.danger red.300→red.200, bg.neutral gray.300→gray.200, etc.). text.on-brand (gray.900) on purple.200 = 10.38:1, clears 4.5:1 with a wide margin. Also resolves a pre-existing inconsistency: purple-dark's hover used to go darker (purple.500→purple.600) while emerald-dark's went lighter (emerald.500→emerald.400) — both brands now use the same lighten-in-dark-mode direction."
     },
     "brand-subtle": {
       "$type": "color",
@@ -38,11 +39,6 @@
       "$type": "color",
       "$value": "{color.gray.800}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — one step lighter than brand-subtle (gray.900), matching this system's standard dark-mode hover direction (lighten, mirroring light mode's darken). text.link (purple.300) on gray.800 = 5.32:1, comfortably passes AA."
-    },
-    "brand-indicator": {
-      "$type": "color",
-      "$value": "{color.purple.400}",
-      "$description": "New token (2026-08-16), found adding a `brand` tone to Badge — for non-text graphical status indicators. bg.brand's own dark value (purple.500) measures only 2.24:1 against bg.surface (gray.800), failing WCAG 1.4.11's 3:1 non-text floor outright — bg.brand was only ever verified as a background *for text*. One step lighter (purple.400) clears it at 3.56:1. Light theme reuses bg.brand's own light value directly (purple.600, 7.37:1) — see that theme's own description. Brand-specific (unlike the shared danger/warning/success/info-indicator tokens), since brand color itself varies per theme."
     },
     "danger": {
       "$type": "color",
@@ -126,23 +122,18 @@
     },
     "neutral": {
       "$type": "color",
-      "$value": "{color.gray.500}",
-      "$description": "Fifth status-tone fill, for neutral/offline-style indicators (e.g. Avatar's offline status dot). gray.500 on bg.surface: 3.25:1 light / 3.10:1 dark, both pass WCAG 1.4.11 non-text contrast (3:1) — re-verified 2026-07-18 (Phase 4, OKLCH regen), shared across all 4 themes since gray.500 uniquely satisfies both. (Dark figure corrected 2026-08-16 — the previously-recorded 4.34:1 was gray.400's own contrast against this same surface, not gray.500's; the token's actual value was never wrong, only this description's cited number. Found while adding bg.danger/warning/success/info-indicator, which needed the same gray.400-vs-gray.500 distinction checked carefully.)"
+      "$value": "{color.gray.300}",
+      "$description": "Merged with the retired bg.neutral (gray.500, offline/dot-only fill) and renamed from bg.neutral-strong (2026-08-21). Dark value moved gray.600 → gray.300 (step 2, 2026-08-21, at explicit direction) — gray.600 alone couldn't satisfy both real uses in dark mode (2.14:1 as a dot against bg.surface, failing 3:1). Fixed the same way bg.danger/warning/success/info were already fixed in the 2026-08-20 consolidation: switch to a lighter dark-mode fill paired with dark (not white) text, rather than try to keep one gray working for both a light-on-dark dot and a dark-on-light text fill. gray.300 vs bg.surface (gray.800) = 5.86:1 (dot use, clears 3:1 with a wide margin, better than the original bg.neutral's own 3.10:1); text.on-neutral's own dark value moved white → gray.900 in the same pass (see that token's own description), giving gray.900-on-gray.300 = 8.21:1 (text use, clears 4.5:1 with a wide margin). Real, visible change for Badge.solidNeutral/Tag.solidNeutral/Tag.selected.outlineNeutral/Tooltip in dark mode — dark text instead of white, not just a number — confirmed live before considering this done."
     },
-    "neutral-strong": {
+    "neutral-hover": {
       "$type": "color",
-      "$value": "{color.gray.600}",
-      "$description": "Solid neutral fill for hosting text (Badge's solid variant, neutral tone) — bg.neutral (gray.500) is only verified for the 3:1 non-text case. gray.600 with white text gives 4.70:1, passing everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
-    },
-    "neutral-strong-hover": {
-      "$type": "color",
-      "$value": "{color.gray.700}",
-      "$description": "New token (2026-08-17), found adding Tag's whole-tag clickable/selectable mode — bg.neutral-strong's own hover step. Unlike every other *-hover token, uses the SAME value (gray.700) in both light and dark themes rather than the usual darken-in-light/lighten-in-dark split: bg.neutral-strong itself is already brand-and-mode-agnostic (gray.600 in all 4 themes, see its own description above), and lightening toward gray.500 for a dark-mode hover fails AA against text.on-neutral (white on gray.500 = 3.25:1, below the 4.5:1 floor) — a documented exception, same class as bg.danger-hover/bg.brand-hover's own original dark-mode direction overrides (see 03-token-system-spec.md's Phase 3 notes). White text.on-neutral on gray.700 = 6.88:1, comfortably passes AA in both modes."
+      "$value": "{color.gray.200}",
+      "$description": "Renamed from bg.neutral-strong-hover (2026-08-21), hover state of bg.neutral (formerly bg.neutral-strong). Dark value moved gray.700 → gray.200 (step 2, 2026-08-21, at explicit direction) — same fix as bg.neutral's own dark value (see that token's description): one step lighter than the new gray.300 base, matching the X.300→X.200 dark-mode hover direction every other tone's own solid fill already uses (e.g. bg.danger red.300→red.200). gray.200 vs bg.surface (gray.800) = 7.47:1; text.on-neutral's new dark value (gray.900) on gray.200 = 10.47:1 — both comfortably clear their floors."
     },
     "neutral-subtle": {
       "$type": "color",
       "$value": "{color.gray.900}",
-      "$description": "Renamed from bg.subtle (2026-08-20), grouped with the other neutral tokens here instead of sitting up near bg.canvas/bg.surface — no value change. Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\", value moved from gray.800 to gray.900 in the same edit — also resolved a since-removed collision with the also-since-removed bg.surface-raised (formerly also gray.800), since gray.900 was a step further from that value than gray.800 was from itself. Contrast re-verified: text.secondary-on-this-token (Tag/Badge subtleNeutral) 8.21:1 (was 4.00:1 on the gray.700 this token's history below rejected, and comfortably clear of gray.800's own value too), text.primary 13.53:1 — both clear AA. Byte-identical to border.subtle (also gray.900) — nothing currently pairs the two, flagged here as a heads-up. History: was byte-identical to bg.surface-raised on gray.800 (2026-07-27 review) — a hover fill invisible against the elevated card it sits on; gray.700 was tried and rejected then for failing the text.secondary pairing at 4.00:1, which is why gray.900 (not gray.700) is the value used to break that collision."
+      "$description": "Renamed from bg.subtle (2026-08-20), grouped with the other neutral tokens here instead of sitting up near bg.canvas/bg.surface — no value change. Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\", value moved from gray.800 to gray.900 in the same edit — also resolved a since-removed collision with the also-since-removed bg.surface-raised (formerly also gray.800), since gray.900 was a step further from that value than gray.800 was from itself. Contrast re-verified: text.secondary-on-this-token (Tag/Badge subtleNeutral) 8.21:1 (was 4.00:1 on the gray.700 this token's history below rejected, and comfortably clear of gray.800's own value too), text.primary 13.53:1 — both clear AA. Byte-identical to border.neutral-subtle (also gray.900) — nothing currently pairs the two, flagged here as a heads-up. History: was byte-identical to bg.surface-raised on gray.800 (2026-07-27 review) — a hover fill invisible against the elevated card it sits on; gray.700 was tried and rejected then for failing the text.secondary pairing at 4.00:1, which is why gray.900 (not gray.700) is the value used to break that collision."
     },
     "neutral-subtle-hover": {
       "$type": "color",
@@ -176,7 +167,8 @@
     },
     "on-brand": {
       "$type": "color",
-      "$value": "{color.neutral.white}"
+      "$value": "{color.gray.900}",
+      "$description": "Text/icons on a solid bg.brand fill. Dark value changed to gray.900 (2026-08-21, at explicit direction), replacing a per-brand split that had accumulated rather than been designed: purple-dark used white, emerald-dark used gray.950 (emerald.500 was too light for white text) — now both brand themes share one value, matching bg.brand's own dark value becoming brand-agnostic in relative terms (each brand's own tone.300 step). gray.900 on the new bg.brand dark = 7.45:1; on bg.brand-hover dark = 10.38:1 — both clear 4.5:1 with a wide margin, well past the old purple pairing's own 4.51:1 near-miss (white on purple.500)."
     },
     "on-danger": {
       "$type": "color",
@@ -200,8 +192,8 @@
     },
     "on-neutral": {
       "$type": "color",
-      "$value": "{color.neutral.white}",
-      "$description": "Text on a solid bg.neutral-strong fill (Badge solid variant). White on gray.600 = 4.70:1, passes everywhere — shared across all 4 themes (re-verified 2026-07-18, Phase 4 OKLCH regen)."
+      "$value": "{color.gray.900}",
+      "$description": "Text on a solid bg.neutral fill (Badge solid variant). Dark value moved white → gray.900 (step 2, 2026-08-21, at explicit direction) — bg.neutral's own dark value moved gray.600 → gray.300 in the same pass (see that token's description) to fix a real 3:1 non-text-contrast failure on the dot use case; white text on the new lighter gray.300 would only measure 1.72:1, so dark mode switches to dark text instead, the same pattern text.on-danger/warning/success/info already use in dark mode (e.g. text.on-danger = red.900, not white). gray.900 on gray.300 = 8.21:1, clears 4.5:1 with a wide margin."
     },
     "link": {
       "$type": "color",
@@ -240,23 +232,25 @@
       "$value": "{color.gray.950}",
       "$description": "Moved from gray.800 to gray.950 (2026-08-08) at explicit direction. Fixes the exact-collision with bg.surface (also gray.800, 1.00:1) noted in Phase 9 of guidelines/03-token-system-spec.md — this pairing now measures 1.80:1. Also improves against bg.canvas (1.46:1 → 2.64:1). Trade-off: gets slightly worse against bg.subtle (1.40:1 → 1.28:1). Neither the old nor the new value clears the 3:1 WCAG 1.4.11 non-text floor against any of these real component-hosting surfaces (Input/Textarea/Button/Kbd/Divider/IconButton all use this token) — a pre-existing gap this change doesn't create, confirmed and accepted rather than assumed."
     },
-    "subtle": {
+    "neutral-subtle": {
       "$type": "color",
-      "$value": "{color.gray.900}"
-    },
-    "strong": {
-      "$type": "color",
-      "$value": "{color.gray.600}"
+      "$value": "{color.gray.900}",
+      "$description": "Renamed from border.subtle (2026-08-21), same border.* rotation as the light file (see border.neutral-subtle's own light-mode description for the full four-way mapping). Dark counterpart, value unchanged (gray.900)."
     },
     "neutral": {
       "$type": "color",
-      "$value": "{color.gray.400}",
-      "$description": "New token (2026-08-20), dark counterpart to border.neutral (light); see that token's own description for its purpose (and why it isn't the one Tag's outline variant actually consumes). Doesn't reuse border.strong's own dark value (gray.600, only 2.14:1 against dark bg.surface — well under 3:1) for the same reason the light value doesn't. gray.400 vs bg.surface (dark) = 4.34:1, a comfortable margin."
+      "$value": "{color.gray.600}",
+      "$description": "Renamed from border.strong (2026-08-21), same border.* rotation (see the light-mode border.neutral's own description). Dark counterpart, value unchanged (gray.600) — the default resting border on Checkbox/Blockquote/Kbd, hover-state border on Select/Input/Textarea/Button's secondary variant/IconButton/Indicators, same as light."
     },
     "neutral-strong": {
       "$type": "color",
+      "$value": "{color.gray.400}",
+      "$description": "Renamed from border.neutral (2026-08-21), part of the border.* rotation (see border.neutral-subtle's own description). Dark counterpart to border.neutral-strong (light) — see that token's own description for its purpose (and why it isn't the one Tag's outline variant actually consumes). Doesn't reuse the token now named border.neutral's own dark value (gray.600, only 2.14:1 against dark bg.surface — well under 3:1) for the same reason the light value doesn't. gray.400 vs bg.surface (dark) = 4.34:1, a comfortable margin."
+    },
+    "strong": {
+      "$type": "color",
       "$value": "{color.gray.200}",
-      "$description": "New token (2026-08-19), found adding Tag's selectable solid-variant ring — dark counterpart to border.neutral-strong (light). Reuses the same primitive step text.secondary already uses in dark mode (gray.200), independently tracked. gray.200 vs bg.surface (dark) = 7.47:1."
+      "$description": "Renamed from border.neutral-strong (2026-08-21), part of the border.* rotation (see border.neutral-subtle's own description). Dark counterpart to border.strong (light) — found adding Tag's selectable solid-variant ring. Reuses the same primitive step text.secondary already uses in dark mode (gray.200), independently tracked. gray.200 vs bg.surface (dark) = 7.47:1. Now consumed directly by Tag's outline/selected-solid-neutral rings (Tag.module.css)."
     },
     "focus": {
       "$type": "color",
@@ -264,8 +258,8 @@
     },
     "brand": {
       "$type": "color",
-      "$value": "{color.purple.400}",
-      "$description": "New token (2026-08-20) — dark counterpart to border.brand (light); see that token's own description for its purpose. Doesn't reuse bg.brand's own dark-mode step (purple.500) the way the light-mode value reuses bg.brand's light step — purple.500 only measures 2.24:1 against dark bg.surface, failing the 3:1 floor, since bg.brand's dark value is calibrated for hosting text on a fill, not for resolving as a thin border line against the surrounding surface. Reuses border.focus's own already-proven dark-purple step (purple.400) instead — the two tokens end up visually identical in dark mode even though they differ in light mode (purple.600 vs purple.500), a real constraint of how little contrast headroom is available for a saturated purple border against dark bg.surface, not an oversight. purple.400 vs bg.surface (dark) = 3.56:1."
+      "$value": "{color.purple.300}",
+      "$description": "Dark value changed purple.400 → purple.300 (2026-08-21, at explicit direction), matching bg.brand's own dark value now that both are the same tone.300 step — previously border.brand reused border.focus's dark value instead of bg.brand's own (see Phase 22), since bg.brand's old dark step measured only 2.24:1/3.41:1 against dark bg.surface, too weak for a real border. That workaround is no longer needed: purple.300 vs bg.surface (gray.800) = 5.32:1, up from 3.56:1 on the old purple.400 — a real improvement, not just a rename."
     },
     "brand-subtle": {
       "$type": "color",

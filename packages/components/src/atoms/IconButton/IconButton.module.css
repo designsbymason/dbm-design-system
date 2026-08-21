@@ -83,7 +83,7 @@
 }
 
 .variantSecondary:not(:disabled):hover {
-  border-color: var(--dbm-border-strong);
+  border-color: var(--dbm-border-neutral);
 }
 
 .variantTertiary {

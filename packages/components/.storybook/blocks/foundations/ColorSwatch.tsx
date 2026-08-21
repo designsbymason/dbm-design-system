@@ -17,7 +17,7 @@ export function ColorSwatch({
       <div
         style={{
           background: color,
-          border: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
+          border: "var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle)",
           borderRadius: "var(--dbm-radius-md)",
           height: "var(--dbm-space-16)",
           width: "100%",

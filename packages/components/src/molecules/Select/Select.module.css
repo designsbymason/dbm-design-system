@@ -20,7 +20,7 @@
 }
 
 .trigger:hover:not(:disabled):not(.error) {
-  border-color: var(--dbm-border-strong);
+  border-color: var(--dbm-border-neutral);
 }
 
 .trigger:focus-visible {

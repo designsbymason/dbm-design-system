@@ -25,7 +25,7 @@ export const StickyHeader: Story = {
               padding: "1rem 1.5rem",
               background: "var(--dbm-bg-surface)",
               borderBottom: stuck
-                ? "var(--dbm-border-width-2) solid var(--dbm-border-strong)"
+                ? "var(--dbm-border-width-2) solid var(--dbm-border-neutral)"
                 : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
             }}
           >

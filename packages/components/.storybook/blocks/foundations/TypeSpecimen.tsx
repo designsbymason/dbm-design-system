@@ -25,7 +25,7 @@ export function TypeSpecimen({
           className="dbm-type-specimen-row"
           style={{
             alignItems: "baseline",
-            borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-subtle)",
+            borderBlockEnd: "var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle)",
             display: "flex",
             gap: "var(--dbm-space-4)",
             paddingBlock: "var(--dbm-space-3)",

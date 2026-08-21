@@ -19,7 +19,7 @@
 }
 
 .dot:hover:not(.active) {
-  background-color: var(--dbm-border-strong);
+  background-color: var(--dbm-border-neutral);
 }
 
 .dot:focus-visible {

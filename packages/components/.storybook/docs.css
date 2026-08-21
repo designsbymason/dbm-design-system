@@ -54,20 +54,20 @@
    after it. Confirmed via computed margin-top (0px vs 40px) across
    multiple Foundations pages, not assumed from one instance.
 
-   Border color: `border.subtle` → `border.default` (2026-08-08) → back to
-   `border.subtle` (2026-08-08, same day) — same back-and-forth as
+   Border color: `border.neutral-subtle` → `border.default` (2026-08-08) → back to
+   `border.neutral-subtle` (2026-08-08, same day) — same back-and-forth as
    `.dbm-proptable`'s own border (see that rule's comment for the full
-   story). `border.subtle` was originally invisible against the Docs
+   story). `border.neutral-subtle` was originally invisible against the Docs
    wrapper's `bg.surface` in dark mode (both `gray.900`); switching to
    `border.default` fixed that, but a same-day `bg.surface` value change
    (`gray.900` → `neutral.black` → `gray.800`, see the `bg.surface` token's
    own description) made `border.default` collide instead (both now
-   `gray.800`) while un-colliding `border.subtle` (`gray.900` again, no
-   longer matching `bg.surface`). `border.subtle` is the live answer as of
+   `gray.800`) while un-colliding `border.neutral-subtle` (`gray.900` again, no
+   longer matching `bg.surface`). `border.neutral-subtle` is the live answer as of
    this file's current state — re-verify against `bg.surface`'s actual
    value before touching either again, since this has now flipped once. */
 .sbdocs-content h2 {
-  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle);
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-2xl);
   font-weight: var(--dbm-font-weight-bold);
@@ -311,18 +311,18 @@
    throughout this investigation even on the attempts where nothing
    actually painted.
 
-   Border color: `border.subtle` → `border.default` (2026-08-08) → back to
-   `border.subtle` (2026-08-08, same day) — flipped twice in one day, each
+   Border color: `border.neutral-subtle` → `border.default` (2026-08-08) → back to
+   `border.neutral-subtle` (2026-08-08, same day) — flipped twice in one day, each
    time chasing `bg.surface`'s own value, which also changed twice. First
-   flip: `border.subtle` (`gray.900` in dark mode) was byte-identical to
+   flip: `border.neutral-subtle` (`gray.900` in dark mode) was byte-identical to
    the Docs wrapper's `bg.surface` (`gray.900` then), a literal 1.00:1
    collision confirmed via computed styles — `border.default` (`gray.800`)
    fixed it, 1.40:1 against that `bg.surface`. Second flip: `bg.surface`
    itself later moved (`gray.900` → `neutral.black` → `gray.800`, see that
    token's own description), landing on `gray.800` — exactly
    `border.default`'s value, recreating the same 1.00:1 collision one step
-   over, while `border.subtle` (`gray.900`) no longer matches and is safe
-   again (1.40:1). `border.subtle` is the live answer as of this file's
+   over, while `border.neutral-subtle` (`gray.900`) no longer matches and is safe
+   again (1.40:1). `border.neutral-subtle` is the live answer as of this file's
    current state. Both are semantic tokens either way, so "stay token-only"
    was never the actual constraint here — re-verify against `bg.surface`'s
    actual value before changing either again, since this has now flipped
@@ -330,7 +330,7 @@
    tradeoff (decorative border, not state-identifying — same exemption as
    `border.brand-subtle` elsewhere in this file), not a regression. */
 .dbm-proptable {
-  border: var(--dbm-border-width-1) solid var(--dbm-border-subtle);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle);
   border-collapse: separate !important;
   border-radius: var(--dbm-radius-md);
   border-spacing: 0;
@@ -371,7 +371,7 @@
 
 .dbm-proptable td {
   border: none !important;
-  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-subtle) !important;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle) !important;
   color: var(--dbm-text-secondary) !important;
   font-size: var(--dbm-font-size-sm);
   line-height: var(--dbm-line-height-relaxed);

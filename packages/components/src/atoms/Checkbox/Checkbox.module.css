@@ -2,7 +2,7 @@
   align-items: center;
   appearance: none;
   background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-strong);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
   border-radius: var(--dbm-radius-xs);
   cursor: pointer;
   display: inline-flex;

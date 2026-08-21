@@ -2,7 +2,7 @@
   background-color: var(--dbm-bg-surface);
   border: var(--dbm-border-width-1) solid var(--dbm-border-default);
   border-radius: var(--dbm-radius-xs);
-  box-shadow: 0 var(--dbm-border-width-2) 0 0 var(--dbm-border-strong);
+  box-shadow: 0 var(--dbm-border-width-2) 0 0 var(--dbm-border-neutral);
   color: var(--dbm-text-secondary);
   display: inline-block;
   font-family: var(--dbm-font-family-mono);

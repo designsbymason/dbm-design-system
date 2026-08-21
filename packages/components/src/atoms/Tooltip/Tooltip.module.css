@@ -1,5 +1,5 @@
 .content {
-  background-color: var(--dbm-bg-neutral-strong);
+  background-color: var(--dbm-bg-neutral);
   border-radius: var(--dbm-radius-sm);
   color: var(--dbm-text-on-neutral);
   font-family: var(--dbm-font-family-primary);
@@ -24,7 +24,7 @@
 }
 
 .arrow {
-  fill: var(--dbm-bg-neutral-strong);
+  fill: var(--dbm-bg-neutral);
 }
 
 @keyframes fadeIn {

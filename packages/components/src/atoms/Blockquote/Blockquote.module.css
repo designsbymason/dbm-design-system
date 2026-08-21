@@ -1,5 +1,5 @@
 .root {
-  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-strong);
+  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-neutral);
   color: var(--dbm-text-secondary);
   font-family: var(--dbm-font-family-secondary);
   font-size: var(--dbm-font-size-md);

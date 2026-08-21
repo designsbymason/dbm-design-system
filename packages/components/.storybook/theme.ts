@@ -29,13 +29,16 @@ type ThemeVars = ReturnType<typeof create>;
  * `manager.ts`/`DbmDocsContainer.tsx`, needs to change.
  *
  * One correctness note found while building this: `text["on-brand"]` is
- * white for purple in both modes, but for emerald it's white in light and
- * **`#16151c` (dark text) in dark mode** — emerald.500 is light enough
- * that white text fails contrast, so the token itself already accounts
- * for this. `textInverseColor` below reads `t.text["on-brand"]` per
- * brand/mode rather than assuming white, which the old purple-only file
- * did — assuming white would have made Emerald+Dark's selected sidebar
- * item illegible (light text on a light-green background).
+ * white in light mode for both brands, but **`#2C2A34` (gray.900, dark
+ * text) in dark mode for both brands** (2026-08-21 — previously this was
+ * split per brand, white for purple and a different dark gray for
+ * emerald, an accumulated inconsistency rather than a designed one; both
+ * `bg.brand`'s own dark value and `text.on-brand`'s dark value were
+ * unified the same day, see guidelines/03-token-system-spec.md).
+ * `textInverseColor` below reads `t.text["on-brand"]` per brand/mode
+ * rather than assuming white, which the old purple-only file did —
+ * assuming white would make dark mode's selected sidebar item illegible
+ * (light text on a now-light brand-tinted background) in both brands.
  */
 
 type Brand = "purple" | "emerald";
@@ -79,16 +82,22 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     // `text.brand`, not `bg.brand` (2026-08-09) — Storybook applies this as
     // literal text color in at least two places: the toolbar's active
     // Brand/Mode labels, and the Docs page's right-side TOC active-item
-    // text. `bg.brand` (purple.500 dark) was calibrated as a *background*
-    // fill paired with `text.on-brand`, not as foreground text on
-    // `bg.neutral-subtle`/`bg.surface` — measured 3.13:1 / 2.24:1 there, both
-    // failing the 4.5:1 AA text floor. `text.brand` is already the vetted
-    // token for literal purple text (purple.300 dark, chosen specifically
-    // because purple.400 failed AA here too — see that token's own
-    // description); it measures 7.45:1 / 5.32:1 against the same two
-    // backgrounds. Light mode is unaffected: `text.brand` and `bg.brand`
-    // are byte-identical there (both purple.600), so this is a pure
-    // dark-mode contrast fix, not a color change in light mode.
+    // text. At the time this was written, `bg.brand` (purple.500 dark) was
+    // calibrated as a *background* fill paired with `text.on-brand`, not as
+    // foreground text on `bg.neutral-subtle`/`bg.surface` — it measured
+    // 3.13:1 / 2.24:1 there, both failing the 4.5:1 AA text floor, so
+    // `text.brand` (the vetted literal-text token, purple.300 dark) was
+    // used instead: 7.45:1 / 5.32:1 against the same two backgrounds.
+    // `bg.brand`'s own dark value later moved to purple.300 (2026-08-21,
+    // see guidelines/03-token-system-spec.md) and would now pass as text
+    // too (same 7.45:1/5.32:1, since both tokens converged on the same
+    // primitive step) — but this file still uses `text.brand`, its own
+    // independently-tracked token, rather than switching to `bg.brand`
+    // now that the two happen to coincide; no functional change intended
+    // here, this note only corrects the stale numbers the original
+    // decision was based on. Light mode is unaffected: `text.brand` and
+    // `bg.brand` are byte-identical there (both purple.600), so this was
+    // always a dark-mode-only distinction.
     // (Originally used `text.link`, which shared these exact values —
     // switched to `text.brand` 2026-08-20 when `text.link` was de-branded
     // to a shared blue across every theme; these active Brand/Mode labels

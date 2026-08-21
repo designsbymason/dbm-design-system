@@ -49,7 +49,7 @@
 }
 
 .solidNeutral {
-  background-color: var(--dbm-bg-neutral-strong);
+  background-color: var(--dbm-bg-neutral);
   color: var(--dbm-text-on-neutral);
 }
 
@@ -102,7 +102,7 @@
 
 .outlineNeutral {
   background-color: transparent;
-  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-neutral-strong);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-strong);
   color: var(--dbm-text-secondary);
 }
 
@@ -199,7 +199,7 @@
 }
 
 .interactive.solidNeutral:hover:not(.selected) {
-  background-color: var(--dbm-bg-neutral-strong-hover);
+  background-color: var(--dbm-bg-neutral-hover);
 }
 
 .interactive.solidInfo:hover:not(.selected) {
@@ -310,7 +310,7 @@
 .selected.solidNeutral {
   box-shadow:
     0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
-    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-neutral-strong);
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-strong);
 }
 
 .selected.solidInfo {
@@ -342,7 +342,7 @@
    token `solid{Tone}` uses) with the matching `text.on-{tone}` text,
    rather than the light `-subtle` tint. The border itself is unchanged
    from the unselected `.outline{Tone}` rule above — same border token
-   (`border.neutral-strong`/`border.brand`/`border.danger`/
+   (`border.strong`/`border.brand`/`border.danger`/
    `border.warning`/`border.success`/`border.info`, whichever that
    tone's own unselected rule uses), redeclared here only to win the
    cascade over the generic `.selected` rule's own `currentColor` ring
@@ -370,9 +370,9 @@
 }
 
 .selected.outlineNeutral {
-  background-color: var(--dbm-bg-neutral-strong);
+  background-color: var(--dbm-bg-neutral);
   color: var(--dbm-text-on-neutral);
-  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-neutral-strong);
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-strong);
 }
 
 .selected.outlineInfo {

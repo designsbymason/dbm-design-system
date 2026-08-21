@@ -119,7 +119,7 @@
 }
 
 .solidNeutral {
-  background-color: var(--dbm-bg-neutral-strong);
+  background-color: var(--dbm-bg-neutral);
   color: var(--dbm-text-on-neutral);
 }
 
@@ -198,7 +198,7 @@
  * around each tone's old, weaker dark value) were all retired.
  */
 .dotBrand {
-  background-color: var(--dbm-bg-brand-indicator);
+  background-color: var(--dbm-bg-brand);
 }
 
 .dotNeutral {
