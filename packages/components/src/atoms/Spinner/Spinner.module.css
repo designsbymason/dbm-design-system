@@ -35,6 +35,22 @@
   color: var(--dbm-icon-disabled);
 }
 
+.toneDanger {
+  color: var(--dbm-icon-danger);
+}
+
+.toneWarning {
+  color: var(--dbm-icon-warning);
+}
+
+.toneSuccess {
+  color: var(--dbm-icon-success);
+}
+
+.toneInfo {
+  color: var(--dbm-icon-info);
+}
+
 .toneOnBrand {
   color: var(--dbm-icon-on-brand);
 }

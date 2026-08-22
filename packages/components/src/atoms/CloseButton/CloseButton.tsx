@@ -33,11 +33,19 @@ const iconSizeForCloseButtonSize: Record<CloseButtonSize, "xs" | "sm" | "md"> = 
  * ```tsx
  * <CloseButton onClick={() => setOpen(false)} />
  * <CloseButton size="sm" aria-label="Remove tag" onClick={onRemove} />
+ * <CloseButton size="md" iconSize="md" aria-label="Remove tag" onClick={onRemove} />
  * ```
  */
 export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
   (
-    { size = "md", className, type = "button", "aria-label": ariaLabel, ...props },
+    {
+      size = "md",
+      iconSize,
+      className,
+      type = "button",
+      "aria-label": ariaLabel,
+      ...props
+    },
     ref,
   ) => (
     <button
@@ -47,7 +55,7 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
       className={cx(styles.root, sizeClass[size], className)}
       {...props}
     >
-      <Icon icon={XIcon} size={iconSizeForCloseButtonSize[size]} />
+      <Icon icon={XIcon} size={iconSize ?? iconSizeForCloseButtonSize[size]} />
     </button>
   ),
 );

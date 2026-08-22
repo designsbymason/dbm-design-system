@@ -12,10 +12,7 @@ import type { TagProps, TagSize, TagTone, TagVariant } from "./Tag.types";
 // in these two states — solid always, outline once selected (it converges
 // to solid's own look, see Tag.module.css). The icon must not just inherit
 // that value via currentColor; it gets its own explicit icon.on-{tone}
-// instead. Every other state (subtle, unselected outline) colors its label
-// with a plain text.{tone}/text.secondary/text.brand token, which the icon
-// inheriting via currentColor is fine for — those aren't "on-a-solid-fill"
-// tokens, so no override is needed there.
+// instead.
 const onToneIcon: Record<TagTone, IconTone> = {
   brand: "on-brand",
   danger: "on-danger",
@@ -23,6 +20,22 @@ const onToneIcon: Record<TagTone, IconTone> = {
   success: "on-success",
   info: "on-info",
   neutral: "on-neutral",
+};
+
+// `subtle`'s and unselected `outline`'s own label color is a plain
+// text.{tone} (text.secondary for neutral, no text.neutral token exists)
+// — same category problem, same fix, just the non-"on-" sibling since
+// neither is a solid-fill pairing. Shared by both variants (2026-08-22 —
+// outline's own icon was still inheriting currentColor until this pass,
+// pending back when only subtle had been fixed), renamed from
+// `subtleToneIcon` since it's no longer subtle-specific.
+const standaloneToneIcon: Record<TagTone, IconTone> = {
+  brand: "brand",
+  danger: "danger",
+  warning: "warning",
+  success: "success",
+  info: "info",
+  neutral: "secondary",
 };
 
 const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
@@ -61,7 +74,21 @@ const sizeClass: Record<TagSize, string | undefined> = {
 };
 
 // The remove button mirrors the same mapping — both are accessory glyphs
-// flanking the label, sized the same way for visual symmetry.
+// flanking the label, sized the same way for visual symmetry. Also used
+// directly as CloseButton's own `size`/`iconSize` props below (not a
+// separate `removeSizeForTagSize` alias any more) — CloseButton's own
+// `size` alone used to double-map through its internal, deliberately
+// smaller-glyph-in-a-bigger-box scale (`iconSizeForCloseButtonSize`),
+// rendering the "×" visibly smaller than leading/trailing (found live:
+// 12px vs this scale's own 20px at `xl`, not just a rounding difference)
+// and reading as vertically off besides — same box, smaller centered
+// glyph inside it looks like a position shift, not just a size one.
+// Passing `iconSize` explicitly bypasses that remapping so the glyph
+// matches exactly; `size` still sets the button's own tap-target box,
+// which now equals the glyph's own size (zero extra padding) rather than
+// the deliberately-larger-than-glyph box CloseButton defaults to
+// standalone — matching how every other icon in this component has no
+// extra padding of its own either.
 const iconSizeForTagSize: Record<TagSize, "xs" | "sm" | "md"> = {
   xs: "xs",
   sm: "xs",
@@ -69,9 +96,6 @@ const iconSizeForTagSize: Record<TagSize, "xs" | "sm" | "md"> = {
   lg: "md",
   xl: "md",
 };
-
-const removeSizeForTagSize: Record<TagSize, "xs" | "sm" | "md"> =
-  iconSizeForTagSize;
 
 /**
  * A labeled pill for categorization or active filters, with an optional
@@ -137,8 +161,14 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     );
     const isSelected = isSelectionControlled ? selected : uncontrolledSelected;
     const isInteractive = isSelectable || onClick !== undefined;
+    // Every `TagVariant` now resolves to one of these two icon-tone
+    // families — `solid` always, `outline` once selected (both real
+    // solid-fill pairings); `subtle` always, `outline` unselected (both
+    // standalone-on-a-non-solid-fill) — so this covers every case
+    // directly, no `undefined` fallback left to reach (2026-08-22, once
+    // outline's own unselected icon got the same fix subtle already had).
     const isOnSolidFill = variant === "solid" || (variant === "outline" && isSelected);
-    const iconTone = isOnSolidFill ? onToneIcon[tone] : undefined;
+    const iconTone = isOnSolidFill ? onToneIcon[tone] : standaloneToneIcon[tone];
 
     const handleActivate = () => {
       if (isSelectable) {
@@ -240,7 +270,8 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
             // an icon.on-{tone} tone here.
             <CloseButton
               aria-label={removeLabel ?? `Remove ${children?.toString() ?? ""}`}
-              size={removeSizeForTagSize[size]}
+              size={iconSizeForTagSize[size]}
+              iconSize={iconSizeForTagSize[size]}
               className={styles.remove}
               onClick={handleRemoveClick}
             />

@@ -207,8 +207,14 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
     // widen to `||` for `alt`/`initials` too: whichever ends up last in the
     // chain has nothing further to fall through to regardless of operator.
     const identity = name || alt || initials;
-    const activeColorClass =
-      colorful && identity ? colorClass[hashToColorFamily(identity)] : undefined;
+    // `.content`'s own text color (text.brand by default, text.{family}
+    // once `colorful` hashes to one — see Avatar.module.css) needs a
+    // matching *icon* tone for the icon fallback below, not the class
+    // list a background/border/text-color rule reads off of — resolved
+    // once here so both can share it.
+    const colorFamily: ColorFamily =
+      colorful && identity ? hashToColorFamily(identity) : "brand";
+    const activeColorClass = colorful && identity ? colorClass[colorFamily] : undefined;
 
     const hasWarnedSrcRef = useRef(false);
     const hasWarnedNoNameRef = useRef(false);
@@ -351,7 +357,11 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
               {resolvedInitials}
             </span>
           ) : (
-            <Icon icon={UserIcon} size={fallbackIconSizeFor[baseSize]} />
+            <Icon
+              icon={UserIcon}
+              size={fallbackIconSizeFor[baseSize]}
+              tone={colorFamily}
+            />
           )}
         </span>
         {resolvedStatus &&
