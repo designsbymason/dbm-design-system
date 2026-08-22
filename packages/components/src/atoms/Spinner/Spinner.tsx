@@ -17,6 +17,12 @@ const toneClass: Record<IconTone, string | undefined> = {
   secondary: styles.toneSecondary,
   brand: styles.toneBrand,
   disabled: styles.toneDisabled,
+  "on-brand": styles.toneOnBrand,
+  "on-danger": styles.toneOnDanger,
+  "on-warning": styles.toneOnWarning,
+  "on-success": styles.toneOnSuccess,
+  "on-info": styles.toneOnInfo,
+  "on-neutral": styles.toneOnNeutral,
 };
 
 /**

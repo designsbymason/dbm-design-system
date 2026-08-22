@@ -58,14 +58,14 @@ primitive step depending on the active brand/mode — that indirection is the en
 ### Background (`bg.*`)
 
 <SemanticSwatchGrid tokens={[
-  { token: "bg.canvas", usage: "Canvas and playground container" },
-  { token: "bg.overlay", usage: "Dimming scrim behind Dialog/Drawer overlays" },
-  { token: "bg.skeleton", usage: "Skeleton's loading-placeholder fill — verified visible against bg.surface, unlike bg.neutral-subtle" },
-  { token: "bg.surface", usage: "Page, card, sheet and drawer background" },
-  { token: "bg.brand", usage: "Primary action fill (Button primary, focus accents); also non-text graphical status indicators (Badge's brand-tone dot mode)" },
+  { token: "bg.canvas", usage: "Background for a live-preview or playground container" },
+  { token: "bg.overlay", usage: "Dimming scrim behind a modal or panel overlay" },
+  { token: "bg.skeleton", usage: "Loading-placeholder fill for skeleton/shimmer states" },
+  { token: "bg.surface", usage: "Default background for pages, cards and other primary surfaces" },
+  { token: "bg.brand", usage: "Primary action fill; also used for solid, non-text status indicators" },
   { token: "bg.brand-hover", usage: "Hover state of bg.brand" },
   { token: "bg.brand-subtle", usage: "Light brand tint — selected states, subtle highlights" },
-  { token: "bg.brand-subtle-hover", usage: "Hover state of bg.brand-subtle (e.g. Avatar's interactive mode)" },
+  { token: "bg.brand-subtle-hover", usage: "Hover state of bg.brand-subtle" },
   { token: "bg.danger", usage: "Destructive action fill; also non-text graphical status indicators" },
   { token: "bg.danger-hover", usage: "Hover state of bg.danger" },
   { token: "bg.danger-subtle", usage: "Light danger tint" },
@@ -82,11 +82,11 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "bg.info-hover", usage: "Hover state of bg.info" },
   { token: "bg.info-subtle", usage: "Light info tint" },
   { token: "bg.info-subtle-hover", usage: "Hover state of bg.info-subtle" },
-  { token: "bg.neutral", usage: "Neutral status fill (offline indicator, Badge's neutral dot) and solid neutral fill for hosting text (Badge/Tag's solid-neutral variant, Tooltip) — merged from two separate tokens (2026-08-21)" },
-  { token: "bg.neutral-hover", usage: "Hover state of bg.neutral (e.g. Tag's solid-neutral clickable/selectable mode) — same value in light and dark themes, unlike every other *-hover token" },
-  { token: "bg.neutral-subtle", usage: "Hover fill for tertiary/ghost controls, dashboard panel, neutral accent" },
-  { token: "bg.neutral-subtle-hover", usage: "Hover state of bg.neutral-subtle (e.g. Tag's subtle-variant clickable/selectable mode)" },
-  { token: "bg.code", usage: "Inline code/token-reference pill background (Storybook docs only)" },
+  { token: "bg.neutral", usage: "Neutral-tone fill for status indicators, and for solid surfaces that host text" },
+  { token: "bg.neutral-hover", usage: "Hover state of bg.neutral — uses the same value in light and dark themes, unlike other hover tokens" },
+  { token: "bg.neutral-subtle", usage: "Hover fill for low-emphasis controls, dashboard panels, and general neutral tinting" },
+  { token: "bg.neutral-subtle-hover", usage: "Hover state of bg.neutral-subtle" },
+  { token: "bg.code", usage: "Background for inline code and token references (documentation only)" },
 ]} />
 
 ### Text (`text.*`)
@@ -94,20 +94,20 @@ primitive step depending on the active brand/mode — that indirection is the en
 <SemanticSwatchGrid tokens={[
   { token: "text.primary", usage: "Default body/heading text" },
   { token: "text.secondary", usage: "De-emphasized text (descriptions, captions)" },
-  { token: "text.tertiary", usage: "Most muted literal text — placeholders, Divider labels" },
+  { token: "text.tertiary", usage: "Most muted literal text — placeholders and inline labels" },
   { token: "text.disabled", usage: "Text inside a disabled control" },
-  { token: "text.on-brand", usage: "Text/icons on a solid bg.brand fill" },
-  { token: "text.on-danger", usage: "Text/icons on a solid bg.danger fill" },
-  { token: "text.on-info", usage: "Text/icons on a solid bg.info fill" },
-  { token: "text.on-success", usage: "Text/icons on a solid bg.success fill" },
-  { token: "text.on-warning", usage: "Text/icons on a solid bg.warning fill" },
-  { token: "text.on-neutral", usage: "Text/icons on a solid bg.neutral fill" },
-  { token: "text.link", usage: "Inline link text" },
   { token: "text.brand", usage: "Accent text in the brand color (emphasis/labels, not links)" },
+  { token: "text.on-brand", usage: "Text on a solid bg.brand fill" },
   { token: "text.danger", usage: "Danger-tone literal text" },
+  { token: "text.on-danger", usage: "Text on a solid bg.danger fill" },
   { token: "text.warning", usage: "Warning-tone literal text" },
+  { token: "text.on-warning", usage: "Text on a solid bg.warning fill" },
   { token: "text.success", usage: "Success-tone literal text" },
+  { token: "text.on-success", usage: "Text on a solid bg.success fill" },
   { token: "text.info", usage: "Info-tone literal text" },
+  { token: "text.on-info", usage: "Text on a solid bg.info fill" },
+  { token: "text.on-neutral", usage: "Text on a solid bg.neutral fill" },
+  { token: "text.link", usage: "Inline link text" },
 ]} />
 
 ### Border (`border.*`)
@@ -115,11 +115,11 @@ primitive step depending on the active brand/mode — that indirection is the en
 <SemanticSwatchGrid tokens={[
   { token: "border.default", usage: "Standard control/card border" },
   { token: "border.neutral-subtle", usage: "Faint dividers and low-emphasis borders" },
-  { token: "border.neutral", usage: "Hover-state border emphasis" },
-  { token: "border.neutral-strong", usage: "Neutral-tone state-identifying border (e.g. Tag's outline-variant neutral border)" },
-  { token: "border.strong", usage: "Richer neutral accent ring (e.g. Tag's selected solid-neutral offset halo)" },
+  { token: "border.neutral", usage: "Emphasized neutral border, used as either a resting or hover state depending on the control" },
+  { token: "border.neutral-strong", usage: "Neutral-tone state-identifying border" },
+  { token: "border.strong", usage: "Richer neutral accent border or ring" },
   { token: "border.focus", usage: "Focus-visible outline color" },
-  { token: "border.brand", usage: "Default brand-accent border, real (not decorative) — not yet consumed by any component" },
+  { token: "border.brand", usage: "Default brand-accent border, verified as a real (non-decorative) state indicator" },
   { token: "border.brand-subtle", usage: "Decorative brand-accent border (not focus/state)" },
   { token: "border.danger", usage: "Error-state input border; also the richer accent-ring role" },
   { token: "border.danger-subtle", usage: "Decorative danger-tinted ring" },
@@ -129,7 +129,7 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "border.success-subtle", usage: "Decorative success-tinted ring" },
   { token: "border.info", usage: "Info-tone state-identifying border; also the richer accent-ring role" },
   { token: "border.info-subtle", usage: "Decorative info-tinted ring" },
-  { token: "border.code", usage: "Border for the bg.code pill above (Storybook docs only)" },
+  { token: "border.code", usage: "Border paired with the inline-code background (documentation only)" },
 ]} />
 
 ### Icon (`icon.*`)
@@ -137,8 +137,9 @@ primitive step depending on the active brand/mode — that indirection is the en
 <SemanticSwatchGrid tokens={[
   { token: "icon.default", usage: "Default icon color" },
   { token: "icon.secondary", usage: "Muted/decorative icon color" },
-  { token: "icon.brand", usage: "Brand-colored icon accents" },
   { token: "icon.disabled", usage: "Icon color inside a disabled control" },
+  { token: "icon.brand", usage: "Brand-colored icon accents" },
+  { token: "icon.on-brand", usage: "Icon on a solid bg.brand fill" },
   { token: "icon.danger", usage: "Standalone danger-tone icon" },
   { token: "icon.on-danger", usage: "Icon on a solid bg.danger fill" },
   { token: "icon.warning", usage: "Standalone warning-tone icon" },
@@ -147,6 +148,7 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "icon.on-success", usage: "Icon on a solid bg.success fill" },
   { token: "icon.info", usage: "Standalone info-tone icon" },
   { token: "icon.on-info", usage: "Icon on a solid bg.info fill" },
+  { token: "icon.on-neutral", usage: "Icon on a solid bg.neutral fill" },
 ]} />
 
 ## Contrast verification

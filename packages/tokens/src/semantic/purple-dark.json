@@ -326,6 +326,11 @@
       "$value": "{color.purple.300}",
       "$description": "Moved from purple.400 to purple.300 (2026-08-09) at explicit direction. purple.400 was a real but tight pass of the 3:1 WCAG 1.4.11 non-text floor (icons are graphical/UI elements, not text, so 3:1 is the correct floor, not 4.5:1) against bg.surface — 3.56:1 — but failed outright against bg.canvas at 2.43:1, a real surface in this system (the live Storybook Canvas/Playground background). purple.300 clears both: 5.32:1 on bg.surface, 3.63:1 on bg.canvas — the latter now also clears the stricter 4.5:1 text floor, for extra headroom given icon.brand can end up adjacent to literal text using the same brand accent."
     },
+    "on-brand": {
+      "$type": "color",
+      "$value": "{color.gray.900}",
+      "$description": "New token (2026-08-22), completing the icon and icon.on- pattern for brand — dark counterpart to icon.on-brand (light); see that token's own description. gray.900 on bg.brand's own dark value (purple.300/emerald.300) = 7.45:1/8.51:1."
+    },
     "disabled": {
       "$type": "color",
       "$value": "{color.gray.700}"
@@ -369,6 +374,11 @@
       "$type": "color",
       "$value": "{color.blue.900}",
       "$description": "New token (2026-08-20), added as part of the info token consolidation — dark counterpart to icon.on-info (light); see that token's own description for its purpose. blue.900 on bg.info's own dark value (blue.300) = 8.20:1."
+    },
+    "on-neutral": {
+      "$type": "color",
+      "$value": "{color.gray.900}",
+      "$description": "New token (2026-08-22), dark counterpart to icon.on-neutral (light); see that token's own description. gray.900 on bg.neutral's own dark value (gray.300) = 8.21:1."
     }
   }
 }

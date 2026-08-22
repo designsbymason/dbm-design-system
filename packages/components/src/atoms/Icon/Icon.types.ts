@@ -8,7 +8,17 @@ import type { ComponentPropsWithoutRef } from "react";
 export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 
 /** Semantic icon color, matching the `--dbm-icon-*` token set. */
-export type IconTone = "default" | "secondary" | "brand" | "disabled";
+export type IconTone =
+  | "default"
+  | "secondary"
+  | "brand"
+  | "disabled"
+  | "on-brand"
+  | "on-danger"
+  | "on-warning"
+  | "on-success"
+  | "on-info"
+  | "on-neutral";
 
 export interface IconProps extends Omit<
   ComponentPropsWithoutRef<"svg">,
@@ -35,8 +45,12 @@ export interface IconProps extends Omit<
   weight?: IconWeight;
   /**
    * Semantic color tone, mapped to the `--dbm-icon-*` token set. Omit to
-   * inherit `currentColor` from surrounding text (e.g. an icon inside a
-   * `Button`, which should match the button's own text color).
+   * inherit `currentColor` from surrounding context instead — the right
+   * choice when an icon should always match its container's own color
+   * regardless of what that is (e.g. `CloseButton`, reused across many
+   * differently-colored contexts). Prefer an explicit `on-{tone}` tone
+   * over inheriting from a `text.on-{tone}` fill specifically — `text.*`
+   * tokens are for text, not icons, even when the color happens to match.
    */
   tone?: IconTone;
   /**

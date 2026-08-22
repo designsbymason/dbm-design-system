@@ -30,7 +30,7 @@ describe("IconButton", () => {
     const button = screen.getByRole("button");
     expect(button).toHaveStyle({
       backgroundColor: "var(--dbm-bg-danger)",
-      color: "var(--dbm-text-on-danger)",
+      color: "var(--dbm-icon-on-danger)",
       paddingBlock: "var(--dbm-space-3)",
       paddingInline: "var(--dbm-space-3)",
     });

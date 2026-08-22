@@ -4,8 +4,26 @@ import { forwardRef, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { CloseButton } from "../CloseButton";
 import { Icon } from "../Icon";
+import type { IconTone } from "../Icon";
 import styles from "./Tag.module.css";
 import type { TagProps, TagSize, TagTone, TagVariant } from "./Tag.types";
+
+// text.on-{tone} (a text token, not an icon one) is what colors the label
+// in these two states — solid always, outline once selected (it converges
+// to solid's own look, see Tag.module.css). The icon must not just inherit
+// that value via currentColor; it gets its own explicit icon.on-{tone}
+// instead. Every other state (subtle, unselected outline) colors its label
+// with a plain text.{tone}/text.secondary/text.brand token, which the icon
+// inheriting via currentColor is fine for — those aren't "on-a-solid-fill"
+// tokens, so no override is needed there.
+const onToneIcon: Record<TagTone, IconTone> = {
+  brand: "on-brand",
+  danger: "on-danger",
+  warning: "on-warning",
+  success: "on-success",
+  info: "on-info",
+  neutral: "on-neutral",
+};
 
 const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
   subtle: {
@@ -119,6 +137,8 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     );
     const isSelected = isSelectionControlled ? selected : uncontrolledSelected;
     const isInteractive = isSelectable || onClick !== undefined;
+    const isOnSolidFill = variant === "solid" || (variant === "outline" && isSelected);
+    const iconTone = isOnSolidFill ? onToneIcon[tone] : undefined;
 
     const handleActivate = () => {
       if (isSelectable) {
@@ -186,11 +206,11 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
         {...props}
       >
         {leadingIcon && (
-          <Icon icon={leadingIcon} size={iconSizeForTagSize[size]} />
+          <Icon icon={leadingIcon} size={iconSizeForTagSize[size]} tone={iconTone} />
         )}
         {children}
         {trailingIcon && (
-          <Icon icon={trailingIcon} size={iconSizeForTagSize[size]} />
+          <Icon icon={trailingIcon} size={iconSizeForTagSize[size]} tone={iconTone} />
         )}
         {removable &&
           (isInteractive ? (
@@ -211,9 +231,13 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
               className={cx(styles.remove, styles.removeDecorative)}
               onClick={handleRemoveClick}
             >
-              <Icon icon={XIcon} size={iconSizeForTagSize[size]} />
+              <Icon icon={XIcon} size={iconSizeForTagSize[size]} tone={iconTone} />
             </span>
           ) : (
+            // CloseButton always inherits currentColor by design (see its
+            // own JSDoc) so it reads correctly across every context it's
+            // reused in, not just Tag — left as-is rather than forced onto
+            // an icon.on-{tone} tone here.
             <CloseButton
               aria-label={removeLabel ?? `Remove ${children?.toString() ?? ""}`}
               size={removeSizeForTagSize[size]}

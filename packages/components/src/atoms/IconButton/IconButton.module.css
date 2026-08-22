@@ -64,12 +64,15 @@
   padding-inline: var(--dbm-space-3);
 }
 
-/* Variants — identical palette to Button, kept in its own module since each
-   component folder is self-contained per this system's file conventions. */
+/* Variants — same fills as Button, kept in its own module since each
+   component folder is self-contained per this system's file conventions.
+   `color` here uses `icon.on-{tone}`, not `text.on-{tone}` — unlike
+   Button, this component renders nothing but an icon, so its `color`
+   should never have been typed as a text token in the first place. */
 
 .variantPrimary {
   background-color: var(--dbm-bg-brand);
-  color: var(--dbm-text-on-brand);
+  color: var(--dbm-icon-on-brand);
 }
 
 .variantPrimary:not(:disabled):hover {
@@ -106,7 +109,7 @@
 
 .variantDestructive {
   background-color: var(--dbm-bg-danger);
-  color: var(--dbm-text-on-danger);
+  color: var(--dbm-icon-on-danger);
 }
 
 .variantDestructive:not(:disabled):hover {

@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { forwardRef } from "react";
 import type { MouseEvent } from "react";
 import { Icon } from "../Icon";
+import type { IconTone } from "../Icon";
 import styles from "./Button.module.css";
 import type { ButtonProps, ButtonSize, ButtonVariant } from "./Button.types";
 
@@ -12,6 +13,20 @@ const variantClass: Record<ButtonVariant, string | undefined> = {
   tertiary: styles.variantTertiary,
   ghost: styles.variantGhost,
   destructive: styles.variantDestructive,
+};
+
+// `primary`/`destructive` sit on a solid bg.brand/bg.danger fill, so their
+// text uses text.on-brand/text.on-danger — the icon must NOT simply inherit
+// that (text.* tokens are for text, not icons), so it gets its own explicit
+// icon.on-{tone} instead. `secondary`/`tertiary`/`ghost` use text.primary/
+// text.secondary for their label, which the icon inheriting via
+// `currentColor` is fine for (those aren't "on-a-solid-fill" tokens).
+const iconToneForVariant: Record<ButtonVariant, IconTone | undefined> = {
+  primary: "on-brand",
+  secondary: undefined,
+  tertiary: undefined,
+  ghost: undefined,
+  destructive: "on-danger",
 };
 
 const sizeClass: Record<ButtonSize, string | undefined> = {
@@ -69,6 +84,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Component = asChild ? Slot : "button";
     const iconSize = iconSizeForButtonSize[size];
+    const iconTone = iconToneForVariant[variant];
     const isDisabled = disabled ?? isLoading;
     // `Slot` can't take a native `disabled` attribute (the child might be
     // an <a> or any other element) — `aria-disabled` plus this handler
@@ -109,11 +125,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             {isLoading ? (
               <span className={styles.spinner} aria-hidden="true" />
             ) : (
-              leadingIcon && <Icon icon={leadingIcon} size={iconSize} />
+              leadingIcon && (
+                <Icon icon={leadingIcon} size={iconSize} tone={iconTone} />
+              )
             )}
             {isLoading ? (loadingText ?? children) : children}
             {!isLoading && trailingIcon && (
-              <Icon icon={trailingIcon} size={iconSize} />
+              <Icon icon={trailingIcon} size={iconSize} tone={iconTone} />
             )}
           </>
         )}

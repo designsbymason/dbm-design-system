@@ -35,6 +35,30 @@
   color: var(--dbm-icon-disabled);
 }
 
+.toneOnBrand {
+  color: var(--dbm-icon-on-brand);
+}
+
+.toneOnDanger {
+  color: var(--dbm-icon-on-danger);
+}
+
+.toneOnWarning {
+  color: var(--dbm-icon-on-warning);
+}
+
+.toneOnSuccess {
+  color: var(--dbm-icon-on-success);
+}
+
+.toneOnInfo {
+  color: var(--dbm-icon-on-info);
+}
+
+.toneOnNeutral {
+  color: var(--dbm-icon-on-neutral);
+}
+
 /* Sizes */
 
 .sizeXs {

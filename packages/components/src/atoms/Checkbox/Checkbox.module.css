@@ -48,7 +48,8 @@
 
 .indicator {
   align-items: center;
-  color: var(--dbm-text-on-brand);
+  /* icon.on-brand, not text.on-brand — this hosts the check/dash icon, not text. */
+  color: var(--dbm-icon-on-brand);
   display: flex;
   justify-content: center;
 }

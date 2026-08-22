@@ -18,6 +18,12 @@ const toneClass: Record<IconTone, string | undefined> = {
   secondary: styles.toneSecondary,
   brand: styles.toneBrand,
   disabled: styles.toneDisabled,
+  "on-brand": styles.toneOnBrand,
+  "on-danger": styles.toneOnDanger,
+  "on-warning": styles.toneOnWarning,
+  "on-success": styles.toneOnSuccess,
+  "on-info": styles.toneOnInfo,
+  "on-neutral": styles.toneOnNeutral,
 };
 
 /**
@@ -31,6 +37,7 @@ const toneClass: Record<IconTone, string | undefined> = {
  * <Icon icon={Wallet} size="lg" />
  * <Icon icon={Wallet} label="Wallet balance" />
  * <Icon icon={Wallet} tone="brand" />
+ * <Icon icon={Wallet} tone="on-brand" />
  * ```
  */
 export const Icon = forwardRef<SVGSVGElement, IconProps>(

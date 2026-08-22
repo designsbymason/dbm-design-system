@@ -325,6 +325,11 @@
       "$type": "color",
       "$value": "{color.emerald.600}"
     },
+    "on-brand": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-08-22), completing the icon and icon.on- pattern for brand (danger/warning/success/info already had both) — same value as text.on-brand (white light / gray.900 dark), for an icon sitting on a solid bg.brand fill. White on bg.brand's own light value (purple.600/emerald.700) = 7.37:1/6.08:1."
+    },
     "disabled": {
       "$type": "color",
       "$value": "{color.gray.300}"
@@ -368,6 +373,11 @@
       "$type": "color",
       "$value": "{color.neutral.white}",
       "$description": "New token (2026-08-20), added as part of the info token consolidation — same value as text.on-info (white light / blue.900 dark), for an icon sitting on a solid bg.info fill. White on blue.600 = 4.71:1."
+    },
+    "on-neutral": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-08-22), added so Tag's solid-neutral/selected-outline-neutral icons no longer inherit color from text.on-neutral (a text token, not an icon one) — same value as text.on-neutral (white light / gray.900 dark), for an icon sitting on a solid bg.neutral fill. White on bg.neutral's own light value (gray.600) = 4.70:1."
     }
   }
 }
