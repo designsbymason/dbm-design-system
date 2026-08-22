@@ -120,6 +120,21 @@ const meta: Meta<typeof Tag> = {
       description:
         "Called with the next selected state whenever the tag is toggled (click, or Enter/Space while focused).",
     },
+    disabled: {
+      control: "boolean",
+      description:
+        "Disables interaction — blocks onClick/selection toggling and (when removable) the remove affordance. Only has an effect once the tag is interactive; Tag warns once in development otherwise. Demo via the \"Disabled\" story below.",
+    },
+    "aria-label": {
+      control: "text",
+      description:
+        "Explicit accessible-name override for the tag's interactive role. Rarely needed — visible `children` already provide the accessible name in the common case.",
+    },
+    "aria-labelledby": {
+      control: false,
+      description:
+        "Points to the id of an existing, already-visible element to use as the accessible name instead.",
+    },
     // `control: false` (className/style/id/data-testid) — values that only
     // mean something wired up in real consuming code, not in an isolated
     // Storybook canvas. Matches Skeleton/Avatar/Badge's established
@@ -166,6 +181,8 @@ const meta: Meta<typeof Tag> = {
     removable: false,
     onRemove: fn(),
     removeLabel: "Remove Design",
+    disabled: false,
+    "aria-label": "",
   },
 };
 
@@ -318,7 +335,14 @@ export const AllSizes: Story = {
     removeLabel: { control: false },
   },
   render: (args) => (
-    <div style={{ display: "flex", gap: "var(--dbm-space-2)", alignItems: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "var(--dbm-space-2)",
+        alignItems: "center",
+        flexWrap: "wrap",
+      }}
+    >
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Tag key={size} {...args} size={size} removeLabel={undefined}>
           Size {size}
@@ -421,6 +445,28 @@ export const SelectableFilterGroup: Story = {
         ))}
       </div>
     );
+  },
+};
+
+export const Disabled: Story = {
+  name: "Disabled (interactive)",
+  // `disabled` only has an effect once the tag is interactive — this
+  // story fixes `onClick`/`defaultSelected`/`onSelectedChange` so the
+  // control panel's own `disabled` toggle demonstrates a real blocked
+  // interaction, not the dev-warning no-op case (a plain `<Tag disabled>`
+  // with nothing else). Removable too, so both the click-block and the
+  // remove-block are visible in one instance — its decorative remove
+  // glyph shares the same dim/blocked treatment as the rest of the tag
+  // (see Tag.module.css's own `.disabled` comment for why no separate
+  // per-glyph opacity is needed).
+  args: {
+    tone: "info",
+    removable: true,
+    onRemove: fn(),
+    disabled: true,
+    defaultSelected: false,
+    onSelectedChange: fn(),
+    onClick: fn(),
   },
 };
 
@@ -606,5 +652,44 @@ export const RemoveViaKeyboardInteraction: Story = {
     await expect(args.onRemove).toHaveBeenCalledTimes(1);
     // Delete/Backspace only removes — it must not also toggle selection.
     await expect(args.onSelectedChange).not.toHaveBeenCalled();
+  },
+};
+
+export const DisabledInteraction: Story = {
+  name: "Interaction: disabled blocks click, keyboard, and remove",
+  args: {
+    disabled: true,
+    onClick: fn(),
+    defaultSelected: false,
+    onSelectedChange: fn(),
+    removable: true,
+    onRemove: fn(),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tag = canvas.getByRole("button", { name: "Design" });
+    await expect(tag).toHaveAttribute("aria-disabled", "true");
+
+    // Still focusable via Tab (aria-disabled, not a real removed-from-
+    // tab-order native disabled) — the tag stays discoverable to
+    // keyboard/AT users, it just doesn't activate. Checked *before* the
+    // click below: a real browser focuses a clicked focusable element as
+    // a side effect of the click itself, so tabbing afterward would move
+    // focus *away* from an already-focused tag rather than onto it.
+    await userEvent.tab();
+    await expect(tag).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await expect(args.onSelectedChange).not.toHaveBeenCalled();
+    await userEvent.keyboard("{Delete}");
+    await expect(args.onRemove).not.toHaveBeenCalled();
+
+    await userEvent.click(tag);
+    await expect(args.onClick).not.toHaveBeenCalled();
+    await expect(args.onSelectedChange).not.toHaveBeenCalled();
+
+    const removeIcon = canvasElement.querySelector('[class*="removeDecorative"]');
+    if (!removeIcon) throw new Error("Decorative remove icon not found");
+    await userEvent.click(removeIcon);
+    await expect(args.onRemove).not.toHaveBeenCalled();
   },
 };

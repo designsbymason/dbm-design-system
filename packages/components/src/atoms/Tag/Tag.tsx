@@ -130,6 +130,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
       selected,
       defaultSelected,
       onSelectedChange,
+      disabled = false,
       className,
       children,
       ...props
@@ -137,6 +138,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     ref,
   ) => {
     const hasWarnedRemovableRef = useRef(false);
+    const hasWarnedDisabledRef = useRef(false);
 
     if (process.env.NODE_ENV !== "production") {
       if (removable && !onRemove && !hasWarnedRemovableRef.current) {
@@ -161,6 +163,19 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     );
     const isSelected = isSelectionControlled ? selected : uncontrolledSelected;
     const isInteractive = isSelectable || onClick !== undefined;
+    // Only meaningful once the tag is already interactive — a plain
+    // read-only (or merely removable-but-not-interactive, real-CloseButton)
+    // tag has nothing to disable, mirroring Avatar's own `disabled` gate.
+    const isDisabled = isInteractive && disabled;
+
+    if (process.env.NODE_ENV !== "production") {
+      if (disabled && !isInteractive && !hasWarnedDisabledRef.current) {
+        hasWarnedDisabledRef.current = true;
+        console.warn(
+          "Tag: `disabled` has no effect unless the tag is interactive — pass `onClick`, `selected`, `defaultSelected`, or `onSelectedChange` too, or remove `disabled`.",
+        );
+      }
+    }
     // Every `TagVariant` now resolves to one of these two icon-tone
     // families — `solid` always, `outline` once selected (both real
     // solid-fill pairings); `subtle` always, `outline` unselected (both
@@ -171,6 +186,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     const iconTone = isOnSolidFill ? onToneIcon[tone] : standaloneToneIcon[tone];
 
     const handleActivate = () => {
+      if (isDisabled) return;
       if (isSelectable) {
         const next = !isSelected;
         if (!isSelectionControlled) {
@@ -198,14 +214,28 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
       }
       // Only reachable when `isInteractive` (this handler isn't attached
       // otherwise) — see the decorative-remove-icon branch below for why
-      // `removable` needs its own keyboard path here at all.
-      if (removable && (event.key === "Delete" || event.key === "Backspace")) {
+      // `removable` needs its own keyboard path here at all. `isDisabled`
+      // itself already implies `isInteractive` (see its own definition
+      // above), so this guard only ever actually blocks anything in
+      // exactly the case it's meant to.
+      if (
+        !isDisabled &&
+        removable &&
+        (event.key === "Delete" || event.key === "Backspace")
+      ) {
         event.preventDefault();
         onRemove?.();
       }
     };
 
+    // Shared by both the decorative-glyph branch (interactive mode, where
+    // `isDisabled` can be `true`) and the standalone `CloseButton` branch
+    // (non-interactive mode, where `isDisabled` is always `false` by
+    // definition — that branch relies on `CloseButton`'s own native
+    // `disabled` handling instead, see the JSX below) — the guard here is
+    // a no-op in the latter case, not dead code.
     const handleRemoveClick = (event: MouseEvent<HTMLElement>) => {
+      if (isDisabled) return;
       event.stopPropagation();
       onRemove?.();
     };
@@ -223,6 +253,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
         aria-keyshortcuts={
           isInteractive && removable ? "Delete Backspace" : undefined
         }
+        aria-disabled={isDisabled || undefined}
         onClick={isInteractive ? handleActivate : undefined}
         onKeyDown={isInteractive ? handleKeyDown : undefined}
         className={cx(
@@ -231,6 +262,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
           sizeClass[size],
           isInteractive && styles.interactive,
           isSelected && styles.selected,
+          isDisabled && styles.disabled,
           className,
         )}
         {...props}

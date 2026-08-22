@@ -1,0 +1,322 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../Badge";
+import { Button } from "../Button";
+import { VisuallyHidden } from "../VisuallyHidden";
+import * as TagStories from "./Tag.stories";
+
+export const propOrder = [
+  "children",
+  "tone",
+  "variant",
+  "size",
+  "leadingIcon",
+  "trailingIcon",
+  "removable",
+  "onRemove",
+  "removeLabel",
+  "onClick",
+  "selected",
+  "defaultSelected",
+  "onSelectedChange",
+  "disabled",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={TagStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Tag" tier="Atom" />
+
+A labeled pill for categorization or active filters, with an optional leading/trailing icon, an
+optional removable ("×") affordance, and an optional clickable/selectable interactive mode. Shares
+`Badge`'s six-tone scale but at larger, touch-friendly sizes suited to interactive contexts like
+filter bars — its own variant scale adds `outline` (a bordered, no-background style) on top of the
+`subtle`/`solid` pair `Badge` also has. Passing `onClick`, `selected`, `defaultSelected`, or
+`onSelectedChange` makes the whole tag focusable and keyboard-activatable, not just visually
+styled; `removable` adds its own independent remove control that composes cleanly with either mode
+— clicking the tag body toggles selection while clicking the "×" removes it, neither triggering the
+other.
+
+### Import
+
+```tsx
+import { Tag } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TagStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={TagStories.Playground}
+  exclude={["onRemove", "onClick", "selected", "defaultSelected", "onSelectedChange", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={TagStories} order={propOrder} />
+
+## Variants
+
+### All tones (subtle)
+
+<Canvas of={TagStories.AllTones} />
+
+### All tones (solid)
+
+<Canvas of={TagStories.Solid} />
+
+### All tones (outline)
+
+<Canvas of={TagStories.Outline} />
+
+### All sizes
+
+<Canvas of={TagStories.AllSizes} />
+
+### With leading icon
+
+<Canvas of={TagStories.WithIcon} />
+
+### With trailing icon
+
+<Canvas of={TagStories.WithTrailingIcon} />
+
+### Clickable (no selection state)
+
+<Canvas of={TagStories.Clickable} />
+
+### Selectable (click to toggle)
+
+<Canvas of={TagStories.Selectable} />
+
+### Selectable (outline)
+
+<Canvas of={TagStories.SelectableOutline} />
+
+### Selectable filter group
+
+<Canvas of={TagStories.SelectableFilterGroup} />
+
+### Disabled (interactive)
+
+<Canvas of={TagStories.Disabled} />
+
+### Removable filter list
+
+<Canvas of={TagStories.RemovableFilterList} />
+
+### Removable + selectable together
+
+<Canvas of={TagStories.RemovableAndSelectable} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `variant="subtle"` (the default) for low-emphasis categorization labels, `solid` for
+  high-emphasis status, and `outline` for a bordered style with no background — selecting an
+  outline tag fills it in, converging toward `solid`'s own look.
+- Pass `onRemove` whenever `removable` is set — Tag warns once in development if `removable` is
+  set without it, since the button would render but do nothing on click.
+- Reach for `tone` for feedback-type meaning (`danger`/`warning`/`success`/`info`) independent of
+  `variant`'s emphasis level — the two are separate axes, not a combined scale. Reserve `brand` for
+  the system's own identity (e.g. "New"/"Beta"), not a status.
+- Combine `removable` with `selected`/`onSelectedChange` freely — the two interactions are
+  independent by design (clicking the body toggles selection, clicking "×" removes), confirmed via
+  a dedicated interaction test.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't rely on `removeLabel`'s default (`Remove ${children}`) when `children` isn't descriptive
+  text — pass an explicit `removeLabel` so the remove button's accessible name still makes sense
+  (e.g. an icon-only tag, or a tag whose label is itself an abbreviation).
+- Don't set `disabled` on a plain, non-interactive tag expecting a visual effect — it only does
+  anything once the tag is already interactive (`onClick`/`selected`/`defaultSelected`/
+  `onSelectedChange`); Tag warns once in development otherwise.
+- Don't expect a bare `selected` toggle without `onSelectedChange` to do anything — controlled mode
+  requires the pairing, the same controlled/uncontrolled split every other stateful component in
+  this system uses.
+- Don't nest another interactive element inside `children` — once `onClick`/`selected` make the tag
+  itself a `role="button"`, a second focusable control inside it (beyond Tag's own remove
+  affordance, which is deliberately handled as a non-nested decorative glyph) creates the same
+  ARIA nested-interactive violation Tag's own implementation avoids for its remove button.
+- Don't use `Tag` for a primary page action — its focus/hover treatment and touch-target sizing are
+  tuned for compact, filter-bar-style density, not a `Button`'s call-to-action prominence.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` consistently within one filter bar or toolbar row rather than mixing sizes, so the
+  row reads as one coherent scale.
+- For a live filter list, compose `removable` tags with your own local state that removes the item
+  on `onRemove` (see "Removable filter list" above) — Tag never removes itself from the DOM on its
+  own, since the caller usually needs to update a backing list too.
+- For a toggleable filter group with several tags, `selected`/`onSelectedChange` (controlled) is
+  usually the better fit over `defaultSelected` (uncontrolled) — a filter's selected state is
+  normally driven by, and needs to stay in sync with, application state elsewhere (see "Selectable
+  filter group" above).
+- `outline`'s selected state deliberately reuses the exact `solid`-fill tokens `variant="solid"`
+  itself uses — treat outline-selected and solid as visually equivalent "committed" states, not two
+  different looks that happen to look similar.
+
+## Accessibility
+
+<Callout tone="info" title="Interactive semantics are computed for you, not opted into piecemeal">
+
+- **Dev-mode warning** (stripped in production): `removable` set without `onRemove` warns once via
+  `console.warn`, since the remove button would otherwise render but silently do nothing.
+- **`role="button"` and `tabIndex={0}`** are applied automatically once any of `onClick`/`selected`/
+  `defaultSelected`/`onSelectedChange` are passed — a purely read-only tag (none of these) renders
+  with no interactive role at all, matching its actual behavior.
+- **`aria-pressed`** reflects the live selected state whenever the tag is selectable, so assistive
+  tech announces the toggle correctly on every change, controlled or uncontrolled.
+- **Enter/Space activates** the tag (toggling selection and/or firing `onClick`) whenever it's
+  interactive — standard `role="button"` keyboard behavior, implemented directly rather than relying
+  on a native element.
+- **The remove affordance avoids a real nested-interactive violation.** When the tag is also
+  interactive, a genuine focusable `<button>` nested inside its own `role="button"` would be an ARIA
+  violation (confirmed via a live `axe` run — the "nested-interactive" rule) — so in that combined
+  mode the "×" renders as a non-focusable, `aria-hidden` decorative glyph instead, and
+  Delete/Backspace on the already-focused tag itself becomes the keyboard path for removal, flagged
+  to assistive tech via `aria-keyshortcuts="Delete Backspace"`. In the non-selectable-but-removable
+  case, the remove affordance is a real, independently focusable `CloseButton` instead, since no
+  nesting conflict exists there.
+- **Mouse and keyboard removal never also toggle selection**, and vice versa — the remove click
+  handler stops propagation, and the tag's own keydown handler ignores events that bubbled up from
+  a focused descendant, both confirmed via dedicated interaction tests.
+- **`disabled` marks `aria-disabled` and blocks activation, but doesn't remove the tag from the tab
+  order.** The tag's own element is always a `<span>`, never a native `<button>`, so there's no
+  native `disabled` attribute to apply — `aria-disabled` plus blocked click/keyboard handlers keeps
+  it focusable and perceivable to assistive tech instead of silently vanishing from Tab order,
+  matching WAI-ARIA's own recommended pattern for a custom-role disabled control. Only has an
+  effect once the tag is interactive; Tag warns once in development otherwise.
+- **Focus ring** uses the shared `border.focus` token at a `radius.full` outline, matching the
+  pill's own shape, offset outward rather than overlapping the fill.
+- Every `tone` × `variant` × state background/text/icon/border pairing is contrast-verified per
+  this system's WCAG methodology — see [Design tokens used](#design-tokens-used) below for the
+  exact tokens.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Tag tone="info">Design</Tag>
+<Tag leadingIcon={TagIcon} tone="success" variant="solid">Shipped</Tag>
+<Tag tone="brand" variant="outline">Beta</Tag>
+<Tag trailingIcon={CaretDownIcon}>Sort by</Tag>
+<Tag removable onRemove={() => removeFilter('status')}>Status: Active</Tag>
+<Tag selected={isActive} onSelectedChange={setIsActive}>Design</Tag>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand-subtle" usage="subtle variant's brand fill" />
+<TokenRow token="bg.neutral-subtle" usage="subtle variant's neutral fill" />
+<TokenRow token="bg.info-subtle" usage="subtle variant's info fill" />
+<TokenRow token="bg.success-subtle" usage="subtle variant's success fill" />
+<TokenRow token="bg.warning-subtle" usage="subtle variant's warning fill" />
+<TokenRow token="bg.danger-subtle" usage="subtle variant's danger fill" />
+<TokenRow token="border.brand-subtle" usage="subtle variant's decorative brand border — not state-identifying, so it sits below the 3:1 WCAG 1.4.11 non-text floor by design" />
+<TokenRow token="border.neutral-subtle" usage="subtle variant's decorative neutral border" />
+<TokenRow token="border.info-subtle" usage="subtle variant's decorative info border" />
+<TokenRow token="border.success-subtle" usage="subtle variant's decorative success border" />
+<TokenRow token="border.warning-subtle" usage="subtle variant's decorative warning border" />
+<TokenRow token="border.danger-subtle" usage="subtle variant's decorative danger border" />
+<TokenRow token="text.brand" usage="subtle & unselected-outline variants' brand text" />
+<TokenRow token="text.secondary" usage="subtle & unselected-outline variants' neutral text (no dedicated text.neutral token)" />
+<TokenRow token="text.info" usage="subtle & unselected-outline variants' info text" />
+<TokenRow token="text.success" usage="subtle & unselected-outline variants' success text" />
+<TokenRow token="text.warning" usage="subtle & unselected-outline variants' warning text" />
+<TokenRow token="text.danger" usage="subtle & unselected-outline variants' danger text" />
+<TokenRow token="icon.brand" usage="subtle & unselected-outline variants' brand icon (leading/trailing/remove)" />
+<TokenRow token="icon.secondary" usage="subtle & unselected-outline variants' neutral icon" />
+<TokenRow token="icon.info" usage="subtle & unselected-outline variants' info icon" />
+<TokenRow token="icon.success" usage="subtle & unselected-outline variants' success icon" />
+<TokenRow token="icon.warning" usage="subtle & unselected-outline variants' warning icon" />
+<TokenRow token="icon.danger" usage="subtle & unselected-outline variants' danger icon" />
+<TokenRow token="border.brand" usage="outline variant's default border; also subtle variant's selected-state border, and solid variant's selected-state offset-halo accent ring" />
+<TokenRow token="border.strong" usage="same three roles as border.brand above, for the neutral tone — this component's own border-rotation choice, not the separate, unrelated border.neutral token" />
+<TokenRow token="border.info" usage="same three roles as border.brand above, for the info tone" />
+<TokenRow token="border.success" usage="same three roles as border.brand above, for the success tone" />
+<TokenRow token="border.warning" usage="same three roles as border.brand above, for the warning tone" />
+<TokenRow token="border.danger" usage="same three roles as border.brand above, for the danger tone" />
+<TokenRow token="bg.brand" usage="solid variant's brand fill; also outline variant's selected-state fill" />
+<TokenRow token="bg.neutral" usage="solid variant's neutral fill; also outline variant's selected-state fill" />
+<TokenRow token="bg.info" usage="solid variant's info fill; also outline variant's selected-state fill" />
+<TokenRow token="bg.success" usage="solid variant's success fill; also outline variant's selected-state fill" />
+<TokenRow token="bg.warning" usage="solid variant's warning fill; also outline variant's selected-state fill" />
+<TokenRow token="bg.danger" usage="solid variant's danger fill; also outline variant's selected-state fill" />
+<TokenRow token="text.on-brand" usage="solid variant's brand text; also outline variant's selected-state text" />
+<TokenRow token="text.on-neutral" usage="solid variant's neutral text; also outline variant's selected-state text" />
+<TokenRow token="text.on-info" usage="solid variant's info text; also outline variant's selected-state text" />
+<TokenRow token="text.on-success" usage="solid variant's success text; also outline variant's selected-state text" />
+<TokenRow token="text.on-warning" usage="solid variant's warning text; also outline variant's selected-state text" />
+<TokenRow token="text.on-danger" usage="solid variant's danger text; also outline variant's selected-state text" />
+<TokenRow token="icon.on-brand" usage="solid variant's brand icon; also outline variant's selected-state icon" />
+<TokenRow token="icon.on-neutral" usage="solid variant's neutral icon; also outline variant's selected-state icon" />
+<TokenRow token="icon.on-info" usage="solid variant's info icon; also outline variant's selected-state icon" />
+<TokenRow token="icon.on-success" usage="solid variant's success icon; also outline variant's selected-state icon" />
+<TokenRow token="icon.on-warning" usage="solid variant's warning icon; also outline variant's selected-state icon" />
+<TokenRow token="icon.on-danger" usage="solid variant's danger icon; also outline variant's selected-state icon" />
+<TokenRow token="bg.brand-subtle-hover" usage="subtle variant's hover fill (interactive mode); also outline variant's unselected-state hover fill" />
+<TokenRow token="bg.neutral-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the neutral tone" />
+<TokenRow token="bg.info-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the info tone" />
+<TokenRow token="bg.success-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the success tone" />
+<TokenRow token="bg.warning-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the warning tone" />
+<TokenRow token="bg.danger-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the danger tone" />
+<TokenRow token="bg.brand-hover" usage="solid variant's hover fill (interactive mode); also outline variant's selected-state hover fill" />
+<TokenRow token="bg.neutral-hover" usage="same hover roles as bg.brand-hover above, for the neutral tone" />
+<TokenRow token="bg.info-hover" usage="same hover roles as bg.brand-hover above, for the info tone" />
+<TokenRow token="bg.success-hover" usage="same hover roles as bg.brand-hover above, for the success tone" />
+<TokenRow token="bg.warning-hover" usage="same hover roles as bg.brand-hover above, for the warning tone" />
+<TokenRow token="bg.danger-hover" usage="same hover roles as bg.brand-hover above, for the danger tone" />
+<TokenRow token="bg.surface" usage="solid variant's selected-state offset-halo gap ring color" />
+<TokenRow token="opacity.40" usage="disabled state (interactive tags only)" />
+<TokenRow token="border.focus" usage="focus-visible outline (interactive mode)" />
+<TokenRow token="radius.full" usage="pill shape, and the round focus ring" />
+<TokenRow token="border-width.1" usage="subtle & outline variants' own border width" />
+<TokenRow token="border-width.2" usage="focus ring width; also both rings of the solid variant's selected-state offset halo" />
+<TokenRow token="space.1" usage="gap between leading icon/label/trailing icon/remove; also the remove button's own negative inline-end margin (optical alignment)" />
+<TokenRow token="font-family.primary" usage="tag text" />
+<TokenRow token="font-size.xs–font-size.base" usage="per-size type scale" />
+<TokenRow token="font-weight.medium" usage="default text weight" />
+<TokenRow token="font-weight.semibold" usage="selected-state text weight" />
+<TokenRow token="line-height.tight" usage="tag text line-height" />
+<TokenRow token="motion.duration.fast" usage="hover background-color transition (interactive mode)" />
+<TokenRow token="motion.easing.standard" usage="hover background-color transition (interactive mode)" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Badge"
+  description="A small, plain read-only indicator — unlike Tag, never removable or interactive"
+  href="/?path=/docs/atoms-data-display-badge--docs"
+>
+  <Badge tone="info">3</Badge>
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="For a primary page action, rather than a compact, filter-bar-style clickable label"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button size="sm" variant="secondary">Apply</Button>
+</RelatedCard>
+</div>

@@ -370,6 +370,106 @@ describe("Tag", () => {
       expect(onSelectedChange).not.toHaveBeenCalled();
     });
 
+    it("ignores disabled when the tag isn't interactive", () => {
+      render(<Tag disabled>Design</Tag>);
+      const tag = screen.getByText("Design");
+      expect(tag).not.toHaveAttribute("aria-disabled");
+      expect(tag).not.toHaveAttribute("role");
+    });
+
+    it("warns once in development when disabled is set without interactivity", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { rerender } = render(<Tag disabled>Design</Tag>);
+      rerender(<Tag disabled>Design (renamed)</Tag>);
+
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("`disabled` has no effect"),
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("does not warn when disabled is combined with onClick", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <Tag disabled onClick={() => {}}>
+          Design
+        </Tag>,
+      );
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("marks aria-disabled and blocks onClick when disabled and interactive", async () => {
+      const user = userEvent.setup();
+      const onClick = vi.fn();
+      render(
+        <Tag disabled onClick={onClick}>
+          Design
+        </Tag>,
+      );
+      const tag = screen.getByRole("button", { name: "Design" });
+      expect(tag).toHaveAttribute("aria-disabled", "true");
+
+      await user.click(tag);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("stays focusable and blocks Enter/Space toggling when disabled", async () => {
+      const user = userEvent.setup();
+      const onSelectedChange = vi.fn();
+      render(
+        <Tag disabled defaultSelected={false} onSelectedChange={onSelectedChange}>
+          Design
+        </Tag>,
+      );
+      const tag = screen.getByRole("button", { name: "Design" });
+
+      await user.tab();
+      expect(tag).toHaveFocus();
+      await user.keyboard("{Enter}");
+      expect(onSelectedChange).not.toHaveBeenCalled();
+      expect(tag).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("blocks remove via click on the decorative glyph when disabled", async () => {
+      const user = userEvent.setup();
+      const onRemove = vi.fn();
+      const { container } = render(
+        <Tag disabled removable onRemove={onRemove} onClick={() => {}}>
+          Design
+        </Tag>,
+      );
+      const removeIcon = container.querySelector('[class*="removeDecorative"]');
+      expect(removeIcon).not.toBeNull();
+      await user.click(removeIcon as Element);
+      expect(onRemove).not.toHaveBeenCalled();
+    });
+
+    it("blocks remove via Delete/Backspace when disabled", async () => {
+      const user = userEvent.setup();
+      const onRemove = vi.fn();
+      render(
+        <Tag disabled removable onRemove={onRemove} onClick={() => {}}>
+          Design
+        </Tag>,
+      );
+      const tag = screen.getByRole("button", { name: "Design" });
+      await user.tab();
+      expect(tag).toHaveFocus();
+      await user.keyboard("{Delete}");
+      expect(onRemove).not.toHaveBeenCalled();
+    });
+
+    it("has no accessibility violations when disabled and interactive/removable", async () => {
+      const { container } = render(
+        <Tag disabled removable onRemove={() => {}} onClick={() => {}}>
+          Design
+        </Tag>,
+      );
+      expect((await axe(container)).violations).toHaveLength(0);
+    });
+
     it("has no accessibility violations when clickable, selectable, or both combined with removable", async () => {
       const { container, rerender } = render(<Tag onClick={() => {}}>Design</Tag>);
       expect((await axe(container)).violations).toHaveLength(0);

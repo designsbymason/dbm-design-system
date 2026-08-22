@@ -92,6 +92,37 @@ export interface TagProps extends ComponentPropsWithoutRef<"span"> {
   /** Tag content — usually a short label. */
   children?: ReactNode;
   /**
+   * Disables interaction — blocks `onClick`, selection toggling, and (when
+   * the tag is also removable) the decorative remove glyph, applying
+   * `aria-disabled`. Only meaningful once the tag is interactive (any of
+   * `onClick`/`selected`/`defaultSelected`/`onSelectedChange`) — a plain,
+   * read-only tag has nothing to disable in the first place, and neither
+   * does a merely `removable`-but-not-otherwise-interactive tag, whose
+   * remove control is a real, independently focusable `CloseButton` that
+   * already has its own native `disabled` handling if a caller needs it.
+   * Tag warns once in development if `disabled` is set without one of
+   * those. The tag's own element is always a `<span>`, never a native
+   * `<button>`, so this applies `aria-disabled` plus blocked handlers
+   * rather than a native `disabled` attribute — mirrors `Avatar`'s own
+   * `disabled` scoping for non-`button` `as` values.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * Explicit accessible-name override for the tag's interactive role,
+   * once it has one (`onClick`/`selected`/`defaultSelected`/
+   * `onSelectedChange`). Rarely needed — the visible `children` already
+   * provide the accessible name in the common case — but useful when
+   * `children` alone doesn't read as a complete name (e.g. an
+   * icon-accompanied abbreviation).
+   */
+  "aria-label"?: string;
+  /**
+   * Points to the `id` of an existing, already-visible element to use as
+   * the accessible name instead — same role as `aria-label` above.
+   */
+  "aria-labelledby"?: string;
+  /**
    * Standard DOM id. Rarely needed directly, but required when another
    * element's `aria-labelledby`/`aria-describedby` needs to point at this
    * tag.

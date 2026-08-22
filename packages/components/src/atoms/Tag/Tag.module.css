@@ -187,6 +187,23 @@
     var(--dbm-motion-easing-standard);
 }
 
+/* Only ever applied alongside `.interactive` (`Tag.tsx`'s own `isDisabled`
+   gate requires `isInteractive`) — no native `:disabled` pseudo-class
+   equivalent needed here, unlike Avatar/Button, since this component's own
+   interactive element is always a plain `<span>`, never a real `<button>`.
+   Every `.interactive*:hover` rule below excludes `.disabled` so hover
+   feedback doesn't fire on an inert tag; the decorative remove glyph's own
+   `cursor: pointer` (`.removeDecorative`) is overridden separately below,
+   since dimming the whole tag via `opacity` doesn't change its cursor. */
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.disabled .removeDecorative {
+  cursor: not-allowed;
+}
+
 /* No separate `border-radius` needed here — `.root`'s own
    `border-radius: var(--dbm-radius-full)` (always present on the same
    element) is what the browser's outline-rounding follows, same as
@@ -213,51 +230,51 @@
    `.selected` below, pending its own pass — its selected state converges
    to `solid`'s own *background*, so a hover-fill change there would
    compete with the very thing that signals "selected." */
-.interactive.subtleBrand:hover {
+.interactive.subtleBrand:hover:not(.disabled) {
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
-.interactive.solidBrand:hover {
+.interactive.solidBrand:hover:not(.disabled) {
   background-color: var(--dbm-bg-brand-hover);
 }
 
-.interactive.subtleNeutral:hover {
+.interactive.subtleNeutral:hover:not(.disabled) {
   background-color: var(--dbm-bg-neutral-subtle-hover);
 }
 
-.interactive.subtleInfo:hover {
+.interactive.subtleInfo:hover:not(.disabled) {
   background-color: var(--dbm-bg-info-subtle-hover);
 }
 
-.interactive.subtleSuccess:hover {
+.interactive.subtleSuccess:hover:not(.disabled) {
   background-color: var(--dbm-bg-success-subtle-hover);
 }
 
-.interactive.subtleWarning:hover {
+.interactive.subtleWarning:hover:not(.disabled) {
   background-color: var(--dbm-bg-warning-subtle-hover);
 }
 
-.interactive.subtleDanger:hover {
+.interactive.subtleDanger:hover:not(.disabled) {
   background-color: var(--dbm-bg-danger-subtle-hover);
 }
 
-.interactive.solidNeutral:hover {
+.interactive.solidNeutral:hover:not(.disabled) {
   background-color: var(--dbm-bg-neutral-hover);
 }
 
-.interactive.solidInfo:hover {
+.interactive.solidInfo:hover:not(.disabled) {
   background-color: var(--dbm-bg-info-hover);
 }
 
-.interactive.solidSuccess:hover {
+.interactive.solidSuccess:hover:not(.disabled) {
   background-color: var(--dbm-bg-success-hover);
 }
 
-.interactive.solidWarning:hover {
+.interactive.solidWarning:hover:not(.disabled) {
   background-color: var(--dbm-bg-warning-hover);
 }
 
-.interactive.solidDanger:hover {
+.interactive.solidDanger:hover:not(.disabled) {
   background-color: var(--dbm-bg-danger-hover);
 }
 
@@ -269,27 +286,27 @@
    `outline` converges to `solid`'s own full-fill background (see
    `.selected.outline{Tone}` further below), a real conflict a
    subtle-tint hover would visually compete with, not an assumed one. */
-.interactive.outlineBrand:hover:not(.selected) {
+.interactive.outlineBrand:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
-.interactive.outlineNeutral:hover:not(.selected) {
+.interactive.outlineNeutral:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-neutral-subtle-hover);
 }
 
-.interactive.outlineInfo:hover:not(.selected) {
+.interactive.outlineInfo:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-info-subtle-hover);
 }
 
-.interactive.outlineSuccess:hover:not(.selected) {
+.interactive.outlineSuccess:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-success-subtle-hover);
 }
 
-.interactive.outlineWarning:hover:not(.selected) {
+.interactive.outlineWarning:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-warning-subtle-hover);
 }
 
-.interactive.outlineDanger:hover:not(.selected) {
+.interactive.outlineDanger:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-danger-subtle-hover);
 }
 
@@ -300,27 +317,27 @@
    not the `-subtle-hover` step the unselected rim uses. 2026-08-22, at
    explicit direction — previously hovering a selected outline tag had no
    feedback at all. */
-.interactive.selected.outlineBrand:hover {
+.interactive.selected.outlineBrand:hover:not(.disabled) {
   background-color: var(--dbm-bg-brand-hover);
 }
 
-.interactive.selected.outlineNeutral:hover {
+.interactive.selected.outlineNeutral:hover:not(.disabled) {
   background-color: var(--dbm-bg-neutral-hover);
 }
 
-.interactive.selected.outlineInfo:hover {
+.interactive.selected.outlineInfo:hover:not(.disabled) {
   background-color: var(--dbm-bg-info-hover);
 }
 
-.interactive.selected.outlineSuccess:hover {
+.interactive.selected.outlineSuccess:hover:not(.disabled) {
   background-color: var(--dbm-bg-success-hover);
 }
 
-.interactive.selected.outlineWarning:hover {
+.interactive.selected.outlineWarning:hover:not(.disabled) {
   background-color: var(--dbm-bg-warning-hover);
 }
 
-.interactive.selected.outlineDanger:hover {
+.interactive.selected.outlineDanger:hover:not(.disabled) {
   background-color: var(--dbm-bg-danger-hover);
 }
 
