@@ -1,0 +1,190 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { ProgressBar } from "../ProgressBar";
+import { ProgressCircle } from "../ProgressCircle";
+import { Skeleton } from "../Skeleton";
+import { VisuallyHidden } from "../VisuallyHidden";
+import * as SpinnerStories from "./Spinner.stories";
+
+export const propOrder = [
+  "size",
+  "tone",
+  "label",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={SpinnerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Spinner" tier="Atom" />
+
+An indeterminate loading indicator — a rotating ring at a token-driven `size`. Decorative
+(`aria-hidden`) and silent to screen readers by default, since a spinner alone rarely tells the
+whole story of what's loading; pass `label` (e.g. `"Loading"`) to announce it via `role="status"`
+instead. `tone` reuses the same color scale `Icon` uses, defaulting to inheriting `currentColor`
+from context (e.g. a colored button) rather than a fixed color. Respects
+`prefers-reduced-motion` — the spin slows rather than stops outright, since a fully static spinner
+reads as frozen, not as respecting the preference. Reach for `ProgressBar`/`ProgressCircle`
+instead once a real, measurable value exists — Spinner is for progress that genuinely can't be
+represented as a fill.
+
+### Import
+
+```tsx
+import { Spinner } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SpinnerStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={SpinnerStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={SpinnerStories} order={propOrder} />
+
+## Variants
+
+### All tones
+
+<Canvas of={SpinnerStories.AllTones} />
+
+### All sizes
+
+<Canvas of={SpinnerStories.AllSizes} />
+
+### With an accessible label
+
+<Canvas of={SpinnerStories.Labeled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass `label` whenever the loading state should actually be announced to assistive tech —
+  Spinner is silently decorative by default, since a bare spinner alone often isn't the most
+  useful thing to announce (a surrounding message, or a `Skeleton`, frequently communicates more).
+- Let `tone` inherit `currentColor` (the default) when the spinner already sits inside colored
+  context — a button, a colored banner — and only set an explicit tone when it's standing alone.
+- Switch to `ProgressBar`/`ProgressCircle` as soon as a real, measurable value exists —
+  indeterminate conveys strictly less information and should be a bridging state, not the norm.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't rely on Spinner's `tone` to communicate status the way `ProgressBar`/`ProgressCircle`'s
+  `tone` does — here it's purely a color choice for a loading state, not a semantic signal tied to
+  success/warning/danger outcomes.
+- Don't try to override `role`, `aria-hidden`, or `aria-label` yourself — Spinner computes and
+  always applies these itself from `label`, so a same-named prop is silently ignored (found and
+  fixed during review — see Accessibility below).
+- Don't treat the absence of `label` as a bug — a decorative, unlabeled spinner is Spinner's
+  intended default, not a missing accessible name that needs a warning.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to context — small (`xs`/`sm`) for an inline indicator next to text or inside a
+  button, larger (`lg`/`xl`) for a dedicated loading state filling more of the view.
+- Prefer `Skeleton` over Spinner when the loading content's eventual shape is already known (a
+  card, a list row) — a shape-matched placeholder reads as faster and less jarring than a generic
+  spin.
+- `ProgressBar`/`ProgressCircle` share a `size`/`tone` scale conceptually similar to this
+  component's own, but with a real `value`/`max` — reach for them instead once progress becomes
+  measurable, rather than leaving a spinner running past the point where a real value exists.
+
+## Accessibility
+
+<Callout tone="info" title="role and aria-hidden/aria-label are computed for you, never overridable">
+
+- **Decorative by default (`aria-hidden="true"`), no `role`** — a spinner with no `label` has
+  nothing meaningful to announce on its own, so it's silent to assistive tech rather than
+  interrupting with an unlabeled status update. This is Spinner's intended default state, not an
+  incomplete one — unlike `ProgressBar`/`ProgressCircle`, Spinner never warns about a missing
+  accessible name in development.
+- **`role="status"` plus `aria-label`, both computed from `label`** — set `label` and the spinner
+  becomes a live region announcing that text, no longer `aria-hidden`.
+- **All three (`role`/`aria-hidden`/`aria-label`) are always applied last**, after any native props
+  spread onto the root — a same-named prop passed by the caller is silently ignored, even though
+  TypeScript's JSX checker permits `aria-*`/`role` attributes on any component regardless of its
+  declared prop type (a real gap found and fixed during review, the same class of bug already found
+  on `ProgressBar`/`ProgressCircle`: enforced via JSX attribute order, not the type system alone).
+- **Respects `prefers-reduced-motion`** — the spin animation slows to 4x its normal duration rather
+  than stopping outright, staying visible as an in-progress signal.
+- Every `tone` here reuses `Icon`'s own already contrast-verified tokens — no new color pairing was
+  introduced by this component.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Spinner />
+<Spinner label="Loading" />
+<Spinner size="lg" tone="brand" label="Loading" />
+<Spinner size="xs" />
+```
+
+## Design tokens used
+
+<TokenRow token="icon.default" usage="default tone" />
+<TokenRow token="icon.secondary" usage="secondary tone" />
+<TokenRow token="icon.brand" usage="brand tone" />
+<TokenRow token="icon.disabled" usage="disabled tone — a deliberate WCAG 1.4.11 contrast exemption for disabled UI, per this system's own established methodology" />
+<TokenRow token="icon.danger" usage="danger tone — for contextual composition, not exposed in the Playground's tone select" />
+<TokenRow token="icon.warning" usage="warning tone — for contextual composition, not exposed in the Playground's tone select" />
+<TokenRow token="icon.success" usage="success tone — for contextual composition, not exposed in the Playground's tone select" />
+<TokenRow token="icon.info" usage="info tone — for contextual composition, not exposed in the Playground's tone select" />
+<TokenRow token="icon.on-brand" usage="on-brand tone — for placing a spinner on a matching colored surface, not exposed in the Playground's tone select" />
+<TokenRow token="icon.on-danger" usage="on-danger tone — for placing a spinner on a matching colored surface, not exposed in the Playground's tone select" />
+<TokenRow token="icon.on-warning" usage="on-warning tone — for placing a spinner on a matching colored surface, not exposed in the Playground's tone select" />
+<TokenRow token="icon.on-success" usage="on-success tone — for placing a spinner on a matching colored surface, not exposed in the Playground's tone select" />
+<TokenRow token="icon.on-info" usage="on-info tone — for placing a spinner on a matching colored surface, not exposed in the Playground's tone select" />
+<TokenRow token="icon.on-neutral" usage="on-neutral tone — for placing a spinner on a matching colored surface, not exposed in the Playground's tone select" />
+<TokenRow token="icon-size.xs–icon-size.xl" usage="per-size ring diameter" />
+<TokenRow token="border-width.2" usage="ring stroke width" />
+<TokenRow token="radius.full" usage="ring shape (circular)" />
+<TokenRow token="motion.duration.slower" usage="spin animation duration (×4 under prefers-reduced-motion)" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="ProgressBar"
+  description="For determinate progress — a horizontal fill reflecting a known value/max, instead of Spinner's fully indeterminate spin"
+  href="/?path=/docs/atoms-feedback-progressbar--docs"
+>
+  <div style={{ width: "var(--dbm-space-24)" }}>
+    <ProgressBar value={70} size="sm" label="Loading" />
+  </div>
+</RelatedCard>
+<RelatedCard
+  name="ProgressCircle"
+  description="For determinate progress — a ring-shaped fill reflecting a known value/max, instead of Spinner's fully indeterminate spin"
+  href="/?path=/docs/atoms-feedback-progresscircle--docs"
+>
+  <ProgressCircle value={70} size="sm" label="Loading" />
+</RelatedCard>
+<RelatedCard
+  name="Skeleton"
+  description="A content-shaped loading placeholder — use instead of Spinner when the loading content's eventual layout is already known"
+  href="/?path=/docs/atoms-data-display-skeleton--docs"
+>
+  <Skeleton variant="rectangular" width={40} height={40} />
+</RelatedCard>
+</div>

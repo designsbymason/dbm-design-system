@@ -46,6 +46,15 @@ export const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(
   ({ size = "md", tone, label, className, ...props }, ref) => (
     <span
       ref={ref}
+      {...props}
+      // These four are always applied last (after `...props`) so they
+      // can never be silently overridden by a same-named prop the caller
+      // passes — including `role`/`aria-hidden`/`aria-label`, which
+      // TypeScript's JSX checker permits on any component regardless of
+      // whether they're declared in its prop type (found and fixed on
+      // ProgressBar/ProgressCircle first — the same ordering bug existed
+      // here too, undetected until writing this component's own Docs
+      // page required re-checking the override behavior directly).
       role={label ? "status" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
@@ -55,7 +64,6 @@ export const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(
         tone && toneClass[tone],
         className,
       )}
-      {...props}
     />
   ),
 );

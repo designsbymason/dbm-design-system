@@ -17,6 +17,21 @@ describe("Spinner", () => {
     expect(status).not.toHaveAttribute("aria-hidden");
   });
 
+  it("never lets a same-named consumer prop override the computed role/aria-hidden/aria-label (found while writing this component's own Docs page — the same JSX-ordering bug already found and fixed on ProgressBar/ProgressCircle existed here too, undetected until now)", () => {
+    render(
+      <Spinner
+        label="Loading"
+        role="button"
+        aria-hidden="false"
+        aria-label="wrong"
+      />,
+    );
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute("role", "status");
+    expect(status).toHaveAccessibleName("Loading");
+    expect(status).not.toHaveAttribute("aria-hidden");
+  });
+
   it("applies size as a token-driven dimension", () => {
     const { container } = render(<Spinner size="lg" />);
     expect(container.firstChild).toHaveStyle({
@@ -48,6 +63,19 @@ describe("Spinner", () => {
   it("applies className", () => {
     const { container } = render(<Spinner className="custom" />);
     expect(container.firstChild).toHaveClass("custom");
+  });
+
+  it("applies id and data-testid to the root", () => {
+    const { container } = render(
+      <Spinner id="loading-indicator" data-testid="spinner" />,
+    );
+    expect(container.firstChild).toHaveAttribute("id", "loading-indicator");
+    expect(container.firstChild).toHaveAttribute("data-testid", "spinner");
+  });
+
+  it("applies style to the root", () => {
+    const { container } = render(<Spinner style={{ marginTop: "1rem" }} />);
+    expect(container.firstChild).toHaveStyle({ marginTop: "1rem" });
   });
 
   it("has no accessibility violations, decorative or labeled", async () => {
