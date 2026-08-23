@@ -17,7 +17,7 @@
 }
 
 .root:hover:not(:disabled):not(.error) {
-  border-color: var(--dbm-border-focus);
+  border-color: var(--dbm-border-neutral-strong);
 }
 
 .root:focus-visible {
@@ -52,6 +52,25 @@
   color: var(--dbm-icon-on-brand);
   display: flex;
   justify-content: center;
+  /* Radix only mounts `Indicator` into the DOM once checked/indeterminate,
+     so this plays once on every such mount — a one-shot state-change
+     transition, not a continuous/looping animation, so it's outside
+     `06-engineering-standards.md` §4's prefers-reduced-motion requirement
+     (same carve-out already applied to Badge's count-change pop and
+     Tooltip's fade-in). */
+  animation: checkboxIndicatorIn var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-emphasized);
+}
+
+@keyframes checkboxIndicatorIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: scale(0.5);
+  }
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: scale(1);
+  }
 }
 
 .checkIcon,
