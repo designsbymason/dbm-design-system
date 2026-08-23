@@ -262,7 +262,7 @@
     "brand": {
       "$type": "color",
       "$value": "{color.purple.600}",
-      "$description": "New token (2026-08-20) — a general-purpose default brand-colored border, for future use wherever a real (not purely decorative) brand-accent border is needed; no component consumes it yet. Reuses bg.brand's own light-mode step (purple.600) rather than border.focus's (purple.500), giving it its own distinct identity from the focus ring. purple.600 vs bg.surface (white) = 7.37:1, clears WCAG 1.4.11's 3:1 non-text floor comfortably — verified as a real border pairing, not assumed from bg.brand's own (different) text-hosting contrast case. Light value unchanged."
+      "$description": "New token (2026-08-20) — a general-purpose default brand-colored border, for future use wherever a real (not purely decorative) brand-accent border is needed. First real consumer: Button's `secondary` variant (2026-08-23), which also adopts text.brand/icon.brand for its label/icon and switches its default fill to transparent — see that component's own review notes. Reuses bg.brand's own light-mode step (purple.600) rather than border.focus's (purple.500), giving it its own distinct identity from the focus ring. purple.600 vs bg.surface (white) = 7.37:1, clears WCAG 1.4.11's 3:1 non-text floor comfortably — verified as a real border pairing, not assumed from bg.brand's own (different) text-hosting contrast case. Light value unchanged."
     },
     "brand-subtle": {
       "$type": "color",

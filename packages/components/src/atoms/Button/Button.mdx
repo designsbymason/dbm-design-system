@@ -25,6 +25,7 @@ export const propOrder = [
   "aria-labelledby",
   "id",
   "className",
+  "style",
   "data-testid",
 ];
 
@@ -55,7 +56,7 @@ import { Button } from "@dbm-design-system/components";
 </div>
 <PlaygroundControls
   of={ButtonStories.Playground}
-  exclude={["onClick", "asChild", "aria-labelledby", "id", "className", "data-testid"]}
+  exclude={["onClick", "asChild", "aria-labelledby", "id", "className", "style", "data-testid"]}
   order={propOrder}
 />
 
@@ -134,8 +135,8 @@ import { Button } from "@dbm-design-system/components";
   for standard forms, `lg`/`xl` for high-emphasis marketing/landing contexts.
 - Keep labels as short, specific verbs ("Save changes", not "Submit") — this is what makes a
   button scannable at a glance and legible to a screen reader user tabbing through a form.
-- When `isLoading` is set without explicit `disabled`, the button becomes non-interactive
-  automatically (`isDisabled = disabled ?? isLoading`) — you don't need to pass both.
+- `isLoading` always makes the button non-interactive (`isDisabled = disabled || isLoading`),
+  even if `disabled` is explicitly `false` — you don't need to pass both.
 
 ## Accessibility
 
@@ -173,18 +174,18 @@ import { Button } from "@dbm-design-system/components";
 
 <TokenRow token="bg.brand" usage="`primary` variant fill" />
 <TokenRow token="bg.brand-hover" usage="`primary` variant hover fill" />
+<TokenRow token="bg.brand-subtle" usage="`ghost` variant fill" />
+<TokenRow token="bg.brand-subtle-hover" usage="`secondary`/`tertiary`/`ghost` variant hover fill" />
 <TokenRow token="bg.danger" usage="`destructive` variant fill" />
 <TokenRow token="bg.danger-hover" usage="`destructive` variant hover fill" />
-<TokenRow token="bg.surface" usage="`secondary` variant fill" />
-<TokenRow token="border.default" usage="`secondary` variant border" />
-<TokenRow token="border.neutral" usage="`secondary` variant hover border" />
-<TokenRow token="bg.neutral-subtle" usage="`tertiary`/`ghost` hover fill" />
+<TokenRow token="border.brand" usage="`secondary` variant border" />
 <TokenRow token="text.on-brand" usage="label color on the `primary` variant's fill" />
 <TokenRow token="text.on-danger" usage="label color on the `destructive` variant's fill" />
-<TokenRow token="text.primary" usage="label color on `secondary`/`tertiary` variants" />
-<TokenRow token="text.secondary" usage="label color on the `ghost` variant" />
+<TokenRow token="text.brand" usage="label color on the `secondary`/`tertiary`/`ghost` variants" />
+<TokenRow token="icon.brand" usage="icon color on the `secondary`/`tertiary`/`ghost` variants" />
 <TokenRow token="border.focus" usage="focus-visible outline" />
 <TokenRow token="radius.md" usage="corner radius (8px)" />
+<TokenRow token="radius.sm" usage="focus-visible outline corner radius (overrides radius.md while focused)" />
 <TokenRow token="radius.full" usage="loading spinner shape" />
 <TokenRow token="space.1–space.8" usage="per-size padding/gap (scales with `size`)" />
 <TokenRow token="font-size.xs–font-size.lg" usage="per-size type scale" />

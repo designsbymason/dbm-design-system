@@ -1,5 +1,5 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 
 export type ButtonVariant =
   "primary" | "secondary" | "tertiary" | "ghost" | "destructive";
@@ -23,10 +23,13 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   trailingIcon?: PhosphorIcon;
   /**
    * Shows a spinner in place of the leading icon (or before the label if
-   * there is none) and disables interaction while `true`. When `asChild`
-   * is also set, the slotted element can't take a native `disabled`
-   * attribute, so this instead applies `aria-disabled` plus matching
-   * dimmed styling and blocks its click handler.
+   * there is none), swaps in `loadingText`, and disables interaction while
+   * `true`. When `asChild` is also set, the spinner and label swap don't
+   * render at all — `Slot` always renders `children` directly, since it
+   * requires exactly one child — so only dimmed styling and
+   * `aria-disabled` (plus a blocked click handler, since the slotted
+   * element can't take a native `disabled` attribute) signal the loading
+   * state there.
    * @default false
    */
   isLoading?: boolean;
@@ -85,6 +88,8 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    * own internal classes rather than replacing them.
    */
   className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
   /**
    * Test identifier for automated testing (e.g. Testing Library's
    * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM

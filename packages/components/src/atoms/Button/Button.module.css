@@ -8,6 +8,10 @@
   font-weight: var(--dbm-font-weight-semibold);
   justify-content: center;
   line-height: var(--dbm-line-height-tight);
+  /* A native <button> never underlines by default, but the `asChild`
+     anchor case does — Button should look like a button regardless of
+     which element it renders onto. */
+  text-decoration: none;
   transition:
     background-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard),
@@ -17,9 +21,22 @@
   white-space: nowrap;
 }
 
+/* `border-radius` here deliberately overrides `.root`'s own
+   `--dbm-radius-md` — the standardized `sm` focus-ring radius
+   (`05-component-api-conventions.md` §6) applies to every square-ish
+   interactive element regardless of its own corner radius, so every
+   focus ring in the system reads consistently. Unlike Avatar (where the
+   ring is drawn on a separate, invisible wrapper box, so overriding its
+   radius costs nothing visually), Button has no such wrapper — `.root`
+   is both the visible button and the element the outline is drawn on —
+   so this override does very slightly tighten the button's own visible
+   corners while focus-visible is active (8px → 4px). Accepted as a minor,
+   deliberate trade-off rather than adding a wrapper element just to
+   decouple the two. */
 .root:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
 }
 
 .root:disabled {
@@ -72,47 +89,52 @@
 .sizeXl {
   font-size: var(--dbm-font-size-lg);
   gap: var(--dbm-space-4);
-  padding-block: var(--dbm-space-5);
+  padding-block: var(--dbm-space-4);
   padding-inline: var(--dbm-space-8);
 }
 
-/* Variants */
+/* Variants
+   Every hover rule below is guarded by both `:not(:disabled)` (the native
+   <button> path) and `:not(.disabled)` (the `asChild` path — `:disabled`
+   can never match a non-form element like a slotted <a>, so without this
+   second guard a disabled `asChild` Button would still show its hover
+   background/border underneath the dimmed opacity). */
 
 .variantPrimary {
   background-color: var(--dbm-bg-brand);
   color: var(--dbm-text-on-brand);
 }
 
-.variantPrimary:not(:disabled):hover {
+.variantPrimary:not(:disabled):not(.disabled):hover {
   background-color: var(--dbm-bg-brand-hover);
 }
 
 .variantSecondary {
-  background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
-  color: var(--dbm-text-primary);
+  background-color: transparent;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-brand);
+  color: var(--dbm-text-brand);
 }
 
-.variantSecondary:not(:disabled):hover {
-  border-color: var(--dbm-border-neutral);
+.variantSecondary:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 .variantTertiary {
   background-color: transparent;
-  color: var(--dbm-text-primary);
+  color: var(--dbm-text-brand);
 }
 
-.variantTertiary:not(:disabled):hover {
-  background-color: var(--dbm-bg-neutral-subtle);
+.variantTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 .variantGhost {
-  background-color: transparent;
-  color: var(--dbm-text-secondary);
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
 }
 
-.variantGhost:not(:disabled):hover {
-  background-color: var(--dbm-bg-neutral-subtle);
+.variantGhost:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 .variantDestructive {
@@ -120,7 +142,7 @@
   color: var(--dbm-text-on-danger);
 }
 
-.variantDestructive:not(:disabled):hover {
+.variantDestructive:not(:disabled):not(.disabled):hover {
   background-color: var(--dbm-bg-danger-hover);
 }
 

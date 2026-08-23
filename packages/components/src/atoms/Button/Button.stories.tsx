@@ -95,6 +95,11 @@ const meta: Meta<typeof Button> = {
       control: false,
       description: "Additional CSS classes for customization.",
     },
+    style: {
+      control: false,
+      description:
+        "Inline styles, merged onto the component's own internal styles.",
+    },
     "data-testid": {
       control: false,
       description: "Test identifier for automated testing.",
@@ -134,12 +139,20 @@ export const Playground: Story = {};
 
 export const AllVariants: Story = {
   name: "All variants",
-  render: () => (
+  // `variant`/`children` are the whole point of this grid — each instance
+  // intentionally varies both together (the variant name doubles as its own
+  // label), so no single control value could represent them. Every other
+  // prop (`size`, `disabled`, `isLoading`, `leadingIcon`, ...) stays live
+  // and shared via `{...args}` — previously this story used a bare
+  // `render: () => (...)` that ignored args entirely, making every control
+  // here a silent no-op.
+  argTypes: { variant: { control: false }, children: { control: false } },
+  render: (args) => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
       {(
         ["primary", "secondary", "tertiary", "ghost", "destructive"] as const
       ).map((variant) => (
-        <Button key={variant} variant={variant}>
+        <Button key={variant} {...args} variant={variant}>
           {variant}
         </Button>
       ))}
@@ -149,7 +162,11 @@ export const AllVariants: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
-  render: () => (
+  // `size`/`children` are the whole point of this grid, same reasoning as
+  // AllVariants above. Every other prop stays live and shared via
+  // `{...args}`.
+  argTypes: { size: { control: false }, children: { control: false } },
+  render: (args) => (
     <div
       style={{
         alignItems: "center",
@@ -159,7 +176,7 @@ export const AllSizes: Story = {
       }}
     >
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-        <Button key={size} size={size}>
+        <Button key={size} {...args} size={size}>
           Size {size}
         </Button>
       ))}
@@ -169,16 +186,51 @@ export const AllSizes: Story = {
 
 export const WithIcons: Story = {
   name: "Leading and trailing icons",
-  render: () => (
+  // Each instance demonstrates a distinct, fixed icon/variant/label
+  // combination, so `leadingIcon`/`trailingIcon`/`variant`/`children` are
+  // pinned per instance rather than controllable. Every other prop (`size`,
+  // `disabled`, `isLoading`, `fullWidth`) stays live and shared via
+  // `{...args}`.
+  argTypes: {
+    leadingIcon: { control: false },
+    trailingIcon: { control: false },
+    variant: { control: false },
+    children: { control: false },
+  },
+  render: (args) => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
-      <Button leadingIcon={WalletIcon}>Pay</Button>
-      <Button trailingIcon={WalletIcon}>Pay</Button>
+      <Button
+        {...args}
+        leadingIcon={WalletIcon}
+        trailingIcon={undefined}
+        variant="primary"
+      >
+        Pay
+      </Button>
+      <Button
+        {...args}
+        leadingIcon={undefined}
+        trailingIcon={WalletIcon}
+        variant="primary"
+      >
+        Pay
+      </Button>
       {/* `leadingIcon` and `trailingIcon` are independent — both render
           together whenever both are passed. */}
-      <Button leadingIcon={DownloadIcon} trailingIcon={ArrowRightIcon}>
+      <Button
+        {...args}
+        leadingIcon={DownloadIcon}
+        trailingIcon={ArrowRightIcon}
+        variant="primary"
+      >
         Export
       </Button>
-      <Button variant="destructive" leadingIcon={TrashIcon}>
+      <Button
+        {...args}
+        leadingIcon={TrashIcon}
+        trailingIcon={undefined}
+        variant="destructive"
+      >
         Delete
       </Button>
     </div>
@@ -188,13 +240,6 @@ export const WithIcons: Story = {
 export const Loading: Story = {
   name: "Loading state",
   args: { isLoading: true, children: "Saving" },
-  // Known finding (2026-08-16, adding @storybook/addon-vitest): despite
-  // `children: "Saving"` being set, the rendered button has no accessible
-  // name at all during loading — Button appears to suppress children
-  // entirely while `isLoading`, leaving only the `aria-hidden` spinner and
-  // an empty `aria-label`. Deferred to Button's own future review pass
-  // rather than fixed here — see guidelines/01-vision-and-goals.md §12.
-  parameters: { a11y: { test: "todo" } },
 };
 
 export const LoadingWithLoadingText: Story = {
@@ -208,17 +253,26 @@ export const Disabled: Story = {
 
 export const FullWidth: Story = {
   name: "Full width",
-  render: () => (
+  // A single instance, so every prop (including `fullWidth` itself) stays
+  // live and shared via `{...args}` — no axis to exclude here. Previously
+  // this story used a bare `render: () => (...)` that ignored args
+  // entirely, making every control here a silent no-op.
+  args: { fullWidth: true, children: "Continue" },
+  render: (args) => (
     <div style={{ maxWidth: "24rem" }}>
-      <Button fullWidth>Continue</Button>
+      <Button {...args} />
     </div>
   ),
 };
 
 export const AsChild: Story = {
   name: "asChild (renders as an anchor)",
-  render: () => (
-    <Button asChild>
+  // A single instance, so every prop stays live and shared via `{...args}`
+  // (`asChild` itself is forced regardless, matching the story's purpose —
+  // it's already `control: false` at the meta level). Previously this
+  // story used a bare `render: () => (...)` that ignored args entirely.
+  render: (args) => (
+    <Button {...args} asChild>
       <a href="/next">Continue as a link</a>
     </Button>
   ),
@@ -226,8 +280,11 @@ export const AsChild: Story = {
 
 export const AsChildDisabled: Story = {
   name: "asChild + disabled (aria-disabled, click blocked)",
-  render: () => (
-    <Button asChild disabled>
+  // Same reasoning as AsChild above — `disabled: true` is a story-level arg
+  // default (live/toggleable in Controls) rather than hardcoded in render.
+  args: { disabled: true },
+  render: (args) => (
+    <Button {...args} asChild>
       <a href="/next">Continue as a link</a>
     </Button>
   ),
