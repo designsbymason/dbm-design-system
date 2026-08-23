@@ -150,8 +150,8 @@ import { Button } from "@dbm-design-system/components";
   even be a `<button>`), so `disabled` instead applies `aria-disabled` plus a click-blocking
   handler — the visual and interactive effect matches native `disabled` even though the DOM
   attribute can't.
-- Every `variant`'s text/background pairing is contrast-verified per `03-token-system-spec.md`'s
-  methodology — see [Design tokens used](#design-tokens-used) below for the exact tokens.
+- Every `variant`'s text/background pairing is checked against real WCAG contrast ratios, not
+  assumed — see [Design tokens used](#design-tokens-used) below for the exact tokens.
 - The loading spinner respects `prefers-reduced-motion` — its spin animation runs at a quarter
   speed (4× the normal duration) for users who've set that OS preference, rather than being
   disabled outright, since the spinner's motion is also its only signal that something is still
