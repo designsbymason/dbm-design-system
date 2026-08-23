@@ -21,6 +21,7 @@ export function ComponentHeader({
       style={{
         alignItems: "center",
         display: "flex",
+        flexWrap: "wrap",
         gap: "var(--dbm-space-3)",
       }}
     >

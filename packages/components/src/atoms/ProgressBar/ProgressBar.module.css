@@ -1,9 +1,26 @@
+.root {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-2);
+}
+
 .track {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-track);
   border-radius: var(--dbm-radius-full);
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   position: relative;
-  width: 100%;
+}
+
+.valueLabel {
+  color: var(--dbm-text-primary);
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-semibold);
+  white-space: nowrap;
 }
 
 .fill {

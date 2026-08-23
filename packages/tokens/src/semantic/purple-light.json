@@ -140,6 +140,11 @@
       "$value": "{color.gray.100}",
       "$description": "Renamed from bg.subtle-hover (2026-08-20), grouped with the other neutral tokens here — no value change. Originally added 2026-08-17, found adding Tag's whole-tag clickable/selectable mode — bg.neutral-subtle's own hover step, one primitive scale step further in the same direction bg.brand-subtle-hover/etc. already use (darken in light mode, lighten in dark mode). text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.100 = 6.05:1, comfortably passes AA."
     },
+    "track": {
+      "$type": "color",
+      "$value": "{color.gray.100}",
+      "$description": "New token (2026-08-22), added for ProgressBar's empty/unfilled track — was reusing bg.neutral-subtle, the same 'existing token reused for an unverified new purpose' bug that led to bg.skeleton (Phase 18): measured directly against bg.surface, bg.neutral-subtle is only 1.04:1 in light mode, functionally near-invisible. Given its own dedicated value at explicit user direction — first gray.200 (1.35:1), revised same session to gray.100 (1.14:1 vs bg.surface) at further explicit direction — still fails the 3:1 non-text floor WCAG 1.4.11 asks for graphical objects required to understand content, and a progress track's boundary plausibly falls under that requirement (unlike border.brand-subtle/border.code, which are purely decorative accents 1.4.11 doesn't bind the same way). Chosen anyway after being shown the compliant alternative (gray.500, 3.25:1) — a deliberate, informed exception matching the common industry convention of a very faint progress track (Ant Design's #f5f5f5 trail measures ~1.05:1, Chakra's blackAlpha.100 is comparably faint), though neither of those is itself verified against 3:1 either. Brand-agnostic, matching bg.neutral-subtle's own precedent. Revisit with gray.500 light / gray.400 dark (3.25:1 / 4.34:1) if this needs to actually clear 3:1 later."
+    },
     "code": {
       "$type": "color",
       "$value": "{color.blue.50}",

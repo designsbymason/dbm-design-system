@@ -140,6 +140,11 @@
       "$value": "{color.gray.800}",
       "$description": "Renamed from bg.subtle-hover (2026-08-20), grouped with the other neutral tokens here — no value change. Originally added 2026-08-17, found adding Tag's whole-tag clickable/selectable mode — bg.neutral-subtle's own hover step, one primitive scale step lighter (the dark-mode hover direction bg.brand-subtle-hover/etc. already use). Byte-identical to bg.surface (also gray.800, since bg.surface-raised was retired into bg.surface — see that token's own description) — a harmless collision, since nothing pairs the two directly. text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.800 = 7.47:1, comfortably passes AA."
     },
+    "track": {
+      "$type": "color",
+      "$value": "{color.gray.900}",
+      "$description": "New token (2026-08-22), added for ProgressBar's empty/unfilled track — was reusing bg.neutral-subtle, the same 'existing token reused for an unverified new purpose' bug that led to bg.skeleton (Phase 18). Dark value carried over unchanged from bg.neutral-subtle (gray.900, 1.40:1 vs bg.surface) — still fails the 3:1 non-text floor WCAG 1.4.11 asks for graphical objects required to understand content, accepted at explicit user direction for the same reason as the light-mode value (see purple-light.json/emerald-light.json for the full rationale) — a deliberate, informed exception, not a verified pass. Brand-agnostic. Revisit with gray.400 (4.34:1) if this needs to actually clear 3:1 later."
+    },
     "code": {
       "$type": "color",
       "$value": "{color.gray.700}",

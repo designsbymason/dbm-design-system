@@ -659,6 +659,21 @@ Verified live (`danger` in Purple light, `neutral` in Emerald dark): default sta
 
 Rebuilt and re-verified via `tsc` (both configs), `eslint`, the full unit/Storybook test suites, and the live computed-style checks above before considering this done — completing the "no box-shadow, border/background/text/icon all tone-specific, hover works in every state" pass across all three `Tag` variants.
 
+**Phase 46 (`bg.track` added, 2026-08-22 — found during `ProgressBar`'s atom review, a known, deliberate WCAG 1.4.11 exception, not a verified pass):** `ProgressBar`'s empty/unfilled track was reusing `bg.neutral-subtle` — the exact "existing token reused for an unverified new purpose" bug already found once for `bg.skeleton` (Phase 18): measured directly against `bg.surface`, `bg.neutral-subtle` is only **1.04:1** in light mode, functionally near-invisible (confirmed live in Storybook — the track was barely a hairline against a white card).
+
+Computed the actual options before picking one:
+
+| Candidate | Light (vs white) | Dark (vs gray.800) |
+|---|---|---|
+| `gray.200` | 1.35:1 | — |
+| `gray.500` | 3.25:1 (clears 3:1) | — |
+| `gray.900` (today's dark value, unchanged either way) | — | 1.40:1 |
+| `gray.400` | — | 4.34:1 (clears 3:1) |
+
+`gray.500`/`gray.400` would have cleared WCAG 1.4.11's 3:1 non-text floor with real margin, while still reading as a genuinely light/subtle neutral (not as heavy as `gray.600`, today's `bg.neutral`). Presented as the recommendation, along with the honest case for why a progress-track boundary plausibly *is* the kind of "graphical object required to understand content" 1.4.11 targets (unlike `border.brand-subtle`/`border.code`, which are purely decorative accents 1.4.11 doesn't bind the same way, or disabled controls, which carry an explicit SC exclusion) — there's no clean carve-out for this one the way there is for those.
+
+**User chose `gray.200` light / `gray.900` dark anyway, at explicit direction, after being shown the compliant alternative and the real numbers.** This is a deliberate, informed exception, not a verified pass — recorded honestly as one, matching the common industry convention of a very faint progress track (Ant Design's `#f5f5f5` trail measures ~1.05:1, Chakra's `blackAlpha.100` is comparably faint), though neither of those competitors is itself verified against 3:1 either. New token `bg.track`, brand-agnostic (matching `bg.neutral-subtle`'s own precedent) — dark value is byte-identical to `bg.neutral-subtle`'s existing dark value (`gray.900`, unchanged), light value is new (`gray.200`, not `bg.neutral-subtle`'s `gray.50`, so at least a real — if still non-compliant — improvement over the original bug). Added to `Color.mdx`'s `bg.*` array immediately after `bg.neutral-subtle-hover`, per the ordering rule. If this ever needs to actually clear 3:1, `gray.500`/`gray.400` are the pre-computed, ready-to-drop-in values.
+
 ## Multi-theme structure going forward
 
 Adding a third brand theme later = one more pair of semantic JSON files (`{brand}-light.json`, `{brand}-dark.json`) referencing a new primitive color scale, following the exact same token names as the existing two. No changes needed to component code, since components should only ever reference semantic tokens, never primitives directly.
