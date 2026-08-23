@@ -32,7 +32,7 @@
 }
 
 .track {
-  stroke: var(--dbm-bg-neutral-subtle);
+  stroke: var(--dbm-bg-track);
   stroke-width: 10;
 }
 
@@ -68,18 +68,55 @@
   color: var(--dbm-text-primary);
   display: flex;
   font-family: var(--dbm-font-family-primary);
-  font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-semibold);
-  inset: 0;
+  /* The ring's stroke (RADIUS 45, stroke-width 10, in ProgressCircle.tsx)
+     occupies the outer 20% of the box radius — its inner edge sits at 80%
+     of the box's own width/height. `inset: 15%` shrinks this box to 70%,
+     comfortably inside that safe zone (with margin) rather than the full
+     bounding box `.svg` uses — found in review: at inset: 0 (the full
+     box), the label's text visibly crowded/overlapped the ring's own
+     colored stroke at small sizes, which was also why axe's automated
+     contrast check couldn't resolve a flat background here and flagged it
+     Inconclusive instead of Pass.
+     Deliberately no `overflow: hidden` here — tried it first, but at the
+     worst realistic case (size="xs", value=100, the built-in percentage
+     label) the rendered text is wider than even the full 32px ring, and
+     clipping silently turned "100%" into "00%" — correct-looking but
+     wrong data is worse than a label that's honestly too big for its
+     ring. Content that CAN wrap (e.g. a longer custom `formatValueLabel`
+     string with spaces) still wraps naturally within this box; a single
+     unbreakable run like "100%" instead overflows the box symmetrically,
+     staying fully legible rather than being silently truncated. */
+  inset: 15%;
   justify-content: center;
   position: absolute;
+  text-align: center;
 }
 
-/* Sizes */
+/* Sizes — ring diameter and the value label's own font-size scale
+   together, the same "one prop, several properties per step" pattern
+   Tag/Badge already use for their own `size` prop. Only three of the five
+   steps get a distinct font-size (xs/sm share the smallest available
+   fixed font token, lg/xl share the largest) — the fixed (non-fluid)
+   xs/sm/base tier of the font-size scale has only three usable steps for
+   five ring sizes; using the fluid md/lg/xl tier instead would make this
+   in-ring label respond to viewport width, which is undesirable for a
+   label whose container is itself a fixed, discrete size, not a fluid
+   one. At the smallest ring (xs, 32px) even the smallest font token
+   (12px) means a worst-case "100%" is wider than the safe 70%-width box
+   above — since it's a single unbreakable run, it overflows that box
+   symmetrically (extending slightly past the ring's own silhouette)
+   rather than wrapping, an accepted tradeoff rather than letting it
+   overlap the stroke or silently truncating it (see `.valueLabel`'s own
+   comment above for why clipping was rejected). */
 
 .sizeXs {
   height: var(--dbm-icon-size-xl);
   width: var(--dbm-icon-size-xl);
+}
+
+.sizeXs > .valueLabel {
+  font-size: var(--dbm-font-size-xs);
 }
 
 .sizeSm {
@@ -87,9 +124,17 @@
   width: var(--dbm-icon-size-2xl);
 }
 
+.sizeSm > .valueLabel {
+  font-size: var(--dbm-font-size-xs);
+}
+
 .sizeMd {
   height: var(--dbm-icon-size-3xl);
   width: var(--dbm-icon-size-3xl);
+}
+
+.sizeMd > .valueLabel {
+  font-size: var(--dbm-font-size-sm);
 }
 
 .sizeLg {
@@ -97,7 +142,15 @@
   width: calc(var(--dbm-icon-size-3xl) * 1.5);
 }
 
+.sizeLg > .valueLabel {
+  font-size: var(--dbm-font-size-base);
+}
+
 .sizeXl {
   height: calc(var(--dbm-icon-size-3xl) * 2);
   width: calc(var(--dbm-icon-size-3xl) * 2);
+}
+
+.sizeXl > .valueLabel {
+  font-size: var(--dbm-font-size-base);
 }

@@ -1,0 +1,238 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { ProgressBar } from "../ProgressBar";
+import { Spinner } from "../Spinner";
+import { VisuallyHidden } from "../VisuallyHidden";
+import * as ProgressCircleStories from "./ProgressCircle.stories";
+
+export const propOrder = [
+  "indeterminate",
+  "value",
+  "max",
+  "size",
+  "tone",
+  "label",
+  "aria-labelledby",
+  "aria-valuetext",
+  "showValueLabel",
+  "formatValueLabel",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ProgressCircleStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ProgressCircle" tier="Atom" />
+
+A circular progress indicator — `ProgressBar`'s ring-shaped counterpart, sharing its
+`value`/`max`/`size`/`tone`/`label` API. Determinate when `value` is set — a filled arc reflecting
+`value`/`max`; indeterminate — a continuously spinning arc — when `value` is omitted, for progress
+that can't be measured yet. The ring has no visible text of its own by default, so `label` (or
+`aria-labelledby`) is required for it to have an accessible name at all. `showValueLabel` shows a
+percentage centered inside the ring; pair it with `formatValueLabel` to show something more
+meaningful than a raw percentage (e.g. `"3/5"`), and `aria-valuetext` to give screen reader users
+the matching description.
+
+### Import
+
+```tsx
+import { ProgressCircle } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ProgressCircleStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ProgressCircleStories.Playground}
+  exclude={["aria-labelledby", "formatValueLabel", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={ProgressCircleStories} order={propOrder} />
+
+## Variants
+
+### All tones
+
+<Canvas of={ProgressCircleStories.AllTones} />
+
+### All sizes
+
+<Canvas of={ProgressCircleStories.AllSizes} />
+
+### With value label
+
+<Canvas of={ProgressCircleStories.WithValueLabel} />
+
+### With aria-valuetext
+
+<Canvas of={ProgressCircleStories.WithValueText} />
+
+### With custom value label
+
+<Canvas of={ProgressCircleStories.WithCustomValueLabel} />
+
+### Indeterminate
+
+<Canvas of={ProgressCircleStories.Indeterminate} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Always pass `label` or `aria-labelledby` — ProgressCircle warns once in development if neither
+  is set, since it has no visible text of its own and would otherwise have no accessible name at all.
+- Use `showValueLabel` (optionally with `formatValueLabel`) whenever a visible number adds real
+  value to sighted users — favor a compact format (e.g. `"3/5"`) over a longer one, since the
+  ring's open center is small.
+- Pair `aria-valuetext` with a matching `formatValueLabel` whenever the raw percentage doesn't
+  convey the real unit of progress, so sighted and screen-reader users get the same story, not two
+  different ones.
+- Prefer a larger `size` (`lg`/`xl`) when `showValueLabel` is set and the value needs to stay
+  comfortably legible — the value label's font scales down at smaller ring sizes to fit the open
+  center, and very long custom labels can outgrow even that.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass an invalid `max` (`0`, negative, or `NaN`) expecting it to silently work —
+  ProgressCircle falls back to the default of 100 and warns once in development, rather than
+  producing a broken `stroke-dashoffset="NaN"` on the ring.
+- Don't expect `formatValueLabel` to do anything without `showValueLabel` — it's never called
+  unless the value label is actually shown, and ProgressCircle warns once in development if it's
+  passed alone.
+- Don't try to override `role`, `aria-valuenow`, `aria-valuemin`, or `aria-valuemax` yourself —
+  ProgressCircle computes and always applies these itself, so a same-named prop is silently
+  ignored (found and fixed during review — see Accessibility below).
+- Don't assume the value label always fits neatly inside the ring — it's sized and positioned to
+  stay clear of the stroke, but an unbreakable string at the smallest ring size (e.g. `"100%"` at
+  `size="xs"`) can extend slightly past the ring's own silhouette rather than being clipped, which
+  is the deliberate tradeoff (found and fixed during review — clipping it instead silently turned
+  `"100%"` into `"00%"`).
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to context — small (`xs`/`sm`) for a compact inline indicator alongside other UI,
+  larger (`lg`/`xl`) when the ring is the primary focus of the view (a dedicated dashboard tile or
+  loading screen), especially with `showValueLabel` set.
+- Keep `tone` consistent with what the fill's color communicates elsewhere in the same view (e.g.
+  `danger` once a quota is exceeded) — treat it as meaningful status, not decoration.
+- For file/step/byte counts, prefer `aria-valuetext` + `formatValueLabel` together over a bare
+  percentage — `"3/5"` is more actionable than `"60%"` when the underlying unit matters to the
+  user's task.
+- `ProgressBar` shares this component's API — reach for it instead when a horizontal, linear shape
+  fits the layout better (e.g. a wide upload row), not as a visually-different alternative
+  requiring a different mental model.
+
+## Accessibility
+
+<Callout tone="info" title="role and aria-value* are computed for you, never overridable">
+
+- **`role="progressbar"` with `aria-valuenow`/`aria-valuemin`/`aria-valuemax`** are always computed
+  internally from `value`/`max` — a same-named prop passed by the caller is silently ignored, even
+  though TypeScript's JSX checker permits `aria-*`/`role` attributes on any component regardless of
+  its declared prop type (a real gap found and fixed during review: enforced via JSX attribute
+  order, not the type system, since the type system alone can't stop it for `aria-*` names).
+- **Indeterminate mode omits `aria-valuenow` entirely**, per the ARIA APG progressbar pattern — the
+  ring's own spin animation is the only "still working" signal, not a numeric value implying false
+  precision.
+- **`aria-valuetext`** lets you pair the numeric value with a meaningful description for screen
+  readers, independent of whatever `formatValueLabel` shows sighted users visually.
+- **Three development-mode warnings** (stripped in production, each fires once per instance): no
+  accessible name (neither `label` nor `aria-labelledby`), an invalid `max`, and `formatValueLabel`
+  provided without `showValueLabel`.
+- **Respects `prefers-reduced-motion`** — the indeterminate spin animation slows to 4x its normal
+  duration rather than stopping outright, staying visible as an in-progress signal.
+- **The value label is sized and positioned to stay clear of the ring's own stroke** — found and
+  fixed during review after the label's full-box default crowded/overlapped the stroke at small
+  sizes, which was also why axe's automated contrast check couldn't reliably resolve a flat
+  background there. Verify the "Color contrast" check manually if it's ever flagged Inconclusive
+  rather than Pass — that's expected axe behavior for text layered over a container that also has
+  SVG content, not necessarily a real problem.
+- The track's own `bg.track` fill is a deliberate, documented exception to this system's usual 3:1
+  non-text contrast floor, chosen at explicit direction — see [Design tokens
+  used](#design-tokens-used) below and the Color Foundations page for the full rationale and the
+  real numbers. Every other pairing here is contrast-verified per this system's WCAG methodology.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<ProgressCircle value={40} label="Uploading file.zip" />
+<ProgressCircle value={40} label="Uploading file.zip" showValueLabel />
+<ProgressCircle
+  value={3}
+  max={5}
+  label="Uploading files"
+  aria-valuetext="3 of 5 files uploaded"
+  showValueLabel
+  formatValueLabel={(value, max) => `${value}/${max}`}
+/>
+<ProgressCircle tone="success" value={100} label="Upload complete" />
+<ProgressCircle label="Loading" />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.track" usage="empty/unfilled track stroke — a deliberate low-contrast exception, see Accessibility above" />
+<TokenRow token="bg.brand" usage="brand tone's fill stroke" />
+<TokenRow token="bg.info" usage="info tone's fill stroke" />
+<TokenRow token="bg.success" usage="success tone's fill stroke" />
+<TokenRow token="bg.warning" usage="warning tone's fill stroke" />
+<TokenRow token="bg.danger" usage="danger tone's fill stroke" />
+<TokenRow token="text.primary" usage="value label text color" />
+<TokenRow token="icon-size.xl–icon-size.3xl" usage="per-size ring diameter (xs–md); lg/xl scale icon-size.3xl by 1.5×/2×" />
+<TokenRow token="font-family.primary" usage="value label text" />
+<TokenRow token="font-size.xs" usage="value label text at size xs/sm" />
+<TokenRow token="font-size.sm" usage="value label text at size md" />
+<TokenRow token="font-size.base" usage="value label text at size lg/xl" />
+<TokenRow token="font-weight.semibold" usage="value label text" />
+<TokenRow token="motion.duration.base" usage="determinate fill stroke-dashoffset transition" />
+<TokenRow token="motion.easing.standard" usage="determinate fill stroke-dashoffset transition" />
+<TokenRow token="motion.duration.slower" usage="indeterminate spin animation duration (×4 under prefers-reduced-motion)" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="ProgressBar"
+  description="This component's horizontal counterpart, sharing the same value/max/size/tone/label API"
+  href="/?path=/docs/atoms-feedback-progressbar--docs"
+>
+  {/* ProgressBar's track fills its parent (`flex: 1 1 auto`) rather than
+      carrying an intrinsic width of its own — dropped straight into this
+      card's centered flex slot with nothing to fill, it collapsed to 0
+      width and rendered invisibly (found live during this page's review).
+      An explicit width here isn't a special case invented for this one
+      card — it's the same requirement any real consumer has to satisfy
+      wherever they place a ProgressBar, and matches this project's own
+      precedent for other intrinsically-unsized components previewed here
+      (see Skeleton's explicit width/height on Avatar.mdx's own related
+      card). */}
+  <div style={{ width: "var(--dbm-space-24)" }}>
+    <ProgressBar value={70} size="sm" label="Loading" />
+  </div>
+</RelatedCard>
+<RelatedCard
+  name="Spinner"
+  description="An indeterminate, shape-agnostic loading indicator — for when progress can't be represented as a fill at all"
+  href="/?path=/docs/atoms-feedback-spinner--docs"
+>
+  <Spinner tone="brand" label="Loading" />
+</RelatedCard>
+</div>
