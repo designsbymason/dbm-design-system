@@ -1,10 +1,20 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import type { ComponentPropsWithoutRef } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  CSSProperties,
+  MouseEventHandler,
+} from "react";
 import type { ButtonSize, ButtonVariant } from "../Button/Button.types";
 
 export interface IconButtonProps extends Omit<
   ComponentPropsWithoutRef<"button">,
-  "aria-label"
+  // `aria-label`: redeclared below as required, not optional.
+  // `aria-pressed`: fully owned by the `pressed`/`defaultPressed`/
+  // `onPressedChange` trio below — computed automatically, not a raw
+  // passthrough, so it's removed from the native extends entirely rather
+  // than risk a consumer's direct `aria-pressed` colliding with (and being
+  // silently erased by) this component's own computed value.
+  "aria-label" | "aria-pressed"
 > {
   /** The icon to render — a component reference, not a string name. */
   icon: PhosphorIcon;
@@ -28,20 +38,93 @@ export interface IconButtonProps extends Omit<
    */
   loadingLabel?: string;
   /**
-   * Merge props onto the single child element instead of rendering a
-   * `<button>` (via Radix `Slot`).
-   * @default false
-   */
-  asChild?: boolean;
-  /**
    * Renders as a circle instead of the standard rounded-corner shape —
    * common for floating-action-button-style triggers.
    * @default false
    */
   rounded?: boolean;
   /**
+   * Whether the button is in a "pressed"/active toggle state (e.g. a
+   * favorited/starred icon button) — controlled. Pair with
+   * `onPressedChange`. Setting either `pressed` or `defaultPressed` opts
+   * the button into toggle-button semantics: `aria-pressed` is computed
+   * and set automatically, and the pressed visual treatment applies while
+   * `true`. Omit both entirely for a plain, non-toggle button (the common
+   * case, and this component's own default) — `aria-pressed` is only ever
+   * rendered when the button is genuinely a toggle. Naming mirrors Radix
+   * `Toggle`'s own `pressed`/`defaultPressed`/`onPressedChange` trio,
+   * consistent with this system's "mirror Radix's own pattern" convention
+   * for controlled/uncontrolled state (`05-component-api-conventions.md`
+   * §3), even though this component doesn't wrap Radix `Toggle` directly.
+   */
+  pressed?: boolean;
+  /**
+   * Initial pressed state for an *uncontrolled* toggle button. Ignored
+   * once `pressed` is also provided.
+   * @default false
+   */
+  defaultPressed?: boolean;
+  /**
+   * Fires when the pressed state changes — a click (or Space/Enter via the
+   * native button) toggles it. Receives the new pressed value. Required
+   * for a controlled toggle (`pressed`) to actually change; optional for
+   * an uncontrolled one, where the component tracks its own state.
+   */
+  onPressedChange?: (pressed: boolean) => void;
+  /**
+   * Merge props onto the single child element instead of rendering a
+   * `<button>` (via Radix `Slot`).
+   * @default false
+   */
+  asChild?: boolean;
+  /**
+   * The native button behavior: `submit` submits the nearest `<form>`,
+   * `reset` resets it, `button` (the default) does neither. Only relevant
+   * for a real `<button>` element — ignored in `asChild` mode, since the
+   * slotted element supplies its own semantics.
+   * @default 'button'
+   */
+  type?: "button" | "submit" | "reset";
+  /**
+   * Disables the button natively. When `asChild` is also set, the slotted
+   * element can't take a native `disabled` attribute, so this instead
+   * applies `aria-disabled` plus matching dimmed styling and blocks its
+   * click handler — the same mechanism `isLoading` uses.
+   * @default false
+   */
+  disabled?: boolean;
+  /** Fires on click, unless `disabled`/`isLoading` blocks it. */
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  /**
    * Required — an icon-only button has no visible text, so an accessible
    * name must be supplied explicitly.
    */
   "aria-label": string;
+  /**
+   * Points to the `id` of an existing, already-visible element to use as
+   * the accessible name instead — e.g. a heading the button sits next to
+   * whose text already says what the button does. Use instead of
+   * `aria-label` when that visible element's text is the better accessible
+   * name; use `aria-label` when no such element exists.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * button, or when a test or router needs a stable anchor.
+   */
+  id?: string;
+  /**
+   * Additional CSS classes for customization. Merged with the component's
+   * own internal classes rather than replacing them.
+   */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }

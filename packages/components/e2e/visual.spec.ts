@@ -178,4 +178,60 @@ test.describe("visual regression", () => {
       .poll(() => button.evaluate((el) => getComputedStyle(el).backgroundColor))
       .not.toBe(before.backgroundColor);
   });
+
+  // Real-browser regression pair for `06-engineering-standards.md` §9
+  // Finding #2 (IconButton review, 2026-08-24) — the exact same bug class
+  // as Button's own pair above: every hover rule in `IconButton.module.css`
+  // was guarded only by `:not(:disabled)`, never `:not(.disabled)`, so a
+  // disabled `asChild` IconButton still showed its hover fill underneath
+  // the dimmed opacity (`:disabled` can never match a non-form slotted
+  // element like an <a>). jsdom can't exercise real `:hover` cascade at
+  // all, so this couldn't be a Vitest/RTL test — computed-style assertions
+  // in a real browser instead.
+  test("IconButton — asChild + disabled ignores hover (no interactive fill under the dimmed opacity)", async ({
+    page,
+  }) => {
+    await page.goto(
+      "/iframe.html?id=atoms-inputs-iconbutton--as-child-disabled&viewMode=story",
+    );
+    const link = page.getByRole("link", { name: "Favorite" });
+    await expect(link).toBeVisible();
+    const before = await link.evaluate(
+      (el) => getComputedStyle(el).backgroundColor,
+    );
+    await link.hover();
+    // `background-color` transitions over `--dbm-motion-duration-fast`
+    // (120ms) — wait past that so a real (buggy) hover fill has time to
+    // finish animating in before asserting it never applied. There's no
+    // "eventually true" condition to poll for here, since the whole point
+    // is confirming *no* change happens — a fixed wait is the correct tool,
+    // not `expect.poll`.
+    await page.waitForTimeout(300);
+    const after = await link.evaluate(
+      (el) => getComputedStyle(el).backgroundColor,
+    );
+    expect(after).toBe(before);
+  });
+
+  test("IconButton — asChild without disabled still applies the interactive hover fill", async ({
+    page,
+  }) => {
+    // The other half of the pair — proves the guard above suppresses hover
+    // specifically *because* the element is disabled, not because `asChild`
+    // links can never receive a hover fill at all.
+    await page.goto(
+      "/iframe.html?id=atoms-inputs-iconbutton--as-child&viewMode=story",
+    );
+    const link = page.getByRole("link", { name: "Favorite" });
+    await expect(link).toBeVisible();
+    const before = await link.evaluate(
+      (el) => getComputedStyle(el).backgroundColor,
+    );
+    await link.hover();
+    // Poll rather than a fixed wait — here there genuinely is an
+    // "eventually true" condition (the hover-fill transition completing).
+    await expect
+      .poll(() => link.evaluate((el) => getComputedStyle(el).backgroundColor))
+      .not.toBe(before);
+  });
 });

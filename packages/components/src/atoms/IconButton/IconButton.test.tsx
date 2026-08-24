@@ -1,9 +1,10 @@
-import { TrashIcon } from "@dbm-design-system/icons";
+import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { IconButton } from "./IconButton";
+import type { IconButtonProps } from "./IconButton.types";
 
 describe("IconButton", () => {
   it("renders a button with the required accessible name", () => {
@@ -31,10 +32,75 @@ describe("IconButton", () => {
     expect(button).toHaveStyle({
       backgroundColor: "var(--dbm-bg-danger)",
       color: "var(--dbm-icon-on-danger)",
-      paddingBlock: "var(--dbm-space-3)",
-      paddingInline: "var(--dbm-space-3)",
+      height: "var(--dbm-icon-button-size-xl)",
+      width: "var(--dbm-icon-button-size-xl)",
     });
   });
+
+  // New review request (2026-08-24, not from the original numbered
+  // findings list): match IconButton's box dimensions to Button's own
+  // real rendered height at the equivalent size step, so the two
+  // components read as visually consistent when placed side by side —
+  // e.g. an IconButton next to a Button in a toolbar. `xs`/`sm`/`md` use
+  // Button's fixed (non-fluid) font sizes, so the match holds at every
+  // viewport; `lg`/`xl` use Button's fluid font sizes, so the match is
+  // exact only at the 1440px reference viewport the values were measured
+  // at (see `component/icon-button.json`'s own `$description` for the
+  // real numbers and the accepted tradeoff).
+  it.each([
+    ["xs", "var(--dbm-icon-button-size-xs)"],
+    ["sm", "var(--dbm-icon-button-size-sm)"],
+    ["md", "var(--dbm-icon-button-size-md)"],
+    ["lg", "var(--dbm-icon-button-size-lg)"],
+    ["xl", "var(--dbm-icon-button-size-xl)"],
+  ] as const)(
+    "renders a square box (height === width) at the %s size, from the icon-button.size component token",
+    (size, expectedToken) => {
+      render(<IconButton icon={TrashIcon} aria-label="Delete" size={size} />);
+      const button = screen.getByRole("button");
+      expect(button).toHaveStyle({
+        height: expectedToken,
+        width: expectedToken,
+      });
+    },
+  );
+
+  it("keeps the same box size when rounded — only the corner radius changes", () => {
+    const { rerender } = render(
+      <IconButton icon={TrashIcon} aria-label="Delete" size="lg" />,
+    );
+    const button = screen.getByRole("button");
+    const squareHeight = getComputedStyle(button).height;
+
+    rerender(
+      <IconButton icon={TrashIcon} aria-label="Delete" size="lg" rounded />,
+    );
+    expect(getComputedStyle(button).height).toBe(squareHeight);
+    expect(getComputedStyle(button).width).toBe(squareHeight);
+  });
+
+  // Review finding #5 (2026-08-24): `secondary`/`tertiary`/`ghost` were
+  // coloring themselves via `text.primary`/`text.secondary` — a category
+  // violation this component's own code comment already warned against but
+  // only actually fixed for `primary`/`destructive`. Superseded by finding
+  // #12 the same day: all three now resolve to `icon.brand` (not
+  // `icon.default`/`icon.secondary`), since finding #12 ported Button's
+  // own brand-colored restyle of these exact variants — the assertion
+  // still proves the real, current icon.* token each variant resolves to,
+  // just an updated expected value.
+  it.each([
+    ["secondary", "var(--dbm-icon-brand)"],
+    ["tertiary", "var(--dbm-icon-brand)"],
+    ["ghost", "var(--dbm-icon-brand)"],
+  ] as const)(
+    "colors the %s variant via an icon.* token, never a text.* one",
+    (variant, expectedColor) => {
+      render(
+        <IconButton icon={TrashIcon} aria-label="Delete" variant={variant} />,
+      );
+      expect(screen.getByRole("button")).toHaveStyle({ color: expectedColor });
+    },
+  );
 
   it("shows a spinner and disables the button when isLoading", () => {
     render(<IconButton icon={TrashIcon} aria-label="Delete" isLoading />);
@@ -43,6 +109,34 @@ describe("IconButton", () => {
     expect(button).toHaveAttribute("aria-busy", "true");
     expect(button.querySelector("svg")).not.toBeInTheDocument();
     expect(button.querySelector("[aria-hidden='true']")).toBeInTheDocument();
+  });
+
+  it("stays disabled while isLoading even when disabled is explicitly false", () => {
+    // Regression test: `disabled ?? isLoading` used to let an explicit
+    // `disabled={false}` win over `isLoading` via `??`'s nullish-only
+    // fallthrough, leaving a "loading" button fully clickable. Same bug
+    // and fix as Button's own.
+    render(
+      <IconButton
+        icon={TrashIcon}
+        aria-label="Delete"
+        isLoading
+        disabled={false}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+  });
+
+  it("never lets a same-named consumer prop override the computed aria-busy (found in review — TypeScript's JSX checker allows aria-* props through regardless of the declared prop type, so this is enforced by JSX attribute order, not by the type system alone)", () => {
+    render(
+      <IconButton
+        icon={TrashIcon}
+        aria-label="Delete"
+        isLoading
+        aria-busy={false}
+      />,
+    );
+    expect(screen.getByRole("button")).toHaveAttribute("aria-busy", "true");
   });
 
   it("renders the single child via Slot when asChild is set", () => {
@@ -105,6 +199,22 @@ describe("IconButton", () => {
     expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
   });
 
+  it("falls back to aria-label while isLoading even when loadingLabel is explicitly an empty string", () => {
+    // Regression test: `loadingLabel ?? ariaLabel` used to let an explicit
+    // `loadingLabel=""` win over `ariaLabel` via `??`'s nullish-only
+    // fallthrough, leaving the button with no accessible name at all while
+    // loading. Same bug and fix as Button's own `loadingText ?? children`.
+    render(
+      <IconButton
+        icon={TrashIcon}
+        aria-label="Delete"
+        isLoading
+        loadingLabel=""
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+  });
+
   it("applies rounded styling", () => {
     render(<IconButton icon={TrashIcon} aria-label="Delete" rounded />);
     expect(screen.getByRole("button").className).toMatch(/rounded/);
@@ -136,6 +246,189 @@ describe("IconButton", () => {
     expect(xlIconClass).not.toBe(lgIconClass);
   });
 
+  describe("toggle (pressed) state — review finding #11", () => {
+    it("does not render aria-pressed at all for a plain, non-toggle button", () => {
+      render(<IconButton icon={HeartIcon} aria-label="Favorite" />);
+      expect(screen.getByRole("button")).not.toHaveAttribute("aria-pressed");
+    });
+
+    it("uncontrolled: defaultPressed sets the initial state and toggles on click", () => {
+      render(
+        <IconButton icon={HeartIcon} aria-label="Favorite" defaultPressed={false} />,
+      );
+      const button = screen.getByRole("button", { name: "Favorite" });
+      expect(button).toHaveAttribute("aria-pressed", "false");
+      expect(button.className).not.toMatch(/pressed/);
+
+      fireEvent.click(button);
+      expect(button).toHaveAttribute("aria-pressed", "true");
+      expect(button.className).toMatch(/pressed/);
+
+      fireEvent.click(button);
+      expect(button).toHaveAttribute("aria-pressed", "false");
+      expect(button.className).not.toMatch(/pressed/);
+    });
+
+    it("uncontrolled: defaults to unpressed when defaultPressed is omitted but onPressedChange is provided", () => {
+      const onPressedChange = vi.fn();
+      render(
+        <IconButton
+          icon={HeartIcon}
+          aria-label="Favorite"
+          onPressedChange={onPressedChange}
+        />,
+      );
+      const button = screen.getByRole("button", { name: "Favorite" });
+      expect(button).toHaveAttribute("aria-pressed", "false");
+
+      fireEvent.click(button);
+      expect(onPressedChange).toHaveBeenCalledTimes(1);
+      expect(onPressedChange).toHaveBeenCalledWith(true);
+      expect(button).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("controlled: pressed reflects the prop and does not change itself on click — onPressedChange reports the intended next value", () => {
+      const onPressedChange = vi.fn();
+      const { rerender } = render(
+        <IconButton
+          icon={HeartIcon}
+          aria-label="Favorite"
+          pressed={false}
+          onPressedChange={onPressedChange}
+        />,
+      );
+      const button = screen.getByRole("button", { name: "Favorite" });
+      expect(button).toHaveAttribute("aria-pressed", "false");
+
+      fireEvent.click(button);
+      // A controlled value doesn't change itself — the consumer owns it.
+      expect(button).toHaveAttribute("aria-pressed", "false");
+      expect(onPressedChange).toHaveBeenCalledTimes(1);
+      expect(onPressedChange).toHaveBeenCalledWith(true);
+
+      rerender(
+        <IconButton
+          icon={HeartIcon}
+          aria-label="Favorite"
+          pressed
+          onPressedChange={onPressedChange}
+        />,
+      );
+      expect(button).toHaveAttribute("aria-pressed", "true");
+      expect(button.className).toMatch(/pressed/);
+    });
+
+    it("still fires onClick when toggling", () => {
+      const onClick = vi.fn();
+      render(
+        <IconButton
+          icon={HeartIcon}
+          aria-label="Favorite"
+          defaultPressed={false}
+          onClick={onClick}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Favorite" }));
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not toggle or fire onPressedChange when disabled", () => {
+      const onPressedChange = vi.fn();
+      render(
+        <IconButton
+          icon={HeartIcon}
+          aria-label="Favorite"
+          defaultPressed={false}
+          disabled
+          onPressedChange={onPressedChange}
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Favorite" }));
+      expect(onPressedChange).not.toHaveBeenCalled();
+    });
+
+    it("sets aria-pressed on the slotted element when asChild is combined with a toggle prop", () => {
+      render(
+        <IconButton asChild icon={HeartIcon} aria-label="Favorite" defaultPressed>
+          <a href="/favorite">
+            <HeartIcon />
+          </a>
+        </IconButton>,
+      );
+      expect(
+        screen.getByRole("link", { name: "Favorite" }),
+      ).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("has no accessibility violations in the pressed state", async () => {
+      const { container } = render(
+        <IconButton icon={HeartIcon} aria-label="Favorite" defaultPressed />,
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it("switches the icon to Phosphor's fill weight while pressed, regular otherwise", () => {
+      const { container: unpressed } = render(
+        <IconButton icon={HeartIcon} aria-label="Favorite" defaultPressed={false} />,
+      );
+      const { container: pressedC } = render(
+        <IconButton icon={HeartIcon} aria-label="Favorite" defaultPressed />,
+      );
+      expect(unpressed.querySelector("svg")?.innerHTML).not.toBe(
+        pressedC.querySelector("svg")?.innerHTML,
+      );
+    });
+
+    it("does not use the fill weight for a plain, non-toggle button", () => {
+      const { container: plain } = render(
+        <IconButton icon={HeartIcon} aria-label="Favorite" />,
+      );
+      const { container: explicitRegular } = render(
+        <IconButton
+          icon={HeartIcon}
+          aria-label="Favorite"
+          defaultPressed={false}
+        />,
+      );
+      expect(plain.querySelector("svg")?.innerHTML).toBe(
+        explicitRegular.querySelector("svg")?.innerHTML,
+      );
+    });
+
+    // Pressed background/icon-color per tone family (2026-08-24, at
+    // explicit direction) — deliberately its own token chain, not a reuse
+    // of each variant's rest/hover tokens:
+    // `primary`/`destructive` (solid at rest) invert to that tone's own
+    // `-subtle` tint while pressed; `secondary`/`tertiary`/`ghost` (no
+    // solid fill at rest) converge to the shared solid `bg.brand`/
+    // `icon.on-brand` pairing instead, so all three read identically once
+    // pressed.
+    it.each([
+      ["primary", "var(--dbm-bg-brand-subtle)", "var(--dbm-icon-brand)"],
+      ["destructive", "var(--dbm-bg-danger-subtle)", "var(--dbm-icon-danger)"],
+      ["secondary", "var(--dbm-bg-brand)", "var(--dbm-icon-on-brand)"],
+      ["tertiary", "var(--dbm-bg-brand)", "var(--dbm-icon-on-brand)"],
+      ["ghost", "var(--dbm-bg-brand)", "var(--dbm-icon-on-brand)"],
+    ] as const)(
+      "colors the %s variant's pressed state via its own token chain, not its rest/hover tokens",
+      (variant, expectedBg, expectedColor) => {
+        render(
+          <IconButton
+            icon={HeartIcon}
+            aria-label="Favorite"
+            variant={variant}
+            defaultPressed
+          />,
+        );
+        expect(screen.getByRole("button")).toHaveStyle({
+          backgroundColor: expectedBg,
+          color: expectedColor,
+        });
+      },
+    );
+  });
+
   describe("asChild disabled/isLoading", () => {
     it("applies aria-disabled and blocks the click handler on the slotted element", () => {
       const onClick = vi.fn();
@@ -165,6 +458,102 @@ describe("IconButton", () => {
       expect(screen.getByRole("link", { name: "Delete" })).not.toHaveAttribute(
         "aria-disabled",
       );
+    });
+
+    it("never lets a same-named consumer prop override the computed aria-disabled (same ordering fix as aria-busy above)", () => {
+      render(
+        <IconButton
+          asChild
+          icon={TrashIcon}
+          aria-label="Delete"
+          disabled
+          aria-disabled={false}
+        >
+          <a href="/delete">×</a>
+        </IconButton>,
+      );
+      expect(
+        screen.getByRole("link", { name: "Delete" }),
+      ).toHaveAttribute("aria-disabled", "true");
+    });
+  });
+
+  describe("dev-mode warnings", () => {
+    it("warns once in development when there is no accessible name", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { rerender } = render(
+        // @ts-expect-error aria-label is required — testing the runtime
+        // safety net for a consumer that bypasses the type (e.g. an agent
+        // ignoring types, or a value that resolves to an empty string).
+        <IconButton icon={TrashIcon} />,
+      );
+      rerender(
+        // @ts-expect-error see above
+        <IconButton icon={TrashIcon} size="lg" />,
+      );
+
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("no accessible name"),
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("does not warn when aria-label is provided", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(<IconButton icon={TrashIcon} aria-label="Delete" />);
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("does not warn when aria-labelledby is provided instead of aria-label", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      // aria-label is required by the type — aria-labelledby is a valid
+      // alternative at runtime (same pair Button's own warning accepts),
+      // so bypass the type via a cast rather than an inline
+      // `@ts-expect-error` (which doesn't work as a JSX-children comment).
+      const props = {
+        icon: TrashIcon,
+        "aria-labelledby": "delete-label",
+      } as unknown as IconButtonProps;
+      render(
+        <>
+          <span id="delete-label">Delete</span>
+          <IconButton {...props} />
+        </>,
+      );
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("warns once in development when asChild is set (icon/isLoading's spinner have no effect there)", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { rerender } = render(
+        <IconButton asChild icon={TrashIcon} aria-label="Delete">
+          <a href="/delete">Delete</a>
+        </IconButton>,
+      );
+      rerender(
+        <IconButton asChild icon={TrashIcon} aria-label="Delete" isLoading>
+          <a href="/delete">Deleting</a>
+        </IconButton>,
+      );
+
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("has no effect when `asChild` is set"),
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("does not warn when asChild is not set", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(<IconButton icon={TrashIcon} aria-label="Delete" />);
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
     });
   });
 

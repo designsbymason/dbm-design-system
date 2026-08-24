@@ -1,0 +1,31 @@
+{
+  "icon-button": {
+    "size": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "30px",
+        "$description": "Total height/width of IconButton's xs step — matches Button's own real rendered height at size=\"xs\" (measured live, 29.796875px, rounded to the nearest whole pixel). Button's xs uses font-size.xs, a fixed (non-fluid) primitive step, so this match holds at every viewport width."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "39px",
+        "$description": "Matches Button's real rendered height at size=\"sm\" (measured live, 39.3203125px, rounded). Button's sm uses font-size.sm, fixed/non-fluid, so this match holds at every viewport width."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "42px",
+        "$description": "Matches Button's real rendered height at size=\"md\" (measured live, 42.3984375px, rounded). Button's md uses font-size.base, fixed/non-fluid, so this match holds at every viewport width."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "55px",
+        "$description": "Matches Button's real rendered height at size=\"lg\" (measured live, exactly 55px at a 1440px viewport). Button's lg uses font-size.md, which IS fluid (clamp()-based) — this value holds exactly only at the 1440px reference viewport (this design system's own documented fluid-scale upper anchor, see 03-token-system-spec.md's 'Fluid typography' section); at narrower viewports Button's own real height is a few px shorter (measured 58.49px at a 320px viewport, vs 60.73px at 1440px for the xl step — the same fluid effect applies here). IconButton's own size is intentionally fixed (not fluid), so this is the closest achievable match, not an exact one at every viewport — accepted tradeoff, confirmed 2026-08-24."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "61px",
+        "$description": "Matches Button's real rendered height at size=\"xl\" (measured live, 60.734375px at a 1440px viewport, rounded). Button's xl uses font-size.lg, which is fluid — same viewport caveat as lg above (measured 58.49px at a 320px viewport vs 60.73px at 1440px)."
+      }
+    }
+  }
+}

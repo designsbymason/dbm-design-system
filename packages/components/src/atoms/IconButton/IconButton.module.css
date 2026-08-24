@@ -13,9 +13,18 @@
     opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
+/* `border-radius` here deliberately overrides `.root`'s own
+   `--dbm-radius-md` — the standardized `sm` focus-ring radius
+   (`05-component-api-conventions.md` §6) applies to every square-ish
+   interactive element regardless of its own corner radius, so every focus
+   ring in the system reads consistently. `.rounded:focus-visible` below
+   overrides this again to `full` for the circular case — same equal
+   `:focus-visible`-plus-one-class specificity, so source order (this rule
+   first) is what makes the later, more-specific-in-practice rule win. */
 .root:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
 }
 
 .root:disabled {
@@ -35,76 +44,101 @@
   border-radius: var(--dbm-radius-full);
 }
 
-/* Sizes: equal padding on all sides around the icon. Logical longhands
-   (not the `padding` shorthand) — jsdom's test environment doesn't
-   reliably resolve var() through the shorthand parser. */
+/* The `full` counterpart to `.root:focus-visible`'s `sm` above — a round
+   icon-button is exactly the case `05-component-api-conventions.md` §6
+   names for using `radius-full` on the focus ring. */
+.rounded:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
+/* Sizes: explicit height/width (not padding-derived) so the box is a true
+   square/circle matching Button's own real rendered height at the
+   equivalent size step — component-layer tokens (`avatar.json`'s own
+   precedent for "requested pixel values with no home on any existing
+   primitive scale"), since none of the 5 measured values land on the
+   shared `space.*` scale. `xs`/`sm`/`md` match at every viewport (Button
+   uses fixed, non-fluid font sizes at those steps); `lg`/`xl` match
+   exactly only at the 1440px reference viewport used to measure them —
+   Button's own height for those two steps is itself fluid (`clamp()`-
+   based font-size), so no single fixed IconButton size can match it
+   universally. See each token's own `$description` in
+   `component/icon-button.json` for the real measured numbers. The icon
+   itself is centered via `.root`'s own `align-items`/`justify-content`,
+   not padding — this is a fixed box, not padding accumulating around
+   content. */
 
 .sizeXs {
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-1);
+  height: var(--dbm-icon-button-size-xs);
+  width: var(--dbm-icon-button-size-xs);
 }
 
 .sizeSm {
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-1);
+  height: var(--dbm-icon-button-size-sm);
+  width: var(--dbm-icon-button-size-sm);
 }
 
 .sizeMd {
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-2);
+  height: var(--dbm-icon-button-size-md);
+  width: var(--dbm-icon-button-size-md);
 }
 
 .sizeLg {
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-2);
+  height: var(--dbm-icon-button-size-lg);
+  width: var(--dbm-icon-button-size-lg);
 }
 
 .sizeXl {
-  padding-block: var(--dbm-space-3);
-  padding-inline: var(--dbm-space-3);
+  height: var(--dbm-icon-button-size-xl);
+  width: var(--dbm-icon-button-size-xl);
 }
 
-/* Variants — same fills as Button, kept in its own module since each
-   component folder is self-contained per this system's file conventions.
-   `color` here uses `icon.on-{tone}`, not `text.on-{tone}` — unlike
-   Button, this component renders nothing but an icon, so its `color`
-   should never have been typed as a text token in the first place. */
+/* Variants — colors match Button's own (review finding #12, 2026-08-24,
+   porting Button's own 2026-08-23 brand-colored restyle of `secondary`/
+   `tertiary`/`ghost` — see `03-token-system-spec.md` Phase 47). `color`
+   always uses an `icon.*` token, never a `text.*` one — unlike Button,
+   this component renders nothing but an icon, so its `color` should never
+   have been typed as a text token in the first place.
+   Every hover rule is guarded by both `:not(:disabled)` (the native
+   <button> path) and `:not(.disabled)` (the `asChild` path — `:disabled`
+   can never match a non-form element like a slotted <a>, so without this
+   second guard a disabled `asChild` IconButton would still show its hover
+   background underneath the dimmed opacity). */
 
 .variantPrimary {
   background-color: var(--dbm-bg-brand);
   color: var(--dbm-icon-on-brand);
 }
 
-.variantPrimary:not(:disabled):hover {
+.variantPrimary:not(:disabled):not(.disabled):hover {
   background-color: var(--dbm-bg-brand-hover);
 }
 
 .variantSecondary {
-  background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
-  color: var(--dbm-text-primary);
+  background-color: transparent;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-brand);
+  color: var(--dbm-icon-brand);
 }
 
-.variantSecondary:not(:disabled):hover {
-  border-color: var(--dbm-border-neutral);
+.variantSecondary:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 .variantTertiary {
   background-color: transparent;
-  color: var(--dbm-text-primary);
+  color: var(--dbm-icon-brand);
 }
 
-.variantTertiary:not(:disabled):hover {
-  background-color: var(--dbm-bg-neutral-subtle);
+.variantTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 .variantGhost {
-  background-color: transparent;
-  color: var(--dbm-text-secondary);
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-icon-brand);
 }
 
-.variantGhost:not(:disabled):hover {
-  background-color: var(--dbm-bg-neutral-subtle);
+.variantGhost:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
 .variantDestructive {
@@ -112,8 +146,58 @@
   color: var(--dbm-icon-on-danger);
 }
 
-.variantDestructive:not(:disabled):hover {
+.variantDestructive:not(:disabled):not(.disabled):hover {
   background-color: var(--dbm-bg-danger-hover);
+}
+
+/* Pressed (the `pressed`/`defaultPressed` toggle-button "on" state,
+   2026-08-24) — deliberately its own token chain per tone family, not a
+   reuse of the variant's own rest/hover tokens (unlike the CSS this
+   replaced): `primary`/`destructive` are already a confident solid fill
+   at rest, so pressed *inverts* to that tone's own `-subtle` tint —
+   visually quieter than rest, a deliberate design choice, not a mistake.
+   `secondary`/`tertiary`/`ghost` have no solid fill at rest, so pressed
+   converges to the full solid `bg.brand`/`icon.on-brand` pairing instead
+   — all three read identically once pressed, since the only thing that
+   differentiated them (transparent vs. bordered vs. subtle-tinted) was a
+   rest-state distinction that a solid "on" state doesn't need. Icon color
+   always follows the *pressed* background's own hosting requirement
+   (`icon.on-brand` for a solid fill, `icon.brand`/`icon.danger` for a
+   subtle tint), not the variant's rest-state icon color — using the rest
+   color here would fail contrast against the new pressed background in
+   at least one of the two directions. The icon itself also switches to
+   Phosphor's "fill" weight while pressed (`IconButton.tsx`), reinforcing
+   the on/off toggle state visually beyond color alone. */
+
+.variantPrimary.pressed {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-icon-brand);
+}
+
+.variantPrimary.pressed:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.variantDestructive.pressed {
+  background-color: var(--dbm-bg-danger-subtle);
+  color: var(--dbm-icon-danger);
+}
+
+.variantDestructive.pressed:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-danger-subtle-hover);
+}
+
+.variantSecondary.pressed,
+.variantTertiary.pressed,
+.variantGhost.pressed {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-icon-on-brand);
+}
+
+.variantSecondary.pressed:not(:disabled):not(.disabled):hover,
+.variantTertiary.pressed:not(:disabled):not(.disabled):hover,
+.variantGhost.pressed:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-brand-hover);
 }
 
 .spinner {
