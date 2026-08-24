@@ -218,6 +218,7 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
 
     const hasWarnedSrcRef = useRef(false);
     const hasWarnedNoNameRef = useRef(false);
+    const hasWarnedIgnoredOnClickRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (src && !resolvedAlt && !hasWarnedSrcRef.current) {
         hasWarnedSrcRef.current = true;
@@ -234,6 +235,16 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
         hasWarnedNoNameRef.current = true;
         console.warn(
           "Avatar: rendering with no `src`, `initials`, `name`, or `alt` — this avatar has no accessible name at all. Pass `alt` (or `name`/`initials`) unless it's intentionally decorative.",
+        );
+      }
+      if (
+        !isInteractive &&
+        onClickProp &&
+        !hasWarnedIgnoredOnClickRef.current
+      ) {
+        hasWarnedIgnoredOnClickRef.current = true;
+        console.warn(
+          "Avatar: `onClick` has no effect without an interactive `as` (e.g. `as=\"button\"`) — same gate `disabled` already gets. Wiring a click handler onto the default, non-interactive `span` would be clickable by mouse with no keyboard equivalent and no button semantics, a real accessibility gap, so it's intentionally ignored rather than silently attached.",
         );
       }
     }
@@ -293,7 +304,7 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
         // support.
         disabled={as === "button" ? isDisabled : undefined}
         aria-disabled={isDisabled || undefined}
-        onClick={isInteractive ? handleClick : onClickProp}
+        onClick={isInteractive ? handleClick : undefined}
         className={cx(
           styles.root,
           shape === "square" && styles.rootSquare,

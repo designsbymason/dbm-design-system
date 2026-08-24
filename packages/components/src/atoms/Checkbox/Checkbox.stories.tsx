@@ -34,18 +34,21 @@ const meta: Meta<typeof Checkbox> = {
   title: "Atoms/Inputs/Checkbox",
   component: Checkbox,
   parameters: { layout: "padded" },
+  // Keys below are ordered to match the component's own `CheckboxProps`
+  // declaration order (content prop → core visual props → behavioral/state
+  // props → advanced/escape-hatch props last) — this is what actually
+  // drives the rendered order of Storybook's raw per-story Controls panel
+  // (confirmed 2026-08-24: that panel's row order comes from docgen's
+  // extraction of the component's own Props type, not from this object's
+  // key order in isolation — but keeping this object in the same order
+  // keeps source and rendered output easy to reason about together, and
+  // matters for any prop only declared here, not in the type file).
   argTypes: {
+    children: { description: "Inline label rendered next to the checkbox." },
     size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
     hasError: {
       description:
         "Marks the checkbox as invalid, visually and via `aria-invalid`.",
-    },
-    disabled: { description: "Disables the checkbox natively." },
-    defaultChecked: {
-      control: "radio",
-      options: [false, true, "indeterminate"],
-      description:
-        "The initial checked state when uncontrolled — sets where the checkbox starts, not a live toggle. Click the checkbox itself in the canvas to change it, same as a real uncontrolled `<input defaultChecked>`.",
     },
     // Deliberately excluded from the live controls: driving `checked` from
     // Controls without a real `onCheckedChange` wired back into `args`
@@ -53,6 +56,12 @@ const meta: Meta<typeof Checkbox> = {
     // value over its own internal click handling. This Playground
     // demonstrates the uncontrolled path via `defaultChecked` instead.
     checked: { control: false, description: "The controlled checked state." },
+    defaultChecked: {
+      control: "radio",
+      options: [false, true, "indeterminate"],
+      description:
+        "The initial checked state when uncontrolled — sets where the checkbox starts, not a live toggle. Click the checkbox itself in the canvas to change it, same as a real uncontrolled `<input defaultChecked>`.",
+    },
     onCheckedChange: {
       description: "Called with the new checked state whenever it changes.",
     },
@@ -66,6 +75,7 @@ const meta: Meta<typeof Checkbox> = {
       description:
         "Overrides the indeterminate glyph (select 'Default' for the system's own dash icon). Same consistency caveat as `icon`.",
     },
+    disabled: { description: "Disables the checkbox natively." },
     required: {
       description:
         "Marks the checkbox as required for HTML5 form validation, and sets aria-required.",
@@ -85,7 +95,6 @@ const meta: Meta<typeof Checkbox> = {
       description:
         "Associates the checkbox with a <form> by id, for use outside that form's own DOM subtree.",
     },
-    children: { description: "Inline label rendered next to the checkbox." },
     "aria-label": {
       control: "text",
       description:

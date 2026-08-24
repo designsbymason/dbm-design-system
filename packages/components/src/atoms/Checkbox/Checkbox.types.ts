@@ -6,8 +6,13 @@ export type CheckboxSize = "xs" | "sm" | "md" | "lg" | "xl";
 export interface CheckboxProps
   extends Omit<
     ComponentPropsWithoutRef<"button">,
-    "checked" | "defaultChecked" | "onChange"
+    "checked" | "defaultChecked" | "onChange" | "disabled"
   > {
+  /**
+   * Inline label rendered next to the checkbox. When omitted, provide an
+   * `aria-label` instead (matches `IconButton`'s icon-only convention).
+   */
+  children?: ReactNode;
   /** @default 'md' */
   size?: CheckboxSize;
   /**
@@ -26,6 +31,30 @@ export interface CheckboxProps
   defaultChecked?: boolean | "indeterminate";
   /** Called with the new checked state whenever it changes. */
   onCheckedChange?: (checked: boolean | "indeterminate") => void;
+  /**
+   * Overrides the glyph shown when checked — a component reference, not a
+   * string name. Defaults to the system's own check glyph; override
+   * sparingly, since a non-standard glyph works against the cross-product
+   * visual consistency a shared checkbox is meant to provide.
+   * @default CheckIcon
+   */
+  icon?: PhosphorIcon;
+  /**
+   * Overrides the glyph shown when `checked`/`defaultChecked` is
+   * `"indeterminate"` — a component reference, not a string name. Defaults
+   * to the system's own dash glyph; see `icon`'s own doc for the same
+   * consistency caveat.
+   * @default MinusIcon
+   */
+  indeterminateIcon?: PhosphorIcon;
+  /**
+   * Disables the checkbox natively. Redeclared explicitly (native
+   * `<button>` already has this) so it's positioned correctly in the
+   * rendered Properties table and Storybook Controls panel, matching this
+   * component's own intended prop order.
+   * @default false
+   */
+  disabled?: boolean;
   /**
    * Marks the checkbox as required for HTML5 form validation, and sets
    * `aria-required`. Native `<button>` has no `required` attribute of its
@@ -53,27 +82,6 @@ export interface CheckboxProps
    * form's own DOM subtree — same purpose as the native `form` attribute.
    */
   form?: string;
-  /**
-   * Overrides the glyph shown when checked — a component reference, not a
-   * string name. Defaults to the system's own check glyph; override
-   * sparingly, since a non-standard glyph works against the cross-product
-   * visual consistency a shared checkbox is meant to provide.
-   * @default CheckIcon
-   */
-  icon?: PhosphorIcon;
-  /**
-   * Overrides the glyph shown when `checked`/`defaultChecked` is
-   * `"indeterminate"` — a component reference, not a string name. Defaults
-   * to the system's own dash glyph; see `icon`'s own doc for the same
-   * consistency caveat.
-   * @default MinusIcon
-   */
-  indeterminateIcon?: PhosphorIcon;
-  /**
-   * Inline label rendered next to the checkbox. When omitted, provide an
-   * `aria-label` instead (matches `IconButton`'s icon-only convention).
-   */
-  children?: ReactNode;
   /**
    * Accessible label announced by assistive tech when there's no visible
    * `children` label. Required for icon-only/label-less usage — see the

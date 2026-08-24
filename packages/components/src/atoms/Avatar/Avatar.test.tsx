@@ -372,6 +372,37 @@ describe("Avatar", () => {
     expect((await axe(container)).violations).toHaveLength(0);
   });
 
+  it("does not fire onClick on the default, non-interactive span, even when provided (found in review — the underlying span was wiring it unconditionally, clickable by mouse with no keyboard equivalent and role='img', a real WCAG 2.1.1 gap)", () => {
+    const onClick = vi.fn();
+    render(<Avatar initials="JD" onClick={onClick} data-testid="avatar" />);
+    const avatar = screen.getByTestId("avatar");
+    fireEvent.click(avatar);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("warns once in development when onClick is provided without an interactive `as`", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const onClick = vi.fn();
+    const { rerender } = render(<Avatar initials="JD" onClick={onClick} />);
+    rerender(<Avatar initials="AB" onClick={onClick} />);
+
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("`onClick` has no effect"),
+    );
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("does not warn about onClick when as='button' makes it interactive", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<Avatar as="button" initials="JD" onClick={() => {}} />);
+
+    expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining("`onClick` has no effect"),
+    );
+    consoleWarnSpy.mockRestore();
+  });
+
   it("applies native disabled and blocks clicks when as='button'", () => {
     const onClick = vi.fn();
     render(

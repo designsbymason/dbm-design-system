@@ -170,9 +170,16 @@ import { Avatar } from "@dbm-design-system/components";
 
 <Callout tone="info" title="An accessible name is computed for you, not just documented">
 
-- **Dev-mode warnings** (stripped in production): `src` provided without `alt`/`name`, or no
-  `src`/`initials`/`name`/`alt` at all — each warns once per instance via `console.warn`, so a
-  missing accessible name surfaces during development instead of shipping silently.
+- **Dev-mode warnings** (stripped in production): `src` provided without `alt`/`name`; no
+  `src`/`initials`/`name`/`alt` at all; or `onClick` provided without an interactive `as` (where
+  it's silently ignored — see below) — each warns once per instance via `console.warn`, so a
+  missing accessible name or a dead click handler surfaces during development instead of shipping
+  silently.
+- **`onClick` only does anything once `as` makes the avatar interactive** (e.g. `as="button"`) —
+  same gate `disabled` already documents on itself. On the default, non-interactive `span` it's
+  intentionally never wired up at all, not just discouraged: attaching a click handler there would
+  be clickable by mouse with no keyboard equivalent and no button semantics, a real WCAG 2.1.1
+  gap rather than a harmless convenience (found and fixed 2026-08-24).
 - **`role="img"` + `aria-label`** are set automatically on the non-image fallback (initials/icon)
   whenever a name is available, computed from `alt` (or `name`). When both a name and `status` are
   present, they're combined into one announcement ("Jane Doe, Online") instead of two separate

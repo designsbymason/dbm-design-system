@@ -3,6 +3,7 @@ import type {
   ComponentPropsWithoutRef,
   CSSProperties,
   ElementType,
+  MouseEvent,
   SyntheticEvent,
 } from "react";
 
@@ -103,6 +104,20 @@ export type AvatarProps<E extends ElementType = "span"> = {
    */
   disabled?: boolean;
   /**
+   * Fires on click — only meaningful (and only wired up at all) once `as`
+   * makes the avatar an interactive trigger, e.g. `as="button"`; blocked
+   * while `disabled`. Has no effect on the default, non-interactive `span`
+   * — same gate `disabled` already documents on itself — since attaching a
+   * click handler there would be clickable by mouse with no keyboard
+   * equivalent and no button semantics, a real accessibility gap rather
+   * than a harmless no-op. A dev-mode warning fires if provided without an
+   * interactive `as`. Typed against the polymorphic root element
+   * generically (`HTMLElement`, not the specific `E`) since the component
+   * itself already re-widens it the same way internally (`Avatar.tsx`'s
+   * own `onClickProp` cast) to accommodate every possible `as` value.
+   */
+  onClick?: (event: MouseEvent<HTMLElement>) => void;
+  /**
    * Explicit accessible-label override. If omitted, a name is computed
    * automatically from `alt` — combined with `status`'s label into one
    * announcement when both are present, instead of two separate
@@ -131,4 +146,4 @@ export type AvatarProps<E extends ElementType = "span"> = {
    * `data-testid` attribute; has no visual or behavioral effect.
    */
   "data-testid"?: string;
-} & Omit<ComponentPropsWithoutRef<E>, "as" | "children">;
+} & Omit<ComponentPropsWithoutRef<E>, "as" | "children" | "onClick">;

@@ -112,7 +112,7 @@ const meta: Meta<typeof Avatar> = {
     onClick: {
       control: false,
       description:
-        "Fires on click. Blocked automatically when `disabled` is set on an interactive (`as`-driven) avatar.",
+        "Fires on click — only wired up when `as` makes the avatar interactive (e.g. `as=\"button\"`); has no effect on the default span. Also blocked when `disabled` is set on an interactive avatar.",
     },
     "aria-label": {
       control: "text",
@@ -161,6 +161,12 @@ const meta: Meta<typeof Avatar> = {
     size: "md",
     shape: "circle",
     disabled: false,
+    // Found missing 2026-08-24, via direct user report — clicking the
+    // Playground's `as="button"` avatar logged nothing in the Actions
+    // panel, since nothing was wired to spy on `onClick` at all (unlike
+    // `onError` above, or Button's/Checkbox's own meta-level `fn()` on
+    // their equivalent handler prop).
+    onClick: fn(),
     // Empty-string default, not undefined — needed for this control to be
     // genuinely interactive rather than an inert placeholder (see the
     // comment above). Safe now: Avatar.tsx treats an empty `aria-label` as
