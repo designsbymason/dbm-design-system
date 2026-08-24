@@ -1,5 +1,9 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  CSSProperties,
+  MouseEventHandler,
+} from "react";
 
 export type ButtonVariant =
   "primary" | "secondary" | "tertiary" | "ghost" | "destructive";
@@ -41,17 +45,17 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    */
   loadingText?: string;
   /**
+   * Stretches the button to fill the width of its container.
+   * @default false
+   */
+  fullWidth?: boolean;
+  /**
    * Merge props onto the single child element instead of rendering a
    * `<button>` (via Radix `Slot`). Icons and the loading spinner are not
    * rendered in this mode, since `Slot` requires exactly one child.
    * @default false
    */
   asChild?: boolean;
-  /**
-   * Stretches the button to fill the width of its container.
-   * @default false
-   */
-  fullWidth?: boolean;
   /**
    * The native button behavior: `submit` submits the nearest `<form>`,
    * `reset` resets it, `button` (the default) does neither. Only relevant
@@ -60,6 +64,14 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    * @default 'button'
    */
   type?: "button" | "submit" | "reset";
+  /**
+   * Disables the button natively. Prefer this over `isLoading` alone when
+   * the button should look and behave as inert, not just busy.
+   * @default false
+   */
+  disabled?: boolean;
+  /** Fires on click, unless `disabled`/`isLoading` blocks it. */
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   /**
    * Accessible label announced by assistive tech instead of the visible
    * `children`. Most buttons don't need this — visible text label content

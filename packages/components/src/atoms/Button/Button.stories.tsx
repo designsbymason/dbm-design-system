@@ -43,6 +43,24 @@ const meta: Meta<typeof Button> = {
   // guidelines/07-storybook-and-documentation-standards.md §4) that embeds
   // this file's stories via `<Meta of={ButtonStories} />`.
   parameters: { layout: "padded" },
+  // Keys below are ordered to match `Button.mdx`'s own `propOrder` (content
+  // prop → core visual props → behavioral/state props → advanced/escape-
+  // hatch props last), for source readability only — this object's key
+  // order does NOT control the rendered order of Storybook's raw per-story
+  // Controls panel (confirmed empirically 2026-08-24: reordering these keys
+  // produced zero change in the live-rendered panel, which still shows
+  // `disabled`/`onClick` ahead of `variant`/`size`). That panel's row order
+  // comes from docgen's own extraction and can only be overridden via
+  // `parameters.controls.sort`, whose type in this Storybook version
+  // (10.5.7) is `'none' | 'alpha' | 'requiredFirst'` — no custom-comparator
+  // support, so an arbitrary sequence like this one can't be forced there.
+  // This is a real, load-bearing Storybook limitation, not a gap in this
+  // file — the Docs page's custom `PropertiesTable`/`PlaygroundControls`
+  // (`.storybook/blocks/`) are the actual, working fix for this exact
+  // problem, via their own `order` prop; see
+  // guidelines/07-storybook-and-documentation-standards.md §4.1's own note
+  // on why those blocks exist instead of the stock `<ArgTypes>`/`<Controls>`
+  // doc blocks.
   argTypes: {
     // Native props Storybook's docgen extracts with no description at all
     // (not the same "drops the row entirely" bug as the aria-*/className
@@ -51,17 +69,11 @@ const meta: Meta<typeof Button> = {
     // guidelines/07-storybook-and-documentation-standards.md §5), so they
     // get one explicitly here too.
     children: { description: "The button's visible label content." },
-    disabled: {
-      description:
-        "Disables the button natively. Prefer this over `isLoading` alone when the button should look and behave as inert, not just busy.",
-    },
-    onClick: { description: "Fires on click, unless disabled/loading blocks it." },
     variant: {
       control: "select",
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
     },
     size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
-    type: { control: "select", options: ["button", "submit", "reset"] },
     leadingIcon: {
       ...iconControl,
       description: "Leading icon (select 'None' to omit).",
@@ -70,7 +82,30 @@ const meta: Meta<typeof Button> = {
       ...iconControl,
       description: "Trailing icon (select 'None' to omit).",
     },
+    // `isLoading`/`loadingText`/`fullWidth` need no control overrides of
+    // their own — docgen already resolves a working control and a real
+    // description from their own JSDoc — so they're intentionally absent
+    // here rather than declared with an empty `{}` (which this file used to
+    // do, on the mistaken assumption that the key's mere presence pinned
+    // its rendered position; disproven above).
     asChild: { control: false },
+    type: { control: "select", options: ["button", "submit", "reset"] },
+    disabled: {
+      description:
+        "Disables the button natively. Prefer this over `isLoading` alone when the button should look and behave as inert, not just busy.",
+    },
+    // `control: false` needed as of the `disabled`/`onClick` redeclaration
+    // above (2026-08-24) — now that `onClick` resolves to a concrete
+    // `MouseEventHandler<HTMLButtonElement>` type rather than an
+    // unresolved inherited prop, Storybook's control-type inference
+    // defaults it to an inert "Set object" placeholder instead of no
+    // control at all. A function prop was never meant to be live-editable
+    // (guidelines/07-storybook-and-documentation-standards.md §5) — this
+    // makes that explicit rather than relying on inference.
+    onClick: {
+      control: false,
+      description: "Fires on click, unless disabled/loading blocks it.",
+    },
     // `className`/`aria-label`/`aria-labelledby`/`id`/`data-testid` are all
     // explicitly declared (with JSDoc) in ButtonProps, but Storybook's
     // default docgen (babel-based `react-docgen`, not the TS-checker-based
