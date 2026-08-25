@@ -92,6 +92,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
     const hasWarnedNoAccessibleNameRef = useRef(false);
     const hasWarnedAsChildIgnoredPropsRef = useRef(false);
+    const hasWarnedAsChildPressedRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (
         !ariaLabel &&
@@ -107,6 +108,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         hasWarnedAsChildIgnoredPropsRef.current = true;
         console.warn(
           "IconButton: `icon` has no effect when `asChild` is set — Radix `Slot` always renders `children` directly, and `icon` has no fallback role in that mode (though it's still a required prop, since it's the only accessible-icon path outside `asChild`). `isLoading`'s spinner is skipped the same way, though its dimming/`aria-disabled` state still applies. Render the icon as part of the slotted child instead.",
+        );
+      }
+      if (asChild && isToggle && !hasWarnedAsChildPressedRef.current) {
+        hasWarnedAsChildPressedRef.current = true;
+        console.warn(
+          "IconButton: `aria-pressed` is not applied when `asChild` is combined with a toggle prop (`pressed`/`defaultPressed`/`onPressedChange`) — `aria-pressed` is only a valid ARIA attribute on elements whose role supports it (e.g. `button`), and `Slot` can render any element a consumer slots in, including ones that don't (e.g. a native `<a>`, whose `link` role doesn't allow it — setting it there is a real `aria-allowed-attr` violation, not just unnecessary). The pressed visual treatment (fill-weight icon, tone-specific background) still applies either way; if the slotted element itself needs `aria-pressed`, set it directly on that element instead.",
         );
       }
     }
@@ -147,7 +154,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         disabled={asChild ? undefined : isDisabled}
         aria-disabled={slottedDisabled || undefined}
         aria-busy={isLoading || undefined}
-        aria-pressed={isToggle ? isPressed : undefined}
+        // Not applied in `asChild` mode — see the dev-mode warning above:
+        // `aria-pressed` is only valid on roles that support it, and `Slot`
+        // can render onto an element (e.g. a native `<a>`) that doesn't.
+        // The `.pressed` visual class below is unaffected — it's a pure
+        // style concern, independent of this ARIA-validity constraint.
+        aria-pressed={isToggle && !asChild ? isPressed : undefined}
         aria-label={effectiveAriaLabel}
         onClick={handleClick}
         className={cx(

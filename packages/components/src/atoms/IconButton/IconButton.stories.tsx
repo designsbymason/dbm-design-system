@@ -244,8 +244,14 @@ export const Toggle: Story = {
 
 export const AsChild: Story = {
   name: "asChild (renders as an anchor)",
-  render: () => (
-    <IconButton asChild icon={HeartIcon} aria-label="Favorite">
+  // Every other prop stays live and shared via `{...args}` (`asChild`
+  // itself is forced regardless, matching the story's purpose — it's
+  // already `control: false` at the meta level). Previously this story
+  // used a bare `render: () => (...)` that ignored args entirely, making
+  // every control here a silent no-op (found in review) — same regression
+  // class, and same fix, as Button's own `AsChild` story.
+  render: (args) => (
+    <IconButton {...args} asChild>
       <a href="/favorite">
         <HeartIcon />
       </a>
@@ -255,8 +261,12 @@ export const AsChild: Story = {
 
 export const AsChildDisabled: Story = {
   name: "asChild + disabled (aria-disabled, click blocked)",
-  render: () => (
-    <IconButton asChild icon={HeartIcon} aria-label="Favorite" disabled>
+  // Same reasoning as AsChild above — `disabled: true` is a story-level
+  // arg default (live/toggleable in Controls) rather than hardcoded in
+  // render.
+  args: { disabled: true },
+  render: (args) => (
+    <IconButton {...args} asChild>
       <a href="/favorite">
         <HeartIcon />
       </a>

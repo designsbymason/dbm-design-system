@@ -163,7 +163,12 @@ import { IconButton } from "@dbm-design-system/components";
   invisible to screen reader users.
 - `aria-pressed` is only ever rendered when the button is genuinely a toggle (`pressed`,
   `defaultPressed`, or `onPressedChange` set) — a plain, non-toggle button never gets a stray
-  `aria-pressed="false"`.
+  `aria-pressed="false"`. Withheld entirely in `asChild` mode, even when the button is a toggle:
+  `aria-pressed` is only a valid ARIA attribute on a role that supports it (e.g. `button`), and
+  `Slot` can render onto an element that doesn't (e.g. a native `<a>`, whose `link` role
+  disallows it). The pressed visual treatment still applies regardless — only the ARIA attribute
+  is withheld, with a development-mode warning explaining why. If the slotted element itself needs
+  `aria-pressed`, set it directly on that element.
 - `aria-busy="true"` is set automatically while `isLoading`, so assistive tech announces the
   in-progress state; `loadingLabel` (falling back to `aria-label`) is announced in its place.
 - In `asChild` mode, the slotted element can't take a native `disabled` attribute (it might not

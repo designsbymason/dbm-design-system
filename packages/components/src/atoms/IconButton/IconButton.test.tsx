@@ -347,7 +347,7 @@ describe("IconButton", () => {
       expect(onPressedChange).not.toHaveBeenCalled();
     });
 
-    it("sets aria-pressed on the slotted element when asChild is combined with a toggle prop", () => {
+    it("does not set aria-pressed on the slotted element, even when asChild is combined with a toggle prop (aria-pressed is invalid on a non-button role like the <a> here)", () => {
       render(
         <IconButton asChild icon={HeartIcon} aria-label="Favorite" defaultPressed>
           <a href="/favorite">
@@ -357,12 +357,37 @@ describe("IconButton", () => {
       );
       expect(
         screen.getByRole("link", { name: "Favorite" }),
-      ).toHaveAttribute("aria-pressed", "true");
+      ).not.toHaveAttribute("aria-pressed");
+    });
+
+    it("still applies the pressed visual class on the slotted element even though aria-pressed is withheld", () => {
+      render(
+        <IconButton asChild icon={HeartIcon} aria-label="Favorite" defaultPressed>
+          <a href="/favorite">
+            <HeartIcon />
+          </a>
+        </IconButton>,
+      );
+      expect(screen.getByRole("link", { name: "Favorite" }).className).toMatch(
+        /pressed/,
+      );
     });
 
     it("has no accessibility violations in the pressed state", async () => {
       const { container } = render(
         <IconButton icon={HeartIcon} aria-label="Favorite" defaultPressed />,
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it("has no accessibility violations when asChild is combined with a toggle prop", async () => {
+      const { container } = render(
+        <IconButton asChild icon={HeartIcon} aria-label="Favorite" defaultPressed>
+          <a href="/favorite">
+            <HeartIcon />
+          </a>
+        </IconButton>,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -553,6 +578,54 @@ describe("IconButton", () => {
       render(<IconButton icon={TrashIcon} aria-label="Delete" />);
 
       expect(consoleWarnSpy).not.toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("warns once in development when asChild is combined with a toggle prop (aria-pressed is withheld)", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { rerender } = render(
+        <IconButton asChild icon={HeartIcon} aria-label="Favorite" defaultPressed>
+          <a href="/favorite">Favorite</a>
+        </IconButton>,
+      );
+      rerender(
+        <IconButton asChild icon={HeartIcon} aria-label="Favorite" defaultPressed={false}>
+          <a href="/favorite">Favorite</a>
+        </IconButton>,
+      );
+
+      const pressedWarnings = consoleWarnSpy.mock.calls.filter(([message]) =>
+        typeof message === "string" && message.includes("aria-pressed"),
+      );
+      expect(pressedWarnings).toHaveLength(1);
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("does not warn about aria-pressed when a toggle prop is set without asChild", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <IconButton icon={HeartIcon} aria-label="Favorite" defaultPressed />,
+      );
+
+      const pressedWarnings = consoleWarnSpy.mock.calls.filter(([message]) =>
+        typeof message === "string" && message.includes("aria-pressed"),
+      );
+      expect(pressedWarnings).toHaveLength(0);
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("does not warn about aria-pressed when asChild is set without a toggle prop", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <IconButton asChild icon={TrashIcon} aria-label="Delete">
+          <a href="/delete">Delete</a>
+        </IconButton>,
+      );
+
+      const pressedWarnings = consoleWarnSpy.mock.calls.filter(([message]) =>
+        typeof message === "string" && message.includes("aria-pressed"),
+      );
+      expect(pressedWarnings).toHaveLength(0);
       consoleWarnSpy.mockRestore();
     });
   });
