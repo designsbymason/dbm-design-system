@@ -1,0 +1,254 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { HeartIcon, PlusIcon } from "@dbm-design-system/icons";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../Button";
+import { CloseButton } from "../CloseButton";
+import { Icon } from "../Icon";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { IconButton } from "./IconButton";
+import * as IconButtonStories from "./IconButton.stories";
+
+export const propOrder = [
+  "icon",
+  "variant",
+  "size",
+  "isLoading",
+  "loadingLabel",
+  "rounded",
+  "pressed",
+  "defaultPressed",
+  "onPressedChange",
+  "asChild",
+  "type",
+  "disabled",
+  "onClick",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={IconButtonStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="IconButton" tier="Atom" />
+
+An icon-only button. Shares `Button`'s variant/size scale and loading behavior, but always
+requires `aria-label` since there's no visible text to derive an accessible name from. Also
+supports an optional `pressed`/`defaultPressed` toggle state (paired with `onPressedChange`) for a
+favorite/bookmark/mute-style control — while pressed, the icon switches to Phosphor's "fill"
+weight and the button takes on a tone-specific "on" treatment, reinforcing the state visually
+beyond color alone.
+
+### Import
+
+```tsx
+import { IconButton } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={IconButtonStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={IconButtonStories.Playground}
+  exclude={["asChild", "pressed", "onPressedChange", "onClick", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={IconButtonStories} order={propOrder} />
+
+## Variants
+
+### All variants
+
+<Canvas of={IconButtonStories.AllVariants} />
+
+### All sizes
+
+<Canvas of={IconButtonStories.AllSizes} />
+
+### Loading state
+
+<Canvas of={IconButtonStories.Loading} />
+
+### Loading state with loadingLabel
+
+<Canvas of={IconButtonStories.LoadingWithLoadingLabel} />
+
+### Disabled
+
+<Canvas of={IconButtonStories.Disabled} />
+
+### Rounded (circular)
+
+<Canvas of={IconButtonStories.Rounded} />
+
+### Toggle (click to favorite)
+
+<Canvas of={IconButtonStories.Toggle} />
+
+### asChild (renders as an anchor)
+
+<Canvas of={IconButtonStories.AsChild} />
+
+### asChild + disabled (aria-disabled, click blocked)
+
+<Canvas of={IconButtonStories.AsChildDisabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Always pass `aria-label` (or `aria-labelledby`) — it's required by the type, and `IconButton`
+  also warns once in development if neither resolves to a value, as a runtime safety net for a
+  consumer that bypasses the type (an untyped call site, or an agent-generated one).
+- Use `pressed`/`defaultPressed` + `onPressedChange` for a genuine toggle affordance (favorite,
+  bookmark, mute) instead of hand-rolling your own active-state styling — the pressed treatment,
+  the fill-weight icon swap, and `aria-pressed` all come for free together.
+- Match `variant` to emphasis the same way as `Button`: `primary` for the single highest-emphasis
+  icon action in a toolbar, `ghost`/`tertiary` for secondary, lower-emphasis ones.
+- Reach for `rounded` for floating-action-button-style triggers.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `icon` expecting it to render in `asChild` mode — Radix `Slot` always renders
+  `children` directly, and `icon` has no fallback role there (it's still required by the type,
+  since it's the only accessible-icon path outside `asChild`). `IconButton` warns once in
+  development when this happens.
+- Don't set `defaultPressed` without pairing it with a real `onPressedChange` if you also intend to
+  read the pressed state elsewhere — an uncontrolled toggle manages its own internal state, so a
+  parent that needs to know the current value should switch to the controlled `pressed` +
+  `onPressedChange` pair instead.
+- Don't reach for `IconButton` when the action needs a visible text label as part of the design —
+  use `Button` with `leadingIcon`/`trailingIcon` instead; an icon-only control is only appropriate
+  when the icon's meaning is unambiguous on its own (and even then, `aria-label` still carries the
+  real accessible name).
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to context density, same as `Button`: `sm`/`xs` for compact toolbars and tables,
+  `md` (the default) for standard forms, `lg`/`xl` for high-emphasis contexts.
+- `isLoading` always makes the button non-interactive (`isDisabled = disabled || isLoading`), even
+  if `disabled` is explicitly `false` — you don't need to pass both.
+- Choose controlled (`pressed`/`onPressedChange`) over uncontrolled (`defaultPressed`) whenever the
+  favorited/toggled state needs to stay in sync with application state elsewhere (e.g. persisted
+  per item in a list) — uncontrolled is the right fit for state that's purely local to that one
+  button.
+- `IconButton`'s box size (all 5 steps, square and circular alike) is deliberately matched to
+  `Button`'s own real rendered height at the equivalent size — the two read as visually aligned
+  when placed side by side, e.g. an `IconButton` next to a `Button` in the same toolbar row.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard support and state come from the native button">
+
+- Renders a native `<button type="button">` by default — full keyboard support (`Tab` to focus,
+  `Enter`/`Space` to activate) comes for free from the browser, not from custom key handling.
+- `aria-label` is required by the type; `IconButton` also warns once in development if it (and
+  `aria-labelledby`) both resolve to nothing, since an icon-only button with no accessible name is
+  invisible to screen reader users.
+- `aria-pressed` is only ever rendered when the button is genuinely a toggle (`pressed`,
+  `defaultPressed`, or `onPressedChange` set) — a plain, non-toggle button never gets a stray
+  `aria-pressed="false"`.
+- `aria-busy="true"` is set automatically while `isLoading`, so assistive tech announces the
+  in-progress state; `loadingLabel` (falling back to `aria-label`) is announced in its place.
+- In `asChild` mode, the slotted element can't take a native `disabled` attribute (it might not
+  even be a `<button>`), so `disabled` instead applies `aria-disabled` plus a click-blocking
+  handler — the visual and interactive effect matches native `disabled` even though the DOM
+  attribute can't.
+- Every `variant` × state (rest, hover, pressed, hover-while-pressed) background/icon-color pairing
+  is checked against real WCAG contrast ratios, not assumed — see
+  [Design tokens used](#design-tokens-used) below for the exact tokens.
+- The loading spinner respects `prefers-reduced-motion` — its spin animation runs at a quarter
+  speed (4× the normal duration) for users who've set that OS preference, rather than being
+  disabled outright, since the spinner's motion is also its only signal that something is still in
+  progress.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<IconButton icon={TrashIcon} aria-label="Delete item" variant="destructive" />
+<IconButton icon={TrashIcon} aria-label="Delete" isLoading loadingLabel="Deleting…" />
+<IconButton icon={PlusIcon} aria-label="Add" rounded />
+<IconButton icon={HeartIcon} aria-label="Favorite" variant="ghost" defaultPressed={false} />
+<IconButton
+  icon={HeartIcon}
+  aria-label="Favorite"
+  variant="ghost"
+  pressed={isFavorited}
+  onPressedChange={setIsFavorited}
+/>
+<IconButton asChild icon={PlusIcon} aria-label="Add item">
+  <a href="/add"><PlusIcon /></a>
+</IconButton>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand" usage="`primary` variant's rest fill; also `secondary`/`tertiary`/`ghost` variants' pressed-state fill" />
+<TokenRow token="bg.brand-hover" usage="`primary` variant's hover fill; also `secondary`/`tertiary`/`ghost` variants' hover-while-pressed fill" />
+<TokenRow token="bg.brand-subtle" usage="`ghost` variant's rest fill; also `primary` variant's pressed-state fill" />
+<TokenRow token="bg.brand-subtle-hover" usage="`secondary`/`tertiary`/`ghost` variants' rest-state hover fill; also `primary` variant's hover-while-pressed fill" />
+<TokenRow token="bg.danger" usage="`destructive` variant's rest fill" />
+<TokenRow token="bg.danger-hover" usage="`destructive` variant's rest-state hover fill" />
+<TokenRow token="bg.danger-subtle" usage="`destructive` variant's pressed-state fill" />
+<TokenRow token="bg.danger-subtle-hover" usage="`destructive` variant's hover-while-pressed fill" />
+<TokenRow token="border.brand" usage="`secondary` variant's border, at rest and pressed alike" />
+<TokenRow token="border.focus" usage="focus-visible outline" />
+<TokenRow token="icon.on-brand" usage="`primary` variant's rest-state icon; also `secondary`/`tertiary`/`ghost` variants' pressed-state icon" />
+<TokenRow token="icon.on-danger" usage="`destructive` variant's rest-state icon" />
+<TokenRow token="icon.brand" usage="`secondary`/`tertiary`/`ghost` variants' rest-state icon; also `primary` variant's pressed-state icon" />
+<TokenRow token="icon.danger" usage="`destructive` variant's pressed-state icon" />
+<TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="per-size box height/width (component-layer token) — matched to Button's own real rendered height at the equivalent size" />
+<TokenRow token="radius.md" usage="default corner radius" />
+<TokenRow token="radius.sm" usage="focus-visible outline corner radius (overrides radius.md while focused)" />
+<TokenRow token="radius.full" usage="`rounded` variant's corner radius and its own focus-ring radius; also the loading spinner's shape" />
+<TokenRow token="border-width.1" usage="`secondary` variant's border width" />
+<TokenRow token="border-width.2" usage="focus ring width; also the loading spinner's stroke width" />
+<TokenRow token="motion.duration.fast" usage="hover/focus/pressed-state transitions" />
+<TokenRow token="motion.duration.slower" usage="loading spinner rotation speed" />
+<TokenRow token="motion.easing.standard" usage="hover/focus/pressed-state transitions" />
+<TokenRow token="opacity.40" usage="disabled state" />
+<TokenRow token="opacity.80" usage="spinner opacity" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Button"
+  description="For an action with a visible text label, rather than an icon-only control"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button size="sm" leadingIcon={HeartIcon} variant="secondary">Favorite</Button>
+</RelatedCard>
+<RelatedCard
+  name="CloseButton"
+  description="A specialized dismiss control, rather than this component's general-purpose icon action"
+  href="/?path=/story/atoms-inputs-closebutton--default"
+>
+  <CloseButton aria-label="Close" />
+</RelatedCard>
+<RelatedCard
+  name="Icon"
+  description="The underlying icon primitive this component wraps and centers in an interactive box"
+  href="/?path=/story/atoms-media-icon--default"
+>
+  <Icon icon={HeartIcon} tone="brand" />
+</RelatedCard>
+</div>

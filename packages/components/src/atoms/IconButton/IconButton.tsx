@@ -23,17 +23,6 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-const iconSizeForButtonSize: Record<
-  ButtonSize,
-  "xs" | "sm" | "md" | "lg" | "xl"
-> = {
-  xs: "xs",
-  sm: "sm",
-  md: "md",
-  lg: "lg",
-  xl: "xl",
-};
-
 /**
  * An icon-only button. Shares Button's variant/size scale and loading
  * behavior, but always requires `aria-label` since there's no visible text
@@ -178,7 +167,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         ) : (
           <Icon
             icon={icon}
-            size={iconSizeForButtonSize[size]}
+            size={size}
             weight={isToggle && isPressed ? "fill" : "regular"}
           />
         )}
