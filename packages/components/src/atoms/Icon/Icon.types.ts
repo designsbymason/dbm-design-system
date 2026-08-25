@@ -50,11 +50,12 @@ export interface IconProps extends Omit<
   /**
    * Semantic color tone, mapped to the `--dbm-icon-*` token set. Omit to
    * inherit `currentColor` from surrounding context instead — the right
-   * choice when an icon should always match its container's own color
-   * regardless of what that is (e.g. `CloseButton`, reused across many
-   * differently-colored contexts). Prefer an explicit `on-{tone}` tone
-   * over inheriting from a `text.on-{tone}` fill specifically — `text.*`
-   * tokens are for text, not icons, even when the color happens to match.
+   * choice when an icon should always match whatever color its container
+   * sets (e.g. a component whose own remove/dismiss affordance must track
+   * its current tone rather than a fixed brand color). Prefer an explicit
+   * `on-{tone}` tone over inheriting from a `text.on-{tone}` fill
+   * specifically — `text.*` tokens are for text, not icons, even when the
+   * color happens to match.
    */
   tone?: IconTone;
   /**

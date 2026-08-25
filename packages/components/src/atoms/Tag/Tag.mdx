@@ -195,7 +195,7 @@ import { Tag } from "@dbm-design-system/components";
   mode the "×" renders as a non-focusable, `aria-hidden` decorative glyph instead, and
   Delete/Backspace on the already-focused tag itself becomes the keyboard path for removal, flagged
   to assistive tech via `aria-keyshortcuts="Delete Backspace"`. In the non-selectable-but-removable
-  case, the remove affordance is a real, independently focusable `CloseButton` instead, since no
+  case, the remove affordance is a real, independently focusable `<button>` instead, since no
   nesting conflict exists there.
 - **Mouse and keyboard removal never also toggle selection**, and vice versa — the remove click
   handler stops propagation, and the tag's own keydown handler ignores events that bubbled up from

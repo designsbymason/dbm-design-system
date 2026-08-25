@@ -31,17 +31,20 @@ describe("CloseButton", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it("inherits currentColor for its icon instead of a fixed token", () => {
+  it("always uses the fixed icon.brand token, regardless of an ancestor's own color", () => {
+    // Styled to match IconButton's own `tertiary` variant exactly
+    // (2026-08-25 review) — a fixed brand token, not context-adaptive
+    // `currentColor` inheritance (that was the pre-restyle behavior, when
+    // this component still had to serve Tag's tone-adaptive remove
+    // control; Tag now implements that locally instead). An ancestor's
+    // own `color` must NOT win.
     const { container } = render(
       <div style={{ color: "rgb(255, 0, 0)" }}>
         <CloseButton />
       </div>,
     );
-    // `color: inherit` resolves to the parent's computed color rather than
-    // the literal keyword — this proves the inheritance actually applies,
-    // instead of some fixed token color winning over it.
     expect(container.querySelector("button")).toHaveStyle({
-      color: "rgb(255, 0, 0)",
+      color: "var(--dbm-icon-brand)",
     });
   });
 
@@ -50,13 +53,28 @@ describe("CloseButton", () => {
     expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
   });
 
-  it("applies size as a token-driven dimension", () => {
+  it("applies size as a token-driven box dimension, matching IconButton's own scale", () => {
     render(<CloseButton size="lg" />);
     expect(screen.getByRole("button", { name: "Close" })).toHaveStyle({
-      height: "var(--dbm-icon-size-lg)",
-      width: "var(--dbm-icon-size-lg)",
+      height: "var(--dbm-icon-button-size-lg)",
+      width: "var(--dbm-icon-button-size-lg)",
     });
   });
+
+  it.each(["xs", "sm", "md", "lg", "xl"] as const)(
+    "sizes the box from icon-button-size and the glyph from icon-size at size=%s — one prop, two matched scales, same relationship as IconButton",
+    (size) => {
+      const { container } = render(<CloseButton size={size} />);
+      expect(screen.getByRole("button", { name: "Close" })).toHaveStyle({
+        height: `var(--dbm-icon-button-size-${size})`,
+        width: `var(--dbm-icon-button-size-${size})`,
+      });
+      expect(container.querySelector("svg")).toHaveStyle({
+        height: `var(--dbm-icon-size-${size})`,
+        width: `var(--dbm-icon-size-${size})`,
+      });
+    },
+  );
 
   it("forwards ref to the underlying button", () => {
     const ref = createRef<HTMLButtonElement>();

@@ -150,19 +150,19 @@
 }
 
 /* `display`/`align-items` matter here, not just decoration — this class is
-   shared by `CloseButton` (already its own flex container, so these are
-   redundant-but-harmless there) *and* the plain decorative `<span>` below
-   (`isInteractive` removable tags), which has no flex container of its
-   own otherwise. Without them, that span defaults to `display: inline`,
-   gets "blockified" as a flex item of `.root` (so the span's own box
-   still centers correctly), but its *own* child — the "×" `Icon` — falls
-   back to normal inline flow inside it (`vertical-align: baseline`), not
-   flex-centered, since blockification doesn't make the span a flex
-   container for its own children. Found live (2026-08-22): measured the
-   "×" 1.7px higher than the leading/trailing icons in exactly this case
-   — a real, reproducible layout bug, not a false alarm from the earlier,
-   narrower check (which only tested the `CloseButton` path, already
-   correct on its own terms). */
+   shared by `.removeButton` below (already its own flex container, so
+   these are redundant-but-harmless there) *and* the plain decorative
+   `<span>` below (`isInteractive` removable tags), which has no flex
+   container of its own otherwise. Without them, that span defaults to
+   `display: inline`, gets "blockified" as a flex item of `.root` (so the
+   span's own box still centers correctly), but its *own* child — the "×"
+   `Icon` — falls back to normal inline flow inside it (`vertical-align:
+   baseline`), not flex-centered, since blockification doesn't make the
+   span a flex container for its own children. Found live (2026-08-22):
+   measured the "×" 1.7px higher than the leading/trailing icons in
+   exactly this case — a real, reproducible layout bug, not a false alarm
+   from the earlier, narrower check (which only tested the real-button
+   path, already correct on its own terms). */
 .remove {
   align-items: center;
   display: inline-flex;
@@ -170,11 +170,60 @@
   margin-inline-end: calc(var(--dbm-space-1) * -1);
 }
 
-/* Only applied to the decorative (non-`CloseButton`) remove glyph used
-   when the tag is also clickable/selectable — a real `<button>` already
-   gets a pointer cursor natively, but this plain `<span>` doesn't. */
+/* Only applied to the decorative (non-focusable) remove glyph used when
+   the tag is also clickable/selectable — a real `<button>` (`.removeButton`
+   below) already gets a pointer cursor natively, but this plain `<span>`
+   doesn't. */
 .removeDecorative {
   cursor: pointer;
+}
+
+/* The remove control's real, independently-focusable `<button>` path
+   (non-interactive removable tags — see Tag.tsx) — locally implemented
+   rather than the shared `CloseButton` atom (2026-08-25, CloseButton
+   review): this needs tone-matched coloring inherited from the tag's own
+   `color` (set per tone/variant elsewhere in this file), not a fixed
+   brand color, so `color` is deliberately left unset here — `currentColor`
+   already does the right thing since the icon itself gets an explicit
+   `icon.{tone}` tone (see Tag.tsx's `iconTone`), same as the decorative
+   span above. */
+.removeButton {
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.removeButton:hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.removeButton:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* Box dimensions — the button's clickable area always exactly matches its
+   glyph (zero extra padding), same principle as `.remove`'s own negative
+   margin above and the leading/trailing icons it's meant to align with.
+   Only `xs`/`sm`/`md` exist since `iconSizeForTagSize` (Tag.tsx) never
+   produces `lg`/`xl`. */
+.removeButtonSizeXs {
+  height: var(--dbm-icon-size-xs);
+  width: var(--dbm-icon-size-xs);
+}
+
+.removeButtonSizeSm {
+  height: var(--dbm-icon-size-sm);
+  width: var(--dbm-icon-size-sm);
+}
+
+.removeButtonSizeMd {
+  height: var(--dbm-icon-size-md);
+  width: var(--dbm-icon-size-md);
 }
 
 /* Interactive (clickable/selectable) mode — only applied when `onClick`

@@ -97,11 +97,11 @@ export interface TagProps extends ComponentPropsWithoutRef<"span"> {
    * `aria-disabled`. Only meaningful once the tag is interactive (any of
    * `onClick`/`selected`/`defaultSelected`/`onSelectedChange`) — a plain,
    * read-only tag has nothing to disable in the first place, and neither
-   * does a merely `removable`-but-not-otherwise-interactive tag, whose
-   * remove control is a real, independently focusable `CloseButton` that
-   * already has its own native `disabled` handling if a caller needs it.
-   * Tag warns once in development if `disabled` is set without one of
-   * those. The tag's own element is always a `<span>`, never a native
+   * does a merely `removable`-but-not-otherwise-interactive tag: its
+   * remove control has no disabled concept of its own either, by the same
+   * "only meaningful once interactive" scoping. Tag warns once in
+   * development if `disabled` is set without one of those. The tag's own
+   * element is always a `<span>`, never a native
    * `<button>`, so this applies `aria-disabled` plus blocked handlers
    * rather than a native `disabled` attribute — mirrors `Avatar`'s own
    * `disabled` scoping for non-`button` `as` values.

@@ -2,7 +2,6 @@ import { XIcon } from "@dbm-design-system/icons";
 import { cx } from "@dbm-design-system/primitives";
 import { forwardRef, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
-import { CloseButton } from "../CloseButton";
 import { Icon } from "../Icon";
 import type { IconTone } from "../Icon";
 import styles from "./Tag.module.css";
@@ -73,28 +72,27 @@ const sizeClass: Record<TagSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-// The remove button mirrors the same mapping — both are accessory glyphs
-// flanking the label, sized the same way for visual symmetry. Also used
-// directly as CloseButton's own `size`/`iconSize` props below (not a
-// separate `removeSizeForTagSize` alias any more) — CloseButton's own
-// `size` alone used to double-map through its internal, deliberately
-// smaller-glyph-in-a-bigger-box scale (`iconSizeForCloseButtonSize`),
-// rendering the "×" visibly smaller than leading/trailing (found live:
-// 12px vs this scale's own 20px at `xl`, not just a rounding difference)
-// and reading as vertically off besides — same box, smaller centered
-// glyph inside it looks like a position shift, not just a size one.
-// Passing `iconSize` explicitly bypasses that remapping so the glyph
-// matches exactly; `size` still sets the button's own tap-target box,
-// which now equals the glyph's own size (zero extra padding) rather than
-// the deliberately-larger-than-glyph box CloseButton defaults to
-// standalone — matching how every other icon in this component has no
-// extra padding of its own either.
+// The remove control mirrors the same mapping — both it and leading/
+// trailing are accessory glyphs flanking the label, sized identically for
+// visual symmetry. Drives both remove-control code paths below (the
+// decorative span and the locally-implemented button) directly, with zero
+// extra padding around the glyph in either case.
 const iconSizeForTagSize: Record<TagSize, "xs" | "sm" | "md"> = {
   xs: "xs",
   sm: "xs",
   md: "sm",
   lg: "md",
   xl: "md",
+};
+
+// Box dimensions for the remove control's real-`<button>` path (below) —
+// keyed off the same `"xs" | "sm" | "md"` values `iconSizeForTagSize`
+// produces, so the button's own clickable box always exactly matches its
+// glyph, zero extra padding, same as the decorative-span path.
+const removeButtonSizeClass: Record<"xs" | "sm" | "md", string | undefined> = {
+  xs: styles.removeButtonSizeXs,
+  sm: styles.removeButtonSizeSm,
+  md: styles.removeButtonSizeMd,
 };
 
 /**
@@ -164,8 +162,8 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     const isSelected = isSelectionControlled ? selected : uncontrolledSelected;
     const isInteractive = isSelectable || onClick !== undefined;
     // Only meaningful once the tag is already interactive — a plain
-    // read-only (or merely removable-but-not-interactive, real-CloseButton)
-    // tag has nothing to disable, mirroring Avatar's own `disabled` gate.
+    // read-only (or merely removable-but-not-otherwise-interactive) tag
+    // has nothing to disable, mirroring Avatar's own `disabled` gate.
     const isDisabled = isInteractive && disabled;
 
     if (process.env.NODE_ENV !== "production") {
@@ -229,11 +227,13 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     };
 
     // Shared by both the decorative-glyph branch (interactive mode, where
-    // `isDisabled` can be `true`) and the standalone `CloseButton` branch
+    // `isDisabled` can be `true`) and the standalone-button branch
     // (non-interactive mode, where `isDisabled` is always `false` by
-    // definition — that branch relies on `CloseButton`'s own native
-    // `disabled` handling instead, see the JSX below) — the guard here is
-    // a no-op in the latter case, not dead code.
+    // definition — `disabled` has no meaning without interactivity, see
+    // `isDisabled`'s own definition above) — the guard here is a genuine
+    // no-op in the latter case, not dead code: it documents that this
+    // branch was deliberately never given its own separate disabled
+    // concept, rather than silently omitting one.
     const handleRemoveClick = (event: MouseEvent<HTMLElement>) => {
       if (isDisabled) return;
       event.stopPropagation();
@@ -284,10 +284,9 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
             // they're related. Rendered as a plain, non-focusable,
             // `aria-hidden` decorative glyph instead: still clickable by
             // mouse (`handleRemoveClick`, same `stopPropagation` guard as
-            // the real `CloseButton` below), with Delete/Backspace on the
-            // tag itself (already focused, since interactive) as the
-            // keyboard path — see `handleKeyDown` and `aria-keyshortcuts`
-            // above.
+            // the real button below), with Delete/Backspace on the tag
+            // itself (already focused, since interactive) as the keyboard
+            // path — see `handleKeyDown` and `aria-keyshortcuts` above.
             <span
               aria-hidden="true"
               className={cx(styles.remove, styles.removeDecorative)}
@@ -296,17 +295,31 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
               <Icon icon={XIcon} size={iconSizeForTagSize[size]} tone={iconTone} />
             </span>
           ) : (
-            // CloseButton always inherits currentColor by design (see its
-            // own JSDoc) so it reads correctly across every context it's
-            // reused in, not just Tag — left as-is rather than forced onto
-            // an icon.on-{tone} tone here.
-            <CloseButton
+            // Locally implemented rather than the shared `CloseButton`
+            // atom (2026-08-25, CloseButton review — detached at explicit
+            // direction): this control needs the exact same tone-matched
+            // coloring as the decorative span above (`icon.{tone}` via
+            // `iconTone`, not a fixed brand color), since it's an
+            // accessory glyph of *this* tag, not a standalone dismiss
+            // control — `CloseButton` itself is styled to match
+            // `IconButton`'s brand-colored `tertiary` variant instead, for
+            // its own standalone use (Toast/Alert/Dialog headers). This is
+            // otherwise the same real, independently-focusable `<button>`
+            // that branch always was, just implemented directly here:
+            // there's no outer `role="button"` in this (non-interactive)
+            // case for a nested real button to conflict with.
+            <button
+              type="button"
               aria-label={removeLabel ?? `Remove ${children?.toString() ?? ""}`}
-              size={iconSizeForTagSize[size]}
-              iconSize={iconSizeForTagSize[size]}
-              className={styles.remove}
+              className={cx(
+                styles.remove,
+                styles.removeButton,
+                removeButtonSizeClass[iconSizeForTagSize[size]],
+              )}
               onClick={handleRemoveClick}
-            />
+            >
+              <Icon icon={XIcon} size={iconSizeForTagSize[size]} tone={iconTone} />
+            </button>
           ))}
       </span>
     );

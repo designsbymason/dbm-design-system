@@ -1,11 +1,12 @@
 import { XIcon } from "@dbm-design-system/icons";
 import { cx } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
+import type { ButtonSize } from "../Button/Button.types";
 import { Icon } from "../Icon";
 import styles from "./CloseButton.module.css";
-import type { CloseButtonProps, CloseButtonSize } from "./CloseButton.types";
+import type { CloseButtonProps } from "./CloseButton.types";
 
-const sizeClass: Record<CloseButtonSize, string | undefined> = {
+const sizeClass: Record<ButtonSize, string | undefined> = {
   xs: styles.sizeXs,
   sm: styles.sizeSm,
   md: styles.sizeMd,
@@ -13,34 +14,27 @@ const sizeClass: Record<CloseButtonSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-const iconSizeForCloseButtonSize: Record<CloseButtonSize, "xs" | "sm" | "md"> = {
-  xs: "xs",
-  sm: "xs",
-  md: "xs",
-  lg: "sm",
-  xl: "md",
-};
-
 /**
  * A dedicated dismiss control — a small, circular, icon-only button
- * defaulting to `aria-label="Close"` (override for context, e.g. "Remove
- * tag"). Unlike `IconButton`, its icon color always inherits `currentColor`
- * from context instead of a fixed token, so it reads correctly whether
- * it's sitting in a `Tag`, an `Alert`, a `Toast`, or a `Dialog` header —
- * each with a different text color.
+ * defaulting to `aria-label="Close"` (override for context, e.g. "Dismiss
+ * notification"). Styled to match `IconButton`'s own `tertiary` variant
+ * exactly (transparent at rest, `icon.brand` icon color, `bg.brand-subtle-
+ * hover` on hover, and the same box sizing) — the standalone dismiss
+ * control for genuinely standalone surfaces (Toast/Alert/Dialog headers),
+ * not a context-adaptive one. A component that needs its remove/dismiss
+ * affordance to match its own local tone (e.g. `Tag`) implements that
+ * locally rather than reusing this component.
  *
  * @example
  * ```tsx
  * <CloseButton onClick={() => setOpen(false)} />
- * <CloseButton size="sm" aria-label="Remove tag" onClick={onRemove} />
- * <CloseButton size="md" iconSize="md" aria-label="Remove tag" onClick={onRemove} />
+ * <CloseButton size="sm" aria-label="Dismiss notification" onClick={onDismiss} />
  * ```
  */
 export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
   (
     {
       size = "md",
-      iconSize,
       className,
       type = "button",
       "aria-label": ariaLabel,
@@ -55,7 +49,7 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
       className={cx(styles.root, sizeClass[size], className)}
       {...props}
     >
-      <Icon icon={XIcon} size={iconSize ?? iconSizeForCloseButtonSize[size]} />
+      <Icon icon={XIcon} size={size} />
     </button>
   ),
 );
