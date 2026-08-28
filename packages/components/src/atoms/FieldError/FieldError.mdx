@@ -1,0 +1,186 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { WarningCircleIcon } from "@dbm-design-system/icons";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldHelperText } from "../FieldHelperText";
+import { FieldLabel } from "../FieldLabel";
+import { Icon } from "../Icon";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { FieldError } from "./FieldError";
+import * as FieldErrorStories from "./FieldError.stories";
+
+export const propOrder = [
+  "children",
+  "icon",
+  "disabled",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={FieldErrorStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="FieldError" tier="Atom" />
+
+Validation error text for a form field, paired with `FieldLabel` and `FieldHelperText` as the
+three field-level text atoms a future `FormField` molecule will compose — usable standalone today
+for a hand-built field. Renders with `role="alert"`, so it's announced to assistive tech the
+moment it mounts, without any extra wiring. Pair its `id` with the field control's own
+`aria-describedby` so screen readers announce this message as describing that specific control,
+not just as an unrelated alert floating on the page.
+
+### Import
+
+```tsx
+import { FieldError } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FieldErrorStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={FieldErrorStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={FieldErrorStories} order={propOrder} />
+
+## Variants
+
+### Without icon
+
+<Canvas of={FieldErrorStories.WithoutIcon} />
+
+### Custom icon
+
+<Canvas of={FieldErrorStories.CustomIcon} />
+
+### Disabled
+
+<Canvas of={FieldErrorStories.Disabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Always pair `id` with the field control's own `aria-describedby` — without that association, a
+  screen reader announces the message once on mount but never connects it back to the invalid
+  field itself.
+- Keep the message specific and actionable — "Enter a valid email address," not a bare "Invalid."
+- Mount/unmount `FieldError` as validity changes, rather than toggling its visibility with CSS —
+  `role="alert"` only re-announces when the element (or its text) actually changes in the DOM.
+- Reach for `icon={false}` in a dense layout (a compact inline field, a table cell) where the
+  warning glyph would crowd the message rather than clarify it.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't override `role` yourself expecting it to take effect — `FieldError` always computes and
+  applies `role="alert"` itself; a same-named prop is silently ignored (see Accessibility below).
+- Don't override the `icon` glyph as a purely stylistic choice — it's a fixed semantic signal
+  ("this is an error"), and swapping it per instance works against a consistent error-state
+  language across the product. Reserve the override for a real, deliberate exception.
+- Don't rely on color alone to convey the error — the icon and the message text both carry the
+  meaning independently, so the pairing still reads correctly for color-blind users.
+- Don't use `FieldError` for a non-error hint or format tip — that's `FieldHelperText`'s job;
+  reserve `role="alert"`'s interruption for messages that actually need it.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Render at most one `FieldError` per field at a time — stacking multiple active errors dilutes
+  which one actually matters and multiplies the number of interruptive announcements.
+- Pass `disabled` to match the field control's own disabled state, the same way `FieldLabel` and
+  `FieldHelperText` do — a stale-looking full-color error next to a grayed-out, non-interactive
+  field reads as a rendering bug, not a real validation state.
+- Let the message replace `FieldHelperText` while it's shown, rather than stacking both — showing
+  a hint and an error for the same field at once is redundant and adds visual noise right when the
+  user most needs a clear, single instruction.
+
+## Accessibility
+
+<Callout tone="info" title="role is computed for you, never overridable">
+
+- **`role="alert"` is always applied internally** — a same-named prop passed by the caller is
+  silently ignored, even though TypeScript's JSX checker permits a `role` attribute on any
+  component regardless of its declared prop type (a real gap found and fixed during review:
+  enforced via JSX attribute order, not the type system, since the type system alone can't stop it
+  for `role`/`aria-*` names).
+- **`role="alert"` implies `aria-live="assertive"` and `aria-atomic="true"`** per the WAI-ARIA
+  spec, so no explicit `aria-live` is set — the whole message is announced as one unit as soon as
+  it mounts, interrupting whatever the screen reader was announcing before.
+- **The warning icon is `aria-hidden` and purely decorative** by default (`Icon`'s own behavior
+  when no `label` is passed) — the visible message text is the sole accessible name, so the icon
+  is never announced redundantly alongside it.
+- **The mount fade/slide-in is a one-shot transition, not a continuous/looping one**, so it isn't
+  gated behind `prefers-reduced-motion` — only continuous animation (spinners, pulses) is in scope
+  for that preference in this system.
+- **`text.danger`'s legibility against `bg.surface`, and `text.disabled`'s own accepted exemption
+  while `disabled`,** are both checked against real WCAG contrast outcomes, not assumed — see
+  [Design tokens used](#design-tokens-used) below for the exact tokens.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<FieldLabel htmlFor="email">Email address</FieldLabel>
+<input id="email" aria-describedby="email-error" aria-invalid="true" />
+<FieldError id="email-error">Enter a valid email address</FieldError>
+```
+
+```tsx
+<FieldError icon={false}>Passwords must match</FieldError>
+<FieldError disabled>Enter a valid email address</FieldError>
+```
+
+## Design tokens used
+
+<TokenRow token="text.danger" usage="Message text and icon color, via currentColor" />
+<TokenRow token="text.disabled" usage="Disabled-state text and icon color, overriding text.danger" />
+<TokenRow token="icon-size.xs" usage="The warning icon's own size, resolved via Icon" />
+<TokenRow token="font-family.primary" usage="Message text" />
+<TokenRow token="font-size.sm" usage="Message text" />
+<TokenRow token="line-height.normal" usage="Message text" />
+<TokenRow token="space.1" usage="Gap between the icon and the message text" />
+<TokenRow token="motion.duration.fast" usage="Mount fade/slide-in animation" />
+<TokenRow token="motion.easing.emphasized" usage="Mount fade/slide-in animation" />
+<TokenRow token="opacity.0–opacity.100" usage="Mount fade/slide-in animation's start/end opacity" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom for the same field — sized to match its control, with its own required-indicator and disabled-state conventions this component mirrors"
+  href="/?path=/story/atoms-inputs-fieldlabel--default"
+>
+  <FieldLabel htmlFor="example">Email address</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="The non-error hint/format-tip atom for the same field — reach for this instead when there's no actual validation failure to interrupt with"
+  href="/?path=/story/atoms-inputs-fieldhelpertext--default"
+>
+  <FieldHelperText>At least 8 characters</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="Icon"
+  description="The underlying icon primitive this component wraps for its warning glyph"
+  href="/?path=/story/atoms-media-icon--default"
+>
+  <Icon icon={WarningCircleIcon} tone="danger" />
+</RelatedCard>
+</div>

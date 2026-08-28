@@ -15,15 +15,33 @@ import type { FieldErrorProps } from "./FieldError.types";
  * ```tsx
  * <FieldError id="email-error">Enter a valid email address</FieldError>
  * <FieldError icon={false}>Passwords must match</FieldError>
+ * <FieldError disabled>Enter a valid email address</FieldError>
+ * <FieldError icon={CircleIcon}>Custom glyph</FieldError>
  * ```
  */
 export const FieldError = forwardRef<HTMLParagraphElement, FieldErrorProps>(
-  ({ icon = true, className, children, ...props }, ref) => (
-    <p ref={ref} role="alert" className={cx(styles.root, className)} {...props}>
-      {icon && <Icon icon={WarningCircleIcon} size="xs" className={styles.icon} />}
-      {children}
-    </p>
-  ),
+  ({ children, icon = true, disabled = false, className, ...props }, ref) => {
+    const iconComponent = icon === false ? null : icon === true ? WarningCircleIcon : icon;
+
+    return (
+      // `{...props}` is spread before the computed `role`/`className` so a
+      // same-named prop a consumer passes can never silently override them —
+      // the JSX-attribute-ordering bug already found and fixed on Skeleton/
+      // ProgressBar/ProgressCircle/Spinner/Button/IconButton/Checkbox
+      // (05-component-api-conventions.md §3). `role="alert"` is this
+      // component's entire reason for existing (the screen-reader
+      // announcement), so this one matters more than most.
+      <p
+        ref={ref}
+        {...props}
+        role="alert"
+        className={cx(styles.root, disabled && styles.disabled, className)}
+      >
+        {iconComponent && <Icon icon={iconComponent} size="xs" className={styles.icon} />}
+        {children}
+      </p>
+    );
+  },
 );
 
 FieldError.displayName = "FieldError";

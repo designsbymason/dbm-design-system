@@ -113,9 +113,25 @@
    a narrow viewport and forced its container (and often the whole page)
    wider instead — confirmed live inside `Callout`'s Do/Don't cards, but
    scoped at the `p`/`li` level so any future prose with the same shape is
-   covered too, not just that one component. */
-.sbdocs-content p,
-.sbdocs-content li {
+   covered too, not just that one component.
+
+   `:not(.sbdocs-preview *)` added (2026-08-28, found live on `FieldError`'s
+   own Docs page — its Playground/Variants text rendered `text.secondary`
+   gray instead of `text.danger` red): this rule's `p`/`li` selector has no
+   way to distinguish real markdown prose from a live component instance
+   whose own root element happens to be a bare `<p>`/`<li>` (`FieldError`,
+   `FieldHelperText`) — every `<Canvas>`-embedded live story renders inside
+   `.sbdocs-preview`, so its specificity (0,1,1) was silently beating that
+   component's own single-class `color`/`font-size`/`line-height` rule
+   (0,1,0) whenever the two happened to collide on tag name. Excluding
+   `.sbdocs-preview` descendants entirely removes the competing
+   declaration there instead of trying to out-rank it, so a live
+   component's own CSS module is the only thing setting its own text
+   styling inside a Canvas — exactly the "renders identically to how it
+   renders standalone" invariant every other Canvas embed already relies
+   on implicitly, just never violated by tag-name collision until now. */
+.sbdocs-content p:not(.sbdocs-preview *),
+.sbdocs-content li:not(.sbdocs-preview *) {
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-base);
   line-height: var(--dbm-line-height-relaxed);

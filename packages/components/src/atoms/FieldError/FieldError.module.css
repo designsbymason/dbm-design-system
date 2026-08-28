@@ -1,5 +1,19 @@
+/*
+ * Fades and eases the message in on mount — this component's own mount
+ * *is* its state change (a field going from valid to invalid), the same
+ * relationship Tooltip's `data-state="delayed-open"` fadeIn has to its own
+ * open transition, so it plays unconditionally here rather than behind a
+ * Radix data-state selector. One-shot, not looping, so
+ * `prefers-reduced-motion` doesn't apply per 06-engineering-standards.md
+ * §4's carve-out (only continuous/looping animation is in scope) — same
+ * precedent as Badge's pop and Tooltip's own fade in/out. Re-renders that
+ * keep this element mounted (e.g. the message text changing while the
+ * field stays invalid) don't replay it, since the `animation` property's
+ * value never changes across those renders.
+ */
 .root {
   align-items: center;
+  animation: fadeIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
   color: var(--dbm-text-danger);
   display: inline-flex;
   font-family: var(--dbm-font-family-primary);
@@ -7,6 +21,29 @@
   gap: var(--dbm-space-1);
   line-height: var(--dbm-line-height-normal);
   margin: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(-2px);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: translateY(0);
+  }
+}
+
+/* Matches FieldLabel's and FieldHelperText's own identical `.root.disabled`
+   rule exactly — a direct token swap, not opacity-composited (the other
+   disabled mechanism this codebase uses, e.g. Button/Checkbox/Input) — see
+   03-token-system-spec.md Phase 17 for why both mechanisms coexist. The
+   icon isn't touched separately here; it inherits this same color via
+   `currentColor` (it has no explicit `tone` of its own — see this
+   component's own review notes on that). */
+.root.disabled {
+  color: var(--dbm-text-disabled);
 }
 
 .icon {
