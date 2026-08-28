@@ -76,6 +76,41 @@ describe("CloseButton", () => {
     },
   );
 
+  it("defaults to a square-ish shape (radius.md), matching IconButton's own default", () => {
+    render(<CloseButton />);
+    expect(screen.getByRole("button", { name: "Close" })).toHaveStyle({
+      borderRadius: "var(--dbm-radius-md)",
+    });
+  });
+
+  it("renders as a circle when rounded is set", () => {
+    render(<CloseButton rounded />);
+    expect(screen.getByRole("button", { name: "Close" })).toHaveStyle({
+      borderRadius: "var(--dbm-radius-full)",
+    });
+  });
+
+  it("doesn't apply the hasBackground class by default", () => {
+    render(<CloseButton />);
+    expect(screen.getByRole("button", { name: "Close" }).className).not.toMatch(
+      /hasBackground/,
+    );
+  });
+
+  it("applies the hasBackground class when hasBackground is set", () => {
+    // The translucent layer itself renders via a `::before` pseudo-element
+    // (so the icon's own opacity is unaffected), which jsdom can't
+    // meaningfully compute a style for — asserting the class is applied is
+    // the real, checkable contract; the CSS itself is verified live in a
+    // running Storybook instance instead (05-component-api-conventions.md
+    // §8's "no hardcoded values" + this project's own live-verification
+    // standard for anything a unit test can't meaningfully assert).
+    render(<CloseButton hasBackground />);
+    expect(screen.getByRole("button", { name: "Close" }).className).toMatch(
+      /hasBackground/,
+    );
+  });
+
   it("forwards ref to the underlying button", () => {
     const ref = createRef<HTMLButtonElement>();
     render(<CloseButton ref={ref} />);
@@ -91,6 +126,28 @@ describe("CloseButton", () => {
 
   it("has no accessibility violations", async () => {
     const { container } = render(<CloseButton />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  // Final review pass (2026-08-27): the bare-default axe check above never
+  // exercised `disabled`, `rounded`, or `hasBackground` — each was only
+  // assumed safe by inference, the same gap class Checkbox's own final
+  // review closed for its `hasError`/`disabled` states.
+  it("has no accessibility violations when disabled", async () => {
+    const { container } = render(<CloseButton disabled />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations when rounded", async () => {
+    const { container } = render(<CloseButton rounded />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations when hasBackground is set", async () => {
+    const { container } = render(<CloseButton hasBackground />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

@@ -15,26 +15,37 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
 };
 
 /**
- * A dedicated dismiss control — a small, circular, icon-only button
- * defaulting to `aria-label="Close"` (override for context, e.g. "Dismiss
- * notification"). Styled to match `IconButton`'s own `tertiary` variant
- * exactly (transparent at rest, `icon.brand` icon color, `bg.brand-subtle-
- * hover` on hover, and the same box sizing) — the standalone dismiss
- * control for genuinely standalone surfaces (Toast/Alert/Dialog headers),
- * not a context-adaptive one. A component that needs its remove/dismiss
- * affordance to match its own local tone (e.g. `Tag`) implements that
- * locally rather than reusing this component.
+ * A dedicated dismiss control — a small, icon-only button defaulting to
+ * `aria-label="Close"` (override for context, e.g. "Dismiss notification")
+ * and a square-ish shape (pass `rounded` for a circle), with an optional
+ * translucent grounding layer (`hasBackground`) for use over unpredictable
+ * external content. Styled to match
+ * `IconButton`'s own `tertiary` variant exactly (transparent at rest,
+ * `icon.brand` icon color, `bg.brand-subtle-hover` on hover, the same box
+ * sizing, and the same `rounded` prop/default) — not a context-adaptive
+ * control. Reserved for surfaces where a modal-style overlay is involved
+ * (Dialog, Drawer, lightbox, and similar cards/panels), which have no local
+ * tone of their own to track. A component whose own tone/color varies per
+ * instance (Tag, Alert, Toast) implements its own local remove/dismiss
+ * button instead of reusing this one — see `Tag`'s own removable variant
+ * for the established pattern, and `05-component-api-conventions.md` §10
+ * for the full rule. Default to that local pattern unless `CloseButton` is
+ * explicitly what's wanted.
  *
  * @example
  * ```tsx
  * <CloseButton onClick={() => setOpen(false)} />
  * <CloseButton size="sm" aria-label="Dismiss notification" onClick={onDismiss} />
+ * <CloseButton rounded aria-label="Close" onClick={() => setOpen(false)} />
+ * <CloseButton hasBackground aria-label="Close" onClick={() => setOpen(false)} />
  * ```
  */
 export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
   (
     {
       size = "md",
+      rounded = false,
+      hasBackground = false,
       className,
       type = "button",
       "aria-label": ariaLabel,
@@ -46,7 +57,13 @@ export const CloseButton = forwardRef<HTMLButtonElement, CloseButtonProps>(
       ref={ref}
       type={type}
       aria-label={ariaLabel ?? "Close"}
-      className={cx(styles.root, sizeClass[size], className)}
+      className={cx(
+        styles.root,
+        sizeClass[size],
+        rounded && styles.rounded,
+        hasBackground && styles.hasBackground,
+        className,
+      )}
       {...props}
     >
       <Icon icon={XIcon} size={size} />

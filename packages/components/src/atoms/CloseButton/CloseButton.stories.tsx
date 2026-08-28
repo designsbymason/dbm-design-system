@@ -17,6 +17,16 @@ const meta: Meta<typeof CloseButton> = {
       description:
         "Controls the button's clickable box and its glyph together, as one step — matches IconButton's own size scale (box sized generously around the glyph, not a tight fit).",
     },
+    rounded: {
+      control: "boolean",
+      description:
+        "Renders as a circle instead of the standard rounded-corner shape — matches IconButton's own rounded prop exactly.",
+    },
+    hasBackground: {
+      control: "boolean",
+      description:
+        "Adds an optional translucent grounding layer behind the icon (white in light mode, a dark neutral in dark mode), for use over unpredictable external content (a photo, a busy hero image).",
+    },
     "aria-label": {
       control: "text",
       description:
@@ -51,11 +61,10 @@ const meta: Meta<typeof CloseButton> = {
       description:
         "Inline styles, merged onto the component's own internal styles.",
     },
-    // `data-testid` isn't redeclared on `CloseButtonProps` yet (finding #7
-    // — Storybook's argTypes are typed against the component's own props,
-    // so an undeclared-but-inherited native prop can't be given an
-    // explicit argType entry until then). It still works at runtime via
-    // native passthrough; add this back once #7 lands.
+    "data-testid": {
+      control: false,
+      description: "Test identifier for automated testing.",
+    },
   },
   // Every controllable prop gets an explicit value here, matching its real
   // component default — an arg left `undefined` renders as an inert "Set
@@ -64,6 +73,8 @@ const meta: Meta<typeof CloseButton> = {
   // §5).
   args: {
     size: "md",
+    rounded: false,
+    hasBackground: false,
     "aria-label": "Close",
     type: "button",
     disabled: false,
@@ -80,11 +91,58 @@ export const Playground: Story = {};
 
 export const AllSizes: Story = {
   name: "All sizes",
-  render: () => (
+  // `size` is the whole point of this grid, paired with `aria-label`
+  // (fixed together per instance so each button keeps a distinct
+  // accessible name) — no single control value could represent either
+  // across five differently-sized instances. Every other prop (`rounded`,
+  // `hasBackground`, `disabled`, …) stays live and shared via `{...args}`,
+  // matching IconButton's own AllSizes precedent — previously this story
+  // used a bare `render: () => (...)` that ignored args entirely, making
+  // every control here a silent no-op (found in review).
+  argTypes: {
+    size: { control: false },
+    "aria-label": { control: false },
+  },
+  render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-3)", alignItems: "center" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-        <CloseButton key={size} size={size} aria-label={`Close (${size})`} />
+        <CloseButton
+          key={size}
+          {...args}
+          aria-label={`Close (${size})`}
+          size={size}
+        />
       ))}
+    </div>
+  ),
+};
+
+export const Rounded: Story = {
+  name: "Rounded (circular)",
+  args: { rounded: true },
+};
+
+export const OnBusyBackground: Story = {
+  name: "hasBackground, over unpredictable content",
+  // A CSS gradient stands in for a real photo/hero-image background here —
+  // the point either way is content this component has no control over.
+  // Side-by-side comparison: without hasBackground, the icon has nothing
+  // grounding it against the busier part of the gradient; with it, the
+  // translucent bg.scrim layer keeps it legible regardless of what's
+  // underneath.
+  render: (args) => (
+    <div
+      style={{
+        display: "flex",
+        gap: "var(--dbm-space-6)",
+        padding: "var(--dbm-space-4)",
+        background:
+          "linear-gradient(135deg, var(--dbm-color-purple-600), var(--dbm-color-amber-400), var(--dbm-color-green-600))",
+        borderRadius: "var(--dbm-radius-md)",
+      }}
+    >
+      <CloseButton {...args} aria-label="Close (no background)" />
+      <CloseButton {...args} aria-label="Close (with background)" hasBackground />
     </div>
   ),
 };

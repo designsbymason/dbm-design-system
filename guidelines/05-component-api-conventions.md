@@ -86,6 +86,16 @@ A component isn't complete until all of these are true:
 
 Conventional Commits format (`feat(button): add loading state`) — this is what allows Changesets to generate accurate changelogs. Every PR/change that affects the public API includes a changeset describing the change from the consumer's point of view.
 
+## 10. `CloseButton` vs. a local, component-specific remove control (established 2026-08-27, via Tag/CloseButton)
+
+`CloseButton` is a fixed, brand-styled dismiss control (`icon.brand` icon color, `bg.brand-subtle-hover` hover fill — matching `IconButton`'s own `tertiary` variant exactly) — not a context-adaptive one. That's the deliberate outcome of a real conflict found building it: `Tag`'s own removable variant originally reused `CloseButton`, but needed its remove icon to track the tag's own local tone (red on a `danger` tag, etc.), a requirement fundamentally incompatible with `CloseButton`'s fixed brand color. Rather than keep stretching one component to serve both needs, `Tag` was detached and given its own small, locally-implemented, tone-aware remove `<button>` instead (see `Tag.module.css`'s `.removeButton` and `Tag.tsx`'s non-interactive removable branch) — colored via that component's own already-existing tone-resolution logic, not a shared atom.
+
+This produced a general rule, not a one-off fix scoped to Tag alone:
+
+- **`CloseButton` is reserved for surfaces where a modal-style overlay is involved** — Dialog, Drawer, lightbox, and similar cards/panels that present over the rest of the page. These are genuinely standalone contexts with no local tone of their own to track, which is exactly what `CloseButton`'s fixed brand styling is designed for.
+- **Any component whose own tone/color varies per instance — Toast, Alert, and any future tone-driven molecule/organism — implements its own local, self-contained remove/close button** instead of reusing `CloseButton`, following `Tag`'s own established pattern. This applies even though Toast/Alert notifications are visually "standalone" in the sense of floating above other content — the deciding factor is whether the component has its own varying tone to track, not whether it visually floats.
+- **Default to the local, component-specific implementation unless `CloseButton` is explicitly requested.** Don't reach for `CloseButton` automatically just because a component needs a dismiss affordance — treat it as an opt-in choice for the modal-surface case specifically, not the default dismiss-button building block every removable/dismissible component should reach for first.
+
 ## Related documents
 - `04-component-inventory.md` — what to build, in what order
 - `03-token-system-spec.md` — the tokens every value here must trace to

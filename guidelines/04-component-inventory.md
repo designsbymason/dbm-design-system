@@ -48,7 +48,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Button | atom | 🟢 | Primary/secondary/tertiary/destructive/ghost variants, loading state |
 | ButtonGroup | molecule | 🟡 | Attached/segmented button set, shared border-radius |
 | IconButton | atom | 🟢 | Icon-only, requires `aria-label` |
-| CloseButton | atom | 🟢 | Dedicated dismiss control — Tag's removable variant, future Alert/Toast/Dialog close |
+| CloseButton | atom | 🟢 | Dedicated dismiss control, fixed brand styling — reserved for modal-style surfaces (Dialog, Drawer, lightbox), not tone-varying components (Tag, Alert, Toast), which implement their own local remove control instead — see `05-component-api-conventions.md` §10 |
 | Input (text) | atom | 🟢 | With prefix/suffix slot support |
 | PasswordInput | molecule | 🟢 | Visibility toggle, wraps Input |
 | Textarea | atom | 🟢 | Auto-resize option |

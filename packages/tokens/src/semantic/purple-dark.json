@@ -10,6 +10,11 @@
       "$value": "{color.neutral.black}",
       "$description": "Dimming scrim behind Dialog/Drawer/overlays (Backdrop atom). No text sits directly on it, so it isn't a WCAG contrast pairing — opacity is applied separately, compositionally, via the opacity.* scale rather than baked into this token, matching how color and opacity stay separate token categories everywhere else. Shared across all 4 themes since dimming what's behind isn't a brand-dependent decision. Reordered (2026-08-20) to sit right after bg.canvas, per explicit direction — no value change."
     },
+    "scrim": {
+      "$type": "color",
+      "$value": "{color.gray.800}",
+      "$description": "New token (2026-08-25, CloseButton review) — dark-mode value revised same day, at explicit direction, from neutral.white (this token's original, shared-across-all-4-themes value) to gray.800, the same step bg.surface itself resolves to in dark mode. A plain white scrim would sit inconsistently bright against a dark-themed app even though what it's grounding against (unpredictable external content) is by design outside this system's control — gray.800 keeps the grounding-layer effect while reading as native to a dark UI. Light grounding layer behind an icon-only control sitting over unpredictable external content (CloseButton's optional hasBackground prop) — no fixed WCAG contrast pairing is possible here, since what this composites over is arbitrary, unlike every other bg.*/text.* pairing in this file. Opacity is applied separately, compositionally, at the component layer (CloseButton.module.css, opacity.40 — also revised down from opacity.80 the same day) rather than baked into this token. Positioned directly after bg.overlay — both are opacity-composited overlay-type tokens, distinct from bg.skeleton's always-opaque, brand-tinted fill."
+    },
     "skeleton": {
       "$type": "color",
       "$value": "{color.gray.900}",

@@ -1,0 +1,197 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { XIcon } from "@dbm-design-system/icons";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Icon } from "../Icon";
+import { IconButton } from "../IconButton";
+import { Tag } from "../Tag";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { CloseButton } from "./CloseButton";
+import * as CloseButtonStories from "./CloseButton.stories";
+
+export const propOrder = [
+  "size",
+  "rounded",
+  "hasBackground",
+  "type",
+  "disabled",
+  "onClick",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={CloseButtonStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="CloseButton" tier="Atom" />
+
+A dedicated dismiss control — a small, icon-only button with a fixed brand-colored icon and a
+default `aria-label` of "Close". Styled to match `IconButton`'s own `tertiary` variant exactly
+(transparent at rest, `icon.brand` icon color, `bg.brand-subtle-hover` on hover, the same box
+sizing), not a context-adaptive one. **Reserved for surfaces where a modal-style overlay is
+involved** — Dialog, Drawer, lightbox, and similar cards/panels that present over the rest of the
+page — which have no local tone of their own to track. Any component whose own tone/color varies
+per instance (Tag, Alert, Toast) implements its own local remove/dismiss button instead, following
+`Tag`'s own established pattern — see [Tag](#related-components) below for a real example. **Default
+to that local, component-specific pattern unless `CloseButton` is explicitly what's wanted** —
+it isn't the default building block for every dismissible component.
+
+### Import
+
+```tsx
+import { CloseButton } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CloseButtonStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={CloseButtonStories.Playground}
+  exclude={["onClick", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={CloseButtonStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={CloseButtonStories.AllSizes} />
+
+### Rounded (circular)
+
+<Canvas of={CloseButtonStories.Rounded} />
+
+### hasBackground, over unpredictable content
+
+<Canvas of={CloseButtonStories.OnBusyBackground} />
+
+### Disabled
+
+<Canvas of={CloseButtonStories.Disabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `CloseButton` for dismiss affordances on modal-style surfaces — Dialog, Drawer, lightbox, and
+  similar cards/panels — where a fixed, brand-colored icon is the right, consistent choice.
+- Pass `hasBackground` when placing it over unpredictable external content (a photo, a busy hero
+  image) so the icon stays grounded regardless of what's behind it.
+- Reach for `rounded` for a circular treatment, matching `IconButton`'s own `rounded` prop and
+  default exactly.
+- Override the default `aria-label="Close"` with something more specific when it helps — "Dismiss
+  notification", "Remove filter" — but leave it as-is when "Close" is already unambiguous.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reuse `CloseButton` inside a component whose own dismiss affordance needs to match a
+  *local*, varying tone — `Tag`, `Alert`, `Toast`, and any future tone-driven component — build a
+  small, local, tone-aware implementation instead, the way `Tag`'s own removable variant does.
+  `CloseButton`'s icon color is fixed, not context-adaptive, even though these components can be
+  visually "standalone" (floating above other content) in the same loose sense Dialog/Drawer are —
+  the deciding factor is whether the component has its own varying tone to track, not whether it
+  floats.
+- Don't reach for `CloseButton` by default just because a component needs *some* dismiss
+  affordance — it's an opt-in choice for the modal-surface case specifically, not the standard
+  building block every removable/dismissible component should start from.
+- Don't rely on `hasBackground` for a guaranteed contrast outcome — there's no fixed WCAG pairing
+  possible here, since what it composites over is arbitrary, external content by design.
+- Don't pass a custom `aria-label` that no longer describes a dismiss action — assistive tech users
+  rely on it to know what the button actually does.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the density of the modal-style surface it's dismissing — `sm`/`xs` for compact
+  cards and panels, `md` (the default) for standard Dialog/Drawer headers, `lg`/`xl` for
+  high-emphasis contexts (a full-screen lightbox, for example).
+- `rounded` and `hasBackground` compose freely — the translucent grounding layer automatically
+  follows whichever shape is active (`border-radius: inherit`), so there's no separate
+  square/circle variant of it to reach for.
+- `hasBackground`'s scrim color is mode-specific (white in light mode, a dark neutral in dark mode)
+  but not otherwise configurable — if a different grounding treatment is needed for a specific
+  surface, compose a wrapper around `CloseButton` rather than extending this prop.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard support comes from the native button; a label is always present">
+
+- Renders a native `<button type="button">` by default — full keyboard support (`Tab` to focus,
+  `Enter`/`Space` to activate) comes for free from the browser, not from custom key handling.
+- Always has an accessible name: `aria-label` defaults to `"Close"` when omitted, so — unlike
+  `IconButton`, whose `aria-label` is required by the type with no fallback — `CloseButton` never
+  ships with no accessible name at all.
+- `icon.brand`'s rest-state legibility against a typical `bg.surface` card, and its hover-state
+  legibility against `bg.brand-subtle-hover`, are both checked against real WCAG contrast ratios,
+  not assumed — see [Design tokens used](#design-tokens-used) below for the exact tokens.
+- `hasBackground`'s translucent layer is purely decorative (`pointer-events: none`) — confirmed
+  live, not just from the CSS declaration, that it never intercepts clicks or keyboard focus.
+  There's no fixed contrast guarantee for it, since what it composites over is arbitrary by design.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<CloseButton onClick={() => setOpen(false)} />
+<CloseButton size="sm" aria-label="Dismiss notification" onClick={onDismiss} />
+<CloseButton rounded aria-label="Close" onClick={() => setOpen(false)} />
+<CloseButton hasBackground aria-label="Close" onClick={() => setOpen(false)} />
+```
+
+## Design tokens used
+
+<TokenRow token="icon.brand" usage="Icon color, at rest and while pressed" />
+<TokenRow token="bg.brand-subtle-hover" usage="Hover-state fill" />
+<TokenRow token="bg.scrim" usage="hasBackground's translucent grounding layer — white in light mode, gray.800 in dark mode" />
+<TokenRow token="border.focus" usage="Focus-visible outline" />
+<TokenRow token="radius.md" usage="Default corner radius" />
+<TokenRow token="radius.sm" usage="Focus-visible outline corner radius (overrides radius.md while focused)" />
+<TokenRow token="radius.full" usage="rounded variant's corner radius and its own focus-ring radius; also hasBackground's grounding layer when rounded is set" />
+<TokenRow token="border-width.2" usage="Focus ring width" />
+<TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="Per-size box height/width (component-layer token, shared with IconButton) — the icon itself uses the plain icon-size.* scale" />
+<TokenRow token="motion.duration.fast" usage="Hover/focus-state transitions" />
+<TokenRow token="motion.easing.standard" usage="Hover/focus-state transitions" />
+<TokenRow token="opacity.40" usage="Disabled state; also hasBackground's grounding-layer opacity" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="IconButton"
+  description="The general-purpose icon-only button this component's style is matched to — reach for it instead when the action isn't specifically a dismiss/close"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={XIcon} aria-label="Example" variant="tertiary" />
+</RelatedCard>
+<RelatedCard
+  name="Tag"
+  description="A real example of a component that needed its own local, tone-aware dismiss control instead of reusing CloseButton"
+  href="/?path=/docs/atoms-data-display-tag--docs"
+>
+  <Tag removable tone="danger" onRemove={() => {}}>Example</Tag>
+</RelatedCard>
+<RelatedCard
+  name="Icon"
+  description="The underlying icon primitive this component wraps and centers in an interactive box"
+  href="/?path=/story/atoms-media-icon--default"
+>
+  <Icon icon={XIcon} tone="brand" />
+</RelatedCard>
+</div>

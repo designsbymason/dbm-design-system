@@ -9,7 +9,7 @@
   align-items: center;
   background-color: transparent;
   border: none;
-  border-radius: var(--dbm-radius-full);
+  border-radius: var(--dbm-radius-md);
   color: var(--dbm-icon-brand);
   cursor: pointer;
   display: inline-flex;
@@ -25,14 +25,79 @@
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
+/* `border-radius` here deliberately overrides `.root`'s own
+   `--dbm-radius-md` — the standardized `sm` focus-ring radius
+   (`05-component-api-conventions.md` §6) applies to every square-ish
+   interactive element regardless of its own corner radius, matching
+   IconButton's identical `:focus-visible` block exactly. `.rounded:focus-
+   visible` below overrides this again to `full` for the circular case. */
 .root:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
 }
 
 .root:disabled {
   cursor: not-allowed;
   opacity: var(--dbm-opacity-40);
+}
+
+.rounded {
+  border-radius: var(--dbm-radius-full);
+}
+
+/* The `full` counterpart to `.root:focus-visible`'s `sm` above — a round
+   CloseButton is exactly the case `05-component-api-conventions.md` §6
+   names for using `radius-full` on the focus ring. */
+.rounded:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
+/* Optional translucent grounding layer (`hasBackground` prop, 2026-08-25;
+   value/opacity revised same day at explicit direction) — for a
+   CloseButton sitting over unpredictable external content (a photo, a
+   busy hero image) where its own icon might not otherwise read clearly.
+   `bg.scrim` is mode-specific (white in light mode, gray.800 — the same
+   step bg.surface itself uses — in dark mode, see that token's own
+   description) at `opacity.40` (revised down from `opacity.80`).
+   Implemented as a `::before` layer rather than `opacity` on `.root`
+   itself, since `opacity` would fade the icon along with the background —
+   `bg.scrim` (an opaque token, like `bg.overlay`) and `opacity.*` stay
+   separate token categories, composited here at the CSS layer instead of
+   baked into one token. `z-index: -1` is required:
+   an absolutely-positioned pseudo-element is a positioned descendant, and
+   without it would paint *above* the plain, non-positioned `<svg>` icon,
+   not behind it, regardless of DOM order. `border-radius: inherit` picks
+   up whichever shape `.root`'s own cascade currently resolves to (`md`
+   default or `full` via `.rounded`), so this needs no square/circle
+   variant of its own.
+
+   `isolation: isolate` is required alongside `position: relative` — found
+   live, not assumed: without it, `.hasBackground` (position: relative,
+   z-index: auto) doesn't establish its own stacking context, so the
+   `::before`'s `z-index: -1` escapes to the *parent's* stacking context
+   instead of staying scoped to this button. There it painted behind the
+   button's own content entirely (both the icon and the scrim rendered as
+   fully invisible, confirmed via computed styles showing every value
+   correct — background-color, opacity, position — despite nothing
+   appearing on screen), rather than just behind the icon as intended.
+   `isolation: isolate` forces the local stacking context `position:
+   relative` alone doesn't guarantee here, containing the negative
+   z-index correctly. */
+.hasBackground {
+  position: relative;
+  isolation: isolate;
+}
+
+.hasBackground::before {
+  border-radius: inherit;
+  background-color: var(--dbm-bg-scrim);
+  content: "";
+  inset: 0;
+  opacity: var(--dbm-opacity-40);
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
 }
 
 /* Sizes — box dimensions matched to IconButton's own real rendered size at
