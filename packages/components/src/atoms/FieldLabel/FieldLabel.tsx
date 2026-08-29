@@ -26,7 +26,7 @@ const sizeClass: Record<FieldLabelSize, string | undefined> = {
  */
 export const FieldLabel = forwardRef<HTMLLabelElement, FieldLabelProps>(
   (
-    { size = "md", required = false, disabled = false, className, children, ...props },
+    { children, size = "md", required = false, disabled = false, className, ...props },
     ref,
   ) => (
     <label

@@ -5,12 +5,65 @@ const meta: Meta<typeof FieldLabel> = {
   title: "Atoms/Inputs/FieldLabel",
   component: FieldLabel,
   parameters: { layout: "padded" },
+  // Ordered content prop first, then the field-association prop, then
+  // core visual/behavioral props — the same sequencing principle the
+  // future Properties table will use (guidelines/
+  // 07-storybook-and-documentation-standards.md §4 item 3).
   argTypes: {
-    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
+    children: {
+      control: "text",
+      description: "The label text.",
+    },
+    htmlFor: {
+      control: "text",
+      description:
+        "The id of the field control this label describes — pairs via the native label/control association (or wrap the control as a child instead).",
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description:
+        "Font size, matching the size scale of the field control it labels (Input, Textarea, Select, etc.).",
+    },
+    required: {
+      control: "boolean",
+      description:
+        "Shows a decorative required-indicator asterisk after the label text. Purely visual — hidden from assistive tech.",
+    },
+    disabled: {
+      control: "boolean",
+      description: "Dims the label to match a disabled field control.",
+    },
+    // `control: false` — values that only mean something wired up in real
+    // consuming code, not in an isolated Storybook canvas. Matches every
+    // other reviewed component's established precedent for this same set.
+    id: { control: false, description: "Standard DOM id." },
+    className: {
+      control: false,
+      description:
+        "Additional CSS classes for customization. Merged with the component's own internal classes rather than replacing them.",
+    },
+    style: {
+      control: false,
+      description:
+        "Inline styles, merged onto the component's own internal styles.",
+    },
+    "data-testid": {
+      control: false,
+      description: "Test identifier for automated testing.",
+    },
   },
+  // Every controllable prop gets an explicit value here, matching its real
+  // component default — an arg left `undefined` renders as an inert "Set
+  // string"/"Set boolean" placeholder instead of a live, interactive
+  // control (see guidelines/07-storybook-and-documentation-standards.md
+  // §5).
   args: {
-    htmlFor: "email",
     children: "Email address",
+    htmlFor: "email",
+    size: "md",
+    required: false,
+    disabled: false,
   },
 };
 
@@ -18,7 +71,8 @@ export default meta;
 
 type Story = StoryObj<typeof FieldLabel>;
 
-export const Default: Story = {};
+/** Drive every prop live via the Controls panel below. */
+export const Playground: Story = {};
 
 export const Required: Story = {
   args: { required: true },
@@ -39,10 +93,22 @@ export const Disabled: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
-  render: () => (
+  // `size`/`children`/`htmlFor` are the whole point of this grid — each
+  // instance intentionally varies size (the size name doubles as its own
+  // label) and needs a unique `htmlFor` for a valid per-instance
+  // association, so no single control value could represent them.
+  // `required`/`disabled` still stay live and shared via `{...args}`.
+  // Previously this story used a bare `render: () => (...)` that ignored
+  // args entirely, making every control here a silent no-op.
+  argTypes: {
+    size: { control: false },
+    children: { control: false },
+    htmlFor: { control: false },
+  },
+  render: (args) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-        <FieldLabel key={size} htmlFor={`field-${size}`} size={size}>
+        <FieldLabel key={size} {...args} htmlFor={`field-${size}`} size={size}>
           Size {size}
         </FieldLabel>
       ))}

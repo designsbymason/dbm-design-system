@@ -1,0 +1,170 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldError } from "../FieldError";
+import { FieldHelperText } from "../FieldHelperText";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { FieldLabel } from "./FieldLabel";
+import * as FieldLabelStories from "./FieldLabel.stories";
+
+export const propOrder = [
+  "children",
+  "htmlFor",
+  "size",
+  "required",
+  "disabled",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={FieldLabelStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="FieldLabel" tier="Atom" />
+
+The label for a form field, sized to match the control it labels and paired with `FieldHelperText`
+and `FieldError` as the three field-level text atoms a future `FormField` molecule will compose.
+Usable standalone today for a hand-built field. Renders a native `<label>` — pair its `htmlFor`
+with the control's own `id` (or wrap the control as a child of the label instead) for the native
+label/control association assistive tech and click-to-focus both rely on.
+
+### Import
+
+```tsx
+import { FieldLabel } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FieldLabelStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={FieldLabelStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={FieldLabelStories} order={propOrder} />
+
+## Variants
+
+### Required
+
+<Canvas of={FieldLabelStories.Required} />
+
+### Disabled
+
+<Canvas of={FieldLabelStories.Disabled} />
+
+### All sizes
+
+<Canvas of={FieldLabelStories.AllSizes} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Always pair `htmlFor` with the field control's own `id` — without that association, a screen
+  reader never announces this label when the control receives focus, and clicking the label text
+  won't focus/activate the control either.
+- Match `size` to the control it labels (`Input`, `Textarea`, `Select`, etc.) so the label and
+  control read as one visually related unit, not two mismatched pieces.
+- Pass `disabled` to match the field control's own disabled state, so the label dims along with it
+  rather than reading as active text next to a grayed-out field.
+- Rely on `required`'s asterisk as a visual cue only — pair it with the control's own real
+  `required`/`aria-required` attribute, which is what actually conveys the semantics.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't wire up `required` alone and skip the control's own `required` attribute — the asterisk is
+  `aria-hidden`, purely decorative, and conveys nothing to assistive tech on its own.
+- Don't use a bare `<span>`/`<div>` for field label text instead of `FieldLabel` — the native
+  `<label>` element (and its `htmlFor` association) is what gives click-to-focus and screen-reader
+  announcement for free; recreating that behavior by hand is easy to get subtly wrong.
+- Don't render a `FieldLabel` with neither `htmlFor` set nor the control wrapped as a child — with
+  neither, the label has no programmatic association with any control at all.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep label text short and scannable — a field label is a prompt, not a sentence; put
+  clarifying detail in `FieldHelperText` instead.
+- `FieldLabel`'s own `size` scale exists specifically to track a paired control's size — when
+  building a hand-assembled field, choose both from the same step rather than mixing, e.g. an
+  `md` `Input` with an `lg` `FieldLabel`.
+- `FieldLabel`, `FieldHelperText`, and `FieldError` all share the same `disabled` mechanism and
+  token (`text.disabled`) — keep all three in sync on a given field so a disabled state reads
+  consistently across label, hint/error, and control.
+
+## Accessibility
+
+<Callout tone="info" title="A native label, not a styled div">
+
+- **Renders a real `<label>` element** — keyboard/click-to-focus behavior on the paired control,
+  and screen-reader announcement when that control receives focus, both come from the browser's
+  own native label semantics, not custom JavaScript.
+- **The required asterisk is `aria-hidden`**, deliberately — it's a visual cue only. The
+  associated control's own `required`/`aria-required` attribute is what assistive tech actually
+  announces; pair them rather than relying on the asterisk alone.
+- **`text.primary`'s legibility against `bg.surface`, and `text.disabled`'s own accepted exemption
+  while `disabled`,** are both checked against real WCAG contrast outcomes, not assumed — see
+  [Design tokens used](#design-tokens-used) below for the exact tokens.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<FieldLabel htmlFor="email">Email address</FieldLabel>
+<input id="email" />
+```
+
+```tsx
+<FieldLabel htmlFor="password" required>Password</FieldLabel>
+<input id="password" required aria-required="true" />
+```
+
+```tsx
+<FieldLabel htmlFor="email" disabled>Email address</FieldLabel>
+<input id="email" disabled />
+```
+
+## Design tokens used
+
+<TokenRow token="text.primary" usage="Label text" />
+<TokenRow token="text.disabled" usage="Disabled-state text, overriding text.primary" />
+<TokenRow token="text.danger" usage="The required-indicator asterisk" />
+<TokenRow token="font-family.primary" usage="Label text" />
+<TokenRow token="font-weight.medium" usage="Label text" />
+<TokenRow token="line-height.normal" usage="Label text" />
+<TokenRow token="font-size.xs–font-size.lg" usage="Per-size font size, matching the size scale of the field control it labels" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FieldHelperText"
+  description="The non-error hint/format-tip atom for the same field — pairs alongside this label, below the field control"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>At least 8 characters</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="The validation-error atom for the same field — reach for this instead of styling this label red directly once the field actually fails validation"
+  href="/?path=/docs/atoms-inputs-fielderror--docs"
+>
+  <FieldError>Enter a valid email address</FieldError>
+</RelatedCard>
+</div>
