@@ -695,15 +695,17 @@ Adding a third brand theme later = one more pair of semantic JSON files (`{brand
 
 ## Component-layer tokens
 
-**First populated 2026-08-12 (Avatar's size scale), extended 2026-08-13 (Avatar's status-size scale, same file — `component/avatar.json` now holds two token families, `avatar.size.*` and `avatar.status-size.*`)** — the pattern below is now established, not just planned.
+**First populated 2026-08-12 (Avatar's size scale), extended 2026-08-13 (Avatar's status-size scale, same file — `component/avatar.json` now holds two token families, `avatar.size.*` and `avatar.status-size.*`)** — the pattern below is now established, not just planned. **Two more files populated since (audited into this doc 2026-08-29, having landed without a narrative entry here at the time):**
 
+- **`component/badge.json` (2026-08-16, during Badge's own deep-dive review):** two token families, `badge.padding-inline.*` and `badge.size.*` (both `xs`–`xl`). Neither maps onto an existing primitive scale — `size` is a per-step circle/pill diameter computed from real Chrome-measured widest-glyph widths at each step's own font size (so a single character renders as a true circle, not an ellipse), and `padding-inline` is the inline padding that diameter math depends on. Both were revised the same day, at explicit direction (`padding-inline` raised from 5px to a uniform 6px across every step, `size` recomputed to match) — see each token's own `$description` for the full per-step arithmetic; not restated here to avoid the numbers drifting out of sync between two places.
+- **`component/icon-button.json` (2026-08-24, during IconButton's own review):** one token family, `icon-button.size.*` (`xs`–`xl`) — IconButton's own box height/width, deliberately matched to `Button`'s real rendered height at the equivalent size step (measured live in a real browser, not computed from another token) so an `IconButton` sits flush next to a `Button` of the same size. `lg`/`xl` hold only at the fluid-typography scale's own 1440px reference viewport, since `Button`'s own height at those two steps is itself fluid — accepted as the closest achievable match, not an exact one at every viewport (see the token's own `$description`). Also the token layer `CloseButton` now reads its own box size from (`CloseButton`'s prior separate `iconSize` mechanism was removed during its own review — see `05-component-api-conventions.md` §10 and the Phases 41–43 superseded note below).
 - **File convention:** one file per component, `component/{component-name}.json`, self-namespaced under that component's own top-level key (e.g. `avatar.json` → `{ "avatar": { ... } }`) — same unwrapped convention as `typography.json`/`other.json`, so no entry in `dbm/namespace-primitives`'s `NAMESPACE_BY_FILENAME` map is needed.
 - **Theme-independent by default.** Unlike semantic tokens, component tokens aren't split per brand/mode — they're built once into `component-tokens.css`/`component-tokens.ts` and loaded globally (`:root`, no `data-theme` scoping), alongside `primitives.css`. A component token *can* alias a primitive (e.g. a future color override) if it ever needs one — the build includes the primitive source for reference resolution — but plain literal values (dimensions, etc.) are just as valid and don't require an alias.
 - **When to reach for this layer, in order of preference:**
   1. Use an existing semantic token if one already fits.
   2. If a component needs a numeric value on an existing primitive scale (spacing, icon-size, etc.) that just isn't the value currently in use, prefer that existing scale over inventing something new.
   3. Only add a component-layer token when the component's design genuinely calls for a value with **no home on any existing primitive scale** — reach for this layer instead of hardcoding the literal value directly in component CSS, which the "tokens are the single source of truth" rule in `CLAUDE.md` forbids regardless of layer.
-- **Precedent — Avatar's size scale:** requested pixel values were 36/40/44/48/52px. Only 40 and 48 matched existing tokens (`space-10`, `space-12`); 36/44/52 matched nothing on any scale. Rather than distort the shared spacing scale to fit one component's needs, or silently snap to the nearest existing values (changing the requested design), `component/avatar.json` was created with `avatar.size.{xs,sm,md,lg,xl}` as literal dimension values, scoped only to Avatar.
+- **Precedent — Avatar's size scale:** requested pixel values were 36/40/44/48/52px. Only 40 and 48 matched existing tokens (`space-10`, `space-12`); 36/44/52 matched nothing on any scale. Rather than distort the shared spacing scale to fit one component's needs, or silently snap to the nearest existing values (changing the requested design), `component/avatar.json` was created with `avatar.size.{xs,sm,md,lg,xl}` as literal dimension values, scoped only to Avatar. `Badge`'s and `IconButton`'s own populations above followed the identical reasoning — a real, measured value with no home on any existing scale, not a convenience shortcut around one that already fit.
 - **Build wiring:** `style-dictionary.config.js`'s `buildComponents()` runs a dedicated Style Dictionary instance (source: primitives + `component/*.json`, filtered to component-namespaced tokens via `token.filePath` rather than a hardcoded namespace list, so a new `component/*.json` file needs no config change) — same shape as the existing primitives-only and per-theme passes.
 
 ## Build pipeline decisions (Phase 2)
@@ -736,8 +738,10 @@ packages/tokens/src/
 │   └── emerald-dark.json
 └── component/
     ├── avatar.json
-    └── badge.json
+    ├── badge.json
+    └── icon-button.json
 ```
+**Updated 2026-08-29** — `icon-button.json` was missing from this tree despite existing on disk since 2026-08-24; see the "Component-layer tokens" section above for its own narrative entry, added the same day.
 
 ## Open for next pass
-- Component-layer tokens: pattern established (Avatar's size scale); extend to other components only as their own reviews turn up a genuine scale gap, not preemptively
+- Component-layer tokens: pattern established (Avatar's size scale) and **confirmed twice more since (Badge, IconButton — see "Component-layer tokens" above), not just a one-off** — still extend to other components only as their own reviews turn up a genuine scale gap, not preemptively; the pattern being proven repeatedly doesn't change that it stays reactive, not speculative
