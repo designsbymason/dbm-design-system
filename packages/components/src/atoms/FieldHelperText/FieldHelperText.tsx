@@ -17,7 +17,7 @@ import type { FieldHelperTextProps } from "./FieldHelperText.types";
 export const FieldHelperText = forwardRef<
   HTMLParagraphElement,
   FieldHelperTextProps
->(({ disabled = false, className, children, ...props }, ref) => (
+>(({ children, disabled = false, className, ...props }, ref) => (
   <p
     ref={ref}
     className={cx(styles.root, disabled && styles.disabled, className)}

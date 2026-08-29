@@ -115,23 +115,47 @@
    scoped at the `p`/`li` level so any future prose with the same shape is
    covered too, not just that one component.
 
-   `:not(.sbdocs-preview *)` added (2026-08-28, found live on `FieldError`'s
+   `:not(.sb-unstyled *)` added (2026-08-28, found live on `FieldError`'s
    own Docs page — its Playground/Variants text rendered `text.secondary`
    gray instead of `text.danger` red): this rule's `p`/`li` selector has no
    way to distinguish real markdown prose from a live component instance
    whose own root element happens to be a bare `<p>`/`<li>` (`FieldError`,
    `FieldHelperText`) — every `<Canvas>`-embedded live story renders inside
-   `.sbdocs-preview`, so its specificity (0,1,1) was silently beating that
+   an `.sbdocs-preview` that's *also* marked `sb-unstyled` (Storybook's own
+   internal "exempt me from Docs-page base typography" convention,
+   confirmed live), so its specificity (0,1,1) was silently beating that
    component's own single-class `color`/`font-size`/`line-height` rule
    (0,1,0) whenever the two happened to collide on tag name. Excluding
-   `.sbdocs-preview` descendants entirely removes the competing
-   declaration there instead of trying to out-rank it, so a live
-   component's own CSS module is the only thing setting its own text
-   styling inside a Canvas — exactly the "renders identically to how it
-   renders standalone" invariant every other Canvas embed already relies
-   on implicitly, just never violated by tag-name collision until now. */
-.sbdocs-content p:not(.sbdocs-preview *),
-.sbdocs-content li:not(.sbdocs-preview *) {
+   `.sb-unstyled` descendants entirely removes the competing declaration
+   there instead of trying to out-rank it, so a live component's own CSS
+   module is the only thing setting its own text styling inside a Canvas —
+   exactly the "renders identically to how it renders standalone" invariant
+   every other Canvas embed already relies on implicitly, just never
+   violated by tag-name collision until now.
+
+   **Originally scoped to `.sbdocs-preview` specifically, widened the same
+   day to the underlying `.sb-unstyled` marker instead:** `RelatedCard`'s
+   own preview slot (`.storybook/blocks/RelatedCard.tsx`) hit the identical
+   bug previewing `FieldError` on `FieldHelperText.mdx` — it's a second,
+   separate live-component container that was never inside `.sbdocs-preview`
+   in the first place (a `<Canvas>` block and a `RelatedCard` preview are
+   two different embedding mechanisms). Rather than stacking a second,
+   parallel `:not()` for every future embedding mechanism this project
+   invents, `RelatedCard`'s preview slot now carries `sb-unstyled` directly
+   (see its own comment) — the same marker a real `<Canvas>` already gets
+   for free — so this one exclusion covers both, and any future
+   custom-embedding block that also marks itself `sb-unstyled` for the same
+   reason is covered automatically too, no docs.css change required. Also
+   guards against Storybook's *own* base MDX stylesheet, not just this
+   file's rule — that stylesheet's default `<p>` color already carries the
+   identical `:not(.sb-unstyled, .sb-unstyled p)` exemption, confirmed live
+   as a second, separate competing rule uncovered while fixing the
+   `RelatedCard` instance of this bug (same specificity as this rule, 0,1,0,
+   winning the tie by source order) — `RelatedCard`'s preview slot needed
+   the `sb-unstyled` class regardless of this file's own rule, since
+   Storybook's base stylesheet isn't something this file can edit at all. */
+.sbdocs-content p:not(.sb-unstyled *),
+.sbdocs-content li:not(.sb-unstyled *) {
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-base);
   line-height: var(--dbm-line-height-relaxed);
@@ -374,7 +398,23 @@
    whatever theme `DbmDocsContainer` is currently passing. Its specificity
    (0,1,2: two real type selectors, `tr`+`th`/`td`, outside the
    zero-specificity `:where()`) has always been higher than `.dbm-proptable
-   th`/`td`'s (0,1,1), so Storybook's rule would otherwise win. */
+   th`/`td`'s (0,1,1), so Storybook's rule would otherwise win.
+
+   `white-space: nowrap` (2026-08-29, found live on `FieldHelperText.mdx` —
+   its "Value options" header wrapped onto two lines while `FieldError.mdx`'s
+   own copy of this exact table stayed on one): `table-layout: auto` sizes
+   every column purely from its own content, so a header label's wrapping
+   depends on how wide *that specific component's* row content happens to
+   be in the same column — `FieldHelperText`'s `disabled` row only ever
+   shows narrow `true`/`false` pills, giving the Value-options column less
+   natural width than `FieldError`'s wider icon-name pills do, which was
+   enough to squeeze its two-word header onto a second line. A column
+   header is never data — it should never wrap regardless of what any given
+   component's rows happen to contain, the same reasoning the pre-existing
+   `td:first-child` fix below already applied to the Name column's own
+   `<code>` values. Applied to every header cell, not just the columns that
+   happen to have wrapped so far, since the underlying cause (short row
+   content in some component's table) can affect any column. */
 .dbm-proptable th {
   background: var(--dbm-bg-brand);
   border: none !important;
@@ -383,6 +423,7 @@
   font-weight: var(--dbm-font-weight-semibold);
   padding: var(--dbm-space-2) var(--dbm-space-3);
   text-align: start;
+  white-space: nowrap;
 }
 
 .dbm-proptable td {
@@ -401,10 +442,53 @@
    `white-space: nowrap` gives auto-layout the real minimum width it needs
    instead of a guessed fixed pixel value, so this scales correctly
    regardless of how long any given prop's name is (current longest:
-   `aria-labelledby`) without wasting space on shorter names. */
-.dbm-proptable th:first-child,
+   `aria-labelledby`) without wasting space on shorter names. Scoped to
+   `td:first-child` only now — `th` already gets this unconditionally from
+   `.dbm-proptable th` above (widened 2026-08-29, see that rule's own
+   note), so restating it here for `th:first-child` would be redundant. */
 .dbm-proptable td:first-child {
   white-space: nowrap;
+}
+
+/* Name / Value options / Default given fixed widths (2026-08-29, found live
+   comparing `FieldHelperText.mdx` against `FieldError.mdx`/`CloseButton.mdx`
+   — the same three columns measured meaningfully different widths on every
+   page: Name 124–172px, Value options 119–216px, Default 74–140px, at the
+   same overall table width). This directly reverses the "no guessed fixed
+   pixel value... regardless of how long any given prop's name is" reasoning
+   the Name-column comment above gave in 2026-08-15 — that fix solved
+   within-page wrapping, but `table-layout: auto` still means these columns
+   never *look* the same page to page, since each is sized purely from that
+   one component's own content. Same underlying problem `TokenRow`'s own
+   pill column already had, and the same fix: a width measured from the
+   longest real content already found in the codebase (not a round guess),
+   so every Properties table reads as one consistent, reusable structure
+   rather than a slightly different layout per component. Measured live
+   across every current Docs page (14, at time of writing): Name's max is
+   Checkbox's `indeterminateIcon` (172px, `10.75rem`); Value options' max is
+   `Box`'s `as` prop, 9 wrapped element-name pills (216px, `13.5rem` —
+   coincidentally the same value `TokenRow`'s own pill column already
+   uses); Default's max is Badge's own default value (140px, `8.75rem`).
+   Description is deliberately left unconstrained — it's prose, meant to
+   flex, not a structural column with a natural ceiling the way the other
+   three are. `table-layout: auto` still treats an explicit `width` as a
+   strong hint rather than an absolute — a future component whose own
+   content genuinely exceeds one of these three columns will still grow it
+   rather than truncate or overflow, the same graceful-growth behavior
+   `TokenRow`'s own fixed-width pills already rely on. */
+.dbm-proptable th:nth-child(1),
+.dbm-proptable td:nth-child(1) {
+  width: 10.75rem;
+}
+
+.dbm-proptable th:nth-child(2),
+.dbm-proptable td:nth-child(2) {
+  width: 13.5rem;
+}
+
+.dbm-proptable th:nth-child(4),
+.dbm-proptable td:nth-child(4) {
+  width: 8.75rem;
 }
 
 .dbm-proptable tbody tr:nth-child(even) {

@@ -1,0 +1,150 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldError } from "../FieldError";
+import { FieldLabel } from "../FieldLabel";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { FieldHelperText } from "./FieldHelperText";
+import * as FieldHelperTextStories from "./FieldHelperText.stories";
+
+export const propOrder = [
+  "children",
+  "disabled",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={FieldHelperTextStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="FieldHelperText" tier="Atom" />
+
+Supplementary helper/hint text for a form field — format requirements, character limits, or any
+other neutral guidance — paired with `FieldLabel` and `FieldError` as the three field-level text
+atoms a future `FormField` molecule will compose. Usable standalone today for a hand-built field.
+Renders as plain text with no ARIA role of its own; pair its `id` with the field control's own
+`aria-describedby` so assistive tech announces this text as describing that control.
+
+### Import
+
+```tsx
+import { FieldHelperText } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FieldHelperTextStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={FieldHelperTextStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+<PropertiesTable of={FieldHelperTextStories} order={propOrder} />
+
+## Variants
+
+### Disabled
+
+<Canvas of={FieldHelperTextStories.Disabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Always pair `id` with the field control's own `aria-describedby` — without that association, a
+  screen reader never announces this text as belonging to that control at all.
+- Keep the hint concrete and actionable — "At least 8 characters, including a number," not a vague
+  "Follow the password rules."
+- Pass `disabled` to match the field control's own disabled state, the same way `FieldLabel` does.
+- Reach for `FieldError` instead once the field actually fails validation — this component is for
+  neutral, always-relevant guidance, not a validation result.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `FieldHelperText` to surface a validation error — it carries no `role="alert"` and
+  isn't announced on its own; that's specifically what `FieldError` exists for.
+- Don't stack this alongside `FieldError` for the same field at once — showing a hint and an error
+  together is redundant and adds visual noise right when the user most needs a single, clear
+  instruction.
+- Don't rely on this text alone to convey a hard requirement a screen reader user must know before
+  submitting — pair it with real HTML5 validation (`required`, `pattern`, `minLength`) on the
+  control itself wherever the guidance is actually enforced.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep it to one line where possible — a long-running paragraph of hint text competes with the
+  field itself for the user's attention rather than quietly supporting it.
+- Write it as guidance the user needs *before* they act, not a description of what already
+  happened — that distinction is what separates this component from `FieldError`.
+- `FieldLabel` and `FieldHelperText` share the same `disabled` mechanism and token
+  (`text.disabled`) — keep both in sync so a disabled field reads consistently across its label,
+  control, and hint.
+
+## Accessibility
+
+<Callout tone="info" title="Plain text, no ARIA role of its own">
+
+- **Renders as an unadorned `<p>`** — no `role`, no implicit live-region behavior. It's read as
+  part of the page's normal reading order, not announced proactively the way `FieldError`'s
+  `role="alert"` is — appropriate for guidance that isn't urgent.
+- **The `id`/`aria-describedby` pairing is the only thing that actually connects this text to its
+  field** for assistive tech — without it, a screen reader user never learns this text exists
+  unless they happen to read past it directly.
+- **`text.tertiary`'s legibility against `bg.surface`, and `text.disabled`'s own accepted exemption
+  while `disabled`,** are both checked against real WCAG contrast outcomes, not assumed — see
+  [Design tokens used](#design-tokens-used) below for the exact tokens.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<FieldLabel htmlFor="password">Password</FieldLabel>
+<input id="password" aria-describedby="password-hint" />
+<FieldHelperText id="password-hint">At least 8 characters, including a number</FieldHelperText>
+```
+
+```tsx
+<FieldHelperText disabled>At least 8 characters, including a number</FieldHelperText>
+```
+
+## Design tokens used
+
+<TokenRow token="text.tertiary" usage="Message text" />
+<TokenRow token="text.disabled" usage="Disabled-state text, overriding text.tertiary" />
+<TokenRow token="font-family.primary" usage="Message text" />
+<TokenRow token="font-size.sm" usage="Message text" />
+<TokenRow token="line-height.normal" usage="Message text" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom for the same field — sized to match its control, with its own required-indicator and disabled-state conventions this component mirrors"
+  href="/?path=/story/atoms-inputs-fieldlabel--default"
+>
+  <FieldLabel htmlFor="example">Email address</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="The validation-error atom for the same field — reach for this instead once the field actually fails validation, in place of this neutral hint"
+  href="/?path=/docs/atoms-inputs-fielderror--docs"
+>
+  <FieldError>Enter a valid email address</FieldError>
+</RelatedCard>
+</div>

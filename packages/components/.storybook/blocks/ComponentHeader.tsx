@@ -25,7 +25,23 @@ export function ComponentHeader({
         gap: "var(--dbm-space-3)",
       }}
     >
-      <h1 style={{ margin: 0 }}>{title}</h1>
+      {/*
+       * `overflowWrap: "break-word"` (found live, mobile-width check on
+       * FieldHelperText.mdx — 15 characters, longer than every previously
+       * tested title, e.g. ProgressBar's 11): without it, a title long
+       * enough that its single unbroken word alone exceeds the viewport
+       * doesn't wrap at all — flex items default to `min-width: auto`,
+       * which floors their shrink at the *unbreakable* content width, and
+       * a CamelCase component name has no natural break point (no spaces)
+       * for the browser to wrap on. `flexWrap` above (the earlier,
+       * 2026-08-22 fix) only solves title+badge wrapping onto two lines;
+       * it does nothing once the title alone is already wider than the
+       * viewport. Same property, same root cause, and the same fix
+       * already applied to `.sbdocs-content p`/`li` in docs.css for
+       * markdown prose containing an unbreakable run of text — just not
+       * previously needed here since no title had hit this length yet.
+       */}
+      <h1 style={{ margin: 0, minWidth: 0, overflowWrap: "break-word" }}>{title}</h1>
       <Badge tone="info">{tier}</Badge>
     </div>
   );

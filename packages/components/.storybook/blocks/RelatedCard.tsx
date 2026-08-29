@@ -51,7 +51,25 @@ export function RelatedCard({
           cascading down from the Docs wrapper's theme. Giving this slot
           its own explicit `text.primary` gives any `currentColor`-based
           child something reactive to actually inherit. */}
+      {/* `sb-unstyled` (found live, 2026-08-29 — FieldHelperText.mdx's own
+          FieldError preview rendering text.secondary gray instead of
+          text.danger red): this is Storybook's own internal marker class
+          for "live rendered story content, exempt me from the Docs page's
+          base MDX typography" — its own base stylesheet already carries
+          `:not(.sb-unstyled, .sb-unstyled p)` on its default `<p>` color
+          rule, confirmed live via the DOM (same "verify Storybook's real
+          class names, don't guess" methodology this file's other rules
+          already use for `.sbdocs-content`/`.sbdocs-preview`). A real
+          `<Canvas>` block already carries this class for free (its own
+          `.sbdocs-preview` wrapper is *also* `sb-unstyled`, confirmed live)
+          — this preview slot never was one, since it's a plain div, not
+          Storybook's own story-rendering mechanism, so it never got that
+          exemption automatically. Reusing the same marker here — rather
+          than inventing a parallel one — also means docs.css's own
+          markdown-prose rule (below) only needs a single, shared exclusion
+          for both cases. */}
       <div
+        className="sb-unstyled"
         style={{
           alignItems: "center",
           color: "var(--dbm-text-primary)",
