@@ -58,6 +58,9 @@ import { ProgressCircle } from "@dbm-design-system/components";
 
 ## Properties
 
+`ProgressCircle` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`title`, `lang`) — passed straight through to the underlying element.
+
 <PropertiesTable of={ProgressCircleStories} order={propOrder} />
 
 ## Variants
@@ -185,6 +188,7 @@ import { ProgressCircle } from "@dbm-design-system/components";
 />
 <ProgressCircle tone="success" value={100} label="Upload complete" />
 <ProgressCircle label="Loading" />
+<ProgressCircle value={45} label="Sync progress" title="45% synced" />
 ```
 
 ## Design tokens used

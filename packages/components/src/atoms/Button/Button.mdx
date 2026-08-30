@@ -62,6 +62,10 @@ import { Button } from "@dbm-design-system/components";
 
 ## Properties
 
+`Button` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
+`onFocus`, `form`, `name`) — passed straight through to the underlying element (or whichever
+element `asChild`'s slotted child renders).
+
 <PropertiesTable of={ButtonStories} order={propOrder} />
 
 ## Variants
@@ -168,6 +172,7 @@ import { Button } from "@dbm-design-system/components";
 <Button fullWidth>Continue</Button>
 <Button asChild><a href="/next">Continue</a></Button>
 <Button type="submit" data-testid="checkout-submit">Place order</Button>
+<Button form="checkout-form" name="action" onFocus={trackButtonFocus}>Continue</Button>
 ```
 
 ## Design tokens used

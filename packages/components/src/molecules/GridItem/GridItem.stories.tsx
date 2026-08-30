@@ -71,7 +71,11 @@ export const RowAndColSpanCombined: Story = {
 
 export const ResponsiveSpan: Story = {
   name: "Responsive colSpan (full-width on mobile, half on desktop)",
-  parameters: { chromatic: { viewports: [375, 1024] } },
+  // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
+  // tool this project never adopted (02-tech-stack-and-structure.md picked
+  // Playwright's own self-hosted visual regression instead); this
+  // parameter was always inert here. See Input.stories.tsx's own review
+  // finding for the full writeup.
   render: () => (
     <Grid columns={4} gap={4}>
       <GridItem colSpan={{ base: 4, md: 2 }} style={cellStyle}>

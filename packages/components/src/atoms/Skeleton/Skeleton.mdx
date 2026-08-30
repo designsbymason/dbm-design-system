@@ -57,6 +57,9 @@ import { Skeleton } from "@dbm-design-system/components";
 
 ## Properties
 
+`Skeleton` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`lang`) — passed straight through to the underlying element.
+
 <PropertiesTable of={SkeletonStories} order={propOrder} />
 
 ## Variants
@@ -151,6 +154,7 @@ import { Skeleton } from "@dbm-design-system/components";
 <Skeleton variant="text" width="80%" />
 <Skeleton variant="rectangular" animation="wave" />
 <Skeleton animation="none" />
+<Skeleton variant="text" width="12rem" title="Loading headline…" />
 ```
 
 ```tsx

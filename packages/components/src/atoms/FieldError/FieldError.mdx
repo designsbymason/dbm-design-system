@@ -52,6 +52,9 @@ import { FieldError } from "@dbm-design-system/components";
 
 ## Properties
 
+`FieldError` also accepts any other native `<p>` attribute beyond what's listed here (e.g. `title`,
+`lang`) — passed straight through to the underlying element.
+
 <PropertiesTable of={FieldErrorStories} order={propOrder} />
 
 ## Variants
@@ -144,6 +147,7 @@ import { FieldError } from "@dbm-design-system/components";
 ```tsx
 <FieldError icon={false}>Passwords must match</FieldError>
 <FieldError disabled>Enter a valid email address</FieldError>
+<FieldError lang="es" title="Campo requerido">Este campo es obligatorio</FieldError>
 ```
 
 ## Design tokens used
@@ -165,14 +169,14 @@ import { FieldError } from "@dbm-design-system/components";
 <RelatedCard
   name="FieldLabel"
   description="The label atom for the same field — sized to match its control, with its own required-indicator and disabled-state conventions this component mirrors"
-  href="/?path=/story/atoms-inputs-fieldlabel--default"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
 >
   <FieldLabel htmlFor="example">Email address</FieldLabel>
 </RelatedCard>
 <RelatedCard
   name="FieldHelperText"
   description="The non-error hint/format-tip atom for the same field — reach for this instead when there's no actual validation failure to interrupt with"
-  href="/?path=/story/atoms-inputs-fieldhelpertext--default"
+  href="/?path=/story/atoms-inputs-fieldhelpertext--playground"
 >
   <FieldHelperText>At least 8 characters</FieldHelperText>
 </RelatedCard>

@@ -51,6 +51,9 @@ import { FieldLabel } from "@dbm-design-system/components";
 
 ## Properties
 
+`FieldLabel` also accepts any other native `<label>` attribute beyond what's listed here (e.g.
+`onClick`, `title`) — passed straight through to the underlying element.
+
 <PropertiesTable of={FieldLabelStories} order={propOrder} />
 
 ## Variants
@@ -138,6 +141,13 @@ import { FieldLabel } from "@dbm-design-system/components";
 ```tsx
 <FieldLabel htmlFor="email" disabled>Email address</FieldLabel>
 <input id="email" disabled />
+```
+
+```tsx
+<FieldLabel htmlFor="email" title="Your primary contact email" onClick={() => trackLabelClick('email')}>
+  Email address
+</FieldLabel>
+<input id="email" />
 ```
 
 ## Design tokens used

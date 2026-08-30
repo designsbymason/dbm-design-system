@@ -6,6 +6,13 @@
   display: inline-flex;
   font-family: var(--dbm-font-family-primary);
   gap: var(--dbm-space-2);
+  /* Matches Button's `.root` line-height exactly (both draw from the same
+     font-size tokens per size step) — without this, the native `<input>`
+     falls back to the browser's own UA-default `line-height: normal`,
+     which isn't guaranteed to compute to the same value as `tight` across
+     browsers/fonts. Needed for the size-by-size height parity with Button
+     below (see each `.sizeX`'s own `padding-block` comment). */
+  line-height: var(--dbm-line-height-tight);
   transition:
     border-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard),
@@ -17,10 +24,21 @@
   border-color: var(--dbm-border-neutral);
 }
 
+/* `border-radius` here deliberately overrides `.wrapper`'s own
+   `--dbm-radius-md` — the standardized `sm` focus-ring radius
+   (`05-component-api-conventions.md` §6) applies to every square-ish
+   interactive element regardless of its own corner radius, so every focus
+   ring in the system reads consistently. `.wrapper` is both the visible
+   input box and the element the outline is drawn on (no separate,
+   invisible wrapper the way Avatar has), so — same as Button's own
+   retrofit — this does very slightly tighten the input's own visible
+   corners while focused (8px → 4px), accepted as a minor, deliberate
+   trade-off. */
 .wrapper:focus-within {
   border-color: var(--dbm-border-focus);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
 }
 
 .wrapper.error {
@@ -39,17 +57,135 @@
   flex-shrink: 0;
 }
 
-.clear {
+/* Inline `current/max` character count (Input.tsx's own `showCount`) —
+   same `text.tertiary`/`font-size.xs` treatment as Textarea's own
+   `.count`, just an inline flex-row child here instead of a below-the-box
+   line, since this component is a single-line row rather than a
+   multi-line block. */
+.count {
+  color: var(--dbm-text-tertiary);
   flex-shrink: 0;
+  font-size: var(--dbm-font-size-xs);
+}
+
+/* Locally-implemented clear control (2026-08-29, review finding) — same
+   reasoning as Tag's own remove button (2026-08-25 review): dropped the
+   shared `IconButton` atom because its size steps are self-contained
+   boxes calibrated to match Button's/Input's own *full* outer height, so
+   even its smallest step (xs, 30px) was taller than this row's own text
+   content at every Input size — it always dominated the flex row and
+   inflated `.wrapper` past the Button-matched height above, and neither
+   its box nor its icon scaled with Input's own `size` prop. `background`
+   stays transparent at rest — `tone="brand"` on the Icon itself (see
+   Input.tsx) supplies the default `icon.brand` color, matching the
+   brand-tinted affordance a click target implies (unlike the plain
+   prefix/suffix `.affix` icons, which are purely informational). */
+.clear {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.clear:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.clear:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* Each step gives the button real `padding` around its icon (the icon
+   itself is one size step down from Input's own `size` —
+   `clearIconSizeForInputSize`, Input.tsx) for a comfortable hit area and
+   hover halo — found (2026-08-29) that a zero-padding box sized to just
+   the bare icon was too small a tap target, even though it solved the
+   earlier height-overflow problem. Padding alone would grow the button's
+   own border-box past this row's own text line-height and reinflate
+   `.wrapper` past the Button-matched height again, so each step also gets
+   a compensating negative `margin-block` — same mechanism proven on the
+   original IconButton-based clear button, just computed against
+   `icon size + 2 × padding` instead of IconButton's own fixed box.
+   Verified live at every size: the padded, hoverable box sits fully
+   inside `.wrapper`'s own padding with room to spare, never touching the
+   border (unlike IconButton's fixed steps, which did overlap it at
+   smaller sizes). Composed entirely from existing tokens via calc() —
+   nothing here is a guessed pixel value.
+
+   Keyed by Input's own `size` (not by the icon-size step) even though
+   `xs`/`sm` share the same icon-size step (`xs`) — they still need their
+   *own* class here, since the margin-block compensation depends on each
+   Input size's own font-size/line-height envelope, which differs between
+   `xs` and `sm` even when their icon sizes match. A shared class keyed by
+   icon size alone would silently reuse `xs`'s envelope for `sm` too. */
+
+.clearXs {
+  padding: var(--dbm-space-1);
+  margin-block: calc(
+    (var(--dbm-font-size-xs) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xs) - 2 * var(--dbm-space-1)) / 2
+  );
+}
+
+.clearSm {
+  padding: var(--dbm-space-2);
+  margin-block: calc(
+    (var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xs) - 2 * var(--dbm-space-2)) / 2
+  );
+}
+
+.clearMd {
+  padding: var(--dbm-space-2);
+  margin-block: calc(
+    (var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--dbm-icon-size-sm) - 2 * var(--dbm-space-2)) / 2
+  );
+}
+
+.clearLg {
+  padding: var(--dbm-space-3);
+  margin-block: calc(
+    (var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--dbm-icon-size-md) - 2 * var(--dbm-space-3)) / 2
+  );
+}
+
+.clearXl {
+  padding: var(--dbm-space-3);
+  margin-block: calc(
+    (var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-3)) / 2
+  );
 }
 
 .input {
+  /* Resets WebKit's native `type="search"` chrome (Safari/Chrome), which
+     otherwise renders its own searchfield styling and — the specific
+     issue this fixes — its own native "×" clear button once there's a
+     value, stacking a second, browser-drawn clear affordance right next
+     to `.clear` (this component's own one). `type="search"` combined
+     with `onClear` was the only way to see it; every other `type` was
+     already unaffected. Same unprefixed `appearance: none` reset already
+     used on Checkbox/Avatar. */
+  appearance: none;
   background: none;
   border: none;
   color: var(--dbm-text-primary);
   flex: 1 1 auto;
   font-family: inherit;
   font-size: inherit;
+  /* A native <input> doesn't inherit `line-height` from `.wrapper` the way
+     a plain element would — the browser's own UA stylesheet gives it a
+     non-inherited `line-height: normal` regardless of what's set upstream
+     (confirmed live: `.wrapper`'s `tight` computed to 13.8px, but the
+     `<input>` itself still measured "normal"). Set it explicitly here so
+     it actually takes the same value `.wrapper` sets, matching Button's
+     own line-height for the Button/Input size-parity math in each
+     `.sizeX`'s `padding-block` below. */
+  line-height: inherit;
   min-width: 0;
   outline: none;
   padding: 0;
@@ -63,34 +199,44 @@
   cursor: not-allowed;
 }
 
-/* Sizes */
+/* Sizes
+   `padding-block` at each step is Button's own `padding-block` for the
+   matching size, minus this component's `--dbm-border-width-1` wrapper
+   border (which Button, having no border, doesn't have to subtract) — that
+   keeps each Input size's total rendered height exactly equal to Button's
+   corresponding size (confirmed live: both draw from the same `font-size`
+   token per step and now share the same `line-height`, so `2 × padding +
+   font-size × line-height [+ 2 × border]` comes out identical). Composing
+   two tokens via `calc()` still traces every value to a token — nothing
+   here is a raw hardcoded number. */
 
 .sizeXs {
   font-size: var(--dbm-font-size-xs);
-  padding-block: var(--dbm-space-1);
+  padding-block: calc(var(--dbm-space-2) - var(--dbm-border-width-1));
   padding-inline: var(--dbm-space-2);
 }
 
 .sizeSm {
   font-size: var(--dbm-font-size-sm);
-  padding-block: var(--dbm-space-1);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
   padding-inline: var(--dbm-space-3);
 }
 
 .sizeMd {
   font-size: var(--dbm-font-size-base);
-  padding-block: var(--dbm-space-2);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
   padding-inline: var(--dbm-space-3);
 }
 
 .sizeLg {
   font-size: var(--dbm-font-size-md);
-  padding-block: var(--dbm-space-2);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
   padding-inline: var(--dbm-space-4);
 }
 
 .sizeXl {
   font-size: var(--dbm-font-size-lg);
-  padding-block: var(--dbm-space-3);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
   padding-inline: var(--dbm-space-4);
 }
+

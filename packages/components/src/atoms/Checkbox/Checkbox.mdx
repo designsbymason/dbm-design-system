@@ -62,6 +62,9 @@ import { Checkbox } from "@dbm-design-system/components";
 
 ## Properties
 
+`Checkbox` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
+`onFocus`, `autoFocus`) — passed straight through to the underlying Radix-rendered `<button>`.
+
 <PropertiesTable of={CheckboxStories} order={propOrder} />
 
 ## Variants
@@ -158,6 +161,7 @@ import { Checkbox } from "@dbm-design-system/components";
 <Checkbox icon={StarIcon}>Favorite</Checkbox>
 <Checkbox data-testid="terms-checkbox">Accept terms</Checkbox>
 <Checkbox name="newsletter" value="subscribed" required>Subscribe to updates</Checkbox>
+<Checkbox autoFocus onFocus={() => trackFieldFocus('subscribe')}>Subscribe</Checkbox>
 ```
 
 ## Design tokens used
@@ -199,14 +203,14 @@ import { Checkbox } from "@dbm-design-system/components";
 <RelatedCard
   name="FieldLabel"
   description="A standalone label atom for pairing with form controls that need one outside their own inline label"
-  href="/?path=/story/atoms-inputs-fieldlabel--default"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
 >
   <FieldLabel>Email address</FieldLabel>
 </RelatedCard>
 <RelatedCard
   name="FieldError"
   description="Pairs with hasError to show why a checkbox failed validation, not just that it did"
-  href="/?path=/story/atoms-inputs-fielderror--default"
+  href="/?path=/story/atoms-inputs-fielderror--playground"
 >
   <FieldError>This field is required</FieldError>
 </RelatedCard>

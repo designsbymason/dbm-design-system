@@ -61,6 +61,9 @@ import { CloseButton } from "@dbm-design-system/components";
 
 ## Properties
 
+`CloseButton` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
+`onFocus`, `form`) — passed straight through to the underlying element.
+
 <PropertiesTable of={CloseButtonStories} order={propOrder} />
 
 ## Variants
@@ -153,6 +156,7 @@ import { CloseButton } from "@dbm-design-system/components";
 <CloseButton size="sm" aria-label="Dismiss notification" onClick={onDismiss} />
 <CloseButton rounded aria-label="Close" onClick={() => setOpen(false)} />
 <CloseButton hasBackground aria-label="Close" onClick={() => setOpen(false)} />
+<CloseButton form="dialog-form" aria-label="Close" onFocus={trackCloseFocus} onClick={() => setOpen(false)} />
 ```
 
 ## Design tokens used

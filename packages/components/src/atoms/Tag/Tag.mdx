@@ -65,6 +65,11 @@ import { Tag } from "@dbm-design-system/components";
 
 ## Properties
 
+`Tag` also accepts any other native `<span>` attribute beyond what's listed here (e.g.
+`onMouseEnter`, `title`) — passed straight through to the underlying element. `onClick` is the one
+exception: it's already listed above, with its own interactive-mode behavior, not a plain
+passthrough.
+
 <PropertiesTable of={TagStories} order={propOrder} />
 
 ## Variants
@@ -223,6 +228,7 @@ import { Tag } from "@dbm-design-system/components";
 <Tag trailingIcon={CaretDownIcon}>Sort by</Tag>
 <Tag removable onRemove={() => removeFilter('status')}>Status: Active</Tag>
 <Tag selected={isActive} onSelectedChange={setIsActive}>Design</Tag>
+<Tag tone="info" title="Filter: design team" onMouseEnter={() => prefetchFilterPreview('design')}>Design</Tag>
 ```
 
 ## Design tokens used

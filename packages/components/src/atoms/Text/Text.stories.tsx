@@ -138,7 +138,11 @@ export const AsLabel: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (wraps, never overflows)",
-  parameters: { chromatic: { viewports: [375] } },
+  // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
+  // tool this project never adopted (02-tech-stack-and-structure.md picked
+  // Playwright's own self-hosted visual regression instead); this
+  // parameter was always inert here. See Input.stories.tsx's own review
+  // finding for the full writeup.
   args: {
     size: "lg",
     children:

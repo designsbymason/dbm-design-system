@@ -292,12 +292,17 @@ export const FullWidth: Story = {
   // live and shared via `{...args}` — no axis to exclude here. Previously
   // this story used a bare `render: () => (...)` that ignored args
   // entirely, making every control here a silent no-op.
+  //
+  // No artificial `maxWidth` wrapper (found in review, 2026-08-29) — the
+  // button *did* correctly fill a narrow wrapper div when one was here
+  // (confirmed live: exactly matched the div's own width), but on the
+  // Docs page that div was much narrower than the real container a reader
+  // sees (24rem/384px vs. the ~992px content column), so `fullWidth`
+  // visibly looked broken — a small button, not a full-width one — even
+  // though the component itself was working correctly. Rendering `Button`
+  // directly lets it fill its real container, honestly demonstrating what
+  // `fullWidth` actually does.
   args: { fullWidth: true, children: "Continue" },
-  render: (args) => (
-    <div style={{ maxWidth: "24rem" }}>
-      <Button {...args} />
-    </div>
-  ),
 };
 
 export const AsChild: Story = {

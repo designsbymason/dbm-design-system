@@ -1,0 +1,269 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { MagnifyingGlassIcon } from "@dbm-design-system/icons";
+import { Icon } from "../Icon";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldError } from "../FieldError";
+import { FieldHelperText } from "../FieldHelperText";
+import { FieldLabel } from "../FieldLabel";
+import { Textarea } from "../Textarea";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Input } from "./Input";
+import * as InputStories from "./Input.stories";
+
+export const propOrder = [
+  "placeholder",
+  "prefix",
+  "suffix",
+  "size",
+  "hasError",
+  "type",
+  "value",
+  "defaultValue",
+  "onClear",
+  "disabled",
+  "required",
+  "readOnly",
+  "autoFocus",
+  "autoComplete",
+  "maxLength",
+  "showCount",
+  "minLength",
+  "pattern",
+  "inputMode",
+  "name",
+  "form",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={InputStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Input" tier="Atom" />
+
+A single-line text input with optional leading/trailing slots (`prefix`/`suffix` — an icon, a
+currency symbol, or plain text), an optional clear (`×`) button, and an error state. Accepts both
+controlled (`value`/`onChange`) and uncontrolled (`defaultValue`) usage, mirroring a native
+`<input>` directly. `type` controls which kind of value it collects — `text` (default), `email`,
+`tel`, `url`, and `search` are what this atom is actually built for; `password` and `number` also
+work (a genuine, unrestricted native attribute) but come with their own dedicated `PasswordInput`/
+`NumberInput` molecules once those ship, each adding UI this atom doesn't (a visibility toggle,
+stepper controls).
+
+### Import
+
+```tsx
+import { Input } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={InputStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={InputStories.Playground}
+  exclude={[
+    "prefix",
+    "suffix",
+    "value",
+    "autoFocus",
+    "autoComplete",
+    "minLength",
+    "pattern",
+    "inputMode",
+    "form",
+    "onClear",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Input` also accepts any other native `<input>` attribute beyond what's listed here (e.g.
+`spellCheck`, `list`) — passed straight through to the underlying element.
+
+<PropertiesTable of={InputStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={InputStories.AllSizes} />
+
+### With prefix icon
+
+<Canvas of={InputStories.WithPrefixIcon} />
+
+### With suffix text
+
+<Canvas of={InputStories.WithSuffix} />
+
+### With a clear button
+
+<Canvas of={InputStories.Clearable} />
+
+### With character count
+
+<Canvas of={InputStories.CharacterCount} />
+
+### Error state
+
+<Canvas of={InputStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={InputStories.Disabled} />
+
+### Narrow viewport (fills container width)
+
+<Canvas of={InputStories.NarrowViewport} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass `onClear` together with a real `value`/`onChange` (or rely on the uncontrolled DOM value) so
+  the clear button has something meaningful to act on — clearing the value itself is the caller's
+  own responsibility, not something `Input` does for you.
+- Pair `hasError` with a nearby `FieldError` so the reason is visible, not just the red border and
+  `aria-invalid`.
+- Match a `prefix`/`suffix` icon's own `size` to `Input`'s size yourself — one step down, same as
+  this component's own internal clear-button icon — since this slot renders arbitrary content
+  as-is, with no visibility into what's inside it to resize automatically.
+- Pair `showCount` with `maxLength` — `showCount` alone renders nothing, matching `Textarea`'s own
+  convention.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't drive `value` from a live control without a real `onChange` wired back — a controlled value
+  always wins over the user's own typing, which freezes the input exactly like Checkbox's own
+  `checked` does.
+- Don't expect changing `defaultValue` after mount to update an already-rendered input — it only
+  sets the value at mount time, exactly like a real `<input defaultValue>`.
+- Don't reach for this atom long-term with `type="password"`/`type="number"` — use `PasswordInput`/
+  `NumberInput` once they ship, since this atom won't grow their dedicated UI (a visibility toggle,
+  stepper controls) itself.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the surrounding form/table density — the default `md` suits standalone forms;
+  drop to `sm`/`xs` inside dense tables or compact filter bars.
+- Use `readOnly` instead of `disabled` when a value should stay visible, selectable, and submittable
+  in a real `<form>` but not editable — e.g. a computed or pre-filled field. `disabled` is for a
+  value that shouldn't participate in the form at all.
+- Reach for `Textarea` instead when the expected value can span more than one line — `Input` is
+  single-line only, matching a native `<input>`'s own behavior (pressing Enter does nothing here).
+
+## Accessibility
+
+<Callout tone="info" title="Native <input> semantics, nothing custom to break">
+
+- Renders a real native `<input>` — full native keyboard, focus, selection, autofill, and
+  form-participation behavior applies automatically, since nothing here reimplements what the
+  browser already does correctly.
+- `aria-invalid="true"` is set automatically while `hasError`, in addition to the visual red
+  border — the two can't drift out of sync, and can never be silently overridden by a same-named
+  consumer prop (the JSX-attribute-ordering fix found during this component's own review — see
+  `05-component-api-conventions.md` §3).
+- Clicking anywhere inside the visual box — the padding, or the `prefix`/`suffix` slots — focuses
+  the input directly, matching a native `<input>`'s own click-anywhere-in-box behavior.
+- Pair with a `FieldLabel` (via `htmlFor`/`id`) or pass `aria-label`/`aria-labelledby` directly — an
+  input with no accessible name is invisible to screen reader users, same requirement as any other
+  form control.
+- The clear button is a real, independently-focusable `<button aria-label="Clear">`, reachable via
+  `Tab` right after the input — not a decorative icon with a click handler bolted on.
+- The focus ring's `border-radius` is deliberately tightened to the standardized `sm` step while
+  focused, regardless of `size`'s own larger `md` corner radius — see
+  [Design tokens used](#design-tokens-used) below.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Input placeholder="Search" />
+<Input prefix={<Icon icon={MagnifyingGlassIcon} size="sm" />} placeholder="Search" />
+<Input suffix="@example.com" placeholder="username" />
+<Input hasError defaultValue="not-an-email" />
+<Input disabled placeholder="Disabled" />
+<Input value={query} onChange={(e) => setQuery(e.target.value)} onClear={() => setQuery('')} />
+<Input size="sm" placeholder="Compact" />
+<Input type="email" name="email" required spellCheck={false} />
+<Input maxLength={140} showCount />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="wrapper resting background" />
+<TokenRow token="bg.brand-subtle" usage="clear button hover background" />
+<TokenRow token="border.default" usage="wrapper resting border" />
+<TokenRow token="border.neutral" usage="wrapper hover border" />
+<TokenRow token="border.danger" usage="hasError state border" />
+<TokenRow token="border.focus" usage="focus-within border and outline" />
+<TokenRow token="border-width.1" usage="wrapper border width" />
+<TokenRow token="border-width.2" usage="focus-within outline width; clear button focus-visible outline width" />
+<TokenRow token="radius.md" usage="wrapper resting corner radius" />
+<TokenRow token="radius.sm" usage="standardized focus-ring radius, overriding radius.md while focused" />
+<TokenRow token="radius.full" usage="clear button's own rounded shape" />
+<TokenRow token="icon.brand" usage="clear button icon color" />
+<TokenRow token="icon-size.xs–icon-size.lg" usage="clear button icon size per Input size step" />
+<TokenRow token="font-family.primary" usage="wrapper and input text" />
+<TokenRow token="font-size.xs–font-size.lg" usage="per-size font size, matched to Button's own size scale" />
+<TokenRow token="line-height.tight" usage="wrapper and input line-height, matched to Button's own for size parity" />
+<TokenRow token="space.1–space.4" usage="clear button hit-area padding per size; wrapper padding-block/padding-inline" />
+<TokenRow token="opacity.40" usage="disabled state" />
+<TokenRow token="motion.duration.fast" usage="border-color/background-color transitions" />
+<TokenRow token="motion.easing.standard" usage="border-color/background-color transitions" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom for this input — sized to match Input's own size scale, with its own required/disabled conventions this component mirrors"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Email address</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="Pairs with hasError to show why an input failed validation, not just that it did"
+  href="/?path=/story/atoms-inputs-fielderror--playground"
+>
+  <FieldError>Enter a valid email address</FieldError>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="Pairs below an input for supporting instructions, distinct from an error state"
+  href="/?path=/story/atoms-inputs-fieldhelpertext--playground"
+>
+  <FieldHelperText>At least 8 characters</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="Textarea"
+  description="The multi-line counterpart — reach for this instead when the expected value can span more than one line"
+  href="/?path=/story/atoms-inputs-textarea--default"
+>
+  <Textarea placeholder="Multi-line text" style={{ maxWidth: "12rem" }} />
+</RelatedCard>
+</div>

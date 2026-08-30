@@ -63,6 +63,11 @@ import { Avatar } from "@dbm-design-system/components";
 
 ## Properties
 
+`Avatar` also accepts any other native attribute of whichever element `as` renders (e.g. `target`/
+`rel` when `as="a"`) — passed straight through to that element. `onClick` is the one exception:
+it's already listed above, and isn't a plain passthrough — see [Accessibility](#accessibility)
+below for why it's gated on `as` being interactive.
+
 <PropertiesTable of={AvatarStories} order={propOrder} />
 
 ## Variants
@@ -216,6 +221,7 @@ import { Avatar } from "@dbm-design-system/components";
 <Avatar name="Jane Doe" size={{ base: "sm", md: "lg" }} />
 <Avatar as="button" name="Jane Doe" onClick={openProfileMenu} />
 <Avatar as="button" name="Jane Doe" disabled />
+<Avatar as="a" href="/profile/jane" target="_blank" rel="noopener" name="Jane Doe" />
 ```
 
 ## Design tokens used

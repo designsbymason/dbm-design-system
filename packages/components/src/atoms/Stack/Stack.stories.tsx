@@ -98,7 +98,11 @@ export const AlignAndJustify: Story = {
 
 export const Wrapping: Story = {
   name: "Wrapping row at narrow widths",
-  parameters: { chromatic: { viewports: [375, 768] } },
+  // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
+  // tool this project never adopted (02-tech-stack-and-structure.md picked
+  // Playwright's own self-hosted visual regression instead); this
+  // parameter was always inert here. See Input.stories.tsx's own review
+  // finding for the full writeup.
   render: () => (
     <Stack direction="row" gap={2} wrap style={{ maxWidth: "16rem" }}>
       {Array.from({ length: 8 }, (_, i) => (
@@ -112,7 +116,8 @@ export const Wrapping: Story = {
 
 export const ResponsiveDirection: Story = {
   name: "Responsive direction (column on mobile, row from md up)",
-  parameters: { chromatic: { viewports: [375, 768, 1024] } },
+  // `parameters.chromatic` removed (2026-08-29) — see Wrapping above, same
+  // file, for why.
   render: () => (
     <Stack direction={{ base: "column", md: "row" }} gap={4}>
       <Swatches />
@@ -122,7 +127,8 @@ export const ResponsiveDirection: Story = {
 
 export const ResponsiveEverything: Story = {
   name: "Responsive gap, align, justify, and wrap together",
-  parameters: { chromatic: { viewports: [375, 1024] } },
+  // `parameters.chromatic` removed (2026-08-29) — see Wrapping above, same
+  // file, for why.
   render: () => (
     <Stack
       direction={{ base: "column", md: "row" }}

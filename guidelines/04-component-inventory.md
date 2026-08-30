@@ -52,7 +52,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Input (text) | atom | 🟢 | With prefix/suffix slot support |
 | PasswordInput | molecule | 🟢 | Visibility toggle, wraps Input |
 | Textarea | atom | 🟢 | Auto-resize option |
-| NumberInput | molecule | 🟢 | Stepper controls, min/max/step |
+| NumberInput | molecule | 🟢 | Stepper controls, min/max/step, wraps Input |
 | Select | molecule | 🟢 | Native-feel, wraps Radix Select |
 | Combobox / Autocomplete | organism | 🟢 | Searchable select, async option loading |
 | MultiSelect | organism | 🟡 | Tag-based multi-value select |
@@ -62,7 +62,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Switch | atom | 🟢 | |
 | Slider | molecule | 🟢 | Single value |
 | RangeSlider | molecule | 🟡 | Dual-handle range |
-| SearchInput | molecule | 🟢 | Debounced, clear button |
+| SearchInput | molecule | 🟢 | Debounced, clear button, wraps Input |
 | PinInput | molecule | ⚪ | OTP/verification code entry |
 | DatePicker | organism | 🟢 | Calendar popover, range mode |
 | DateRangePicker | organism | 🟡 | |

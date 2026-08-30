@@ -48,6 +48,9 @@ import { FieldHelperText } from "@dbm-design-system/components";
 
 ## Properties
 
+`FieldHelperText` also accepts any other native `<p>` attribute beyond what's listed here (e.g.
+`title`, `lang`) — passed straight through to the underlying element.
+
 <PropertiesTable of={FieldHelperTextStories} order={propOrder} />
 
 ## Variants
@@ -120,6 +123,7 @@ import { FieldHelperText } from "@dbm-design-system/components";
 
 ```tsx
 <FieldHelperText disabled>At least 8 characters, including a number</FieldHelperText>
+<FieldHelperText lang="fr">Doit contenir au moins 8 caractères</FieldHelperText>
 ```
 
 ## Design tokens used
@@ -136,7 +140,7 @@ import { FieldHelperText } from "@dbm-design-system/components";
 <RelatedCard
   name="FieldLabel"
   description="The label atom for the same field — sized to match its control, with its own required-indicator and disabled-state conventions this component mirrors"
-  href="/?path=/story/atoms-inputs-fieldlabel--default"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
 >
   <FieldLabel htmlFor="example">Email address</FieldLabel>
 </RelatedCard>

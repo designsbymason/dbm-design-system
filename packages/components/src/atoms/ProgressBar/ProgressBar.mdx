@@ -58,6 +58,9 @@ import { ProgressBar } from "@dbm-design-system/components";
 
 ## Properties
 
+`ProgressBar` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`title`, `lang`) — passed straight through to the underlying element.
+
 <PropertiesTable of={ProgressBarStories} order={propOrder} />
 
 ## Variants
@@ -174,6 +177,7 @@ import { ProgressBar } from "@dbm-design-system/components";
 />
 <ProgressBar tone="success" value={100} label="Upload complete" />
 <ProgressBar label="Loading" />
+<ProgressBar value={72} label="Upload progress" title="72% uploaded" />
 ```
 
 ## Design tokens used

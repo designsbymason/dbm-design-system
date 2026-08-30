@@ -53,6 +53,9 @@ import { Spinner } from "@dbm-design-system/components";
 
 ## Properties
 
+`Spinner` also accepts any other native `<span>` attribute beyond what's listed here (e.g. `title`,
+`lang`) — passed straight through to the underlying element.
+
 <PropertiesTable of={SpinnerStories} order={propOrder} />
 
 ## Variants
@@ -138,6 +141,7 @@ import { Spinner } from "@dbm-design-system/components";
 <Spinner label="Loading" />
 <Spinner size="lg" tone="brand" label="Loading" />
 <Spinner size="xs" />
+<Spinner label="Loading" title="Please wait" />
 ```
 
 ## Design tokens used

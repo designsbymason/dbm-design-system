@@ -41,6 +41,14 @@ describe("Input", () => {
     );
   });
 
+  it("never lets a same-named consumer prop override the computed aria-invalid (found in review — TypeScript's JSX checker allows aria-* props through regardless of the declared prop type, so this is enforced by JSX attribute order, not by the type system alone)", () => {
+    render(<Input hasError aria-invalid={false} placeholder="Email" />);
+    expect(screen.getByPlaceholderText("Email")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
   it("applies size as a token-driven font-size/padding on the wrapper", () => {
     render(
       <Input size="lg" placeholder="Search" data-testid-wrapper="wrapper" />,
@@ -49,7 +57,11 @@ describe("Input", () => {
     const wrapper = input.parentElement;
     expect(wrapper).toHaveStyle({
       fontSize: "var(--dbm-font-size-md)",
-      paddingBlock: "var(--dbm-space-2)",
+      // `padding-block` composes two tokens via calc() rather than a bare
+      // space token — Button/Input size-parity finding, see Input.module.css's
+      // own `.sizeLg` comment for the full reasoning.
+      paddingBlock:
+        "calc(var(--dbm-space-4) - var(--dbm-border-width-1))",
       paddingInline: "var(--dbm-space-4)",
     });
   });
@@ -143,6 +155,24 @@ describe("Input", () => {
       expect(screen.getByPlaceholderText("Search")).toHaveFocus();
     });
 
+    it("is keyboard-activatable — Enter and Space on the focused clear button both call onClear (found in review, full end-to-end pass)", async () => {
+      const user = userEvent.setup();
+      const onClear = vi.fn();
+      render(
+        <Input defaultValue="hello" onClear={onClear} placeholder="Search" />,
+      );
+      const clearButton = screen.getByRole("button", { name: "Clear" });
+      clearButton.focus();
+      expect(clearButton).toHaveFocus();
+
+      await user.keyboard("{Enter}");
+      expect(onClear).toHaveBeenCalledTimes(1);
+
+      clearButton.focus();
+      await user.keyboard(" ");
+      expect(onClear).toHaveBeenCalledTimes(2);
+    });
+
     it("tracks a controlled value directly, showing the clear button whenever value is non-empty", () => {
       function Controlled() {
         const [value, setValue] = useState("hello");
@@ -172,11 +202,67 @@ describe("Input", () => {
     expect(input.parentElement).toHaveClass("custom");
   });
 
+  it("applies style to the wrapper, not the native input (matches className's own target, found in review)", () => {
+    render(
+      <Input style={{ marginTop: "10px" }} placeholder="Search" />,
+    );
+    const input = screen.getByPlaceholderText("Search");
+    expect(input).not.toHaveStyle({ marginTop: "10px" });
+    expect(input.parentElement).toHaveStyle({ marginTop: "10px" });
+  });
+
   it("forwards native input props", () => {
     render(<Input placeholder="Search" type="email" maxLength={10} />);
     const input = screen.getByPlaceholderText("Search");
     expect(input).toHaveAttribute("type", "email");
     expect(input).toHaveAttribute("maxlength", "10");
+  });
+
+  it("resets appearance so type=\"search\" doesn't show a second, browser-drawn clear button in WebKit alongside our own onClear button (found in review)", () => {
+    render(<Input type="search" placeholder="Search" />);
+    expect(screen.getByPlaceholderText("Search")).toHaveStyle({
+      appearance: "none",
+    });
+  });
+
+  describe("showCount", () => {
+    it("does not render a count when showCount is false, even with maxLength set", () => {
+      render(<Input placeholder="Search" maxLength={10} />);
+      expect(screen.queryByText("0/10")).not.toBeInTheDocument();
+    });
+
+    it("does not render a count when showCount is true but maxLength is unset", () => {
+      render(<Input placeholder="Search" showCount />);
+      expect(screen.queryByText(/\/undefined/)).not.toBeInTheDocument();
+    });
+
+    it("renders and live-updates a current/max count while typing (uncontrolled)", async () => {
+      const user = userEvent.setup();
+      render(<Input placeholder="Bio" maxLength={10} showCount />);
+      expect(screen.getByText("0/10")).toBeInTheDocument();
+
+      await user.type(screen.getByPlaceholderText("Bio"), "hello");
+      expect(screen.getByText("5/10")).toBeInTheDocument();
+    });
+
+    it("updates the count for an externally-driven controlled value change, not just typing", () => {
+      function Controlled({ value }: { value: string }) {
+        return (
+          <Input
+            aria-label="Bio"
+            value={value}
+            onChange={() => {}}
+            maxLength={10}
+            showCount
+          />
+        );
+      }
+      const { rerender } = render(<Controlled value="hi" />);
+      expect(screen.getByText("2/10")).toBeInTheDocument();
+
+      rerender(<Controlled value="" />);
+      expect(screen.getByText("0/10")).toBeInTheDocument();
+    });
   });
 
   it("has no accessibility violations, plain, with an error, or with a clear button", async () => {

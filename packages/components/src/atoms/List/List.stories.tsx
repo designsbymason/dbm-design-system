@@ -66,7 +66,11 @@ export const OrderedListSpecificProps: Story = {
 
 export const ResponsiveSpacing: Story = {
   name: "Responsive spacing (tight on mobile, roomy from lg up)",
-  parameters: { chromatic: { viewports: [375, 1024] } },
+  // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
+  // tool this project never adopted (02-tech-stack-and-structure.md picked
+  // Playwright's own self-hosted visual regression instead); this
+  // parameter was always inert here. See Input.stories.tsx's own review
+  // finding for the full writeup.
   render: () => (
     <List spacing={{ base: 1, lg: 6 }}>
       <ListItem>First item</ListItem>
@@ -78,7 +82,8 @@ export const ResponsiveSpacing: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (long items wrap)",
-  parameters: { chromatic: { viewports: [375] } },
+  // `parameters.chromatic` removed (2026-08-29) — see ResponsiveSpacing
+  // above, same file, for why.
   render: () => (
     <List>
       <ListItem>

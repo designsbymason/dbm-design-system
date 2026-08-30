@@ -64,6 +64,10 @@ import { IconButton } from "@dbm-design-system/components";
 
 ## Properties
 
+`IconButton` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
+`onFocus`, `form`, `name`) — passed straight through to the underlying element (or whichever
+element `asChild`'s slotted child renders).
+
 <PropertiesTable of={IconButtonStories} order={propOrder} />
 
 ## Variants
@@ -202,6 +206,7 @@ import { IconButton } from "@dbm-design-system/components";
 <IconButton asChild icon={PlusIcon} aria-label="Add item">
   <a href="/add"><PlusIcon /></a>
 </IconButton>
+<IconButton icon={TrashIcon} aria-label="Delete" form="item-form" name="delete-action" onFocus={trackDeleteFocus} />
 ```
 
 ## Design tokens used

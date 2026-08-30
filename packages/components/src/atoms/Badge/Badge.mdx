@@ -64,6 +64,9 @@ import { Badge } from "@dbm-design-system/components";
 
 ## Properties
 
+`Badge` also accepts any other native `<span>` attribute beyond what's listed here (e.g. `onClick`,
+`title`) — passed straight through to the underlying element.
+
 <PropertiesTable of={BadgeStories} order={propOrder} />
 
 ## Variants
@@ -211,6 +214,7 @@ import { Badge } from "@dbm-design-system/components";
 <Badge dot aria-label="Unread notifications" />
 <Badge size="lg">Failed</Badge>
 <Badge anchor={<Icon icon={Bell} size="lg" />} dot aria-label="Unread notifications" />
+<Badge tone="danger" title="3 unread notifications" onClick={openNotifications}>3</Badge>
 ```
 
 ## Design tokens used

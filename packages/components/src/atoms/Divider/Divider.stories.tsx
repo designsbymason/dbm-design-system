@@ -51,7 +51,11 @@ export const Vertical: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport",
-  parameters: { chromatic: { viewports: [375] } },
+  // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
+  // tool this project never adopted (02-tech-stack-and-structure.md picked
+  // Playwright's own self-hosted visual regression instead); this
+  // parameter was always inert here. See Input.stories.tsx's own review
+  // finding for the full writeup.
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)", maxWidth: "300px" }}>
       <p>Content above</p>
@@ -90,7 +94,8 @@ export const Dashed: Story = {
 
 export const ResponsiveOrientation: Story = {
   name: "Responsive orientation (horizontal on mobile, vertical from lg up)",
-  parameters: { chromatic: { viewports: [375, 1024] } },
+  // `parameters.chromatic` removed (2026-08-29) — see NarrowViewport above,
+  // same file, for why.
   render: () => (
     <Stack
       direction={{ base: "column", lg: "row" }}
