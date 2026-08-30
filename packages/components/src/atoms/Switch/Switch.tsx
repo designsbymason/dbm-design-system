@@ -1,7 +1,8 @@
 import { cx } from "@dbm-design-system/primitives";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
-import { forwardRef, useId } from "react";
+import { forwardRef, useId, useRef } from "react";
 import { Icon } from "../Icon";
+import { Spinner } from "../Spinner";
 import styles from "./Switch.module.css";
 import type { SwitchProps, SwitchSize } from "./Switch.types";
 
@@ -13,12 +14,12 @@ const sizeClass: Record<SwitchSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-const iconSizeForSwitchSize: Record<SwitchSize, "xs" | "sm"> = {
+const iconSizeForSwitchSize: Record<SwitchSize, "xs" | "sm" | "md"> = {
   xs: "xs",
   sm: "xs",
-  md: "xs",
-  lg: "xs",
-  xl: "sm",
+  md: "sm",
+  lg: "sm",
+  xl: "md",
 };
 
 /**
@@ -33,12 +34,15 @@ const iconSizeForSwitchSize: Record<SwitchSize, "xs" | "sm"> = {
  * <Switch defaultChecked>Email notifications</Switch>
  * <Switch checked={isDark} onCheckedChange={setIsDark} checkedIcon={MoonIcon} uncheckedIcon={SunIcon} />
  * <Switch aria-label="Airplane mode" />
+ * <Switch hasError>Required setting</Switch>
+ * <Switch loading>Saving…</Switch>
  * ```
  */
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
   (
     {
       size = "md",
+      hasError = false,
       disabled,
       className,
       children,
@@ -47,6 +51,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
       onCheckedChange,
       checkedIcon,
       uncheckedIcon,
+      loading = false,
       id,
       ...props
     },
@@ -55,32 +60,77 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
     const generatedId = useId();
     const switchId = id ?? generatedId;
     const iconSize = iconSizeForSwitchSize[size];
+    // `||`, not `??` — `loading` must disable the switch even when a
+    // consumer explicitly passes `disabled={false}`; `??` would let that
+    // explicit `false` win and leave a "loading" switch fully toggleable.
+    const isDisabled = disabled || loading;
+
+    const hasWarnedNoAccessibleNameRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (
+        !children &&
+        !props["aria-label"] &&
+        !props["aria-labelledby"] &&
+        !hasWarnedNoAccessibleNameRef.current
+      ) {
+        hasWarnedNoAccessibleNameRef.current = true;
+        console.warn(
+          "Switch: no accessible name — pass a visible label as `children`, or `aria-label`/`aria-labelledby`, so assistive tech has something to announce. A switch with no label is invisible to screen reader users.",
+        );
+      }
+    }
 
     const control = (
       <SwitchPrimitive.Root
         ref={ref}
+        {...props}
+        // These are always applied last (after `...props`) so they can
+        // never be silently overridden by a same-named prop the caller
+        // passes — including `aria-invalid`/`aria-busy`, which
+        // TypeScript's JSX checker permits on any component regardless of
+        // whether they're declared in its prop type (the same confirmed
+        // bug class already fixed on Button/Checkbox/Skeleton/ProgressBar/
+        // ProgressCircle/Spinner). Not currently exploitable via the props
+        // this component destructures out (`id`/`checked`/`defaultChecked`/
+        // `onCheckedChange`/`className` can't reappear in `...props`), but
+        // kept consistent with the standing convention so newly-added
+        // computed attributes stay protected by construction.
         id={switchId}
         checked={checked}
         defaultChecked={defaultChecked}
         onCheckedChange={onCheckedChange}
-        disabled={disabled}
-        className={cx(styles.root, sizeClass[size], className)}
-        {...props}
+        disabled={isDisabled}
+        aria-invalid={hasError || undefined}
+        aria-busy={loading || undefined}
+        className={cx(
+          styles.root,
+          sizeClass[size],
+          hasError && styles.error,
+          className,
+        )}
       >
         <SwitchPrimitive.Thumb className={styles.thumb}>
-          {uncheckedIcon && (
-            <Icon
-              icon={uncheckedIcon}
-              size={iconSize}
-              className={styles.uncheckedIcon}
-            />
-          )}
-          {checkedIcon && (
-            <Icon
-              icon={checkedIcon}
-              size={iconSize}
-              className={styles.checkedIcon}
-            />
+          {loading ? (
+            <Spinner size={iconSize} tone="secondary" />
+          ) : (
+            <>
+              {uncheckedIcon && (
+                <Icon
+                  icon={uncheckedIcon}
+                  size={iconSize}
+                  weight="bold"
+                  className={styles.uncheckedIcon}
+                />
+              )}
+              {checkedIcon && (
+                <Icon
+                  icon={checkedIcon}
+                  size={iconSize}
+                  weight="bold"
+                  className={styles.checkedIcon}
+                />
+              )}
+            </>
           )}
         </SwitchPrimitive.Thumb>
       </SwitchPrimitive.Root>
@@ -91,7 +141,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
     return (
       <label
         htmlFor={switchId}
-        className={cx(styles.label, disabled && styles.labelDisabled)}
+        className={cx(styles.label, isDisabled && styles.labelDisabled)}
       >
         {control}
         <span className={styles.labelText}>{children}</span>

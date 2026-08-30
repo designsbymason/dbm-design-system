@@ -1,5 +1,7 @@
 .root {
-  --switch-track-height: var(--dbm-icon-size-md);
+  /* `md`'s default, matching .sizeMd below — see that rule's own comment
+     for why this is a calc() composition rather than a single token. */
+  --switch-track-height: calc(var(--dbm-space-6) + var(--dbm-space-1));
   --switch-track-width: calc(var(--switch-track-height) * 1.8);
   --switch-thumb-inset: calc(var(--dbm-space-1) / 2);
   --switch-thumb-size: calc(
@@ -14,7 +16,7 @@
       (var(--switch-thumb-inset) * 2)
   );
 
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-track-strong);
   border: none;
   border-radius: var(--dbm-radius-full);
   cursor: pointer;
@@ -26,6 +28,10 @@
   transition: background-color var(--dbm-motion-duration-fast)
     var(--dbm-motion-easing-standard);
   width: var(--switch-track-width);
+}
+
+.root:hover:not(:disabled) {
+  background-color: var(--dbm-bg-neutral);
 }
 
 .root[data-state="checked"] {
@@ -44,6 +50,17 @@
 .root:disabled {
   cursor: not-allowed;
   opacity: var(--dbm-opacity-40);
+}
+
+/* A box-shadow ring, not a border — composes independently of
+   `:focus-visible`'s own `outline` (both can render at once, e.g. a
+   focused+invalid switch), doesn't affect the track's box model/thumb-
+   travel math the way adding a real border would, and isn't overridden by
+   the `[data-state="checked"]` background-color rules the way a
+   border-color-based approach (Checkbox's own mechanism) would need
+   explicit override handling for. */
+.root.error {
+  box-shadow: 0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger);
 }
 
 .thumb {
@@ -91,26 +108,33 @@
   display: block;
 }
 
-/* Sizes */
+/* Sizes — deliberately not the shared icon-size scale (unlike every other
+   size prop in this system): at explicit direction, every step was shifted
+   up so `md` lands slightly bigger than the *previous* `lg`. `xs`/`sm`/`lg`/
+   `xl` land exactly on existing `space.*` steps; only `md` needs a
+   calc() composition, since the spacing scale has no step between
+   `space.6` (24px) and `space.8` (32px) — composing tokens via calc() still
+   traces every value to a token, not a raw number (same precedent as
+   Input's height-parity work). */
 
 .sizeXs {
-  --switch-track-height: var(--dbm-icon-size-xs);
+  --switch-track-height: var(--dbm-space-5);
 }
 
 .sizeSm {
-  --switch-track-height: var(--dbm-icon-size-sm);
+  --switch-track-height: var(--dbm-space-6);
 }
 
 .sizeMd {
-  --switch-track-height: var(--dbm-icon-size-md);
+  --switch-track-height: calc(var(--dbm-space-6) + var(--dbm-space-1));
 }
 
 .sizeLg {
-  --switch-track-height: var(--dbm-icon-size-lg);
+  --switch-track-height: var(--dbm-space-8);
 }
 
 .sizeXl {
-  --switch-track-height: var(--dbm-icon-size-xl);
+  --switch-track-height: var(--dbm-space-10);
 }
 
 /* Label wrapper */

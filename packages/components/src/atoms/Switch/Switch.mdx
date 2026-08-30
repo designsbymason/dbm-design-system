@@ -1,0 +1,219 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Checkbox } from "../Checkbox";
+import { FieldError } from "../FieldError";
+import { FieldLabel } from "../FieldLabel";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Switch } from "./Switch";
+import * as SwitchStories from "./Switch.stories";
+
+export const propOrder = [
+  "children",
+  "size",
+  "hasError",
+  "checked",
+  "defaultChecked",
+  "onCheckedChange",
+  "checkedIcon",
+  "uncheckedIcon",
+  "loading",
+  "disabled",
+  "required",
+  "autoFocus",
+  "name",
+  "value",
+  "form",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={SwitchStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Switch" tier="Atom" />
+
+A binary on/off toggle built on Radix UI's Switch primitive, with a token-driven sliding-thumb
+track and an optional inline label. Accepts both controlled (`checked`/`onCheckedChange`) and
+uncontrolled (`defaultChecked`) usage, mirroring the same pattern as a native
+`<input type="checkbox">`.
+
+### Import
+
+```tsx
+import { Switch } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SwitchStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={SwitchStories.Playground}
+  exclude={["onCheckedChange", "checked", "autoFocus", "form", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Switch` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
+`onFocus`, `onKeyDown`) — passed straight through to the underlying Radix-rendered `<button>`.
+
+<PropertiesTable of={SwitchStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={SwitchStories.AllSizes} />
+
+### States
+
+<Canvas of={SwitchStories.States} />
+
+### With thumb icons
+
+<Canvas of={SwitchStories.WithThumbIcons} />
+
+### Without a label (aria-label required)
+
+<Canvas of={SwitchStories.IconOnly} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Switch` for a setting that takes effect immediately (e.g. toggling notifications on) — that
+  instant-effect expectation is what the switch shape communicates, unlike a checkbox's
+  pending-until-submit convention.
+- Pass `aria-label` (or `aria-labelledby`) whenever there's no visible `children` label, e.g. a
+  single icon-only settings toggle.
+- Set `loading` while an async toggle request is in flight, instead of leaving the switch appearing
+  interactive during a request that hasn't resolved yet.
+- Pair `hasError` with a nearby `FieldError` so the reason is visible, not just the red ring and
+  `aria-invalid`.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't drive `checked` from a live control without a real `onCheckedChange` wired back — Radix
+  always defers to the controlled value, which freezes the switch's own click handling.
+- Don't expect changing `defaultChecked` after mount to update an already-rendered switch — it only
+  sets the value at mount time, exactly like a real `<input defaultChecked>`.
+- Don't set both `disabled` and `loading` expecting different behavior — `loading` already disables
+  the switch on its own (via the same native `disabled` attribute), so the two compose rather than
+  conflict.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reach for `Checkbox` instead when the choice stays pending until an explicit submit/save — the
+  convention most users already associate with the checkbox shape, not the switch shape.
+- Match `size` to the surrounding density — the default `md` suits a standalone settings list; drop
+  to `sm`/`xs` inside a dense table row.
+- Let `Switch` generate its own `id` (via `useId`) unless something else — a test, a router, an
+  external `aria-describedby` — needs a stable, predictable value to point at.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard and ARIA state come from Radix's own switch primitive">
+
+- Renders a `<button role="switch">` (not a native checkbox input) — `Tab` focuses it, and `Space`
+  toggles it, per the WAI-ARIA switch pattern. Unlike `Button`, `Enter` isn't part of that pattern's
+  keyboard contract.
+- `aria-checked` reflects the real state directly as `"true"`/`"false"`, kept in sync with the
+  visible thumb position automatically.
+- `aria-invalid="true"` is set automatically while `hasError`, in addition to the visual danger
+  ring — the two can't drift out of sync.
+- `aria-busy="true"` is set automatically while `loading`, alongside the native `disabled`
+  attribute that actually blocks interaction — a loading switch is genuinely unreachable by `Tab`,
+  not just visually dimmed while remaining focusable.
+- A dev-mode console warning fires once if a `Switch` has no `children`, `aria-label`, or
+  `aria-labelledby` — a switch with no accessible name is invisible to screen reader users.
+- The inline `children` label is a real `<label>` associated via `htmlFor`/`id`, so clicking the
+  label text toggles the switch too, not just the track itself.
+- A `disabled` (or `loading`) switch uses the native `disabled` attribute, so it's skipped by `Tab`
+  entirely — not just visually dimmed while remaining reachable.
+- `required` sets `aria-required` and marks the switch required for real HTML5 form validation —
+  inside a `<form>`, Radix automatically renders a hidden native `<input type="checkbox">` that
+  actually participates in submission (including an uncontrolled form with no JS handler), using
+  `name`/`value` as its own name/value.
+- The unchecked track (`bg.track-strong`) and checked track (`bg.brand`) are both checked against
+  real WCAG contrast ratios, not assumed — see [Design tokens used](#design-tokens-used) below.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Switch defaultChecked>Email notifications</Switch>
+<Switch checked={isDark} onCheckedChange={setIsDark} checkedIcon={MoonIcon} uncheckedIcon={SunIcon} />
+<Switch aria-label="Airplane mode" />
+<Switch hasError>Required setting</Switch>
+<Switch loading>Saving…</Switch>
+<Switch data-testid="notifications-switch">Email notifications</Switch>
+<Switch name="notifications" value="enabled" required>Enable notifications</Switch>
+<Switch autoFocus onFocus={() => trackFieldFocus('notifications')}>Notifications</Switch>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.track-strong" usage="unchecked resting track fill" />
+<TokenRow token="bg.neutral" usage="unchecked hover track fill" />
+<TokenRow token="bg.brand" usage="checked track fill" />
+<TokenRow token="bg.brand-hover" usage="checked hover track fill" />
+<TokenRow token="bg.surface" usage="thumb fill" />
+<TokenRow token="border.danger" usage="hasError state ring" />
+<TokenRow token="border.focus" usage="focus-visible outline" />
+<TokenRow token="icon.secondary" usage="unchecked thumb icon color" />
+<TokenRow token="icon.brand" usage="checked thumb icon color" />
+<TokenRow token="text.primary" usage="label text color" />
+<TokenRow token="text.disabled" usage="disabled/loading label text color" />
+<TokenRow token="border-width.2" usage="focus-visible outline width; hasError ring width" />
+<TokenRow token="radius.full" usage="track and thumb corner radius (fully round)" />
+<TokenRow token="icon-size.xs–icon-size.xl" usage="per-size track/thumb dimensions" />
+<TokenRow token="space.1" usage="thumb inset within the track" />
+<TokenRow token="space.2" usage="gap between the track and its inline label" />
+<TokenRow token="font-family.primary" usage="label text" />
+<TokenRow token="font-size.base" usage="label text" />
+<TokenRow token="line-height.normal" usage="label text" />
+<TokenRow token="motion.duration.fast" usage="track color transitions" />
+<TokenRow token="motion.duration.base" usage="thumb slide transition" />
+<TokenRow token="motion.easing.standard" usage="track color and thumb slide transitions" />
+<TokenRow token="opacity.40" usage="disabled/loading state" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Checkbox"
+  description="For a choice that stays pending until an explicit submit, instead of taking effect immediately"
+  href="/?path=/story/atoms-inputs-checkbox--playground"
+>
+  <Checkbox defaultChecked aria-label="Accept terms" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="A standalone label atom for pairing with form controls that need one outside their own inline label"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel>Email address</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="Pairs with hasError to show why a switch failed validation, not just that it did"
+  href="/?path=/story/atoms-inputs-fielderror--playground"
+>
+  <FieldError>This field is required</FieldError>
+</RelatedCard>
+</div>

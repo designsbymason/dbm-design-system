@@ -18,6 +18,7 @@ export const propOrder = [
   "indeterminateIcon",
   "disabled",
   "required",
+  "autoFocus",
   "name",
   "value",
   "form",
@@ -56,14 +57,14 @@ import { Checkbox } from "@dbm-design-system/components";
 </div>
 <PlaygroundControls
   of={CheckboxStories.Playground}
-  exclude={["onCheckedChange", "checked", "form", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  exclude={["onCheckedChange", "checked", "autoFocus", "form", "aria-labelledby", "id", "className", "style", "data-testid"]}
   order={propOrder}
 />
 
 ## Properties
 
 `Checkbox` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
-`onFocus`, `autoFocus`) — passed straight through to the underlying Radix-rendered `<button>`.
+`onFocus`, `onKeyDown`) — passed straight through to the underlying Radix-rendered `<button>`.
 
 <PropertiesTable of={CheckboxStories} order={propOrder} />
 
@@ -196,7 +197,7 @@ import { Checkbox } from "@dbm-design-system/components";
 <RelatedCard
   name="Switch"
   description="For an action that takes effect immediately, instead of staying pending until submit"
-  href="/?path=/story/atoms-inputs-switch--default"
+  href="/?path=/docs/atoms-inputs-switch--docs"
 >
   <Switch defaultChecked aria-label="Enable notifications" />
 </RelatedCard>

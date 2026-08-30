@@ -150,6 +150,11 @@
       "$value": "{color.gray.900}",
       "$description": "New token (2026-08-22), added for ProgressBar's empty/unfilled track — was reusing bg.neutral-subtle, the same 'existing token reused for an unverified new purpose' bug that led to bg.skeleton (Phase 18). Dark value carried over unchanged from bg.neutral-subtle (gray.900, 1.40:1 vs bg.surface) — still fails the 3:1 non-text floor WCAG 1.4.11 asks for graphical objects required to understand content, accepted at explicit user direction for the same reason as the light-mode value (see purple-light.json/emerald-light.json for the full rationale) — a deliberate, informed exception, not a verified pass. Brand-agnostic. Revisit with gray.400 (4.34:1) if this needs to actually clear 3:1 later. Reused 2026-08-23 for ProgressCircle's own identical track-invisibility bug (same root cause — bg.neutral-subtle reused for an unverified purpose — same fix, no new value decision needed)."
     },
+    "track-strong": {
+      "$type": "color",
+      "$value": "{color.gray.400}",
+      "$description": "New token (2026-08-30), added for Switch's unchecked-state track fill — was reusing bg.neutral-subtle, the exact 'existing token reused for an unverified new purpose' bug already fixed twice (bg.skeleton, Phase 18; bg.track, above). Dark value requested as gray.900 initially — checked directly against bg.surface (gray.800) and found to measure only 1.4:1, reproducing the same near-invisible defect in dark mode instead of fixing it, so gray.400 was used instead: 4.34:1 vs bg.surface, the same already-verified value border.neutral-strong (Phase 23) established for this identical 'needs to read as a real UI boundary in dark mode' case. Brand-agnostic. Hover state reuses the existing bg.neutral token directly (gray.600 light / gray.300 dark) rather than a dedicated -hover token — already the correct 'one step further in the visibility direction' value with its own separately-verified contrast."
+    },
     "code": {
       "$type": "color",
       "$value": "{color.gray.700}",

@@ -64,6 +64,13 @@ export interface CheckboxProps
    */
   required?: boolean;
   /**
+   * Focuses the checkbox automatically on mount. Use sparingly — stealing
+   * focus on page load is disorienting for screen-reader/keyboard users
+   * unless this checkbox is genuinely the page's primary action.
+   * @default false
+   */
+  autoFocus?: boolean;
+  /**
    * Form field name. Only meaningful inside a `<form>` — Radix Checkbox
    * automatically renders a hidden native `<input type="checkbox">` there
    * so the checkbox participates in real form submission (including

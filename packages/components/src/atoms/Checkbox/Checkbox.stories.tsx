@@ -80,6 +80,12 @@ const meta: Meta<typeof Checkbox> = {
       description:
         "Marks the checkbox as required for HTML5 form validation, and sets aria-required.",
     },
+    // `control: false` — autoFocus only takes effect on mount, so toggling
+    // it live in the Controls panel has no visible feedback to demo.
+    autoFocus: {
+      control: false,
+      description: "Focuses the checkbox automatically on mount. Use sparingly.",
+    },
     name: {
       control: "text",
       description:
