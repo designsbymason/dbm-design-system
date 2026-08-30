@@ -51,10 +51,10 @@ describe("Icon", () => {
     );
   });
 
-  it("defaults weight to regular", () => {
+  it("defaults weight to bold", () => {
     const { container: defaulted } = render(<Icon icon={WalletIcon} />);
     const { container: explicit } = render(
-      <Icon icon={WalletIcon} weight="regular" />,
+      <Icon icon={WalletIcon} weight="bold" />,
     );
     expect(defaulted.querySelector("svg")?.innerHTML).toBe(
       explicit.querySelector("svg")?.innerHTML,

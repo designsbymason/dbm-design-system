@@ -118,7 +118,6 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
                 <Icon
                   icon={uncheckedIcon}
                   size={iconSize}
-                  weight="bold"
                   className={styles.uncheckedIcon}
                 />
               )}
@@ -126,7 +125,6 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
                 <Icon
                   icon={checkedIcon}
                   size={iconSize}
-                  weight="bold"
                   className={styles.checkedIcon}
                 />
               )}

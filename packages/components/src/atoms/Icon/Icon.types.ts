@@ -44,7 +44,7 @@ export interface IconProps extends Omit<
    */
   size?: IconSize;
   /**
-   * @default 'regular'
+   * @default 'bold'
    */
   weight?: IconWeight;
   /**

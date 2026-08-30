@@ -180,7 +180,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           <Icon
             icon={icon}
             size={size}
-            weight={isToggle && isPressed ? "fill" : "regular"}
+            weight={isToggle && isPressed ? "fill" : "bold"}
           />
         )}
       </Component>

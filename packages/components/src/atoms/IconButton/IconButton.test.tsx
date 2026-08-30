@@ -393,7 +393,7 @@ describe("IconButton", () => {
       expect(results).toHaveNoViolations();
     });
 
-    it("switches the icon to Phosphor's fill weight while pressed, regular otherwise", () => {
+    it("switches the icon to Phosphor's fill weight while pressed, bold otherwise", () => {
       const { container: unpressed } = render(
         <IconButton icon={HeartIcon} aria-label="Favorite" defaultPressed={false} />,
       );
@@ -409,7 +409,7 @@ describe("IconButton", () => {
       const { container: plain } = render(
         <IconButton icon={HeartIcon} aria-label="Favorite" />,
       );
-      const { container: explicitRegular } = render(
+      const { container: explicitUnpressed } = render(
         <IconButton
           icon={HeartIcon}
           aria-label="Favorite"
@@ -417,7 +417,7 @@ describe("IconButton", () => {
         />,
       );
       expect(plain.querySelector("svg")?.innerHTML).toBe(
-        explicitRegular.querySelector("svg")?.innerHTML,
+        explicitUnpressed.querySelector("svg")?.innerHTML,
       );
     });
 

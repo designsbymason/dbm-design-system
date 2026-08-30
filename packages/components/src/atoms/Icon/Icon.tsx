@@ -49,7 +49,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
     {
       icon: IconComponent,
       size = "md",
-      weight = "regular",
+      weight = "bold",
       tone,
       label,
       className,
