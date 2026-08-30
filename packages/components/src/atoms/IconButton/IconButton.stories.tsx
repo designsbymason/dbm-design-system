@@ -62,24 +62,35 @@ const meta: Meta<typeof IconButton> = {
       description:
         "Renders as a circle instead of the standard rounded-corner shape.",
     },
-    // `pressed` (controlled) is deliberately `control: false` — driving it
-    // live without a real `onPressedChange` wired back would freeze the
-    // button, since a controlled value always wins over the click handler's
-    // own toggle attempt. The Playground demonstrates the uncontrolled
-    // path (`defaultPressed`) instead, same precedent as Checkbox's own
-    // `checked`/`defaultChecked` split.
+    // `pressed`/`defaultPressed`/`onPressedChange` don't each get their own
+    // Controls-panel widget: `pressed` alone would freeze the button (a
+    // controlled value always wins over the click handler's own toggle
+    // attempt, and there's no real `onPressedChange` wired back to a live
+    // control), and a bare `defaultPressed` boolean can't represent "not a
+    // toggle at all" — `false` is still a defined value, so it would leave
+    // `isToggle` permanently `true` regardless of which way the switch is
+    // set (found in review: every story in this file rendered in toggle
+    // mode by default before this fix, since the shared meta-level default
+    // below used to set `defaultPressed: false`). Driven instead by the
+    // Playground's own "Interaction mode" synthetic select (not a real
+    // IconButtonProps field, see `Playground.argTypes.interactionMode`
+    // below — same pattern as Tag's own Playground), which composes
+    // `defaultPressed`/`onPressedChange` into one coherent, correctly-
+    // behaving control, or via the dedicated `Toggle` story.
     pressed: {
       control: false,
       description:
-        "Controlled pressed state — pair with onPressedChange. Setting either pressed or defaultPressed opts into toggle-button semantics.",
+        "Controlled pressed state — pair with onPressedChange. Setting either pressed or defaultPressed opts into toggle-button semantics. Demo via the Playground's \"Interaction mode\" control.",
     },
     defaultPressed: {
-      control: "boolean",
-      description: "Initial pressed state for an uncontrolled toggle button.",
+      control: false,
+      description:
+        'Initial pressed state for an uncontrolled toggle button. Demo via the Playground\'s "Interaction mode" control (select "Toggle") or the dedicated "Toggle" story below.',
     },
     onPressedChange: {
       control: false,
-      description: "Fires when the pressed state changes.",
+      description:
+        "Fires when the pressed state changes. Demo via the Playground's \"Interaction mode\" control.",
     },
     "aria-label": {
       control: "text",
@@ -129,6 +140,14 @@ const meta: Meta<typeof IconButton> = {
   // IconButton still resolves it via `loadingLabel ?? aria-label`, and an
   // explicit empty string would silently win over `aria-label` the same
   // way Button's own `loadingText ?? children` once did.
+  // `defaultPressed`/`onPressedChange` are deliberately absent here (found
+  // in review, fixed at explicit direction) — `defaultPressed: false` used
+  // to live in this shared args object, which meant `isToggle` was `true`
+  // for every single story in this file (`false` is still a *defined*
+  // value), none of which ever demonstrated IconButton's actual default,
+  // non-toggle appearance. Toggle mode is opted into per-story instead —
+  // the Playground's own "Interaction mode" control, or the dedicated
+  // `Toggle` story below.
   args: {
     icon: "Heart" as unknown as IconButtonProps["icon"],
     variant: "primary",
@@ -137,7 +156,6 @@ const meta: Meta<typeof IconButton> = {
     loadingLabel: "Favoriting…",
     asChild: false,
     rounded: false,
-    defaultPressed: false,
     "aria-label": "Favorite",
     type: "button",
     disabled: false,
@@ -149,8 +167,57 @@ export default meta;
 
 type Story = StoryObj<typeof IconButton>;
 
-/** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+type InteractionMode = "Non-toggle" | "Toggle";
+
+// `interactionMode` is a Playground-only Controls axis, not a real
+// IconButtonProps field — `defaultPressed`/`onPressedChange` don't have a
+// sensible standalone control on their own (see each one's own argTypes
+// description above), and a bare `defaultPressed` boolean can't represent
+// "not a toggle at all" (see the meta-level comment above `pressed`). This
+// one synthetic select composes them into a single, correctly-behaving
+// control — same pattern as Tag's own Playground. Defaults to
+// "Non-toggle" — IconButton's real zero-extra-props default — so the
+// Playground's initial render matches what a plain `<IconButton>` actually
+// looks like, rather than starting pre-opted into toggle mode.
+interface PlaygroundArgs extends IconButtonProps {
+  interactionMode: InteractionMode;
+}
+
+export const Playground: Story = {
+  // Cast: `interactionMode` isn't part of `IconButtonProps` — see the
+  // interface and comment above. `onPressedChange` is created once here
+  // (module-eval time, not per-render) so its identity — and Actions-panel
+  // call history — stays stable across unrelated control changes, matching
+  // every other `fn()` usage in this file.
+  args: {
+    interactionMode: "Non-toggle",
+    defaultPressed: false,
+    onPressedChange: fn(),
+  } as Partial<PlaygroundArgs>,
+  argTypes: {
+    interactionMode: {
+      name: "Interaction mode",
+      control: "select",
+      options: ["Non-toggle", "Toggle"],
+      description:
+        'Playground-only control (not a real IconButtonProps field). "Non-toggle": neither defaultPressed nor onPressedChange is applied — IconButton\'s real default. "Toggle": wires defaultPressed + onPressedChange (uncontrolled, so the button below toggles live on click with no external state needed).',
+    },
+  } as NonNullable<Meta<typeof IconButton>["argTypes"]>,
+  render: (args) => {
+    const { interactionMode, defaultPressed, onPressedChange, ...rest } =
+      args as PlaygroundArgs;
+    if (interactionMode === "Toggle") {
+      return (
+        <IconButton
+          {...rest}
+          defaultPressed={defaultPressed}
+          onPressedChange={onPressedChange}
+        />
+      );
+    }
+    return <IconButton {...rest} />;
+  },
+};
 
 export const AllVariants: Story = {
   name: "All variants",

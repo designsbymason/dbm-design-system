@@ -58,7 +58,7 @@ import { IconButton } from "@dbm-design-system/components";
 </div>
 <PlaygroundControls
   of={IconButtonStories.Playground}
-  exclude={["asChild", "pressed", "onPressedChange", "onClick", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  exclude={["asChild", "pressed", "defaultPressed", "onPressedChange", "onClick", "aria-labelledby", "id", "className", "style", "data-testid"]}
   order={propOrder}
 />
 
@@ -195,7 +195,11 @@ element `asChild`'s slotted child renders).
 <IconButton icon={TrashIcon} aria-label="Delete item" variant="destructive" />
 <IconButton icon={TrashIcon} aria-label="Delete" isLoading loadingLabel="Deleting…" />
 <IconButton icon={PlusIcon} aria-label="Add" rounded />
-<IconButton icon={HeartIcon} aria-label="Favorite" variant="ghost" defaultPressed={false} />
+{/* Plain, non-toggle (the default — no pressed/defaultPressed/onPressedChange at all) */}
+<IconButton icon={HeartIcon} aria-label="Favorite" variant="ghost" onClick={handleFavoriteClick} />
+{/* Uncontrolled toggle — IconButton manages its own pressed state */}
+<IconButton icon={HeartIcon} aria-label="Favorite" variant="ghost" defaultPressed={false} onPressedChange={logFavoriteChange} />
+{/* Controlled toggle */}
 <IconButton
   icon={HeartIcon}
   aria-label="Favorite"
