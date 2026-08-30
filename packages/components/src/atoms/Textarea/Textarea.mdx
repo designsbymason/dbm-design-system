@@ -1,0 +1,266 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldError } from "../FieldError";
+import { FieldHelperText } from "../FieldHelperText";
+import { FieldLabel } from "../FieldLabel";
+import { Input } from "../Input";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Textarea } from "./Textarea";
+import * as TextareaStories from "./Textarea.stories";
+
+export const propOrder = [
+  "placeholder",
+  "hasError",
+  "size",
+  "autoResize",
+  "resize",
+  "rows",
+  "minRows",
+  "maxRows",
+  "value",
+  "defaultValue",
+  "onClear",
+  "disabled",
+  "required",
+  "readOnly",
+  "autoFocus",
+  "autoComplete",
+  "maxLength",
+  "showCount",
+  "minLength",
+  "name",
+  "form",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+  "onInput",
+];
+
+<Meta of={TextareaStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Textarea" tier="Atom" />
+
+A multi-line text input, sharing `Input`'s size scale, error state, and token-driven visual
+treatment. Supports `autoResize` to grow with its content instead of scrolling internally —
+optionally bounded by `minRows`/`maxRows` — an optional clear (`×`) button via `onClear`, and an
+optional live character count when `maxLength` is set. Accepts both controlled (`value`/`onChange`)
+and uncontrolled (`defaultValue`) usage, mirroring a native `<textarea>` directly.
+
+### Import
+
+```tsx
+import { Textarea } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TextareaStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={TextareaStories.Playground}
+  exclude={[
+    "minRows",
+    "maxRows",
+    "value",
+    "onClear",
+    "autoFocus",
+    "autoComplete",
+    "minLength",
+    "form",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+    "onInput",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Textarea` also accepts any other native `<textarea>` attribute beyond what's listed here (e.g.
+`spellCheck`, `wrap`) — passed straight through to the underlying element.
+
+<PropertiesTable of={TextareaStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={TextareaStories.AllSizes} />
+
+### Auto-resize
+
+<Canvas of={TextareaStories.AutoResize} />
+
+### Auto-resize (bounded)
+
+<Canvas of={TextareaStories.BoundedAutoResize} />
+
+### With a clear button
+
+<Canvas of={TextareaStories.Clearable} />
+
+### With character count
+
+<Canvas of={TextareaStories.CharacterCount} />
+
+### Error state
+
+<Canvas of={TextareaStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={TextareaStories.Disabled} />
+
+### Narrow viewport (fills container width)
+
+<Canvas of={TextareaStories.NarrowViewport} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass `minRows`/`maxRows` alongside `autoResize` when the acceptable content length is roughly
+  known, so the field grows within a predictable range instead of unbounded.
+- Pass `onClear` together with a real `value`/`onChange` (or rely on the uncontrolled DOM value) so
+  the clear button has something meaningful to act on — clearing the value itself is the caller's
+  own responsibility, matching `Input`'s own `onClear`.
+- Pair `hasError` with a nearby `FieldError` so the reason is visible, not just the red border and
+  `aria-invalid`.
+- Pair `showCount` with `maxLength` — `showCount` alone renders nothing, matching `Input`'s own
+  convention.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't drive `value` from a live control without a real `onChange` wired back — a controlled value
+  always wins over the user's own typing, which freezes the textarea exactly like `Input`'s own
+  `value` does.
+- Don't expect changing `defaultValue` after mount to update an already-rendered textarea — it only
+  sets the value at mount time, exactly like a real `<textarea defaultValue>`.
+- Don't pass `minRows`/`maxRows` without `autoResize` — they only bound the auto-grow height, so
+  they're silently ignored (and warn in development) without it.
+- Don't reach for this atom when the expected value never spans more than one line — use `Input`
+  instead, which adds its own single-line affordances (`prefix`/`suffix` slots).
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the surrounding form/table density — the default `md` suits standalone forms;
+  drop to `sm`/`xs` inside dense tables or compact filter bars.
+- Use `readOnly` instead of `disabled` when a value should stay visible, selectable, and submittable
+  in a real `<form>` but not editable — e.g. a computed or pre-filled field. `disabled` is for a
+  value that shouldn't participate in the form at all.
+- Set `resize="none"` (or rely on `autoResize` instead) in tightly constrained layouts — a
+  user-resizable corner handle can let a reader drag the box wider than a narrow column or sidebar
+  was designed to allow.
+- Reach for `Input` instead when the expected value is always a single line — `Textarea` is
+  multi-line only, matching a native `<textarea>`'s own behavior (pressing Enter inserts a newline
+  here, unlike `Input`).
+
+## Accessibility
+
+<Callout tone="info" title="Native <textarea> semantics, nothing custom to break">
+
+- Renders a real native `<textarea>` — full native keyboard, focus, selection, and
+  form-participation behavior applies automatically, since nothing here reimplements what the
+  browser already does correctly.
+- `aria-invalid="true"` is set automatically while `hasError`, in addition to the visual red
+  border — the two can't drift out of sync, and a same-named consumer prop can never silently
+  override it, since this component's own computed value is always applied last.
+- Pair with a `FieldLabel` (via `htmlFor`/`id`) or pass `aria-label`/`aria-labelledby` directly — a
+  textarea with no accessible name is invisible to screen reader users, same requirement as any
+  other form control.
+- The clear button is a real, independently-focusable `<button aria-label="Clear">`, reachable via
+  `Tab` right after the textarea — not a decorative icon with a click handler bolted on.
+- The focus ring's `border-radius` is deliberately tightened to the standardized `sm` step while
+  focused, regardless of `size`'s own larger `md` corner radius — see
+  [Design tokens used](#design-tokens-used) below.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Textarea placeholder="Add a comment" />
+<Textarea autoResize defaultValue="Grows with content…" />
+<Textarea autoResize minRows={3} maxRows={8} />
+<Textarea value={value} onChange={(e) => setValue(e.target.value)} onClear={() => setValue('')} />
+<Textarea maxLength={280} showCount />
+<Textarea hasError defaultValue="" />
+<Textarea disabled defaultValue="Can't edit this" />
+<Textarea name="bio" required spellCheck={false} />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="wrapper resting background" />
+<TokenRow token="bg.brand-subtle" usage="clear button hover background" />
+<TokenRow token="border.default" usage="wrapper resting border" />
+<TokenRow token="border.neutral" usage="wrapper hover border" />
+<TokenRow token="border.danger" usage="hasError state border" />
+<TokenRow token="border.focus" usage="focus-within border and outline; clear button focus-visible outline" />
+<TokenRow token="border-width.1" usage="wrapper border width" />
+<TokenRow token="border-width.2" usage="focus-within outline width; clear button focus-visible outline width" />
+<TokenRow token="radius.md" usage="wrapper resting corner radius" />
+<TokenRow token="radius.sm" usage="standardized focus-ring radius, overriding radius.md while focused" />
+<TokenRow token="radius.full" usage="clear button's own rounded shape" />
+<TokenRow token="text.primary" usage="typed text color" />
+<TokenRow token="text.tertiary" usage="placeholder text; character count text" />
+<TokenRow token="icon.brand" usage="clear button icon color" />
+<TokenRow token="icon-size.xs–icon-size.lg" usage="clear button icon size per Textarea size step" />
+<TokenRow token="font-family.primary" usage="wrapper and textarea text" />
+<TokenRow token="font-size.xs–font-size.lg" usage="per-size font size, matched to Input's own size scale" />
+<TokenRow token="space.1–space.4" usage="wrapper padding-block/padding-inline per size; clear button hit-area padding; character count padding" />
+<TokenRow token="space.8" usage="reserved padding-inline-end on the textarea when onClear is provided, so wrapped text never overlaps the clear button" />
+<TokenRow token="opacity.40" usage="disabled state" />
+<TokenRow token="motion.duration.fast" usage="border-color/opacity/background-color transitions" />
+<TokenRow token="motion.easing.standard" usage="border-color/opacity/background-color transitions" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Input"
+  description="The single-line counterpart — reach for this instead when the expected value never spans more than one line"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Single-line text" style={{ maxWidth: "12rem" }} />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom for this textarea — sized to match Textarea's own size scale, with its own required/disabled conventions this component mirrors"
+  href="/?path=/docs/atoms-inputs-fieldlabel--docs"
+>
+  <FieldLabel htmlFor="example">Bio</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="Pairs with hasError to show why a textarea failed validation, not just that it did"
+  href="/?path=/docs/atoms-inputs-fielderror--docs"
+>
+  <FieldError>This field is required</FieldError>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="Pairs below a textarea for supporting instructions, distinct from an error state"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>Markdown is supported</FieldHelperText>
+</RelatedCard>
+</div>
