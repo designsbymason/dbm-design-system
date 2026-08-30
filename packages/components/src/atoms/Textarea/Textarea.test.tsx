@@ -94,7 +94,7 @@ describe("Textarea", () => {
     expect(textarea.parentElement).toHaveStyle({ marginTop: "10px" });
   });
 
-  it("does not let a consumer's style prop clobber the computed resize style (found in review — style previously fell through to the native textarea and completely replaced the computed { resize } object instead of being ignored by it)", () => {
+  it("merges a consumer's style prop with the computed resize style on the wrapper, rather than one clobbering the other (found in review — style previously fell through to the native textarea and completely replaced the computed { resize } object instead of merging with it)", () => {
     render(
       <Textarea
         style={{ marginTop: "10px" }}
@@ -102,8 +102,9 @@ describe("Textarea", () => {
         placeholder="Comment"
       />,
     );
-    expect(screen.getByPlaceholderText("Comment")).toHaveStyle({
+    expect(screen.getByPlaceholderText("Comment").parentElement).toHaveStyle({
       resize: "both",
+      marginTop: "10px",
     });
   });
 
@@ -115,24 +116,46 @@ describe("Textarea", () => {
   });
 
   describe("resize", () => {
-    it("sets the native resize style from the resize prop", () => {
+    // `resize` is set on the wrapper, not the native `<textarea>` — found
+    // in a live bug report: with `resize` on the textarea (a borderless,
+    // backgroundless element filling the wrapper's own padding box),
+    // dragging the native resize handle genuinely widened the textarea's
+    // own box, but the wrapper — the only element with a visible border/
+    // background, fixed at `width: 100%` — never grew to match, so the
+    // resized textarea silently overflowed past the wrapper's own right
+    // edge instead of visibly resizing. See Textarea.tsx's own `style`
+    // comment on the wrapper for the full fix.
+    it("sets the resize style on the wrapper from the resize prop", () => {
       render(<Textarea resize="none" placeholder="Comment" />);
-      expect(screen.getByPlaceholderText("Comment")).toHaveStyle({
+      expect(
+        screen.getByPlaceholderText("Comment").parentElement,
+      ).toHaveStyle({
         resize: "none",
       });
     });
 
-    it("defaults to vertical resize", () => {
+    it("defaults to vertical resize on the wrapper", () => {
       render(<Textarea placeholder="Comment" />);
-      expect(screen.getByPlaceholderText("Comment")).toHaveStyle({
+      expect(
+        screen.getByPlaceholderText("Comment").parentElement,
+      ).toHaveStyle({
         resize: "vertical",
       });
     });
 
-    it("forces resize to none when autoResize is enabled, regardless of the resize prop", () => {
+    it("forces the wrapper's resize to none when autoResize is enabled, regardless of the resize prop", () => {
       render(
         <Textarea autoResize resize="both" placeholder="Comment" />,
       );
+      expect(
+        screen.getByPlaceholderText("Comment").parentElement,
+      ).toHaveStyle({
+        resize: "none",
+      });
+    });
+
+    it("keeps the native textarea itself permanently non-resizable, since the wrapper is now the sole resize target", () => {
+      render(<Textarea resize="both" placeholder="Comment" />);
       expect(screen.getByPlaceholderText("Comment")).toHaveStyle({
         resize: "none",
       });

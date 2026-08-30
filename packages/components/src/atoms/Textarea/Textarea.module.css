@@ -5,6 +5,15 @@
   display: flex;
   flex-direction: column;
   font-family: var(--dbm-font-family-primary);
+  /* Required for `resize` (set inline below, computed from the
+     `resize`/`autoResize` props) to actually activate on this element —
+     per the CSS Resize spec, `resize` has no effect on an element whose
+     own `overflow` computes to `visible` (this wrapper's own default).
+     `.textarea`'s own internal scrolling — the native textarea scrollbar
+     that appears once its content exceeds its box — is unaffected: that's
+     governed by the textarea's own `overflow`/`overflow-y`, a completely
+     separate element from this one. */
+  overflow: hidden;
   /* Positioning context for `.clear` (the optional onClear button),
      absolutely positioned in the top-inline-end corner — the multi-line
      equivalent of Input's own inline trailing clear button, which
@@ -54,7 +63,19 @@
   display: block;
   font-family: inherit;
   font-size: inherit;
+  /* Fills `.wrapper` exactly — including height, not just width — so
+     `.wrapper` (not this element) is what the browser actually resizes;
+     see `.wrapper`'s own `style` comment in Textarea.tsx for the full
+     bug this fixes. A percentage height against `.wrapper`'s own `auto`
+     height (its default, content-driven, before any resize) resolves
+     back to `auto` per spec — the same fallback that already made this
+     component's `rows` attribute work as the default height — so nothing
+     about the untouched default case changes; this only takes over once
+     `.wrapper` has a real, resized height to fill. */
+  height: 100%;
   outline: none;
+  /* `resize` lives on `.wrapper` now, not here — see its own comment. */
+  resize: none;
   width: 100%;
 }
 

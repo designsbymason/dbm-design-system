@@ -206,15 +206,29 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         // matching `className`'s own target, not the borderless inner
         // `<textarea>`. Previously unhandled entirely: `style` wasn't
         // destructured, so it fell into `{...props}` below and landed on
-        // the `<textarea>` instead, where (a) it had no visible effect for
+        // the `<textarea>` instead, where it had no visible effect for
         // anything targeting the box's own border/background (the same
         // "silently no-op" bug class `Input`'s own review found and fixed
-        // for its identical wrapper/inner-element split), and (b) being a
-        // plain object, it completely replaced the computed
-        // `{ resize: ... }` style outright rather than merging with it —
-        // silently breaking `resize`/`autoResize` for any consumer who
-        // also passed a `style` prop.
-        style={style}
+        // for its identical wrapper/inner-element split).
+        //
+        // `resize` also lives here now, not on the `<textarea>` — found in
+        // a live bug report: with `resize` on the textarea (a borderless,
+        // backgroundless element filling this wrapper's own padding box),
+        // dragging the native resize handle *did* widen the textarea's own
+        // box (confirmed via `getBoundingClientRect()`), but this wrapper
+        // — the only element with a visible border/background, and fixed
+        // at `width: 100%` — never grew to match, so the textarea silently
+        // overflowed past the wrapper's own right edge instead of visibly
+        // resizing. Vertical resize never had this problem, since the
+        // wrapper's *height* was already unconstrained (`auto`), so it
+        // naturally grew to wrap the textarea's own resized height — the
+        // fix makes width behave the same way, by making the wrapper
+        // itself the element the browser actually resizes: `.textarea`
+        // now fills it at `width: 100%; height: 100%` (see its own CSS
+        // rule) and carries `resize: none` permanently, so there's a
+        // single resize handle, on the one element a resize can actually
+        // make visible.
+        style={{ resize: autoResize ? "none" : resize, ...style }}
       >
         {/* `{...props}` is spread before the computed `aria-invalid` so a
             same-named prop a consumer passes can never silently override
@@ -234,7 +248,6 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           value={value}
           defaultValue={defaultValue}
           onInput={handleInput}
-          style={{ resize: autoResize ? "none" : resize }}
           {...props}
           aria-invalid={hasError || undefined}
         />
