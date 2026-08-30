@@ -5,6 +5,11 @@
   display: flex;
   flex-direction: column;
   font-family: var(--dbm-font-family-primary);
+  /* Positioning context for `.clear` (the optional onClear button),
+     absolutely positioned in the top-inline-end corner — the multi-line
+     equivalent of Input's own inline trailing clear button, which
+     doesn't need this since it's a single-line flex row instead. */
+  position: relative;
   transition:
     border-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard),
@@ -16,10 +21,21 @@
   border-color: var(--dbm-border-neutral);
 }
 
+/* `border-radius` here deliberately overrides `.wrapper`'s own
+   `--dbm-radius-md` — the standardized `sm` focus-ring radius
+   (`05-component-api-conventions.md` §6) applies to every square-ish
+   interactive element regardless of its own corner radius, so every focus
+   ring in the system reads consistently. `.wrapper` is both the visible
+   textarea box and the element the outline is drawn on (no separate,
+   invisible wrapper the way Avatar has), so — same as Input's own
+   retrofit — this does very slightly tighten the textarea's own visible
+   corners while focused (8px → 4px), accepted as a minor, deliberate
+   trade-off. */
 .wrapper:focus-within {
   border-color: var(--dbm-border-focus);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
 }
 
 .wrapper.error {
@@ -44,6 +60,45 @@
 
 .textarea::placeholder {
   color: var(--dbm-text-tertiary);
+}
+
+/* Reserves room so the top-inline-end `.clear` button never overlaps the
+   first line's own text — applied whenever `onClear` is provided at all
+   (not just while the button is currently visible), so there's no layout
+   shift as content is typed/cleared. */
+.hasClear {
+  padding-inline-end: var(--dbm-space-8);
+}
+
+/* `background`/`border-radius`/`padding` are the same "locally-implemented
+   clear control" treatment already established on Input/Tag — see either
+   component's own `.clear`/`.removeButton` comment for the full
+   reasoning. Positioned absolutely (Input's own version is an inline flex
+   child instead, since Input is a single-line row with no need for this)
+   — `.wrapper`'s own `position: relative` above is what anchors it. */
+.clear {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  inset-block-start: var(--dbm-space-1);
+  inset-inline-end: var(--dbm-space-1);
+  justify-content: center;
+  padding: var(--dbm-space-1);
+  position: absolute;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.clear:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.clear:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
 }
 
 .textarea:disabled {
