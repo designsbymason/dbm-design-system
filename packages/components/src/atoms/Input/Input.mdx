@@ -182,9 +182,8 @@ import { Input } from "@dbm-design-system/components";
   form-participation behavior applies automatically, since nothing here reimplements what the
   browser already does correctly.
 - `aria-invalid="true"` is set automatically while `hasError`, in addition to the visual red
-  border — the two can't drift out of sync, and can never be silently overridden by a same-named
-  consumer prop (the JSX-attribute-ordering fix found during this component's own review — see
-  `05-component-api-conventions.md` §3).
+  border — the two can't drift out of sync, and a same-named consumer prop can never silently
+  override it, since this component's own computed value is always applied last.
 - Clicking anywhere inside the visual box — the padding, or the `prefix`/`suffix` slots — focuses
   the input directly, matching a native `<input>`'s own click-anywhere-in-box behavior.
 - Pair with a `FieldLabel` (via `htmlFor`/`id`) or pass `aria-label`/`aria-labelledby` directly — an
