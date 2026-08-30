@@ -163,12 +163,16 @@ describe("Checkbox", () => {
 
   it("participates in real form submission via name/value, through Radix's own hidden input (a genuine Radix Checkbox feature previously blocked at the type level — `required` wasn't on CheckboxProps, since native <button> has no `required` attribute of its own)", async () => {
     const user = userEvent.setup();
-    let submitted: FormData | null = null;
+    // A plain `let` reassigned only inside the closure below narrows to its
+    // initializer type (`null`) at the `expect` call site, since that
+    // reassignment isn't visible to TS's control-flow analysis there —
+    // wrapping it in an object sidesteps the narrowing.
+    const captured: { submitted: FormData | null } = { submitted: null };
     render(
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          submitted = new FormData(event.currentTarget);
+          captured.submitted = new FormData(event.currentTarget);
         }}
       >
         <Checkbox name="newsletter" value="subscribed" aria-label="Subscribe" />
@@ -177,7 +181,7 @@ describe("Checkbox", () => {
     );
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: "Submit" }));
-    expect(submitted?.get("newsletter")).toBe("subscribed");
+    expect(captured.submitted?.get("newsletter")).toBe("subscribed");
   });
 
   it("sets aria-invalid when hasError is true", () => {
