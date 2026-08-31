@@ -1,5 +1,18 @@
 .sentinel {
+  /* Harmless outside a flex context (flex-shrink only applies to flex
+     items) — needed so the sentinel survives at its declared 1px size
+     inside a horizontally-scrolling flex row (a swiper's own track, a
+     comparison table's flex-based columns) instead of being shrunk
+     toward 0 alongside its siblings. */
+  flex-shrink: 0;
+}
+
+.sentinelVertical {
   height: var(--dbm-space-px);
+}
+
+.sentinelHorizontal {
+  width: var(--dbm-space-px);
 }
 
 .root {

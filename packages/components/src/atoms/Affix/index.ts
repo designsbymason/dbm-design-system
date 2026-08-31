@@ -1,2 +1,2 @@
 export { Affix } from "./Affix";
-export type { AffixProps, AffixSide } from "./Affix.types";
+export type { AffixAxis, AffixEdge, AffixProps } from "./Affix.types";

@@ -8,7 +8,8 @@ import * as AffixStories from "./Affix.stories";
 
 export const propOrder = [
   "children",
-  "side",
+  "axis",
+  "edge",
   "offset",
   "scrollContainerRef",
   "onStickyChange",
@@ -24,12 +25,14 @@ export const propOrder = [
 
 <ComponentHeader title="Affix" tier="Atom" />
 
-A sticky-positioning wrapper — sticky table headers, filter bars, section nav. Wraps `position:
-sticky` with real stuck-state *detection*: a hidden sentinel element tracked via
-`IntersectionObserver` reports when the wrapped content has actually started sticking, exposed both
-as a `data-stuck` DOM attribute (for pure-CSS reactions, e.g. a shadow that appears once stuck) and
-via the `onStickyChange` callback (for reactions that need real state, e.g. swapping the label
-shown in the header). SSR-safe — the observer only ever attaches client-side.
+A sticky-positioning wrapper — sticky table headers, filter bars, section nav (`axis="vertical"`,
+the default), or a sticky lead column in a horizontally-scrolling comparison table, a sticky lead
+card in a swiper (`axis="horizontal"`). Wraps `position: sticky` with real stuck-state *detection*:
+a hidden sentinel element tracked via `IntersectionObserver` reports when the wrapped content has
+actually started sticking, exposed both as a `data-stuck` DOM attribute (for pure-CSS reactions,
+e.g. a shadow that appears once stuck) and via the `onStickyChange` callback (for reactions that
+need real state, e.g. swapping the label shown in the header). SSR-safe — the observer only ever
+attaches client-side.
 
 ### Import
 
@@ -67,6 +70,10 @@ import { Affix } from "@dbm-design-system/components";
 
 <Canvas of={AffixStories.WithinScrollContainer} />
 
+### Sticky lead column (axis="horizontal")
+
+<Canvas of={AffixStories.HorizontalScrollInteraction} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -87,8 +94,20 @@ import { Affix } from "@dbm-design-system/components";
 - Don't assume `Affix` needs `scrollContainerRef` just because it's nested inside other elements —
   only a genuinely *scrollable* ancestor (its own `overflow: auto`/`scroll`) changes what the
   stuck-state detection needs to measure against; ordinary non-scrolling wrappers don't.
-- Don't expect `side="bottom"` to also mirror `data-stuck`'s *meaning* — it still just means "the
+- Don't expect `edge="end"` to also mirror `data-stuck`'s *meaning* — it still just means "the
   sentinel has left view," now measured from the opposite edge, not a different kind of state.
+- Don't skip `scrollContainerRef` for `axis="horizontal"` — page-level horizontal scroll is rare,
+  so almost every real horizontal use case (a comparison table, a swiper) needs it, unlike
+  `axis="vertical"`, where the whole page scrolling is the common case.
+- Don't expect `axis="horizontal"` to work inside a real HTML `<table>`'s `<td>`/`<th>` directly —
+  `Affix` always renders a plain `<div>` (no `asChild`/polymorphism yet); apply `position: sticky`
+  to the cell itself instead, or wrap the cell's own content in a `<div>` and stick *that*.
+- Don't expect `axis="horizontal"` to work inside a `transform`-driven swiper/carousel (one that
+  moves slides via `transform: translateX()` rather than genuine `overflow-x` scrolling) — both
+  `position: sticky` and the `IntersectionObserver` this component relies on need a real scroll
+  offset to react to; a transform never produces one, so nothing will stick no matter how correctly
+  `Affix` itself is configured. This is a real, common gotcha — many hand-rolled or third-party
+  carousels use `transform` specifically to animate between slides, not `overflow-x: auto` at all.
 
 </Callout>
 </div>
@@ -98,8 +117,9 @@ import { Affix } from "@dbm-design-system/components";
 - Reach for `Affix` instead of hand-rolling `position: sticky` directly whenever a consumer needs
   to *react* to the stuck state (a shadow, a swapped label) — that's the real value this component
   adds over the bare CSS property, which offers no way to detect it on its own.
-- Keep the wrapped content's own height stable across the stuck/unstuck transition — `Affix` doesn't
-  reserve layout space for it, so a height change on stick can cause a visible content jump.
+- Keep the wrapped content's own size along the sticking axis stable across the stuck/unstuck
+  transition — height for `axis="vertical"`, width for `axis="horizontal"` — `Affix` doesn't reserve
+  layout space for it, so a size change on stick can cause a visible content jump.
 
 ## Accessibility
 
@@ -112,7 +132,10 @@ import { Affix } from "@dbm-design-system/components";
   content — it never reaches assistive tech.
 - If `scrollContainerRef` points at a genuinely scrollable region, that region itself needs its own
   keyboard-accessibility treatment (`tabIndex={0}` at minimum) per WCAG 2.1.1 — `Affix` doesn't add
-  this for you, since it doesn't own that element.
+  this for you, since it doesn't own that element. This applies equally to `axis="horizontal"`,
+  where `scrollContainerRef` is the common case rather than the exception — see every horizontal
+  story in this file's own Variants/Playground sections for the pattern (`role="region"` +
+  `tabIndex={0}` + `aria-label` on the scrolling container itself).
 
 </Callout>
 
@@ -123,7 +146,7 @@ import { Affix } from "@dbm-design-system/components";
   <TableHeader />
 </Affix>
 
-<Affix side="bottom" onStickyChange={setIsStuck}>
+<Affix edge="end" onStickyChange={setIsStuck}>
   <FilterBar />
 </Affix>
 
@@ -139,13 +162,22 @@ const panelRef = useRef<HTMLDivElement>(null);
 <Affix data-testid="section-nav" onFocus={trackNavFocus}>
   <SectionNav />
 </Affix>
+
+// A sticky lead column in a horizontally-scrolling comparison table
+const tableScrollRef = useRef<HTMLDivElement>(null);
+<div ref={tableScrollRef} style={{ display: "flex", overflowX: "auto" }}>
+  <Affix axis="horizontal" scrollContainerRef={tableScrollRef}>
+    <LeadColumn />
+  </Affix>
+  {/* ...remaining columns... */}
+</div>
 ```
 
 ## Design tokens used
 
 <TokenRow token="z-index.sticky" usage="stacking order for the sticky element" />
-<TokenRow token="space.px" usage="the hidden sentinel's height (1px)" />
-<TokenRow token="space.0–space.32" usage="the offset prop's own scale, applied to top/bottom" />
+<TokenRow token="space.px" usage="the hidden sentinel's own thickness (1px) — height for axis=vertical, width for axis=horizontal" />
+<TokenRow token="space.0–space.32" usage="the offset prop's own scale, applied to top/bottom (axis=vertical) or inset-inline-start/inset-inline-end (axis=horizontal)" />
 
 ## Related components
 

@@ -13,7 +13,7 @@ const meta: Meta<typeof Affix> = {
   // usual "padded") applies to the whole file, not just individual demos.
   parameters: { layout: "fullscreen" },
   argTypes: {
-    // The Playground composes its own demo header bar around `side`/
+    // The Playground composes its own demo header bar around `edge`/
     // `offset` (see below) rather than exposing raw JSX children as a text
     // control — a styled header bar isn't representable as a string, the
     // same reasoning Card-like demos elsewhere fix their own markup.
@@ -21,7 +21,8 @@ const meta: Meta<typeof Affix> = {
       control: false,
       description: "The content to stick — a table header, filter bar, section nav, etc.",
     },
-    side: { control: "select", options: ["top", "bottom"] },
+    axis: { control: "select", options: ["vertical", "horizontal"] },
+    edge: { control: "select", options: ["start", "end"] },
     offset: {
       control: "select",
       options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
@@ -62,7 +63,8 @@ const meta: Meta<typeof Affix> = {
   },
   args: {
     children: "Header content",
-    side: "top",
+    axis: "vertical",
+    edge: "start",
     offset: 0,
     onStickyChange: fn(),
   },
@@ -73,45 +75,95 @@ export default meta;
 type Story = StoryObj<typeof Affix>;
 
 /**
- * Drive `side`/`offset` live via the Controls panel below, and scroll the
- * canvas to see it stick — `Affix.mdx` renders this story's Docs-page
- * preview via the custom `PlaygroundCanvas` block (not the standard
- * `<Canvas>`) specifically so both of those actually work together; see
- * that block's own doc comment for why `<Canvas>` alone can't do both at
- * once for a page-scroll-based sticky story like this one.
+ * Drive `axis`/`edge`/`offset` live via the Controls panel below, and
+ * scroll the canvas to see it stick — `Affix.mdx` renders this story's
+ * Docs-page preview via the custom `PlaygroundCanvas` block (not the
+ * standard `<Canvas>`) specifically so both of those actually work
+ * together; see that block's own doc comment for why `<Canvas>` alone
+ * can't do both at once for a page-scroll-based sticky story like this
+ * one. `axis="horizontal"` swaps the whole demo's shape (a horizontally-
+ * scrolling row of columns via its own internal `scrollContainerRef`,
+ * mirroring `HorizontalScrollInteraction` below) rather than just
+ * reinterpreting the same vertical content sideways — a real user report
+ * flagged the earlier version, which disabled `axis` entirely here
+ * (reasoning the vertical-only content wouldn't make sense as a
+ * horizontal demo) as more restrictive than necessary; building the
+ * actual alternate shape instead is exactly one more axis of "explore
+ * the prop combinations," which is this section's whole job.
  */
 export const Playground: Story = {
   render: function PlaygroundStory(args) {
     const [stuck, setStuck] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const isHorizontal = args.axis === "horizontal";
     // Real, previously-shipped bug (found via direct user report): the
-    // unstuck label hardcoded "Scroll down" regardless of `side`, which
-    // is backwards for `side="bottom"` — given this demo's leading-only
-    // content (see the reordering below), `bottom` starts *already*
-    // stuck and only un-sticks once scrolled past the end of the page,
-    // so the direction that re-engages it is *up*, not down.
-    const unstuckLabel = args.side === "bottom" ? "Scroll up" : "Scroll down";
+    // unstuck label hardcoded "Scroll down" regardless of `side` (`edge`,
+    // after the axis/edge rename), which is backwards for `edge="end"`
+    // — given this demo's leading-only content on the active axis (see
+    // the reordering below), `end` starts *already* stuck and only
+    // un-sticks once scrolled past the end of the container, so the
+    // direction that re-engages it is the *reverse* of `start`'s own
+    // instruction, on whichever axis is active.
+    const unstuckLabel = isHorizontal
+      ? args.edge === "end"
+        ? "Scroll left"
+        : "Scroll right"
+      : args.edge === "end"
+        ? "Scroll up"
+        : "Scroll down";
     const header = (
       <Affix
         {...args}
+        // Only wired up for the horizontal demo — `scrollContainerRef`
+        // isn't itself a Controls-panel prop (a React ref has no
+        // meaningful control representation, same reasoning as
+        // `WithinScrollContainer`'s own dedicated demo), so this story
+        // manages it internally rather than exposing it.
+        scrollContainerRef={isHorizontal ? containerRef : undefined}
         onStickyChange={(isStuck) => {
           setStuck(isStuck);
           args.onStickyChange?.(isStuck);
         }}
       >
         <div
-          style={{
-            padding: "1rem 1.5rem",
-            background: "var(--dbm-bg-surface)",
-            borderBlock: stuck
-              ? "var(--dbm-border-width-2) solid var(--dbm-border-neutral)"
-              : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
-          }}
+          style={
+            isHorizontal
+              ? {
+                  width: "10rem",
+                  flexShrink: 0,
+                  padding: "0.75rem 1rem",
+                  background: "var(--dbm-bg-surface)",
+                  borderInlineEnd: stuck
+                    ? "var(--dbm-border-width-2) solid var(--dbm-border-neutral)"
+                    : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+                }
+              : {
+                  padding: "1rem 1.5rem",
+                  background: "var(--dbm-bg-surface)",
+                  borderBlock: stuck
+                    ? "var(--dbm-border-width-2) solid var(--dbm-border-neutral)"
+                    : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+                }
+          }
         >
           <Text weight="semibold">{stuck ? "Stuck!" : unstuckLabel}</Text>
         </div>
       </Affix>
     );
-    const content = (
+    const content = isHorizontal ? (
+      Array.from({ length: 10 }, (_, i) => (
+        <div
+          key={i}
+          style={{
+            flex: "0 0 12rem",
+            padding: "0.75rem 1rem",
+            borderInlineEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+          }}
+        >
+          <Text>Column {i + 1}.</Text>
+        </div>
+      ))
+    ) : (
       <div style={{ padding: "var(--dbm-space-6)" }}>
         {Array.from({ length: 30 }, (_, i) => (
           <Text key={i} style={{ marginBlockEnd: "var(--dbm-space-4)" }}>
@@ -121,34 +173,57 @@ export const Playground: Story = {
       </div>
     );
     // Real, previously-shipped bug (found via direct user report):
-    // content always came *after* the Affix regardless of `side`, which
-    // only gives `side="top"` the room it needs — `bottom: 0` sticky is
-    // the mirror case and needs substantial *leading* content before the
-    // sticky element instead (confirmed while building the dedicated
+    // content always came *after* the Affix regardless of `side` (now
+    // `edge`), which only gives `edge="start"` the room it needs —
+    // `edge="end"` sticky is the mirror case and needs substantial
+    // *leading* content before the sticky element instead, on whichever
+    // axis is active (confirmed while building the dedicated
     // `BottomScrollInteraction` story below; without it, the header just
     // scrolls away immediately with nothing to hold it, since it starts
-    // at the very top of a container with no room below to be "caught"
-    // at the bottom edge). No explicit height on the outer wrapper for
-    // the same reason `BottomScrollInteraction` doesn't have one — a
-    // declared height that doesn't match the actual (side-dependent)
-    // content height reintroduces the exact containing-block mismatch
-    // already fixed once on `Affix.tsx` itself; letting it auto-size to
-    // whichever ordering is active avoids that.
-    return (
-      <div>
-        {args.side === "bottom" ? (
-          <>
-            {content}
-            {header}
-          </>
-        ) : (
-          <>
-            {header}
-            {content}
-          </>
-        )}
-      </div>
-    );
+    // at the very start of a container with no room after it to be
+    // "caught" at the end edge). No explicit height/width forced on the
+    // outer wrapper for the same reason `BottomScrollInteraction`
+    // doesn't have one — a declared size that doesn't match the actual
+    // (edge-dependent) content extent reintroduces the exact containing-
+    // block mismatch already fixed once on `Affix.tsx` itself; letting
+    // it auto-size to whichever ordering is active avoids that.
+    const ordered =
+      args.edge === "end" ? (
+        <>
+          {content}
+          {header}
+        </>
+      ) : (
+        <>
+          {header}
+          {content}
+        </>
+      );
+
+    if (isHorizontal) {
+      return (
+        <div style={{ padding: "var(--dbm-space-6)" }}>
+          <div
+            ref={containerRef}
+            data-testid="playground-horizontal-panel"
+            role="region"
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- same reasoning as `WithinScrollContainer`/`HorizontalScrollInteraction`: a scrollable, non-interactive region genuinely needs tabIndex to be keyboard-scrollable per WCAG 2.1.1.
+            tabIndex={0}
+            aria-label="Horizontally scrollable demo panel"
+            style={{
+              display: "flex",
+              overflowX: "auto",
+              border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+              borderRadius: "var(--dbm-radius-md)",
+            }}
+          >
+            {ordered}
+          </div>
+        </div>
+      );
+    }
+
+    return <div>{ordered}</div>;
   },
 };
 
@@ -157,21 +232,26 @@ export const StickyHeader: Story = {
   // Same `.docs-story` containing-block issue as `Playground` above —
   // see that story's comment for the full root cause.
   parameters: { docs: { story: { inline: false, iframeHeight: 500 } } },
-  // `side`/`offset` disabled — this is meant to stay *the* static,
-  // fixed-default (`side="top"`) variant demo per its own name and the
-  // Variants-gallery convention (`07-storybook-and-documentation-
-  // standards.md` §4), same reasoning `ScrollInteraction`/
-  // `BottomScrollInteraction` already disable them for. Left controllable
-  // before this fix only because nothing had explicitly turned it off —
-  // real, previously-shipped bug (found via direct user report): with
-  // it enabled, switching to `side="bottom"` inherited the exact same
-  // "content always trailing" layout issue `Playground` had before its
-  // own fix, since this story's `render` never got the equivalent
-  // conditional-reordering treatment. `Playground` is the intended place
-  // to explore `side`/`offset` combinations; this one demonstrates one
-  // fixed, correct configuration well rather than every configuration
+  // `axis`/`edge`/`offset` disabled — this is meant to stay *the* static,
+  // fixed-default (vertical, `edge="start"`) variant demo per its own
+  // name and the Variants-gallery convention (`07-storybook-and-
+  // documentation-standards.md` §4), same reasoning `ScrollInteraction`/
+  // `BottomScrollInteraction` already disable them for. `side` (`edge`,
+  // after the axis/edge rename) was left controllable before this fix
+  // only because nothing had explicitly turned it off — real, previously-
+  // shipped bug (found via direct user report): with it enabled,
+  // switching to `side="bottom"` inherited the exact same "content
+  // always trailing" layout issue `Playground` had before its own fix,
+  // since this story's `render` never got the equivalent conditional-
+  // reordering treatment. `Playground` is the intended place to explore
+  // `axis`/`edge`/`offset` combinations; this one demonstrates one fixed,
+  // correct configuration well rather than every configuration
   // adequately.
-  argTypes: { side: { control: false }, offset: { control: false } },
+  argTypes: {
+    axis: { control: false },
+    edge: { control: false },
+    offset: { control: false },
+  },
   render: function StickyHeaderStory(args) {
     const [stuck, setStuck] = useState(false);
     return (
@@ -209,15 +289,21 @@ export const StickyHeader: Story = {
 
 export const WithinScrollContainer: Story = {
   name: "Within a scroll container (scrollContainerRef)",
-  // `side`/`offset` now also disabled, alongside `children` — real,
-  // previously-shipped bug (found via direct user report): left
-  // controllable, `side="bottom"` inherited the same "content always
-  // trailing the Affix" layout issue `Playground` had before its own
-  // fix (this story's panel content `<div>` also only ever comes after
-  // the header). `scrollContainerRef` is the one thing this story exists
-  // to demonstrate; exploring `side`/`offset` combinations is
-  // `Playground`'s job, not this one's.
-  argTypes: { children: { control: false }, side: { control: false }, offset: { control: false } },
+  // `axis`/`edge`/`offset` now also disabled, alongside `children` —
+  // real, previously-shipped bug (found via direct user report): left
+  // controllable, `side="bottom"` (`edge="end"`, after the rename)
+  // inherited the same "content always trailing the Affix" layout issue
+  // `Playground` had before its own fix (this story's panel content
+  // `<div>` also only ever comes after the header). `scrollContainerRef`
+  // is the one thing this story exists to demonstrate; exploring
+  // `axis`/`edge`/`offset` combinations is `Playground`'s job, not this
+  // one's.
+  argTypes: {
+    children: { control: false },
+    axis: { control: false },
+    edge: { control: false },
+    offset: { control: false },
+  },
   render: function WithinScrollContainerStory(args) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [stuck, setStuck] = useState(false);
@@ -317,7 +403,11 @@ export const WithinScrollContainer: Story = {
 
 export const ScrollInteraction: Story = {
   name: "Interaction: sticks and reports data-stuck while scrolling",
-  argTypes: { side: { control: false }, offset: { control: false } },
+  argTypes: {
+    axis: { control: false },
+    edge: { control: false },
+    offset: { control: false },
+  },
   render: function ScrollInteractionStory(args) {
     const [stuck, setStuck] = useState(false);
     return (
@@ -388,14 +478,19 @@ export const ScrollInteraction: Story = {
 };
 
 export const BottomScrollInteraction: Story = {
-  name: "Interaction: side=bottom sticks to the bottom edge while scrolling",
-  // `side="bottom"` had never been exercised by any test before this
-  // review — the sentinel/root reordering it drives (see Affix.tsx's own
-  // `side === "top" ? ... : ...` branch) is a real, distinct code path,
-  // not just a mirrored CSS value, so it needs its own coverage rather
-  // than assuming symmetry with the `side="top"` case holds.
-  argTypes: { side: { control: false }, offset: { control: false } },
-  args: { side: "bottom" } satisfies Partial<AffixProps>,
+  name: "Interaction: edge=end sticks to the bottom edge while scrolling",
+  // `edge="end"` (`side="bottom"`, before the axis/edge rename) had
+  // never been exercised by any test before this review — the sentinel/
+  // root reordering it drives (see Affix.tsx's own `edge === "start" ?
+  // ... : ...` branch) is a real, distinct code path, not just a
+  // mirrored CSS value, so it needs its own coverage rather than
+  // assuming symmetry with the `edge="start"` case holds.
+  argTypes: {
+    axis: { control: false },
+    edge: { control: false },
+    offset: { control: false },
+  },
+  args: { edge: "end" } satisfies Partial<AffixProps>,
   render: function BottomScrollInteractionStory(args) {
     const [stuck, setStuck] = useState(false);
     return (
@@ -497,6 +592,128 @@ export const BottomScrollInteraction: Story = {
     ).toBeLessThan(3);
 
     window.scrollTo({ top: 0 });
+  },
+};
+
+export const HorizontalScrollInteraction: Story = {
+  name: "Interaction: axis=horizontal sticks to the leading edge while scrolling",
+  // `axis="horizontal"` had never been exercised by any test before this
+  // addition — direct user request, after confirming the real-world use
+  // cases (a sticky lead column in a horizontally-scrolling comparison
+  // table, a sticky lead card in a swiper). Uses `scrollContainerRef`
+  // rather than page-level scroll, unlike the vertical interaction
+  // stories above — page-level *horizontal* scroll is rare in practice,
+  // so this demo models the realistic case directly (a dashboard-panel-
+  // style horizontally scrolling row, same shape as `WithinScrollContainer`
+  // but sideways) rather than the less common page-scroll one.
+  argTypes: {
+    axis: { control: false },
+    edge: { control: false },
+    offset: { control: false },
+  },
+  args: { axis: "horizontal" } satisfies Partial<AffixProps>,
+  render: function HorizontalScrollInteractionStory(args) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [stuck, setStuck] = useState(false);
+    return (
+      <div style={{ padding: "var(--dbm-space-6)" }}>
+        <Text style={{ marginBlockEnd: "var(--dbm-space-4)" }}>
+          A comparison-table-style horizontally scrolling row — the lead
+          column stays pinned to the left while the rest scroll underneath
+          it. Scroll inside the box below.
+        </Text>
+        <div
+          ref={containerRef}
+          data-testid="horizontal-scroll-panel"
+          role="region"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- same reasoning as `WithinScrollContainer` above: a scrollable, non-interactive region genuinely needs tabIndex to be keyboard-scrollable per WCAG 2.1.1, regardless of which axis it scrolls on.
+          tabIndex={0}
+          aria-label="Horizontally scrollable demo panel"
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+            borderRadius: "var(--dbm-radius-md)",
+          }}
+        >
+          <Affix
+            {...args}
+            scrollContainerRef={containerRef}
+            onStickyChange={(isStuck) => {
+              setStuck(isStuck);
+              args.onStickyChange?.(isStuck);
+            }}
+          >
+            <div
+              data-testid="horizontal-affix-column"
+              style={{
+                width: "10rem",
+                flexShrink: 0,
+                padding: "0.75rem 1rem",
+                background: "var(--dbm-bg-surface)",
+                borderInlineEnd: stuck
+                  ? "var(--dbm-border-width-2) solid var(--dbm-border-neutral)"
+                  : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+              }}
+            >
+              <Text weight="semibold">{stuck ? "Stuck!" : "Scroll right"}</Text>
+            </div>
+          </Affix>
+          {Array.from({ length: 10 }, (_, i) => (
+            <div
+              key={i}
+              style={{
+                flex: "0 0 12rem",
+                padding: "0.75rem 1rem",
+                borderInlineEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+              }}
+            >
+              <Text>Column {i + 1}.</Text>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = canvas.getByTestId("horizontal-scroll-panel");
+    const column = canvas.getByTestId("horizontal-affix-column");
+    const affixRoot = column.parentElement as HTMLElement;
+
+    await expect(affixRoot).not.toHaveAttribute("data-stuck");
+
+    // Scrolling the panel itself (not the page) — same reasoning as
+    // `WithinScrollContainer`, just on the inline axis instead of the
+    // block one.
+    panel.scrollLeft = 300;
+    panel.dispatchEvent(new Event("scroll"));
+
+    await waitFor(() => {
+      expect(affixRoot).toHaveAttribute("data-stuck", "true");
+    });
+    await expect(args.onStickyChange).toHaveBeenCalledWith(true);
+
+    // Same "data-stuck alone isn't proof of visual position" check
+    // already established for the vertical axis (`ScrollInteraction`/
+    // `BottomScrollInteraction` above) — confirmed via
+    // `getBoundingClientRect()` against the panel's own left edge, with
+    // the same few-pixels tolerance for the panel's own border-width.
+    await waitFor(() => {
+      expect(
+        Math.abs(
+          affixRoot.getBoundingClientRect().left - panel.getBoundingClientRect().left,
+        ),
+      ).toBeLessThan(3);
+    });
+
+    panel.scrollLeft = 0;
+    panel.dispatchEvent(new Event("scroll"));
+
+    await waitFor(() => {
+      expect(affixRoot).not.toHaveAttribute("data-stuck");
+    });
+    await expect(args.onStickyChange).toHaveBeenLastCalledWith(false);
   },
 };
 

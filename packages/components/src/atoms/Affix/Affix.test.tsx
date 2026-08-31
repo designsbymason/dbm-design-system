@@ -14,33 +14,48 @@ import { Affix } from "./Affix";
 // deliberately so this stays a real, un-special-cased read of whatever
 // the test environment actually reports).
 type FakeEntry = Pick<IntersectionObserverEntry, "isIntersecting"> & {
-  boundingClientRect: Pick<DOMRectReadOnly, "top" | "bottom">;
+  boundingClientRect: Pick<DOMRectReadOnly, "top" | "bottom" | "left" | "right">;
 };
 type ObserverCallback = (entries: FakeEntry[]) => void;
 type ObserverOptions = { root?: Element | Document | null; threshold?: number };
 
 // A sentinel that has scrolled above the top edge (0, for the default
-// viewport root) — the real "stuck" case for `side="top"`.
+// viewport root) — the real "stuck" case for `edge="start"` on the
+// vertical axis.
 const scrolledPastTop: FakeEntry = {
   isIntersecting: false,
-  boundingClientRect: { top: -10, bottom: -9 },
+  boundingClientRect: { top: -10, bottom: -9, left: 0, right: 0 },
 };
 // A sentinel still visible within the viewport — the "unstuck" case.
 const withinView: FakeEntry = {
   isIntersecting: true,
-  boundingClientRect: { top: 100, bottom: 101 },
+  boundingClientRect: { top: 100, bottom: 101, left: 0, right: 0 },
 };
 // A sentinel that simply hasn't been scrolled to yet (mounted below the
 // fold) — not intersecting, but must NOT be reported as stuck.
 const belowFoldNotYetScrolled: FakeEntry = {
   isIntersecting: false,
-  boundingClientRect: { top: 4000, bottom: 4001 },
+  boundingClientRect: { top: 4000, bottom: 4001, left: 0, right: 0 },
 };
 // A sentinel that has scrolled below jsdom's default 768px viewport
-// height — the real "stuck" case for `side="bottom"`.
+// height — the real "stuck" case for `edge="end"` on the vertical axis.
 const scrolledPastBottom: FakeEntry = {
   isIntersecting: false,
-  boundingClientRect: { top: 769, bottom: 770 },
+  boundingClientRect: { top: 769, bottom: 770, left: 0, right: 0 },
+};
+// A sentinel that has scrolled past jsdom's default 1024px viewport
+// width — the real "stuck" case for `edge="end"` on the horizontal axis
+// (LTR: the physical right edge).
+const scrolledPastRight: FakeEntry = {
+  isIntersecting: false,
+  boundingClientRect: { top: 0, bottom: 0, left: 1025, right: 1026 },
+};
+// A sentinel that has scrolled past the left edge (0) — the real "stuck"
+// case for `edge="start"` on the horizontal axis (LTR: the physical left
+// edge).
+const scrolledPastLeft: FakeEntry = {
+  isIntersecting: false,
+  boundingClientRect: { top: 0, bottom: 0, left: -10, right: -9 },
 };
 
 let latestCallback: ObserverCallback | undefined;
@@ -81,9 +96,9 @@ describe("Affix", () => {
     });
   });
 
-  it("applies the offset for the given side as a token-driven value", () => {
+  it("applies the offset for the given edge as a token-driven value", () => {
     render(
-      <Affix side="top" offset={4}>
+      <Affix edge="start" offset={4}>
         Header content
       </Affix>,
     );
@@ -92,14 +107,39 @@ describe("Affix", () => {
     });
   });
 
-  it("applies the offset to bottom when side is bottom", () => {
+  it("applies the offset to bottom when edge is end", () => {
     render(
-      <Affix side="bottom" offset={6}>
+      <Affix edge="end" offset={6}>
         Filter bar
       </Affix>,
     );
     expect(screen.getByText("Filter bar")).toHaveStyle({
       bottom: "var(--dbm-space-6)",
+    });
+  });
+
+  it("uses the logical inset-inline properties for axis=horizontal, not physical left/right", () => {
+    // Physical `left`/`right` would silently stick to the wrong side
+    // under `direction: rtl` — logical properties let the browser
+    // resolve the correct physical side itself.
+    render(
+      <Affix axis="horizontal" edge="start" offset={4}>
+        Lead column
+      </Affix>,
+    );
+    expect(screen.getByText("Lead column")).toHaveStyle({
+      insetInlineStart: "var(--dbm-space-4)",
+    });
+  });
+
+  it("applies inset-inline-end for axis=horizontal edge=end", () => {
+    render(
+      <Affix axis="horizontal" edge="end" offset={6}>
+        Lead column
+      </Affix>,
+    );
+    expect(screen.getByText("Lead column")).toHaveStyle({
+      insetInlineEnd: "var(--dbm-space-6)",
     });
   });
 
@@ -162,10 +202,10 @@ describe("Affix", () => {
     expect(onStickyChange).toHaveBeenCalledWith(false);
   });
 
-  it("sets data-stuck when side is bottom and the sentinel scrolls past the bottom edge", () => {
+  it("sets data-stuck when edge is end and the sentinel scrolls past the bottom edge", () => {
     const onStickyChange = vi.fn();
     render(
-      <Affix side="bottom" onStickyChange={onStickyChange}>
+      <Affix edge="end" onStickyChange={onStickyChange}>
         Filter bar
       </Affix>,
     );
@@ -181,12 +221,12 @@ describe("Affix", () => {
     expect(onStickyChange).toHaveBeenCalledWith(true);
   });
 
-  it("does not report stuck for side bottom when the sentinel scrolled past the opposite (top) edge", () => {
-    // The direction check must be side-aware — a sentinel that scrolled
-    // past the *top* edge is irrelevant to a `side="bottom"` Affix.
+  it("does not report stuck for edge=end when the sentinel scrolled past the opposite (top) edge", () => {
+    // The direction check must be edge-aware — a sentinel that scrolled
+    // past the *top* edge is irrelevant to an `edge="end"` Affix.
     const onStickyChange = vi.fn();
     render(
-      <Affix side="bottom" onStickyChange={onStickyChange}>
+      <Affix edge="end" onStickyChange={onStickyChange}>
         Filter bar
       </Affix>,
     );
@@ -199,25 +239,121 @@ describe("Affix", () => {
     expect(onStickyChange).toHaveBeenCalledWith(false);
   });
 
-  it("computes the stuck edge locally rather than trusting entry.rootBounds", () => {
-    // Real, previously-shipped bug (found via direct user report,
-    // reproduced only for `side="bottom"`): rendered inside a nested
-    // iframe (Storybook's own preview iframe), the browser's *implicit*
-    // root resolves to the outermost top-level viewport and reports
-    // `rootBounds` in *that* frame — a real capture showed
-    // `rootBounds: { top: 0, bottom: 912 }` (the actual browser tab's
-    // height) while the sentinel's own document was genuinely only
-    // `572px` tall. Comparing `boundingClientRect` (sentinel-local
-    // frame) against that mismatched `rootBounds` silently broke the
-    // bottom-edge check — `top` never showed it, since a viewport's own
-    // top is always `0` in any frame, but `bottom` differs by frame.
-    // This entry is `769` — genuinely past jsdom's real `768px`
-    // viewport — paired with a deliberately wrong, much larger
-    // `rootBounds.bottom` a broken implementation would trust instead;
-    // if `Affix` ever reads `entry.rootBounds` again, this must fail.
+  it("sets data-stuck for axis=horizontal edge=start when the sentinel scrolls past the left edge", () => {
     const onStickyChange = vi.fn();
     render(
-      <Affix side="bottom" onStickyChange={onStickyChange}>
+      <Affix axis="horizontal" onStickyChange={onStickyChange}>
+        Lead column
+      </Affix>,
+    );
+
+    act(() => {
+      latestCallback?.([scrolledPastLeft]);
+    });
+
+    expect(screen.getByText("Lead column")).toHaveAttribute(
+      "data-stuck",
+      "true",
+    );
+    expect(onStickyChange).toHaveBeenCalledWith(true);
+  });
+
+  it("sets data-stuck for axis=horizontal edge=end when the sentinel scrolls past the right edge", () => {
+    const onStickyChange = vi.fn();
+    render(
+      <Affix axis="horizontal" edge="end" onStickyChange={onStickyChange}>
+        Lead column
+      </Affix>,
+    );
+
+    act(() => {
+      latestCallback?.([scrolledPastRight]);
+    });
+
+    expect(screen.getByText("Lead column")).toHaveAttribute(
+      "data-stuck",
+      "true",
+    );
+    expect(onStickyChange).toHaveBeenCalledWith(true);
+  });
+
+  it("does not report stuck for axis=horizontal when the sentinel only scrolled past a vertical edge", () => {
+    // Axis-awareness has to hold in both directions — a sentinel that
+    // scrolled past the *top* (a vertical-axis crossing) is irrelevant
+    // to a horizontal-axis Affix, same as the vertical edge-awareness
+    // check above.
+    const onStickyChange = vi.fn();
+    render(
+      <Affix axis="horizontal" onStickyChange={onStickyChange}>
+        Lead column
+      </Affix>,
+    );
+
+    act(() => {
+      latestCallback?.([scrolledPastTop]);
+    });
+
+    expect(screen.getByText("Lead column")).not.toHaveAttribute("data-stuck");
+    expect(onStickyChange).toHaveBeenCalledWith(false);
+  });
+
+  it("resolves edge=start to the physical right edge under direction: rtl", () => {
+    // `insetInlineStart` (the CSS actually applied) already flips
+    // correctly under RTL on its own, browser-side — this test is about
+    // the *other* half: the stuck-detection math in the observer
+    // callback, which works off `getBoundingClientRect()`'s always-
+    // physical coordinates and has to independently resolve which
+    // physical edge "start" means before comparing. Wrapping in a real
+    // `direction: rtl` ancestor (inherited, not set directly on Affix)
+    // matches how RTL actually reaches an element in practice.
+    const onStickyChange = vi.fn();
+    render(
+      <div style={{ direction: "rtl" }}>
+        <Affix axis="horizontal" onStickyChange={onStickyChange}>
+          Lead column
+        </Affix>
+      </div>,
+    );
+
+    // `edge="start"` under RTL means the physical *right* edge — a
+    // sentinel that scrolled past the physical *left* edge instead
+    // (`scrolledPastLeft`, the correct fixture for LTR `edge="start"`)
+    // must NOT be reported as stuck here.
+    act(() => {
+      latestCallback?.([scrolledPastLeft]);
+    });
+    expect(screen.getByText("Lead column")).not.toHaveAttribute("data-stuck");
+
+    act(() => {
+      latestCallback?.([scrolledPastRight]);
+    });
+    expect(screen.getByText("Lead column")).toHaveAttribute(
+      "data-stuck",
+      "true",
+    );
+    expect(onStickyChange).toHaveBeenLastCalledWith(true);
+  });
+
+  it("computes the stuck edge locally rather than trusting entry.rootBounds", () => {
+    // Real, previously-shipped bug (found via direct user report,
+    // reproduced only for `side="bottom"`, `edge="end"` after the
+    // axis/edge rename): rendered inside a nested iframe (Storybook's
+    // own preview iframe), the browser's *implicit* root resolves to
+    // the outermost top-level viewport and reports `rootBounds` in
+    // *that* frame — a real capture showed `rootBounds: { top: 0,
+    // bottom: 912 }` (the actual browser tab's height) while the
+    // sentinel's own document was genuinely only `572px` tall. Comparing
+    // `boundingClientRect` (sentinel-local frame) against that
+    // mismatched `rootBounds` silently broke the bottom-edge check —
+    // `top` never showed it, since a viewport's own top is always `0`
+    // in any frame, but `bottom` differs by frame. This entry is `769`
+    // — genuinely past jsdom's real `768px` viewport — paired with a
+    // deliberately wrong, much larger `rootBounds.bottom` a broken
+    // implementation would trust instead; if `Affix` ever reads
+    // `entry.rootBounds` again, this must fail.
+    const onStickyChange = vi.fn();
+    render(
+      <Affix edge="end" onStickyChange={onStickyChange}>
         Header content
       </Affix>,
     );
@@ -226,7 +362,7 @@ describe("Affix", () => {
       latestCallback?.([
         {
           isIntersecting: false,
-          boundingClientRect: { top: 769, bottom: 770 },
+          boundingClientRect: { top: 769, bottom: 770, left: 0, right: 0 },
           // @ts-expect-error -- intentionally present on the raw object
           // passed through the callback to prove the component doesn't
           // read it, even though `FakeEntry` no longer declares it.
@@ -254,7 +390,7 @@ describe("Affix", () => {
       return (
         <div ref={containerRef}>
           <Affix
-            side="bottom"
+            edge="end"
             scrollContainerRef={containerRef}
             onStickyChange={onStickyChange}
           >
@@ -280,7 +416,10 @@ describe("Affix", () => {
 
     act(() => {
       latestCallback?.([
-        { isIntersecting: false, boundingClientRect: { top: 401, bottom: 402 } },
+        {
+          isIntersecting: false,
+          boundingClientRect: { top: 401, bottom: 402, left: 0, right: 0 },
+        },
       ]);
     });
 
