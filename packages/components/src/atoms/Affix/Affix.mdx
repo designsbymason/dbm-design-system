@@ -1,0 +1,171 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundCanvas, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../Box";
+import { Backdrop } from "../Backdrop";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Affix } from "./Affix";
+import * as AffixStories from "./Affix.stories";
+
+export const propOrder = [
+  "children",
+  "side",
+  "offset",
+  "scrollContainerRef",
+  "onStickyChange",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={AffixStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Affix" tier="Atom" />
+
+A sticky-positioning wrapper — sticky table headers, filter bars, section nav. Wraps `position:
+sticky` with real stuck-state *detection*: a hidden sentinel element tracked via
+`IntersectionObserver` reports when the wrapped content has actually started sticking, exposed both
+as a `data-stuck` DOM attribute (for pure-CSS reactions, e.g. a shadow that appears once stuck) and
+via the `onStickyChange` callback (for reactions that need real state, e.g. swapping the label
+shown in the header). SSR-safe — the observer only ever attaches client-side.
+
+### Import
+
+```tsx
+import { Affix } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<PlaygroundCanvas of={AffixStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={AffixStories.Playground}
+  exclude={["children", "scrollContainerRef", "onStickyChange", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Affix` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`,
+`role`) — passed straight through to the underlying sticky element.
+
+<PropertiesTable of={AffixStories} order={propOrder} />
+
+## Variants
+
+### Sticky table-style header
+
+<Canvas of={AffixStories.StickyHeader} />
+
+### Within a scroll container (scrollContainerRef)
+
+<Canvas of={AffixStories.WithinScrollContainer} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass `scrollContainerRef` whenever `Affix` lives inside its own scrollable panel (a modal body, a
+  dashboard card with `overflow: auto`) rather than the page itself — otherwise the stuck-state
+  *detection* measures against the viewport and won't correlate with the panel's own scroll
+  position, even though the visual sticking itself still works correctly either way.
+- React to `data-stuck` in CSS for purely presentational changes (a border/shadow appearing once
+  stuck) — it's already there for free, no `onStickyChange` wiring needed.
+- Use `onStickyChange` when the reaction needs real component state — swapping visible text,
+  triggering an animation, anything beyond what a CSS attribute selector can express.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't assume `Affix` needs `scrollContainerRef` just because it's nested inside other elements —
+  only a genuinely *scrollable* ancestor (its own `overflow: auto`/`scroll`) changes what the
+  stuck-state detection needs to measure against; ordinary non-scrolling wrappers don't.
+- Don't expect `side="bottom"` to also mirror `data-stuck`'s *meaning* — it still just means "the
+  sentinel has left view," now measured from the opposite edge, not a different kind of state.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reach for `Affix` instead of hand-rolling `position: sticky` directly whenever a consumer needs
+  to *react* to the stuck state (a shadow, a swapped label) — that's the real value this component
+  adds over the bare CSS property, which offers no way to detect it on its own.
+- Keep the wrapped content's own height stable across the stuck/unstuck transition — `Affix` doesn't
+  reserve layout space for it, so a height change on stick can cause a visible content jump.
+
+## Accessibility
+
+<Callout tone="info" title="A structural wrapper, not an interactive widget">
+
+- `Affix` sets no ARIA role or attributes of its own — it's a plain, non-interactive `<div>`, and
+  accessibility is a function of whatever semantic content is passed as `children` (a real
+  `<table>`'s `<thead>`, a `<nav>`, etc.), the same way `Box` works.
+- The sentinel element used for stuck-state detection is `aria-hidden="true"` and has no visible
+  content — it never reaches assistive tech.
+- If `scrollContainerRef` points at a genuinely scrollable region, that region itself needs its own
+  keyboard-accessibility treatment (`tabIndex={0}` at minimum) per WCAG 2.1.1 — `Affix` doesn't add
+  this for you, since it doesn't own that element.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Affix offset={0}>
+  <TableHeader />
+</Affix>
+
+<Affix side="bottom" onStickyChange={setIsStuck}>
+  <FilterBar />
+</Affix>
+
+// Inside its own scrollable panel, not the page
+const panelRef = useRef<HTMLDivElement>(null);
+<div ref={panelRef} style={{ overflow: "auto", height: "20rem" }}>
+  <Affix scrollContainerRef={panelRef}>
+    <FilterBar />
+  </Affix>
+  {/* ...panel content... */}
+</div>
+
+<Affix data-testid="section-nav" onFocus={trackNavFocus}>
+  <SectionNav />
+</Affix>
+```
+
+## Design tokens used
+
+<TokenRow token="z-index.sticky" usage="stacking order for the sticky element" />
+<TokenRow token="space.px" usage="the hidden sentinel's height (1px)" />
+<TokenRow token="space.0–space.32" usage="the offset prop's own scale, applied to top/bottom" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Box"
+  description="The polymorphic base primitive — Affix's own wrapper elements are plain divs, same tier"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ padding: "var(--dbm-space-2)", border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", borderRadius: "var(--dbm-radius-xs)" }}>
+    Box
+  </Box>
+</RelatedCard>
+<RelatedCard
+  name="Backdrop"
+  description="Another positioning-only Layout atom, for the dimming scrim behind Dialog/Drawer"
+  href="/?path=/story/atoms-layout-backdrop--playground"
+>
+  <div style={{ position: "relative", width: "100%", height: "var(--dbm-space-10)", overflow: "hidden", borderRadius: "var(--dbm-radius-xs)" }}>
+    <Backdrop inPortal={false} style={{ position: "absolute", inset: 0 }} />
+  </div>
+</RelatedCard>
+</div>

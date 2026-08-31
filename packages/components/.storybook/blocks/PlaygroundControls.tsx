@@ -56,12 +56,27 @@ function ControlField({
       />
     );
   } else if (controlType === "select" || controlType === "radio") {
+    // Options aren't always strings — e.g. Affix's `offset` (a numeric
+    // space scale) or Heading's `level` (1–6) — but `Select` only deals in
+    // string values internally. Real, previously-shipped bug: comparing
+    // `typeof value === "string"` to decide what to display meant any
+    // non-string arg (a plain number, most commonly the default `0`, which
+    // is also falsy) always read as unset, rendering the placeholder
+    // instead of the real value; found via direct user report that
+    // Affix's `offset` control looked broken on its Docs page. Fixed by
+    // stringifying for comparison/display, then mapping the selected
+    // string back to the original option (preserving its real type —
+    // including `undefined`, which some option lists include as a valid
+    // choice, e.g. Avatar's `loading`/`status`) before calling `onChange`.
     const options = Array.isArray(argType.options) ? argType.options : [];
     widget = (
       <Select
         id={fieldId}
-        value={typeof value === "string" ? value : undefined}
-        onValueChange={onChange}
+        value={value === undefined ? undefined : String(value)}
+        onValueChange={(selected) => {
+          const index = options.findIndex((option) => String(option) === selected);
+          onChange(index === -1 ? selected : options[index]);
+        }}
         placeholder="Choose option…"
       >
         {options.map((option) => (

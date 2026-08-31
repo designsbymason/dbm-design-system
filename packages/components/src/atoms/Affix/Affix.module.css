@@ -1,5 +1,5 @@
-.wrapper {
-  position: relative;
+.sentinel {
+  height: var(--dbm-space-px);
 }
 
 .root {
