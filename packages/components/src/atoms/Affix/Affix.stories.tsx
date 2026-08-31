@@ -229,9 +229,23 @@ export const Playground: Story = {
 
 export const StickyHeader: Story = {
   name: "Sticky table-style header",
-  // Same `.docs-story` containing-block issue as `Playground` above —
-  // see that story's comment for the full root cause.
-  parameters: { docs: { story: { inline: false, iframeHeight: 500 } } },
+  // No `docs.story.inline: false` parameter here (despite the same
+  // `.docs-story` containing-block issue `Playground` above has) — this
+  // story's Docs-page embedding uses `PlaygroundCanvas` instead (see
+  // `Affix.mdx`), which solves that same problem without it. Real,
+  // previously-shipped bug found this way (during a final review, not a
+  // user report): Storybook's own `inline: false`/`IFrameStory`
+  // mechanism builds its iframe's `src` from `getStoryHref(story.id, {
+  // viewMode: "story" })` alone — no `globals` embedded, confirmed by
+  // reading that function's own source (`@storybook/addon-docs/dist/
+  // blocks.js`) — so this story stayed stuck showing Purple/Light no
+  // matter what the Docs page's own Brand/Mode toolbar was set to,
+  // visibly wrong right next to `WithinScrollContainer` (inlined,
+  // correctly theme-reactive) in the same Variants section.
+  // `PlaygroundCanvas` already reads and embeds the live globals
+  // correctly (see its own doc comment) — reusing it here fixes this for
+  // free instead of building a second, parallel fix for the same root
+  // cause Storybook's own mechanism doesn't handle.
   // `axis`/`edge`/`offset` disabled — this is meant to stay *the* static,
   // fixed-default (vertical, `edge="start"`) variant demo per its own
   // name and the Variants-gallery convention (`07-storybook-and-
@@ -714,6 +728,142 @@ export const HorizontalScrollInteraction: Story = {
       expect(affixRoot).not.toHaveAttribute("data-stuck");
     });
     await expect(args.onStickyChange).toHaveBeenLastCalledWith(false);
+  },
+};
+
+export const HorizontalEndScrollInteraction: Story = {
+  name: "Interaction: axis=horizontal edge=end sticks to the trailing edge while scrolling",
+  // `axis="horizontal" edge="end"` — unlike the other three axis/edge
+  // combinations, this one was only ever unit-tested (a fake
+  // `IntersectionObserver` entry), never exercised by a real-browser
+  // story — found and closed during a final review pass, matching the
+  // same "every distinct sentinel/root ordering needs its own coverage"
+  // reasoning `BottomScrollInteraction` was originally built for. Mirrors
+  // that story's own shape on the inline axis instead of the block one:
+  // genuinely *leading* content (not trailing) so it reads as stuck from
+  // the first scroll pixel, via `scrollContainerRef` rather than page
+  // scroll (page-level horizontal scroll is rare — same reasoning
+  // `HorizontalScrollInteraction` above already uses).
+  argTypes: {
+    axis: { control: false },
+    edge: { control: false },
+    offset: { control: false },
+  },
+  args: { axis: "horizontal", edge: "end" } satisfies Partial<AffixProps>,
+  render: function HorizontalEndScrollInteractionStory(args) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [stuck, setStuck] = useState(false);
+    return (
+      <div style={{ padding: "var(--dbm-space-6)" }}>
+        <Text style={{ marginBlockEnd: "var(--dbm-space-4)" }}>
+          The mirror of the leading-edge case above — this column stays
+          pinned to the right while genuinely leading content scrolls past
+          it, the horizontal counterpart of <code>edge=&quot;end&quot;</code>{" "}
+          on the vertical axis. Scroll inside the box below.
+        </Text>
+        <div
+          ref={containerRef}
+          data-testid="horizontal-end-scroll-panel"
+          role="region"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- same reasoning as the sibling horizontal story above: a scrollable, non-interactive region genuinely needs tabIndex to be keyboard-scrollable per WCAG 2.1.1.
+          tabIndex={0}
+          aria-label="Horizontally scrollable demo panel"
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+            borderRadius: "var(--dbm-radius-md)",
+          }}
+        >
+          {Array.from({ length: 10 }, (_, i) => (
+            <div
+              key={i}
+              style={{
+                flex: "0 0 12rem",
+                padding: "0.75rem 1rem",
+                borderInlineEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+              }}
+            >
+              <Text>Column {i + 1}.</Text>
+            </div>
+          ))}
+          <Affix
+            {...args}
+            scrollContainerRef={containerRef}
+            onStickyChange={(isStuck) => {
+              setStuck(isStuck);
+              args.onStickyChange?.(isStuck);
+            }}
+          >
+            <div
+              data-testid="horizontal-end-affix-column"
+              style={{
+                width: "10rem",
+                flexShrink: 0,
+                padding: "0.75rem 1rem",
+                background: "var(--dbm-bg-surface)",
+                borderInlineStart: stuck
+                  ? "var(--dbm-border-width-2) solid var(--dbm-border-neutral)"
+                  : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+              }}
+            >
+              <Text weight="semibold">{stuck ? "Stuck!" : "Scroll left"}</Text>
+            </div>
+          </Affix>
+        </div>
+      </div>
+    );
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = canvas.getByTestId("horizontal-end-scroll-panel");
+    const column = canvas.getByTestId("horizontal-end-affix-column");
+    const affixRoot = column.parentElement as HTMLElement;
+
+    // Stuck (pinned, visible at the right edge) from the very start,
+    // given how much leading content precedes it — mirrors
+    // `BottomScrollInteraction`'s own reasoning on the other axis.
+    await waitFor(() => {
+      expect(affixRoot).toHaveAttribute("data-stuck", "true");
+    });
+    await expect(args.onStickyChange).toHaveBeenCalledWith(true);
+
+    // Same "data-stuck alone isn't proof of visual position" check
+    // already established elsewhere in this file.
+    await waitFor(() => {
+      expect(
+        Math.abs(
+          affixRoot.getBoundingClientRect().right - panel.getBoundingClientRect().right,
+        ),
+      ).toBeLessThan(3);
+    });
+
+    // Scrolling all the way to the end genuinely un-sticks it — the
+    // mirror of `BottomScrollInteraction`'s own "scroll to the end"
+    // un-stick case, on the inline axis instead of the block one.
+    const maxScroll = panel.scrollWidth - panel.clientWidth;
+    panel.scrollLeft = maxScroll;
+    panel.dispatchEvent(new Event("scroll"));
+    await waitFor(() => {
+      expect(affixRoot).not.toHaveAttribute("data-stuck");
+    });
+    await expect(args.onStickyChange).toHaveBeenLastCalledWith(false);
+
+    // Scrolling back into range re-engages it — the same cross-frame
+    // `rootBounds` regression class already fixed for the vertical axis,
+    // now covered here too.
+    panel.scrollLeft = maxScroll - 200;
+    panel.dispatchEvent(new Event("scroll"));
+    await waitFor(() => {
+      expect(affixRoot).toHaveAttribute("data-stuck", "true");
+    });
+    await expect(args.onStickyChange).toHaveBeenLastCalledWith(true);
+    expect(
+      Math.abs(affixRoot.getBoundingClientRect().right - panel.getBoundingClientRect().right),
+    ).toBeLessThan(3);
+
+    panel.scrollLeft = 0;
+    panel.dispatchEvent(new Event("scroll"));
   },
 };
 

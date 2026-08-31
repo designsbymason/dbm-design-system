@@ -106,6 +106,20 @@ export const Affix = forwardRef<HTMLDivElement, AffixProps>(
     const sentinelRef = useRef<HTMLDivElement>(null);
     const [isStuck, setIsStuck] = useState(false);
 
+    const hasWarnedHorizontalNoContainerRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (
+        axis === "horizontal" &&
+        !scrollContainerRef &&
+        !hasWarnedHorizontalNoContainerRef.current
+      ) {
+        hasWarnedHorizontalNoContainerRef.current = true;
+        console.warn(
+          'Affix: axis="horizontal" without scrollContainerRef — page-level horizontal scroll is rare, so this almost always means the stuck-state detection is measuring against the wrong scroll context (the viewport, not the actual horizontally-scrolling container). Pass scrollContainerRef pointing at the element that actually scrolls sideways (a comparison table\'s scroll wrapper, a swiper\'s track).',
+        );
+      }
+    }
+
     useEffect(() => {
       const sentinel = sentinelRef.current;
       if (!sentinel) return undefined;

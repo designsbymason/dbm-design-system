@@ -56,6 +56,38 @@ import { usePlaygroundArgs } from "./usePlaygroundArgs";
  * a URL and are silently dropped — the reloaded story falls back to its
  * own `meta.args` default for those, which for a spy function is
  * observably identical to the original anyway.
+ *
+ * The Brand/Mode toolbar globals get the identical treatment, for the
+ * identical reason — real, previously-shipped bug (found live during a
+ * final review, not reported by a user first): switching the Docs page
+ * to Emerald/Dark left this block's own iframe stuck showing Purple/
+ * Light, since a fresh iframe load only ever picks up Storybook's
+ * *default* globals, never whatever the surrounding Docs page currently
+ * has selected — the same "a separate document doesn't inherit the
+ * parent's live state automatically" gap `args` already had.
+ *
+ * Deliberately NOT `useThemeGlobals` (the channel-subscription hook
+ * `ThemeSync`/`DbmDocsContainer`'s own fallback path use) — a second,
+ * distinct bug found fixing the first: it read back stale defaults
+ * (`brand:purple;mode:light`) even right after toggling to Emerald/Dark,
+ * confirmed live via the iframe's own resulting `src`. `DbmDocsContainer`'s
+ * own doc comment already explains why: on any docs page with an attached
+ * story (every component's `ComponentName.mdx`, this one included), the
+ * embedded `<Canvas>` machinery tears down and rebuilds the whole
+ * `useThemeGlobals.ts` module on every globals change, wiping its
+ * module-level cache — `DbmDocsContainer` itself doesn't rely on that
+ * hook here for exactly this reason, reading `context.getStoryContext
+ * (story).globals` directly instead (a synchronous, stateless read with
+ * nothing to lose across a module reload, since a fresh instance just
+ * recomputes the same correct answer). Reused that same proven pattern
+ * here rather than the hook, on the exact story this block already
+ * resolves via `useOf` — the same read `usePlaygroundArgs` above already
+ * does for `.args`, just for `.globals` instead.
+ *
+ * Serialized onto the URL as `globals=brand:x;mode:y`, the same key:value
+ * format Storybook itself uses for its own URL-based globals sync, and
+ * included in the remount `key` alongside `argsParam` so a theme toggle
+ * reloads the iframe exactly like an args change does.
  */
 function serializeArgsForUrl(args: Record<string, unknown>): string {
   return Object.entries(args)
@@ -75,11 +107,16 @@ export function PlaygroundCanvas({ of, height = "500px" }: { of: Of; height?: st
 
   if (!story) return null;
 
+  const storyGlobals = context.getStoryContext(story).globals;
+  const brand = (storyGlobals?.brand as string | undefined) ?? "purple";
+  const mode = (storyGlobals?.mode as string | undefined) ?? "light";
   const argsParam = serializeArgsForUrl(args);
+  const globalsParam = `brand:${brand};mode:${mode}`;
   const params = new URLSearchParams();
   params.set("id", story.id);
   params.set("viewMode", "story");
   if (argsParam) params.set("args", argsParam);
+  params.set("globals", globalsParam);
   const src = `iframe.html?${params.toString()}`;
 
   return (
@@ -93,7 +130,7 @@ export function PlaygroundCanvas({ of, height = "500px" }: { of: Of; height?: st
       }}
     >
       <iframe
-        key={argsParam}
+        key={`${argsParam}|${globalsParam}`}
         src={src}
         title={story.name}
         style={{ border: "none", height: "100%", width: "100%" }}

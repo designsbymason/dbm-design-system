@@ -482,6 +482,51 @@ describe("Affix", () => {
     expect(latestOptions?.root).toBeNull();
   });
 
+  it("warns once in development when axis is horizontal without scrollContainerRef", () => {
+    // Page-level horizontal scroll is rare — almost every real
+    // `axis="horizontal"` use case needs `scrollContainerRef`, unlike
+    // `axis="vertical"` (see `Affix.mdx`'s own "Don't" callout). Missing
+    // it silently measures stuck-state against the wrong scroll context
+    // rather than failing loudly, so this warns instead.
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { rerender } = render(
+      <Affix axis="horizontal">Lead column</Affix>,
+    );
+    rerender(<Affix axis="horizontal">Lead column, again</Affix>);
+
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('axis="horizontal" without scrollContainerRef'),
+    );
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("does not warn about axis=horizontal when scrollContainerRef is provided", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    function Wrapper() {
+      const containerRef = useRef<HTMLDivElement>(null);
+      return (
+        <div ref={containerRef}>
+          <Affix axis="horizontal" scrollContainerRef={containerRef}>
+            Lead column
+          </Affix>
+        </div>
+      );
+    }
+    render(<Wrapper />);
+
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("does not warn about scrollContainerRef for the default vertical axis", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<Affix>Header content</Affix>);
+
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
+    consoleWarnSpy.mockRestore();
+  });
+
   it("has no accessibility violations", async () => {
     const { container } = render(<Affix>Header content</Affix>);
     const results = await axe(container);
