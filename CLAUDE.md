@@ -51,6 +51,9 @@ guidelines/          Internal reference docs — current-state specs, inventorie
   adr/                Individual immutable Architecture Decision Records (the "why"
                        behind a real fork-in-the-road decision) — numbered 01-07 files
                        point here rather than narrating decisions inline.
+  component-reviews/  One living file per component holding its own review findings —
+                       moved out of 07's own §6 so that file stays a compact status table
+                       instead of growing unbounded as more components get reviewed.
 ```
 
 ## Stack quick reference
