@@ -1,17 +1,27 @@
 .sentinel {
-  /* Harmless outside a flex context (flex-shrink only applies to flex
-     items) — needed so the sentinel survives at its declared 1px size
-     inside a horizontally-scrolling flex row (a swiper's own track, a
-     comparison table's flex-based columns) instead of being shrunk
-     toward 0 alongside its siblings. */
+  /* Both dimensions fixed and explicit — real, previously-shipped bug
+     (found live building the `asChild`/<table> demo): this used to set
+     only the axis-relevant dimension (height for vertical, width for
+     horizontal) and rely on the *cross* axis being provided "for free"
+     by an ambient layout context — a flex row's default `align-items:
+     stretch` happened to give a horizontal sentinel a real height in
+     `HorizontalScrollInteraction`'s own flex-based demo, but that
+     assumption silently broke the moment the sentinel landed somewhere
+     without that stretch behavior: a bare `<div>` inserted directly into
+     a `<tr>` (a real `<table>`, `display: table-row`) computes as a
+     plain `display: block` box with no explicit height, sizing to 0.
+     Confirmed directly: `getBoundingClientRect()` on that sentinel
+     reported `height: 0` — a genuinely zero-area target, which silently
+     broke `IntersectionObserver`'s own crossing detection (`data-stuck`
+     read `true` from mount regardless of real scroll position, never
+     changing on scroll at all). Giving both dimensions a small fixed
+     size removes the dependency on the surrounding layout context
+     entirely — the sentinel's own *cross*-axis size was never actually
+     meaningful to the stuck-detection math either way (only the
+     axis-relevant edge, top/bottom or left/right, is ever read), so
+     there's no reason it should have been left to chance. */
   flex-shrink: 0;
-}
-
-.sentinelVertical {
   height: var(--dbm-space-px);
-}
-
-.sentinelHorizontal {
   width: var(--dbm-space-px);
 }
 

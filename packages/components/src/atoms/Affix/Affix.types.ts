@@ -43,6 +43,33 @@ export interface AffixProps extends ComponentPropsWithoutRef<"div"> {
    */
   offset?: SpaceValue;
   /**
+   * Render the sticky positioning onto `children` directly (via Radix
+   * `Slot`) instead of wrapping it in an extra `<div>` — `children` must
+   * be a single valid React element in this mode. The main reason to
+   * reach for this: a real HTML `<table>`'s `<td>`/`<th>` can't have a
+   * `<div>` wrapped around it without breaking the row, so making the
+   * cell itself the sticky element (`<Affix asChild axis="horizontal">
+   * <td>…</td></Affix>`) is the only way to build a genuinely sticky
+   * table column/header with real markup. Without `asChild`, `Affix`
+   * always renders a plain `<div>`.
+   * @default false
+   */
+  asChild?: boolean;
+  /**
+   * The element the hidden stuck-state sentinel renders as. Only ever
+   * needs changing alongside `asChild` inside a real `<table>` row — the
+   * sentinel is always a plain sibling of the sticky element (see
+   * `Affix.tsx`'s own comment on why it can't live inside it instead),
+   * and a bare `<div>` isn't valid there: React itself warns "In HTML,
+   * `<div>` cannot be a child of `<tr>`. This will cause a hydration
+   * error" (confirmed live building the `WithinTable` story). Set to
+   * `"td"` (or `"th"`, to match a header row) so the sentinel becomes a
+   * real, validly-nested cell instead — genuinely invisible either way,
+   * since it stays `aria-hidden` and sized to a single pixel.
+   * @default 'div'
+   */
+  sentinelAs?: "div" | "td" | "th";
+  /**
    * The scrollable container to detect stuck state against, if not the
    * page/viewport itself — e.g. a modal body or dashboard panel with its
    * own internal scroll. `position: sticky` itself already works

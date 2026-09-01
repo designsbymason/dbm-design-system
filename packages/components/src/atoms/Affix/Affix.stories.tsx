@@ -23,6 +23,16 @@ const meta: Meta<typeof Affix> = {
     },
     axis: { control: "select", options: ["vertical", "horizontal"] },
     edge: { control: "select", options: ["start", "end"] },
+    // Toggling this in the Playground would leave `children` (a plain
+    // demo header bar) as a single valid element either way, but the
+    // *point* of `asChild` only shows up against a real target element
+    // (a `<td>`/`<th>`) — same reasoning Button's own `asChild` control
+    // is disabled in favor of dedicated stories instead.
+    asChild: { control: false },
+    // Only ever meaningful alongside `asChild` inside a real `<table>`
+    // row — see `WithinTable` below and `Affix.tsx`'s own comment for
+    // why the sentinel's default `<div>` isn't valid there.
+    sentinelAs: { control: false },
     offset: {
       control: "select",
       options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
@@ -864,6 +874,240 @@ export const HorizontalEndScrollInteraction: Story = {
 
     panel.scrollLeft = 0;
     panel.dispatchEvent(new Event("scroll"));
+  },
+};
+
+export const WithinTable: Story = {
+  name: "Sticky lead column in a real <table> (asChild)",
+  // `asChild` had no dedicated demo before this addition — the concrete
+  // use case that motivated adding it in the first place (a real HTML
+  // `<table>`'s `<td>`/`<th>` can't have a `<div>` wrapped around it
+  // without breaking the row), so it needs proof this actually works
+  // against a *genuine* `<table>`, not just a `<div>`-based row standing
+  // in for one the way `HorizontalScrollInteraction` above does.
+  //
+  // `sentinelAs="th"` is not optional here — real, previously-shipped bug
+  // found building this exact story: the sentinel defaults to a `<div>`,
+  // and React itself warns loudly in the console the moment one lands as
+  // a direct child of a `<tr>` ("In HTML, `<div>` cannot be a child of
+  // `<tr>`. This will cause a hydration error") — confirmed live, not
+  // just theoretical. `sentinelAs`'s own addition is what closes this.
+  argTypes: {
+    axis: { control: false },
+    edge: { control: false },
+    offset: { control: false },
+    asChild: { control: false },
+    sentinelAs: { control: false },
+    children: { control: false },
+  },
+  args: {
+    asChild: true,
+    axis: "horizontal",
+    sentinelAs: "th",
+  } satisfies Partial<AffixProps>,
+  render: function WithinTableStory(args) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [stuck, setStuck] = useState(false);
+    // Row labels get their own plain, fixed-width, non-sticky column —
+    // `whiteSpace: "nowrap"` plus an explicit `width` keeps "Row 1" etc.
+    // on one line regardless of the surrounding table's own layout.
+    const rowLabelCellStyle = {
+      width: "6rem",
+      whiteSpace: "nowrap",
+      padding: "0.75rem 1rem",
+      borderInlineEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+    } as const;
+    // Shared by the "Metric 1" header `<th>` and every "Metric 1" body
+    // `<td>` in the same column — `position: sticky` is per-element,
+    // there's no way to make an entire table *column* sticky with one
+    // declaration, so every cell in this column needs it applied
+    // directly. Only the header cell goes through `Affix`/`asChild` (the
+    // one sentinel/observer that actually detects stuck state); the body
+    // cells reuse that same `stuck` boolean purely for their matching
+    // visual treatment instead of each running their own redundant
+    // detection — they always cross the edge at the exact same scroll
+    // position as the header, so a second observer per row would just
+    // re-derive an answer already known. See the "Do" callout in
+    // `Affix.mdx` for this pattern.
+    const stickyMetricCellStyle = {
+      position: "sticky",
+      insetInlineStart: 0,
+      zIndex: "var(--dbm-z-index-sticky)",
+      width: "8rem",
+      padding: "0.75rem 1rem",
+      background: "var(--dbm-bg-surface)",
+      borderInlineEnd: stuck
+        ? "var(--dbm-border-width-2) solid var(--dbm-border-neutral)"
+        : "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+    } as const;
+    // A real, previously-shipped bug (found via direct user screenshot):
+    // `sentinelAs="th"` makes Affix's own hidden sentinel a genuine
+    // sibling `<th>` in the header `<tr>` — a real table column of its
+    // own, not something the browser skips over just because it's
+    // `aria-hidden` and 1px wide. The header row ends up with one MORE
+    // cell than every body row (`Rows`, sentinel, `Metric 1`, `Metric
+    // 2`… vs `Row N`, `N-1`, `N-2`…), so columns after the sentinel
+    // silently shift by one — confirmed exactly matching the report:
+    // "Metric 1" rendered visually above what was actually `Metric 2`'s
+    // own data. Table columns align purely by cell *index* within each
+    // row, with no notion of a "skipped" column, so the fix is a plain
+    // placeholder `<td>` in every body row at that same index, matching
+    // the sentinel's own footprint (`space.px`, `aria-hidden`) — not
+    // sticky itself, same as the header's own sentinel isn't.
+    const sentinelPlaceholderWidth = "var(--dbm-space-px)";
+    return (
+      <div style={{ padding: "var(--dbm-space-6)" }}>
+        <Text style={{ marginBlockEnd: "var(--dbm-space-4)" }}>
+          A genuine HTML table — <code>asChild</code> makes the sticky
+          element the real <code>&lt;th&gt;</code> cell itself, not a
+          wrapping <code>&lt;div&gt;</code>, since a <code>div</code> can&apos;t
+          be inserted into a table row. The &quot;Rows&quot; column is a
+          plain, fixed-width column here (it scrolls away like any other);
+          the &quot;Metric 1&quot; column freezes to the left edge instead.
+          Only its header cell is wrapped in <code>Affix</code> —
+          <code>position: sticky</code> is per-cell, so the column&apos;s
+          own body cells get the same CSS by hand, reusing the header&apos;s
+          already-detected stuck state rather than each running a redundant
+          sentinel of their own. Scroll inside the box below.
+        </Text>
+        <div
+          ref={containerRef}
+          data-testid="table-scroll-panel"
+          role="region"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- same reasoning as the other horizontal stories: a scrollable, non-interactive region genuinely needs tabIndex to be keyboard-scrollable per WCAG 2.1.1.
+          tabIndex={0}
+          aria-label="Horizontally scrollable table"
+          style={{
+            overflowX: "auto",
+            border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+            borderRadius: "var(--dbm-radius-md)",
+          }}
+        >
+          <table style={{ borderCollapse: "collapse", width: "max-content" }}>
+            <thead>
+              <tr>
+                <th style={{ ...rowLabelCellStyle, textAlign: "start" }}>
+                  <Text weight="semibold">Rows</Text>
+                </th>
+                <Affix
+                  {...args}
+                  scrollContainerRef={containerRef}
+                  onStickyChange={(isStuck) => {
+                    setStuck(isStuck);
+                    args.onStickyChange?.(isStuck);
+                  }}
+                >
+                  <th
+                    data-testid="table-affix-cell"
+                    style={{ ...stickyMetricCellStyle, textAlign: "start" }}
+                  >
+                    <Text weight="semibold">Metric 1</Text>
+                  </th>
+                </Affix>
+                {/* Deliberately enough columns to guarantee real overflow
+                    regardless of viewport width — real, previously-shipped
+                    bug (found via this exact story's own automated test):
+                    too few columns at this width don't overflow a wide
+                    desktop viewport's own scroll panel, so `scrollLeft`
+                    silently clamped back to 0 (nothing to scroll to)
+                    instead of genuinely moving — not a sentinel/observer
+                    bug at all, just an under-sized demo.
+                    `HorizontalScrollInteraction` above already had enough
+                    columns to avoid this; matched its same margin of
+                    safety here. */}
+                {Array.from({ length: 11 }, (_, i) => (
+                  <th
+                    key={i}
+                    style={{
+                      width: "8rem",
+                      padding: "0.75rem 1rem",
+                      textAlign: "start",
+                      borderInlineEnd: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+                    }}
+                  >
+                    <Text weight="semibold">Metric {i + 2}</Text>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }, (_, row) => (
+                <tr key={row}>
+                  <td style={rowLabelCellStyle}>
+                    <Text>Row {row + 1}</Text>
+                  </td>
+                  {/* Matches the header row's own sentinel `<th>` — see
+                      the comment above `sentinelPlaceholderWidth`. */}
+                  <td aria-hidden="true" style={{ width: sentinelPlaceholderWidth, padding: 0 }} />
+                  <td
+                    data-testid={row === 0 ? "table-lead-body-cell" : undefined}
+                    style={stickyMetricCellStyle}
+                  >
+                    <Text>{row + 1}-1</Text>
+                  </td>
+                  {Array.from({ length: 11 }, (_, i) => (
+                    <td key={i} style={{ padding: "0.75rem 1rem" }}>
+                      <Text>
+                        {row + 1}-{i + 2}
+                      </Text>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = canvas.getByTestId("table-scroll-panel");
+    const cell = canvas.getByTestId("table-affix-cell");
+    const bodyCell = canvas.getByTestId("table-lead-body-cell");
+
+    // `cell` *is* the Affix root here (asChild slots directly onto it,
+    // no wrapping element to look for), unlike every other story in this
+    // file — confirms `data-stuck` lands on the real `<th>`, not some
+    // intermediate node.
+    await expect(cell).not.toHaveAttribute("data-stuck");
+    expect(cell.tagName).toBe("TH");
+
+    panel.scrollLeft = 300;
+    panel.dispatchEvent(new Event("scroll"));
+
+    await waitFor(() => {
+      expect(cell).toHaveAttribute("data-stuck", "true");
+    });
+    await expect(args.onStickyChange).toHaveBeenCalledWith(true);
+
+    await waitFor(() => {
+      expect(
+        Math.abs(cell.getBoundingClientRect().left - panel.getBoundingClientRect().left),
+      ).toBeLessThan(3);
+    });
+
+    // The body cell has no Affix/sentinel of its own (plain CSS
+    // `position: sticky`, driven by the header's own detected `stuck`
+    // state) — confirm it actually stayed pinned in lockstep with the
+    // header, not just that it was styled to look like it should. A
+    // regression here (e.g. a missing `insetInlineStart` on the body
+    // cell) would leave the header pinned while every row's own lead
+    // cell scrolled away underneath it — visually broken, but not
+    // something `cell`'s own assertions above would ever catch.
+    await waitFor(() => {
+      expect(
+        Math.abs(bodyCell.getBoundingClientRect().left - panel.getBoundingClientRect().left),
+      ).toBeLessThan(3);
+    });
+
+    panel.scrollLeft = 0;
+    panel.dispatchEvent(new Event("scroll"));
+
+    await waitFor(() => {
+      expect(cell).not.toHaveAttribute("data-stuck");
+    });
+    await expect(args.onStickyChange).toHaveBeenLastCalledWith(false);
   },
 };
 

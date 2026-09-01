@@ -532,4 +532,88 @@ describe("Affix", () => {
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
+
+  describe("asChild", () => {
+    it("renders the slotted child's own element type instead of a wrapping div", () => {
+      render(
+        <Affix asChild>
+          <th>Lead cell</th>
+        </Affix>,
+      );
+      const el = screen.getByText("Lead cell");
+      expect(el.tagName).toBe("TH");
+    });
+
+    it("merges data-stuck, className, and style onto the slotted element via Slot", () => {
+      render(
+        <Affix asChild className="custom" style={{ zIndex: 5 }}>
+          <th>Lead cell</th>
+        </Affix>,
+      );
+      const el = screen.getByText("Lead cell");
+      expect(el).toHaveClass("custom");
+      expect(el).toHaveStyle({ position: "sticky", zIndex: "5" });
+
+      act(() => {
+        latestCallback?.([scrolledPastTop]);
+      });
+      expect(el).toHaveAttribute("data-stuck", "true");
+    });
+
+    it("forwards ref to the slotted element itself, not a wrapper", () => {
+      const ref = createRef<HTMLTableCellElement>();
+      render(
+        <Affix asChild ref={ref}>
+          <th>Lead cell</th>
+        </Affix>,
+      );
+      expect(ref.current).toBeInstanceOf(HTMLTableCellElement);
+      expect(ref.current).toHaveTextContent("Lead cell");
+    });
+
+    it("renders the sentinel as the tag given by sentinelAs", () => {
+      const { container } = render(
+        <Affix asChild sentinelAs="th">
+          <th>Lead cell</th>
+        </Affix>,
+      );
+      // The sentinel is the first child of the fragment (edge="start"
+      // default) — the slotted `<th>` is the second, matched by text.
+      const sentinel = container.querySelector('[aria-hidden="true"]');
+      expect(sentinel?.tagName).toBe("TH");
+    });
+
+    it("defaults the sentinel to a plain div when sentinelAs is not given", () => {
+      const { container } = render(
+        <Affix asChild>
+          <th>Lead cell</th>
+        </Affix>,
+      );
+      const sentinel = container.querySelector('[aria-hidden="true"]');
+      expect(sentinel?.tagName).toBe("DIV");
+    });
+
+    it("has no accessibility violations when rendered with asChild onto a non-default element", () => {
+      // Per this project's own checklist for polymorphic components: run
+      // axe against a non-default rendering too, not just the default
+      // element (`Avatar`'s `role="img"` + `as="button"` finding is the
+      // precedent for why this matters).
+      async function checkAxe() {
+        const { container } = render(
+          <table>
+            <thead>
+              <tr>
+                <Affix asChild sentinelAs="th">
+                  <th>Lead cell</th>
+                </Affix>
+              </tr>
+            </thead>
+          </table>,
+        );
+        const results = await axe(container);
+        expect(results).toHaveNoViolations();
+      }
+      return checkAxe();
+    });
+  });
 });

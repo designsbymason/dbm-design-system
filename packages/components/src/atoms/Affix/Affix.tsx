@@ -1,4 +1,6 @@
+import { Slot } from "@radix-ui/react-slot";
 import { forwardRef, useEffect, useRef, useState } from "react";
+import type { ElementType } from "react";
 import { cx } from "@dbm-design-system/primitives";
 import styles from "./Affix.module.css";
 import type { AffixAxis, AffixEdge, AffixProps } from "./Affix.types";
@@ -53,12 +55,18 @@ function resolvePhysicalEdge(axis: AffixAxis, edge: AffixEdge, direction: string
  * `axis="horizontal"` only actually engages against a *scrolling*
  * container — `scrollContainerRef` is effectively required for it (unlike
  * `axis="vertical"`, where the whole page scrolling is the common case),
- * since page-level horizontal scroll is rare. Also note: this always
- * renders a plain `<div>`, so it can't wrap a real `<table>`'s `<td>`/
- * `<th>` directly (no `asChild`/polymorphism yet) — for a literal HTML
- * table, apply `position: sticky` directly to the cell instead, or wrap
- * the cell's own content in a `<div>` and stick *that*.
+ * since page-level horizontal scroll is rare.
  *
+ * Renders a plain `<div>` by default; pass `asChild` to render the sticky
+ * positioning onto `children` directly instead (via Radix `Slot`) — the
+ * way to build a genuinely sticky `<table>` column/header with real
+ * markup, since a `<div>` can't be wrapped around a `<td>`/`<th>` without
+ * breaking the row (`<Affix asChild axis="horizontal"><td>…</td></Affix>`
+ * makes the cell itself the sticky element). The sentinel stays a plain
+ * `<div>` sibling either way (see below) — see the `WithinTable` story
+ * for how that plays out inside a real `<tr>`.
+ *
+
  * Renders the sentinel as a plain sibling of the sticky element, not
  * wrapped together with it — a real, previously-shipped bug (found via
  * direct user report, not caught by any prior test): wrapping both in a
@@ -86,6 +94,9 @@ function resolvePhysicalEdge(axis: AffixAxis, edge: AffixEdge, direction: string
  * <Affix axis="horizontal" scrollContainerRef={tableScrollRef}>
  *   <LeadColumn />
  * </Affix>
+ * <Affix asChild axis="horizontal" scrollContainerRef={tableScrollRef}>
+ *   <td>Lead cell</td>
+ * </Affix>
  * ```
  */
 export const Affix = forwardRef<HTMLDivElement, AffixProps>(
@@ -96,6 +107,8 @@ export const Affix = forwardRef<HTMLDivElement, AffixProps>(
       offset = 0,
       scrollContainerRef,
       onStickyChange,
+      asChild = false,
+      sentinelAs = "div",
       className,
       style,
       children,
@@ -103,7 +116,7 @@ export const Affix = forwardRef<HTMLDivElement, AffixProps>(
     },
     ref,
   ) => {
-    const sentinelRef = useRef<HTMLDivElement>(null);
+    const sentinelRef = useRef<HTMLElement>(null);
     const [isStuck, setIsStuck] = useState(false);
 
     const hasWarnedHorizontalNoContainerRef = useRef(false);
@@ -174,19 +187,23 @@ export const Affix = forwardRef<HTMLDivElement, AffixProps>(
       return () => observer.disconnect();
     }, [axis, edge, onStickyChange, scrollContainerRef]);
 
+    // Kept loosely typed (`ElementType`, not the narrower `"div" | "td" |
+    // "th"` the public `sentinelAs` prop declares) at the point of use —
+    // matching `Box.tsx`'s own established workaround for the same
+    // underlying issue: JSX resolves a *narrow* union tag to a union of
+    // per-tag-specific ref/prop types instead of a single general one,
+    // which doesn't unify cleanly with `sentinelRef`'s own `HTMLElement`
+    // typing. The public prop stays narrow (real autocomplete, no
+    // nonsensical tags accepted); only this internal read is widened.
+    const SentinelTag = sentinelAs as ElementType;
     const sentinel = (
-      <div
-        ref={sentinelRef}
-        aria-hidden="true"
-        className={cx(
-          styles.sentinel,
-          axis === "vertical" ? styles.sentinelVertical : styles.sentinelHorizontal,
-        )}
-      />
+      <SentinelTag ref={sentinelRef} aria-hidden="true" className={styles.sentinel} />
     );
 
+    const Component = asChild ? Slot : "div";
+
     const root = (
-      <div
+      <Component
         ref={ref}
         {...props}
         // Always applied last (after `...props`) so they can never be
@@ -196,13 +213,16 @@ export const Affix = forwardRef<HTMLDivElement, AffixProps>(
         // above) and silently won over the real computed stuck state,
         // the same bug class already fixed on Skeleton/ProgressBar/
         // ProgressCircle/Spinner/Button/IconButton/Checkbox/FieldError/
-        // Input (`05-component-api-conventions.md` §3).
+        // Input (`05-component-api-conventions.md` §3). `Slot` merges
+        // these the same way — combining `className`/`style`, composing
+        // event handlers — rather than one winning outright, so this
+        // ordering guarantee holds in `asChild` mode too.
         data-stuck={isStuck || undefined}
         className={cx(styles.root, className)}
         style={{ [cssInsetProperty(axis, edge)]: `var(--dbm-space-${offset})`, ...style }}
       >
         {children}
-      </div>
+      </Component>
     );
 
     // Sentinel ordering mirrors which edge it needs to detect crossing —
