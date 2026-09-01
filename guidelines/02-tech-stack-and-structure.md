@@ -1,25 +1,8 @@
 # DBM Design System — Monorepo Structure & Tech Stack
 
-## Guiding decisions locked in so far
-- Styling: CSS Custom Properties + plain/scoped CSS (no CSS-in-JS runtime), tokens generated from a single source of truth
-- Agentic scope for v1: strong TypeScript + JSDoc, auto-generated JSON component manifest; CLI/MCP server deferred to v1.5+
-- Platform scope for v1: Web + Enterprise, built on shared primitives (mobile/React Native deferred, but token layer built to support it later)
-- Icons: Phosphor Icons
-- Accessibility/interaction primitives: Radix UI Primitives (confirmed)
-- Motion: Motion (Framer Motion) as an optional peer dependency (confirmed)
-- Package manager for consumers: npm (published package), built with Claude Code
-- Docs site + hosted Storybook: planned, built after core library stabilizes
-- **Constraint: every tool/service must be free or open-source** — no paid SaaS in the build, test, or hosting pipeline
+## 1. Accessibility primitives
 
----
-
-## 1. Accessibility primitives — confirmed
-
-Building keyboard navigation, focus trapping, roving tabindex, and ARIA wiring from scratch for every interactive component (menus, comboboxes, dialogs, tabs, sliders) is a *very* large, easy-to-get-subtly-wrong undertaking — this is the single riskiest place to go fully dependency-free.
-
-**Confirmed:** **Radix UI Primitives** (`@radix-ui/react-*`, MIT-licensed, fully open-source and free) as a foundational, unstyled dependency for interaction/accessibility logic, with DBM's own styled components built on top. Radix ships zero styling, is tree-shakeable per-component, and is the de facto industry standard other systems (shadcn/ui, many enterprise DS) build on.
-
-**Motion (Framer Motion's successor, MIT-licensed) is confirmed** as an optional peer dependency for richer micro-interactions, layered on top of CSS transitions/keyframes for the simpler cases.
+Radix UI Primitives (`@radix-ui/react-*`) is the foundational, unstyled dependency for interaction/accessibility logic — see `guidelines/adr/0004` for why (over hand-rolling it) and what that decision constrains going forward.
 
 ---
 
@@ -39,7 +22,8 @@ dbm-design-system/
 │   │   │   │                    # radius.json, shadow.json, breakpoint.json, motion.json, other.json
 │   │   │   ├── semantic/        # One file per theme (brand × mode) — purple-light.json, purple-dark.json,
 │   │   │   │                    # emerald-light.json, emerald-dark.json
-│   │   │   └── component/       # One file per component that needs one — avatar.json, badge.json
+│   │   │   └── component/       # One file per component that needs one — avatar.json, badge.json,
+│   │   │                        # icon-button.json, ...
 │   │   ├── style-dictionary.config.js
 │   │   └── build/                # generated: css vars, JS/TS exports, (later) RN objects
 │   │
@@ -98,7 +82,7 @@ dbm-design-system/
 | Accessibility testing | jest-axe | Automated a11y regression checks per component. Settled on jest-axe over vitest-axe during Phase 3 — vitest-axe was a single early (0.1.0, Jan 2025) release with no follow-up, while jest-axe (10.0.0, actively maintained) works fine under Vitest since Vitest's `expect` is Jest-API-compatible |
 | Visual regression | Playwright's built-in screenshot/snapshot testing, self-hosted | Fully open-source and free, no SaaS account needed — trade-off is you host/diff the snapshot artifacts yourself (e.g. as CI artifacts) rather than getting Chromatic's hosted review UI |
 | Component workshop | Storybook 10 | OSS; also doubles as living documentation and the base for the future public-hosted instance. Originally pinned at 8 during planning; bumped to 10 in Phase 3 when 8 turned out to be two majors behind with React 19 peer-dependency friction — confirmed with the maintainer before deviating |
-| Component/story testing | `@storybook/addon-vitest` (Vitest browser mode, `@vitest/browser-playwright` provider, reuses the already-approved Playwright install) | Added 2026-08-16. Runs every story — and critically every story's `play` function — as a real Vitest test in an actual Chromium instance, closing a real gap: play-function interactions previously only ran when a human manually opened that story's Interactions tab, with no CI signal if one broke. Also what the Accessibility addon's automatic scan is gated behind in this Storybook version (root-caused via the real event channel, see `01-vision-and-goals.md` §12). Dev-only, never shipped in `@dbm-design-system/components` — same category as Storybook/Vitest/Playwright themselves, not subject to the runtime dependency budget in `CLAUDE.md`. Two commands: `pnpm test:storybook` (one-shot, what CI runs, works standalone with no dev server since Vite loads stories directly) and `pnpm test:storybook:watch` (must run alongside `pnpm storybook` for the live sidebar indicators/Accessibility panel to have anything to report — confirmed empirically, registering the addon alone isn't sufficient). A second, browser-mode Vitest project (`vitest.config.ts`'s `test.projects`) sits alongside the existing jsdom `unit` project; deliberately does *not* inherit `src/test/setup.ts`, which stubs several browser APIs jsdom lacks (matchMedia, ResizeObserver, etc.) — correct for jsdom, actively wrong in a real browser where those already work. |
+| Component/story testing | `@storybook/addon-vitest` (Vitest browser mode, `@vitest/browser-playwright` provider, reuses the already-approved Playwright install) | Added 2026-08-16. Runs every story — and critically every story's `play` function — as a real Vitest test in an actual Chromium instance, closing a real gap: play-function interactions previously only ran when a human manually opened that story's Interactions tab, with no CI signal if one broke. Also what the Accessibility addon's automatic scan is gated behind in this Storybook version — see `guidelines/adr/0003` for the root cause and full reasoning. Dev-only, never shipped in `@dbm-design-system/components` — same category as Storybook/Vitest/Playwright themselves, not subject to the runtime dependency budget in `CLAUDE.md`. Two commands: `pnpm test:storybook` (one-shot, what CI runs, works standalone with no dev server since Vite loads stories directly) and `pnpm test:storybook:watch` (must run alongside `pnpm storybook` for the live sidebar indicators/Accessibility panel to have anything to report — confirmed empirically, registering the addon alone isn't sufficient). A second, browser-mode Vitest project (`vitest.config.ts`'s `test.projects`) sits alongside the existing jsdom `unit` project; deliberately does *not* inherit `src/test/setup.ts`, which stubs several browser APIs jsdom lacks (matchMedia, ResizeObserver, etc.) — correct for jsdom, actively wrong in a real browser where those already work. |
 | Docs site (later) | Next.js or Astro (both OSS frameworks) | Pairs naturally with MDX for component docs + the manifest data |
 | Static hosting (docs site + Storybook) | GitHub Pages, or Cloudflare Pages free tier | Both free for public/OSS projects with no usage-based billing risk; GitHub Pages is the simplest since the repo is already on GitHub |
 | Versioning/release | Changesets | OSS; per-package semver, changelog generation, monorepo-aware. **Configured, not yet wired into CI (audited 2026-08-29):** `.changeset/config.json` exists and `pnpm changeset` works locally, but no workflow runs `changeset version`/`changeset publish` — there's no `changesets/action` step or separate release workflow in `.github/workflows/`. Building that pipeline is explicitly Phase 8 scope (`01-vision-and-goals.md` §13), not something already running; don't describe it as a current CI step (see the CI row below, corrected the same day for exactly this). |
@@ -124,13 +108,6 @@ When `pnpm audit` or a GitHub Dependabot alert flags a vulnerable package, check
 
 ---
 
-## 4. What's deferred (by design, not forgotten)
+## 4. What's deferred
 
-- **CLI scaffolder / MCP server** — v1.5+, once component API is stable and manifest is proven accurate
-- **React Native primitives** — token layer built to support it; actual RN components are a separate future package (`packages/components-native`)
-- **Figma component library** — built from the same token source once tokens are finalized, so Figma variables can mirror the CSS vars 1:1
-- **Multi-brand/theme packs beyond light/dark** — architecture supports it (swap `data-theme`), but building 10 themes like Astryx isn't a v1 goal unless you want it to be
-
----
-
-All three items originally tracked here as "next planning pass" work are done: the full token category breakdown lives in `03-token-system-spec.md`, component inventory + atomic tiering in `04-component-inventory.md`, and the CI/release workflow was built in Phase 1 (`.github/workflows/ci.yml`, Changesets config). Removed 2026-07-18 rather than left as stale planning notes — see `01-vision-and-goals.md` §12 for what's actually still open.
+See `01-vision-and-goals.md` §6 ("Explicitly deferred") — the authoritative, complete list. Not duplicated here to avoid the two copies drifting out of sync with each other.

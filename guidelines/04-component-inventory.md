@@ -1,6 +1,6 @@
 # DBM Design System — Component Inventory
 
-**Status: v1 draft.** Organizing principle: **9 functional categories** for documentation/discoverability (docs site, Storybook sidebar, manifest grouping), with **atomic-design tier** tracked as metadata per component (internal composition concern, not a navigation axis). See `01-vision-and-goals.md` for why this hybrid approach — functional categories are what MUI, Chakra UI, and Ant Design independently converge on; atomic tiers stay internal.
+**Status: v1 draft.** Organizing principle: **9 functional categories** for documentation/discoverability (docs site, Storybook sidebar, manifest grouping), with **atomic-design tier** tracked as metadata per component (internal composition concern, not a navigation axis). See `guidelines/adr/0006` for why this hybrid approach.
 
 **Priority key:** 🟢 v1 (core, build first) · 🟡 v1.5 (comprehensive pass, right after v1 ships) · ⚪ v2/deferred (real, but not blocking launch)
 

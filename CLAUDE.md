@@ -17,7 +17,7 @@ An agentic, standalone React component library — built for AI coding agents (a
 - **Security is not optional.** See "Security practices" below — applies to every phase, not just repo setup.
 - **Responsive is not optional**, same standing as accessibility — every component works across the full breakpoint scale, not desktop-first with mobile bolted on later.
 - **Self-verify before reporting a task done.** Actually run lint/build/test and report real results — never report completion based on code "looking right."
-- **Update `guidelines/*.md` directly as decisions are made — no need to ask first, but always surface what changed.** These are the source of truth I control, but chat scrolls away and `guidelines/*.md` persists, so record real decisions as they happen rather than gating every edit on a round trip. See `guidelines/06-engineering-standards.md` §8 for the full rule (when this applies, and the one carve-out — a rewrite of a standing process rule itself is worth flagging prominently even though it doesn't need pre-approval).
+- **Update `guidelines/*.md` directly as decisions are made — no need to ask first, but always surface what changed.** These are the source of truth I control, but chat scrolls away and `guidelines/*.md` persists, so record real decisions as they happen rather than gating every edit on a round trip. **These numbered files are a current-state reference, not a changelog.** A real architecture/API decision — a genuine fork in the road, or something that constrains how future components must be built — gets its own immutable entry in `guidelines/adr/` (see that folder's own README for the template) instead of being narrated inline; the numbered doc then just points to it (`See ADR-0012`). Routine iteration — a debugging dead-end, a step-by-step verification log, an intermediate wrong turn — doesn't get recorded in either place; it belongs in the commit message. See `guidelines/06-engineering-standards.md` §8 for the full rule (when this applies, and the one carve-out — a rewrite of a standing process rule itself is worth flagging prominently even though it doesn't need pre-approval).
 - **Full engineering discipline** (clean code, scalability, performance, error handling, browser/SSR targets, i18n stance) is in `guidelines/06-engineering-standards.md` — read it alongside this file, not as an optional extra.
 
 ## Security practices
@@ -47,7 +47,10 @@ packages/
   manifest/          Build tool: generates the JSON component manifest from TS + JSDoc
   eslint-config/      Shared lint rules
   tsconfig/           Shared TypeScript configs
-guidelines/          Internal reference docs — architecture decisions, specs, inventories
+guidelines/          Internal reference docs — current-state specs, inventories, conventions.
+  adr/                Individual immutable Architecture Decision Records (the "why"
+                       behind a real fork-in-the-road decision) — numbered 01-07 files
+                       point here rather than narrating decisions inline.
 ```
 
 ## Stack quick reference
@@ -62,6 +65,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Building a new component | `guidelines/04-component-inventory.md` (tier + scope) |
 | Unsure about a dependency or tool choice | `guidelines/02-tech-stack-and-structure.md` |
 | Overall project goals/scope | `guidelines/01-vision-and-goals.md` |
+| Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 
 ## Component index (planned: auto-synced)
 Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand. This mirrors Astryx's `npx astryx init`, which installs its component index directly into a project's `AGENTS.md`/`CLAUDE.md` so agents discover what's available instead of guessing or hallucinating a component that doesn't exist.
