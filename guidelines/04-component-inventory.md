@@ -4,7 +4,7 @@
 
 **Priority key:** 🟢 v1 (core, build first) · 🟡 v1.5 (comprehensive pass, right after v1 ships) · ⚪ v2/deferred (real, but not blocking launch)
 
-Target v1 scope: **~65 components**. Full comprehensive scope (v1 + v1.5): **~95 components**. This is deliberately in Astryx's range (90–150+), not a "basic" starter set.
+Target v1 scope: **~65 components**. Full comprehensive scope (v1 + v1.5): **~95 components** — enough to build a real web/enterprise application end to end (forms, navigation, data display, feedback, overlays) without falling back to one-off custom components, not a "basic" starter set.
 
 ---
 
@@ -168,7 +168,7 @@ Non-visual/structural helpers other components are built from.
 
 ## Templates (page-level composition, deferred to v1.5/v2)
 
-Not individual components, but composed patterns — worth planning for since Astryx's "templates over composing from scratch" approach is a real differentiator, but these should come **after** the underlying components exist, not before.
+Not individual components, but composed patterns — worth planning for since a template meaningfully reduces time-to-first-app for a common structure (a dashboard shell, an auth flow) versus composing it from scratch every time, but these should come **after** the underlying components exist, not before.
 
 | Template | Priority | Notes |
 |---|---|---|
@@ -188,7 +188,7 @@ Not individual components, but composed patterns — worth planning for since As
 | ⚪ v2/deferred | ~14 |
 | **Total planned** | **~104** |
 
-This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to Astryx-scale coverage rather than trying to build all ~104 at once.
+This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all ~104 at once.
 
 ## Sequencing recommendation for actual build order
 Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 (every atom-tier row in this doc, Grid/GridItem excepted — see the note on step 1) are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — **47 atoms total, none left unbuilt** (corrected 2026-08-12; this doc, `01-vision-and-goals.md`, and `07-storybook-and-documentation-standards.md` all previously said "49," which was simply a miscount against this doc's own table — count the atom-tier rows across all 9 categories above and it's 47):

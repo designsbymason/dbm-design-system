@@ -71,7 +71,7 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 
 ## Component index (planned: auto-synced)
-Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand. This mirrors Astryx's `npx astryx init`, which installs its component index directly into a project's `AGENTS.md`/`CLAUDE.md` so agents discover what's available instead of guessing or hallucinating a component that doesn't exist.
+Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand, so agents discover what's actually available instead of guessing or hallucinating a component that doesn't exist.
 
 Until that tooling exists, treat `guidelines/04-component-inventory.md` as the authoritative (manually maintained) list.
 

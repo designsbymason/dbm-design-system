@@ -106,7 +106,7 @@ Astryx is worth continued reference (not imitation) as a live proof-of-concept t
 
 1. **Tokens are law.** No hardcoded values in component code — ever. If a value is needed and no token exists, the token gets created first.
 2. **Semantic over primitive, always.** Components never reference raw color/spacing values directly — only semantic tokens. This is what makes theming free.
-3. **Guidance over restriction.** Components should be composable and unopinionated about content, similar in spirit to Astryx's "guidance over enforcement" philosophy — the system provides capability and strong defaults, not walls.
+3. **Guidance over restriction.** Components should be composable and unopinionated about content — the system provides capability and strong defaults, not walls, so a consumer (human or agent) can reach for the right building block without fighting the API to get an unusual-but-valid layout.
 4. **Accessible is not a variant.** There is no "accessible mode" — every component is accessible by default, verified, not assumed.
 5. **Motion with restraint.** Micro-interactions should clarify state changes and feel premium, not decorate for their own sake. CSS transitions handle the simple cases; Motion is reserved for genuinely complex sequences.
 6. **Documented as-built, not after-the-fact.** JSDoc and prop documentation are part of the definition of "done" for a component, not a follow-up task.
@@ -185,10 +185,42 @@ Renumbered 2026-07-18 to match the phases actually run (the original version bun
 - **Phase 5 — Molecules (started 2026-08-09 — earlier than planned):** `Grid`, `GridItem`, `Select` are built. This got ahead of the original sequencing (Phase 5 was meant to start only once Phase 4.9 proved the documentation standard on the full atom tier) — noting the actual order here rather than silently leaving the doc read as strictly sequential. Remaining: FormField, Card, SearchBar, Popover, MenuItem, and the rest of the 🟢 v1 molecule tier per `04-component-inventory.md`.
 - **Phase 6 — Organisms:** DataTable, Modal, Navbar, CommandPalette, Form, and the rest of the 🟢 v1 organism tier
 - **Phase 7 — Comprehensive pass:** remaining 🟡 v1.5 components + templates
-- **Phase 8 — Manifest & publish:** full `packages/manifest` JSON component manifest generation; npm publishing pipeline (Changesets-based)
+- **Phase 8 — Manifest & publish:** full `packages/manifest` JSON component manifest generation; npm publishing pipeline (Changesets-based). See §13.1 for the full required/recommended agent-consumption deliverable list.
 - **Phase 9 — Surface expansion:** documentation website, public Storybook hosting
-- **Phase 10 — Agent tooling:** CLI scaffolder, MCP server, and an auto-synced component index written into `CLAUDE.md`/`AGENTS.md` on every release (mirroring Astryx's `npx astryx init` pattern) — once API is proven stable
+- **Phase 10 — Agent tooling:** CLI scaffolder, MCP server, and an auto-synced component index written into `CLAUDE.md`/`AGENTS.md` on every release — a consuming agent gets an always-current inventory of what's actually shipped instead of guessing or hallucinating a component that doesn't exist. Deferred until the API is proven stable, so agent tooling isn't built against a shifting target. See §13.1 for the full required/recommended agent-consumption deliverable list.
 - **Phase 11 — Platform expansion:** Figma component library; React Native package
+
+### 13.1 Agent-consumption deliverables (required vs. recommended)
+
+Reviewed 2026-08-31, following a best-practices/industry-standard pass. Distinct from
+`guidelines/` and `CLAUDE.md` themselves, which are internal-only and never published
+(confirmed: `packages/components/package.json`'s `"files"` field is `["dist"]` only) —
+this list is what a *consuming* agent (one building an app with this package, not
+contributing to it) needs, shipped as part of the published package or its docs site.
+
+**Required — already this project's own stated mission (goal #1), not yet built:**
+
+| Artifact | Why | Target phase |
+|---|---|---|
+| JSON component manifest | The single most load-bearing artifact for programmatic agent use — a structured, typed index of every component's props/variants/constraints, queryable directly instead of parsed from prose. Already primary goal #1 (§4). | Phase 8 (`packages/manifest`, currently empty scaffolding) |
+| Per-package `CHANGELOG.md` | Lets an agent doing an upgrade know what broke without diffing source across versions. | Phase 8 (Changesets is configured but not yet wired into CI) |
+
+Already in place, not a gap: comprehensive `.d.ts` declarations (shipped via `tsup`) and
+complete JSDoc on every export (`05-component-api-conventions.md` §7) — both keep feeding
+the manifest above as more components ship; no new artifact needed, just keep the
+discipline going.
+
+**Recommended — real external precedent, not currently planned:**
+
+| Artifact | Precedent | What it adds |
+|---|---|---|
+| Consumer-facing agent usage guide, shipped in `"files"` (e.g. `AGENTS.md`/`USAGE.md` at the package root) | The `AGENTS.md` convention is spreading across coding-agent tooling as the standard place for agent-facing instructions, distinct from a human-oriented `README.md`. | A condensed, public rewrite of the consumption rules currently internal to `05`/`06` — import patterns, "reference semantic tokens, never hardcode," `as`/`asChild` composability — for someone building *with* the library, not the internal guidelines themselves. |
+| `llms.txt` / `llms-full.txt` | Emerging convention (llmstxt.org) for a curated, LLM-optimized index of a docs site. | Most natural once the docs site/hosted Storybook (Phase 9) exists. |
+| Structured example/registry format | Machine-readable, queryable example catalog (a pattern several component-distribution tools use). | Bigger lift; sits on top of the manifest, so defer until that ships. |
+| MCP server | A structured query interface in front of the manifest, for an agent that wants to ask questions rather than fetch a static file. | Already named in Phase 10; the manifest is its prerequisite either way. |
+
+**Sequencing note:** the manifest is the one item worth prioritizing — everything else
+here is more valuable *with* a real manifest behind it than without one.
 
 ---
 
