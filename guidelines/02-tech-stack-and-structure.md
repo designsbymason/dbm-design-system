@@ -92,7 +92,7 @@ dbm-design-system/
 | Styling | CSS Modules + CSS Custom Properties | Scoped classnames at build time, zero runtime cost, tokens flow in as CSS vars |
 | Token pipeline | Style Dictionary | Single JSON source → CSS vars (web), TS constants (typed token access), future RN output |
 | Icons | Phosphor Icons (`@phosphor-icons/react`), wrapped | Wrap in a typed `Icon` component so swapping/theming icon weight & size is centralized |
-| Motion | CSS transitions/keyframes by default; Motion (Framer Motion successor) as an **optional peer dependency** for complex sequences | Keeps the core dependency-light; consumers who don't need rich motion don't pay for it |
+| Motion | CSS transitions/keyframes by default; Motion (Framer Motion successor) as an **optional peer dependency** for complex sequences | Keeps the core dependency-light; consumers who don't need rich motion don't pay for it. **Approved, not yet integrated (confirmed 2026-08-31 audit):** no component has needed a Motion-driven sequence yet — every micro-interaction shipped so far (Badge's pop, Checkbox's indicator fade-in, etc.) has stayed within plain CSS transitions/keyframes, so `motion` doesn't appear in any `package.json` yet. This is expected, not a gap — it stays an *optional* peer, added the first time a component genuinely needs it, not pre-installed speculatively. |
 | Build (component packages) | tsup (esbuild-based) | Fast, simple ESM+CJS+d.ts output, minimal config |
 | Testing (unit/behavior) | Vitest + React Testing Library | Fast, ESM-native, pairs well with Vite/tsup toolchain |
 | Accessibility testing | jest-axe | Automated a11y regression checks per component. Settled on jest-axe over vitest-axe during Phase 3 — vitest-axe was a single early (0.1.0, Jan 2025) release with no follow-up, while jest-axe (10.0.0, actively maintained) works fine under Vitest since Vitest's `expect` is Jest-API-compatible |
@@ -108,7 +108,7 @@ dbm-design-system/
 | Security: secret scanning | GitHub secret scanning + push protection | Free for public repos; a repo setting, not a dependency — must be enabled at the GitHub repo level |
 | Security: static analysis | GitHub CodeQL | Free for public repos; catches common vulnerability patterns (XSS, injection) in CI |
 | Security: publish auth | npm provenance / trusted publishing (OIDC) | No long-lived npm tokens stored as CI secrets; used when the Phase 8 publish pipeline is built |
-| Manifest generation | react-docgen-typescript (custom build step in `packages/manifest`) | OSS; extracts props/types/JSDoc into the machine-readable JSON contract for agents |
+| Manifest generation | react-docgen-typescript (custom build step in `packages/manifest`) | OSS; extracts props/types/JSDoc into the machine-readable JSON contract for agents. **Planned tool choice, not yet built (confirmed 2026-08-31 audit) — `packages/manifest` is still Phase 1 scaffolding**: `src/index.ts` is an empty `export {}`, `package.json` is at `0.0.0` with no `react-docgen-typescript` dependency yet. This is expected — Phase 8 (`01-vision-and-goals.md` §13) is when this actually gets built; don't read this row as describing something already running. |
 
 ---
 
