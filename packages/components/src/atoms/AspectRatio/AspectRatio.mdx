@@ -1,0 +1,198 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../Box";
+import { Image } from "../Image";
+import { Skeleton } from "../Skeleton";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { AspectRatio } from "./AspectRatio";
+import * as AspectRatioStories from "./AspectRatio.stories";
+
+export const propOrder = ["ratio", "children", "id", "className", "style", "data-testid"];
+
+export const PREVIEW_PHOTO_URL =
+  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%235548A4'/%3E%3C/svg%3E";
+
+<Meta of={AspectRatioStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="AspectRatio" tier="Atom" />
+
+Locks its child content to a fixed width-to-height ratio, regardless of the child's own intrinsic
+size — the classic use cases are video embeds, map embeds, and image placeholders that need to
+hold their space in a layout whether or not their real content has loaded yet. Renders a
+relatively-positioned wrapper `<div>` around an absolutely-positioned, `overflow: hidden` inner
+layer holding `children`; the wrapper's height is derived purely from its own width via the CSS
+`aspect-ratio` property, so the box holds its shape at any container width with no JavaScript
+measurement involved. Always renders a plain `<div>` — no `as`/`asChild` polymorphism, since this
+component's whole purpose is the ratio-locking structure itself, not standing in for an arbitrary
+element.
+
+### Import
+
+```tsx
+import { AspectRatio } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive `ratio` and `children` live. The wrapping background behind the canvas is Storybook-only
+demo chrome (so the box's bounds stay visible even with plain text content) — not part of the
+component itself.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={AspectRatioStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={AspectRatioStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`AspectRatio` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`title`, `lang`) — passed straight through to the underlying element.
+
+<PropertiesTable of={AspectRatioStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={AspectRatioStories.Default} />
+
+### Square
+
+<Canvas of={AspectRatioStories.Square} />
+
+### Video embed (21:9)
+
+<Canvas of={AspectRatioStories.VideoEmbed} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give the child element real fill sizing — `width: 100%; height: 100%`, plus `objectFit: 'cover'`
+  for images/video — since `AspectRatio` locks the *box*, not the child's own sizing. A child with
+  no fill sizing just sits at its own intrinsic size inside the box (e.g. plain text in the
+  top-left corner, per the Playground's own default).
+- Decide `ratio` as part of the surrounding layout, not after — since the box's height is entirely
+  derived from its own width, get the width-driving layout right first (a fixed-width card, a
+  fluid grid column) and the height follows automatically.
+- Pair with `Skeleton` for a loading state that reserves the correct footprint before real media
+  arrives (see Related components below).
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `ratio={0}` or a negative/`NaN` value expecting some fallback shape — the browser
+  silently ignores an invalid CSS `aspect-ratio` and the box collapses to the content's own
+  intrinsic size instead. A development-mode console warning flags this, but nothing renders
+  differently in production.
+- Don't expect `AspectRatio` to crop or letterbox oversized content for you — it clips via
+  `overflow: hidden`, but getting a filled, non-distorted result is the child's own
+  `objectFit`/sizing responsibility, not something this component computes.
+- Don't change `ratio` on every render expecting a smooth resize animation — the box's whole point
+  is a stable, predictable footprint; a `ratio` that changes at runtime jumps instantly rather than
+  transitioning.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat `ratio` as a layout decision made once per usage site, not a prop that changes at
+  runtime — if content should be a different ratio at different breakpoints, conditionally set
+  `ratio` from a media-query hook in consuming code; this component doesn't do responsive
+  ratio-switching internally.
+- Reach for `AspectRatio` specifically when the ratio is genuinely fixed and known ahead of
+  time (a 16:9 video slot, a square avatar-upload preview). If you just need general
+  aspect-preserving image behavior with no separate wrapping element, `Image`'s own `aspectRatio`
+  prop may be a lighter-weight fit — see Related components below.
+- Keep `children` to a single element that can genuinely fill the box (an `img`, `iframe`, `video`,
+  or a `div` wrapping further content) rather than multiple loose children with no shared sizing —
+  `AspectRatio` doesn't lay them out for you.
+
+## Accessibility
+
+<Callout tone="info" title="No built-in semantics — accessibility is entirely up to children">
+
+- `AspectRatio` sets no ARIA attributes and imposes no role of its own — it's a purely structural
+  layout wrapper. Accessibility is entirely a function of what you render as `children` (an `img`
+  needs its own `alt`, an `iframe` needs its own `title`).
+- No keyboard interaction of its own — nothing to tab to, nothing to verify for keyboard
+  navigation, since the component itself renders no focusable content.
+- Content is clipped via `overflow: hidden`. If `children` doesn't correctly fill `100%`/`100%`,
+  make sure nothing essential (including any focusable element) ends up visually cut off at the
+  box's edge.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<AspectRatio ratio={16 / 9}>
+  <img
+    src="/hero.jpg"
+    alt="Product photo"
+    style={{ objectFit: "cover", width: "100%", height: "100%" }}
+  />
+</AspectRatio>
+```
+
+```tsx
+<AspectRatio ratio={16 / 9}>
+  <iframe
+    src="https://example.com/embed"
+    title="Product demo video"
+    style={{ width: "100%", height: "100%", border: "none" }}
+  />
+</AspectRatio>
+```
+
+```tsx
+// A native <div> attribute (title) passed straight through, alongside a square ratio
+<AspectRatio ratio={1} title="1:1 preview crop">
+  <img src="/avatar-source.jpg" alt="" style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+</AspectRatio>
+```
+
+## Design tokens used
+
+`AspectRatio` itself references **no design tokens** — its CSS module only sets structural
+properties needed for the ratio-locking mechanism (`position`, `width: 100%`, `inset: 0`,
+`overflow: hidden`), none of which are color/spacing/radius/etc. values with a token home. Any
+visual styling (background, border, radius) comes entirely from `className`/`style` or from the
+`children` rendered inside it, which should still reference semantic tokens per this system's
+conventions.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Image"
+  description="Has its own built-in aspectRatio prop — a lighter-weight fit when you only need one image locked to a ratio, with no separate wrapping element"
+  href="/?path=/docs/atoms-media-image--docs"
+>
+  <Image src={PREVIEW_PHOTO_URL} alt="" aspectRatio={1} style={{ width: 48 }} />
+</RelatedCard>
+<RelatedCard
+  name="Skeleton"
+  description="A natural loading-state pairing — size a rectangular Skeleton to the same ratio while real media is still loading"
+  href="/?path=/docs/atoms-data-display-skeleton--docs"
+>
+  <Skeleton variant="rectangular" width={64} height={36} />
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch — reach for Box instead when you need a styled wrapper with no ratio-locking behavior"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>

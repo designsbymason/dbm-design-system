@@ -1,5 +1,5 @@
 import { cx } from "@dbm-design-system/primitives";
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import styles from "./AspectRatio.module.css";
 import type { AspectRatioProps } from "./AspectRatio.types";
 
@@ -20,16 +20,28 @@ import type { AspectRatioProps } from "./AspectRatio.types";
  * ```
  */
 export const AspectRatio = forwardRef<HTMLDivElement, AspectRatioProps>(
-  ({ ratio = 16 / 9, className, style, children, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cx(styles.root, className)}
-      style={{ aspectRatio: ratio, ...style }}
-      {...props}
-    >
-      <div className={styles.content}>{children}</div>
-    </div>
-  ),
+  ({ ratio = 16 / 9, className, style, children, ...props }, ref) => {
+    const hasWarnedInvalidRatioRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if ((!Number.isFinite(ratio) || ratio <= 0) && !hasWarnedInvalidRatioRef.current) {
+        hasWarnedInvalidRatioRef.current = true;
+        console.warn(
+          `AspectRatio: \`ratio\` must be a positive, finite number — received ${ratio}. The browser ignores an invalid CSS \`aspect-ratio\` value, so the box will fall back to its content's own intrinsic size instead of the intended ratio.`,
+        );
+      }
+    }
+
+    return (
+      <div
+        ref={ref}
+        className={cx(styles.root, className)}
+        style={{ aspectRatio: ratio, ...style }}
+        {...props}
+      >
+        <div className={styles.content}>{children}</div>
+      </div>
+    );
+  },
 );
 
 AspectRatio.displayName = "AspectRatio";

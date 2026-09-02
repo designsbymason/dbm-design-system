@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AspectRatio } from "./AspectRatio";
 
 describe("AspectRatio", () => {
@@ -49,6 +49,60 @@ describe("AspectRatio", () => {
       </AspectRatio>,
     );
     expect(container.firstChild).toHaveClass("custom");
+  });
+
+  it("merges a custom style onto the computed aspectRatio", () => {
+    const { container } = render(
+      <AspectRatio ratio={1} style={{ maxWidth: "20rem" }}>
+        <div />
+      </AspectRatio>,
+    );
+    expect(container.firstChild).toHaveStyle({ aspectRatio: "1", maxWidth: "20rem" });
+  });
+
+  it("lets a custom style.aspectRatio override the ratio prop", () => {
+    const { container } = render(
+      <AspectRatio ratio={1} style={{ aspectRatio: "2" }}>
+        <div />
+      </AspectRatio>,
+    );
+    expect(container.firstChild).toHaveStyle({ aspectRatio: "2" });
+  });
+
+  it("applies id and data-testid to the outer element", () => {
+    render(
+      <AspectRatio id="hero-media" data-testid="hero-media">
+        <div />
+      </AspectRatio>,
+    );
+    const element = screen.getByTestId("hero-media");
+    expect(element).toHaveAttribute("id", "hero-media");
+  });
+
+  describe("invalid ratio", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("warns in development when ratio is not a positive, finite number", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <AspectRatio ratio={0}>
+          <div />
+        </AspectRatio>,
+      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("AspectRatio"));
+    });
+
+    it("does not warn for a valid ratio", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <AspectRatio ratio={4 / 3}>
+          <div />
+        </AspectRatio>,
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
   });
 
   it("has no accessibility violations", async () => {
