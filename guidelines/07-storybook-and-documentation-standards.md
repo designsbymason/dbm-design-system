@@ -122,7 +122,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**24 of 47 atoms have a Docs page; all 24 are also Finalized.**
+**25 of 47 atoms have a Docs page; all 25 are also Finalized.**
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -150,9 +150,10 @@ Foundational components first (prove the template before mass-applying it), then
 | ProgressBar | Atom | Feedback | ✅ | ✅ 2026-08-22 | [ProgressBar.md](component-reviews/ProgressBar.md) |
 | ProgressCircle | Atom | Feedback | ✅ | ✅ 2026-08-23 | [ProgressCircle.md](component-reviews/ProgressCircle.md) |
 | Spinner | Atom | Feedback | ✅ | ✅ 2026-08-23 | [Spinner.md](component-reviews/Spinner.md) |
+| Spacer | Atom | Layout | ✅ | ✅ 2026-09-03 | [Spacer.md](component-reviews/Spacer.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
-- **Layout:** Stack, Grid, GridItem, Spacer (`Grid`/`GridItem` are molecule-tier, built, but still need this same Docs-page treatment). **Known gap for Spacer's future review** (found 2026-08-16, while reviewing Skeleton): `Spacer.tsx` renders `aria-hidden="true"` *before* its `{...rest}` spread, so a caller passing their own `aria-hidden` prop silently overrides it — the exact bug already fixed on Skeleton. Apply the same reorder + regression test when Spacer's own review pass runs.
+- **Layout:** Stack, Grid, GridItem (`Grid`/`GridItem` are molecule-tier, built, but still need this same Docs-page treatment). Spacer's own review pass is complete — see the status table above and [Spacer.md](component-reviews/Spacer.md), including the fix for the `aria-hidden`-ordering gap this note used to flag.
 - **Typography:** Text, Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
 - **Navigation:** BackToTop
 - **Overlay:** Tooltip, Collapse, Backdrop

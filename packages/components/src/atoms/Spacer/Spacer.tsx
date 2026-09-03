@@ -26,7 +26,18 @@ export const Spacer = forwardRef<HTMLDivElement, SpacerProps>((props, ref) => {
   // explicitly rather than relying on the type alone, so the "renders no
   // content of its own" guarantee actually holds regardless of caller.
   const { className, children: _children, ...rest } = props as SpacerProps & { children?: unknown };
-  return <div ref={ref} aria-hidden="true" className={cx(styles.root, className)} {...rest} />;
+  return (
+    <div
+      ref={ref}
+      className={cx(styles.root, className)}
+      {...rest}
+      // Always after `...rest`, so it can't be overridden by a caller
+      // passing their own `aria-hidden` — Spacer renders no content of its
+      // own, so there's no legitimate case for un-hiding it from assistive
+      // tech (same pattern as Skeleton).
+      aria-hidden="true"
+    />
+  );
 });
 
 Spacer.displayName = "Spacer";

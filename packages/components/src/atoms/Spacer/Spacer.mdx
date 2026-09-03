@@ -1,0 +1,163 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Box } from "../Box";
+import { Stack } from "../Stack";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Spacer } from "./Spacer";
+import * as SpacerStories from "./Spacer.stories";
+
+export const propOrder = ["id", "className", "style", "data-testid"];
+
+<Meta of={SpacerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Spacer" tier="Atom" />
+
+A flex-grow spacer (`flex: 1 0 0%`) that pushes sibling content apart inside a `Stack` (or any flex
+container) — the same "logo on the left, actions on the right" pattern a browser's own toolbar
+uses, without hardcoding a gap or margin that would need updating whenever the surrounding content
+changes width. Renders no content of its own: `children` are never rendered even if a caller passes
+some, and the element is always hidden from the accessibility tree, since a `Spacer` has nothing
+for a screen reader user to perceive.
+
+### Import
+
+```tsx
+import { Spacer } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Spacer takes no props of its own — only the inherited native escape hatches below, none of which
+are meaningfully live-editable. The Playground shows Spacer doing its one job inside a real flex
+row; see the Properties table for what each remaining prop does.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SpacerStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={SpacerStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Spacer` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`lang`) — passed straight through to the underlying element.
+
+<PropertiesTable of={SpacerStories} order={propOrder} />
+
+## Variants
+
+### Pushes content apart in a row
+
+<Canvas of={SpacerStories.InARow} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Spacer` inside a `Stack` (or any `display: flex` container) to push the elements on either
+  side of it to opposite ends — a header's logo-left/actions-right layout, a toolbar's leading and
+  trailing groups.
+- Use more than one `Spacer` in the same row to distribute extra space evenly between several
+  groups of content, not just two.
+- Reach for `Spacer` instead of `margin-inline-start: auto` on the element that needs to be pushed
+  — the effect is identical, but `Spacer` reads as an explicit, visible layout element in the JSX
+  rather than a side effect hidden in one child's own styling.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `children` expecting them to render — `Spacer` discards any content passed to it by
+  design; it's a spacing utility, not a container.
+- Don't use `Spacer` inside a non-flex parent — `flex: 1 0 0%` has no effect unless the immediate
+  parent is `display: flex` (or `inline-flex`), the same requirement `Stack` itself satisfies.
+- Don't reach for `Spacer` when you need a fixed gap between two elements — that's `Stack`'s own
+  `gap` prop; `Spacer` grows to fill whatever space is *left over*, not a specific amount.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Let `Spacer` do the layout work instead of hardcoding `margin-inline-start: auto` on a sibling —
+  keeping the "push apart" behavior visible as its own element in the JSX makes the layout easier
+  to scan than a margin buried in one child's own styles.
+- Combine with `Stack`'s `direction` prop for a row that reflows to a column at a smaller
+  breakpoint — `Spacer`'s `flex: 1 0 0%` still applies correctly along whichever axis is currently
+  the main axis.
+
+## Accessibility
+
+<Callout tone="info" title="No content, so nothing to perceive — hidden from the accessibility tree by design">
+
+- **Always `aria-hidden="true"`, and not overridable** — `Spacer` renders no content and has no
+  accessible name or role, so there's no legitimate case for un-hiding it, even if a caller tries
+  to pass their own `aria-hidden`.
+- **No keyboard interaction.** `Spacer` renders no focusable content, so there's nothing to tab to
+  and nothing to verify for keyboard navigation.
+- **`children` are silently discarded**, not rendered — this is deliberate: visually showing
+  content that's simultaneously hidden from assistive technology would create an inconsistent
+  experience between sighted and screen-reader users, so `Spacer` avoids the situation entirely
+  rather than rendering it inaccessibly.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Stack direction="row" align="center">
+  <Logo />
+  <Spacer />
+  <NavActions />
+</Stack>
+```
+
+```tsx
+// Two Spacers distribute the leftover space evenly between three groups
+<Stack direction="row">
+  <BackButton />
+  <Spacer />
+  <PageTitle />
+  <Spacer />
+  <SaveButton />
+</Stack>
+```
+
+```tsx
+// A native <div> attribute (title) passed straight through
+<Spacer title="Flexible gap" />
+```
+
+## Design tokens used
+
+`Spacer` itself references **no tokens** — its only CSS is the structural `flex: 1 0 0%` shorthand
+needed for the grow behavior, which has no color/spacing/radius/etc. value with a token home.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Stack"
+  description="The flex container Spacer is built to live inside — Spacer has no effect outside a flex parent"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch — reach for Box instead when you need a styled wrapper with no spacing behavior"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>

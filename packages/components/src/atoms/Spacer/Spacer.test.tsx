@@ -15,6 +15,11 @@ describe("Spacer", () => {
     expect(screen.getByTestId("spacer")).toHaveAttribute("aria-hidden", "true");
   });
 
+  it("stays hidden from the accessibility tree even if a caller passes their own aria-hidden", () => {
+    render(<Spacer data-testid="spacer" aria-hidden={false} />);
+    expect(screen.getByTestId("spacer")).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("grows to fill available space", () => {
     render(<Spacer data-testid="spacer" />);
     expect(screen.getByTestId("spacer")).toHaveStyle({ flex: "1 0 0%" });
