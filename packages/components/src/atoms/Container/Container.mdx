@@ -1,0 +1,196 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Bleed } from "../Bleed";
+import { Box } from "../Box";
+import { Center } from "../Center";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Container } from "./Container";
+import * as ContainerStories from "./Container.stories";
+
+export const propOrder = [
+  "as",
+  "size",
+  "paddingInline",
+  "children",
+  "style",
+  "className",
+  "id",
+  "data-testid",
+];
+
+<Meta of={ContainerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Container" tier="Atom" />
+
+The standard top-level wrapper for page/section content — centers its children horizontally
+(`margin-inline: auto`) and constrains them to a max-width breakpoint step, with token-driven
+horizontal padding. **Polymorphic** (see [`Box`](/?path=/docs/atoms-layout-box--docs) for the full
+explanation of what that means): renders a `div` by default, but `as` lets it render any other
+element or component — useful here in particular, since a top-level page wrapper often needs to be
+a real landmark element (`main`, `section`), not a generic `div`. `paddingInline` accepts a single
+spacing step or a mobile-first responsive map keyed by breakpoint (e.g. `{ base: 2, lg: 8 }`) —
+the same responsive shape [`Bleed`](/?path=/docs/atoms-layout-bleed--docs)'s own `inset` uses to
+counteract it.
+
+### Import
+
+```tsx
+import { Container } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive `as`/`size`/`paddingInline` live — the demo content itself stays fixed (a styled block, so
+the max-width/centering effect is actually visible).
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ContainerStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ContainerStories.Playground}
+  exclude={["children", "className", "style", "id", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Container` also accepts any other native attribute of whichever element `as` renders — see
+[Intro](#intro) above for the full explanation.
+
+<PropertiesTable of={ContainerStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={ContainerStories.Default} />
+
+### All sizes stacked
+
+<Canvas of={ContainerStories.AllSizes} />
+
+### Narrow viewport (padding never disappears)
+
+<Canvas of={ContainerStories.NarrowViewport} />
+
+### Responsive paddingInline (tight on mobile, roomy from lg up)
+
+<Canvas of={ContainerStories.ResponsivePadding} />
+
+### Polymorphic: as="main" (real landmark element, Container layout behavior)
+
+<Canvas of={ContainerStories.AsMain} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Container` as the standard top-level wrapper for page or section content — it's the one
+  place `size`/`paddingInline` should come from, rather than reinventing max-width/padding
+  per-page.
+- Pass `as="main"` (or another real landmark element) for a page's actual top-level content
+  wrapper — `Container` composes cleanly with real semantics, it doesn't fight them.
+- Pass the identical `paddingInline` map to a paired [`Bleed`](/?path=/docs/atoms-layout-bleed--docs)
+  when something inside needs to bleed back out to the viewport edge — see the Responsive
+  paddingInline variant above.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't nest `Container` inside `Container` — max-widths don't compose usefully, and the inner
+  one's own padding just doubles up against the outer one's.
+- Don't reach for `Container` to center a single child on both axes — that's
+  [`Center`](/?path=/docs/atoms-layout-center--docs), which has no max-width concept of its own.
+- Don't hardcode a page's max-width/padding in `style` when `size`/`paddingInline` already express
+  it — `Container` exists specifically so this is a shared, token-driven decision.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat `size` as a small set of real breakpoint decisions, not a per-page tuning knob — pick the
+  step that matches the content's actual density (a form reads better at `md`/`lg`, a dashboard at
+  `2xl`/`3xl`), and default (`xl`) unless there's a real reason to deviate.
+- When a page's content needs a full-bleed section (a hero image, a banner) alongside otherwise
+  padded content, keep `Container` wrapping the page and use `Bleed` locally around just that
+  section — don't drop `Container` for the whole page to work around one full-width element.
+- Treat `as` the same way you'd treat choosing a native HTML tag directly — `Container` imposes no
+  semantics of its own beyond layout.
+
+## Accessibility
+
+<Callout tone="info" title="No built-in semantics — as is what makes this accessible">
+
+`Container` sets no ARIA attributes and imposes no accessibility semantics of its own — the same
+as `Box`/`Center`. Accessibility is entirely a function of which element `as` renders; a real
+top-level content wrapper should almost always use `as="main"` (or another landmark element)
+rather than the default `div`.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Container as="main" size="lg">
+  <PageContent />
+</Container>
+```
+
+```tsx
+// Responsive padding, tight on mobile, roomy on wide screens
+<Container size="xl" paddingInline={{ base: 2, lg: 8 }}>
+  <PageContent />
+</Container>
+```
+
+```tsx
+// A native <div> attribute (title) passed straight through
+<Container title="Main content area" size="md">
+  <PageContent />
+</Container>
+```
+
+## Design tokens used
+
+<TokenRow token="breakpoint.sm–breakpoint.3xl" usage="per-step max-width, selected by the size prop" />
+<TokenRow token="space.0–space.32" usage="the full spacing scale — paddingInline accepts any SpaceValue step, applied via padding-inline" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Bleed"
+  description="Breaks content back out of Container's own padding — inset accepts the identical responsive-map shape as paddingInline"
+  href="/?path=/docs/atoms-layout-bleed--docs"
+>
+  <Container
+    size="sm"
+    paddingInline={2}
+    style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}
+  >
+    <Box style={{ width: 20, height: 20, margin: "0 auto", background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Container>
+</RelatedCard>
+<RelatedCard
+  name="Center"
+  description="Centers a single child on both axes — reach for Center instead when there's no max-width/padding concept involved"
+  href="/?path=/docs/atoms-layout-center--docs"
+>
+  <Center style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%", height: "var(--dbm-space-10)" }}>
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Center>
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch Container itself is built on — reach for Box instead when you need a styled wrapper with no max-width/centering behavior"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>

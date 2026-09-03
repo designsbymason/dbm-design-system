@@ -93,12 +93,24 @@ describe("Container", () => {
     expect(screen.getByTestId("container")).toHaveClass("custom");
   });
 
-  it("has no accessibility violations", async () => {
+  it("applies id and data-testid", () => {
+    render(<Container id="container-1" data-testid="container-1" />);
+    const el = screen.getByTestId("container-1");
+    expect(el).toHaveAttribute("id", "container-1");
+  });
+
+  it("has no accessibility violations with the default element (no `as`)", async () => {
     const { container } = render(
       <Container>
         <main>Accessible content</main>
       </Container>,
     );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations with a non-default `as`", async () => {
+    const { container } = render(<Container as="main">Accessible content</Container>);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
