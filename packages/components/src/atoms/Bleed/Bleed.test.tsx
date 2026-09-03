@@ -10,49 +10,71 @@ describe("Bleed", () => {
     expect(screen.getByText("Content")).toBeInTheDocument();
   });
 
-  it("applies a negative inline margin by default", () => {
+  it("sets a single inset as the base-breakpoint CSS custom property", () => {
     render(<Bleed inset={4}>Content</Bleed>);
     expect(screen.getByText("Content")).toHaveStyle({
-      marginInlineStart: "calc(var(--dbm-space-4) * -1)",
-      marginInlineEnd: "calc(var(--dbm-space-4) * -1)",
+      "--bleed-inset-base": "var(--dbm-space-4)",
     });
   });
 
-  it("applies a negative block margin when side is block", () => {
+  it("sets a responsive inset as per-breakpoint CSS custom properties", () => {
+    render(
+      <Bleed inset={{ base: 4, lg: 8 }} data-testid="bleed">
+        Content
+      </Bleed>,
+    );
+    const el = screen.getByTestId("bleed");
+    expect(el.style.getPropertyValue("--bleed-inset-base")).toBe(
+      "var(--dbm-space-4)",
+    );
+    expect(el.style.getPropertyValue("--bleed-inset-lg")).toBe(
+      "var(--dbm-space-8)",
+    );
+  });
+
+  it('applies the "inline" class by default', () => {
+    render(<Bleed inset={4}>Content</Bleed>);
+    expect(screen.getByText("Content").className).toMatch(/sideInline/);
+  });
+
+  it('applies the "block" class when side="block"', () => {
     render(
       <Bleed inset={6} side="block">
         Content
       </Bleed>,
     );
-    expect(screen.getByText("Content")).toHaveStyle({
-      marginBlockStart: "calc(var(--dbm-space-6) * -1)",
-      marginBlockEnd: "calc(var(--dbm-space-6) * -1)",
-    });
+    expect(screen.getByText("Content").className).toMatch(/sideBlock/);
   });
 
-  it("applies a negative margin on all sides when side is all", () => {
+  it('applies the "all" class when side="all"', () => {
     render(
       <Bleed inset={8} side="all">
         Content
       </Bleed>,
     );
-    expect(screen.getByText("Content")).toHaveStyle({
-      marginBlockStart: "calc(var(--dbm-space-8) * -1)",
-      marginBlockEnd: "calc(var(--dbm-space-8) * -1)",
-      marginInlineStart: "calc(var(--dbm-space-8) * -1)",
-      marginInlineEnd: "calc(var(--dbm-space-8) * -1)",
-    });
+    expect(screen.getByText("Content").className).toMatch(/sideAll/);
   });
 
-  it("merges caller-provided style with the bleed margin", () => {
+  it("merges caller-provided style alongside the bleed custom properties", () => {
     render(
       <Bleed inset={4} style={{ backgroundColor: "red" }}>
         Content
       </Bleed>,
     );
     expect(screen.getByText("Content")).toHaveStyle({
-      marginInlineStart: "calc(var(--dbm-space-4) * -1)",
+      "--bleed-inset-base": "var(--dbm-space-4)",
       backgroundColor: "rgb(255, 0, 0)",
+    });
+  });
+
+  it("lets a caller's own margin longhand override the computed bleed margin", () => {
+    render(
+      <Bleed inset={4} style={{ marginInlineStart: "0px" }}>
+        Content
+      </Bleed>,
+    );
+    expect(screen.getByText("Content")).toHaveStyle({
+      marginInlineStart: "0px",
     });
   });
 
@@ -73,6 +95,16 @@ describe("Bleed", () => {
       </Bleed>,
     );
     expect(screen.getByText("Content")).toHaveClass("custom");
+  });
+
+  it("applies id and data-testid", () => {
+    render(
+      <Bleed inset={4} id="bleed-1" data-testid="bleed-1">
+        Content
+      </Bleed>,
+    );
+    const el = screen.getByTestId("bleed-1");
+    expect(el).toHaveAttribute("id", "bleed-1");
   });
 
   it("has no accessibility violations", async () => {

@@ -1,0 +1,195 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../Box";
+import { Container } from "../Container";
+import { Stack } from "../Stack";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Bleed } from "./Bleed";
+import * as BleedStories from "./Bleed.stories";
+
+export const propOrder = [
+  "inset",
+  "side",
+  "children",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={BleedStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Bleed" tier="Atom" />
+
+Breaks its children out of a parent's padding via a negative margin — the classic use case is a
+full-width image inside an otherwise-padded article body, or a banner that should touch a card's
+edges while the rest of the card stays padded. `inset` accepts a single spacing step, or a
+mobile-first responsive map keyed by breakpoint (e.g. `{ base: 4, lg: 8 }`) — matching `Container`'s
+own `paddingInline`, the prop `Bleed` is most often counteracting. Purely a margin transform: it
+sets no background, clips nothing, and has no accessibility semantics of its own — accessibility
+and visual identity come entirely from whatever you render as `children`.
+
+### Import
+
+```tsx
+import { Bleed } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive `inset`, `side`, and `children` live. `inset`'s control shows the single-value form — the
+responsive-map form (`{ base: 4, lg: 8 }`) has no single control shape Storybook can represent, so
+it gets its own dedicated story below instead. The dashed-border "padded article" chrome around
+the canvas is Storybook-only demo context, not part of the component itself.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={BleedStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={BleedStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Bleed` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`lang`) — passed straight through to the underlying element.
+
+<PropertiesTable of={BleedStories} order={propOrder} />
+
+## Variants
+
+### Bleeds a full-width block out of a padded article
+
+<Canvas of={BleedStories.Default} />
+
+### side="block" (bleeds vertically, stays inset horizontally)
+
+<Canvas of={BleedStories.Block} />
+
+### side="all" (bleeds on every edge)
+
+<Canvas of={BleedStories.All} />
+
+### Responsive inset, paired with Container's own responsive padding
+
+<Canvas of={BleedStories.ResponsiveInset} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Match `inset` (or its per-breakpoint map) exactly to the parent's own padding value — `Bleed`
+  doesn't read the parent's actual computed padding, it takes your word for it.
+- Reach for the responsive map form whenever the parent's own padding is itself responsive (e.g.
+  pairing with `Container`'s `paddingInline`) — a fixed `inset` over- or under-bleeds at whichever
+  breakpoints the parent's real padding differs from it.
+- Use `side="all"` sparingly, for content that should touch every edge of a card/section (a
+  full-bleed banner image), rather than as a default.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reach for `Bleed` to fix a layout that's simply missing padding in the first place — it
+  only counteracts padding that's actually there.
+- Don't expect `Bleed` to clip overflow — it's a pure margin transform with no `overflow: hidden`
+  of its own; oversized content still overflows normally.
+- Don't nest one `Bleed` directly inside another expecting the insets to combine automatically —
+  each `Bleed`'s margin is independent, so stacked insets need to be summed by hand if that's
+  genuinely the intent.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat `inset` as a value you look up from the parent, not one you eyeball — pull it directly
+  from whatever `padding`/`paddingInline` prop the parent is actually using.
+- For a page-level `Container` with responsive padding, pass `Bleed` the identical map rather than
+  averaging it into one fixed number.
+- Prefer `side="inline"` (the default) for the common "full-width image in an article" case;
+  reach for `"block"`/`"all"` only when the design genuinely calls for it.
+
+## Accessibility
+
+<Callout tone="info" title="No built-in semantics — a pure layout transform">
+
+- `Bleed` sets no ARIA attributes and imposes no role of its own — it's a purely structural margin
+  transform. Accessibility is entirely a function of what you render as `children`.
+- No keyboard interaction of its own — nothing to tab to, nothing to verify for keyboard
+  navigation, since the component itself renders no focusable content.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Container style={{ paddingInline: 'var(--dbm-space-6)' }}>
+  <Text>Padded article copy.</Text>
+  <Bleed inset={6}>
+    <img src="/hero.jpg" alt="Full-width photo" style={{ width: '100%' }} />
+  </Bleed>
+</Container>
+```
+
+```tsx
+// Responsive inset, paired with Container's own responsive paddingInline
+<Container paddingInline={{ base: 4, lg: 8 }}>
+  <Text>Padded article copy.</Text>
+  <Bleed inset={{ base: 4, lg: 8 }}>
+    <img src="/hero.jpg" alt="Full-width photo" style={{ width: '100%' }} />
+  </Bleed>
+</Container>
+```
+
+```tsx
+// A native <div> attribute (title) passed straight through, alongside side="all"
+<Bleed inset={4} side="all" title="Full-bleed section">
+  <div style={{ background: 'var(--dbm-bg-canvas)' }}>Content</div>
+</Bleed>
+```
+
+## Design tokens used
+
+<TokenRow token="space.0–space.32" usage="the full spacing scale — inset accepts any SpaceValue step, negated into the bleed margin" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Container"
+  description="The prop Bleed is most often counteracting — paddingInline supports the identical responsive-map shape as inset"
+  href="/?path=/docs/atoms-layout-container--docs"
+>
+  <Container
+    size="sm"
+    paddingInline={2}
+    style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}
+  >
+    <Box style={{ width: 20, height: 20, margin: "0 auto", background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Container>
+</RelatedCard>
+<RelatedCard
+  name="Stack"
+  description="Another layout primitive sharing the same responsive-prop mechanism (a plain value or a mobile-first breakpoint map)"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch — reach for Box instead when you need a styled wrapper with no bleed behavior"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>

@@ -1,0 +1,137 @@
+/*
+ * `--bleed-margin` resolves once per breakpoint to the correct (negative)
+ * margin value, shared by all three `.side*` variants below — cheaper than
+ * repeating the full breakpoint fallback chain inside each variant. A
+ * breakpoint with no matching `--bleed-inset-{bp}` custom property (set via
+ * inline style by `responsiveStyle()`, only for breakpoints the caller's
+ * `inset` map actually specifies) falls through to the next smaller
+ * breakpoint that does have one, cascading down to `--bleed-inset-base`;
+ * if that's unset too (no `base` key in the map), `calc()` resolves against
+ * `0` — no bleed at that width, not an invalid/broken margin.
+ *
+ * CSS custom properties cannot be referenced inside an `@media` condition
+ * (a CSS spec limitation, not a choice here) — these thresholds are the
+ * literal values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six blocks must be updated by hand to match. Mirrors
+ * Container's/Grid's/Stack's/GridItem's identical responsive-prop
+ * mechanism (see `@dbm-design-system/primitives`' `responsiveStyle`).
+ */
+.root {
+  --bleed-margin: calc(var(--bleed-inset-base, 0) * -1);
+}
+
+@media (min-width: 640px) {
+  .root {
+    --bleed-margin: calc(
+      var(--bleed-inset-sm, var(--bleed-inset-base, 0)) * -1
+    );
+  }
+}
+
+@media (min-width: 768px) {
+  .root {
+    --bleed-margin: calc(
+      var(
+          --bleed-inset-md,
+          var(--bleed-inset-sm, var(--bleed-inset-base, 0))
+        )
+        * -1
+    );
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    --bleed-margin: calc(
+      var(
+          --bleed-inset-lg,
+          var(
+              --bleed-inset-md,
+              var(--bleed-inset-sm, var(--bleed-inset-base, 0))
+            )
+        )
+        * -1
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    --bleed-margin: calc(
+      var(
+          --bleed-inset-xl,
+          var(
+              --bleed-inset-lg,
+              var(
+                  --bleed-inset-md,
+                  var(--bleed-inset-sm, var(--bleed-inset-base, 0))
+                )
+            )
+        )
+        * -1
+    );
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    --bleed-margin: calc(
+      var(
+          --bleed-inset-2xl,
+          var(
+              --bleed-inset-xl,
+              var(
+                  --bleed-inset-lg,
+                  var(
+                      --bleed-inset-md,
+                      var(--bleed-inset-sm, var(--bleed-inset-base, 0))
+                    )
+                )
+            )
+        )
+        * -1
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    --bleed-margin: calc(
+      var(
+          --bleed-inset-3xl,
+          var(
+              --bleed-inset-2xl,
+              var(
+                  --bleed-inset-xl,
+                  var(
+                      --bleed-inset-lg,
+                      var(
+                          --bleed-inset-md,
+                          var(--bleed-inset-sm, var(--bleed-inset-base, 0))
+                        )
+                    )
+                )
+            )
+        )
+        * -1
+    );
+  }
+}
+
+.sideInline {
+  margin-inline-end: var(--bleed-margin);
+  margin-inline-start: var(--bleed-margin);
+}
+
+.sideBlock {
+  margin-block-end: var(--bleed-margin);
+  margin-block-start: var(--bleed-margin);
+}
+
+.sideAll {
+  margin-block-end: var(--bleed-margin);
+  margin-block-start: var(--bleed-margin);
+  margin-inline-end: var(--bleed-margin);
+  margin-inline-start: var(--bleed-margin);
+}
