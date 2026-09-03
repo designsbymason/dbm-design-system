@@ -122,11 +122,12 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**21 of 47 atoms have a Docs page; all 21 of those are also Finalized.**
+**22 of 47 atoms have a Docs page; all 22 of those are also Finalized.**
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
 | Box | Atom | Layout | ✅ | ✅ 2026-09-02 | [Box.md](component-reviews/Box.md) |
+| Center | Atom | Layout | ✅ | ✅ 2026-09-02 | [Center.md](component-reviews/Center.md) |
 | AspectRatio | Atom | Layout | ✅ | ✅ 2026-09-02 | [AspectRatio.md](component-reviews/AspectRatio.md) |
 | Bleed | Atom | Layout | ✅ | ✅ 2026-09-02 | [Bleed.md](component-reviews/Bleed.md) |
 | Button | Atom | Inputs & Forms | ✅ | ✅ 2026-08-23 | [Button.md](component-reviews/Button.md) |
@@ -149,7 +150,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Spinner | Atom | Feedback | ✅ | ✅ 2026-08-23 | [Spinner.md](component-reviews/Spinner.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
-- **Layout:** Stack, Grid, GridItem, Container, Divider, Spacer, Center (`Grid`/`GridItem` are molecule-tier, built, but still need this same Docs-page treatment). **Known gap for Spacer's future review** (found 2026-08-16, while reviewing Skeleton): `Spacer.tsx` renders `aria-hidden="true"` *before* its `{...rest}` spread, so a caller passing their own `aria-hidden` prop silently overrides it — the exact bug already fixed on Skeleton. Apply the same reorder + regression test when Spacer's own review pass runs.
+- **Layout:** Stack, Grid, GridItem, Container, Divider, Spacer (`Grid`/`GridItem` are molecule-tier, built, but still need this same Docs-page treatment). **Known gap for Spacer's future review** (found 2026-08-16, while reviewing Skeleton): `Spacer.tsx` renders `aria-hidden="true"` *before* its `{...rest}` spread, so a caller passing their own `aria-hidden` prop silently overrides it — the exact bug already fixed on Skeleton. Apply the same reorder + regression test when Spacer's own review pass runs.
 - **Typography:** Text, Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
 - **Navigation:** BackToTop
 - **Overlay:** Tooltip, Collapse, Backdrop

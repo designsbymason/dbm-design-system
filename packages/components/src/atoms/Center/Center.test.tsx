@@ -42,8 +42,24 @@ describe("Center", () => {
     expect(screen.getByText("Content")).toHaveClass("custom");
   });
 
-  it("has no accessibility violations", async () => {
+  it("applies id and data-testid", () => {
+    render(
+      <Center id="center-1" data-testid="center-1">
+        Content
+      </Center>,
+    );
+    const el = screen.getByTestId("center-1");
+    expect(el).toHaveAttribute("id", "center-1");
+  });
+
+  it("has no accessibility violations with the default element (no `as`)", async () => {
     const { container } = render(<Center>Content</Center>);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations with a non-default `as`", async () => {
+    const { container } = render(<Center as="span">Content</Center>);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });

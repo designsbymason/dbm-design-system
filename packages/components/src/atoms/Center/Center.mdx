@@ -1,0 +1,174 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Box } from "../Box";
+import { Container } from "../Container";
+import { Stack } from "../Stack";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Center } from "./Center";
+import * as CenterStories from "./Center.stories";
+
+export const propOrder = [
+  "as",
+  "inline",
+  "children",
+  "style",
+  "className",
+  "id",
+  "data-testid",
+];
+
+<Meta of={CenterStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Center" tier="Atom" />
+
+A thin **polymorphic** wrapper that centers its children on both axes — `align-items: center` and
+`justify-content: center` on a `flex` container. Renders a `div` by default; pass `as` to render
+any other element or component while keeping full type-checking on that element's own native props,
+the same polymorphic mechanism [`Box`](/?path=/docs/atoms-layout-box--docs) uses. Pass `inline` to
+render `inline-flex` instead of `flex`, for centering a small piece of content (a badge, an icon)
+within an inline flow — a paragraph of text, for example — rather than as its own block.
+
+### Import
+
+```tsx
+import { Center } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live. The dashed border is Storybook-only demo chrome (so the centering is
+visible against a bounded box) — not part of the component itself.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CenterStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={CenterStories.Playground}
+  exclude={["className", "style", "id", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Center` also accepts any other native attribute of whichever element `as` renders — see
+[Intro](#intro) above for the full explanation.
+
+<PropertiesTable of={CenterStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={CenterStories.Default} />
+
+### Inline
+
+<Canvas of={CenterStories.Inline} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Center` for the common "one thing, centered on both axes" case — a loading spinner filling
+  a panel, an empty-state icon, a badge centered inside a fixed-size chip.
+- Pass `inline` when the centered content sits inside running text or another inline flow (see the
+  Inline variant above) — plain `flex` would force a line break around it.
+- Pass `as` to get real, type-checked native props for the element you actually need, the same as
+  `Box`.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reach for `Center` when you need to center *multiple* independent children with their own
+  spacing — that's `Stack` with `align="center"`/`justify="center"`, not `Center`, which has no
+  `gap` concept of its own.
+- Don't nest `Center` several levels deep to center something that's already centered by its
+  parent's own layout — check whether the surrounding layout already centers before reaching for
+  another wrapper.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Give `Center` an explicit size (via `style`, or because its parent already constrains it) —
+  without one, it collapses to fit its content and the centering has no visible effect, the same
+  way `align-items`/`justify-content` do nothing on a flex container with no extra space.
+- Treat `as` the same way you'd treat choosing a native HTML tag directly — `Center` imposes no
+  semantics of its own, so pick the element that matches what the content actually is.
+
+## Accessibility
+
+<Callout tone="info" title="No built-in semantics — as is what makes this accessible">
+
+`Center` sets no ARIA attributes and imposes no accessibility semantics of its own — the same as
+`Box`. Accessibility is entirely a function of which element `as` renders and what props you pass
+it, and of the child content being centered.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Center style={{ height: '100vh' }}>
+  <Spinner label="Loading" />
+</Center>
+```
+
+```tsx
+// Inline centering within running text
+<p>
+  Status: <Center as="span" inline><Badge tone="success">Live</Badge></Center>
+</p>
+```
+
+```tsx
+// A native <div> attribute (title) passed straight through
+<Center title="Loading indicator" style={{ height: '8rem' }}>
+  <Spinner label="Loading" />
+</Center>
+```
+
+## Design tokens used
+
+`Center` itself references **no tokens** and has no CSS module beyond the structural
+`display`/`align-items`/`justify-content` properties needed for centering, none of which are
+color/spacing/radius/etc. values with a token home. Any visual styling comes entirely from what
+the consumer passes via `style`/`className`, which should still reference semantic tokens per this
+system's conventions.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Stack"
+  description="Flex layout with a token-driven gap — reach for Stack instead when centering more than one independently-spaced child"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Container"
+  description="Max-width centered content wrapper — centers a whole layout region horizontally, not a single child on both axes"
+  href="/?path=/docs/atoms-layout-container--docs"
+>
+  <Container style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}>
+    <Box style={{ width: 20, height: 20, margin: "0 auto", background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Container>
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch Center itself is built on — reach for Box instead when you need a styled wrapper with no centering behavior"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>
