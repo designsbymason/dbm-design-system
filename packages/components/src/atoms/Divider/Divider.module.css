@@ -245,9 +245,72 @@
   width: 0;
 }
 
+.lineDottedHorizontal {
+  background: none;
+  border-block-end: var(--dbm-border-width-1) dotted var(--dbm-border-default);
+  flex: 1 1 auto;
+  height: 0;
+}
+
+.lineDottedVertical {
+  background: none;
+  border-inline-end: var(--dbm-border-width-1) dotted var(--dbm-border-default);
+  flex: 1 1 auto;
+  width: 0;
+}
+
+/*
+ * `variant="double"`: two bars stacked along the divider's own CROSS axis
+ * (opposite of its main axis) — so the group's own internal
+ * `flex-direction` is the *other* one from the root's (see `.root`'s own
+ * `--divider-flex-direction-*`), with `flex: 1 1 auto` on the group itself
+ * so it still grows along the divider's main axis like `.line` does. Each
+ * bar's own "length" (matching the group's main axis) is fixed at 100% via
+ * `.doubleBarHorizontal`/`Vertical`; its thickness (the group's internal
+ * main-axis dimension) comes from an inline style set per-bar in JS, since
+ * the two bars can differ in weight (see `emphasis`).
+ */
+.doubleGroupHorizontal {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+}
+
+.doubleGroupVertical {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: row;
+  gap: var(--dbm-space-1);
+}
+
+.doubleBarHorizontal {
+  background: var(--dbm-border-default);
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.doubleBarVertical {
+  background: var(--dbm-border-default);
+  flex: 0 0 auto;
+  height: 100%;
+}
+
 .label {
   color: var(--dbm-text-tertiary);
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-sm);
   white-space: nowrap;
+}
+
+/*
+ * Overrides one line segment's flex-grow so it stays a fixed short length
+ * instead of sharing the remaining space equally with the other segment —
+ * this is what makes `align="start"`/`align="end"` actually shift the
+ * label instead of always centering it. Works for both orientations
+ * unchanged, same reasoning as `.line`'s own `flex: 1 1 auto` above:
+ * flex-grow/shrink apply to whichever axis is currently the main axis.
+ */
+.lineShort {
+  flex: 0 0 var(--dbm-space-6);
 }

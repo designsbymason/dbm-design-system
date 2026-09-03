@@ -1,0 +1,275 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../Box";
+import { Container } from "../Container";
+import { Stack } from "../Stack";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Divider } from "./Divider";
+import * as DividerStories from "./Divider.stories";
+
+export const propOrder = [
+  "orientation",
+  "variant",
+  "thickness",
+  "emphasis",
+  "tone",
+  "label",
+  "align",
+  "aria-label",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={DividerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Divider" tier="Atom" />
+
+A visual separator between content, horizontal or vertical, with an optional label (e.g. `"OR"`)
+positioned via `align`. `orientation` accepts a single value or a mobile-first responsive map
+keyed by breakpoint (e.g. `{ base: "horizontal", lg: "vertical" }`) — the same "stack on mobile,
+row on desktop" pattern [`Stack`](/?path=/docs/atoms-layout-stack--docs)'s `direction` uses,
+applied to a separator instead of a layout container. The divider's `aria-orientation` stays in
+sync with the currently-active breakpoint via `matchMedia`, since that's a static HTML attribute
+CSS alone can't drive responsively — the *visual* orientation itself is driven entirely by CSS and
+never depends on that JS timing. When `label` is a plain string, it doubles as the accessible name
+automatically.
+
+### Import
+
+```tsx
+import { Divider } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DividerStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={DividerStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Divider` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`lang`) — passed straight through to the underlying element.
+
+<PropertiesTable of={DividerStories} order={propOrder} />
+
+## Variants
+
+### Horizontal
+
+<Canvas of={DividerStories.Horizontal} />
+
+### Horizontal with label
+
+<Canvas of={DividerStories.HorizontalWithLabel} />
+
+### Label alignment (start / center / end)
+
+<Canvas of={DividerStories.LabelAlignment} />
+
+### Vertical
+
+<Canvas of={DividerStories.Vertical} />
+
+### Vertical with label
+
+<Canvas of={DividerStories.VerticalWithLabel} />
+
+### Dashed
+
+<Canvas of={DividerStories.Dashed} />
+
+### Dotted
+
+<Canvas of={DividerStories.Dotted} />
+
+### Double (equal weight)
+
+<Canvas of={DividerStories.Double} />
+
+### Double (thicker start line)
+
+<Canvas of={DividerStories.DoubleEmphasisStart} />
+
+### Double (thicker end line)
+
+<Canvas of={DividerStories.DoubleEmphasisEnd} />
+
+### Tones (default / brand / info / success / warning / danger)
+
+<Canvas of={DividerStories.Tones} />
+
+### Responsive orientation (horizontal on mobile, vertical from lg up)
+
+<Canvas of={DividerStories.ResponsiveOrientation} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a labeled divider (`label="OR"`) to separate two genuinely alternative paths (sign-in
+  methods, either/or choices) — a plain unlabeled divider is enough for ordinary section breaks.
+- Reach for a responsive `orientation` map when content reflows from a stacked mobile layout to a
+  side-by-side desktop one — see the Responsive orientation variant above, paired with `Stack`'s
+  own identical `direction` map.
+- Pass an explicit `aria-label` when `label` is a non-string `ReactNode` (an icon, styled text) —
+  the string-label fallback can't derive one automatically from arbitrary content.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Divider` as a spacing utility — it renders a visible line; reach for `Stack`'s `gap`
+  or `Spacer` when you just need empty space with nothing drawn.
+- Don't expect a vertical `Divider` to have height on its own — like `Center`, it fills whatever
+  cross-axis space its flex/grid parent gives it; a vertical divider in a parent with no explicit
+  height collapses to nothing. A `min-height` on that parent isn't enough on its own — only a real
+  `height` (or a flex/grid layout that otherwise gives the parent a definite size) lets the
+  divider's own `height: 100%` resolve; with only `min-height`, the divider falls back to its own
+  near-zero content height instead (see the Responsive orientation variant's own story source for
+  a worked example of this exact fix).
+- Don't override `role`/`aria-orientation` — `Divider` computes both itself to stay correct at
+  every breakpoint; anything else risks assistive tech announcing the wrong semantics.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer the default `align="center"` for a true either/or divider (`"OR"` between two equal
+  options); reach for `"start"`/`"end"` when the label reads more like a section heading than a
+  binary choice (see the Label alignment variant above).
+- Keep dashed and dotted dividers (`variant="dashed"` / `variant="dotted"`) for a deliberately
+  lighter-weight, less final-looking separator than the default solid line — not as a default
+  choice. `dotted` reads as the more casual of the two, closer to a soft suggestion of a break than
+  a firm rule; reach for `dashed` when the separator still needs to feel structural.
+- Reach for `variant="double"` (optionally paired with `emphasis`) for a more ornamental or
+  editorial-feeling rule — under a page title, above a footer — rather than as a default in-flow
+  content separator. `thickness` sets the baseline weight for every variant; `emphasis` steps one
+  of `double`'s two lines up from that baseline rather than a fixed weight, so raising `thickness`
+  makes a bolder statement without breaking the pairing.
+- A vertical divider needs an explicit height from its parent (a fixed height, or a flex/grid
+  container that gives it one) — it doesn't invent height on its own.
+- Reach for a non-`default` `tone` sparingly — a `danger`/`warning`-toned divider reads as a real
+  status signal, not decoration, so reserve it for a genuine semantic boundary (e.g. separating a
+  destructive section) rather than as a styling choice. `brand` is safer for a purely identity-driven
+  accent (see the Tones variant above).
+
+## Accessibility
+
+<Callout tone="info" title="role='separator', kept correct automatically">
+
+- Always renders with `role="separator"` and a matching `aria-orientation`, computed by the
+  component itself — not overridable by a same-named consumer prop, since accessibility
+  correctness here shouldn't depend on what a caller happens to pass through.
+- `aria-orientation` tracks the currently-active breakpoint live (via `matchMedia`) when
+  `orientation` is a responsive map, so it's never stuck reporting only the `base` value.
+- When `label` is a plain string, it's used automatically as the accessible name (`aria-label`) —
+  pass `aria-label` explicitly to override it, or when `label` is a non-string `ReactNode`.
+- No keyboard interaction — a separator that isn't also a resize handle or similar control isn't
+  focusable, per the WAI-ARIA `separator` role's own default behavior.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Divider />
+<Divider orientation="vertical" />
+<Divider label="OR" />
+```
+
+```tsx
+// Label alignment
+<Divider label="Section 2" align="start" />
+```
+
+```tsx
+// Responsive orientation, paired with Stack's own identical direction map
+<Stack direction={{ base: "column", lg: "row" }} gap={4}>
+  <span>Section A</span>
+  <Divider orientation={{ base: "horizontal", lg: "vertical" }} label="OR" />
+  <span>Section B</span>
+</Stack>
+```
+
+```tsx
+// A native <div> attribute (title) passed straight through
+<Divider title="Content separator" variant="dashed" />
+```
+
+```tsx
+// Double rule with a heavier start line
+<Divider variant="double" emphasis="start" />
+```
+
+```tsx
+// Semantic tone, e.g. above a destructive confirmation section
+<Divider tone="danger" />
+```
+
+## Design tokens used
+
+<TokenRow token="border.default" usage="the default tone (Divider's own original resting color)" />
+<TokenRow token="border.brand" usage="the brand tone" />
+<TokenRow token="border.info" usage="the info tone" />
+<TokenRow token="border.success" usage="the success tone" />
+<TokenRow token="border.warning" usage="the warning tone" />
+<TokenRow token="border.danger" usage="the danger tone" />
+<TokenRow token="border.width.1" usage="the default ('thin') stroke weight" />
+<TokenRow token="border.width.2" usage="the 'regular' stroke weight, and double's emphasized line when thickness is 'thin'" />
+<TokenRow token="border.width.4" usage="the 'thick' stroke weight, and double's emphasized line when thickness is 'regular'" />
+<TokenRow token="text.tertiary" usage="the label text color" />
+<TokenRow token="font.family.primary" usage="the label text font" />
+<TokenRow token="font.size.sm" usage="the label text size" />
+<TokenRow token="space.1" usage="the gap between double's two parallel lines" />
+<TokenRow token="space.3" usage="the gap between each line segment and the label" />
+<TokenRow token="space.6" usage="the short line segment's fixed length when align is start or end" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Stack"
+  description="Divider's orientation uses the identical responsive-map shape as Stack's own direction — a natural pairing for a layout that reflows from stacked to side-by-side"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Container"
+  description="The standard top-level page wrapper Divider often separates sections within"
+  href="/?path=/docs/atoms-layout-container--docs"
+>
+  <Container
+    size="sm"
+    paddingInline={2}
+    style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}
+  >
+    <Box style={{ width: 20, height: 20, margin: "0 auto", background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Container>
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch — reach for Box instead when you need a styled wrapper with no separator semantics"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>
