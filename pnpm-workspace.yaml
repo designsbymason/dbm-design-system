@@ -62,6 +62,17 @@ overrides:
   # file when `from` is unset, patched in 8.5.23. Dev-only, pulled in via
   # Vite (Storybook's bundler). Found via `pnpm audit`, 2026-08-08.
   postcss: ">=8.5.23"
+  # GHSA-c83g-rgw3-j3cx (unbounded memory growth / cache never evicted) and
+  # GHSA-73wf-gq98-2v4g (crash / prototype write via untrusted
+  # browserslist-stats.json), both patched in 4.28.7. Reached only via
+  # @babel/core's own @babel/helper-compilation-targets — through
+  # @storybook/react-vite>@storybook/react>react-docgen, and separately
+  # through eslint-plugin-react-hooks — dev-only, never shipped in published
+  # packages. @babel/helper-compilation-targets@7.29.7 declares an
+  # open-ended `^4.24.0` browserslist range, so this floor stays within its
+  # own compatible major — no adjacent-major risk like the undici case
+  # above. Flagged by GitHub Dependabot 2026-09-03.
+  browserslist: ">=4.28.7"
 patchedDependencies:
   # Bridges brace-expansion's >=2 export shape (see the brace-expansion
   # override above) so the >=5.0.8 override doesn't crash this package's
