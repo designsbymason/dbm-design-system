@@ -1,16 +1,12 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { Box } from "../Box";
-import { Image } from "../Image";
 import { Skeleton } from "../Skeleton";
 import { VisuallyHidden } from "../VisuallyHidden";
 import { AspectRatio } from "./AspectRatio";
 import * as AspectRatioStories from "./AspectRatio.stories";
 
 export const propOrder = ["ratio", "children", "id", "className", "style", "data-testid"];
-
-export const PREVIEW_PHOTO_URL =
-  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%235548A4'/%3E%3C/svg%3E";
 
 <Meta of={AspectRatioStories} />
 
@@ -179,7 +175,7 @@ conventions.
   description="Has its own built-in aspectRatio prop — a lighter-weight fit when you only need one image locked to a ratio, with no separate wrapping element"
   href="/?path=/docs/atoms-media-image--docs"
 >
-  <Image src={PREVIEW_PHOTO_URL} alt="" aspectRatio={1} style={{ width: 48 }} />
+  <div style={{ width: 48, height: 48, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
 </RelatedCard>
 <RelatedCard
   name="Skeleton"
@@ -193,6 +189,6 @@ conventions.
   description="The generic layout escape hatch — reach for Box instead when you need a styled wrapper with no ratio-locking behavior"
   href="/?path=/docs/atoms-layout-box--docs"
 >
-  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
 </RelatedCard>
 </div>

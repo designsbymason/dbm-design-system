@@ -73,3 +73,16 @@ findings.
 
 **Finalized 2026-09-02** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to AspectRatio (code, stories, docs, or its tokens) without asking first.
+
+**Authorized post-finalization change, 2026-09-02 (same day).** At explicit direction: swapped the
+demo-shape fill in all four stories from `bg.track` to `bg.canvas` (a better semantic fit — the
+token's own description names it "the live-preview/demo container surface"), and in
+`AspectRatio.mdx`'s Related components, changed the `Box` card's accent to `bg.canvas` and replaced
+the `Image` card's real photo-fill instance with a plain `bg.canvas` swatch (`Image`'s own real
+`src`/fallback rendering fully covers its root, so no caller-supplied background is ever visible
+through it — confirmed by reading `Image.module.css`; a live instance couldn't satisfy the ask, so
+switched to a swatch matching the other three cards' own convention). Per the three-question test
+above: a deliberate preference change (step 2: no), scoped to this component's own files only
+(step 3) — partial re-finalization, re-verified: design quality, theming (both brands × both
+modes, live), Storybook documentation. Untouched by this change: accessibility, feature-
+completeness, functional behavior.

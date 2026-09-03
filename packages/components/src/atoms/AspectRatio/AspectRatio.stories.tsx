@@ -72,7 +72,7 @@ export const Playground: Story = {
     <div
       style={{
         maxWidth: "24rem",
-        background: "var(--dbm-bg-track)",
+        background: "var(--dbm-bg-canvas)",
         color: "var(--dbm-text-tertiary)",
       }}
     >
@@ -90,7 +90,7 @@ export const Default: Story = {
   render: () => (
     <div style={{ width: "20rem" }}>
       <AspectRatio ratio={16 / 9}>
-        <div style={{ width: "100%", height: "100%", background: "var(--dbm-bg-track)" }} />
+        <div style={{ width: "100%", height: "100%", background: "var(--dbm-bg-canvas)" }} />
       </AspectRatio>
     </div>
   ),
@@ -101,7 +101,7 @@ export const Square: Story = {
   render: () => (
     <div style={{ width: "12rem" }}>
       <AspectRatio ratio={1}>
-        <div style={{ width: "100%", height: "100%", background: "var(--dbm-bg-track)" }} />
+        <div style={{ width: "100%", height: "100%", background: "var(--dbm-bg-canvas)" }} />
       </AspectRatio>
     </div>
   ),
@@ -120,7 +120,7 @@ export const VideoEmbed: Story = {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "var(--dbm-bg-track)",
+            background: "var(--dbm-bg-canvas)",
             color: "var(--dbm-text-tertiary)",
           }}
         >
