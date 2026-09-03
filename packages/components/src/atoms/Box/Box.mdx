@@ -7,7 +7,7 @@ import { VisuallyHidden } from "../VisuallyHidden";
 import { Box } from "./Box";
 import * as BoxStories from "./Box.stories";
 
-export const propOrder = ["as", "children", "className"];
+export const propOrder = ["as", "children", "style", "className", "id", "data-testid"];
 
 <Meta of={BoxStories} />
 
@@ -39,7 +39,7 @@ never changes, only the underlying element it renders.
 <Canvas of={BoxStories.Playground} />
 
 </div>
-<PlaygroundControls of={BoxStories.Playground} exclude={["className"]} order={propOrder} />
+<PlaygroundControls of={BoxStories.Playground} exclude={["className", "style", "id", "data-testid"]} order={propOrder} />
 
 ## Properties
 
@@ -130,10 +130,10 @@ a `Box`-based component accessible; `Box` itself doesn't enforce this.
 
 ## Design tokens used
 
-`Box` itself references **no tokens** — it has no CSS module of its own beyond the globally-applied
-`box-sizing: border-box` reset (`src/styles/global.css`). Any visual styling comes entirely from
-what the consumer passes via `style`/`className`, which should still reference semantic tokens per
-this system's conventions.
+`Box` itself references **no tokens** and has no CSS module of its own at all — the only global
+reset that touches it is `box-sizing: border-box`, applied project-wide in `src/styles/global.css`,
+not by `Box` itself. Any visual styling comes entirely from what the consumer passes via
+`style`/`className`, which should still reference semantic tokens per this system's conventions.
 
 ## Related components
 
@@ -144,9 +144,9 @@ this system's conventions.
   href="/?path=/docs/atoms-layout-stack--docs"
 >
   <Stack direction="row" gap={2}>
-    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
-    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
-    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
   </Stack>
 </RelatedCard>
 <RelatedCard
@@ -155,7 +155,7 @@ this system's conventions.
   href="/?path=/docs/atoms-layout-container--docs"
 >
   <Container style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%" }}>
-    <Box style={{ height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, margin: "0 auto", background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
   </Container>
 </RelatedCard>
 <RelatedCard
@@ -164,7 +164,7 @@ this system's conventions.
   href="/?path=/docs/atoms-layout-center--docs"
 >
   <Center style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", width: "100%", height: "var(--dbm-space-10)" }}>
-    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
   </Center>
 </RelatedCard>
 </div>

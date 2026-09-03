@@ -122,11 +122,11 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**21 of 47 atoms have a Docs page; 20 of those are also Finalized (only `Box` isn't yet).**
+**21 of 47 atoms have a Docs page; all 21 of those are also Finalized.**
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
-| Box | Atom | Layout | ✅ | ⬜ | *(no findings recorded — template-proving pass only)* |
+| Box | Atom | Layout | ✅ | ✅ 2026-09-02 | [Box.md](component-reviews/Box.md) |
 | AspectRatio | Atom | Layout | ✅ | ✅ 2026-09-02 | [AspectRatio.md](component-reviews/AspectRatio.md) |
 | Bleed | Atom | Layout | ✅ | ✅ 2026-09-02 | [Bleed.md](component-reviews/Bleed.md) |
 | Button | Atom | Inputs & Forms | ✅ | ✅ 2026-08-23 | [Button.md](component-reviews/Button.md) |

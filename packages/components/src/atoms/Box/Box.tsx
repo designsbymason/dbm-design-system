@@ -1,7 +1,5 @@
-import { cx } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
-import styles from "./Box.module.css";
 import type { BoxProps } from "./Box.types";
 
 type BoxComponent = {
@@ -16,11 +14,11 @@ type BoxComponent = {
 // type is applied at the export boundary instead — the standard workaround
 // for a typed polymorphic `as`-prop component.
 const BoxImpl = forwardRef<HTMLElement, BoxProps<ElementType>>(function Box(
-  { as, className, ...props },
+  { as, ...props },
   ref,
 ) {
   const Component = as ?? "div";
-  return <Component ref={ref} className={cx(styles.root, className)} {...props} />;
+  return <Component ref={ref} {...props} />;
 });
 
 /**

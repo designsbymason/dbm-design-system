@@ -24,8 +24,19 @@ const meta: Meta<typeof Box> = {
     },
     children: { control: "text" },
     style: {
+      control: false,
       description:
         "Inline styles — the primary way to visually style a Box, since it has no CSS module of its own. Should still reference semantic tokens (`var(--dbm-*)`), not raw values.",
+    },
+    id: {
+      control: false,
+      description:
+        "DOM id. Needed when another element's aria-labelledby/aria-describedby must point at this component, or a test/router needs a stable anchor.",
+    },
+    "data-testid": {
+      control: false,
+      description:
+        "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
   args: {

@@ -72,7 +72,23 @@ describe("Box", () => {
     expect(screen.getByTestId("box")).toHaveClass("custom");
   });
 
-  it("has no accessibility violations", async () => {
+  it("applies id and data-testid", () => {
+    render(
+      <Box id="box-1" data-testid="box-1">
+        content
+      </Box>,
+    );
+    const el = screen.getByTestId("box-1");
+    expect(el).toHaveAttribute("id", "box-1");
+  });
+
+  it("has no accessibility violations with the default element (no `as`)", async () => {
+    const { container } = render(<Box>Accessible content</Box>);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations with a non-default `as`", async () => {
     const { container } = render(<Box as="main">Accessible content</Box>);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
