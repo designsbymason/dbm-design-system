@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 import { Icon } from "./Icon";
+import type { IconProps } from "./Icon.types";
 
 describe("Icon", () => {
   it("renders the given Phosphor icon component", () => {
@@ -21,6 +22,29 @@ describe("Icon", () => {
     render(<Icon icon={WalletIcon} label="Wallet balance" />);
     const icon = screen.getByRole("img", { name: "Wallet balance" });
     expect(icon).not.toHaveAttribute("aria-hidden");
+  });
+
+  it("does not let a same-named consumer prop override the computed role/aria-label/aria-hidden", () => {
+    // Regression test for the {...props}-ordering bug class (see
+    // 05-component-api-conventions.md §3) — {...props} must spread before
+    // the computed role/aria-label/aria-hidden attributes, not after, or a
+    // same-named consumer prop silently wins. TypeScript's own aria-*
+    // exemption means a consumer can still pass these at runtime despite
+    // IconProps Omitting them, so the deliberately-invalid values are
+    // passed via a spread object cast through `unknown` (rather than literal
+    // JSX attributes, and rather than `any`) to simulate exactly that.
+    const invalidProps = {
+      role: "not-img",
+      "aria-label": "wrong label",
+      "aria-hidden": false,
+    } as unknown as IconProps;
+    render(
+      <Icon {...invalidProps} icon={WalletIcon} label="Wallet balance" data-testid="icon" />,
+    );
+    const el = screen.getByTestId("icon");
+    expect(el).toHaveAttribute("role", "img");
+    expect(el).toHaveAttribute("aria-label", "Wallet balance");
+    expect(el).not.toHaveAttribute("aria-hidden");
   });
 
   it("applies size as a token-driven width/height", () => {
@@ -73,6 +97,24 @@ describe("Icon", () => {
     expect(screen.getByTestId("icon")).not.toHaveStyle({
       color: "var(--dbm-icon-brand)",
     });
+  });
+
+  it("applies mirrored as a horizontal flip transform", () => {
+    render(<Icon icon={WalletIcon} mirrored data-testid="icon" />);
+    expect(screen.getByTestId("icon")).toHaveAttribute(
+      "transform",
+      "scale(-1, 1)",
+    );
+  });
+
+  it("does not mirror by default", () => {
+    render(<Icon icon={WalletIcon} data-testid="icon" />);
+    expect(screen.getByTestId("icon")).not.toHaveAttribute("transform");
+  });
+
+  it("forwards id and data-testid", () => {
+    render(<Icon icon={WalletIcon} id="my-icon" data-testid="icon" />);
+    expect(screen.getByTestId("icon")).toHaveAttribute("id", "my-icon");
   });
 
   it("forwards ref to the underlying svg", () => {

@@ -2,7 +2,7 @@
 
 One file per component, holding the detailed findings from its `06-engineering-standards.md` §9 review pass — what was checked, what was found, what was fixed, and (once declared) its Finalized status and date.
 
-This folder exists to keep `07-storybook-and-documentation-standards.md` §6 from growing without bound as more components (currently 26 of a planned ~104) go through review — that section stays a compact, scannable status table; the actual per-component narrative lives here instead. See `CLAUDE.md`'s note on numbered docs staying current-state reference, applied to this specific unbounded-growth case.
+This folder exists to keep `07-storybook-and-documentation-standards.md` §6 from growing without bound as more components (currently 27 of a planned ~104) go through review — that section stays a compact, scannable status table; the actual per-component narrative lives here instead. See `CLAUDE.md`'s note on numbered docs staying current-state reference, applied to this specific unbounded-growth case.
 
 ## Conventions
 

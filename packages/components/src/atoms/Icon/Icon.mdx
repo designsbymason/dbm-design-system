@@ -1,0 +1,226 @@
+import { HeartIcon, WalletIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../Button";
+import { IconButton } from "../IconButton";
+import { Tag } from "../Tag";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Icon } from "./Icon";
+import * as IconStories from "./Icon.stories";
+
+export const propOrder = [
+  "icon",
+  "size",
+  "weight",
+  "tone",
+  "label",
+  "mirrored",
+  "style",
+  "className",
+  "id",
+  "data-testid",
+];
+
+<Meta of={IconStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Icon" tier="Atom" />
+
+A typed wrapper around [Phosphor Icons](https://phosphoricons.com), the icon set this whole system
+is built on. Renders any Phosphor icon at a token-driven `size` and `tone`, decorative by default
+(hidden from the accessibility tree) unless `label` is set. `icon` takes a **component reference**
+— `import { Wallet } from '@dbm-design-system/icons'; <Icon icon={Wallet} />` — not a string name,
+so unused icons stay tree-shaken out of the final bundle and every reference is type-checked at
+compile time. This is the mechanism every icon-rendering component in the system
+([`Button`](/?path=/docs/atoms-inputs-button--docs)'s `leadingIcon`/`trailingIcon`,
+[`IconButton`](/?path=/docs/atoms-inputs-iconbutton--docs)'s `icon`, `Tag`'s `leadingIcon`, and
+others) ultimately renders through.
+
+### Import
+
+```tsx
+import { Icon } from "@dbm-design-system/components";
+import { Wallet } from "@dbm-design-system/icons";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={IconStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={IconStories.Playground}
+  exclude={["className", "style", "id", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Icon` also accepts any other native `<svg>` attribute beyond what's listed here (e.g. `onClick`,
+`title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={IconStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={IconStories.Default} />
+
+### All sizes
+
+<Canvas of={IconStories.AllSizes} />
+
+### All weights
+
+<Canvas of={IconStories.AllWeights} />
+
+### All tones
+
+<Canvas of={IconStories.AllTones} />
+
+### With accessible label (role=img)
+
+<Canvas of={IconStories.Labeled} />
+
+### Mirrored (RTL-flipped directional icon)
+
+<Canvas of={IconStories.Mirrored} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Leave `tone` unset when an icon sits inside text or another colored element and should just
+  track `currentColor` — a `Button`'s own icon is the common case.
+- Reach for an `on-{tone}` tone (`on-brand`, `on-danger`, etc.) specifically when the icon sits on
+  a matching solid-fill background — `text.*` tokens are for text, not icons, even when the color
+  happens to match.
+- Pass `label` whenever the icon is the *only* content conveying meaning (a standalone icon
+  button, a status icon with no adjacent text) — leave it unset when adjacent visible text already
+  says the same thing, so assistive tech doesn't announce it twice.
+- Set `mirrored` on a directional icon (an arrow, a chevron) whose meaning should flip under RTL —
+  see [Accessibility](#accessibility) below for why this isn't automatic.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass a string icon name — `icon` is always a component reference
+  (`import { Wallet } from '@dbm-design-system/icons'`), which is what keeps unused icons
+  tree-shaken out of the bundle.
+- Don't set both `label` and rely on adjacent visible text saying the same thing — pick one,
+  otherwise assistive tech announces the meaning twice.
+- Don't hardcode a `color`/`fill` via `style` to recolor an icon — reach for `tone` (a real
+  `--dbm-icon-*` token) so the color stays theme-reactive across brand and light/dark mode.
+- Don't reach for `Icon` as a loading spinner — that's the dedicated
+  [`Spinner`](/?path=/docs/atoms-feedback-spinner--docs) atom, which already handles the
+  `prefers-reduced-motion` case a spun `Icon` wouldn't.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat `size` as the same 7-step scale (`xs`–`3xl`) everywhere in the system — an icon inside a
+  `Button`/`IconButton` already picks the size that matches its own `size` step automatically; only
+  set `size` directly when using `Icon` standalone.
+- Default to `weight="bold"` (the system default) — it's what every other icon-rendering component
+  already renders at; only override `weight` for a specific, named reason (a `duotone` illustrative
+  icon, a `thin` decorative accent).
+- Treat `mirrored` as a per-icon, per-usage judgment call, not something to apply blanket to every
+  directional icon — see `guidelines/adr/0009`'s reasoning for why this isn't automatic.
+
+## Accessibility
+
+<Callout tone="info" title="Decorative by default, meaningful when you ask for it">
+
+- **`label` unset (the default):** the icon renders `aria-hidden="true"` with no `role`, invisible
+  to assistive tech — correct whenever adjacent visible text already conveys the same meaning (a
+  `Button`'s leading icon next to its own label).
+- **`label` set:** the icon renders `role="img"` and `aria-label={label}` instead, giving it a real
+  accessible name — correct when the icon is the only content conveying meaning (a standalone
+  icon-only control's own icon, surfaced through that control's own accessible name).
+- **`role`/`aria-label`/`aria-hidden` are computed from `label` and can't be overridden by a raw
+  passthrough prop** — `Icon`'s own props type omits `role`/`aria-hidden`/`aria-label` for this
+  exact reason (`label` is the one, unambiguous mechanism), and the implementation spreads any
+  other native prop *before* these three in the JSX so a same-named value can never silently win.
+- **`mirrored` only changes the visual transform, never the accessible name** — a mirrored
+  directional icon still needs its own `label` (or its container's accessible name) to convey
+  "back" vs. "forward" correctly regardless of visual direction.
+
+</Callout>
+
+## Code examples
+
+```tsx
+import { Wallet } from "@dbm-design-system/icons";
+
+<Icon icon={Wallet} size="lg" />
+<Icon icon={Wallet} tone="brand" />
+<Icon icon={Wallet} label="Wallet balance" />
+```
+
+```tsx
+// On a matching solid-fill background
+<div style={{ background: "var(--dbm-bg-danger)", padding: "var(--dbm-space-2)" }}>
+  <Icon icon={Wallet} tone="on-danger" />
+</div>
+```
+
+```tsx
+// A directional icon, flipped for RTL
+<Icon icon={ArrowRight} mirrored={isRtl} />
+```
+
+```tsx
+// A native <svg> attribute (onClick) passed straight through
+<Icon icon={Wallet} onClick={() => setOpen(true)} />
+```
+
+## Design tokens used
+
+<TokenRow token="icon.default" usage="default tone" />
+<TokenRow token="icon.secondary" usage="secondary tone" />
+<TokenRow token="icon.brand" usage="brand tone" />
+<TokenRow token="icon.disabled" usage="disabled tone" />
+<TokenRow token="icon.danger" usage="danger tone" />
+<TokenRow token="icon.warning" usage="warning tone" />
+<TokenRow token="icon.success" usage="success tone" />
+<TokenRow token="icon.info" usage="info tone" />
+<TokenRow token="icon.on-brand" usage="on-brand tone, for an icon sitting on a bg.brand fill" />
+<TokenRow token="icon.on-danger" usage="on-danger tone, for an icon sitting on a bg.danger fill" />
+<TokenRow token="icon.on-warning" usage="on-warning tone, for an icon sitting on a bg.warning fill" />
+<TokenRow token="icon.on-success" usage="on-success tone, for an icon sitting on a bg.success fill" />
+<TokenRow token="icon.on-info" usage="on-info tone, for an icon sitting on a bg.info fill" />
+<TokenRow token="icon.on-neutral" usage="on-neutral tone, for an icon sitting on a bg.neutral fill" />
+<TokenRow token="icon-size.xs–icon-size.3xl" usage="the full icon-size scale — size accepts any IconSize step" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Button"
+  description="Renders its own leadingIcon/trailingIcon through Icon internally"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button leadingIcon={WalletIcon} size="sm">Pay</Button>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="An icon-only control — its icon prop renders through Icon with an accessible label always required"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={HeartIcon} aria-label="Favorite" variant="secondary" />
+</RelatedCard>
+<RelatedCard
+  name="Tag"
+  description="Another Icon consumer — a leading icon alongside a removable label"
+  href="/?path=/docs/atoms-data-display-tag--docs"
+>
+  <Tag leadingIcon={HeartIcon}>Favorites</Tag>
+</RelatedCard>
+</div>

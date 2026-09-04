@@ -34,12 +34,20 @@ import type { PreparedStory } from "storybook/internal/types";
  * cross-navigation staleness to guard against — if this component
  * remounts, the initial `useState` read is already current.
  *
- * `argType.mapping` (e.g. Button's `icon`/`trailingIcon`, which map a
- * string option like `"Trash"` to an actual icon component) does **not**
- * need to be applied here — confirmed by reading Storybook's
- * `prepareContext`, which re-applies `mapping` on every render
- * regardless of how args were updated. `updateArgs` below only ever needs
- * to send the raw pre-mapping value.
+ * `argType.mapping` (e.g. Button's `leadingIcon`/`trailingIcon`, Icon's own
+ * `icon`, which map a string option like `"Trash"` to an actual icon
+ * component): `updateArgs` only ever needs to send the raw pre-mapping key
+ * string — Storybook's own `UPDATE_STORY_ARGS`/`STORY_ARGS_UPDATED`
+ * round-trip re-applies `mapping` on the way back in. **Correction (found
+ * during Icon's own review, 2026-09-03): the `args` this hook *returns*
+ * are already the resolved, post-mapping value** (e.g. the real icon
+ * component), not the raw key the original version of this comment
+ * claimed — confirmed empirically (`console.log`ing the actual value read
+ * back for a mapped control). A consumer of this hook's `args` that needs
+ * the raw option key back (`PlaygroundControls.tsx`'s own `ControlField`,
+ * for driving a `<Select>`'s displayed value) has to reverse-look-up the
+ * key from `argType.mapping` itself — this hook has no way to do that
+ * generically, since it doesn't have each prop's own `argType` in scope.
  */
 export function usePlaygroundArgs(
   context: DocsContextProps,

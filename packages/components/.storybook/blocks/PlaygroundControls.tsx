@@ -15,6 +15,7 @@ import { usePlaygroundArgs } from "./usePlaygroundArgs";
 interface ArgTypeLike {
   control?: { type?: string; disable?: boolean } | false;
   options?: unknown[];
+  mapping?: Record<string, unknown>;
   table?: { disable?: boolean };
 }
 
@@ -69,10 +70,31 @@ function ControlField({
     // including `undefined`, which some option lists include as a valid
     // choice, e.g. Avatar's `loading`/`status`) before calling `onChange`.
     const options = Array.isArray(argType.options) ? argType.options : [];
+    // A `mapping`-backed control (a component-reference prop like Icon's
+    // own `icon`, matching Button's leadingIcon/trailingIcon — see
+    // 05-component-api-conventions.md §5) needs its display value
+    // reverse-looked-up from the mapping instead of naively stringified.
+    // `context.getStoryContext(story).args` (this component's own `value`)
+    // turns out to already hold the *mapped*, resolved value (e.g. the real
+    // icon component) rather than the raw option key the comment in
+    // usePlaygroundArgs.ts originally assumed — confirmed empirically
+    // (found via Icon's own review, 2026-09-03): naively `String()`-ing a
+    // resolved component reference produces something that matches no
+    // option, so the Select silently showed its unselected placeholder even
+    // though the canvas was rendering the correct icon the whole time.
+    // `onChange` below is unaffected — it already sends the raw option key
+    // string (`options[index]`, which for a mapped select just resolves to
+    // the same key), and Storybook's own UPDATE_STORY_ARGS pipeline is what
+    // correctly re-resolves that key through `mapping` on the way back in.
+    const displayValue = argType.mapping
+      ? Object.entries(argType.mapping).find(([, mapped]) => mapped === value)?.[0]
+      : value === undefined
+        ? undefined
+        : String(value);
     widget = (
       <Select
         id={fieldId}
-        value={value === undefined ? undefined : String(value)}
+        value={displayValue}
         onValueChange={(selected) => {
           const index = options.findIndex((option) => String(option) === selected);
           onChange(index === -1 ? selected : options[index]);

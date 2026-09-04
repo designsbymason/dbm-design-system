@@ -33,7 +33,8 @@ const toneClass: Record<IconTone, string | undefined> = {
 /**
  * Renders a Phosphor icon at a token-driven size. Decorative by default
  * (hidden from the accessibility tree); pass `label` when the icon conveys
- * meaning on its own. Inherits `currentColor` unless `tone` is set.
+ * meaning on its own. Inherits `currentColor` unless `tone` is set. Pass
+ * `mirrored` to flip a directional icon horizontally for RTL.
  *
  * @example
  * ```tsx
@@ -52,6 +53,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
       weight = "bold",
       tone,
       label,
+      mirrored,
       className,
       ...props
     },
@@ -59,10 +61,8 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
   ) => (
     <IconComponent
       ref={ref}
-      role={label ? "img" : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
       weight={weight}
+      mirrored={mirrored}
       className={cx(
         styles.root,
         sizeClass[size],
@@ -70,6 +70,9 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
         className,
       )}
       {...props}
+      role={label ? "img" : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
     />
   ),
 );
