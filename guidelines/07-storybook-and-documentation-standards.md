@@ -122,7 +122,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**25 of 47 atoms have a Docs page; all 25 are also Finalized.**
+**26 of 47 atoms have a Docs page; all 26 are also Finalized.**
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -151,9 +151,10 @@ Foundational components first (prove the template before mass-applying it), then
 | ProgressCircle | Atom | Feedback | ✅ | ✅ 2026-08-23 | [ProgressCircle.md](component-reviews/ProgressCircle.md) |
 | Spinner | Atom | Feedback | ✅ | ✅ 2026-08-23 | [Spinner.md](component-reviews/Spinner.md) |
 | Spacer | Atom | Layout | ✅ | ✅ 2026-09-03 | [Spacer.md](component-reviews/Spacer.md) |
+| Stack | Atom | Layout | ✅ | ✅ 2026-09-03 | [Stack.md](component-reviews/Stack.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
-- **Layout:** Stack, Grid, GridItem (`Grid`/`GridItem` are molecule-tier, built, but still need this same Docs-page treatment). Spacer's own review pass is complete — see the status table above and [Spacer.md](component-reviews/Spacer.md), including the fix for the `aria-hidden`-ordering gap this note used to flag.
+- **Layout:** Grid, GridItem (molecule-tier, built, but still need this same Docs-page treatment). Spacer's and Stack's own review passes are complete — see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md).
 - **Typography:** Text, Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
 - **Navigation:** BackToTop
 - **Overlay:** Tooltip, Collapse, Backdrop

@@ -28,6 +28,19 @@ describe("Stack", () => {
     });
   });
 
+  it("applies row-reverse and column-reverse direction values", () => {
+    const { rerender } = render(
+      <Stack data-testid="stack" direction="row-reverse" />,
+    );
+    expect(screen.getByTestId("stack")).toHaveStyle({
+      "--stack-direction-base": "row-reverse",
+    });
+    rerender(<Stack data-testid="stack" direction="column-reverse" />);
+    expect(screen.getByTestId("stack")).toHaveStyle({
+      "--stack-direction-base": "column-reverse",
+    });
+  });
+
   it("applies gap as a token-driven CSS variable", () => {
     render(<Stack data-testid="stack" gap={4} />);
     expect(screen.getByTestId("stack")).toHaveStyle({
@@ -162,10 +175,27 @@ describe("Stack", () => {
     expect(el).toHaveStyle({ padding: "8px" });
   });
 
-  it("has no accessibility violations", async () => {
+  it("forwards id and data-testid", () => {
+    render(<Stack id="my-stack" data-testid="stack" />);
+    const el = screen.getByTestId("stack");
+    expect(el).toHaveAttribute("id", "my-stack");
+  });
+
+  it("has no accessibility violations (default element)", async () => {
     const { container } = render(
       <Stack>
         <button type="button">Accessible</button>
+      </Stack>,
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations (non-default as)", async () => {
+    const { container } = render(
+      <Stack as="ul" direction="row">
+        <li>One</li>
+        <li>Two</li>
       </Stack>,
     );
     const results = await axe(container);

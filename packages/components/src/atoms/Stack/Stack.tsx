@@ -121,7 +121,9 @@ const StackImpl = forwardRef<HTMLElement, StackProps<ElementType>>(
  * value or a mobile-first responsive map keyed by breakpoint (e.g.
  * `{ base: "column", md: "row" }`), matching `Grid`'s `columns` prop — the
  * standard way to express "stack on mobile, row on desktop" (or re-justify,
- * re-align, wrap, or re-space at any breakpoint).
+ * re-align, wrap, or re-space at any breakpoint). `direction` also accepts
+ * `row-reverse`/`column-reverse` for reversing child order without touching
+ * markup order.
  *
  * `divider` automatically inserts the given element between every child
  * (typically a `Divider`), so consumers don't have to hand-interleave one
