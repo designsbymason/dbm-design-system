@@ -1,0 +1,282 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { AspectRatio } from "../AspectRatio";
+import { Avatar } from "../Avatar";
+import { Skeleton } from "../Skeleton";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Image } from "./Image";
+import * as ImageStories from "./Image.stories";
+
+export const propOrder = [
+  "src",
+  "alt",
+  "fallback",
+  "width",
+  "height",
+  "aspectRatio",
+  "objectFit",
+  "position",
+  "radius",
+  "loading",
+  "onError",
+  "srcSet",
+  "sizes",
+  "decoding",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ImageStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Image" tier="Atom" />
+
+A native `<img>` with lazy-loading on by default, a token-driven `radius`, an optional locked
+`aspectRatio`, and a `fallback` shown in place of the image whenever `src` is missing or fails to
+load — a generic image icon on a `bg.neutral-subtle` background by default, or pass `fallback` to
+override it with your own icon, initials, or other content. `position` anchors the image within its
+box when `objectFit="cover"` (or `"none"`) crops it — sets CSS `object-position`, not layout
+`position`. Renders inside a stable wrapper
+`<span>` — `ref`/`id`/`className`/`style`/`data-testid` all apply there, so they survive the swap
+between the loaded image and the fallback, rather than disappearing whenever `src` fails. `alt` is
+always required (pass `""` explicitly for a purely decorative image) since it doubles as the
+fallback state's own accessible label.
+
+### Import
+
+```tsx
+import { Image } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live, wrapped in a fixed-width demo container so `radius`/`objectFit`/`position`/
+`aspectRatio`/`width`/`height` all read visually. `position` only visibly changes anything once the
+image is actually being cropped — pair it with `objectFit="cover"` and a box smaller than the image
+(see "All positions" below for a clear side-by-side). The default `width`/`height`/`aspectRatio` values
+are deliberately consistent (200 / 150 / 4:3) — try changing just one of them to see `width`/
+`height` win over a conflicting `aspectRatio`, with a dev-mode console warning explaining why (see
+the "Sizing precedence" variant below for a static side-by-side reference). `fallback` isn't
+included — it's a `ReactNode`, not representable as a plain control (and set the same way, its own
+resolved value would break the "Show code" panel below, the same issue found on `Icon`'s own
+review).
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ImageStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ImageStories.Playground}
+  exclude={["fallback", "onError", "srcSet", "sizes", "decoding", "className", "style", "id", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Image` also accepts any other native `<img>` attribute beyond what's listed here (e.g.
+`crossOrigin`, `referrerPolicy`) — passed straight through to the underlying element.
+
+<PropertiesTable of={ImageStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={ImageStories.Default} />
+
+### All radii
+
+<Canvas of={ImageStories.AllRadii} />
+
+### All objectFit modes
+
+<Canvas of={ImageStories.AllObjectFit} />
+
+### All positions (objectFit="cover")
+
+<Canvas of={ImageStories.AllPositions} />
+
+### Locked aspect ratio (16:9)
+
+<Canvas of={ImageStories.AspectRatio169} />
+
+### Rounded
+
+<Canvas of={ImageStories.Rounded} />
+
+### Sizing precedence (width/height vs aspectRatio)
+
+<Canvas of={ImageStories.SizingPrecedence} />
+
+### Broken src, default fallback
+
+<Canvas of={ImageStories.BrokenDefaultFallback} />
+
+### Broken src, custom fallback (overrides the default)
+
+<Canvas of={ImageStories.BrokenCustomFallback} />
+
+### Decorative (alt="") — hidden from the accessibility tree either way
+
+<Canvas of={ImageStories.Decorative} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Always pass `alt` — a real description for a meaningful image, or `""` explicitly for a
+  decorative one. There's no silent default either way.
+- Pass `aspectRatio` (e.g. `16 / 9`) whenever the image's box needs a predictable shape before the
+  image itself has loaded — this prevents layout shift, and is the same mechanism
+  [`AspectRatio`](/?path=/docs/atoms-layout-aspectratio--docs) uses.
+- Pass just one of `width`/`height` alongside `aspectRatio` to size the box from a single fixed
+  dimension — the other is computed automatically, standard CSS `aspect-ratio` behavior.
+- Pass `position` alongside `objectFit="cover"` when the subject of a cropped image isn't centered
+  (a portrait where the face sits near the top, a landscape whose horizon should stay visible) —
+  otherwise the default center crop can cut off the part that actually matters.
+- Leave `fallback` unset to get the built-in generic image icon — override it only when a more
+  specific fallback (initials, a brand mark, a different icon) genuinely helps the reader, e.g.
+  user-uploaded content where the default reads as too generic.
+- Use `loading="eager"` only for an image that's already visible on first paint (a hero image) —
+  leave the `lazy` default for anything below the fold.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass your own `onError` expecting it to replace Image's own fallback-triggering behavior —
+  it's called *after* the fallback has already taken over, for logging/retry/telemetry, not to
+  control the fallback itself.
+- Don't reach for `Image` to render a person/entity picture with initials — that's
+  [`Avatar`](/?path=/docs/atoms-data-display-avatar--docs), which already has this exact
+  image-with-fallback architecture plus initials/status-dot support built in.
+- Don't rely on `id`/`data-testid` landing on the `<img>` itself — both apply to the outer wrapper
+  specifically so they keep working through the fallback swap; query by role/alt-text instead if
+  the test needs to assert something about the `<img>` element specifically.
+- Don't pass `width`, `height`, *and* a conflicting `aspectRatio` expecting `aspectRatio` to somehow
+  still apply — `width`/`height` win outright once both are set (standard CSS behavior: `aspect-
+  ratio` only ever fills in a *missing* dimension), and a genuine conflict logs a dev-mode warning.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat `radius` as the same token scale every other radius-consuming surface in the system uses —
+  match a card/container's own `radius` rather than picking an arbitrary value.
+- `objectFit="cover"` (the default) suits most photographic content; reach for `contain` when
+  cropping any part of the image would lose meaning (a logo, a diagram, a screenshot).
+- `position` reads most clearly under `objectFit="cover"` (which crop gets shown) — it also affects
+  `contain`/`none`/`scale-down` (which side any letterboxed empty space lands on), just less
+  dramatically. `objectFit="fill"` is the one mode where it's a true no-op, since the image is
+  stretched to exactly fill the box with no leftover space to position within.
+- Combine `aspectRatio` with `fallback` for the most robust pattern — the box holds its shape
+  immediately, whether the real image is still loading, missing, or has failed.
+- `width`/`height`/`aspectRatio` all size the same wrapper and combine the way plain CSS `width`/
+  `height`/`aspect-ratio` do: any one alone, any two together, or all three (redundant but harmless
+  if they already agree). There's no requirement to provide more than what a given layout actually
+  needs.
+
+## Accessibility
+
+<Callout tone="info" title="alt drives the accessible name in both states, not just when loaded">
+
+- **A meaningful `alt`** (non-empty): the loaded `<img>` gets it natively; the fallback `<span>`
+  gets `role="img"` and `aria-label={alt}` instead, so the accessible name stays identical whether
+  the real image or the fallback is currently showing.
+- **A decorative `alt=""`**: the loaded `<img>` is automatically skipped by assistive tech, per the
+  standard HTML behavior for an empty `alt`. The fallback matches that same behavior explicitly
+  (`aria-hidden="true"`, no `role`) rather than exposing an empty-named `role="img"` — a real fix
+  made during this component's own review; previously the fallback always asserted `role="img"`
+  regardless of whether `alt` was empty.
+- **`onError` composes, it doesn't replace** — Image's own internal handler (which triggers the
+  fallback) always runs first; a consumer-provided `onError` is called after, and can't prevent or
+  interfere with the fallback swap.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Image src="/hero.jpg" alt="Product photo" aspectRatio={16 / 9} />
+```
+
+```tsx
+// A fixed width, height computed from aspectRatio
+<Image src="/hero.jpg" alt="Product photo" width={320} aspectRatio={16 / 9} />
+```
+
+```tsx
+// An exact box — width/height win outright over any aspectRatio
+<Image src="/hero.jpg" alt="Product photo" width={320} height={240} />
+```
+
+```tsx
+// A cropped portrait — keep the top (the face) in frame instead of a center crop
+<Image src="/team-member.jpg" alt="Jane Doe" aspectRatio={1} position="top" />
+```
+
+```tsx
+// The default fallback (a generic image icon) shown if the URL is missing or 404s
+<Image src={photo.url} alt={photo.caption} radius="md" />
+```
+
+```tsx
+// A custom fallback, overriding the default
+<Image
+  src={user.avatarUrl}
+  alt={user.name}
+  fallback={<Icon icon={UserIcon} size="lg" />}
+  radius="full"
+/>
+```
+
+```tsx
+// Purely decorative — hidden from assistive tech in both the loaded and fallback states
+<Image src={pattern} alt="" objectFit="cover" />
+```
+
+```tsx
+// A native <img> attribute (decoding) passed straight through
+<Image src="/hero.jpg" alt="Product photo" decoding="async" />
+```
+
+## Design tokens used
+
+<TokenRow token="radius.xs–radius.3xl" usage="the corner-radius scale — radius accepts any ImageRadius step" />
+<TokenRow token="radius.full" usage="radius='full' (circular/pill crop)" />
+<TokenRow token="bg.neutral-subtle" usage="fallback background" />
+<TokenRow token="icon.default" usage="default fallback icon color, via currentColor" />
+<TokenRow token="icon-size.xl" usage="the default fallback icon's size" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Avatar"
+  description="The same image-with-fallback architecture, specialized for people/entities — initials and a status dot instead of a generic ReactNode fallback"
+  href="/?path=/docs/atoms-data-display-avatar--docs"
+>
+  <Avatar initials="JD" alt="Jane Doe" />
+</RelatedCard>
+<RelatedCard
+  name="AspectRatio"
+  description="The same aspect-ratio-locking mechanism Image's own aspectRatio prop uses, for locking arbitrary content (not just images) to a ratio"
+  href="/?path=/docs/atoms-layout-aspectratio--docs"
+>
+  <AspectRatio ratio={1} style={{ width: 40 }}>
+    <div style={{ background: "var(--dbm-bg-canvas)", height: "100%", width: "100%" }} />
+  </AspectRatio>
+</RelatedCard>
+<RelatedCard
+  name="Skeleton"
+  description="A loading placeholder shape — pair with Image while an image URL is still being resolved, before Image itself has anything to render"
+  href="/?path=/docs/atoms-data-display-skeleton--docs"
+>
+  <Skeleton width={40} height={40} />
+</RelatedCard>
+</div>

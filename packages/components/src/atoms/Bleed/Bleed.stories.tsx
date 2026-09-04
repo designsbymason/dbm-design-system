@@ -92,7 +92,7 @@ export const Playground: Story = {
         {...args}
         style={{
           background: "var(--dbm-bg-canvas)",
-          color: "var(--dbm-text-tertiary)",
+          color: "var(--dbm-text-secondary)",
           marginBlock: "var(--dbm-space-4)",
           padding: "var(--dbm-space-4)",
         }}
@@ -157,7 +157,7 @@ export const Block: Story = {
           style={{
             alignItems: "center",
             background: "var(--dbm-bg-canvas)",
-            color: "var(--dbm-text-tertiary)",
+            color: "var(--dbm-text-secondary)",
             display: "flex",
             justifyContent: "center",
             paddingBlock: "var(--dbm-space-4)",
@@ -190,7 +190,7 @@ export const All: Story = {
           style={{
             alignItems: "center",
             background: "var(--dbm-bg-canvas)",
-            color: "var(--dbm-text-tertiary)",
+            color: "var(--dbm-text-secondary)",
             display: "flex",
             height: "8rem",
             justifyContent: "center",
@@ -227,7 +227,7 @@ export const ResponsiveInset: Story = {
         inset={{ base: 4, lg: 8 }}
         style={{
           background: "var(--dbm-bg-canvas)",
-          color: "var(--dbm-text-tertiary)",
+          color: "var(--dbm-text-secondary)",
           marginBlock: "var(--dbm-space-4)",
           padding: "var(--dbm-space-4)",
         }}

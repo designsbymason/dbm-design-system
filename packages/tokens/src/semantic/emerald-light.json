@@ -3,7 +3,7 @@
     "canvas": {
       "$type": "color",
       "$value": "{color.gray.100}",
-      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.white (was briefly byte-identical to bg.surface/bg.neutral-subtle) to gray.100, one step past bg.neutral-subtle (gray.50), so it reads as a visually distinct container again. Contrast re-verified: text.primary 12.41:1, text.secondary 6.05:1 — both clear AA. Byte-identical to border.neutral-subtle (also gray.100) — nothing currently pairs the two, flagged here in case a future component draws a border.neutral-subtle border directly on bg.canvas."
+      "$description": "Usage redefined (2026-08-08) to \"canvas and playground container\" — narrower than the prior \"page/app background\" meaning, now specifically the live-preview/demo container surface. Value moved off neutral.white (was briefly byte-identical to bg.surface/bg.neutral-subtle) to gray.100, one step past bg.neutral-subtle (gray.50), so it reads as a visually distinct container again. Contrast re-verified: text.primary 12.41:1, text.secondary 6.05:1 — both clear AA. text.tertiary fails here at 4.13:1 (found 2026-09-03, during an unrelated Image atom review's incidental Storybook-suite run — previously unmeasured against this token specifically) — don't place text.tertiary literal text directly on bg.canvas, matching the already-documented dark-mode failure (see that theme's own description). Byte-identical to border.neutral-subtle (also gray.100) — nothing currently pairs the two, flagged here in case a future component draws a border.neutral-subtle border directly on bg.canvas."
     },
     "overlay": {
       "$type": "color",
@@ -138,7 +138,7 @@
     "neutral-subtle": {
       "$type": "color",
       "$value": "{color.gray.50}",
-      "$description": "Renamed from bg.subtle (2026-08-20), grouped with the other neutral tokens here instead of sitting up near bg.canvas/bg.surface — no value change. Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\" — broadens from hover-fill/zebra-striping to also cover dashboard panels and general neutral accents. Value unchanged (gray.50). History: swapped with canvas 2026-07-27, when this token was defined as the barely-visible tint layered on top of white bg.surface."
+      "$description": "Renamed from bg.subtle (2026-08-20), grouped with the other neutral tokens here instead of sitting up near bg.canvas/bg.surface — no value change. Usage redefined (2026-08-08) to \"hover fill for tertiary/ghost controls, dashboard panel, neutral accent\" — broadens from hover-fill/zebra-striping to also cover dashboard panels and general neutral accents. Value unchanged (gray.50). History: swapped with canvas 2026-07-27, when this token was defined as the barely-visible tint layered on top of white bg.surface. text.tertiary against this token measures 4.51:1 — clears the 4.5:1 AA text floor, but by a razor-thin 0.01 margin; revisit if the primitive gray scale is ever regenerated. icon.default shares text.tertiary's own primitive step, so this is also the figure for Image's own fallback icon (verified 2026-09-04, finalizing Image — see icon.default's own description)."
     },
     "neutral-subtle-hover": {
       "$type": "color",
@@ -329,7 +329,8 @@
   "icon": {
     "default": {
       "$type": "color",
-      "$value": "{color.gray.600}"
+      "$value": "{color.gray.600}",
+      "$description": "vs bg.neutral-subtle: 4.51:1 (verified 2026-09-04, finalizing Image — its fallback state's default icon pairs the two) — clears the 3:1 non-text floor comfortably, but also happens to share text.tertiary's own primitive step, which only barely clears the stricter 4.5:1 text floor against this same background; revisit if the primitive gray scale is ever regenerated."
     },
     "secondary": {
       "$type": "color",

@@ -13,7 +13,7 @@
 .fallback {
   align-items: center;
   background-color: var(--dbm-bg-neutral-subtle);
-  color: var(--dbm-text-tertiary);
+  color: var(--dbm-icon-default);
   display: flex;
   height: 100%;
   justify-content: center;
@@ -42,6 +42,10 @@
 
 .radius2xl {
   border-radius: var(--dbm-radius-2xl);
+}
+
+.radius3xl {
+  border-radius: var(--dbm-radius-3xl);
 }
 
 .radiusFull {

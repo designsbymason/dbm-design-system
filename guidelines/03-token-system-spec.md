@@ -58,7 +58,7 @@ Methodology, then the current state of every semantic token — not a replay of 
 
 | Token | Light | Dark | Verified against | Status |
 |---|---|---|---|---|
-| `canvas` | `gray.100` | `gray.700` | `text.primary` 12.41:1 / 6.59:1; `text.secondary` 6.05:1 / **fails, 4.00:1**; `text.tertiary` — / **fails, 2.96:1** | Light: AA. **Dark: known gap** — don't place `text.secondary`/`text.tertiary` literal text on `bg.canvas` in dark mode. |
+| `canvas` | `gray.100` | `gray.700` | `text.primary` 12.41:1 / 6.59:1; `text.secondary` 6.05:1 / 5.10:1 (fixed 2026-08-08 alongside `text.secondary`'s own move to `gray.200` dark — this row's own dark figure was left stale at the time, corrected 2026-09-03); `text.tertiary` **fails, 4.13:1** / **fails, 2.96:1** | AA for `text.primary`/`text.secondary` in both modes. **Never place `text.tertiary` literal text on `bg.canvas`, light or dark** — found failing in light mode too (2026-09-03, during an unrelated Image atom review's incidental Storybook-suite run); previously only the dark-mode failure was documented, light was an unverified "—" that turned out to also fail once actually measured. |
 | `overlay` | `neutral.black` | `neutral.black` | — | Exempt (no text sits on it; opacity applied separately via `opacity.*`) |
 | `surface` | `neutral.white` | `gray.800` | `text.primary` — / 9.66:1; `text.secondary` — / 5.86:1; `text.tertiary` — / 4.34:1 | AA (dark verified explicitly; light is the base case, comfortably higher-margin) |
 | `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 5.67:1 | AA |
@@ -79,7 +79,7 @@ Methodology, then the current state of every semantic token — not a replay of 
 | `info-subtle-hover` | `blue.100` | `blue.900` | `text.info`: 6.10:1 / 8.20:1 | AA |
 | `neutral` | `gray.600` | `gray.300` | dot vs `bg.surface`: 4.70:1 / 5.86:1; `text.on-neutral`: 4.70:1 / 8.21:1 | AA (dual-purpose: dot fill and solid-fill text host) |
 | `neutral-hover` | `gray.700` | `gray.200` | `text.on-neutral`: 6.88:1 / 10.47:1 | AA |
-| `neutral-subtle` | `gray.50` | `gray.900` | `text.secondary`: — / 8.21:1; `text.primary`: — / 13.53:1 | AA |
+| `neutral-subtle` | `gray.50` | `gray.900` | `text.secondary`: — / 8.21:1; `text.primary`: — / 13.53:1; `text.tertiary`: **4.51:1 (razor-thin — revisit if the primitive scale is ever regenerated)** / 8.21:1; `icon.default` (shares `text.tertiary`'s own primitive step): same figures | AA. Light-mode `text.tertiary`/`icon.default` figure added 2026-09-04, verified while finalizing `Image` (its fallback state's own `bg.neutral-subtle` + `icon.default` pairing — the fallback icon's actual token, not `text.tertiary`, though the two share the identical value in every theme) — previously unmeasured against this token, shown as unverified "—". |
 | `neutral-subtle-hover` | `gray.100` | `gray.800` | `text.secondary`: 6.05:1 / 7.47:1 | AA |
 | `track` | `gray.100` | `gray.900` | vs `bg.surface`: **1.14:1 / 1.40:1** | **Deliberate exception** — fails 3:1, accepted for a passive progress-indicator track (industry-common convention). See "Notable exceptions" below. |
 | `track-strong` | `gray.500` | `gray.400` | vs `bg.surface`: 3.25:1 / 4.34:1 | AA (non-text floor) — used where the boundary must read as real, e.g. `Switch`'s always-interactive track |
@@ -101,7 +101,7 @@ Methodology, then the current state of every semantic token — not a replay of 
 |---|---|---|---|---|
 | `primary` | `gray.900` | `gray.50` | vs `bg.surface` (dark): 9.66:1; vs `bg.canvas` (dark): 6.59:1; vs `bg.neutral-subtle` (dark): 13.53:1 | AAA — highest-contrast text tier, never a close call |
 | `secondary` | `gray.700` | `gray.200` | vs `bg.surface` (dark): 7.47:1; vs `bg.canvas` (dark): 5.10:1 (fixed 2026-08-08, was a real AA failure at the prior value) | AA/AAA |
-| `tertiary` | `gray.600` | `gray.300` | vs `bg.surface` (dark): 5.86:1; vs `bg.neutral-subtle` (dark): 8.21:1 | AA. **Never place on `bg.canvas`** (dark: 4.00:1, fails the 4.5:1 text floor — enforced by convention, not a lighter token, since no primitive step closes the gap without colliding with `text.secondary`). |
+| `tertiary` | `gray.600` | `gray.300` | vs `bg.surface` (dark): 5.86:1; vs `bg.neutral-subtle`: **4.51:1 (razor-thin, light)** / 8.21:1 (dark); vs `bg.canvas`: **fails, 4.13:1** (light) / **fails, 2.96:1** (dark) | AA against its actual intended surfaces (`bg.surface`, `bg.neutral-subtle`) — though the light-mode `bg.neutral-subtle` figure only barely clears the floor; revisit if the primitive scale is ever regenerated. **Never place on `bg.canvas`, light or dark** — enforced by convention, not a lighter token, since no primitive step closes the gap without colliding with `text.secondary`. (This row previously cited a stale `4.00:1` for the dark figure, left over from `gray.400` before this token's own 2026-08-08 move to `gray.300` — corrected 2026-09-03 to the current value, and the light-mode failure added the same day; light was previously shown as unverified in `bg.*`'s own `canvas` row. The `bg.neutral-subtle` figure was originally measured against `Image`'s fallback state, which actually renders its icon via `icon.default` — see that token's own row, which shares this exact value in every theme — not `text.tertiary` directly; corrected 2026-09-04.) |
 | `disabled` | `gray.400` | `gray.600` | — | Exempt (disabled-state text) |
 | `on-brand` | `neutral.white` | `gray.900` (shared both brands) | vs `bg.brand`/`bg.brand-hover` (dark): 7.45–10.55:1 across both brands | AA |
 | `on-danger` | `neutral.white` | `red.900` | vs `bg.danger` (dark): 8.22:1 | AA |
@@ -144,7 +144,7 @@ Methodology, then the current state of every semantic token — not a replay of 
 
 | Token | Light | Dark | Verified against | Status |
 |---|---|---|---|---|
-| `default` | `gray.600` | `gray.300` | — | AA (non-text floor) |
+| `default` | `gray.600` | `gray.300` | vs `bg.neutral-subtle`: **4.51:1 (razor-thin — revisit if the primitive scale is ever regenerated)** / 8.21:1 | AA (non-text floor). Verified 2026-09-04 for `Image`'s own fallback icon (its default state, via `currentColor`) — previously unmeasured against this token. |
 | `secondary` | `gray.500` | `gray.500` | vs `bg.surface`: 3.25:1 | AA (non-text floor) — the original `gray.400` failed at 2.32:1, found in the Phase 4 icon-contrast sweep |
 | `brand` | `purple.600` / `emerald.600` | `purple.300` / `emerald.300` | vs `bg.surface`: 7.37:1 (purple)/light; 5.32:1 (purple)/6.07:1 (emerald) dark; also checked vs `bg.canvas` dark: 3.63:1 (purple)/4.15:1 (emerald) | AA (non-text floor) |
 | `on-brand` | `neutral.white` | `gray.900` | vs `bg.brand`: 7.37:1 / 6.08:1 light; 7.45:1 / 8.51:1 dark | AA |

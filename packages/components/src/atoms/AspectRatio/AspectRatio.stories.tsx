@@ -73,7 +73,7 @@ export const Playground: Story = {
       style={{
         maxWidth: "24rem",
         background: "var(--dbm-bg-canvas)",
-        color: "var(--dbm-text-tertiary)",
+        color: "var(--dbm-text-secondary)",
       }}
     >
       <AspectRatio {...args} />
@@ -121,7 +121,7 @@ export const VideoEmbed: Story = {
             alignItems: "center",
             justifyContent: "center",
             background: "var(--dbm-bg-canvas)",
-            color: "var(--dbm-text-tertiary)",
+            color: "var(--dbm-text-secondary)",
           }}
         >
           21:9 video placeholder

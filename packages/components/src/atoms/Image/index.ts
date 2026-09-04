@@ -1,2 +1,7 @@
 export { Image } from "./Image";
-export type { ImageObjectFit, ImageProps, ImageRadius } from "./Image.types";
+export type {
+  ImageObjectFit,
+  ImageObjectPosition,
+  ImageProps,
+  ImageRadius,
+} from "./Image.types";
