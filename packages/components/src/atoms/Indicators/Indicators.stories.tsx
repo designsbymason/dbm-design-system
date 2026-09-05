@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { Indicators } from "./Indicators";
 
 const meta: Meta<typeof Indicators> = {
@@ -28,6 +28,12 @@ const meta: Meta<typeof Indicators> = {
       options: ["horizontal", "vertical"],
       description:
         "Layout axis. horizontal uses Left/Right arrow keys (the default); vertical uses Up/Down instead. Home/End are unaffected.",
+    },
+    variant: {
+      control: "select",
+      options: ["dots", "outline", "bars"],
+      description:
+        "Visual style. dots (solid fill, the default), outline (hollow ring when inactive), or bars (same-length segments — active at full thickness, inactive at half).",
     },
     // Driving `activeIndex` directly from a Controls-panel field without a
     // real click/keyboard-driven `onIndexChange` wired back into it would
@@ -98,6 +104,7 @@ const meta: Meta<typeof Indicators> = {
     count: 5,
     size: "md",
     orientation: "horizontal",
+    variant: "dots",
     showLabel: false,
     "aria-label": "Slide navigation",
     onIndexChange: fn(),
@@ -195,6 +202,36 @@ export const WithProgressLabel: Story = {
   },
 };
 
+export const AllVariants: Story = {
+  name: "All variants",
+  // `variant` is the whole point of this grid — every other shared prop
+  // stays wired through `args` and controllable (07-storybook-and-
+  // documentation-standards.md §5), only this one axis is fixed per row.
+  argTypes: { variant: { control: false } },
+  render: function AllVariantsStory(args) {
+    const variants = ["dots", "outline", "bars"] as const;
+    const [indices, setIndices] = useState<number[]>(variants.map(() => 1));
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {variants.map((variant, row) => (
+          <Indicators
+            key={variant}
+            {...args}
+            variant={variant}
+            activeIndex={indices[row] ?? 0}
+            onIndexChange={(next) => {
+              setIndices((prev) =>
+                prev.map((value, i) => (i === row ? next : value)),
+              );
+              args.onIndexChange?.(next);
+            }}
+          />
+        ))}
+      </div>
+    );
+  },
+};
+
 export const AllSizes: Story = {
   name: "All sizes",
   // `size` is the whole point of this grid — every other shared prop stays
@@ -222,5 +259,45 @@ export const AllSizes: Story = {
         ))}
       </div>
     );
+  },
+};
+
+export const KeyboardInteraction: Story = {
+  name: "Interaction: click and arrow-key navigation",
+  render: function KeyboardInteractionStory(args) {
+    const [index, setIndex] = useState(0);
+    return (
+      <Indicators
+        {...args}
+        activeIndex={index}
+        onIndexChange={(next) => {
+          setIndex(next);
+          args.onIndexChange?.(next);
+        }}
+      />
+    );
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const first = canvas.getByRole("button", { name: "Go to slide 1" });
+    const third = canvas.getByRole("button", { name: "Go to slide 3" });
+
+    await expect(first).toHaveAttribute("aria-current", "true");
+
+    // Click a non-adjacent dot directly.
+    await userEvent.click(third);
+    await expect(third).toHaveAttribute("aria-current", "true");
+    await expect(args.onIndexChange).toHaveBeenCalledWith(2);
+
+    // Roving tabindex: only the now-active dot is a Tab stop.
+    await expect(first).toHaveAttribute("tabIndex", "-1");
+    await expect(third).toHaveAttribute("tabIndex", "0");
+
+    // Arrow-key navigation from the newly active dot, with focus following.
+    third.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    const fourth = canvas.getByRole("button", { name: "Go to slide 4" });
+    await expect(fourth).toHaveAttribute("aria-current", "true");
+    await expect(fourth).toHaveFocus();
   },
 };

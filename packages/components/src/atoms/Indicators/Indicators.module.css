@@ -2,6 +2,14 @@
   align-items: center;
   display: inline-flex;
   gap: var(--dbm-space-4);
+  /* An `inline-flex` box's default `vertical-align: baseline` derives its
+     baseline from its *first* flex item — for `bars`/vertical `dots`, that
+     item's own cross-axis size changes whenever activation moves onto or
+     off of it, which shifted this element's position in its parent's line
+     box (found live: a real, reproducible one-time shift whenever the
+     first dot's own active state changed, never again afterward). `middle`
+     removes the dependency on any child's content baseline entirely. */
+  vertical-align: middle;
 }
 
 .wrapper.vertical {
@@ -38,6 +46,8 @@
   transition:
     background-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast)
+      var(--dbm-motion-easing-standard),
     width var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
     height var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
   width: var(--dot-size);
@@ -59,6 +69,71 @@
 
 .root.vertical .active {
   height: calc(var(--dot-size) * 3);
+  width: var(--dot-size);
+}
+
+/* Outline variant — inactive steps render as a hollow ring instead of a
+   solid fill; the active step stays solid for contrast. Border widths are
+   included in `--dot-size` via the global `box-sizing: border-box` reset,
+   so adding a border here doesn't change the rendered diameter. */
+
+.root.outline .dot {
+  background-color: transparent;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral-strong);
+}
+
+.root.outline .dot:hover:not(.active) {
+  background-color: transparent;
+  border-color: var(--dbm-border-strong);
+}
+
+.root.outline .active {
+  background-color: var(--dbm-bg-brand);
+  border-color: transparent;
+}
+
+/* Bars variant — every step renders at the same elongated length; only the
+   active step is at full thickness (`--dot-size` on the cross axis) — every
+   inactive step is thinner (half that), so the active one reads as more
+   prominent even before color is taken into account. The two `.active`
+   overrides below must stay after their own `.dot` rule in source order —
+   same specificity (0,0,3,0 each), so the later declaration wins.
+
+   `.root`'s own cross-axis size is fixed explicitly here (`--dot-size`,
+   the full thickness) rather than left to intrinsic "max of all children"
+   sizing — without this, since the outgoing/incoming active bar's
+   thicknesses cross paths during the transition (one shrinking from full
+   to half, the other growing from half to full), the intrinsic max
+   briefly dips below the settled value at the transition's midpoint
+   (found live: a real, reproducible momentary resize on every bars
+   transition, self-correcting once the transition finishes — visible as a
+   symmetric "shake" when the row is centered in its own parent). Locking
+   the cross-size removes the fluctuation regardless of transition timing. */
+
+.root.bars .dot {
+  height: calc(var(--dot-size) * 0.5);
+  width: calc(var(--dot-size) * 3);
+}
+
+.root.bars .active {
+  height: var(--dot-size);
+}
+
+.root.bars {
+  height: var(--dot-size);
+}
+
+.root.bars.vertical .dot {
+  height: calc(var(--dot-size) * 3);
+  width: calc(var(--dot-size) * 0.5);
+}
+
+.root.bars.vertical .active {
+  width: var(--dot-size);
+}
+
+.root.bars.vertical {
+  height: auto;
   width: var(--dot-size);
 }
 

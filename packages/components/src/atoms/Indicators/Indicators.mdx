@@ -11,6 +11,7 @@ export const propOrder = [
   "count",
   "size",
   "orientation",
+  "variant",
   "activeIndex",
   "onIndexChange",
   "getLabel",
@@ -39,7 +40,10 @@ a *roving tabindex* — a composite-widget pattern where only one element in a r
 the active dot) sits in the page's Tab order at a time, and the arrow keys move both the selection
 and that single Tab stop together, rather than every dot being individually tabbable. `orientation`
 switches both the layout axis and which pair of arrow keys drives it — Left/Right for the default
-horizontal row, Up/Down for a vertical column.
+horizontal row, Up/Down for a vertical column. `variant` switches the visual style only — `dots`
+(solid fill, the default), `outline` (a hollow ring when inactive), or `bars` (same-length segments,
+the active one at full thickness and every inactive one at half) — with identical behavior
+underneath in every case.
 
 ### Import
 
@@ -49,7 +53,7 @@ import { Indicators } from "@dbm-design-system/components";
 
 ## Playground
 
-Drive `count`, `size`, `orientation`, `showLabel`, and `aria-label` live. `activeIndex`/
+Drive `count`, `size`, `orientation`, `variant`, `showLabel`, and `aria-label` live. `activeIndex`/
 `onIndexChange` are wired through local Storybook-demo state instead of a Controls-panel field —
 click a dot, or focus one and use the arrow/Home/End keys, to actually move the position, the same
 as in a real consuming app.
@@ -73,6 +77,10 @@ as in a real consuming app.
 <PropertiesTable of={IndicatorsStories} order={propOrder} />
 
 ## Variants
+
+### All variants
+
+<Canvas of={IndicatorsStories.AllVariants} />
 
 ### All sizes
 
@@ -108,6 +116,10 @@ as in a real consuming app.
 - Turn on `showLabel` when the exact count matters to the user (a data-dense gallery, an enterprise
   dashboard's paginated widget) — dots alone communicate position well only up to a handful of
   slides; a numeric label scales to any `count` without the row itself growing unreadably wide.
+- Reach for `variant="bars"` when the indicators sit over a photo or video (a hero carousel, a
+  Stories-style flow) — the segmented look reads clearly against busy imagery the same way solid
+  dots can visually disappear into. Reach for `variant="outline"` for a lighter, lower-emphasis
+  treatment on a plain background, where a solid-filled row would compete with surrounding content.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -160,7 +172,8 @@ as in a real consuming app.
   of the group, not a child of it, so it never becomes part of any dot's own accessible name.
 - **Contrast:** the inactive dot's fill (`bg.track-strong`) and the active dot's fill (`bg.brand`)
   are both verified against `bg.surface` at the WCAG 1.4.11 3:1 non-text floor, across every brand
-  and mode combination — see Design tokens used below.
+  and mode combination — see Design tokens used below. `variant="outline"`'s ring (`border.neutral-
+  strong`, hover `border.strong`) is verified to the same floor.
 
 </Callout>
 
@@ -214,11 +227,19 @@ const [index, setIndex] = useState(0);
 />
 ```
 
+```tsx
+// The bars variant, for indicators overlaid on a photo or video
+<Indicators count={5} variant="bars" activeIndex={index} onIndexChange={setIndex} />
+```
+
 ## Design tokens used
 
-<TokenRow token="bg.track-strong" usage="inactive dot fill" />
-<TokenRow token="bg.neutral" usage="inactive dot's hover fill" />
-<TokenRow token="bg.brand" usage="active dot fill" />
+<TokenRow token="bg.track-strong" usage="inactive dot fill (dots, bars variants)" />
+<TokenRow token="bg.neutral" usage="inactive dot's hover fill (dots, bars variants)" />
+<TokenRow token="bg.brand" usage="active dot fill (all variants)" />
+<TokenRow token="border.neutral-strong" usage="inactive ring (outline variant)" />
+<TokenRow token="border.strong" usage="inactive ring's hover state (outline variant)" />
+<TokenRow token="border-width.1" usage="ring width (outline variant)" />
 <TokenRow token="border.focus" usage="focus-visible ring" />
 <TokenRow token="border-width.2" usage="focus-visible ring width" />
 <TokenRow token="radius.full" usage="dot/pill shape, both states" />

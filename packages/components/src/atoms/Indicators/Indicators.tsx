@@ -2,7 +2,11 @@ import { cx, mergeRefs } from "@dbm-design-system/primitives";
 import { forwardRef, useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import styles from "./Indicators.module.css";
-import type { IndicatorsProps, IndicatorsSize } from "./Indicators.types";
+import type {
+  IndicatorsProps,
+  IndicatorsSize,
+  IndicatorsVariant,
+} from "./Indicators.types";
 
 const defaultGetLabel = (index: number) => `Go to slide ${index + 1}`;
 const defaultFormatLabel = (activeIndex: number, count: number) =>
@@ -14,6 +18,12 @@ const sizeClass: Record<IndicatorsSize, string | undefined> = {
   md: styles.sizeMd,
   lg: styles.sizeLg,
   xl: styles.sizeXl,
+};
+
+const variantClass: Record<IndicatorsVariant, string | undefined> = {
+  dots: undefined,
+  outline: styles.outline,
+  bars: styles.bars,
 };
 
 /**
@@ -30,6 +40,7 @@ const sizeClass: Record<IndicatorsSize, string | undefined> = {
  * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} />
  * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} orientation="vertical" />
  * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} showLabel />
+ * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} variant="bars" />
  * ```
  */
 export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
@@ -38,6 +49,7 @@ export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
       count,
       size = "md",
       orientation = "horizontal",
+      variant = "dots",
       activeIndex,
       onIndexChange,
       getLabel = defaultGetLabel,
@@ -112,6 +124,7 @@ export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
           className={cx(
             styles.root,
             sizeClass[size],
+            variantClass[variant],
             isVertical && styles.vertical,
             className,
           )}

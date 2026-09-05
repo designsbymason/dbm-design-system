@@ -174,3 +174,192 @@ Self-verified: `tsc --noEmit` (package + `.storybook`), `eslint --max-warnings 0
 (929 tests package-wide), a real `tsup` build, and live Storybook verification — the label rendering
 correctly in both orientations, and the Docs page's Properties table/Variants/Design-tokens sections
 all confirmed live.
+
+**Follow-up, 2026-09-05, at explicit direction: added `variant` (`"dots" | "outline" | "bars"`,
+default `"dots"`).** Raised first as a feature-completeness question — a third variant option
+("progress-bar style," a continuous track+fill) was also considered and declined: it changes the
+interaction model itself (no discrete per-slide click targets, a different ARIA pattern entirely —
+`role="slider"`, not a button group), and the passive-display version of it already exists in the
+system as `ProgressBar` (`value={activeIndex + 1}`, `max={count}`) with zero new code needed — see
+this file's own note above for the full reasoning. `outline`/`bars` were chosen instead because both
+keep the *exact* existing behavior (controlled `activeIndex`, roving-tabindex keyboard nav,
+`role="group"`) and only change the dot's own rendering — matching `05-component-api-conventions.md`
+§2's `variant` convention (`Button`/`Tag`'s own shape), not the four-library comparison this project
+usually reaches for first (none of MUI/Chakra/Ant/Radix ship a standalone "Indicators" component to
+compare against — the precedent here is the broader pagination-indicator pattern in the wild,
+Swiper.js/Stories-style UIs, named honestly as a weaker citation than the usual sibling-library gap).
+- **`outline`:** inactive dots render as a hollow ring (`border.neutral-strong`, transparent fill)
+  instead of the default solid `bg.track-strong` fill; hover intensifies to `border.strong` — both
+  tokens already verified elsewhere for the identical "outline/selected ring" role (`border.strong`'s
+  own token description literally names "Tag's outline/selected-solid-neutral rings"). The active dot
+  stays solid `bg.brand` with `border-color: transparent`, keeping box dimensions identical to
+  inactive across the transition (the project's global `box-sizing: border-box` reset means the new
+  border doesn't inflate `--dot-size`, confirmed live via computed style rather than assumed).
+- **`bars`:** every dot renders at the same elongated dimension (`calc(--dot-size * 3)` on whichever
+  axis `orientation` puts the row/column along) — a deliberate behavior change *within* the variant,
+  not just color: the existing "active dot elongates" mechanic doesn't apply here, since all bars are
+  already at that width/height; only `background-color` (`bg.track-strong`/`bg.neutral` hover/
+  `bg.brand` active — the same three tokens `dots` already uses) distinguishes the active one. `.dot`'s
+  own `radius: full` already applies unconditionally, so bars get the same rounded/stadium ends as
+  the existing active pill for free, no new radius token needed.
+- Both variants compose cleanly with `orientation="vertical"` and `showLabel` with no extra wiring —
+  confirmed live for all combinations (`bars` + `vertical` swaps to `height: calc(...)`/`width: var(
+  --dot-size)` via a `.root.bars.vertical` compound selector, mirroring the existing `.root.vertical
+  .active` pattern).
+- Docs page updated: `propOrder` (`variant` after `orientation`), intro paragraph, Playground
+  description, a new "All variants" Variants entry (mirroring `AllSizes`' own multi-instance-grid
+  story pattern — only `variant` itself has its Controls-panel control suppressed, per the standing
+  convention for that story shape), Do bullets naming when to reach for each, an Accessibility
+  contrast bullet for the outline ring, a `bars` code example, and 3 new `Design tokens used` rows
+  (`border.neutral-strong`, `border.strong`, `border-width.1`) plus updated per-token usage notes
+  clarifying which variant(s) each existing token now serves. New `AllVariants` gallery story;
+  `variant` added to the Playground's `argTypes`/`args` as a real `select` control.
+
+Tests: 32 → 38 (added: default/outline/bars class coverage, jest-axe checks for both new variants,
+and a functional check that `bars` still marks `aria-current` and supports click/keyboard navigation
+identically to `dots` — confirming the variant only changed rendering, not behavior).
+
+Self-verified: `tsc --noEmit` (package + `.storybook`), `eslint --max-warnings 0`, full Vitest suite
+(935 tests package-wide), a real `tsup` build, and live Storybook verification — computed styles
+checked directly (not just visually) for both variants' resting/hover/active states in every
+combination with `orientation`, confirming the exact token values rendered match what was specified
+rather than assuming from the CSS source alone.
+
+**Follow-up, 2026-09-05, at explicit direction: `bars` variant — inactive bars are now thinner than
+the active bar.** Previously every bar (active and inactive) rendered at the identical thickness
+(`--dot-size` on the cross axis), differing only by fill color. Changed so every inactive bar is half
+that thickness (`calc(--dot-size * 0.5)`) while the active bar stays at full `--dot-size` — the active
+step now reads as more prominent from shape alone, color aside, closer to how Stories-style UIs
+typically treat their active segment.
+- Implemented as `.root.bars .dot` (thin base, both axes set — `height` for horizontal, `width` for
+  vertical via the parallel `.root.bars.vertical .dot` rule) plus a same-specificity `.active`
+  override placed later in source order to win the tie (`.root.bars .active` / `.root.bars.vertical
+  .active`) — the identical cascade mechanism `.root.vertical .active` already relies on for the
+  dots/outline variants' own active-elongation, just one compound class deeper. Verified by reading
+  actual computed `width`/`height` in the browser for all 4 orientation×active-state combinations
+  (not inferred from the CSS source alone) — e.g. horizontal `md`: inactive 24×4px, active 24×8px;
+  vertical `md`: inactive 4×24px, active 8×24px.
+- No new token — `0.5` is a calc() multiplier on the existing `--dot-size` custom property, matching
+  the same pattern already established for the `3` (active elongation) and `4`/`0.5` (this fix)
+  multipliers rather than requiring a new component-layer token step for a value that's a strict
+  proportion of one that already exists.
+- Docs page updated: intro paragraph and `IndicatorsProps`' own `variant` JSDoc (`bars` no longer
+  described as "distinguished only by fill color"), and the story file's own `argTypes.variant`
+  description, kept in sync with the JSDoc per the standing convention that both need to independently
+  state the truth (docgen doesn't read one from the other).
+
+No test changes — the existing `bars` functional test (`aria-current`, click/keyboard nav) and the
+jest-axe check both already covered this variant generically; this was a pure CSS geometry change
+with no new branchable behavior to assert beyond what computed-style inspection already confirmed
+live.
+
+Self-verified: `tsc --noEmit` (package + `.storybook`), `eslint --max-warnings 0`, full Vitest suite
+(935 tests package-wide, unchanged count), a real `tsup` build, and live Storybook verification with
+direct computed-style reads confirming the exact pixel values above.
+
+**Follow-up, 2026-09-05, two real bugs reported by the user in the `bars` variant — both root-caused
+by live measurement (`getBoundingClientRect`, sampled through actual transitions), not guessed at
+from reading the CSS.**
+
+1. **Horizontal `bars`: the whole component visibly shifted down the first time activation moved
+   away from index 0, never again afterward.** Root cause: `.wrapper`/`.root` are `display:
+   inline-flex`, which defaults to `vertical-align: baseline` for how the box sits in its *own*
+   parent's line — and a flex container's baseline is specifically derived from its *first* in-flow
+   flex item. In horizontal `bars` mode, dot 0's own height changes (8px active → 4px inactive) the
+   first time it stops being active, which shifts `.root`'s (and thus `.wrapper`'s) baseline, which
+   shifts where the whole component sits in its parent. Once dot 0 is inactive, its height never
+   changes again — hence a one-time shift, never repeating on subsequent clicks between any other
+   pair of indices. Confirmed by measuring `getBoundingClientRect().top` directly: `47.5` → `49.5`
+   after the first index-0 departure, then stable at `49.5` for every later transition. This
+   generalizes beyond `bars`: vertical `dots`/`outline` has the identical latent issue (the active
+   dot's height *does* change there too, 8px inactive → 24px active) even though it wasn't the one
+   reported — the fix below is applied unconditionally, not scoped to `bars`, so it's covered too.
+   **Fix:** `vertical-align: middle` on `.wrapper` — removes the dependency on any child's content
+   baseline entirely, regardless of which variant/orientation/index is involved.
+2. **Vertical `bars`: a brief left-right "shake" on every activation change, self-correcting back to
+   the original position.** Different root cause, specific to `bars`: `.root`'s cross-axis size
+   (width, in vertical/column mode) is intrinsic — "max of all children." During the CSS transition,
+   the outgoing active bar's thickness shrinks (8→4px) while the incoming one grows (4→8px)
+   simultaneously; since these are symmetric and cross paths, at the transition's midpoint *both* sit
+   around 6px — briefly making the intrinsic max less than the settled 8px, so the container visibly
+   narrows then widens again as the transition completes. Confirmed by sampling
+   `getBoundingClientRect()` every 15ms through an entire transition. Only `bars` is affected: for
+   `dots`/`outline`, the changing dimension is the *main* axis (elongation), which is sum-based, not
+   max-based — exactly one item is always elongated at any instant, so the sum never fluctuates
+   regardless of which one it is. **Fix:** lock `.root`'s cross-axis size explicitly to the full
+   `--dot-size` for the `bars` variant (`.root.bars { height: ... }` for horizontal, `.root.bars.
+   vertical { width: ...; height: auto }` for vertical) instead of leaving it to intrinsic sizing —
+   the settled value is unchanged in every case (it already equaled `--dot-size` at rest), only the
+   never-fluctuates-mid-transition guarantee is new.
+
+Both fixes verified live via direct `getBoundingClientRect` reads (not just visual inspection): the
+horizontal shift is gone (`top` identical across a baseline read, a click to index 1, and a further
+click to index 3); the vertical width is sampled at 15ms intervals across an entire transition and
+never moves off 8px. Two new regression tests added (`toHaveStyle` checks on `vertical-align` and the
+locked cross-axis size) — genuine layout/geometry can't be asserted in jsdom (no real layout engine,
+`getBoundingClientRect` always returns zeros there), but the underlying CSS declarations that *cause*
+the fix can be, and were confirmed to actually resolve correctly rather than assumed from source.
+
+Tests: 38 → 41 (three regression tests: wrapper `vertical-align`, bars horizontal cross-axis lock,
+bars vertical cross-axis lock).
+
+Self-verified: `tsc --noEmit` (package + `.storybook`), `eslint --max-warnings 0`, full Vitest suite
+(938 tests package-wide), a real `tsup` build, and live browser reproduction of both original bugs
+followed by direct measurement confirming both are resolved.
+
+**Final review pass, 2026-09-05, ahead of a Finalized decision — re-ran the full
+`06-engineering-standards.md` §9 checklist end to end against the component's current, accumulated
+state** (five follow-ups deep since the original 2026-09-04 pass), rather than assuming everything
+already checked once still holds.
+
+**Fixed:**
+- **No `play`-function interaction story existed anywhere in `Indicators.stories.tsx`.** A real,
+  required gap per `07-storybook-and-documentation-standards.md` §2/§5 ("every interactive component
+  gets at least one `play`-function story") and never added across any of the five prior passes on
+  this component. Added `KeyboardInteraction` — a stateful story (fully-controlled components need
+  their own local state to demonstrate real behavior, same pattern as `Playground`) whose `play`
+  function clicks a non-adjacent dot, asserts `aria-current`/`onIndexChange` and the roving-tabindex
+  swap, then arrow-key-navigates from there and asserts focus follows. Verified for real via
+  `pnpm test:storybook` (the actual Vitest-browser runner that executes `play` functions, not just
+  `tsc`/lint) — 327/327 storybook tests passing, this one included.
+
+**Checked, found already correct (no change needed):**
+- **Theming across all 4 brand/mode combinations for `outline`/`bars`** — both variants were only
+  ever screenshotted in Purple/Light during their own review. Explicitly checked Purple/Dark,
+  Emerald/Light, and Emerald/Dark live: the outline ring, its hover state, and the bars' thickness
+  contrast all render correctly and visibly in every combination.
+- **A "kitchen sink" combination never tested before** — `orientation="vertical"` + `variant="outline"`
+  + `showLabel` together. Confirmed live via computed style: outline ring colors correct on the
+  column, active dot solid, progress label renders as a sibling with the right text — no interaction
+  bugs from combining three independently-shipped features.
+- Full baseline-correctness re-verification (definition of done, prop patterns, `{...props}` ordering,
+  zero hardcoded values, SSR safety, exported from `index.ts`, no `any`/suppressions) — all still hold
+  exactly as the original pass left them; nothing regressed across the five follow-ups.
+
+**Noted, not changed (a real tradeoff, not a defect):** `.dot`'s transitions animate `width`/`height`,
+which `06-engineering-standards.md` §4 names as layout-triggering properties to avoid in favor of
+`transform`/`opacity` where possible. This is, in hindsight, the underlying reason the two geometry
+bugs above were even possible — a `transform: scale()`-based implementation would never have needed
+the container's own intrinsic size to fluctuate in the first place. Not changed here: switching to
+transform-based sizing is a real redesign (distorts `border-radius` under non-uniform scale, needs a
+fixed-size box plus a separately-transformed inner element, changes the actual click-target size
+question along with it — WCAG 2.5.8 territory, a separate concern of its own), not a drop-in fix, and
+the concrete symptoms it could have caused are already independently resolved by the two locked-
+geometry fixes above. Worth knowing if `Indicators` is revisited for a performance pass later; not
+blocking here.
+
+Tests: 41 → still 41 unit tests (the new coverage is a Storybook `play`-function story, run via
+`test:storybook`, not a `Indicators.test.tsx` addition).
+
+Self-verified: `tsc --noEmit` (package + `.storybook`), `eslint --max-warnings 0`, full Vitest unit
+suite (938 tests package-wide) and the Storybook interaction suite (`pnpm test:storybook`, 327 tests
+including the new `play` function), a real `tsup` build, and live verification of every combination
+named above across all 4 brand/mode themes.
+
+**Review complete.** Every `06-engineering-standards.md` §9 checklist section re-verified against the
+component's current state, one real required gap found and closed, two untested-but-fine combinations
+confirmed, and one non-blocking architectural tradeoff surfaced and explained rather than silently
+redesigned.
+
+**Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further changes
+to Indicators (code, stories, docs, or its tokens) without asking first.

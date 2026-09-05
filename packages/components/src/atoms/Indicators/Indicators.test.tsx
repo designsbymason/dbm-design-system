@@ -37,6 +37,119 @@ describe("Indicators", () => {
     expect(screen.getByRole("group")).toHaveClass(styles.sizeLg as string);
   });
 
+  describe("variant", () => {
+    it("defaults to dots (no outline/bars class)", () => {
+      render(<Indicators count={3} activeIndex={0} onIndexChange={() => {}} />);
+      const group = screen.getByRole("group");
+      expect(group).not.toHaveClass(styles.outline as string);
+      expect(group).not.toHaveClass(styles.bars as string);
+    });
+
+    it("applies the outline class when variant='outline'", () => {
+      render(
+        <Indicators
+          count={3}
+          activeIndex={0}
+          onIndexChange={() => {}}
+          variant="outline"
+        />,
+      );
+      expect(screen.getByRole("group")).toHaveClass(styles.outline as string);
+    });
+
+    it("applies the bars class when variant='bars'", () => {
+      render(
+        <Indicators
+          count={3}
+          activeIndex={0}
+          onIndexChange={() => {}}
+          variant="bars"
+        />,
+      );
+      expect(screen.getByRole("group")).toHaveClass(styles.bars as string);
+    });
+
+    it("has no accessibility violations with variant='outline'", async () => {
+      const { container } = render(
+        <Indicators
+          count={4}
+          activeIndex={1}
+          onIndexChange={() => {}}
+          variant="outline"
+        />,
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it("has no accessibility violations with variant='bars'", async () => {
+      const { container } = render(
+        <Indicators
+          count={4}
+          activeIndex={1}
+          onIndexChange={() => {}}
+          variant="bars"
+        />,
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it("still marks the active dot and supports click/keyboard navigation with variant='bars'", async () => {
+      const user = userEvent.setup();
+      const onIndexChange = vi.fn();
+      render(
+        <Indicators
+          count={3}
+          activeIndex={0}
+          onIndexChange={onIndexChange}
+          variant="bars"
+        />,
+      );
+      const dots = screen.getAllByRole("button");
+      expect(dots[0]).toHaveAttribute("aria-current", "true");
+      await user.click(screen.getByRole("button", { name: "Go to slide 3" }));
+      expect(onIndexChange).toHaveBeenCalledWith(2);
+    });
+
+    it("regression: the outer wrapper's vertical-align is locked to 'middle', not left at inline-flex's default 'baseline' (found live — a real page shift whenever the first dot's own height changed, e.g. bars/vertical-dots activation moving onto or off of it)", () => {
+      const { container } = render(
+        <Indicators count={3} activeIndex={0} onIndexChange={() => {}} />,
+      );
+      const wrapper = container.firstElementChild as HTMLElement;
+      expect(wrapper).toHaveStyle({ verticalAlign: "middle" });
+    });
+
+    it("regression: variant='bars' locks the group's own cross-axis size (height) rather than leaving it to intrinsic 'max of children' sizing, which visibly dipped mid-transition as the outgoing/incoming active bar's thicknesses crossed paths", () => {
+      render(
+        <Indicators
+          count={3}
+          activeIndex={0}
+          onIndexChange={() => {}}
+          variant="bars"
+        />,
+      );
+      expect(screen.getByRole("group")).toHaveStyle({
+        height: "var(--dot-size)",
+      });
+    });
+
+    it("regression: variant='bars' with orientation='vertical' locks the cross-axis size on width instead (the axes swap with orientation)", () => {
+      render(
+        <Indicators
+          count={3}
+          activeIndex={0}
+          onIndexChange={() => {}}
+          variant="bars"
+          orientation="vertical"
+        />,
+      );
+      expect(screen.getByRole("group")).toHaveStyle({
+        width: "var(--dot-size)",
+      });
+    });
+  });
+
   describe("orientation", () => {
     it("defaults to horizontal (no vertical class)", () => {
       render(<Indicators count={3} activeIndex={0} onIndexChange={() => {}} />);

@@ -126,9 +126,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**29 of 47 atoms have a Docs page; 28 are also Finalized** — Indicators' review pass is complete
-(see [Indicators.md](component-reviews/Indicators.md)) but awaiting the user's explicit
-Finalized confirmation per `06-engineering-standards.md` §9.
+**29 of 47 atoms have a Docs page; all 29 are also Finalized** (see [Indicators.md](component-reviews/Indicators.md)
+for the most recent, 2026-09-05).
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -160,7 +159,7 @@ Finalized confirmation per `06-engineering-standards.md` §9.
 | Stack | Atom | Layout | ✅ | ✅ 2026-09-03 | [Stack.md](component-reviews/Stack.md) |
 | Icon | Atom | Media | ✅ | ✅ 2026-09-03 | [Icon.md](component-reviews/Icon.md) |
 | Image | Atom | Media | ✅ | ✅ 2026-09-04 | [Image.md](component-reviews/Image.md) |
-| Indicators | Atom | Media | ✅ | ⏳ pending confirmation | [Indicators.md](component-reviews/Indicators.md) |
+| Indicators | Atom | Media | ✅ | ✅ 2026-09-05 | [Indicators.md](component-reviews/Indicators.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
 - **Layout:** Grid, GridItem (molecule-tier, built, but still need this same Docs-page treatment). Spacer's and Stack's own review passes are complete — see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md).
