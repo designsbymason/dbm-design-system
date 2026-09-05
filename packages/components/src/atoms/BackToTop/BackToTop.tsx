@@ -6,45 +6,72 @@ import styles from "./BackToTop.module.css";
 import type { BackToTopProps } from "./BackToTop.types";
 
 /**
- * A floating button that appears once the page has been scrolled past
- * `threshold`, scrolling smoothly back to the top when activated. Stays
- * mounted at all times (fading/sliding in and out) rather than mounting on
- * demand, so its appearance is a transition instead of a layout jump —
- * hidden from the accessibility tree and removed from tab order while not
- * visible. SSR-safe: the scroll listener only attaches client-side.
+ * A floating button that appears once the page (or a custom scroll
+ * container) has been scrolled past `threshold`, scrolling smoothly back
+ * to the top when activated. Stays mounted at all times (fading/sliding in
+ * and out) rather than mounting on demand, so its appearance is a
+ * transition instead of a layout jump — hidden from the accessibility tree
+ * and removed from tab order while not visible. SSR-safe: the scroll
+ * listener only attaches client-side.
  *
  * @example
  * ```tsx
  * <BackToTop />
  * <BackToTop threshold={800} label="Scroll to top" />
+ * <BackToTop size="sm" variant="secondary" />
+ * <BackToTop scrollContainerRef={panelRef} />
  * ```
  */
 export const BackToTop = forwardRef<HTMLButtonElement, BackToTopProps>(
-  ({ threshold = 400, label = "Back to top", className, ...props }, ref) => {
+  (
+    {
+      size = "md",
+      variant = "primary",
+      threshold = 400,
+      scrollContainerRef,
+      label = "Back to top",
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
-      const handleScroll = () => setVisible(window.scrollY > threshold);
+      const container = scrollContainerRef?.current;
+      const getScrollPosition = () =>
+        container ? container.scrollTop : window.scrollY;
+      const handleScroll = () => setVisible(getScrollPosition() > threshold);
       handleScroll();
-      window.addEventListener("scroll", handleScroll, { passive: true });
-      return () => window.removeEventListener("scroll", handleScroll);
-    }, [threshold]);
+      const scrollTarget: EventTarget = container ?? window;
+      scrollTarget.addEventListener("scroll", handleScroll, {
+        passive: true,
+      });
+      return () => scrollTarget.removeEventListener("scroll", handleScroll);
+    }, [threshold, scrollContainerRef]);
 
     const handleClick = () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const container = scrollContainerRef?.current;
+      if (container) {
+        container.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     };
 
     return (
       <IconButton
         ref={ref}
         icon={ArrowUpIcon}
-        aria-label={label}
+        size={size}
+        variant={variant}
+        rounded
+        {...props}
         aria-hidden={!visible || undefined}
         tabIndex={visible ? undefined : -1}
+        aria-label={label}
         onClick={handleClick}
-        rounded
         className={cx(styles.root, visible && styles.visible, className)}
-        {...props}
       />
     );
   },

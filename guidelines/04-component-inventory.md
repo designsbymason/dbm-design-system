@@ -111,7 +111,7 @@ Wayfinding and app structure.
 | Stepper | organism | 🟡 | Multi-step flow indicator (wizards, onboarding) |
 | CommandPalette | organism | 🟡 | ⌘K-style search/action launcher — high agent/power-user value |
 | Pagination | molecule | 🟢 | (see also Data Display) |
-| BackToTop | atom | ⚪ | |
+| BackToTop | atom | ⚪ | Floating scroll-to-top button, appears past a scroll threshold — wraps IconButton |
 | TableOfContents | molecule | ⚪ | Anchor-linked page outline, docs-site use case |
 
 ## 6. Feedback

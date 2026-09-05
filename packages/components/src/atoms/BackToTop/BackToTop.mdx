@@ -1,0 +1,232 @@
+import { ArrowUpIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Affix } from "../Affix";
+import { IconButton } from "../IconButton";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { BackToTop } from "./BackToTop";
+import * as BackToTopStories from "./BackToTop.stories";
+
+export const propOrder = [
+  "size",
+  "variant",
+  "threshold",
+  "scrollContainerRef",
+  "label",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={BackToTopStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="BackToTop" tier="Atom" />
+
+A floating button, fixed to the bottom-end corner of the viewport, that appears once the page (or a
+custom scroll container) has been scrolled past `threshold` and scrolls smoothly back to the top when
+activated. Wraps `IconButton` internally — `size`/`variant` pass straight through to it, so a
+`BackToTop` matches whatever button styling the surrounding page already uses. The button stays
+mounted at all times (fading and sliding in and out via `opacity`/`transform`) rather than mounting
+only once visible, so its appearance reads as a transition rather than a layout jump — and it's hidden
+from the accessibility tree and removed from the tab order the entire time it isn't visible, not just
+visually faded out. Pass `scrollContainerRef` (the same prop name and shape `Affix` already uses) to
+watch and scroll a specific panel instead of the page — the button itself still floats in the
+viewport's own fixed corner either way, since its position is never relative to the container it
+watches.
+
+### Import
+
+```tsx
+import { BackToTop } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive `size`, `variant`, `threshold`, and `label` live. Scroll the canvas down past `threshold` to
+reveal the button.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={BackToTopStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={BackToTopStories.Playground}
+  exclude={["scrollContainerRef", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`BackToTop` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
+`onFocus`, `form`) — passed straight through to the underlying `IconButton`.
+
+<PropertiesTable of={BackToTopStories} order={propOrder} />
+
+## Variants
+
+### Visible state (no scrolling needed)
+
+<Canvas of={BackToTopStories.Visible} />
+
+### Within a scroll container (scrollContainerRef)
+
+<Canvas of={BackToTopStories.WithinScrollContainer} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Mount exactly one default-positioned `BackToTop` per scroll context — it's fixed-positioned
+  relative to the *viewport*, not the container it watches, so two instances with no explicit offset
+  always render in the identical corner regardless of which `scrollContainerRef` each one has.
+- If a page and one of its own panels are *both* independently scrollable and genuinely need their
+  own separate button, give each instance a distinct position via `className`/`style` (a different
+  corner, or an offset `bottom`/`inset-inline-end`) — see the Code examples section below. Without
+  that, the two literally overlap; `scrollContainerRef` only changes what each one measures and
+  scrolls, never where it renders.
+- Pick a `threshold` proportional to how tall the page typically is — a short landing page and a
+  long data table shouldn't use the same fixed pixel value.
+- Match `size`/`variant` to the page's other floating or primary actions, so `BackToTop` doesn't read
+  as a visually unrelated control bolted on afterward.
+- Reach for `scrollContainerRef` when the scrollable surface is a panel, not the page itself (a
+  dashboard's own scrolling region, a modal body) — without it, `BackToTop` measures and resets the
+  page's own scroll, which won't correlate with a nested container's position at all.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't rely on `BackToTop` as the page's only way back to important navigation — it's a convenience
+  shortcut to the very top of the document, not a substitute for a real navigation landmark.
+- Don't set `threshold` to `0` expecting the button to appear immediately and then never move again —
+  a value at or below the page's own initial scroll position (including a real negative number) means
+  the button is visible from first paint, which reads as a persistent floating action button rather
+  than a scroll-triggered one.
+- Don't nest interactive content inside `label` expecting it to render — it's a plain accessible-name
+  string, not `children`; this button has no visible text at all.
+- Don't expect `scrollContainerRef` to change *where* the button renders — it only changes what
+  `BackToTop` measures and scrolls, never its own position. If a panel needs a button that visually
+  reads as "belonging" to it rather than the page, that's a different, unbuilt positioning mode, not
+  something `scrollContainerRef` already does.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep `threshold` comfortably below the point where a user would already feel "lost" on a long page
+  — the button should offer an escape hatch before scroll fatigue sets in, not only once someone has
+  scrolled to the very bottom.
+- Reach for a lower-emphasis `variant` (`secondary`/`tertiary`/`ghost`) on content-heavy pages where a
+  `primary`-styled floating button would compete with the page's own real primary action.
+- Leave `label` at its default ("Back to top") unless the destination genuinely isn't the top of the
+  page (e.g. a specific anchor) — changing the wording without changing the actual behavior makes the
+  button's name inaccurate.
+- Before reaching for two instances, check whether you actually need both — in the common "app shell"
+  layout where the outer page itself never scrolls (only inner panels do), a single `scrollContainerRef`
+  instance is unambiguous on its own, since there's only one thing on screen it could mean. Two
+  buttons are only genuinely needed when the page *and* a panel are both independently scrollable and
+  a user could plausibly want to reset either one separately.
+
+## Accessibility
+
+<Callout tone="info" title="Hidden from the accessibility tree and the tab order while not visible — not just faded out">
+
+- While below `threshold`, the button renders with `aria-hidden="true"` and `tabIndex={-1}` together,
+  and `pointer-events: none` in CSS — all three at once, not just a visual fade. `aria-hidden` alone
+  only affects screen readers; `tabIndex={-1}` alone only affects the Tab key; a real user could still
+  click through to it with a mouse if only the opacity changed. All three are required together for
+  the hidden state to actually mean "not there."
+- `aria-hidden`, `tabIndex`, and `aria-label` are entirely computed by the component itself from
+  `visible`/`label` — none of the three can be overridden by passing a same-named native prop, the
+  same "fully owned, not a raw passthrough" pattern `IconButton` already uses for its own
+  `aria-pressed`.
+- The fade/slide transition is a one-shot state-change transition (triggered once per scroll-position
+  crossing), not a continuously-repeating animation — it's correctly out of scope for
+  `prefers-reduced-motion`, which this system reserves for looping animations like a spinner.
+- Activating the button (click, or Enter/Space once focused) scrolls the page with
+  `behavior: "smooth"` — the browser's own native smooth-scroll implementation, not a custom
+  JavaScript animation.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Basic usage — mount once, anywhere in the page tree
+<BackToTop />
+```
+
+```tsx
+// A higher threshold for a very long page, and a destination-specific label
+<BackToTop threshold={1200} label="Scroll to top" />
+```
+
+```tsx
+// A lower-emphasis variant and a smaller size, to sit quietly on a content-heavy page
+<BackToTop variant="tertiary" size="sm" />
+```
+
+```tsx
+// Watching and scrolling a dashboard panel instead of the page
+const panelRef = useRef<HTMLDivElement>(null);
+<div ref={panelRef} style={{ overflow: 'auto', height: '100%' }}>
+  {/* panel content */}
+</div>
+<BackToTop scrollContainerRef={panelRef} />
+```
+
+```tsx
+// Both the page and a panel are independently scrollable, so each gets its
+// own button — offset one via style, or they'd render in the same corner
+const panelRef = useRef<HTMLDivElement>(null);
+
+// Page-level instance — default position (bottom-end corner)
+<BackToTop />
+
+// Panel-level instance — offset further from the edge so it doesn't overlap
+<BackToTop
+  scrollContainerRef={panelRef}
+  style={{ insetInlineEnd: 'calc(var(--dbm-space-6) + 4rem)' }}
+/>
+```
+
+## Design tokens used
+
+<TokenRow token="space.6" usage="distance from the viewport's bottom and end edges" />
+<TokenRow token="space.2" usage="slide-in offset (the hidden state's resting transform)" />
+<TokenRow token="opacity.0" usage="fully hidden state" />
+<TokenRow token="opacity.100" usage="fully visible state" />
+<TokenRow token="motion.duration.base" usage="fade/slide transition" />
+<TokenRow token="motion.easing.standard" usage="fade/slide transition" />
+<TokenRow token="z-index.fixed" usage="stacking above normal page content" />
+
+`IconButton` — see its own Design tokens used for the button's actual fill/border/focus-ring colors,
+which `size`/`variant` resolve through unchanged.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="IconButton"
+  description="What BackToTop wraps internally — size and variant pass straight through unchanged"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={ArrowUpIcon} aria-label="Example" rounded />
+</RelatedCard>
+<RelatedCard
+  name="Affix"
+  description="Shares the scrollContainerRef convention for a custom scroll container — sticks content in place rather than toggling a floating button's visibility"
+  href="/?path=/docs/atoms-layout-affix--docs"
+>
+  <Affix>
+    <div style={{ padding: "var(--dbm-space-2)", background: "var(--dbm-bg-brand-subtle)", borderRadius: "var(--dbm-radius-xs)", fontSize: "var(--dbm-font-size-xs)" }}>
+      Sticky header
+    </div>
+  </Affix>
+</RelatedCard>
+</div>
