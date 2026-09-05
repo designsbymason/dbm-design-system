@@ -87,8 +87,8 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "bg.neutral-hover", usage: "Hover state of bg.neutral — uses the same value in light and dark themes, unlike other hover tokens" },
   { token: "bg.neutral-subtle", usage: "Hover fill for low-emphasis controls, dashboard panels, and general neutral tinting" },
   { token: "bg.neutral-subtle-hover", usage: "Hover state of bg.neutral-subtle" },
-  { token: "bg.track", usage: "Empty/unfilled track fill for ProgressBar and ProgressCircle — a deliberate low-contrast exception, see Color page notes" },
-  { token: "bg.track-strong", usage: "Unchecked-state track fill for Switch — a real, WCAG 1.4.11-verified interactive-control boundary, unlike bg.track's own deliberate exception" },
+  { token: "bg.track", usage: "Empty/unfilled track fill for a progress indicator" },
+  { token: "bg.track-strong", usage: "Unchecked-state track fill for a toggle control" },
   { token: "bg.code", usage: "Background for inline code and token references (documentation only)" },
 ]} />
 
@@ -152,7 +152,7 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "icon.info", usage: "Standalone info-tone icon" },
   { token: "icon.on-info", usage: "Icon on a solid bg.info fill" },
   { token: "icon.on-neutral", usage: "Icon on a solid bg.neutral fill" },
-  { token: "icon.white", usage: "Icon/spinner sitting directly on bg.overlay — stays white in dark mode too, since bg.overlay itself never lightens; named for its value rather than its role, a deliberate exception since it doesn't change per theme/mode" },
+  { token: "icon.white", usage: "Icon on the dimming scrim (bg.overlay)" },
 ]} />
 
 ## Contrast verification
