@@ -51,6 +51,17 @@ const meta: Meta<typeof Indicators> = {
       control: false,
       description: "Accessible label per dot.",
     },
+    showLabel: {
+      control: "boolean",
+      description:
+        'Shows a text progress label (e.g. "3/5") next to the dots.',
+    },
+    // Same reasoning as `getLabel`/`formatValueLabel` above — a function
+    // prop isn't a control Storybook can meaningfully drive.
+    formatLabel: {
+      control: false,
+      description: "Customizes the progress label's content.",
+    },
     "aria-label": {
       control: "text",
       description: "Accessible name for the whole group of dots.",
@@ -87,6 +98,7 @@ const meta: Meta<typeof Indicators> = {
     count: 5,
     size: "md",
     orientation: "horizontal",
+    showLabel: false,
     "aria-label": "Slide navigation",
     onIndexChange: fn(),
   },
@@ -148,6 +160,27 @@ export const Vertical: Story = {
   },
   render: function VerticalStory(args) {
     const [index, setIndex] = useState(1);
+    const clampedIndex = Math.min(index, Math.max(args.count - 1, 0));
+    return (
+      <Indicators
+        {...args}
+        activeIndex={clampedIndex}
+        onIndexChange={(next) => {
+          setIndex(next);
+          args.onIndexChange?.(next);
+        }}
+      />
+    );
+  },
+};
+
+export const WithProgressLabel: Story = {
+  name: "With progress label",
+  args: {
+    showLabel: true,
+  },
+  render: function WithProgressLabelStory(args) {
+    const [index, setIndex] = useState(2);
     const clampedIndex = Math.min(index, Math.max(args.count - 1, 0));
     return (
       <Indicators

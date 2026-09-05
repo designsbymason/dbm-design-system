@@ -14,6 +14,8 @@ export const propOrder = [
   "activeIndex",
   "onIndexChange",
   "getLabel",
+  "showLabel",
+  "formatLabel",
   "aria-label",
   "id",
   "className",
@@ -47,9 +49,10 @@ import { Indicators } from "@dbm-design-system/components";
 
 ## Playground
 
-Drive `count`, `size`, `orientation`, and `aria-label` live. `activeIndex`/`onIndexChange` are wired
-through local Storybook-demo state instead of a Controls-panel field — click a dot, or focus one and
-use the arrow/Home/End keys, to actually move the position, the same as in a real consuming app.
+Drive `count`, `size`, `orientation`, `showLabel`, and `aria-label` live. `activeIndex`/
+`onIndexChange` are wired through local Storybook-demo state instead of a Controls-panel field —
+click a dot, or focus one and use the arrow/Home/End keys, to actually move the position, the same
+as in a real consuming app.
 
 <div className="dbm-playground-canvas">
 
@@ -58,7 +61,7 @@ use the arrow/Home/End keys, to actually move the position, the same as in a rea
 </div>
 <PlaygroundControls
   of={IndicatorsStories.Playground}
-  exclude={["activeIndex", "onIndexChange", "getLabel", "id", "className", "style", "data-testid"]}
+  exclude={["activeIndex", "onIndexChange", "getLabel", "formatLabel", "id", "className", "style", "data-testid"]}
   order={propOrder}
 />
 
@@ -83,6 +86,10 @@ use the arrow/Home/End keys, to actually move the position, the same as in a rea
 
 <Canvas of={IndicatorsStories.Vertical} />
 
+### With progress label
+
+<Canvas of={IndicatorsStories.WithProgressLabel} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -98,6 +105,9 @@ use the arrow/Home/End keys, to actually move the position, the same as in a rea
 - Reach for `orientation="vertical"` when the indicators sit beside a gallery rather than beneath
   it (a side-positioned thumbnail rail, a full-height hero) — it swaps both the layout axis and the
   arrow-key mapping together, so keyboard behavior always matches what's on screen.
+- Turn on `showLabel` when the exact count matters to the user (a data-dense gallery, an enterprise
+  dashboard's paginated widget) — dots alone communicate position well only up to a handful of
+  slides; a numeric label scales to any `count` without the row itself growing unreadably wide.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -108,6 +118,8 @@ use the arrow/Home/End keys, to actually move the position, the same as in a rea
   position marker within a fixed, already-rendered sequence, not a multi-step form's progress UI.
 - Don't leave the default `aria-label` ("Slide navigation") in place when a page has more than one
   `Indicators` group — give each one an explicit, distinguishing label instead.
+- Don't pass `formatLabel` without `showLabel` — development mode warns once, since the formatter is
+  never called and the label never renders either way.
 
 </Callout>
 </div>
@@ -143,6 +155,9 @@ use the arrow/Home/End keys, to actually move the position, the same as in a rea
 - Focus only moves programmatically to the newly active dot when focus was **already inside the
   group** — an external autoplay or next-button-driven index change never steals focus from
   elsewhere on the page.
+- The optional progress label (`showLabel`) renders as plain, non-`aria-hidden` text next to the
+  group — not marked decorative, matching `ProgressBar`'s own value-label precedent. It's a sibling
+  of the group, not a child of it, so it never becomes part of any dot's own accessible name.
 - **Contrast:** the inactive dot's fill (`bg.track-strong`) and the active dot's fill (`bg.brand`)
   are both verified against `bg.surface` at the WCAG 1.4.11 3:1 non-text floor, across every brand
   and mode combination — see Design tokens used below.
@@ -188,6 +203,17 @@ const [index, setIndex] = useState(0);
 />
 ```
 
+```tsx
+// A progress label, with a custom format
+<Indicators
+  count={12}
+  activeIndex={index}
+  onIndexChange={setIndex}
+  showLabel
+  formatLabel={(activeIndex, count) => `Slide ${activeIndex + 1} of ${count}`}
+/>
+```
+
 ## Design tokens used
 
 <TokenRow token="bg.track-strong" usage="inactive dot fill" />
@@ -197,10 +223,15 @@ const [index, setIndex] = useState(0);
 <TokenRow token="border-width.2" usage="focus-visible ring width" />
 <TokenRow token="radius.full" usage="dot/pill shape, both states" />
 <TokenRow token="space.2" usage="gap between dots" />
+<TokenRow token="space.4" usage="gap between the dots group and the progress label (showLabel)" />
 <TokenRow token="space.1" usage="focus-visible ring's outline-offset" />
 <TokenRow token="motion.duration.fast" usage="fill-color and width transition (hover, active state change)" />
 <TokenRow token="motion.easing.standard" usage="fill-color and width transition (hover, active state change)" />
 <TokenRow token="indicators.size.xs–indicators.size.xl" usage="per-size dot diameter (component-layer token, no home on the primitive space scale) — the active dot's pill width is derived from it via calc(), not a separate token" />
+<TokenRow token="text.primary" usage="progress label text color (showLabel)" />
+<TokenRow token="font-family.primary" usage="progress label text (showLabel)" />
+<TokenRow token="font-size.xs" usage="progress label text (showLabel)" />
+<TokenRow token="font-weight.semibold" usage="progress label text (showLabel)" />
 
 ## Related components
 

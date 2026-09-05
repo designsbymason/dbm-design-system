@@ -71,6 +71,97 @@ describe("Indicators", () => {
     });
   });
 
+  describe("progress label", () => {
+    it("does not render a label by default", () => {
+      render(<Indicators count={5} activeIndex={2} onIndexChange={() => {}} />);
+      expect(screen.queryByText("3/5")).not.toBeInTheDocument();
+    });
+
+    it("renders the default '{n}/{count}' label when showLabel is set, as a sibling of the group rather than inside it", () => {
+      render(
+        <Indicators
+          count={5}
+          activeIndex={2}
+          onIndexChange={() => {}}
+          showLabel
+        />,
+      );
+      expect(screen.getByText("3/5")).toBeInTheDocument();
+      expect(screen.getByRole("group")).not.toHaveTextContent("3/5");
+    });
+
+    it("supports a custom formatLabel", () => {
+      render(
+        <Indicators
+          count={5}
+          activeIndex={2}
+          onIndexChange={() => {}}
+          showLabel
+          formatLabel={(activeIndex, count) =>
+            `Slide ${activeIndex + 1} of ${count}`
+          }
+        />,
+      );
+      expect(screen.getByText("Slide 3 of 5")).toBeInTheDocument();
+    });
+
+    it("has no accessibility violations with the label shown", async () => {
+      const { container } = render(
+        <Indicators
+          count={4}
+          activeIndex={1}
+          onIndexChange={() => {}}
+          showLabel
+        />,
+      );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    describe("formatLabel-without-showLabel warning", () => {
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it("warns once in development when formatLabel is provided without showLabel", () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const { rerender } = render(
+          <Indicators
+            count={3}
+            activeIndex={0}
+            onIndexChange={() => {}}
+            formatLabel={(i, c) => `${i}/${c}`}
+          />,
+        );
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy.mock.calls[0]?.[0]).toContain("formatLabel");
+        rerender(
+          <Indicators
+            count={3}
+            activeIndex={0}
+            onIndexChange={() => {}}
+            formatLabel={(i, c) => `${i}/${c}`}
+          />,
+        );
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it("does not warn when formatLabel is paired with showLabel", () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        render(
+          <Indicators
+            count={3}
+            activeIndex={0}
+            onIndexChange={() => {}}
+            showLabel
+            formatLabel={(i, c) => `${i}/${c}`}
+          />,
+        );
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe("out-of-range activeIndex warning", () => {
     afterEach(() => {
       vi.restoreAllMocks();

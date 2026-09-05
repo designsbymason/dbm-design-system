@@ -1,3 +1,13 @@
+.wrapper {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-4);
+}
+
+.wrapper.vertical {
+  flex-direction: column;
+}
+
 .root {
   align-items: center;
   display: inline-flex;
@@ -6,6 +16,16 @@
 
 .root.vertical {
   flex-direction: column;
+}
+
+.label {
+  color: var(--dbm-text-primary);
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-semibold);
+  white-space: nowrap;
 }
 
 .dot {

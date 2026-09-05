@@ -5,6 +5,8 @@ import styles from "./Indicators.module.css";
 import type { IndicatorsProps, IndicatorsSize } from "./Indicators.types";
 
 const defaultGetLabel = (index: number) => `Go to slide ${index + 1}`;
+const defaultFormatLabel = (activeIndex: number, count: number) =>
+  `${activeIndex + 1}/${count}`;
 
 const sizeClass: Record<IndicatorsSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -27,6 +29,7 @@ const sizeClass: Record<IndicatorsSize, string | undefined> = {
  * ```tsx
  * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} />
  * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} orientation="vertical" />
+ * <Indicators count={5} activeIndex={index} onIndexChange={setIndex} showLabel />
  * ```
  */
 export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
@@ -38,6 +41,8 @@ export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
       activeIndex,
       onIndexChange,
       getLabel = defaultGetLabel,
+      showLabel = false,
+      formatLabel,
       className,
       "aria-label": ariaLabel = "Slide navigation",
       ...props
@@ -48,6 +53,7 @@ export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
     const rootRef = useRef<HTMLDivElement>(null);
 
     const hasWarnedOutOfRangeRef = useRef(false);
+    const hasWarnedUnusedFormatRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (
         (activeIndex < 0 || activeIndex >= count) &&
@@ -56,6 +62,12 @@ export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
         hasWarnedOutOfRangeRef.current = true;
         console.warn(
           `Indicators: \`activeIndex\` (${activeIndex}) is out of range for \`count\` (${count}) — no dot will match, so none will be focusable via Tab. Pass a value between 0 and ${count - 1}.`,
+        );
+      }
+      if (formatLabel && !showLabel && !hasWarnedUnusedFormatRef.current) {
+        hasWarnedUnusedFormatRef.current = true;
+        console.warn(
+          "Indicators: `formatLabel` was provided without `showLabel` — the progress label isn't rendered, so the formatter is never called. Pass `showLabel`, or remove `formatLabel`.",
         );
       }
     }
@@ -94,36 +106,45 @@ export const Indicators = forwardRef<HTMLDivElement, IndicatorsProps>(
     };
 
     return (
-      <div
-        ref={mergeRefs(ref, rootRef)}
-        className={cx(
-          styles.root,
-          sizeClass[size],
-          isVertical && styles.vertical,
-          className,
+      <div className={cx(styles.wrapper, isVertical && styles.vertical)}>
+        <div
+          ref={mergeRefs(ref, rootRef)}
+          className={cx(
+            styles.root,
+            sizeClass[size],
+            isVertical && styles.vertical,
+            className,
+          )}
+          {...props}
+          role="group"
+          aria-label={ariaLabel}
+        >
+          {Array.from({ length: count }, (_, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <button
+                // Fixed-size positional sequence (slide 0..count-1) that
+                // never reorders — index is a stable, correct identity here.
+                key={index}
+                type="button"
+                data-index={index}
+                aria-label={getLabel(index)}
+                aria-current={isActive || undefined}
+                tabIndex={isActive ? 0 : -1}
+                className={cx(styles.dot, isActive && styles.active)}
+                onClick={() => onIndexChange(index)}
+                onKeyDown={handleKeyDown}
+              />
+            );
+          })}
+        </div>
+        {showLabel && (
+          <span className={styles.label}>
+            {formatLabel
+              ? formatLabel(activeIndex, count)
+              : defaultFormatLabel(activeIndex, count)}
+          </span>
         )}
-        {...props}
-        role="group"
-        aria-label={ariaLabel}
-      >
-        {Array.from({ length: count }, (_, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <button
-              // Fixed-size positional sequence (slide 0..count-1) that
-              // never reorders — index is a stable, correct identity here.
-              key={index}
-              type="button"
-              data-index={index}
-              aria-label={getLabel(index)}
-              aria-current={isActive || undefined}
-              tabIndex={isActive ? 0 : -1}
-              className={cx(styles.dot, isActive && styles.active)}
-              onClick={() => onIndexChange(index)}
-              onKeyDown={handleKeyDown}
-            />
-          );
-        })}
       </div>
     );
   },

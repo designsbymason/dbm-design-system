@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 export type IndicatorsSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type IndicatorsOrientation = "horizontal" | "vertical";
@@ -31,6 +31,21 @@ export interface IndicatorsProps
    * @default (index) => `Go to slide ${index + 1}`
    */
   getLabel?: (index: number) => string;
+  /**
+   * Shows a text progress label (e.g. "3/5") next to the dots, reflecting
+   * `activeIndex`/`count`. Defaults to hidden — the dots alone are the
+   * primary UI; this is an optional, purely visual supplement.
+   * @default false
+   */
+  showLabel?: boolean;
+  /**
+   * Customizes the progress label's content shown when `showLabel` is set
+   * — receives the current `activeIndex` and `count`, returns the content
+   * to render. Defaults to `` `${activeIndex + 1}/${count}` `` (e.g.
+   * `"3/5"`). Has no effect unless `showLabel` is also set — development
+   * mode warns once if it's provided without it.
+   */
+  formatLabel?: (activeIndex: number, count: number) => ReactNode;
   /**
    * Accessible name for the whole group of dots.
    * @default 'Slide navigation'

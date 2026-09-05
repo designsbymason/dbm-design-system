@@ -130,3 +130,47 @@ Self-verified: `tsc --noEmit` (package + `.storybook`), `eslint --max-warnings 0
 (923 tests package-wide), a real `tsup` build, and live Storybook verification — vertical layout,
 click-to-navigate, ArrowDown/Up working, ArrowRight/Left confirmed as a no-op via the Actions panel
 call count, and the Docs page's new/updated sections all rendering correctly.
+
+**Follow-up, 2026-09-05, at explicit direction: added a progress label (`showLabel`/`formatLabel`).**
+Raised first as a feature-completeness question alongside three other candidates (loop navigation —
+already implemented via the existing modulo wraparound; auto-advance — declined, since it requires
+internal timer state that contradicts the component's deliberate fully-controlled design and drags
+in WCAG 2.2.2 pause/stop requirements that really belong to the not-yet-built `Carousel`; and a
+dedicated spacing prop — declined, since `style`/`className` already override the gap today and a
+first-class prop would mostly duplicate that escape hatch). Progress label was the one with a
+direct, strong precedent: mirrors `ProgressBar`'s own `showValueLabel`/`formatValueLabel` shape
+exactly (`showLabel?: boolean`, `formatLabel?: (activeIndex, count) => ReactNode`, defaulting to
+`` `${activeIndex + 1}/${count}` ``), including the identical "provided without the boolean" dev-mode
+warning pattern (`hasWarnedUnusedFormatRef`).
+- **Structural change: the component now always renders an outer wrapper `<div>`** around the
+  existing `role="group"` element, with the label as an optional sibling `<span>` inside it —
+  matching `ProgressBar`'s own root/track split (ref, `className`, and `{...props}` all still target
+  the inner group element, never the wrapper, so this is invisible to any existing consumer's props
+  or the exposed `ref`). The wrapper renders unconditionally (not only when `showLabel` is set) to
+  keep the component's DOM shape stable across a `showLabel` toggle, rather than switching structure
+  based on a prop value — deliberate, matching `ProgressBar`'s own precedent, confirmed to have zero
+  visual effect when no label is shown (a single-child flex container is invisible either way).
+- Label styling (`text.primary`, `font-family.primary`, `font-size.xs`, `font-weight.semibold`,
+  `font-variant-numeric: tabular-nums`) copied directly from `ProgressBar.module.css`'s own
+  `.valueLabel`, including the not-`aria-hidden` accessibility choice (the label is real, readable
+  text, not marked decorative — same reasoning `ProgressBar` already settled on for its own value
+  label).
+- Vertical orientation composes cleanly with no extra work: the wrapper reuses the same `.vertical`
+  modifier class as the inner group (a shared CSS-module class matched by two separate compound
+  selectors, `.wrapper.vertical` and `.root.vertical`), so the label automatically sits below the
+  column instead of beside the row — confirmed live.
+- Docs page updated: `propOrder` (`showLabel`/`formatLabel` after `getLabel`), Playground
+  description, `PlaygroundControls`' `exclude` list (`formatLabel`, a function prop), a new "With
+  progress label" Variants entry, Do/Don't bullets, an Accessibility bullet, a code example, and 4
+  new `Design tokens used` rows for the label's typography. New `WithProgressLabel` gallery story;
+  `showLabel` added to the Playground's `argTypes`/`args` as a real boolean control, `formatLabel`
+  set to `control: false` (function prop).
+
+Tests: 28 → 32 (added: default-hidden, default-format-renders-as-sibling-not-child, custom
+`formatLabel`, a jest-axe check with the label shown, and the warn-once/no-warn pair for
+`formatLabel` without `showLabel`).
+
+Self-verified: `tsc --noEmit` (package + `.storybook`), `eslint --max-warnings 0`, full Vitest suite
+(929 tests package-wide), a real `tsup` build, and live Storybook verification — the label rendering
+correctly in both orientations, and the Docs page's Properties table/Variants/Design-tokens sections
+all confirmed live.
