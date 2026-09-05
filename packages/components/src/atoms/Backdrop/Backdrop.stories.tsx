@@ -334,22 +334,30 @@ export const InPlace: Story = {
 
 export const ClickToDismissInteraction: Story = {
   name: "Interaction: fires onClick and dismisses",
-  // The one legitimate whole-panel-disable case in this file (reserved for
-  // "a demo driven entirely by its own internal state," per
-  // `06-engineering-standards.md` §9's own precedent, `ThemeProvider.
-  // stories.tsx`'s `LiveThemeToggle`) — this story exists purely to run a
-  // scripted `play` function, not for manual Controls exploration, and
-  // isn't part of the Docs page's own embed list either.
-  parameters: { controls: { disable: true } },
-  render: function ClickToDismissInteractionStory() {
+  // `open` is bound to this story's own scripted state (it must start
+  // `true` with no trigger button, so the `play` function below always has
+  // something to click), so its control is suppressed — same reasoning as
+  // `ClickToDismiss`/`AnimatedDismiss` above. `children`/`opacity`/`blur`
+  // stay genuinely live, matching every other story in this file.
+  argTypes: {
+    open: { control: false },
+  },
+  render: function ClickToDismissInteractionStory(args) {
     const [isOpen, setIsOpen] = useState(true);
     return (
-      <Backdrop
-        inPortal={false}
-        open={isOpen}
-        onClick={() => setIsOpen(false)}
-        data-testid="scrim"
-      />
+      <Stack gap={4}>
+        <DemoBackground />
+        <Backdrop
+          inPortal={false}
+          opacity={args.opacity}
+          blur={args.blur}
+          open={isOpen}
+          onClick={() => setIsOpen(false)}
+          data-testid="scrim"
+        >
+          {args.children}
+        </Backdrop>
+      </Stack>
     );
   },
   play: async ({ canvasElement }) => {

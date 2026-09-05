@@ -40,7 +40,6 @@ export const Backdrop = forwardRef<HTMLDivElement, BackdropProps>(
       <Presence present={open}>
         <div
           ref={ref}
-          data-state={open ? "open" : "closed"}
           className={cx(styles.root, blur && styles.blur, className)}
           // `opacity` (the prop) sets a CSS custom property consumed by
           // `.root`'s own `color-mix()`-based background fill in
@@ -63,6 +62,15 @@ export const Backdrop = forwardRef<HTMLDivElement, BackdropProps>(
             } as CSSProperties
           }
           {...props}
+          // Spread after `{...props}`, never before — `data-state` drives
+          // the `fadeIn`/`fadeOut` CSS animation above, and TypeScript's
+          // `data-*` exemption means a consumer can pass their own
+          // `data-state` even though it isn't a declared prop; if it were
+          // set before the spread, that value would silently win and
+          // break the enter/exit animation (the same JSX-attribute-
+          // ordering bug class tracked in `05-component-api-conventions.md`
+          // §3, found here during Backdrop's final pre-finalization pass).
+          data-state={open ? "open" : "closed"}
         >
           {children}
         </div>

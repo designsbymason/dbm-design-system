@@ -235,6 +235,74 @@ write-up of that change, including the three-question-test reasoning for why bot
 `Backdrop.stories.tsx`'s `WithContent` story now uses `<Spinner size="xl" tone="white" />` directly,
 replacing the earlier manual `style={{ color: "var(--dbm-icon-on-overlay)" }}` override.
 
+**Final pre-finalization pass, 2026-09-05.** Re-ran the full `06-engineering-standards.md` §9
+checklist against the current state (all prior fixes above included), rather than assuming they
+still hold:
+
+- **Found and fixed one real, previously-missed bug**: `{...props}` was spread *before* the computed
+  `data-state` attribute in `Backdrop.tsx`'s JSX — the same JSX-attribute-ordering bug class already
+  tracked in `05-component-api-conventions.md` §3 (confirmed instances on `Skeleton`, `ProgressBar`,
+  `Button`, `Checkbox`, `Affix`, `Divider`, `FieldError`), just not previously checked on `Backdrop`
+  itself. Since TypeScript's `data-*` exemption lets a consumer pass `data-state` even though it
+  isn't a declared prop, this meant a same-named consumer prop could silently win and disable the
+  `fadeIn`/`fadeOut` animation entirely. Moved `data-state` to spread after `{...props}`, and added a
+  regression test — verified the test actually catches the bug by temporarily reverting the fix and
+  confirming the test fails (`data-state="banana"` instead of `"open"`), then confirming it passes
+  again with the fix restored.
+- **Live-verified**: Docs page renders correctly end to end; mobile viewport (375px) — title+badge
+  wraps cleanly, the scrim still correctly covers the full mobile viewport width when triggered;
+  Purple/Emerald × Light/Dark — `bg.overlay` correctly resolves identically across all 4 (confirmed
+  brand-agnostic, as documented); the enter/exit animation and click-to-dismiss all function
+  correctly.
+- **One live-testing artifact worth recording, not a component bug**: manually triggering open→close
+  via `javascript_tool` while the Browser pane itself was reported hidden produced an apparently
+  "stuck" animation (`getComputedStyle` showing `animationName` set but `getAnimations()` never
+  advancing/completing) — root-caused to `document.hidden === true` at the time, which is standard
+  Chromium behavior (browsers throttle/pause CSS animation timelines on a hidden page). Cross-checked
+  against the authoritative source instead: the `ClickToDismissInteraction` play-function test, which
+  runs in a genuinely-visible, real Chromium instance via Playwright (Vitest browser mode, immune to
+  the pane's own hidden state) — reran it standalone and it passed cleanly (361ms), confirming the
+  underlying `Presence`/`data-state` mechanism completes correctly in a real browser. Noting this so a
+  future session doesn't waste time re-diagnosing the same pane-visibility artifact as if it were a
+  real defect.
+- **Accessibility addon panel**: not independently checkable in this session (requires
+  `test:storybook:watch` running alongside `storybook dev`, per `guidelines/adr/0003` — a standing
+  environmental requirement, not a `Backdrop`-specific gap). Relied on the automated jest-axe test
+  instead (zero violations, part of the suite below).
+- **Full re-verification**: `tsc --noEmit`, `eslint --max-warnings 0`, both Vitest projects
+  (`unit` + `storybook`, 23/23 for `Backdrop` specifically — one more than before, the new
+  regression test), the full package suite (1282/1282), a real `tsup` build, and
+  `check-component-bundle-size` (0.57KB JS / 0.31KB CSS gzipped — well under budget). No other
+  findings — every item from the original pass and every follow-up since (open/`Presence`, the
+  opacity/`backdrop-filter` fix, Controls-panel wiring audit, `icon.white`) has already landed and
+  re-verified across this session.
+
+**Follow-up (2026-09-05, same day) — Controls panel restored for `ClickToDismissInteraction`, at
+explicit direction.** Its original whole-panel `disable` predated the per-story wiring pattern
+worked out for the other five stories earlier the same day (suppress only the axis a story can't
+honor, not the whole panel) — it should have gotten the same treatment from the start. Now matches
+`ClickToDismiss`/`AnimatedDismiss`: `open` suppressed (bound to the story's own scripted state, no
+trigger button), `children`/`opacity`/`blur` genuinely live, `DemoBackground` added so `opacity`/
+`blur` are visible. Re-verified: `tsc`, `eslint`, both Vitest projects (23/23) clean.
+
+While re-verifying this story live in a running Storybook instance (not just via the automated
+Vitest run), its own `play` function timed out in the browser's "Interactions" panel replay —
+investigated rather than dismissed, since a genuinely flaky interaction test would be a real
+problem. Root cause, confirmed directly: `document.hidden`/`visibilityState` reported `true` for
+that page at the time (the Browser pane tool used for this session's live checks was itself
+reported hidden), and browsers throttle CSS animation timelines on a hidden page — the `fadeOut`
+animation was still genuinely running, just far slower than normal, so the scrim was still in the
+DOM when the `play` function's 1000ms `waitForElementToBeRemoved` timeout fired, even though
+re-checking moments later confirmed it *did* eventually finish and unmount correctly. This is not a
+defect in `Backdrop`, `Presence`, or the test: the same `play` function passes reliably (~220ms)
+every time it's run via the real Vitest browser-mode test runner (a fresh, properly-visible
+Chromium instance via Playwright, immune to this specific pane's visibility state) — confirmed
+again this same session. Recorded here so a future live-check of this specific story doesn't
+misread the same page-visibility artifact as a real regression.
+
+**Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further
+changes to Backdrop (code, stories, docs, or its tokens) without asking first.
+
 ## Related components
 
 `Portal` (composition dependency), `Spinner` (a `children` pairing), `guidelines/adr/0010` (the

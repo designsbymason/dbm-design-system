@@ -117,6 +117,21 @@ describe("Backdrop", () => {
     expect(screen.queryByTestId("scrim")).not.toBeInTheDocument();
   });
 
+  it("does not let a same-named consumer prop override the computed data-state", () => {
+    // Regression test for the {...props}-ordering bug class (see
+    // 05-component-api-conventions.md §3) — {...props} must spread before
+    // the computed data-state attribute, not after, or a same-named
+    // consumer prop silently wins and breaks the fadeIn/fadeOut animation.
+    render(
+      // `data-state` isn't a declared prop, but TypeScript's `data-*`
+      // exemption type-checks it anyway regardless (confirmed empirically
+      // elsewhere in this codebase — see 05-component-api-conventions.md
+      // §3), which is exactly why the computed value needs protecting.
+      <Backdrop inPortal={false} data-state="banana" data-testid="scrim" />,
+    );
+    expect(screen.getByTestId("scrim")).toHaveAttribute("data-state", "open");
+  });
+
   it("renders children centered on top of the dimming fill", () => {
     render(
       <Backdrop inPortal={false}>
