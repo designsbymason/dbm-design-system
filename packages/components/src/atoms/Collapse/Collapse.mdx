@@ -48,7 +48,26 @@ import { Collapse } from "@dbm-design-system/components";
 </div>
 <PlaygroundControls
   of={CollapseStories.Playground}
-  exclude={["open", "onOpenChange", "asChild", "id", "className", "style", "data-testid"]}
+  exclude={[
+    "open",
+    "onOpenChange",
+    // `trigger` (switching to "None" leaves nothing to click, since `open`
+    // itself has no live control here either — see above) and
+    // `defaultOpen` (only read on mount, so changing it has no visible
+    // effect until the story remounts — not a real-time toggle) don't give
+    // the reader anything to meaningfully interact with in this panel,
+    // unlike every other live control here. Both stay fully documented
+    // below in the Properties table, and `trigger` is still genuinely
+    // live on the standalone Playground story itself (a separate control
+    // surface from this embedded panel).
+    "trigger",
+    "defaultOpen",
+    "asChild",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
   order={propOrder}
 />
 
@@ -96,6 +115,10 @@ import { Collapse } from "@dbm-design-system/components";
 - Use `asChild` when a consumer-provided host element can't have an extra wrapper `<div>` around
   it — e.g. a `<li>` in a list of collapsible items, where a `<div>` ancestor would be invalid
   between the `<ul>` and its `<li>` children.
+- For a "read more" pattern (a truncated preview that expands to the full text), keep the preview
+  outside `Collapse` entirely (`Text`'s own `truncate` prop) and use `Collapse` only to reveal the
+  remaining content — see Code examples. `Collapse` always fully hides its content when closed; it
+  has no partial/peek-through collapsed state of its own to reach for here.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -177,6 +200,36 @@ import { Collapse } from "@dbm-design-system/components";
 <Collapse asChild open={isOpen}>
   <li>A collapsible list item.</li>
 </Collapse>
+```
+
+```tsx
+{/* Native <div> attributes not in the Properties table above still pass through. */}
+<Collapse aria-label="Additional details" title="Details" open={isOpen}>
+  <Text>Content with native attributes passed straight through.</Text>
+</Collapse>
+```
+
+```tsx
+{/*
+ * "Read more" — Collapse has no partial/peek-through collapsed state of
+ * its own, so the truncated preview lives outside it entirely (Text's own
+ * `truncate` prop); Collapse only reveals the remaining content, a normal
+ * full open/close.
+ */}
+function ReadMore({ preview, rest }: { preview: string; rest: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  return (
+    <>
+      <Text truncate={isExpanded ? undefined : 3}>{preview}</Text>
+      <Collapse open={isExpanded}>
+        <Text>{rest}</Text>
+      </Collapse>
+      <Button variant="tertiary" onClick={() => setIsExpanded((v) => !v)}>
+        {isExpanded ? "Read less" : "Read more"}
+      </Button>
+    </>
+  );
+}
 ```
 
 ## Design tokens used

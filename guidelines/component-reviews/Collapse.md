@@ -234,6 +234,101 @@ three list items now show a visible bullet, the collapsible item's box renders w
 `margin: 12px 0px` (equal space above and below), `border-radius: 8px`, and the `bg.neutral-subtle`
 fill. `tsc`, `eslint`, and the full Vitest suite (1297/1297) all clean.
 
+**Follow-up (2026-09-05, same day), at user request — two small Storybook-only polish items.**
+
+- **`ToggleInteraction`'s open/close happened too fast to watch.** The play function's assertions
+  ran back to back with no pause, so a human watching the replay in the Interactions panel saw a
+  single flash rather than two distinct, observable state changes (the real CSS animation is only
+  `motion.duration.base`, 200ms, too quick on its own either way). Added two plain `setTimeout`-based
+  pauses (600ms before the first click, 1200ms after confirming open and before the keyboard-close) —
+  cosmetic pacing only, not test logic; every existing assertion is unchanged and still passes.
+  Re-verified live: forced a fresh play run via the story's "Reload" toolbar button and screenshotted
+  mid-run — the content stayed visibly open for the pause window before closing, confirming the
+  pacing actually holds (the Interactions panel's own manual step-replay button hung indefinitely
+  when tested the same way — investigated and ruled out as an unrelated, pre-existing Storybook UI
+  quirk, not caused by this change, since the natural on-mount play run completed correctly and
+  quickly every time).
+- **`Collapse.mdx`'s Playground Controls panel showed `trigger` and `defaultOpen` as live controls
+  with nothing meaningful to interact with.** `trigger`'s only other option ("None") leaves nothing
+  clickable, since `open`/`onOpenChange` (the only way to drive it externally) aren't live controls
+  in this panel either; `defaultOpen` is only read on mount, so changing it has no visible effect
+  until the story remounts — not a real-time toggle, confirmed by the user's own prior observation
+  that it only took effect after a manual reload. Added both to `PlaygroundControls`' `exclude` list
+  in `Collapse.mdx` — **Docs-page embedded panel only**, not the component: no prop, type, or story
+  `argTypes` change, so `trigger` stays genuinely live on the standalone `Playground` story itself
+  (a separate control surface from this embedded panel), and both props stay fully documented, with
+  complete descriptions, in the Properties table below. Re-verified live: the embedded Playground
+  panel now shows only `children`/`orientation`/`disabled`; the Properties table still lists both
+  `trigger` and `defaultOpen` in full.
+
+Neither follow-up changed `Collapse.tsx`/`Collapse.types.ts`/`Collapse.module.css`. `tsc`, `eslint`,
+and the full Vitest suite (1297/1297, no count change) all clean.
+
+**Final pre-finalization pass, 2026-09-05.** Re-ran the full `06-engineering-standards.md` §9
+checklist against the current state (all prior fixes/follow-ups above included), rather than
+assuming they still hold:
+
+- **Found and fixed one real gap**: the Docs page's Code examples section had no snippet
+  demonstrating a genuine *native* `<div>` attribute in use, even though the Properties section's
+  own disclaimer sentence cites `aria-label`/`title` as examples — the same gap class the `Input`
+  review originally established this checklist item for. Added a closing example
+  (`<Collapse aria-label="Additional details" title="Details" open={isOpen}>`), live-verified
+  rendering correctly on the Docs page.
+- **Live-verified**: keyboard Tab focus (visible focus ring) and toggle activation (confirmed via a
+  real `.click()` and cross-checked against the automated Playwright-based tests, both the unit test
+  and the `ToggleInteraction` play function's own keyboard assertion — see the noted tooling artifact
+  below); Purple/Emerald × Light/Dark (`Playground`, both render correctly, including the
+  `bg.neutral-subtle` content box in dark mode); mobile viewport (375px) on `Playground` (clean
+  wrap, no overflow) and `Horizontal` (row layout holds, panel stays within the viewport, top-aligned
+  with the trigger, confirmed via `getBoundingClientRect`); the Docs page end to end (all 10
+  sections present, no rendering artifacts, both `RelatedCard` previews link and render live, the
+  Properties table's 12 rows all have real non-empty descriptions in the established prop order,
+  ordered content → trigger → controlled/uncontrolled pair → orientation → disabled → asChild →
+  escape-hatch props).
+- **One live-testing artifact worth recording, not a component bug**: the Browser pane's synthetic
+  `Return` keypress didn't reliably reach the nested Storybook iframe's trigger button (focus was
+  confirmed correctly on the button throughout), while a programmatic `.click()` and both automated
+  Playwright-based tests toggle state correctly and reliably. Also, the Interactions panel's own
+  manual step-replay button hung indefinitely when tested directly, while the natural on-mount play
+  run (and a forced reload via the story's own "Reload" toolbar button) both completed correctly and
+  quickly every time. Noting both here, matching the precedent already set on `Backdrop`'s own final
+  pass, so a future session doesn't misread either as a real regression.
+- **Accessibility addon panel**: not independently checkable in this session (stuck at "Preparing
+  accessibility scan" — requires `test:storybook:watch` running alongside `storybook dev`, per
+  `guidelines/adr/0003`, a standing environmental requirement, not a `Collapse`-specific gap).
+  Relied on the automated jest-axe test instead (zero violations, part of the suite below).
+- **Feature-completeness gap (named against MUI's/Chakra's own `Collapse`: `collapsedSize`/
+  `startingHeight`, a partial non-zero collapsed state) — discussed, deliberately not added.**
+  Investigated the real implementation cost before deciding: Radix `Collapsible.Content` hard-codes
+  "closed = children not rendered, native `hidden` set," with no override available (confirmed by
+  reading its source — `children: isOpen && children`), so supporting a partial collapsed size would
+  mean dropping `Content` for the content region entirely and hand-rolling a `ResizeObserver`-based
+  height/width measurement in its place, plus `aria-hidden` handling for the still-visible sliver —
+  a real architecture change, not a new prop. The actual motivating use case (a "read more" truncated
+  preview that expands to full text) doesn't need it: composing `Text`'s own `truncate` prop for the
+  always-visible preview with `Collapse` revealing only the remaining content — a normal full open/
+  close, no partial state involved — achieves the identical user-facing result with zero changes to
+  `Collapse` itself. Documented this composition pattern instead: a new "Do" bullet in Usage
+  guidelines and a full `ReadMore` code example in Code examples, both live-verified rendering
+  correctly on the Docs page. `collapsedSize` itself stays out of scope.
+- **Full re-verification**: `tsc --noEmit`, `eslint --max-warnings 0`, the full Vitest suite (28/28
+  for `Collapse` specifically, 1297/1297 package-wide), a real `tsup` build, `pnpm audit`
+  (zero known vulnerabilities), and `check-component-bundle-size` (0.73KB JS / 0.27KB CSS gzipped —
+  well under budget). No other findings.
+
+Review pass complete — all findings actioned. Per `06-engineering-standards.md` §9, "Finalized" is a
+status the user declares explicitly, not one a review pass asserts on its own.
+
+**Follow-up (2026-09-05, same day), discussed at the user's own request — `collapsedSize` (a partial,
+non-zero collapsed state, matching MUI's/Chakra's own `Collapse`) considered and deliberately left
+out.** See the feature-completeness bullet above for the full reasoning (a real architecture change,
+not a new prop — Radix `Collapsible.Content` hard-codes "closed = unmounted" with no override) and
+the composition pattern documented in its place (`Text`'s `truncate` + `Collapse` for a "read more"
+disclosure, achieving the same user-facing result with zero changes to `Collapse` itself).
+
+**Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further
+changes to Collapse (code, stories, docs, or its tokens) without asking first.
+
 ## Related components
 
 `Button` (the most common `trigger` element), `Text` (a common `children` pairing), `Affix` (the

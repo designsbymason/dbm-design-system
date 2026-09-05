@@ -333,12 +333,21 @@ export const ToggleInteraction: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("button", { name: "Toggle details" });
 
+    // Purely for human legibility when watching this replay in the
+    // Interactions panel — the assertions themselves need none of these
+    // pauses (the real animation is only `motion.duration.base`, 200ms).
+    // Without them, both toggles happened back to back with no visible
+    // gap, reading as a single flash rather than two distinct,
+    // observable state changes.
+    const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     expect(trigger).toHaveAttribute("aria-expanded", "false");
     await expect(
       canvas.queryByText(
         "Hidden content revealed on toggle, with an animated height transition.",
       ),
     ).not.toBeInTheDocument();
+    await pause(600);
 
     await userEvent.click(trigger);
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
@@ -347,6 +356,7 @@ export const ToggleInteraction: Story = {
         "Hidden content revealed on toggle, with an animated height transition.",
       ),
     ).toBeVisible();
+    await pause(1200);
 
     // Keyboard activation — a real <button> gets this natively, but this
     // proves the trigger really is one, not just visually styled as one.
