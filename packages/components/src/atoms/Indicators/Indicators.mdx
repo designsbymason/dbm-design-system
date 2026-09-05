@@ -1,0 +1,222 @@
+import { StarIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Icon } from "../Icon";
+import { Image } from "../Image";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Indicators } from "./Indicators";
+import * as IndicatorsStories from "./Indicators.stories";
+
+export const propOrder = [
+  "count",
+  "size",
+  "orientation",
+  "activeIndex",
+  "onIndexChange",
+  "getLabel",
+  "aria-label",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={IndicatorsStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Indicators" tier="Atom" />
+
+A row (or column) of clickable dots showing position within a fixed-size sequence — the position
+marker a `Carousel` or `ImageViewer` (both still unbuilt organisms) would place beneath its slides,
+or beside a vertical/side-positioned gallery, direct-navigable rather than purely decorative.
+`Indicators` is **fully controlled**: it holds no state of its own, so `activeIndex`/`onIndexChange`
+are required, not optional — the owning component (a carousel, a gallery, a wizard-like sequence) is
+expected to hold the real position and pass it straight through. It supports Arrow/Home/End keys via
+a *roving tabindex* — a composite-widget pattern where only one element in a related group (here,
+the active dot) sits in the page's Tab order at a time, and the arrow keys move both the selection
+and that single Tab stop together, rather than every dot being individually tabbable. `orientation`
+switches both the layout axis and which pair of arrow keys drives it — Left/Right for the default
+horizontal row, Up/Down for a vertical column.
+
+### Import
+
+```tsx
+import { Indicators } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive `count`, `size`, `orientation`, and `aria-label` live. `activeIndex`/`onIndexChange` are wired
+through local Storybook-demo state instead of a Controls-panel field — click a dot, or focus one and
+use the arrow/Home/End keys, to actually move the position, the same as in a real consuming app.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={IndicatorsStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={IndicatorsStories.Playground}
+  exclude={["activeIndex", "onIndexChange", "getLabel", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Indicators` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={IndicatorsStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={IndicatorsStories.AllSizes} />
+
+### Many slides with custom labels
+
+<Canvas of={IndicatorsStories.ManySlides} />
+
+### Vertical orientation
+
+<Canvas of={IndicatorsStories.Vertical} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Let the owning carousel/gallery hold the real position and pass it straight through as
+  `activeIndex`/`onIndexChange` — `Indicators` is intentionally stateless, by design, so it always
+  stays in sync with whatever autoplay, swipe, or next/previous control also drives that state.
+- Provide a `getLabel` that names the actual content ("Photo 2 of 10") whenever slides aren't
+  interchangeable, rather than leaving the generic default (`"Go to slide 2"`) in place.
+- Choose `size` to match the surrounding chrome — `xs`/`sm` for a dense thumbnail rail, `lg`/`xl`
+  over a full-bleed hero.
+- Reach for `orientation="vertical"` when the indicators sit beside a gallery rather than beneath
+  it (a side-positioned thumbnail rail, a full-height hero) — it swaps both the layout axis and the
+  arrow-key mapping together, so keyboard behavior always matches what's on screen.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass an `activeIndex` outside `[0, count)` — development mode warns once, but the group
+  still renders with no dot matching, so nothing is reachable via Tab until it's corrected.
+- Don't reach for `Indicators` as a generic step/wizard progress marker — it's purpose-built as a
+  position marker within a fixed, already-rendered sequence, not a multi-step form's progress UI.
+- Don't leave the default `aria-label` ("Slide navigation") in place when a page has more than one
+  `Indicators` group — give each one an explicit, distinguishing label instead.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Pair `Indicators` with a live region elsewhere in the carousel it drives (e.g. announcing "Slide
+  3 of 5" on change) — `Indicators` itself only labels each dot, it doesn't announce transitions on
+  its own.
+- Keep `count` stable for a given mounted instance where practical — there's no transition or
+  animation when the number of dots changes, so a shrinking/growing count reflows instantly.
+- Reserve the default `md` size for a self-contained photo gallery or card carousel; scale down for
+  compact/embedded contexts and up for a hero banner.
+
+## Accessibility
+
+<Callout tone="info" title="A roving-tabindex composite widget, built from real buttons">
+
+- The root renders `role="group"` with an `aria-label` naming the whole set (defaulting to "Slide
+  navigation"); each dot is a real `<button>` with its own accessible name (the default
+  `"Go to slide N"`, or a custom `getLabel`) and `aria-current="true"` on the active one.
+- **Keyboard:** `ArrowRight`/`ArrowLeft` move to the next/previous dot, wrapping at either end (or
+  `ArrowDown`/`ArrowUp` instead when `orientation="vertical"` — only the axis-matching pair responds,
+  matching how other orientation-aware composite widgets behave); `Home`/`End` jump to the
+  first/last dot regardless of orientation. Only the active dot sits in the page's Tab order — the
+  roving-tabindex pattern above — so Tab never has to step through every dot individually.
+  Activating a dot works the same way as clicking it.
+- **No `aria-orientation` attribute** — `role="group"` doesn't support it per the WAI-ARIA
+  specification (confirmed via an automated accessibility-testing violation during development), so
+  orientation is conveyed through the actual arrow-key behavior and visual layout rather than an
+  ARIA property. A role that does support it (`toolbar`, `tablist`) wouldn't accurately describe
+  what this widget actually is.
+- Focus only moves programmatically to the newly active dot when focus was **already inside the
+  group** — an external autoplay or next-button-driven index change never steals focus from
+  elsewhere on the page.
+- **Contrast:** the inactive dot's fill (`bg.track-strong`) and the active dot's fill (`bg.brand`)
+  are both verified against `bg.surface` at the WCAG 1.4.11 3:1 non-text floor, across every brand
+  and mode combination — see Design tokens used below.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Basic controlled usage — the owning component holds the real position
+const [index, setIndex] = useState(0);
+<Indicators count={5} activeIndex={index} onIndexChange={setIndex} />
+```
+
+```tsx
+// Custom per-dot labels, naming the actual content
+<Indicators
+  count={10}
+  activeIndex={index}
+  onIndexChange={setIndex}
+  getLabel={(i) => `Photo ${i + 1} of 10`}
+  aria-label="Gallery navigation"
+/>
+```
+
+```tsx
+// A larger dot size for a full-bleed hero carousel
+<Indicators count={4} size="xl" activeIndex={index} onIndexChange={setIndex} />
+```
+
+```tsx
+// A native <div> attribute (title) passed straight through
+<Indicators count={3} activeIndex={index} onIndexChange={setIndex} title="Slide picker" />
+```
+
+```tsx
+// Vertical orientation, for a side-positioned thumbnail rail
+<Indicators
+  count={6}
+  orientation="vertical"
+  activeIndex={index}
+  onIndexChange={setIndex}
+/>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.track-strong" usage="inactive dot fill" />
+<TokenRow token="bg.neutral" usage="inactive dot's hover fill" />
+<TokenRow token="bg.brand" usage="active dot fill" />
+<TokenRow token="border.focus" usage="focus-visible ring" />
+<TokenRow token="border-width.2" usage="focus-visible ring width" />
+<TokenRow token="radius.full" usage="dot/pill shape, both states" />
+<TokenRow token="space.2" usage="gap between dots" />
+<TokenRow token="space.1" usage="focus-visible ring's outline-offset" />
+<TokenRow token="motion.duration.fast" usage="fill-color and width transition (hover, active state change)" />
+<TokenRow token="motion.easing.standard" usage="fill-color and width transition (hover, active state change)" />
+<TokenRow token="indicators.size.xs–indicators.size.xl" usage="per-size dot diameter (component-layer token, no home on the primitive space scale) — the active dot's pill width is derived from it via calc(), not a separate token" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Icon"
+  description="Another Media-category atom — Indicators has no icon slot of its own, but sits alongside Icon/Image in the same functional category"
+  href="/?path=/docs/atoms-media-icon--docs"
+>
+  <Icon icon={StarIcon} tone="brand" />
+</RelatedCard>
+<RelatedCard
+  name="Image"
+  description="The content Indicators most often sits beneath — a photo gallery or hero carousel's individual slides"
+  href="/?path=/docs/atoms-media-image--docs"
+>
+  <Image src="/placeholder-img.png" alt="" style={{ width: 40, height: 40, borderRadius: "var(--dbm-radius-sm)" }} />
+</RelatedCard>
+</div>

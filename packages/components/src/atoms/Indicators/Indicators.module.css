@@ -4,22 +4,27 @@
   gap: var(--dbm-space-2);
 }
 
+.root.vertical {
+  flex-direction: column;
+}
+
 .dot {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-track-strong);
   border: none;
   border-radius: var(--dbm-radius-full);
   cursor: pointer;
-  height: var(--dbm-space-2);
+  height: var(--dot-size);
   padding: 0;
   transition:
     background-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard),
-    width var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
-  width: var(--dbm-space-2);
+    width var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    height var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  width: var(--dot-size);
 }
 
 .dot:hover:not(.active) {
-  background-color: var(--dbm-border-neutral);
+  background-color: var(--dbm-bg-neutral);
 }
 
 .dot:focus-visible {
@@ -29,5 +34,34 @@
 
 .active {
   background-color: var(--dbm-bg-brand);
-  width: var(--dbm-space-6);
+  width: calc(var(--dot-size) * 3);
+}
+
+.root.vertical .active {
+  height: calc(var(--dot-size) * 3);
+  width: var(--dot-size);
+}
+
+/* Sizes — dot diameter, exposed as `--dot-size` for `.dot`/`.active` above.
+   The active dot's pill width stays a fixed 3x multiple of it at every
+   step, matching the original 8px/24px (`md`) ratio. */
+
+.sizeXs {
+  --dot-size: var(--dbm-indicators-size-xs);
+}
+
+.sizeSm {
+  --dot-size: var(--dbm-indicators-size-sm);
+}
+
+.sizeMd {
+  --dot-size: var(--dbm-indicators-size-md);
+}
+
+.sizeLg {
+  --dot-size: var(--dbm-indicators-size-lg);
+}
+
+.sizeXl {
+  --dot-size: var(--dbm-indicators-size-xl);
 }

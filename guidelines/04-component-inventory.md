@@ -151,7 +151,7 @@ Images, icons, visual content handling.
 | Image | atom | 🟢 | Lazy-load, fallback, aspect-ratio integration |
 | ImageViewer / Lightbox | organism | ⚪ | Full-screen zoomable image view |
 | Carousel | organism | ⚪ | Wraps Radix or headless carousel logic |
-| Indicators | atom | ⚪ | Dot/step indicator row for Carousel/ImageViewer position — clickable for direct navigation |
+| Indicators | atom | ⚪ | Dot/step indicator, horizontal or vertical, for Carousel/ImageViewer position — clickable for direct navigation |
 
 ## 9. Utility
 Non-visual/structural helpers other components are built from.

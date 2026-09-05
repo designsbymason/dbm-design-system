@@ -126,8 +126,9 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**28 of 47 atoms have a Docs page; all 28 are also Finalized** (see [Image.md](component-reviews/Image.md)
-for the most recent, 2026-09-04).
+**29 of 47 atoms have a Docs page; 28 are also Finalized** — Indicators' review pass is complete
+(see [Indicators.md](component-reviews/Indicators.md)) but awaiting the user's explicit
+Finalized confirmation per `06-engineering-standards.md` §9.
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -159,13 +160,14 @@ for the most recent, 2026-09-04).
 | Stack | Atom | Layout | ✅ | ✅ 2026-09-03 | [Stack.md](component-reviews/Stack.md) |
 | Icon | Atom | Media | ✅ | ✅ 2026-09-03 | [Icon.md](component-reviews/Icon.md) |
 | Image | Atom | Media | ✅ | ✅ 2026-09-04 | [Image.md](component-reviews/Image.md) |
+| Indicators | Atom | Media | ✅ | ⏳ pending confirmation | [Indicators.md](component-reviews/Indicators.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
 - **Layout:** Grid, GridItem (molecule-tier, built, but still need this same Docs-page treatment). Spacer's and Stack's own review passes are complete — see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md).
 - **Typography:** Text, Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
 - **Navigation:** BackToTop
 - **Overlay:** Tooltip, Collapse, Backdrop
-- **Media:** Indicators. Icon's and Image's own review passes are complete — see the status table above and their own [Icon.md](component-reviews/Icon.md)/[Image.md](component-reviews/Image.md).
+- **Media:** none remaining — Icon's, Image's, and Indicators' own review passes are complete, see the status table above and their own [Icon.md](component-reviews/Icon.md)/[Image.md](component-reviews/Image.md)/[Indicators.md](component-reviews/Indicators.md).
 - **Utility:** ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly
 
 **Molecules (resolved 2026-08-16 — superseded, not just decided):** this used to be an open sequencing question, written back when Docs pages were produced by their own standalone sweep (Phase 4.9) running only loosely coordinated with Phase 5 (Molecules, which started early — `Grid`/`GridItem`/`Select` landed 2026-08-09, ahead of the original plan). That's no longer how it works: a Docs page is now one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, run one component at a time, strictly tier-order — atoms first, in full (Docs page included), before any molecule gets its own review pass. `Grid`/`GridItem`/`Select` have stories/tests but no Docs page yet; they simply wait in the queue behind the remaining atoms like any other not-yet-reviewed component, the same as every other still-open row in the table above. No interleaving, no second queue to track.
