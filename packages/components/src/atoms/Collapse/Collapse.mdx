@@ -1,0 +1,207 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../Button";
+import { Text } from "../Text";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Collapse } from "./Collapse";
+import * as CollapseStories from "./Collapse.stories";
+
+export const propOrder = [
+  "children",
+  "trigger",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "orientation",
+  "disabled",
+  "asChild",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={CollapseStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Collapse" tier="Atom" />
+
+A simple animated expand/collapse region, built directly on Radix `Collapsible` — the
+building block a future `Accordion` composes for each of its own items. With `trigger`, it's a
+self-contained disclosure that manages its own open state and renders a toggle button above the
+content; without one, `open` can be driven entirely externally instead (what `Accordion` does with
+its own trigger UI, using `Collapse` only for the animated content region underneath it).
+
+### Import
+
+```tsx
+import { Collapse } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CollapseStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={CollapseStories.Playground}
+  exclude={["open", "onOpenChange", "asChild", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Collapse` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`aria-label`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={CollapseStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={CollapseStories.Default} />
+
+### Open by default
+
+<Canvas of={CollapseStories.OpenByDefault} />
+
+### Externally driven (no built-in trigger)
+
+<Canvas of={CollapseStories.WithoutTrigger} />
+
+### Horizontal orientation
+
+<Canvas of={CollapseStories.Horizontal} />
+
+### As child (no wrapper element)
+
+<Canvas of={CollapseStories.AsChild} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `trigger` for a self-contained disclosure (an FAQ answer, a details panel) — it wires up
+  `aria-expanded`/`aria-controls` and click/keyboard activation with no extra work.
+- Omit `trigger` and drive `open` externally when another element already owns the toggle
+  affordance — an `Accordion` item's own header button, a menu item that expands a sub-panel.
+- Use `orientation="horizontal"` for a region that grows/shrinks sideways (a collapsible
+  sidebar/rail), and make sure its container is laid out so the element isn't stretched back to
+  full width regardless (a flex row, or an explicit `inline-block` context) — see Best practices.
+- Use `asChild` when a consumer-provided host element can't have an extra wrapper `<div>` around
+  it — e.g. a `<li>` in a list of collapsible items, where a `<div>` ancestor would be invalid
+  between the `<ul>` and its `<li>` children.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't combine `trigger` and `asChild` — the root element would need two children (the trigger
+  and the content region) where Radix `Slot` requires exactly one; `trigger` wins and `asChild` is
+  silently ignored, with a dev-mode warning.
+- Don't set `disabled` without a `trigger` expecting it to block an externally-driven `open` — there's
+  no built-in interactive element for it to disable, so it has no effect in that case (also warned
+  in development).
+- Don't reach for `orientation="horizontal"` inside a plain block-level container and expect a
+  visible collapse — a block box stretches back to full width regardless of the animated `width`,
+  defeating the effect.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer the `trigger` prop for any standalone disclosure — it's the least code and the most
+  correct accessibility wiring available, matching Radix's own convention.
+- Reserve the externally-driven (no `trigger`) mode for composition, where a parent component
+  already owns a semantically-correct trigger element of its own (a future `Accordion`'s header
+  button) — duplicating a second toggle affordance next to it would be confusing.
+- Keep `orientation` consistent with what the collapsing content actually represents — `vertical`
+  for content that reads top-to-bottom (the overwhelming majority of disclosure content), reserving
+  `horizontal` specifically for sidebar/rail-shaped panels.
+
+## Accessibility
+
+<Callout tone="info" title="Radix Collapsible's own ARIA wiring, applied automatically">
+
+- **`trigger` gets `aria-expanded` always, `aria-controls` only while open.** This is Radix
+  `Collapsible`'s own upstream behavior, not something this component adds or removes:
+  `aria-expanded` reflects the current state at all times, but `aria-controls` (pointing at the
+  content region's `id`) is only present once `open` is `true` — omitted while closed rather than
+  pointing at a hidden element.
+- **The content region is a native `hidden` element while closed**, not just visually hidden —
+  removed from the accessibility tree and from tab order by the browser's own `hidden` attribute
+  semantics, on top of eventually leaving the DOM entirely once its exit animation finishes (via
+  Radix `Presence`).
+- **Keyboard activation comes from the underlying trigger element itself**, not from `Collapse` —
+  `trigger` renders through Radix `Slot` (`asChild`-style composition) onto whatever real element
+  is passed in, so a real `<button>` (this system's `Button`, or a plain native one) gets Enter/Space
+  activation for free with no extra wiring.
+- **No ARIA role of its own on the content region or root** — `Collapse` renders plain `<div>`s
+  (or, with `asChild`, whatever host element is passed in); the disclosure semantics live entirely
+  on the trigger's `aria-expanded`/`aria-controls` pair.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Collapse trigger={<Button variant="secondary">Toggle details</Button>}>
+  <Text>Hidden content revealed on toggle.</Text>
+</Collapse>
+```
+
+```tsx
+<Collapse open={isOpen} onOpenChange={setIsOpen} trigger={<Button>Toggle</Button>} />
+```
+
+```tsx
+{/* Externally driven — Accordion uses Collapse this way. */}
+<Collapse open={isOpen}>
+  <Text>Driven by external state, no built-in trigger.</Text>
+</Collapse>
+```
+
+```tsx
+<Collapse orientation="horizontal" open={isSidebarOpen}>
+  <Sidebar />
+</Collapse>
+```
+
+```tsx
+{/* asChild — no extra wrapper <div> between the <ul> and its <li> children. */}
+<Collapse asChild open={isOpen}>
+  <li>A collapsible list item.</li>
+</Collapse>
+```
+
+## Design tokens used
+
+<TokenRow token="motion.duration.base" usage="expand/collapse animation duration" />
+<TokenRow token="motion.easing.standard" usage="expand/collapse animation easing" />
+<TokenRow token="space.3" usage="gap between trigger and content when orientation is horizontal" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Button"
+  description="The most common trigger element passed to Collapse's trigger prop"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button variant="secondary" size="sm">
+    Toggle
+  </Button>
+</RelatedCard>
+<RelatedCard
+  name="Text"
+  description="A common choice for the revealed content itself"
+  href="/?path=/docs/atoms-typography-text--docs"
+>
+  <Text>Revealed content</Text>
+</RelatedCard>
+</div>

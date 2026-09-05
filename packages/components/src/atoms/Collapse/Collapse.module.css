@@ -1,18 +1,70 @@
+/*
+ * Deliberately no `display` here. A plain `<div>` (the non-`asChild`
+ * default) is already block-level with no rule needed; `asChild` merges
+ * this class onto whatever host element the consumer actually rendered
+ * (a `<li>`, a table row, …), and a hardcoded `display: block` here would
+ * silently override that host's own default display — confirmed live via
+ * the `AsChild` story: an explicit `display: block` previously clobbered
+ * the `<li>`'s native `display: list-item`, dropping its bullet marker
+ * with no visible error. `.rootRow` (below) still applies its own
+ * `display: flex` independently when that combination is active.
+ */
 .root {
-  display: block;
+}
+
+/*
+ * Applied only for `orientation="horizontal"` combined with a `trigger` —
+ * without this, Root's two children (the inline-flex Trigger button and
+ * the inline-block `.horizontal` content region) lay out via normal
+ * inline flow, which wraps the content onto a new line the instant its
+ * animated width no longer fits beside the trigger, reading as the
+ * layout flipping from horizontal to vertical mid-animation. A row flex
+ * layout guarantees they never wrap — the content overflows the
+ * container's width instead where necessary, which is the correct
+ * trade-off for a sidebar-style reveal.
+ */
+.rootRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--dbm-space-3);
 }
 
 .content {
   overflow: hidden;
 }
 
-.content[data-state="open"] {
+/*
+ * `.horizontal` additionally sets `display: inline-block` — a block-level
+ * element (the default) still visually respects an animated `width`, but
+ * a horizontal "collapse" reads as broken if the container it sits in
+ * keeps stretching it back to the parent's full width regardless (the
+ * common case for a block box). `inline-block` sizes to content instead,
+ * so the width animation is what actually determines how much space this
+ * takes up, matching how a collapsible sidebar/rail is normally expected
+ * to behave. `.vertical` needs no equivalent override — `display: block`
+ * already behaves correctly for a height animation.
+ */
+.horizontal {
+  display: inline-block;
+}
+
+.vertical[data-state="open"] {
   animation: slideDown var(--dbm-motion-duration-base)
     var(--dbm-motion-easing-standard);
 }
 
-.content[data-state="closed"] {
+.vertical[data-state="closed"] {
   animation: slideUp var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+.horizontal[data-state="open"] {
+  animation: slideRight var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+.horizontal[data-state="closed"] {
+  animation: slideLeft var(--dbm-motion-duration-base)
     var(--dbm-motion-easing-standard);
 }
 
@@ -33,5 +85,25 @@
 
   to {
     height: 0;
+  }
+}
+
+@keyframes slideRight {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: var(--radix-collapsible-content-width);
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    width: var(--radix-collapsible-content-width);
+  }
+
+  to {
+    width: 0;
   }
 }
