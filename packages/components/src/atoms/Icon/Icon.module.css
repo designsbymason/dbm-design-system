@@ -92,3 +92,7 @@
 .toneOnNeutral {
   color: var(--dbm-icon-on-neutral);
 }
+
+.toneWhite {
+  color: var(--dbm-icon-white);
+}

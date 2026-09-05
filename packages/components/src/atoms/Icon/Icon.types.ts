@@ -22,7 +22,8 @@ export type IconTone =
   | "on-warning"
   | "on-success"
   | "on-info"
-  | "on-neutral";
+  | "on-neutral"
+  | "white";
 
 export interface IconProps extends Omit<
   ComponentPropsWithoutRef<"svg">,
@@ -55,7 +56,12 @@ export interface IconProps extends Omit<
    * its current tone rather than a fixed brand color). Prefer an explicit
    * `on-{tone}` tone over inheriting from a `text.on-{tone}` fill
    * specifically — `text.*` tokens are for text, not icons, even when the
-   * color happens to match.
+   * color happens to match. `white` is a special case, named for its value
+   * rather than its role like every other tone here: it's for an icon
+   * sitting directly on `Backdrop`'s dimming scrim (`bg.overlay`), which
+   * stays black in every theme/mode — unlike the `on-{tone}` family, which
+   * each deliberately flip to a dark color in dark mode to match their own
+   * paired background lightening.
    */
   tone?: IconTone;
   /**

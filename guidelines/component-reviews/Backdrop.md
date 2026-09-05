@@ -203,6 +203,38 @@ still reads as a clear, visible frosted-glass effect (softer than 8px, not washe
 underlying opacity/backdrop-filter bug is fixed. `tsc`, `eslint`, both Vitest projects (22/22), and
 the full package suite (1281/1281) all clean.
 
+**Follow-up (2026-09-05, same day) — `WithContent` story's `Spinner` had no color token at all, at
+the user's request to verify.** The story's `<Spinner size="xl" />` had no `tone` prop, so it
+inherited the browser's default black `currentColor` — confirmed live via `getComputedStyle`
+(`color: rgb(0, 0, 0)`) in both light and dark mode, functionally invisible against the dark
+dimming scrim. Checked every existing `icon.on-*` semantic token as a possible fix and found none
+were actually correct: each pairs with a `bg.*` that gets *lighter* in dark mode (so its own `on-*`
+counterpart deliberately flips to a *dark* color to match, per the dark-mode solid-fill pattern),
+but `bg.overlay` stays `neutral.black` in every theme/mode — an existing `on-*` token would go
+dark-on-black in dark mode, i.e. still broken. Added a new semantic token, `icon.on-overlay`
+(`packages/tokens/src/semantic/*.json`, all 4 themes, white in every one — mirroring `bg.overlay`'s
+own brand/mode-agnostic precedent), rather than reuse an incorrect existing one or inline a hardcoded
+color. Added to `Foundations/Color.mdx`'s icon array (`check-foundations-token-coverage.mjs` passes).
+
+**Deliberately did not** add `"on-overlay"` as a named option on `Icon`'s/`Spinner`'s own `IconTone`
+union — both are Finalized (`icon.on-overlay` would need adding to `Icon.tsx`'s *and* `Spinner.tsx`'s
+own exhaustive `Record<IconTone, ...>` tone-class maps, a change to two Finalized components' own
+files, which needs its own explicit confirmation first per `06-engineering-standards.md` §9's
+Finalized-components rule — flagged rather than done silently). Fixed the story instead via
+`Spinner`'s own `style` prop (`style={{ color: "var(--dbm-icon-on-overlay)" }}`), which needed no
+change to either Finalized component. Re-verified live: white spinner, clearly visible, in both
+light and dark mode (`getComputedStyle` confirmed `rgb(255, 255, 255)`). `tsc`, `eslint`, the full
+Vitest suite (1281/1281), and a real `tsup` build all clean.
+
+**Follow-up (2026-09-05, same day) — `tone="white"` added to `Icon`/`Spinner`, at explicit
+direction, resolving the item flagged above.** `icon.on-overlay` (the token added above) was
+renamed to `icon.white` the same day, also at explicit direction — a deliberate exception to this
+system's usual semantic-over-primitive token naming, since the value is white in all 4 themes and
+isn't expected to change (see `guidelines/component-reviews/Icon.md` and `Spinner.md` for the full
+write-up of that change, including the three-question-test reasoning for why both stay Finalized).
+`Backdrop.stories.tsx`'s `WithContent` story now uses `<Spinner size="xl" tone="white" />` directly,
+replacing the earlier manual `style={{ color: "var(--dbm-icon-on-overlay)" }}` override.
+
 ## Related components
 
 `Portal` (composition dependency), `Spinner` (a `children` pairing), `guidelines/adr/0010` (the

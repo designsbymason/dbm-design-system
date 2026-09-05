@@ -49,6 +49,7 @@ const onColorTones: { tone: IconTone; bg: string }[] = [
   { tone: "on-success", bg: "var(--dbm-bg-success)" },
   { tone: "on-info", bg: "var(--dbm-bg-info)" },
   { tone: "on-neutral", bg: "var(--dbm-bg-neutral)" },
+  { tone: "white", bg: "var(--dbm-bg-overlay)" },
 ];
 
 const meta: Meta<typeof Icon> = {

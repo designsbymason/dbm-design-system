@@ -100,3 +100,21 @@ Vitest suite (890 tests package-wide), a real `tsup` package build, and
 
 **Finalized 2026-09-03** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Icon (code, stories, docs, or its tokens) without asking first.
+
+**Authorized post-finalization change, 2026-09-05.** Added `"white"` as a new `IconTone` member, at
+explicit direction — found reviewing `Backdrop`'s own `WithContent` story (a `Spinner` sitting on
+the dimming scrim had no tone set, inheriting the browser's default black, functionally invisible).
+Backed by a new semantic token, `icon.white` (originally proposed/added as `icon.on-overlay`, then
+renamed to `icon.white` at explicit direction the same day — a deliberate exception to this system's
+usual semantic-over-primitive naming, since the value is white in all 4 themes and isn't expected to
+change; see that token's own `$description` in `packages/tokens/src/semantic/*.json`). Wired into
+`toneClass` (`Icon.tsx`) and `.toneWhite` (`Icon.module.css`), added to `Icon.stories.tsx`'s
+`onColorTones` array (paired with `bg.overlay`, so it shows in the Playground select and the "All
+tones" gallery alongside the `on-*` family), and given its own `TokenRow` in `Icon.mdx`'s Design
+tokens section. Per the three-question test (`06-engineering-standards.md` §9): purely additive
+(step 1, no existing rendered/behavioral output changed) — **stays finalized**; the new surface got
+its own scoped mini-pass (JSDoc on `tone` explaining why `white` doesn't flip in dark mode like the
+`on-*` family, Storybook coverage, Foundations token-coverage check passing) rather than a full
+checklist re-run. Re-verified live: white heart icon renders correctly against the `bg.overlay`
+swatch in the "All tones" gallery, both brands × both modes. `tsc`, `eslint`, full Vitest suite
+(1281/1281 package-wide), and a real `tsup` build all clean.

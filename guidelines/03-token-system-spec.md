@@ -158,12 +158,13 @@ Methodology, then the current state of every semantic token — not a replay of 
 | `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 5.85:1 | AA |
 | `on-info` | `neutral.white` | `blue.900` | vs `bg.info`: 4.71:1 / 8.20:1 | AA |
 | `on-neutral` | `neutral.white` | `gray.900` | vs `bg.neutral`: 4.70:1 / 8.21:1 | AA |
+| `white` | `neutral.white` | `neutral.white` (deliberately doesn't flip — see own `$description`) | vs `bg.overlay` at its default `opacity.60`: 21:1 (max possible) | Exempt — see `bg.overlay`'s own exemption below; this token exists specifically for content sitting on it |
 
 ### Notable exceptions (deliberate, non-obvious passes)
 
 - **`bg.track`** (`ProgressBar`/`ProgressCircle`'s empty track) — 1.14:1/1.40:1, fails the 3:1 non-text floor. Accepted deliberately: a passive, non-interactive indicator, matching common industry convention (Ant Design/Chakra's own progress tracks are comparably faint and also unverified against 3:1). Compliant alternative if this ever needs to change: `gray.500`/`gray.400` (3.25:1/4.34:1) — already in use as `bg.track-strong`.
 - **Disabled-state pairings** (any `*.disabled` token, or a component's own disabled styling) — exempt from 1.4.3/1.4.11 under WCAG 2.1, not a failure to flag.
-- **`bg.overlay`, `bg.scrim`** — no fixed pairing is possible or expected; both composite over arbitrary, unpredictable content by design.
+- **`bg.overlay`, `bg.scrim`, `icon.white`** — no fixed pairing is possible or expected; all three composite over (or sit on top of a fill compositing over) arbitrary, unpredictable content by design. `icon.white` is also a deliberate naming exception — named for its value rather than its role like every other token here, since it's white in all 4 themes/brands and isn't expected to change (see its own `$description`).
 - **`border.neutral`, `border.default`, `border.neutral-subtle`, `border.code`, and every `*-subtle` border** (`brand-subtle`, `danger-subtle`, `warning-subtle`, `success-subtle`, `info-subtle`) — decorative accents, not state-identifying boundaries, so WCAG 1.4.11 doesn't bind them even though several sit well under 3:1.
 
 ## Multi-theme structure going forward

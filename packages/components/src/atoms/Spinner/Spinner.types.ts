@@ -9,7 +9,10 @@ export interface SpinnerProps extends ComponentPropsWithoutRef<"span"> {
   /**
    * Color, from the same scale `Icon`'s `tone` uses. Defaults to
    * inheriting `currentColor` from context (e.g. a colored button or
-   * banner) rather than a fixed tone.
+   * banner) rather than a fixed tone. `white` is the right choice for a
+   * loading spinner sitting directly on `Backdrop`'s dimming scrim
+   * (`bg.overlay`), which stays black in every theme/mode — see `Icon`'s
+   * own `tone` JSDoc for why that's distinct from the `on-{tone}` family.
    */
   tone?: IconTone;
   /**

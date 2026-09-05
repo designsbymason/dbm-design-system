@@ -395,6 +395,11 @@
       "$type": "color",
       "$value": "{color.gray.900}",
       "$description": "New token (2026-08-22), dark counterpart to icon.on-neutral (light); see that token's own description. gray.900 on bg.neutral's own dark value (gray.300) = 8.21:1."
+    },
+    "white": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Renamed from icon.on-overlay (2026-09-05, at explicit direction — see the light file's own description for the full naming-exception reasoning). Dark counterpart to icon.white (light), except the value doesn't change: unlike every other icon.on-* pair, this one deliberately stays white in dark mode too, since bg.overlay itself stays neutral.black in dark mode (it doesn't lighten the way bg.neutral/bg.brand/etc. do)."
     }
   }
 }

@@ -393,6 +393,11 @@
       "$type": "color",
       "$value": "{color.neutral.white}",
       "$description": "New token (2026-08-22), added so Tag's solid-neutral/selected-outline-neutral icons no longer inherit color from text.on-neutral (a text token, not an icon one) — same value as text.on-neutral (white light / gray.900 dark), for an icon sitting on a solid bg.neutral fill. White on bg.neutral's own light value (gray.600) = 4.70:1."
+    },
+    "white": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Renamed from icon.on-overlay (2026-09-05, at explicit direction) — a deliberate exception to this system's usual semantic-over-primitive token naming, since the value is white in all 4 themes and isn't expected to change. Original purpose unchanged: found reviewing Backdrop's own 'content on the scrim' feature (its With-content story's Spinner had no tone set, silently inheriting the browser's default black text color, functionally invisible against the dimming scrim). For an icon/spinner sitting directly on bg.overlay, distinct from every other icon.on-* token: those pair with a bg.* that gets lighter in dark mode (so the on- token flips to a dark color to match), but bg.overlay is neutral.black in all 4 themes (brand/mode-agnostic, see that token's own description) — a token that also flipped dark in dark mode would go dark-on-black, invisible. Shared across all 4 themes for the same reason bg.overlay itself is. White on bg.overlay at its default opacity.60 = 21:1 (max possible); like bg.overlay itself, not a fixed WCAG pairing at every opacity/background combination, since what's behind the scrim is arbitrary by design."
     }
   }
 }

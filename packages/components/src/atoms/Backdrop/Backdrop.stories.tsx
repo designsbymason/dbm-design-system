@@ -282,7 +282,13 @@ export const WithContent: Story = {
         <DemoBackground />
         {isOpen && (
           <Backdrop opacity={args.opacity} blur={args.blur} onClick={() => setIsOpen(false)}>
-            <Spinner size="xl" />
+            {/* `tone="white"` — without an explicit tone here, Spinner
+                inherits the browser's default black `currentColor`, which
+                is functionally invisible against the dark dimming scrim
+                (confirmed live, in both light and dark mode). Unlike the
+                `on-{tone}` family, `white` stays white in dark mode too,
+                since Backdrop's own `bg.overlay` never lightens. */}
+            <Spinner size="xl" tone="white" />
           </Backdrop>
         )}
       </Stack>

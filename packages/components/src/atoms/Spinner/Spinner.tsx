@@ -27,6 +27,7 @@ const toneClass: Record<IconTone, string | undefined> = {
   "on-success": styles.toneOnSuccess,
   "on-info": styles.toneOnInfo,
   "on-neutral": styles.toneOnNeutral,
+  white: styles.toneWhite,
 };
 
 /**
