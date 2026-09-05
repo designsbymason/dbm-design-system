@@ -1,10 +1,63 @@
 .root {
-  background-color: var(--dbm-bg-overlay);
+  align-items: center;
+  /*
+   * The alpha is mixed into the fill color itself, not applied via the
+   * element's own `opacity` — see Backdrop.tsx's own comment on why:
+   * `opacity < 1` combined with `backdrop-filter` blends the whole
+   * element (fill + blur) back with the sharp content behind it,
+   * visibly weakening the blur. `--dbm-backdrop-fill-opacity` is set
+   * inline per-instance from the `opacity` prop; the fallback here
+   * keeps this class safe to use standalone (outside the component).
+   */
+  background-color: color-mix(
+    in srgb,
+    var(--dbm-bg-overlay)
+      calc(var(--dbm-backdrop-fill-opacity, var(--dbm-opacity-60)) * 100%),
+    transparent
+  );
+  display: flex;
   inset: 0;
+  justify-content: center;
   position: fixed;
   z-index: var(--dbm-z-index-overlay);
 }
 
 .blur {
-  backdrop-filter: blur(var(--dbm-space-2));
+  backdrop-filter: blur(var(--dbm-space-1));
+}
+
+.root[data-state="open"] {
+  animation: fadeIn var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+.root[data-state="closed"] {
+  animation: fadeOut var(--dbm-motion-duration-base)
+    var(--dbm-motion-easing-standard);
+}
+
+/*
+ * A pure presence (mount/unmount) fade, always 0 <-> 1 — the fill's own
+ * opacity is handled separately via the background's alpha (above), so
+ * unlike the previous version of this animation, there's no need to omit
+ * an endpoint and fall through to a prop-driven inline value here.
+ */
+@keyframes fadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
 }

@@ -1,0 +1,209 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Portal } from "../Portal";
+import { Spinner } from "../Spinner";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Backdrop } from "./Backdrop";
+import * as BackdropStories from "./Backdrop.stories";
+
+export const propOrder = [
+  "children",
+  "open",
+  "opacity",
+  "blur",
+  "onClick",
+  "inPortal",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={BackdropStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Backdrop" tier="Atom" />
+
+A full-viewport dimming scrim — the visual layer that sits behind modal-style overlays (`Dialog`,
+`Drawer`, a lightbox) to dim and de-emphasize the rest of the page. Purely visual: it renders no
+dialog semantics, focus trapping, or scroll locking of its own — those belong to whichever
+component composes it. `Backdrop` portals to `document.body` by default (see `Portal`), so it
+always renders above the rest of the page regardless of where it's mounted in the React tree, and
+escapes any parent's `overflow`/`transform` stacking context. Visibility is driven by the `open`
+prop, which — via Radix's `Presence` — lets the scrim fade out before it actually leaves the DOM,
+rather than disappearing instantly the moment a consumer stops rendering it.
+
+### Import
+
+```tsx
+import { Backdrop } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={BackdropStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={BackdropStories.Playground}
+  exclude={["onClick", "inPortal", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Backdrop` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`aria-hidden`) — passed straight through to the underlying element.
+
+<PropertiesTable of={BackdropStories} order={propOrder} />
+
+## Variants
+
+### Click to dismiss
+
+<Canvas of={BackdropStories.ClickToDismiss} />
+
+### Animated dismiss (open prop)
+
+<Canvas of={BackdropStories.AnimatedDismiss} />
+
+### With blur
+
+<Canvas of={BackdropStories.Blurred} />
+
+### With content (loading overlay)
+
+<Canvas of={BackdropStories.WithContent} />
+
+### Rendered in place (no portal)
+
+<Canvas of={BackdropStories.InPlace} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use the `open` prop (always rendering `<Backdrop open={isOpen} />`) instead of conditionally
+  rendering the whole element whenever you want a graceful fade-out — conditional rendering
+  (`{isOpen && <Backdrop />}`) still fades in on mount, but removes the element instantly on
+  dismiss with no exit animation.
+- Pass `onClick` for click-to-dismiss, but always pair it with a real keyboard path (typically
+  Escape, handled by whichever component — a future `Dialog` — composes `Backdrop`) — a backdrop
+  click is a pointer convenience, never the only way to dismiss.
+- Set `inPortal={false}` when composing inside a parent that already provides its own portal (a
+  future `Dialog`, portaling backdrop and content together in one call).
+- Use `children` for a standalone full-page loading overlay (a centered `Spinner`); leave it unset
+  for modal/dialog composition, where the dialog's own content renders as a sibling instead.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't expect `Backdrop` to trap focus, lock page scroll, or manage Escape-to-close — it's a
+  purely visual scrim; that orchestration belongs to the component composing it.
+- Don't rely on the backdrop click alone for dismissal — screen reader and keyboard-only users
+  need an equivalent path that doesn't depend on it.
+- Don't nest dialog content inside `Backdrop`'s `children` — that slot is for content that sits
+  *on* the scrim itself (a loading spinner), not a dialog panel, which should render as a sibling
+  so its own stacking/positioning stays independent of the scrim's.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer the `open`-prop pattern by default — it costs nothing when you don't need the exit
+  animation (it's the same visual result on mount) and means you don't have to revisit the call
+  site later if a snappier dismiss ever starts feeling abrupt.
+- Keep `opacity`/`blur` consistent across every overlay surface in one product — mixing a heavily
+  blurred backdrop in one flow with a plain dimmed one in another reads as inconsistent rather than
+  intentional.
+- Reach for `blur` sparingly — a frosted-glass effect is a stronger visual statement than a plain
+  dim and reads best for a small number of high-emphasis surfaces, not every overlay in the app.
+
+## Accessibility
+
+<Callout tone="info" title="A supplementary dismiss gesture, not the only one">
+
+- **No ARIA role of its own.** `Backdrop` is a plain, non-semantic `<div>` — it isn't announced to
+  assistive technology and carries no accessible name, matching Radix's own `Dialog.Overlay` and
+  MUI's/Chakra's equivalents.
+- **Click-to-dismiss is a pointer-only convenience.** `Backdrop` renders no `tabIndex` and handles
+  no keyboard events itself, so a click handler here is never the sole way to dismiss whatever it's
+  behind — pair it with Escape handling (typically owned by the composing `Dialog`/`Drawer`), which
+  keyboard and screen reader users rely on instead.
+- **`bg.overlay` is exempt from contrast requirements.** It composites over arbitrary, unpredictable
+  page content by design, so no fixed contrast ratio is meaningful for it.
+- **The fade-in/fade-out animation is a one-shot state transition**, not a continuous or looping
+  effect, so it isn't gated behind `prefers-reduced-motion` — that preference governs continuously
+  repeating animation (spinners, pulses), not a single 200ms appearance/dismissal transition.
+
+</Callout>
+
+## Code examples
+
+```tsx
+{isOpen && <Backdrop onClick={() => setIsOpen(false)} />}
+```
+
+```tsx
+<Backdrop open={isOpen} onClick={() => setIsOpen(false)} />
+```
+
+```tsx
+<Backdrop blur opacity={80} inPortal={false} />
+```
+
+```tsx
+{isLoading && (
+  <Backdrop>
+    <Spinner size="xl" />
+  </Backdrop>
+)}
+```
+
+```tsx
+{/* Native <div> attributes not in the Properties table above still pass through. */}
+<Backdrop title="Dismiss overlay" aria-hidden="true" />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.overlay" usage="the dimming fill color — exempt from contrast checks, composites over arbitrary content" />
+<TokenRow token="opacity.0" usage="fade-in/fade-out animation's transparent endpoint; also the opacity scale's fully-transparent step" />
+<TokenRow token="opacity.5" usage="opacity scale step" />
+<TokenRow token="opacity.10" usage="opacity scale step" />
+<TokenRow token="opacity.20" usage="opacity scale step" />
+<TokenRow token="opacity.40" usage="opacity scale step" />
+<TokenRow token="opacity.60" usage="opacity scale step — the default dimming opacity" />
+<TokenRow token="opacity.80" usage="opacity scale step" />
+<TokenRow token="opacity.90" usage="opacity scale step" />
+<TokenRow token="opacity.100" usage="fade-in/fade-out animation's opaque endpoint; also the opacity scale's fully-opaque step" />
+<TokenRow token="z-index.overlay" usage="stacking position — below modal/popover/toast/tooltip, above everything else" />
+<TokenRow token="space.1" usage="the blur radius applied when the blur prop is set" />
+<TokenRow token="motion.duration.base" usage="fade-in/fade-out animation duration" />
+<TokenRow token="motion.easing.standard" usage="fade-in/fade-out animation easing" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Portal"
+  description="What Backdrop renders through by default — escapes parent overflow/transform stacking contexts"
+  href="/?path=/docs/atoms-utility-portal--docs"
+>
+  <Portal disablePortal>
+    <span>Portal</span>
+  </Portal>
+</RelatedCard>
+<RelatedCard
+  name="Spinner"
+  description="A common Backdrop children pairing for a standalone full-page loading overlay"
+  href="/?path=/docs/atoms-feedback-spinner--docs"
+>
+  <Spinner tone="brand" label="Loading" />
+</RelatedCard>
+</div>

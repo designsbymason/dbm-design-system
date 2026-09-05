@@ -56,6 +56,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0007](./0007-as-vs-aschild-by-content-source.md) | `as` vs. `asChild`: pick based on where the component's visual content comes from | Accepted |
 | [0008](./0008-closebutton-reserved-for-modal-surfaces.md) | `CloseButton` is reserved for modal-style overlay surfaces; tone-varying components get their own local remove control | Accepted |
 | [0009](./0009-rtl-mirroring-is-a-per-component-judgment-call.md) | Whether a component's rendered result mirrors under RTL is a separate, per-component judgment call | Accepted |
+| [0010](./0010-presence-driven-exit-animation-plain-open-boolean.md) | A plain `open` boolean over the full controlled/uncontrolled trio for Presence-driven exit animation | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 
