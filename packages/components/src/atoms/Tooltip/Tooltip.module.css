@@ -5,7 +5,7 @@
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-xs);
   line-height: var(--dbm-line-height-normal);
-  max-width: 20rem;
+  max-width: var(--dbm-tooltip-max-width);
   padding-block: var(--dbm-space-1);
   padding-inline: var(--dbm-space-2);
   will-change: transform, opacity;

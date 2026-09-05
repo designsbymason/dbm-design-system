@@ -1,0 +1,224 @@
+import { TrashIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../Button";
+import { IconButton } from "../IconButton";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Tooltip } from "./Tooltip";
+import * as TooltipStories from "./Tooltip.stories";
+
+export const propOrder = [
+  "content",
+  "children",
+  "side",
+  "align",
+  "delayDuration",
+  "disableHoverableContent",
+  "hideArrow",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "aria-label",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={TooltipStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Tooltip" tier="Atom" />
+
+A short, non-interactive hint shown on hover/focus of its trigger, built directly on Radix
+`Tooltip`. Wraps its own `Provider` by default, so a single `Tooltip` needs no app-level setup —
+reach for `TooltipProvider` once a page has several and moving between them should share one
+timing instead of each re-incurring its own delay (see Best practices). Unlike most of this
+system's components, `Tooltip` has no single root DOM node of its own to forward a `ref` to — its
+trigger is an arbitrary child element and its content renders in a portal — so it takes no `ref`
+prop, matching Radix's own `Tooltip.Root`.
+
+### Import
+
+```tsx
+import { Tooltip } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TooltipStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={TooltipStories.Playground}
+  exclude={["open", "onOpenChange", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Tooltip` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`onPointerDown`) — passed straight through to the tooltip's content element.
+
+<PropertiesTable of={TooltipStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={TooltipStories.Default} />
+
+### All sides
+
+<Canvas of={TooltipStories.Sides} />
+
+### Icon-only trigger
+
+<Canvas of={TooltipStories.IconTrigger} />
+
+### Multiple tooltips (shared TooltipProvider)
+
+<Canvas of={TooltipStories.MultipleWithSharedProvider} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Keep `content` short and plain text — a tooltip is a hint, not a place for interactive elements
+  or long-form explanation (see Accessibility).
+- Make sure the trigger is itself focusable (a real `<button>`, a native form control, or anything
+  else that natively receives keyboard focus) — `Tooltip` adds no `tabIndex` of its own, so a
+  non-focusable trigger is unreachable without a pointer.
+- Reach for `TooltipProvider` once a page has more than one `Tooltip` and moving between them
+  (a toolbar of icon buttons, say) should feel instant after the first opens, not re-delay every
+  time — see the dedicated story above and Best practices.
+- Use `aria-label` when `content` itself isn't a good accessible description — rich or non-text
+  content, or a clearer standalone string than what's visually shown.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't rely on a tooltip alone to convey information critical to completing a task — hover/focus
+  tooltips are not reliably reachable on touch devices, and WCAG 1.4.13 expects the same content
+  to be available another way.
+- Don't put a `Button`, `Link`, or any other interactive element inside `content` — Radix's own
+  `DismissableLayer` doesn't accept pointer input inside tooltip content, so it wouldn't be
+  clickable anyway.
+- Don't wrap every individual `Tooltip` in its own `TooltipProvider` expecting it to help — a
+  `TooltipProvider` only changes anything when it wraps *multiple* tooltips that should share
+  timing; on a single `Tooltip` it's a no-op.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer the default (no `TooltipProvider`) for a single, standalone tooltip — it costs nothing
+  extra and needs no setup.
+- Place one `TooltipProvider` near the app root (alongside `ThemeProvider`) once a page has several
+  tooltips that should feel like part of one coherent system rather than each independently
+  delayed — a toolbar, a dense data table's row actions, an icon-heavy nav rail.
+- Reserve `disableHoverableContent` for cases where a tooltip lingering while the pointer travels
+  toward it would actually cause a problem (rare) — the default (pointer-travel-tolerant) behavior
+  is what most users expect and is Radix's own default for a reason.
+
+## Accessibility
+
+<Callout tone="info" title="A hint, not a popover — Radix's own ARIA wiring, applied automatically">
+
+- **The trigger gets `aria-describedby` pointing at the tooltip's content while open** — omitted
+  while closed rather than pointing at a hidden element, matching the same pattern this system's
+  other Radix-backed components already use for their own open-state ARIA attributes.
+- **The content region gets `role="tooltip"`** unless `aria-label` is set, in which case a separate,
+  visually-hidden element carrying that string takes over the role/id instead — the visible bubble
+  itself simply loses the role/id in that case, but still renders `content` exactly as normal.
+- **Opens on focus as well as hover** — a keyboard user tabbing to the trigger sees the same tooltip
+  a mouse user hovering it would, with no extra wiring needed.
+- **Closes on Escape** — Radix's `DismissableLayer` handles this; verified live and covered by an
+  automated interaction test.
+- **Never put interactive content inside `content`** — a tooltip's content isn't part of the tab
+  order and doesn't accept pointer input, per the WAI-ARIA tooltip pattern this component follows;
+  anything requiring interaction belongs in a real popover, not a tooltip.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Tooltip content="Save your changes">
+  <Button>Save</Button>
+</Tooltip>
+```
+
+```tsx
+<Tooltip content="Delete" side="bottom">
+  <IconButton icon={TrashIcon} aria-label="Delete" />
+</Tooltip>
+```
+
+```tsx
+{/* Multiple tooltips sharing one hover-delay/skip-delay timing. */}
+<TooltipProvider>
+  <Toolbar>
+    <Tooltip content="Bold"><IconButton icon={BoldIcon} aria-label="Bold" /></Tooltip>
+    <Tooltip content="Italic"><IconButton icon={ItalicIcon} aria-label="Italic" /></Tooltip>
+  </Toolbar>
+</TooltipProvider>
+```
+
+```tsx
+{/* aria-label — content stays visually rendered as-is; this string becomes
+    what's actually announced instead. */}
+<Tooltip content={<CustomRichPreview />} aria-label="Preview of the selected theme">
+  <IconButton icon={EyeIcon} aria-label="Preview" />
+</Tooltip>
+```
+
+```tsx
+{/* Native <div> attributes not in the Properties table above still pass through. */}
+<Tooltip content="Save your changes" title="Save your changes">
+  <Button>Save</Button>
+</Tooltip>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.neutral" usage="tooltip background and arrow fill" />
+<TokenRow token="text.on-neutral" usage="tooltip text color" />
+<TokenRow token="radius.sm" usage="tooltip corner radius" />
+<TokenRow token="font-size.xs" usage="tooltip text size" />
+<TokenRow token="line-height.normal" usage="tooltip text line height" />
+<TokenRow token="space.1" usage="vertical padding" />
+<TokenRow token="space.2" usage="horizontal padding, and the gap between trigger and tooltip" />
+<TokenRow token="tooltip.max-width" usage="maximum tooltip width before text wraps" />
+<TokenRow token="z-index.tooltip" usage="stacking position — above every other layer" />
+<TokenRow token="motion.duration.fast" usage="fade-in/fade-out animation duration" />
+<TokenRow token="motion.easing.emphasized" usage="fade-in animation easing" />
+<TokenRow token="motion.easing.standard" usage="fade-out animation easing" />
+<TokenRow token="opacity.0" usage="fade animation's transparent endpoint" />
+<TokenRow token="opacity.100" usage="fade animation's opaque endpoint" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Button"
+  description="The most common Tooltip trigger element"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button variant="secondary" size="sm">
+    Hover me
+  </Button>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="Frequently paired with Tooltip to give an icon-only control an accessible, visible label"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={TrashIcon} aria-label="Delete" variant="secondary" size="sm" />
+</RelatedCard>
+</div>

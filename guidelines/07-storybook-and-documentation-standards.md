@@ -128,8 +128,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**32 of 47 atoms have a Docs page; all 32 are Finalized** (see [Collapse.md](component-reviews/Collapse.md)
-for the most recent, 2026-09-05).
+**33 of 47 atoms have a Docs page; 32 are Finalized, 1 (Tooltip) awaiting the user's Finalized
+confirmation** (see [Tooltip.md](component-reviews/Tooltip.md) for the most recent, 2026-09-05).
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -165,12 +165,17 @@ for the most recent, 2026-09-05).
 | BackToTop | Atom | Navigation | ✅ | ✅ 2026-09-05 | [BackToTop.md](component-reviews/BackToTop.md) |
 | Backdrop | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Backdrop.md](component-reviews/Backdrop.md) |
 | Collapse | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Collapse.md](component-reviews/Collapse.md) |
+| Tooltip | Atom | Overlay | ✅ | ⏳ pending confirmation | [Tooltip.md](component-reviews/Tooltip.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
 - **Layout:** Grid, GridItem (molecule-tier, built, but still need this same Docs-page treatment). Spacer's and Stack's own review passes are complete — see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md).
 - **Typography:** Text, Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
 - **Navigation:** none remaining — BackToTop's own review pass is complete, see the status table above and its own [BackToTop.md](component-reviews/BackToTop.md).
-- **Overlay:** Tooltip. Backdrop's and Collapse's own review passes are complete — see the status table above and their own [Backdrop.md](component-reviews/Backdrop.md)/[Collapse.md](component-reviews/Collapse.md).
+- **Overlay:** none remaining — Backdrop's, Collapse's, and Tooltip's own review passes are
+  complete, see the status table above and their own
+  [Backdrop.md](component-reviews/Backdrop.md)/[Collapse.md](component-reviews/Collapse.md)/
+  [Tooltip.md](component-reviews/Tooltip.md) (Tooltip still awaiting the user's Finalized
+  confirmation).
 - **Media:** none remaining — Icon's, Image's, and Indicators' own review passes are complete, see the status table above and their own [Icon.md](component-reviews/Icon.md)/[Image.md](component-reviews/Image.md)/[Indicators.md](component-reviews/Indicators.md).
 - **Utility:** ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly
 

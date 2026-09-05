@@ -1,0 +1,8 @@
+{
+  "tooltip": {
+    "max-width": {
+      "$type": "dimension",
+      "$value": "20rem"
+    }
+  }
+}

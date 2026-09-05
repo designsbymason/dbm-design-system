@@ -135,7 +135,7 @@ Content that appears above, or reveals/hides other content.
 | Dialog / Modal | organism | 🟢 | Wraps Radix Dialog |
 | Drawer / Sheet | organism | 🟢 | Side-panel variant of Dialog |
 | Popover | molecule | 🟢 | Wraps Radix Popover |
-| Tooltip | atom | 🟢 | Wraps Radix Tooltip |
+| Tooltip | atom | 🟢 | Wraps Radix Tooltip; ships a co-located `TooltipProvider` (optional shared hover-delay/skip-delay timing across multiple tooltips) as a secondary export from the same folder, not a separate atom entry |
 | HoverCard | molecule | 🟡 | Rich preview on hover (user cards, link previews) |
 | Accordion | molecule | 🟢 | Wraps Radix Accordion |
 | Collapse | atom | 🟢 | Simple expand/collapse, building block for Accordion |
