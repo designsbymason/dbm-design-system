@@ -3,11 +3,11 @@ import { DocsContext, useOf } from "@storybook/addon-docs/blocks";
 import type { Of } from "@storybook/addon-docs/blocks";
 import { useContext } from "react";
 import type { ReactNode } from "react";
+import { Button } from "../../src/atoms/Button";
 import { FieldLabel } from "../../src/atoms/FieldLabel";
-import { IconButton } from "../../src/atoms/IconButton";
+import { Icon } from "../../src/atoms/Icon";
 import { Input } from "../../src/atoms/Input";
 import { Switch } from "../../src/atoms/Switch";
-import { Tooltip } from "../../src/atoms/Tooltip";
 import { Select } from "../../src/molecules/Select";
 import { sortEntriesByOrder } from "./sortEntriesByOrder";
 import { usePlaygroundArgs } from "./usePlaygroundArgs";
@@ -187,6 +187,70 @@ function ControlField({
  * `sortEntriesByOrder` helper) — pass the same array to both so a
  * component's docs page defines one sensible prop reading order and reuses
  * it for the full Properties table and this compact panel alike.
+ *
+ * The "Reset to defaults" control sits outside/below the bordered card,
+ * left-aligned (moved 2026-09-06, at explicit direction, from a top-right
+ * icon-only `IconButton` inside the card) — mirroring how the Canvas
+ * block's own native "Show code"/"Copy code" controls sit below *its* box
+ * rather than inside it. The visible label means a `Tooltip` restating
+ * the same text is no longer needed.
+ *
+ * Styled to match those same native "Show code"/"Copy code" buttons
+ * (revised 2026-09-06, at explicit direction, same session, in two passes
+ * — the first pass covered color/size/spacing; a follow-up, same day,
+ * caught two more real mismatches: border-radius (8px vs. the reference's
+ * 4px) and hover behavior (the reference's icon+text switch to brand color
+ * on hover; this button's didn't change color at all)) — read the
+ * reference's real computed style directly rather than guessing:
+ * `color: gray.700` (byte-identical to `text.secondary`), `font-size: 12px`
+ * (`font-size.xs`), `font-weight: 700` (`font-weight.bold`),
+ * `border-radius: 4px` (`radius.sm`), `height: 28px`, `padding: 0 10px`,
+ * `gap: 6px`, no background/border at rest, `color: purple.600`
+ * (`text.brand`) on hover — confirmed byte-identical afterward via
+ * `getComputedStyle` on both buttons side by side, not just eyeballed.
+ *
+ * `Button`'s own `tertiary` variant (transparent background, native
+ * focus-visible ring — both kept) is the base rather than a from-scratch
+ * element, styled via the dedicated `.dbm-playground-reset-button` class
+ * in `docs.css` — **not inline `style`, which was this component's own
+ * first-pass approach and is exactly why the hover color never worked**:
+ * an inline `style` attribute's specificity beats any external rule
+ * regardless of pseudo-class, so a `:hover` rule in a stylesheet can never
+ * override a color set via `style` on the same element, only ever a class.
+ * The real CSS class's own rest-state declarations need `!important` to
+ * reliably beat `Button.module.css`'s own same-specificity classes
+ * (`.root`/`.sizeXs`/`.variantTertiary`, each a single class selector, same
+ * weight as this one) regardless of which stylesheet happens to load
+ * later in the bundle — the identical reasoning already documented for
+ * `.sbdocs-content code` earlier in this file. The `:hover` rule itself
+ * doesn't need `!important`: a class+pseudo-class selector is inherently
+ * *more* specific than a plain class, so it wins on its own.
+ *
+ * The icon is composed into `children` instead of passed as `leadingIcon`
+ * — `Button` always colors a `leadingIcon` via a variant-locked `tone`
+ * (`iconToneForVariant`, `Button.tsx`) rather than inheriting the label's
+ * own color, so it would stay brand-purple regardless of any override on
+ * the button itself, confirmed by reading `Button.tsx` directly. Deliberately
+ * given no `tone` prop at all (unlike the first pass, which used
+ * `tone="default"`) — `Icon`'s own doc comment states it inherits
+ * `currentColor` when `tone` is omitted, which is exactly what makes the
+ * icon track the button's own color automatically, hover included, with
+ * no separate icon-specific override needed.
+ *
+ * `border-radius`/`height`/`padding`/`gap` are literal pixel values, not
+ * `--dbm-space-*`/`--dbm-radius-*` steps — none of 4px/28px/10px/6px lands
+ * on those scales, and the whole point here is matching an external
+ * reference (Storybook's own manager-chrome buttons, which don't derive
+ * from this system's tokens at all), not picking the nearest token and
+ * accepting a visible mismatch. Same accepted-literal category as the
+ * story-wrapper-sizing/media-query exceptions already documented in
+ * `07-storybook-and-documentation-standards.md` §8.
+ *
+ * Renders nothing at all — no card, no "Reset to defaults" — when a
+ * component has zero genuinely live-editable props after `exclude`/
+ * `control: false` filtering (added 2026-09-06, at explicit direction, via
+ * Spacer): a card with no rows inside plus a reset button with nothing to
+ * reset is dead UI, not an empty-but-valid state worth showing.
  */
 export function PlaygroundControls({
   of,
@@ -215,38 +279,55 @@ export function PlaygroundControls({
   });
   const rows = sortEntriesByOrder(filtered, order);
 
+  // A component with no genuinely live-editable props (every argType
+  // either `exclude`d or `control: false` — e.g. Spacer, which takes no
+  // props of its own) previously still rendered an empty, contentless
+  // bordered card plus a "Reset to defaults" button with nothing to
+  // reset — found via direct user report on Spacer's own Docs page.
+  // Render nothing at all in that case, rather than dead UI.
+  if (rows.length === 0) return null;
+
   return (
-    <div
-      style={{
-        background: "var(--dbm-bg-surface)",
-        border: "var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle)",
-        borderRadius: "var(--dbm-radius-md)",
-        padding: "var(--dbm-space-4)",
-        width: "100%",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBlockEnd: "var(--dbm-space-2)" }}>
-        <Tooltip content="Reset to defaults">
-          <IconButton
-            icon={ArrowCounterClockwiseIcon}
-            aria-label="Reset controls to defaults"
-            size="sm"
-            variant="ghost"
-            onClick={() => resetArgs()}
-          />
-        </Tooltip>
+    <>
+      <div
+        style={{
+          background: "var(--dbm-bg-surface)",
+          border: "var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle)",
+          borderRadius: "var(--dbm-radius-md)",
+          padding: "var(--dbm-space-4)",
+          width: "100%",
+        }}
+      >
+        <div className="dbm-playground-controls-grid">
+          {rows.map(([name, argType]) => (
+            <ControlField
+              key={name}
+              name={name}
+              argType={argType}
+              value={args[name]}
+              onChange={(value) => updateArgs({ [name]: value })}
+            />
+          ))}
+        </div>
       </div>
-      <div className="dbm-playground-controls-grid">
-        {rows.map(([name, argType]) => (
-          <ControlField
-            key={name}
-            name={name}
-            argType={argType}
-            value={args[name]}
-            onChange={(value) => updateArgs({ [name]: value })}
-          />
-        ))}
+      {/* `marginBlockStart: 6px` — measured live (getBoundingClientRect),
+          not guessed: the real gap between the Canvas box's own bottom edge
+          and its native "Show code" row's top edge, on the exact same Docs
+          page, is 6px (Storybook's own layout gets there via a `-40px`
+          margin-top on its toolbar row plus the preview's own padding, an
+          internal mechanism this block doesn't replicate — matching the
+          resulting visual gap is what matters, not the mechanism). */}
+      <div style={{ display: "flex", justifyContent: "flex-start", marginBlockStart: "6px" }}>
+        <Button
+          size="xs"
+          variant="tertiary"
+          onClick={() => resetArgs()}
+          className="dbm-playground-reset-button"
+        >
+          <Icon icon={ArrowCounterClockwiseIcon} size="xs" />
+          Reset to defaults
+        </Button>
       </div>
-    </div>
+    </>
   );
 }

@@ -683,6 +683,51 @@
   }
 }
 
+/* `PlaygroundControls.tsx`'s "Reset to defaults" control (added
+   2026-09-06) — styled to match Storybook's own native "Show code"/"Copy
+   code" toggle buttons directly below the Canvas (values read from their
+   real computed style, not guessed; see that component's own doc comment
+   for the full rationale and history). Needs a real class, not inline
+   `style` (that component's own first-pass approach) — an inline `style`
+   attribute's specificity beats any external stylesheet rule regardless
+   of pseudo-class, so a `:hover` color change can never take effect on an
+   element whose color is set via `style`, only via a class. `!important`
+   on every rest-state property here for the same reason `.sbdocs-content
+   code` above needs it: `Button.module.css`'s own `.root`/`.sizeXs`/
+   `.variantTertiary` are each a single class selector, the same
+   specificity weight as this one, so which one wins is otherwise decided
+   by bundle load order rather than intent. The `:hover` rule below needs
+   no `!important` — a class+pseudo-class selector is inherently more
+   specific than a plain class, so it wins over all of the above on its
+   own. `border-radius`/`height`/`padding`/`gap` are literal pixel values,
+   not `--dbm-space-*`/`--dbm-radius-*` steps, since none of
+   4px/28px/10px/6px lands on those scales and the point is matching an
+   external reference that doesn't derive from this system's tokens at
+   all — same accepted-literal category as this file's media-query
+   breakpoints (§8 of guidelines/07-storybook-and-documentation-
+   standards.md). */
+.dbm-playground-reset-button {
+  border-radius: var(--dbm-radius-sm) !important;
+  color: var(--dbm-text-secondary) !important;
+  font-weight: var(--dbm-font-weight-bold) !important;
+  gap: 6px !important;
+  height: 28px !important;
+  padding-block: 0 !important;
+  padding-inline: 10px !important;
+}
+
+/* `!important` here too, not just on the rest-state rule above — an
+   `!important` declaration forms its own, higher-priority cascade tier
+   that a normal-priority declaration can never beat regardless of
+   selector specificity, hover included. Confirmed as a real, live bug,
+   not a hypothetical: without this, the rest rule's `!important` color
+   silently won even while genuinely hovered, confirmed via the browser's
+   own `:hover`-matched element chain (`document.querySelectorAll(':hover')`)
+   showing the resting gray color rather than the intended brand purple. */
+.dbm-playground-reset-button:hover {
+  color: var(--dbm-text-brand) !important;
+}
+
 /* Shared 3-column card grid (2026-08-10) — "Related components" on every
    component doc page (Button/Box/...), "What's covered here" on the
    Foundations Overview page, "Font families" on the Typography page. All
