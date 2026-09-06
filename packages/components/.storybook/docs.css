@@ -33,7 +33,23 @@
   padding-block-end: 60vh;
 }
 
-.sbdocs-content h1 {
+/* `:not(.sbdocs-preview h1)` (added 2026-09-06, via Heading's own Docs
+   page — the first component whose own rendered *output* is a real
+   `h1`-`h6` element, not a div/span/button): without it, this rule's
+   (0,1,1) specificity beats any single-class rule a component's own CSS
+   Module can produce (0,1,0) — e.g. Heading's `._size4xl_...` — for *any*
+   real `<h1>` a story renders inside its embedded Canvas, not just this
+   file's actual target (the MDX page's own `##`/`###` prose headings).
+   Confirmed live: an `<h1 class="_size4xl_...">` inside the Playground's
+   Canvas computed to this rule's `font-size.4xl`/no-border instead of its
+   own class's real value/border, and — for `h2`/`h3` below — sometimes
+   picked up this rule's own `border-block-end` it was never meant to have.
+   `.sbdocs-preview` is addon-docs' own stable wrapper around every
+   embedded Canvas (confirmed via the rendered DOM, same as this file's
+   other class names) — excluding anything nested inside it scopes these
+   three rules back to prose only, regardless of how deep a real
+   component's own render nests the actual element. */
+.sbdocs-content h1:not(.sbdocs-preview h1) {
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-4xl);
   font-weight: var(--dbm-font-weight-bold);
@@ -71,7 +87,16 @@
    description for the full history. Re-verify against `bg.surface`'s
    actual value before touching either again, since this has now flipped
    three times. */
-.sbdocs-content h2 {
+/* `:not(.sbdocs-preview h2)` — see `.sbdocs-content h1`'s own comment
+   above for the full finding; this is the specific instance that surfaced
+   it (user-reported): Heading's Playground defaults to `level={2}`, so its
+   real `<h2>` sat directly inside this rule's reach and picked up both a
+   wrong `font-size` (this rule's `2xl` instead of the component's own
+   selected size) and an unwanted `border-block-end` — the exact "some
+   headings have a border, some don't" and "the size shown doesn't match
+   what's rendered" symptoms, both explained by whether a given instance
+   happened to render as a real `<h2>` or not. */
+.sbdocs-content h2:not(.sbdocs-preview h2) {
   border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-2xl);
@@ -102,7 +127,11 @@
    React component, not CSS-targeted markup here) — already paired its own
    reactive background with reactive text on the same element, which is
    why it never needed the fixed-primitive workaround in the first place. */
-.sbdocs-content h3 {
+/* `:not(.sbdocs-preview h3)` — same finding as `.sbdocs-content h1`'s own
+   comment above; several Heading stories render a real `<h3>` (e.g. the
+   "truncate"/"Text alignment" galleries), which this rule's `color`/
+   `font-size.md`/`font-weight.semibold` would otherwise silently override. */
+.sbdocs-content h3:not(.sbdocs-preview h3) {
   color: var(--dbm-text-secondary);
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-md);

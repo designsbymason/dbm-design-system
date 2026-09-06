@@ -278,4 +278,129 @@ Playground both — everything in this entry above, plus a fresh full-server res
 (not just a hot-reloaded session) specifically to rule out the exact class of stale-instance bug
 the `size` fix above was root-caused to.
 
-Not yet finalized — pending confirmation.
+**Fifth follow-up fix (same day, user-requested): the `size`-tracks-`level` fix extended to every
+other story with a live `level`, a Truncate-story-specific display bug, and a spacing gap in the
+Font family gallery.**
+
+- **`size` showed "Choose option…" on `Default`, `Font family`, `Text alignment`, `Line-wrapping`,
+  `truncate`, and `Narrow viewport`** — the unconditional sync added to the `Playground` story in
+  the fourth follow-up was Playground-only; every other story with a live (or fixed-but-real)
+  `level` still had no equivalent. Extracted the sync into a shared `useSyncSizeToLevel(level)` hook
+  (`06-engineering-standards.md` §1's DRY rule — identical logic now needed in six places, not one)
+  and applied it: via the meta-level fallback `render` for `Default`/`Narrow viewport` (both rely on
+  it, having no `render` of their own), and directly in `Font family`/`Text alignment`/
+  `Line-wrapping`/`truncate`'s own `render` functions. Verified on all six: each story's `size`
+  control now shows the size its own current `level` actually resolves to.
+- **`truncate` (the story) showed an empty input despite `args.truncate` being set to `2`.** Real,
+  confirmed bug: that story's own control is `text`-typed, and a `text` control only displays
+  `typeof value === "string"` values — the literal number `2` fails that check and renders as
+  empty, even though the canvas was rendering the clamp correctly the whole time (same
+  string-vs-number display mismatch already documented for `truncate`'s own argType, just not
+  applied to this specific story's `args` yet). Fixed by setting `args.truncate` to the string
+  `"2"` instead — `parseTruncateArg` already normalizes either shape back to a real number for the
+  component itself, so nothing about the actual rendered output changed, only the control's own
+  display.
+- **Added visible spacing between the two `Font family` gallery instances.** They were two
+  `Heading`s back to back inside a bare Fragment — `Heading` itself sets `margin: 0`, so nothing
+  separated them. Wrapped in this system's own `Stack` (`gap={4}`, i.e. `space.4`/16px) rather than
+  a manual `margin`/`gap` style, matching `Divider.stories.tsx`'s own established use of `Stack` for
+  exactly this kind of gallery spacing. Verified live via `getBoundingClientRect()`: a real 16px gap
+  between the first heading's bottom edge and the second's top edge (was 0).
+
+Self-re-verified: `tsc --noEmit`, `eslint`, full Vitest suite (983 tests package-wide, unchanged —
+Storybook-only changes), and a real `pnpm build`. Visually re-verified live in Storybook (native
+Controls tab) on all six affected stories plus the Docs page's own embedded Canvas for each.
+
+**Sixth follow-up fix (same day, user-reported): a real CSS specificity bug in shared Docs
+infrastructure, not a control-wiring issue — Heading is the first component whose own rendered
+output collided with it.**
+
+- **User-reported symptoms, all from one root cause:** on the Docs page specifically (not the
+  standalone story), changing `level` correctly updated the `size` control but the canvas's actual
+  font size didn't match; some rendered headings had a bottom border and some didn't; and — echoing
+  the "font weight doesn't update" report from an earlier turn, but this time on the Docs page,
+  where it turned out to be a *different* bug wearing the same symptom — `weight` appeared inert for
+  both font families there.
+- **Root cause, confirmed via the actual cascade, not assumed:** `.storybook/docs.css`'s
+  `.sbdocs-content h1/h2/h3` rules exist to style the MDX page's own `##`/`###` prose section
+  headings ("Playground", "Properties", etc.) — but their selector is a plain descendant combinator,
+  which also matches any *real* `<h1>`-`<h3>` a story renders inside its embedded Canvas, at
+  (0,1,1) specificity — higher than any single-class rule a component's own CSS Module can produce
+  (e.g. Heading's `._size4xl_...` at (0,1,0)). Every other component's Docs page was unaffected
+  simply because no other component's own rendered output happens to be a real semantic heading
+  element — Heading is the first one where this collision was even possible. Confirmed directly:
+  an actual `<h2 class="_size4xl_...">` inside the Playground's Canvas computed to this rule's
+  `font-size.2xl`/bold/bordered instead of its own class's real values — explaining the font-size
+  mismatch, the inconsistent borders (any instance that happened to render as `h1`/`h2`/`h3` got
+  one; `h4`/`h5`/`h6` never matched the selector at all, hence "some have it, some don't"), and the
+  apparent dead `weight` control (the rule hardcodes `font-weight: bold`, unconditionally, so
+  nothing the control did to a `level={2}`-default instance could ever show).
+- **Fixed by scoping all three rules to exclude anything inside `.sbdocs-preview`** (addon-docs' own
+  stable wrapper around every embedded Canvas, confirmed via the rendered DOM) —
+  `.sbdocs-content h2:not(.sbdocs-preview h2)`, and the equivalent for `h1`/`h3`. `:not()`'s
+  specificity is that of its own argument, so this is *more* specific than before for genuine prose
+  headings (still wins, confirmed unaffected on both Heading's own prose sections and, spot-checked,
+  Blockquote's Docs page) while not matching at all for anything nested inside a Canvas, regardless
+  of how many wrapper elements a real component's own render nests it under.
+
+Self-re-verified: `tsc --noEmit`, `eslint`, full Vitest suite (983 tests package-wide, unchanged —
+a Storybook-CSS-only fix), and a real `pnpm build`. Visually re-verified live in Storybook: the
+Playground's default `<h2>` now computes to the real `4xl` size with no border; changing `weight`
+now visibly changes it for both font families; a `level={3}` instance in the "All levels" gallery
+now shows its own real size/color/weight instead of the docs-chrome's forced `md`/`text.secondary`/
+`semibold`; and the actual prose "Properties"/"Import" section headings are confirmed still styled
+correctly (own `2xl`/bordered and `md`/`text.secondary` treatment intact), both on Heading's own
+Docs page and, spot-checked on a second component (Blockquote), unaffected elsewhere.
+
+**Final review pass (same day, before finalizing):** re-read every file fresh (`Heading.tsx`,
+`.types.ts`, `.module.css`, `.stories.tsx`, `.test.tsx`, `.mdx`, `index.ts`) rather than trusting
+the incremental follow-ups above to have left everything consistent, and re-ran the full
+`06-engineering-standards.md` §9 checklist end to end.
+
+**Fixed:** `index.ts` only re-exported `HeadingLevel`, `HeadingProps`, `HeadingSize` —
+`HeadingAlign` and `HeadingWrap` (both added during the original pass) were never wired into the
+barrel file, so neither was actually reachable from `@dbm-design-system/components`'s public API
+despite being real, referenced, JSDoc'd prop types — the exact same gap already documented for
+Divider's own review, now a confirmed second instance. Confirmed via a real `tsup` build before the
+fix (both types absent from `dist/index.d.ts`) and after (both present, `grep` count of 5
+occurrences across the declaration file).
+
+**Checked, no defect found:**
+- Full checklist re-verified top to bottom: `forwardRef`, `className`/`style`/`id`/`data-testid`
+  redeclared, `{...props}` ordering, zero hardcoded values, SSR safety, TypeScript strict/no `any`,
+  JSDoc complete on the component and all 14 props.
+- Live-verified across both brands × both modes (not just one, and not just the Playground's
+  default state): `purple-light` and `emerald-dark` explicitly checked — color, font-size, and
+  border-bottom (the sixth follow-up's own fix) all correct in both.
+- Mobile viewport (375px): confirmed zero horizontal overflow across the *entire* Docs page (not
+  just spot-checked sections), the page title correctly fits without wrapping, and the
+  `NarrowViewport` story's own heading genuinely wraps (`scrollWidth` > its own rendered width, not
+  overflowing the viewport).
+- Properties table re-confirmed complete: all 14 rows present, correct order, every description
+  populated, sensible defaults shown (`level`/`weight`/`color`/`fontFamily` show their real
+  defaults; `size`/`align`/`wrap`/`truncate`/`as`/escape-hatches correctly show "—").
+- `check-component-bundle-size`: 1.37KB JS / 0.38KB CSS gzipped — comfortably within budget.
+- Full Vitest suite (983 tests package-wide, unit project), `tsc --noEmit`, `eslint` (including
+  `.storybook`), a real `pnpm build`, and the Foundations token-coverage check — all clean.
+
+**Known, deliberately-deferred nice-to-have (not a defect, not blocking):** Radix Themes' `Heading`
+also offers a `trim` prop (leading-trim, removing the extra space above/below text that a font's own
+line-height reserves — the invisible padding from a font's ascent/descent/line-gap metrics, not
+anything set in CSS, which is why text never sits perfectly flush against a border or icon without a
+fudge-factor negative margin). Discussed directly with the user (2026-09-06) and declined for now.
+Not added here — no other component in this system has it yet either, so adding it only to Heading
+would be an isolated, inconsistent one-off rather than a system-wide convention.
+
+If this gets picked up in a future pass, two real (not just cosmetic) pieces of work, not just prop
+plumbing:
+- **Real font-metrics work, not a copy of Radix's own numbers.** Radix's `trim` is pre-computed
+  specifically for Inter, the one font they ship. DBM uses two different fonts (Nunito primary, Lora
+  secondary), each with its own ascent/descent/line-gap metrics from its own font file's OS/2 table
+  — the actual crop values have to be derived (or extracted via a tool like fontkit/opentype.js) per
+  font, not assumed to transfer from Radix's own Inter-tuned values.
+- **A scoping decision, not just a Heading-local one.** Leading-trim is a generic typography concern
+  — `Text` would reasonably want the same prop eventually, using the same per-font metrics. Adding
+  it to `Heading` alone now, ahead of `Text`'s own review, means either a real API inconsistency
+  between the two siblings until `Text` catches up, or doing both together at that point instead.
+
+Finalized 2026-09-06.

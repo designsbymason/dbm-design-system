@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect } from "react";
 import { useArgs } from "storybook/preview-api";
+import { Stack } from "../Stack";
 import { defaultSizeForLevel, Heading } from "./Heading";
 import type { HeadingLevel } from "./Heading.types";
 
@@ -23,6 +24,24 @@ function parseTruncateArg(value: unknown): number | undefined {
   if (typeof value !== "string" || value.trim() === "") return undefined;
   const parsed = Number(value);
   return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+/**
+ * Keeps a story's own `size` arg in sync with `level`'s real default —
+ * shared by every story below whose `size` control should show that
+ * resolved value instead of a blank "Choose option…" (the same reasoning
+ * as the Playground's own version of this, `06-engineering-standards.md`
+ * §9's DRY rule: identical logic, now needed in six places, not one).
+ * Deliberately unconditional, not "sticky once manually touched" — see the
+ * Playground story's own comment below for why a ref-based version of this
+ * silently broke.
+ */
+function useSyncSizeToLevel(level: HeadingLevel) {
+  const [, updateArgs] = useArgs();
+  useEffect(() => {
+    updateArgs({ size: defaultSizeForLevel[level] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level]);
 }
 
 const meta: Meta<typeof Heading> = {
@@ -181,10 +200,13 @@ const meta: Meta<typeof Heading> = {
   },
   // The fallback renderer for any story below with no `render` of its own
   // (`Default`, `NarrowViewport`) — every story that *does* define its own
-  // `render` applies this same `parseTruncateArg` coercion itself, since
-  // this meta-level one only ever runs in place of a missing one, never
-  // alongside it.
-  render: (args) => <Heading {...args} truncate={parseTruncateArg(args.truncate)} />,
+  // `render` applies this same `parseTruncateArg` coercion and
+  // `useSyncSizeToLevel` call itself, since this meta-level one only ever
+  // runs in place of a missing one, never alongside it.
+  render: function DefaultRenderer(args) {
+    useSyncSizeToLevel(args.level as HeadingLevel);
+    return <Heading {...args} truncate={parseTruncateArg(args.truncate)} />;
+  },
 };
 
 export default meta;
@@ -198,9 +220,10 @@ export const Playground: Story = {
   // block) is Storybook's own vanilla `<select>` — it can only ever display
   // `args.size` itself, with no equivalent to that block's own
   // `resolveDisplayValue` mechanism for a display-only computed fallback.
-  // To still show the size `level` actually resolves to here (rather than
-  // a blank "Choose option…"), this syncs a *real* `size` arg to
-  // `defaultSizeForLevel[level]` whenever `level` changes.
+  // `useSyncSizeToLevel` (above) syncs a *real* `size` arg to
+  // `defaultSizeForLevel[level]` whenever `level` changes instead, so this
+  // (and every other story below with a live `level`) shows the resolved
+  // size rather than a blank "Choose option…".
   //
   // Deliberately unconditional — an earlier version tried to preserve a
   // manually-picked `size` across a later `level` change by tracking "was
@@ -220,15 +243,7 @@ export const Playground: Story = {
   // the "Size set independently of level" story is the dedicated,
   // always-correct demo of that combination.
   render: function PlaygroundStory(args) {
-    const [, updateArgs] = useArgs();
-
-    useEffect(() => {
-      updateArgs({ size: defaultSizeForLevel[args.level as HeadingLevel] });
-      // Deliberately level-only — see the comment above for why this
-      // doesn't try to detect/preserve a manual `size` override.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [args.level]);
-
+    useSyncSizeToLevel(args.level as HeadingLevel);
     return <Heading {...args} truncate={parseTruncateArg(args.truncate)} />;
   },
 };
@@ -308,20 +323,27 @@ export const FontFamily: Story = {
   name: "Font family (secondary/editorial vs primary)",
   // `fontFamily` is the deliberate varying axis; `children` is hardcoded
   // per instance to describe each. Everything else stays live and shared.
+  // Wrapped in `Stack` (this system's own layout atom, not a bare
+  // Fragment) so the two instances get real breathing room between them —
+  // `Heading` itself has `margin: 0`, so two of them back to back in a
+  // Fragment stack flush against each other with no gap at all.
   argTypes: {
     fontFamily: { control: false },
     children: { control: false },
   },
-  render: (args) => (
-    <>
-      <Heading {...args} fontFamily="secondary" truncate={parseTruncateArg(args.truncate)}>
-        fontFamily=&quot;secondary&quot; (Lora, default) — editorial heading.
-      </Heading>
-      <Heading {...args} fontFamily="primary" truncate={parseTruncateArg(args.truncate)}>
-        fontFamily=&quot;primary&quot; (Nunito) — UI-dense/enterprise heading.
-      </Heading>
-    </>
-  ),
+  render: function FontFamilyStory(args) {
+    useSyncSizeToLevel(args.level as HeadingLevel);
+    return (
+      <Stack gap={4}>
+        <Heading {...args} fontFamily="secondary" truncate={parseTruncateArg(args.truncate)}>
+          fontFamily=&quot;secondary&quot; (Lora, default) — editorial heading.
+        </Heading>
+        <Heading {...args} fontFamily="primary" truncate={parseTruncateArg(args.truncate)}>
+          fontFamily=&quot;primary&quot; (Nunito) — UI-dense/enterprise heading.
+        </Heading>
+      </Stack>
+    );
+  },
 };
 
 export const Align: Story = {
@@ -338,19 +360,22 @@ export const Align: Story = {
     align: { control: false },
     children: { control: false },
   },
-  render: (args) => (
-    <>
-      <Heading {...args} align="start" truncate={parseTruncateArg(args.truncate)}>
-        align=&quot;start&quot; (default)
-      </Heading>
-      <Heading {...args} align="center" truncate={parseTruncateArg(args.truncate)}>
-        align=&quot;center&quot;
-      </Heading>
-      <Heading {...args} align="end" truncate={parseTruncateArg(args.truncate)}>
-        align=&quot;end&quot;
-      </Heading>
-    </>
-  ),
+  render: function AlignStory(args) {
+    useSyncSizeToLevel(args.level as HeadingLevel);
+    return (
+      <>
+        <Heading {...args} align="start" truncate={parseTruncateArg(args.truncate)}>
+          align=&quot;start&quot; (default)
+        </Heading>
+        <Heading {...args} align="center" truncate={parseTruncateArg(args.truncate)}>
+          align=&quot;center&quot;
+        </Heading>
+        <Heading {...args} align="end" truncate={parseTruncateArg(args.truncate)}>
+          align=&quot;end&quot;
+        </Heading>
+      </>
+    );
+  },
 };
 
 export const Wrap: Story = {
@@ -368,25 +393,28 @@ export const Wrap: Story = {
     wrap: { control: false },
     children: { control: false },
   },
-  render: (args) => (
-    <>
-      <div style={{ maxWidth: "20rem" }}>
-        <Heading {...args} wrap="wrap" truncate={parseTruncateArg(args.truncate)}>
-          A longer heading that wraps with the browser&apos;s default line breaks
-        </Heading>
-      </div>
-      <div style={{ maxWidth: "20rem" }}>
-        <Heading {...args} wrap="balance" truncate={parseTruncateArg(args.truncate)}>
-          A longer heading that wraps with balanced line breaks
-        </Heading>
-      </div>
-      <div style={{ maxWidth: "20rem" }}>
-        <Heading {...args} wrap="pretty" truncate={parseTruncateArg(args.truncate)}>
-          A longer heading that wraps avoiding an orphaned last word
-        </Heading>
-      </div>
-    </>
-  ),
+  render: function WrapStory(args) {
+    useSyncSizeToLevel(args.level as HeadingLevel);
+    return (
+      <>
+        <div style={{ maxWidth: "20rem" }}>
+          <Heading {...args} wrap="wrap" truncate={parseTruncateArg(args.truncate)}>
+            A longer heading that wraps with the browser&apos;s default line breaks
+          </Heading>
+        </div>
+        <div style={{ maxWidth: "20rem" }}>
+          <Heading {...args} wrap="balance" truncate={parseTruncateArg(args.truncate)}>
+            A longer heading that wraps with balanced line breaks
+          </Heading>
+        </div>
+        <div style={{ maxWidth: "20rem" }}>
+          <Heading {...args} wrap="pretty" truncate={parseTruncateArg(args.truncate)}>
+            A longer heading that wraps avoiding an orphaned last word
+          </Heading>
+        </div>
+      </>
+    );
+  },
 };
 
 export const Truncate: Story = {
@@ -396,19 +424,30 @@ export const Truncate: Story = {
   // defaults to 2 via `args` (not a JSX-literal override) so its own
   // control stays genuinely live — try 1/2/3 lines directly. Every other
   // prop stays live too.
-  args: { level: 3, truncate: 2 },
+  //
+  // `truncate: "2"` is a *string* here, not the number `2` — this story's
+  // own control is `text` (see that argType's own comment), and a text
+  // control displays `typeof value === "string"` values only; a raw
+  // number arg fails that check and the field renders empty instead of
+  // "2", even though the canvas would still render correctly (real,
+  // confirmed bug — `parseTruncateArg` below still normalizes either
+  // shape back to a real number for the component itself either way).
+  args: { level: 3, truncate: "2" as unknown as number },
   argTypes: {
     level: { control: false },
     children: { control: false },
   },
-  render: (args) => (
-    <div style={{ maxWidth: "20rem" }}>
-      <Heading {...args} truncate={parseTruncateArg(args.truncate)}>
-        A much longer card title than will fit on two lines, so it should be clamped with an
-        ellipsis instead of overflowing or wrapping onto a third line.
-      </Heading>
-    </div>
-  ),
+  render: function TruncateStory(args) {
+    useSyncSizeToLevel(args.level as HeadingLevel);
+    return (
+      <div style={{ maxWidth: "20rem" }}>
+        <Heading {...args} truncate={parseTruncateArg(args.truncate)}>
+          A much longer card title than will fit on two lines, so it should be clamped with an
+          ellipsis instead of overflowing or wrapping onto a third line.
+        </Heading>
+      </div>
+    );
+  },
 };
 
 export const AsCardTitle: Story = {

@@ -1,2 +1,8 @@
 export { Heading } from "./Heading";
-export type { HeadingLevel, HeadingProps, HeadingSize } from "./Heading.types";
+export type {
+  HeadingAlign,
+  HeadingLevel,
+  HeadingProps,
+  HeadingSize,
+  HeadingWrap,
+} from "./Heading.types";
