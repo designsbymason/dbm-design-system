@@ -1,9 +1,15 @@
 import { cx } from "@dbm-design-system/primitives";
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
 import type { TextColor, TextFontFamily, TextWeight } from "../Text/Text.types";
 import styles from "./Heading.module.css";
-import type { HeadingLevel, HeadingProps, HeadingSize } from "./Heading.types";
+import type {
+  HeadingAlign,
+  HeadingLevel,
+  HeadingProps,
+  HeadingSize,
+  HeadingWrap,
+} from "./Heading.types";
 
 type HeadingComponent = {
   <E extends ElementType = "h1">(
@@ -21,6 +27,8 @@ const elementForLevel: Record<HeadingLevel, ElementType> = {
   6: "h6",
 };
 
+const headingTags = new Set<string>(Object.values(elementForLevel) as string[]);
+
 const defaultSizeForLevel: Record<HeadingLevel, HeadingSize> = {
   1: "5xl",
   2: "4xl",
@@ -31,6 +39,9 @@ const defaultSizeForLevel: Record<HeadingLevel, HeadingSize> = {
 };
 
 const sizeClass: Record<HeadingSize, string | undefined> = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
   md: styles.sizeMd,
   lg: styles.sizeLg,
   xl: styles.sizeXl,
@@ -39,6 +50,19 @@ const sizeClass: Record<HeadingSize, string | undefined> = {
   "4xl": styles.size4xl,
   "5xl": styles.size5xl,
   "6xl": styles.size6xl,
+};
+
+const alignClass: Record<HeadingAlign, string | undefined> = {
+  start: styles.alignStart,
+  center: styles.alignCenter,
+  end: styles.alignEnd,
+};
+
+const wrapClass: Record<HeadingWrap, string | undefined> = {
+  wrap: styles.wrapWrap,
+  nowrap: styles.wrapNowrap,
+  balance: styles.wrapBalance,
+  pretty: styles.wrapPretty,
 };
 
 const weightClass: Record<TextWeight, string | undefined> = {
@@ -70,9 +94,11 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
     as,
     level = 2,
     size,
+    align,
     weight = "bold",
     color = "primary",
     fontFamily = "secondary",
+    wrap,
     truncate,
     className,
     style,
@@ -90,17 +116,44 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
   const resolvedSize = size ?? defaultSizeForLevel[level as HeadingLevel];
   const usesAriaFallback = as !== undefined;
 
+  const hasWarnedAsHeadingTagRef = useRef(false);
+  const hasWarnedNowrapTruncateRef = useRef(false);
+
+  if (process.env.NODE_ENV !== "production") {
+    if (
+      as !== undefined &&
+      headingTags.has(as as string) &&
+      !hasWarnedAsHeadingTagRef.current
+    ) {
+      hasWarnedAsHeadingTagRef.current = true;
+      console.warn(
+        `Heading: \`as="${String(as)}"\` renders a native heading element, which already carries its own implicit level — the \`role="heading"\`/\`aria-level\` fallback this component adds for a non-heading \`as\` still applies on top of it and can conflict with the tag's own native level. \`as\` is meant for overriding to a *non*-heading element (e.g. "div"); to change which heading tag renders, use \`level\` instead.`,
+      );
+    }
+    if (
+      wrap === "nowrap" &&
+      truncate !== undefined &&
+      truncate > 1 &&
+      !hasWarnedNowrapTruncateRef.current
+    ) {
+      hasWarnedNowrapTruncateRef.current = true;
+      console.warn(
+        `Heading: \`wrap="nowrap"\` conflicts with \`truncate={${truncate}}\` — nowrap keeps the heading on a single line, so a multi-line clamp never has more than one line to clamp. Use \`truncate={1}\`, or remove \`wrap="nowrap"\`.`,
+      );
+    }
+  }
+
   return (
     <Component
       ref={ref}
-      role={usesAriaFallback ? "heading" : undefined}
-      aria-level={usesAriaFallback ? level : undefined}
       className={cx(
         styles.root,
         sizeClass[resolvedSize as HeadingSize],
+        align !== undefined && alignClass[align as HeadingAlign],
         weightClass[weight as TextWeight],
         colorClass[color as TextColor],
         fontFamilyClass[fontFamily as TextFontFamily],
+        wrap !== undefined && wrapClass[wrap as HeadingWrap],
         truncate !== undefined && styles.truncate,
         className,
       )}
@@ -109,6 +162,8 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
         ...style,
       }}
       {...props}
+      role={usesAriaFallback ? "heading" : undefined}
+      aria-level={usesAriaFallback ? level : undefined}
     />
   );
 });
@@ -126,13 +181,16 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
  *
  * `fontFamily="primary"` switches to Nunito, for UI-dense/enterprise
  * sections that want headings to stay in the interface's primary family.
- * `truncate` clamps to a fixed number of lines with an ellipsis.
+ * `align` sets text alignment; `wrap` controls line-wrapping (e.g.
+ * `wrap="balance"` for a more evenly-broken multi-line heading); `truncate`
+ * clamps to a fixed number of lines with an ellipsis.
  *
  * @example
  * ```tsx
  * <Heading level={1}>Page title</Heading>
  * <Heading level={2} size="xl">Visually smaller section heading</Heading>
  * <Heading level={3} as="div">Card title (not in the page's heading outline)</Heading>
+ * <Heading level={1} align="center" wrap="balance">Centered hero title</Heading>
  * ```
  */
 export const Heading = HeadingImpl as HeadingComponent;

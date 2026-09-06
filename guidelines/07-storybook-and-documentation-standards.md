@@ -137,8 +137,9 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**35 of 47 atoms have a Docs page; all 35 are Finalized** (see [Code.md](component-reviews/Code.md)
-for the most recent, 2026-09-06).
+**36 of 47 atoms have a Docs page; 35 are Finalized** (see [Heading.md](component-reviews/Heading.md)
+for the most recent, 2026-09-06 — its review pass is complete but not yet finalized, pending
+confirmation; see that file's own note).
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -177,10 +178,11 @@ for the most recent, 2026-09-06).
 | Tooltip | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Tooltip.md](component-reviews/Tooltip.md) |
 | Blockquote | Atom | Typography | ✅ | ✅ 2026-09-06 | [Blockquote.md](component-reviews/Blockquote.md) |
 | Code | Atom | Typography | ✅ | ✅ 2026-09-06 | [Code.md](component-reviews/Code.md) |
+| Heading | Atom | Typography | ✅ | ⏳ pending | [Heading.md](component-reviews/Heading.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
 - **Layout:** Grid, GridItem (molecule-tier, built, but still need this same Docs-page treatment). Spacer's and Stack's own review passes are complete — see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md).
-- **Typography:** Text, Heading, Link, List, ListItem, Kbd, Highlight — Blockquote's and Code's own review passes are complete and Finalized, see the status table above and their own [Blockquote.md](component-reviews/Blockquote.md)/[Code.md](component-reviews/Code.md).
+- **Typography:** Text, Link, List, ListItem, Kbd, Highlight — Blockquote's, Code's, and Heading's own review passes are complete (Blockquote/Code Finalized; Heading pending finalization), see the status table above and their own [Blockquote.md](component-reviews/Blockquote.md)/[Code.md](component-reviews/Code.md)/[Heading.md](component-reviews/Heading.md).
 - **Navigation:** none remaining — BackToTop's own review pass is complete, see the status table above and its own [BackToTop.md](component-reviews/BackToTop.md).
 - **Overlay:** none remaining — Backdrop's, Collapse's, and Tooltip's own review passes are
   complete, see the status table above and their own

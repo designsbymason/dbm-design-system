@@ -17,6 +17,46 @@
   overflow: hidden;
 }
 
+.alignStart {
+  text-align: start;
+}
+
+.alignCenter {
+  text-align: center;
+}
+
+.alignEnd {
+  text-align: end;
+}
+
+.wrapWrap {
+  text-wrap: wrap;
+}
+
+.wrapNowrap {
+  text-wrap: nowrap;
+}
+
+.wrapBalance {
+  text-wrap: balance;
+}
+
+.wrapPretty {
+  text-wrap: pretty;
+}
+
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+}
+
+.sizeBase {
+  font-size: var(--dbm-font-size-base);
+}
+
 .sizeMd {
   font-size: var(--dbm-font-size-md);
 }

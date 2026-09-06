@@ -1,0 +1,246 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Blockquote } from "../Blockquote";
+import { Text } from "../Text";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Heading } from "./Heading";
+import * as HeadingStories from "./Heading.stories";
+
+export const propOrder = [
+  "children",
+  "level",
+  "size",
+  "align",
+  "weight",
+  "color",
+  "fontFamily",
+  "wrap",
+  "truncate",
+  "as",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={HeadingStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Heading" tier="Atom" />
+
+A page or section heading, rendered as `h1`-`h6` per `level` by default and set in Lora — this
+system's secondary/editorial typeface (see the Typography foundations page for the full
+primary/secondary distinction). `level` (document structure — what a screen reader's heading
+outline sees) and `size` (visual size) default to a matched pair but are fully independent: a
+heading can be structurally an `h1` while visually smaller, or vice versa, the same separation
+[MUI's `Typography`](https://mui.com/material-ui/react-typography/) (`variant` vs. `component`) and
+[Radix Themes' `Heading`](https://www.radix-ui.com/themes/docs/components/heading) (`size` vs. `as`)
+both make. `as` overrides the rendered element entirely (e.g. a repeated card title that shouldn't
+add another entry to the page's heading outline) while keeping the correct heading semantics via an
+automatic ARIA fallback.
+
+### Import
+
+```tsx
+import { Heading } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={HeadingStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={HeadingStories.Playground}
+  exclude={["truncate", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Heading` also accepts any other native attribute of its rendered element beyond what's listed
+here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element `as` specifies (e.g.
+`lang`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={HeadingStories} order={propOrder} />
+
+## Variants
+
+### All levels (h1-h6, matched default sizes)
+
+<Canvas of={HeadingStories.AllLevels} />
+
+### Size set independently of level
+
+<Canvas of={HeadingStories.SizeIndependentOfLevel} />
+
+### All sizes (full font-size scale)
+
+<Canvas of={HeadingStories.AllSizes} />
+
+### Font family (secondary/editorial vs primary)
+
+<Canvas of={HeadingStories.FontFamily} />
+
+### Text alignment (start/center/end)
+
+<Canvas of={HeadingStories.Align} />
+
+### Line-wrapping (wrap vs balance vs pretty)
+
+<Canvas of={HeadingStories.Wrap} />
+
+### truncate (line-clamp)
+
+<Canvas of={HeadingStories.Truncate} />
+
+### Polymorphic: as="div" (card title, kept out of the page heading outline)
+
+<Canvas of={HeadingStories.AsCardTitle} />
+
+### Narrow viewport (large heading wraps, never overflows)
+
+<Canvas of={HeadingStories.NarrowViewport} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pick `level` for what the heading *is* in the page's document outline — the first heading on a
+  page should be `level={1}`, and levels should nest without skipping (an `h2`'s subsection is an
+  `h3`, not an `h4`).
+- Set `size` independently of `level` whenever the visual hierarchy a design calls for doesn't match
+  the document outline — a dense enterprise page's real `h1` visually smaller than a marketing
+  page's hero `h1`, for instance.
+- Use `as` for a heading-styled title that shouldn't add an entry to the page's actual heading
+  outline (a repeated card title in a list) — `level` still drives the ARIA fallback, so it's
+  announced at the right level regardless.
+- Reach for `wrap="balance"` on a short, large, multi-line heading (a hero title, an empty-state
+  message) where an evenly-broken line reads more polished than the browser's default break.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pick `level` based on how a heading should *look* — that's what `size` is for. Choosing a
+  smaller heading tag just to get smaller text breaks the page's outline for screen reader users.
+- Don't skip heading levels to get a specific visual weight (using `h4` because `h3` "looks too
+  big") — use `level` for structure and `size` for the visual result instead.
+- Don't pass an actual `h1`-`h6` tag to `as` — it's meant for a non-heading element; use `level` to
+  choose which heading tag renders instead.
+- Don't combine `wrap="nowrap"` with a multi-line `truncate` — nowrap keeps the heading on one line,
+  so there's never a second line for the clamp to act on (Heading warns about this in development).
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat `level` and `size` as answering two different questions — "where does this sit in the
+  page's outline?" and "how big should it look?" — and pick each independently rather than assuming
+  they must match.
+- Default to the editorial `fontFamily="secondary"` (Lora) for real page/section titles; switch to
+  `fontFamily="primary"` (Nunito) for dense, UI-heavy sections (a card title inside a dashboard
+  widget, for instance) where a heading should read as part of the interface rather than editorial
+  copy.
+- `align` is unset by default, inheriting the surrounding layout's own alignment — set it explicitly
+  only when a heading needs to differ from its container (a centered empty-state title inside an
+  otherwise start-aligned page).
+- `truncate` and `wrap="balance"`/`"pretty"` solve different problems — `truncate` hides overflow
+  text behind an ellipsis after a fixed number of lines; `wrap` only changes *where* the visible
+  text breaks. Reach for `truncate` when a heading has an unpredictable length that needs a hard
+  cap, and `wrap="balance"` when it just needs to look more polished at whatever length it already
+  is.
+
+## Accessibility
+
+<Callout tone="info" title="Level drives the accessible outline — as never removes it">
+
+- Renders a native `<h1>`-`<h6>` by default, which browsers and assistive technology already expose
+  as a navigable heading outline with zero ARIA required.
+- When `as` overrides the rendered element, `Heading` automatically applies `role="heading"` and
+  `aria-level={level}` so the element still surfaces as a heading of the correct level — verified
+  with an automated accessibility check against both the default heading element and an `as="div"`
+  override, not just the default case.
+- Heading levels should nest without skipping (`h1` → `h2` → `h3`, not `h1` → `h3`) for a coherent
+  screen-reader navigation experience — this isn't enforced by the component itself, since a single
+  heading has no way to know its position relative to the rest of the page.
+- No keyboard interaction — `Heading` is not an interactive element.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Heading level={1}>Page title</Heading>
+```
+
+```tsx
+// Visual size set independently of document structure
+<Heading level={2} size="xl">Visually smaller section heading</Heading>
+```
+
+```tsx
+// A repeated card title, kept out of the page's heading outline
+<Heading level={3} as="div">Card title</Heading>
+```
+
+```tsx
+// A centered, evenly-wrapped hero title
+<Heading level={1} align="center" wrap="balance">
+  Design builds meaning
+</Heading>
+```
+
+```tsx
+// A native attribute (lang) passed straight through
+<Heading level={2} lang="fr">Un titre en français</Heading>
+```
+
+## Design tokens used
+
+<TokenRow token="text.primary" usage="the default color" />
+<TokenRow token="text.secondary" usage="color=&quot;secondary&quot;" />
+<TokenRow token="text.tertiary" usage="color=&quot;tertiary&quot;" />
+<TokenRow token="text.disabled" usage="color=&quot;disabled&quot;" />
+<TokenRow token="text.link" usage="color=&quot;link&quot;" />
+<TokenRow token="text.danger" usage="color=&quot;danger&quot;" />
+<TokenRow token="text.warning" usage="color=&quot;warning&quot;" />
+<TokenRow token="text.success" usage="color=&quot;success&quot;" />
+<TokenRow token="text.info" usage="color=&quot;info&quot;" />
+<TokenRow token="font-family.secondary" usage="Lora, the default editorial font family" />
+<TokenRow token="font-family.primary" usage="Nunito, via fontFamily=&quot;primary&quot;" />
+<TokenRow token="font-size.xs–font-size.6xl" usage="the full size scale — every size step maps to one token" />
+<TokenRow token="font-weight.regular" usage="weight=&quot;regular&quot;" />
+<TokenRow token="font-weight.medium" usage="weight=&quot;medium&quot;" />
+<TokenRow token="font-weight.semibold" usage="weight=&quot;semibold&quot;" />
+<TokenRow token="font-weight.bold" usage="weight=&quot;bold&quot; (default)" />
+<TokenRow token="line-height.tight" usage="the heading's line height" />
+
+`align` and `wrap` map directly to CSS `text-align`/`text-wrap` keyword values rather than a design
+token — these are structural/behavioral properties, not colors, spacing, or other tokenized design
+values, the same category `Stack`'s `align`/`justify` props (flexbox keywords) already fall into.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Text"
+  description="The body-copy atom for content beneath a Heading — shares the same size/weight/color/fontFamily scales"
+  href="/?path=/story/atoms-typography-text--default"
+>
+  <Text>Body copy beneath a heading.</Text>
+</RelatedCard>
+<RelatedCard
+  name="Blockquote"
+  description="Also set in the editorial Lora font family, often introduced by a Heading"
+  href="/?path=/story/atoms-typography-blockquote--default"
+>
+  <Blockquote>Design is how it works.</Blockquote>
+</RelatedCard>
+</div>
