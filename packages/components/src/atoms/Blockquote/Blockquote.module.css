@@ -1,5 +1,5 @@
 .root {
-  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-neutral);
+  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-brand);
   color: var(--dbm-text-secondary);
   font-family: var(--dbm-font-family-secondary);
   font-size: var(--dbm-font-size-md);
@@ -9,11 +9,47 @@
   padding-inline-start: var(--dbm-space-4);
 }
 
+/*
+ * No left border/inline padding — the decorative quote mark below carries
+ * the visual accent instead, so a second, redundant accent would compete
+ * with it.
+ */
+.pullQuote {
+  border-inline-start: none;
+  font-size: var(--dbm-font-size-2xl);
+  padding-inline-start: 0;
+  text-align: center;
+}
+
+.quoteMark {
+  color: var(--dbm-text-brand);
+  display: block;
+  font-family: var(--dbm-font-family-secondary);
+  font-size: var(--dbm-font-size-6xl);
+  font-style: normal;
+  line-height: 1;
+  margin-block-end: calc(-1 * var(--dbm-space-2));
+}
+
 .footer {
-  color: var(--dbm-text-tertiary);
+  /*
+   * text.secondary, not text.tertiary — Blockquote's own hardcoded default,
+   * not a consumer-chosen color, so it must stay compliant wherever a
+   * consumer plausibly places it. text.tertiary fails WCAG AA's 4.5:1 text
+   * floor against bg.canvas (4.13:1 light / 2.96:1 dark, per
+   * 03-token-system-spec.md's own documented exception) — a very likely
+   * background for an editorial/typography atom like this one, since
+   * Storybook's own default canvas backdrop (bg.surface) hid the failure
+   * from every prior live check.
+   */
+  color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-sm);
   font-style: normal;
   margin-block-start: var(--dbm-space-2);
+}
+
+.pullQuoteFooter {
+  text-align: center;
 }
 
 .cite {

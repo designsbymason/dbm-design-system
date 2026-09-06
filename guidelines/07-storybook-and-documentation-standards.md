@@ -130,8 +130,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**33 of 47 atoms have a Docs page; all 33 are Finalized** (see [Tooltip.md](component-reviews/Tooltip.md)
-for the most recent, 2026-09-05).
+**34 of 47 atoms have a Docs page; all 34 are Finalized** (see [Blockquote.md](component-reviews/Blockquote.md)
+for the most recent, 2026-09-06).
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -168,10 +168,11 @@ for the most recent, 2026-09-05).
 | Backdrop | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Backdrop.md](component-reviews/Backdrop.md) |
 | Collapse | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Collapse.md](component-reviews/Collapse.md) |
 | Tooltip | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Tooltip.md](component-reviews/Tooltip.md) |
+| Blockquote | Atom | Typography | ✅ | ✅ 2026-09-06 | [Blockquote.md](component-reviews/Blockquote.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`):
 - **Layout:** Grid, GridItem (molecule-tier, built, but still need this same Docs-page treatment). Spacer's and Stack's own review passes are complete — see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md).
-- **Typography:** Text, Heading, Link, Code, Blockquote, List, ListItem, Kbd, Highlight
+- **Typography:** Text, Heading, Link, Code, List, ListItem, Kbd, Highlight — Blockquote's own review pass is complete and Finalized, see the status table above and its own [Blockquote.md](component-reviews/Blockquote.md).
 - **Navigation:** none remaining — BackToTop's own review pass is complete, see the status table above and its own [BackToTop.md](component-reviews/BackToTop.md).
 - **Overlay:** none remaining — Backdrop's, Collapse's, and Tooltip's own review passes are
   complete, see the status table above and their own

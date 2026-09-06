@@ -255,7 +255,7 @@
     "neutral": {
       "$type": "color",
       "$value": "{color.gray.600}",
-      "$description": "Renamed from border.strong (2026-08-21), same border.* rotation (see the light-mode border.neutral's own description). Dark counterpart, value unchanged (gray.600) — the default resting border on Checkbox/Blockquote/Kbd, hover-state border on Select/Input/Textarea/Button's secondary variant/IconButton/Indicators, same as light."
+      "$description": "Renamed from border.strong (2026-08-21), same border.* rotation (see the light-mode border.neutral's own description). Dark counterpart, value unchanged (gray.600) — the default resting border on Checkbox/Kbd, hover-state border on Select/Input/Textarea/Button's secondary variant/IconButton/Indicators, same as light. Blockquote moved off this token onto border.brand instead (2026-09-06, at explicit direction, during its own review pass) — see that token's own description."
     },
     "neutral-strong": {
       "$type": "color",
@@ -274,7 +274,7 @@
     "brand": {
       "$type": "color",
       "$value": "{color.purple.300}",
-      "$description": "Dark value changed purple.400 → purple.300 (2026-08-21, at explicit direction), matching bg.brand's own dark value now that both are the same tone.300 step — previously border.brand reused border.focus's dark value instead of bg.brand's own (see Phase 22), since bg.brand's old dark step measured only 2.24:1/3.41:1 against dark bg.surface, too weak for a real border. That workaround is no longer needed: purple.300 vs bg.surface (gray.800) = 5.32:1, up from 3.56:1 on the old purple.400 — a real improvement, not just a rename."
+      "$description": "Dark value changed purple.400 → purple.300 (2026-08-21, at explicit direction), matching bg.brand's own dark value now that both are the same tone.300 step — previously border.brand reused border.focus's dark value instead of bg.brand's own (see Phase 22), since bg.brand's old dark step measured only 2.24:1/3.41:1 against dark bg.surface, too weak for a real border. That workaround is no longer needed: purple.300 vs bg.surface (gray.800) = 5.32:1, up from 3.56:1 on the old purple.400 — a real improvement, not just a rename. Second consumer: Blockquote's default-variant accent border (2026-09-06, at explicit direction, moved off border.neutral — see that token's own description)."
     },
     "brand-subtle": {
       "$type": "color",

@@ -253,7 +253,7 @@
     "neutral": {
       "$type": "color",
       "$value": "{color.gray.400}",
-      "$description": "Renamed from border.strong (2026-08-21), part of the same border.* rotation (see border.neutral-subtle's own description). This is the system's most widely consumed generic gray border — the default resting border on Checkbox/Blockquote/Kbd (not hover), and the hover-state border on Select/Input/Textarea/Button's secondary variant/IconButton/Indicators. Color.mdx's own usage text ('Hover-state border emphasis') predates this full consumer list and doesn't capture the non-hover cases — a pre-existing documentation gap noted here, not something this rename introduces or fixes."
+      "$description": "Renamed from border.strong (2026-08-21), part of the same border.* rotation (see border.neutral-subtle's own description). This is the system's most widely consumed generic gray border — the default resting border on Checkbox/Kbd (not hover), and the hover-state border on Select/Input/Textarea/Button's secondary variant/IconButton/Indicators. Color.mdx's own usage text ('Hover-state border emphasis') predates this full consumer list and doesn't capture the non-hover cases — a pre-existing documentation gap noted here, not something this rename introduces or fixes. Blockquote moved off this token onto border.brand instead (2026-09-06, at explicit direction, during its own review pass) — see that token's own description."
     },
     "neutral-strong": {
       "$type": "color",
@@ -273,7 +273,7 @@
     "brand": {
       "$type": "color",
       "$value": "{color.emerald.700}",
-      "$description": "New token (2026-08-20) — emerald counterpart to border.brand (purple); see that token's own description for its purpose. Reuses bg.brand's own light-mode step (emerald.700, not the numerically-parallel emerald.600 — emerald needs to go one step further than purple's own analogous step to reach equivalent perceptual/contrast weight, the same reason border.focus's own emerald value sits at .600 while purple's sits at .500). emerald.700 vs bg.surface (white) = 6.08:1, clears WCAG 1.4.11's 3:1 non-text floor comfortably. Light value unchanged."
+      "$description": "New token (2026-08-20) — emerald counterpart to border.brand (purple); see that token's own description for its purpose. Reuses bg.brand's own light-mode step (emerald.700, not the numerically-parallel emerald.600 — emerald needs to go one step further than purple's own analogous step to reach equivalent perceptual/contrast weight, the same reason border.focus's own emerald value sits at .600 while purple's sits at .500). emerald.700 vs bg.surface (white) = 6.08:1, clears WCAG 1.4.11's 3:1 non-text floor comfortably. Light value unchanged. Second consumer: Blockquote's default-variant accent border (2026-09-06, at explicit direction, moved off border.neutral — see that token's own description), pairing it with the same brand family already used by Blockquote's pull-quote decorative quote mark (text.brand)."
     },
     "brand-subtle": {
       "$type": "color",

@@ -1,0 +1,192 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Heading } from "../Heading";
+import { Text } from "../Text";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Blockquote } from "./Blockquote";
+import * as BlockquoteStories from "./Blockquote.stories";
+
+export const propOrder = [
+  "children",
+  "variant",
+  "attribution",
+  "cite",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={BlockquoteStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Blockquote" tier="Atom" />
+
+A quoted passage set in Lora — this system's secondary/editorial typeface, distinct from Nunito
+(used for ordinary UI text; see the Typography foundations page for the full primary/secondary
+distinction). The default `variant` renders inline, sized for body copy, with an accent border and
+an optional `attribution` in the semantic `<footer><cite>` pattern. `variant="pull-quote"` switches
+to a larger, centered treatment with a decorative brand-colored quote mark, for a standalone
+editorial callout meant to draw the eye rather than a quote embedded in running text.
+
+### Import
+
+```tsx
+import { Blockquote } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={BlockquoteStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={BlockquoteStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Blockquote` also accepts any other native `<blockquote>` attribute beyond what's listed here (e.g.
+`lang`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={BlockquoteStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={BlockquoteStories.Default} />
+
+### With attribution
+
+<Canvas of={BlockquoteStories.WithAttribution} />
+
+### Pull quote
+
+<Canvas of={BlockquoteStories.PullQuote} />
+
+### Pull quote with attribution
+
+<Canvas of={BlockquoteStories.PullQuoteWithAttribution} />
+
+### Long quote (wrapping)
+
+<Canvas of={BlockquoteStories.LongQuote} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use the default variant for a quote embedded within running article/body text — a testimonial
+  inline in a paragraph, a cited passage within a longer piece.
+- Reach for `variant="pull-quote"` for a standalone editorial callout meant to draw the eye — an
+  article's single most quotable line, a testimonial highlight on a marketing page — not embedded
+  inline with surrounding copy.
+- Pass `cite` with the source URL whenever one exists, alongside a visible `attribution` — `cite`
+  isn't rendered visibly by browsers, so it isn't a substitute for a reader-visible citation.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Blockquote` for a UI callout, tip, or warning — it's specifically for quoted content;
+  a general emphasis/admonition box is a different component's job.
+- Don't rely on `cite`'s URL being visible to readers — always pair it with a visible `attribution`
+  when the source matters to the reader.
+- Don't put long biographical detail in `attribution` — keep it to a name, or "name, role" — longer
+  context reads better as separate body text below the quote.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer the default variant for quotes that are part of the surrounding narrative's argument;
+  reserve `pull-quote` for the one line per article or page you actually want to visually break out.
+- Keep `attribution` short and let `cite` carry the full source URL instead of stuffing it into the
+  visible text.
+- The pull-quote variant's decorative quote mark is purely visual (`aria-hidden`) — don't rely on it
+  to convey meaning; the native `<blockquote>` element itself already communicates "this is a
+  quotation" to assistive technology in either variant.
+
+## Accessibility
+
+<Callout tone="info" title="Semantic HTML carries the meaning — no ARIA needed">
+
+- Renders a native `<blockquote>`, which already communicates "this is an extended quotation" to
+  assistive technology with zero ARIA required, in either variant.
+- `attribution` renders in a `<footer><cite>` pair — the standard HTML pattern for quote
+  attribution, with `<cite>` marking up the source's name specifically.
+- The pull-quote variant's decorative quote-mark glyph is a plain `aria-hidden="true"` `<span>` —
+  invisible to screen readers, never announced as content.
+- No keyboard interaction — `Blockquote` is not an interactive element.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Blockquote>Design is not just what it looks like — design is how it works.</Blockquote>
+```
+
+```tsx
+// With a visible attribution and the source URL
+<Blockquote cite="https://en.wikiquote.org/wiki/Steve_Jobs" attribution="Steve Jobs">
+  Design is not just what it looks like — design is how it works.
+</Blockquote>
+```
+
+```tsx
+// A standalone editorial pull-quote
+<Blockquote variant="pull-quote" attribution="Dieter Rams">
+  Good design is as little design as possible.
+</Blockquote>
+```
+
+```tsx
+// A native <blockquote> attribute (lang) passed straight through
+<Blockquote lang="en" attribution="Steve Jobs">
+  Design is not just what it looks like — design is how it works.
+</Blockquote>
+```
+
+## Design tokens used
+
+<TokenRow token="text.secondary" usage="the quote body text color, and the attribution footer color (not text.tertiary — see Best practices)" />
+<TokenRow token="text.brand" usage="the pull-quote variant's decorative quote-mark glyph" />
+<TokenRow token="border.brand" usage="the default variant's accent border" />
+<TokenRow token="font-family.secondary" usage="Lora, the quote body text and the decorative quote mark" />
+<TokenRow token="font-size.md" usage="the default variant's quote text size" />
+<TokenRow token="font-size.2xl" usage="the pull-quote variant's larger quote text size" />
+<TokenRow token="font-size.6xl" usage="the pull-quote variant's decorative quote-mark glyph size" />
+<TokenRow token="font-size.sm" usage="the attribution footer text size" />
+<TokenRow token="line-height.relaxed" usage="the quote body line height" />
+<TokenRow token="border-width.4" usage="the default variant's accent border weight" />
+<TokenRow token="space.4" usage="the default variant's inline-start padding" />
+<TokenRow token="space.2" usage="the gap above the attribution footer, and the pull-quote glyph's own negative pull toward the text below it" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Text"
+  description="The body-copy atom a Blockquote is typically embedded alongside within an article"
+  href="/?path=/story/atoms-typography-text--default"
+>
+  <Text>Design copy reads well beside a quote.</Text>
+</RelatedCard>
+<RelatedCard
+  name="Heading"
+  description="Often introduces the section a pull-quote sits within"
+  href="/?path=/story/atoms-typography-heading--default"
+>
+  <Heading level={3} size="md">Section title</Heading>
+</RelatedCard>
+</div>

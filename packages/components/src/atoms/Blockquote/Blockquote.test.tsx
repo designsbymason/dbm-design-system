@@ -57,7 +57,33 @@ describe("Blockquote", () => {
     ).toHaveClass("custom");
   });
 
-  it("has no accessibility violations, plain or with attribution", async () => {
+  it("forwards id, style, and data-testid", () => {
+    render(
+      <Blockquote id="quote-1" style={{ opacity: 0.5 }} data-testid="quote">
+        Design is how it works.
+      </Blockquote>,
+    );
+    const blockquote = screen.getByTestId("quote");
+    expect(blockquote).toHaveAttribute("id", "quote-1");
+    expect(blockquote).toHaveStyle({ opacity: "0.5" });
+  });
+
+  it("does not render a decorative quote mark for the default variant", () => {
+    render(<Blockquote>Design is how it works.</Blockquote>);
+    expect(
+      screen.getByText("Design is how it works.").closest("blockquote"),
+    ).not.toHaveTextContent("“");
+  });
+
+  it("renders an aria-hidden decorative quote mark for the pull-quote variant", () => {
+    render(
+      <Blockquote variant="pull-quote">Design is how it works.</Blockquote>,
+    );
+    const mark = screen.getByText("“");
+    expect(mark).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("has no accessibility violations, plain, with attribution, or as a pull-quote", async () => {
     const { container, rerender } = render(
       <Blockquote>Design is how it works.</Blockquote>,
     );
@@ -65,6 +91,13 @@ describe("Blockquote", () => {
 
     rerender(
       <Blockquote attribution="Steve Jobs">Design is how it works.</Blockquote>,
+    );
+    expect((await axe(container)).violations).toHaveLength(0);
+
+    rerender(
+      <Blockquote variant="pull-quote" attribution="Steve Jobs">
+        Design is how it works.
+      </Blockquote>,
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
