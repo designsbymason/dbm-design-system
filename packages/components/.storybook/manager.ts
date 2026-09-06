@@ -55,14 +55,19 @@ let hasReceivedInitialSync = false;
 // of dock position) has no dedicated Storybook theme variable of its own:
 // its background is driven by `appContentBg`, the same variable the Docs
 // content wrapper uses (`DbmDocsContainer` passes the same theme object
-// there). Setting `appContentBg` to `bg.neutral-subtle` to color the panel
-// would also recolor every component's Docs page background, which wasn't
-// asked for. Scoped `<style>` injection targeting the panel's own id, kept
-// in sync with the same brand/mode tracking `applyTheme` already does
-// below, is the only way to color just the panel.
+// there). Scoped `<style>` injection targeting the panel's own id, kept in
+// sync with the same brand/mode tracking `applyTheme` already does below,
+// is the only way to color just the panel without touching `appContentBg`
+// (and, with it, every component's Docs page background) directly.
+// **Revised 2026-09-06, at explicit direction:** now uses `bg.surface`,
+// matching `appContentBg`/`appPreviewBg` — the panel is meant to read as
+// part of the same "page" as the Docs content and the area behind the
+// canvas, not a separately-tinted region (this reverses an earlier
+// `bg.neutral-subtle` choice made specifically to look distinct from that
+// page background).
 let panelStyleEl: HTMLStyleElement | undefined;
 function applyPanelBg(brand: string | undefined, mode: string | undefined): void {
-  const hex = getSemanticTokens(brand, mode).bg["neutral-subtle"];
+  const hex = getSemanticTokens(brand, mode).bg.surface;
   if (!panelStyleEl) {
     panelStyleEl = document.createElement("style");
     panelStyleEl.id = "dbm-panel-bg-override";

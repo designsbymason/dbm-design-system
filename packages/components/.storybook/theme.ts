@@ -105,7 +105,14 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     // still does and `text.link` no longer would.)
     colorSecondary: t.text.brand,
 
-    appBg: t.bg["neutral-subtle"],
+    // Dark mode only, at explicit direction (2026-09-06): the sidebar
+    // (logo + nav tree) should read as brand-tinted rather than plain
+    // neutral gray once dark mode itself got darker overall in the same
+    // day's retuning pass (see `guidelines/adr/0011`) — `bg.brand-subtle`
+    // is `gray.950` in dark mode, distinctly darker/more-branded than
+    // `bg.neutral-subtle`'s `gray.800`. Light mode is unaffected, still
+    // `bg.neutral-subtle`, since only dark mode was asked for.
+    appBg: mode === "dark" ? t.bg["brand-subtle"] : t.bg["neutral-subtle"],
     appContentBg: t.bg.surface,
     appPreviewBg: t.bg.surface,
     appBorderColor: t.border.default,
@@ -128,7 +135,10 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     // inconsistency in place.
     barHoverColor: t.bg["brand-hover"],
     barSelectedColor: t.bg.brand,
-    barBg: t.bg["neutral-subtle"],
+    // Same dark-mode-only `bg.brand-subtle` swap as `appBg` above, so the
+    // toolbar (Brand/Mode buttons, viewport, zoom) reads as one continuous
+    // brand-tinted chrome with the sidebar instead of two different grays.
+    barBg: mode === "dark" ? t.bg["brand-subtle"] : t.bg["neutral-subtle"],
 
     buttonBg: t.bg["neutral-subtle"],
     buttonBorder: t.border.default,
