@@ -38,11 +38,13 @@ convention):
    consumed by the shipped Code atom," used only by `docs.css`'s own MDX-prose code-pill styling.
    Adopted the full matching visual treatment from that existing, already-proven rule
    (`.sbdocs-content code` in `docs.css`) rather than inventing a new one: `bg.code` (background),
-   `border.code` (1px border — byte-identical to `bg.code` in dark mode, an intentional
-   flat/borderless look there), `radius.sm` (was `radius.xs`), `text.secondary` (was
-   `text.primary` — switched to reuse the pairing already contrast-verified specifically against
-   `bg.code`, 5.10:1 dark, rather than assume `text.primary` would also pass against the new
-   background), `font-weight.medium` (new), `padding-block: space.1` / `padding-inline: space.2`
+   `border.code` (1px border — byte-identical to `bg.code` in dark mode at the time, an intentional
+   flat/borderless look there — no longer true after the 2026-09-06 darker-dark-mode retuning pass
+   moved `bg.code` off the value the two tokens briefly shared; see below), `radius.sm` (was
+   `radius.xs`), `text.secondary` (was `text.primary` — switched to reuse the pairing already
+   contrast-verified specifically against `bg.code`, 5.10:1 dark at the time (now 7.47:1 — see
+   below), rather than assume `text.primary` would also pass against the new background),
+   `font-weight.medium` (new), `padding-block: space.1` / `padding-inline: space.2`
    (was `space.1` horizontal only, `0` vertical — this is what resolves finding 5 above). Net
    effect: the real shipped `Code` atom and the Storybook-docs inline-code pill now look
    identical, rather than two different "code" treatments existing in the same design system.
@@ -58,6 +60,16 @@ convention):
      consumed by any published component"). `03-token-system-spec.md`'s own `bg.*`/`border.*`
      tables updated to match — the `bg.code` row now carries the newly-verified 6.57:1 light-mode
      figure instead of a dash.
+
+   - **Post-finalization update (2026-09-06, same day, at explicit direction):** a separate
+     darker-dark-mode token retuning pass moved `bg.code` from `gray.700` to `gray.800` in dark
+     mode, then (after `border.code` briefly followed to stay byte-identical) moved `border.code`
+     back to `gray.700` deliberately — so the dark-mode pill now has a real, intentional border
+     (1.46:1 apart) rather than the flat/borderless look described above when this review was
+     written. `text.secondary` vs `bg.code` dark also moved from 5.10:1 to 7.47:1 as a result. This
+     was a token-layer change, not a re-opening of this component's own review — see
+     `guidelines/03-token-system-spec.md`'s `bg.*`/`border.*` intro note and each token's own
+     `$description` for the full history.
 
 8. **Feature-completeness:** Chakra UI's `Code` ships a `variant` scale (subtle/solid/outline) and
    Radix UI Themes' `Code` ships `variant`/`color`/`size` — flagged and discussed; **decided to
@@ -82,8 +94,9 @@ sync), and `check-component-bundle-size` (0.19KB JS / 0.18KB CSS gzipped — tri
 budget) all run and passing. Live-verified in Storybook: both brand themes × both modes (bg.code/
 border.code/text.secondary are brand-agnostic, so appearance is identical Purple vs. Emerald,
 confirmed rather than assumed), computed padding/radius/color/border values all matched the
-intended token values exactly, dark-mode flat/borderless treatment confirmed (border byte-identical
-to background), Playground controls actually driving the canvas, Docs page rendering end to end.
+intended token values exactly, dark-mode flat/borderless treatment confirmed at the time (border
+byte-identical to background — since superseded, see the post-finalization update above), Playground
+controls actually driving the canvas, Docs page rendering end to end.
 
 ## Finalized
 

@@ -55,19 +55,24 @@
    multiple Foundations pages, not assumed from one instance.
 
    Border color: `border.neutral-subtle` → `border.default` (2026-08-08) → back to
-   `border.neutral-subtle` (2026-08-08, same day) — same back-and-forth as
-   `.dbm-proptable`'s own border (see that rule's comment for the full
-   story). `border.neutral-subtle` was originally invisible against the Docs
-   wrapper's `bg.surface` in dark mode (both `gray.900`); switching to
-   `border.default` fixed that, but a same-day `bg.surface` value change
-   (`gray.900` → `neutral.black` → `gray.800`, see the `bg.surface` token's
-   own description) made `border.default` collide instead (both now
-   `gray.800`) while un-colliding `border.neutral-subtle` (`gray.900` again, no
-   longer matching `bg.surface`). `border.neutral-subtle` is the live answer as of
-   this file's current state — re-verify against `bg.surface`'s actual
-   value before touching either again, since this has now flipped once. */
+   `border.neutral-subtle` (2026-08-08, same day) → `border.default` again
+   (2026-09-06, confirmed live) — same back-and-forth as `.dbm-proptable`'s
+   own border (see that rule's comment for the full story). Third flip:
+   `bg.surface` moved again (`gray.800` → `gray.900`, a coordinated
+   darker-dark-mode retuning pass, see that token's own description),
+   recreating the exact `border.neutral-subtle`/`bg.surface` collision this
+   comment already warned about (`gray.900` = `gray.900`, confirmed via
+   computed styles, not assumed — the "Code" atom's own `h2` genuinely had
+   no visible bottom border in dark mode before this fix). `border.default`
+   is the live answer as of this file's current state — moved again the
+   same day, `gray.950` → `gray.800` (swapping with `border.neutral-subtle`,
+   which took `gray.950`), a real improvement this time: 1.40:1 against
+   `bg.surface`, not just the less-bad option — see that token's own
+   description for the full history. Re-verify against `bg.surface`'s
+   actual value before touching either again, since this has now flipped
+   three times. */
 .sbdocs-content h2 {
-  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle);
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
   font-family: var(--dbm-font-family-primary);
   font-size: var(--dbm-font-size-2xl);
   font-weight: var(--dbm-font-weight-bold);
@@ -352,25 +357,36 @@
    actually painted.
 
    Border color: `border.neutral-subtle` → `border.default` (2026-08-08) → back to
-   `border.neutral-subtle` (2026-08-08, same day) — flipped twice in one day, each
-   time chasing `bg.surface`'s own value, which also changed twice. First
-   flip: `border.neutral-subtle` (`gray.900` in dark mode) was byte-identical to
-   the Docs wrapper's `bg.surface` (`gray.900` then), a literal 1.00:1
-   collision confirmed via computed styles — `border.default` (`gray.800`)
-   fixed it, 1.40:1 against that `bg.surface`. Second flip: `bg.surface`
-   itself later moved (`gray.900` → `neutral.black` → `gray.800`, see that
-   token's own description), landing on `gray.800` — exactly
-   `border.default`'s value, recreating the same 1.00:1 collision one step
-   over, while `border.neutral-subtle` (`gray.900`) no longer matches and is safe
-   again (1.40:1). `border.neutral-subtle` is the live answer as of this file's
-   current state. Both are semantic tokens either way, so "stay token-only"
-   was never the actual constraint here — re-verify against `bg.surface`'s
-   actual value before changing either again, since this has now flipped
-   twice. Still under the 3:1 WCAG 1.4.11 floor either way — accepted
-   tradeoff (decorative border, not state-identifying — same exemption as
-   `border.brand-subtle` elsewhere in this file), not a regression. */
+   `border.neutral-subtle` (2026-08-08, same day) → `border.default` again
+   (2026-09-06, confirmed live) — flipped three times now, each time
+   chasing `bg.surface`'s own value, which has also changed three times.
+   First flip: `border.neutral-subtle` (`gray.900` in dark mode) was
+   byte-identical to the Docs wrapper's `bg.surface` (`gray.900` then), a
+   literal 1.00:1 collision confirmed via computed styles — `border.default`
+   (`gray.800`) fixed it, 1.40:1 against that `bg.surface`. Second flip:
+   `bg.surface` itself later moved (`gray.900` → `neutral.black` →
+   `gray.800`, see that token's own description), landing on `gray.800` —
+   exactly `border.default`'s value at the time, recreating the same
+   1.00:1 collision one step over, while `border.neutral-subtle`
+   (`gray.900`) no longer matched and was safe again (1.40:1). Third flip:
+   `bg.surface` moved again (`gray.800` → `gray.900`, a coordinated
+   darker-dark-mode retuning pass, 2026-09-06), recreating the *first*
+   collision exactly (`border.neutral-subtle` and the new `bg.surface` are
+   both `gray.900`, confirmed via computed styles — the h2 divider rule
+   above genuinely had no visible border before this fix) —
+   `border.default` is the live answer as of this file's current state —
+   moved again the same day, `gray.950` → `gray.800` (swapping with
+   `border.neutral-subtle`, which took `gray.950`), a real improvement
+   this time: 1.40:1 against `bg.surface`, not just the less-bad option —
+   see that token's own description for the full history. Both are semantic
+   tokens either way, so "stay token-only" was never the actual constraint
+   here — re-verify against `bg.surface`'s actual value before changing
+   either again, since this has now flipped three times. Still under the
+   3:1 WCAG 1.4.11 floor either way — accepted tradeoff (decorative
+   border, not state-identifying — same exemption as `border.brand-subtle`
+   elsewhere in this file), not a regression. */
 .dbm-proptable {
-  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
   border-collapse: separate !important;
   border-radius: var(--dbm-radius-md);
   border-spacing: 0;
@@ -428,7 +444,7 @@
 
 .dbm-proptable td {
   border: none !important;
-  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-neutral-subtle) !important;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default) !important;
   color: var(--dbm-text-secondary) !important;
   font-size: var(--dbm-font-size-sm);
   line-height: var(--dbm-line-height-relaxed);
@@ -498,16 +514,23 @@
 /* Code-pill style unified onto the Foundations token-table treatment
    (2026-08-10, replacing a surface-matched borderless pill) — dedicated
    `bg.code`/`border.code` semantic tokens, genuinely reactive per theme
-   (blue.50/blue.100 light, gray.700/gray.700 dark — `bg.code` dropped
-   its blue tint in dark mode at an earlier explicit direction, see that
-   token's own description; briefly retired in favor of `bg.info-subtle`
+   (blue.50/blue.100 light — `bg.code` dropped its blue tint in dark
+   mode at an earlier explicit direction, see that token's own
+   description; briefly retired in favor of `bg.info-subtle`
    on 2026-08-20, then restored the same day, reversing that retirement
    — see `guidelines/03-token-system-spec.md`), visually distinct from
    this table's own zebra stripe (`bg.brand-subtle` above) regardless of
    what that resolves to, since blue isn't part of the same
    gray/brand-purple family at all. `color: text.secondary` on `bg.code`
-   measures 6.57:1 light / 5.10:1 dark — both sides reacting together,
-   unlike a fixed color pinned to a reactive background.
+   measures 6.57:1 light / 7.47:1 dark (updated 2026-09-06, darker-dark-
+   mode retuning pass — `bg.code` moved `gray.700` → `gray.800` that day;
+   was 5.10:1 against the prior value) — both sides reacting together,
+   unlike a fixed color pinned to a reactive background. `bg.code`/
+   `border.code` were briefly byte-identical in dark mode (both
+   `gray.700`, a flat/borderless pill) but no longer are — `border.code`
+   ended that same retuning pass back at `gray.700` while `bg.code`
+   landed on `gray.800`, a deliberate visible border now (1.46:1 apart,
+   see `border.code`'s own token description for the full history).
 
    Previously this table used its own borderless, surface-matched pill and
    `.dbm-tokentable code` (Foundations token tables) carried a *second*,

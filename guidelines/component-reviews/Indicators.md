@@ -15,7 +15,10 @@ was effectively invisible against its own default background in every theme — 
   accepted exception for a *passive* progress indicator), these dots are genuinely interactive
   controls a user must be able to see to know slides exist and are clickable. Fixed by switching to
   `bg.neutral` (gray.600/gray.300) — the token spec's own table already documents this token as
-  verified "dot vs `bg.surface`: 4.70:1 / 5.86:1 (dual-purpose: dot fill...)", and it's already the
+  verified "dot vs `bg.surface`: 4.70:1 / 5.86:1 (dual-purpose: dot fill...)" at the time (dark
+  figure since risen to 8.21:1 — `bg.surface` itself got darker in the 2026-09-06 darker-dark-mode
+  retuning pass, only improving this pairing further; see `03-token-system-spec.md`'s current
+  `bg.neutral` row), and it's already the
   token Avatar's status dot and Switch's track use for the identical role. Verified live in all 4
   brand/mode combinations (Purple/Emerald × Light/Dark) — dots are now clearly visible in every one.
 - **`.dot:hover:not(.active)` colored a `background-color` from `border.neutral`** — a border-family

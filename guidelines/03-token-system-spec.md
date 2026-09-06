@@ -54,54 +54,57 @@ Methodology, then the current state of every semantic token — not a replay of 
 
 ### `bg.*`
 
+**`bg.surface` (dark mode's representative background) and several dependent tokens were retuned darker, 2026-09-06.** See [ADR-0011](adr/0011-darker-dark-mode-representative-background.md).
+
 **Brand-agnostic** (identical in Purple and Emerald):
 
 | Token | Light | Dark | Verified against | Status |
 |---|---|---|---|---|
 | `canvas` | `gray.100` | `gray.700` | `text.primary` 12.41:1 / 6.59:1; `text.secondary` 6.05:1 / 5.10:1 (fixed 2026-08-08 alongside `text.secondary`'s own move to `gray.200` dark — this row's own dark figure was left stale at the time, corrected 2026-09-03); `text.tertiary` **fails, 4.13:1** / **fails, 2.96:1** | AA for `text.primary`/`text.secondary` in both modes. **Never place `text.tertiary` literal text on `bg.canvas`, light or dark** — found failing in light mode too (2026-09-03, during an unrelated Image atom review's incidental Storybook-suite run); previously only the dark-mode failure was documented, light was an unverified "—" that turned out to also fail once actually measured. |
 | `overlay` | `neutral.black` | `neutral.black` | — | Exempt (no text sits on it; opacity applied separately via `opacity.*`) |
-| `surface` | `neutral.white` | `gray.800` | `text.primary` — / 9.66:1; `text.secondary` — / 5.86:1; `text.tertiary` — / 4.34:1 | AA (dark verified explicitly; light is the base case, comfortably higher-margin) |
-| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 5.67:1 | AA |
+| `scrim` | `neutral.white` | `gray.900` | — | Exempt (no fixed pairing possible — composites over arbitrary external content, same as `bg.overlay`). Dark tracks `bg.surface`'s own value by design — moved `gray.800` → `gray.900` (ADR-0011). |
+| `surface` | `neutral.white` | `gray.900` | `text.primary` — / 13.53:1; `text.secondary` — / 10.47:1; `text.tertiary` — / 8.21:1 | AA (dark verified explicitly; light is the base case, comfortably higher-margin). Moved from `gray.800` (ADR-0011) — see the token's own `$description` for side effects. |
+| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 7.94:1 | AA |
 | `danger-hover` | `red.700` | `red.200` | `text.on-danger`: — / 10.68:1 | AA |
 | `danger-subtle` | `red.50` | `red.950` | `text.danger`: 7.05:1 / 10.32:1 | AA (light also clears AAA) |
 | `danger-subtle-hover` | `red.100` | `red.900` | `text.danger`: 6.43:1 / 8.22:1 | AA |
-| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 5.80:1 | AA |
+| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 8.12:1 | AA |
 | `warning-hover` | `amber.700` | `amber.200` | `text.on-warning`: 6.96:1 / 10.54:1 | AA |
 | `warning-subtle` | `amber.50` | `amber.950` | `text.warning`: 9.74:1 / 10.44:1 | AAA |
 | `warning-subtle-hover` | `amber.100` | `amber.900` | `text.warning`: 8.90:1 / 8.19:1 | AAA |
-| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 6.01:1 | AA (approaching AAA) |
+| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 8.42:1 | AA (approaching AAA) |
 | `success-hover` | `green.800` | `green.200` | `text.on-success`: 9.56:1 / 10.32:1 | AAA |
 | `success-subtle` | `green.50` | `green.950` | `text.success`: 9.15:1 / 10.68:1 | AAA |
 | `success-subtle-hover` | `green.100` | `green.900` | `text.success`: 8.42:1 / 8.19:1 | AAA |
-| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 5.85:1 | AA |
+| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 8.20:1 | AA |
 | `info-hover` | `blue.700` | `blue.200` | `text.on-info`: 6.93:1 / 10.46:1 | AA |
 | `info-subtle` | `blue.50` | `blue.950` | `text.info`: **4.5068:1 (tightest margin in the system)** / 10.51:1 | AA light (razor-thin, flagged — revisit if the primitive scale is ever regenerated), AAA dark |
 | `info-subtle-hover` | `blue.100` | `blue.900` | `text.info`: 6.10:1 / 8.20:1 | AA |
-| `neutral` | `gray.600` | `gray.300` | dot vs `bg.surface`: 4.70:1 / 5.86:1; `text.on-neutral`: 4.70:1 / 8.21:1 | AA (dual-purpose: dot fill and solid-fill text host — also `Indicators`' inactive-dot *hover* fill, revised 2026-09-04 the same day it first shipped, at explicit direction, once the initial choice read as visually too dark; see `guidelines/component-reviews/Indicators.md`) |
+| `neutral` | `gray.600` | `gray.300` | dot vs `bg.surface`: 4.70:1 / 8.21:1; `text.on-neutral`: 4.70:1 / 8.21:1 | AA (dual-purpose: dot fill and solid-fill text host — also `Indicators`' inactive-dot *hover* fill, revised 2026-09-04 the same day it first shipped, at explicit direction, once the initial choice read as visually too dark; see `guidelines/component-reviews/Indicators.md`) |
 | `neutral-hover` | `gray.700` | `gray.200` | `text.on-neutral`: 6.88:1 / 10.47:1 | AA |
-| `neutral-subtle` | `gray.50` | `gray.900` | `text.secondary`: — / 8.21:1; `text.primary`: — / 13.53:1; `text.tertiary`: **4.51:1 (razor-thin — revisit if the primitive scale is ever regenerated)** / 8.21:1; `icon.default` (shares `text.tertiary`'s own primitive step): same figures | AA. Light-mode `text.tertiary`/`icon.default` figure added 2026-09-04, verified while finalizing `Image` (its fallback state's own `bg.neutral-subtle` + `icon.default` pairing — the fallback icon's actual token, not `text.tertiary`, though the two share the identical value in every theme) — previously unmeasured against this token, shown as unverified "—". |
-| `neutral-subtle-hover` | `gray.100` | `gray.800` | `text.secondary`: 6.05:1 / 7.47:1 | AA |
-| `track` | `gray.100` | `gray.900` | vs `bg.surface`: **1.14:1 / 1.40:1** | **Deliberate exception** — fails 3:1, accepted for a passive progress-indicator track (industry-common convention). See "Notable exceptions" below. |
-| `track-strong` | `gray.500` | `gray.400` | vs `bg.surface`: 3.25:1 / 4.34:1 | AA (non-text floor) — used where the boundary must read as real, e.g. `Switch`'s always-interactive track. Also `Indicators`' inactive-dot fill (2026-09-04, at explicit direction, in place of `bg.neutral` — visually lighter while still clearing the 3:1 floor; `bg.neutral` itself moved to the hover state) — see `guidelines/component-reviews/Indicators.md` |
-| `code` | `blue.50` | `gray.700` | `text.secondary`: 6.57:1 / 5.10:1 | AA. Adopted by the shipped `Code` atom (2026-09-06) — previously Storybook-docs-only, paired with `text.primary`/`bg.neutral-subtle` in the real component instead; both now share the identical treatment. |
+| `neutral-subtle` | `gray.50` | `gray.800` | `text.secondary`: — / 7.47:1; `text.primary`: — / 9.66:1; `text.tertiary`: **4.51:1 (razor-thin — revisit if the primitive scale is ever regenerated)** / 5.86:1; `icon.default` (shares `text.tertiary`'s own primitive step): same figures | AA. Moved from `gray.900` to `gray.800` (ADR-0011). Light-mode `text.tertiary`/`icon.default` figure added 2026-09-04, verified while finalizing `Image` (its fallback state's own `bg.neutral-subtle` + `icon.default` pairing — the fallback icon's actual token, not `text.tertiary`, though the two share the identical value in every theme) — previously unmeasured against this token, shown as unverified "—". |
+| `neutral-subtle-hover` | `gray.100` | `gray.700` | `text.secondary`: 6.05:1 / 5.10:1 | AA. Moved from `gray.800` to `gray.700` (ADR-0011), tracking `bg.neutral-subtle`. |
+| `track` | `gray.100` | `gray.800` | vs `bg.surface`: **1.14:1 / 1.40:1** | **Deliberate exception** — fails 3:1, accepted for a passive progress-indicator track (industry-common convention). Dark moved from `gray.900` to `gray.800` (ADR-0011), tracking `bg.neutral-subtle` — ratio against `bg.surface` unchanged. See "Notable exceptions" below. |
+| `track-strong` | `gray.500` | `gray.400` | vs `bg.surface`: 3.25:1 / 6.08:1 | AA (non-text floor) — used where the boundary must read as real, e.g. `Switch`'s always-interactive track. Also `Indicators`' inactive-dot fill (2026-09-04, at explicit direction, in place of `bg.neutral` — visually lighter while still clearing the 3:1 floor; `bg.neutral` itself moved to the hover state) — see `guidelines/component-reviews/Indicators.md` |
+| `code` | `blue.50` | `gray.800` | `text.secondary`: 6.57:1 / 7.47:1 | AA. Adopted by the shipped `Code` atom (2026-09-06) — previously Storybook-docs-only, paired with `text.primary`/`bg.neutral-subtle` in the real component instead; both now share the identical treatment. Dark moved from `gray.700` to `gray.800` (ADR-0011) — `border.code` deliberately no longer matches (see its own row), a visible border by design. |
 
 **Brand-specific** (Purple / Emerald differ):
 
 | Token | Purple light | Purple dark | Emerald light | Emerald dark | Verified against | Status |
 |---|---|---|---|---|---|---|
-| `skeleton` | `purple.200` | `gray.900` (shared, no dark brand tint) | `emerald.200` | `gray.900` (shared) | vs `bg.surface`: ~1.35:1 both brands light; 1.40:1 dark | Deliberate sub-3:1 — decorative/`aria-hidden` placeholder, exempt like disabled controls, not a text/1.4.11 case |
-| `brand` | `purple.600` | `purple.300` | `emerald.700` | `emerald.300` | vs `bg.surface` (dark, dot use): 5.32:1 / 6.07:1 | AA |
+| `skeleton` | `purple.200` | `gray.950` (shared, no dark brand tint) | `emerald.200` | `gray.950` (shared) | vs `bg.surface`: ~1.35:1 both brands light; 1.11:1 dark | Deliberate sub-3:1 — decorative/`aria-hidden` placeholder, exempt like disabled controls, not a text/1.4.11 case. Dark moved `gray.900` → `gray.950` (ADR-0011) — distinctness from `bg.surface` drops from 1.40:1 to 1.11:1, a knowingly-accepted trade-off. |
+| `brand` | `purple.600` | `purple.300` | `emerald.700` | `emerald.300` | vs `bg.surface` (dark, dot use): 7.45:1 / 8.51:1 | AA |
 | `brand-hover` | `purple.700` | `purple.200` | `emerald.800` | `emerald.200` | `text.on-brand` (dark): 10.38:1 / 10.55:1 | AA |
-| `brand-subtle` | `purple.50` | `gray.900` (shared, drops brand tint) | `emerald.50` | `gray.900` (shared) | `text.link` (light): 7.03:1 / 5.83:1 | AA |
-| `brand-subtle-hover` | `purple.100` | `gray.800` (shared) | `emerald.100` | `gray.800` (shared) | `text.link` (light): 6.47:1 / 5.37:1 | AA |
+| `brand-subtle` | `purple.50` | `gray.950` (shared, drops brand tint) | `emerald.50` | `gray.950` (shared) | `text.link` (light): 7.03:1 / 5.83:1; `text.brand`/`icon.brand` (dark): 8.29:1 (purple) / 7.22:1 (emerald text) / 9.47:1 (emerald icon) | AA. Dark moved `gray.900` → `gray.950` (ADR-0011) — own pairings improve markedly; now sits at only ~1.1:1 against `bg.surface`, and shares its value with `bg.skeleton`/`border.neutral-subtle` — an accepted trade-off. |
+| `brand-subtle-hover` | `purple.100` | `gray.800` (shared, unchanged) | `emerald.100` | `gray.800` (shared, unchanged) | `text.link` (light): 6.47:1 / 5.37:1; `text.brand` (dark, unchanged): 5.32:1 (purple) / 4.63:1 (emerald) | AA. **Deliberately held at `gray.800`** — ADR-0011's rejected alternative moved this to `gray.700`, which would have dropped `text.brand` to 3.63:1 (purple) / 3.16:1 (emerald), a real AA text-contrast failure. |
 
 ### `text.*`
 
 | Token | Light | Dark | Verified against | Status |
 |---|---|---|---|---|
-| `primary` | `gray.900` | `gray.50` | vs `bg.surface` (dark): 9.66:1; vs `bg.canvas` (dark): 6.59:1; vs `bg.neutral-subtle` (dark): 13.53:1 | AAA — highest-contrast text tier, never a close call |
-| `secondary` | `gray.700` | `gray.200` | vs `bg.surface` (dark): 7.47:1; vs `bg.canvas` (dark): 5.10:1 (fixed 2026-08-08, was a real AA failure at the prior value) | AA/AAA |
-| `tertiary` | `gray.600` | `gray.300` | vs `bg.surface` (dark): 5.86:1; vs `bg.neutral-subtle`: **4.51:1 (razor-thin, light)** / 8.21:1 (dark); vs `bg.canvas`: **fails, 4.13:1** (light) / **fails, 2.96:1** (dark) | AA against its actual intended surfaces (`bg.surface`, `bg.neutral-subtle`) — though the light-mode `bg.neutral-subtle` figure only barely clears the floor; revisit if the primitive scale is ever regenerated. **Never place on `bg.canvas`, light or dark** — enforced by convention, not a lighter token, since no primitive step closes the gap without colliding with `text.secondary`. (This row previously cited a stale `4.00:1` for the dark figure, left over from `gray.400` before this token's own 2026-08-08 move to `gray.300` — corrected 2026-09-03 to the current value, and the light-mode failure added the same day; light was previously shown as unverified in `bg.*`'s own `canvas` row. The `bg.neutral-subtle` figure was originally measured against `Image`'s fallback state, which actually renders its icon via `icon.default` — see that token's own row, which shares this exact value in every theme — not `text.tertiary` directly; corrected 2026-09-04.) |
+| `primary` | `gray.900` | `gray.50` | vs `bg.surface` (dark): 13.53:1; vs `bg.canvas` (dark): 6.59:1; vs `bg.neutral-subtle` (dark): 9.66:1 | AAA — highest-contrast text tier, never a close call |
+| `secondary` | `gray.700` | `gray.200` | vs `bg.surface` (dark): 10.47:1; vs `bg.canvas` (dark): 5.10:1 (fixed 2026-08-08, was a real AA failure at the prior value) | AA/AAA |
+| `tertiary` | `gray.600` | `gray.300` | vs `bg.surface` (dark): 8.21:1; vs `bg.neutral-subtle`: **4.51:1 (razor-thin, light)** / 5.86:1 (dark); vs `bg.canvas`: **fails, 4.13:1** (light) / **fails, 2.96:1** (dark) | AA against its actual intended surfaces (`bg.surface`, `bg.neutral-subtle`) — though the light-mode `bg.neutral-subtle` figure only barely clears the floor; revisit if the primitive scale is ever regenerated. **Never place on `bg.canvas`, light or dark** — enforced by convention, not a lighter token, since no primitive step closes the gap without colliding with `text.secondary`. (This row previously cited a stale `4.00:1` for the dark figure, left over from `gray.400` before this token's own 2026-08-08 move to `gray.300` — corrected 2026-09-03 to the current value, and the light-mode failure added the same day; light was previously shown as unverified in `bg.*`'s own `canvas` row. The `bg.neutral-subtle` figure was originally measured against `Image`'s fallback state, which actually renders its icon via `icon.default` — see that token's own row, which shares this exact value in every theme — not `text.tertiary` directly; corrected 2026-09-04. `bg.surface`/`bg.neutral-subtle` dark figures both updated per ADR-0011 — this token's own figure against `bg.neutral-subtle` actually *tightened* slightly even though `bg.surface`'s improved.) |
 | `disabled` | `gray.400` | `gray.600` | — | Exempt (disabled-state text) |
 | `on-brand` | `neutral.white` | `gray.900` (shared both brands) | vs `bg.brand`/`bg.brand-hover` (dark): 7.45–10.55:1 across both brands | AA |
 | `on-danger` | `neutral.white` | `red.900` | vs `bg.danger` (dark): 8.22:1 | AA |
@@ -109,12 +112,12 @@ Methodology, then the current state of every semantic token — not a replay of 
 | `on-success` | `neutral.white` | `green.900` | vs `bg.success` (dark): 8.19:1 | AAA |
 | `on-info` | `neutral.white` | `blue.900` | vs `bg.info` (dark): 8.20:1 | AAA |
 | `on-neutral` | `neutral.white` | `gray.900` | vs `bg.neutral` (dark): 8.21:1 | AA/AAA |
-| `link` | `blue.600` (shared both brands) | `blue.300` (shared both brands) | vs `bg.surface`: 4.71:1 / 5.85:1 | AA. De-branded (2026-08-20) — identical across all 4 themes, no longer brand-colored. |
-| `brand` | `purple.600` / `emerald.700` | `purple.300` / `emerald.400` | vs `bg.surface`: 7.37:1 (purple) / 6.08:1 (emerald) light; 5.32:1 (purple) / 4.63:1 (emerald) dark | AA/AAA |
-| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 5.67:1 | AA |
-| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 5.80:1 | AA |
-| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 6.01:1 | AA, approaching AAA |
-| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 5.85:1; vs `bg.info-subtle`: **4.5068:1 light (tightest margin in the system)** | AA |
+| `link` | `blue.600` (shared both brands) | `blue.300` (shared both brands) | vs `bg.surface`: 4.71:1 / 8.20:1 | AA. De-branded (2026-08-20) — identical across all 4 themes, no longer brand-colored. |
+| `brand` | `purple.600` / `emerald.700` | `purple.300` / `emerald.400` | vs `bg.surface`: 7.37:1 (purple) / 6.08:1 (emerald) light; 7.45:1 (purple) / 6.49:1 (emerald) dark | AA/AAA |
+| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 7.94:1 | AA |
+| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 8.12:1 | AA |
+| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 8.42:1 | AA, approaching AAA |
+| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 8.20:1; vs `bg.info-subtle`: **4.5068:1 light (tightest margin in the system)** | AA |
 
 `text.danger`/`text.on-danger`'s full AA-vs-AAA numbers (the policy this whole methodology is built around) are in `guidelines/adr/0002`, not restated here.
 
@@ -122,40 +125,42 @@ Methodology, then the current state of every semantic token — not a replay of 
 
 | Token | Light | Dark | Verified against | Status |
 |---|---|---|---|---|
-| `default` | `gray.200` | `gray.950` | — | Decorative, not state-identifying — 1.4.11 doesn't bind it |
-| `neutral-subtle` | `gray.100` | `gray.900` | — | Decorative — Storybook-chrome only, no shipped component consumes it directly |
-| `neutral` | `gray.400` | `gray.600` | vs `bg.surface`: **fails outright, 2.32:1** both modes-worth of this specific step | **Not state-identifying** — this is the default resting/hover-emphasis border (Checkbox, Select, Input, Textarea, Button `secondary`, IconButton, Indicators), not one that needs to clear 3:1 |
-| `neutral-strong` | `gray.600` | `gray.400` | vs `bg.surface`: 4.70:1 / 4.34:1 | AA (non-text floor) — the neutral member of the state-identifying family (`border.danger`/`warning`/`success`/`info`/`brand`/`neutral-strong`) |
-| `strong` | `gray.700` | `gray.200` | vs `bg.surface`: 6.88:1 / 7.47:1 | AA — Tag's outline/selected-solid-neutral rings |
-| `focus` | `purple.500` / `emerald.600` | `purple.400` / `emerald.400` | vs `bg.surface`: 4.16:1 (emerald light, tightest) | AA (non-text floor) |
-| `brand` | `purple.600` / `emerald.700` | `purple.300` / `emerald.300` | vs `bg.surface`: 7.37:1 (purple) / 6.08:1 (emerald) light; 5.32:1 (purple) / 6.07:1 (emerald) dark | AA — Button `secondary`'s first real consumer |
+| `default` | `gray.200` | `gray.800` | vs `bg.surface` (dark): 1.40:1; vs `bg.canvas`: 1.46:1; vs `bg.neutral-subtle`: **1.00:1, byte-identical** | Decorative, not state-identifying — 1.4.11 doesn't bind it. Real component-hosting surfaces (`Input`/`Textarea`/`Select`/`Kbd`/`Divider` all use this token) still don't clear the 3:1 non-text floor, same pre-existing, accepted gap as always — not a regression. Moved from `gray.950`, swapping with `border.neutral-subtle` (ADR-0011) — an improvement, 1.40:1 vs. the prior value's 1.80:1 against the old, lighter `bg.surface`. Now byte-identical to `bg.neutral-subtle` — accepted (a border vs. a fill, not typically drawn against each other). |
+| `neutral-subtle` | `gray.100` | `gray.950` | vs `bg.surface` (dark): 1.11:1 | Decorative — Storybook-chrome only, no shipped component consumes it directly. Moved `gray.900` → `gray.950`, swapping with `border.default` (ADR-0011) — this token briefly collided byte-for-byte with `bg.surface` mid-pass, which broke `docs.css`'s own h2/table-border rules (see that file's own comments); those rules now point at `border.default` instead, which also gives a better result (1.40:1 vs. this token's 1.11:1). |
+| `neutral` | `gray.400` | `gray.600` | vs `bg.surface`: **fails, 2.32:1** light / **3.00:1** dark | **Not state-identifying** — this is the default resting/hover-emphasis border (Checkbox, Select, Input, Textarea, Button `secondary`, IconButton, Indicators), not one that needs to clear 3:1 regardless. Dark figure improved from 2.32:1 to 3.00:1 (ADR-0011) — now incidentally right at the 3:1 line, though compliance was never required here. |
+| `neutral-strong` | `gray.600` | `gray.400` | vs `bg.surface`: 4.70:1 / 6.08:1 | AA (non-text floor) — the neutral member of the state-identifying family (`border.danger`/`warning`/`success`/`info`/`brand`/`neutral-strong`) |
+| `strong` | `gray.700` | `gray.200` | vs `bg.surface`: 6.88:1 / 10.47:1 | AA — Tag's outline/selected-solid-neutral rings |
+| `focus` | `purple.500` / `emerald.600` | `purple.400` / `emerald.400` | vs `bg.surface`: 4.16:1 (emerald light, tightest); 6.49:1 (emerald dark) | AA (non-text floor) |
+| `brand` | `purple.600` / `emerald.700` | `purple.300` / `emerald.300` | vs `bg.surface`: 7.37:1 (purple) / 6.08:1 (emerald) light; 7.45:1 (purple) / 8.51:1 (emerald) dark | AA — Button `secondary`'s first real consumer |
 | `brand-subtle` | `purple.100` / `emerald.100` | `purple.900` / `emerald.900` | ~1.09–1.32:1 both brands, both modes | **Deliberate exception** — purely decorative accent, not state-identifying, 1.4.11 doesn't apply |
-| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 5.67:1 | AA (non-text floor) |
+| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 7.94:1 | AA (non-text floor) |
 | `danger-subtle` | `red.100` | `red.900` | ~1.10–1.26:1 | Deliberate exception — decorative accent, brand-agnostic |
-| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 5.80:1 | AA |
+| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 8.12:1 | AA |
 | `warning-subtle` | `amber.100` | `amber.900` | ~1.09–1.27:1 | Deliberate exception — decorative accent |
-| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 6.01:1 | AA, approaching AAA |
+| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 8.42:1 | AA, approaching AAA |
 | `success-subtle` | `green.100` | `green.900` | ~1.09–1.30:1 | Deliberate exception — decorative accent |
-| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 5.85:1 | AA |
+| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 8.20:1 | AA |
 | `info-subtle` | `blue.100` | `blue.900` | ~1.09–1.28:1 | Deliberate exception — decorative accent |
-| `code` | `blue.100` | `gray.700` (flat/borderless, byte-identical to `bg.code` dark) | ~1.09:1 light / 1.00:1 dark | Deliberate exception — decorative, not state-identifying. Adopted by the shipped `Code` atom alongside `bg.code` (2026-09-06). |
+| `code` | `blue.100` | `gray.700` (deliberately not matching `bg.code`'s `gray.800`) | ~1.09:1 light / 1.46:1 dark | Deliberate exception — decorative, not state-identifying. Adopted by the shipped `Code` atom alongside `bg.code` (2026-09-06). Settled at `gray.700` after ADR-0011 moved `bg.code` to `gray.800` — a deliberate visible border, not the flat/borderless look the two tokens briefly shared. Still under the 3:1 WCAG 1.4.11 floor either way; no compliance concern. |
+
+See [ADR-0011](adr/0011-darker-dark-mode-representative-background.md) for the decision behind the dark-mode figures above.
 
 ### `icon.*`
 
 | Token | Light | Dark | Verified against | Status |
 |---|---|---|---|---|
-| `default` | `gray.600` | `gray.300` | vs `bg.neutral-subtle`: **4.51:1 (razor-thin — revisit if the primitive scale is ever regenerated)** / 8.21:1 | AA (non-text floor). Verified 2026-09-04 for `Image`'s own fallback icon (its default state, via `currentColor`) — previously unmeasured against this token. |
-| `secondary` | `gray.500` | `gray.500` | vs `bg.surface`: 3.25:1 | AA (non-text floor) — the original `gray.400` failed at 2.32:1, found in the Phase 4 icon-contrast sweep |
-| `brand` | `purple.600` / `emerald.600` | `purple.300` / `emerald.300` | vs `bg.surface`: 7.37:1 (purple)/light; 5.32:1 (purple)/6.07:1 (emerald) dark; also checked vs `bg.canvas` dark: 3.63:1 (purple)/4.15:1 (emerald) | AA (non-text floor) |
+| `default` | `gray.600` | `gray.300` | vs `bg.neutral-subtle`: **4.51:1 (razor-thin — revisit if the primitive scale is ever regenerated)** / 5.86:1 | AA (non-text floor). Verified 2026-09-04 for `Image`'s own fallback icon (its default state, via `currentColor`) — previously unmeasured against this token. Dark figure updated per ADR-0011 (`bg.neutral-subtle` moved darker) — tightened but not endangered. |
+| `secondary` | `gray.500` | `gray.500` | vs `bg.surface`: 3.25:1 / 4.34:1 | AA (non-text floor) — the original `gray.400` failed at 2.32:1, found in the Phase 4 icon-contrast sweep |
+| `brand` | `purple.600` / `emerald.600` | `purple.300` / `emerald.300` | vs `bg.surface`: 7.37:1 (purple)/light; 7.45:1 (purple)/8.51:1 (emerald) dark; also checked vs `bg.canvas` dark: 3.63:1 (purple)/4.15:1 (emerald) | AA (non-text floor) |
 | `on-brand` | `neutral.white` | `gray.900` | vs `bg.brand`: 7.37:1 / 6.08:1 light; 7.45:1 / 8.51:1 dark | AA |
 | `disabled` | `gray.300` | `gray.700` | — | Exempt (disabled-state icon) |
-| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 5.67:1 | AA |
+| `danger` | `red.600` | `red.300` | vs `bg.surface`: 5.10:1 / 7.94:1 | AA |
 | `on-danger` | `neutral.white` | `red.900` | vs `bg.danger`: 5.10:1 / 8.22:1 | AA |
-| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 5.80:1 | AA |
+| `warning` | `amber.600` | `amber.300` | vs `bg.surface`: 4.78:1 / 8.12:1 | AA |
 | `on-warning` | `neutral.white` | `amber.900` | vs `bg.warning`: 4.78:1 / 8.19:1 | AA |
-| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 6.01:1 | AA, approaching AAA |
+| `success` | `green.700` | `green.300` | vs `bg.surface`: 6.50:1 / 8.42:1 | AA, approaching AAA |
 | `on-success` | `neutral.white` | `green.900` | vs `bg.success`: 6.50:1 / 8.19:1 | AAA |
-| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 5.85:1 | AA |
+| `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 8.20:1 | AA |
 | `on-info` | `neutral.white` | `blue.900` | vs `bg.info`: 4.71:1 / 8.20:1 | AA |
 | `on-neutral` | `neutral.white` | `gray.900` | vs `bg.neutral`: 4.70:1 / 8.21:1 | AA |
 | `white` | `neutral.white` | `neutral.white` (deliberately doesn't flip — see own `$description`) | vs `bg.overlay` at its default `opacity.60`: 21:1 (max possible) | Exempt — see `bg.overlay`'s own exemption below; this token exists specifically for content sitting on it |

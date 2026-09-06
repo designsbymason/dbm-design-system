@@ -247,9 +247,18 @@ compiled CSS) actually worked as an override path.
   (`CLAUDE.md`). `default` maps to `border.default` specifically (Divider's own original resting
   token, gray.200) rather than the generic `border.neutral` (gray.400) Badge/Tag use for their own
   "neutral" tone — picked deliberately so adding this prop doesn't shift any existing usage's
-  appearance. All 6 tokens were already contrast-verified against `bg.surface` at ≥3:1 (WCAG
-  1.4.11) as part of their original addition — confirmed by reading the token source directly
-  rather than re-deriving, no new verification needed.
+  appearance. **Correction (2026-09-06):** this originally claimed all 6 tokens were already
+  contrast-verified against `bg.surface` at ≥3:1 (WCAG 1.4.11) — checked directly against
+  `03-token-system-spec.md`'s own `border.*` table while auditing documentation after that day's
+  dark-mode token retuning pass, and that's only true for 5 of the 6. `brand`/`info`/`success`/
+  `warning`/`danger` are all state-identifying, non-text-floor tokens and do clear 3:1 in both
+  modes (per that table's own figures). `default` does not and was never meant to — it's the one
+  deliberately decorative, non-state-identifying exception in that same table (border.default
+  isn't bound by 1.4.11 at all), currently ~1.35:1 light / 1.40:1 dark against `bg.surface`. Using
+  it as `tone="default"` was never a compliance claim — it was chosen specifically to preserve
+  Divider's existing, already-shipped appearance (see above), the same accepted exception
+  `03-token-system-spec.md`'s "Notable exceptions" section already documents for this token
+  elsewhere in the system.
 - Implementation mirrors `thickness`'s own mechanism exactly: `solid` and `double`'s bars override
   `backgroundColor`; `dashed`/`dotted` override the one logical `border-block-end-color`/
   `border-inline-end-color` property their own CSS class already scopes a border to (leaving
