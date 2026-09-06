@@ -38,11 +38,13 @@
     },
     "900": {
       "$type": "color",
-      "$value": "#140B36"
+      "$value": "#1A133A",
+      "$description": "Manual override (2026-09-06, at explicit direction) — deviates from generate-color-scales.mjs's canonical OKLCH curve. If that script is ever re-run, it will overwrite this value back to the generated one; carry this override forward by hand or update CANONICAL_L/the script itself first."
     },
     "950": {
       "$type": "color",
-      "$value": "#040115"
+      "$value": "#110C27",
+      "$description": "Manual override (2026-09-06, at explicit direction) — deviates from generate-color-scales.mjs's canonical OKLCH curve. If that script is ever re-run, it will overwrite this value back to the generated one; carry this override forward by hand or update CANONICAL_L/the script itself first."
     }
   },
   "emerald": {
