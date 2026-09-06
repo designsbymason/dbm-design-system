@@ -1,5 +1,29 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Heading } from "./Heading";
+import { useEffect } from "react";
+import { useArgs } from "storybook/preview-api";
+import { defaultSizeForLevel, Heading } from "./Heading";
+import type { HeadingLevel } from "./Heading.types";
+
+/**
+ * `truncate`'s Storybook control is a plain text field, paired with a real
+ * `""` starting arg (see `meta.args` below) rather than `undefined` — see
+ * that argType's own comment for the full reasoning (an empty string is
+ * what actually avoids Storybook's "Set X" boundary button, not the
+ * control *type*: confirmed empirically that a `text` control gates on an
+ * undefined value exactly the same way a `number` control does, showing
+ * "Set string" instead of "Set number" — an earlier version of this file
+ * assumed `text` was exempt, which was wrong). `Heading`'s own `truncate`
+ * prop stays a real `number` — this parses the control's raw string back
+ * to one (or `undefined` for an empty/non-numeric string, rather than
+ * `NaN` reaching a real CSS property) before it's ever passed to the
+ * component.
+ */
+function parseTruncateArg(value: unknown): number | undefined {
+  if (typeof value === "number") return value;
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
 
 const meta: Meta<typeof Heading> = {
   title: "Atoms/Typography/Heading",
@@ -23,6 +47,16 @@ const meta: Meta<typeof Heading> = {
       options: ["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"],
       description:
         "Visual size, from the full font-size token scale. Defaults to a sensible size for the given level, but can be set independently.",
+      // Not a Storybook concept — this custom Docs page's own
+      // PlaygroundControls block (.storybook/blocks/PlaygroundControls.tsx)
+      // reads this to show the size `level` actually resolves to
+      // internally while `size` itself is left unset, rather than a blank
+      // "Choose option…" — reuses Heading's own real default-size mapping
+      // directly rather than duplicating it. Picking a value here never
+      // writes a real `size` arg on its own; it's display-only until the
+      // user actually touches the control.
+      resolveDisplayValue: (args: Record<string, unknown>) =>
+        defaultSizeForLevel[args.level as HeadingLevel],
     },
     align: {
       control: "select",
@@ -61,23 +95,36 @@ const meta: Meta<typeof Heading> = {
       description:
         "Line-wrapping behavior (CSS text-wrap). balance or pretty improve how a multi-line heading breaks. nowrap conflicts with a multi-line truncate and warns in development if combined with one.",
     },
-    // `control: false` — a `number` control with no starting value renders
-    // as an inert "Set number" placeholder button rather than a live
-    // input (confirmed live; unlike text/select/boolean controls, this is
-    // real Storybook behavior for `number`/`object` controls specifically,
-    // not a docgen type-inference failure). `truncate`'s real default is
-    // "off" (no truncation, i.e. genuinely `undefined`), and there's no
-    // number that honestly represents "off" to pre-fill instead — same
-    // reasoning and same fix as `Textarea`'s own `minRows`/`maxRows`. The
-    // "truncate (line-clamp)" story demonstrates it with a hardcoded value.
+    // A `text` control, paired with a real `""` (not `undefined`) starting
+    // arg in `meta.args` below — the combination that actually avoids
+    // Storybook's own "Set X" boundary button. Confirmed empirically, twice
+    // over: a `number` control with an undefined value shows "Set number";
+    // a `text` control with an undefined value shows "Set string" just the
+    // same (a real Storybook/shared-block behavior gated on the *value*,
+    // not the control type — an earlier version of this comment assumed
+    // otherwise). `""` is a real, defined value, so neither surface gates
+    // it — a genuinely empty, always-live input from the start, on both
+    // the native Controls tab and this Docs page's own PlaygroundControls
+    // block. Every `Heading` instance in this file passes `truncate`
+    // through `parseTruncateArg` (this file's own helper, above) rather
+    // than the raw control value, so the component itself still only ever
+    // receives a real `number` or `undefined`, never the empty string.
     truncate: {
-      control: false,
+      control: "text",
       description:
         "Truncates text after this many lines, with an ellipsis (-webkit-line-clamp).",
     },
+    // `control: false` — toggling `as` genuinely changes the rendered
+    // element (confirmed live: the DOM tag and its role/aria-level really
+    // do change), but between `div`/`span`/`p` at otherwise-identical
+    // styling the *visible* result is indistinguishable without opening
+    // devtools, which reads as "this control does nothing" in a Playground
+    // meant to be judged by eye. `as` stays fully live, and its effect
+    // fully visible, on the "Polymorphic: as=..." story, which pairs it
+    // with a visual cue (a card background) specifically so the change is
+    // actually observable.
     as: {
-      control: "select",
-      options: ["div", "span", "p"],
+      control: false,
       description:
         "The HTML element (or component) to render as, overriding the element level would normally select. Renders role=\"heading\" and aria-level={level} in this case. Intended for a non-heading element — passing an actual h1-h6 tag warns in development.",
     },
@@ -104,18 +151,19 @@ const meta: Meta<typeof Heading> = {
   // component default — an arg left `undefined` renders as an inert
   // placeholder instead of a live, interactive control (see
   // guidelines/07-storybook-and-documentation-standards.md §5). `size` is
-  // the one deliberate exception among the *live* controls: it's left
-  // `undefined` because that's its real default (falls back to `level`'s
-  // own matched default internally), and giving it a fixed demo value here
-  // would silently break the very thing this Playground should
-  // demonstrate — changing `level` visibly changing the rendered size for
-  // anyone who hasn't explicitly picked a `size` of their own. `align`/
-  // `wrap`/`as` have no true default either but, unlike `size`, get a
-  // sensible non-blank demo value since doing so doesn't hide any other
-  // prop's behavior. `truncate` isn't in this list at all — its control is
-  // `control: false` above (see that argType's own comment), so it has no
-  // live default to set here, matching `Textarea`'s own `minRows`/
-  // `maxRows` (also omitted from `args` for the same reason).
+  // left `undefined` deliberately (falls back to `level`'s own matched
+  // default internally, shown live via `resolveDisplayValue` above; giving
+  // it a fixed demo value would hide the level->size behavior this
+  // Playground exists to demonstrate) — `select`-type controls don't gate
+  // on this the way free-form ones do, so it still renders live. `truncate`
+  // gets `""`, not `undefined` — its real default genuinely is "off," but a
+  // `text` control gates on `undefined` exactly like a `number` control
+  // does (see that argType's own comment); `""` is a real, defined value
+  // that reads as empty, avoiding the gate while still meaning "no
+  // truncation" once parsed. `align`/`wrap` have no true default either but
+  // get a sensible non-blank demo value since doing so doesn't hide any
+  // other prop's behavior. `as`'s control is disabled entirely (see that
+  // argType's own comment), so its own arg value here is moot.
   args: {
     children: "Design builds meaning",
     level: 2,
@@ -125,16 +173,65 @@ const meta: Meta<typeof Heading> = {
     color: "primary",
     fontFamily: "secondary",
     wrap: "wrap",
+    // Cast, not a real `number` — see this file's own `truncate` argType
+    // comment for why the Storybook *control* needs a string `""` here
+    // even though the real component prop is always a `number`.
+    truncate: "" as unknown as number,
     as: undefined,
   },
+  // The fallback renderer for any story below with no `render` of its own
+  // (`Default`, `NarrowViewport`) — every story that *does* define its own
+  // `render` applies this same `parseTruncateArg` coercion itself, since
+  // this meta-level one only ever runs in place of a missing one, never
+  // alongside it.
+  render: (args) => <Heading {...args} truncate={parseTruncateArg(args.truncate)} />,
 };
 
 export default meta;
 
 type Story = StoryObj<typeof Heading>;
 
-/** Drive every prop live. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  name: "Playground",
+  // The *native* per-story Controls panel (the addon tab beside this
+  // canvas, distinct from the Docs page's own custom PlaygroundControls
+  // block) is Storybook's own vanilla `<select>` — it can only ever display
+  // `args.size` itself, with no equivalent to that block's own
+  // `resolveDisplayValue` mechanism for a display-only computed fallback.
+  // To still show the size `level` actually resolves to here (rather than
+  // a blank "Choose option…"), this syncs a *real* `size` arg to
+  // `defaultSizeForLevel[level]` whenever `level` changes.
+  //
+  // Deliberately unconditional — an earlier version tried to preserve a
+  // manually-picked `size` across a later `level` change by tracking "was
+  // this value the one I last auto-set" in a `useRef`. Real, confirmed bug
+  // (user-reported, reproduced): that tracking silently broke the moment
+  // the story's component instance was recreated for any reason (an HMR
+  // reload, a Storybook internal re-render) while `args.size` already held
+  // a previously-auto-set value — the fresh `ref` came back empty, so the
+  // check read the existing value as "the user must have picked this," and
+  // the sync permanently stopped re-firing from then on, with no visible
+  // error. A `useRef` has no guaranteed lifetime here; `args` in the
+  // Storybook store does. Trading the "manual size survives a level
+  // change" nicety for something that can't silently wedge itself off:
+  // changing `level` now always re-snaps `size` to that level's own
+  // default, full stop. Setting `size` independently still works exactly
+  // as before as long as `level` itself isn't touched again afterward —
+  // the "Size set independently of level" story is the dedicated,
+  // always-correct demo of that combination.
+  render: function PlaygroundStory(args) {
+    const [, updateArgs] = useArgs();
+
+    useEffect(() => {
+      updateArgs({ size: defaultSizeForLevel[args.level as HeadingLevel] });
+      // Deliberately level-only — see the comment above for why this
+      // doesn't try to detect/preserve a manual `size` override.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [args.level]);
+
+    return <Heading {...args} truncate={parseTruncateArg(args.truncate)} />;
+  },
+};
 
 export const Default: Story = {
   // `level` is this story's own reason to exist (the default level) — kept
@@ -159,7 +256,7 @@ export const AllLevels: Story = {
   render: (args) => (
     <>
       {([1, 2, 3, 4, 5, 6] as const).map((level) => (
-        <Heading key={level} {...args} level={level}>
+        <Heading key={level} {...args} level={level} truncate={parseTruncateArg(args.truncate)}>
           Heading level {level}
         </Heading>
       ))}
@@ -178,7 +275,7 @@ export const SizeIndependentOfLevel: Story = {
     children: { control: false },
   },
   render: (args) => (
-    <Heading {...args} level={2} size="xl">
+    <Heading {...args} level={2} size="xl" truncate={parseTruncateArg(args.truncate)}>
       Semantic h2, visually smaller (size=&quot;xl&quot;)
     </Heading>
   ),
@@ -199,7 +296,7 @@ export const AllSizes: Story = {
       {(
         ["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"] as const
       ).map((size) => (
-        <Heading key={size} {...args} size={size}>
+        <Heading key={size} {...args} size={size} truncate={parseTruncateArg(args.truncate)}>
           size=&quot;{size}&quot;
         </Heading>
       ))}
@@ -217,10 +314,10 @@ export const FontFamily: Story = {
   },
   render: (args) => (
     <>
-      <Heading {...args} fontFamily="secondary">
+      <Heading {...args} fontFamily="secondary" truncate={parseTruncateArg(args.truncate)}>
         fontFamily=&quot;secondary&quot; (Lora, default) — editorial heading.
       </Heading>
-      <Heading {...args} fontFamily="primary">
+      <Heading {...args} fontFamily="primary" truncate={parseTruncateArg(args.truncate)}>
         fontFamily=&quot;primary&quot; (Nunito) — UI-dense/enterprise heading.
       </Heading>
     </>
@@ -243,13 +340,13 @@ export const Align: Story = {
   },
   render: (args) => (
     <>
-      <Heading {...args} align="start">
+      <Heading {...args} align="start" truncate={parseTruncateArg(args.truncate)}>
         align=&quot;start&quot; (default)
       </Heading>
-      <Heading {...args} align="center">
+      <Heading {...args} align="center" truncate={parseTruncateArg(args.truncate)}>
         align=&quot;center&quot;
       </Heading>
-      <Heading {...args} align="end">
+      <Heading {...args} align="end" truncate={parseTruncateArg(args.truncate)}>
         align=&quot;end&quot;
       </Heading>
     </>
@@ -262,9 +359,10 @@ export const Wrap: Story = {
   // instance (text calibrated to actually wrap at the demo width). `level`
   // defaults via `args` rather than a JSX-literal override, same reasoning
   // as `Align`'s own comment — keeps its control genuinely live instead of
-  // silently dead. Every other *live* prop stays shared (`truncate` is
-  // `control: false` meta-wide — see that argType's own comment — so it
-  // isn't live here either).
+  // silently dead. Every other prop stays shared and live too, including
+  // `truncate` — setting it alongside `wrap="nowrap"` here triggers
+  // Heading's own development warning about that exact combination, a
+  // legitimate, useful thing to be able to demonstrate live.
   args: { level: 2 },
   argTypes: {
     wrap: { control: false },
@@ -273,17 +371,17 @@ export const Wrap: Story = {
   render: (args) => (
     <>
       <div style={{ maxWidth: "20rem" }}>
-        <Heading {...args} wrap="wrap">
+        <Heading {...args} wrap="wrap" truncate={parseTruncateArg(args.truncate)}>
           A longer heading that wraps with the browser&apos;s default line breaks
         </Heading>
       </div>
       <div style={{ maxWidth: "20rem" }}>
-        <Heading {...args} wrap="balance">
+        <Heading {...args} wrap="balance" truncate={parseTruncateArg(args.truncate)}>
           A longer heading that wraps with balanced line breaks
         </Heading>
       </div>
       <div style={{ maxWidth: "20rem" }}>
-        <Heading {...args} wrap="pretty">
+        <Heading {...args} wrap="pretty" truncate={parseTruncateArg(args.truncate)}>
           A longer heading that wraps avoiding an orphaned last word
         </Heading>
       </div>
@@ -293,19 +391,19 @@ export const Wrap: Story = {
 
 export const Truncate: Story = {
   name: "truncate (line-clamp)",
-  // `level`/`children`/`truncate` are all fixed — `truncate` is
-  // `control: false` meta-wide (a `number` control with no starting value
-  // is an inert placeholder, not a live input; see that argType's own
-  // comment), so this story demonstrates it with a literal, hardcoded
-  // value instead of a live one, same as `Textarea`'s own `minRows`/
-  // `maxRows` demo stories. Every other prop stays live.
+  // `level`/`children` are fixed so the demo text (calibrated to clamp at
+  // exactly two lines at this width) stays consistent; `truncate` itself
+  // defaults to 2 via `args` (not a JSX-literal override) so its own
+  // control stays genuinely live — try 1/2/3 lines directly. Every other
+  // prop stays live too.
+  args: { level: 3, truncate: 2 },
   argTypes: {
     level: { control: false },
     children: { control: false },
   },
   render: (args) => (
     <div style={{ maxWidth: "20rem" }}>
-      <Heading {...args} level={3} truncate={2}>
+      <Heading {...args} truncate={parseTruncateArg(args.truncate)}>
         A much longer card title than will fit on two lines, so it should be clamped with an
         ellipsis instead of overflowing or wrapping onto a third line.
       </Heading>
@@ -332,7 +430,13 @@ export const AsCardTitle: Story = {
         padding: "var(--dbm-space-4)",
       }}
     >
-      <Heading {...args} level={3} as="div" size="lg">
+      <Heading
+        {...args}
+        level={3}
+        as="div"
+        size="lg"
+        truncate={parseTruncateArg(args.truncate)}
+      >
         Product card title
       </Heading>
       <p style={{ color: "var(--dbm-text-secondary)", margin: 0 }}>

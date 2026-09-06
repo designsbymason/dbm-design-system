@@ -17,6 +17,18 @@ interface ArgTypeLike {
   options?: unknown[];
   mapping?: Record<string, unknown>;
   table?: { disable?: boolean };
+  /**
+   * Opt-in, not a Storybook concept — computes what this control should
+   * *display* when its own arg is `undefined`, from the story's current
+   * full `args` (e.g. Heading's `size` control showing the size that
+   * `level` actually resolves to internally, rather than a blank "Choose
+   * option…", without that computed value ever becoming a real, sticky arg
+   * on its own). Purely additive: a control with no `resolveDisplayValue`
+   * behaves exactly as before. The underlying arg stays genuinely
+   * `undefined` until the user actually interacts with the control —
+   * `onChange` always writes the real explicit value, never this one.
+   */
+  resolveDisplayValue?: (args: Record<string, unknown>) => unknown;
 }
 
 /**
@@ -32,11 +44,19 @@ function ControlField({
   name,
   argType,
   value,
+  resolvedDisplayValue,
   onChange,
 }: {
   name: string;
   argType: ArgTypeLike;
   value: unknown;
+  /**
+   * Pre-computed by `PlaygroundControls` (it has the full `args` object;
+   * this component only ever sees this one prop's own value) by calling
+   * `argType.resolveDisplayValue` — `undefined` when that field isn't set,
+   * which is every existing prop today. See `ArgTypeLike`'s own doc.
+   */
+  resolvedDisplayValue?: unknown;
   onChange: (value: unknown) => void;
 }) {
   // `argType.control &&` already truthy-narrows away the `false` member of
@@ -46,13 +66,19 @@ function ControlField({
   // never be false (TS2367), not just a style nit.
   const controlType = argType.control ? argType.control.type : undefined;
   const fieldId = `playground-control-${name}`;
+  // What the widget below should *show* — the real arg when it's set, the
+  // computed fallback otherwise. `onChange` always writes the real value
+  // the user actually picked, never this one, so a prop with no
+  // `resolveDisplayValue` (every prop except an opt-in one like Heading's
+  // `size`) behaves exactly as before: `effectiveValue === value` always.
+  const effectiveValue = value !== undefined ? value : resolvedDisplayValue;
 
   let widget: ReactNode;
   if (controlType === "boolean") {
     widget = (
       <Switch
         id={fieldId}
-        checked={Boolean(value)}
+        checked={Boolean(effectiveValue)}
         onCheckedChange={(checked) => onChange(checked === true)}
       />
     );
@@ -87,10 +113,10 @@ function ControlField({
     // the same key), and Storybook's own UPDATE_STORY_ARGS pipeline is what
     // correctly re-resolves that key through `mapping` on the way back in.
     const displayValue = argType.mapping
-      ? Object.entries(argType.mapping).find(([, mapped]) => mapped === value)?.[0]
-      : value === undefined
+      ? Object.entries(argType.mapping).find(([, mapped]) => mapped === effectiveValue)?.[0]
+      : effectiveValue === undefined
         ? undefined
-        : String(value);
+        : String(effectiveValue);
     widget = (
       <Select
         id={fieldId}
@@ -113,7 +139,7 @@ function ControlField({
       <Input
         id={fieldId}
         type="number"
-        value={typeof value === "number" ? value : ""}
+        value={typeof effectiveValue === "number" ? effectiveValue : ""}
         onChange={(event) => {
           const next = event.target.value;
           onChange(next === "" ? undefined : Number(next));
@@ -125,7 +151,7 @@ function ControlField({
     widget = (
       <Input
         id={fieldId}
-        value={typeof value === "string" ? value : ""}
+        value={typeof effectiveValue === "string" ? effectiveValue : ""}
         onChange={(event) => onChange(event.target.value)}
       />
     );
@@ -305,6 +331,7 @@ export function PlaygroundControls({
               name={name}
               argType={argType}
               value={args[name]}
+              resolvedDisplayValue={argType.resolveDisplayValue?.(args)}
               onChange={(value) => updateArgs({ [name]: value })}
             />
           ))}

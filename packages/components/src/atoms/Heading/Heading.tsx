@@ -29,7 +29,14 @@ const elementForLevel: Record<HeadingLevel, ElementType> = {
 
 const headingTags = new Set<string>(Object.values(elementForLevel) as string[]);
 
-const defaultSizeForLevel: Record<HeadingLevel, HeadingSize> = {
+/**
+ * `level`'s own matched default `size` — exported (package-internal use
+ * only, not re-exported from the public barrel) so `Heading.stories.tsx`
+ * can reuse this exact mapping for the Playground's `size` control, rather
+ * than duplicating it, to show the size that will actually render when
+ * `size` itself is left unset.
+ */
+export const defaultSizeForLevel: Record<HeadingLevel, HeadingSize> = {
   1: "5xl",
   2: "4xl",
   3: "3xl",
