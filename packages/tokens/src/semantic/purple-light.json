@@ -158,7 +158,7 @@
     "code": {
       "$type": "color",
       "$value": "{color.blue.50}",
-      "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's inline-code and token-table pill rules) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Retired 2026-08-20 in favor of bg.info-subtle directly; restored the same day, reversing that retirement — every former bg.info-subtle-standing-in-for-bg.code consumer (docs.css's two inline-code pill rules) uses this token again. Not currently consumed by any published component — the real Code.tsx atom uses bg.neutral-subtle instead — Storybook-docs-only for now."
+      "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's inline-code and token-table pill rules) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Retired 2026-08-20 in favor of bg.info-subtle directly; restored the same day, reversing that retirement — every former bg.info-subtle-standing-in-for-bg.code consumer (docs.css's two inline-code pill rules) uses this token again. Adopted by the real Code.tsx atom (2026-09-06, at explicit direction, during its own review pass) — previously that component used bg.neutral-subtle instead; the shipped atom and the Storybook-docs inline-code pill now share the identical bg.code/border.code/text.secondary treatment rather than looking like two different things."
     }
   },
   "text": {
@@ -322,7 +322,7 @@
     "code": {
       "$type": "color",
       "$value": "{color.blue.100}",
-      "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Briefly paired with bg.info-subtle instead (2026-08-20, when bg.code was retired) and measured 2.63:1 dark against that fill; bg.code was restored the same day, reversing that retirement, so this token is back to pairing with bg.code and its own flat gray.700 dark value — 1.09:1 light / 1.00:1 dark (byte-identical to bg.code's own dark value, an intentional flat/borderless look in that mode), an accepted tradeoff, not an oversight."
+      "$description": "Paired with bg.code (2026-08-08) — blue.100/blue.900, a purely decorative border, not one that identifies a component/state boundary, so WCAG 1.4.11's 3:1 floor doesn't apply — same accepted class as border.brand-subtle. Briefly paired with bg.info-subtle instead (2026-08-20, when bg.code was retired) and measured 2.63:1 dark against that fill; bg.code was restored the same day, reversing that retirement, so this token is back to pairing with bg.code and its own flat gray.700 dark value — 1.09:1 light / 1.00:1 dark (byte-identical to bg.code's own dark value, an intentional flat/borderless look in that mode), an accepted tradeoff, not an oversight. Adopted by the real Code.tsx atom alongside bg.code (2026-09-06, at explicit direction) — see that token's own description."
     }
   },
   "icon": {

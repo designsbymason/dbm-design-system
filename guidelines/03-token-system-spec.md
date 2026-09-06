@@ -83,7 +83,7 @@ Methodology, then the current state of every semantic token — not a replay of 
 | `neutral-subtle-hover` | `gray.100` | `gray.800` | `text.secondary`: 6.05:1 / 7.47:1 | AA |
 | `track` | `gray.100` | `gray.900` | vs `bg.surface`: **1.14:1 / 1.40:1** | **Deliberate exception** — fails 3:1, accepted for a passive progress-indicator track (industry-common convention). See "Notable exceptions" below. |
 | `track-strong` | `gray.500` | `gray.400` | vs `bg.surface`: 3.25:1 / 4.34:1 | AA (non-text floor) — used where the boundary must read as real, e.g. `Switch`'s always-interactive track. Also `Indicators`' inactive-dot fill (2026-09-04, at explicit direction, in place of `bg.neutral` — visually lighter while still clearing the 3:1 floor; `bg.neutral` itself moved to the hover state) — see `guidelines/component-reviews/Indicators.md` |
-| `code` | `blue.50` | `gray.700` | `text.secondary`: — / 5.10:1 | AA. Storybook-docs-only — not consumed by the shipped `Code` atom. |
+| `code` | `blue.50` | `gray.700` | `text.secondary`: 6.57:1 / 5.10:1 | AA. Adopted by the shipped `Code` atom (2026-09-06) — previously Storybook-docs-only, paired with `text.primary`/`bg.neutral-subtle` in the real component instead; both now share the identical treatment. |
 
 **Brand-specific** (Purple / Emerald differ):
 
@@ -138,7 +138,7 @@ Methodology, then the current state of every semantic token — not a replay of 
 | `success-subtle` | `green.100` | `green.900` | ~1.09–1.30:1 | Deliberate exception — decorative accent |
 | `info` | `blue.600` | `blue.300` | vs `bg.surface`: 4.71:1 / 5.85:1 | AA |
 | `info-subtle` | `blue.100` | `blue.900` | ~1.09–1.28:1 | Deliberate exception — decorative accent |
-| `code` | `blue.100` | `gray.700` (flat/borderless, byte-identical to `bg.code` dark) | ~1.09:1 light / 1.00:1 dark | Deliberate exception — decorative, Storybook-docs-only |
+| `code` | `blue.100` | `gray.700` (flat/borderless, byte-identical to `bg.code` dark) | ~1.09:1 light / 1.00:1 dark | Deliberate exception — decorative, not state-identifying. Adopted by the shipped `Code` atom alongside `bg.code` (2026-09-06). |
 
 ### `icon.*`
 

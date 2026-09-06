@@ -28,6 +28,17 @@ describe("Code", () => {
     expect(screen.getByText("pnpm install")).toHaveClass("custom");
   });
 
+  it("forwards id, style, and data-testid", () => {
+    render(
+      <Code id="snippet-1" style={{ opacity: 0.5 }} data-testid="snippet">
+        pnpm install
+      </Code>,
+    );
+    const code = screen.getByTestId("snippet");
+    expect(code).toHaveAttribute("id", "snippet-1");
+    expect(code).toHaveStyle({ opacity: "0.5" });
+  });
+
   it("forwards native code element props", () => {
     render(<Code lang="bash">pnpm install</Code>);
     expect(screen.getByText("pnpm install")).toHaveAttribute("lang", "bash");

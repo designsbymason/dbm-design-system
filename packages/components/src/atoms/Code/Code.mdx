@@ -1,0 +1,164 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Kbd } from "../Kbd";
+import { Text } from "../Text";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Code } from "./Code";
+import * as CodeStories from "./Code.stories";
+
+export const propOrder = [
+  "children",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={CodeStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Code" tier="Atom" />
+
+A short, inline monospace code snippet — a single word, identifier, or short expression sitting
+within a line of running text (e.g. "Run `pnpm install` to get started"). Renders as a native
+`<code>` with a tinted background pill, sized in the token system's monospace font stack. For
+multi-line, syntax-highlighted code with a copy button, a future `CodeBlock` molecule is the
+right fit instead — `Code` is deliberately for short, single-line references only.
+
+### Import
+
+```tsx
+import { Code } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CodeStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={CodeStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Code` also accepts any other native `<code>` attribute beyond what's listed here (e.g. `lang`,
+`title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={CodeStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={CodeStories.Default} />
+
+### Within body text
+
+<Canvas of={CodeStories.WithinText} />
+
+### Inherits surrounding font size
+
+<Canvas of={CodeStories.InheritsSurroundingSize} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Code` for a single word, identifier, command, or short expression referenced inline within
+  a sentence — a package name, a CLI command, a variable name.
+- Let it inherit the surrounding text's font size (its own default behavior) — it's designed to sit
+  inside `Text`/`Heading`/list content at whatever size that content already is, not to introduce
+  its own independent size scale.
+- Reach for a future `CodeBlock` instead once real multi-line or syntax-highlighted code is needed
+  — `Code` intentionally stays single-line only.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Code` for multi-line snippets — it has no line-wrapping affordance for a real code
+  block, no syntax highlighting, and no copy button.
+- Don't override its font size directly — it's designed to inherit from its surrounding context
+  (see the Inherits surrounding font size variant above); forcing a fixed size defeats that.
+- Don't reach for `Code` to render a keyboard shortcut — use `Kbd` instead, which has its own
+  distinct key-cap visual treatment for that specific purpose.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep the content short — a package name, command, file path, or identifier reads well inline;
+  a long unbroken string (e.g. a deep file path) will wrap at the container edge rather than
+  overflow, but still reads more naturally as a `CodeBlock`-style reference once it's genuinely long.
+- `Code` and `Kbd` are visually similar (both monospace, both pill-shaped) but serve different
+  roles — `Code` marks up a literal code reference, `Kbd` marks up a keyboard key or shortcut.
+  Don't use one for the other's job even though the visual difference is subtle.
+
+## Accessibility
+
+<Callout tone="info" title="Semantic HTML carries the meaning — no ARIA needed">
+
+- Renders a native `<code>` element, which already communicates "this is a code reference" to
+  assistive technology with zero ARIA required.
+- No keyboard interaction — `Code` is not an interactive element.
+- The background/border pill is purely visual; screen readers announce the text content exactly
+  as if it were plain text within the surrounding sentence.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Text>Run <Code>pnpm install</Code> to install dependencies.</Text>
+```
+
+```tsx
+// Inherits whatever font size its surrounding context is set to
+<Text size="lg">
+  Set <Code>NODE_ENV</Code> to <Code>production</Code> before deploying.
+</Text>
+```
+
+```tsx
+// A native <code> attribute (lang) passed straight through
+<Code lang="bash">pnpm install</Code>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.code" usage="the pill background" />
+<TokenRow token="border.code" usage="the pill border" />
+<TokenRow token="text.secondary" usage="the code text color" />
+<TokenRow token="font-family.mono" usage="the monospace font stack" />
+<TokenRow token="font-weight.medium" usage="the code text weight" />
+<TokenRow token="radius.sm" usage="the pill's corner radius" />
+<TokenRow token="space.1" usage="the pill's block (vertical) padding" />
+<TokenRow token="space.2" usage="the pill's inline (horizontal) padding" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Text"
+  description="The body-copy atom Code is typically embedded within, inline in a sentence"
+  href="/?path=/story/atoms-typography-text--default"
+>
+  <Text>Run <Code>pnpm install</Code> to get started.</Text>
+</RelatedCard>
+<RelatedCard
+  name="Kbd"
+  description="Visually similar (monospace, pill-shaped) but for keyboard keys/shortcuts specifically, not code references"
+  href="/?path=/story/atoms-typography-kbd--default"
+>
+  <Kbd>Esc</Kbd>
+</RelatedCard>
+</div>
