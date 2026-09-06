@@ -61,11 +61,20 @@ const meta: Meta<typeof Tooltip> = {
       control: { type: "number", min: 0, step: 100 },
       description:
         "Milliseconds the trigger must be hovered/focused before the tooltip opens. Standalone (no ambient TooltipProvider), defaults to 400ms; nested inside one, leaving this unset inherits its delayDuration instead.",
+      // No literal destructuring default in code (an unset value must
+      // stay `undefined` so it can inherit an ambient `TooltipProvider`'s
+      // own delayDuration instead of always shadowing it) — docgen has
+      // nothing to read a "Default" from as a result, so it's set
+      // explicitly here instead, matching the effective standalone value
+      // documented in the description above.
+      table: { defaultValue: { summary: "400" } },
     },
     disableHoverableContent: {
       control: "boolean",
       description:
         "When true, moving the pointer from the trigger toward the tooltip content closes it immediately instead of leaving it open while the pointer travels there. Same standalone-vs-TooltipProvider inheritance as delayDuration.",
+      // Same reasoning as `delayDuration` above.
+      table: { defaultValue: { summary: "false" } },
     },
     hideArrow: {
       control: "boolean",
@@ -85,6 +94,11 @@ const meta: Meta<typeof Tooltip> = {
       control: "boolean",
       description:
         "The initial open state for uncontrolled usage — ignored once open is provided.",
+      // Same reasoning as `delayDuration`/`disableHoverableContent`
+      // above: no literal destructuring default in code (Radix's own
+      // `useControllableState` applies its internal `?? false` fallback
+      // instead), so docgen has nothing to read a "Default" from.
+      table: { defaultValue: { summary: "false" } },
     },
     onOpenChange: {
       control: false,
@@ -122,9 +136,25 @@ const meta: Meta<typeof Tooltip> = {
     children: "Button trigger" as unknown as TooltipProps["children"],
     side: "top",
     align: "center",
+    // Matches the component's own real standalone default (see
+    // `delayDuration`'s JSDoc) — without an explicit value here, this
+    // optional prop with no literal destructuring default renders as an
+    // inert "Set number" placeholder button in the Controls panel instead
+    // of a genuinely interactive number input (06-engineering-standards.md
+    // §9: every control must be a real input or explicitly `control:
+    // false`, never a placeholder in between).
+    delayDuration: 400,
     disableHoverableContent: false,
     hideArrow: false,
     defaultOpen: false,
+    // No true default (an optional string with none) — "" keeps the text
+    // control genuinely interactive from the start (same "Set string"
+    // placeholder issue as `delayDuration` above) rather than requiring a
+    // click to initialize it, and is safe here specifically because
+    // Radix's own `ariaLabel ? ... : ...` branching treats an empty
+    // string exactly like "not set" (both falsy) — confirmed by reading
+    // its source, not assumed.
+    "aria-label": "",
   },
 };
 
@@ -249,6 +279,18 @@ export const SharedProviderInteraction: Story = {
     const boldButton = canvas.getByRole("button", { name: "B" });
     const italicButton = canvas.getByRole("button", { name: "I" });
 
+    // Purely for human legibility when watching this replay in the
+    // Interactions panel — placed only where it can't interfere with the
+    // actual assertion below: before the very first hover (nothing timed
+    // yet), and while a tooltip is genuinely open (the skipDelayDuration
+    // clock only starts once a tooltip *closes*, so holding one open
+    // longer costs nothing). Never between the unhover/hover pair itself
+    // — that transition has to stay fast, it's the exact thing being
+    // tested.
+    const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    await pause(500);
+
     // Content portals to `document.body` — queried globally, not via
     // `canvas`, for that reason (see `ToggleInteraction` below). Safe
     // here specifically because this story is never embedded in the
@@ -257,6 +299,7 @@ export const SharedProviderInteraction: Story = {
     await userEvent.hover(boldButton);
     const firstTooltip = await within(document.body).findByRole("tooltip");
     await expect(firstTooltip).toHaveTextContent("Bold");
+    await pause(800);
 
     await userEvent.unhover(boldButton);
     await userEvent.hover(italicButton);
@@ -275,6 +318,7 @@ export const SharedProviderInteraction: Story = {
       },
       { timeout: 250 },
     );
+    await pause(800);
   },
 };
 
@@ -293,7 +337,16 @@ export const ToggleInteraction: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("button", { name: "Save" });
 
+    // Purely for human legibility when watching this replay in the
+    // Interactions panel — this story sets `delayDuration={0}` so the
+    // assertions themselves don't need either pause. Without them, hover
+    // and Escape happened back to back with no visible gap, reading as a
+    // single flash rather than two distinct, observable state changes —
+    // the same fix already applied to Collapse's own equivalent story.
+    const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     expect(canvas.queryByRole("tooltip")).not.toBeInTheDocument();
+    await pause(500);
 
     // The tooltip content portals to `document.body`, not inside
     // `canvasElement` — queried globally rather than via `canvas` for
@@ -301,6 +354,7 @@ export const ToggleInteraction: Story = {
     await userEvent.hover(trigger);
     const tooltip = await within(document.body).findByRole("tooltip");
     await expect(tooltip).toHaveTextContent("Save your changes");
+    await pause(1200);
 
     await userEvent.keyboard("{Escape}");
     await waitFor(() =>

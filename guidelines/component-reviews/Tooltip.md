@@ -127,3 +127,93 @@ records a Finalized date.
 Docs-page-embedding play-function split and `asChild`-adjacent native-passthrough gap followed),
 `ThemeProvider` (the precedent for a co-located, app-root-level provider component,
 `skipDelayDuration`'s own reason for existing).
+
+**Follow-up (2026-09-05, same day), at user request — two Storybook Controls-panel polish items.**
+
+- **`delayDuration` and `aria-label` showed as inert "Set number"/"Set string" placeholder buttons**
+  in the Controls panel instead of a genuinely interactive input — both had a real `argTypes.control`
+  configured, but neither had a value in `meta.args`, and Storybook renders an unset optional arg as
+  a "click to initialize" placeholder regardless of its control config (`06-engineering-standards.md`
+  §9's own "not an inert placeholder" requirement). Fixed by adding both to `args`:
+  `delayDuration: 400` (matching the component's real standalone default) and `"aria-label": ""` (no
+  true default, but confirmed safe against Radix's own `ariaLabel ? ... : ...` branching — an empty
+  string is falsy, so it behaves identically to "not set," the same reasoning already used for
+  Avatar's own `""`-default string props). Verified live: `delayDuration` now renders a real
+  `<input type="number">` (value `400`); `aria-label` renders a real `<textarea>` (my first DOM check
+  missed this since I only queried for `input`/`button`/`select`, not `textarea` — corrected before
+  concluding it was still broken).
+- **`ToggleInteraction`'s and `SharedProviderInteraction`'s open/close happened too fast to watch**,
+  the same gap already fixed for `Collapse`'s own interaction story. Added `setTimeout`-based pauses
+  to both, placed only where they can't affect the actual assertions: for `SharedProviderInteraction`
+  specifically, a pause is safe before the very first hover and while a tooltip is genuinely open
+  (the `skipDelayDuration` clock only starts once a tooltip *closes*), but deliberately **not**
+  between the unhover/hover pair itself, since that transition staying fast is the exact behavior
+  under test — confirmed the skip-delay assertion still passes after adding the pauses elsewhere
+  (re-ran the real-browser suite three times, 7/7 each time).
+  **Investigated, not just observed, an apparent failure while manually verifying this live:**
+  reloading `ToggleInteraction` directly in the Browser pane consistently failed its final
+  `not.toBeInTheDocument()` assertion, but the real automated Playwright suite passed reliably every
+  time. Root-caused rather than assumed identical to Backdrop's own earlier instance of this: checked
+  `document.hidden`/`visibilityState` directly on the affected tab and confirmed `hidden: true` —
+  browsers throttle CSS animation timelines on a hidden page, so the tooltip's fade-out exit
+  animation was still genuinely running, just far slower than the `waitFor`'s 1000ms timeout allowed
+  for. Not a `Tooltip`/`Presence` defect; recorded here so a future live-check of either interaction
+  story doesn't misread the same pane-visibility artifact as a real regression.
+
+Neither follow-up changed `Tooltip.tsx`/`TooltipProvider.tsx`/`Tooltip.types.ts`/`.module.css`.
+`tsc`, `eslint`, and the full Vitest suite (1310/1310, no count change) all clean.
+
+**Follow-up (2026-09-05, same day), at user request — Properties table showed no Default for
+`delayDuration`/`disableHoverableContent`.** Both correctly show `—` for the same underlying reason
+noted above (no literal destructuring default in code, on purpose — an unset value has to stay
+`undefined` so it can inherit an ambient `TooltipProvider`'s own value instead of always shadowing
+it), but `—` reads as "no default" rather than "a real default that just isn't a literal in the
+function signature." `PropertiesTable` (`.storybook/blocks/PropertiesTable.tsx`) reads its Default
+column from `argType.table.defaultValue.summary`, a value independent of what docgen infers from
+code — set explicitly in `Tooltip.stories.tsx` to `"400"`/`"false"`, matching the effective
+standalone values already documented in each prop's own description. Verified live: both now show
+their real default in the Properties table. Storybook-only; no component code changed. `tsc`,
+`eslint`, and the full Vitest suite (1310/1310) all clean.
+
+**Final pre-finalization pass, 2026-09-05.** Re-ran the full `06-engineering-standards.md` §9
+checklist against the current state (all prior fixes/follow-ups above included), rather than
+assuming they still hold:
+
+- **Found and fixed one more instance of the same Default-column gap**: `defaultOpen` also has no
+  literal destructuring default in `Tooltip.tsx` (Radix's own `useControllableState` applies its
+  internal `?? false` fallback instead, the same reasoning already applied to `delayDuration`/
+  `disableHoverableContent`), so it showed `—` in the Properties table despite its own JSDoc
+  documenting `@default false` — missed in the earlier pass since its Controls-panel behavior was
+  already correct (it has a real value in `meta.args`) and only the separate `table.defaultValue`
+  override was absent. Fixed the same way, verified live.
+- **Live-verified**: hover-triggered open, Purple/Emerald × Light/Dark (Playground), mobile viewport
+  (375px, clean wrap, no overflow), the Docs page end to end in a genuinely fresh tab (all 10
+  sections, zero console errors, all 16 Properties rows correct, both `RelatedCard`s aligned and
+  linking correctly, `TokenRow` swatches resolving for the two color tokens).
+- **Two live-testing artifacts worth recording, not component bugs**: keyboard-Tab focus in the
+  Browser pane didn't visibly open the tooltip even after well over the delay — confirmed focus
+  genuinely landed on the trigger (`document.activeElement`) but `data-state` stayed `"closed"`;
+  re-ran the automated `"shows its content when the trigger receives focus"` unit test in isolation
+  and it passed cleanly, matching the same class of synthetic-keyboard-event limitation already
+  documented for `Collapse`'s own final review. Separately, a long-lived browser tab that had
+  navigated many times within this session intermittently reported `document.body.scrollHeight` in
+  the tens of thousands of pixels and correspondingly nonsensical `getBoundingClientRect` positions
+  for otherwise-correct content (confirmed by re-checking the identical page in a fresh tab each
+  time and getting legitimate ~10,000px heights and correctly-aligned elements) — a Storybook-client
+  navigation-accumulation artifact, not a rendering defect; noted here so a future session doesn't
+  misread a stale long-lived tab's own measurements as a real regression.
+- **Accessibility addon panel**: not independently checkable in this session (stuck at "Preparing
+  accessibility scan" — requires `test:storybook:watch` running alongside `storybook dev`, per
+  `guidelines/adr/0003`, a standing environmental requirement, not a `Tooltip`-specific gap). Relied
+  on the automated jest-axe test instead (zero violations, part of the suite below).
+- **Full re-verification**: `tsc --noEmit`, `eslint --max-warnings 0`, the full Vitest suite (22/22
+  for `Tooltip` specifically across both projects, 1310/1310 package-wide), a real `tsup` build,
+  `pnpm audit` (zero known vulnerabilities), and `check-component-bundle-size` (0.51KB JS / 0.36KB
+  CSS gzipped for the whole `Tooltip` folder, `TooltipProvider` included — well under budget). No
+  other findings.
+
+Review pass complete — all findings actioned. Per `06-engineering-standards.md` §9, "Finalized" is a
+status the user declares explicitly, not one a review pass asserts on its own.
+
+**Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further
+changes to Tooltip (code, stories, docs, or its tokens) without asking first.

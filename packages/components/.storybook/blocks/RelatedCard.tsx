@@ -68,15 +68,29 @@ export function RelatedCard({
           than inventing a parallel one — also means docs.css's own
           markdown-prose rule (below) only needs a single, shared exclusion
           for both cases. */}
+      {/* `height` (fixed), not `minHeight` — with only a floor, a preview
+          taller than it (a `Button`, measured live at ~68px even at its
+          own `size="sm"`, vs. the ~48px most other previews render at)
+          still grew the slot to fit, so the name/description directly
+          below started at a different Y position card to card in the
+          same row (confirmed live via `getBoundingClientRect` across
+          several Docs pages before picking this value — 48px is the
+          actual height nearly everything else already renders at,
+          `space-20` the first scale step that comfortably fits the
+          tallest real instance found, `Button size="sm"`, with room to
+          spare). `overflow: hidden` is a safety net, not the intended
+          normal case — every preview here is meant to fit inside this
+          box, not be clipped by it. */}
       <div
         className="sb-unstyled"
         style={{
           alignItems: "center",
           color: "var(--dbm-text-primary)",
           display: "flex",
+          height: "var(--dbm-space-20)",
           justifyContent: "center",
           marginBlockEnd: "var(--dbm-space-3)",
-          minHeight: "var(--dbm-space-12)",
+          overflow: "hidden",
         }}
       >
         {children}
