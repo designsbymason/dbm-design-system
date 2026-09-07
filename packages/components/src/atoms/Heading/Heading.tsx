@@ -8,6 +8,7 @@ import type {
   HeadingLevel,
   HeadingProps,
   HeadingSize,
+  HeadingTrim,
   HeadingWrap,
 } from "./Heading.types";
 
@@ -72,6 +73,12 @@ const wrapClass: Record<HeadingWrap, string | undefined> = {
   pretty: styles.wrapPretty,
 };
 
+const trimClass: Record<HeadingTrim, string | undefined> = {
+  start: styles.trimStart,
+  end: styles.trimEnd,
+  both: styles.trimBoth,
+};
+
 const weightClass: Record<TextWeight, string | undefined> = {
   regular: styles.weightRegular,
   medium: styles.weightMedium,
@@ -106,6 +113,7 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
     color = "primary",
     fontFamily = "secondary",
     wrap,
+    trim,
     truncate,
     className,
     style,
@@ -161,6 +169,7 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
         colorClass[color as TextColor],
         fontFamilyClass[fontFamily as TextFontFamily],
         wrap !== undefined && wrapClass[wrap as HeadingWrap],
+        trim !== undefined && trimClass[trim as HeadingTrim],
         truncate !== undefined && styles.truncate,
         className,
       )}
@@ -189,8 +198,10 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
  * `fontFamily="primary"` switches to Nunito, for UI-dense/enterprise
  * sections that want headings to stay in the interface's primary family.
  * `align` sets text alignment; `wrap` controls line-wrapping (e.g.
- * `wrap="balance"` for a more evenly-broken multi-line heading); `truncate`
- * clamps to a fixed number of lines with an ellipsis.
+ * `wrap="balance"` for a more evenly-broken multi-line heading); `trim`
+ * removes the extra space a font reserves above/below the visible glyphs,
+ * for pixel-tight alignment against a border or icon; `truncate` clamps to
+ * a fixed number of lines with an ellipsis.
  *
  * @example
  * ```tsx
@@ -198,6 +209,7 @@ const HeadingImpl = forwardRef<HTMLElement, HeadingProps<ElementType>>(function 
  * <Heading level={2} size="xl">Visually smaller section heading</Heading>
  * <Heading level={3} as="div">Card title (not in the page's heading outline)</Heading>
  * <Heading level={1} align="center" wrap="balance">Centered hero title</Heading>
+ * <Heading level={2} trim="both">Flush against a border above and below</Heading>
  * ```
  */
 export const Heading = HeadingImpl as HeadingComponent;

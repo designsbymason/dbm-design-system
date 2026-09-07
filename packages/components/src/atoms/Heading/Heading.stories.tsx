@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useArgs } from "storybook/preview-api";
 import { Stack } from "../Stack";
 import { defaultSizeForLevel, Heading } from "./Heading";
-import type { HeadingLevel } from "./Heading.types";
+import type { HeadingLevel, HeadingTrim } from "./Heading.types";
 
 /**
  * `truncate`'s Storybook control is a plain text field, paired with a real
@@ -49,9 +49,9 @@ const meta: Meta<typeof Heading> = {
   component: Heading,
   parameters: { layout: "padded" },
   // Ordered to match HeadingProps' own declaration order (children, level,
-  // size, align, weight, color, fontFamily, wrap, truncate, as, then the
-  // inherited native escape-hatch props last) — same sequencing principle
-  // the Properties table uses (07-storybook-and-documentation-standards.md
+  // size, align, weight, color, fontFamily, wrap, trim, truncate, as, then
+  // the inherited native escape-hatch props last) — same sequencing
+  // principle the Properties table uses (07-storybook-and-documentation-standards.md
   // §4 item 3).
   argTypes: {
     children: { control: "text", description: "The heading text." },
@@ -113,6 +113,12 @@ const meta: Meta<typeof Heading> = {
       options: ["wrap", "nowrap", "balance", "pretty"],
       description:
         "Line-wrapping behavior (CSS text-wrap). balance or pretty improve how a multi-line heading breaks. nowrap conflicts with a multi-line truncate and warns in development if combined with one.",
+    },
+    trim: {
+      control: "select",
+      options: ["start", "end", "both"],
+      description:
+        "Leading-trim — removes the extra space a font reserves above the cap-height and/or below the baseline. Unset by default (no trim). Uses the native CSS text-box-trim where supported, falling back to a pre-calculated margin (per font family) elsewhere.",
     },
     // A `text` control, paired with a real `""` (not `undefined`) starting
     // arg in `meta.args` below — the combination that actually avoids
@@ -413,6 +419,59 @@ export const Wrap: Story = {
           </Heading>
         </div>
       </>
+    );
+  },
+};
+
+const trimRows: { label: string; trim: HeadingTrim | undefined }[] = [
+  { label: "trim unset (default)", trim: undefined },
+  { label: 'trim="start"', trim: "start" },
+  { label: 'trim="end"', trim: "end" },
+  { label: 'trim="both"', trim: "both" },
+];
+
+export const Trim: Story = {
+  name: "Leading-trim (unset vs start/end/both)",
+  // `trim` is the deliberate varying axis — all 4 real states shown as
+  // separate rows (not just the two most different ones), each with its
+  // own label so it's clear which is which without relying on the heading
+  // text itself to say so. `children` is fixed to a plain word so the
+  // effect (space above the caps, below the baseline) is easy to see
+  // against the highlighted background — every instance wrapped in a
+  // bg.canvas box specifically to make the otherwise-invisible trimmed
+  // space visible, the same "reveal the box" technique typography tools
+  // like Capsize use to demo this. A generous `Stack` gap between rows
+  // (this system's own layout atom, not a bare Fragment) keeps each row's
+  // own box from reading as adjacent to its neighbors, since the boxes
+  // themselves are already different heights by design (that's the whole
+  // point being demonstrated). `level` stays live and shared.
+  args: { level: 2, children: "Typography" },
+  argTypes: {
+    trim: { control: false },
+    children: { control: false },
+  },
+  render: function TrimStory(args) {
+    useSyncSizeToLevel(args.level as HeadingLevel);
+    const boxStyle = {
+      background: "var(--dbm-bg-canvas)",
+      display: "inline-block",
+    } as const;
+    const labelStyle = {
+      color: "var(--dbm-text-secondary)",
+      fontSize: "var(--dbm-font-size-sm)",
+      marginBottom: "var(--dbm-space-2)",
+    } as const;
+    return (
+      <Stack gap={8}>
+        {trimRows.map(({ label, trim }) => (
+          <div key={label}>
+            <div style={labelStyle}>{label}</div>
+            <div style={boxStyle}>
+              <Heading {...args} trim={trim} truncate={parseTruncateArg(args.truncate)} />
+            </div>
+          </div>
+        ))}
+      </Stack>
     );
   },
 };

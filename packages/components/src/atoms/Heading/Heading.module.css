@@ -3,18 +3,78 @@
   margin: 0;
 }
 
+/* `--heading-trim-start`/`--heading-trim-end` are local, component-scoped
+   custom properties — set here (per font family) so `.trimStart`/`.trimEnd`/
+   `.trimBoth` below can reference one generic pair regardless of which
+   `fontFamilyClass` is also applied. Always applied together with a trim
+   class via `cx()` in Heading.tsx, so these are only ever read when a real
+   trim value is also present. */
 .fontFamilyPrimary {
   font-family: var(--dbm-font-family-primary);
+  --heading-trim-start: var(--dbm-heading-trim-primary-start);
+  --heading-trim-end: var(--dbm-heading-trim-primary-end);
 }
 
 .fontFamilySecondary {
   font-family: var(--dbm-font-family-secondary);
+  --heading-trim-start: var(--dbm-heading-trim-secondary-start);
+  --heading-trim-end: var(--dbm-heading-trim-secondary-end);
 }
 
 .truncate {
   -webkit-box-orient: vertical;
   display: -webkit-box;
   overflow: hidden;
+}
+
+/* Leading-trim: removes the extra space a font reserves above the cap-height
+   and below the baseline (font-metrics overshoot, not anything set by our
+   own CSS — see guidelines/component-reviews/Heading.md for the full
+   background). Two layers, in this order on purpose:
+   1. A calculated negative-margin fallback (below), using the per-font
+      values set above — works in every browser, needs no feature support.
+   2. The native `text-box-trim`/`text-box-edge` property, gated behind
+      `@supports` — where the browser supports it, this both zeroes out the
+      fallback margin (so the two don't stack and over-trim) and switches to
+      the real, font-metrics-accurate native behavior instead. Chrome/Edge
+      133+ and Safari 18.2+ support this; Firefox doesn't yet (confirmed
+      2026-09-07) — the fallback margin is what Firefox actually renders
+      with, not a broken/unstyled state, matching this property's own
+      spec-documented graceful-degradation design. */
+.trimStart {
+  margin-block-start: var(--heading-trim-start, 0);
+}
+
+@supports (text-box-trim: trim-start) {
+  .trimStart {
+    margin-block-start: 0;
+    text-box-edge: cap alphabetic;
+    text-box-trim: trim-start;
+  }
+}
+
+.trimEnd {
+  margin-block-end: var(--heading-trim-end, 0);
+}
+
+@supports (text-box-trim: trim-end) {
+  .trimEnd {
+    margin-block-end: 0;
+    text-box-edge: cap alphabetic;
+    text-box-trim: trim-end;
+  }
+}
+
+.trimBoth {
+  margin-block: var(--heading-trim-start, 0) var(--heading-trim-end, 0);
+}
+
+@supports (text-box-trim: trim-both) {
+  .trimBoth {
+    margin-block: 0;
+    text-box-edge: cap alphabetic;
+    text-box-trim: trim-both;
+  }
 }
 
 .alignStart {

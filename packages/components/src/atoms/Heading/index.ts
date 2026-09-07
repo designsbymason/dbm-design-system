@@ -4,5 +4,6 @@ export type {
   HeadingLevel,
   HeadingProps,
   HeadingSize,
+  HeadingTrim,
   HeadingWrap,
 } from "./Heading.types";

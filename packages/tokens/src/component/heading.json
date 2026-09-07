@@ -1,0 +1,26 @@
+{
+  "heading": {
+    "trim": {
+      "primary-start": {
+        "$type": "dimension",
+        "$value": "-0.30em",
+        "$description": "Nunito (font-family.primary). Negative margin-block-start for Heading's trim prop's fallback path (browsers without native CSS text-box-trim support) — cancels the extra space the font reserves above the cap-height. Measured empirically (2026-09-07) via Canvas TextMetrics against the real loaded webfont: fontBoundingBoxAscent 101px minus a capital H's own actualBoundingBoxAscent ~71.25px, at a 100px reference size (so the ratio scales correctly to any font-size) — consistent between weight 400 and 700, confirmed directly rather than assumed. Verified live: applying this margin shifts real rendered text by the expected pixel amount (getBoundingClientRect before/after), not just trusted from the arithmetic."
+      },
+      "primary-end": {
+        "$type": "dimension",
+        "$value": "-0.35em",
+        "$description": "Nunito (font-family.primary). Negative margin-block-end for Heading's trim prop's fallback path — cancels the font's full descent reserve, flush to the baseline (matching the native property's own cap/alphabetic edge pair). Measured the same way and on the same date as trim.primary-start (see that token's own $description) — fontBoundingBoxDescent 35px at the 100px reference size."
+      },
+      "secondary-start": {
+        "$type": "dimension",
+        "$value": "-0.31em",
+        "$description": "Lora (font-family.secondary). Same role as trim.primary-start, a different value because Lora's own font metrics differ from Nunito's — this is the entire reason Heading's trim fallback is computed per font-family rather than shared. Measured the same way, same date: fontBoundingBoxAscent 101px minus a capital H's own actualBoundingBoxAscent 70px at the 100px reference size."
+      },
+      "secondary-end": {
+        "$type": "dimension",
+        "$value": "-0.27em",
+        "$description": "Lora (font-family.secondary). Same role as trim.primary-end, Lora's own value. Measured the same way, same date: fontBoundingBoxDescent 27px at the 100px reference size."
+      }
+    }
+  }
+}

@@ -32,6 +32,20 @@ export type HeadingAlign = "start" | "center" | "end";
  */
 export type HeadingWrap = "wrap" | "nowrap" | "balance" | "pretty";
 
+/**
+ * Leading-trim: removes the extra space a font reserves above the
+ * cap-height and below the baseline (metrics baked into the font file
+ * itself, not anything set in CSS) — `start` trims only the top, `end`
+ * only the bottom, `both` trims both edges. Uses the native CSS
+ * `text-box-trim`/`text-box-edge` properties where supported (Chrome/Edge
+ * 133+, Safari 18.2+ as of 2026-09-07), which read the real active font's
+ * own metrics live; falls back to a pre-calculated negative margin
+ * (measured specifically for this system's own Nunito/Lora, per
+ * `component/heading.json`) everywhere else, including Firefox. Unset by
+ * default (no trim).
+ */
+export type HeadingTrim = "start" | "end" | "both";
+
 export type HeadingProps<E extends ElementType = "h1"> = {
   /** The heading text. */
   children?: ReactNode;
@@ -77,6 +91,12 @@ export type HeadingProps<E extends ElementType = "h1"> = {
    * warns in development if combined with one.
    */
   wrap?: HeadingWrap;
+  /**
+   * Leading-trim — removes the extra space a font reserves above the
+   * cap-height and/or below the baseline. Unset by default (no trim, the
+   * ordinary line-height space around the text).
+   */
+  trim?: HeadingTrim;
   /**
    * Truncates text after this many lines, with an ellipsis
    * (`-webkit-line-clamp`, supported by all evergreen browsers).

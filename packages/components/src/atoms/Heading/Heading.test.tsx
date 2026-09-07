@@ -95,6 +95,32 @@ describe("Heading", () => {
     expect(screen.getByRole("heading")).toHaveStyle({ textWrap: "nowrap" });
   });
 
+  it("applies no trim class by default", () => {
+    render(<Heading>Title</Heading>);
+    const className = screen.getByRole("heading").className;
+    expect(className).not.toMatch(/trimStart|trimEnd|trimBoth/);
+  });
+
+  // Asserted via the applied CSS Module class, not `toHaveStyle` — jsdom's
+  // own CSSOM doesn't reliably resolve `margin-block-start`/`-end` (logical
+  // properties) the way it resolves `text-align`/`text-wrap` above; a
+  // `toHaveStyle({ marginBlockStart: ... })` assertion here produced a false
+  // negative even against the exact literal value the CSS Module declares,
+  // confirmed by direct experimentation, not assumed. The real, resolved
+  // margin values (from the per-font-family custom properties in
+  // component/heading.json) are verified live in a real browser instead —
+  // see guidelines/component-reviews/Heading.md.
+  it("applies the matching trim class for start/end/both", () => {
+    const { rerender } = render(<Heading trim="start">Title</Heading>);
+    expect(screen.getByRole("heading").className).toMatch(/trimStart/);
+
+    rerender(<Heading trim="end">Title</Heading>);
+    expect(screen.getByRole("heading").className).toMatch(/trimEnd/);
+
+    rerender(<Heading trim="both">Title</Heading>);
+    expect(screen.getByRole("heading").className).toMatch(/trimBoth/);
+  });
+
   it("applies weight and color tokens", () => {
     render(
       <Heading weight="semibold" color="danger">

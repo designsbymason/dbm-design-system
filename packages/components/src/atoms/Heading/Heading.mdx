@@ -15,6 +15,7 @@ export const propOrder = [
   "color",
   "fontFamily",
   "wrap",
+  "trim",
   "truncate",
   "as",
   "id",
@@ -95,6 +96,10 @@ here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element
 
 <Canvas of={HeadingStories.Wrap} />
 
+### Leading-trim (unset vs start/end/both)
+
+<Canvas of={HeadingStories.Trim} />
+
 ### truncate (line-clamp)
 
 <Canvas of={HeadingStories.Truncate} />
@@ -123,6 +128,8 @@ here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element
   announced at the right level regardless.
 - Reach for `wrap="balance"` on a short, large, multi-line heading (a hero title, an empty-state
   message) where an evenly-broken line reads more polished than the browser's default break.
+- Reach for `trim` when a heading sits directly against a border, icon, or another tightly-aligned
+  element and the ordinary font-reserved space above/below it reads as a visible misalignment.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -135,6 +142,8 @@ here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element
   choose which heading tag renders instead.
 - Don't combine `wrap="nowrap"` with a multi-line `truncate` — nowrap keeps the heading on one line,
   so there's never a second line for the clamp to act on (Heading warns about this in development).
+- Don't reach for `trim` by default on every heading — it's a fine-tuning tool for a specific tight
+  layout, not a general typography improvement; most headings read fine without it.
 
 </Callout>
 </div>
@@ -156,6 +165,11 @@ here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element
   text breaks. Reach for `truncate` when a heading has an unpredictable length that needs a hard
   cap, and `wrap="balance"` when it just needs to look more polished at whatever length it already
   is.
+- `trim`'s exact amount is calculated per `fontFamily` (Nunito and Lora have different metrics),
+  using the real, current native CSS `text-box-trim`/`text-box-edge` properties where the browser
+  supports them (Chrome/Edge 133+, Safari 18.2+ as of 2026-09-07) and a pre-calculated fallback
+  margin everywhere else, including Firefox — either way, no extra setup is needed to get a
+  reasonable result across browsers.
 
 ## Accessibility
 
@@ -171,6 +185,8 @@ here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element
   screen-reader navigation experience — this isn't enforced by the component itself, since a single
   heading has no way to know its position relative to the rest of the page.
 - No keyboard interaction — `Heading` is not an interactive element.
+- `trim` is purely visual (CSS spacing only) — it doesn't change the accessible name, role, or any
+  other assistive-technology-facing property.
 
 </Callout>
 
@@ -202,6 +218,13 @@ here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element
 <Heading level={2} lang="fr">Un titre en français</Heading>
 ```
 
+```tsx
+// Flush against a border, top and bottom
+<Heading level={2} trim="both" style={{ borderBlock: "1px solid var(--dbm-border-default)" }}>
+  Section title
+</Heading>
+```
+
 ## Design tokens used
 
 <TokenRow token="text.primary" usage="the default color" />
@@ -221,10 +244,17 @@ here — by default one of `<h1>`-`<h6>` (matching `level`), or whatever element
 <TokenRow token="font-weight.semibold" usage="weight=&quot;semibold&quot;" />
 <TokenRow token="font-weight.bold" usage="weight=&quot;bold&quot; (default)" />
 <TokenRow token="line-height.tight" usage="the heading's line height" />
+<TokenRow token="heading.trim.primary-start" usage="trim=&quot;start&quot;/&quot;both&quot; fallback margin, fontFamily=&quot;primary&quot; (Nunito)" />
+<TokenRow token="heading.trim.primary-end" usage="trim=&quot;end&quot;/&quot;both&quot; fallback margin, fontFamily=&quot;primary&quot; (Nunito)" />
+<TokenRow token="heading.trim.secondary-start" usage="trim=&quot;start&quot;/&quot;both&quot; fallback margin, fontFamily=&quot;secondary&quot; (Lora, default)" />
+<TokenRow token="heading.trim.secondary-end" usage="trim=&quot;end&quot;/&quot;both&quot; fallback margin, fontFamily=&quot;secondary&quot; (Lora, default)" />
 
 `align` and `wrap` map directly to CSS `text-align`/`text-wrap` keyword values rather than a design
 token — these are structural/behavioral properties, not colors, spacing, or other tokenized design
 values, the same category `Stack`'s `align`/`justify` props (flexbox keywords) already fall into.
+`trim` prefers the native CSS `text-box-trim`/`text-box-edge` properties where supported (no token
+involved — the browser reads the real active font's own metrics live); the four `heading.trim.*`
+tokens above are only the calculated fallback for browsers without that support yet.
 
 ## Related components
 

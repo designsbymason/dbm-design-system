@@ -404,3 +404,81 @@ plumbing:
   between the two siblings until `Text` catches up, or doing both together at that point instead.
 
 Finalized 2026-09-06.
+
+**Post-finalization addition (2026-09-07, at explicit request): implemented `trim`.** Authorized
+directly (per `06-engineering-standards.md`'s finalized-component rule) after the effort/scoping
+discussion above. Applying that same doc's three-question test for whether an authorized change
+reopens finalized status: purely additive — no existing prop's default or rendered output under an
+unchanged value changed — so **stays finalized**, with this addition getting its own scoped
+mini-pass rather than a full re-run.
+
+- **`trim?: "start" | "end" | "both"`** — leading-trim, unset by default. Two-layer implementation,
+  in this order: (1) a pre-calculated negative-margin fallback, always applied; (2) the native CSS
+  `text-box-trim`/`text-box-edge` properties, gated behind `@supports (text-box-trim: trim-start)`
+  (and the `trim-end`/`trim-both` equivalents) — where supported, this *also* zeroes the fallback
+  margin so the two don't stack and over-trim. Verified current support before writing the
+  `@supports` query rather than assuming (Chrome/Edge 133+, Safari 18.2+, not yet Firefox, as of
+  2026-09-07) — confirmed via web search, not from training-data memory, since this is a genuinely
+  still-stabilizing CSS feature.
+- **Real, empirically-measured font metrics, not estimated ones.** Used Canvas `TextMetrics` in a
+  live browser against the actual loaded Nunito/Lora webfonts (`fontBoundingBoxAscent`/`Descent`
+  minus a capital letter's own `actualBoundingBoxAscent`, at a 100px reference size) rather than
+  publishing guessed values — confirmed consistent between weight 400 and 700 for each family before
+  computing a single pair of ratios per family. Values: Nunito (`fontFamily="primary"`) `-0.30em`
+  start / `-0.35em` end; Lora (`fontFamily="secondary"`, default) `-0.31em` start / `-0.27em` end.
+  **Verified live, not just computed:** applied the calculated margins to real rendered text in the
+  actual browser and confirmed via `getBoundingClientRect()` before/after that the ink shifted by
+  the expected pixel amount (17.84px measured vs. 17.85px expected for Nunito's top trim, 18.59px
+  vs. 18.60px for Lora's) — the arithmetic alone was not treated as sufficient proof.
+- **New component-layer token file, `component/heading.json`** (`heading.trim.primary-start`/
+  `-end`, `heading.trim.secondary-start`/`-end`) — the fallback margins have no home on any existing
+  primitive scale (they're derived from font metrics, not a design/pixel grid), matching the
+  established Avatar/Badge/IconButton/Indicators precedent for exactly this situation. Documented in
+  `03-token-system-spec.md`'s "Component-layer tokens" section. CSS architecture: each
+  `fontFamilyClass` sets local `--heading-trim-start`/`--heading-trim-end` custom properties from
+  the matching global tokens, so `.trimStart`/`.trimEnd`/`.trimBoth` can reference one generic pair
+  regardless of which font family is also applied, rather than needing a combinatorial class per
+  font-family-times-trim-value pairing.
+- **Real gap found and fixed in the test suite while writing trim's own tests, not just for this
+  prop:** confirmed via direct experimentation that jsdom's `getComputedStyle` does not reliably
+  resolve `margin-block-start`/`-end` (logical properties) the way it resolves `text-align`/
+  `text-wrap` — a `toHaveStyle({ marginBlockStart: ... })` assertion produced a false negative even
+  against the exact literal value the CSS Module declares. Worked around by asserting the applied
+  CSS Module class instead (which is what the component's own logic is actually responsible for);
+  the real, resolved margin behavior is what got verified live in an actual browser instead, per the
+  bullet above. Left a comment on the test itself explaining why, so a future contributor doesn't
+  try the "obvious" `toHaveStyle` approach on a similar logical-property case and hit the same false
+  negative without knowing why.
+- Docs page: new "Leading-trim" Variants section, a Usage guidelines Do/Don't pair, a Best practices
+  note, an Accessibility note (purely visual, no AT impact), a code example, and the four new
+  `TokenRow` entries with a note that the tokens are the fallback path only — the native property,
+  where supported, doesn't consume them at all.
+- Tests: 31 → 33 (default renders no trim class; `start`/`end`/`both` each apply their own class).
+
+**Follow-up (2026-09-07, same day, at explicit request): Trim story layout revised.** Original story
+showed only 2 rows (unset vs `both`) on `bg.brand-subtle`, which was functionally correct but read as
+too subtle in a screenshot. Rewrote to show all 4 states (unset/`start`/`end`/`both`), each as its
+own labeled row in a `Stack gap={8}`, on `bg.canvas` (clearly visible box edges), with placeholder
+text changed from `"Hgy"` to `"Typography"`. Verified live in both the standalone story and the Docs
+page embed (`<Canvas of={HeadingStories.Trim} />` — no separate Docs-page change needed, it reflects
+the story automatically): all 4 rows render with correct labels and text, background resolves to
+`rgb(240, 240, 243)` consistently across rows, and consecutive rows have ~58-64px of clearance with
+no overlap. Purely a demo-presentation change — no prop, token, or component code touched — so
+doesn't reopen finalized status any more than the trim addition itself did.
+
+Self-verified: `tsc --noEmit`, `eslint` (including `.storybook`), full Vitest suite (985 tests
+package-wide, unit project), a real `pnpm build` (confirmed `HeadingTrim` now appears in the public
+`dist/index.d.ts`), and a real `pnpm --filter @dbm-design-system/tokens build` (confirmed the four
+new `--dbm-heading-trim-*` custom properties are generated). `check-component-bundle-size`: 1.42KB
+JS / 0.54KB CSS gzipped (up from 1.37KB/0.38KB, still comfortably within budget) — measured via a
+direct reproduction of the check script's own build logic rather than the script itself, which
+failed with an unrelated, pre-existing error (`Affix` build output missing) reproducible even after
+clearing its cache; the identical build logic run directly, byte-for-byte, succeeded for all 50
+components including `Affix` and `Heading`, so this reads as flakiness in the script's own
+invocation in this environment, not a real defect in any component — flagged for a separate look,
+not blocking this addition. Visually re-verified live in Storybook: native `text-box-trim` confirmed
+active in a real supporting browser (`text-box-trim: trim-both` in computed style, fallback margin
+correctly zeroed to avoid double-trimming); the underlying fallback custom-property chain confirmed
+resolving to the correct per-font values in that same real browser (unlike jsdom, which does not
+resolve it — see the test-suite finding above); the Trim gallery story's own box height measurably
+shrinks between untrimmed and `trim="both"` instances.
