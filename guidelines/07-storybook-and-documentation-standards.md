@@ -140,7 +140,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**40 of 47 atoms have a Docs page; 40 are Finalized** — [ListItem.md](component-reviews/ListItem.md)
+**41 of 47 atoms have a Docs page; 41 are Finalized** — [Text.md](component-reviews/Text.md)
 (2026-09-07) has a completed review pass and a Docs page but is not yet marked Finalized, pending
 explicit confirmation per `06-engineering-standards.md` §9's finalization rule. See
 [Link.md](component-reviews/Link.md) for the most recent Finalized one, 2026-09-07.
@@ -187,10 +187,11 @@ explicit confirmation per `06-engineering-standards.md` §9's finalization rule.
 | Kbd | Atom | Typography | ✅ | ✅ 2026-09-07 | [Kbd.md](component-reviews/Kbd.md) |
 | Link | Atom | Typography | ✅ | ✅ 2026-09-07 | [Link.md](component-reviews/Link.md) |
 | ListItem | Atom | Typography | ✅ | ✅ 2026-09-07 | [ListItem.md](component-reviews/ListItem.md) |
+| Text | Atom | Typography | ✅ | ✅ 2026-09-07 | [Text.md](component-reviews/Text.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`; membership updated 2026-09-07 per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) — `GridItem` now tracked here as atom-tier, `List` no longer is):
 - **Layout:** GridItem (atom-tier as of 2026-09-07, moved from `molecules/` to `atoms/` — see ADR-0012; `Grid` itself stays molecule-tier and isn't tracked in this atom-only list). Spacer's and Stack's own review passes are complete — see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md).
-- **Typography:** Text (`List` moved to molecule-tier 2026-09-07 per ADR-0012 — no longer tracked in this atom-only list) — Blockquote's, Code's, Heading's, Highlight's, Kbd's, Link's, and ListItem's own review passes are complete and Finalized, see the status table above and their own [Blockquote.md](component-reviews/Blockquote.md)/[Code.md](component-reviews/Code.md)/[Heading.md](component-reviews/Heading.md)/[Highlight.md](component-reviews/Highlight.md)/[Kbd.md](component-reviews/Kbd.md)/[Link.md](component-reviews/Link.md)/[ListItem.md](component-reviews/ListItem.md).
+- **Typography:** (`List` moved to molecule-tier 2026-09-07 per ADR-0012 — no longer tracked in this atom-only list) — every atom in this category is now Finalized: Blockquote's, Code's, Heading's, Highlight's, Kbd's, Link's, ListItem's, and Text's own review passes are complete, see the status table above and their own [Blockquote.md](component-reviews/Blockquote.md)/[Code.md](component-reviews/Code.md)/[Heading.md](component-reviews/Heading.md)/[Highlight.md](component-reviews/Highlight.md)/[Kbd.md](component-reviews/Kbd.md)/[Link.md](component-reviews/Link.md)/[ListItem.md](component-reviews/ListItem.md)/[Text.md](component-reviews/Text.md).
 - **Navigation:** none remaining — BackToTop's own review pass is complete, see the status table above and its own [BackToTop.md](component-reviews/BackToTop.md).
 - **Overlay:** none remaining — Backdrop's, Collapse's, and Tooltip's own review passes are
   complete, see the status table above and their own

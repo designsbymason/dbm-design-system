@@ -31,7 +31,7 @@ Text rendering primitives — Nunito for UI, Lora for editorial/display per the 
 
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
-| Text | atom | 🟢 | Base text primitive, semantic size/weight/color props |
+| Text | atom | 🟢 | Base text primitive, semantic size/weight/color props, plus align/wrap (2026-09-07, mirrors Heading) |
 | Heading | atom | 🟢 | h1–h6, maps to fluid type scale |
 | Link | atom | 🟢 | Internal/external, visited/hover states, icon-affordance for external, disabled (aria-disabled) |
 | Code (inline) | atom | 🟡 | Monospace inline snippet |

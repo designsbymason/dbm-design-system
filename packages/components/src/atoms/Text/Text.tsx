@@ -1,14 +1,16 @@
 import { cx } from "@dbm-design-system/primitives";
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
 import styles from "./Text.module.css";
 import type {
+  TextAlign,
   TextColor,
   TextElement,
   TextFontFamily,
   TextProps,
   TextSize,
   TextWeight,
+  TextWrap,
 } from "./Text.types";
 
 type TextComponent = {
@@ -56,13 +58,28 @@ const fontFamilyClass: Record<TextFontFamily, string | undefined> = {
   secondary: styles.fontFamilySecondary,
 };
 
+const alignClass: Record<TextAlign, string | undefined> = {
+  start: styles.alignStart,
+  center: styles.alignCenter,
+  end: styles.alignEnd,
+};
+
+const wrapClass: Record<TextWrap, string | undefined> = {
+  wrap: styles.wrapWrap,
+  nowrap: styles.wrapNowrap,
+  balance: styles.wrapBalance,
+  pretty: styles.wrapPretty,
+};
+
 const TextImpl = forwardRef<HTMLElement, TextProps<TextElement>>(function Text(
   {
     as,
     size = "base",
+    align,
     weight = "regular",
     color = "primary",
     fontFamily = "primary",
+    wrap,
     truncate,
     className,
     style,
@@ -77,6 +94,22 @@ const TextImpl = forwardRef<HTMLElement, TextProps<TextElement>>(function Text(
   // (the exported, generic prop type) still gives consumers full per-tag
   // checking at the call site.
   const Component = (as ?? "p") as ElementType;
+
+  const hasWarnedNowrapTruncateRef = useRef(false);
+  if (process.env.NODE_ENV !== "production") {
+    if (
+      wrap === "nowrap" &&
+      truncate !== undefined &&
+      truncate > 1 &&
+      !hasWarnedNowrapTruncateRef.current
+    ) {
+      hasWarnedNowrapTruncateRef.current = true;
+      console.warn(
+        `Text: \`wrap="nowrap"\` conflicts with \`truncate={${truncate}}\` — nowrap keeps the text on a single line, so a multi-line clamp never has more than one line to clamp. Use \`truncate={1}\`, or remove \`wrap="nowrap"\`.`,
+      );
+    }
+  }
+
   return (
     <Component
       ref={ref}
@@ -87,9 +120,11 @@ const TextImpl = forwardRef<HTMLElement, TextProps<TextElement>>(function Text(
         // this internal, abstract-`E` call site, not at the public,
         // concrete-`E` call site.
         sizeClass[size as TextSize],
+        align !== undefined && alignClass[align as TextAlign],
         weightClass[weight as TextWeight],
         colorClass[color as TextColor],
         fontFamilyClass[fontFamily as TextFontFamily],
+        wrap !== undefined && wrapClass[wrap as TextWrap],
         truncate !== undefined && styles.truncate,
         className,
       )}
@@ -111,8 +146,10 @@ const TextImpl = forwardRef<HTMLElement, TextProps<TextElement>>(function Text(
  * styled text content. For page/section headings, use `Heading` instead.
  *
  * `fontFamily="secondary"` switches to Lora, the token system's editorial
- * family, for longer-form reading content. `truncate` clamps to a fixed
- * number of lines with an ellipsis.
+ * family, for longer-form reading content. `align` sets text alignment;
+ * `wrap` controls line-wrapping (e.g. `wrap="balance"` for a more evenly-
+ * broken multi-line paragraph) — both mirror `Heading`'s own props of the
+ * same name. `truncate` clamps to a fixed number of lines with an ellipsis.
  *
  * @example
  * ```tsx
@@ -120,6 +157,7 @@ const TextImpl = forwardRef<HTMLElement, TextProps<TextElement>>(function Text(
  * <Text as="span" weight="semibold">Inline emphasis</Text>
  * <Text as="label" htmlFor="email">Email address</Text>
  * <Text fontFamily="secondary">Long-form editorial copy set in Lora.</Text>
+ * <Text align="center" wrap="balance">A centered, evenly-wrapped paragraph.</Text>
  * <Text truncate={2}>A long description clamped to two lines…</Text>
  * ```
  */

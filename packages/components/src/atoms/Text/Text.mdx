@@ -1,0 +1,233 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Heading } from "../Heading";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Text } from "./Text";
+import * as TextStories from "./Text.stories";
+
+export const propOrder = [
+  "children",
+  "size",
+  "align",
+  "weight",
+  "color",
+  "fontFamily",
+  "wrap",
+  "truncate",
+  "as",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={TextStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Text" tier="Atom" />
+
+The base text primitive for body copy, with semantic `size`/`weight`/`color` props — the same role
+as [MUI's `Typography`](https://mui.com/material-ui/react-typography/) (`variant="body1"`) or
+[Chakra's `Text`](https://chakra-ui.com/docs/components/text). Renders a `<p>` by default; `as`
+switches to `span`/`div`/`label`/`legend` for inline or other text-container contexts — a curated
+set of sensible tags, not `Box`'s fully-open polymorphism, since `Text` specifically represents
+styled text content. For page/section headings, use `Heading` instead — the two atoms share the
+same `size`/`weight`/`color`/`fontFamily` scale, and now the same `align`/`wrap` props too, so
+switching between them never means learning a second API.
+
+### Import
+
+```tsx
+import { Text } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TextStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={TextStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Text` also accepts any other native attribute of its rendered element beyond what's listed here —
+by default a `<p>`, or whatever element `as` specifies (`span`, `div`, `label`, `legend`) — e.g.
+`htmlFor` when `as="label"`, passed straight through.
+
+<PropertiesTable of={TextStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={TextStories.AllSizes} />
+
+### All weights
+
+<Canvas of={TextStories.AllWeights} />
+
+### All colors
+
+<Canvas of={TextStories.AllColors} />
+
+### Font family (primary vs secondary/editorial)
+
+<Canvas of={TextStories.FontFamily} />
+
+### Text alignment (start/center/end)
+
+<Canvas of={TextStories.Align} />
+
+### Line-wrapping (wrap vs balance vs pretty)
+
+<Canvas of={TextStories.Wrap} />
+
+### truncate (line-clamp)
+
+<Canvas of={TextStories.Truncate} />
+
+### Polymorphic: as="label" (native props type-check, e.g. htmlFor)
+
+<Canvas of={TextStories.AsLabel} />
+
+### Narrow viewport (wraps, never overflows)
+
+<Canvas of={TextStories.NarrowViewport} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Text` for body copy, helper text, labels, and any other styled text content that isn't a
+  page/section heading.
+- Reach for `as="span"` for inline emphasis inside a larger block of copy, and `as="label"` when the
+  text is a real form label (pair it with `htmlFor`).
+- Set `fontFamily="secondary"` for longer-form reading content (an article, a long description)
+  where the editorial serif reads better than the UI font.
+- Reach for `wrap="balance"` on a short, prominent line (an empty-state message, a card title) where
+  an evenly-broken line reads more polished than the browser's default break.
+- Use `truncate` when a line count genuinely needs a hard cap (a card summary, a table cell) —
+  not as a substitute for a properly-sized container.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Text` for a page or section heading — use `Heading`, which carries the correct
+  semantic level and document-outline behavior `Text` doesn't.
+- Don't combine `wrap="nowrap"` with a multi-line `truncate` — nowrap keeps the text on one line,
+  so there's never a second line for the clamp to act on (`Text` warns about this in development).
+- Don't reach for `align` by default — it's unset for a reason (inheriting the surrounding layout's
+  own alignment); set it explicitly only when a specific block of text needs to differ from its
+  container.
+- Don't use `color="disabled"` to just mean "less important" — it's a specific, WCAG-exempt
+  disabled-state pairing; use `color="tertiary"` or `color="secondary"` for de-emphasized-but-still-
+  active text instead.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `size` draws from the full 11-step font-size scale (`xs`-`6xl`), the same scale `Heading` uses —
+  reach for the larger steps only when `Text` is standing in for prominent, heading-adjacent copy,
+  not for ordinary body text.
+- `align`/`wrap` behave identically to `Heading`'s own props of the same name — `align` uses logical
+  (`start`/`end`, RTL-safe) keywords rather than `left`/`right`, and `wrap="balance"`/`"pretty"` only
+  visibly differ from the browser default on genuinely multi-line text.
+- `truncate` and `wrap="balance"`/`"pretty"` solve different problems — `truncate` hides overflow
+  text behind an ellipsis after a fixed number of lines; `wrap` only changes *where* the visible
+  text breaks, never hiding any of it.
+- Prefer composing layout (`Stack`, `margin`-free by design) around `Text` rather than reaching for
+  `style`/`className` for spacing — `Text` intentionally ships with `margin: 0` so it never fights
+  with a parent layout's own spacing.
+
+## Accessibility
+
+<Callout tone="info" title="A plain text container — no ARIA of its own">
+
+- Renders as whatever native element `as` specifies; none of `p`/`span`/`div`/`label`/`legend`
+  require any ARIA attributes of their own to be accessible.
+- Automated accessibility check verified against every `as` value (`p`, `span`, `div`, `label`,
+  `legend`), not just the default — per the same convention that caught a real violation on
+  `Avatar` once `as` changed its underlying element (`06-engineering-standards.md` §9).
+- No keyboard interaction — `Text` is not an interactive element.
+- `as="label"` renders a real `<label>`; pair it with `htmlFor` pointing at the control it labels
+  (see the Code examples below) so assistive technology associates the two correctly. `Text` itself
+  has no way to verify that association exists.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Text size="sm" color="secondary">Helper text</Text>
+```
+
+```tsx
+<Text as="span" weight="semibold">Inline emphasis</Text>
+```
+
+```tsx
+// A native attribute (htmlFor), passed straight through when as="label"
+<Text as="label" htmlFor="email">Email address</Text>
+```
+
+```tsx
+<Text fontFamily="secondary">Long-form editorial copy set in Lora.</Text>
+```
+
+```tsx
+// A centered, evenly-wrapped short line
+<Text align="center" wrap="balance">A centered, evenly-wrapped paragraph.</Text>
+```
+
+```tsx
+<Text truncate={2}>A long description clamped to two lines…</Text>
+```
+
+## Design tokens used
+
+<TokenRow token="text.primary" usage="the default color" />
+<TokenRow token="text.secondary" usage="color=&quot;secondary&quot;" />
+<TokenRow token="text.tertiary" usage="color=&quot;tertiary&quot;" />
+<TokenRow token="text.disabled" usage="color=&quot;disabled&quot;" />
+<TokenRow token="text.link" usage="color=&quot;link&quot;" />
+<TokenRow token="text.danger" usage="color=&quot;danger&quot;" />
+<TokenRow token="text.warning" usage="color=&quot;warning&quot;" />
+<TokenRow token="text.success" usage="color=&quot;success&quot;" />
+<TokenRow token="text.info" usage="color=&quot;info&quot;" />
+<TokenRow token="font-family.primary" usage="Nunito, the default UI font family" />
+<TokenRow token="font-family.secondary" usage="Lora, via fontFamily=&quot;secondary&quot;" />
+<TokenRow token="font-size.xs–font-size.6xl" usage="the full size scale — every size step maps to one token" />
+<TokenRow token="font-weight.regular" usage="weight=&quot;regular&quot; (default)" />
+<TokenRow token="font-weight.medium" usage="weight=&quot;medium&quot;" />
+<TokenRow token="font-weight.semibold" usage="weight=&quot;semibold&quot;" />
+<TokenRow token="font-weight.bold" usage="weight=&quot;bold&quot;" />
+<TokenRow token="line-height.normal" usage="the text's line height" />
+
+`align` and `wrap` map directly to CSS `text-align`/`text-wrap` keyword values rather than a design
+token — these are structural/behavioral properties, not colors, spacing, or other tokenized design
+values, the same category `Heading`'s own `align`/`wrap` (and `Stack`'s `align`/`justify`) already
+fall into.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Heading"
+  description="The page/section-title atom — shares the same size/weight/color/fontFamily/align/wrap scale"
+  href="/?path=/story/atoms-typography-heading--default"
+>
+  <Heading level={3} size="lg">A heading</Heading>
+</RelatedCard>
+</div>

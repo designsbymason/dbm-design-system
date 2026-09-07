@@ -1,10 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Text } from "./Text";
 
 describe("Text", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("renders a <p> by default", () => {
     render(<Text>Body copy</Text>);
     expect(screen.getByText("Body copy").tagName).toBe("P");
@@ -65,6 +69,46 @@ describe("Text", () => {
     expect(screen.getByTestId("text")).toHaveAttribute("for", "my-input");
   });
 
+  it("applies align as a text-align value", () => {
+    render(<Text align="center">Centered</Text>);
+    expect(screen.getByText("Centered")).toHaveStyle({ textAlign: "center" });
+  });
+
+  it("does not apply a text-align style by default", () => {
+    render(<Text data-testid="text">Default alignment</Text>);
+    expect(screen.getByTestId("text").style.textAlign).toBe("");
+  });
+
+  it("applies wrap as a text-wrap value", () => {
+    render(<Text wrap="balance">Balanced</Text>);
+    expect(screen.getByText("Balanced")).toHaveStyle({ textWrap: "balance" });
+  });
+
+  it("does not apply a text-wrap style by default", () => {
+    render(<Text data-testid="text">Default wrap</Text>);
+    expect(screen.getByTestId("text").style.textWrap).toBe("");
+  });
+
+  it("warns when wrap=\"nowrap\" is combined with a multi-line truncate", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(
+      <Text wrap="nowrap" truncate={2}>
+        Conflicting
+      </Text>,
+    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('wrap="nowrap"'));
+  });
+
+  it("does not warn when wrap=\"nowrap\" is combined with truncate={1}", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(
+      <Text wrap="nowrap" truncate={1}>
+        Fine
+      </Text>,
+    );
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
   it("applies the secondary (editorial) font family", () => {
     render(<Text fontFamily="secondary">Editorial copy</Text>);
     expect(screen.getByText("Editorial copy")).toHaveStyle({
@@ -106,5 +150,23 @@ describe("Text", () => {
     const { container } = render(<Text>Accessible body copy</Text>);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  describe("accessibility across `as` values", () => {
+    // Per the established convention (confirmed real finding, Avatar
+    // 2026-08-15: a role valid on the default element became an
+    // aria-allowed-role violation once `as` changed the underlying
+    // element) — a polymorphic component's automated a11y check must also
+    // run against non-default `as` values, not just the default. `Text`
+    // itself sets no role, so none of these are expected to find a
+    // violation, but the coverage gap (only ever testing `<p>`) was real.
+    it.each(["span", "div", "label", "legend"] as const)(
+      "as=\"%s\" has no accessibility violations",
+      async (as) => {
+        const { container } = render(<Text as={as}>Accessible text</Text>);
+        const results = await axe(container);
+        expect(results).toHaveNoViolations();
+      },
+    );
   });
 });
