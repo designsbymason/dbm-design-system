@@ -43,6 +43,16 @@
 }
 
 .icon {
-  margin-inline-start: 0.25em;
-  vertical-align: -0.125em;
+  margin-inline-start: var(--dbm-link-icon-offset-inline);
+  vertical-align: var(--dbm-link-icon-vertical-align);
+}
+
+/* Mirrors Button's own `.disabled` treatment (`aria-disabled` +
+   click-guard, since `<a>` has no native `disabled` attribute to style
+   against) — deliberately no `pointer-events: none` here, matching
+   Button's own precedent, since that would also suppress the
+   `cursor: not-allowed` this class relies on. */
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
 }

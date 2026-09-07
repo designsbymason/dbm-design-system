@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /**
  * Controls when the underline is visible. `always` (the default) is the
@@ -18,6 +18,8 @@ export type LinkUnderline = "always" | "hover" | "none";
 export interface LinkProps extends ComponentPropsWithoutRef<"a"> {
   /** The link destination. */
   href: string;
+  /** The link text/content. */
+  children?: ReactNode;
   /**
    * Applies external-link affordances: opens in a new tab
    * (`target="_blank"`), sets `rel="noopener noreferrer"`, appends a small
@@ -40,6 +42,57 @@ export interface LinkProps extends ComponentPropsWithoutRef<"a"> {
    * @default false
    */
   asChild?: boolean;
-  /** The link text/content. */
-  children?: ReactNode;
+  /**
+   * Disables the link: applies `aria-disabled`, blocks click/keyboard
+   * activation, and dims the visual treatment. Native `<a>` has no
+   * `disabled` attribute (unlike `Button`'s own `<button>`-backed default),
+   * so this is `aria-disabled` plus a click-handler guard instead — the
+   * link stays focusable and its `href` stays present, per WAI-ARIA APG
+   * guidance for `aria-disabled` (unlike native `disabled`, which removes
+   * focusability).
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * Native anchor `target`. Defaults to `"_blank"` when the link is
+   * external (see `external`); pass explicitly to override (e.g. force
+   * same-tab navigation for an external `href`).
+   */
+  target?: AnchorHTMLAttributes<HTMLAnchorElement>["target"];
+  /**
+   * Native anchor `rel`. Defaults to `"noopener noreferrer"` when the link
+   * is external (see `external`); pass explicitly to override or extend
+   * (e.g. `rel="nofollow noopener noreferrer"`).
+   */
+  rel?: string;
+  /**
+   * Native anchor `download` — prompts a file download instead of
+   * navigating, optionally with a suggested filename (`download="report.pdf"`).
+   */
+  download?: AnchorHTMLAttributes<HTMLAnchorElement>["download"];
+  /**
+   * Accessible name override. Needed when `children` isn't readable text on
+   * its own (an icon-only link, a link wrapping an image with no
+   * descriptive surrounding context) — screen readers announce this instead
+   * of the link's visible content.
+   */
+  "aria-label"?: string;
+  /** References the id of an element that labels this link, as an alternative to `aria-label`. */
+  "aria-labelledby"?: string;
+  /**
+   * Standard DOM id. Needed when another element's `aria-labelledby`/
+   * `aria-describedby` must point at this component, or a test/router
+   * needs a stable anchor.
+   */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }

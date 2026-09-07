@@ -32,7 +32,7 @@ Text rendering primitives — Nunito for UI, Lora for editorial/display per the 
 |---|---|---|---|
 | Text | atom | 🟢 | Base text primitive, semantic size/weight/color props |
 | Heading | atom | 🟢 | h1–h6, maps to fluid type scale |
-| Link | atom | 🟢 | Internal/external, visited/hover states, icon-affordance for external |
+| Link | atom | 🟢 | Internal/external, visited/hover states, icon-affordance for external, disabled (aria-disabled) |
 | Code (inline) | atom | 🟡 | Monospace inline snippet |
 | CodeBlock | molecule | 🟡 | Multi-line, syntax-highlighted, copy button |
 | Blockquote | atom | 🟡 | Uses Lora for editorial feel |

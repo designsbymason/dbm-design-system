@@ -1,0 +1,14 @@
+{
+  "link": {
+    "icon-offset-inline": {
+      "$type": "dimension",
+      "$value": "0.25em",
+      "$description": "Gap between Link's own text content and its trailing external-link icon. Deliberately em-relative rather than a primitive space.* step (all of which are absolute px) — Link inherits its font size from surrounding context rather than owning a size scale, so the icon's own offset needs to scale with whatever text size it happens to sit in (a Link inside a large Heading vs. small caption text), not stay a fixed pixel gap regardless of context. Value chosen to visually match the primitive space.1 (4px) gap at Link's own base font-size (font-size.sm, 14px: 0.25em ≈ 3.5px), the same gap Button/Tag use via space.1 for their own icon-to-label spacing, without hardcoding a px value that would only be correct at one font size."
+    },
+    "icon-vertical-align": {
+      "$type": "dimension",
+      "$value": "-0.125em",
+      "$description": "Vertical nudge (CSS vertical-align) aligning the external-link icon's optical center with the surrounding text's x-height rather than its own inline-block baseline, which sits visibly low relative to lowercase text. Also em-relative for the same reason as icon-offset-inline — the correct nudge is proportional to the current font size, not a fixed pixel amount. Value found empirically (2026-09-07) by visual inspection against real rendered text at Link's base size; re-check if the icon's own intrinsic proportions or Link's base font size ever change."
+    }
+  }
+}

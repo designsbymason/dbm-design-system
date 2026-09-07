@@ -81,8 +81,24 @@ export function RelatedCard({
           spare). `overflow: hidden` is a safety net, not the intended
           normal case — every preview here is meant to fit inside this
           box, not be clipped by it. */}
+      {/* `inert` (found live, 2026-09-07 — Link.mdx's own Text/Button cards,
+          user-reported): a preview can itself render a real interactive
+          element with a real destination (a `Link` with a working `href`,
+          a `Button asChild` wrapping a real anchor) — clicking straight into
+          it navigates the whole Docs page to that (usually nonexistent)
+          route, "blank page," bypassing this card's own name/description
+          link entirely. `pointer-events: none` alone doesn't fully solve
+          this: it blocks mouse clicks but not Tab-to-focus-then-Enter, which
+          activates a native `<a>`/`<button>` without going through
+          pointer-events at all. `inert` blocks both — pointer and keyboard
+          — and also removes the subtree from the accessibility tree's
+          normal tab order, matching the actual intent ("a small live
+          rendering," not something meant to be interacted with on its own;
+          the card's own link at the bottom is the only real navigation
+          affordance a preview should offer). */}
       <div
         className="sb-unstyled"
+        inert
         style={{
           alignItems: "center",
           color: "var(--dbm-text-primary)",

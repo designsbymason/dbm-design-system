@@ -1,0 +1,218 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../Button";
+import { Text } from "../Text";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Link } from "./Link";
+import * as LinkStories from "./Link.stories";
+
+export const propOrder = [
+  "href",
+  "children",
+  "external",
+  "underline",
+  "asChild",
+  "disabled",
+  "target",
+  "rel",
+  "download",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={LinkStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Link" tier="Atom" />
+
+A styled anchor with automatic external-link affordances — opens in a new tab, sets
+`rel="noopener noreferrer"`, appends a trailing icon, and adds a visually-hidden "(opens in a new
+tab)" cue for screen reader users, all auto-detected from `href`. Supports `asChild` (via Radix
+Slot) for composing with a router's own Link component, and a WCAG-conscious `underline` default
+that stays visible for keyboard/touch users who never trigger `:hover`.
+
+### Import
+
+```tsx
+import { Link } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={LinkStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={LinkStories.Playground}
+  exclude={["asChild", "target", "rel", "download", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Link` also accepts any other native `<a>` attribute beyond what's listed here (e.g. `hrefLang`,
+`referrerPolicy`) — passed straight through to the underlying element.
+
+<PropertiesTable of={LinkStories} order={propOrder} />
+
+## Variants
+
+### Internal
+
+<Canvas of={LinkStories.Internal} />
+
+### External (auto-detected, shows icon)
+
+<Canvas of={LinkStories.External} />
+
+### Forced external via explicit prop
+
+<Canvas of={LinkStories.ForcedExternal} />
+
+### asChild (composes with a custom element)
+
+<Canvas of={LinkStories.AsChild} />
+
+### Disabled (aria-disabled, click blocked)
+
+<Canvas of={LinkStories.Disabled} />
+
+### Inline within body text
+
+<Canvas of={LinkStories.InParagraph} />
+
+### underline variants (always / hover / none)
+
+<Canvas of={LinkStories.UnderlineVariants} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Keep `underline="always"` (the default) for any link sitting inline within body text — it's the
+  only variant that stays distinguishable from surrounding text for keyboard/touch users, who never
+  trigger `:hover`.
+- Let `external` auto-detect from `href` for the common case; pass it explicitly only when the
+  auto-detection would get it wrong (e.g. a relative path that still needs new-tab behavior, or an
+  absolute URL that should deliberately stay same-tab).
+- Use `asChild` to compose with a router's own Link component so client-side navigation and this
+  system's styling/external-link logic both apply to the same element.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't switch to `underline="hover"` or `"none"` for a link embedded in running text — color alone
+  isn't a sufficient distinguishing signal per WCAG 1.4.1, and neither variant reveals anything to a
+  keyboard or touch user. Reserve those for links with no surrounding flowing text to confuse them
+  with (e.g. navigation).
+- Don't reach for `disabled` as a way to visually hide a link that shouldn't exist yet — it still
+  renders (dimmed, `aria-disabled`, focusable) and communicates "temporarily unavailable," not "not
+  here." Simply don't render the `Link` if it shouldn't be there at all.
+- Don't pass a literal `href` on `asChild`'s slotted child expecting it to win — `Link`'s own `href`
+  is what gets merged onto the child; a child-supplied `href` isn't the mechanism this pattern is
+  built around (see the asChild story's own source for the expected shape).
+
+</Callout>
+</div>
+
+## Best practices
+
+- `external` detection covers absolute `http(s)://` and protocol-relative `//` URLs — a relative
+  path (`/docs`, `../report`) is never treated as external automatically, even if it happens to
+  navigate off-site via a redirect.
+- A disabled link is still perceivable and focusable (per WAI-ARIA APG guidance for
+  `aria-disabled`) — screen reader and keyboard users can still find it and hear that it's
+  unavailable, rather than it silently vanishing from the page.
+- When composing `asChild` with a real router's Link component, that component's own props (e.g. a
+  router's `to`) still apply as usual — `Link`'s own `href`/`target`/`rel`/`aria-disabled`/`onClick`
+  merge on top via Radix `Slot`, they don't replace the router component's own navigation behavior.
+
+## Accessibility
+
+<Callout tone="info" title="Underline is the primary non-color signal — verified, not assumed">
+
+- WCAG 1.4.1 requires a link to be distinguishable from surrounding text by more than color alone,
+  unless the color contrast between link and body text is at least 3:1 — `text.link` vs.
+  `text.primary` measures 2.99:1 light / 1.65:1 dark in this system (checked directly, brand-agnostic
+  across all 4 themes), comfortably under that floor. This is exactly why `underline="always"` is
+  the default rather than `"hover"`.
+- External links get a visually-hidden "(opens in a new tab)" cue (via `VisuallyHidden`) in addition
+  to the visible icon, so screen reader users get the same warning sighted users get from the icon
+  alone.
+- `disabled` uses `aria-disabled` plus a click-handler guard, not a native `disabled` attribute —
+  `<a>` has no such attribute. The link stays in the tab order and keeps its `href`, matching
+  WAI-ARIA APG guidance (unlike native `disabled`, which removes focusability entirely).
+- Pass `aria-label` when `children` isn't readable text on its own — an icon-only link, or a link
+  wrapping an image with no descriptive surrounding text.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Text>Read the <Link href="/docs">documentation</Link> for more detail.</Text>
+```
+
+```tsx
+// External detection is automatic — this one gets the new-tab + icon treatment for free
+<Link href="https://example.com">External reference</Link>
+```
+
+```tsx
+// Composing with a router's own Link component
+<Link asChild href="/docs">
+  <RouterLink to="/docs">Docs</RouterLink>
+</Link>
+```
+
+```tsx
+// Temporarily unavailable, not removed from the page
+<Link href="/report" disabled>Report (unavailable until next quarter)</Link>
+```
+
+```tsx
+// A native <a> attribute (download) passed straight through
+<Link href="/report.pdf" download="annual-report.pdf">Download report</Link>
+```
+
+## Design tokens used
+
+<TokenRow token="text.link" usage="the link's text color, in both default and :visited states" />
+<TokenRow token="border.focus" usage="the focus-visible outline" />
+<TokenRow token="font-family.primary" usage="the link's own font family" />
+<TokenRow token="motion.duration.fast" usage="the hover-underline reveal transition (underline='hover')" />
+<TokenRow token="motion.easing.standard" usage="the hover-underline reveal transition" />
+<TokenRow token="link.icon-offset-inline" usage="gap between the link text and the external-link icon (component-layer token, em-relative to scale with inherited font size)" />
+<TokenRow token="link.icon-vertical-align" usage="optical alignment of the external-link icon against the surrounding text (component-layer token)" />
+<TokenRow token="opacity.40" usage="the disabled state's dimmed opacity" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Text"
+  description="The body-copy atom a Link is typically embedded within, inline in a sentence"
+  href="/?path=/story/atoms-typography-text--default"
+>
+  <Text>Read the <Link href="/docs">docs</Link>.</Text>
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="The primary interactive action element — also supports asChild, for the reverse composition (a Button styled onto a Link)"
+  href="/?path=/story/atoms-inputs-button--playground"
+>
+  <Button asChild size="sm">
+    <a href="/next">Continue</a>
+  </Button>
+</RelatedCard>
+</div>
