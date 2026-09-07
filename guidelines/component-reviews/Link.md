@@ -137,7 +137,10 @@ the standing reporting convention):
    applying the fix for real. A permanent regression test was added
    (`"blocks a click handler declared directly on the asChild child, not just one passed to Link
    itself"`). The observable public behavior/API is unchanged — this is an internal mechanism fix,
-   not a prop or default change.
+   not a prop or default change. **Recorded as a standing rule** in
+   `05-component-api-conventions.md` §3 (the `disabled` pattern bullets) — added during this
+   session's own guidelines audit, 2026-09-07, so a future `asChild`-supporting component doesn't
+   rediscover this the same way.
 
 ## Verification
 
