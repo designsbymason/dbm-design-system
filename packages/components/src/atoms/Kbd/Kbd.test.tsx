@@ -28,6 +28,27 @@ describe("Kbd", () => {
     expect(screen.getByText("Esc")).toHaveClass("custom");
   });
 
+  it("applies style", () => {
+    render(<Kbd style={{ fontWeight: 700 }}>Esc</Kbd>);
+    expect(screen.getByText("Esc")).toHaveStyle({ fontWeight: "700" });
+  });
+
+  it("applies id and data-testid", () => {
+    render(
+      <Kbd id="my-kbd" data-testid="kbd-1">
+        Esc
+      </Kbd>,
+    );
+    const el = screen.getByTestId("kbd-1");
+    expect(el.id).toBe("my-kbd");
+    expect(el.tagName).toBe("KBD");
+  });
+
+  it("applies aria-label for symbol-only content", () => {
+    render(<Kbd aria-label="Command">⌘</Kbd>);
+    expect(screen.getByLabelText("Command")).toHaveTextContent("⌘");
+  });
+
   it("supports composing multiple Kbd for a chord", () => {
     render(
       <span>

@@ -1,0 +1,166 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Code } from "../Code";
+import { Text } from "../Text";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Kbd } from "./Kbd";
+import * as KbdStories from "./Kbd.stories";
+
+export const propOrder = [
+  "children",
+  "aria-label",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={KbdStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Kbd" tier="Atom" />
+
+A keyboard shortcut or key name, styled like a physical keycap — a raised, bordered box with a
+subtle bottom-edge shadow, distinct from `Code`'s flat inline-reference pill. Renders a native
+`<kbd>` (semantically "a single key or combination of keys from a keyboard"). Compose multiple
+side by side for a chord, e.g. `⌘` + `K`.
+
+### Import
+
+```tsx
+import { Kbd } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={KbdStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={KbdStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Kbd` also accepts any other native `<kbd>` attribute beyond what's listed here (e.g. `onClick`,
+`title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={KbdStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={KbdStories.Default} />
+
+### A keyboard chord
+
+<Canvas of={KbdStories.Chord} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Kbd` for an actual keyboard key or shortcut — a single key (`Esc`), a symbol (`⌘`), or a
+  chord composed from multiple `Kbd`s side by side (`⌘` + `K`).
+- Pass `aria-label` on a symbol-only `Kbd` (`⌘`, `⇧`, `⌥`, `⌃`) so screen readers announce a
+  plain-language name instead of the raw glyph.
+- Let its font size stay fixed — a keycap should read as a consistent visual regardless of the
+  surrounding text size, the same way a physical key doesn't resize with the sentence around it.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Kbd` for a literal code reference or identifier — use `Code` instead, which is
+  visually similar (monospace, both compact) but reads as running text rather than a physical key.
+- Don't rely on the raw glyph alone for a symbol key — without `aria-label`, `⌘` may be announced
+  inconsistently (or not at all) across screen readers.
+- Don't override the font size to match surrounding text — that defeats the fixed-size keycap
+  design (see `Best practices` below).
+
+</Callout>
+</div>
+
+## Best practices
+
+- `Kbd` and `Code` are visually similar (both monospace, both compact) but serve different roles —
+  `Kbd` represents a physical keyboard key, `Code` marks up a literal code reference. Don't use one
+  for the other's job even though the visual difference is subtle.
+- For a chord, compose multiple `Kbd`s with a plain `+` (or similar) between them, as running text
+  — there's no dedicated chord-group sub-component, since a plain composition already reads clearly
+  and doesn't force a fixed separator convention on every locale/platform.
+- Keep the label short — a full word (`Esc`, `Enter`, `Tab`) or a single symbol reads well; a long
+  phrase doesn't fit the keycap's compact, fixed-size treatment.
+
+## Accessibility
+
+<Callout tone="info" title="Symbol keys need an explicit label">
+
+- Renders a native `<kbd>`, which already communicates "this is a keyboard key" to assistive
+  technology with no ARIA required for text content like `"Esc"`.
+- **Symbol-only content needs `aria-label`.** A Unicode glyph like `⌘` isn't reliably announced by
+  screen readers on its own — pass `aria-label="Command"` (or the equivalent plain-language name)
+  so it announces something meaningful.
+- No keyboard interaction — `Kbd` is not an interactive element itself; it documents a shortcut,
+  it doesn't trigger one.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Kbd>Esc</Kbd>
+```
+
+```tsx
+// A chord, composed from multiple Kbd
+<Text as="span">
+  <Kbd aria-label="Command">⌘</Kbd> + <Kbd>K</Kbd> to open the command palette
+</Text>
+```
+
+```tsx
+// A native <kbd> attribute (title) passed straight through
+<Kbd title="Escape key">Esc</Kbd>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="the keycap's background" />
+<TokenRow token="border.default" usage="the keycap's border" />
+<TokenRow token="border.neutral" usage="the keycap's bottom-edge shadow color, for the raised effect" />
+<TokenRow token="border-width.2" usage="the keycap's bottom-edge shadow offset, for the raised effect" />
+<TokenRow token="text.secondary" usage="the key label's text color" />
+<TokenRow token="radius.xs" usage="the keycap's corner radius" />
+<TokenRow token="space.1" usage="the keycap's block (vertical) padding" />
+<TokenRow token="space.2" usage="the keycap's inline (horizontal) padding" />
+<TokenRow token="font-family.mono" usage="the monospace font stack" />
+<TokenRow token="font-size.xs" usage="the key label's fixed font size" />
+<TokenRow token="line-height.tight" usage="the key label's line height" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Code"
+  description="Visually similar (monospace, compact) but for a literal code reference within running text, not a keyboard key"
+  href="/?path=/story/atoms-typography-code--default"
+>
+  <Code>pnpm install</Code>
+</RelatedCard>
+<RelatedCard
+  name="Text"
+  description="The body-copy atom a Kbd chord is typically embedded within, inline in a sentence"
+  href="/?path=/story/atoms-typography-text--default"
+>
+  <Text>Press <Kbd>Esc</Kbd> to close.</Text>
+</RelatedCard>
+</div>
