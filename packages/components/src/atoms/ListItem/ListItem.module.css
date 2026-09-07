@@ -2,15 +2,27 @@
   line-height: var(--dbm-line-height-normal);
 }
 
-.hasIcon {
+/* Only ever applied to the <li> itself, deliberately, when a custom `icon`
+   replaces the native bullet — never merely because `trailing` is present
+   (that only needs `.row`'s layout, on an inner wrapper, not the <li>'s
+   own marker suppressed). */
+.noMarker {
+  list-style: none;
+}
+
+.row {
   align-items: center;
   display: flex;
   gap: var(--dbm-space-2);
-  list-style: none;
 }
 
 .icon {
   flex-shrink: 0;
+}
+
+.trailing {
+  flex-shrink: 0;
+  margin-inline-start: auto;
 }
 
 .interactive {
@@ -18,6 +30,7 @@
   border-radius: var(--dbm-radius-md);
   cursor: pointer;
   display: flex;
+  flex: 1 1 auto;
   gap: var(--dbm-space-2);
   padding-block: var(--dbm-space-2);
   padding-inline: var(--dbm-space-3);
@@ -25,7 +38,7 @@
     var(--dbm-motion-easing-standard);
 }
 
-.interactive:hover {
+.interactive:not(.disabled):hover {
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
@@ -39,6 +52,16 @@
   font-weight: var(--dbm-font-weight-semibold);
 }
 
-.selected:hover {
+.selected:not(.disabled):hover {
   background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* Mirrors Button's/Link's own `.disabled` treatment (`aria-disabled` +
+   click-guard, since the interactive surface is a `role="button"` span,
+   not a real `<button>`) — deliberately no `pointer-events: none`,
+   matching that same precedent, since it would also suppress the
+   `cursor: not-allowed` this class relies on. */
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
 }

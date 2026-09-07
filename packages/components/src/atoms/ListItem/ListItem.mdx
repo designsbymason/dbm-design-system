@@ -1,0 +1,207 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../Badge";
+import { List } from "../../molecules/List";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { ListItem } from "./ListItem";
+import * as ListItemStories from "./ListItem.stories";
+
+export const propOrder = [
+  "children",
+  "icon",
+  "interactive",
+  "selected",
+  "disabled",
+  "trailing",
+  "aria-label",
+  "aria-labelledby",
+  "value",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ListItemStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ListItem" tier="Atom" />
+
+A single item within a `List` — a native `<li>` with an optional custom marker `icon`, trailing
+content (a count, an icon button, a switch), and an `interactive` mode that turns the item into a
+focusable, keyboard-activatable row for nav-menu-style lists, with `selected` and `disabled`
+states.
+
+### Import
+
+```tsx
+import { ListItem } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ListItemStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ListItemStories.Playground}
+  exclude={["icon", "trailing", "aria-labelledby", "value", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`ListItem` also accepts any other native `<li>` attribute beyond what's listed here (e.g.
+`onMouseEnter`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={ListItemStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={ListItemStories.Default} />
+
+### Custom icon marker
+
+<Canvas of={ListItemStories.CustomIconMarker} />
+
+### Trailing content
+
+<Canvas of={ListItemStories.TrailingContent} />
+
+### Interactive (nav-menu-style list)
+
+<Canvas of={ListItemStories.Interactive} />
+
+### Disabled (aria-disabled, click blocked)
+
+<Canvas of={ListItemStories.Disabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `interactive` for a nav-menu-style list where each item navigates or triggers an action; leave
+  it unset for a plain content list (an article's bullet points, a summary of steps).
+- Pass `trailing` for a count, an icon button, or a switch that sits at the end of the row — it
+  renders as a sibling of the item's own clickable surface, so it's its own separate tab stop, not
+  nested inside a button-in-a-button.
+- Pass `aria-label` on an icon-only `interactive` item (no visible text) — `ListItem` warns once in
+  development if it detects one with no accessible name at all.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `selected` or `disabled` without `interactive` — neither has anything to attach to
+  (no interactive surface exists), and `ListItem` warns once in development if you do.
+- Don't nest a focusable element (a real `<button>`, another interactive `ListItem`) inside
+  `children` on an `interactive` item — that's a control inside a control. Use `trailing` instead,
+  which is deliberately rendered outside the clickable surface for exactly this reason.
+- Don't rely on `trailing`'s content to be announced as part of the row's own accessible name —
+  it's a sibling specifically so it doesn't affect the row's own name computation.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `interactive` renders its clickable surface as an inner `<span role="button">`, not the `<li>`
+  itself — putting `role="button"` directly on an `<li>` fails WAI-ARIA's required-owned-elements
+  check on an ancestor `<ul role="list">` (confirmed with axe-core, a real measured violation, not
+  a style preference). Real implementations of this exact pattern (e.g. MUI's `ListItemButton`) do
+  the same.
+- A custom `icon` marker and the ancestor `List`'s own `marker="none"` both suppress the native
+  bullet — either one on its own already triggers the `role="listitem"` fallback this component
+  needs for Safari/VoiceOver, so combining them doesn't require anything extra.
+- Keep `trailing` content compact — a count, a single icon button, a switch. It's pushed to the
+  far end of the row automatically; it isn't a second content column.
+
+## Accessibility
+
+<Callout tone="info" title="The interactive surface, not the <li>, carries the accessible name">
+
+- `aria-label`/`aria-labelledby` apply to the inner `<span role="button">` when `interactive` is
+  set, not the outer `<li>` — the span is the actual focusable, name-bearing control; the `<li>`
+  is just a semantic wrapper.
+- An `interactive` item with no visible text and no `aria-label`/`aria-labelledby` warns once in
+  development — screen reader users would otherwise hear nothing meaningful for it.
+- `disabled` uses `aria-disabled` plus a capture-phase click/keydown guard, not a native `disabled`
+  attribute — the interactive surface is a `<span role="button">`, not a real `<button>`. The item
+  stays in the tab order, matching WAI-ARIA APG guidance for `aria-disabled` (unlike native
+  `disabled`, which removes focusability entirely).
+- Keyboard: `Tab` moves focus to an `interactive` item's row; `Enter`/`Space` activates it (blocked
+  entirely when `disabled`).
+
+</Callout>
+
+## Code examples
+
+```tsx
+<List>
+  <ListItem>Plain content item</ListItem>
+  <ListItem icon={CheckIcon}>Done</ListItem>
+</List>
+```
+
+```tsx
+// Trailing content, outside the clickable surface
+<List marker="none">
+  <ListItem trailing={<Badge tone="info">3</Badge>}>Inbox</ListItem>
+</List>
+```
+
+```tsx
+// A nav-menu-style interactive list
+<List marker="none">
+  <ListItem interactive selected icon={HouseIcon} onClick={goHome}>Home</ListItem>
+  <ListItem interactive disabled icon={GearIcon} onClick={goSettings}>Settings (unavailable)</ListItem>
+</List>
+```
+
+```tsx
+// Icon-only interactive item — needs an explicit accessible name
+<ListItem interactive icon={GearIcon} aria-label="Settings" onClick={goSettings} />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.neutral-subtle" usage="interactive row's hover background" />
+<TokenRow token="bg.brand-subtle" usage="selected row's background" />
+<TokenRow token="border.focus" usage="interactive row's focus-visible outline" />
+<TokenRow token="font-weight.semibold" usage="selected row's text weight" />
+<TokenRow token="opacity.40" usage="disabled row's dimmed opacity" />
+<TokenRow token="radius.md" usage="interactive row's corner radius" />
+<TokenRow token="space.1" usage="focus-visible outline offset" />
+<TokenRow token="space.2" usage="icon/content/trailing gap; interactive row's block padding" />
+<TokenRow token="space.3" usage="interactive row's inline padding" />
+<TokenRow token="line-height.normal" usage="the item's own line height" />
+<TokenRow token="motion.duration.fast" usage="interactive row's hover background transition" />
+<TokenRow token="motion.easing.standard" usage="interactive row's hover background transition" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="List"
+  description="The ancestor ListItem is designed to sit inside — provides the marker/spacing context"
+  href="/?path=/story/molecules-typography-list--unordered"
+>
+  <List>
+    <ListItem>An item</ListItem>
+  </List>
+</RelatedCard>
+<RelatedCard
+  name="Badge"
+  description="A common choice for ListItem's own trailing slot — a count or status indicator"
+  href="/?path=/story/atoms-data-display-badge--playground"
+>
+  <Badge tone="info">3</Badge>
+</RelatedCard>
+</div>
