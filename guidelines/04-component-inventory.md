@@ -38,7 +38,7 @@ Text rendering primitives — Nunito for UI, Lora for editorial/display per the 
 | Blockquote | atom | 🟡 | Uses Lora for editorial feel |
 | List / ListItem | atom | 🟢 | Ordered/unordered, custom marker support |
 | Kbd | atom | ⚪ | Keyboard shortcut display |
-| Highlight | atom | 🟡 | Inline text-highlight span, for search-match emphasis |
+| Highlight | atom | 🟡 | Inline text-highlight span; wrap the match yourself, or pass `query` to have it find and wrap matches itself |
 
 ## 3. Inputs & Forms
 Anything that captures user input. Largest category by necessity — this is where "comprehensive" gets tested.

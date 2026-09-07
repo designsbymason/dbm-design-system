@@ -1,0 +1,186 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../Badge";
+import { Text } from "../Text";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Highlight } from "./Highlight";
+import * as HighlightStories from "./Highlight.stories";
+
+export const propOrder = [
+  "children",
+  "tone",
+  "query",
+  "caseSensitive",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={HighlightStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Highlight" tier="Atom" />
+
+An inline highlight for emphasizing a substring within running text — search-match highlighting,
+"new" markers, deprecation call-outs. Renders a native `<mark>` (semantically "content of special
+relevance"), styled with a token-driven background/text pairing rather than the browser's default
+yellow. Two usage modes: wrap the matched text yourself and pass it as `children`, or hand
+`Highlight` a plain-string `children` plus a `query` and let it find and wrap every match itself.
+
+### Import
+
+```tsx
+import { Highlight } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={HighlightStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={HighlightStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Highlight` also accepts any other native `<mark>` attribute beyond what's listed here (e.g.
+`onClick`, `title`) — passed straight through to the underlying element(s).
+
+<PropertiesTable of={HighlightStories} order={propOrder} />
+
+## Variants
+
+### All tones
+
+<Canvas of={HighlightStories.AllTones} />
+
+### Search-match emphasis
+
+<Canvas of={HighlightStories.SearchMatch} />
+
+### Auto-matching (query prop)
+
+<Canvas of={HighlightStories.AutoMatching} />
+
+### Multiple queries (array)
+
+<Canvas of={HighlightStories.MultipleQueries} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use the plain `children`-only mode when you've already located the match yourself (e.g. a search
+  API that returns the matched span's position) — it accepts any `ReactNode`, not just text.
+- Use `query` when you have the original string plus a search term and want `Highlight` to do the
+  finding — it handles repeated matches, an array of terms, and regex-special characters in the
+  query safely.
+- Pick a `tone` that matches the highlight's actual meaning (`danger` for a deprecation notice,
+  `success` for a newly-added item) rather than defaulting to `warning` everywhere.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `query` alongside a non-string `children` (e.g. JSX) — it can't search inside
+  arbitrary React content, so in development it warns and falls back to highlighting the whole of
+  `children` instead of the intended match.
+- Don't pass `id`/`data-testid` together with a `query` that can match more than once — every
+  matched `<mark>` would get the same value, which breaks the uniqueness either attribute is
+  meant to guarantee.
+- Don't rely on `ref` when `query` can match more than once — it's only attached when there's
+  exactly one match (or none at all — see Accessibility below for the empty-match case).
+
+</Callout>
+</div>
+
+## Best practices
+
+- `query` matching is a plain substring search, not whole-word — `query="agent"` also matches the
+  "agent" inside "agents". This mirrors how most real search-match UIs highlight (Google, GitHub,
+  Algolia all do substring matching), not a limitation to work around.
+- A `query` with no match in `children` renders no `<mark>` at all — the surrounding text still
+  renders, just with nothing highlighted. This is the expected "no results this render" case, not
+  an error state.
+- Keep highlighted spans short — a whole highlighted paragraph reads as noise rather than
+  emphasis. `Highlight` is for a word or short phrase within a larger block of body text.
+
+## Accessibility
+
+<Callout tone="info" title="Semantic HTML carries the meaning — minimal ARIA needed">
+
+- Renders a native `<mark>`, which already communicates "highlighted/relevant content" to
+  assistive technology with no ARIA required.
+- No keyboard interaction — `Highlight` is not an interactive element.
+- Every tone's background/text pairing is contrast-verified at AA or better (several reach AAA) —
+  see Design tokens used below.
+- In `query` mode, `ref` is only attached when there's exactly one match, so a caller relying on it
+  to focus or scroll to "the" highlighted element should confirm the query is expected to match
+  once before depending on it.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Caller pre-wraps the match
+<Text>Results for <Highlight>{query}</Highlight></Text>
+```
+
+```tsx
+// Highlight finds the match itself
+<Highlight query="design">Results for design system</Highlight>
+```
+
+```tsx
+// Multiple terms, one call
+<Highlight query={["design", "agent"]} tone="info">
+  A design system built for AI agents and human engineers alike.
+</Highlight>
+```
+
+```tsx
+// A native <mark> attribute (title) passed straight through
+<Highlight title="Deprecated in v2" tone="danger">legacyProp</Highlight>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.warning-subtle" usage="the warning tone's background (default)" />
+<TokenRow token="text.warning" usage="the warning tone's text color (default)" />
+<TokenRow token="bg.success-subtle" usage="the success tone's background" />
+<TokenRow token="text.success" usage="the success tone's text color" />
+<TokenRow token="bg.info-subtle" usage="the info tone's background" />
+<TokenRow token="text.info" usage="the info tone's text color" />
+<TokenRow token="bg.danger-subtle" usage="the danger tone's background" />
+<TokenRow token="text.danger" usage="the danger tone's text color" />
+<TokenRow token="radius.xs" usage="the highlighted span's corner radius" />
+<TokenRow token="space.1" usage="the highlighted span's inline (horizontal) padding" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Text"
+  description="The body-copy atom Highlight is typically embedded within, inline in a sentence"
+  href="/?path=/story/atoms-typography-text--default"
+>
+  <Text>Results for <Highlight>design</Highlight> system.</Text>
+</RelatedCard>
+<RelatedCard
+  name="Badge"
+  description="Shares the same contrast-verified tone-subtle background/text pairings, for a standalone status label rather than inline text emphasis"
+  href="/?path=/story/atoms-data-display-badge--playground"
+>
+  <Badge tone="warning">New</Badge>
+</RelatedCard>
+</div>
