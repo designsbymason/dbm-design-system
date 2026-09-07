@@ -37,8 +37,8 @@ dbm-design-system/
 │   │
 │   ├── components/                # The actual DBM component library (this is the npm package)
 │   │   ├── src/
-│   │   │   ├── atoms/            # Built: Avatar, Badge, Button, Icon, Input... (47 shipped so far)
-│   │   │   ├── molecules/        # Built so far: Grid, GridItem, Select — FormField, Card, etc. still open
+│   │   │   ├── atoms/            # Built: Avatar, Badge, Button, GridItem, Icon, Input... (47 shipped so far — see ADR-0012 for GridItem/ListItem's own tier history)
+│   │   │   ├── molecules/        # Built so far: Grid, List, Select — FormField, Card, etc. still open
 │   │   │   ├── organisms/        # Not started yet — DataTable, Modal, Navbar, CommandPalette, Form...
 │   │   │   ├── templates/        # Not started yet — page-level layout scaffolds (optional, later)
 │   │   │   ├── foundations/      # Storybook-only Foundations pages (*.mdx) — not shipped in the package

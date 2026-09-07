@@ -58,6 +58,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0009](./0009-rtl-mirroring-is-a-per-component-judgment-call.md) | Whether a component's rendered result mirrors under RTL is a separate, per-component judgment call | Accepted |
 | [0010](./0010-presence-driven-exit-animation-plain-open-boolean.md) | A plain `open` boolean over the full controlled/uncontrolled trio for Presence-driven exit animation | Accepted |
 | [0011](./0011-darker-dark-mode-representative-background.md) | Darken dark mode's representative background (`bg.surface`) one step, cascading through dependent tokens, over adjusting brand tokens in isolation | Accepted |
+| [0012](./0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) | A "container + item" pair's tier is decided per-component by independent function, not inherited from its partner | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

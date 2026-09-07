@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ListItem } from "../ListItem";
+import { ListItem } from "../../atoms/ListItem";
 import { List } from "./List";
 
 const meta: Meta<typeof List> = {
-  title: "Atoms/Typography/List",
+  title: "Molecules/Typography/List",
   component: List,
   parameters: { layout: "padded" },
 };

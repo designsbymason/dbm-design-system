@@ -15,7 +15,8 @@ Structural primitives everything else is built from.
 |---|---|---|---|
 | Box | atom | 🟢 | Base polymorphic primitive (`as` prop), most components compose this |
 | Stack | atom | 🟢 | Vertical/horizontal flex layout with gap token |
-| Grid / GridItem | molecule | 🟢 | CSS Grid wrapper, responsive column props |
+| Grid | molecule | 🟢 | CSS Grid wrapper, responsive column props — meaningless without child items, so molecule-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) |
+| GridItem | atom | 🟢 | A cell within a `Grid` — colSpan/rowSpan/colStart/rowStart placement. Renders/functions correctly standalone (no context coupling to `Grid`), so atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) despite typically being used inside a molecule |
 | Container | atom | 🟢 | Max-width + centered content wrapper |
 | Divider | atom | 🟢 | Horizontal/vertical, with optional label |
 | Spacer | atom | 🟢 | Flex-grow spacer utility |
@@ -36,7 +37,8 @@ Text rendering primitives — Nunito for UI, Lora for editorial/display per the 
 | Code (inline) | atom | 🟡 | Monospace inline snippet |
 | CodeBlock | molecule | 🟡 | Multi-line, syntax-highlighted, copy button |
 | Blockquote | atom | 🟡 | Uses Lora for editorial feel |
-| List / ListItem | atom | 🟢 | Ordered/unordered, custom marker support |
+| List | molecule | 🟢 | Ordered/unordered, custom marker support — meaningless without `ListItem` children, so molecule-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) |
+| ListItem | atom | 🟢 | A single item within a `List` — optional custom marker icon, interactive/selected states. Renders/functions correctly standalone, so atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) despite typically being used inside a molecule |
 | Kbd | atom | ⚪ | Keyboard shortcut display |
 | Highlight | atom | 🟡 | Inline text-highlight span; wrap the match yourself, or pass `query` to have it find and wrap matches itself |
 
@@ -192,10 +194,13 @@ This puts v1 alone in "real, comprehensive design system" territory (not a 15-co
 
 ## Sequencing recommendation for actual build order
 Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 (every atom-tier row in this doc, Grid/GridItem excepted — see the note on step 1) are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — **47 atoms total, none left unbuilt** (corrected 2026-08-12; this doc, `01-vision-and-goals.md`, and `07-storybook-and-documentation-standards.md` all previously said "49," which was simply a miscount against this doc's own table — count the atom-tier rows across all 9 categories above and it's 47):
+
+**Corrected 2026-09-07 ([ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md)):** `GridItem` and `ListItem` are now atom-tier; `Grid` and `List` are now molecule-tier (previously each pair shared a single combined row/tier — see that ADR for why). Checked against real git history before writing this note, not assumed: `Grid`/`GridItem` were originally authored together on 2026-07-18 (Phase 3, alongside Box/Stack/Container/Divider/Spacer) — genuinely atom-tier at the time, files and all. They moved to `molecules/` on 2026-08-09 in the same commit that added `Select` (`"...moving Grid/GridItem there from atoms/, where they'd been misfiled relative to their documented tier"` — i.e. the inventory doc had *already* called the combined pair molecule-tier before that commit; the move just brought the files in line). Today's change is really GridItem's second tier flip: atom (Phase 3) → molecule (2026-08-09, as part of the undifferentiated pair) → atom again (today, now correctly split from `Grid`). `List`/`ListItem` were also both authored 2026-07-18, stayed atom-tier and in `atoms/` the whole time until today's move splits them the same way. The **47 atoms total** figure is unaffected by today's change — `GridItem` replaces `List` in the count, net zero.
+
 1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix) — corrected 2026-08-12: Grid was listed here in error; it's molecule-tier per this doc's own Layout table above and is tracked under step 4 instead.
-2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight)
+2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight, ListItem)
 3. Core atoms (Button, IconButton, CloseButton, Icon, Badge, Tag, Avatar, Input, Textarea, Checkbox, Switch, FieldLabel/FieldError/FieldHelperText, Skeleton, Spinner, ProgressBar, ProgressCircle, Divider, Image, Tooltip, Collapse, Backdrop, BackToTop, Indicators)
-4. Form molecules (FormField, RadioGroup, Select) plus Grid/GridItem — Checkbox/Switch/Textarea/Tag already exist as atoms and unlock the form ones. **Started 2026-08-09, ahead of the original plan** (this step was meant to follow Phase 4.9's full documentation pass on the atom tier — see `01-vision-and-goals.md` §13 Phase 5 — but began in parallel instead): `Grid`, `GridItem`, and `Select` are built; `FormField`/`RadioGroup` are not yet.
+4. Form molecules (FormField, RadioGroup, Select) plus Grid and List — Checkbox/Switch/Textarea/Tag already exist as atoms and unlock the form ones. **Started 2026-08-09, ahead of the original plan** (this step was meant to follow Phase 4.9's full documentation pass on the atom tier — see `01-vision-and-goals.md` §13 Phase 5 — but began in parallel instead): `Grid`, `GridItem` (atom-tier per ADR-0012, but built here regardless — no dependency reason to build it earlier than `Grid`), and `Select` are built; `List` itself has existed since Phase 3 but only became molecule-tier today; `FormField`/`RadioGroup` are not yet.
 5. Overlay foundation (Dialog, Popover) — Tooltip/Collapse/Backdrop already exist as atoms and unlock these; Dialog/Popover unlock Drawer, ConfirmDialog, AlertDialog, Menu
 6. Data Display core (Card, Table, DataTable, EmptyState)
 7. Navigation core (Tabs, Breadcrumb, Navbar, Sidebar)

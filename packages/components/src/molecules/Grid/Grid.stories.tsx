@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { GridItem } from "../GridItem";
+import { GridItem } from "../../atoms/GridItem";
 import { Grid } from "./Grid";
 
 const meta: Meta<typeof Grid> = {

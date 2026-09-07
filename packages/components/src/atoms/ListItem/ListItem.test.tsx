@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { List } from "../List";
+import { List } from "../../molecules/List";
 import { ListItem } from "./ListItem";
 
 describe("ListItem", () => {

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Grid } from "../Grid";
+import { Grid } from "../../molecules/Grid";
 import { GridItem } from "./GridItem";
 
 const meta: Meta<typeof GridItem> = {
-  title: "Molecules/Layout/GridItem",
+  title: "Atoms/Layout/GridItem",
   component: GridItem,
   parameters: { layout: "padded" },
 };

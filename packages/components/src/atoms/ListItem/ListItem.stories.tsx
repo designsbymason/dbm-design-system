@@ -1,7 +1,7 @@
 import { CheckIcon, GearIcon, HouseIcon } from "@dbm-design-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { List } from "../List";
+import { List } from "../../molecules/List";
 import { ListItem } from "./ListItem";
 
 const meta: Meta<typeof ListItem> = {

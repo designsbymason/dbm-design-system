@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
 import { describe, expect, it } from "vitest";
-import { ListItem } from "../ListItem";
+import { ListItem } from "../../atoms/ListItem";
 import { List } from "./List";
 
 describe("List", () => {

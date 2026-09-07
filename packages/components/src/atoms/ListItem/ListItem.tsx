@@ -2,7 +2,7 @@ import { cx } from "@dbm-design-system/primitives";
 import { forwardRef, useContext } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { Icon } from "../Icon";
-import { ListMarkerContext } from "../List/ListMarkerContext";
+import { ListMarkerContext } from "../../molecules/List/ListMarkerContext";
 import styles from "./ListItem.module.css";
 import type { ListItemProps } from "./ListItem.types";
 
