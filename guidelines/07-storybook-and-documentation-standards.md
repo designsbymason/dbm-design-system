@@ -144,10 +144,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**42 of 47 atoms have a Docs page; 41 are Finalized** — [GridItem.md](component-reviews/GridItem.md)
-(2026-09-07) has a completed review pass and a Docs page but is not yet marked Finalized, pending
-explicit confirmation per `06-engineering-standards.md` §9's finalization rule. See
-[Link.md](component-reviews/Link.md) for the most recent Finalized one, 2026-09-07.
+**42 of 47 atoms have a Docs page; 42 are Finalized** — [GridItem.md](component-reviews/GridItem.md)
+is the most recent, Finalized 2026-09-07 at explicit user direction.
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -177,7 +175,7 @@ explicit confirmation per `06-engineering-standards.md` §9's finalization rule.
 | Spinner | Atom | Feedback | ✅ | ✅ 2026-08-23 | [Spinner.md](component-reviews/Spinner.md) |
 | Spacer | Atom | Layout | ✅ | ✅ 2026-09-03 | [Spacer.md](component-reviews/Spacer.md) |
 | Stack | Atom | Layout | ✅ | ✅ 2026-09-03 | [Stack.md](component-reviews/Stack.md) |
-| GridItem | Atom | Layout | ✅ | Pending | [GridItem.md](component-reviews/GridItem.md) |
+| GridItem | Atom | Layout | ✅ | ✅ 2026-09-07 | [GridItem.md](component-reviews/GridItem.md) |
 | Icon | Atom | Media | ✅ | ✅ 2026-09-03 | [Icon.md](component-reviews/Icon.md) |
 | Image | Atom | Media | ✅ | ✅ 2026-09-04 | [Image.md](component-reviews/Image.md) |
 | Indicators | Atom | Media | ✅ | ✅ 2026-09-05 | [Indicators.md](component-reviews/Indicators.md) |
@@ -195,7 +193,7 @@ explicit confirmation per `06-engineering-standards.md` §9's finalization rule.
 | Text | Atom | Typography | ✅ | ✅ 2026-09-07 | [Text.md](component-reviews/Text.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`; membership updated 2026-09-07 per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) — `GridItem` now tracked here as atom-tier, `List` no longer is):
-- **Layout:** none remaining — every Layout atom now has a completed review pass (`Grid` itself stays molecule-tier per ADR-0012 and isn't tracked in this atom-only list; GridItem moved to atom-tier 2026-09-07 — see the same ADR). Spacer's, Stack's, and GridItem's own review passes are complete (GridItem pending Finalized confirmation), see the status table above and their own [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md)/[GridItem.md](component-reviews/GridItem.md).
+- **Layout:** none remaining — every Layout atom now has a completed, Finalized review pass (`Grid` itself stays molecule-tier per ADR-0012 and isn't tracked in this atom-only list; GridItem moved to atom-tier 2026-09-07 — see the same ADR). See the status table above and [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md)/[GridItem.md](component-reviews/GridItem.md).
 - **Typography:** (`List` moved to molecule-tier 2026-09-07 per ADR-0012 — no longer tracked in this atom-only list) — every atom in this category is now Finalized: Blockquote's, Code's, Heading's, Highlight's, Kbd's, Link's, ListItem's, and Text's own review passes are complete, see the status table above and their own [Blockquote.md](component-reviews/Blockquote.md)/[Code.md](component-reviews/Code.md)/[Heading.md](component-reviews/Heading.md)/[Highlight.md](component-reviews/Highlight.md)/[Kbd.md](component-reviews/Kbd.md)/[Link.md](component-reviews/Link.md)/[ListItem.md](component-reviews/ListItem.md)/[Text.md](component-reviews/Text.md).
 - **Navigation:** none remaining — BackToTop's own review pass is complete, see the status table above and its own [BackToTop.md](component-reviews/BackToTop.md).
 - **Overlay:** none remaining — Backdrop's, Collapse's, and Tooltip's own review passes are

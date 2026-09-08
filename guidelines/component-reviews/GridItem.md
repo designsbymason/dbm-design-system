@@ -1,6 +1,6 @@
 # GridItem
 
-**Tier:** Atom · **Category:** Layout · **Finalized:** Pending confirmation
+**Tier:** Atom · **Category:** Layout · **Finalized:** ✅ 2026-09-07
 
 ## Review pass (2026-09-07)
 
@@ -189,12 +189,29 @@ new `Order` story confirmed to visually reorder three cells independent of their
 spot-checked; the `Grid`/`Box` `RelatedCard` links confirmed to navigate correctly without touching
 either unreviewed sibling.
 
+15. **Final review pass before finalization (2026-09-07), user-requested.** Re-verified the full
+    `06-engineering-standards.md` §9 checklist end to end rather than assuming the findings above
+    already covered everything: prop patterns cross-checked against `Box`/`Container`'s own
+    convention (confirmed no `aria-*` redeclaration is needed — a plain layout primitive, consistent
+    with its siblings, not a gap); `05-component-api-conventions.md` §8's original "definition of
+    done" re-checked item by item, including the public `index.ts` export (confirmed present). Live
+    in a running Storybook instance: typed into the Docs page's `colSpan`/`colStart`/`order`
+    controls and read back the canvas's actual computed `grid-column`/`order` each time (not just
+    that the input accepted the value) to reconfirm the `PlaygroundControls` latency fix (finding 9)
+    still holds; confirmed Emerald/Dark resolves correctly via computed `background-color`/`color`,
+    not just that the toolbar toggle exists; confirmed the `ResponsiveSpan` story genuinely reflows
+    (`span 4` at 375px, `span 2` at 980px) via computed `grid-column`, not assumed from the token
+    math. Found and fixed one real defect in the process — finding 14 above (the `rowStart +
+    rowSpan`/`rowSpan + colSpan` stories not visually reading as row-spanning); everything else
+    checked out with nothing further to change.
+
 ## Finalized
 
-Not yet — this review pass (baseline correctness, a real confirmed API-consistency gap on
-`id`/`className`/`style`/`data-testid`, a real stability gap on invalid span values, a
-feature-completeness addition of `order` at explicit user direction, a systemic missing-Playground/
-no-controls-at-all defect, accessibility test coverage, responsiveness, design quality, theming,
-Storybook documentation, and functional verification) is complete and passing, but per
-`06-engineering-standards.md` §9's finalization rule, "Finalized" is only ever declared by explicit
-user confirmation, not asserted by the agent that ran the review.
+**Finalized 2026-09-07, at explicit user direction.** A final consolidated self-verification was run
+immediately before this declaration, covering the full review pass plus finding 14/15's own fix
+together: `tsc --noEmit` (main + `.storybook`), `eslint . --max-warnings 0` (whole package), `tsup`
+build, both Vitest projects (`unit`: 1050/1050, `storybook`: 365/365), `check-foundations-token-
+coverage` (80/80 in sync), and `check-component-bundle-size` (0.59KB JS / 0.42KB CSS — within
+budget) all clean. Per `06-engineering-standards.md` §9's finalization rule, no further changes to
+`GridItem` (code, stories, docs, or tokens it alone drives) without asking first, even for something
+that would otherwise be an obvious, in-scope fix.
