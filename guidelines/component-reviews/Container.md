@@ -6,7 +6,7 @@ sound — this is the component that originated the `Responsive<SpaceValue>` + `
 token-driven, with the literal breakpoint pixel values in each `@media` condition already
 documented as an accepted CSS-spec limitation (custom properties can't be referenced inside a
 media condition), matching `Bleed`'s own precedent. No feature-completeness gap found against
-Chakra's own `Container`. Findings were entirely documentation completeness and Storybook
+comparable production implementations of this same pattern. Findings were entirely documentation completeness and Storybook
 coverage — no code-behavior bugs.
 
 **Fixed:**

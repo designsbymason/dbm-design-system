@@ -115,8 +115,8 @@ Drive every prop live.
 - `interactive` renders its clickable surface as an inner `<span role="button">`, not the `<li>`
   itself — putting `role="button"` directly on an `<li>` fails WAI-ARIA's required-owned-elements
   check on an ancestor `<ul role="list">` (confirmed with axe-core, a real measured violation, not
-  a style preference). Real implementations of this exact pattern (e.g. MUI's `ListItemButton`) do
-  the same.
+  a style preference) — nesting the interactive element inside the `<li>` instead of repurposing
+  the `<li>` itself is the standard, accessible way to build this pattern.
 - A custom `icon` marker and the ancestor `List`'s own `marker="none"` both suppress the native
   bullet — either one on its own already triggers the `role="listitem"` fallback this component
   needs for Safari/VoiceOver, so combining them doesn't require anything extra.

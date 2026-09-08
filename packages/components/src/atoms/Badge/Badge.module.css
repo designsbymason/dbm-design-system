@@ -223,8 +223,8 @@
 
 /*
  * Overlay/positioning mode (the "notification dot on a bell icon" pattern
- * MUI/Ant Design ship as their primary Badge use case — flagged as a gap
- * against those systems). Only rendered when the `anchor` prop is set;
+ * comparable production Badge components ship as their primary use case —
+ * flagged as a real gap). Only rendered when the `anchor` prop is set;
  * the plain inline-label mode above is completely unaffected otherwise.
  */
 .anchorWrapper {
@@ -271,7 +271,7 @@
 
 /* A circular anchor (e.g. an Avatar) needs the badge tucked in further
    than a rectangular one, or it visually overhangs past the circle's own
-   silhouette — same distinction MUI's `overlap` prop makes. Mirrors the
+   silhouette — same distinction a comparable `overlap` prop makes elsewhere. Mirrors the
    dot/non-dot split above, one step up in both cases. Moved inward a
    third time (2026-08-16, at explicit direction), from space-1 (4px) to
    space-2 (8px) — now numerically the same as .overlapCircular.dot just
@@ -324,7 +324,8 @@
  * pop whenever a text/count badge's own content value changes, so an
  * incrementing notification count or a status-label swap reads as an
  * update rather than static text silently changing underneath the reader
- * — the same cue MUI's own Badge gives on value change. Triggered from
+ * — the same cue comparable production Badge components give on value
+ * change. Triggered from
  * Badge.tsx (compares new content against the previous render, skips the
  * initial mount). Never applies in `dot` mode, which has no content to
  * change.

@@ -84,8 +84,8 @@ exposed.
   page whose Playground's own *default* args include a non-primitive value, not something to design
   around.
 
-Considered and declined (named, not silently skipped): Ant Design's `Icon` also has a `spin`
-boolean for a rotating loading icon — not added, since the system already has a dedicated
+Considered and declined (named, not silently skipped): some comparable libraries' own `Icon` also
+has a `spin` boolean for a rotating loading icon — not added, since the system already has a dedicated
 `Spinner` atom (with its own `prefers-reduced-motion` handling) for that exact role, and adding a
 parallel mechanism on `Icon` would duplicate it. A generic `rotate`/directional-flip degree prop
 (Ant's `Icon` has this too) — not added; no existing component in the codebase hand-rolls this kind

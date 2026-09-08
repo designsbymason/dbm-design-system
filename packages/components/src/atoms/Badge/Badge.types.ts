@@ -36,11 +36,11 @@ export interface BadgeProps extends ComponentPropsWithoutRef<"span"> {
   max?: number;
   /**
    * Renders nothing at all (just `anchor`, if set) when `children` is
-   * exactly the number `0` — matching MUI's `showZero={false}` default for
-   * a live count that shouldn't show an empty "0" once it drops back to
-   * none. Has no effect when `dot` is set (a dot has no `children` to be
-   * zero), or when `children` isn't the number `0` (a string `"0"`, or any
-   * other value, still renders normally). Off by default so existing
+   * exactly the number `0` — for a live count that shouldn't show an empty
+   * "0" once it drops back to none. Has no effect when `dot` is set (a dot
+   * has no `children` to be zero), or when `children` isn't the number `0`
+   * (a string `"0"`, or any other value, still renders normally). Off by
+   * default so existing
    * `<Badge>{0}</Badge>` usage is unaffected unless you opt in.
    * @default false
    */
@@ -78,9 +78,7 @@ export interface BadgeProps extends ComponentPropsWithoutRef<"span"> {
    * `anchor` is set. Intentionally a physical corner, not a logical one —
    * `top-right` stays at the visual top-right in both LTR and RTL rather
    * than mirroring, since `anchor` is arbitrary visual content (an icon,
-   * an avatar) rather than something tied to reading-flow direction
-   * (matches MUI's own `Badge` `anchorOrigin`, which doesn't mirror
-   * either).
+   * an avatar) rather than something tied to reading-flow direction.
    * @default 'top-right'
    */
   position?: BadgePosition;

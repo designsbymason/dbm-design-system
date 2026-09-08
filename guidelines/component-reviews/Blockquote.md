@@ -42,16 +42,16 @@ convention):
    `variant` prop, the decorative quote-mark's `aria-hidden` state, and a11y across all three
    render states (plain, with attribution, pull-quote). 11/11 passing (up from 8).
 
-7. **Feature-completeness:** no dedicated Blockquote component exists in MUI/Chakra/Ant/Radix to
-   compare against. The pre-existing default treatment already matched real-world precedent
+7. **Feature-completeness:** no dedicated Blockquote component exists in comparable production
+   component libraries to compare against. The pre-existing default treatment already matched real-world precedent
    (GitHub/Notion/WordPress default blockquote rendering) — no functional gap there.
 
 8. **Design enhancement, added at explicit direction: `variant="pull-quote"`.** A second visual
    treatment — larger (`font-size.2xl`), centered, no left border, with a decorative
    `aria-hidden` quote-mark glyph (`font-size.6xl`, `text.brand` — so it re-colors correctly across
    both brand themes) — for a standalone editorial callout, distinct from the default's
-   inline-embedded treatment. Named precedent: WordPress-theme/Tailwind-UI-style pull-quote
-   patterns; no forcing comparable in MUI/Chakra/Ant/Radix. Live-verified across both brands ×
+   inline-embedded treatment. Named precedent: common editorial-theme pull-quote
+   patterns; no forcing comparable in any comparable production component library. Live-verified across both brands ×
    both modes (quote mark correctly resolves `purple.600`/`emerald.700` light,
    `purple.300`/`emerald.400` dark) and at mobile viewport width (wraps cleanly, no overflow).
 

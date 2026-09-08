@@ -2,8 +2,8 @@
 
 Full `06-engineering-standards.md` §9 review pass run 2026-09-02. Implementation was already sound
 (correct flex-centering CSS module, `forwardRef` correct via the standard `Box`-shared polymorphic
-workaround, no unnecessary opinions). No feature-completeness gap found against Chakra's own
-`Center` (same "flex align/justify center" pattern). Findings were entirely documentation
+workaround, no unnecessary opinions). No feature-completeness gap found against comparable
+production implementations of this same "flex align/justify center" pattern. Findings were entirely documentation
 completeness and Storybook coverage.
 
 **Fixed:**

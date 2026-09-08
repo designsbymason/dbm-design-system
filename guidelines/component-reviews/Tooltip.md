@@ -46,8 +46,8 @@ component shares (or rather, doesn't share) hover-delay timing across multiple i
   prop (confirmed dual Provider/Root, not Provider-only) that closes the tooltip immediately on
   pointer-leave instead of letting the pointer travel into the content — added, with the same
   standalone-vs-ambient-`Provider` inheritance as `delayDuration` above.
-- **No arrow-visibility toggle.** *(Judgment call, approved.)* MUI's `arrow`/Chakra's `hasArrow`
-  let consumers hide the pointer arrow; ours always rendered one. Added `hideArrow?: boolean`
+- **No arrow-visibility toggle.** *(Judgment call, approved.)* Comparable production tooltip
+  components typically let consumers hide the pointer arrow; ours always rendered one. Added `hideArrow?: boolean`
   (default `false`, preserving the existing visual default rather than flipping it to match those
   libraries' own opt-in default, since this component isn't newly-introduced and changing the
   default would be a visible behavior change to every existing usage).

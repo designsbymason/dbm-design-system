@@ -12,9 +12,8 @@ export interface BackdropProps extends ComponentPropsWithoutRef<"div"> {
   /**
    * Optional content rendered on top of the dimming fill, centered on
    * both axes — e.g. a `Spinner`/`ProgressCircle` for a full-page loading
-   * overlay (matching MUI's `Backdrop` `children` prop). Most modal/
-   * dialog composition doesn't need this: a dialog's own content renders
-   * as a sibling of `Backdrop`, not inside it.
+   * overlay. Most modal/dialog composition doesn't need this: a dialog's
+   * own content renders as a sibling of `Backdrop`, not inside it.
    */
   children?: ReactNode;
   /**

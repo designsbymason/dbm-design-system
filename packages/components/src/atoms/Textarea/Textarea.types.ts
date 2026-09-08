@@ -41,9 +41,7 @@ export interface TextareaProps
   /**
    * When `autoResize` is `true`, sets a maximum height in rows — beyond
    * this many rows' worth of content, the textarea stops growing and
-   * scrolls internally instead, the same bounded-autosize behavior MUI's
-   * `TextField multiline` and Ant Design's `TextArea` both offer. Ignored
-   * when `autoResize` is `false`.
+   * scrolls internally instead. Ignored when `autoResize` is `false`.
    */
   maxRows?: number;
   /**

@@ -129,8 +129,8 @@ import { Backdrop } from "@dbm-design-system/components";
 <Callout tone="info" title="A supplementary dismiss gesture, not the only one">
 
 - **No ARIA role of its own.** `Backdrop` is a plain, non-semantic `<div>` — it isn't announced to
-  assistive technology and carries no accessible name, matching Radix's own `Dialog.Overlay` and
-  MUI's/Chakra's equivalents.
+  assistive technology and carries no accessible name, the correct, expected behavior for a pure
+  visual dismiss-layer with no content or semantics of its own.
 - **Click-to-dismiss is a pointer-only convenience.** `Backdrop` renders no `tabIndex` and handles
   no keyboard events itself, so a click handler here is never the sole way to dismiss whatever it's
   behind — pair it with Escape handling (typically owned by the composing `Dialog`/`Drawer`), which

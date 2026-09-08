@@ -14,8 +14,8 @@ existing prop surface.
   worked via the inherited `ComponentPropsWithoutRef<E>` spread; the gap was documentation
   visibility (JSDoc for the manifest generator, and Storybook's `react-docgen` not reliably
   surfacing inherited-only native props — `05-component-api-conventions.md` §3).
-- **Feature-completeness gap against MUI's own `Stack`:** `StackDirection` only supported
-  `row`/`column` — MUI's comparable `direction` prop also accepts `row-reverse`/`column-reverse`, a
+- **Feature-completeness gap against comparable production `Stack` components:** `StackDirection` only supported
+  `row`/`column` — a comparable `direction` prop typically also accepts `row-reverse`/`column-reverse`, a
   standard flexbox capability Stack's own CSS already passes straight through with zero additional
   logic (`flex-direction` accepts these values natively, and the JS-side mapping function was
   already a plain identity passthrough). Added both values to `StackDirection`, plus a dedicated

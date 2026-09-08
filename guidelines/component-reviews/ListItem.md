@@ -51,9 +51,9 @@ first, Docs-page-missing last, per the standing reporting convention):
    no label) had no accessible name at all and nothing flagged it, matching the same "no accessible
    name" pattern Button/Checkbox/ProgressBar already warn about.
 
-6. **Feature-completeness — two real, concrete gaps named against MUI/Ant Design and closed at
-   explicit direction (not silently added):**
-   - **`disabled`** (MUI's `ListItemButton`, Ant's `Menu.Item`): only meaningful when `interactive`.
+6. **Feature-completeness — two real, concrete gaps named against comparable production
+   interactive-list components and closed at explicit direction (not silently added):**
+   - **`disabled`** (a common pattern for an interactive list-row component): only meaningful when `interactive`.
      `aria-disabled` plus a **capture-phase** click/keydown guard — capture, not bubble, so a
      disabled row blocks activation outright rather than only preventing a default action after the
      consumer's own `onClick`/`onKeyDown` already ran (the same reasoning as Link's own
@@ -64,7 +64,7 @@ first, Docs-page-missing last, per the standing reporting convention):
      `disabled` without `interactive` (mirroring the same warning already added for `selected`
      without `interactive`, prompted by noticing `selected`'s own identical gap while implementing
      `disabled`).
-   - **`trailing`** (MUI's `secondaryAction`, Ant's `extra`/`actions`): rendered as a **sibling** of
+   - **`trailing`** (a common pattern — a secondary action/extra-content slot at the row's end): rendered as a **sibling** of
      the item's own interactive surface, never nested inside it — the key design decision, made
      specifically to avoid an invalid control-inside-a-control when `trailing` itself contains a
      focusable element (an `IconButton`, a `Switch`). Confirmed live and in a dedicated test that a
@@ -125,7 +125,7 @@ While investigating, also confirmed (and fixed) a related, narrower layout bug i
 the interactive row's own clickable/hoverable surface (`.interactive`) didn't stretch to fill the
 row when `trailing` was present — it sized to its own content only, leaving a large dead zone
 between the item's text and the trailing element where hovering/clicking did nothing, breaking the
-expected full-row nav-item affordance (the exact MUI `ListItemButton`/Ant `Menu.Item` pattern this
+expected full-row nav-item affordance (the exact interactive-list-row pattern this
 component's own review cites as its reference). Confirmed live via real mouse hover in Storybook
 before and after. Fixed with `flex: 1 1 auto` on `.interactive`, which only takes effect when its
 parent is itself a flex container (i.e. when `trailing` triggers the wrapper), so the no-`trailing`

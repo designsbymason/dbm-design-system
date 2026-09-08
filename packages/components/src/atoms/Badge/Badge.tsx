@@ -141,9 +141,9 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
 
     // Placed after every hook above (rules of hooks) so this can return
     // early without skipping any of them. Renders nothing at all — not
-    // just visually hidden — matching MUI's own `showZero={false}`
-    // default; `anchor` (if set) still renders on its own, since it's a
-    // real element the caller passed in, not part of what "zero" hides.
+    // just visually hidden; `anchor` (if set) still renders on its own,
+    // since it's a real element the caller passed in, not part of what
+    // "zero" hides.
     if (hideZero && !dot && children === 0) {
       return anchor === undefined ? null : anchor;
     }

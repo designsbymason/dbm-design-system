@@ -277,9 +277,9 @@ export const AutoResize: Story = {
 export const BoundedAutoResize: Story = {
   name: "Auto-resize (bounded)",
   // Feature-completeness addition (guidelines/06-engineering-standards.md
-  // §9 finding): MUI's `TextField multiline` and Ant Design's `TextArea`
-  // both support a bounded auto-grow range (`minRows`/`maxRows`); this
-  // component's own `autoResize` was on/off-only until now. Same
+  // §9 finding): a bounded auto-grow range (`minRows`/`maxRows`) was a
+  // real, concrete gap — this component's own `autoResize` was on/off-only
+  // until now. Same
   // args/argTypes/defaultValue-conflict pattern as the plain Auto-resize
   // story above — `autoResize`/`minRows`/`maxRows`/`value`/`onChange`/
   // `placeholder` are all fixed/driven by local state (the whole point of
@@ -313,7 +313,7 @@ export const BoundedAutoResize: Story = {
 export const Clearable: Story = {
   name: "With a clear button",
   // Feature-completeness addition (guidelines/06-engineering-standards.md
-  // §9 finding): Ant Design's `TextArea` supports `allowClear`; this
+  // §9 finding): a clear button was a real, concrete gap — this
   // component's own `Input` sibling already has `onClear`, Textarea
   // didn't until now. `value`/`onChange`/`onClear`/`placeholder` are all
   // driven by this story's own local state/fixed setup (the whole point

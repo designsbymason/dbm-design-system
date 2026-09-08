@@ -27,10 +27,9 @@ export const propOrder = [
 
 <ComponentHeader title="Text" tier="Atom" />
 
-The base text primitive for body copy, with semantic `size`/`weight`/`color` props — the same role
-as [MUI's `Typography`](https://mui.com/material-ui/react-typography/) (`variant="body1"`) or
-[Chakra's `Text`](https://chakra-ui.com/docs/components/text). Renders a `<p>` by default; `as`
-switches to `span`/`div`/`label`/`legend` for inline or other text-container contexts — a curated
+The base text primitive for body copy, with semantic `size`/`weight`/`color` props. Renders a `<p>`
+by default; `as` switches to `span`/`div`/`label`/`legend` for inline or other text-container
+contexts — a curated
 set of sensible tags, not `Box`'s fully-open polymorphism, since `Text` specifically represents
 styled text content. For page/section headings, use `Heading` instead — the two atoms share the
 same `size`/`weight`/`color`/`fontFamily` scale, and now the same `align`/`wrap` props too, so

@@ -297,8 +297,9 @@ assuming they still hold:
   accessibility scan" — requires `test:storybook:watch` running alongside `storybook dev`, per
   `guidelines/adr/0003`, a standing environmental requirement, not a `Collapse`-specific gap).
   Relied on the automated jest-axe test instead (zero violations, part of the suite below).
-- **Feature-completeness gap (named against MUI's/Chakra's own `Collapse`: `collapsedSize`/
-  `startingHeight`, a partial non-zero collapsed state) — discussed, deliberately not added.**
+- **Feature-completeness gap (named against comparable production `Collapse`/`Collapsible`
+  components: `collapsedSize`/`startingHeight`, a partial non-zero collapsed state) — discussed,
+  deliberately not added.**
   Investigated the real implementation cost before deciding: Radix `Collapsible.Content` hard-codes
   "closed = children not rendered, native `hidden` set," with no override available (confirmed by
   reading its source — `children: isOpen && children`), so supporting a partial collapsed size would
@@ -320,8 +321,8 @@ Review pass complete — all findings actioned. Per `06-engineering-standards.md
 status the user declares explicitly, not one a review pass asserts on its own.
 
 **Follow-up (2026-09-05, same day), discussed at the user's own request — `collapsedSize` (a partial,
-non-zero collapsed state, matching MUI's/Chakra's own `Collapse`) considered and deliberately left
-out.** See the feature-completeness bullet above for the full reasoning (a real architecture change,
+non-zero collapsed state, matching comparable production `Collapse`/`Collapsible` components)
+considered and deliberately left out.** See the feature-completeness bullet above for the full reasoning (a real architecture change,
 not a new prop — Radix `Collapsible.Content` hard-codes "closed = unmounted" with no override) and
 the composition pattern documented in its place (`Text`'s `truncate` + `Collapse` for a "read more"
 disclosure, achieving the same user-facing result with zero changes to `Collapse` itself).

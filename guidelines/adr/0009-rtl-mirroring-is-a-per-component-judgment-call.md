@@ -12,7 +12,7 @@ This is a **per-component judgment call**, made explicitly before building a new
 - **Content anchored to arbitrary visual position with no reading-direction relationship of its own should not mirror.** `Badge`'s `position` prop stays pinned to the literal physical corner in both directions — `top-right` means the literal top-right corner, not "the corner reading-flow would put it in."
 
 ## Alternatives considered
-**Always mirror everything, automatically, once logical properties are in use** — rejected. This would have silently flipped `Badge`'s `position` prop under RTL, contradicting the literal physical semantics that prop already promises a caller (`top-right` genuinely means top-right) and contradicting `MUI`'s own `Badge anchorOrigin` precedent for the identical case (also physical, also non-mirroring, independently arrived at).
+**Always mirror everything, automatically, once logical properties are in use** — rejected. This would have silently flipped `Badge`'s `position` prop under RTL, contradicting the literal physical semantics that prop already promises a caller (`top-right` genuinely means top-right) and contradicting comparable production component libraries' own precedent for the identical case (also physical, also non-mirroring, independently arrived at).
 
 **Never mirror anything, keep every component physically fixed** — rejected. `Switch`'s on/off travel direction genuinely is a reading-flow convention in RTL-aware toggle patterns; leaving it physically fixed would read as broken/backwards to an RTL user in a way `Badge`'s fixed corner wouldn't.
 

@@ -45,8 +45,9 @@ convention):
    path). 19/19 passing (up from 6).
 
 7. **Feature-completeness — real gap, discussed and closed at explicit direction (not silently
-   added):** Chakra UI's `Highlight` component finds and wraps a `query` substring (or array of
-   substrings) inside `children` itself, case-insensitive by default — DBM's `Highlight` previously
+   added):** some comparable libraries' own `Highlight` component finds and wraps a `query`
+   substring (or array of substrings) inside `children` itself, case-insensitive by default — DBM's
+   `Highlight` previously
    required the caller to pre-split and pre-wrap the match themselves, an intentional, JSDoc'd scope
    boundary ("this is the styled span, not a text-matching utility"). Flagged as a named, concrete
    comparable-library gap per the guardrail in `06-engineering-standards.md` §9; the user chose to
@@ -56,7 +57,7 @@ convention):
      split around every match (regex-special characters escaped) and each match is wrapped in the
      same tone-styled `<mark>` the manual mode already renders; non-matching text renders as plain
      text nodes, no wrapper element.
-   - `caseSensitive?: boolean` (default `false`) — matches Chakra's own case-insensitive default.
+   - `caseSensitive?: boolean` (default `false`) — matches the common case-insensitive default.
    - A `query` with zero matches renders no `<mark>` at all (only real matches get highlighted, not
      a fallback wrap) — a deliberate behavior, not an edge case oversight, documented in the prop's
      own JSDoc and the Docs page's Best practices section.
@@ -125,7 +126,7 @@ this file was updated.
 **2026-09-07** — confirmed by the user after the full checklist was verified end to end, including
 a dedicated final re-verification pass that found and fixed one more real bug (finding 8,
 longest-match-first ordering) before sign-off: baseline correctness, feature-completeness (the
-Chakra-style `query` auto-matching gap named and closed at explicit direction), accessibility
+`query` auto-matching gap named and closed at explicit direction), accessibility
 (jest-axe zero violations, including the new multi-mark output), responsiveness (mobile viewport
 spot-checked), design quality, theming (both brand themes × both modes, confirmed brand-agnostic as
 expected), Storybook documentation (Docs page, Properties table, Design Tokens table all

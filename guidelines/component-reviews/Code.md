@@ -25,8 +25,8 @@ convention):
 
 5. **Real design-quality gap, found and fixed: zero vertical padding.** Computed live in the
    browser before the fix: `padding-block: 0px / 0px` — only 4px horizontal padding was applied,
-   giving the pill a visually flat, cramped look. GitHub, Notion, MDN, and Chakra UI's own `Code`
-   component all pad inline code in both directions. **Fixed as part of finding 7 below** (the
+   giving the pill a visually flat, cramped look. GitHub, Notion, MDN, and other comparable
+   inline-code implementations all pad inline code in both directions. **Fixed as part of finding 7 below** (the
    token-consumer switch already brings its own, already-established padding values).
 
 6. **Unit tests extended**: added coverage for `style`/`id`/`data-testid` passthrough. 7/7 passing
@@ -71,12 +71,12 @@ convention):
      `guidelines/03-token-system-spec.md`'s `bg.*`/`border.*` intro note and each token's own
      `$description` for the full history.
 
-8. **Feature-completeness:** Chakra UI's `Code` ships a `variant` scale (subtle/solid/outline) and
-   Radix UI Themes' `Code` ships `variant`/`color`/`size` — flagged and discussed; **decided to
-   leave Code as a single fixed treatment**, matching GitHub/Notion/MDN's own inline code (none of
-   which offer variants either) — the more directly comparable precedent for a single-purpose
-   inline-code atom specifically, versus Chakra/Radix's broader decorative-UI-kit framing of their
-   own Code components.
+8. **Feature-completeness:** some comparable component libraries ship a `variant` scale
+   (subtle/solid/outline) or `variant`/`color`/`size` combination for their own inline-code
+   component — flagged and discussed; **decided to leave Code as a single fixed treatment**,
+   matching GitHub/Notion/MDN's own inline code (none of which offer variants either) — the more
+   directly comparable precedent for a single-purpose inline-code atom specifically, versus a
+   broader decorative-UI-kit framing of the same concept.
 
 9. **Docs page added** (`Code.mdx`), full 10-section template, first in the sidebar group.
    Live-verified: TOC renders all 10 section headings, Properties table renders all 5 props in

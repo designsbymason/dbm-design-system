@@ -9,7 +9,7 @@ export interface VisuallyHiddenProps extends RadixVisuallyHiddenProps {
    * document flow when it (or a focusable descendant) receives focus — the
    * classic "skip link" pattern: hidden for mouse/screen-reader users,
    * visible the moment a sighted keyboard user tabs to it. Matches
-   * Bootstrap's `.visually-hidden-focusable` and react-aria's `isFocusable`.
+   * react-aria's own `isFocusable` for this same pattern.
    * Revealing only restores normal layout flow — it adds no background,
    * positioning, or chrome of its own, so style the revealed state yourself
    * if it needs to stand out (e.g. a real skip link).

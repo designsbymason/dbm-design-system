@@ -60,7 +60,7 @@ convention):
    `aria-label` test (`getByLabelText("Command")` resolving to the `⌘` key). 9/9 passing (up
    from 6).
 
-7. **Feature-completeness:** compared against Chakra UI's and GitHub Primer's own `Kbd` — both are
+7. **Feature-completeness:** compared against comparable production `Kbd` components — all are
    equally minimal (no `size`/`variant` prop), so no gap to close. Confirmed, rather than assumed,
    that `Kbd`'s fixed (non-inheriting) font size is the correct, deliberate choice distinct from
    `Code`'s inherited one — a keycap should read as a constant-size visual regardless of context,
@@ -114,7 +114,7 @@ throughout.
 **2026-09-07** — confirmed by the user after the full checklist was verified end to end, including
 a dedicated final re-verification pass that found and fixed one more real gap (finding 8, the
 missing `border-width.2` Design Tokens row) before sign-off: baseline correctness,
-feature-completeness (confirmed against Chakra UI's and GitHub Primer's own `Kbd`, no gap to
+feature-completeness (confirmed against comparable production `Kbd` components, no gap to
 close), the `aria-label` accessibility addition (including a user-reported follow-up fix to the
 `Default`/`Chord` stories' own inert controls), responsiveness (mobile viewport spot-checked),
 design quality (the keycap's raised bottom-edge shadow effect verified across light/dark and at

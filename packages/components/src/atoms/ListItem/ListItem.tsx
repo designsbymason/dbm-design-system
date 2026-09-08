@@ -100,9 +100,9 @@ export const ListItem = forwardRef<HTMLLIElement, ListItemProps>(
     // fails WAI-ARIA's required-owned-elements check on its ancestor
     // `<ul role="list">` (confirmed with axe-core: aria-allowed-role +
     // aria-required-children — a real, measured violation, not a style
-    // preference). Real implementations of this exact pattern (e.g. MUI's
-    // ListItemButton) do the same: nest the interactive element inside
-    // the <li>, don't repurpose the <li> itself. `onClick`/`onKeyDown` are
+    // preference) — nesting the interactive element inside the <li>,
+    // rather than repurposing the <li> itself, is the standard, accessible
+    // way to build this pattern. `onClick`/`onKeyDown` are
     // typed for the <li> element `ListItem` normally renders as — the
     // casts below just re-target them to the inner <span>; the event
     // shape is otherwise identical.

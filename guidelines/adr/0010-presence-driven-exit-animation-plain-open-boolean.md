@@ -4,9 +4,9 @@
 
 ## Context
 
-`Backdrop`'s review (`06-engineering-standards.md` §9) found it had no enter/exit transition — MUI's
-`Backdrop` (`Fade`) and Chakra's `ModalOverlay` both animate opacity in/out, while `Backdrop` mounted
-and unmounted instantly via whatever conditional-render expression the consumer wrote
+`Backdrop`'s review (`06-engineering-standards.md` §9) found it had no enter/exit transition —
+comparable production overlay/scrim components typically animate opacity in/out, while `Backdrop`
+mounted and unmounted instantly via whatever conditional-render expression the consumer wrote
 (`{isOpen && <Backdrop />}`). A real exit animation requires the scrim to stay in the DOM for the
 duration of its own fade-out, which is impossible once React has already unmounted the whole
 subtree — the component needs to control its own presence internally, via Radix's `Presence`.

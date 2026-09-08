@@ -33,8 +33,8 @@ const animationClass: Record<SkeletonAnimation, string | undefined> = {
  * `style` to override in the rare case a hard corner is genuinely needed.
  *
  * Deliberately standalone-only — there's no `children`-driven auto-sizing
- * (MUI's pattern) and no wrapping/`isLoaded`-style mode that swaps to real
- * content once loaded (Chakra's pattern). Compose multiple `Skeleton`
+ * and no wrapping/`isLoaded`-style mode that swaps to real content once
+ * loaded. Compose multiple `Skeleton`
  * instances instead (see the "Composed: card loading placeholder" story) and
  * conditionally render between a `Skeleton` and the real content yourself —
  * both are already fully achievable without special support, so adding

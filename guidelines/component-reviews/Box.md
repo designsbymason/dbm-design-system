@@ -4,9 +4,9 @@ Full `06-engineering-standards.md` §9 review pass run 2026-09-02 — the first 
 Docs page since early on but was explicitly logged as "template-proving pass only, no findings
 recorded," never checked against the full checklist. Implementation was already sound (clean
 polymorphic `as` pattern via the standard `forwardRef`-plus-cast workaround, no unnecessary
-opinions — Chakra's/MUI's own `Box`-equivalents add a style-prop system, which would directly
-contradict this project's own "CSS Modules, no CSS-in-JS" decision, so not counted as a feature
-gap). Findings were real, concrete gaps, including one genuine bug.
+opinions — some comparable libraries' own `Box`-equivalents add a style-prop system, which would
+directly contradict this project's own "CSS Modules, no CSS-in-JS" decision, so not counted as a
+feature gap). Findings were real, concrete gaps, including one genuine bug.
 
 **Fixed:**
 - **`style`'s control in the Docs page's embedded Playground was broken** — confirmed live:

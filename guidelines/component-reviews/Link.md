@@ -37,8 +37,9 @@ the standing reporting convention):
    from the outer `Link` onto the plain child anchor.
 
 4. **Feature-completeness — real gap, discussed and closed at explicit direction (not silently
-   added): Ant Design's `Typography.Link` has a `disabled` prop; DBM's `Link` had none.** Flagged as
-   a named, concrete comparable-library gap per the guardrail in `06-engineering-standards.md` §9;
+   added): some comparable production `Link` components have a `disabled` prop; DBM's `Link` had
+   none.** Flagged as a named, concrete comparable-library gap per the guardrail in
+   `06-engineering-standards.md` §9;
    the user chose to close it. Implemented as `aria-disabled` plus a click-handler guard — `<a>` has
    no native `disabled` attribute at all (unlike `Button`, which can rely on a real `<button>` in
    its own default, non-`asChild` case), so this is unconditional regardless of `asChild`, closer to
@@ -163,7 +164,7 @@ behave differently with respect to `inert`.
 **2026-09-07** — confirmed by the user after the full checklist was verified end to end, including
 a dedicated final re-verification pass that found and fixed one more real bug (finding 9, the
 `onClickCapture` fix for a click handler declared directly on an `asChild` child) before sign-off:
-baseline correctness, feature-completeness (the Ant Design `disabled`-prop gap named and closed at
+baseline correctness, feature-completeness (the `disabled`-prop gap named and closed at
 explicit direction), accessibility (jest-axe zero violations, including the disabled state),
 responsiveness (mobile viewport spot-checked), design quality, theming (both brand themes × both
 modes, confirmed brand-agnostic as expected), Storybook documentation (Docs page, Properties table,

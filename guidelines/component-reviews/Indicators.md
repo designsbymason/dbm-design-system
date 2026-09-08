@@ -187,9 +187,9 @@ system as `ProgressBar` (`value={activeIndex + 1}`, `max={count}`) with zero new
 this file's own note above for the full reasoning. `outline`/`bars` were chosen instead because both
 keep the *exact* existing behavior (controlled `activeIndex`, roving-tabindex keyboard nav,
 `role="group"`) and only change the dot's own rendering — matching `05-component-api-conventions.md`
-§2's `variant` convention (`Button`/`Tag`'s own shape), not the four-library comparison this project
-usually reaches for first (none of MUI/Chakra/Ant/Radix ship a standalone "Indicators" component to
-compare against — the precedent here is the broader pagination-indicator pattern in the wild,
+§2's `variant` convention (`Button`/`Tag`'s own shape), not the multi-library comparison this project
+usually reaches for first (no comparable production component library ships a standalone
+"Indicators" component to compare against — the precedent here is the broader pagination-indicator pattern in the wild,
 Swiper.js/Stories-style UIs, named honestly as a weaker citation than the usual sibling-library gap).
 - **`outline`:** inactive dots render as a hollow ring (`border.neutral-strong`, transparent fill)
   instead of the default solid `bg.track-strong` fill; hover intensifies to `border.strong` — both

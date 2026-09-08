@@ -5,7 +5,7 @@ sound (correct Radix-equivalent relative-root/absolute-inset-0/CSS-`aspect-ratio
 hardcoded values, `forwardRef` correct, no SSR/theming issues, live-verified across both brands ×
 both modes and at mobile viewport with zero jest-axe violations) — findings were entirely in
 documentation completeness and Storybook coverage, not runtime correctness. No feature-completeness
-gap found against Radix's own `AspectRatio` or Chakra's equivalent (same core pattern).
+gap found against comparable production implementations of this same pattern.
 
 **Fixed:**
 - No Playground story existed — `Default`/`Square`/`Video embed` all used a hardcoded

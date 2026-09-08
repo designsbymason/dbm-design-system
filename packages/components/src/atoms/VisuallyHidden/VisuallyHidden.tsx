@@ -21,8 +21,8 @@ import type { VisuallyHiddenProps } from "./VisuallyHidden.types";
  * `focusable` reveals the content in normal document flow the moment it (or
  * a focusable descendant) receives focus — the classic skip-link pattern
  * (hidden for mouse/screen-reader users, visible for sighted keyboard
- * users), matching Bootstrap's `.visually-hidden-focusable` and react-aria's
- * `isFocusable`. Reveal only restores normal layout; it adds no background
+ * users), matching react-aria's own `isFocusable` for this same pattern.
+ * Reveal only restores normal layout; it adds no background
  * or positioning of its own, so style the revealed state yourself if it
  * needs to stand out.
  *

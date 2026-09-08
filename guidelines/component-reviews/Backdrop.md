@@ -2,9 +2,9 @@
 
 Full `06-engineering-standards.md` §9 review pass run 2026-09-05. Core implementation was already
 sound (correct tokens throughout, `forwardRef`, SSR-safe via `Portal`, zero hardcoded values,
-accessible-by-design click-to-dismiss matching Radix/MUI/Chakra precedent) — findings covered
-documentation completeness, Storybook coverage, and two named feature-completeness gaps against
-MUI's `Backdrop`. `asChild` support (Radix's own `Dialog.Overlay` has it) was raised but deliberately
+accessible-by-design click-to-dismiss matching comparable production precedent) — findings covered
+documentation completeness, Storybook coverage, and two named feature-completeness gaps.
+`asChild` support (Radix's own `Dialog.Overlay` has it) was raised but deliberately
 not added — Backdrop generates its own visual content from props rather than `children`, which
 `05-component-api-conventions.md` §3's `as`-vs-`asChild` rule says doesn't fit `asChild`.
 
@@ -25,14 +25,15 @@ not added — Backdrop generates its own visual content from props rather than `
   actually unmounting (this only surfaces in the real-browser Storybook/Vitest project; the jsdom unit
   tests never detect the CSS animation at all, so `Presence` skips straight to unmounting there —
   both are correct for their own environment, not a discrepancy to fix).
-- **Feature-completeness gap (named against MUI's `Backdrop`): no way to render content on top of the
-  scrim** (a common real pattern — a centered `Spinner` for a full-page loading overlay). Added
+- **Feature-completeness gap (named against comparable production overlay/scrim components): no way
+  to render content on top of the scrim** (a common real pattern — a centered `Spinner` for a
+  full-page loading overlay). Added
   `children?: ReactNode`, rendered explicitly (previously only reachable by accident through the
   untyped `...props` spread) and centered via `.root`'s new `display: flex; align-items: center;
   justify-content: center`. Covered by a new unit test, a new `WithContent` story, and a "Design
   tokens"-adjacent Code example.
-- **Feature-completeness gap (named against MUI's `Backdrop`/Chakra's `ModalOverlay`): no enter/exit
-  transition.** MUI wraps its own in `Fade`; Chakra animates `ModalOverlay` via Framer Motion.
+- **Feature-completeness gap (named against comparable production overlay/scrim components): no
+  enter/exit transition** — comparable components typically animate opacity in/out on mount/unmount.
   `Backdrop` previously mounted/unmounted instantly. Added a plain `open?: boolean` prop (default
   `true`) rendering through Radix `Presence`, with `data-state="open"|"closed"` driving new
   `fadeIn`/`fadeOut` `@keyframes` (`--dbm-motion-duration-base` / `--dbm-motion-easing-standard`,

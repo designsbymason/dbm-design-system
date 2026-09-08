@@ -34,10 +34,8 @@ A page or section heading, rendered as `h1`-`h6` per `level` by default and set 
 system's secondary/editorial typeface (see the Typography foundations page for the full
 primary/secondary distinction). `level` (document structure — what a screen reader's heading
 outline sees) and `size` (visual size) default to a matched pair but are fully independent: a
-heading can be structurally an `h1` while visually smaller, or vice versa, the same separation
-[MUI's `Typography`](https://mui.com/material-ui/react-typography/) (`variant` vs. `component`) and
-[Radix Themes' `Heading`](https://www.radix-ui.com/themes/docs/components/heading) (`size` vs. `as`)
-both make. `as` overrides the rendered element entirely (e.g. a repeated card title that shouldn't
+heading can be structurally an `h1` while visually smaller, or vice versa. `as` overrides the
+rendered element entirely (e.g. a repeated card title that shouldn't
 add another entry to the page's heading outline) while keeping the correct heading semantics via an
 automatic ARIA fallback.
 

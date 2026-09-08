@@ -4,7 +4,7 @@ Full `06-engineering-standards.md` §9 review pass run 2026-09-02. A notably mor
 component than the other Layout atoms reviewed this session — a real SSR-safe `matchMedia` hook
 (`useResolvedOrientation`) keeps `aria-orientation` correct across a responsive `orientation` map,
 already well-tested (14 unit tests) before this pass. No feature-completeness gap found against
-Chakra's own `Divider` (comparable shape); MUI's/Ant's own `Divider` both support label
+comparable production `Divider` implementations (comparable shape); some do support label
 alignment, which DBM's didn't — see the `align` addition below.
 
 **Fixed:**
@@ -39,8 +39,8 @@ alignment, which DBM's didn't — see the `align` addition below.
   behavior is. When `label` is a plain string and no explicit `aria-label` is given, it's now used
   automatically as the accessible name; an explicit `aria-label` always wins, and a non-string
   `label` (e.g. an icon) gets no automatic fallback (can't derive a string from arbitrary content).
-- **Added `align` (`'start' | 'center' | 'end'`, default `'center'`) — the named gap against MUI's/
-  Ant's own `Divider`.** Implemented via a `.lineShort` CSS modifier (`flex: 0 0
+- **Added `align` (`'start' | 'center' | 'end'`, default `'center'`) — the named gap against
+  comparable production `Divider` implementations.** Implemented via a `.lineShort` CSS modifier (`flex: 0 0
   var(--dbm-space-6)`) applied to whichever line segment sits on the short side, overriding the
   default `flex: 1 1 auto` both segments otherwise share equally — works unchanged for both
   orientations, same reasoning as `.line`'s own orientation-agnostic `flex` rule. Live-verified:
@@ -129,7 +129,7 @@ element, both before and after).
 
 **Third follow-up (same day, user-requested addition):** added a `"dotted"` `variant`, alongside
 the existing `"solid"`/`"dashed"` pair — user asked what other variants were worth adding after a
-brief survey of comparable libraries (Chakra/Ant ship only solid/dashed; MUI's extra `variant`
+brief survey of comparable libraries (some ship only solid/dashed; another's extra `variant`
 values are inset-margin options, not line styles, and were judged out of scope). `dotted` mirrors
 `dashed`'s existing implementation exactly (`.lineDottedHorizontal`/`.lineDottedVertical` CSS
 classes, `border-block-end`/`border-inline-end` with `dotted` in place of `dashed`, orientation

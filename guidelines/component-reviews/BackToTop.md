@@ -52,8 +52,8 @@ gap against a component this one directly wraps, and the standard documentation-
   both light and dark mode.
 
 **Considered, not added (a named, judgment-level gap — flagged for a separate decision, not folded
-into this pass):** Ant Design's `BackTop` — the one real precedent for this exact component type —
-supports a custom scroll container via `target`; this component is hardcoded to `window`. Real value
+into this pass):** the one real precedent for this exact component type supports a custom scroll
+container via a `target`-style prop; this component is hardcoded to `window`. Real value
 for a scrollable-panel/dashboard context (this system's own stated enterprise use case), but real
 added complexity (retargeting the scroll listener and the `scrollTo` call to an arbitrary element
 instead of `window`). Not implemented without an explicit decision to take it on.
@@ -70,9 +70,9 @@ including the new `play` function), a real `tsup` build, and live Storybook veri
 page in both light and dark mode.
 
 **Follow-up, 2026-09-05, at explicit direction: added `scrollContainerRef` (a custom scroll container,
-the deferred item above).** Named `scrollContainerRef`, not Ant Design's `target` — this project's own
+the deferred item above).** Named `scrollContainerRef`, not a `target`-style prop — this project's own
 internal precedent (`Affix`'s existing prop of the identical name and shape) took priority over the
-external-library naming the original finding cited, per the same reasoning `05-component-api-
+external naming the original finding cited, per the same reasoning `05-component-api-
 conventions.md` gives generally for consistency across this system's own components.
 - `RefObject<HTMLElement | null>`, matching `Affix`'s own type exactly. When provided: the scroll
   listener attaches to the container instead of `window`, `threshold` is measured against the

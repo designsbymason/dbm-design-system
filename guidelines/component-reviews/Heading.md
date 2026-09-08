@@ -37,16 +37,16 @@ Full `06-engineering-standards.md` §9 review pass run 2026-09-06.
 
 **Added (feature-completeness gaps, named against comparable components per the `06` §9
 guardrail, both approved before implementation):**
-- **`align?: "start" | "center" | "end"`** — named gap against MUI's `Typography` (`align`) and
-  Radix Themes' `Heading` (`align`). Logical keywords (not `left`/`right`), per `06` §7's
+- **`align?: "start" | "center" | "end"`** — named gap against comparable typography components'
+  own `align` prop. Logical keywords (not `left`/`right`), per `06` §7's
   RTL-safe-by-default convention — `text-align: start/center/end` is itself the logical form, no
   `-inline` suffix needed. Unset by default (inherits the surrounding layout's own alignment,
   visually unchanged from before this pass). Maps directly to a literal CSS keyword, not a design
   token — `text-align` isn't a color/spacing/etc. value the token system covers, the same category
   `Stack`'s `align`/`justify` (flexbox keywords) already fall into; documented as such on the Docs
   page's Design tokens section rather than silently omitted.
-- **`wrap?: "wrap" | "nowrap" | "balance" | "pretty"`** — named gap against Radix Themes' `Heading`
-  (`wrap`, mapping to CSS `text-wrap`). `balance` avoids an orphaned short last line on a multi-line
+- **`wrap?: "wrap" | "nowrap" | "balance" | "pretty"`** — named gap against comparable typography
+  components' own `wrap` prop (mapping to CSS `text-wrap`). `balance` avoids an orphaned short last line on a multi-line
   heading; `pretty` avoids poor breaks with less layout cost. Unset by default (browser's own `wrap`
   behavior, visually unchanged). Same non-tokenized-literal treatment as `align` — documented on the
   Docs page rather than silently omitted.
@@ -62,8 +62,8 @@ guardrail, both approved before implementation):**
 
 **Kept as-is (confirmed intentional, not a gap):** `level`/`size` decoupling itself — the existing
 `defaultSizeForLevel` map already gives every level a sensible default `size` while `size` stays
-fully overridable, the same split MUI's `variant`/`component` and Radix Themes' `size`/`as` make.
-Discussed directly and confirmed as the desired pattern before the `HeadingSize` fix above; nothing
+fully overridable, the same split comparable typography components make between their own visual
+and structural props. Discussed directly and confirmed as the desired pattern before the `HeadingSize` fix above; nothing
 architectural changed here, only the range of values `size` itself accepts.
 
 Tests: 18 → 29 (three new `xs`/`sm`/`base` size assertions, default-vs-explicit `align`/`wrap`
@@ -383,8 +383,8 @@ occurrences across the declaration file).
 - Full Vitest suite (983 tests package-wide, unit project), `tsc --noEmit`, `eslint` (including
   `.storybook`), a real `pnpm build`, and the Foundations token-coverage check — all clean.
 
-**Known, deliberately-deferred nice-to-have (not a defect, not blocking):** Radix Themes' `Heading`
-also offers a `trim` prop (leading-trim, removing the extra space above/below text that a font's own
+**Known, deliberately-deferred nice-to-have (not a defect, not blocking):** some comparable
+typography components also offer a `trim` prop (leading-trim, removing the extra space above/below text that a font's own
 line-height reserves — the invisible padding from a font's ascent/descent/line-gap metrics, not
 anything set in CSS, which is why text never sits perfectly flush against a border or icon without a
 fudge-factor negative margin). Discussed directly with the user (2026-09-06) and declined for now.

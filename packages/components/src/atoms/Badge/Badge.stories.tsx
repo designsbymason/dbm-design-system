@@ -305,8 +305,9 @@ export const SolidStatusLabels: Story = {
 
 // The five stories below demonstrate `anchor` — the overlay/positioning
 // mode (badge overlapping a corner of another element, e.g. a notification
-// dot on a bell icon), added to close a feature gap against MUI/Ant
-// Design's own Badge, whose *primary* use case this is. `anchor` itself is
+// dot on a bell icon), added to close a real feature gap: an overlay/
+// notification-dot badge is a common, expected use case this component
+// didn't originally cover. `anchor` itself is
 // a fixed identity value per story (a ReactNode can't be represented by a
 // generic Storybook control at all — same reasoning as Button's icon props
 // needing a curated control, except there's no small enum to curate here),
