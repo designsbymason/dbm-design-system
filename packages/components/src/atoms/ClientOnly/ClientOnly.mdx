@@ -1,0 +1,182 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Image } from "../Image";
+import { Skeleton } from "../Skeleton";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { ClientOnly } from "./ClientOnly";
+import * as ClientOnlyStories from "./ClientOnly.stories";
+
+export const propOrder = ["children", "fallback"];
+
+<Meta of={ClientOnlyStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ClientOnly" tier="Atom" />
+
+An SSR-safe render guard for content that can only run correctly in a browser — a value read from
+`window`/`localStorage`, a non-deterministic random ID, a chart library that measures the DOM. In a
+server-rendered app, rendering that kind of content during SSR produces markup that won't match
+what the client renders on its first pass, which React reports as a hydration mismatch.
+`ClientOnly` avoids that by rendering `fallback` (`null` by default) on the server and while
+hydrating, then swapping to the real `children` once mounted. It renders no DOM element of its own
+— `children` or `fallback` render directly, with nothing wrapping them.
+
+### Import
+
+```tsx
+import { ClientOnly } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<Callout tone="info" title="fallback never appears in this canvas — see why below">
+
+Storybook's own preview is a plain client-only render, with no server-rendered HTML behind it. The
+`fallback` phase only exists to avoid a mismatch against real server HTML — with no server HTML in
+the picture here, there's nothing to guard against, so `children` render immediately and `fallback`
+never appears. The control below is genuinely wired to the real prop (this isn't the "control does
+nothing because of a bug" problem this system watches for elsewhere) — it's just that this
+particular effect can't be observed inside a client-only tool. See
+[Code examples](#code-examples) for a real, verified example of the `fallback` phase actually
+happening.
+
+</Callout>
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ClientOnlyStories.Playground} />
+
+</div>
+<PlaygroundControls of={ClientOnlyStories.Playground} order={propOrder} />
+
+## Properties
+
+`ClientOnly` accepts no other props. Unlike most components in this system, it doesn't extend any
+native element's attributes — it renders no DOM element of its own, so there's no underlying
+element to spread additional props onto. This is also why it takes no `ref`: there's nothing for a
+ref to point at.
+
+<PropertiesTable of={ClientOnlyStories} order={propOrder} />
+
+## Variants
+
+### With a loading fallback
+
+<Canvas of={ClientOnlyStories.WithFallback} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `ClientOnly` around content that reads a browser-only API (`window`, `localStorage`,
+  `navigator`) or renders something non-deterministic (a random ID, `Math.random()`,
+  `Date.now()`-based content) in a server-rendered app.
+- Keep `fallback` visually similar in size/shape to `children` — a `Skeleton` matched to the real
+  content's dimensions avoids a jarring layout shift the instant the swap happens.
+- Keep `fallback` non-interactive. Content the user can click or focus disappears the moment
+  `children` takes over, which reads as broken if `fallback` invited interaction.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reach for `ClientOnly` just to delay rendering for a moment in a client-only app (no SSR
+  involved) — there's no mismatch to avoid there, so `children` render immediately regardless, and
+  `fallback` never shows.
+- Don't wrap an entire page or a large layout region in one `ClientOnly` — scope it to the specific
+  piece of content that actually needs browser-only behavior, so the rest of the page still
+  benefits from real server-rendered HTML (faster first paint, works with JavaScript disabled).
+- Don't put content inside `fallback` that a screen reader user would need to act on — it's
+  removed from the DOM the moment `children` mounts, with no announcement that it happened.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reach for `ClientOnly` only when a real hydration mismatch is possible — most components in this
+  system are already SSR-safe by construction and don't need it.
+- Match `fallback`'s footprint to `children`'s real rendered size wherever practical (a `Skeleton`
+  sized to match, or a fixed-height wrapper) — this is what actually prevents the layout shift a
+  reader would otherwise see the instant the real content swaps in.
+- If the browser-only content is expensive to compute, `ClientOnly` doesn't by itself defer that
+  cost — it only defers *rendering*. Combine with your own lazy-loading/code-splitting if the
+  underlying work itself needs to be deferred too.
+
+## Accessibility
+
+<Callout tone="info" title="No ARIA role of its own — entirely dependent on children/fallback">
+
+- `ClientOnly` sets no role, label, or live-region behavior itself. Whatever accessible semantics
+  the page ends up with come entirely from whichever of `fallback`/`children` is currently
+  rendered.
+- **The swap from `fallback` to `children` isn't announced.** If `fallback` held content a screen
+  reader user was actively reading, it's silently replaced — keep `fallback` genuinely
+  content-free of anything that matters (a placeholder shape, not real information), so nothing of
+  substance is lost in the swap.
+- **Avoid putting a focused or focusable element inside `fallback`.** If focus is sitting on an
+  element inside `fallback` at the exact moment `children` mounts, that element is removed from the
+  DOM and focus is lost back to the document body — the same general risk as any conditional render
+  swap, not specific to `ClientOnly`, but worth calling out since the swap here always happens
+  automatically, not from a user action that could be timed around it.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// The common case: browser-only content with a matched-size loading fallback
+<ClientOnly fallback={<Skeleton variant="rectangular" height="12rem" />}>
+  <ChartThatReadsWindowWidth />
+</ClientOnly>
+```
+
+```tsx
+// Reading a browser-only API directly
+<ClientOnly fallback={null}>
+  <span>{window.localStorage.getItem("preferredTheme") ?? "system"}</span>
+</ClientOnly>
+```
+
+```tsx
+// What actually happens, verified directly (not assumed):
+//
+// Real SSR + hydration (hydrateRoot) — the only context where a hydration
+// mismatch is possible in the first place:
+//   1. Server sends:      <span>Loading…</span>
+//   2. Client hydrates:   <span>Loading…</span>   (matches the server exactly)
+//   3. Once mounted:      <span>Ready</span>       (a separate, later update)
+//
+// A plain client-only render (createRoot) — an SPA with no SSR, or this
+// very Storybook preview — has no server HTML to match, so step 2 never
+// happens; the client goes straight to step 3 from its very first paint.
+<ClientOnly fallback={<span>Loading…</span>}>
+  <span>Ready</span>
+</ClientOnly>
+```
+
+## Design tokens used
+
+`ClientOnly` itself references **no tokens** — it renders no DOM element of its own, so it has no
+CSS and nothing for a token to apply to. Any visual styling comes entirely from whatever
+`children`/`fallback` render, which supply their own token usage.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Skeleton"
+  description="The usual choice for fallback — a placeholder shape sized to match the real content, avoiding a layout shift when the swap happens"
+  href="/?path=/docs/atoms-data-display-skeleton--docs"
+>
+  <Skeleton variant="text" width="6rem" />
+</RelatedCard>
+<RelatedCard
+  name="Image"
+  description="A different kind of fallback — Image's own fallback state responds to a load error, not to server/client mount timing, but shares the same 'show a placeholder, then the real thing' shape"
+  href="/?path=/docs/atoms-media-image--docs"
+>
+  <Image src="" alt="Broken example" width={40} height={40} />
+</RelatedCard>
+</div>
