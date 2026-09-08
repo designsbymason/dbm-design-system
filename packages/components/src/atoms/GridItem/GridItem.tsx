@@ -1,5 +1,5 @@
 import { cx, responsiveStyle } from "@dbm-design-system/primitives";
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
 import styles from "./GridItem.module.css";
 import type { GridItemProps } from "./GridItem.types";
@@ -11,12 +11,36 @@ type GridItemComponent = {
   displayName?: string;
 };
 
+// Flags any responsive-map or single value <= 0 — `span`/`grid-column`/
+// `grid-row` are invalid per the CSS Grid spec for a non-positive integer,
+// so the browser silently ignores the whole declaration rather than
+// clamping it, which reads as "colSpan did nothing" with no error anywhere.
+function hasNonPositiveValue(value: number | Partial<Record<string, number>> | undefined) {
+  if (value === undefined) return false;
+  if (typeof value === "number") return value <= 0;
+  return Object.values(value).some((entry) => entry !== undefined && entry <= 0);
+}
+
 const GridItemImpl = forwardRef<HTMLElement, GridItemProps<ElementType>>(
   function GridItem(
-    { as, colSpan, rowSpan, colStart, rowStart, className, style, ...props },
+    { as, colSpan, rowSpan, colStart, rowStart, order, className, style, ...props },
     ref,
   ) {
     const Component = as ?? "div";
+
+    const hasWarnedNonPositiveSpanRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (
+        (hasNonPositiveValue(colSpan) || hasNonPositiveValue(rowSpan)) &&
+        !hasWarnedNonPositiveSpanRef.current
+      ) {
+        hasWarnedNonPositiveSpanRef.current = true;
+        console.warn(
+          "GridItem: `colSpan`/`rowSpan` must be a positive integer — a zero or negative value is invalid per the CSS Grid spec, so the browser silently ignores the whole placement instead of clamping it.",
+        );
+      }
+    }
+
     return (
       <Component
         ref={ref}
@@ -38,6 +62,7 @@ const GridItemImpl = forwardRef<HTMLElement, GridItemProps<ElementType>>(
           ...responsiveStyle(rowSpan, "--griditem-row-span", (value: number) =>
             String(value),
           ),
+          ...responsiveStyle(order, "--griditem-order", (value: number) => String(value)),
           ...style,
         }}
         {...props}
@@ -57,7 +82,10 @@ const GridItemImpl = forwardRef<HTMLElement, GridItemProps<ElementType>>(
  * Every prop accepts a single value or a mobile-first responsive map keyed
  * by breakpoint (e.g. `{ base: 4, md: 2 }`), matching `Grid`'s own
  * `columns`/`gap` — so an item can span 2 of 4 columns on desktop and drop
- * to full-width on mobile without any manual breakpoint check.
+ * to full-width on mobile without any manual breakpoint check. `order`
+ * reorders an item visually (CSS `order`) independent of its DOM position —
+ * useful for e.g. showing a sidebar before the main content on mobile while
+ * keeping the source order (and reading/tab order) unchanged.
  *
  * @example
  * ```tsx
@@ -65,6 +93,10 @@ const GridItemImpl = forwardRef<HTMLElement, GridItemProps<ElementType>>(
  *   <GridItem colSpan={{ base: 4, md: 2 }}>Wide cell</GridItem>
  *   <GridItem>Cell</GridItem>
  *   <GridItem>Cell</GridItem>
+ * </Grid>
+ * <Grid columns={2} gap={4}>
+ *   <GridItem order={{ base: 2, md: 1 }}>Main content</GridItem>
+ *   <GridItem order={{ base: 1, md: 2 }}>Sidebar (shown first on mobile)</GridItem>
  * </Grid>
  * ```
  */

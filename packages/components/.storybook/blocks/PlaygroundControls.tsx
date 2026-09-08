@@ -1,7 +1,7 @@
 import { ArrowCounterClockwiseIcon } from "@dbm-design-system/icons";
 import { DocsContext, useOf } from "@storybook/addon-docs/blocks";
 import type { Of } from "@storybook/addon-docs/blocks";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "../../src/atoms/Button";
 import { FieldLabel } from "../../src/atoms/FieldLabel";
@@ -29,6 +29,20 @@ interface ArgTypeLike {
    * `onChange` always writes the real explicit value, never this one.
    */
   resolveDisplayValue?: (args: Record<string, unknown>) => unknown;
+  /**
+   * Shown (via the native HTML `placeholder` attribute) when a `text`- or
+   * `number`-type control's own value is genuinely empty/unset — cosmetic
+   * guidance only, never a real value: it disappears the moment the reader
+   * types anything, is never sent through `onChange`, and never becomes a
+   * real arg on its own. For a prop like `GridItem`'s `colStart`/`rowStart`
+   * that has no *safe* real default to show instead (unlike `colSpan`/
+   * `rowSpan`, whose own CSS-initial value of `1` is safe to default to —
+   * see that story file's own comment on why `colStart`/`rowStart` can't do
+   * the same), this is what keeps the field from just looking broken/empty
+   * (user-reported, 2026-09-07) without actually setting anything that
+   * could collide once spread across more than one grid item.
+   */
+  placeholder?: string;
 }
 
 /**
@@ -73,13 +87,62 @@ function ControlField({
   // `size`) behaves exactly as before: `effectiveValue === value` always.
   const effectiveValue = value !== undefined ? value : resolvedDisplayValue;
 
+  // `onChange` round-trips through Storybook's event channel
+  // (`usePlaygroundArgs.ts` — `UPDATE_STORY_ARGS` out, `STORY_ARGS_UPDATED`
+  // back in), which isn't instant. Driving every widget's displayed value
+  // directly off `effectiveValue` meant every keystroke/toggle visibly
+  // lagged behind what was just typed/clicked until that round-trip
+  // resolved — confirmed live (user-reported, 2026-09-07): GridItem's
+  // `order` and `colSpan` fields both kept showing their *previous* value
+  // for roughly a second after typing, even though the canvas itself
+  // already updated correctly in the meantime. `draft` is the optimistic
+  // local echo each widget actually displays — it updates synchronously on
+  // every interaction, and re-syncs to the real external value whenever
+  // *that* changes for a reason other than this widget's own edit (the
+  // round-trip finally landing, "Reset to defaults", another control's
+  // `resolveDisplayValue` cascading, switching stories). Synced *during
+  // render* (the React-docs-recommended "adjust state when a prop changes"
+  // pattern — comparing against a same-render "previous value" and calling
+  // setState conditionally, not from inside a `useEffect`), since this
+  // repo's lint config (`react-hooks/set-state-in-effect`) forbids the
+  // effect-based version of this same pattern as a real anti-pattern (it
+  // costs an extra commit/paint the during-render version doesn't).
+  const [draft, setDraft] = useState(effectiveValue);
+  const [prevEffectiveValue, setPrevEffectiveValue] = useState(effectiveValue);
+  if (effectiveValue !== prevEffectiveValue) {
+    setPrevEffectiveValue(effectiveValue);
+    setDraft(effectiveValue);
+  }
+
+  // The `number` widget's own local raw string, not the parsed number —
+  // tracked separately from `draft` (which mirrors the outgoing, already-
+  // parsed value) so a mid-edit state that isn't a valid number yet (an
+  // empty field, a bare "-" while typing a negative `order`) can still be
+  // typed without being clobbered on every keystroke. Declared
+  // unconditionally (a control's own `controlType` never changes across
+  // this component's lifetime, but React's rules of hooks still forbid
+  // calling `useState` from inside the `if`/`else` below) — simply unused
+  // whenever `controlType !== "number"`. Same during-render sync pattern as
+  // `draft` above, keyed off `draft` itself rather than `effectiveValue`.
+  const [rawText, setRawText] = useState(() =>
+    typeof draft === "number" ? String(draft) : "",
+  );
+  const [prevDraftForRawText, setPrevDraftForRawText] = useState(draft);
+  if (draft !== prevDraftForRawText) {
+    setPrevDraftForRawText(draft);
+    setRawText(typeof draft === "number" ? String(draft) : "");
+  }
+
   let widget: ReactNode;
   if (controlType === "boolean") {
     widget = (
       <Switch
         id={fieldId}
-        checked={Boolean(effectiveValue)}
-        onCheckedChange={(checked) => onChange(checked === true)}
+        checked={Boolean(draft)}
+        onCheckedChange={(checked) => {
+          setDraft(checked === true);
+          onChange(checked === true);
+        }}
       />
     );
   } else if (controlType === "select" || controlType === "radio") {
@@ -113,17 +176,19 @@ function ControlField({
     // the same key), and Storybook's own UPDATE_STORY_ARGS pipeline is what
     // correctly re-resolves that key through `mapping` on the way back in.
     const displayValue = argType.mapping
-      ? Object.entries(argType.mapping).find(([, mapped]) => mapped === effectiveValue)?.[0]
-      : effectiveValue === undefined
+      ? Object.entries(argType.mapping).find(([, mapped]) => mapped === draft)?.[0]
+      : draft === undefined
         ? undefined
-        : String(effectiveValue);
+        : String(draft);
     widget = (
       <Select
         id={fieldId}
         value={displayValue}
         onValueChange={(selected) => {
           const index = options.findIndex((option) => String(option) === selected);
-          onChange(index === -1 ? selected : options[index]);
+          const resolved = index === -1 ? selected : options[index];
+          setDraft(resolved);
+          onChange(resolved);
         }}
         placeholder="Choose option…"
       >
@@ -139,10 +204,20 @@ function ControlField({
       <Input
         id={fieldId}
         type="number"
-        value={typeof effectiveValue === "number" ? effectiveValue : ""}
+        value={rawText}
+        placeholder={argType.placeholder}
         onChange={(event) => {
           const next = event.target.value;
-          onChange(next === "" ? undefined : Number(next));
+          setRawText(next);
+          if (next === "") {
+            setDraft(undefined);
+            onChange(undefined);
+            return;
+          }
+          const parsed = Number(next);
+          if (Number.isNaN(parsed)) return;
+          setDraft(parsed);
+          onChange(parsed);
         }}
       />
     );
@@ -151,8 +226,12 @@ function ControlField({
     widget = (
       <Input
         id={fieldId}
-        value={typeof effectiveValue === "string" ? effectiveValue : ""}
-        onChange={(event) => onChange(event.target.value)}
+        value={typeof draft === "string" ? draft : ""}
+        placeholder={argType.placeholder}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          onChange(event.target.value);
+        }}
       />
     );
   }

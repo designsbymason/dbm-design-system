@@ -16,7 +16,7 @@ Structural primitives everything else is built from.
 | Box | atom | 🟢 | Base polymorphic primitive (`as` prop), most components compose this |
 | Stack | atom | 🟢 | Vertical/horizontal flex layout with gap token |
 | Grid | molecule | 🟢 | CSS Grid wrapper, responsive column props — meaningless without child items, so molecule-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) |
-| GridItem | atom | 🟢 | A cell within a `Grid` — colSpan/rowSpan/colStart/rowStart placement. Renders/functions correctly standalone (no context coupling to `Grid`), so atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) despite typically being used inside a molecule |
+| GridItem | atom | 🟢 | A cell within a `Grid` — colSpan/rowSpan/colStart/rowStart placement, plus order (2026-09-07, visual reordering independent of DOM order). Renders/functions correctly standalone (no context coupling to `Grid`), so atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) despite typically being used inside a molecule |
 | Container | atom | 🟢 | Max-width + centered content wrapper |
 | Divider | atom | 🟢 | Horizontal/vertical, with optional label |
 | Spacer | atom | 🟢 | Flex-grow spacer utility |

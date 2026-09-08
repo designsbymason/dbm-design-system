@@ -1,0 +1,226 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../Box";
+import { Grid } from "../../molecules/Grid";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { GridItem } from "./GridItem";
+import * as GridItemStories from "./GridItem.stories";
+
+export const propOrder = [
+  "children",
+  "colSpan",
+  "rowSpan",
+  "colStart",
+  "rowStart",
+  "order",
+  "as",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={GridItemStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="GridItem" tier="Atom" />
+
+A cell within a [`Grid`](/?path=/story/molecules-layout-grid--default-columns), with props for how
+many columns/rows it spans and where it starts — `colSpan`/`rowSpan` for how much space an item
+takes up, `colStart`/`rowStart` for exactly which line it begins at. **Polymorphic** (see
+[`Box`](/?path=/docs/atoms-layout-box--docs) for the full explanation of what that means): renders a
+`div` by default, but `as` lets it render a real `<li>`, `<article>`, or any other element/component
+while keeping GridItem's own grid-placement behavior.
+
+Column/row span and line numbers are structural grid-placement math, not design values, so they're
+plain numbers rather than tokens — every placement prop (`colSpan`/`rowSpan`/`colStart`/`rowStart`/
+`order`) accepts a single value or a mobile-first responsive map keyed by breakpoint (e.g.
+`{ base: 4, md: 2 }`), matching `Grid`'s own `columns`/`gap`.
+
+### Import
+
+```tsx
+import { GridItem } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Drive every prop live — the other three cells stay fixed filler, so the effect on the highlighted
+cell is actually visible.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={GridItemStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={GridItemStories.Playground}
+  exclude={["id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`GridItem` also accepts any other native attribute of its rendered element beyond what's listed
+here — by default a `<div>`, or whatever element `as` specifies — passed straight through to the
+underlying element.
+
+<PropertiesTable of={GridItemStories} order={propOrder} />
+
+## Variants
+
+### colSpan
+
+<Canvas of={GridItemStories.ColSpan} />
+
+### colStart + colSpan (explicit placement)
+
+<Canvas of={GridItemStories.ExplicitColumnPlacement} />
+
+### rowStart + rowSpan (explicit placement)
+
+<Canvas of={GridItemStories.ExplicitRowPlacement} />
+
+### rowSpan + colSpan on the same item
+
+<Canvas of={GridItemStories.RowAndColSpanCombined} />
+
+### order (visual reordering, independent of DOM order)
+
+<Canvas of={GridItemStories.Order} />
+
+### Responsive colSpan (full-width on mobile, half on desktop)
+
+<Canvas of={GridItemStories.ResponsiveSpan} />
+
+### Polymorphic: as="li" (real semantic list item, GridItem layout behavior)
+
+<Canvas of={GridItemStories.AsListItem} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `colSpan`/`rowSpan` for the common case (an item spanning N columns/rows from wherever it
+  naturally falls in the grid's auto-placement flow).
+- Reach for `colStart`/`rowStart` only when an item needs to start at a specific line, overriding
+  the grid's own auto-placement — most layouts never need this.
+- Use `as="li"` (with the parent `Grid` itself set to `as="ul"`) when a grid is genuinely a list of
+  items semantically, not just visually arranged in a grid.
+- Use `order` sparingly, for genuine visual-only reordering (e.g. a sidebar shown first on mobile,
+  second on desktop) — it never changes DOM/reading/tab order, so overusing it can make the visual
+  order diverge confusingly from keyboard navigation order.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass a zero or negative `colSpan`/`rowSpan` — both are invalid per the CSS Grid spec, so
+  the browser silently ignores the whole placement instead of clamping it (GridItem warns about
+  this in development).
+- Don't use `as="li"` without a real `<ul>`/`<ol>` ancestor — an `<li>` outside list context is an
+  accessibility violation regardless of what renders it.
+- Don't reach for `order` to fix a layout that's actually wrong in its source order — if content
+  should logically read in a different order, reorder it in the DOM instead; `order` is for cases
+  where the *visual* and *logical* orders genuinely need to differ.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `colSpan`/`rowSpan`/`colStart`/`rowStart`/`order` all accept the same mobile-first responsive map
+  shape as `Grid`'s own `columns`/`gap` — an item can span 2 of 4 columns on desktop and drop to
+  full-width on mobile without any manual breakpoint check.
+- `colStart`/`rowStart` alone (with no matching span) default the span to `1`, per the CSS Grid
+  spec's own `auto / span 1` fallback — the same as leaving the axis unset entirely except for
+  where it starts.
+- `order` only affects visual/paint order — it never changes DOM order, so screen reader
+  navigation and Tab order still follow the source order regardless of what `order` is set to.
+
+## Accessibility
+
+<Callout tone="info" title="A plain layout cell — no ARIA of its own">
+
+- Renders as whatever native element `as` specifies; a plain `<div>` (the default) requires no ARIA
+  to be accessible.
+- Automated accessibility check verified both against the default `<div>` and against `as="li"`
+  used correctly (wrapped in a real `<ul>`) — per the same convention that caught a real violation
+  on `Avatar` once `as` changed its underlying element (`06-engineering-standards.md` §9).
+  `GridItem` sets no ARIA role of its own, so there's no equivalent violation here — but rendering
+  `as="li"` *without* a real list ancestor does trigger a real "listitem" violation, an inherent
+  property of `<li>` outside list context that's the caller's responsibility, not something
+  `GridItem` could or should suppress.
+- No keyboard interaction — `GridItem` is not an interactive element.
+- `order` is purely visual — it never changes the accessible DOM order, reading order, or Tab
+  order.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Grid columns={4} gap={4}>
+  <GridItem colSpan={2}>Wide cell</GridItem>
+  <GridItem>Cell</GridItem>
+  <GridItem>Cell</GridItem>
+</Grid>
+```
+
+```tsx
+// Explicit placement — starts at column 2, spans 2
+<GridItem colStart={2} colSpan={2}>Cell</GridItem>
+```
+
+```tsx
+// Sidebar shown first on mobile, second on desktop — visual only, DOM order unchanged
+<Grid columns={2} gap={4}>
+  <GridItem order={{ base: 2, md: 1 }}>Main content</GridItem>
+  <GridItem order={{ base: 1, md: 2 }}>Sidebar</GridItem>
+</Grid>
+```
+
+```tsx
+// A real semantic list, using Grid layout
+<Grid as="ul" columns={3} gap={4} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+  <GridItem as="li">Item one</GridItem>
+  <GridItem as="li">Item two</GridItem>
+</Grid>
+```
+
+```tsx
+// A native <div> attribute (title), passed straight through
+<GridItem title="Featured item" colSpan={2}>Cell</GridItem>
+```
+
+## Design tokens used
+
+`GridItem` uses no design tokens of its own — `colSpan`/`rowSpan`/`colStart`/`rowStart`/`order` are
+all structural grid-placement math (plain numbers per the CSS Grid spec), not colors, spacing, or
+other tokenized design values.
+
+<TokenRow token="breakpoint.sm–breakpoint.3xl" usage="the six breakpoint thresholds every responsive prop cascades across, matching Grid's/Stack's own identical mechanism" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Grid"
+  description="The 2-dimensional CSS Grid layout primitive GridItem is designed to sit inside — provides the column/row tracks GridItem places itself within"
+  href="/?path=/story/molecules-layout-grid--default-columns"
+>
+  <Grid columns={3} gap={2} style={{ width: 60 }}>
+    <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Grid>
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch this file's own polymorphic-as explanation lives on"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>
