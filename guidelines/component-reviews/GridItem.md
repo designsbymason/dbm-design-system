@@ -161,6 +161,21 @@ last, per the standing reporting convention):
     real value is typed (`colStart=2` correctly moved the highlighted cell), and `rowStart`'s own
     placeholder was unaffected by that edit.
 
+14. **User follow-up: the `rowStart + rowSpan (explicit placement)` story's item was labeled "spans
+    2" but didn't look visually taller than the two single-row items above it.** Confirmed via
+    computed style that `grid-row: 2 / span 2` really was applied — the underlying `rowSpan` prop
+    was never the bug. The story's `Grid` had a plain `height: "12rem"` and no other content in
+    columns 2/3 of the rows the spanning item occupies; with no `grid-template-rows` set, CSS
+    Grid's auto-row-sizing algorithm sizes each implicit row only by whatever actually occupies
+    *that specific row*, so the two rows this item spans ended up sized much smaller than row 1's
+    (which does have full single-row content) — the item measured 109px tall against row 1's 66px,
+    nowhere near a genuine 2x. Same defect, same fix, in the neighboring `rowSpan + colSpan on the
+    same item` story. Fixed both by passing `Grid`'s existing `autoRows="4rem"` prop instead of the
+    `height` style — this sets `grid-auto-rows` directly, fixing every implicit row to the same
+    height regardless of content, so a rowSpan reliably renders as visually proportional. Re-verified
+    live via computed style + `getBoundingClientRect`: the spanning item now measures exactly
+    2×64px + one 16px row-gap = 144px against each single-row item's 64px, in both stories.
+
 ## Verification
 
 `tsc --noEmit` (main + `.storybook`), `eslint . --max-warnings 0` (whole package), full `vitest`

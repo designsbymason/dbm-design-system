@@ -247,7 +247,16 @@ export const ExplicitRowPlacement: Story = {
   },
   args: { rowStart: 2, rowSpan: 2 },
   render: (args) => (
-    <Grid columns={3} gap={4} style={{ height: "12rem" }}>
+    // `autoRows="4rem"` fixes every implicit row to the same height,
+    // regardless of content. Without it (an earlier version of this story
+    // used a plain `height: "12rem"` on the Grid instead), CSS Grid's
+    // auto-sizing algorithm sizes each implicit row only by whatever
+    // content actually occupies *that specific row* — and since nothing
+    // else sits in columns 2/3 of rows 2-3 here, the two rows this item
+    // spans end up far shorter than row 1's, so a rowSpan={2} item renders
+    // barely taller than a rowSpan={1} one even though `grid-row: 2 / span
+    // 2` is genuinely applied underneath (confirmed via computed style).
+    <Grid columns={3} gap={4} autoRows="4rem">
       <GridItem
         {...args}
         colStart={parseNumberArg(args.colStart)}
@@ -271,7 +280,9 @@ export const RowAndColSpanCombined: Story = {
   },
   args: { rowSpan: 2, colSpan: 2 },
   render: (args) => (
-    <Grid columns={3} gap={4} style={{ height: "12rem" }}>
+    // Same `autoRows` fix as the story above — without it, this item's
+    // rowSpan={2} wouldn't visually read as double-height either.
+    <Grid columns={3} gap={4} autoRows="4rem">
       <GridItem
         {...args}
         colStart={parseNumberArg(args.colStart)}
