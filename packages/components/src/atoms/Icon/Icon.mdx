@@ -33,8 +33,8 @@ is built on. Renders any Phosphor icon at a token-driven `size` and `tone`, deco
 — `import { Wallet } from '@dbm-design-system/icons'; <Icon icon={Wallet} />` — not a string name,
 so unused icons stay tree-shaken out of the final bundle and every reference is type-checked at
 compile time. This is the mechanism every icon-rendering component in the system
-([`Button`](/?path=/docs/atoms-inputs-button--docs)'s `leadingIcon`/`trailingIcon`,
-[`IconButton`](/?path=/docs/atoms-inputs-iconbutton--docs)'s `icon`, `Tag`'s `leadingIcon`, and
+([`Button`](/docs/atoms-inputs-button--docs)'s `leadingIcon`/`trailingIcon`,
+[`IconButton`](/docs/atoms-inputs-iconbutton--docs)'s `icon`, `Tag`'s `leadingIcon`, and
 others) ultimately renders through.
 
 ### Import
@@ -117,7 +117,7 @@ import { Wallet } from "@dbm-design-system/icons";
 - Don't hardcode a `color`/`fill` via `style` to recolor an icon — reach for `tone` (a real
   `--dbm-icon-*` token) so the color stays theme-reactive across brand and light/dark mode.
 - Don't reach for `Icon` as a loading spinner — that's the dedicated
-  [`Spinner`](/?path=/docs/atoms-feedback-spinner--docs) atom, which already handles the
+  [`Spinner`](/docs/atoms-feedback-spinner--docs) atom, which already handles the
   `prefers-reduced-motion` case a spun `Icon` wouldn't.
 
 </Callout>

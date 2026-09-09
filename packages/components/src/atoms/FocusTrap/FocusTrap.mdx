@@ -42,6 +42,17 @@ import { FocusTrap } from "@dbm-design-system/components";
 
 ## Playground
 
+<Callout tone="info" title="asChild toggles correctly, but has no visible effect here — see why below">
+
+`asChild` genuinely merges the trap onto this box instead of rendering Radix's own wrapper `<div>`
+around it — the control below is real and correctly wired (this isn't the "control does nothing
+because of a bug" problem this system watches for elsewhere). The wrapper it removes carries no
+styling of its own, though, so toggling it produces no visible difference in this canvas — inspect
+the DOM (browser devtools) to see the actual effect, or see [Variants](#variants) below for a
+dedicated, isolated demo of the same behavior.
+
+</Callout>
+
 <div className="dbm-playground-canvas">
 
 <Canvas of={FocusTrapStories.Playground} />
@@ -82,7 +93,7 @@ it, regardless of either one's own `trapped`/`loop` values. Embedding this story
 silently break the Playground's own `loop` demo above it on this same page (confirmed directly, not
 assumed — this is a real Radix behavior, not a Storybook Controls wiring bug).
 
-**<a href="/?path=/story/atoms-utility-focustrap--merged-onto-child">Open the "Merged onto a single child (asChild)" story on its own page</a>**
+**[Open the "Merged onto a single child (asChild)" story on its own page](/story/atoms-utility-focustrap--merged-onto-child)**
 to see it live, fully interactive, with nothing else competing for keyboard focus — it merges the
 trap directly onto its box with no extra wrapping `<div>` (inspect the DOM there to confirm), the
 same as the code example below.

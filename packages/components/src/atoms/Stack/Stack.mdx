@@ -29,7 +29,7 @@ export const propOrder = [
 
 A flex layout primitive for stacking children vertically or horizontally with a consistent,
 token-driven `gap` — the standard way to space a group of elements without hand-writing margins.
-**Polymorphic** (see [`Box`](/?path=/docs/atoms-layout-box--docs) for the full explanation of what
+**Polymorphic** (see [`Box`](/docs/atoms-layout-box--docs) for the full explanation of what
 that means): renders a `div` by default, but `as` lets it render a real `<ul>`, `<nav>`, or any
 other element/component while keeping Stack's own flex-layout behavior. `direction`, `align`,
 `justify`, `wrap`, and `gap` each accept a single value or a mobile-first responsive map keyed by
@@ -113,21 +113,21 @@ layout effect is actually visible).
 - Pass a responsive `direction` map (`{ base: "column", md: "row" }`) when a layout needs to
   reflow from stacked-on-mobile to side-by-side-on-desktop, rather than building two separate
   layouts.
-- Pass `divider` (typically a real [`Divider`](/?path=/docs/atoms-layout-divider--docs)) instead
+- Pass `divider` (typically a real [`Divider`](/docs/atoms-layout-divider--docs)) instead
   of hand-interleaving a separator element between every child yourself.
 
 </Callout>
 <Callout tone="danger" title="Don't">
 
 - Don't reach for `Stack` to build a 2-dimensional layout (rows *and* columns together) —
-  that's [`Grid`](/?path=/story/molecules-layout-grid--default-columns), which Stack's own
+  that's [`Grid`](/story/molecules-layout-grid--default-columns), which Stack's own
   single-axis `gap` mechanism doesn't attempt to replace.
 - Don't hand-write `margin-block-end`/`margin-inline-end` on children to fake a gap — `gap`
   already expresses this as a single token-driven prop, and doesn't leave a dangling margin after
   the last child the way manual per-child margins do.
 - Don't expect a `divider` with `orientation="vertical"` to have height on its own inside a
   `direction="row"` Stack with no other sized content — see
-  [`Divider`](/?path=/docs/atoms-layout-divider--docs)'s own Accessibility/Don't notes on this
+  [`Divider`](/docs/atoms-layout-divider--docs)'s own Accessibility/Don't notes on this
   exact caveat.
 
 </Callout>
@@ -148,7 +148,7 @@ layout effect is actually visible).
 <Callout tone="info" title="No built-in semantics — as is what makes this accessible">
 
 `Stack` sets no ARIA attributes and imposes no accessibility semantics of its own — the same as
-[`Box`](/?path=/docs/atoms-layout-box--docs). Accessibility is entirely a function of which
+[`Box`](/docs/atoms-layout-box--docs). Accessibility is entirely a function of which
 element `as` renders and what real semantic structure the children provide; a genuine list of
 items should use `as="ul"` with `<li>` children rather than the default `div`.
 

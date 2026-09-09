@@ -1,7 +1,6 @@
 # FocusTrap
 
-**Tier:** Atom · **Category:** Utility · **Finalized:** pending — review pass complete, awaiting
-user confirmation
+**Tier:** Atom · **Category:** Utility · **Finalized:** ✅ 2026-09-09
 
 ## Review pass (2026-09-09)
 
@@ -195,21 +194,96 @@ sidebar-only). Concretely:
   codifying this exact mechanism generically: a second mounted `FocusTrap`, even with
   `trapped={false}`, still pauses the first one's own `loop` wrap-around.
 
-**A real, separate, pre-existing bug found and worked around while adding the standalone-story
-link:** a plain markdown-syntax link (`[text](/?path=/story/...)`) to that story rendered with a
-doubled, broken `href` (`./?path=/?path=/story/...`) — confirmed live, and confirmed **not** caused
-by this session's earlier `remark-gfm` addition (reproduces identically with `remark-gfm` fully
-removed from `.storybook/main.ts`, tested both ways). This same broken pattern already exists across
-at least 8 other, already-Finalized Docs pages (`Center`, `Image`, `GridItem`, `Container`,
-`Divider`, `Stack`, `Icon`, `foundations/Color`) — apparently never caught because no prior review
-literally clicked through these particular internal links, only confirmed they render. Worked around
-in `FocusTrap.mdx` by writing the link as a real inline JSX `<a href="...">` instead of markdown
-syntax (confirmed correct — matches the same mechanism `RelatedCard`'s own `href` prop already uses
-successfully everywhere). The wider pre-existing bug across the other 8 files is flagged as a
-separate follow-up task, not fixed here (out of scope for this component's own review).
+**A real, separate, pre-existing bug found while adding the standalone-story link, root-caused and
+properly fixed in a same-day follow-up session (2026-09-09):** a plain markdown-syntax link
+(`[text](/?path=/story/...)`) to that story rendered with a doubled, broken `href`
+(`./?path=/?path=/story/...`) — confirmed live, and confirmed **not** caused by this session's
+earlier `remark-gfm` addition (reproduces identically with `remark-gfm` fully removed from
+`.storybook/main.ts`, tested both ways). This same broken pattern was confirmed across 8 other
+already-Finalized Docs pages (`Center`, `Image`, `GridItem`, `Container`, `Divider`, `Stack`, `Icon`,
+`foundations/Color`) — apparently never caught because no prior review literally clicked through
+these particular internal links, only confirmed they render. Initially worked around in
+`FocusTrap.mdx` with a literal inline JSX `<a href="...">`; **root-caused properly the same day** by
+reading Storybook's own `Link` component source directly — every internal Markdown-syntax link in
+this project had been authored with an already-prefixed `?path=` href, which Storybook's own `Link`
+then double-prefixes (its documented convention is a *bare* `/story-id` path, prefix added
+automatically). Fixed at the source across all 9 affected files (this one plus the other 8), and
+`FocusTrap.mdx`'s own link converted back to clean Markdown syntax (`[text](/story/...)`, no `?path=`
+prefix) now that the real fix is known — full detail, including the exact `Link` source snippet and
+why `RelatedCard`'s own `href` prop deliberately stays in the *other* (prefixed) form:
+`07-storybook-and-documentation-standards.md` §4.1.
 
 Re-verified live end to end: real Tab key-presses on the actual Docs page (First → Second → Third →
 wraps back to First, confirmed with only one `FocusTrap` instance now on the page); the standalone
 `MergedOntoChild` story's own `href` link renders and navigates correctly; zero accessibility
 violations on the standalone story. Full suite re-run clean: `tsc`, `eslint`, 1061/1061 unit tests
 (up from 1060), `tsup` build, `addon-vitest` 369/369.
+
+## Post-review fix #3: `asChild`'s invisible-but-real Playground effect undocumented (2026-09-09, same day, user-asked)
+
+User question, not a bug report: is it appropriate for `asChild`'s Playground control to be live
+when toggling it produces no visible canvas change? Same underlying situation `ClientOnly`'s own
+`fallback` control hit (confirmed real, wired correctly — verified again by inspecting the DOM
+before/after toggling — but the effect is structurally real while visually silent, since the
+wrapper `<div>` it removes carries no styling). Per the established precedent, the fix is to keep
+the control live (disabling it would remove a genuinely working feature) and add an explanatory
+`Callout` rather than a `control: false`. Added directly above the Playground's own `<Canvas>` in
+`FocusTrap.mdx`, matching `ClientOnly.mdx`'s own wording pattern. Live-verified: renders correctly
+in both light and dark mode, zero console errors, in-page `#variants` anchor link confirmed correct.
+
+## Post-review fix #4: interaction story ran too fast to watch (2026-09-09, same day, user-reported)
+
+`KeyboardInteraction`'s `play` function scripted all four Tab presses back to back with no visible
+gap between them in the Interactions panel replay — hard to actually watch happen. Fixed with the
+same `pause(ms)` helper `Collapse`'s own story already established for this identical problem (a
+600ms pause after each focus-move assertion, needed only for human legibility — the assertions
+themselves require none of it). Verified via the authoritative headless CI check
+(`pnpm test:storybook`, 369/369 passing) rather than trusting the live browser alone, since a
+same-day live-replay check showed one spurious `FAIL` on the very first auto-play after a fresh page
+load (reproduced as a genuine Storybook auto-play race, not a real regression — a manual re-run
+immediately after passed cleanly with all 7 steps green and the four focus moves now visibly
+distinct).
+
+## Post-review fix #5: Playground's own args didn't match the real component default (2026-09-09, same-day final review)
+
+Found during a full top-to-bottom final review pass before finalizing: the Playground's `meta.args`
+set `trapped: true, loop: true` as a "good demo" starting state, but both props are documented
+`@default false` (matching Radix's own real default — `FocusTrap.tsx` has no destructuring defaults
+of its own, so the true default when either prop is omitted is Radix's `false`). This violates the
+standing convention (`06-engineering-standards.md` §9 / `07-storybook-and-documentation-standards.md`
+§5): "the Playground's own args match the component's real prop defaults... not an arbitrary demo
+value standing in for an actual default" — confirmed against `Collapse`'s own identical precedent
+(`defaultOpen: false` in its own meta, matching its own `@default false` exactly, not a "good demo"
+preset). Fixed by changing `meta.args` to `trapped: false, loop: false, asChild: false`, and — since
+`Default` and `MergedOntoChild` had been implicitly inheriting `trapped: true, loop: true` from the
+old meta default to make their own point — adding explicit `trapped: true, loop: true` overrides to
+both, preserving their own intended demonstrated behavior unchanged. Live-verified: Playground's
+three switches now start `False`/`False`/`False`; the Properties table's `Default` column, each
+prop's own `@default false` JSDoc, and the Playground's actual starting state are now fully
+consistent end to end (previously the Playground silently contradicted the documented default);
+`Default` and `MergedOntoChild` still correctly show `loop`/`trapped` as `True`, unaffected. Full
+suite re-run clean: `tsc`, `eslint`, 1061/1061 unit tests, `tsup` build, `addon-vitest` 369/369,
+`check-component-bundle-size`, `check-foundations-token-coverage`.
+
+## Finalized
+
+**2026-09-09** — confirmed by the user after a full top-to-bottom final review pass covering every
+checklist section: baseline correctness (the `asChild`/`FocusScopeProps` type fix, explicit
+escape-hatch props, `{...props}` ordering N/A since the component computes no attributes of its
+own), feature-completeness (compared against comparable focus-trap implementations, `asChild` was
+the one real gap, already closed; a public "restore focus" convenience prop was considered and
+deliberately not added), accessibility (zero `jest-axe`/addon-a11y violations across every story,
+including `asChild`; keyboard behavior verified directly via both unit tests and a live
+play-function interaction story), theming (confirmed brand-agnostic — no tokens of its own; the
+shared Docs chrome/Callouts/code blocks spot-checked across both brands and both modes with no
+breakage), and functional verification (`tsc`, `eslint`, full 1061-test suite, `tsup` build,
+`addon-vitest`, bundle-size and foundations-token-coverage checks all clean).
+
+This review surfaced and fixed five real, independent issues beyond the initial pass — the missing
+`asChild` support (a genuine type-drift bug, not just a documentation gap), two distinct Radix
+`FocusScope` behaviors that broke the Docs page when two instances coexisted (fixed architecturally,
+not with a prop), a pre-existing broken-link pattern affecting 8 other already-Finalized components
+(root-caused and fixed at the source, not worked around), an undocumented-but-real invisible Playground
+effect, a too-fast interaction replay, and a Playground/documented-default mismatch caught on final
+review — each verified live in a running Storybook instance, not assumed from the code. No further
+changes without asking first, per `06-engineering-standards.md` §9's finalization rule.

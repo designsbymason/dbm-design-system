@@ -26,12 +26,12 @@ export const propOrder = [
 
 The standard top-level wrapper for page/section content — centers its children horizontally
 (`margin-inline: auto`) and constrains them to a max-width breakpoint step, with token-driven
-horizontal padding. **Polymorphic** (see [`Box`](/?path=/docs/atoms-layout-box--docs) for the full
+horizontal padding. **Polymorphic** (see [`Box`](/docs/atoms-layout-box--docs) for the full
 explanation of what that means): renders a `div` by default, but `as` lets it render any other
 element or component — useful here in particular, since a top-level page wrapper often needs to be
 a real landmark element (`main`, `section`), not a generic `div`. `paddingInline` accepts a single
 spacing step or a mobile-first responsive map keyed by breakpoint (e.g. `{ base: 2, lg: 8 }`) —
-the same responsive shape [`Bleed`](/?path=/docs/atoms-layout-bleed--docs)'s own `inset` uses to
+the same responsive shape [`Bleed`](/docs/atoms-layout-bleed--docs)'s own `inset` uses to
 counteract it.
 
 ### Import
@@ -95,7 +95,7 @@ the max-width/centering effect is actually visible).
   per-page.
 - Pass `as="main"` (or another real landmark element) for a page's actual top-level content
   wrapper — `Container` composes cleanly with real semantics, it doesn't fight them.
-- Pass the identical `paddingInline` map to a paired [`Bleed`](/?path=/docs/atoms-layout-bleed--docs)
+- Pass the identical `paddingInline` map to a paired [`Bleed`](/docs/atoms-layout-bleed--docs)
   when something inside needs to bleed back out to the viewport edge — see the Responsive
   paddingInline variant above.
 
@@ -105,7 +105,7 @@ the max-width/centering effect is actually visible).
 - Don't nest `Container` inside `Container` — max-widths don't compose usefully, and the inner
   one's own padding just doubles up against the outer one's.
 - Don't reach for `Container` to center a single child on both axes — that's
-  [`Center`](/?path=/docs/atoms-layout-center--docs), which has no max-width concept of its own.
+  [`Center`](/docs/atoms-layout-center--docs), which has no max-width concept of its own.
 - Don't hardcode a page's max-width/padding in `style` when `size`/`paddingInline` already express
   it — `Container` exists specifically so this is a shared, token-driven decision.
 

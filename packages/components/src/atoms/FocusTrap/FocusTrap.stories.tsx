@@ -56,9 +56,16 @@ const meta: Meta<typeof FocusTrap> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
+  // Matches the real destructuring/Radix defaults (trapped/loop/asChild
+  // all false when omitted) rather than a "good demo" preset — the
+  // Playground's own top-level args must match the component's stated
+  // @default per the standing convention (see Collapse's own
+  // defaultOpen: false for the identical precedent), not an arbitrary
+  // value standing in for one. The reader turns trapped/loop on
+  // themselves via the live controls to see the interesting behavior.
   args: {
-    trapped: true,
-    loop: true,
+    trapped: false,
+    loop: false,
     asChild: false,
   },
 };
@@ -105,8 +112,11 @@ export const Playground: Story = {
 };
 
 export const Default: Story = {
+  // trapped/loop set explicitly (not inherited from meta, which now
+  // matches the real false defaults) — this story's own descriptive text
+  // below specifically demonstrates the trapped+loop-on behavior.
   argTypes: { asChild: { control: false } },
-  args: { asChild: undefined },
+  args: { asChild: undefined, trapped: true, loop: true },
   render: (args) => (
     <FocusTrap {...args}>
       <div style={boxStyle}>
@@ -141,13 +151,14 @@ export const MergedOntoChild: Story = {
   // it from pausing the Playground story's own loop/trap the moment both
   // are mounted together on one Docs page (found 2026-09-09, user-
   // reported: Playground's own `loop` visibly stopped wrapping once this
-  // story's Canvas was also embedded). Kept at the meta defaults
-  // (trapped/loop both on) since it no longer needs the detrapped
-  // workaround once it's not coexisting with another mounted FocusTrap —
-  // this is the more representative, realistic demo of `asChild` in
-  // practice (typically paired with real trapping, like a real dialog).
+  // story's Canvas was also embedded). trapped/loop set explicitly true
+  // (meta's own default is false, matching the real component default) —
+  // it no longer needs the detrapped workaround once it's not coexisting
+  // with another mounted FocusTrap, and this is the more representative,
+  // realistic demo of `asChild` in practice (typically paired with real
+  // trapping, like a real dialog).
   argTypes: { asChild: { control: false } },
-  args: { asChild: true },
+  args: { asChild: true, trapped: true, loop: true },
   render: (args) => (
     <FocusTrap {...args}>
       <div role="group" aria-label="Merged focus trap" style={boxStyle}>
@@ -182,14 +193,25 @@ export const KeyboardInteraction: Story = {
     const second = canvas.getByPlaceholderText("Second field");
     const third = canvas.getByRole("button", { name: "Third field (button)" });
 
+    // Purely for human legibility when watching this replay in the
+    // Interactions panel — the assertions themselves need none of these
+    // pauses. Without them, all four Tab presses happened back to back
+    // with no visible gap, reading as a single flash rather than four
+    // distinct, observable focus moves (matching Collapse's own
+    // established pattern for this exact same problem).
+    const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     first.focus();
     await expect(first).toHaveFocus();
+    await pause(600);
 
     await userEvent.tab();
     await expect(second).toHaveFocus();
+    await pause(600);
 
     await userEvent.tab();
     await expect(third).toHaveFocus();
+    await pause(600);
 
     // loop wraps focus back to the first field instead of escaping the
     // trap to whatever real elements happen to sit outside this canvas.

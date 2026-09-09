@@ -133,7 +133,7 @@ review).
   decorative one. There's no silent default either way.
 - Pass `aspectRatio` (e.g. `16 / 9`) whenever the image's box needs a predictable shape before the
   image itself has loaded — this prevents layout shift, and is the same mechanism
-  [`AspectRatio`](/?path=/docs/atoms-layout-aspectratio--docs) uses.
+  [`AspectRatio`](/docs/atoms-layout-aspectratio--docs) uses.
 - Pass just one of `width`/`height` alongside `aspectRatio` to size the box from a single fixed
   dimension — the other is computed automatically, standard CSS `aspect-ratio` behavior.
 - Pass `position` alongside `objectFit="cover"` when the subject of a cropped image isn't centered
@@ -152,7 +152,7 @@ review).
   it's called *after* the fallback has already taken over, for logging/retry/telemetry, not to
   control the fallback itself.
 - Don't reach for `Image` to render a person/entity picture with initials — that's
-  [`Avatar`](/?path=/docs/atoms-data-display-avatar--docs), which already has this exact
+  [`Avatar`](/docs/atoms-data-display-avatar--docs), which already has this exact
   image-with-fallback architecture plus initials/status-dot support built in.
 - Don't rely on `id`/`data-testid` landing on the `<img>` itself — both apply to the outer wrapper
   specifically so they keep working through the fallback swap; query by role/alt-text instead if
