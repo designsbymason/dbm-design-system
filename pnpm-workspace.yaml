@@ -50,7 +50,13 @@ overrides:
   # scoped per-parent so each keeps its own major rather than one blanket
   # range colliding across both. Found via `pnpm audit`, 2026-08-08 (ahead
   # of a GitHub Dependabot alert for this one at the time of fixing).
-  read-yaml-file>js-yaml: ">=3.15.1 <4.0.0"
+  # Bumped 3.x's own floor to >=3.15.2 on 2026-09-09 (GHSA-2883-xcg3-v3hh:
+  # maxTotalMergeKeys doesn't limit CPU use for empty merge sources, a
+  # separate advisory from the one above) — the prior >=3.15.1 floor was
+  # exactly what pnpm had resolved to, and 3.15.1 itself is vulnerable to
+  # this newer advisory; 3.15.2 is the next (and latest) 3.x release,
+  # confirmed to exist on the registry before pinning to it.
+  read-yaml-file>js-yaml: ">=3.15.2 <4.0.0"
   "@changesets/parse>js-yaml": ">=4.3.1"
   # GHSA-...-nanoid-zero-size (nanoid): custom generators can loop
   # indefinitely when size is 0, patched in 3.3.17. Dev-only, pulled in
@@ -73,6 +79,27 @@ overrides:
   # own compatible major — no adjacent-major risk like the undici case
   # above. Flagged by GitHub Dependabot 2026-09-03.
   browserslist: ">=4.28.7"
+  # GHSA-82fw-gwwq-j3cx: Vitest path traversal / arbitrary file read via
+  # @vitest/mocker's redirect-mock handling, patched in 4.1.11. Both
+  # `vitest` and `@vitest/mocker` were resolved at exactly 4.1.10 — a
+  # single patch release behind — reached only via
+  # @storybook/addon-vitest's own @vitest/browser/@vitest/browser-
+  # playwright dependencies (dev-only Storybook test tooling, never
+  # shipped in published packages). Range capped at the current major
+  # (`<5.0.0`), not left open-ended, matching the project's own established
+  # pattern above — both packages already sit deep in the 4.1.x line with
+  # no adjacent-major consumer to worry about here. Flagged by GitHub
+  # Dependabot 2026-09-09.
+  vitest: ">=4.1.11 <5.0.0"
+  "@vitest/mocker": ">=4.1.11 <5.0.0"
+  # Kept version-locked with the vitest/@vitest/mocker bump above — without
+  # these, pnpm left @vitest/browser and @vitest/browser-playwright one
+  # patch behind at 4.1.10, producing a real (self-caused) `pnpm peers
+  # check` mismatch (`unmet peer @vitest/browser-playwright: wanted
+  # 4.1.11`). Not a separate advisory of their own, just keeping the whole
+  # vitest family in sync at the same patch release.
+  "@vitest/browser": ">=4.1.11 <5.0.0"
+  "@vitest/browser-playwright": ">=4.1.11 <5.0.0"
 patchedDependencies:
   # Bridges brace-expansion's >=2 export shape (see the brace-expansion
   # override above) so the >=5.0.8 override doesn't crash this package's
