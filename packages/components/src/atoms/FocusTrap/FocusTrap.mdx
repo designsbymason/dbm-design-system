@@ -1,0 +1,232 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Backdrop } from "../Backdrop";
+import { Portal } from "../Portal";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { FocusTrap } from "./FocusTrap";
+import * as FocusTrapStories from "./FocusTrap.stories";
+
+export const propOrder = [
+  "children",
+  "trapped",
+  "loop",
+  "asChild",
+  "onMountAutoFocus",
+  "onUnmountAutoFocus",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={FocusTrapStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="FocusTrap" tier="Atom" />
+
+Manages keyboard focus within a region — traps Tab/Shift+Tab cycling inside its `children`,
+optionally looping from the last focusable element back to the first (and vice versa), and controls
+what receives focus on mount and unmount. This is the WAI-ARIA "modal dialog" keyboard-focus
+pattern: once a dialog, drawer, or popover is open, keyboard focus should stay inside it until the
+user closes it, rather than tabbing out into the rest of the page behind it. `FocusTrap` is a thin
+wrapper around Radix's own `FocusScope` — used internally by overlay-style components (Dialog,
+Drawer, Popover), and usable directly for any custom overlay that needs the same behavior. It
+renders a plain wrapping `<div>` by default, or merges directly onto `children` with `asChild`.
+
+### Import
+
+```tsx
+import { FocusTrap } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FocusTrapStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={FocusTrapStories.Playground}
+  exclude={[
+    "children",
+    "onMountAutoFocus",
+    "onUnmountAutoFocus",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`FocusTrap` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `onKeyDown`) — passed straight through to the underlying element (or onto `children`
+directly when `asChild` is set).
+
+<PropertiesTable of={FocusTrapStories} order={propOrder} />
+
+## Variants
+
+### Merged onto a single child (asChild)
+
+<Callout tone="info" title="Not embedded live here — see why below">
+
+This variant isn't shown as a live `<Canvas>` on this page, unlike every other story. Radix's own
+`FocusScope` (which `FocusTrap` wraps) registers *every* mounted instance into one shared internal
+stack — whichever instance mounts last pauses the Tab-key handling of every instance mounted before
+it, regardless of either one's own `trapped`/`loop` values. Embedding this story's Canvas here would
+silently break the Playground's own `loop` demo above it on this same page (confirmed directly, not
+assumed — this is a real Radix behavior, not a Storybook Controls wiring bug).
+
+**<a href="/?path=/story/atoms-utility-focustrap--merged-onto-child">Open the "Merged onto a single child (asChild)" story on its own page</a>**
+to see it live, fully interactive, with nothing else competing for keyboard focus — it merges the
+trap directly onto its box with no extra wrapping `<div>` (inspect the DOM there to confirm), the
+same as the code example below.
+
+</Callout>
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pair `trapped` with a visible way to close the region (an Escape-key handler, a close button) —
+  trapping focus without an exit path strands a keyboard user inside it.
+- Use `asChild` when `children` is already the element that should own the trap's own visual
+  boundary (a dialog's own root `<div role="dialog">`) — it avoids an extra, purely structural
+  wrapper `<div>` with no visual purpose of its own.
+- Restore focus to whatever triggered the overlay when it closes — Radix already returns focus to
+  the previously-focused element by default on unmount; use `onUnmountAutoFocus` only when that
+  default isn't what you want (e.g. redirecting focus somewhere else entirely).
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't set `trapped` on content that isn't actually a modal-style overlay — trapping focus on a
+  region the user can still see and interact with elsewhere on the page (a non-modal panel) fights
+  normal keyboard navigation instead of helping it.
+- Don't rely on `FocusTrap` alone for a complete dialog — it only manages focus. Pairing it with a
+  `role="dialog"`/`aria-modal="true"` region, a `Backdrop`, and an Escape-key handler is what
+  actually makes a correct modal.
+- Don't use `asChild` when `children` contains more than one top-level element, or isn't a real
+  element at all (plain text) — Radix's own `Slot` requires exactly one, and throws if that's not
+  what it gets.
+- Don't render more than one `FocusTrap` at a time expecting each to keep its own independent
+  `loop`/`trapped` behavior — Radix keeps one shared, page-wide stack; whichever instance mounts
+  last pauses every earlier one's own Tab-key handling. In a real app this is rarely an issue (two
+  simultaneously-open modal overlays is already a UX bug on its own), but it's worth knowing if
+  you're composing more than one custom overlay at once.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reach for `FocusTrap` directly only when building a custom overlay that isn't already one of this
+  system's own overlay components — Dialog/Drawer/Popover (once built) will already include this
+  internally.
+- Keep `loop` on for anything that reads as a self-contained region (a dialog's own field set) —
+  cycling back to the first field after the last is the expected, unsurprising behavior for a
+  keyboard user working through a form inside an overlay.
+- `trapped` and `loop` are independent — `trapped` alone (no `loop`) keeps focus from leaving the
+  region but doesn't wrap it back to the start; most real dialogs want both together.
+
+## Accessibility
+
+<Callout tone="info" title="This component exists entirely for keyboard accessibility">
+
+- **No ARIA role or accessible name of its own.** `FocusTrap` manages *where keyboard focus can go*
+  — the semantic role (`role="dialog"`, `aria-modal`, a label) belongs to whatever `children`
+  renders, the same as any other structural wrapper in this system.
+- **Keyboard behavior, verified directly (not assumed):**
+
+  | Key | Behavior |
+  |---|---|
+  | `Tab` | Moves focus to the next focusable element inside the trap. With `trapped` and no `loop`, stays on the last element rather than moving anywhere once there — it doesn't error, escape, or wrap. |
+  | `Shift+Tab` | Moves focus to the previous focusable element; same boundary behavior as `Tab` in reverse. |
+  | `Tab`/`Shift+Tab` past the last/first element, with `loop` | Wraps to the first/last element instead of stopping. |
+  | `Tab`/`Shift+Tab` past the last/first element, with `trapped` set | Never reaches an element outside the trap, regardless of `loop`. |
+
+- **Mount/unmount focus is automatic by default.** On mount, focus moves to the trap's first
+  focusable element (or the trap itself, if none exists); on unmount, focus returns to whatever
+  element was focused immediately beforehand. `onMountAutoFocus`/`onUnmountAutoFocus` are escape
+  hatches for the rare case where that default isn't the right behavior — both receive the real
+  DOM event and can call `event.preventDefault()` to take over focus placement themselves.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// A custom overlay — Backdrop dims the page, FocusTrap keeps keyboard focus inside
+<Backdrop open={isOpen} onClick={close} />
+<FocusTrap trapped loop>
+  <div role="dialog" aria-modal="true" aria-label="Confirm action">
+    <p>Are you sure?</p>
+    <button onClick={close}>Cancel</button>
+    <button onClick={confirm}>Confirm</button>
+  </div>
+</FocusTrap>
+```
+
+```tsx
+// asChild — merges onto the dialog's own root, no extra wrapper <div>
+<FocusTrap trapped loop asChild>
+  <div role="dialog" aria-modal="true" aria-label="Confirm action">
+    ...
+  </div>
+</FocusTrap>
+```
+
+```tsx
+// A native <div> event handler (onKeyDown) passed straight through
+<FocusTrap trapped onKeyDown={(event) => event.key === "Escape" && close()}>
+  <div role="dialog">...</div>
+</FocusTrap>
+```
+
+## Design tokens used
+
+`FocusTrap` itself references **no tokens** — it renders no visual styling of its own (a plain,
+unstyled `<div>`, or none at all with `asChild`). Any visual appearance comes entirely from
+`children`, which supplies its own token usage.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Backdrop"
+  description="The dimming scrim that typically sits behind the same modal-style overlay FocusTrap manages focus within"
+  href="/?path=/docs/atoms-overlay-backdrop--docs"
+>
+  <div style={{ position: "relative", width: "100%", height: "var(--dbm-space-10)", overflow: "hidden", borderRadius: "var(--dbm-radius-xs)" }}>
+    <Backdrop open inPortal={false} style={{ position: "absolute", inset: 0 }} />
+  </div>
+</RelatedCard>
+<RelatedCard
+  name="Portal"
+  description="Renders overlay content elsewhere in the DOM — commonly composed alongside FocusTrap inside the same custom overlay"
+  href="/?path=/story/atoms-utility-portal--default"
+>
+  <Portal disablePortal>
+    <div
+      style={{
+        alignItems: "center",
+        background: "var(--dbm-bg-neutral-subtle)",
+        borderRadius: "var(--dbm-radius-sm)",
+        display: "flex",
+        fontSize: "var(--dbm-font-size-xs)",
+        height: 40,
+        justifyContent: "center",
+        width: 60,
+      }}
+    >
+      Portal
+    </div>
+  </Portal>
+</RelatedCard>
+</div>

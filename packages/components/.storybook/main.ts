@@ -1,3 +1,4 @@
+import remarkGfm from "remark-gfm";
 import type { StorybookConfig } from "@storybook/react-vite";
 
 const config: StorybookConfig = {
@@ -19,7 +20,25 @@ const config: StorybookConfig = {
   // live Vitest process is actually watching). `pnpm test:storybook` (no
   // watch) is the one that matters for CI — it works standalone with no
   // running dev server, since Vite loads stories directly.
-  addons: ["@storybook/addon-a11y", "@storybook/addon-docs", "@storybook/addon-vitest"],
+  // `@storybook/addon-docs` registered with an explicit `options` object
+  // (rather than the plain string form) so its MDX compiler picks up
+  // `remark-gfm` — without it, GFM tables in a `.mdx` Docs page silently
+  // render as raw, unparsed `| pipe | text |` instead of an actual table
+  // (found 2026-09-09, via FocusTrap's own review; confirmed there's no
+  // other way to reach the MDX compiler's remark plugins — `main.ts` has no
+  // top-level `options` field of its own, this addon's own per-addon
+  // `options.mdxPluginOptions.mdxCompileOptions` is the documented
+  // extension point). Dev-only Storybook tooling, not shipped in
+  // `@dbm-design-system/components` — same category as Storybook itself,
+  // not subject to the runtime dependency budget in `CLAUDE.md`.
+  addons: [
+    "@storybook/addon-a11y",
+    {
+      name: "@storybook/addon-docs",
+      options: { mdxPluginOptions: { mdxCompileOptions: { remarkPlugins: [remarkGfm] } } },
+    },
+    "@storybook/addon-vitest",
+  ],
   // Served at the root path, so `./public/logo.svg` becomes `/logo.svg` —
   // referenced as `brandImage` in theme.ts for the sidebar logo.
   staticDirs: ["./public"],
