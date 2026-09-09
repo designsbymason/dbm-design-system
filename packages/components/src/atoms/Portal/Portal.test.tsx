@@ -62,6 +62,43 @@ describe("Portal", () => {
     const slotChild = screen.getByTestId("slot-child");
     expect(slotChild.tagName).toBe("SPAN");
     expect(document.body).toContainElement(slotChild);
+    // Confirms no extra wrapper element exists around it — the slotted
+    // child itself is the direct last child of body, not nested one level
+    // deeper inside a portal-owned <div>.
+    expect(document.body.lastElementChild).toBe(slotChild);
+  });
+
+  it("supports asChild together with a custom container", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+
+    render(
+      <Portal container={container} asChild>
+        <span data-testid="slot-child">content</span>
+      </Portal>,
+    );
+    const slotChild = screen.getByTestId("slot-child");
+    expect(container).toContainElement(slotChild);
+    expect(container.lastElementChild).toBe(slotChild);
+    document.body.removeChild(container);
+  });
+
+  // asChild is irrelevant once disablePortal short-circuits to rendering
+  // children in place directly — verified directly, not assumed, since
+  // this is a real, previously-undocumented interaction between the two
+  // props (found during this component's own review pass).
+  it("asChild has no effect when disablePortal is also true", () => {
+    render(
+      <div data-testid="local-root">
+        <Portal disablePortal asChild>
+          <span data-testid="child">content</span>
+        </Portal>
+      </div>,
+    );
+    const local = screen.getByTestId("local-root");
+    const child = screen.getByTestId("child");
+    expect(local).toContainElement(child);
+    expect(local.firstElementChild).toBe(child);
   });
 
   it("renders children in place with no portal when disablePortal is true", () => {
@@ -103,6 +140,16 @@ describe("Portal", () => {
       </Portal>,
     );
     // Portaled content renders outside RTL's `container`, so check `baseElement`.
+    const results = await axe(baseElement);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations with asChild", async () => {
+    const { baseElement } = render(
+      <Portal asChild>
+        <button type="button">Click</button>
+      </Portal>,
+    );
     const results = await axe(baseElement);
     expect(results).toHaveNoViolations();
   });

@@ -1,0 +1,251 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { Backdrop } from "../Backdrop";
+import { FocusTrap } from "../FocusTrap";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Portal } from "./Portal";
+import * as PortalStories from "./Portal.stories";
+
+export const propOrder = [
+  "children",
+  "container",
+  "disablePortal",
+  "asChild",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={PortalStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Portal" tier="Atom" />
+
+Renders its `children` into a different part of the DOM — by default, the very end of
+`<body>` — while preserving their position in the React tree for events, context, and props.
+Used internally by overlay-style components (Dialog, Popover, Tooltip, Toast) so they escape a
+parent's `overflow: hidden`, `z-index`, or `transform` stacking context, which would otherwise
+clip or misposition them; also usable directly for any custom overlay. `Portal` is a thin wrapper
+around Radix's own `Portal` — it renders no visual chrome of its own, and has no shared state
+between instances, so mounting more than one at once (as this Docs page itself does, in the
+Playground and Variants sections below) never causes one to interfere with another *functionally*.
+Two of the Variants below still link out to their own standalone pages rather than embedding
+directly — not a functional conflict, but a purely visual one: those two demo a real,
+screen-corner-pinned target, and every `<Canvas>` on this Docs page shares one underlying document
+(Storybook's own Docs architecture), so a real-viewport demo embedded here would pin to the corner
+of the *entire* Docs page instead of staying near its own section. See [Variants](#variants) below
+for the full explanation.
+
+### Import
+
+```tsx
+import { Portal } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<Callout tone="info" title="asChild toggles correctly, but has no visible effect here — see why below">
+
+`asChild` genuinely portals the child itself instead of rendering Radix's own wrapper `<div>`
+around it — the control below is real and correctly wired (this isn't the "control does nothing
+because of a bug" problem this system watches for elsewhere). The wrapper it removes carries no
+styling of its own, though, so toggling it produces no visible difference here — inspect the DOM
+(browser devtools) to see the actual effect, or see [Variants](#variants) below for a dedicated,
+isolated demo of the same behavior.
+
+</Callout>
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={PortalStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={PortalStories.Playground}
+  exclude={["children", "container", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Portal` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`,
+`aria-label`) — passed straight through to the underlying element (or onto `children` directly when
+`asChild` is set).
+
+<PropertiesTable of={PortalStories} order={propOrder} />
+
+## Variants
+
+### Portaled to document.body (default)
+
+<Callout tone="info" title="Not embedded here — escapes this page's own shared document">
+
+This variant's own demo pins a badge to a fixed corner of the screen, deliberately, to make the
+"moved elsewhere in the DOM" effect visible without opening devtools — accurate and uncluttered on
+its own page. Every `<Canvas>` on *this* Docs page renders into one shared underlying document,
+though (Storybook's own Docs architecture, not a `Portal` limitation), so embedding a
+fixed-position, real-`document.body` demo here would pin it to a corner of the *entire* Docs page
+instead of staying near this section — confirmed live before making this change. See it on its own
+dedicated page instead: [Portaled to document.body (default)](/story/atoms-utility-portal--default).
+
+</Callout>
+
+### Custom container target
+
+<Canvas of={PortalStories.CustomContainer} />
+
+### disablePortal (renders in place)
+
+<Canvas of={PortalStories.DisabledPortal} />
+
+### asChild (no wrapper div)
+
+<Callout tone="info" title="Not embedded here — same underlying cause as Default, above">
+
+Same reason as the "Portaled to document.body" variant above: this demo's own badge is
+fixed-positioned to a screen corner to make the DOM move visible without devtools, which only
+behaves correctly as this story's own, uncluttered page. See it standalone:
+[asChild (no wrapper div)](/story/atoms-utility-portal--as-child).
+
+</Callout>
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Reach for `Portal` whenever content needs to visually escape an ancestor's `overflow: hidden`,
+  fixed `z-index` stacking, or `transform` (which creates a new containing block for any
+  descendant using `position: fixed`) — a tooltip or dropdown clipped by a scrollable card is the
+  classic symptom `Portal` fixes.
+- Use `asChild` when `children` is already the element that should own the portal's own root (a
+  dialog's own root `<div role="dialog">`) — it avoids an extra, purely structural wrapper `<div>`
+  with no visual purpose of its own.
+- Use `disablePortal` to conditionally turn portaling off without branching around whether
+  `<Portal>` renders at all — a print stylesheet or a test asserting on local DOM structure are
+  the common cases.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reach for `Portal` just to change stacking order within the *same* containing block — a
+  higher `z-index` alone is often enough; `Portal` is for escaping an ancestor's clipping/stacking
+  context entirely, not a substitute for normal `z-index` layering.
+- Don't rely on CSS selectors that depend on DOM ancestry (a parent's own class name, a `:has()`
+  targeting a child) to style portaled content — once portaled, it's no longer a DOM descendant of
+  where it's declared in JSX, only a React-tree descendant.
+- Don't use `asChild` when `children` contains more than one top-level element, or isn't a real
+  element at all (plain text) — Radix's own `Slot` requires exactly one, and throws if that's not
+  what it gets.
+- Don't pass `container`/`ref` expecting them to do anything when `disablePortal` is also set —
+  both are ignored in that mode, since there's no portaled element left to target (a dev-mode
+  warning fires once if `ref` is passed alongside `disablePortal`).
+
+</Callout>
+</div>
+
+## Best practices
+
+- Default to portaling into `document.body` (the default `container`) unless there's a specific
+  reason to target somewhere else — a custom `container` is mainly useful for scoping portaled
+  content to a specific region (e.g. keeping it inside a particular themed subtree).
+- Pair `Portal` with `FocusTrap` for a complete custom overlay — `Portal` handles *where* the
+  content renders in the DOM, `FocusTrap` handles keyboard focus once it's there. Neither one does
+  the other's job.
+- Keep portaled content's own accessible relationship to its trigger intact via ARIA
+  (`aria-labelledby`, `aria-describedby`) rather than relying on DOM proximity — screen readers
+  don't care where in the DOM tree an element physically sits, only its accessibility-tree
+  relationships.
+
+## Accessibility
+
+<Callout tone="info" title="No ARIA role of its own — purely a DOM-location change">
+
+- **Renders no semantic role or accessible name.** `Portal` only changes *where* `children` render
+  in the DOM — the accessibility tree is unaffected by the move, since it reflects DOM structure
+  regardless of which physical subtree an element lives in relative to where it was declared in
+  JSX.
+- **Tab order follows DOM order, not declaration order.** Since portaled content moves to the end
+  of `<body>` (or a custom `container`) by default, its keyboard Tab position reflects *that*
+  location, not where `<Portal>` appears in your component tree — worth knowing if `container`
+  places content somewhere unexpected in the page's natural tab sequence.
+- **`Portal` alone doesn't trap or manage focus.** Pair with `FocusTrap` (see
+  [Related components](#related-components)) for a modal-style overlay that needs to keep keyboard
+  focus contained once opened.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// A custom overlay — Portal escapes the page's own stacking context
+<Portal>
+  <div role="dialog" aria-modal="true" aria-label="Confirm action">
+    <p>Are you sure?</p>
+  </div>
+</Portal>
+```
+
+```tsx
+// asChild — portals the dialog's own root, no extra wrapper <div>
+<Portal asChild>
+  <div role="dialog" aria-modal="true" aria-label="Confirm action">
+    ...
+  </div>
+</Portal>
+```
+
+```tsx
+// Portaling into a specific container instead of document.body
+const container = document.getElementById("app-overlays");
+<Portal container={container}>
+  <div role="tooltip">Extra context</div>
+</Portal>
+```
+
+```tsx
+// A native <div> event handler (onClick) passed straight through
+<Portal onClick={(event) => console.log("clicked inside the portal", event)}>
+  <div role="dialog">...</div>
+</Portal>
+```
+
+## Design tokens used
+
+`Portal` itself references **no tokens** — it renders no visual styling of its own (a plain,
+unstyled `<div>`, or none at all with `asChild`). Any visual appearance comes entirely from
+`children`, which supplies its own token usage.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FocusTrap"
+  description="Manages keyboard focus once content is portaled — Portal handles where it renders in the DOM, FocusTrap handles keyboard focus once it's there"
+  href="/?path=/docs/atoms-utility-focustrap--docs"
+>
+  <div
+    style={{
+      border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
+      borderRadius: "var(--dbm-radius-sm)",
+      padding: "var(--dbm-space-2)",
+      width: "100%",
+    }}
+  >
+    <FocusTrap>
+      <span>Focus trapped here</span>
+    </FocusTrap>
+  </div>
+</RelatedCard>
+<RelatedCard
+  name="Backdrop"
+  description="The dimming scrim that typically sits behind the same modal-style overlay content portaled with Portal"
+  href="/?path=/docs/atoms-overlay-backdrop--docs"
+>
+  <div style={{ position: "relative", width: "100%", height: "var(--dbm-space-10)", overflow: "hidden", borderRadius: "var(--dbm-radius-xs)" }}>
+    <Backdrop open inPortal={false} style={{ position: "absolute", inset: 0 }} />
+  </div>
+</RelatedCard>
+</div>
