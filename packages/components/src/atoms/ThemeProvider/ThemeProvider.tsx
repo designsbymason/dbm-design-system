@@ -126,7 +126,10 @@ export const ThemeProvider = forwardRef<HTMLDivElement, ThemeProviderProps>(
 
     return (
       <ThemeContext.Provider value={contextValue}>
-        <div ref={ref} className={cx(styles.root, className)} data-theme={theme} {...props}>
+        {/* `{...props}` spreads first so a stray consumer-supplied `data-theme`
+            can never silently win over the computed value that actually
+            drives this component's own theming contract. */}
+        <div {...props} ref={ref} className={cx(styles.root, className)} data-theme={theme}>
           {children}
         </div>
       </ThemeContext.Provider>

@@ -84,6 +84,30 @@ describe("ThemeProvider", () => {
     expect(el).toHaveClass("custom");
   });
 
+  // A real, previously-latent bug (found during this component's own review
+  // pass): `{...props}` was spread onto the wrapper `<div>` *after* the
+  // computed `data-theme` attribute, so a stray consumer-supplied
+  // `data-theme` prop (allowed by TypeScript's own JSX handling of `data-*`
+  // attributes, even though it isn't declared on `ThemeProviderProps`) would
+  // silently win via object-spread ordering. Confirmed this never affected
+  // the *real* theming mechanism (driven entirely by
+  // `document.documentElement`'s own `data-theme`, set independently in a
+  // layout effect) — only the wrapper element's own, otherwise-redundant
+  // attribute — but still a real, confusing inconsistency, now fixed by
+  // spreading `props` first.
+  it("never lets a same-named consumer prop override the computed data-theme attribute", () => {
+    render(
+      // @ts-expect-error -- `data-theme` isn't part of `ThemeProviderProps`,
+      // but TypeScript's JSX handling allows any `data-*` attribute through
+      // regardless — this is exactly the real-world case being guarded
+      // against, not a contrived one.
+      <ThemeProvider brand="purple" mode="light" data-theme="not-a-real-theme" data-testid="provider">
+        <div />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("provider")).toHaveAttribute("data-theme", "purple-light");
+  });
+
   it('resolves mode="system" from prefers-color-scheme and updates live on change', async () => {
     const listeners: Array<(event: MediaQueryListEvent) => void> = [];
     vi.stubGlobal(

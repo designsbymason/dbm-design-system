@@ -1,0 +1,221 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { ThemeSync } from "../../../.storybook/blocks/foundations";
+import { ThemeProvider } from "./ThemeProvider";
+import { VisuallyHidden } from "../VisuallyHidden";
+import * as ThemeProviderStories from "./ThemeProvider.stories";
+
+export const propOrder = [
+  "brand",
+  "mode",
+  "children",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ThemeProviderStories} />
+
+<ThemeSync />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ThemeProvider" tier="Atom" />
+
+Applies a DBM Design System brand + color mode by setting `data-theme` (e.g. `data-theme="purple-light"`)
+on `document.documentElement` — matching the `:root[data-theme="..."]`-scoped CSS custom properties
+`@dbm-design-system/tokens` emits. Theming is applied document-wide, not scoped to this component's
+own DOM subtree, so portaled content (dialogs, tooltips, toasts mounted on `document.body`) inherits
+the theme correctly too. `mode="system"` follows `prefers-color-scheme` and updates live if the OS
+preference changes while mounted. Descendants can read the resolved brand/mode reactively via
+`useTheme()` instead of reaching into the DOM directly.
+
+<Callout tone="info" title="No live demo embedded on this page — see why below">
+
+Every demo of `ThemeProvider` itself (including its own Playground) lives on its own standalone
+story page instead of being embedded here as a `Canvas` — see the [Playground](#playground) section
+below for the full reason. Every *other* component's own Docs page keeps its usual embedded,
+interactive Playground; this is a deliberate, one-off exception specific to `ThemeProvider`, not a
+change to how Docs pages work in general.
+
+</Callout>
+
+### Import
+
+```tsx
+import { ThemeProvider, useTheme } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<Callout tone="info" title="Not embedded here — this page's own chrome can't follow along, producing a broken-looking split state">
+
+This Docs page's own surrounding chrome (background, headings, body text) is themed two different
+ways at once: most of it reads Storybook's own theme object, synced only to the toolbar's
+**Brand**/**Mode** selection; the components demonstrated *within* it (Callouts, code blocks, and any
+embedded `Canvas`) read real `--dbm-*` tokens, which resolve from `document.documentElement`'s own
+`data-theme`. Those two normally stay in sync — a shared decorator keeps `document.documentElement`
+matching the toolbar on every render — but `ThemeProvider` mounted here would keep overwriting
+`document.documentElement` on its own, independently of the toolbar, the instant its controls were
+touched. The result isn't a clean whole-page transition (confirmed live, not assumed): token-driven
+text flips to its dark-mode color while the surrounding toolbar-themed chrome stays on its last
+light-mode background, leaving genuinely hard-to-read, washed-out text — a real Docs-page rendering
+bug, not an accurate preview of `ThemeProvider`'s real behavior (a real app has no second,
+independently-themed chrome layer running alongside it). Try every prop live on its own page instead,
+where this conflict doesn't exist: [Playground](/story/atoms-utility-themeprovider--playground).
+
+</Callout>
+
+## Properties
+
+`ThemeProvider` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onClick`, `aria-label`) — passed straight through to the underlying wrapper element.
+
+<PropertiesTable of={ThemeProviderStories} order={propOrder} />
+
+## Variants
+
+<Callout tone="info" title="Not embedded here either — same underlying cause as Playground, above">
+
+Every variant below is a real, standalone story — not embedded on this page as a `Canvas`, for the
+same reason the Playground isn't (see its own Callout above): each one would independently overwrite
+`document.documentElement`, out of sync with this page's own toolbar-themed chrome, producing the
+same broken split-state rather than a clean demonstration. Mounting more than one at once would
+compound it further, each silently overwriting the last. See each on its own page instead, where it
+renders correctly with nothing else competing for `document.documentElement`:
+
+- [Purple / Light](/story/atoms-utility-themeprovider--purple-light)
+- [Purple / Dark](/story/atoms-utility-themeprovider--purple-dark)
+- [Emerald / Light](/story/atoms-utility-themeprovider--emerald-light)
+- [Emerald / Dark](/story/atoms-utility-themeprovider--emerald-dark)
+- [System mode (follows OS preference)](/story/atoms-utility-themeprovider--system-mode)
+- [Live brand/mode toggle (useTheme + transition demo)](/story/atoms-utility-themeprovider--live-theme-toggle) —
+  a fuller demo pairing `ThemeProvider` with `useTheme()`, showing a descendant reactively reading
+  the resolved brand/mode and the brief color transition a later change (not the initial mount)
+  applies to every themed surface.
+
+</Callout>
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Mount exactly one `ThemeProvider` near the root of your app — it's meant to own the whole
+  document's theme, not scope a small region of the page.
+- Use `mode="system"` (the default) unless the product has its own explicit light/dark toggle —
+  it keeps the app in sync with the user's OS preference automatically, including live updates if
+  they change it while the app is open.
+- Read the active theme via `useTheme()` in any descendant that needs to branch on it (an icon that
+  swaps for light vs. dark, an image with separate light/dark source assets) instead of reaching
+  into `document.documentElement.dataset.theme` directly — `useTheme()` is reactive and re-renders
+  the consumer when the resolved value changes; a direct DOM read doesn't.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't nest a second `ThemeProvider` inside the first expecting a scoped sub-theme — theming
+  applies document-wide regardless of where in the tree a `ThemeProvider` sits, so an inner one
+  simply takes over the *whole* document for as long as it's mounted, then hands control back to
+  the outer one's own value on unmount (useful for test/Storybook isolation, not for theming one
+  region of a page differently from the rest).
+- Don't call `useTheme()` outside a `ThemeProvider` — it throws
+  (`useTheme must be used within a ThemeProvider`) rather than silently returning a default, so a
+  missing provider fails loudly during development instead of rendering with the wrong colors.
+- Don't read `document.documentElement.dataset.theme` directly in a descendant when `useTheme()` is
+  available — a direct read only reflects whatever was true at that exact render, and won't update
+  when the theme changes afterward.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Place `ThemeProvider` above anything that portals to `document.body` (dialogs, tooltips, toasts)
+  — since theming applies to the whole document rather than a DOM subtree, this is automatic as
+  long as `ThemeProvider` is mounted anywhere in the tree, portaled content included.
+- Let the brief color transition (on a *change*, never on the initial mount) do its job — it's
+  already skipped under `prefers-reduced-motion: reduce` and timed from
+  `--dbm-motion-duration-base`, so there's usually nothing to configure.
+- On a server-rendered app, expect the very first paint to briefly show `light` if `mode="system"`
+  resolves to `dark` — `ThemeProvider` intentionally renders `light` on the first render (matching
+  what the server produced) and corrects to the real OS preference in a layout effect immediately
+  after mount, avoiding a React hydration mismatch at the cost of that brief first-paint flash. A
+  fully flash-free experience needs a blocking pre-hydration script outside this component's
+  control (the same tradeoff documented by comparable SSR theming libraries).
+
+## Accessibility
+
+<Callout tone="info" title="No ARIA role of its own — a document-wide styling mechanism">
+
+- **Renders no semantic role or accessible name.** `ThemeProvider` only ever changes *which colors*
+  `--dbm-*` tokens resolve to — it has no effect on the accessibility tree.
+- **Every semantic color pairing this system ships already clears WCAG AA contrast** in all four
+  brand/mode combinations (`03-token-system-spec.md`'s own contrast methodology) — switching
+  theme never trades away contrast, in either direction.
+- **The brief post-change color transition respects `prefers-reduced-motion: reduce`** — skipped
+  entirely for a user with that preference set, matching how every other motion in this system
+  behaves.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Mounted once, near the app root
+<ThemeProvider brand="purple" mode="system">
+  <App />
+</ThemeProvider>
+```
+
+```tsx
+// A fixed brand/mode, no OS-preference following
+<ThemeProvider brand="emerald" mode="dark">
+  <App />
+</ThemeProvider>
+```
+
+```tsx
+// A descendant reactively reading the resolved theme
+import { useTheme } from "@dbm-design-system/components";
+
+function ModeToggleIcon() {
+  const { resolvedMode } = useTheme();
+  return resolvedMode === "dark" ? <MoonIcon /> : <SunIcon />;
+}
+```
+
+## Design tokens used
+
+`ThemeProvider` itself references two motion tokens, applied only for the brief transition after a
+brand/mode *change* (never on the initial mount):
+
+<TokenRow token="motion.duration.base" usage="duration of the color transition on a theme change" />
+<TokenRow token="motion.easing.standard" usage="easing curve for the same transition" />
+
+Every other visual token in this system (`--dbm-bg-*`, `--dbm-text-*`, `--dbm-border-*`, and the
+rest) is what `ThemeProvider` actually *switches* the resolved value of, by setting `data-theme` —
+it doesn't reference them directly itself.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Color"
+  description="The full semantic token reference ThemeProvider switches between — every brand/mode combination, with contrast ratios"
+  href="/?path=/docs/foundations-color--docs"
+>
+  <div
+    style={{
+      display: "flex",
+      gap: "var(--dbm-space-2)",
+      alignItems: "center",
+    }}
+  >
+    <div style={{ width: "1.5rem", height: "1.5rem", borderRadius: "var(--dbm-radius-sm)", background: "var(--dbm-bg-brand)" }} />
+    <div style={{ width: "1.5rem", height: "1.5rem", borderRadius: "var(--dbm-radius-sm)", background: "var(--dbm-bg-success)" }} />
+    <div style={{ width: "1.5rem", height: "1.5rem", borderRadius: "var(--dbm-radius-sm)", background: "var(--dbm-bg-danger)" }} />
+  </div>
+</RelatedCard>
+</div>
