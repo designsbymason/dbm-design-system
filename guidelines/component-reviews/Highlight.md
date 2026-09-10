@@ -133,3 +133,16 @@ expected), Storybook documentation (Docs page, Properties table, Design Tokens t
 consistent, zero console errors), and functional verification (`tsc`, `eslint`, full 999-test
 suite, `tsup` build, bundle-size and foundations-token-coverage checks all clean). No further
 changes without asking first, per `06-engineering-standards.md` §9's finalization rule.
+
+## Post-review fix: `tone`/`caseSensitive` missing from 4 stories' inert-control overrides (2026-09-09)
+
+Part of a cross-component sweep (originating from `Portal`'s own review, see
+`guidelines/component-reviews/Portal.md`) for stories whose fixed `render` ignores `args` but whose
+Controls panel still shows live-looking toggles doing nothing (`07-storybook-and-documentation-
+standards.md` §5's own convention). `AllTones` dashed `children`/`query`/`tone` but missed
+`caseSensitive`; `SearchMatch`/`AutoMatching`/`MultipleQueries` dashed only `children`/`query`,
+missing both `tone` and `caseSensitive` — all four props are live at the meta level and all four
+were equally ignored by each story's own zero-arg `render`. Fixed by adding the missing keys to
+each story's `argTypes`. `Default` was checked and correctly left alone — it has no custom `render`
+(uses the default args-spread render), so `tone`/`caseSensitive` genuinely stay live there. Pure
+Storybook-metadata fix, no runtime code touched. Full suite re-run clean.

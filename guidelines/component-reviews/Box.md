@@ -75,3 +75,14 @@ budget). No new findings.
 
 **Finalized 2026-09-02** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Box (code, stories, docs, or its tokens) without asking first.
+
+## Post-review fix: inert controls on `AsButton`/`AsCustomComponent` (2026-09-09)
+
+Part of a cross-component sweep (originating from `Portal`'s own review, see
+`guidelines/component-reviews/Portal.md`) for the "story's fixed `render` ignores `args`, but its
+Controls panel still shows live-looking `as`/`children` toggles that do nothing" pattern
+(`07-storybook-and-documentation-standards.md` §5's own convention). Both `AsButton` and
+`AsCustomComponent` had no `argTypes` override at all despite their zero-arg `render`s — fixed by
+adding `argTypes: { as: { control: false }, children: { control: false } }` to each. Pure
+Storybook-metadata fix, no runtime code touched. Live-verified: both props now show `-` on both
+stories; the Docs page's own Properties table is unaffected. Full suite re-run clean.

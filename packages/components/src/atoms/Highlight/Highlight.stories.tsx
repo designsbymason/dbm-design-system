@@ -87,6 +87,7 @@ export const AllTones: Story = {
     children: { control: false },
     query: { control: false },
     tone: { control: false },
+    caseSensitive: { control: false },
   },
   render: () => (
     <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
@@ -104,6 +105,8 @@ export const SearchMatch: Story = {
   argTypes: {
     children: { control: false },
     query: { control: false },
+    tone: { control: false },
+    caseSensitive: { control: false },
   },
   render: () => (
     <Text>
@@ -118,6 +121,8 @@ export const AutoMatching: Story = {
   argTypes: {
     children: { control: false },
     query: { control: false },
+    tone: { control: false },
+    caseSensitive: { control: false },
   },
   render: () => (
     <Text>
@@ -133,6 +138,8 @@ export const MultipleQueries: Story = {
   argTypes: {
     children: { control: false },
     query: { control: false },
+    tone: { control: false },
+    caseSensitive: { control: false },
   },
   render: () => (
     <Text>

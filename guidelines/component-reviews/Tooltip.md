@@ -217,3 +217,16 @@ status the user declares explicitly, not one a review pass asserts on its own.
 
 **Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Tooltip (code, stories, docs, or its tokens) without asking first.
+
+## Post-review fix: 7 props missing from 2 stories' inert-control overrides (2026-09-09)
+
+Part of a cross-component sweep (originating from `Portal`'s own review, see
+`guidelines/component-reviews/Portal.md`) for stories whose fixed `render` ignores `args` but whose
+Controls panel still shows live-looking toggles doing nothing (`07-storybook-and-documentation-
+standards.md` §5's own convention). `MultipleWithSharedProvider` and `SharedProviderInteraction`
+each only dashed `children`/`content`, leaving `side`/`align`/`delayDuration`/
+`disableHoverableContent`/`hideArrow`/`defaultOpen`/`aria-label` showing as live-looking controls
+despite both stories' fully-bespoke, zero-arg renders ignoring every one of them. Fixed by adding
+all 7 missing keys to both stories' `argTypes`. Pure Storybook-metadata fix, no runtime code
+touched. Live-verified: all 15 controls now show `-` on `MultipleWithSharedProvider`. Full suite
+re-run clean.

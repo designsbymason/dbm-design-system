@@ -148,6 +148,7 @@ export const Horizontal: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
@@ -168,6 +169,7 @@ export const HorizontalWithLabel: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
@@ -188,6 +190,7 @@ export const LabelAlignment: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <Stack gap={4} style={{ color: "var(--dbm-text-primary)" }}>
@@ -207,6 +210,7 @@ export const Vertical: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div
@@ -239,6 +243,7 @@ export const NarrowViewport: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)", maxWidth: "300px" }}>
@@ -259,6 +264,7 @@ export const VerticalWithLabel: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div
@@ -284,6 +290,7 @@ export const Dashed: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
@@ -303,6 +310,7 @@ export const Dotted: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
@@ -323,6 +331,7 @@ export const Double: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
@@ -343,6 +352,7 @@ export const DoubleEmphasisStart: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
@@ -363,6 +373,7 @@ export const DoubleEmphasisEnd: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
@@ -383,6 +394,7 @@ export const Tones: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     <Stack gap={4} style={{ color: "var(--dbm-text-primary)" }}>
@@ -408,6 +420,7 @@ export const ResponsiveOrientation: Story = {
     tone: { control: false },
     label: { control: false },
     align: { control: false },
+    "aria-label": { control: false },
   },
   render: () => (
     // `height`, not `minHeight` — a vertical Divider's own `height: 100%`

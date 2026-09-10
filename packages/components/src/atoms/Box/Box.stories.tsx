@@ -69,6 +69,10 @@ export const AsSection: Story = {
 
 export const AsButton: Story = {
   name: 'Polymorphic: as="button" (native button props type-check)',
+  // Fixed render — doesn't read `args`, so `as`/`children` would otherwise
+  // show as live-looking controls that silently do nothing (07-storybook-
+  // and-documentation-standards.md §5's own "inert controls" convention).
+  argTypes: { as: { control: false }, children: { control: false } },
   render: () => (
     <Box
       as="button"
@@ -104,6 +108,8 @@ CustomLabel.displayName = "CustomLabel";
 
 export const AsCustomComponent: Story = {
   name: "Polymorphic: as={CustomComponent} (renders another React component, not just a tag)",
+  // Fixed render — doesn't read `args`; see AsButton's own comment above.
+  argTypes: { as: { control: false }, children: { control: false } },
   render: () => (
     <Box
       as={CustomLabel}

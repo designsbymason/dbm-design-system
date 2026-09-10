@@ -219,6 +219,13 @@ export const MultipleWithSharedProvider: Story = {
   argTypes: {
     children: { control: false },
     content: { control: false },
+    side: { control: false },
+    align: { control: false },
+    delayDuration: { control: false },
+    disableHoverableContent: { control: false },
+    hideArrow: { control: false },
+    defaultOpen: { control: false },
+    "aria-label": { control: false },
   },
   render: function MultipleWithSharedProviderStory() {
     return (
@@ -259,6 +266,13 @@ export const SharedProviderInteraction: Story = {
   argTypes: {
     children: { control: false },
     content: { control: false },
+    side: { control: false },
+    align: { control: false },
+    delayDuration: { control: false },
+    disableHoverableContent: { control: false },
+    hideArrow: { control: false },
+    defaultOpen: { control: false },
+    "aria-label": { control: false },
   },
   render: function SharedProviderInteractionStory() {
     return (

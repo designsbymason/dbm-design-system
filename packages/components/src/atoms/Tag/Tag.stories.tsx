@@ -422,6 +422,8 @@ export const SelectableFilterGroup: Story = {
     trailingIcon: { control: false },
     removable: { control: false },
     removeLabel: { control: false },
+    disabled: { control: false },
+    "aria-label": { control: false },
   },
   render: function SelectableFilterGroupStory() {
     const [selected, setSelected] = useState<Record<string, boolean>>({
@@ -488,6 +490,8 @@ export const RemovableAndSelectable: Story = {
     trailingIcon: { control: false },
     removable: { control: false },
     removeLabel: { control: false },
+    disabled: { control: false },
+    "aria-label": { control: false },
   },
   render: function RemovableAndSelectableStory() {
     const [filters, setFilters] = useState(["Design", "Engineering"]);
@@ -532,6 +536,8 @@ export const RemovableFilterList: Story = {
     trailingIcon: { control: false },
     removable: { control: false },
     removeLabel: { control: false },
+    disabled: { control: false },
+    "aria-label": { control: false },
   },
   render: function RemovableFilterListStory() {
     const [filters, setFilters] = useState([

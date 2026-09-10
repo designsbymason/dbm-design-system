@@ -356,3 +356,15 @@ package build (confirmed the four newly-exported types appear in `dist/index.d.t
 runtime cost).
 
 **Finalized 2026-09-03.**
+
+## Post-review fix: `aria-label` missing from 13 stories' inert-control overrides (2026-09-09)
+
+Part of a cross-component sweep (originating from `Portal`'s own review, see
+`guidelines/component-reviews/Portal.md`) for stories whose fixed `render` ignores `args` but whose
+Controls panel still shows live-looking toggles doing nothing (`07-storybook-and-documentation-
+standards.md` §5's own convention). Every non-Playground Divider story already dashed
+`orientation`/`variant`/`thickness`/`emphasis`/`tone`/`label`/`align` — a partial fix from an
+earlier pass — but missed `aria-label`, which is also live at the meta level and equally ignored by
+every one of those same fixed renders. Added `"aria-label": { control: false }` to all 13 affected
+stories. Pure Storybook-metadata fix, no runtime code touched. Live-verified on `Horizontal`: all 8
+props now show `-`. Full suite re-run clean.
