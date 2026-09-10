@@ -1,6 +1,6 @@
 # ThemeProvider
 
-**Tier:** Atom · **Category:** Utility · **Finalized:** ⏳ pending (review complete, awaiting user sign-off)
+**Tier:** Atom · **Category:** Utility · **Finalized:** ✅ 2026-09-10
 
 ## Review pass (2026-09-10)
 
@@ -226,8 +226,87 @@ stale — a fresh tab load showed none). Full suite re-run clean: `eslint`, `tsc
 (unchanged — a Storybook/MDX-only fix), `tsup` build, `addon-vitest` 371/371, `build-storybook`,
 `check-component-bundle-size` (unchanged at 0.80KB/0.17KB), `check-foundations-token-coverage`.
 
-## Status
+## Post-review polish: shorter Docs-page messaging (2026-09-10, same day, user-directed)
 
-Review complete as of 2026-09-10, including all post-review fixes above. Not yet marked Finalized —
-per the standing rule (`06-engineering-standards.md` §9), only the user declares a component
-Finalized.
+User-directed simplification, not a bug fix: the Intro/Playground/Variants Callouts explaining *why*
+nothing is embedded were judged too long for a page whose reader mostly just wants the link. Trimmed
+to a one-line title-only Callout in the Intro (removed the body sentence entirely — the title alone
+already says "not embedded here"), and a short one-sentence lead-in before the link in both
+Playground ("`ThemeProvider` controls the whole document's theme, so its Playground lives on a
+dedicated story page instead of being embedded here.") and Variants ("Each brand/mode combination is
+its own standalone story:"). The full *why* (the two-independent-theming-systems root cause) stays
+recorded here and in `07-storybook-and-documentation-standards.md` §4.1 — this is a reader-facing
+trim, not a loss of the underlying documentation. Live-verified: all three sections render correctly,
+`tsc`/`eslint`/`test:storybook` clean.
+
+**Considered and accepted, no fix needed (user confirmed "all good," 2026-09-10):** a live user
+report asked whether the demo box's background was incorrectly rendering as the canvas's own
+background in dark mode. Verified directly via computed token values, not visual impression alone —
+`bg.surface` (`#2c2a34`) and `bg.brand-subtle` (`#24222a`) in `purple-dark` are two genuinely
+different, correctly-applied values; the canvas never actually becomes `bg.brand-subtle`. The
+*appearance* of blending is real, though: an 8-unit-per-channel delta reads as visually distinct in
+light mode (`#ffffff` vs `#f9f9ff`, next to a visible border) but is much harder to perceive in dark
+mode, where human contrast sensitivity is lower for small luminance deltas at low lightness. Not a
+functional bug — confirmed no token is misapplied — a minor, accepted contrast tradeoff in the demo
+stories' own presentation, not in the component or the real token pairing itself.
+
+## Final review (2026-09-10)
+
+A full top-to-bottom re-pass of the checklist before finalizing, after every post-review fix above
+was in place. No new findings — everything checked out:
+
+- **Baseline correctness**: `ThemeProvider.tsx` re-read fresh — the `{...props}`-first ordering fix
+  and the nesting/restore logic both unchanged and correct since their own fixes.
+- **Playground defaults**: `meta.args` (`brand: "purple", mode: "system"`) matches the real
+  `@default 'purple'`/`@default 'system'` documented on both props and the Properties table's own
+  `Default` column — no mismatch (specifically checked for the exact class of bug `FocusTrap`'s own
+  final review caught; none found here).
+- **Controls wiring**: `Playground`'s controls genuinely drive its own canvas (confirmed via
+  `document.documentElement`'s own `data-theme`, not just visual inspection); all five `Variant`
+  stories plus `LiveThemeToggle` correctly show `-` for `brand`/`mode` — re-spot-checked
+  `PurpleDark`/`EmeraldLight`/`SystemMode` live in a fresh tab, all render their own correct
+  combination.
+- **Accessibility**: zero violations via `jest-axe` (`ThemeProvider.test.tsx`, 14/14 passing). The
+  live Accessibility panel couldn't be independently re-checked this session — the same standing
+  environmental limitation already documented in `Portal.md`/`Tooltip.md` (`ADR-0003`'s
+  `pnpm test:storybook:watch` requires a persistent process this session can't sustain) — covered
+  instead by the `jest-axe` suite.
+- **Responsiveness**: mobile viewport (375px) checked live on the Docs page, including the
+  now-shortened Playground/Variants sections specifically — zero horizontal overflow on the page
+  itself (the Properties table's own internal `overflow-x` scroll container behaves as designed,
+  confirmed via direct DOM measurement, not just visually).
+- **Theming**: `ThemeSync` confirmed still correctly syncing the Docs page's own chrome to the
+  toolbar on a fresh load (the "Atom" badge and every other token-styled element render correctly,
+  not unstyled) — this is the component whose own review found and fixed that exact class of gap, so
+  it's the one most worth re-confirming on a final pass.
+- **Console**: zero errors on a genuinely fresh tab.
+- **Full suite**: `tsc`, `eslint`, `tsup` build, 1065/1065 unit tests, `addon-vitest` 371/371,
+  `build-storybook`, `check-component-bundle-size` (unchanged, 0.80KB/0.17KB),
+  `check-foundations-token-coverage` — all re-run clean.
+
+## Finalized
+
+**2026-09-10** — confirmed by the user after a full top-to-bottom final review pass covering every
+checklist section: baseline correctness (the `{...props}`-first ordering fix and the nesting/restore
+logic both re-verified), feature-completeness (`brand`/`mode`/`useTheme()` cover the standard
+surface against comparable production theming libraries, the SSR first-paint tradeoff documented
+rather than "fixed" since a fully flash-free experience needs a blocking pre-hydration script outside
+this component's own control), accessibility (zero `jest-axe` violations, 14/14 tests passing;
+`Playground`'s own live a11y panel blocked only by the standing, documented `ADR-0003` environmental
+limitation, not a real gap), responsiveness (mobile viewport spot-checked, including the shortened
+Playground/Variants sections), theming (`ThemeSync` reconfirmed correctly syncing the Docs page's own
+chrome to the toolbar), and functional verification (`tsc`, `eslint`, full 1065-test suite, `tsup`
+build, `addon-vitest`, `build-storybook`, bundle-size and foundations-token-coverage checks all
+clean).
+
+This review surfaced and fixed real, independent issues beyond the initial pass — a Properties-table
+docgen gap (`id`/`className`/`style`/`data-testid` never redeclared), a props-spread-ordering
+correctness bug, hand-rolled demo styling replaced with real design-system tokens and the real
+`Button` component, and — the most significant — a genuinely broken split-theme Docs page from the
+embedded Playground, root-caused to two independent theming systems falling out of sync, fixed by
+not embedding any live demo on the Docs page at all (a deliberate, documented, one-off exception to
+the standard template) plus reusing `ThemeSync` to fix a second bug that removing the last `Canvas`
+exposed. Each fix was verified live in a running Storybook instance, including a live user report
+that caught the split-theme bug directly and a follow-up user report that was investigated and
+confirmed *not* a bug (a dark-mode contrast tradeoff, verified via actual token values). No further
+changes without asking first, per `06-engineering-standards.md` §9's finalization rule.

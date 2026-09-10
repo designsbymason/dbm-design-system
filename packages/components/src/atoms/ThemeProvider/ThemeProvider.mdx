@@ -31,15 +31,7 @@ the theme correctly too. `mode="system"` follows `prefers-color-scheme` and upda
 preference changes while mounted. Descendants can read the resolved brand/mode reactively via
 `useTheme()` instead of reaching into the DOM directly.
 
-<Callout tone="info" title="No live demo embedded on this page — see why below">
-
-Every demo of `ThemeProvider` itself (including its own Playground) lives on its own standalone
-story page instead of being embedded here as a `Canvas` — see the [Playground](#playground) section
-below for the full reason. Every *other* component's own Docs page keeps its usual embedded,
-interactive Playground; this is a deliberate, one-off exception specific to `ThemeProvider`, not a
-change to how Docs pages work in general.
-
-</Callout>
+<Callout tone="info" title="Live demos live on their own standalone story pages, not embedded here" />
 
 ### Import
 
@@ -49,21 +41,12 @@ import { ThemeProvider, useTheme } from "@dbm-design-system/components";
 
 ## Playground
 
-<Callout tone="info" title="Not embedded here — this page's own chrome can't follow along, producing a broken-looking split state">
+<Callout tone="info" title="Try every prop live on its own page">
 
-This Docs page's own surrounding chrome (background, headings, body text) is themed two different
-ways at once: most of it reads Storybook's own theme object, synced only to the toolbar's
-**Brand**/**Mode** selection; the components demonstrated *within* it (Callouts, code blocks, and any
-embedded `Canvas`) read real `--dbm-*` tokens, which resolve from `document.documentElement`'s own
-`data-theme`. Those two normally stay in sync — a shared decorator keeps `document.documentElement`
-matching the toolbar on every render — but `ThemeProvider` mounted here would keep overwriting
-`document.documentElement` on its own, independently of the toolbar, the instant its controls were
-touched. The result isn't a clean whole-page transition (confirmed live, not assumed): token-driven
-text flips to its dark-mode color while the surrounding toolbar-themed chrome stays on its last
-light-mode background, leaving genuinely hard-to-read, washed-out text — a real Docs-page rendering
-bug, not an accurate preview of `ThemeProvider`'s real behavior (a real app has no second,
-independently-themed chrome layer running alongside it). Try every prop live on its own page instead,
-where this conflict doesn't exist: [Playground](/story/atoms-utility-themeprovider--playground).
+`ThemeProvider` controls the whole document's theme, so its Playground lives on a dedicated story
+page instead of being embedded here.
+
+[Playground](/story/atoms-utility-themeprovider--playground)
 
 </Callout>
 
@@ -76,14 +59,7 @@ where this conflict doesn't exist: [Playground](/story/atoms-utility-themeprovid
 
 ## Variants
 
-<Callout tone="info" title="Not embedded here either — same underlying cause as Playground, above">
-
-Every variant below is a real, standalone story — not embedded on this page as a `Canvas`, for the
-same reason the Playground isn't (see its own Callout above): each one would independently overwrite
-`document.documentElement`, out of sync with this page's own toolbar-themed chrome, producing the
-same broken split-state rather than a clean demonstration. Mounting more than one at once would
-compound it further, each silently overwriting the last. See each on its own page instead, where it
-renders correctly with nothing else competing for `document.documentElement`:
+Each brand/mode combination is its own standalone story:
 
 - [Purple / Light](/story/atoms-utility-themeprovider--purple-light)
 - [Purple / Dark](/story/atoms-utility-themeprovider--purple-dark)
@@ -91,11 +67,7 @@ renders correctly with nothing else competing for `document.documentElement`:
 - [Emerald / Dark](/story/atoms-utility-themeprovider--emerald-dark)
 - [System mode (follows OS preference)](/story/atoms-utility-themeprovider--system-mode)
 - [Live brand/mode toggle (useTheme + transition demo)](/story/atoms-utility-themeprovider--live-theme-toggle) —
-  a fuller demo pairing `ThemeProvider` with `useTheme()`, showing a descendant reactively reading
-  the resolved brand/mode and the brief color transition a later change (not the initial mount)
-  applies to every themed surface.
-
-</Callout>
+  pairs `ThemeProvider` with `useTheme()` and the brief color transition on a change.
 
 ## Usage guidelines
 
