@@ -1,6 +1,6 @@
 # Portal
 
-**Tier:** Atom · **Category:** Utility · **Finalized:** ⏳ pending (review complete, awaiting user sign-off)
+**Tier:** Atom · **Category:** Utility · **Finalized:** ✅ 2026-09-09
 
 ## Review pass (2026-09-09)
 
@@ -209,15 +209,73 @@ now show `-` for both props in their Controls panel; the Docs page's Properties 
 full `true`/`false` value options and descriptions for both.
 
 **Recorded as a new, generalizable convention** (not just a Portal fix) in
-`07-storybook-and-documentation-standards.md` §5's own Controls-panel checklist item, since every
-other already-Finalized component's non-Playground stories have the identical latent issue and
-haven't been swept yet — tracked as a separate backlog item, out of scope for this review.
+`07-storybook-and-documentation-standards.md` §5's own Controls-panel checklist item. Swept across
+every other already-Finalized atom the same day, at explicit user request — found and fixed 5
+components with real, partial gaps (`Box`, `Divider`, `Highlight`, `Tag`, `Tooltip`); see each
+component's own `component-reviews/ComponentName.md` and `07`'s own §5 entry for the full sweep
+writeup.
 
 Full suite re-run clean: `eslint`, `tsc`, 1064/1064 unit tests (unchanged — Storybook-metadata-only
 fix), `addon-vitest` 370/370.
 
-## Status
+## Final review (2026-09-09)
 
-Review complete as of 2026-09-09, including both post-review fixes above. Not yet marked Finalized —
-per the standing rule (`06-engineering-standards.md` §9), only the user declares a component
-Finalized.
+A full top-to-bottom re-pass of the checklist before finalizing, after both post-review fixes above
+were in place. No new findings — everything checked out:
+
+- **Baseline correctness**: `Portal.tsx`'s implementation (the `forwardRef`, the `disablePortal`
+  short-circuit, the dev-mode `ref` warning) re-read fresh, unchanged since the initial pass.
+- **Playground defaults**: `meta.args` (`disablePortal: false, asChild: false`) matches the real
+  `@default false` documented on both props and the Properties table's own `Default` column — no
+  mismatch (the exact class of bug `FocusTrap`'s own final review caught; checked specifically for
+  it here and found none).
+- **Controls wiring**: every story's Controls panel re-verified live — `Playground` drives the
+  canvas correctly (including the post-fix local-container behavior); `Default`/`CustomContainer`/
+  `DisabledPortal`/`AsChild` all correctly show `-` for `disablePortal`/`asChild` (the inert-controls
+  fix above).
+- **Accessibility**: zero violations confirmed via `jest-axe` (`Portal.test.tsx`, including the
+  `asChild` variant) and, live, on `Default`/`CustomContainer`/`DisabledPortal`/`AsChild`'s own
+  Accessibility panels. `Playground`'s own live panel couldn't be independently re-checked this
+  session — Storybook's a11y panel requires a persistent `pnpm test:storybook:watch` process
+  (`ADR-0003`), which doesn't survive this environment's non-interactive shell (confirmed: the
+  watcher exits after one run instead of staying alive, even under `nohup`/`disown`). Same standing
+  environmental limitation already noted in `Tooltip.md`'s own review, not a `Portal`-specific gap —
+  covered instead by the `jest-axe` suite and `Playground`'s own structurally-simple markup (a
+  paragraph and a styled badge, the same accessible patterns already verified elsewhere in this
+  file).
+- **Responsiveness**: mobile viewport (375px) checked live on the Docs page — zero horizontal
+  overflow confirmed via direct DOM measurement (`scrollWidth === clientWidth`), and specifically
+  checked `Playground`'s own two-column flex layout in both toggle states (`disablePortal` off,
+  where the first column is empty since the badge portals away, and on, where both columns hold
+  real content) — both lay out cleanly with no squeezing or overlap.
+- **Theming**: both brand themes × both color modes re-confirmed on the Docs page (dark mode,
+  Emerald brand) — no breakage to the shared chrome/Callouts/badges, consistent with `Portal`
+  itself referencing no tokens of its own.
+- **Console**: zero `Portal`-specific errors on repeated fresh loads. The one recurring
+  `Accessing element.ref was removed in React 19` warning is confirmed pre-existing and unrelated
+  (identical on `ClientOnly.mdx`, a page untouched by any of this component's own fixes).
+- **Full suite**: `tsc`, `eslint`, `tsup` build, 1064/1064 unit tests, `addon-vitest` 370/370 —
+  all re-run clean, all cache hits (confirming zero code drift since the last verified-passing run).
+
+## Finalized
+
+**2026-09-09** — confirmed by the user after a full top-to-bottom final review pass covering every
+checklist section: baseline correctness (implementation unchanged and re-verified since the initial
+pass), feature-completeness (`container`/`disablePortal`/`asChild` cover the standard surface
+against comparable production portal implementations, a convenience prop for breakpoint-gated
+portaling deliberately not added — consumer-side composition, not this component's job),
+accessibility (zero `jest-axe`/live-panel violations across every story, including `asChild`;
+`Playground`'s own live panel blocked only by a documented, pre-existing environmental limitation,
+not a real gap), responsiveness (mobile viewport spot-checked, including both `Playground` toggle
+states), theming (confirmed brand-agnostic — no tokens of its own; the shared Docs chrome/Callouts/
+badges spot-checked across both brands and both modes with no breakage), and functional
+verification (`tsc`, `eslint`, full 1064-test suite, `tsup` build, `addon-vitest`, `build-storybook`,
+bundle-size and foundations-token-coverage checks all clean).
+
+This review surfaced and fixed two real, independent issues beyond the initial pass — the
+`Default`/`AsChild` demo badges escaping to the whole Docs page's shared viewport instead of
+staying near their own section (fixed architecturally, matching `FocusTrap`'s own `MergedOntoChild`
+precedent), and inert Controls-panel toggles on all four fixed-render stories (fixed, and the same
+convention swept across 5 other already-Finalized atoms the same day) — each verified live in a
+running Storybook instance, not assumed from the code. No further changes without asking first, per
+`06-engineering-standards.md` §9's finalization rule.

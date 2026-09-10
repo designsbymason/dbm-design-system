@@ -150,9 +150,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**45 of 47 atoms have a Docs page; 44 are Finalized** — [FocusTrap.md](component-reviews/FocusTrap.md)
-is the most recently Finalized, 2026-09-09 at explicit user direction. [Portal.md](component-reviews/Portal.md)'s
-review pass is complete (2026-09-09) but not yet Finalized — pending the user's own sign-off.
+**45 of 47 atoms have a Docs page; 45 are Finalized** — [Portal.md](component-reviews/Portal.md)
+is the most recently Finalized, 2026-09-09 at explicit user direction.
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -200,7 +199,7 @@ review pass is complete (2026-09-09) but not yet Finalized — pending the user'
 | Text | Atom | Typography | ✅ | ✅ 2026-09-07 | [Text.md](component-reviews/Text.md) |
 | ClientOnly | Atom | Utility | ✅ | ✅ 2026-09-07 | [ClientOnly.md](component-reviews/ClientOnly.md) |
 | FocusTrap | Atom | Utility | ✅ | ✅ 2026-09-09 | [FocusTrap.md](component-reviews/FocusTrap.md) |
-| Portal | Atom | Utility | ✅ | ⏳ pending | [Portal.md](component-reviews/Portal.md) |
+| Portal | Atom | Utility | ✅ | ✅ 2026-09-09 | [Portal.md](component-reviews/Portal.md) |
 
 **Not yet started, by category** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see `01-vision-and-goals.md` §13 and `04-component-inventory.md`; membership updated 2026-09-07 per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) — `GridItem` now tracked here as atom-tier, `List` no longer is):
 - **Layout:** none remaining — every Layout atom now has a completed, Finalized review pass (`Grid` itself stays molecule-tier per ADR-0012 and isn't tracked in this atom-only list; GridItem moved to atom-tier 2026-09-07 — see the same ADR). See the status table above and [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md)/[GridItem.md](component-reviews/GridItem.md).
@@ -211,7 +210,7 @@ review pass is complete (2026-09-09) but not yet Finalized — pending the user'
   [Backdrop.md](component-reviews/Backdrop.md)/[Collapse.md](component-reviews/Collapse.md)/
   [Tooltip.md](component-reviews/Tooltip.md).
 - **Media:** none remaining — Icon's, Image's, and Indicators' own review passes are complete, see the status table above and their own [Icon.md](component-reviews/Icon.md)/[Image.md](component-reviews/Image.md)/[Indicators.md](component-reviews/Indicators.md).
-- **Utility:** ThemeProvider, VisuallyHidden remaining — `ClientOnly`'s and `FocusTrap`'s own review passes are complete and Finalized (Docs pages included); `Portal`'s own review pass is complete (Docs page included) but not yet Finalized, pending the user's sign-off, see [ClientOnly.md](component-reviews/ClientOnly.md)/[FocusTrap.md](component-reviews/FocusTrap.md)/[Portal.md](component-reviews/Portal.md).
+- **Utility:** ThemeProvider, VisuallyHidden remaining — `ClientOnly`'s, `FocusTrap`'s, and `Portal`'s own review passes are complete and Finalized (Docs pages included), see [ClientOnly.md](component-reviews/ClientOnly.md)/[FocusTrap.md](component-reviews/FocusTrap.md)/[Portal.md](component-reviews/Portal.md).
 
 **Molecules (resolved 2026-08-16 — superseded, not just decided):** this used to be an open sequencing question, written back when Docs pages were produced by their own standalone sweep (Phase 4.9) running only loosely coordinated with Phase 5 (Molecules, which started early — `Grid`/`GridItem`/`Select` landed 2026-08-09, ahead of the original plan). That's no longer how it works: a Docs page is now one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, run one component at a time, strictly tier-order — atoms first, in full (Docs page included), before any molecule gets its own review pass. `Grid`/`Select` (and, as of 2026-09-07, `List` — see [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md)) have stories/tests but no Docs page yet; they simply wait in the queue behind the remaining atoms like any other not-yet-reviewed component, the same as every other still-open row in the table above. `GridItem` is no longer part of this molecule queue — it moved to atom-tier the same day (ADR-0012) and is now tracked in the Layout bullet above instead. No interleaving, no second queue to track.
 
