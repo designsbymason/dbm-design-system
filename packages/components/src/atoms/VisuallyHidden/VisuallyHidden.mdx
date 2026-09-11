@@ -1,0 +1,188 @@
+import { XIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard } from "../../../.storybook/blocks";
+import { IconButton } from "../IconButton";
+import { Link } from "../Link";
+import { VisuallyHidden } from "./VisuallyHidden";
+import * as VisuallyHiddenStories from "./VisuallyHidden.stories";
+
+export const propOrder = [
+  "children",
+  "focusable",
+  "asChild",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={VisuallyHiddenStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="VisuallyHidden" tier="Atom" />
+
+Hides content visually while keeping it in the accessibility tree, so screen reader users still get
+information sighted users would otherwise only infer from visual context — icon-only button labels,
+supplemental instructions, skip links. Applies a fixed, well-established CSS technique (absolute
+positioning clipped to a 1px box) rather than `display: none` or `visibility: hidden`, both of which
+would also remove the content from the accessibility tree. `VisuallyHidden` is a thin wrapper around
+Radix's own `VisuallyHidden` — used internally by this system's own Docs pages (the visually-hidden
+"Intro" heading every page starts with, including this one), and usable directly anywhere sighted
+users and screen reader users need genuinely different content.
+
+### Import
+
+```tsx
+import { VisuallyHidden } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<Callout tone="info" title="asChild toggles correctly, but has no visible effect here — see why below">
+
+`asChild` genuinely applies the hidden styling directly to the child instead of rendering an extra
+wrapper `<span>` around it — the control is real and correctly wired (this isn't the "control does
+nothing because of a bug" problem this system watches for elsewhere). The wrapper it removes carries
+no styling of its own, though, so toggling it produces no visible difference here — inspect the DOM
+(browser devtools) to see the actual effect, or see the skip-link variant below for a demo that uses
+it directly.
+
+</Callout>
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={VisuallyHiddenStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={VisuallyHiddenStories.Playground}
+  exclude={["asChild", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`VisuallyHidden` also accepts any other native `<span>` attribute beyond what's listed here (e.g.
+`onClick`, `aria-label`) — passed straight through to the underlying element (or onto `children`
+directly when `asChild` is set).
+
+<PropertiesTable of={VisuallyHiddenStories} order={propOrder} />
+
+## Variants
+
+### Icon-only button label
+
+<Canvas of={VisuallyHiddenStories.IconOnlyButtonLabel} />
+
+### Inline within visible text
+
+<Canvas of={VisuallyHiddenStories.InlineWithinText} />
+
+### focusable (skip link pattern)
+
+<Canvas of={VisuallyHiddenStories.SkipLink} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `VisuallyHidden` to give an icon-only control (a close button, an icon-only `IconButton`) a
+  real accessible name when the surrounding design has no room for visible text.
+- Use `focusable` for a skip link or any other visually-hidden control a sighted keyboard user
+  should be able to discover by tabbing — it stays invisible for mouse and screen-reader users, but
+  reveals itself the instant it (or a descendant) receives focus.
+- Use `asChild` when `children` is already the element that should own the hidden styling directly
+  (an `<a>` skip link) — it avoids an extra, purely structural wrapper `<span>`.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reach for `VisuallyHidden` when `aria-label`/`aria-labelledby` already covers the need (e.g.
+  `IconButton`'s own required `aria-label`) — both approaches work, but a plain attribute is simpler
+  when there's no reason to also expose the text as real, selectable DOM content.
+- Don't use `display: none` or `visibility: hidden` for the same goal — both remove content from the
+  accessibility tree entirely, which is the opposite of what `VisuallyHidden` is for.
+- Don't put interactive content inside a non-`focusable` `VisuallyHidden` expecting a mouse user to
+  reach it — it's permanently off-screen for them; only a keyboard/screen-reader user can ever
+  interact with it in that mode.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep visually-hidden text short and purely functional (a label, a cue like "(opens in a new
+  tab)") — it's announced by assistive technology, not read as prose.
+- Pair `focusable` with real, visible styling of your own once revealed — `VisuallyHidden` only
+  restores normal layout flow on focus, it adds no background, border, or positioning to make the
+  revealed state stand out.
+- Prefer `asChild` over a wrapper `<span>` whenever the child is itself the element that needs the
+  hidden treatment (a real `<a>` skip link, not `<VisuallyHidden><a>...</a></VisuallyHidden>`) — one
+  fewer structural element in the accessibility tree to reason about.
+
+## Accessibility
+
+<Callout tone="info" title="This component exists entirely for accessibility — a few things to get right">
+
+- **Content stays in the accessibility tree at all times.** Unlike `display: none`/`visibility:
+  hidden`, screen readers still announce it — that's the whole point.
+- **Don't duplicate an already-accessible name.** If a control already has a visible label, wrapping
+  additional text in `VisuallyHidden` right next to it can make assistive technology announce the
+  name twice — reserve it for content that has no other accessible name yet.
+- **`focusable` content still needs a real, visible focus indicator once revealed** — `VisuallyHidden`
+  restores normal layout on focus, but relies on the browser's/your own `:focus` styling for the
+  indicator itself, same as any other focusable element.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Icon-only button — a real accessible name with no visible text
+<button type="button">
+  <TrashIcon />
+  <VisuallyHidden>Delete item</VisuallyHidden>
+</button>
+```
+
+```tsx
+// A cue appended to visible text, announced but not shown
+<a href="https://example.com">
+  External link
+  <VisuallyHidden> (opens in a new tab)</VisuallyHidden>
+</a>
+```
+
+```tsx
+// Skip link — hidden until a sighted keyboard user tabs to it
+<VisuallyHidden asChild focusable>
+  <a href="#main-content">Skip to main content</a>
+</VisuallyHidden>
+```
+
+## Design tokens used
+
+`VisuallyHidden` itself references **no tokens** — its hidden styling is a fixed, non-visual CSS
+clipping technique (absolute positioning, zero-size box), not a themed surface. Any visual appearance
+in the `focusable` revealed state comes entirely from `children`, which supplies its own token usage.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Link"
+  description="A real internal consumer — Link uses VisuallyHidden to add a screen-reader-only '(opens in a new tab)' cue next to its own external-link icon"
+  href="/?path=/docs/atoms-typography-link--docs"
+>
+  <Link href="https://example.com" external>External link</Link>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="The other common way to label icon-only content — a plain aria-label instead of visually-hidden text, simpler when there's no reason to also expose the text as real DOM content"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={XIcon} aria-label="Close" variant="ghost" />
+</RelatedCard>
+</div>

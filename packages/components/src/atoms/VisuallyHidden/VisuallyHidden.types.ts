@@ -1,5 +1,5 @@
 import type { VisuallyHiddenProps as RadixVisuallyHiddenProps } from "@radix-ui/react-visually-hidden";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 export interface VisuallyHiddenProps extends RadixVisuallyHiddenProps {
   /** The content to visually hide (while keeping it in the accessibility tree). */
@@ -16,4 +16,27 @@ export interface VisuallyHiddenProps extends RadixVisuallyHiddenProps {
    * @default false
    */
   focusable?: boolean;
+  /**
+   * Merge props onto the single child element instead of rendering a
+   * `<span>` (via Radix `Slot`) — applies the hidden styling directly to
+   * the child. `children` must be a single valid element when set.
+   * @default false
+   */
+  asChild?: boolean;
+  /**
+   * Standard DOM id. Needed when another element's aria-labelledby/
+   * aria-describedby must point at this component, or a test/router needs
+   * a stable anchor.
+   */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal hidden styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * getByTestId, Playwright/Cypress selectors). Rendered as the DOM
+   * data-testid attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }

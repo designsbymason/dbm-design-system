@@ -28,9 +28,13 @@ import type { VisuallyHiddenProps } from "./VisuallyHidden.types";
  *
  * @example
  * ```tsx
- * <IconButton icon={Trash}>
+ * // A plain native icon-only button — IconButton itself never renders
+ * // `children` outside `asChild` mode, so this pattern only applies to a
+ * // hand-rolled button, not IconButton's own `icon` prop.
+ * <button type="button">
+ *   <Trash />
  *   <VisuallyHidden>Delete item</VisuallyHidden>
- * </IconButton>
+ * </button>
  * ```
  *
  * @example Skip link

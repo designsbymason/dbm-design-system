@@ -80,6 +80,7 @@ function ControlField({
   // never be false (TS2367), not just a style nit.
   const controlType = argType.control ? argType.control.type : undefined;
   const fieldId = `playground-control-${name}`;
+  const labelId = `${fieldId}-label`;
   // What the widget below should *show* — the real arg when it's set, the
   // computed fallback otherwise. `onChange` always writes the real value
   // the user actually picked, never this one, so a prop with no
@@ -136,8 +137,17 @@ function ControlField({
   let widget: ReactNode;
   if (controlType === "boolean") {
     widget = (
+      // `Switch` runs its own dev-mode "no accessible name" check against
+      // only its own `children`/`aria-label`/`aria-labelledby` props — it
+      // has no way to detect the external `<FieldLabel htmlFor={fieldId}>`
+      // below, even though that's already a real, spec-valid native label
+      // association (`<label for>` targeting a `<button>`, a labelable
+      // element). `aria-labelledby` here doesn't change what's announced —
+      // the label text is identical either way — it just makes the
+      // association explicit so Switch's own heuristic can see it too.
       <Switch
         id={fieldId}
+        aria-labelledby={labelId}
         checked={Boolean(draft)}
         onCheckedChange={(checked) => {
           setDraft(checked === true);
@@ -246,6 +256,7 @@ function ControlField({
       }}
     >
       <FieldLabel
+        id={labelId}
         htmlFor={fieldId}
         size="md"
         style={{
