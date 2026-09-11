@@ -2,13 +2,41 @@ import { cx, responsiveStyle } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
 import styles from "./Grid.module.css";
-import type { GridProps } from "./Grid.types";
+import type {
+  GridContentAlign,
+  GridItemsAlign,
+  GridProps,
+} from "./Grid.types";
 
 type GridComponent = {
   <E extends ElementType = "div">(
     props: GridProps<E> & { ref?: ComponentPropsWithRef<E>["ref"] },
   ): ReactElement | null;
   displayName?: string;
+};
+
+// justify-items/align-items values are already valid CSS keywords as-is —
+// this map exists only so `GridItemsAlign` stays an explicit, documented
+// value set rather than an unchecked passthrough string.
+const ITEMS_ALIGN: Record<GridItemsAlign, string> = {
+  start: "start",
+  center: "center",
+  end: "end",
+  stretch: "stretch",
+  baseline: "baseline",
+};
+
+// justify-content/align-content: "between"/"around"/"evenly" need mapping to
+// their real CSS `space-*` keywords, matching Stack's identical convention
+// for its own justify prop.
+const CONTENT_ALIGN: Record<GridContentAlign, string> = {
+  start: "start",
+  center: "center",
+  end: "end",
+  stretch: "stretch",
+  between: "space-between",
+  around: "space-around",
+  evenly: "space-evenly",
 };
 
 const GridImpl = forwardRef<HTMLElement, GridProps<ElementType>>(function Grid(
@@ -20,6 +48,10 @@ const GridImpl = forwardRef<HTMLElement, GridProps<ElementType>>(function Grid(
     autoFlow,
     autoRows,
     autoColumns,
+    justifyItems,
+    alignItems,
+    justifyContent,
+    alignContent,
     className,
     style,
     ...props
@@ -39,6 +71,26 @@ const GridImpl = forwardRef<HTMLElement, GridProps<ElementType>>(function Grid(
           gap,
           "--grid-gap",
           (value: number) => `var(--dbm-space-${value})`,
+        ),
+        ...responsiveStyle(
+          justifyItems,
+          "--grid-justify-items",
+          (value: GridItemsAlign) => ITEMS_ALIGN[value],
+        ),
+        ...responsiveStyle(
+          alignItems,
+          "--grid-align-items",
+          (value: GridItemsAlign) => ITEMS_ALIGN[value],
+        ),
+        ...responsiveStyle(
+          justifyContent,
+          "--grid-justify-content",
+          (value: GridContentAlign) => CONTENT_ALIGN[value],
+        ),
+        ...responsiveStyle(
+          alignContent,
+          "--grid-align-content",
+          (value: GridContentAlign) => CONTENT_ALIGN[value],
         ),
         ...(minChildWidth !== undefined
           ? {
@@ -72,6 +124,12 @@ const GridImpl = forwardRef<HTMLElement, GridProps<ElementType>>(function Grid(
  * `autoFlow="row dense"` or `"column dense"` backfills gaps left by earlier
  * items with different spans, useful for masonry-like layouts.
  *
+ * `justifyItems`/`alignItems` align each item *within its own cell*;
+ * `justifyContent`/`alignContent` position the grid's own tracks *within
+ * the container* when their total size is smaller than the container. All
+ * four accept a single value or a mobile-first responsive map, matching
+ * every other prop here.
+ *
  * @example
  * ```tsx
  * <Grid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
@@ -85,6 +143,15 @@ const GridImpl = forwardRef<HTMLElement, GridProps<ElementType>>(function Grid(
  * <Grid minChildWidth="12rem" gap={4}>
  *   <Card />
  *   <Card />
+ * </Grid>
+ * ```
+ *
+ * @example Centering short content within its cells
+ * ```tsx
+ * <Grid columns={3} gap={4} justifyItems="center" alignItems="center">
+ *   <Icon size="lg" />
+ *   <Icon size="lg" />
+ *   <Icon size="lg" />
  * </Grid>
  * ```
  */

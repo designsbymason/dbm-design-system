@@ -2,6 +2,10 @@
   display: grid;
   gap: var(--grid-gap-base, 0);
   grid-template-columns: repeat(var(--grid-cols-base, 12), minmax(0, 1fr));
+  justify-items: var(--grid-justify-items-base, normal);
+  align-items: var(--grid-align-items-base, normal);
+  justify-content: var(--grid-justify-content-base, normal);
+  align-content: var(--grid-align-content-base, normal);
 }
 
 /*
@@ -18,6 +22,18 @@
       var(--grid-cols-sm, var(--grid-cols-base, 12)),
       minmax(0, 1fr)
     );
+    justify-items: var(--grid-justify-items-sm,
+        var(--grid-justify-items-base,
+          normal));
+    align-items: var(--grid-align-items-sm,
+        var(--grid-align-items-base,
+          normal));
+    justify-content: var(--grid-justify-content-sm,
+        var(--grid-justify-content-base,
+          normal));
+    align-content: var(--grid-align-content-sm,
+        var(--grid-align-content-base,
+          normal));
   }
 }
 
@@ -28,108 +44,187 @@
       var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))),
       minmax(0, 1fr)
     );
+    justify-items: var(--grid-justify-items-md,
+        var(--grid-justify-items-sm,
+          var(--grid-justify-items-base,
+            normal)));
+    align-items: var(--grid-align-items-md,
+        var(--grid-align-items-sm,
+          var(--grid-align-items-base,
+            normal)));
+    justify-content: var(--grid-justify-content-md,
+        var(--grid-justify-content-sm,
+          var(--grid-justify-content-base,
+            normal)));
+    align-content: var(--grid-align-content-md,
+        var(--grid-align-content-sm,
+          var(--grid-align-content-base,
+            normal)));
   }
 }
 
 @media (min-width: 1024px) {
   .root {
-    gap: var(
-      --grid-gap-lg,
-      var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
-    );
+    gap: var(--grid-gap-lg,
+        var(--grid-gap-md,
+          var(--grid-gap-sm,
+            var(--grid-gap-base,
+              0))));
     grid-template-columns: repeat(
-      var(
-        --grid-cols-lg,
-        var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
-      ),
+      var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))),
       minmax(0, 1fr)
     );
+    justify-items: var(--grid-justify-items-lg,
+        var(--grid-justify-items-md,
+          var(--grid-justify-items-sm,
+            var(--grid-justify-items-base,
+              normal))));
+    align-items: var(--grid-align-items-lg,
+        var(--grid-align-items-md,
+          var(--grid-align-items-sm,
+            var(--grid-align-items-base,
+              normal))));
+    justify-content: var(--grid-justify-content-lg,
+        var(--grid-justify-content-md,
+          var(--grid-justify-content-sm,
+            var(--grid-justify-content-base,
+              normal))));
+    align-content: var(--grid-align-content-lg,
+        var(--grid-align-content-md,
+          var(--grid-align-content-sm,
+            var(--grid-align-content-base,
+              normal))));
   }
 }
 
 @media (min-width: 1280px) {
   .root {
-    gap: var(
-      --grid-gap-xl,
-      var(
-        --grid-gap-lg,
-        var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
-      )
-    );
+    gap: var(--grid-gap-xl,
+        var(--grid-gap-lg,
+          var(--grid-gap-md,
+            var(--grid-gap-sm,
+              var(--grid-gap-base,
+                0)))));
     grid-template-columns: repeat(
-      var(
-        --grid-cols-xl,
-        var(
-          --grid-cols-lg,
-          var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
-        )
-      ),
+      var(--grid-cols-xl, var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))))),
       minmax(0, 1fr)
     );
+    justify-items: var(--grid-justify-items-xl,
+        var(--grid-justify-items-lg,
+          var(--grid-justify-items-md,
+            var(--grid-justify-items-sm,
+              var(--grid-justify-items-base,
+                normal)))));
+    align-items: var(--grid-align-items-xl,
+        var(--grid-align-items-lg,
+          var(--grid-align-items-md,
+            var(--grid-align-items-sm,
+              var(--grid-align-items-base,
+                normal)))));
+    justify-content: var(--grid-justify-content-xl,
+        var(--grid-justify-content-lg,
+          var(--grid-justify-content-md,
+            var(--grid-justify-content-sm,
+              var(--grid-justify-content-base,
+                normal)))));
+    align-content: var(--grid-align-content-xl,
+        var(--grid-align-content-lg,
+          var(--grid-align-content-md,
+            var(--grid-align-content-sm,
+              var(--grid-align-content-base,
+                normal)))));
   }
 }
 
 @media (min-width: 1536px) {
   .root {
-    gap: var(
-      --grid-gap-2xl,
-      var(
-        --grid-gap-xl,
-        var(
-          --grid-gap-lg,
-          var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
-        )
-      )
-    );
+    gap: var(--grid-gap-2xl,
+        var(--grid-gap-xl,
+          var(--grid-gap-lg,
+            var(--grid-gap-md,
+              var(--grid-gap-sm,
+                var(--grid-gap-base,
+                  0))))));
     grid-template-columns: repeat(
-      var(
-        --grid-cols-2xl,
-        var(
-          --grid-cols-xl,
-          var(
-            --grid-cols-lg,
-            var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))
-          )
-        )
-      ),
+      var(--grid-cols-2xl, var(--grid-cols-xl, var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12)))))),
       minmax(0, 1fr)
     );
+    justify-items: var(--grid-justify-items-2xl,
+        var(--grid-justify-items-xl,
+          var(--grid-justify-items-lg,
+            var(--grid-justify-items-md,
+              var(--grid-justify-items-sm,
+                var(--grid-justify-items-base,
+                  normal))))));
+    align-items: var(--grid-align-items-2xl,
+        var(--grid-align-items-xl,
+          var(--grid-align-items-lg,
+            var(--grid-align-items-md,
+              var(--grid-align-items-sm,
+                var(--grid-align-items-base,
+                  normal))))));
+    justify-content: var(--grid-justify-content-2xl,
+        var(--grid-justify-content-xl,
+          var(--grid-justify-content-lg,
+            var(--grid-justify-content-md,
+              var(--grid-justify-content-sm,
+                var(--grid-justify-content-base,
+                  normal))))));
+    align-content: var(--grid-align-content-2xl,
+        var(--grid-align-content-xl,
+          var(--grid-align-content-lg,
+            var(--grid-align-content-md,
+              var(--grid-align-content-sm,
+                var(--grid-align-content-base,
+                  normal))))));
   }
 }
 
 @media (min-width: 1920px) {
   .root {
-    gap: var(
-      --grid-gap-3xl,
-      var(
-        --grid-gap-2xl,
-        var(
-          --grid-gap-xl,
-          var(
-            --grid-gap-lg,
-            var(--grid-gap-md, var(--grid-gap-sm, var(--grid-gap-base, 0)))
-          )
-        )
-      )
-    );
+    gap: var(--grid-gap-3xl,
+        var(--grid-gap-2xl,
+          var(--grid-gap-xl,
+            var(--grid-gap-lg,
+              var(--grid-gap-md,
+                var(--grid-gap-sm,
+                  var(--grid-gap-base,
+                    0)))))));
     grid-template-columns: repeat(
-      var(
-        --grid-cols-3xl,
-        var(
-          --grid-cols-2xl,
-          var(
-            --grid-cols-xl,
-            var(
-              --grid-cols-lg,
-              var(
-                --grid-cols-md,
-                var(--grid-cols-sm, var(--grid-cols-base, 12))
-              )
-            )
-          )
-        )
-      ),
+      var(--grid-cols-3xl, var(--grid-cols-2xl, var(--grid-cols-xl, var(--grid-cols-lg, var(--grid-cols-md, var(--grid-cols-sm, var(--grid-cols-base, 12))))))),
       minmax(0, 1fr)
     );
+    justify-items: var(--grid-justify-items-3xl,
+        var(--grid-justify-items-2xl,
+          var(--grid-justify-items-xl,
+            var(--grid-justify-items-lg,
+              var(--grid-justify-items-md,
+                var(--grid-justify-items-sm,
+                  var(--grid-justify-items-base,
+                    normal)))))));
+    align-items: var(--grid-align-items-3xl,
+        var(--grid-align-items-2xl,
+          var(--grid-align-items-xl,
+            var(--grid-align-items-lg,
+              var(--grid-align-items-md,
+                var(--grid-align-items-sm,
+                  var(--grid-align-items-base,
+                    normal)))))));
+    justify-content: var(--grid-justify-content-3xl,
+        var(--grid-justify-content-2xl,
+          var(--grid-justify-content-xl,
+            var(--grid-justify-content-lg,
+              var(--grid-justify-content-md,
+                var(--grid-justify-content-sm,
+                  var(--grid-justify-content-base,
+                    normal)))))));
+    align-content: var(--grid-align-content-3xl,
+        var(--grid-align-content-2xl,
+          var(--grid-align-content-xl,
+            var(--grid-align-content-lg,
+              var(--grid-align-content-md,
+                var(--grid-align-content-sm,
+                  var(--grid-align-content-base,
+                    normal)))))));
   }
 }

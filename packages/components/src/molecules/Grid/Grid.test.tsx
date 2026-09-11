@@ -114,6 +114,66 @@ describe("Grid", () => {
     expect(screen.getByTestId("grid")).toHaveClass("custom");
   });
 
+  it("forwards id and style", () => {
+    render(<Grid data-testid="grid" id="my-grid" style={{ opacity: 0.5 }} />);
+    const el = screen.getByTestId("grid");
+    expect(el).toHaveAttribute("id", "my-grid");
+    expect(el).toHaveStyle({ opacity: "0.5" });
+  });
+
+  it("applies justifyItems/alignItems via CSS custom properties, mapping values as-is", () => {
+    render(
+      <Grid
+        data-testid="grid"
+        justifyItems="center"
+        alignItems="baseline"
+      />,
+    );
+    expect(screen.getByTestId("grid")).toHaveStyle({
+      "--grid-justify-items-base": "center",
+      "--grid-align-items-base": "baseline",
+    });
+  });
+
+  it("applies justifyContent/alignContent via CSS custom properties, mapping between/around/evenly to space-*", () => {
+    render(
+      <Grid
+        data-testid="grid"
+        justifyContent="between"
+        alignContent="evenly"
+      />,
+    );
+    expect(screen.getByTestId("grid")).toHaveStyle({
+      "--grid-justify-content-base": "space-between",
+      "--grid-align-content-base": "space-evenly",
+    });
+  });
+
+  it("leaves alignment custom properties unset by default (native `normal` behavior via the CSS fallback)", () => {
+    render(<Grid data-testid="grid" />);
+    const el = screen.getByTestId("grid");
+    expect(el.style.getPropertyValue("--grid-justify-items-base")).toBe("");
+    expect(el.style.getPropertyValue("--grid-align-items-base")).toBe("");
+    expect(el.style.getPropertyValue("--grid-justify-content-base")).toBe("");
+    expect(el.style.getPropertyValue("--grid-align-content-base")).toBe("");
+  });
+
+  it("accepts a responsive alignment map, setting one custom property per breakpoint", () => {
+    render(
+      <Grid
+        data-testid="grid"
+        justifyItems={{ base: "start", lg: "center" }}
+      />,
+    );
+    const el = screen.getByTestId("grid");
+    expect(el.style.getPropertyValue("--grid-justify-items-base")).toBe(
+      "start",
+    );
+    expect(el.style.getPropertyValue("--grid-justify-items-lg")).toBe(
+      "center",
+    );
+  });
+
   it("has no accessibility violations", async () => {
     const { container } = render(
       <Grid columns={2}>

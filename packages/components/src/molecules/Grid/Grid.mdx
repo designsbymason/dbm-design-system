@@ -1,0 +1,248 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../../atoms/Box";
+import { GridItem } from "../../atoms/GridItem";
+import { Stack } from "../../atoms/Stack";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Grid } from "./Grid";
+import * as GridStories from "./Grid.stories";
+
+export const propOrder = [
+  "as",
+  "columns",
+  "minChildWidth",
+  "gap",
+  "autoFlow",
+  "autoRows",
+  "autoColumns",
+  "justifyItems",
+  "alignItems",
+  "justifyContent",
+  "alignContent",
+  "children",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={GridStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Grid" tier="Molecule" />
+
+A 2-dimensional CSS Grid layout primitive — the row-and-column counterpart to
+[`Stack`](/docs/atoms-layout-stack--docs)'s single-axis flex layout. **Polymorphic** (see
+[`Box`](/docs/atoms-layout-box--docs) for the full explanation of what that means): renders a
+`div` by default, but `as` lets it render a real `<ul>`, `<section>`, or any other
+element/component while keeping Grid's own layout behavior.
+
+`columns` accepts a fixed column count or a mobile-first responsive map keyed by breakpoint (e.g.
+`{ base: 1, md: 2, lg: 3 }`). For a fluid grid that doesn't need explicit breakpoints — "as many
+columns as fit, each at least this wide" — use `minChildWidth` instead. Place children directly,
+or wrap each one in a [`GridItem`](/docs/atoms-layout-griditem--docs) for explicit column/row
+spanning and placement.
+
+### Import
+
+```tsx
+import { Grid } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={GridStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={GridStories.Playground}
+  exclude={["as", "justifyContent", "children", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Grid` also accepts any other native attribute of its rendered element beyond what's listed here —
+by default a `<div>`, or whatever element `as` specifies — passed straight through to the
+underlying element.
+
+<PropertiesTable of={GridStories} order={propOrder} />
+
+## Variants
+
+### Default (12 columns, no columns prop)
+
+<Canvas of={GridStories.DefaultColumns} />
+
+### Fixed 4 columns
+
+<Canvas of={GridStories.FixedColumns} />
+
+### Responsive: 1 column mobile, 2 tablet, 3 desktop
+
+<Canvas of={GridStories.ResponsiveColumns} />
+
+### With GridItem colSpan/rowSpan
+
+<Canvas of={GridStories.WithSpanningItems} />
+
+### Responsive gap (tight on mobile, roomy from lg up)
+
+<Canvas of={GridStories.ResponsiveGap} />
+
+### Fluid: minChildWidth (no explicit breakpoints)
+
+<Canvas of={GridStories.FluidMinChildWidth} />
+
+### autoFlow="row dense" (backfills gaps from mixed spans)
+
+<Canvas of={GridStories.DensePacking} />
+
+### justifyItems/alignItems (aligning every item within its own cell)
+
+<Canvas of={GridStories.ItemAlignment} />
+
+### justifyContent/alignContent (positioning the grid's own tracks)
+
+<Canvas of={GridStories.ContentAlignment} />
+
+### Polymorphic: as="ul" (real semantic list, Grid layout behavior)
+
+<Canvas of={GridStories.AsUnorderedList} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `columns` for the common case — a fixed or responsive column count, with children (or
+  `GridItem`s) placed automatically in source order.
+- Reach for `minChildWidth` instead of `columns` when you want "as many columns as fit" without
+  hand-picking a column count per breakpoint (e.g. a card grid of unknown length).
+- Use `GridItem`'s `colSpan`/`rowSpan`/`colStart`/`rowStart` for items that need to span or start
+  somewhere other than the grid's own default auto-placement.
+- Use `justifyItems`/`alignItems` to align every item within its own cell (e.g. centering short
+  content in taller cells) — it applies uniformly to every item in the grid, not per-item.
+- Use `as="ul"` (with children rendered `as="li"`, typically via `GridItem`) when a grid is
+  genuinely a list of items semantically, not just visually arranged in a grid.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't set both `columns` and `minChildWidth` expecting both to apply — `minChildWidth` takes
+  precedence and `columns` is ignored entirely when it's set.
+- Don't expect `justifyContent`/`alignContent` to do anything under the default `columns` or
+  `minChildWidth` track sizing — both always generate `1fr`-based tracks that fill 100% of the
+  container, leaving no leftover space to position (see the Properties table and the
+  justifyContent/alignContent variant above). Only relevant if you override `gridTemplateColumns`
+  directly via `style` with fixed, non-`fr` track sizes.
+- Don't reach for `Grid` for a single-axis layout (a toolbar, a form's stacked fields) — use
+  [`Stack`](/docs/atoms-layout-stack--docs) instead; forcing a 2-dimensional grid onto a 1-dimensional
+  layout adds unnecessary complexity.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `columns`, `gap`, `autoFlow` (`row`/`column`/`row dense`/`column dense` only, not a CSS length),
+  `justifyItems`, `alignItems`, `justifyContent`, and `alignContent` all accept a single value or a
+  mobile-first responsive map keyed by breakpoint — the standard way to re-lay-out at any
+  breakpoint without a manual media query.
+- `minChildWidth`, `autoRows`, and `autoColumns` accept a raw CSS size string (e.g. `"12rem"`)
+  rather than a token — these are structural sizing escape hatches, not design values, the same
+  category as `GridItem`'s own `colSpan`/`rowSpan`/`colStart`/`rowStart`.
+- `autoFlow="row dense"`/`"column dense"` backfills gaps left by earlier items with different
+  spans — useful for masonry-like layouts with mixed-span items, but changes visual order
+  independent of DOM order, so use it deliberately, the same caution as `GridItem`'s own `order`.
+
+## Accessibility
+
+<Callout tone="info" title="A plain layout container — no ARIA of its own">
+
+- Renders as whatever native element `as` specifies; a plain `<div>` (the default) requires no
+  ARIA to be accessible. Use `as="ul"` (with real `<li>` children, typically via
+  `GridItem as="li"`) when the grid's content is genuinely a list, not just visually arranged in
+  one — this is a semantic decision the grid layout itself doesn't imply either way.
+- No keyboard interaction of its own — `Grid` is not an interactive element; tab order follows
+  whatever interactive children it contains, in their own source order.
+- Automated accessibility check verified with real interactive children (buttons) inside the grid
+  — zero violations, since `Grid` sets no conflicting role or attribute of its own.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Grid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
+  <GridItem colSpan={2}><Card /></GridItem>
+  <GridItem><Card /></GridItem>
+</Grid>
+```
+
+```tsx
+// Fluid grid, no explicit breakpoints
+<Grid minChildWidth="12rem" gap={4}>
+  <Card />
+  <Card />
+</Grid>
+```
+
+```tsx
+// Centering short content within its cells
+<Grid columns={3} gap={4} justifyItems="center" alignItems="center">
+  <Icon size="lg" />
+  <Icon size="lg" />
+  <Icon size="lg" />
+</Grid>
+```
+
+```tsx
+// A native <div> attribute (title), passed straight through
+<Grid title="Product results" columns={3} gap={4}>
+  <Card />
+  <Card />
+</Grid>
+```
+
+## Design tokens used
+
+<TokenRow token="space.0–space.32" usage="gap's own spacing-token scale — a single value, or a per-breakpoint map" />
+<TokenRow token="breakpoint.sm–breakpoint.3xl" usage="the six breakpoint thresholds every responsive prop cascades across, matching Stack's/GridItem's own identical mechanism" />
+
+`columns`, `autoFlow`, `justifyItems`, `alignItems`, `justifyContent`, and `alignContent` are
+structural CSS Grid keywords/counts, not tokenized design values — the same category as
+`GridItem`'s own placement props. `minChildWidth`/`autoRows`/`autoColumns` accept a raw CSS size
+string for the same reason.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="GridItem"
+  description="A cell within a Grid — colSpan/rowSpan/colStart/rowStart placement, plus visual reordering via order"
+  href="/?path=/docs/atoms-layout-griditem--docs"
+>
+  <GridItem style={{ width: 40, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+<RelatedCard
+  name="Stack"
+  description="The single-axis flex-layout counterpart to Grid's 2-dimensional layout — for simple row/column stacking"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Box style={{ width: 16, height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 16, height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Box"
+  description="The generic layout escape hatch this file's own polymorphic-as explanation lives on"
+  href="/?path=/docs/atoms-layout-box--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>
