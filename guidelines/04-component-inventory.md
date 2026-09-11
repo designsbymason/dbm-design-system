@@ -25,6 +25,7 @@ Structural primitives everything else is built from.
 | Bleed | atom | ⚪ | Breaks child out of parent padding (editorial layouts) |
 | Affix | atom | 🟡 | Sticky-positioning wrapper (sticky table headers, filter bars) |
 | ScrollArea | molecule | 🟡 | Custom-styled scrollable region (wraps Radix ScrollArea) |
+| Splitter | molecule | ⚪ | Resizable multi-pane layout — drag-to-resize divider between 2+ panes, for enterprise dashboard/IDE-style UIs. Added 2026-09-10 following a molecule feature-completeness gap-check — no existing component covers coordinated multi-pane resize (`ScrollArea` only handles scrolling, not resizing) |
 
 ## 2. Typography
 Text rendering primitives — Nunito for UI, Lora for editorial/display per the token spec.
@@ -49,6 +50,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 |---|---|---|---|
 | Button | atom | 🟢 | Primary/secondary/tertiary/destructive/ghost variants, loading state |
 | ButtonGroup | molecule | 🟡 | Attached/segmented button set, shared border-radius |
+| Toolbar | molecule | ⚪ | Generic action-grouping container (buttons/icon buttons/dividers) with ARIA toolbar keyboard semantics (roving tabindex) — distinct from `ButtonGroup`'s single fused/segmented control. `Table Toolbar` (Data Display, below) likely builds on this once it exists rather than reinventing the same behavior. Added 2026-09-10 following a molecule feature-completeness gap-check |
 | IconButton | atom | 🟢 | Icon-only, requires `aria-label` |
 | CloseButton | atom | 🟢 | Dedicated dismiss control, fixed brand styling — reserved for modal-style surfaces (Dialog, Drawer, lightbox), not tone-varying components (Tag, Alert, Toast), which implement their own local remove control instead — see `05-component-api-conventions.md` §10 |
 | Input (text) | atom | 🟢 | With prefix/suffix slot support |
@@ -75,6 +77,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | ToggleGroup | molecule | 🟡 | Segmented control (single/multi select) |
 | Form | organism | 🟢 | Context provider + validation wiring |
 | FormField | molecule | 🟢 | Label + control + helper/error text composition |
+| FieldGroup | molecule | ⚪ | Groups multiple `FormField`s under a shared legend/heading with fieldset-equivalent semantic grouping for assistive tech — distinct from `Form`'s context/validation role and `FormField`'s single-field scope. Added 2026-09-10 following a molecule feature-completeness gap-check |
 | FieldLabel | atom | 🟢 | |
 | FieldError | atom | 🟢 | |
 | FieldHelperText | atom | 🟢 | |
@@ -187,10 +190,12 @@ Not individual components, but composed patterns — worth planning for since a 
 |---|---|
 | 🟢 v1 (core) | ~64 |
 | 🟡 v1.5 (comprehensive) | ~26 |
-| ⚪ v2/deferred | ~14 |
-| **Total planned** | **~104** |
+| ⚪ v2/deferred | ~17 |
+| **Total planned** | **~107** |
 
-This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all ~104 at once.
+**Updated 2026-09-10** — added `Toolbar`, `Splitter`, `FieldGroup` (all ⚪, molecule-tier) following a molecule-tier feature-completeness gap-check run before the molecule review phase began; ⚪ count 14→17, total 104→107. A fourth candidate (a typeable tags/token input) was considered and deliberately deferred rather than added — it may already be covered by `MultiSelect`'s "tag-based" rendering, not yet confirmed since `MultiSelect` isn't built; revisit once `MultiSelect` exists.
+
+This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all ~107 at once.
 
 ## Sequencing recommendation for actual build order
 Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 (every atom-tier row in this doc, Grid/GridItem excepted — see the note on step 1) are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — **47 atoms total, none left unbuilt** (corrected 2026-08-12; this doc, `01-vision-and-goals.md`, and `07-storybook-and-documentation-standards.md` all previously said "49," which was simply a miscount against this doc's own table — count the atom-tier rows across all 9 categories above and it's 47):
