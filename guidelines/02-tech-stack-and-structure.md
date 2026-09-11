@@ -27,10 +27,10 @@ dbm-design-system/
 │   │   ├── style-dictionary.config.js
 │   │   └── build/                # generated: css vars, JS/TS exports, (later) RN objects
 │   │
-│   ├── primitives/               # Headless behavior layer (wraps Radix, adds shared hooks)
+│   ├── primitives/               # Small framework-agnostic utils, not a Radix wrapper (see note below)
 │   │   └── src/
-│   │       ├── hooks/            # useControllableState, useId, useFocusTrap, etc.
-│   │       └── components/       # unstyled composition wrappers
+│   │       ├── utils/            # cx (classname merging), mergeRefs, responsiveStyle
+│   │       └── types/            # shared token types
 │   │
 │   ├── icons/                    # Phosphor wrapper — curated re-export + typed icon prop
 │   │   └── src/
@@ -61,6 +61,8 @@ dbm-design-system/
 **Why this split:** `tokens`, `primitives`, `icons`, and `components` are separately versioned/publishable packages. This lets consumers (or you, later, for React Native) depend on `tokens` and `primitives` independently without pulling in the full styled component set — and keeps the manifest generator decoupled from the components themselves.
 
 **Where Storybook actually lives (clarified 2026-08-16):** `apps/storybook/` was the originally-planned home for a *public-hosted* Storybook instance (Phase 9, still not built — the directory is currently just a stub `README.md`). The Storybook that's actually built and run today (`pnpm --filter @dbm-design-system/components run storybook`, the Docs pages, the `.storybook/blocks/*` MDX building blocks, everything covered in `07-storybook-and-documentation-standards.md`) lives entirely under `packages/components/.storybook/` instead — it ships alongside the component source it documents, not as a separate app. `apps/storybook/` may end up hosting a deployed build of that same instance later; it isn't a second, independent Storybook setup.
+
+**What `primitives` actually holds (corrected 2026-09-10 — this table above previously described it as a Radix-wrapping headless behavior layer with `hooks/`/`components/` subdirectories; that was aspirational and never matched what got built):** in practice, every component that needs Radix imports `@radix-ui/react-*` directly (`Tooltip.tsx`, `Select.tsx`, `FocusTrap.tsx`, `Switch.tsx`, etc., all as direct dependencies of `packages/components`) — `primitives` never became an intermediary wrapping layer, and has no Radix dependency of its own. What it actually holds today is a small set of framework-agnostic utils genuinely shared across components: `cx` (classname merging), `mergeRefs`, `responsiveStyle`, and shared token types. Still a real, separately-versioned package worth keeping split out (per "Why this split" above) — just not the headless-behavior-layer shape originally planned. If a real shared-hook need (`useControllableState`, a focus-trap hook, etc.) comes up later, it can still land here; none has yet; `FocusTrap` and friends each currently implement their own Radix-wrapping logic directly in `packages/components`.
 
 ---
 

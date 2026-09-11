@@ -39,7 +39,9 @@ apps/
                      not here)
 packages/
   tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
-  primitives/        Headless behavior layer (wraps Radix, shared hooks)
+  primitives/        Small framework-agnostic utils (classname merging, ref merging,
+                     responsive style helpers, token types) — components import Radix
+                     UI Primitives directly, not through this package
   icons/             Phosphor Icons wrapper
   components/        The actual DBM component library (published npm package) — also
                      holds its own .storybook/ config and src/foundations/ (Storybook-only
