@@ -459,6 +459,52 @@ style (`border.focus`, `bg.brand`, `text.on-brand`, `bg.brand-subtle` all matche
 re-checked, no console errors; 0 accessibility violations across every story checked, in both light
 and dark.
 
+## Post-review fix #4 (2026-09-12, user-reported): row-gaps never showed anywhere
+
+**"I see the vertical gap in storybook's Grid stories, but visually, I don't see the horizontal
+gaps; there is no white space between the rows."** Confirmed and root-caused, not just patched: the
+overlay's original design rendered exactly `columns` many stripes, each an explicit `grid-row: 1 /
+100`-equivalent (via `gridTemplateRows: "1fr"` on a single row spanning the overlay's *entire*
+height) — one continuous block per column. Column-gaps showed correctly (real CSS `gap` between
+adjacent stripes along that one row), but since a column was only ever *one* uninterrupted stripe
+top to bottom, there was no row boundary anywhere for a row-gap to visibly break — this was true on
+every single story with more than one row, not an isolated case.
+
+**Redesigned, not patched:** `ColumnTrackOverlay` now renders one stripe per grid *cell* (`count`
+many, no explicit position), letting the same CSS Grid auto-placement algorithm the real content
+uses lay them out. Real row-gaps now appear naturally between every row, at exactly the same
+position the real grid's own rows break, for free — no separate row-count tracking needed for the
+common case. Two real design questions this raised, both resolved deliberately:
+
+1. **How many stripes to render.** For a plain grid (`Cells`/`Chips`, no `colSpan`), `count` matches
+   the real content's own item count exactly — auto-placement then naturally reproduces the same row
+   count as the real content at *any* column count, including a responsive one that changes per
+   breakpoint (`ResponsiveColumns`) or one CSS itself computes (`FluidMinChildWidth`'s `auto-fill`),
+   with no separate calculation. For the two `colSpan` stories (`WithSpanningItems`, `DensePacking`),
+   the real content's cell *occupancy* isn't 1 item = 1 cell, so `count` is `rows × columns` instead
+   (`8` = 2×4 for both, computed once by hand from each story's own known layout — verified by
+   tracing the actual auto-placement algorithm for `DensePacking`'s `row dense` case, not assumed).
+2. **How tall each auto-generated row should be**, now that empty stripe `<div>`s are placed one per
+   cell instead of one continuous block: for a `Chips`-based story (`Playground`, `ItemAlignment`),
+   the real grid's own resolved `autoRows` (e.g. `"6rem"`) is now passed straight through to the
+   overlay's `gridAutoRows` — exact, not approximated. For a `Cells`-based story (every other one,
+   none of which set an explicit `autoRows`, relying on `cellStyle`'s own padding + text for natural
+   height), each stripe now gets the same `padding: var(--dbm-space-3)` plus a `visibility: hidden`
+   text node — matching real content's box model closely enough that natural content-driven row
+   sizing lands on close to the same height, without hardcoding a guessed pixel value.
+
+**Re-verified live via measured `getBoundingClientRect()`, not visual impression, on `Playground`**
+(the case checked most rigorously): row 1 and row 2 stripes both measured exactly 96px tall
+(matching `autoRows="6rem"`), with exactly 16px between them (matching `gap={4}` = `space-4` =
+1rem), and every real chip's own rect falling entirely inside its corresponding stripe's bounds.
+Spot-checked visually (row-gap clearly visible, 0 accessibility violations) on `FixedColumns`,
+`ItemAlignment`, `AsUnorderedList` (DOM re-confirmed still valid — `<li>`-only children), 
+`WithSpanningItems` and `DensePacking` (both correctly show the full underlying track rectangle,
+including the row-gap, even beneath spanning items that themselves cover multiple stripe cells at
+once), and `FixedColumns` again in Emerald/Dark. Full suite re-run clean: `tsc --noEmit`,
+`eslint . --max-warnings 0`, `typecheck:storybook`, `vitest` unit (1070/1070) and `storybook`
+project (375/375) tests.
+
 ## Status
 
 Review pass complete, all findings actioned. **Not yet Finalized** — per

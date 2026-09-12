@@ -74,42 +74,47 @@ const Chips = ({ count }: { count: number }) => (
   </>
 );
 
-// A decorative overlay, one stripe per column track, so the grid's own
-// column structure is visible independent of where the real content
-// happens to sit — added 2026-09-11, at explicit user direction, to make
-// spanning/gaps/auto-placement easier to read at a glance.
+// A decorative overlay, one stripe per grid *cell* (not one continuous
+// stripe per column) — added 2026-09-11, at explicit user direction, to
+// make spanning/gaps/auto-placement easier to read at a glance; redesigned
+// 2026-09-12, user-reported ("I see the vertical gap, but... no white space
+// between the rows"): the original design rendered exactly `columns` many
+// stripes, each explicitly spanning the *entire* height in one continuous
+// block — column-gaps showed correctly (real CSS `gap` between adjacent
+// stripes), but since each column was only ever one uninterrupted stripe,
+// there was no row boundary anywhere for a row-gap to visibly break. Fixed
+// by rendering `count` many ordinary, uniformly-sized stripes with no
+// explicit position at all, letting the *same* CSS Grid auto-placement
+// algorithm the real content uses lay them out — real row-gaps now appear
+// naturally between every row, for free, exactly where the real grid's own
+// rows break.
 //
-// Deliberately NOT implemented as extra grid items inside the same grid
-// (the first approach tried): a ghost item with an explicit gridColumn/
-// gridRow span is treated by the CSS Grid placement algorithm as
-// "occupying" those cells for every other item's own auto-placement —
-// confirmed against the spec before building this, not assumed — so a
-// full-height stripe in column 1 would silently exclude every
-// auto-placed real child from ever landing in column 1 at all, breaking
-// the very layout the story is trying to demonstrate. Runs its own
-// separate absolutely-positioned nested grid instead, matching the real
-// grid's `columns`/`gap` exactly so its track boundaries land pixel-for-
-// pixel on the real ones, with no interaction with the real grid's own
-// placement algorithm at all.
+// Deliberately NOT implemented as extra grid items inside the *real* grid
+// (the first approach tried, still correct as a reason to avoid it): a
+// ghost item mixed into the real grid's own children competes with the
+// real content for auto-placement slots — confirmed against the spec
+// before building this, not assumed. Runs its own separate absolutely-
+// positioned nested grid instead, matching the real grid's `columns`/`gap`
+// exactly so its track boundaries land pixel-for-pixel on the real ones,
+// with zero interaction with the real grid's own placement algorithm.
 //
 // Requires the real `<Grid>` to have both `position: "relative"` AND an
 // explicit `zIndex: 0` in its own style — found and fixed 2026-09-11,
-// user-reported "not displayed at all" (a *third*, distinct bug from the
-// same report, alongside the row-height and border/contrast fixes above):
-// `position: "relative"` alone does not establish a new CSS stacking
-// context (only `position` combined with a non-`auto` `z-index` does), so
-// without an explicit `zIndex` on `Grid` itself, the overlay's `zIndex: -1`
-// doesn't resolve locally against its own parent — it escapes to whichever
-// ancestor further up the tree *does* establish one, painting behind that
-// instead and disappearing entirely. Confirmed by direct experiment, not
-// assumed: setting `zIndex: 0` on `Grid` alone (with the overlay still at
-// `zIndex: -1`) was the one change that made the already-correctly-sized,
-// already-correctly-colored overlay actually visible, behind the real
-// content, exactly as intended.
+// user-reported "not displayed at all": `position: "relative"` alone does
+// not establish a new CSS stacking context (only `position` combined with
+// a non-`auto` `z-index` does), so without an explicit `zIndex` on `Grid`
+// itself, the overlay's `zIndex: -1` doesn't resolve locally against its
+// own parent — it escapes to whichever ancestor further up the tree *does*
+// establish one, painting behind that instead and disappearing entirely.
+// Confirmed by direct experiment: setting `zIndex: 0` on `Grid` alone (with
+// the overlay still at `zIndex: -1`) was the one change that made the
+// overlay actually visible, behind the real content, exactly as intended.
 const ColumnTrackOverlay = ({
   columns,
+  count,
   gap,
   gridTemplateColumns,
+  autoRows,
   justifyContent,
   alignContent,
   responsiveColumns = false,
@@ -117,12 +122,30 @@ const ColumnTrackOverlay = ({
   as: As = "div",
 }: {
   columns: number;
+  // How many uniform stripe cells to render — matches the real content's
+  // own item count for a plain grid (auto-placement then naturally
+  // produces the same row count as the real content, at any column count
+  // or breakpoint, with no separate calculation needed); for a grid using
+  // `GridItem`'s own `colSpan` (`WithSpanningItems`/`DensePacking`), the
+  // real content's cell *occupancy* isn't 1 item = 1 cell, so this is
+  // `rows × columns` instead (the full track rectangle the real content's
+  // own row count actually needs), computed once by hand from that
+  // story's own known layout, documented at its own call site.
+  count: number;
   gap: number;
   // Escape hatch for a story like `ContentAlignment` that bypasses `Grid`'s
   // own `columns` prop entirely (fixed, non-`1fr` tracks via its own
   // `style.gridTemplateColumns` override) — lets the overlay mirror that
   // same literal template instead of assuming `1fr` tracks.
   gridTemplateColumns?: string;
+  // Mirrors the real grid's own resolved `autoRows` (e.g. `"6rem"`) for a
+  // `Chips`-based story, so implicit rows size identically on both —
+  // without this, an empty stripe `<div>`'s own natural (contentless)
+  // height would collapse each implicit row instead. Omit for a
+  // `Cells`-based story instead (no story sets an explicit `autoRows` for
+  // those) — each stripe's own padding + hidden text (below) approximates
+  // a real `cellStyle` cell's natural content-driven height instead.
+  autoRows?: string;
   // Must mirror the real grid's own `justifyContent`/`alignContent` — found
   // and fixed 2026-09-11, confirmed via measured `getBoundingClientRect()`
   // on `ContentAlignment` (not just visual impression): without these, the
@@ -136,13 +159,7 @@ const ColumnTrackOverlay = ({
   // (Grid.stories.module.css) instead of the inline `gridTemplateColumns`/
   // `gap` — inline styles can't express `@media` queries, so a genuinely
   // responsive story (`ResponsiveColumns`/`ResponsiveGap`) needs the real
-  // breakpoint cascade to live in an actual CSS class instead. `columns`
-  // still governs how many stripe `<div>`s get rendered (the *maximum*
-  // across all breakpoints) — at a narrower breakpoint where fewer column
-  // tracks actually exist, the excess stripes auto-place into additional
-  // implicit rows below the first, which `overflow: hidden` on the outer
-  // element (below) crops away cleanly rather than letting them bleed out
-  // past the real grid's own box.
+  // breakpoint cascade to live in an actual CSS class instead.
   responsiveColumns?: boolean;
   responsiveGap?: boolean;
   // `<div>` isn't valid content for a real `<ul>` (only `<li>`/`<script>`/
@@ -172,25 +189,20 @@ const ColumnTrackOverlay = ({
       gridTemplateColumns: responsiveColumns
         ? undefined
         : (gridTemplateColumns ?? `repeat(${columns}, minmax(0, 1fr))`),
-      // Explicit, not left to auto-size (found and fixed 2026-09-11,
-      // user-reported "not displayed at all" — root-caused with computed
-      // `getBoundingClientRect()`, not assumed from a screenshot): with no
-      // `grid-template-rows` of its own, the overlay's single implicit row
-      // sized to its own (empty, contentless) stripe divs' natural
-      // min-content height — 0 — so every stripe rendered at ~2px tall
-      // (its own top+bottom border only), not the full grid height. `1fr`
-      // forces the one row to fill the overlay's own already-definite box
-      // (sized via `inset: 0` against the real grid) regardless of its
-      // content.
-      gridTemplateRows: "1fr",
+      gridAutoRows: autoRows,
       gap: responsiveGap ? undefined : `var(--dbm-space-${gap})`,
       justifyContent,
       alignContent,
       pointerEvents: "none",
     }}
   >
-    {Array.from({ length: columns }, (_, i) => (
-      <div key={i} style={{ background: "var(--dbm-bg-brand-subtle)" }} />
+    {Array.from({ length: count }, (_, i) => (
+      <div
+        key={i}
+        style={{ background: "var(--dbm-bg-brand-subtle)", padding: "var(--dbm-space-3)" }}
+      >
+        <span style={{ visibility: "hidden" }}>0</span>
+      </div>
     ))}
   </As>
 );
@@ -366,7 +378,13 @@ const meta: Meta<typeof Grid> = {
           outline: "1px dashed var(--dbm-border-focus)",
         }}
       >
-        <ColumnTrackOverlay columns={columns} gap={gap} alignContent={alignContent} />
+        <ColumnTrackOverlay
+          columns={columns}
+          count={6}
+          gap={gap}
+          autoRows={args.autoRows || "6rem"}
+          alignContent={alignContent}
+        />
         <Chips count={6} />
       </Grid>
     );
@@ -409,7 +427,12 @@ export const DefaultColumns: Story = {
           outline: "1px dashed var(--dbm-border-focus)",
         }}
       >
-        <ColumnTrackOverlay columns={12} gap={gap} alignContent={alignContent} />
+        <ColumnTrackOverlay
+          columns={12}
+          count={12}
+          gap={gap}
+          alignContent={alignContent}
+        />
         <Cells count={12} />
       </Grid>
     );
@@ -434,7 +457,12 @@ export const FixedColumns: Story = {
           outline: "1px dashed var(--dbm-border-focus)",
         }}
       >
-        <ColumnTrackOverlay columns={4} gap={gap} alignContent={alignContent} />
+        <ColumnTrackOverlay
+          columns={4}
+          count={8}
+          gap={gap}
+          alignContent={alignContent}
+        />
         <Cells count={8} />
       </Grid>
     );
@@ -477,6 +505,7 @@ export const ResponsiveColumns: Story = {
       >
         <ColumnTrackOverlay
           columns={3}
+          count={6}
           gap={gap}
           alignContent={alignContent}
           responsiveColumns
@@ -508,7 +537,11 @@ export const WithSpanningItems: Story = {
           outline: "1px dashed var(--dbm-border-focus)",
         }}
       >
-        <ColumnTrackOverlay columns={4} gap={gap} alignContent={alignContent} />
+        {/* count=8, not the real itemCount (4) — these GridItems span
+            multiple cells (colSpan=2/1/1/4), filling exactly 2 rows × 4
+            columns; 8 uniform 1x1 stripes is the full track rectangle that
+            actually needs representing, not one stripe per real item. */}
+        <ColumnTrackOverlay columns={4} count={8} gap={gap} alignContent={alignContent} />
         <GridItem colSpan={2} style={cellStyle}>
           colSpan=2
         </GridItem>
@@ -552,6 +585,7 @@ export const ResponsiveGap: Story = {
       >
         <ColumnTrackOverlay
           columns={columns}
+          count={6}
           gap={0}
           alignContent={alignContent}
           responsiveGap
@@ -587,12 +621,13 @@ export const FluidMinChildWidth: Story = {
             Reusing the exact same `repeat(auto-fill, minmax(...))` formula
             `Grid`/`Grid.tsx` itself applies means the overlay computes the
             *same* track count from the *same* container width natively, no
-            JS measurement needed — 12 stripe `<div>`s is a generous supply
-            for any realistic width at this `minChildWidth`; any that don't
-            fit the first row wrap into implicit rows below, cropped away by
-            `overflow: hidden` (see `ColumnTrackOverlay`'s own comment). */}
+            JS measurement needed — `count={9}` matches the real content
+            exactly (not an oversupply), so auto-placement wraps the
+            overlay's own stripes into the same row count as the real
+            `Cells`, with row-gaps landing in the same places. */}
         <ColumnTrackOverlay
           columns={12}
+          count={9}
           gap={gap}
           gridTemplateColumns="repeat(auto-fill, minmax(var(--dbm-space-32), 1fr))"
           alignContent={alignContent}
@@ -629,7 +664,10 @@ export const DensePacking: Story = {
           outline: "1px dashed var(--dbm-border-focus)",
         }}
       >
-        <ColumnTrackOverlay columns={4} gap={gap} alignContent={alignContent} />
+        {/* count=8 (2 rows × 4 columns), same reasoning as
+            WithSpanningItems above — these 5 GridItems' own colSpan values
+            don't map 1:1 to cells. */}
+        <ColumnTrackOverlay columns={4} count={8} gap={gap} alignContent={alignContent} />
         <GridItem colSpan={2} style={cellStyle}>
           colSpan=2
         </GridItem>
@@ -696,7 +734,13 @@ export const ItemAlignment: Story = {
               outline: "1px dashed var(--dbm-border-focus)",
             }}
           >
-            <ColumnTrackOverlay columns={columns} gap={gap} alignContent={alignContent} />
+            <ColumnTrackOverlay
+              columns={columns}
+              count={4}
+              gap={gap}
+              autoRows={sharedProps.autoRows}
+              alignContent={alignContent}
+            />
             <Chips count={4} />
           </Grid>
         </div>
@@ -714,7 +758,13 @@ export const ItemAlignment: Story = {
               outline: "1px dashed var(--dbm-border-focus)",
             }}
           >
-            <ColumnTrackOverlay columns={columns} gap={gap} alignContent={alignContent} />
+            <ColumnTrackOverlay
+              columns={columns}
+              count={4}
+              gap={gap}
+              autoRows={sharedProps.autoRows}
+              alignContent={alignContent}
+            />
             <Chips count={4} />
           </Grid>
         </div>
@@ -776,6 +826,7 @@ export const ContentAlignment: Story = {
       >
         <ColumnTrackOverlay
           columns={3}
+          count={3}
           gap={gap}
           gridTemplateColumns="repeat(3, 4rem)"
           justifyContent={justifyContent}
@@ -816,6 +867,7 @@ export const AsUnorderedList: Story = {
       >
         <ColumnTrackOverlay
           columns={columns}
+          count={6}
           gap={gap}
           alignContent={alignContent}
           as="li"
