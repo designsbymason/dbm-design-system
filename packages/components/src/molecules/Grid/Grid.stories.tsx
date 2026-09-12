@@ -11,33 +11,27 @@ const cellStyle = {
   textAlign: "center" as const,
 };
 
-// A "chip" sized as a *percentage* of its own cell — deliberately NOT
-// full-cell-stretching (unlike `cellStyle` above), so justifyItems/
-// alignItems have visible room to position it within its own cell. A grid
-// item with no intrinsic size stretches to fill its cell by default (CSS
-// `normal` computes to `stretch`), which would make justifyItems/alignItems
-// changes invisible.
-//
-// Deliberately a percentage, not a fixed rem size (found and fixed
-// 2026-09-11, user-reported twice): a fixed size can't adapt to whatever
-// column/row size the current props actually produce, which breaks in both
-// directions — (1) in a wide column, a small fixed chip leaves a huge,
-// gap-unrelated margin that swamps the actual `gap` value, making `gap`
-// changes hard to perceive or looking like they "don't work"; (2) in a
-// narrow column (either a large `gap` value shrinking `1fr` tracks, or
-// `ContentAlignment`'s own fixed 4rem tracks), a fixed chip bigger than its
-// column visibly overflows past the grid's own boundary. A percentage always
-// resolves against the item's own actual cell size, so it scales correctly
-// and can never overflow, in every story that reuses it.
+// A "chip" with NO explicit width/height (content-sized via padding only,
+// same shape as `cellStyle` above) — required for justifyItems/alignItems
+// to have any visible effect at all. CSS `stretch` only applies to a grid
+// item with no *definite* size on that axis; a percentage size (the
+// previous approach here, found and fixed 2026-09-11 to solve a gap-overflow
+// bug — see git history) still counts as definite and permanently blocks
+// `stretch`, and uniform padding/no size at all is also what lets
+// `start`/`center`/`end` actually reposition the item within its cell
+// instead of it already filling the whole thing. The earlier overflow/
+// dead-space concern that motivated percentage sizing no longer applies:
+// `ColumnTrackOverlay` (added afterward) now paints each cell's own
+// boundary directly, so a small content-sized chip inside a visibly larger
+// cell reads as "item within its cell", not "broken gap" (found and fixed
+// 2026-09-12, user-reported: justifyItems/alignItems "stretch"/"baseline"
+// showed no visible change).
 const chipStyle = {
-  alignItems: "center" as const,
   background: "var(--dbm-bg-brand)",
   borderRadius: "var(--dbm-radius-sm)",
   color: "var(--dbm-text-on-brand)",
-  display: "flex",
-  height: "80%",
-  justifyContent: "center" as const,
-  width: "80%",
+  padding: "var(--dbm-space-3)",
+  textAlign: "center" as const,
 };
 
 // Mirrors `Grid.tsx`'s own private `CONTENT_ALIGN` map (not exported, so
@@ -64,10 +58,24 @@ const Cells = ({ count }: { count: number }) => (
   </>
 );
 
+// Font size alternates per chip so `alignItems: baseline` has something to
+// actually demonstrate — with every chip the same size, their text
+// baselines already land in the same place under any alignment, making
+// "baseline" visually indistinguishable from "start" (same fix as above,
+// 2026-09-12).
 const Chips = ({ count }: { count: number }) => (
   <>
     {Array.from({ length: count }, (_, i) => (
-      <div key={i} style={chipStyle}>
+      <div
+        key={i}
+        style={{
+          ...chipStyle,
+          fontSize:
+            i % 2 === 0
+              ? "var(--dbm-font-size-xs)"
+              : "var(--dbm-font-size-xl)",
+        }}
+      >
         {i + 1}
       </div>
     ))}
@@ -410,7 +418,19 @@ export const DefaultColumns: Story = {
   // except the ones each story explicitly hardcoded (found and fixed
   // 2026-09-11, user-reported: the "story ignores its own args" bug class
   // `06-engineering-standards.md` §9 already warns about).
-  argTypes: { columns: { control: false }, children: { control: false } },
+  // `minChildWidth` disabled alongside `columns` — not just redundant with
+  // it, but a *stronger* override: per Grid.tsx's own precedence (inline
+  // `gridTemplateColumns` from `minChildWidth` always wins over the
+  // `columns`-driven CSS class rule), setting it here would silently switch
+  // the whole demo into a fluid grid, defeating the very point of this
+  // story (found and fixed 2026-09-12, user-requested control-panel audit —
+  // confirmed live: typing a value left `--grid-cols-base` inert while the
+  // real rendered columns changed to a fluid, viewport-dependent count).
+  argTypes: {
+    columns: { control: false },
+    minChildWidth: { control: false },
+    children: { control: false },
+  },
   args: { gap: 2 },
   render: (args) => {
     const gap = typeof args.gap === "number" ? args.gap : 2;
@@ -441,7 +461,16 @@ export const DefaultColumns: Story = {
 
 export const FixedColumns: Story = {
   name: "Fixed 4 columns",
-  argTypes: { columns: { control: false }, children: { control: false } },
+  // `minChildWidth` disabled alongside `columns` — same reasoning as
+  // DefaultColumns above: it silently overrides the fixed 4-column
+  // structure this story exists to demonstrate (confirmed live 2026-09-12 —
+  // at a wide enough viewport the real grid rendered 7 columns while
+  // `ColumnTrackOverlay` still assumed 4, visibly misaligned).
+  argTypes: {
+    columns: { control: false },
+    minChildWidth: { control: false },
+    children: { control: false },
+  },
   render: (args) => {
     const gap = typeof args.gap === "number" ? args.gap : 4;
     const alignContent = toCssContentAlign(
@@ -487,7 +516,15 @@ export const ResponsiveColumns: Story = {
   // Playwright's own self-hosted visual regression instead); this
   // parameter was always inert here. See Input.stories.tsx's own review
   // finding for the full writeup.
-  argTypes: { columns: { control: false }, children: { control: false } },
+  // `minChildWidth` disabled alongside `columns` — same reasoning as
+  // DefaultColumns/FixedColumns above: it would silently override the
+  // `{ base: 1, md: 2, lg: 3 }` responsive cascade this story exists to
+  // demonstrate (2026-09-12 control-panel audit).
+  argTypes: {
+    columns: { control: false },
+    minChildWidth: { control: false },
+    children: { control: false },
+  },
   render: (args) => {
     const gap = typeof args.gap === "number" ? args.gap : 4;
     const alignContent = toCssContentAlign(
@@ -521,7 +558,14 @@ export const WithSpanningItems: Story = {
   // `columns` is fixed at 4 — structural to this demo's own colSpan={2}/
   // colSpan={4} values, which assume a 4-column grid. Every other prop
   // (gap, autoFlow, alignment, etc.) stays live via `{...args}`.
-  argTypes: { columns: { control: false }, children: { control: false } },
+  // `minChildWidth` disabled too — it would override that same 4-column
+  // structure, leaving colSpan={4} spanning an arbitrary fluid column count
+  // instead of "the full width" as labeled (2026-09-12 control-panel audit).
+  argTypes: {
+    columns: { control: false },
+    minChildWidth: { control: false },
+    children: { control: false },
+  },
   render: (args) => {
     const gap = typeof args.gap === "number" ? args.gap : 4;
     const alignContent = toCssContentAlign(
@@ -567,7 +611,15 @@ export const ResponsiveGap: Story = {
   // `gap` prop exactly.
   // `parameters.chromatic` removed (2026-08-29) — see ResponsiveColumns
   // above, same file, for why.
-  argTypes: { gap: { control: false }, children: { control: false } },
+  // `minChildWidth` disabled too — it would silently override `columns`
+  // (still live here), leaving `ColumnTrackOverlay`'s `columns`-based
+  // stripes misaligned against the resulting fluid grid (2026-09-12
+  // control-panel audit).
+  argTypes: {
+    gap: { control: false },
+    minChildWidth: { control: false },
+    children: { control: false },
+  },
   render: (args) => {
     const columns = typeof args.columns === "number" ? args.columns : 3;
     const alignContent = toCssContentAlign(
@@ -598,7 +650,18 @@ export const ResponsiveGap: Story = {
 
 export const FluidMinChildWidth: Story = {
   name: "Fluid: minChildWidth (no explicit breakpoints)",
-  argTypes: { minChildWidth: { control: false }, children: { control: false } },
+  // `columns` disabled too, not just `minChildWidth` — `minChildWidth` is
+  // hardcoded truthy below, and per Grid.tsx's own precedence (inline
+  // `gridTemplateColumns` from `minChildWidth` always wins over the
+  // `columns`-driven CSS class rule), that makes `columns` permanently
+  // inert here regardless of its own value — confirmed live 2026-09-12:
+  // `--grid-cols-base` changed on toggling the control, but the actual
+  // rendered `grid-template-columns` never left `repeat(auto-fill, ...)`.
+  argTypes: {
+    columns: { control: false },
+    minChildWidth: { control: false },
+    children: { control: false },
+  },
   render: (args) => {
     const gap = typeof args.gap === "number" ? args.gap : 4;
     const alignContent = toCssContentAlign(
@@ -643,9 +706,13 @@ export const DensePacking: Story = {
   // `autoFlow` and `columns` are both fixed — the demo's specific colSpan
   // values and gap-backfilling behavior are only meaningful against this
   // exact 4-column, row-dense combination. Every other prop stays live.
+  // `minChildWidth` disabled too — it would override that same 4-column
+  // structure the dense-packing backfill depends on (2026-09-12
+  // control-panel audit).
   argTypes: {
     autoFlow: { control: false },
     columns: { control: false },
+    minChildWidth: { control: false },
     children: { control: false },
   },
   render: (args) => {
@@ -696,7 +763,11 @@ export const ItemAlignment: Story = {
   // uses their live value from `args`. This keeps the comparison
   // meaningful under any combination of the other controls, rather than
   // the two grids silently drifting apart.
-  argTypes: { children: { control: false } },
+  // `minChildWidth` disabled — it would override `columns` (still live) on
+  // both grids identically, but `ColumnTrackOverlay`'s own `columns` prop
+  // stays a static number either way, so the overlay would misalign against
+  // the resulting fluid grid (2026-09-12 control-panel audit).
+  argTypes: { minChildWidth: { control: false }, children: { control: false } },
   args: { columns: 2, autoRows: "6rem" },
   render: (args) => {
     const sharedProps = {
@@ -721,7 +792,10 @@ export const ItemAlignment: Story = {
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)" }}>
         <div>
           <p style={{ margin: "0 0 var(--dbm-space-2)" }}>
-            Unset (default — items keep their own size, positioned at start)
+            Unset (default — CSS&apos;s own initial value, &quot;normal&quot;,
+            behaves as &quot;stretch&quot; for an item with no definite size,
+            same as the bottom grid below with justifyItems/alignItems
+            explicitly set to &quot;stretch&quot;)
           </p>
           <Grid
             {...sharedProps}
@@ -792,8 +866,16 @@ export const ContentAlignment: Story = {
   // visible effect, and a per-story `argTypes` override was needed or it
   // would have silently inherited "disabled" here too (found and fixed
   // 2026-09-11, user-reported).
+  // `minChildWidth` disabled alongside `columns` — confirmed live
+  // 2026-09-12 to be fully inert here, not just structurally undesirable:
+  // this story's own hardcoded `style.gridTemplateColumns` ("repeat(3,
+  // 4rem)") is spread onto `Grid` last, after `minChildWidth`'s own
+  // conditional `gridTemplateColumns` in Grid.tsx's internal style object —
+  // so the consumer-provided `style` always wins, and minChildWidth can
+  // never have any visible effect in this story regardless of its value.
   argTypes: {
     columns: { control: false },
+    minChildWidth: { control: false },
     justifyContent: {
       control: "select",
       options: ["start", "center", "end", "stretch", "between", "around", "evenly"],
@@ -843,8 +925,15 @@ export const AsUnorderedList: Story = {
   // `as` is fixed to "ul" — necessary for valid list markup, the whole
   // point of this story. Every other prop (columns/gap default to 3 here,
   // overriding the Playground's own meta defaults) stays live via
-  // `{...args}`.
-  argTypes: { as: { control: false }, children: { control: false } },
+  // `{...args}`. `minChildWidth` is the one exception — left live it would
+  // override `columns` (still live) and misalign `ColumnTrackOverlay`'s own
+  // `columns`-based stripes against the resulting fluid grid, same as every
+  // other non-Playground/non-fluid story (2026-09-12 control-panel audit).
+  argTypes: {
+    as: { control: false },
+    minChildWidth: { control: false },
+    children: { control: false },
+  },
   args: { columns: 3, gap: 3 },
   render: (args) => {
     const columns = typeof args.columns === "number" ? args.columns : 3;

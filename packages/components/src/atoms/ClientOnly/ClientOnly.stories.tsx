@@ -45,7 +45,7 @@ type Story = StoryObj<typeof ClientOnly>;
  */
 export const Playground: Story = {
   render: (args) => (
-    <ClientOnly fallback={<Text tone="secondary">{args.fallback}</Text>}>
+    <ClientOnly fallback={<Text color="secondary">{args.fallback}</Text>}>
       <Text>{args.children}</Text>
     </ClientOnly>
   ),

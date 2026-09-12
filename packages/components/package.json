@@ -24,7 +24,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "lint": "eslint . && pnpm typecheck:storybook",
+    "lint": "eslint . && pnpm typecheck && pnpm typecheck:storybook",
+    "typecheck": "tsc --noEmit",
     "typecheck:storybook": "tsc --noEmit -p .storybook/tsconfig.json",
     "test": "vitest run --project=unit",
     "test:watch": "vitest --project=unit",

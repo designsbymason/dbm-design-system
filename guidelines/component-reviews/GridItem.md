@@ -215,3 +215,15 @@ coverage` (80/80 in sync), and `check-component-bundle-size` (0.59KB JS / 0.42KB
 budget) all clean. Per `06-engineering-standards.md` §9's finalization rule, no further changes to
 `GridItem` (code, stories, docs, or tokens it alone drives) without asking first, even for something
 that would otherwise be an obvious, in-scope fix.
+
+## Post-finalization fix (2026-09-12, authorized)
+
+`GridItem.mdx`'s own "Grid" `RelatedCard` still pointed at Grid's raw Storybook story
+(`/?path=/story/molecules-layout-grid--default-columns`), left over from before Grid had a Docs
+page — flagged during Grid's own final review pass, authorized here, fixed by pointing it at Grid's
+Docs page instead (`/?path=/docs/molecules-layout-grid--docs`). Re-verified live: the rendered
+`<a>`'s `href` now reads the corrected path. Per the finalization re-check test (§9): a defect fix
+(stale link, not a design change) — **stays finalized**, no re-review needed. The Intro section's
+own Markdown-syntax link to Grid (line 29, `[Grid](/story/molecules-layout-grid--default-columns)`)
+was found to have the identical staleness but was *not* in scope of this authorization — flagged
+separately, not touched.

@@ -110,3 +110,15 @@ both modes with no breakage), and functional verification (`tsc`, `eslint`, full
 `tsup` build, and the `addon-vitest` Storybook test project all clean) were all verified end to end
 before sign-off. No further changes without asking first, per `06-engineering-standards.md` §9's
 finalization rule.
+
+## Post-finalization fix (2026-09-12, authorized)
+
+`ClientOnly.stories.tsx`'s `Playground` story passed `<Text tone="secondary">` for the fallback
+render — `Text` has no `tone` prop (the real prop is `color`, with `TextColor` including
+`"secondary"`); a genuine `tsc --noEmit` type error, invisible to this package's own `lint` script
+until the tooling gap below was also closed. Surfaced during Grid's own final review pass (an
+unrelated component's pre-existing error, flagged not fixed there), authorized here. Fixed by
+changing `tone` to `color`. Re-verified: `tsc --noEmit` clean for this file, full `vitest` storybook
+project (375/375) still passing, live-checked in Storybook with no console errors. Per the
+finalization re-check test (§9): a defect fix (an invalid prop that never should have compiled as
+intended) — **stays finalized**, no re-review needed.

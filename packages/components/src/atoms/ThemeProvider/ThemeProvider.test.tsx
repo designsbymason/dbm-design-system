@@ -97,10 +97,14 @@ describe("ThemeProvider", () => {
   // spreading `props` first.
   it("never lets a same-named consumer prop override the computed data-theme attribute", () => {
     render(
-      // @ts-expect-error -- `data-theme` isn't part of `ThemeProviderProps`,
-      // but TypeScript's JSX handling allows any `data-*` attribute through
-      // regardless — this is exactly the real-world case being guarded
-      // against, not a contrived one.
+      // `data-theme` isn't part of `ThemeProviderProps`, but TypeScript's JSX
+      // handling permits any `data-*` attribute on any component regardless
+      // of its declared prop type — so this line compiles cleanly with no
+      // type error to expect, even though `data-theme` isn't explicitly
+      // typed. That JSX-level permissiveness is exactly what makes this a
+      // real, non-contrived runtime case worth guarding against (a consumer
+      // can pass this at the type level with zero friction), not just a
+      // hypothetical.
       <ThemeProvider brand="purple" mode="light" data-theme="not-a-real-theme" data-testid="provider">
         <div />
       </ThemeProvider>,

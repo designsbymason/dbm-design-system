@@ -310,3 +310,17 @@ exposed. Each fix was verified live in a running Storybook instance, including a
 that caught the split-theme bug directly and a follow-up user report that was investigated and
 confirmed *not* a bug (a dark-mode contrast tradeoff, verified via actual token values). No further
 changes without asking first, per `06-engineering-standards.md` §9's finalization rule.
+
+## Post-finalization fix (2026-09-12, authorized)
+
+`ThemeProvider.test.tsx` carried a stale `@ts-expect-error` on the "never lets a same-named consumer
+prop override the computed `data-theme` attribute" test, flagged as an unused-directive `tsc` error
+during Grid's own final review pass (an unrelated component's pre-existing error, flagged not fixed
+there). Root cause: TypeScript's JSX handling permits any `data-*` attribute on any component
+regardless of its declared prop type, so `<ThemeProvider data-theme="...">` was never actually going
+to error — the directive was mistaken from the start, not a later regression. Fixed by removing the
+directive and correcting the comment to explain the real JSX behavior instead of claiming a type
+error is expected. Re-verified: `tsc --noEmit` clean, the test itself still passes (full `vitest`
+unit suite 1070/1070), confirming this was a comment/directive correction with zero change to actual
+test behavior. Per the finalization re-check test (§9): a defect fix (an incorrect type-level
+assumption) — **stays finalized**, no re-review needed.

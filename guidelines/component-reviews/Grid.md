@@ -1,6 +1,6 @@
 # Grid
 
-**Tier:** Molecule · **Category:** Layout · **Finalized:** Not yet — pending user confirmation
+**Tier:** Molecule · **Category:** Layout · **Finalized:** 2026-09-12, at explicit user direction
 
 ## Review pass (2026-09-11)
 
@@ -505,13 +505,125 @@ once), and `FixedColumns` again in Emerald/Dark. Full suite re-run clean: `tsc -
 `eslint . --max-warnings 0`, `typecheck:storybook`, `vitest` unit (1070/1070) and `storybook`
 project (375/375) tests.
 
-## Status
+## Post-review fix #5: `justifyItems`/`alignItems` "stretch"/"baseline" showed no visible change
 
-Review pass complete, all findings actioned. **Not yet Finalized** — per
-`06-engineering-standards.md` §9, only the user declares a component's review pass done. Two items
-need a decision before or alongside that:
+User-reported (2026-09-12), asking to verify these prop values were correctly wired. Root cause:
+the demo's own `chipStyle` forced every chip to `width: "80%"`/`height: "80%"` — a definite size
+CSS `stretch` can never override (per spec, `stretch` only applies when an item has no definite
+size on that axis), and every chip carried identical uniform text, so `baseline` (aligning text
+baselines) was indistinguishable from `start` (aligning box tops) regardless of chip sizing. Both
+props were already correctly implemented and unit-tested in `Grid.tsx`/`Grid.module.css` since the
+original review — this was a demo-only rendering gap, not a component defect.
 
-- Whether to update `GridItem.mdx`'s own "Grid" `RelatedCard` to link to `Grid`'s new Docs page
-  instead of its raw story (an edit to an already-Finalized component, needs authorization).
-- What to do about the 2 pre-existing, out-of-scope `tsc` errors and the underlying tooling gap
-  (`lint` not covering main-`src` typecheck) — see the section above.
+Fixed by removing `chipStyle`'s fixed sizing (now content-sized via padding only, matching
+`cellStyle`'s own approach — safe now that `ColumnTrackOverlay` independently marks each cell's own
+boundary, so a smaller content-sized chip no longer reads as "broken gap"), and alternating font
+size per chip in `Chips` so `baseline` has something real to demonstrate. Verified live on
+`Playground` and `ItemAlignment`: `stretch`/`stretch` now fills every cell fully; `baseline` visibly
+shifts a small-text chip down to meet a large-text chip's baseline, distinct from `start`. Full
+suite re-run clean (`tsc`, `eslint`, `vitest` unit 19/19 and storybook 375/375).
+
+## Post-review audit #2: control-panel interactivity per story
+
+User-requested (2026-09-12): verify every story's control panel shows a live control only for props
+that are actually interactive in that story's own render, and `-` (disabled) otherwise. Found a
+systemic gap — `minChildWidth` was left live in 9 of 11 stories (`DefaultColumns`, `FixedColumns`,
+`ResponsiveColumns`, `WithSpanningItems`, `ResponsiveGap`, `DensePacking`, `ItemAlignment`,
+`ContentAlignment`, `AsUnorderedList`) even though `Grid.tsx`'s own precedence rule means an inline
+`gridTemplateColumns` (from `minChildWidth`, or from a story's own hardcoded `style` override) always
+wins over the `columns`-driven CSS class rule — so setting it there either silently defeated that
+story's own fixed/responsive column structure, or (in `ContentAlignment`, whose own hardcoded
+`style.gridTemplateColumns` is spread after `minChildWidth`'s conditional one) had zero effect at
+all. Confirmed live, not assumed: at a wide viewport, typing a value into `FixedColumns`'
+`minChildWidth` made the real grid render 7 columns while `ColumnTrackOverlay` still assumed 4,
+visibly misaligned; typing into `ContentAlignment`'s left `gridTemplateColumns` unchanged at
+`repeat(3, 4rem)` regardless of value. Symmetrically, `FluidMinChildWidth`'s own `columns` control
+was live but permanently inert there too (`minChildWidth` is hardcoded truthy in that story, always
+winning) — confirmed live via computed style: `--grid-cols-base` changed but the actual rendered
+`grid-template-columns` never left `repeat(auto-fill, ...)`.
+
+Fixed by disabling `minChildWidth` in all 9 affected stories and `columns` in `FluidMinChildWidth`.
+`Playground` was audited too and left as-is: both controls stay live there, since demonstrating that
+`minChildWidth` overrides `columns` when set is the actual documented behavior the Playground exists
+to expose (unlike the other stories, `columns` isn't structurally fixed there, so no story-specific
+point gets defeated). Full suite re-run clean (`eslint`, `tsc` — no Grid errors, `vitest` storybook
+project 375/375).
+
+## Post-review fix #6: "Unset" caption in `ItemAlignment` went stale after fix #5
+
+User-reported (2026-09-12, via screenshot): asked whether the `ItemAlignment` story still looked
+correct. It didn't — a self-inflicted regression from fix #5 above. That fix removed `chipStyle`'s
+fixed `width`/`height` so `stretch` could work, but didn't account for a CSS Grid alignment detail:
+an item's alignment `normal` (CSS's own initial value, what "unset" resolves to) *behaves as
+`stretch`* for an item with no definite size — which the chip now has, post-fix. So the top
+("Unset") grid's caption — "items keep their own size, positioned at start" — went from accurate to
+wrong the moment the chip became auto-sized: it was true only while the chip still had a definite
+size (the old fixed `width`/`height`) to prevent `normal` from stretching it. Confirmed live via
+computed style: `justifyItems`/`alignItems` both read `"normal"`, and the chip's own rect (314×96px)
+exactly matched its cell — genuinely stretched, not content-sized.
+
+Fixed by rewriting the caption to describe what's actually true now: "Unset (default — CSS's own
+initial value, 'normal', behaves as 'stretch' for an item with no definite size, same as the bottom
+grid below with justifyItems/alignItems explicitly set to 'stretch')" — which also turns this into a
+more useful demonstration than before (a real, common CSS Grid gotcha), not just a caption patch.
+Full suite re-run clean (`eslint`, `tsc` — no Grid errors, `vitest` storybook project 375/375).
+
+## Post-review closure (2026-09-12, authorized): the two open decision items
+
+Both resolved, with authorization:
+
+1. **`GridItem.mdx`'s "Grid" `RelatedCard`** now points at Grid's Docs page instead of its raw
+   story — logged in `GridItem.md`'s own post-finalization fix entry (stays finalized, per §9's
+   defect-fix test). One related item surfaced but left untouched, out of this authorization's
+   scope: `GridItem.mdx`'s Intro section also has a Markdown-syntax link to Grid pointing at the
+   same raw story — flagged, not fixed.
+2. **The 2 pre-existing `tsc` errors, fixed at their source, plus the underlying tooling gap
+   closed, not just the symptoms:**
+   - `ClientOnly.stories.tsx`: `<Text tone="secondary">` → `<Text color="secondary">` (`Text` has
+     no `tone` prop). Logged in `ClientOnly.md`.
+   - `ThemeProvider.test.tsx`: removed a stale `@ts-expect-error` that never actually suppressed an
+     error (TypeScript's JSX handling permits any `data-*` attribute on any component regardless of
+     declared prop type, so the guarded line was never going to fail `tsc`) and corrected the
+     comment. Logged in `ThemeProvider.md`.
+   - **Root tooling gap:** added a `typecheck` script (`tsc --noEmit`, the package's existing root
+     `tsconfig.json`, which already has `include: ["src"]` — the whole tree, `.stories.tsx`/
+     `.test.tsx` included) and wired it into `lint` (`eslint . && pnpm typecheck && pnpm
+     typecheck:storybook`). Previously `lint` only ran `typecheck:storybook`, whose own
+     `.storybook/tsconfig.json` resolves its `include` globs relative to `.storybook/` itself, so it
+     silently never reached anything under `src/` — exactly why both errors survived undetected by
+     `pnpm lint` (and by extension CI, which runs `pnpm lint`) until a bare, wider `tsc --noEmit`
+     happened to be run by hand during this review.
+
+Re-verified after all three fixes: `pnpm lint` now runs clean end to end (previously it would have
+passed despite both latent errors — confirmed the gap was real, not hypothetical); full `vitest`
+unit suite (1070/1070) and `storybook` project (375/375) still passing; live-checked in Storybook —
+`ClientOnly`'s Playground renders with no console errors, `GridItem.mdx`'s `RelatedCard` `href`
+confirmed correct via the live DOM.
+
+## Finalized
+
+**Finalized 2026-09-12, at explicit user direction.** This is the first molecule-tier
+finalization, and the first component reviewed against the six molecule/organism-only §9
+checkpoints (compound-component sub-part completeness, atom-reuse audit, consumed-atom defect
+handling, Radix-primitive prop audit, cross-part ARIA/id wiring, composed tab order) — `Grid` has
+no compound sub-parts and no cross-part ARIA wiring to audit (a plain layout primitive, not a
+composed multi-piece component), so those two checkpoints passed trivially by having nothing to
+check; the atom-reuse, consumed-atom, and Radix-primitive checkpoints don't apply either (`Grid`
+composes no other DBM atoms and wraps no Radix primitive) — noted here rather than silently
+skipped, since this is the first time those checkpoints have been exercised at all.
+
+A final consolidated self-verification was run immediately before this declaration, covering the
+original review, all 8 post-review rounds, and both post-review-closure fixes together: `tsc
+--noEmit` (main tree, via the newly-added `typecheck` script — clean for every `Grid`-owned file),
+`eslint . --max-warnings 0` (whole package, clean), `typecheck:storybook` (clean), `pnpm lint` as a
+whole (now genuinely covers the full `src` tree end to end, confirmed clean), `tsup` build (clean),
+full `vitest` unit suite (1070/1070) and `storybook` project (375/375), `check-component-bundle-
+size` (0.55KB JS / 0.48KB CSS gzipped, within budget). Live-verified in Storybook: 0 accessibility
+violations across Playground/`ItemAlignment`/`ContentAlignment`; both brand themes × both modes
+confirmed on Playground (Emerald/Dark screenshotted); Docs page Properties table complete and
+correctly ordered for all 16 props; every story's control panel shows a live control only where
+genuinely interactive.
+
+Per `06-engineering-standards.md` §9's finalization rule, no further changes to `Grid` (code,
+stories, docs, or tokens it alone drives) without asking first, even for something that would
+otherwise be an obvious, in-scope fix.
