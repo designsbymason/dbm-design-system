@@ -1,29 +1,57 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { GridItem } from "../../atoms/GridItem";
 import { Grid } from "./Grid";
+import styles from "./Grid.stories.module.css";
 
 const cellStyle = {
-  background: "var(--dbm-bg-brand-subtle)",
+  background: "var(--dbm-bg-brand)",
   borderRadius: "var(--dbm-radius-sm)",
-  color: "var(--dbm-text-primary)",
+  color: "var(--dbm-text-on-brand)",
   padding: "var(--dbm-space-3)",
   textAlign: "center" as const,
 };
 
-// A small, fixed-size "chip" — deliberately NOT full-cell-stretching (unlike
-// `cellStyle` above) — so justifyItems/alignItems have visible room to
-// position it within its own cell. A grid item with no intrinsic size
-// stretches to fill its cell by default (CSS `normal` computes to `stretch`),
-// which would make justifyItems/alignItems changes invisible.
+// A "chip" sized as a *percentage* of its own cell — deliberately NOT
+// full-cell-stretching (unlike `cellStyle` above), so justifyItems/
+// alignItems have visible room to position it within its own cell. A grid
+// item with no intrinsic size stretches to fill its cell by default (CSS
+// `normal` computes to `stretch`), which would make justifyItems/alignItems
+// changes invisible.
+//
+// Deliberately a percentage, not a fixed rem size (found and fixed
+// 2026-09-11, user-reported twice): a fixed size can't adapt to whatever
+// column/row size the current props actually produce, which breaks in both
+// directions — (1) in a wide column, a small fixed chip leaves a huge,
+// gap-unrelated margin that swamps the actual `gap` value, making `gap`
+// changes hard to perceive or looking like they "don't work"; (2) in a
+// narrow column (either a large `gap` value shrinking `1fr` tracks, or
+// `ContentAlignment`'s own fixed 4rem tracks), a fixed chip bigger than its
+// column visibly overflows past the grid's own boundary. A percentage always
+// resolves against the item's own actual cell size, so it scales correctly
+// and can never overflow, in every story that reuses it.
 const chipStyle = {
   alignItems: "center" as const,
-  background: "var(--dbm-bg-brand-subtle)",
+  background: "var(--dbm-bg-brand)",
   borderRadius: "var(--dbm-radius-sm)",
-  color: "var(--dbm-text-primary)",
+  color: "var(--dbm-text-on-brand)",
   display: "flex",
-  height: "3rem",
+  height: "80%",
   justifyContent: "center" as const,
-  width: "3rem",
+  width: "80%",
+};
+
+// Mirrors `Grid.tsx`'s own private `CONTENT_ALIGN` map (not exported, so
+// duplicated here — this is Storybook-only presentational code, not shipped
+// logic) — `justifyContent`/`alignContent`'s "between"/"around"/"evenly"
+// aren't real CSS keywords on their own; `ColumnTrackOverlay` needs the
+// same translation the real `Grid` applies internally, or its own nested
+// grid renders `justify-content: normal` instead (an actual bug found this
+// way, not assumed — see `ColumnTrackOverlay`'s own comment).
+const toCssContentAlign = (value: string | undefined) => {
+  if (value === "between") return "space-between";
+  if (value === "around") return "space-around";
+  if (value === "evenly") return "space-evenly";
+  return value;
 };
 
 const Cells = ({ count }: { count: number }) => (
@@ -44,6 +72,127 @@ const Chips = ({ count }: { count: number }) => (
       </div>
     ))}
   </>
+);
+
+// A decorative overlay, one stripe per column track, so the grid's own
+// column structure is visible independent of where the real content
+// happens to sit — added 2026-09-11, at explicit user direction, to make
+// spanning/gaps/auto-placement easier to read at a glance.
+//
+// Deliberately NOT implemented as extra grid items inside the same grid
+// (the first approach tried): a ghost item with an explicit gridColumn/
+// gridRow span is treated by the CSS Grid placement algorithm as
+// "occupying" those cells for every other item's own auto-placement —
+// confirmed against the spec before building this, not assumed — so a
+// full-height stripe in column 1 would silently exclude every
+// auto-placed real child from ever landing in column 1 at all, breaking
+// the very layout the story is trying to demonstrate. Runs its own
+// separate absolutely-positioned nested grid instead, matching the real
+// grid's `columns`/`gap` exactly so its track boundaries land pixel-for-
+// pixel on the real ones, with no interaction with the real grid's own
+// placement algorithm at all.
+//
+// Requires the real `<Grid>` to have both `position: "relative"` AND an
+// explicit `zIndex: 0` in its own style — found and fixed 2026-09-11,
+// user-reported "not displayed at all" (a *third*, distinct bug from the
+// same report, alongside the row-height and border/contrast fixes above):
+// `position: "relative"` alone does not establish a new CSS stacking
+// context (only `position` combined with a non-`auto` `z-index` does), so
+// without an explicit `zIndex` on `Grid` itself, the overlay's `zIndex: -1`
+// doesn't resolve locally against its own parent — it escapes to whichever
+// ancestor further up the tree *does* establish one, painting behind that
+// instead and disappearing entirely. Confirmed by direct experiment, not
+// assumed: setting `zIndex: 0` on `Grid` alone (with the overlay still at
+// `zIndex: -1`) was the one change that made the already-correctly-sized,
+// already-correctly-colored overlay actually visible, behind the real
+// content, exactly as intended.
+const ColumnTrackOverlay = ({
+  columns,
+  gap,
+  gridTemplateColumns,
+  justifyContent,
+  alignContent,
+  responsiveColumns = false,
+  responsiveGap = false,
+  as: As = "div",
+}: {
+  columns: number;
+  gap: number;
+  // Escape hatch for a story like `ContentAlignment` that bypasses `Grid`'s
+  // own `columns` prop entirely (fixed, non-`1fr` tracks via its own
+  // `style.gridTemplateColumns` override) — lets the overlay mirror that
+  // same literal template instead of assuming `1fr` tracks.
+  gridTemplateColumns?: string;
+  // Must mirror the real grid's own `justifyContent`/`alignContent` — found
+  // and fixed 2026-09-11, confirmed via measured `getBoundingClientRect()`
+  // on `ContentAlignment` (not just visual impression): without these, the
+  // overlay's own nested grid falls back to `justify-content: normal`
+  // (tracks packed at the start), while the real grid's tracks were
+  // actually spread via `justifyContent="between"` — the two landed in
+  // completely different positions, not just off by a few pixels.
+  justifyContent?: string;
+  alignContent?: string;
+  // Applies `.responsiveColumnsOverlay`/`.responsiveGapOverlay`
+  // (Grid.stories.module.css) instead of the inline `gridTemplateColumns`/
+  // `gap` — inline styles can't express `@media` queries, so a genuinely
+  // responsive story (`ResponsiveColumns`/`ResponsiveGap`) needs the real
+  // breakpoint cascade to live in an actual CSS class instead. `columns`
+  // still governs how many stripe `<div>`s get rendered (the *maximum*
+  // across all breakpoints) — at a narrower breakpoint where fewer column
+  // tracks actually exist, the excess stripes auto-place into additional
+  // implicit rows below the first, which `overflow: hidden` on the outer
+  // element (below) crops away cleanly rather than letting them bleed out
+  // past the real grid's own box.
+  responsiveColumns?: boolean;
+  responsiveGap?: boolean;
+  // `<div>` isn't valid content for a real `<ul>` (only `<li>`/`<script>`/
+  // `<template>` are) — `AsUnorderedList` renders this overlay as `as="li"`
+  // instead, so the DOM stays spec-valid even though React's own direct
+  // DOM APIs (unlike innerHTML/HTML-string parsing) don't actually enforce
+  // this and would have silently accepted a stray `<div>` there too
+  // (confirmed live before fixing, not assumed).
+  as?: "div" | "li";
+}) => (
+  <As
+    aria-hidden="true"
+    className={
+      [
+        responsiveColumns ? styles.responsiveColumnsOverlay : "",
+        responsiveGap ? styles.responsiveGapOverlay : "",
+      ]
+        .filter(Boolean)
+        .join(" ") || undefined
+    }
+    style={{
+      position: "absolute",
+      inset: 0,
+      zIndex: -1,
+      overflow: "hidden",
+      display: "grid",
+      gridTemplateColumns: responsiveColumns
+        ? undefined
+        : (gridTemplateColumns ?? `repeat(${columns}, minmax(0, 1fr))`),
+      // Explicit, not left to auto-size (found and fixed 2026-09-11,
+      // user-reported "not displayed at all" — root-caused with computed
+      // `getBoundingClientRect()`, not assumed from a screenshot): with no
+      // `grid-template-rows` of its own, the overlay's single implicit row
+      // sized to its own (empty, contentless) stripe divs' natural
+      // min-content height — 0 — so every stripe rendered at ~2px tall
+      // (its own top+bottom border only), not the full grid height. `1fr`
+      // forces the one row to fill the overlay's own already-definite box
+      // (sized via `inset: 0` against the real grid) regardless of its
+      // content.
+      gridTemplateRows: "1fr",
+      gap: responsiveGap ? undefined : `var(--dbm-space-${gap})`,
+      justifyContent,
+      alignContent,
+      pointerEvents: "none",
+    }}
+  >
+    {Array.from({ length: columns }, (_, i) => (
+      <div key={i} style={{ background: "var(--dbm-bg-brand-subtle)" }} />
+    ))}
+  </As>
 );
 
 const meta: Meta<typeof Grid> = {
@@ -83,8 +232,17 @@ const meta: Meta<typeof Grid> = {
       description:
         'Renders a fluid grid — as many columns as fit, each at least this CSS size wide (e.g. "12rem") — via repeat(auto-fill, minmax(minChildWidth, 1fr)), instead of a fixed or responsive column count. Takes precedence over columns when set.',
     },
+    // `select`, not a plain `number` — `gap` is a spacing *token* step, not
+    // an arbitrary integer, and the scale skips several numbers entirely
+    // (no `space.7`, `space.9`, `space.11`, etc.). A plain number control
+    // let you type an invalid step, which silently resolved to nothing and
+    // collapsed to 0 with no error — found and fixed 2026-09-11,
+    // user-reported ("no value associated with gap 7"). `SpaceValue` itself
+    // already enforces this exact set at the type level; `Stack.stories.tsx`
+    // already gets this right for its own `gap` — this matches it.
     gap: {
-      control: "number",
+      control: "select",
+      options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
       description:
         "Gap between grid cells (both row and column), as a spacing token step — a single value, or a mobile-first responsive map keyed by breakpoint.",
     },
@@ -185,17 +343,34 @@ const meta: Meta<typeof Grid> = {
     alignContent: "start",
     as: undefined,
   },
-  render: (args) => (
-    <Grid
-      {...args}
-      minChildWidth={args.minChildWidth || undefined}
-      autoRows={args.autoRows || "6rem"}
-      autoColumns={args.autoColumns || undefined}
-      style={{ height: "20rem", outline: "1px dashed var(--dbm-border-default)" }}
-    >
-      <Chips count={6} />
-    </Grid>
-  ),
+  render: (args) => {
+    // `columns`/`gap`'s Playground controls only ever produce a plain
+    // number (never a responsive map) — this narrowing is a type-safe
+    // fallback, not a real runtime case, same reasoning as `ItemAlignment`'s
+    // own `describe` helper below.
+    const columns = typeof args.columns === "number" ? args.columns : 3;
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        minChildWidth={args.minChildWidth || undefined}
+        autoRows={args.autoRows || "6rem"}
+        autoColumns={args.autoColumns || undefined}
+        style={{
+          position: "relative",
+          zIndex: 0,
+          height: "16rem",
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay columns={columns} gap={gap} alignContent={alignContent} />
+        <Chips count={6} />
+      </Grid>
+    );
+  },
 };
 
 export default meta;
@@ -219,21 +394,51 @@ export const DefaultColumns: Story = {
   // `06-engineering-standards.md` §9 already warns about).
   argTypes: { columns: { control: false }, children: { control: false } },
   args: { gap: 2 },
-  render: (args) => (
-    <Grid {...args} columns={undefined}>
-      <Cells count={12} />
-    </Grid>
-  ),
+  render: (args) => {
+    const gap = typeof args.gap === "number" ? args.gap : 2;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        columns={undefined}
+        style={{
+          position: "relative",
+          zIndex: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay columns={12} gap={gap} alignContent={alignContent} />
+        <Cells count={12} />
+      </Grid>
+    );
+  },
 };
 
 export const FixedColumns: Story = {
   name: "Fixed 4 columns",
   argTypes: { columns: { control: false }, children: { control: false } },
-  render: (args) => (
-    <Grid {...args} columns={4}>
-      <Cells count={8} />
-    </Grid>
-  ),
+  render: (args) => {
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        columns={4}
+        style={{
+          position: "relative",
+          zIndex: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay columns={4} gap={gap} alignContent={alignContent} />
+        <Cells count={8} />
+      </Grid>
+    );
+  },
 };
 
 export const ResponsiveColumns: Story = {
@@ -241,18 +446,45 @@ export const ResponsiveColumns: Story = {
   // `columns` is hardcoded to a responsive map here — no single `number`
   // control could represent "base=1, md=2, lg=3" as one value, the
   // multi-instance-gallery exception (06-engineering-standards.md §9).
-  // Every other prop stays live via `{...args}`.
+  // Every other prop stays live via `{...args}`. `ColumnTrackOverlay` here
+  // uses `responsiveColumns` (found and fixed 2026-09-12, user-reported —
+  // the earlier version of this story had no overlay at all, since a
+  // single static column count couldn't represent "1 at mobile, 2 at
+  // tablet, 3 at desktop" without misaligning at two of the three): a real
+  // CSS class (Grid.stories.module.css) mirrors the exact same
+  // `{ base: 1, md: 2, lg: 3 }` breakpoint cascade via `@media` queries,
+  // which an inline style alone can't express.
   // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
   // tool this project never adopted (02-tech-stack-and-structure.md picked
   // Playwright's own self-hosted visual regression instead); this
   // parameter was always inert here. See Input.stories.tsx's own review
   // finding for the full writeup.
   argTypes: { columns: { control: false }, children: { control: false } },
-  render: (args) => (
-    <Grid {...args} columns={{ base: 1, md: 2, lg: 3 }}>
-      <Cells count={6} />
-    </Grid>
-  ),
+  render: (args) => {
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        columns={{ base: 1, md: 2, lg: 3 }}
+        style={{
+          position: "relative",
+          zIndex: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay
+          columns={3}
+          gap={gap}
+          alignContent={alignContent}
+          responsiveColumns
+        />
+        <Cells count={6} />
+      </Grid>
+    );
+  },
 };
 
 export const WithSpanningItems: Story = {
@@ -261,18 +493,33 @@ export const WithSpanningItems: Story = {
   // colSpan={4} values, which assume a 4-column grid. Every other prop
   // (gap, autoFlow, alignment, etc.) stays live via `{...args}`.
   argTypes: { columns: { control: false }, children: { control: false } },
-  render: (args) => (
-    <Grid {...args} columns={4}>
-      <GridItem colSpan={2} style={cellStyle}>
-        colSpan=2
-      </GridItem>
-      <GridItem style={cellStyle}>1x1</GridItem>
-      <GridItem style={cellStyle}>1x1</GridItem>
-      <GridItem colSpan={4} style={cellStyle}>
-        colSpan=4 (full width)
-      </GridItem>
-    </Grid>
-  ),
+  render: (args) => {
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        columns={4}
+        style={{
+          position: "relative",
+          zIndex: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay columns={4} gap={gap} alignContent={alignContent} />
+        <GridItem colSpan={2} style={cellStyle}>
+          colSpan=2
+        </GridItem>
+        <GridItem style={cellStyle}>1x1</GridItem>
+        <GridItem style={cellStyle}>1x1</GridItem>
+        <GridItem colSpan={4} style={cellStyle}>
+          colSpan=4 (full width)
+        </GridItem>
+      </Grid>
+    );
+  },
 };
 
 export const ResponsiveGap: Story = {
@@ -280,25 +527,80 @@ export const ResponsiveGap: Story = {
   // `gap` is hardcoded to a responsive map here — same multi-instance-
   // gallery exception as ResponsiveColumns above. `columns` stays live via
   // `{...args}` (its own meta default, 3, already matches this story's
-  // original fixed value).
+  // original fixed value). `ColumnTrackOverlay` here uses `responsiveGap`
+  // (found and fixed 2026-09-12, user-reported — same gap as
+  // ResponsiveColumns had): a real CSS class mirrors the exact
+  // `{ base: 1, lg: 8 }` cascade via `@media`, matching this story's own
+  // `gap` prop exactly.
   // `parameters.chromatic` removed (2026-08-29) — see ResponsiveColumns
   // above, same file, for why.
   argTypes: { gap: { control: false }, children: { control: false } },
-  render: (args) => (
-    <Grid {...args} gap={{ base: 1, lg: 8 }}>
-      <Cells count={6} />
-    </Grid>
-  ),
+  render: (args) => {
+    const columns = typeof args.columns === "number" ? args.columns : 3;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        gap={{ base: 1, lg: 8 }}
+        style={{
+          position: "relative",
+          zIndex: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay
+          columns={columns}
+          gap={0}
+          alignContent={alignContent}
+          responsiveGap
+        />
+        <Cells count={6} />
+      </Grid>
+    );
+  },
 };
 
 export const FluidMinChildWidth: Story = {
   name: "Fluid: minChildWidth (no explicit breakpoints)",
   argTypes: { minChildWidth: { control: false }, children: { control: false } },
-  render: (args) => (
-    <Grid {...args} minChildWidth="var(--dbm-space-32)">
-      <Cells count={9} />
-    </Grid>
-  ),
+  render: (args) => {
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        minChildWidth="var(--dbm-space-32)"
+        style={{
+          position: "relative",
+          zIndex: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        {/* The real column count here is however many `auto-fill` tracks
+            fit the current container width — genuinely unknowable ahead of
+            render (found and fixed 2026-09-12, user-reported — the earlier
+            version of this story had no overlay at all for this reason).
+            Reusing the exact same `repeat(auto-fill, minmax(...))` formula
+            `Grid`/`Grid.tsx` itself applies means the overlay computes the
+            *same* track count from the *same* container width natively, no
+            JS measurement needed — 12 stripe `<div>`s is a generous supply
+            for any realistic width at this `minChildWidth`; any that don't
+            fit the first row wrap into implicit rows below, cropped away by
+            `overflow: hidden` (see `ColumnTrackOverlay`'s own comment). */}
+        <ColumnTrackOverlay
+          columns={12}
+          gap={gap}
+          gridTemplateColumns="repeat(auto-fill, minmax(var(--dbm-space-32), 1fr))"
+          alignContent={alignContent}
+        />
+        <Cells count={9} />
+      </Grid>
+    );
+  },
 };
 
 export const DensePacking: Story = {
@@ -311,19 +613,35 @@ export const DensePacking: Story = {
     columns: { control: false },
     children: { control: false },
   },
-  render: (args) => (
-    <Grid {...args} columns={4} autoFlow="row dense">
-      <GridItem colSpan={2} style={cellStyle}>
-        colSpan=2
-      </GridItem>
-      <GridItem style={cellStyle}>1x1</GridItem>
-      <GridItem colSpan={2} style={cellStyle}>
-        colSpan=2
-      </GridItem>
-      <GridItem style={cellStyle}>1x1</GridItem>
-      <GridItem style={cellStyle}>1x1</GridItem>
-    </Grid>
-  ),
+  render: (args) => {
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        columns={4}
+        autoFlow="row dense"
+        style={{
+          position: "relative",
+          zIndex: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay columns={4} gap={gap} alignContent={alignContent} />
+        <GridItem colSpan={2} style={cellStyle}>
+          colSpan=2
+        </GridItem>
+        <GridItem style={cellStyle}>1x1</GridItem>
+        <GridItem colSpan={2} style={cellStyle}>
+          colSpan=2
+        </GridItem>
+        <GridItem style={cellStyle}>1x1</GridItem>
+        <GridItem style={cellStyle}>1x1</GridItem>
+      </Grid>
+    );
+  },
 };
 
 export const ItemAlignment: Story = {
@@ -331,13 +649,15 @@ export const ItemAlignment: Story = {
   // `justifyItems`/`alignItems` are set on the *grid container* and apply
   // uniformly to every item in it (the CSS Grid item-alignment properties
   // are not settable per-item through Grid alone — GridItem has no such
-  // props). Demonstrated via two side-by-side grids that share every prop
-  // via `{...args}` — columns, gap, autoRows, etc. all stay live and update
-  // both grids identically — except `justifyItems`/`alignItems`
-  // themselves: the left grid always forces them `undefined` (the fixed
-  // "unset" baseline), the right grid uses their live value from `args`.
-  // This keeps the comparison meaningful under any combination of the
-  // other controls, rather than the two grids silently drifting apart.
+  // props). Demonstrated via two grids, each its own full-width row (found
+  // and fixed 2026-09-12, user-requested — previously side-by-side at a
+  // fixed 13rem each), that share every prop via `{...args}` — columns,
+  // gap, autoRows, etc. all stay live and update both grids identically —
+  // except `justifyItems`/`alignItems` themselves: the top grid always
+  // forces them `undefined` (the fixed "unset" baseline), the bottom grid
+  // uses their live value from `args`. This keeps the comparison
+  // meaningful under any combination of the other controls, rather than
+  // the two grids silently drifting apart.
   argTypes: { children: { control: false } },
   args: { columns: 2, autoRows: "6rem" },
   render: (args) => {
@@ -354,8 +674,13 @@ export const ItemAlignment: Story = {
     // real runtime case.
     const describe = (value: unknown) =>
       typeof value === "string" ? value : "unset";
+    const columns = typeof args.columns === "number" ? args.columns : 2;
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
     return (
-      <div style={{ display: "flex", gap: "var(--dbm-space-8)" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)" }}>
         <div>
           <p style={{ margin: "0 0 var(--dbm-space-2)" }}>
             Unset (default — items keep their own size, positioned at start)
@@ -364,8 +689,14 @@ export const ItemAlignment: Story = {
             {...sharedProps}
             justifyItems={undefined}
             alignItems={undefined}
-            style={{ width: "10rem" }}
+            style={{
+              position: "relative",
+              zIndex: 0,
+              width: "100%",
+              outline: "1px dashed var(--dbm-border-focus)",
+            }}
           >
+            <ColumnTrackOverlay columns={columns} gap={gap} alignContent={alignContent} />
             <Chips count={4} />
           </Grid>
         </div>
@@ -374,7 +705,16 @@ export const ItemAlignment: Story = {
             justifyItems=&quot;{describe(args.justifyItems)}&quot; alignItems=&quot;
             {describe(args.alignItems)}&quot;
           </p>
-          <Grid {...sharedProps} style={{ width: "10rem" }}>
+          <Grid
+            {...sharedProps}
+            style={{
+              position: "relative",
+              zIndex: 0,
+              width: "100%",
+              outline: "1px dashed var(--dbm-border-focus)",
+            }}
+          >
+            <ColumnTrackOverlay columns={columns} gap={gap} alignContent={alignContent} />
             <Chips count={4} />
           </Grid>
         </div>
@@ -411,22 +751,40 @@ export const ContentAlignment: Story = {
     children: { control: false },
   },
   args: { justifyContent: "between", alignContent: "center" },
-  render: (args) => (
-    <Grid
-      {...args}
-      columns={undefined}
-      minChildWidth={args.minChildWidth || undefined}
-      autoRows={args.autoRows || undefined}
-      autoColumns={args.autoColumns || undefined}
-      style={{
-        gridTemplateColumns: "repeat(3, 4rem)",
-        height: "12rem",
-        outline: "1px dashed var(--dbm-border-default)",
-      }}
-    >
-      <Chips count={3} />
-    </Grid>
-  ),
+  render: (args) => {
+    const gap = typeof args.gap === "number" ? args.gap : 4;
+    const justifyContent = toCssContentAlign(
+      typeof args.justifyContent === "string" ? args.justifyContent : undefined,
+    );
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        columns={undefined}
+        minChildWidth={args.minChildWidth || undefined}
+        autoRows={args.autoRows || undefined}
+        autoColumns={args.autoColumns || undefined}
+        style={{
+          position: "relative",
+          zIndex: 0,
+          gridTemplateColumns: "repeat(3, 4rem)",
+          height: "12rem",
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay
+          columns={3}
+          gap={gap}
+          gridTemplateColumns="repeat(3, 4rem)"
+          justifyContent={justifyContent}
+          alignContent={alignContent}
+        />
+        <Chips count={3} />
+      </Grid>
+    );
+  },
 };
 
 export const AsUnorderedList: Story = {
@@ -437,17 +795,37 @@ export const AsUnorderedList: Story = {
   // `{...args}`.
   argTypes: { as: { control: false }, children: { control: false } },
   args: { columns: 3, gap: 3 },
-  render: (args) => (
-    <Grid
-      {...args}
-      as="ul"
-      style={{ listStyle: "none", margin: 0, padding: 0 }}
-    >
-      {Array.from({ length: 6 }, (_, i) => (
-        <li key={i} style={cellStyle}>
-          {i + 1}
-        </li>
-      ))}
-    </Grid>
-  ),
+  render: (args) => {
+    const columns = typeof args.columns === "number" ? args.columns : 3;
+    const gap = typeof args.gap === "number" ? args.gap : 3;
+    const alignContent = toCssContentAlign(
+      typeof args.alignContent === "string" ? args.alignContent : undefined,
+    );
+    return (
+      <Grid
+        {...args}
+        as="ul"
+        style={{
+          position: "relative",
+          zIndex: 0,
+          listStyle: "none",
+          margin: 0,
+          padding: 0,
+          outline: "1px dashed var(--dbm-border-focus)",
+        }}
+      >
+        <ColumnTrackOverlay
+          columns={columns}
+          gap={gap}
+          alignContent={alignContent}
+          as="li"
+        />
+        {Array.from({ length: 6 }, (_, i) => (
+          <li key={i} style={cellStyle}>
+            {i + 1}
+          </li>
+        ))}
+      </Grid>
+    );
+  },
 };

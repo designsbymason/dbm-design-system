@@ -1,0 +1,38 @@
+/*
+ * Storybook-only presentational styles for ColumnTrackOverlay's two
+ * breakpoint-driven demo stories (ResponsiveColumns, ResponsiveGap) — not
+ * shipped in @dbm-design-system/components. Inline styles can't express
+ * @media queries, so the responsive halves of the overlay (which column
+ * count or gap applies at which breakpoint) live here instead, mirroring
+ * the exact breakpoint thresholds Grid.module.css itself uses (see that
+ * file's own comment on why these are literal pixel values, not custom
+ * properties — the same CSS spec limitation applies here).
+ */
+
+/* Mirrors ResponsiveColumns' own `columns={{ base: 1, md: 2, lg: 3 }}`. */
+.responsiveColumnsOverlay {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .responsiveColumnsOverlay {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsiveColumnsOverlay {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Mirrors ResponsiveGap's own `gap={{ base: 1, lg: 8 }}`. */
+.responsiveGapOverlay {
+  gap: var(--dbm-space-1);
+}
+
+@media (min-width: 1024px) {
+  .responsiveGapOverlay {
+    gap: var(--dbm-space-8);
+  }
+}

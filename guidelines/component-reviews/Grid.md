@@ -196,6 +196,269 @@ shared `gap` change, and only the right one moving on a `justifyItems` change; `
 "Polymorphic: as=ul" changing the rendered column count. 0 accessibility violations re-confirmed on
 "Content alignment."
 
+## Post-review visual pass (2026-09-11, user-requested, with a screenshot)
+
+**Request: improve the stories' visual presentation — the Playground at `gap=0` still showed a lot
+of dead white space, `gap=7` had no visible effect, add a consistent dashed container outline
+across every story, and review each story's own demo for clarity.**
+
+**`gap=7` — root-caused, not just cosmetic.** The spacing token scale is a fixed, discontinuous set
+(`0,1,2,3,4,5,6,8,10,12,16,20,24,32` — no `7`, `9`, `11`, etc.), and `SpaceValue` already enforces
+this exact union at the type level; `gap={7}` wouldn't compile in real usage. The Playground's own
+`gap` argType was a plain `control: "number"`, which let an invalid step through — it silently
+resolved to nothing and the whole `gap` declaration collapsed to its initial value (0), with no
+error anywhere. `Stack.stories.tsx` (already Finalized) already gets this right — `control:
+"select"` with the literal `[0,1,2,3,4,5,6,8,10,12,16,20,24,32]` options array. Fixed `Grid`'s own
+`gap` argType to match exactly.
+
+**Dead space at `gap=0` — a demo-content sizing issue, not a `gap` bug.** The Playground's chips
+were a fixed 3rem inside columns that could be 19rem+ wide at the canvas's full width — at any
+`gap` value, most of the visible "space" was actually the chip-to-cell-edge gap `justifyItems`/
+`alignItems` need to demonstrate positioning, not the `gap` prop itself, which made the two easy to
+conflate. Fixed by bumping the shared chip size (3rem → 4.5rem) and constraining the Playground's
+own container to `maxWidth: 28rem` (and `height: 20rem → 16rem`) — chips now fill a consistent,
+substantial share of each cell, `gap` changes read clearly, and there's still enough leftover room
+for `justifyItems`/`alignItems`/`alignContent` to visibly move. `ItemAlignment`'s two comparison
+grids got the same chip-size bump plus a proportionally widened container (`10rem → 13rem`).
+**Known, accepted limitation carried over from the original design, not introduced by this fix:**
+with the chip's size expressed as a fixed dimension, `justifyItems="stretch"`/`alignItems="stretch"`
+can't visibly stretch it to fill the cell — a definite size always wins over `stretch`. Every other
+value (`start`/`center`/`end`/`baseline`) demonstrates correctly; `stretch` reads identically to
+`start` in this specific demo. Not fixed here — flagging it rather than leaving it silently
+undocumented.
+
+**Dashed container outline — added to every story, not just the Playground and Content alignment.**
+`DefaultColumns`, `FixedColumns`, `ResponsiveColumns`, `WithSpanningItems`, `ResponsiveGap`,
+`FluidMinChildWidth`, `DensePacking`, `ItemAlignment` (both grids), and `AsUnorderedList` now all
+render `outline: "1px dashed var(--dbm-border-default)"` on the `Grid` itself, matching what
+`Playground`/`ContentAlignment` already had — the grid's own boundary is now visible everywhere,
+including where full-bleed `cellStyle` content already fills the space edge-to-edge.
+
+**Per-story visual review:** the 8 full-bleed-`cellStyle` stories (`DefaultColumns` through
+`DensePacking`) needed no content changes — `cellStyle` cells already stretch to fill their cell, so
+`gap`/`columns` changes were already clearly visible there; they only needed the outline added.
+`ItemAlignment`/`ContentAlignment` (the two chip-based stories) got the sizing fixes above.
+`AsUnorderedList` needed only the outline.
+
+**Re-verified:** `tsc --noEmit`, `eslint . --max-warnings 0`, `typecheck:storybook`, full `vitest`
+unit suite (1070/1070) and `storybook` project (375/375), `tsup` build, and
+`check-component-bundle-size` all clean (Storybook-only change, bundle size unaffected). Live-
+verified in the browser: `gap`'s control now shows a real dropdown of exactly the 14 valid steps;
+toggling it between `0` and `4` on the Playground shows a clear, unambiguous difference; the dashed
+outline renders correctly (including in Emerald/Dark) on every checked story; 0 accessibility
+violations re-confirmed on Playground, `DefaultColumns`, `ItemAlignment`, and `AsUnorderedList`.
+
+## Post-review fix #2 (2026-09-11, user-reported): fixed-size demo chip was itself broken
+
+**"Are gap values related to spacing tokens? Changing values don't seem like updating the gap
+correctly."** Confirmed `gap` genuinely is token-driven and was computing correctly in every case
+(re-verified via computed style at `gap=0`, `4`, `32`) — the *previous* fix (bumping the shared
+chip to a fixed `4.5rem`) traded one problem for two new, real ones, both traced to the same root
+cause: a **fixed-size** demo chip can't adapt to whatever column/row size the current props
+actually produce.
+
+1. **At large `gap` values, the chip overflowed its own shrinking column** — confirmed on the
+   Playground at `gap=32`: columns shrank to 64px (1fr tracks give up space to a growing gap
+   before anything else), but the chip stayed a fixed 72px, visibly spilling past the grid's own
+   dashed boundary.
+2. **In `ContentAlignment`'s fixed 4rem (64px) tracks, the 4.5rem (72px) chip was *permanently*
+   oversized** — confirmed live: chips visibly overflowed their columns even at the story's own
+   default settings, unrelated to `gap` entirely.
+3. **The deeper issue behind "gap doesn't seem to update correctly":** with a small fixed chip in
+   a wide column (the Playground's own original design), most of the visible space between chips
+   was the *column's own unfilled leftover* (needed so `justifyItems`/`alignItems` have room to
+   move), not `gap` itself — confirmed by measuring actual chip-to-chip pixel distance: at the
+   original ~19rem-wide columns, that baseline leftover was ~77px against which a `gap` change of
+   16px (a ~21% relative change) was easy to miss or misread as "not working." The first round of
+   fixes (bigger chip, narrower container) reduced this in absolute terms but didn't fix the
+   underlying mismatch.
+
+**Fixed by switching `chipStyle` from a fixed rem size to a percentage of its own cell (`80%` width
+and height)** — CSS resolves a grid item's percentage width/height against its own grid area, which
+is already definite once the grid's tracks are sized, so this works correctly (verified, not
+assumed) and: cannot overflow regardless of how small `gap` or a story's own fixed tracks make the
+column (percentage can never exceed 100% of its container); shrinks the baseline "leftover space" at
+every column width (re-measured: chip-to-chip distance at `gap=0` dropped from ~77px to ~30px in the
+Playground), so a `gap` change now reads as a much larger, clearer relative jump against a small,
+consistent margin.
+
+**Re-verified:** `tsc --noEmit`, `eslint . --max-warnings 0`, `typecheck:storybook`, full `vitest`
+unit suite (1070/1070) and `storybook` project (375/375) all clean. Live-verified in the browser:
+`gap=0`/`4`/`32` on the Playground (computed style + measured chip-to-chip pixel distance each
+time, not just visual impression) — no overflow at any value, chip always proportionally sized;
+`ContentAlignment`'s previously-overflowing chips now fit cleanly inside their fixed 4rem tracks;
+`ItemAlignment` re-checked, alignment differences still clearly visible with the smaller, correctly-
+scaled chips. 0 accessibility violations re-confirmed on Playground, `ContentAlignment` (one
+"inconclusive" axe entry present both before and after this change — persists across a fresh re-run,
+unrelated to this fix), and `ItemAlignment`.
+
+## Post-review enhancement (2026-09-11, user-requested): column track visualization
+
+**"For Grid component stories, add a background color to represent each column or row to better
+visualize grid items in the grid layout. Use color token bg.warning-subtle."**
+
+**Real technical obstacle found and worked around, not assumed away:** the first approach
+considered — extra grid items inside the same grid, each explicitly spanning one column and every
+row — was checked against the CSS Grid placement algorithm before building anything: an
+explicitly-positioned item is treated as "occupying" its cells for the purposes of every *other*
+item's own auto-placement, so a full-height stripe in column 1 would have silently excluded every
+auto-placed real child from ever landing in column 1 at all — breaking the very layout the story
+demonstrates. Built as a separate, absolutely-positioned overlay instead (`ColumnTrackOverlay`,
+`aria-hidden`, `zIndex: -1`, `pointerEvents: "none"`), running its own nested grid that mirrors the
+real grid's `columns`/`gap`/`gridTemplateColumns` so its track boundaries land pixel-for-pixel on
+the real ones, with zero interaction with the real grid's own placement.
+
+**Two real alignment bugs found and fixed during verification, not assumed correct from the code
+alone:**
+
+1. **`<div>` is not valid content for a real `<ul>`** (only `<li>`/`<script>`/`<template>` are) —
+   `AsUnorderedList` renders the overlay inside a real `<ul>`. Confirmed live that React's direct
+   DOM APIs (unlike HTML-string parsing) don't actually enforce this and would have silently
+   accepted the invalid nesting with no console warning — still fixed properly by adding an `as`
+   prop to the overlay (`"div" | "li"`) rather than relying on the browser being lenient.
+2. **The overlay didn't mirror the real grid's own `justifyContent`/`alignContent`** — found by
+   measuring actual `getBoundingClientRect()` coordinates on `ContentAlignment` (not assumed from
+   a screenshot): the overlay's stripes sat packed at the container's start (CSS Grid's own
+   `justify-content: normal` default), while the real chips were spread via `justifyContent=
+   "between"` — completely different positions, not just a few pixels off. Root cause: `Grid.tsx`
+   maps the abstracted `"between"/"around"/"evenly"` prop values to real CSS keywords
+   (`space-between` etc.) internally via a private, unexported `CONTENT_ALIGN` map; the overlay
+   needs the identical translation, added here as a small duplicated `toCssContentAlign` helper
+   (Storybook-only presentational code, not shipped logic, so duplication was the pragmatic choice
+   over exporting internal implementation detail from the component itself). Fixed and *re-verified
+   by measurement*, not just visual re-inspection: stripe and chip rects now match exactly.
+   Applied to every story's overlay usage, not just `ContentAlignment` — `alignContent` is a live,
+   uncontrolled prop on every story, so the same latent misalignment was possible anywhere a reader
+   changed it, not just the one story that happens to default away from "normal."
+
+**Scope, deliberately not comprehensive:** `ResponsiveColumns` and `ResponsiveGap` don't get an
+overlay — both stories' whole point is that `columns`/`gap` itself changes per breakpoint, and the
+overlay needs one concrete value to mirror; a static overlay would only match one breakpoint and
+visibly misalign at the other two. `FluidMinChildWidth` (auto-fill) is skipped for the same reason
+— the actual rendered column count isn't known ahead of render.
+
+**Real, honest finding about the token itself, not silently glossed over:** `bg.warning-subtle` is
+a genuinely pale/near-white tint in light mode (`#fdfaf5`) and a dark, low-luminance tint in dark
+mode (`#211300` against a `#2c2a34` surface) — confirmed correct implementation (computed styles
+match the token exactly), but the *visual* result is real yet subtle by design, consistent with
+what "subtle" tokens are for. Flagged to the user rather than silently swapping to a bolder token
+on my own judgment, since the exact token was specified explicitly.
+
+**Re-verified:** `tsc --noEmit`, `eslint . --max-warnings 0`, `typecheck:storybook`, full `vitest`
+unit suite (1070/1070) and `storybook` project (375/375) all clean. Live-verified in the browser:
+overlay position/size matches the real grid exactly on multiple stories (measured, not assumed);
+`AsUnorderedList`'s DOM now contains only valid `<li>` children; `ContentAlignment`'s stripe-to-chip
+alignment re-measured correct after the `justifyContent`/`alignContent` fix; 0 accessibility
+violations re-confirmed across `DefaultColumns`, `ContentAlignment`, `WithSpanningItems`, and
+`AsUnorderedList`; Docs page re-checked, no console errors, Playground embed renders correctly.
+One incidental finding along the way: the dev server entered a broken, stuck-indexing state after a
+transient syntax error (introduced and fixed within the same edit) and needed an explicit restart,
+not just a page reload, to recover — noted here in case it recurs, not a code defect.
+
+## Post-review fix #3 (2026-09-12, user-reported): overlay wasn't visible at all
+
+**"I understand bg.warning-subtle is very pale, but it is not displayed in storybook's Grid stories
+at all. fix it."** The previous entry's own diagnosis (color contrast too close to white) turned out
+to be incomplete — re-investigated from scratch rather than trusting the prior conclusion, and found
+**two further, more fundamental bugs**, both confirmed by direct experiment before fixing, not
+assumed:
+
+1. **Every stripe was rendering at ~2px tall, not the grid's full height.** Measured via
+   `getBoundingClientRect()`: `{height: 2}`. Root cause: the overlay's own nested grid has no
+   `grid-template-rows` of its own, and each stripe `<div>` has no content — so the single implicit
+   row sized to its content's natural (empty) min-content height, i.e. near-zero, regardless of the
+   outer overlay's own correct, full-size `inset: 0` box. Fixed with an explicit
+   `gridTemplateRows: "1fr"` on the overlay, forcing the one row to fill the already-definite outer
+   box.
+2. **The overlay was painting behind an unrelated ancestor, not just behind the real chips.**
+   `position: "relative"` alone does **not** establish a new CSS stacking context (only `position`
+   combined with a non-`auto` `z-index` does) — without an explicit `zIndex` on `Grid` itself, the
+   overlay's `zIndex: -1` had nothing local to resolve against and escaped to whichever ancestor
+   further up the tree *did* establish one, painting behind that instead. Confirmed by direct
+   experiment: setting `zIndex: 0` on `Grid` (overlay still at `-1`) was the one change that made an
+   already-correctly-sized, already-correctly-colored overlay actually appear, behind the real
+   content as intended. Added `zIndex: 0` alongside `position: "relative"` on every story's `Grid`
+   style (9 call sites).
+
+**A visible border was also added** (`border.warning`, not just the `bg.warning-subtle` fill) once
+the geometry bugs were fixed and the fill's own real-but-subtle contrast against white became the
+only remaining limiting factor — this was validated as the right call only *after* confirming the
+first two bugs were the actual "not displayed at all" cause, not a workaround for them. The fill
+stays exactly `bg.warning-subtle`, as specified; the border gives the track boundary itself
+guaranteed visible contrast regardless of theme.
+
+**Re-verified after all three fixes together, live, not just via computed style:** `Playground` at
+`gap=0` (columns visibly touch, matching the already-fixed gap-token behavior) and `gap=4`
+(clear separation) in both Purple/Light and Purple/Dark; `ContentAlignment` re-confirmed
+stripe-to-chip alignment still correct after adding `zIndex`/`gridTemplateRows` (measured, not
+assumed — the earlier `justifyContent`/`alignContent` fix and this fix touch adjacent but distinct
+parts of the same style object); `DefaultColumns` (full-bleed `cellStyle` content) now shows a
+clean 12-column outline even though the fill itself is fully covered; `AsUnorderedList`'s `<li>`
+overlay renders correctly. 0 accessibility violations re-confirmed across all four. `tsc --noEmit`,
+`eslint . --max-warnings 0`, `typecheck:storybook`, full `vitest` unit suite (1070/1070), and
+`storybook` project (375/375) all clean.
+
+## Post-review enhancement #2 (2026-09-12, user-requested): color scheme, full-width demos, responsive overlays for the 3 skipped stories
+
+**Color scheme change, applied globally (all stories share the same `cellStyle`/`chipStyle`/
+`ColumnTrackOverlay` definitions, so this was centralized, not per-story):**
+- Dashed container outline: `border.default` → `border.focus`.
+- Real grid items (`cellStyle`/`chipStyle`): fill `bg.brand-subtle` → `bg.brand`, text
+  `text.primary` → `text.on-brand`.
+- Column-track stripes: fill `bg.warning-subtle` → `bg.brand-subtle`, **border removed entirely**
+  (per explicit instruction — `bg.brand-subtle` turned out to have enough real contrast against
+  white to not need the `border.warning` crutch the previous fix added; confirmed live, re-verified
+  via computed style: `rgb(249, 249, 255)` against the canvas's white, visibly distinct without a
+  border in both light and dark).
+
+**Playground now extends full canvas width** — removed the `maxWidth: "28rem"` constraint added
+during the earlier gap-visibility fix; no longer needed now that the chip is percentage-sized
+(scales correctly at any width) rather than a fixed rem value.
+
+**`ItemAlignment` restacked** — the two comparison grids now render one per row (`flexDirection:
+"column"` instead of the default row), each at `width: "100%"` instead of a fixed `13rem`.
+
+**The 3 stories with no overlay — real reason, and now actually fixed, not left as a permanent
+gap:** `ResponsiveColumns`, `ResponsiveGap`, and `FluidMinChildWidth` were deliberately left without
+`ColumnTrackOverlay` in the original build — inline styles can't express `@media` queries, and the
+overlay's `columns`/`gap` props only ever took one static value, which would have visibly misaligned
+at two of every three breakpoints. Asked to fix rather than accept the gap, so built the real
+capability instead of declaring it out of scope again:
+- Added `Grid.stories.module.css` (Storybook-only, not shipped) with `.responsiveColumnsOverlay`
+  (`1 → 2 → 3` at the same `md`/`lg` thresholds as `ResponsiveColumns`' own `columns` prop) and
+  `.responsiveGapOverlay` (`1 → 8` at `lg`, matching `ResponsiveGap`'s own `gap` prop) — genuine
+  `@media` cascades, not a JS/inline approximation.
+- `ColumnTrackOverlay` gained `responsiveColumns`/`responsiveGap` boolean props that apply these
+  classes and omit the conflicting inline `gridTemplateColumns`/`gap` (inline styles always beat
+  class rules, so the two are mutually exclusive per property). `columns` still governs how many
+  stripe `<div>`s render — the *maximum* across breakpoints (3, in both cases) — with the overlay's
+  new `overflow: "hidden"` cropping whichever excess stripes don't fit the current breakpoint's
+  actual track count (they auto-place into additional implicit rows below, invisibly).
+- `FluidMinChildWidth` needed a different technique (no discrete breakpoint set to enumerate — the
+  real column count is however many `auto-fill` tracks fit the current width, genuinely unknowable
+  ahead of render): the overlay's `gridTemplateColumns` now reuses the identical
+  `repeat(auto-fill, minmax(var(--dbm-space-32), 1fr))` formula the real `Grid` computes internally,
+  so both derive the *same* count from the *same* container width with no JS measurement needed — a
+  generous supply of 12 stripe `<div>`s, with the same `overflow: hidden` cropping any that don't
+  fit.
+
+**Re-verified live, via computed style, not just visual impression, on all three:** `ResponsiveColumns`
+confirmed at both the default (~500px, 1 column) and an explicit 1280px desktop viewport (3 columns) —
+`gridTemplateColumns` on the real grid and the overlay matched exactly at both (`389.328px 389.336px
+389.336px` at desktop). `ResponsiveGap` confirmed at the default width — both real grid and overlay
+computed `gap: 4px` (the `base` value) identically. `FluidMinChildWidth` confirmed — both real grid
+and overlay independently computed 4 columns from the same container width, with `overflow: hidden`
+correctly containing the unused stripe supply (verified via matching `getBoundingClientRect()` on the
+overlay and the real grid).
+
+**Re-verified overall:** `tsc --noEmit`, `eslint . --max-warnings 0`, `typecheck:storybook`, full
+`vitest` unit suite (1070/1070), `storybook` project (375/375), `tsup` build, and
+`check-component-bundle-size` (unaffected — `Grid.stories.module.css` is Storybook-only, never
+reaches the published package) all clean. Live-verified: token values re-confirmed via computed
+style (`border.focus`, `bg.brand`, `text.on-brand`, `bg.brand-subtle` all matched exactly); Docs page
+re-checked, no console errors; 0 accessibility violations across every story checked, in both light
+and dark.
+
 ## Status
 
 Review pass complete, all findings actioned. **Not yet Finalized** — per
