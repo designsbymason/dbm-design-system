@@ -1,2 +1,8 @@
 export { Select } from "./Select";
-export type { SelectOptionProps, SelectProps, SelectSize } from "./Select.types";
+export type {
+  SelectAlign,
+  SelectOptionProps,
+  SelectProps,
+  SelectSide,
+  SelectSize,
+} from "./Select.types";

@@ -129,6 +129,155 @@ describe("Select", () => {
     expect(screen.getByRole("combobox")).toHaveClass("custom");
   });
 
+  it("forwards id, style, and data-testid to the trigger", () => {
+    render(
+      <BasicSelect
+        id="my-select"
+        style={{ opacity: 0.5 }}
+        data-testid="select-trigger"
+      />,
+    );
+    const el = screen.getByTestId("select-trigger");
+    expect(el).toHaveAttribute("id", "my-select");
+    expect(el).toHaveStyle({ opacity: "0.5" });
+  });
+
+  it("never lets a same-named consumer prop override the computed aria-invalid attribute", () => {
+    // `aria-invalid` is a genuinely valid native prop here (inherited from
+    // `button`'s own `AriaAttributes`, no type error to guard against) —
+    // this is exactly the real-world case the props-spread-ordering fix
+    // protects against: a consumer passing their own `aria-invalid` must
+    // not silently win over Select's own `hasError`-computed value.
+    render(<BasicSelect hasError aria-invalid={false} />);
+    expect(screen.getByRole("combobox")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+  });
+
+  describe("side/align", () => {
+    it("passes side/align through to the dropdown content", async () => {
+      const user = userEvent.setup();
+      render(<BasicSelect side="top" align="end" />);
+      await user.click(screen.getByRole("combobox"));
+      const listbox = await screen.findByRole("listbox");
+      // Radix renders the resolved placement on the content element itself.
+      expect(listbox.closest("[data-side]")).toHaveAttribute(
+        "data-side",
+        "top",
+      );
+      expect(listbox.closest("[data-align]")).toHaveAttribute(
+        "data-align",
+        "end",
+      );
+    });
+  });
+
+  describe("asChild/trigger", () => {
+    it("renders the custom trigger element instead of the built-in button", () => {
+      render(
+        <Select
+          aria-label="Variant"
+          asChild
+          trigger={<a href="#custom">Custom trigger</a>}
+        >
+          <Select.Option value="primary">Primary</Select.Option>
+        </Select>,
+      );
+      const el = screen.getByRole("combobox");
+      expect(el.tagName).toBe("A");
+      expect(el).toHaveTextContent("Custom trigger");
+    });
+
+    it("warns when trigger is passed without asChild", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(<BasicSelect trigger={<button type="button">Custom</button>} />);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("`trigger` has no effect without `asChild`"),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("warns when asChild is passed without trigger", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(<BasicSelect asChild />);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("`asChild` requires `trigger`"),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("warns when placeholder is passed alongside asChild", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Select
+          aria-label="Variant"
+          placeholder="Choose a variant"
+          asChild
+          trigger={<button type="button">Custom</button>}
+        >
+          <Select.Option value="primary">Primary</Select.Option>
+        </Select>,
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("`placeholder` has no effect when `asChild` is set"),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("does not warn for a normal, non-asChild select", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(<BasicSelect />);
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+  });
+
+  describe("Select.Option", () => {
+    it("forwards id, style, and data-testid", async () => {
+      const user = userEvent.setup();
+      render(
+        <Select aria-label="Variant" placeholder="Choose">
+          <Select.Option
+            value="primary"
+            id="opt-primary"
+            style={{ opacity: 0.5 }}
+            data-testid="option-primary"
+          >
+            Primary
+          </Select.Option>
+        </Select>,
+      );
+      await user.click(screen.getByRole("combobox"));
+      const option = await screen.findByTestId("option-primary");
+      expect(option).toHaveAttribute("id", "opt-primary");
+      expect(option).toHaveStyle({ opacity: "0.5" });
+    });
+
+    it("accepts a custom textValue for typeahead search", async () => {
+      const user = userEvent.setup();
+      render(
+        <Select aria-label="Variant" placeholder="Choose">
+          <Select.Option value="z" textValue="alpha">
+            🔤
+          </Select.Option>
+          <Select.Option value="b">Beta</Select.Option>
+        </Select>,
+      );
+      const trigger = screen.getByRole("combobox");
+      trigger.focus();
+      await user.keyboard("{Enter}");
+      await screen.findByRole("listbox");
+      // Typing "a" should move typeahead highlight to the option whose
+      // `textValue` starts with "a" ("alpha"), not the one whose visible
+      // emoji content obviously can't match a letter search — Enter then
+      // commits whichever option is currently highlighted.
+      await user.keyboard("a");
+      await user.keyboard("{Enter}");
+      expect(trigger).toHaveTextContent("🔤");
+    });
+  });
+
   it("has no accessibility violations when closed", async () => {
     const { container } = render(<BasicSelect />);
     expect((await axe(container)).violations).toHaveLength(0);
@@ -139,6 +288,19 @@ describe("Select", () => {
     const { container } = render(<BasicSelect />);
     await user.click(screen.getByRole("combobox"));
     await screen.findByRole("listbox");
+    expect((await axe(container)).violations).toHaveLength(0);
+  });
+
+  it("has no accessibility violations with a custom asChild trigger", async () => {
+    const { container } = render(
+      <Select
+        aria-label="Variant"
+        asChild
+        trigger={<button type="button">Custom trigger</button>}
+      >
+        <Select.Option value="primary">Primary</Select.Option>
+      </Select>,
+    );
     expect((await axe(container)).violations).toHaveLength(0);
   });
 });

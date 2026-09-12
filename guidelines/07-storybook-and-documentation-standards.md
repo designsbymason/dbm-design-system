@@ -211,6 +211,7 @@ coverage.** [VisuallyHidden.md](component-reviews/VisuallyHidden.md) is the most
 | VisuallyHidden | Atom | Utility | ✅ | ✅ 2026-09-10 | [VisuallyHidden.md](component-reviews/VisuallyHidden.md) |
 | Grid | Molecule | Layout | ✅ | ✅ 2026-09-12 | [Grid.md](component-reviews/Grid.md) |
 | List | Molecule | Typography | ✅ | ✅ 2026-09-13 | [List.md](component-reviews/List.md) |
+| Select | Molecule | Inputs & Forms | ✅ | ⏳ pending (reviewed 2026-09-13) | [Select.md](component-reviews/Select.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see
@@ -235,16 +236,22 @@ below for the per-category record:
 **Molecules (resolved 2026-08-16 — superseded, not just decided):** this used to be an open sequencing question, written back when Docs pages were produced by their own standalone sweep (Phase 4.9) running only loosely coordinated with Phase 5 (Molecules, which started early — `Grid`/`GridItem`/`Select` landed 2026-08-09, ahead of the original plan). That's no longer how it works: a Docs page is now one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, run one component at a time, strictly tier-order — atoms first, in full (Docs page included), before any molecule gets its own review pass. `GridItem` is no longer part of this molecule queue — it moved to atom-tier 2026-09-07 (ADR-0012) and is now tracked in the Layout bullet above instead.
 
 **Molecule review pass started 2026-09-11 (`Grid` first), `Grid` Finalized 2026-09-12, `List`
-Finalized 2026-09-13:** now that all 47 atoms are Finalized, the queue moved to molecules per the
-plan recorded in `01-vision-and-goals.md`'s Phase 5 entry — review and finalize the 3 already-built
-molecules (`Grid`, `List`, `Select`) first, then build and review the remaining 33 not-yet-started
-molecules one at a time. Both `Grid`'s and `List`'s own full `06-engineering-standards.md` §9
-passes are complete and **Finalized** (see the status table above and
-[Grid.md](component-reviews/Grid.md)/[List.md](component-reviews/List.md)) — `List`'s pass found
-and fixed a real, confirmed accessibility bug (`{...props}` spread after the computed `role`,
-silently overridable) and a real, confirmed rendering bug found live while building its own
-Playground (the new `type` prop reaching the DOM correctly but having zero visible effect, shadowed
-by CSS `list-style-type`). `Select` is next in the queue, before any new molecule is started.
+Finalized 2026-09-13, `Select` reviewed 2026-09-13:** now that all 47 atoms are Finalized, the
+queue moved to molecules per the plan recorded in `01-vision-and-goals.md`'s Phase 5 entry — review
+and finalize the 3 already-built molecules (`Grid`, `List`, `Select`) first, then build and review
+the remaining 33 not-yet-started molecules one at a time. `Grid`'s and `List`'s own full
+`06-engineering-standards.md` §9 passes are complete and **Finalized** (see the status table above
+and [Grid.md](component-reviews/Grid.md)/[List.md](component-reviews/List.md)). `Select`'s own full
+§9 pass is also complete (see [Select.md](component-reviews/Select.md)) — the first molecule review
+where the compound-component and Radix-primitive checkpoints actually apply (`Select.Option` is a
+real sub-part, `Select` wraps Radix Select) — found and fixed a real accessibility bug
+(`{...props}` spread after the computed `aria-invalid`), a real compound-sub-part gap
+(`Select.Option` couldn't accept `id`/`style`/`data-testid`/any native passthrough at all), added
+`side`/`align` (matching `Tooltip`'s own precedent) and `asChild` + a dedicated `trigger` prop
+(resolving a real `children`-already-used-for-options conflict `Button`'s own `asChild` precedent
+didn't directly cover) — but not yet Finalized, pending user confirmation. With all three
+review-first molecules now reviewed, the queue moves to building the remaining 33 not-yet-started
+molecules next.
 
 ## 7. Foundations pages (added 2026-07-27)
 

@@ -1,0 +1,247 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Select } from "./Select";
+import * as SelectStories from "./Select.stories";
+
+export const propOrder = [
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "placeholder",
+  "size",
+  "hasError",
+  "disabled",
+  "name",
+  "required",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "dir",
+  "form",
+  "autoComplete",
+  "side",
+  "align",
+  "asChild",
+  "trigger",
+  "children",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+];
+
+<Meta of={SelectStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Select" tier="Molecule" />
+
+A single-value select built on Radix Select, styled to match [`Input`](/docs/atoms-inputs-input--docs)'s
+resting/focus/error chrome so the two read as the same form-field family — sit them side by side in
+a form and they'll line up exactly at the same `size`. Accepts both controlled
+(`value`/`onValueChange`) and uncontrolled (`defaultValue`) usage, mirroring Radix's own pattern.
+Options are declared as children via `Select.Option`, not a flat `options` array — matches Radix's
+own compositional idiom and leaves room for grouped options later without a breaking API change.
+
+### Import
+
+```tsx
+import { Select } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SelectStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={SelectStories.Playground}
+  exclude={[
+    "value",
+    "onValueChange",
+    "open",
+    "onOpenChange",
+    "asChild",
+    "trigger",
+    "children",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+    "aria-labelledby",
+    "aria-describedby",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Select` also accepts any other native `<button>` attribute beyond what's listed here — passed
+straight through to the underlying trigger element (or whichever element `asChild`'s `trigger`
+renders).
+
+<PropertiesTable of={SelectStories} order={propOrder} />
+
+## Variants
+
+### Default
+
+<Canvas of={SelectStories.Default} />
+
+### All sizes
+
+<Canvas of={SelectStories.AllSizes} />
+
+### States
+
+<Canvas of={SelectStories.States} />
+
+### Disabled option
+
+<Canvas of={SelectStories.DisabledOption} />
+
+### Long list (scroll buttons)
+
+<Canvas of={SelectStories.LongList} />
+
+### side/align (dropdown placement)
+
+<Canvas of={SelectStories.SideAndAlign} />
+
+### asChild + trigger (custom trigger element)
+
+<Canvas of={SelectStories.CustomTrigger} />
+
+### Controlled
+
+<Canvas of={SelectStories.Controlled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pair `Select` with [`Input`](/docs/atoms-inputs-input--docs) at the same `size` when a form mixes
+  both — they share the same border/radius/focus/error chrome by design.
+- Use `hasError` (paired with a visible `FieldError` message) rather than styling an invalid state
+  yourself — it also sets `aria-invalid` automatically.
+- Use `asChild` + `trigger` only when you genuinely need a different trigger element (e.g. a
+  pre-existing custom button component) — the built-in trigger already covers the common case with
+  no extra markup.
+- Use `Select.Option`'s own `textValue` when an option's visible content isn't plain, searchable
+  text, so typeahead search (typing a letter to jump to a matching option) still works correctly.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass both `value` and `defaultValue` — pick controlled or uncontrolled, matching any other
+  React form control.
+- Don't pass `trigger` without `asChild`, or `asChild` without `trigger` — `Select` warns about
+  both in development; the built-in value/placeholder/caret display isn't rendered once `asChild`
+  is set, since Radix `Slot` requires exactly one child.
+- Don't reach for `Select` for a multi-select or searchable/filterable list — this is a single-value,
+  native-feel select; a dedicated `MultiSelect`/`Combobox` covers those cases instead.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `size` matches `Input`'s identical five-step scale (`xs`–`xl`) — pick the same size for every
+  field in a given form/row rather than mixing scales.
+- `side`/`align` control where the dropdown opens relative to the trigger, matching `Tooltip`'s own
+  identical props — Radix repositions automatically to stay within the viewport regardless, so
+  these are a starting preference, not a hard guarantee.
+- Grouped options (a `Select.Group`/label heading, e.g. "Fruits" / "Vegetables") aren't supported
+  yet — a deliberate, deferred scope decision (see the component's own JSDoc), not an oversight;
+  the children-based `Select.Option` API was chosen specifically so this can be added later without
+  a breaking change.
+
+## Accessibility
+
+<Callout tone="info" title="Radix Select's own combobox pattern, plus a few DBM-specific details">
+
+- Renders as a real `role="combobox"` trigger with a `role="listbox"`/`role="option"` dropdown —
+  the standard WAI-ARIA combobox pattern, entirely Radix-managed.
+- Always pass `aria-label` (or associate a visible label via `aria-labelledby`) — the trigger has
+  no visible text of its own until a value is selected.
+- Full keyboard support out of the box: `Enter`/`Space` opens the dropdown, arrow keys move the
+  highlight, typing jumps to a matching option (typeahead), `Enter` selects, `Escape` closes.
+- `hasError` sets `aria-invalid` automatically — and can't be silently overridden by a stray
+  consumer-supplied `aria-invalid`, a real bug found and fixed during this component's own review
+  (see `component-reviews/Select.md`).
+- Automated accessibility check verified closed, open, and with a custom `asChild` trigger — zero
+  violations in every case.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Select aria-label="Variant" placeholder="Choose a variant" value={variant} onValueChange={setVariant}>
+  <Select.Option value="primary">Primary</Select.Option>
+  <Select.Option value="secondary">Secondary</Select.Option>
+</Select>
+```
+
+```tsx
+// Uncontrolled, with an error state
+<Select aria-label="Size" defaultValue="md" size="sm" hasError>
+  <Select.Option value="sm">Small</Select.Option>
+  <Select.Option value="md">Medium</Select.Option>
+</Select>
+```
+
+```tsx
+// Custom trigger element via asChild
+<Select aria-label="Variant" asChild trigger={<MyCustomButton />}>
+  <Select.Option value="primary">Primary</Select.Option>
+</Select>
+```
+
+```tsx
+// A native <button> attribute (form), passed straight through
+<Select aria-label="Variant" form="checkout-form" name="variant">
+  <Select.Option value="primary">Primary</Select.Option>
+</Select>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="the trigger's and dropdown content's own background" />
+<TokenRow token="border.default, border.neutral, border.focus, border.danger" usage="the trigger's resting, hover, focus, and error border colors" />
+<TokenRow token="text.primary, text.tertiary, text.disabled, text.brand" usage="the trigger's/option's text color across its resting, placeholder, disabled, and selected states" />
+<TokenRow token="bg.brand-subtle" usage="a highlighted (keyboard/pointer-focused) option's background" />
+<TokenRow token="icon.brand" usage="the selected option's own checkmark indicator" />
+<TokenRow token="radius.md, radius.sm" usage="the trigger's and dropdown content's own corner radius, and each option's own radius" />
+<TokenRow token="shadow.light.md / shadow.dark.md" usage="the dropdown content's own elevation — a fixed light/dark pair, not a reactive token (see 03-token-system-spec.md)" />
+<TokenRow token="motion.duration.fast, motion.easing.standard" usage="the trigger's border-color/opacity transitions" />
+<TokenRow token="space.1–space.4" usage="the trigger's/option's own padding across the five size steps" />
+<TokenRow token="z-index.dropdown" usage="the portaled dropdown content's own stacking order" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Input"
+  description="The single-line text-field counterpart — shares Select's own border/radius/focus/error/size chrome for a consistent form-field family"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Input" size="sm" style={{ width: 72 }} />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="A form field's own visible label — associate it with Select via aria-labelledby (Select has no native <label for> target of its own)"
+  href="/?path=/docs/atoms-inputs-fieldlabel--docs"
+>
+  <FieldLabel>Label</FieldLabel>
+</RelatedCard>
+</div>

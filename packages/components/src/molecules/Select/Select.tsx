@@ -1,7 +1,7 @@
 import { CaretDownIcon, CheckIcon } from "@dbm-design-system/icons";
 import { cx } from "@dbm-design-system/primitives";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { forwardRef, useId } from "react";
+import { forwardRef, useId, useRef } from "react";
 import { Icon } from "../../atoms/Icon";
 import styles from "./Select.module.css";
 import type { SelectOptionProps, SelectProps, SelectSize } from "./Select.types";
@@ -35,6 +35,9 @@ const sizeClass: Record<SelectSize, string | undefined> = {
  *   <Select.Option value="sm">Small</Select.Option>
  *   <Select.Option value="md">Medium</Select.Option>
  * </Select>
+ * <Select aria-label="Variant" asChild trigger={<button type="button">Custom trigger</button>}>
+ *   <Select.Option value="primary">Primary</Select.Option>
+ * </Select>
  * ```
  */
 const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
@@ -44,6 +47,10 @@ const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
       hasError = false,
       disabled,
       placeholder,
+      side = "bottom",
+      align = "start",
+      asChild = false,
+      trigger,
       className,
       children,
       value,
@@ -65,6 +72,30 @@ const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
     const generatedId = useId();
     const selectId = id ?? generatedId;
 
+    const hasWarnedTriggerWithoutAsChildRef = useRef(false);
+    const hasWarnedAsChildWithoutTriggerRef = useRef(false);
+    const hasWarnedAsChildIgnoredPlaceholderRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (trigger && !asChild && !hasWarnedTriggerWithoutAsChildRef.current) {
+        hasWarnedTriggerWithoutAsChildRef.current = true;
+        console.warn(
+          "Select: `trigger` has no effect without `asChild` — the built-in value/caret display renders instead. Pass `asChild`, or remove `trigger`.",
+        );
+      }
+      if (asChild && !trigger && !hasWarnedAsChildWithoutTriggerRef.current) {
+        hasWarnedAsChildWithoutTriggerRef.current = true;
+        console.warn(
+          "Select: `asChild` requires `trigger` — Radix `Slot` needs exactly one child element to merge the trigger's behavior onto. Pass `trigger`, or remove `asChild`.",
+        );
+      }
+      if (asChild && placeholder && !hasWarnedAsChildIgnoredPlaceholderRef.current) {
+        hasWarnedAsChildIgnoredPlaceholderRef.current = true;
+        console.warn(
+          "Select: `placeholder` has no effect when `asChild` is set — the built-in value display isn't rendered in that mode. Remove `asChild`/`trigger`, or remove `placeholder`.",
+        );
+      }
+    }
+
     return (
       <SelectPrimitive.Root
         value={value}
@@ -81,6 +112,18 @@ const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
         autoComplete={autoComplete}
       >
         <SelectPrimitive.Trigger
+          asChild={asChild}
+          // `{...triggerProps}` spread first so none of the attributes
+          // below can be silently overridden by a same-named prop the
+          // caller passes — including `aria-invalid`, which isn't excluded
+          // from `SelectProps`' own native-attribute passthrough and
+          // TypeScript's JSX checker permits regardless (found and fixed
+          // 2026-09-13: this was previously spread *last*, letting a
+          // stray consumer-supplied `aria-invalid` silently win over this
+          // component's own `hasError`-computed value — the same ordering
+          // bug already fixed on Button/Skeleton/ProgressBar/FieldError/
+          // List, see `05-component-api-conventions.md` §3).
+          {...triggerProps}
           ref={ref}
           id={selectId}
           aria-invalid={hasError || undefined}
@@ -90,16 +133,23 @@ const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
             hasError && styles.error,
             className,
           )}
-          {...triggerProps}
         >
-          <SelectPrimitive.Value placeholder={placeholder} />
-          <SelectPrimitive.Icon className={styles.icon} asChild>
-            <Icon icon={CaretDownIcon} size="xs" />
-          </SelectPrimitive.Icon>
+          {asChild ? (
+            trigger
+          ) : (
+            <>
+              <SelectPrimitive.Value placeholder={placeholder} />
+              <SelectPrimitive.Icon className={styles.icon} asChild>
+                <Icon icon={CaretDownIcon} size="xs" />
+              </SelectPrimitive.Icon>
+            </>
+          )}
         </SelectPrimitive.Trigger>
         <SelectPrimitive.Portal>
           <SelectPrimitive.Content
             position="popper"
+            side={side}
+            align={align}
             sideOffset={4}
             className={styles.content}
           >
@@ -123,12 +173,19 @@ SelectRoot.displayName = "Select";
 
 /** A single selectable option inside a `<Select>`. */
 const SelectOption = forwardRef<HTMLDivElement, SelectOptionProps>(
-  ({ className, children, value, disabled }, ref) => (
+  ({ className, style, children, value, disabled, textValue, id, ...props }, ref) => (
     <SelectPrimitive.Item
+      // `{...props}` spread first — same "own computed/passed attributes
+      // must win, not be silently overridable" ordering as `SelectRoot`
+      // above, applied consistently to this sub-part too.
+      {...props}
       ref={ref}
+      id={id}
       value={value}
       disabled={disabled}
+      textValue={textValue}
       className={cx(styles.option, className)}
+      style={style}
     >
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className={styles.optionIndicator}>
