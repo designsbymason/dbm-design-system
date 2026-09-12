@@ -1,2 +1,7 @@
 export { List } from "./List";
-export type { ListElement, ListMarker, ListProps } from "./List.types";
+export type {
+  ListElement,
+  ListMarker,
+  ListOrderedType,
+  ListProps,
+} from "./List.types";

@@ -1,0 +1,227 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../../atoms/Box";
+import { Stack } from "../../atoms/Stack";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { List } from "./List";
+import * as ListStories from "./List.stories";
+
+export const propOrder = [
+  "as",
+  "marker",
+  "spacing",
+  "children",
+  "start",
+  "reversed",
+  "type",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ListStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="List" tier="Molecule" />
+
+An ordered or unordered list with a token-driven vertical gap between items and a configurable
+marker style. Renders a `<ul>` by default, or `<ol>` via `as`. Use with
+[`ListItem`](/docs/atoms-typography-listitem--docs) for children — a plain layout container on its
+own, `List` composes with `ListItem`'s own icon marker, trailing content, and interactive/selected/
+disabled states for nav-menu-style lists.
+
+### Import
+
+```tsx
+import { List } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ListStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ListStories.Playground}
+  exclude={["children", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`List` also accepts any other native attribute of its rendered element beyond what's listed here —
+by default a `<ul>`, or `<ol>` when `as="ol"` — passed straight through to the underlying element.
+
+<PropertiesTable of={ListStories} order={propOrder} />
+
+## Variants
+
+### Unordered (default)
+
+<Canvas of={ListStories.Unordered} />
+
+### Ordered
+
+<Canvas of={ListStories.Ordered} />
+
+### marker="none"
+
+<Canvas of={ListStories.NoMarker} />
+
+### Custom spacing between items
+
+<Canvas of={ListStories.CustomSpacing} />
+
+### as="ol" with start/reversed/type (ol-specific native props)
+
+<Canvas of={ListStories.OrderedListSpecificProps} />
+
+### Responsive spacing (tight on mobile, roomy from lg up)
+
+<Canvas of={ListStories.ResponsiveSpacing} />
+
+### Narrow viewport (long items wrap)
+
+<Canvas of={ListStories.NarrowViewport} />
+
+### Composed with ListItem's icon/trailing/interactive features
+
+<Canvas of={ListStories.WithListItemFeatures} />
+
+### Nested lists
+
+<Canvas of={ListStories.NestedLists} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use the default `ul`/`disc` marker for plain, unordered content; switch `as="ol"` for genuinely
+  sequential/ranked content (steps, rankings).
+- Use `marker="none"` (with real content, e.g. a custom `icon` per item, or plain text in a
+  nav-style list) rather than relying on `list-style: none` yourself — `List` also applies the
+  `role="list"` fix Safari/VoiceOver need when the native marker is suppressed.
+- Reach for `ListItem`'s own `icon`/`trailing`/`interactive`/`selected`/`disabled` props for
+  nav-menu-style lists — see [`ListItem`](/docs/atoms-typography-listitem--docs) for the full set.
+- Nest a `List` inside a `ListItem`'s own children for multi-level content — this is standard,
+  unguarded HTML and needs no special prop.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `start`/`reversed`/`type` without `as="ol"` — they're native `<ol>`-only attributes,
+  silently ignored by the browser on the default `ul` (`List` warns about this in development).
+- Don't expect `type` to do anything alongside an explicit `marker="disc"`/`"none"` override on an
+  `ol` — it only applies when `marker` resolves to `"decimal"` (the default for `ol`), since it's
+  translated into that same CSS `list-style-type` mechanism, not the native HTML attribute alone.
+- Don't build a nav menu from scratch with `<div>`s and hand-rolled ARIA — `List` (`marker="none"`)
+  plus `ListItem`'s `interactive`/`selected`/`disabled` already covers this correctly.
+
+</Callout>
+</div>
+
+## Best practices
+
+- `spacing` accepts a single spacing token step or a mobile-first responsive map keyed by
+  breakpoint (e.g. `{ base: 1, lg: 6 }`) — the standard way to tighten/loosen list density at any
+  breakpoint without a manual media query, matching `Grid`'s/`Stack`'s identical mechanism.
+- `marker` has no single static default — it resolves to `"disc"` for the default `ul` and
+  `"decimal"` for `ol`, matching native browser behavior, until explicitly overridden.
+- `start`, `reversed`, and `type` are structural/native `<ol>` attributes, not tokenized design
+  values — the same category as `GridItem`'s own `colSpan`/`rowSpan`/`colStart`/`rowStart`.
+
+## Accessibility
+
+<Callout tone="info" title="Safari/VoiceOver's list/listitem role fix, built in">
+
+- When `marker="none"` suppresses the native marker, `List` automatically applies `role="list"`
+  (and `ListItem` applies the matching `role="listitem"`) — Safari + VoiceOver (and historically
+  other browser/AT combinations) drop the implicit list semantics once `list-style` is `none`;
+  this is the standard, documented fix.
+- `ListItem`'s own `interactive` rows render as a real, keyboard-activatable `role="button"` surface
+  (Enter/Space, focus-visible styling) — see [`ListItem`](/docs/atoms-typography-listitem--docs)
+  for its own full accessibility notes, including `selected`/`disabled`/accessible-name handling.
+- Automated accessibility check verified against the default `ul`/`disc` case, `as="ol"`,
+  `marker="none"` (the role fix itself), and a `marker="none"` list of `interactive` rows (selected/
+  disabled included) — zero violations in every case.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<List as="ol" spacing={2}>
+  <ListItem>First step</ListItem>
+  <ListItem>Second step</ListItem>
+</List>
+```
+
+```tsx
+// Ordered list counting down, lettered markers
+<List as="ol" start={5} reversed type="A">
+  <ListItem>Counts down from 5</ListItem>
+  <ListItem>Then 4</ListItem>
+</List>
+```
+
+```tsx
+// Nav-menu-style list — no native marker, interactive rows with icons
+<List marker="none">
+  <ListItem interactive selected icon={HouseIcon} onClick={goHome}>Home</ListItem>
+  <ListItem interactive icon={GearIcon} onClick={goToSettings}>Settings</ListItem>
+</List>
+```
+
+```tsx
+// A native <ul> attribute (title), passed straight through
+<List title="Recent changes" spacing={2}>
+  <ListItem>Item</ListItem>
+</List>
+```
+
+## Design tokens used
+
+<TokenRow token="space.0–space.32" usage="spacing's own spacing-token scale — a single value, or a per-breakpoint map" />
+<TokenRow token="breakpoint.sm–breakpoint.3xl" usage="the six breakpoint thresholds spacing cascades across, matching Grid's/Stack's own identical mechanism" />
+<TokenRow token="text.primary" usage="the list's own text color" />
+<TokenRow token="font-family.primary, font-size.base" usage="the list's own typography" />
+
+`marker`, `as`, and the native `start`/`reversed`/`type` props are structural CSS/HTML list
+keywords, not tokenized design values — the same category as `GridItem`'s own placement props.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="ListItem"
+  description="A single item within a List — optional custom marker icon, trailing content, and interactive/selected/disabled states"
+  href="/?path=/docs/atoms-typography-listitem--docs"
+>
+  <Stack direction="row" gap={1} align="center">
+    <Box style={{ width: 8, height: 8, borderRadius: 999, background: "var(--dbm-bg-canvas)" }} />
+    <Box style={{ width: 28, height: 8, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Stack"
+  description="The single-axis flex-layout primitive underlying many other layout components — for simple row/column stacking"
+  href="/?path=/docs/atoms-layout-stack--docs"
+>
+  <Stack direction="row" gap={2}>
+    <Box style={{ width: 16, height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ width: 16, height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Stack>
+</RelatedCard>
+<RelatedCard
+  name="Grid"
+  description="The 2-dimensional CSS Grid layout primitive — for laying out cards/items in a grid rather than a semantic list"
+  href="/?path=/docs/molecules-layout-grid--docs"
+>
+  <Box style={{ width: 20, height: 20, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+</RelatedCard>
+</div>

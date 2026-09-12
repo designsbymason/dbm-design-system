@@ -1,9 +1,9 @@
 import { cx, responsiveStyle } from "@dbm-design-system/primitives";
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
 import { ListMarkerContext } from "./ListMarkerContext";
 import styles from "./List.module.css";
-import type { ListElement, ListMarker, ListProps } from "./List.types";
+import type { ListElement, ListMarker, ListOrderedType, ListProps } from "./List.types";
 
 type ListComponent = {
   <E extends ListElement = "ul">(
@@ -21,6 +21,22 @@ const markerClass: Record<ListMarker, string | undefined> = {
   disc: styles.markerDisc,
   decimal: styles.markerDecimal,
   none: styles.markerNone,
+};
+
+// CSS `list-style-type` always takes precedence over the native `<ol
+// type="...">` HTML attribute when both are present (found live 2026-09-13:
+// `type="A"` reached the DOM correctly as a real attribute, but rendered as
+// plain digits regardless, since `markerClass.decimal`'s own
+// `list-style-type: decimal` was unconditionally overriding it) — `type`
+// only has any visible effect at all when translated into its CSS
+// counterpart and applied the same way `marker` already is, not left to the
+// native attribute alone.
+const TYPE_TO_LIST_STYLE: Record<ListOrderedType, string> = {
+  "1": "decimal",
+  a: "lower-alpha",
+  A: "upper-alpha",
+  i: "lower-roman",
+  I: "upper-roman",
 };
 
 const ListImpl = forwardRef<HTMLElement, ListProps<ListElement>>(function List(
@@ -41,9 +57,37 @@ const ListImpl = forwardRef<HTMLElement, ListProps<ListElement>>(function List(
   //="list" is the standard, documented fix for exactly this case.
   const isMarkerless = resolvedMarker === "none";
 
+  const hasWarnedOlPropsOnUlRef = useRef(false);
+  if (process.env.NODE_ENV !== "production") {
+    // `reversed === true` (not `"reversed" in props`) — a caller explicitly
+    // passing `reversed={false}` (e.g. a Playground/Storybook control's own
+    // default arg) is a no-op matching the attribute's own natural default,
+    // not a real ol-only usage worth warning about.
+    const hasOlOnlyProps =
+      props.start !== undefined ||
+      props.reversed === true ||
+      props.type !== undefined;
+    if (resolvedAs !== "ol" && hasOlOnlyProps && !hasWarnedOlPropsOnUlRef.current) {
+      hasWarnedOlPropsOnUlRef.current = true;
+      console.warn(
+        'List: `start`/`reversed`/`type` have no effect without `as="ol"` — the browser silently ignores them on a `ul`. Pass `as="ol"`, or remove them.',
+      );
+    }
+  }
+
   return (
     <ListMarkerContext.Provider value={isMarkerless}>
       <Component
+        // `{...props}` spread first so none of the attributes below can be
+        // silently overridden by a same-named prop the caller passes —
+        // including `role`, which TypeScript's JSX checker permits on any
+        // component regardless of whether it's declared in its prop type
+        // (found and fixed 2026-09-13: this was previously spread *last*,
+        // letting a stray consumer-supplied `role` silently win over this
+        // component's own computed `role="list"` fix — the same ordering
+        // bug already fixed on Button/Skeleton/ProgressBar/FieldError/etc.,
+        // see `05-component-api-conventions.md` §3).
+        {...props}
         ref={ref}
         role={isMarkerless ? "list" : undefined}
         className={cx(styles.root, markerClass[resolvedMarker], className)}
@@ -53,9 +97,11 @@ const ListImpl = forwardRef<HTMLElement, ListProps<ListElement>>(function List(
             "--list-gap",
             (value: number) => `var(--dbm-space-${value})`,
           ),
+          ...(props.type !== undefined && resolvedMarker === "decimal"
+            ? { listStyleType: TYPE_TO_LIST_STYLE[props.type] }
+            : {}),
           ...style,
         }}
-        {...props}
       />
     </ListMarkerContext.Provider>
   );
