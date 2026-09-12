@@ -1,6 +1,6 @@
 # List
 
-**Tier:** Molecule · **Category:** Typography · **Finalized:** Not yet — pending user confirmation
+**Tier:** Molecule · **Category:** Typography · **Finalized:** 2026-09-13, at explicit user direction
 
 ## Review pass (2026-09-13)
 
@@ -115,7 +115,111 @@ and concluded not a real gap — `List` needs native `<ul>`/`<ol>` markup and ma
 `Stack` has no notion of, and the actual duplicated surface is a handful of CSS lines, not enough
 to justify the added indirection.
 
-## Status
+## Post-review fix (2026-09-13, user-reported): controls not accurately reflecting the canvas
 
-Review pass complete, all findings actioned. **Not yet Finalized** — per
-`06-engineering-standards.md` §9, only the user declares a component's review pass done.
+**Request: verify List story props are wired properly, that select controls show the story's real
+value instead of "Choose option...", and that `start` shows an interactive input or `-`, not an
+inert "Set number" placeholder.**
+
+**`as`/`marker` showing "Choose option..." while the canvas visibly rendered a real value.**
+Confirmed: the original review left both `undefined` in the Playground's own `args`, reasoning they
+had "no true default" per `06-engineering-standards.md` §9's own wording — technically accurate
+(neither has a destructuring-level default in `List.tsx`), but the wrong conclusion: both *do* have
+a real, documented effective value (`as` → `'ul'`, `marker` → `'disc'` for the resulting `ul`) that
+the canvas was already rendering the entire time. A control claiming an unset state while the canvas
+shows a real one is the same class of bug as a control that silently doesn't work — exactly the
+"control claiming one value while canvas visibly shows another" case §9 itself flags. Fixed by
+setting `as: "ul"`/`marker: "disc"` as real starting args. Auditing every other story surfaced the
+same gap in `Ordered` and `OrderedListSpecificProps` — both set `as="ol"` but left `marker`
+inheriting the meta-level `"disc"` default, which no longer matched their own real resolved value
+(`"decimal"`) once `as` changed. Fixed by explicitly setting `marker: "decimal"` in both.
+
+**`start` showing an inert "Set number" placeholder button instead of a real input.** Root cause:
+a Storybook `number` control with an `undefined` starting arg renders as a placeholder button, not
+an empty-but-editable input — the exact same problem `GridItem.stories.tsx`'s own `colStart`/
+`rowStart` already solved (documented there as "a `number` control gates on an undefined value
+showing 'Set number' exactly like a `text` control shows 'Set string,' so neither control *type*
+alone avoids it"). Fixed by applying the identical established pattern: `start`'s control switched
+to `"text"` with a `placeholder: "1"` (matching the native default when omitted), paired with a real
+`""` starting arg (`"" as unknown as number`, matching `GridItem`'s own cast) and a `parseNumberArg`
+helper (copied from `GridItem.stories.tsx`) applied at every render call site that spreads
+`{...args}` onto `<List>`, parsing the control's raw string (or an already-numeric per-story demo
+value, e.g. `OrderedListSpecificProps`' own `start: "5"`) back to a real `number | undefined` before
+it ever reaches the component.
+
+**Re-verified live, not assumed from the diff alone:** `Playground` now shows `as: ul`/`marker: disc`
+matching the bulleted canvas; setting `as` to `ol` and `marker` to `decimal` live, then typing `3`
+into `start`'s new text field, correctly renumbered the canvas to `3./4./5.` — confirming `start`
+now genuinely drives the canvas, not just accepts a value. `Ordered` and `OrderedListSpecificProps`
+both re-checked showing `marker: decimal` correctly matching their own numbered canvases, with
+`OrderedListSpecificProps`' `start` field showing a real, editable `5`. Every other story spot-
+checked (`Unordered`, `marker="none"`, `Custom spacing`) shows accurate, non-placeholder defaults
+throughout. Full suite re-run clean: `pnpm lint`, `vitest` unit (27/27 for `List`) and `storybook`
+project (378/378) tests.
+
+## Post-review fix #2 (2026-09-13, user-reported): changing `as` visibly did nothing
+
+**"When I change the prop 'as' in the list story, nothing changes. is it wired correctly?"**
+Confirmed real, and a direct side effect of the previous fix: giving `marker` a fixed, real
+starting value (`"disc"`, to stop it showing "Choose option..." — see the fix directly above)
+meant it could no longer *follow* `as` the way it does inside the real component (`marker ??
+defaultMarkerFor[resolvedAs]` only ever applies when `marker` is genuinely `undefined`). Once
+`marker` held an explicit `"disc"`, toggling `as` between `ul`/`ol` still worked — the DOM element
+genuinely changed — but `<ol marker="disc">` and `<ul marker="disc">` render visually identically
+(both round bullets), so the change was invisible without also manually touching `marker`.
+
+Found the right fix already established in this codebase for the exact same class of problem:
+`Heading.stories.tsx`'s `useSyncSizeToLevel` keeps `size` following `level` via Storybook's own
+`updateArgs`, specifically because the *native* Controls panel (the addon tab, not the Docs page's
+own custom `PlaygroundControls` block) has no equivalent to that block's `resolveDisplayValue`
+(display-only, doesn't touch the real arg) — the only way to keep the native panel itself showing
+and using the correct resolved value is to actually write it. Applied the identical pattern:
+exported `defaultMarkerFor` from `List.tsx` (matching `Heading.tsx`'s own exported
+`defaultSizeForLevel`, avoiding a duplicated table) and added `useSyncMarkerToAs` — an `as`-keyed
+`useEffect` that unconditionally re-snaps `marker` to `as`'s own default via `useArgs()`'s
+`updateArgs`, mirroring `useSyncSizeToLevel`'s own deliberately-unconditional design (that file's
+own comment documents a real, reproduced bug from an earlier "only sync if not user-picked"
+`useRef`-tracking attempt, which could silently stop syncing across an HMR reload). Applied to
+every story where both `as` and `marker` stay genuinely live (`Playground`, `CustomSpacing`,
+`ResponsiveSpacing`, `NarrowViewport`, `NestedLists`) — not to stories where `marker`'s own control
+is already fixed/disabled (`NoMarker`, `WithListItemFeatures`, where applying the hook would
+incorrectly overwrite the fixed value) or where `as` itself is fixed/disabled (`Unordered`,
+`Ordered`, `OrderedListSpecificProps`, which already set the correct static `marker` value
+directly, with nothing to sync since `as` can't change there).
+
+**Re-verified live via the actual DOM, not just visual impression:** toggling `as` from `ul` to
+`ol` on `Playground` changed the rendered element to `<ol class="...markerDecimal">` (previously
+stayed `markerDisc`), with the `marker` control itself updating to show `decimal`; toggling back to
+`ul` correctly re-synced to `markerDisc`. Re-checked on `NestedLists` (the one story with a second,
+independently-hardcoded inner `<List>`) — only the outer list's marker synced, the inner one stayed
+exactly as authored. `WithListItemFeatures` re-confirmed unaffected (`marker` still shows `-`,
+fixed at `"none"`). Full suite re-run clean: `pnpm lint`, `vitest` unit (27/27) and `storybook`
+project (378/378) tests.
+
+## Post-review closure (2026-09-13, authorized): open decision item resolved
+
+**`ListItem.mdx`'s "List" `RelatedCard`** now points at `List`'s Docs page instead of its raw story
+— logged in `ListItem.md`'s own post-finalization fix entry (stays finalized, per §9's defect-fix
+test). Re-verified live via the DOM: the rendered `href` now reads
+`/?path=/docs/molecules-typography-list--docs`. `pnpm lint` re-run clean.
+
+## Finalized
+
+**Finalized 2026-09-13, at explicit user direction.** Second molecule-tier finalization, after
+`Grid`. The three molecule/organism-only §9 checkpoints that require a compound sub-part, a
+consumed atom's own defect, or a wrapped Radix primitive don't apply here (see the Verification
+section above) — noted explicitly rather than silently skipped, same as `Grid`'s own finalization.
+
+A final consolidated self-verification was run immediately before this declaration, covering the
+original review, both post-review fix rounds, and the post-review-closure link fix together: `pnpm
+lint` (eslint + full `tsc --noEmit` + `typecheck:storybook`, clean), `tsup` build (clean), full
+`vitest` unit suite (1084/1084 package-wide, 27/27 for `List`) and `storybook` project (378/378),
+`check-component-bundle-size` (0.68KB JS / 0.30KB CSS gzipped, within budget). Live-verified in
+Storybook: 0 accessibility violations; both brand themes × both modes confirmed on Playground
+(Emerald/Dark screenshotted); the `as`/`marker` sync fix confirmed working in both the native
+Controls panel and the Docs page's own custom Playground block; `ListItem.mdx`'s `RelatedCard`
+`href` re-confirmed correct via the live DOM.
+
+Per `06-engineering-standards.md` §9's finalization rule, no further changes to `List` (code,
+stories, docs, or tokens it alone drives) without asking first, even for something that would
+otherwise be an obvious, in-scope fix.

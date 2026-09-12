@@ -159,3 +159,12 @@ confirmed prop-ordering bug, a real accessible-name routing gap, feature-complet
 `disabled` and `trailing`, a subsequent final review that found and fixed a real marker-suppression
 bug and a related full-row-hover layout bug, accessibility, responsiveness, design quality,
 theming, Storybook documentation, and functional verification) is complete.
+
+## Post-finalization fix (2026-09-13, authorized)
+
+`ListItem.mdx`'s own "List" `RelatedCard` still pointed at `List`'s raw Storybook story
+(`/?path=/story/molecules-typography-list--unordered`), left over from before `List` had a Docs
+page — flagged during `List`'s own final review pass, authorized here, fixed by pointing it at
+`List`'s Docs page instead (`/?path=/docs/molecules-typography-list--docs`). Re-verified live: the
+rendered `<a>`'s `href` now reads the corrected path. Per the finalization re-check test (§9): a
+defect fix (stale link, not a design change) — **stays finalized**, no re-review needed.

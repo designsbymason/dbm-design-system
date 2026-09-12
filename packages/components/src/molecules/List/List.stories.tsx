@@ -1,10 +1,60 @@
 import { CheckIcon, GearIcon, HouseIcon } from "@dbm-design-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useArgs } from "storybook/preview-api";
 import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
 import { ListItem } from "../../atoms/ListItem";
-import { List } from "./List";
+import { defaultMarkerFor, List } from "./List";
+import type { ListElement } from "./List.types";
+
+/**
+ * Keeps the *native* Storybook Controls panel's own `marker` value in sync
+ * with `as` whenever `as` changes — user-reported 2026-09-13: "when I
+ * change the prop 'as' in the list story, nothing changes," because
+ * `marker` had been given a fixed, real starting value (`"disc"`, see
+ * `meta.args` below, itself a fix for a *different* bug — see that
+ * comment) that no longer tracked `as` once it stopped being genuinely
+ * `undefined`. Mirrors `Heading.stories.tsx`'s own identical
+ * `useSyncSizeToLevel` (`size` following `level`) — a native `<select>`
+ * control has no equivalent to the Docs page's own `resolveDisplayValue`
+ * mechanism (display-only, doesn't touch the real arg), so keeping the
+ * *actual* arg in sync via Storybook's own `updateArgs` is the only way to
+ * make the native panel (not just the Docs page) show and use the correct
+ * resolved value. Deliberately unconditional (always re-snaps `marker` to
+ * `as`'s own default, not just when `marker` looks "auto-set") — matches
+ * `useSyncSizeToLevel`'s own hard-won reasoning: tracking "was this
+ * value user-picked or auto-set" in a `ref` has no guaranteed lifetime
+ * across an HMR reload/internal re-render and can silently stop syncing.
+ */
+function useSyncMarkerToAs(as: ListElement | undefined) {
+  const [, updateArgs] = useArgs();
+  useEffect(() => {
+    updateArgs({ marker: defaultMarkerFor[as ?? "ul"] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [as]);
+}
+
+/**
+ * `start`'s Storybook control is a plain text field, paired with a real
+ * `""` starting arg (see `meta.args` below) rather than `undefined` —
+ * mirrors `GridItem.stories.tsx`'s own identical `parseNumberArg` helper:
+ * a `number` control gates on an undefined value showing an inert "Set
+ * number" placeholder button instead of a real, always-editable input,
+ * exactly like a `text` control shows "Set string" — neither control
+ * *type* alone avoids this, only pairing the control with a real, defined
+ * starting value does. `""` reads as empty while still meaning "no
+ * explicit start" (native default of `1`) once parsed. `List`'s own
+ * `start` prop stays real `number | undefined` — this parses the
+ * control's raw string (or an already-numeric per-story demo value) back
+ * to one before it's ever passed to the component.
+ */
+function parseNumberArg(value: unknown): number | undefined {
+  if (typeof value === "number") return value;
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
 
 const meta: Meta<typeof List> = {
   title: "Molecules/Typography/List",
@@ -42,10 +92,16 @@ const meta: Meta<typeof List> = {
       control: false,
       description: "The list items (typically ListItem).",
     },
+    // `text` control + `""` starting arg — see this file's own
+    // `parseNumberArg` comment above for why (not a plain `number` control
+    // with `undefined`). `placeholder: "1"` matches the native default
+    // when `start` is omitted, keeping the empty box from reading as
+    // broken while still not setting any real value.
     start: {
-      control: "number",
+      control: "text",
       description:
         'Native <ol> start — the ordinal value the first item counts from. Only applies when as="ol".',
+      placeholder: "1",
     },
     reversed: {
       control: "boolean",
@@ -77,32 +133,41 @@ const meta: Meta<typeof List> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  // Every controllable prop gets an explicit value matching its real
-  // component default where one exists (spacing=2, reversed=false — the
-  // real default per ListProps). `as`/`marker` have no true default value
-  // of their own (`as` genuinely renders as `undefined` → `ul`; `marker`
-  // genuinely resolves per-`as` rather than one fixed value) — per
-  // 06-engineering-standards.md §9, left `undefined` here so the Playground
-  // starts from the component's real, unmodified default behavior rather
-  // than an arbitrary demo value standing in for one. `start`/`type` have
-  // no default either (native `undefined`) and stay unset for the same
-  // reason — see the `OrderedListSpecificProps` story below for where
-  // they're genuinely demonstrated with a non-default value.
+  // Every controllable prop gets an explicit value matching its real,
+  // effective default — including `as`/`marker`, neither of which has a
+  // destructuring-level default in `List.tsx` (both resolve via `??`
+  // inside the function body instead), but both of which *do* have a real,
+  // documented effective value (`as` → `'ul'`, `marker` → `'disc'` for the
+  // resulting `ul`) that the canvas already renders regardless of what the
+  // control shows. Leaving them `undefined` left the Controls panel
+  // showing "Choose option..." while the canvas visibly rendered `ul`/
+  // `disc` the whole time — a control claiming an unset state while the
+  // canvas shows a real one is the same class of bug as a control that
+  // silently doesn't work at all (06-engineering-standards.md §9, found
+  // and fixed 2026-09-13, user-reported). `type` genuinely has no
+  // effective default to show even when unset (no CSS override applies at
+  // all until a real value is chosen — see `List.tsx`'s own `type`
+  // handling) and correctly stays unset here; see the
+  // `OrderedListSpecificProps` story below for where it's demonstrated
+  // with a real value.
   args: {
-    as: undefined,
-    marker: undefined,
+    as: "ul",
+    marker: "disc",
     spacing: 2,
-    start: undefined,
+    start: "" as unknown as number,
     reversed: false,
     type: undefined,
   },
-  render: (args) => (
-    <List {...args}>
-      <ListItem>First item</ListItem>
-      <ListItem>Second item</ListItem>
-      <ListItem>Third item</ListItem>
-    </List>
-  ),
+  render: function DefaultRenderer(args) {
+    useSyncMarkerToAs(args.as as ListElement);
+    return (
+      <List {...args} start={parseNumberArg(args.start)}>
+        <ListItem>First item</ListItem>
+        <ListItem>Second item</ListItem>
+        <ListItem>Third item</ListItem>
+      </List>
+    );
+  },
 };
 
 export default meta;
@@ -122,7 +187,7 @@ export const Unordered: Story = {
   // story). Every other prop stays live via `{...args}`.
   argTypes: { as: { control: false } },
   render: (args) => (
-    <List {...args} as={undefined}>
+    <List {...args} as={undefined} start={parseNumberArg(args.start)}>
       <ListItem>First item</ListItem>
       <ListItem>Second item</ListItem>
       <ListItem>Third item</ListItem>
@@ -132,10 +197,15 @@ export const Unordered: Story = {
 
 export const Ordered: Story = {
   name: "Ordered",
+  // `marker` explicitly set to `"decimal"` — its own real, effective
+  // resolved value once `as="ol"` (not the meta-level default of `"disc"`,
+  // which only matches the default `ul` context) — same "control must
+  // match what the canvas actually shows" reasoning as the meta-level fix
+  // above, found while auditing this specific story (2026-09-13).
   argTypes: { as: { control: false } },
-  args: { as: "ol" },
+  args: { as: "ol", marker: "decimal" },
   render: (args) => (
-    <List {...args}>
+    <List {...args} start={parseNumberArg(args.start)}>
       <ListItem>First step</ListItem>
       <ListItem>Second step</ListItem>
       <ListItem>Third step</ListItem>
@@ -151,7 +221,7 @@ export const NoMarker: Story = {
   argTypes: { marker: { control: false } },
   args: { marker: "none" },
   render: (args) => (
-    <List {...args}>
+    <List {...args} start={parseNumberArg(args.start)}>
       <ListItem>Item without a marker</ListItem>
       <ListItem>Another item</ListItem>
     </List>
@@ -162,26 +232,37 @@ export const CustomSpacing: Story = {
   name: "Custom spacing between items",
   argTypes: { spacing: { control: false } },
   args: { spacing: 6 },
-  render: (args) => (
-    <List {...args}>
-      <ListItem>First item</ListItem>
-      <ListItem>Second item</ListItem>
-      <ListItem>Third item</ListItem>
-    </List>
-  ),
+  render: function CustomSpacingStory(args) {
+    useSyncMarkerToAs(args.as as ListElement);
+    return (
+      <List {...args} start={parseNumberArg(args.start)}>
+        <ListItem>First item</ListItem>
+        <ListItem>Second item</ListItem>
+        <ListItem>Third item</ListItem>
+      </List>
+    );
+  },
 };
 
 export const OrderedListSpecificProps: Story = {
   name: 'as="ol" with start/reversed/type (ol-specific native props)',
   // `as` fixed to `"ol"` — `start`/`reversed`/`type` are inert (and warn in
   // development) on the default `ul`, so this story exists specifically to
-  // demonstrate them with a real, non-default value. Every other prop
-  // (including `start`/`reversed`/`type` themselves) stays live via
-  // `{...args}`.
+  // demonstrate them with a real, non-default value. `marker` explicitly
+  // set to `"decimal"` (its own real resolved value for `ol`, same
+  // reasoning as `Ordered` above) rather than inheriting the meta-level
+  // `ul`-context default of `"disc"`. Every other prop (including
+  // `start`/`reversed`/`type` themselves) stays live via `{...args}`.
   argTypes: { as: { control: false } },
-  args: { as: "ol", start: 5, reversed: true, type: "A" },
+  args: {
+    as: "ol",
+    marker: "decimal",
+    start: "5" as unknown as number,
+    reversed: true,
+    type: "A",
+  },
   render: (args) => (
-    <List {...args}>
+    <List {...args} start={parseNumberArg(args.start)}>
       <ListItem>Counts down from 5</ListItem>
       <ListItem>Then 4</ListItem>
       <ListItem>Then 3</ListItem>
@@ -196,26 +277,32 @@ export const ResponsiveSpacing: Story = {
   // multi-instance-gallery exception (06-engineering-standards.md §9),
   // matching Grid's own `ResponsiveGap` story. Every other prop stays live.
   argTypes: { spacing: { control: false } },
-  render: (args) => (
-    <List {...args} spacing={{ base: 1, lg: 6 }}>
-      <ListItem>First item</ListItem>
-      <ListItem>Second item</ListItem>
-      <ListItem>Third item</ListItem>
-    </List>
-  ),
+  render: function ResponsiveSpacingStory(args) {
+    useSyncMarkerToAs(args.as as ListElement);
+    return (
+      <List {...args} spacing={{ base: 1, lg: 6 }} start={parseNumberArg(args.start)}>
+        <ListItem>First item</ListItem>
+        <ListItem>Second item</ListItem>
+        <ListItem>Third item</ListItem>
+      </List>
+    );
+  },
 };
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (long items wrap)",
-  render: (args) => (
-    <List {...args}>
-      <ListItem>
-        A longer list item that should wrap gracefully at narrow viewport widths
-        without overflowing its container.
-      </ListItem>
-      <ListItem>Short item</ListItem>
-    </List>
-  ),
+  render: function NarrowViewportStory(args) {
+    useSyncMarkerToAs(args.as as ListElement);
+    return (
+      <List {...args} start={parseNumberArg(args.start)}>
+        <ListItem>
+          A longer list item that should wrap gracefully at narrow viewport widths
+          without overflowing its container.
+        </ListItem>
+        <ListItem>Short item</ListItem>
+      </List>
+    );
+  },
 };
 
 export const WithListItemFeatures: Story = {
@@ -233,7 +320,7 @@ export const WithListItemFeatures: Story = {
   render: function WithListItemFeaturesStory(args) {
     const [selected, setSelected] = useState("home");
     return (
-      <List {...args}>
+      <List {...args} start={parseNumberArg(args.start)}>
         <ListItem
           interactive
           selected={selected === "home"}
@@ -271,17 +358,20 @@ export const NestedLists: Story = {
   // `<ul>`/`<ol>` inside a `<li>`'s own content is standard, unguarded
   // HTML, and `ListItem` renders `children` as-is — this story exists to
   // actually demonstrate it, since nothing previously did.
-  render: (args) => (
-    <List {...args}>
-      <ListItem>
-        Layout
-        <List as="ol" spacing={1} marker="decimal">
-          <ListItem>Grid</ListItem>
-          <ListItem>Stack</ListItem>
-        </List>
-      </ListItem>
-      <ListItem>Typography</ListItem>
-      <ListItem>Inputs &amp; Forms</ListItem>
-    </List>
-  ),
+  render: function NestedListsStory(args) {
+    useSyncMarkerToAs(args.as as ListElement);
+    return (
+      <List {...args} start={parseNumberArg(args.start)}>
+        <ListItem>
+          Layout
+          <List as="ol" spacing={1} marker="decimal">
+            <ListItem>Grid</ListItem>
+            <ListItem>Stack</ListItem>
+          </List>
+        </ListItem>
+        <ListItem>Typography</ListItem>
+        <ListItem>Inputs &amp; Forms</ListItem>
+      </List>
+    );
+  },
 };

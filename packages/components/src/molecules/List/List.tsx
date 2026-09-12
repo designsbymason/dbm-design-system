@@ -12,7 +12,11 @@ type ListComponent = {
   displayName?: string;
 };
 
-const defaultMarkerFor: Record<ListElement, ListMarker> = {
+// Exported (not just internal) so Storybook can reuse the real mapping —
+// see `List.stories.tsx`'s own `useSyncMarkerToAs`, matching how
+// `Heading.tsx` exports `defaultSizeForLevel` for its own identical
+// Storybook-sync case, rather than duplicating this table there.
+export const defaultMarkerFor: Record<ListElement, ListMarker> = {
   ul: "disc",
   ol: "decimal",
 };
