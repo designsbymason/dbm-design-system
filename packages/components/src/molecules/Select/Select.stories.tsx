@@ -1,6 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { Button } from "../../atoms/Button";
 import { Select } from "./Select";
+
+// `Select`'s own `.trigger` CSS sets `width: 100%`, filling its container
+// by design (the same convention `Input` uses) — every story below
+// constrains and centers that container instead of letting the canvas's
+// own full padded width stretch the demo edge-to-edge, matching
+// `Input.stories.tsx`'s own `maxWidth: "20rem"` convention (found and
+// fixed 2026-09-14, user-requested).
+const demoContainerStyle = {
+  maxWidth: "20rem",
+  marginInline: "auto",
+} as const;
 
 const DemoOptions = () => (
   <>
@@ -17,11 +29,11 @@ const meta: Meta<typeof Select> = {
   component: Select,
   parameters: { layout: "padded" },
   // Ordered to match SelectProps' own declaration order (value,
-  // defaultValue, onValueChange, placeholder, size, hasError, name,
-  // required, open, defaultOpen, onOpenChange, dir, form, autoComplete,
-  // side, align, asChild, trigger, id, className, style, data-testid,
-  // aria-label, aria-labelledby, aria-describedby, children) — same
-  // sequencing principle the Properties table uses
+  // defaultValue, onValueChange, onClear, placeholder, size, hasError,
+  // name, required, open, defaultOpen, onOpenChange, dir, form,
+  // autoComplete, side, align, asChild, trigger, id, className, style,
+  // data-testid, aria-label, aria-labelledby, aria-describedby, children)
+  // — same sequencing principle the Properties table uses
   // (07-storybook-and-documentation-standards.md §4 item 3).
   argTypes: {
     // `control: false` — driving `value` from Controls without a real
@@ -43,6 +55,14 @@ const meta: Meta<typeof Select> = {
     onValueChange: {
       control: false,
       description: "Called with the new value whenever the selection changes.",
+    },
+    // `control: false` — same reasoning as `onValueChange` above; the
+    // dedicated `Clearable` story below demonstrates it with a real
+    // handler instead.
+    onClear: {
+      control: false,
+      description:
+        "Shows a clear button in place of the caret whenever a value is selected. No effect when asChild is set.",
     },
     placeholder: {
       control: "text",
@@ -157,27 +177,45 @@ const meta: Meta<typeof Select> = {
       description: "<Select.Option> elements.",
     },
   },
-  // Every controllable prop gets an explicit value matching its real
-  // component default where one exists (size='md', hasError=false,
-  // disabled=false, side='bottom', align='start' — all real defaults per
-  // SelectProps). `defaultValue`/`placeholder` have no true default
-  // (genuinely unset shows the placeholder) and stay unset/a sensible demo
-  // value respectively, per 06-engineering-standards.md §9.
+  // Every controllable prop gets an explicit value matching its real,
+  // effective default — including `dir`, which has no destructuring-level
+  // default in `Select.tsx` (passed straight through to Radix `Root`,
+  // which falls back to the ambient document direction when omitted) but
+  // *does* have a real, standard resolved value (`'ltr'`) worth showing
+  // rather than leaving the control at "Choose option..." while nothing
+  // about the canvas actually contradicts it — same "control must match
+  // what's genuinely in effect" reasoning as List's own `as`/`marker` fix
+  // (found and fixed 2026-09-14, user-reported). `name`/`form`/
+  // `autoComplete` get `""`, not `undefined` — genuinely optional
+  // escape-hatch props with no default *value* to show, but a `text`
+  // control gates on `undefined` exactly like a `number` control does
+  // (see `GridItem.stories.tsx`'s own `parseNumberArg` comment for the
+  // full mechanism) — showing "Set string" instead of a real, always-
+  // editable input, the second bug reported alongside this one.
+  // `defaultValue`/`placeholder` still have no true default (genuinely
+  // unset shows the placeholder, and the canvas agrees) and stay unset/a
+  // sensible demo value respectively, per 06-engineering-standards.md §9.
   args: {
     "aria-label": "Variant",
     placeholder: "Choose a variant",
     size: "md",
     hasError: false,
     disabled: false,
+    name: "",
     required: false,
     defaultOpen: false,
+    dir: "ltr",
+    form: "",
+    autoComplete: "",
     side: "bottom",
     align: "start",
   },
   render: (args) => (
-    <Select {...args}>
-      <DemoOptions />
-    </Select>
+    <div style={demoContainerStyle}>
+      <Select {...args}>
+        <DemoOptions />
+      </Select>
+    </div>
   ),
 };
 
@@ -191,9 +229,11 @@ export const Playground: Story = {
 
 export const Default: Story = {
   render: (args) => (
-    <Select {...args}>
-      <DemoOptions />
-    </Select>
+    <div style={demoContainerStyle}>
+      <Select {...args}>
+        <DemoOptions />
+      </Select>
+    </div>
   ),
 };
 
@@ -202,11 +242,28 @@ export const AllSizes: Story = {
   // `size` is the deliberate varying axis (one instance per size, so no
   // single control value could represent "all of them" — per
   // 06-engineering-standards.md §9's multi-instance-gallery exception).
-  // Every other prop stays live, shared across all five instances.
-  argTypes: { size: { control: false } },
+  // `defaultValue` disabled too — fixed to "md" so every instance starts
+  // populated (this story is about comparing sizes, not exploring
+  // selection), and this story's own children ("sm"/"md"/"lg") are a
+  // completely different value set from the shared meta-level
+  // `defaultValue` argType's options (the 5-variant demo set) — leaving it
+  // live would silently show a blank selection for any of those 5 values,
+  // since none of them exist in these three options (found and fixed
+  // 2026-09-14, user-reported: the control read "Choose option..." while
+  // every instance visibly showed "Medium", a real control/canvas
+  // mismatch — root cause traced to this options-list mismatch, not a
+  // missing default). Every other prop stays live, shared across all five.
+  argTypes: { size: { control: false }, defaultValue: { control: false } },
   args: { defaultValue: "md" },
   render: (args) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--dbm-space-3)",
+        ...demoContainerStyle,
+      }}
+    >
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <Select key={size} {...args} aria-label={`Size ${size}`} size={size}>
           <Select.Option value="sm">Small</Select.Option>
@@ -221,11 +278,28 @@ export const AllSizes: Story = {
 export const States: Story = {
   // `hasError`/`disabled` are the deliberate varying axes here (each of
   // the four instances demonstrates a different fixed combination) — same
-  // multi-instance-gallery exception as `AllSizes` above. Every other prop
-  // (size, placeholder, etc.) stays live, shared across all four.
-  argTypes: { hasError: { control: false }, disabled: { control: false } },
+  // multi-instance-gallery exception as `AllSizes` above. `defaultValue`
+  // disabled too — only the "Filled" instance actually uses it, and even
+  // then with its own hardcoded `"primary"` override, not the shared arg
+  // (the other three stay empty by design); leaving the shared control
+  // live would make three of the four instances respond to it while the
+  // fourth silently doesn't, an inconsistency not worth the confusion for
+  // a story about comparing fixed visual states. Every other prop (size,
+  // placeholder, etc.) stays live, shared across all four.
+  argTypes: {
+    hasError: { control: false },
+    disabled: { control: false },
+    defaultValue: { control: false },
+  },
   render: (args) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--dbm-space-3)",
+        ...demoContainerStyle,
+      }}
+    >
       <Select {...args} aria-label="Empty">
         <Select.Option value="primary">Primary</Select.Option>
       </Select>
@@ -244,35 +318,71 @@ export const States: Story = {
 
 export const DisabledOption: Story = {
   name: "Disabled option",
+  // `defaultValue`'s own options overridden to match this story's actual
+  // three children (the shared meta-level options list is the 5-variant
+  // demo set, which doesn't apply here) — kept live, not disabled, since
+  // trying `defaultValue="secondary"` (the disabled option) is itself a
+  // legitimate, interesting thing to explore in this specific story.
+  argTypes: {
+    defaultValue: { control: "select", options: ["primary", "secondary", "tertiary"] },
+  },
   render: (args) => (
-    <Select {...args}>
-      <Select.Option value="primary">Primary</Select.Option>
-      <Select.Option value="secondary" disabled>
-        Secondary (unavailable)
-      </Select.Option>
-      <Select.Option value="tertiary">Tertiary</Select.Option>
-    </Select>
+    <div style={demoContainerStyle}>
+      <Select {...args}>
+        <Select.Option value="primary">Primary</Select.Option>
+        <Select.Option value="secondary" disabled>
+          Secondary (unavailable)
+        </Select.Option>
+        <Select.Option value="tertiary">Tertiary</Select.Option>
+      </Select>
+    </div>
+  ),
+};
+
+export const Clearable: Story = {
+  name: "With a clear button",
+  // Unlike `Input`'s own `onClear` (which needs a real controlled
+  // `value`/`onChange` to actually reset what's displayed — see that
+  // component's own "With a clear button" story), `Select` fully resets
+  // its own selection back to the placeholder on `onClear` even with only
+  // `defaultValue` (uncontrolled) — no local state needed for this demo.
+  // `defaultValue`'s own control stays live and interactive here (unlike
+  // `LongList`/`AllSizes` below) since it's exactly this story's own
+  // point: pick a starting value, then clear it.
+  render: (args) => (
+    <div style={demoContainerStyle}>
+      <Select {...args} onClear={() => {}}>
+        <DemoOptions />
+      </Select>
+    </div>
   ),
 };
 
 export const LongList: Story = {
   name: "Long list (scroll buttons)",
+  // `defaultValue` disabled — the shared meta-level options list (the
+  // 5-variant demo set) doesn't match this story's own 30 country values,
+  // and the story's own point (scroll buttons on a long list) doesn't
+  // need selection exploration to demonstrate.
+  argTypes: { defaultValue: { control: false } },
   args: { "aria-label": "Country", placeholder: "Choose a country" },
   render: (args) => (
-    <Select {...args}>
-      {[
-        "Argentina", "Australia", "Belgium", "Brazil", "Canada", "Chile",
-        "Denmark", "Egypt", "Finland", "France", "Germany", "Greece",
-        "India", "Indonesia", "Ireland", "Italy", "Japan", "Kenya",
-        "Mexico", "Netherlands", "New Zealand", "Nigeria", "Norway",
-        "Poland", "Portugal", "Spain", "Sweden", "Switzerland",
-        "United Kingdom", "United States",
-      ].map((country) => (
-        <Select.Option key={country} value={country}>
-          {country}
-        </Select.Option>
-      ))}
-    </Select>
+    <div style={demoContainerStyle}>
+      <Select {...args}>
+        {[
+          "Argentina", "Australia", "Belgium", "Brazil", "Canada", "Chile",
+          "Denmark", "Egypt", "Finland", "France", "Germany", "Greece",
+          "India", "Indonesia", "Ireland", "Italy", "Japan", "Kenya",
+          "Mexico", "Netherlands", "New Zealand", "Nigeria", "Norway",
+          "Poland", "Portugal", "Spain", "Sweden", "Switzerland",
+          "United Kingdom", "United States",
+        ].map((country) => (
+          <Select.Option key={country} value={country}>
+            {country}
+          </Select.Option>
+        ))}
+      </Select>
+    </div>
   ),
 };
 
@@ -280,7 +390,7 @@ export const SideAndAlign: Story = {
   name: "side/align (dropdown placement)",
   args: { side: "right", align: "start" },
   render: (args) => (
-    <div style={{ paddingBlock: "var(--dbm-space-16)" }}>
+    <div style={{ paddingBlock: "var(--dbm-space-16)", ...demoContainerStyle }}>
       <Select {...args}>
         <DemoOptions />
       </Select>
@@ -292,35 +402,97 @@ export const CustomTrigger: Story = {
   name: 'asChild + trigger (custom trigger element)',
   // `asChild`/`trigger` stay disabled at the meta level (no Storybook
   // control can produce a real `ReactElement`) — this story demonstrates
-  // them with a real, hardcoded custom trigger instead. Every other
-  // Select-level prop still applies via Radix's own prop-merging onto the
-  // custom element (confirmed live: size/hasError's own classes still
-  // apply), except `placeholder` (see that argType's own comment).
+  // them with a real, hardcoded custom trigger instead. Select's own
+  // built-in trigger chrome (background/border/color, size, error classes)
+  // is deliberately NOT applied in `asChild` mode (see `Select.tsx`'s own
+  // comment) — the custom trigger brings its own full styling, here `Button`
+  // itself, unmodified: no `style` override needed, since there's no longer
+  // a competing `.trigger` class to win over. `placeholder` has no effect
+  // either (see that argType's own comment).
   argTypes: { placeholder: { control: false } },
   args: { placeholder: undefined },
   render: (args) => (
-    <Select
-      {...args}
-      asChild
-      trigger={
-        <button type="button" style={{ font: "inherit" }}>
-          Open the custom trigger ▾
-        </button>
-      }
-    >
-      <DemoOptions />
-    </Select>
+    // `justifyContent: "center"` in addition to `demoContainerStyle`'s own
+    // `marginInline: auto` — `Button` is fit-content by default (no
+    // Select-owned `width: 100%` applies to it anymore), so centering just
+    // the outer container isn't enough to center the (much narrower) button
+    // itself within it.
+    <div style={{ display: "flex", justifyContent: "center", ...demoContainerStyle }}>
+      <Select
+        {...args}
+        asChild
+        trigger={<Button variant="primary">Open the custom trigger</Button>}
+      >
+        <DemoOptions />
+      </Select>
+    </div>
+  ),
+};
+
+export const CustomOptionRow: Story = {
+  name: "Custom option row (Select.Option asChild)",
+  // `defaultValue` disabled — the shared meta-level options list (the
+  // 5-variant demo set) doesn't match this story's own framework values.
+  argTypes: { defaultValue: { control: false } },
+  render: (args) => (
+    <div style={demoContainerStyle}>
+      <Select {...args} aria-label="Framework" placeholder="Choose a framework">
+        {[
+          { value: "react", label: "React", description: "UI library" },
+          { value: "vue", label: "Vue", description: "Progressive framework" },
+          { value: "svelte", label: "Svelte", description: "Compiler-based" },
+        ].map(({ value, label, description }) => (
+          // `asChild` replaces the built-in single-line option row with
+          // this fully custom two-line one — `textValue` is required here
+          // (Select.Option warns without it): it's what typeahead search
+          // matches against, and what the trigger shows once this option
+          // is selected, since the trigger can't reasonably display this
+          // whole custom row (see Select.Option's own `asChild` doc).
+          <Select.Option key={value} value={value} asChild textValue={label}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span>{label}</span>
+              <span
+                style={{
+                  color: "var(--dbm-text-tertiary)",
+                  fontSize: "var(--dbm-font-size-xs)",
+                }}
+              >
+                {description}
+              </span>
+            </div>
+          </Select.Option>
+        ))}
+      </Select>
+    </div>
   ),
 };
 
 export const Controlled: Story = {
-  render: function ControlledStory() {
+  // `defaultValue` disabled — `value` (this story's own local state) is
+  // already controlling the selection; passing both at once is the exact
+  // controlled/uncontrolled conflict `Select.mdx`'s own "Don't" list warns
+  // against, so it must never reach the component here regardless of the
+  // shared arg. Every other prop (size, hasError, placeholder, etc.)
+  // stays genuinely live via `{...args}` — found and fixed 2026-09-14,
+  // user-reported: this story's own render previously ignored `args`
+  // entirely (a bare hardcoded `<Select>`), so every one of its controls
+  // was a silent no-op — the same "story ignores its own args" bug class
+  // Grid's/List's own reviews already found and fixed elsewhere.
+  argTypes: { defaultValue: { control: false } },
+  render: function ControlledStory(args) {
     const [value, setValue] = useState<string | undefined>(undefined);
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--dbm-space-2)",
+          ...demoContainerStyle,
+        }}
+      >
         <Select
-          aria-label="Variant"
-          placeholder="Choose a variant"
+          {...args}
+          defaultValue={undefined}
           value={value}
           onValueChange={setValue}
         >

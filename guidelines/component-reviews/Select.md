@@ -116,6 +116,340 @@ Grouped options (`Select.Group`/`Select.Label`) remain a deliberate, already-JSD
 review, not a fresh finding, and now also noted in the Docs page's own "Best practices" section for
 visibility.
 
+## Post-review fix (2026-09-14, user-reported): control-panel wiring, values, and order
+
+**Request: verify Select's Storybook controls show each story's real value instead of "Choose
+option..."; fix props showing an inert "Set string" placeholder instead of a real input; make sure
+prop order makes sense in both the stories and the Docs page Properties table; and disable any
+control that isn't genuinely interactive for a given story.**
+
+**`name`/`form`/`autoComplete` showing an inert "Set string" placeholder button.** Same root cause
+as `List`'s own `start` prop fix: a `text` control with an `undefined` starting arg renders as a
+placeholder button, not an empty-but-editable input. Fixed by giving all three a real `""` starting
+arg, matching `GridItem.stories.tsx`'s own established `parseNumberArg`-adjacent convention (a
+`text` control gates on `undefined` exactly like a `number` control does).
+
+**`dir` showing "Choose option..." though it has a real, standard resolved value.** Same "control
+must match what's genuinely in effect" reasoning as `List`'s own `as`/`marker` fix — `dir` has no
+destructuring-level default in `Select.tsx` (passed straight through to Radix `Root`), but its real
+effective value when omitted is `'ltr'`. Fixed by setting it as the Playground's starting arg.
+`defaultValue`/`value`/`placeholder` were audited too and correctly left alone — their true default
+genuinely *is* "nothing selected," which the canvas already shows consistently as a placeholder; a
+forced fake selection there would misrepresent real default behavior, not fix a bug.
+
+**Real, confirmed control/canvas mismatch bugs — the same class as `List`'s own `as`/`marker`
+finding, found by checking every story individually, not just the Playground.** `AllSizes`' own
+`defaultValue: "md"` was genuinely applied and visibly showing "Medium" in all five instances, while
+the shared control read "Choose option..." — root-caused to the `defaultValue` argType's `options`
+list being hardcoded to the Playground's own 5-variant demo set, which doesn't include `"md"` at
+all (a completely different value space from `AllSizes`' own `sm`/`md`/`lg` children). The same
+options-list mismatch existed for `States` (children: `primary` only), `DisabledOption` (`primary`/
+`secondary`/`tertiary`), and `LongList` (30 country names) — none of which share the Playground's
+option set. Fixed per-story: `AllSizes`/`States`/`LongList` disable `defaultValue`'s control
+(fixed/structural demo content, not the story's own point, and/or impractical to explore);
+`DisabledOption` instead overrides `defaultValue`'s own `options` to its real three values, kept
+live since trying `defaultValue="secondary"` (the disabled option) is a genuinely interesting,
+real thing to explore there — confirmed live that Radix correctly declines to pre-select a disabled
+option via `defaultValue`, real component behavior, not a bug.
+
+**`Controlled` story's render ignored its own args entirely** — a bare hardcoded `<Select>` with no
+`{...args}` spread, so every one of its 27 controls was a silent no-op (confirmed live: toggling
+`disabled` did nothing). The same "story ignores its own args" bug class `Grid`'s and `List`'s own
+reviews already found and fixed elsewhere in this codebase. Fixed by spreading `{...args}`, with
+`value`/`onValueChange` still driven by this story's own local state (its whole point) and
+`defaultValue` explicitly disabled (passing both `value` and `defaultValue` at once is the exact
+controlled/uncontrolled conflict `Select.mdx`'s own "Don't" list already warns against). Re-verified
+live: toggling `disabled` now genuinely dims the trigger.
+
+**Real, non-obvious ordering bug, root-caused rather than patched around:** the *native* per-story
+Controls panel (Storybook's own addon tab, distinct from the Docs page's own custom
+`PlaygroundControls` block) consistently floated `disabled` to the very first position, ahead of
+`value` — while every other prop matched the intended `SelectProps` declaration order exactly, and
+the Docs page's own explicitly-`order`-controlled blocks were already 100% correct throughout.
+Confirmed via direct comparison against `Input` (an atom with the identical `interface X extends
+Omit<ComponentPropsWithoutRef<"button">, ...>` shape, including its own explicit `disabled`
+redeclaration) that this isn't a general limitation of that pattern — `Input`'s own native panel
+orders `disabled` correctly. The one structural difference: `Select` is `Object.assign(SelectRoot,
+{ Option: SelectOption })` — the first compound, dot-notation component this codebase has reviewed
+(`Grid`/`List` have no sub-parts) — and TypeScript infers the *bare* `Object.assign(...)` call's
+return type as an unnamed intersection, which the docgen tool apparently resolves less predictably
+than a plain `forwardRef` export. Fixed by introducing an explicit `SelectComponent` type alias and
+annotating the export with it (`export const Select: SelectComponent = Object.assign(...)`) instead
+of relying on the inferred type — confirmed live: `disabled` immediately moved to its correct
+position, with no other change to the component's runtime behavior. Worth carrying forward as a
+convention for any future dot-notation compound component in this codebase.
+
+**Re-verified live across every story, not assumed from the diff:** `Playground`'s `dir`/`name`/
+`form`/`autoComplete` all show correct real values in the native panel; `AllSizes`/`States`/
+`LongList` show `defaultValue` as `-`; `DisabledOption`'s own options list correctly restricted to
+its three real children; `Controlled`'s `disabled` toggle genuinely dims the canvas; `disabled`
+correctly ordered (right after `hasError`) on every story checked. Full suite re-run clean: `pnpm
+lint`, `vitest` unit (24/24 for `Select`) and `storybook` project (381/381) tests, `tsup` build,
+`check-component-bundle-size` (unchanged, within budget).
+
+## Post-review fix #2 (2026-09-14, user-reported, with a screenshot): dropdown never actually scrolled
+
+**"select 'long list...' story seems incorrect. Shouldn't the dropdown be a short height that
+vertically scrollable?"** Confirmed real, and — unlike the earlier Storybook-controls-only fix
+round — a genuine defect in the shipped component's own CSS, not a demo issue. `Select.module.css`'s
+`.content` rule had no `max-height` at all, so the dropdown rendered every option fully unclipped
+regardless of how many there were; Radix's own `ScrollUpButton`/`ScrollDownButton`/`Viewport`
+scrolling mechanism only activates once `Content` is actually height-constrained, and without that
+constraint it never had anything to do. The "Long list (scroll buttons)" story's own name had been
+describing behavior that was never actually happening.
+
+Fixed by adding `max-height: var(--radix-select-content-available-height)` to `.content` — Radix's
+own documented pattern for this exact case, not a value this component invents: a real CSS custom
+property Radix sets at runtime to the actual remaining viewport space. Re-verified live, not assumed
+from the CSS alone: the dropdown now opens to a short panel (Argentina–Egypt) with a visible
+scroll-down affordance; scrolling reaches United States (the real last item) with the scroll-up
+affordance now showing instead. Short lists (`Default`, 5 options) confirmed unaffected — no scroll
+buttons appear, nothing changed there, since those never approach the available-height budget. Both
+brand themes × both modes reconfirmed live on the fixed dropdown (Emerald/Dark screenshotted). 0
+accessibility violations re-confirmed. Full suite re-run clean: `pnpm lint`, `vitest` unit (24/24)
+and `storybook` project (381/381) tests.
+
+## Post-review fix #3 (2026-09-14, user-requested): `CustomTrigger` story uses DBM's own `Button`
+
+**"could you use dbm button instead?"** (of the story's plain `<button type="button">`), followed by
+**"update 'asChild + trigger' button variant to primary. make sure its default and not full width
+.... in other words it should hug content. Also, change label from 'Open the custom trigger ▾' to
+'Open the custom trigger'"**. `CustomTrigger`'s own point is demonstrating that `asChild`/`trigger`
+accepts *any* real element and correctly merges Select's chrome onto it via Radix `Slot` — swapping
+the plain `<button>` for this system's own `Button` atom makes that concrete rather than abstract,
+and is a more realistic real-world usage example besides.
+
+Swapped to `<Button variant="primary">`, removed the label's manual `▾` (redundant now that `Button`
+is the real, recognizable atom, not a placeholder). **Real cross-component interaction found and
+fixed along the way:** `Select.module.css`'s `.trigger` class sets `width: 100%` by design (see
+finding 1's own file header comment) — Radix `Slot` merges that class onto whatever element is
+slotted as `trigger`, which silently overrode `Button`'s own `fullWidth={false}` default and stretched
+it edge-to-edge, contrary to `Button`'s own real default behavior everywhere else in this codebase.
+Fixed with an inline `style={{ width: "fit-content" }}` on the `Button` itself — inline styles always
+beat an external stylesheet class regardless of merge order, so this reliably wins without touching
+`Select.module.css`'s own `100%` rule (still correct for the built-in trigger). Confirmed live: the
+button now hugs its own label content instead of stretching full width.
+
+## Diagnostic (2026-09-14, user-reported, with a screenshot): `side="right"` dropdown appearing behind the control panel
+
+**"I'm noticing the dropdown appears behind the control panel, for instance when the side is set to
+'right'. is this storybook issue or component bug?"** Investigated via precise DOM/iframe coordinate
+measurement (`getBoundingClientRect()` on the dropdown vs. the Storybook canvas iframe's own rect,
+correctly offset into page-space rather than compared directly — an iframe-inner element's rect is
+relative to the iframe's own viewport, not the outer page). **Concluded: a Storybook-layout artifact,
+not a component defect.** The addon panel docks on the right by default, leaving a narrow canvas;
+combined with the trigger's own full-width-by-design `.trigger` class (see finding 1), there is
+genuinely no room on either side of the trigger for the ~244px-wide dropdown when `side="right"` is
+requested in that narrow context. Confirmed by testing `side="bottom"` in the identical narrow
+canvas — it positioned perfectly, and Radix's own collision detection (which measures
+`window.innerWidth` from inside the iframe, matching its real rendered width) correctly perceived the
+narrow viewport and repositioned accordingly rather than malfunctioning. No code change made — purely
+diagnostic. Offered the user a documentation caveat about `side="left"`/`"right"` needing adequate
+horizontal space; not yet requested.
+
+## Post-review fix #4 (2026-09-14, user-requested): stories constrained and centered, not full-width
+
+**"could you update the width of the select in the stories so that its not full width. also make
+sure its centered within the canvas/demo box."** Every story's demo `<div>` had previously stretched
+to the canvas's own full padded width, since `.trigger`'s `width: 100%` (finding 1) fills whatever
+container it's given — matching the trigger's own real, deliberate default behavior, but making every
+story visually stretch edge-to-edge in a way `Input.stories.tsx` (the closest sibling molecule,
+already establishing a `maxWidth: "20rem"` demo-container convention) does not.
+
+Added a shared `demoContainerStyle = { maxWidth: "20rem", marginInline: "auto" }` constant, matching
+`Input.stories.tsx`'s own `20rem` value, and applied it to all 9 stories (`Playground`/meta-render,
+`Default`, `AllSizes`, `States`, `DisabledOption`, `LongList`, `SideAndAlign`, `CustomTrigger`,
+`Controlled`) — merged into each story's own existing wrapper (flex-column gap, `paddingBlock`, etc.)
+rather than adding a redundant nested `<div>`. `CustomTrigger` needed one addition beyond the shared
+style: since its `Button` trigger is `fit-content` (finding above), not `100%` width like every other
+story's trigger, constraining only the outer container wasn't sufficient to center it — added
+`display: "flex", justifyContent: "center"` to that story's own wrapper specifically.
+
+Re-verified live in Storybook, not assumed from the diff: every story's canvas — both as its own
+story view and embedded via `Select.mdx`'s own `<Canvas of={...}>` blocks on the Docs page — now
+renders the select/button constrained to `20rem` and horizontally centered; `SideAndAlign`'s
+`side="right"` dropdown re-confirmed still opening correctly in a normal (non-narrow) canvas after
+the width change. `pnpm lint` clean; `vitest` unit (24/24 for `Select`) and `storybook` project
+(381/381) suites re-run clean.
+
+## Post-review fix #5 (2026-09-14, user-reported, with a screenshot): custom `Button` trigger not rendering as `primary`
+
+**"what happen to our primary button as the custom trigger in select's 'asChild + Trigger' story? did
+it revert back? fix it"** — the story's code genuinely still said `variant="primary"` (no revert), but
+the rendered button showed white/outlined chrome instead. Root cause: `Select.tsx`'s trigger
+`className` unconditionally applied `cx(styles.trigger, sizeClass[size], hasError && styles.error,
+className)` regardless of `asChild`. Radix `Slot` merges that className onto the custom `trigger`
+element by concatenation, so the rendered `Button` ended up with both its own `_variantPrimary_...`
+class and Select's own `_trigger_...` class at once — and since both are equal-specificity
+single-class CSS-Modules selectors, the winner came down to unpredictable stylesheet load order, not
+intent. Confirmed live via computed styles: `Select.module.css`'s `.trigger` background-color/border/
+color were winning over `Button`'s own `variantPrimary` rules (the earlier `width: "fit-content"`
+inline-style fix from finding #3 only ever addressed `width`, not this).
+
+Fixed by only applying Select's own built-in trigger chrome classes when *not* `asChild` — in
+`asChild` mode, only the consumer's own `className` passthrough still applies, since the whole point
+of a custom `trigger` is that it brings its own complete styling (unlike `Button`'s own `asChild`,
+where merging its classes onto the child *is* the point — a different, non-transferable precedent).
+Removed the now-unnecessary `style={{ width: "fit-content" }}` from the `CustomTrigger` story — with
+`.trigger`'s `width: 100%` no longer applying in `asChild` mode, `Button`'s own `fullWidth={false}`
+default already produces the right sizing with no override needed. Re-verified live: the button
+renders fully purple/primary, still fit-content and centered, and still opens the real dropdown with
+all five options. `pnpm lint` clean; `vitest` unit (24/24) and `storybook` project (381/381) suites
+re-run clean.
+
+## Post-review fix #6 (2026-09-14, user-requested): size variants didn't actually match Input's
+
+**"update all Select component size variants to match to it's size counterpart in Input component,
+eg. Select md size variant should be same size as the Input md size variant. do not change Input
+component."** `Select.module.css`'s own "Sizes" comment had long claimed an "identical scale to
+Input.module.css so a Select and an Input at the same `size` line up exactly in a shared row" — not
+actually true. Two real gaps, found by directly diffing both files' size rules rather than trusting
+the comment:
+
+1. **`.trigger` had no `line-height` at all**, unlike `Input.module.css`'s own `.wrapper`, which sets
+   `line-height: var(--dbm-line-height-tight)` explicitly — needed because a native interactive
+   element doesn't inherit `line-height` from an ancestor the way a plain element does (same root
+   cause `Input`'s own file documents for its `<input>`, just one level up here on the `<button>`
+   trigger itself). Without it, `.trigger` fell back to the browser's own UA-default `line-height:
+   normal`, not `tight`.
+2. **Every `.sizeX`'s `padding-block` used its own shorter, ad hoc values** (`space-1`/`space-1`/
+   `space-2`/`space-2`/`space-3` for xs/sm/md/lg/xl) instead of `Input`'s real formula — Button's own
+   `padding-block` for the matching size, minus `--dbm-border-width-1` (both `Select`'s trigger and
+   `Input`'s wrapper carry that same 1px border; Button, having none, doesn't subtract it). `font-size`
+   and `padding-inline` already matched Input exactly per step — only `padding-block` was off, by
+   6px of total height at every size except `lg` (14px there).
+
+Fixed by adding the missing `line-height` and replacing each `padding-block` with `Input`'s own
+formula (`calc(var(--dbm-space-N) - var(--dbm-border-width-1))`, same per-size `N` as Input: xs→2,
+sm→3, md→3, lg→4, xl→4). Confirmed live, not assumed from the CSS: measured both components'
+`AllSizes` stories via `getBoundingClientRect()` — Select's five trigger heights now equal Input's
+five wrapper heights exactly (xs 29.8px, sm 39.3px, md 42.4px, lg 54.4px, xl 59.3px, matched at every
+step), and both `AllSizes` galleries look visually identical box-height-wise side by side. `States`
+(empty/filled/disabled/error) re-confirmed rendering correctly at the new heights. No change made to
+`Input` itself, per the request. `pnpm lint` clean; `vitest` unit (`Select` 24/24, `Input` 25/25) and
+`storybook` project (381/381) suites re-run clean.
+
+## Final pre-finalization pass (2026-09-14, user-requested)
+
+**"let's do a final review of the Select component before finalizing it."** Re-ran the full
+`06-engineering-standards.md` §9 checklist against the component's current state (six post-review fix
+rounds landed since the original pass), rather than assuming the original findings still fully cover
+it. Found and fixed three real, concrete compliance gaps — no design decisions needed for any of
+them:
+
+1. **`Select.mdx`'s own "Design tokens used" section was incomplete** relative to what
+   `Select.module.css` actually references — missing `border-width.1`/`border-width.2`,
+   `font-family.primary`, `font-size.xs`–`font-size.lg`, `font-weight.semibold`, `line-height.tight`
+   (added this session's own sizing fix), `opacity.40`, and `space.6` (the scroll buttons' own
+   height) — noticeably thinner than `Input.mdx`'s own equivalent section for a component now
+   explicitly sized to match it. Fixed by adding all seven, each with real usage descriptions.
+2. **`trigger`/`size`/`hasError`'s own JSDoc didn't document that Select's own built-in trigger
+   chrome doesn't apply in `asChild` mode** — a real behavior change from fix #5 above that a
+   consumer reading only the types (not this file) would have no way to know. Fixed by adding a
+   sentence to each of the three.
+3. **No regression test covered fix #5's actual className-merge behavior** — existing tests covered
+   `asChild` rendering the right element and warning correctly, but nothing asserted that Select's
+   own built-in classes are absent from a custom trigger, or that the consumer's own `className` and
+   the custom trigger's own `className` both still reach the DOM. Added two tests
+   (`Select.test.tsx`, `24 → 26`) covering both.
+
+**Also re-verified live, not re-derived from the diff**, since three CSS-affecting fixes (#5's
+className logic, #6's `line-height`/`padding-block` sizing) landed since the original pass:
+`AllSizes` and the `CustomTrigger` story confirmed correct in Emerald/Dark (the custom trigger's own
+pale-mint `primary` color is `Button`'s own real, already-established dark-mode appearance, not a
+Select-side regression); `Default` confirmed correct and fully functional (opens, selects) at a
+375px mobile viewport, no overflow past its own `20rem` cap; full suite re-run clean — `pnpm lint`,
+`vitest` unit (`Select` 26/26), `storybook` project (381/381), `tsup` build, `check-component-bundle-
+size` (1.56KB JS / 0.97KB CSS gzipped, within budget — CSS grew ~0.05KB from fix #6's added
+`line-height`/`calc()` rules).
+
+**Two feature-completeness items surfaced for an explicit scope decision, not actioned without
+one** (per §9's own scope-creep guardrail — every addition needs a named, concrete rationale, not
+implemented speculatively):
+
+- **`Select.Option` doesn't expose Radix `Item`'s own `asChild` prop**, unlike `Select` itself (which
+  already got `asChild` in the original review, finding 6). Radix's `Select.Item` genuinely supports
+  it — the concrete use case is rendering an option as a custom row component (e.g. with a leading
+  icon or secondary description line) while keeping Radix's own listbox/typeahead/selection behavior.
+  Not yet needed by anything in this codebase.
+- **No "clear selection" affordance**, unlike `Input` — the same form-field family, sharing Select's
+  own border/radius/focus/error/size chrome — which already has one (`onClear` + its own clear
+  button). Once a value is selected, there's currently no way back to the placeholder/unselected
+  state without a caller-provided blank option. A real, comparable-sibling gap, but a nontrivial one
+  to add correctly (its own icon-size mapping per `size` step, keyboard/focus handling, RTL — the
+  same shape of work `Input`'s own `onClear` already required).
+
+Both left **unactioned pending the user's decision** — build now, defer explicitly (matching how
+grouped options was already deferred in the original review), or decline.
+
+## Post-review fix #7 (2026-09-14, user-requested): both surfaced findings built
+
+**"let's do the 2 findings after the last review."** Both items above were implemented. Each surfaced
+a real bug beyond the feature itself, found live in Storybook, not by reading the code — the standing
+pattern throughout this whole review.
+
+**`onClear` — a clear button that replaces the caret whenever a value is selected.** Added to
+`SelectProps`, wired through `Select.tsx`: `showClear` computes from an internal `effectiveValue`
+that shadows the real `value`/`defaultValue`; clicking the clear `<button>` (a plain DOM sibling of
+the trigger, positioned via `.triggerContainer`'s `position: relative` + `.clear`'s
+`position: absolute; inset-inline-end` — never nested inside the trigger `<button>`, which would be
+invalid HTML) calls `onClear`, resets the selection, and refocuses the trigger. `.trigger`'s own
+`padding-inline-end` grows via a new `.sizeXClearable` variant when the clear button is showing, so
+its icon never overlaps the selected value's own text — sized from the same tokens as `.clearX`'s own
+per-size icon+padding, not a guessed value. `asChild` skips this entirely (warns in development if
+`onClear` is passed alongside it, matching the established `placeholder`-with-`asChild` warning
+pattern) — a custom trigger has no built-in caret slot for a clear button to take over.
+
+**Real bug found live, not caught by any test beforehand:** the first working version passed
+`undefined` as the "nothing selected" sentinel when resetting an uncontrolled selection. This made
+Radix's own `value` prop genuinely flip between controlled and uncontrolled from *Radix's own*
+perspective every time a selection was made (real string) vs. cleared (`undefined`) — exactly the
+anti-pattern Radix's own `useControllableState` dev warning exists to catch ("Select is changing from
+uncontrolled to controlled... Components should not switch..."), confirmed firing in the console.
+Root-caused by reading `@radix-ui/react-use-controllable-state`'s actual source rather than guessing:
+Radix's own internal "uncontrolled fallback" value gets set as a *side effect* of Select genuinely
+being uncontrolled (from Radix's perspective) at the moment a selection is first made — since nothing
+on this side can reach in and reset *that* internal value, flipping back to `undefined` later made
+Radix silently resurface the stale, just-cleared value instead of the placeholder. Confirmed live via
+temporary render-logging: this component's own state reset to `undefined` correctly every time, but
+the trigger kept showing the old label regardless — proof the bug was entirely on Radix's side of the
+boundary, not this one. Fixed by using `""`, never `undefined`, as the sentinel whenever `onClear` is
+engaged — `"" !== undefined` keeps Radix permanently controlled from the first render onward, so its
+internal fallback is never used at all. Re-verified live through repeated select→clear→select→clear
+cycles (including a second, *different* value after a clear, and RTL via `dir="rtl"`, where the clear
+button correctly mirrors via `inset-inline-end`) with zero stale values and zero console warnings.
+`jest-axe`: 0 violations with the clear button shown.
+
+**`Select.Option`'s own `asChild`** — a custom option row (e.g. a two-line label + description)
+while keeping Radix's own listbox/typeahead/highlight behavior. Requires `textValue` (warns in
+development without it): Radix's own selected-label projection needs a plain string to show in the
+trigger once selected, not the custom row itself, so in `asChild` mode the custom row renders as
+provided with an extra `ItemText` appended (sourced from `textValue`) purely to feed that projection.
+`styles.option` isn't merged onto the custom row (`className` still passes through), matching the
+established `SelectRoot`-level `asChild` precedent from finding #5.
+
+**Second real bug found live:** the extra `ItemText` was meant to be invisible (`style={{ display:
+"none" }}` directly on it) — instead it rendered fully visible, duplicating every custom row's own
+label directly beneath it in the open dropdown. Root-caused by reading Radix's own `SelectItemText`
+source: it destructures `style`/`className` out of its own props and never actually applies either to
+its rendered node — both are silently dropped, a genuine Radix behavior, not a typo on this side.
+Fixed by wrapping the extra `ItemText` in a plain `<span style={{ display: "none" }}>` instead, which
+does respect inline styles; confirmed this doesn't interfere with Radix's own portal-based projection
+into the trigger, since `ReactDOM.createPortal` moves that content to a completely different DOM node
+(the trigger's own), which isn't a descendant of the hidden wrapper. Added a regression test that
+specifically locates the hidden text and asserts *where* it lives (inside a `display: none` ancestor)
+rather than just counting occurrences in `textContent` — confirmed by temporarily reverting the fix
+that the naive count-based version of this test can never fail, since `textContent` ignores CSS
+`display` entirely, while the ancestor-based version correctly fails on the bug and passes on the fix.
+
+Two new demo stories (`Clearable`/"With a clear button", `CustomOptionRow`/"Custom option row
+(Select.Option asChild)") added to `Select.stories.tsx` and `Select.mdx`'s own Variants section — the
+first pass at documenting `Clearable` shipped without its own `<Canvas>` block in the Docs page,
+caught and fixed while verifying the Docs page live rather than assuming the story alone was enough.
+Both stories: 0 accessibility violations. Full suite re-run clean: `pnpm lint`; `vitest` unit (`Select`
+41/41, up from 26); `storybook` project (383/383, up from 381); `tsup` build; `check-component-
+bundle-size` (2.20KB JS / 1.19KB CSS gzipped, within budget).
+
 ## Status
 
 Review pass complete, all findings actioned. **Not yet Finalized** — per

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, useState } from "react";
@@ -231,6 +231,151 @@ describe("Select", () => {
       expect(warnSpy).not.toHaveBeenCalled();
       warnSpy.mockRestore();
     });
+
+    it("does not merge Select's own built-in trigger chrome onto a custom trigger", () => {
+      // Regression test for a real bug (found and fixed 2026-09-14,
+      // user-reported): Select's own `.trigger`/size/error classes were
+      // being merged onto the custom `trigger` element via Radix `Slot`,
+      // fighting the custom element's own styling. Only the custom
+      // element's own className should end up on it now.
+      render(
+        <Select
+          aria-label="Variant"
+          hasError
+          asChild
+          trigger={
+            <button type="button" className="my-custom-button">
+              Custom
+            </button>
+          }
+        >
+          <Select.Option value="primary">Primary</Select.Option>
+        </Select>,
+      );
+      const el = screen.getByRole("combobox");
+      expect(el.className.split(" ").filter(Boolean)).toEqual(["my-custom-button"]);
+    });
+
+    it("still merges Select's own className with a custom trigger's own className", () => {
+      render(
+        <Select
+          aria-label="Variant"
+          className="select-level"
+          asChild
+          trigger={
+            <button type="button" className="trigger-level">
+              Custom
+            </button>
+          }
+        >
+          <Select.Option value="primary">Primary</Select.Option>
+        </Select>,
+      );
+      const el = screen.getByRole("combobox");
+      expect(el).toHaveClass("select-level");
+      expect(el).toHaveClass("trigger-level");
+    });
+  });
+
+  describe("onClear", () => {
+    it("does not render a clear button when onClear is not provided", () => {
+      render(<BasicSelect defaultValue="primary" />);
+      expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
+    });
+
+    it("does not render a clear button when nothing is selected yet", () => {
+      render(<BasicSelect onClear={() => {}} />);
+      expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
+    });
+
+    it("renders a clear button once a value is selected, uncontrolled", () => {
+      render(<BasicSelect defaultValue="primary" onClear={() => {}} />);
+      expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+    });
+
+    it("fully resets an uncontrolled selection back to the placeholder when cleared", async () => {
+      const user = userEvent.setup();
+      const onClear = vi.fn();
+      render(<BasicSelect defaultValue="primary" onClear={onClear} />);
+      const trigger = screen.getByRole("combobox");
+      expect(trigger).toHaveTextContent("Primary");
+      await user.click(screen.getByRole("button", { name: "Clear" }));
+      expect(onClear).toHaveBeenCalledTimes(1);
+      expect(trigger).toHaveTextContent("Choose a variant");
+      expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
+    });
+
+    it("refocuses the trigger after clearing", async () => {
+      const user = userEvent.setup();
+      render(<BasicSelect defaultValue="primary" onClear={() => {}} />);
+      await user.click(screen.getByRole("button", { name: "Clear" }));
+      expect(screen.getByRole("combobox")).toHaveFocus();
+    });
+
+    it("is keyboard-activatable — Enter and Space both call onClear", async () => {
+      const user = userEvent.setup();
+      const onClear = vi.fn();
+      render(<BasicSelect defaultValue="primary" onClear={onClear} />);
+      screen.getByRole("button", { name: "Clear" }).focus();
+      await user.keyboard("{Enter}");
+      expect(onClear).toHaveBeenCalledTimes(1);
+    });
+
+    it("supports fully controlled usage — clearing calls onClear so the caller can reset its own value", async () => {
+      const user = userEvent.setup();
+      const onClear = vi.fn();
+      function Controlled() {
+        const [value, setValue] = useState<string | undefined>("primary");
+        return (
+          <Select
+            aria-label="Variant"
+            placeholder="Choose a variant"
+            value={value}
+            onValueChange={setValue}
+            onClear={() => {
+              onClear();
+              setValue(undefined);
+            }}
+          >
+            <Select.Option value="primary">Primary</Select.Option>
+          </Select>
+        );
+      }
+      render(<Controlled />);
+      const trigger = screen.getByRole("combobox");
+      expect(trigger).toHaveTextContent("Primary");
+      await user.click(screen.getByRole("button", { name: "Clear" }));
+      expect(onClear).toHaveBeenCalledTimes(1);
+      expect(trigger).toHaveTextContent("Choose a variant");
+    });
+
+    it("does not render a clear button when disabled, even with a selected value", () => {
+      render(<BasicSelect defaultValue="primary" onClear={() => {}} disabled />);
+      expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
+    });
+
+    it("warns when onClear is passed alongside asChild", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Select
+          aria-label="Variant"
+          asChild
+          onClear={() => {}}
+          trigger={<button type="button">Custom</button>}
+        >
+          <Select.Option value="primary">Primary</Select.Option>
+        </Select>,
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("`onClear` has no effect when `asChild` is set"),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it("has no accessibility violations with a clear button shown", async () => {
+      const { container } = render(<BasicSelect defaultValue="primary" onClear={() => {}} />);
+      expect((await axe(container)).violations).toHaveLength(0);
+    });
   });
 
   describe("Select.Option", () => {
@@ -275,6 +420,104 @@ describe("Select", () => {
       await user.keyboard("a");
       await user.keyboard("{Enter}");
       expect(trigger).toHaveTextContent("🔤");
+    });
+
+    describe("asChild", () => {
+      it("renders the custom row element instead of the built-in option markup", async () => {
+        const user = userEvent.setup();
+        render(
+          <Select aria-label="Variant" placeholder="Choose">
+            <Select.Option value="fr" asChild textValue="France">
+              <li className="custom-option-row">
+                <strong>France</strong> — Europe
+              </li>
+            </Select.Option>
+          </Select>,
+        );
+        await user.click(screen.getByRole("combobox"));
+        const option = await screen.findByRole("option");
+        expect(option.tagName).toBe("LI");
+        expect(option).toHaveClass("custom-option-row");
+      });
+
+      it("does not visibly duplicate the label via the hidden textValue projection", async () => {
+        // Regression test for a real bug (found and fixed 2026-09-14, live
+        // in Storybook — `textContent` alone can't catch this, since it
+        // ignores CSS `display` entirely; this checks the actual hiding
+        // mechanism instead): Radix's own `SelectItemText` silently drops
+        // its `style`/`className` props — an inline
+        // `style={{ display: "none" }}` on it had no effect, so the hidden
+        // textValue-sourced `ItemText` this component injects for the
+        // trigger's own benefit rendered fully visible, duplicating every
+        // custom row's own label directly beneath it. Fixed by hiding a
+        // wrapping `<span>` around `ItemText` instead, which does respect
+        // inline styles.
+        const user = userEvent.setup();
+        render(
+          <Select aria-label="Variant" placeholder="Choose">
+            <Select.Option value="fr" asChild textValue="France">
+              <li>Europe</li>
+            </Select.Option>
+          </Select>,
+        );
+        await user.click(screen.getByRole("combobox"));
+        const option = await screen.findByRole("option");
+        // The visible row ("Europe") has no idea about `textValue`
+        // ("France") at all — the only place "France" can appear in the
+        // DOM is the injected projection source, so asserting *where* it
+        // lives (inside a `display: none` ancestor) directly verifies it's
+        // actually hidden, rather than inferring hiding from a count that
+        // `textContent` can't distinguish.
+        const franceNode = within(option).getByText("France");
+        expect(franceNode.closest('[style*="display: none"]')).not.toBeNull();
+      });
+
+      it("shows the plain textValue in the trigger once a custom-row option is selected", async () => {
+        const user = userEvent.setup();
+        render(
+          <Select aria-label="Variant" placeholder="Choose">
+            <Select.Option value="fr" asChild textValue="France">
+              <li>
+                <strong>France</strong> — Europe
+              </li>
+            </Select.Option>
+          </Select>,
+        );
+        const trigger = screen.getByRole("combobox");
+        await user.click(trigger);
+        await user.click(await screen.findByRole("option"));
+        expect(trigger).toHaveTextContent("France");
+        expect(trigger).not.toHaveTextContent("Europe");
+      });
+
+      it("warns when asChild is passed without textValue", () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        render(
+          <Select aria-label="Variant" placeholder="Choose">
+            <Select.Option value="fr" asChild>
+              <li>France</li>
+            </Select.Option>
+          </Select>,
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("`asChild` needs `textValue`"),
+        );
+        warnSpy.mockRestore();
+      });
+
+      it("does not merge the built-in option class onto a custom row", async () => {
+        const user = userEvent.setup();
+        render(
+          <Select aria-label="Variant" placeholder="Choose">
+            <Select.Option value="fr" asChild textValue="France" className="my-row">
+              <li>France</li>
+            </Select.Option>
+          </Select>,
+        );
+        await user.click(screen.getByRole("combobox"));
+        const option = await screen.findByRole("option");
+        expect(option.className.split(" ").filter(Boolean)).toEqual(["my-row"]);
+      });
     });
   });
 

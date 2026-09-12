@@ -12,6 +12,15 @@
   font-family: var(--dbm-font-family-primary);
   gap: var(--dbm-space-2);
   justify-content: space-between;
+  /* A native <button> doesn't inherit `line-height` from an ancestor the
+     way a plain element would — same UA-default-`normal` gap
+     `Input.module.css`'s own `.wrapper` comment documents — so this is set
+     explicitly, matching `Input`, for the size-by-size height parity math
+     each `.sizeX`'s own `padding-block` below depends on (found and fixed
+     2026-09-14, user-reported: without this, a Select and an Input at the
+     same `size` didn't actually line up, despite this file's own
+     longstanding "identical scale" claim below). */
+  line-height: var(--dbm-line-height-tight);
   transition:
     border-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard),
@@ -48,36 +57,165 @@
 }
 
 /* Sizes — identical scale to Input.module.css so a Select and an Input at
-   the same `size` line up exactly in a shared row. */
+   the same `size` line up exactly in a shared row: same `font-size` and
+   `padding-inline` per step, and the same `padding-block` formula (Button's
+   own `padding-block` for the matching size, minus this component's
+   `--dbm-border-width-1` trigger border, which Button — having no border —
+   doesn't have to subtract), producing the same total rendered height as
+   Input at every step now that `line-height` above also matches (found and
+   fixed 2026-09-14, user-reported: `padding-block` previously used its own,
+   visibly shorter ad hoc values — space-1/1/2/2/3 — not this formula, so a
+   Select was noticeably shorter than an Input at every size despite this
+   comment's own longstanding claim; confirmed live post-fix at all five
+   sizes side by side). */
 
 .sizeXs {
   font-size: var(--dbm-font-size-xs);
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-2);
+  padding-block: calc(var(--dbm-space-2) - var(--dbm-border-width-1));
+  padding-inline-end: var(--dbm-space-2);
+  padding-inline-start: var(--dbm-space-2);
 }
 
 .sizeSm {
   font-size: var(--dbm-font-size-sm);
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-3);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline-end: var(--dbm-space-3);
+  padding-inline-start: var(--dbm-space-3);
 }
 
 .sizeMd {
   font-size: var(--dbm-font-size-base);
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-3);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline-end: var(--dbm-space-3);
+  padding-inline-start: var(--dbm-space-3);
 }
 
 .sizeLg {
   font-size: var(--dbm-font-size-md);
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-4);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline-end: var(--dbm-space-4);
+  padding-inline-start: var(--dbm-space-4);
 }
 
 .sizeXl {
   font-size: var(--dbm-font-size-lg);
-  padding-block: var(--dbm-space-3);
-  padding-inline: var(--dbm-space-4);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline-end: var(--dbm-space-4);
+  padding-inline-start: var(--dbm-space-4);
+}
+
+/* Clearable variants — override just `padding-inline-end` (`padding-
+   inline-start` stays this size's own base value above) to reserve room
+   for the clear button, which takes over the caret's own former corner
+   (see `.clear`'s own comment below). Each value is this size's own base
+   `padding-inline-end` (space-2/3/3/4/4, matching `.sizeX` above) plus the
+   clear button's own full diameter at this size (its icon size plus its
+   own padding on both sides, matching `.clearX` below) plus one more
+   `space-1` as a small breathing-room gap — every term traces to a real
+   token, nothing here is a guessed pixel value. */
+
+.sizeXsClearable {
+  padding-inline-end: calc(
+    var(--dbm-space-2) + var(--dbm-icon-size-xs) + 3 * var(--dbm-space-1)
+  );
+}
+
+.sizeSmClearable {
+  padding-inline-end: calc(
+    var(--dbm-space-3) + var(--dbm-icon-size-xs) + 2 * var(--dbm-space-2) + var(--dbm-space-1)
+  );
+}
+
+.sizeMdClearable {
+  padding-inline-end: calc(
+    var(--dbm-space-3) + var(--dbm-icon-size-sm) + 2 * var(--dbm-space-2) + var(--dbm-space-1)
+  );
+}
+
+.sizeLgClearable {
+  padding-inline-end: calc(
+    var(--dbm-space-4) + var(--dbm-icon-size-md) + 2 * var(--dbm-space-3) + var(--dbm-space-1)
+  );
+}
+
+.sizeXlClearable {
+  padding-inline-end: calc(
+    var(--dbm-space-4) + var(--dbm-icon-size-lg) + 2 * var(--dbm-space-3) + var(--dbm-space-1)
+  );
+}
+
+/* Positioning context for the optional clear button below — no visual
+   styling of its own (border/background/padding all stay on `.trigger`
+   itself, unchanged), so the trigger's own full box stays exactly as
+   clickable as it's always been; the clear button is purely an overlay
+   sitting on top of `.trigger`'s own reserved corner. Only rendered around
+   the trigger at all when `onClear` is provided (Select.tsx), so a
+   `Select` that doesn't use `onClear` has no extra wrapper in its DOM. */
+.triggerContainer {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+/* Clear button — a plain DOM sibling of `.trigger` (not a descendant): a
+   `<button>` can't validly contain another interactive element, so this
+   overlays `.trigger`'s own reserved corner via absolute positioning
+   instead of nesting inside it. Replaces the caret in that same corner
+   (Select.tsx only renders one or the other, never both), so it reuses
+   the caret's own former resting position: `inset-inline-end` matches
+   `.sizeX`'s own *base* `padding-inline-end` (space-2/3/3/4/4) exactly —
+   the same edge the caret's own icon used to sit flush against — using
+   the logical `inset-inline-end` property (not `right`) so it mirrors
+   correctly under `dir="rtl"`. Taken out of normal flow entirely, so
+   (unlike Input's own clear button) it needs no compensating margin to
+   avoid inflating the trigger's own height. */
+.clear {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.clear:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.clear:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.clearXs {
+  inset-inline-end: var(--dbm-space-2);
+  padding: var(--dbm-space-1);
+}
+
+.clearSm {
+  inset-inline-end: var(--dbm-space-3);
+  padding: var(--dbm-space-1);
+}
+
+.clearMd {
+  inset-inline-end: var(--dbm-space-3);
+  padding: var(--dbm-space-1);
+}
+
+.clearLg {
+  inset-inline-end: var(--dbm-space-4);
+  padding: var(--dbm-space-2);
+}
+
+.clearXl {
+  inset-inline-end: var(--dbm-space-4);
+  padding: var(--dbm-space-2);
 }
 
 /* Dropdown content — shadows are a fixed light/dark primitive pair, not a
@@ -101,6 +239,18 @@
      dropdown options rendered in the browser's default font, not Nunito,
      until this was added. */
   font-family: var(--dbm-font-family-primary);
+  /* Radix's own `ScrollUpButton`/`ScrollDownButton`/`Viewport` scrolling
+     mechanism only activates once `Content` is actually height-constrained
+     — without this, the dropdown just renders every option unclipped, no
+     matter how many there are (found and fixed 2026-09-14, user-reported
+     via the "Long list (scroll buttons)" story rendering all 30 countries
+     at once instead of a short, scrollable panel). `--radix-select-
+     content-available-height` is a real CSS custom property Radix sets at
+     runtime to the actual remaining viewport space, per Radix's own
+     documented pattern for this exact case — not a value this component
+     invents itself.
+     */
+  max-height: var(--radix-select-content-available-height);
   overflow: hidden;
   width: var(--radix-select-trigger-width);
   z-index: var(--dbm-z-index-dropdown);

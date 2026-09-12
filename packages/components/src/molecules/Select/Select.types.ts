@@ -16,18 +16,43 @@ export interface SelectProps
   /** Called with the new value whenever the selection changes. */
   onValueChange?: (value: string) => void;
   /**
+   * Shows a clear ("×") button in the trigger, in place of the caret,
+   * whenever a value is currently selected — calling this when it's
+   * clicked. Unlike `Input`'s own `onClear`, this fully resets the
+   * selection back to the placeholder either way: for controlled usage,
+   * update your own `value` state inside this callback as usual; for
+   * uncontrolled usage (`defaultValue` only), Select resets its own
+   * internal selection automatically, no extra wiring needed. No effect
+   * when `asChild` is set (warns in development if passed alongside it) —
+   * a custom `trigger` has no built-in caret slot for a clear button to
+   * take over.
+   */
+  onClear?: () => void;
+  /**
    * Shown in the trigger when nothing is selected. No effect when
    * `asChild` is set (the built-in value display isn't rendered in that
    * mode — see `asChild`'s own doc).
    */
   placeholder?: ReactNode;
-  /** @default 'md' */
+  /**
+   * No visual effect when `asChild` is set — the custom `trigger` brings
+   * its own sizing (see `trigger`'s own doc).
+   * @default 'md'
+   */
   size?: SelectSize;
   /**
    * Marks the select as invalid, visually and via `aria-invalid`.
+   * `aria-invalid` is still set when `asChild` is used, but the visual
+   * error styling isn't — the custom `trigger` brings its own appearance
+   * (see `trigger`'s own doc).
    * @default false
    */
   hasError?: boolean;
+  /**
+   * Disables the select entirely — no trigger interaction, not focusable,
+   * excluded from the enclosing form's submitted values.
+   */
+  disabled?: boolean;
   /** Name submitted with the enclosing form. */
   name?: string;
   /** Marks the field as required for native form validation. */
@@ -72,6 +97,10 @@ export interface SelectProps
    * `children`, since that's already `<Select.Option>`s for the dropdown
    * — matching `Tooltip`'s own single-`ReactElement` trigger shape, just
    * under its own name here since `children` was already spoken for.
+   * Select's own built-in trigger chrome (background/border/color, and
+   * `size`/`hasError`'s own visual effect) isn't applied in this mode —
+   * `trigger` is expected to bring its own complete styling (e.g. this
+   * system's own `Button`); only `className` still merges onto it.
    */
   trigger?: ReactElement;
   /**
@@ -131,6 +160,14 @@ export interface SelectOptionProps
   textValue?: string;
   /** The option's own visible content. */
   children?: ReactNode;
+  /**
+   * Renders as a single provided child element (via Radix `Slot`
+   * composition) instead of the built-in `<div>` — for a custom option row
+   * component (e.g. with a leading icon or a secondary description line)
+   * that still needs Radix's own selection/typeahead/highlight behavior.
+   * @default false
+   */
+  asChild?: boolean;
   /**
    * Standard DOM id. Rarely needed directly, but required when another
    * element's `aria-labelledby`/`aria-describedby` needs to point at this

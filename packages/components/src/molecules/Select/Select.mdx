@@ -108,6 +108,10 @@ renders).
 
 <Canvas of={SelectStories.DisabledOption} />
 
+### With a clear button
+
+<Canvas of={SelectStories.Clearable} />
+
 ### Long list (scroll buttons)
 
 <Canvas of={SelectStories.LongList} />
@@ -119,6 +123,10 @@ renders).
 ### asChild + trigger (custom trigger element)
 
 <Canvas of={SelectStories.CustomTrigger} />
+
+### Custom option row (Select.Option asChild)
+
+<Canvas of={SelectStories.CustomOptionRow} />
 
 ### Controlled
 
@@ -218,13 +226,21 @@ renders).
 
 <TokenRow token="bg.surface" usage="the trigger's and dropdown content's own background" />
 <TokenRow token="border.default, border.neutral, border.focus, border.danger" usage="the trigger's resting, hover, focus, and error border colors" />
+<TokenRow token="border-width.1" usage="the trigger's and dropdown content's own border width" />
+<TokenRow token="border-width.2" usage="the trigger's focus-visible outline width" />
 <TokenRow token="text.primary, text.tertiary, text.disabled, text.brand" usage="the trigger's/option's text color across its resting, placeholder, disabled, and selected states" />
 <TokenRow token="bg.brand-subtle" usage="a highlighted (keyboard/pointer-focused) option's background" />
 <TokenRow token="icon.brand" usage="the selected option's own checkmark indicator" />
 <TokenRow token="radius.md, radius.sm" usage="the trigger's and dropdown content's own corner radius, and each option's own radius" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="the dropdown content's own elevation — a fixed light/dark pair, not a reactive token (see 03-token-system-spec.md)" />
+<TokenRow token="font-family.primary" usage="the trigger's and dropdown content's own font" />
+<TokenRow token="font-size.xs–font-size.lg" usage="per-size font size, matched to Input's own scale" />
+<TokenRow token="font-weight.semibold" usage="the selected option's own label weight" />
+<TokenRow token="line-height.tight" usage="the trigger's line-height, matched to Input's own for size parity" />
+<TokenRow token="opacity.40" usage="the disabled trigger's dimmed appearance" />
 <TokenRow token="motion.duration.fast, motion.easing.standard" usage="the trigger's border-color/opacity transitions" />
-<TokenRow token="space.1–space.4" usage="the trigger's/option's own padding across the five size steps" />
+<TokenRow token="space.1–space.4" usage="the trigger's/option's own padding across the five size steps, and the dropdown viewport's own padding" />
+<TokenRow token="space.6" usage="each scroll button's own fixed height" />
 <TokenRow token="z-index.dropdown" usage="the portaled dropdown content's own stacking order" />
 
 ## Related components
