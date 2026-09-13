@@ -184,7 +184,7 @@ below for why it's gated on `as` being interactive.
   same gate `disabled` already documents on itself. On the default, non-interactive `span` it's
   intentionally never wired up at all, not just discouraged: attaching a click handler there would
   be clickable by mouse with no keyboard equivalent and no button semantics, a real WCAG 2.1.1
-  gap rather than a harmless convenience (found and fixed 2026-08-24).
+  gap rather than a harmless convenience.
 - **`role="img"` + `aria-label`** are set automatically on the non-image fallback (initials/icon)
   whenever a name is available, computed from `alt` (or `name`). When both a name and `status` are
   present, they're combined into one announcement ("Jane Doe, Online") instead of two separate
@@ -203,8 +203,7 @@ below for why it's gated on `as` being interactive.
   handling, the same as any other native interactive element.
 - **Focus ring shape matches the avatar's own shape**: fully round for the default `circle`, a
   standardized `sm`-radius square for `shape="square"` — not tied to the square's own, larger
-  visual corner radius (see `05-component-api-conventions.md`'s focus-ring convention, established
-  via this component).
+  visual corner radius.
 - Every `colorful` family's background/text pairing, and every hover-state background, is
   contrast-verified per this system's WCAG methodology — see
   [Design tokens used](#design-tokens-used) below for the exact tokens.
@@ -251,9 +250,9 @@ below for why it's gated on `as` being interactive.
 <TokenRow token="text.info" usage="colorful info family's initials color" />
 <TokenRow token="icon.info" usage="colorful info family's fallback-icon color (no initials or image)" />
 <TokenRow token="border.info-subtle" usage="colorful info family's decorative border (family-matched, not brand)" />
-<TokenRow token="bg.success" usage="status='online' dot color — since the 2026-08-20 token consolidation this is the same token the solid success fill uses elsewhere, no longer a separate -indicator token" />
-<TokenRow token="bg.danger" usage="status='busy' dot color — since the 2026-08-20 token consolidation this is the same token the solid danger fill uses elsewhere, no longer a separate -indicator token (its dark value now clears the 3:1 non-text floor directly)" />
-<TokenRow token="bg.warning" usage="status='away' dot color — since the 2026-08-20 token consolidation this is the same token the solid warning fill uses elsewhere, no longer a separate -indicator token" />
+<TokenRow token="bg.success" usage="status='online' dot color" />
+<TokenRow token="bg.danger" usage="status='busy' dot color" />
+<TokenRow token="bg.warning" usage="status='away' dot color" />
 <TokenRow token="bg.neutral" usage="status='offline' dot color" />
 <TokenRow token="bg.surface" usage="status dot's ring (border color)" />
 <TokenRow token="border.focus" usage="focus-visible outline (as-driven interactive mode)" />

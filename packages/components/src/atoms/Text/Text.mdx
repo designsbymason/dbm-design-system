@@ -157,8 +157,7 @@ by default a `<p>`, or whatever element `as` specifies (`span`, `div`, `label`, 
 - Renders as whatever native element `as` specifies; none of `p`/`span`/`div`/`label`/`legend`
   require any ARIA attributes of their own to be accessible.
 - Automated accessibility check verified against every `as` value (`p`, `span`, `div`, `label`,
-  `legend`), not just the default — per the same convention that caught a real violation on
-  `Avatar` once `as` changed its underlying element (`06-engineering-standards.md` §9).
+  `legend`), not just the default.
 - No keyboard interaction — `Text` is not an interactive element.
 - `as="label"` renders a real `<label>`; pair it with `htmlFor` pointing at the control it labels
   (see the Code examples below) so assistive technology associates the two correctly. `Text` itself

@@ -118,9 +118,8 @@ import { FieldError } from "@dbm-design-system/components";
 
 - **`role="alert"` is always applied internally** — a same-named prop passed by the caller is
   silently ignored, even though TypeScript's JSX checker permits a `role` attribute on any
-  component regardless of its declared prop type (a real gap found and fixed during review:
-  enforced via JSX attribute order, not the type system, since the type system alone can't stop it
-  for `role`/`aria-*` names).
+  component regardless of its declared prop type (enforced via JSX attribute order, not the type
+  system, since the type system alone can't stop it for `role`/`aria-*` names).
 - **`role="alert"` implies `aria-live="assertive"` and `aria-atomic="true"`** per the WAI-ARIA
   spec, so no explicit `aria-live` is set — the whole message is announced as one unit as soon as
   it mounts, interrupting whatever the screen reader was announcing before.

@@ -146,12 +146,10 @@ underlying element.
 - Renders as whatever native element `as` specifies; a plain `<div>` (the default) requires no ARIA
   to be accessible.
 - Automated accessibility check verified both against the default `<div>` and against `as="li"`
-  used correctly (wrapped in a real `<ul>`) — per the same convention that caught a real violation
-  on `Avatar` once `as` changed its underlying element (`06-engineering-standards.md` §9).
-  `GridItem` sets no ARIA role of its own, so there's no equivalent violation here — but rendering
-  `as="li"` *without* a real list ancestor does trigger a real "listitem" violation, an inherent
-  property of `<li>` outside list context that's the caller's responsibility, not something
-  `GridItem` could or should suppress.
+  used correctly (wrapped in a real `<ul>`). `GridItem` sets no ARIA role of its own, so there's no
+  equivalent violation here — but rendering `as="li"` *without* a real list ancestor does trigger a
+  real "listitem" violation, an inherent property of `<li>` outside list context that's the
+  caller's responsibility, not something `GridItem` could or should suppress.
 - No keyboard interaction — `GridItem` is not an interactive element.
 - `order` is purely visual — it never changes the accessible DOM order, reading order, or Tab
   order.

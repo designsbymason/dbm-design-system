@@ -125,8 +125,7 @@ import { Spinner } from "@dbm-design-system/components";
 - **All three (`role`/`aria-hidden`/`aria-label`) are always applied last**, after any native props
   spread onto the root — a same-named prop passed by the caller is silently ignored, even though
   TypeScript's JSX checker permits `aria-*`/`role` attributes on any component regardless of its
-  declared prop type (a real gap found and fixed during review, the same class of bug already found
-  on `ProgressBar`/`ProgressCircle`: enforced via JSX attribute order, not the type system alone).
+  declared prop type (enforced via JSX attribute order, not the type system alone).
 - **Respects `prefers-reduced-motion`** — the spin animation slows to 4x its normal duration rather
   than stopping outright, staying visible as an in-progress signal.
 - Every `tone` here reuses `Icon`'s own already contrast-verified tokens — no new color pairing was

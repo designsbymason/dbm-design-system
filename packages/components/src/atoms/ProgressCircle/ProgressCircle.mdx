@@ -117,12 +117,11 @@ import { ProgressCircle } from "@dbm-design-system/components";
   passed alone.
 - Don't try to override `role`, `aria-valuenow`, `aria-valuemin`, or `aria-valuemax` yourself —
   ProgressCircle computes and always applies these itself, so a same-named prop is silently
-  ignored (found and fixed during review — see Accessibility below).
+  ignored (see Accessibility below).
 - Don't assume the value label always fits neatly inside the ring — it's sized and positioned to
   stay clear of the stroke, but an unbreakable string at the smallest ring size (e.g. `"100%"` at
   `size="xs"`) can extend slightly past the ring's own silhouette rather than being clipped, which
-  is the deliberate tradeoff (found and fixed during review — clipping it instead silently turned
-  `"100%"` into `"00%"`).
+  is the deliberate tradeoff — clipping it instead would silently turn `"100%"` into `"00%"`.
 
 </Callout>
 </div>
@@ -148,8 +147,8 @@ import { ProgressCircle } from "@dbm-design-system/components";
 - **`role="progressbar"` with `aria-valuenow`/`aria-valuemin`/`aria-valuemax`** are always computed
   internally from `value`/`max` — a same-named prop passed by the caller is silently ignored, even
   though TypeScript's JSX checker permits `aria-*`/`role` attributes on any component regardless of
-  its declared prop type (a real gap found and fixed during review: enforced via JSX attribute
-  order, not the type system, since the type system alone can't stop it for `aria-*` names).
+  its declared prop type (enforced via JSX attribute order, not the type system, since the type
+  system alone can't stop it for `aria-*` names).
 - **Indeterminate mode omits `aria-valuenow` entirely**, per the ARIA APG progressbar pattern — the
   ring's own spin animation is the only "still working" signal, not a numeric value implying false
   precision.
@@ -160,16 +159,14 @@ import { ProgressCircle } from "@dbm-design-system/components";
   provided without `showValueLabel`.
 - **Respects `prefers-reduced-motion`** — the indeterminate spin animation slows to 4x its normal
   duration rather than stopping outright, staying visible as an in-progress signal.
-- **The value label is sized and positioned to stay clear of the ring's own stroke** — found and
-  fixed during review after the label's full-box default crowded/overlapped the stroke at small
-  sizes, which was also why axe's automated contrast check couldn't reliably resolve a flat
-  background there. Verify the "Color contrast" check manually if it's ever flagged Inconclusive
-  rather than Pass — that's expected axe behavior for text layered over a container that also has
-  SVG content, not necessarily a real problem.
+- **The value label is sized and positioned to stay clear of the ring's own stroke.** Verify the
+  "Color contrast" check manually if it's ever flagged Inconclusive rather than Pass — that's
+  expected axe behavior for text layered over a container that also has SVG content, not
+  necessarily a real problem.
 - The track's own `bg.track` fill is a deliberate, documented exception to this system's usual 3:1
-  non-text contrast floor, chosen at explicit direction — see [Design tokens
-  used](#design-tokens-used) below and the Color Foundations page for the full rationale and the
-  real numbers. Every other pairing here is contrast-verified per this system's WCAG methodology.
+  non-text contrast floor — see [Design tokens used](#design-tokens-used) below and the Color
+  Foundations page for the full rationale and the real numbers. Every other pairing here is
+  contrast-verified per this system's WCAG methodology.
 
 </Callout>
 

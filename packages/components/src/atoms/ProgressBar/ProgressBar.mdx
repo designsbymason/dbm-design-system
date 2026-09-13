@@ -116,7 +116,7 @@ import { ProgressBar } from "@dbm-design-system/components";
   passed alone.
 - Don't try to override `role`, `aria-valuenow`, `aria-valuemin`, or `aria-valuemax` yourself —
   ProgressBar computes and always applies these itself, so a same-named prop is silently ignored
-  (found and fixed during review — see Accessibility below).
+  (see Accessibility below).
 - Don't reach for `aria-valuetext` alone when the unit genuinely matters to sighted users too —
   pair it with `formatValueLabel` instead of leaving sighted users with only the bare percentage.
 
@@ -143,8 +143,8 @@ import { ProgressBar } from "@dbm-design-system/components";
 - **`role="progressbar"` with `aria-valuenow`/`aria-valuemin`/`aria-valuemax`** are always computed
   internally from `value`/`max` — a same-named prop passed by the caller is silently ignored, even
   though TypeScript's JSX checker permits `aria-*`/`role` attributes on any component regardless of
-  its declared prop type (a real gap found and fixed during review: enforced via JSX attribute
-  order, not the type system, since the type system alone can't stop it for `aria-*` names).
+  its declared prop type (enforced via JSX attribute order, not the type system, since the type
+  system alone can't stop it for `aria-*` names).
 - **Indeterminate mode omits `aria-valuenow` entirely**, per the ARIA APG progressbar pattern — the
   fill's own animation is the only "still working" signal, not a numeric value implying false
   precision.
@@ -156,9 +156,9 @@ import { ProgressBar } from "@dbm-design-system/components";
 - **Respects `prefers-reduced-motion`** — the indeterminate sliding-fill animation slows to 12x its
   normal duration rather than stopping outright, staying visible as an in-progress signal.
 - The track's own `bg.track` fill is a deliberate, documented exception to this system's usual 3:1
-  non-text contrast floor, chosen at explicit direction — see [Design tokens
-  used](#design-tokens-used) below and the Color Foundations page for the full rationale and the
-  real numbers. Every other pairing here is contrast-verified per this system's WCAG methodology.
+  non-text contrast floor — see [Design tokens used](#design-tokens-used) below and the Color
+  Foundations page for the full rationale and the real numbers. Every other pairing here is
+  contrast-verified per this system's WCAG methodology.
 
 </Callout>
 
