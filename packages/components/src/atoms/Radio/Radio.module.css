@@ -30,13 +30,17 @@
 }
 
 .root[data-state="checked"] {
-  background-color: var(--dbm-bg-brand);
-  border-color: var(--dbm-bg-brand);
+  /* Outline style, not filled — background stays bg.surface (inherited
+     from .root above), only the border and inner dot (.indicator, below)
+     carry the brand color. */
+  border-color: var(--dbm-border-brand);
 }
 
 .root[data-state="checked"]:hover:not(:disabled) {
-  background-color: var(--dbm-bg-brand-hover);
-  border-color: var(--dbm-bg-brand-hover);
+  /* Explicit, not just inherited from the rule above — without this, the
+     unchecked :hover rule (border-neutral-strong) would win on hover,
+     since it ties on specificity with this file's own source order. */
+  border-color: var(--dbm-border-brand);
 }
 
 .root.error {
@@ -49,10 +53,14 @@
 }
 
 .indicator {
-  background-color: var(--dbm-icon-on-brand);
+  /* icon.brand, not icon.on-brand — the dot sits on bg.surface (an
+     outline-style checked state, not a filled one), so it needs the
+     "brand mark on a neutral surface" token, not the "mark on a brand
+     fill" one. */
+  background-color: var(--dbm-icon-brand);
   border-radius: var(--dbm-radius-full);
-  height: 40%;
-  width: 40%;
+  height: 50%;
+  width: 50%;
   /* Radix only mounts `Indicator` into the DOM once checked, so this plays
      once on every such mount — a one-shot state-change transition, not a
      continuous/looping animation, so it's outside

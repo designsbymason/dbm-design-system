@@ -92,6 +92,94 @@ from the circular root, so no separate override was needed (unlike Button's squa
 - Confirmed sidebar placement: **Atoms → Inputs → Radio**, per the taxonomy in
   `07-storybook-and-documentation-standards.md` §3
 
-**Not yet Finalized** — awaiting explicit confirmation per `06-engineering-standards.md` §9's
-reporting convention. `RadioGroup` (the molecule that will actually compose `Radio` for real,
-instead of the test/story harness above) is next in the build order.
+**Post-review fix (user-reported, 2026-09-14): phantom "RadioProps" sidebar story.** `Radio.stories.tsx`
+had ended with `export type { RadioProps };` — a leftover, never actually consumed by `Radio.mdx`
+(which only needs plain string arrays for `propOrder`). Storybook's static CSF indexer scans a
+`.stories.tsx` file's AST for named exports and treats each one (besides `default`) as a story
+candidate, including a type-only export, which its static parse sees *before* Vite/esbuild strips
+it away at build time — producing a phantom sidebar entry (`RadioProps` → id `radio-props`) that
+pointed at nothing once the module was actually imported at runtime, hence "Couldn't find story
+matching id ... after importing a CSF file." Fixed by removing the unused export (and its now-dead
+`import type { RadioProps } from "./Radio.types"`) — confirmed live in Storybook (sidebar search for
+"RadioProps" returns no matches) and via a full re-run: `tsc`, `eslint --max-warnings 0`, both
+Vitest projects (`unit`: 1534/1534, `Radio` itself 37/37) all clean. A pure defect fix — no
+behavioral/API change to `Radio` itself, so this doesn't touch Finalization readiness. **General
+takeaway, worth checking on future components:** never add a `.stories.tsx` export "just in case" a
+`.mdx` might want to import it later — an unused export in a story file isn't just dead code here,
+it's a real, user-visible broken sidebar entry.
+
+**Interaction-story pacing fix (user-reported, 2026-09-14): "Interaction: focusable and toggles via
+Space" ran too fast to watch.** Added the same `pause` helper already used in `Collapse`'s/`Tooltip`'s/
+`FocusTrap`'s own interaction stories — 600ms after focus lands, 800ms after the Space-triggered
+check completes — purely for human legibility replaying the story in the Interactions panel; the
+assertions themselves need none of it. Confirmed live (rewatched the replay, step timing now
+visible) and via a full re-run: `tsc`, `eslint`, both Vitest projects (`unit`: 1534/1534, `storybook`
+browser-mode: 392/392) all clean.
+
+**Design revision (user-requested, 2026-09-14): checked-state style changed from filled to
+outline+dot.** Previously: full `bg.brand` fill, `icon.on-brand` (white) dot, `bg.brand-hover` fill on
+hover. Now: `bg.surface` stays unchanged (not filled), `border.brand` ring (unchanged on hover too —
+explicit rule added so the unchecked `:hover` rule, which ties on specificity, doesn't win and flash
+the border back to neutral), `icon.brand` dot. Both new token pairings were already verified against
+`bg.surface` in `03-token-system-spec.md`'s own contrast log (`border.brand`: 7.37:1 purple / 6.08:1
+emerald light, 7.45:1 / 8.51:1 dark; `icon.brand`: same figures) — genuinely the same pairing Radio
+already sits on, not a new one requiring fresh measurement. Deliberately **did not** add a hover
+background tint (e.g. `bg.brand-subtle-hover`, the pattern `Button`'s own `secondary` variant uses for
+an outline-style control) — out of scope for what was asked, and would have introduced an unverified
+`icon.brand`-on-`bg.brand-subtle-hover` contrast pairing; flagging here in case a hover treatment is
+wanted later. `Radio.mdx`'s Design tokens used and Accessibility sections updated to match. Confirmed
+live across all 4 themes (Purple/Emerald × Light/Dark) and zero Accessibility-panel violations; full
+re-run: `tsc`, `eslint`, both Vitest projects (`unit`: 1534/1534, `storybook`: 392/392) all clean.
+
+**Design revision (user-requested, 2026-09-14): checked-state dot enlarged.** `.indicator`'s
+`height`/`width` moved from 40% to 50% of the root's own box — a proportional size, not a new
+component-layer token, so it scales correctly across every `size` step with no per-step values to
+keep in sync. Confirmed live across the full `xs`–`xl` size scale (still a clearly visible ring at
+every step, `xs` included) and zero Accessibility-panel violations. Full re-run: `eslint`, Vitest
+`unit` project (`Radio`: 37/37) clean.
+
+**Final review pass (2026-09-14, at explicit user request before Finalization).** Re-read every
+file fresh end to end (`Radio.tsx`, `Radio.types.ts`, `Radio.module.css`, `Radio.stories.tsx`,
+`Radio.mdx`, `Radio.test.tsx`, `RadioGroupContext.ts`, `index.ts`) rather than assuming the four
+incremental post-build fixes above already covered everything — same discipline as `Checkbox`'s own
+final pass, which found two more real gaps by re-checking. Found and fixed two real, if minor,
+gaps:
+1. A stale code comment in `Radio.stories.tsx`'s `AllSizes` story still said "the filled state is
+   visible" — left over from before the checked-state style revision above. Fixed to "the checked
+   state is visible."
+2. `Radio.mdx`'s Design tokens used section was missing `space.1` (used for the focus-visible
+   outline's `outline-offset` in `Radio.module.css`) — every other token the CSS actually references
+   is listed, this one was simply missed. Added. (Noted for context, not fixed here: `Checkbox` —
+   already Finalized — has the identical omission for its own equivalent `space.1` usage; a
+   pre-existing, cross-component documentation gap, not something this pass introduced. Worth a
+   future audit across already-shipped components, out of scope for Radio's own review.)
+
+One hypothesis raised and disproven by live verification, not acted on: `checked` has
+`control: false` in `Radio.stories.tsx`'s `argTypes` but isn't in `PlaygroundControls`' own
+`exclude` list (unlike `Checkbox`'s equivalent list, which does include it) — reading the code alone
+suggested this might render a stray "–" row in the Playground panel, the exact failure mode
+`07-storybook-and-documentation-standards.md` §4 item 2 warns about. Checked live instead of trusting
+the static read: no such row appears (`PlaygroundControls` only renders rows for props actually
+present in the resolved `args` object, and `checked` isn't one of them) — `Checkbox`'s inclusion of
+"checked" in its own exclude list is defensive/redundant, not required. No change made.
+
+Also deliberately **not** added: a Playwright real-browser visual-regression test for the new
+checked-state colors. `e2e/visual.spec.ts`'s own doc comment states it "isn't meant to cover every
+story for every component from day one," and `Checkbox` (twice-reviewed, Finalized) has zero entries
+there despite also using brand-colored borders/fills — that suite is opportunistic, added only when
+a genuine jsdom-unverifiable defect is found (e.g. Button's `var()`-in-border-shorthand limitation),
+not a standing requirement per component. Live Storybook verification across all 4 themes already
+satisfies the Theming checklist item.
+
+Full self-verification, whole package, real runs: `tsc` (package + `.storybook`), `eslint
+--max-warnings 0`, Vitest `unit` project (1534/1534) and `storybook` browser-mode project
+(392/392), `tsup` build (clean, all four targets), `check-component-bundle-size` (Radio still within
+budget). Docs page re-verified live end to end, section by section (Playground, Properties table,
+all 4 variant galleries, Usage guidelines, Best practices, Accessibility, Code examples, Design
+tokens, Related components) — no other gaps found.
+
+**Finalized 2026-09-14, at explicit user direction**, following the final review pass above. Per
+`06-engineering-standards.md` §9's own rule, no further changes to `Radio` (code, stories, docs, or
+tokens it alone drives) without asking first, even for something that would otherwise be an obvious,
+in-scope fix. `RadioGroup` (the molecule that will actually compose `Radio` for real, instead of the
+test/story harness used throughout this review) is next in the build order.

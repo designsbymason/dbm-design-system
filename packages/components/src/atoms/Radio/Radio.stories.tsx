@@ -4,7 +4,6 @@ import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Radio } from "./Radio";
 import { RadioGroupContext } from "./RadioGroupContext";
-import type { RadioProps } from "./Radio.types";
 
 const meta: Meta<typeof Radio> = {
   title: "Atoms/Inputs/Radio",
@@ -111,7 +110,7 @@ export const AllSizes: Story = {
   name: "All sizes",
   // `size`/`children` are the whole point of this grid — each instance
   // intentionally varies both together, so no single control value could
-  // represent them. `defaultChecked: true` so the filled state is visible
+  // represent them. `defaultChecked: true` so the checked state is visible
   // at every size out of the box — still live via `{...args}`, along with
   // every other prop.
   args: { defaultChecked: true },
@@ -242,14 +241,22 @@ export const SpaceKeyInteraction: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     const radio = canvas.getByRole("radio", { name: "Email" });
+
+    // Purely for human legibility when watching this replay in the
+    // Interactions panel — the assertions themselves need none of these
+    // pauses. Without them, focus and the Space-triggered check happened
+    // back to back with no visible gap, reading as a single flash rather
+    // than two distinct, observable steps (same pattern as Collapse's own
+    // interaction stories).
+    const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     await userEvent.tab();
     await expect(radio).toHaveFocus();
+    await pause(600);
+
     await userEvent.keyboard(" ");
     await expect(radio).toHaveAttribute("aria-checked", "true");
     await expect(args.onCheckedChange).toHaveBeenCalledWith(true);
+    await pause(800);
   },
 };
-
-// Re-exported only so `Radio.mdx` can type its own `propOrder`/exclude
-// lists against this file's real argTypes without a separate import.
-export type { RadioProps };
