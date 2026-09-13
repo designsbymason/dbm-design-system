@@ -6,7 +6,6 @@ import { FieldLabel } from "../FieldLabel";
 import { Icon } from "../Icon";
 import { Input } from "../Input";
 import { VisuallyHidden } from "../VisuallyHidden";
-import { FormField } from "../../molecules/FormField";
 import { FieldError } from "./FieldError";
 import * as FieldErrorStories from "./FieldError.stories";
 
@@ -193,8 +192,6 @@ import { FieldError } from "@dbm-design-system/components";
   description="Composes this error message with a label and control, with the id/aria-describedby wiring done for you"
   href="/?path=/docs/molecules-inputs-formfield--docs"
 >
-  <FormField label="Email address" error="Enter a valid email address">
-    {(fieldProps) => <Input {...fieldProps} placeholder="you@example.com" />}
-  </FormField>
+  <Input hasError placeholder="you@example.com" />
 </RelatedCard>
 </div>

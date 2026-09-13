@@ -4,7 +4,6 @@ import { FieldError } from "../FieldError";
 import { FieldHelperText } from "../FieldHelperText";
 import { Input } from "../Input";
 import { VisuallyHidden } from "../VisuallyHidden";
-import { FormField } from "../../molecules/FormField";
 import { FieldLabel } from "./FieldLabel";
 import * as FieldLabelStories from "./FieldLabel.stories";
 
@@ -184,8 +183,6 @@ import { FieldLabel } from "@dbm-design-system/components";
   description="Composes this label with a control and helper/error text, with the id/htmlFor wiring done for you"
   href="/?path=/docs/molecules-inputs-formfield--docs"
 >
-  <FormField label="Email address">
-    {(fieldProps) => <Input {...fieldProps} placeholder="you@example.com" />}
-  </FormField>
+  <Input placeholder="you@example.com" />
 </RelatedCard>
 </div>

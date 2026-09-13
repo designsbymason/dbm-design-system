@@ -17,3 +17,5 @@ FieldLabel — ✅ done (2026-08-29 — comprehensive `06-engineering-standards.
 3. Not reached.
 
 **Result: stays Finalized.** Full re-verification: `tsc` (package + `.storybook`), `eslint --max-warnings 0`, both Vitest projects (`unit`: 1221/1221 whole package, `storybook`: 414/414), `tsup` build — all clean. Live-reconfirmed: the new card renders its live preview correctly on the Docs page.
+
+**Correction (user-reported, 2026-09-14, with screenshot): that same `FormField` card's preview was cropped.** `RelatedCard`'s preview slot is a fixed 80px-tall box built for a single compact instance (see `guidelines/component-reviews/PasswordInput.md` for the full root-cause writeup) — the composed `<FormField label="Email address">{...}</FormField>` used here was taller than that, so it was clipped top and bottom. Fixed by previewing a bare `Input` instead, matching every other card's own "single compact instance" convention; the description text alone still conveys the `FormField` relationship. Purely corrective within this same authorized change — stays Finalized, no new date.
