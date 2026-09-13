@@ -51,4 +51,5 @@ export * from "./atoms/VisuallyHidden";
 
 export * from "./molecules/Grid";
 export * from "./molecules/List";
+export * from "./molecules/RadioGroup";
 export * from "./molecules/Select";

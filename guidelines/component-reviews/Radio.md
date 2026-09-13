@@ -183,3 +183,35 @@ tokens, Related components) — no other gaps found.
 tokens it alone drives) without asking first, even for something that would otherwise be an obvious,
 in-scope fix. `RadioGroup` (the molecule that will actually compose `Radio` for real, instead of the
 test/story harness used throughout this review) is next in the build order.
+
+**Authorized post-finalization change (user-directed, 2026-09-14): size-cascade support.** While
+building `RadioGroup`, its own review flagged a real gap rather than improvising: no way for a
+`RadioGroup` to set `size` once for every `Radio` child, since building that meant editing this
+already-Finalized file. User confirmed the gap live (toggling nothing changed a grouped `Radio`'s
+size without repeating it on each one), then authorized the change. Added a new, separate
+`RadioGroupSizeContext` (`RadioSize | undefined`) — kept apart from the existing `RadioGroupContext`
+boolean rather than changing its shape, so that already-tested contract stays untouched — and
+changed `size`'s resolution from a plain destructuring default (`size = "md"`) to a fallback chain
+(`size ?? inheritedSize ?? "md"`), read via the new context.
+
+**Three-question finalization test (`06-engineering-standards.md` §9):**
+1. *Does it change the rendered/behavioral output of anything that already existed at finalization
+   time?* No. `RadioGroupSizeContext`'s default value (no `Provider` ancestor) is `undefined`, so
+   every previously-existing usage — standalone `Radio`, and the `Inside a RadioGroup (preview)`
+   story's own harness (predates this context, provides no size) — resolves through the exact same
+   chain to the exact same `"md"` default as before. No prop's default changed, no existing DOM
+   output changed under any previously-exercised value.
+2. Not reached — question 1 already resolved to "No."
+3. Not reached.
+
+**Result: stays Finalized** — purely additive, per the "No" branch. New surface (the inherited-size
+behavior) still got its own scoped mini-pass rather than skipping straight to "no re-review needed":
+JSDoc updated on both the component doc and `size`'s own prop doc, 4 new tests (standalone default
+regression, inherits from context, own explicit value wins, falls back to `"md"` when grouped with
+no inherited size either) — 37 → 41. Storybook coverage lives on `RadioGroup`'s own stories (the
+natural real-world composition surface for a cross-component feature — see
+[RadioGroup.md](RadioGroup.md)), not duplicated into `Radio`'s own, which already covers the
+underlying resolution logic at the unit-test level. Full re-verification, whole package: `tsc`,
+`eslint --max-warnings 0`, Vitest `unit` (1569/1569) and `storybook` browser-mode (400/400) projects,
+`tsup` build, `check-component-bundle-size` (`Radio` 1.09KB JS / 0.59KB CSS, still within budget) —
+all clean.

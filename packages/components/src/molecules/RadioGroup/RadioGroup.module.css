@@ -1,0 +1,27 @@
+.root {
+  display: flex;
+}
+
+.orientationVertical {
+  flex-direction: column;
+  gap: var(--dbm-space-2);
+}
+
+.orientationHorizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2) var(--dbm-space-4);
+}
+
+/* Colored left-border accent for hasError — same pattern already
+   established by Blockquote's own border-width-4 + space-4 inline-start
+   pairing, applied here with border.danger instead of border.brand. A bare
+   group has no bordered box of its own the way Input/Checkbox/Radio do, so
+   this is the group-level equivalent: a flagged-section accent, not a
+   bounding box. Reinforces, not replaces, the paired FieldError text this
+   component's own Usage guidelines already call for — color/border alone
+   is never the sole error signal. */
+.error {
+  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-danger);
+  padding-inline-start: var(--dbm-space-4);
+}

@@ -3,6 +3,7 @@ import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { forwardRef, useContext, useId, useRef } from "react";
 import styles from "./Radio.module.css";
 import { RadioGroupContext } from "./RadioGroupContext";
+import { RadioGroupSizeContext } from "./RadioGroupSizeContext";
 import type { RadioProps, RadioSize } from "./Radio.types";
 
 const sizeClass: Record<RadioSize, string | undefined> = {
@@ -26,8 +27,9 @@ const STANDALONE_VALUE_FALLBACK = "on";
  * `checked`/`defaultChecked`/`onCheckedChange` API mirroring `Checkbox`.
  * Composed inside a `RadioGroup` instead, it participates in that shared
  * group's own `value`/`onValueChange` — pass a distinct `value` there to
- * identify this option among its siblings. `ref` forwards to the
- * underlying `<button role="radio">` in both cases.
+ * identify this option among its siblings, and inherits `size` from the
+ * group when it doesn't set its own. `ref` forwards to the underlying
+ * `<button role="radio">` in both cases.
  *
  * @example
  * ```tsx
@@ -44,7 +46,7 @@ const STANDALONE_VALUE_FALLBACK = "on";
 export const Radio = forwardRef<HTMLButtonElement, RadioProps>(
   (
     {
-      size = "md",
+      size,
       hasError = false,
       disabled,
       className,
@@ -64,6 +66,8 @@ export const Radio = forwardRef<HTMLButtonElement, RadioProps>(
     const generatedId = useId();
     const radioId = id ?? generatedId;
     const isGrouped = useContext(RadioGroupContext);
+    const inheritedSize = useContext(RadioGroupSizeContext);
+    const resolvedSize = size ?? inheritedSize ?? "md";
     const itemValue = value ?? STANDALONE_VALUE_FALLBACK;
 
     const hasWarnedNoAccessibleNameRef = useRef(false);
@@ -115,7 +119,7 @@ export const Radio = forwardRef<HTMLButtonElement, RadioProps>(
         aria-invalid={hasError || undefined}
         className={cx(
           styles.root,
-          sizeClass[size],
+          sizeClass[resolvedSize],
           hasError && styles.error,
           className,
         )}

@@ -1,0 +1,215 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldError } from "../../atoms/FieldError";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Radio } from "../../atoms/Radio";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { RadioGroup } from "./RadioGroup";
+import * as RadioGroupStories from "./RadioGroup.stories";
+
+export const propOrder = [
+  "children",
+  "size",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "hasError",
+  "disabled",
+  "required",
+  "name",
+  "form",
+  "orientation",
+  "dir",
+  "loop",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={RadioGroupStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="RadioGroup" tier="Molecule" />
+
+Manages a group of `Radio` options sharing one selection, built on Radix UI's RadioGroup primitive
+— the same primitive each grouped `Radio` participates in directly. Accepts both controlled
+(`value`/`onValueChange`) and uncontrolled (`defaultValue`) usage. Handles roving-tabindex keyboard
+navigation between options (`Tab` reaches only the checked, or first, option; arrow keys move
+between the rest) and cascades `disabled`/`required`/`name`/`size` to every option at once — any
+option can still set its own `size` to override the group's.
+
+### Import
+
+```tsx
+import { RadioGroup, Radio } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={RadioGroupStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={RadioGroupStories.Playground}
+  exclude={["children", "value", "onValueChange", "form", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`RadioGroup` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `onKeyDown`) — passed straight through to the underlying Radix-rendered
+`<div role="radiogroup">`.
+
+<PropertiesTable of={RadioGroupStories} order={propOrder} />
+
+## Variants
+
+### Vertical vs. horizontal
+
+<Canvas of={RadioGroupStories.Orientation} />
+
+### Size cascade, with a per-item override
+
+<Canvas of={RadioGroupStories.SizeCascade} />
+
+### States
+
+<Canvas of={RadioGroupStories.States} />
+
+### Controlled, with a live selection summary
+
+<Canvas of={RadioGroupStories.ControlledSelectionSummary} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass a distinct `value` on every `Radio` inside the group — that's what identifies which option
+  is which.
+- Pass `aria-label` (or `aria-labelledby`, pointing at a nearby `FieldLabel`) — every
+  `role="radiogroup"` needs an accessible name of its own.
+- Reach for `orientation="horizontal"` for a short set of options in a compact filter bar or
+  toolbar; keep the default `vertical` for anything inside a real form.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't drive `value` from a live control without a real `onValueChange` wired back — Radix always
+  defers to the controlled value, which freezes every option's own click handling.
+- Don't set `required`/`name` on the individual `Radio` children — those are group-level concerns
+  here; `Radio`'s own `required`/`name` only apply when it has no `RadioGroup` ancestor at all.
+- Don't nest interactive elements other than `Radio` inside the group — roving tabindex assumes
+  every focusable child is one of the options.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reach for a plain, standalone `Radio` (or a set of independent `Checkbox`es) instead when the
+  options aren't mutually exclusive, or there's genuinely only one meaningful choice to make.
+- Pair with `FieldLabel`/`FieldError` for the group's own visible label and validation message —
+  `RadioGroup` itself only sets the semantic `aria-invalid`/`aria-required`, it doesn't render
+  either.
+- Keep the option set short and scannable — a long list of mutually-exclusive choices usually
+  reads better as a `Select` instead.
+- Set `size` once on the group rather than repeating it on every `Radio` — reach for a per-`Radio`
+  override only for a genuine one-off, not as the default way to size a whole group.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard and ARIA state come from Radix's own radio-group primitive">
+
+- Renders a `<div role="radiogroup">` around its `Radio` children, each a real `<button
+  role="radio">` — `Tab` reaches only one option at a time (the checked one, or the first if none
+  is checked yet), and the arrow-key pair matching `orientation` moves roving focus (and
+  selection) between the rest, per the WAI-ARIA radio-group pattern.
+- `aria-orientation` reflects the `orientation` prop directly.
+- `aria-invalid="true"` is set automatically while `hasError`, alongside a colored left-border
+  accent (`border.danger`) — both on the group itself, not each individual option.
+  `aria-required="true"` while `required`, same scope. `border.danger` against `bg.surface` is
+  checked against real WCAG contrast ratios, not assumed — see
+  [Design tokens used](#design-tokens-used) below.
+- A dev-mode console warning fires once if a `RadioGroup` has no `aria-label` or
+  `aria-labelledby` — a radiogroup with no accessible name is confusing for screen reader users.
+- `disabled` cascades to every option automatically, via the same real Radix context each grouped
+  `Radio` already reads from — an individual `Radio` can still layer its own additional `disabled`
+  on top.
+- `required` sets `aria-required` and marks the group required for real HTML5 form validation —
+  inside a `<form>`, Radix automatically renders a hidden native `<input type="radio">` per option
+  that actually participates in submission, using `name` as their shared name.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<RadioGroup aria-label="Contact method" defaultValue="email">
+  <Radio value="email">Email</Radio>
+  <Radio value="sms">SMS</Radio>
+  <Radio value="phone">Phone call</Radio>
+</RadioGroup>
+
+<RadioGroup aria-label="Contact method" value={value} onValueChange={setValue}>
+  <Radio value="email">Email</Radio>
+  <Radio value="sms">SMS</Radio>
+</RadioGroup>
+
+<RadioGroup aria-label="Plan" orientation="horizontal" defaultValue="monthly">
+  <Radio value="monthly">Monthly</Radio>
+  <Radio value="annual">Annual</Radio>
+</RadioGroup>
+
+<RadioGroup aria-label="Contact method" name="contact-method" required onFocus={() => trackFieldFocus('contact-method')}>
+  <Radio value="email">Email</Radio>
+  <Radio value="sms">SMS</Radio>
+</RadioGroup>
+
+{/* Every option inherits sm; one option overrides it back to md. */}
+<RadioGroup aria-label="Contact method" size="sm" defaultValue="email">
+  <Radio value="email">Email</Radio>
+  <Radio value="sms" size="md">SMS</Radio>
+</RadioGroup>
+```
+
+## Design tokens used
+
+<TokenRow token="space.2" usage="gap between options, vertical orientation" />
+<TokenRow token="space.2, space.4" usage="row-gap, column-gap between options, horizontal orientation" />
+<TokenRow token="border.danger" usage="hasError state left-border accent" />
+<TokenRow token="border-width.4" usage="hasError state left-border accent width" />
+<TokenRow token="space.4" usage="hasError state inline-start padding, offsetting content from the accent" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Radio"
+  description="A single radio input — functions standalone too, or as this group's own child"
+  href="/?path=/docs/atoms-inputs-radio--docs"
+>
+  <Radio defaultChecked aria-label="Email" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="A standalone label atom for pairing with the group's own aria-labelledby"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel>Contact method</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="Pairs with hasError to show why the group failed validation, not just that it did"
+  href="/?path=/story/atoms-inputs-fielderror--playground"
+>
+  <FieldError>Please choose a contact method</FieldError>
+</RelatedCard>
+</div>

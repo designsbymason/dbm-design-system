@@ -12,7 +12,13 @@ export interface RadioProps
    * `aria-label` instead (matches `Checkbox`'s own icon-only convention).
    */
   children?: ReactNode;
-  /** @default 'md' */
+  /**
+   * Inside a `RadioGroup`, omitting this inherits the group's own `size`
+   * (if it set one) instead of falling straight to the default — an
+   * explicit value here always wins over both. Standalone, or grouped with
+   * no inherited size either, falls back to `'md'`.
+   * @default 'md'
+   */
   size?: RadioSize;
   /**
    * Marks the radio as invalid, visually and via `aria-invalid`.

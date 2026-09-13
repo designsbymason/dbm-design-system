@@ -6,25 +6,32 @@ import { createRef, useState, type ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Radio } from "./Radio";
 import { RadioGroupContext } from "./RadioGroupContext";
+import { RadioGroupSizeContext } from "./RadioGroupSizeContext";
 import styles from "./Radio.module.css";
+import type { RadioSize } from "./Radio.types";
 
 /**
- * A minimal grouped-mode harness — anticipates `RadioGroup` (molecule, not
- * yet built), which will do exactly this internally: render Radix's real
- * `RadioGroupPrimitive.Root` and provide `RadioGroupContext` as `true`
- * around its `Radio` children. Once `RadioGroup` exists, these tests should
- * be revisited to use it directly instead of this harness.
+ * A minimal grouped-mode harness — mirrors what the real `RadioGroup`
+ * molecule does internally: render Radix's real `RadioGroupPrimitive.Root`
+ * and provide `RadioGroupContext` (plus, now, `RadioGroupSizeContext`) as
+ * `RadioGroup` itself does. Kept here rather than importing the real
+ * `RadioGroup` so `Radio`'s own atom-tier tests stay self-contained, with
+ * no dependency on a molecule — `RadioGroup.test.tsx` is where the real,
+ * composed integration (including its own size-cascade tests) is covered.
  */
 function GroupHarness({
   children,
+  size,
   ...rootProps
-}: { children: React.ReactNode } & ComponentProps<
+}: { children: React.ReactNode; size?: RadioSize } & ComponentProps<
   typeof RadioGroupPrimitive.Root
 >) {
   return (
     <RadioGroupPrimitive.Root {...rootProps}>
       <RadioGroupContext.Provider value={true}>
-        {children}
+        <RadioGroupSizeContext.Provider value={size}>
+          {children}
+        </RadioGroupSizeContext.Provider>
       </RadioGroupContext.Provider>
     </RadioGroupPrimitive.Root>
   );
@@ -35,6 +42,11 @@ describe("Radio", () => {
     it("renders unchecked by default", () => {
       render(<Radio aria-label="Email" />);
       expect(screen.getByRole("radio")).toHaveAttribute("aria-checked", "false");
+    });
+
+    it("defaults to size 'md' with no size prop and no RadioGroup ancestor", () => {
+      render(<Radio aria-label="Email" />);
+      expect(screen.getByRole("radio")).toHaveClass(styles.sizeMd as string);
     });
 
     it("renders checked when defaultChecked is true", () => {
@@ -341,6 +353,37 @@ describe("Radio", () => {
         expect.stringContaining("no `value`"),
       );
       consoleWarnSpy.mockRestore();
+    });
+
+    it("inherits size from an ambient RadioGroup context when it has no size of its own", () => {
+      render(
+        <GroupHarness size="sm">
+          <Radio value="email">Email</Radio>
+        </GroupHarness>,
+      );
+      expect(screen.getByRole("radio")).toHaveClass(styles.sizeSm as string);
+    });
+
+    it("falls back to 'md' when grouped with no inherited size and no size of its own", () => {
+      render(
+        <GroupHarness>
+          <Radio value="email">Email</Radio>
+        </GroupHarness>,
+      );
+      expect(screen.getByRole("radio")).toHaveClass(styles.sizeMd as string);
+    });
+
+    it("prefers its own explicit size over an inherited one", () => {
+      render(
+        <GroupHarness size="sm">
+          <Radio value="email" size="xl">
+            Email
+          </Radio>
+        </GroupHarness>,
+      );
+      const radio = screen.getByRole("radio");
+      expect(radio).toHaveClass(styles.sizeXl as string);
+      expect(radio).not.toHaveClass(styles.sizeSm as string);
     });
 
     it("has no accessibility violations as a real group", async () => {
