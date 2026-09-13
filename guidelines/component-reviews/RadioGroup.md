@@ -72,6 +72,57 @@ Live-verified: the `SizeCascade` story (three visibly distinct sizes, zero Acces
 violations, both Light and Dark) and the Playground's own live `size` control actually resizing the
 canvas in real time.
 
+**Post-review fix (user-reported, 2026-09-14): `size`/`dir` controls showed literal "undefined."**
+Both argTypes used a plain `options: [undefined, ...]` array with `args` left `undefined` —
+Storybook's `select` control renders that as the literal text "undefined" instead of a meaningful
+value. **First attempt (wrong, corrected the same turn):** read this as "these props have no
+concrete default," and mapped a `Default` label to `undefined` (the `Checkbox.stories.tsx`
+icon/indeterminateIcon pattern) — user clarified that wasn't the intent: they wanted the control to
+start at the component's actual real default value, not an abstract "no override" concept, i.e.
+`size` should show `"md"` and `dir` should show `"ltr"` (both real, concrete `RadioSize`/`"ltr"|"rtl"`
+values, not synthetic labels). **Corrected to match `Select.stories.tsx`'s own existing `dir`
+control exactly** (`options: ["ltr", "rtl"]`, `args.dir: "ltr"`, no `undefined` anywhere) and applied
+the identical pattern to `size` (`options: ["xs","sm","md","lg","xl"]`, `args.size: "md"`) — plain,
+real values, no mapping/cast needed. Confirmed live: both the raw Controls panel and the Docs page's
+`PlaygroundControls` show "md"/"ltr" directly. A pure Storybook-presentation fix — doesn't touch
+`RadioGroup`'s actual rendered output or ARIA, so no accessibility re-check needed. Full re-run:
+`tsc` (package + `.storybook`), `eslint`, Vitest `unit` (31/31 for `RadioGroup`'s own two test
+files) and `storybook` browser-mode (400/400) — all clean.
+
+**Final review pass (2026-09-14, at explicit user request before Finalization).** Re-read every file
+fresh end to end (`RadioGroup.tsx`, `RadioGroup.types.ts`, `RadioGroup.module.css`,
+`RadioGroup.stories.tsx`, `RadioGroup.test.tsx`, `RadioGroup.mdx`, `index.ts`) rather than assuming
+the prior incremental fixes already covered everything — same discipline as `Radio`'s own final
+pass. Found and fixed four real gaps:
+1. `orientation`'s JSDoc still said "(see `rtl` for that)" — stale, left over from before that prop
+   was renamed to `dir` during the initial build (per `Select`'s own precedent). Fixed to reference
+   `dir` correctly.
+2. `dir`'s JSDoc said it "defaults to the ambient document direction" — inaccurate. Verified against
+   Radix's own installed source (`@radix-ui/react-direction`): `useDirection` only reads a React
+   context (`DirectionProvider`), never the actual browser `document`/`<html dir>` attribute, falling
+   back to a hardcoded `"ltr"` if no such context exists. Reworded both the JSDoc and — since the
+   rendered Docs-page Properties table turned out to source its text from `RadioGroup.stories.tsx`'s
+   own separately-authored `argTypes.description` strings, not the JSDoc directly — the story file's
+   own `orientation`/`dir` descriptions too, so the same correction is what a reader actually sees,
+   not just what ships in the type declarations.
+3. No unit test asserted the `.error` CSS class (the left-border accent) is actually applied when
+   `hasError` is true — only `aria-invalid` was checked. Added a dedicated test, matching
+   `Indicators.test.tsx`'s own established precedent for this class of state-class assertion.
+4. No unit test asserted `dir` actually renders as a real DOM attribute. Added one.
+
+Also live-verified two combinations that had never been checked together before: `hasError` +
+`orientation="horizontal"` (the border accent and the row layout coexist cleanly, zero violations),
+and `hasError` + `orientation="horizontal"` + `dir="rtl"` together (confirmed the border accent
+correctly moves to the physical *right* edge in RTL, since it's built with the logical
+`border-inline-start` property rather than a hardcoded `left` — proving the RTL implementation is
+genuinely correct, not just untested; option order also correctly mirrors). Zero Accessibility-panel
+violations in both cases.
+
+Full re-verification, whole package: `tsc` (package + `.storybook`), `eslint --max-warnings 0`,
+Vitest `unit` (1571/1571 whole package; `RadioGroup` 33/33) and `storybook` browser-mode (400/400)
+projects, `tsup` build, `check-component-bundle-size` (`RadioGroup` still within budget) — all
+clean. No other gaps found.
+
 **Self-verification, whole package, all real runs:**
 - `tsc --noEmit` (package + `.storybook`): clean
 - `eslint --max-warnings 0`: clean
@@ -130,5 +181,9 @@ design) across all 4 themes. Full re-run: `tsc` (package + `.storybook`), `eslin
 projects (`unit`: 1561/1561, `storybook`: 399/399), `tsup` build, `check-component-bundle-size`
 (RadioGroup 0.65KB JS / 0.15KB CSS gzipped, still within budget) — all clean.
 
-**Not yet Finalized** — awaiting explicit confirmation per `06-engineering-standards.md` §9's
-reporting convention.
+**Finalized 2026-09-14, at explicit user direction**, following the final review pass above. Per
+`06-engineering-standards.md` §9's own rule, no further changes to `RadioGroup` (code, stories,
+docs, or tokens it alone drives) without asking first, even for something that would otherwise be
+an obvious, in-scope fix. With `Radio` and `RadioGroup` both Finalized, all three review-first
+molecules (`Grid`, `List`, `Select`) plus these two are done; `CheckboxGroup` (item 1 in the
+itemized build order, `04-component-inventory.md`) is next, followed by `FormField`.

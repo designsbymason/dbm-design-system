@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Radio } from "../../atoms/Radio";
 import radioStyles from "../../atoms/Radio/Radio.module.css";
 import { RadioGroup } from "./RadioGroup";
+import styles from "./RadioGroup.module.css";
 
 describe("RadioGroup", () => {
   it("renders a role=radiogroup wrapping its Radio children", () => {
@@ -216,6 +217,22 @@ describe("RadioGroup", () => {
     );
   });
 
+  it("shows the colored left-border accent class when hasError is true, not otherwise", () => {
+    const { rerender } = render(
+      <RadioGroup aria-label="Contact method">
+        <Radio value="email">Email</Radio>
+      </RadioGroup>,
+    );
+    expect(screen.getByRole("radiogroup")).not.toHaveClass(styles.error as string);
+
+    rerender(
+      <RadioGroup aria-label="Contact method" hasError>
+        <Radio value="email">Email</Radio>
+      </RadioGroup>,
+    );
+    expect(screen.getByRole("radiogroup")).toHaveClass(styles.error as string);
+  });
+
   it("sets aria-orientation to match the orientation prop", () => {
     const { rerender } = render(
       <RadioGroup aria-label="Contact method" orientation="horizontal">
@@ -236,6 +253,15 @@ describe("RadioGroup", () => {
       "aria-orientation",
       "vertical",
     );
+  });
+
+  it("sets a real dir attribute when passed explicitly", () => {
+    render(
+      <RadioGroup aria-label="Contact method" dir="rtl">
+        <Radio value="email">Email</Radio>
+      </RadioGroup>,
+    );
+    expect(screen.getByRole("radiogroup")).toHaveAttribute("dir", "rtl");
   });
 
   it("participates in real form submission via name, through Radix's own hidden inputs", async () => {

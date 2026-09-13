@@ -220,7 +220,7 @@ Not alphabetical, not category-by-category — build in **dependency order**, si
 
 `Grid`, `List`, `Select` (the three review-first molecules, `01-vision-and-goals.md` §13) are Finalized. This itemizes steps 4–9 above across the remaining 32 molecules (33 at the time this section was first written, 2026-09-14 — see the `RadioGroup`/`Radio` split noted in the Rough count summary above; `Radio` moved to atom-tier the same day, so it's no longer one of these 32), applying the same dependency-order + priority-tier (🟢 before 🟡 before ⚪) logic the steps above only stated in the abstract. Build one at a time, in this order, unless a later session finds a reason to deviate (note it here if so):
 
-**`Radio` (atom, the prerequisite for item 2 below) built and Finalized 2026-09-14** — see [Radio.md](component-reviews/Radio.md). **`RadioGroup` (item 2) built the same day** — full `06-engineering-standards.md` §9 pass complete, awaiting Finalization; see [RadioGroup.md](component-reviews/RadioGroup.md).
+**`Radio` (atom, the prerequisite for item 2 below) built and Finalized 2026-09-14** — see [Radio.md](component-reviews/Radio.md). **`RadioGroup` (item 2) built and Finalized the same day** — full `06-engineering-standards.md` §9 pass complete; see [RadioGroup.md](component-reviews/RadioGroup.md). Item 1 (`CheckboxGroup`) is next, out of build order since it was skipped while `Radio`/`RadioGroup` were the priority — then item 3 (`FormField`) onward as originally sequenced.
 
 **Form molecules (🟢, step 4's remaining scope)**
 1. CheckboxGroup, 2. RadioGroup — simple compositions over already-Finalized atoms (`Checkbox`, and `Radio`), no dependency on anything else in this list

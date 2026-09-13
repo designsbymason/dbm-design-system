@@ -20,7 +20,7 @@ const meta: Meta<typeof RadioGroup> = {
     children: { control: false, description: "The Radio elements this group manages." },
     size: {
       control: "select",
-      options: [undefined, "xs", "sm", "md", "lg", "xl"],
+      options: ["xs", "sm", "md", "lg", "xl"],
       description: "The size every Radio in this group inherits, unless it sets its own.",
     },
     // Deliberately excluded — same reasoning as Radio's own `checked`:
@@ -56,12 +56,14 @@ const meta: Meta<typeof RadioGroup> = {
     orientation: {
       control: "select",
       options: ["vertical", "horizontal"],
-      description: "Layout direction, and which arrow-key pair moves roving focus between options.",
+      description:
+        "Layout direction, and which arrow-key pair moves roving focus between options. Purely visual/keyboard — unrelated to text direction, see dir for that.",
     },
     dir: {
       control: "select",
-      options: [undefined, "ltr", "rtl"],
-      description: "Text direction, passed through to Radix RadioGroup.",
+      options: ["ltr", "rtl"],
+      description:
+        "Text direction, passed through to Radix RadioGroup. When omitted, defers to the nearest Radix DirectionProvider ancestor if the app has one (a React context, not the actual browser document/html[dir] attribute), else falls back to ltr.",
     },
     loop: {
       description: "Whether roving focus wraps from the last option back to the first.",
@@ -95,13 +97,14 @@ const meta: Meta<typeof RadioGroup> = {
   // component default — see guidelines/07-storybook-and-documentation-
   // standards.md §5.
   args: {
-    size: undefined,
+    size: "md",
     defaultValue: "email",
     hasError: false,
     disabled: false,
     required: false,
     name: "",
     orientation: "vertical",
+    dir: "ltr",
     loop: true,
     "aria-label": "Contact method",
     onValueChange: fn(),

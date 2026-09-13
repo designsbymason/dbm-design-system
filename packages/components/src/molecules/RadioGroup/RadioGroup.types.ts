@@ -71,15 +71,18 @@ export interface RadioGroupProps
    * Layout direction, and which arrow-key pair moves roving focus between
    * options: `Up`/`Down` when `"vertical"`, `Left`/`Right` when
    * `"horizontal"`. Purely visual+keyboard — unrelated to text direction
-   * (see `rtl` for that).
+   * (see `dir` for that).
    * @default 'vertical'
    */
   orientation?: RadioGroupOrientation;
   /**
    * Text direction, passed through to Radix RadioGroup — flips which
    * physical arrow key (`Left`/`Right`) moves focus forward versus back in
-   * `"horizontal"` orientation. Defaults to the ambient document direction
-   * when omitted.
+   * `"horizontal"` orientation. When omitted, defers to the nearest Radix
+   * `DirectionProvider` ancestor, if the consuming app has one (a React
+   * context, not the actual browser `document`/`<html dir>` attribute —
+   * Radix never reads that), falling back to `"ltr"` if there's no such
+   * provider either.
    */
   dir?: "ltr" | "rtl";
   /**
