@@ -1,0 +1,23 @@
+.root {
+  display: flex;
+}
+
+.orientationVertical {
+  flex-direction: column;
+  gap: var(--dbm-space-2);
+}
+
+.orientationHorizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2) var(--dbm-space-4);
+}
+
+/* Same colored left-border accent pattern as RadioGroup's own .error — see
+   that component's CSS for the full rationale (Blockquote's own
+   border-width-4 + space-4 inline-start pairing, applied with
+   border.danger instead of border.brand). */
+.error {
+  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-danger);
+  padding-inline-start: var(--dbm-space-4);
+}

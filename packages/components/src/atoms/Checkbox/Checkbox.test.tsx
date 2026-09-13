@@ -2,10 +2,67 @@ import { StarIcon, XIcon } from "@dbm-design-system/icons";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { createRef, useState } from "react";
+import { createRef, useState, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Checkbox } from "./Checkbox";
+import { CheckboxGroupContext } from "./CheckboxGroupContext";
+import { CheckboxGroupSizeContext } from "./CheckboxGroupSizeContext";
 import styles from "./Checkbox.module.css";
+import type { CheckboxSize } from "./Checkbox.types";
+
+/**
+ * A minimal grouped-mode harness — mirrors what the real `CheckboxGroup`
+ * molecule does internally: own the array of checked values, and provide
+ * `CheckboxGroupContext`/`CheckboxGroupSizeContext` the same way it does.
+ * Kept here rather than importing the real `CheckboxGroup` so `Checkbox`'s
+ * own atom-tier tests stay self-contained, with no dependency on a
+ * molecule — `CheckboxGroup.test.tsx` is where the real, composed
+ * integration is covered.
+ */
+function GroupHarness({
+  children,
+  initialValue = [],
+  disabled = false,
+  name,
+  form,
+  size,
+  onItemCheckedChange,
+}: {
+  children: ReactNode;
+  initialValue?: string[];
+  disabled?: boolean;
+  name?: string;
+  form?: string;
+  size?: CheckboxSize;
+  onItemCheckedChange?: (itemValue: string, checked: boolean) => void;
+}) {
+  const [value, setValue] = useState<string[]>(initialValue);
+  const handleItemCheckedChange = (itemValue: string, checked: boolean) => {
+    setValue((prev) =>
+      checked
+        ? prev.includes(itemValue)
+          ? prev
+          : [...prev, itemValue]
+        : prev.filter((v) => v !== itemValue),
+    );
+    onItemCheckedChange?.(itemValue, checked);
+  };
+  return (
+    <CheckboxGroupContext.Provider
+      value={{
+        value,
+        onItemCheckedChange: handleItemCheckedChange,
+        disabled,
+        name,
+        form,
+      }}
+    >
+      <CheckboxGroupSizeContext.Provider value={size}>
+        {children}
+      </CheckboxGroupSizeContext.Provider>
+    </CheckboxGroupContext.Provider>
+  );
+}
 
 describe("Checkbox", () => {
   it("renders an unchecked checkbox by default", () => {
@@ -316,5 +373,175 @@ describe("Checkbox", () => {
     );
     const results = await axe(disabledContainer);
     expect(results).toHaveNoViolations();
+  });
+
+  it("defaults to size 'md' with no size prop and no CheckboxGroup ancestor", () => {
+    render(<Checkbox aria-label="Accept" />);
+    expect(screen.getByRole("checkbox")).toHaveClass(styles.sizeMd as string);
+  });
+
+  describe("grouped (real ambient CheckboxGroup context present)", () => {
+    it("reflects checked state from the group's own value array containing this item's value", () => {
+      render(
+        <GroupHarness initialValue={["sports"]}>
+          <Checkbox value="sports">Sports</Checkbox>
+          <Checkbox value="music">Music</Checkbox>
+        </GroupHarness>,
+      );
+      expect(screen.getByRole("checkbox", { name: "Sports" })).toHaveAttribute(
+        "aria-checked",
+        "true",
+      );
+      expect(screen.getByRole("checkbox", { name: "Music" })).toHaveAttribute(
+        "aria-checked",
+        "false",
+      );
+    });
+
+    it("calls the group's onItemCheckedChange with this item's value and the new checked state when clicked", async () => {
+      const user = userEvent.setup();
+      const onItemCheckedChange = vi.fn();
+      render(
+        <GroupHarness onItemCheckedChange={onItemCheckedChange}>
+          <Checkbox value="sports">Sports</Checkbox>
+        </GroupHarness>,
+      );
+      await user.click(screen.getByRole("checkbox", { name: "Sports" }));
+      expect(onItemCheckedChange).toHaveBeenCalledWith("sports", true);
+    });
+
+    it("supports checking multiple items independently, and unchecking one doesn't affect the others", async () => {
+      const user = userEvent.setup();
+      render(
+        <GroupHarness initialValue={["sports"]}>
+          <Checkbox value="sports">Sports</Checkbox>
+          <Checkbox value="music">Music</Checkbox>
+        </GroupHarness>,
+      );
+      await user.click(screen.getByRole("checkbox", { name: "Music" }));
+      expect(screen.getByRole("checkbox", { name: "Sports" })).toHaveAttribute(
+        "aria-checked",
+        "true",
+      );
+      expect(screen.getByRole("checkbox", { name: "Music" })).toHaveAttribute(
+        "aria-checked",
+        "true",
+      );
+
+      await user.click(screen.getByRole("checkbox", { name: "Sports" }));
+      expect(screen.getByRole("checkbox", { name: "Sports" })).toHaveAttribute(
+        "aria-checked",
+        "false",
+      );
+      expect(screen.getByRole("checkbox", { name: "Music" })).toHaveAttribute(
+        "aria-checked",
+        "true",
+      );
+    });
+
+    it("cascades disabled from the group, ORed with its own explicit disabled", async () => {
+      const user = userEvent.setup();
+      const onItemCheckedChange = vi.fn();
+      render(
+        <GroupHarness disabled onItemCheckedChange={onItemCheckedChange}>
+          <Checkbox value="sports">Sports</Checkbox>
+        </GroupHarness>,
+      );
+      const checkbox = screen.getByRole("checkbox", { name: "Sports" });
+      expect(checkbox).toBeDisabled();
+      await user.click(checkbox);
+      expect(onItemCheckedChange).not.toHaveBeenCalled();
+    });
+
+    it("dims the inline label when disabled via the group cascade, not just its own explicit disabled", () => {
+      render(
+        <GroupHarness disabled>
+          <Checkbox value="sports">Sports</Checkbox>
+        </GroupHarness>,
+      );
+      const label = screen.getByText("Sports").closest("label");
+      expect(label).toHaveClass(styles.labelDisabled as string);
+    });
+
+    it("cascades name and form from the group unless the item sets its own", () => {
+      const { container } = render(
+        <GroupHarness name="interests" form="preferences-form">
+          <Checkbox value="sports">Sports</Checkbox>
+          <Checkbox value="music" name="music-opt-in">
+            Music
+          </Checkbox>
+        </GroupHarness>,
+      );
+      const inputs = container.querySelectorAll('input[type="checkbox"]');
+      const sportsInput = Array.from(inputs).find(
+        (input) => (input as HTMLInputElement).value === "sports",
+      ) as HTMLInputElement;
+      const musicInput = Array.from(inputs).find(
+        (input) => (input as HTMLInputElement).value === "music",
+      ) as HTMLInputElement;
+      expect(sportsInput.name).toBe("interests");
+      expect(sportsInput.getAttribute("form")).toBe("preferences-form");
+      expect(musicInput.name).toBe("music-opt-in");
+    });
+
+    it("inherits size from an ambient CheckboxGroup context when it has no size of its own", () => {
+      render(
+        <GroupHarness size="sm">
+          <Checkbox value="sports">Sports</Checkbox>
+        </GroupHarness>,
+      );
+      expect(screen.getByRole("checkbox")).toHaveClass(styles.sizeSm as string);
+    });
+
+    it("prefers its own explicit size over an inherited one", () => {
+      render(
+        <GroupHarness size="sm">
+          <Checkbox value="sports" size="xl">
+            Sports
+          </Checkbox>
+        </GroupHarness>,
+      );
+      const checkbox = screen.getByRole("checkbox");
+      expect(checkbox).toHaveClass(styles.sizeXl as string);
+      expect(checkbox).not.toHaveClass(styles.sizeSm as string);
+    });
+
+    it("warns once in development when standalone-only props are passed while grouped", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <GroupHarness>
+          <Checkbox value="sports" defaultChecked>
+            Sports
+          </Checkbox>
+        </GroupHarness>,
+      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("have no effect inside a `CheckboxGroup`"),
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("warns once in development when rendered inside a group with no value", () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <GroupHarness>
+          <Checkbox>Sports</Checkbox>
+        </GroupHarness>,
+      );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("no `value`"),
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("has no accessibility violations as a real group, some checked and some not", async () => {
+      const { container } = render(
+        <GroupHarness initialValue={["sports"]}>
+          <Checkbox value="sports">Sports</Checkbox>
+          <Checkbox value="music">Music</Checkbox>
+        </GroupHarness>,
+      );
+      expect((await axe(container)).violations).toHaveLength(0);
+    });
   });
 });

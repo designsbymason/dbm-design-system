@@ -1,0 +1,213 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Checkbox } from "../../atoms/Checkbox";
+import { FieldError } from "../../atoms/FieldError";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { CheckboxGroup } from "./CheckboxGroup";
+import * as CheckboxGroupStories from "./CheckboxGroup.stories";
+
+export const propOrder = [
+  "children",
+  "size",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "hasError",
+  "disabled",
+  "name",
+  "form",
+  "orientation",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={CheckboxGroupStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="CheckboxGroup" tier="Molecule" />
+
+Manages a group of `Checkbox` options sharing one multi-select array of checked values. Radix has
+no group primitive for checkboxes — each `Checkbox` is already a fully standalone primitive — so
+`CheckboxGroup` implements the array coordination itself via context, mirroring `RadioGroup`'s own
+composition pattern. Accepts both controlled (`value`/`onValueChange`) and uncontrolled
+(`defaultValue`) usage. Cascades `disabled`/`name`/`form`/`size` to every option at once — any
+option can still set its own `size` (or additional `disabled`) to layer on top of the group's.
+
+### Import
+
+```tsx
+import { CheckboxGroup, Checkbox } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CheckboxGroupStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={CheckboxGroupStories.Playground}
+  exclude={["children", "value", "onValueChange", "form", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`CheckboxGroup` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `onKeyDown`) — passed straight through to the underlying `<div role="group">`.
+
+<PropertiesTable of={CheckboxGroupStories} order={propOrder} />
+
+## Variants
+
+### Vertical vs. horizontal
+
+<Canvas of={CheckboxGroupStories.Orientation} />
+
+### Size cascade, with a per-item override
+
+<Canvas of={CheckboxGroupStories.SizeCascade} />
+
+### States
+
+<Canvas of={CheckboxGroupStories.States} />
+
+### Controlled, with a live selection summary
+
+<Canvas of={CheckboxGroupStories.ControlledSelectionSummary} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Pass a distinct `value` on every `Checkbox` inside the group — that's what identifies which
+  option is which.
+- Pass `aria-label` (or `aria-labelledby`, pointing at a nearby `FieldLabel`) — every
+  `role="group"` benefits from an accessible name of its own.
+- Reach for `orientation="horizontal"` for a short set of options in a compact filter bar or
+  toolbar; keep the default `vertical` for anything inside a real form.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't drive `value` from a live control without a real `onValueChange` wired back — the group
+  always defers to the controlled value, which freezes every option's own click handling.
+- Don't set `checked`/`defaultChecked`/`onCheckedChange` on the individual `Checkbox` children —
+  those are group-level concerns here; a grouped `Checkbox` reads its checked state from the
+  group's own `value` array instead, and warns once in development if any of those are passed.
+- Don't expect `hasError` to set `aria-invalid` here the way `RadioGroup`'s does — `role="group"`
+  doesn't support it at all (see [Accessibility](#accessibility) below), so it's a visual-only
+  signal; always pair it with a nearby `FieldError`.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reach for a plain, standalone `Checkbox` (or a `RadioGroup`, if the options are mutually
+  exclusive) instead when there's genuinely only one meaningful choice to make.
+- Pair with `FieldLabel`/`FieldError` for the group's own visible label and validation message —
+  `CheckboxGroup` itself doesn't render either.
+- Keep the option set short and scannable — a long list of independent choices usually reads
+  better as a searchable list or a `Select` with multi-select support instead.
+- Set `size` once on the group rather than repeating it on every `Checkbox` — reach for a
+  per-`Checkbox` override only for a genuine one-off, not as the default way to size a whole group.
+
+## Accessibility
+
+<Callout tone="info" title="No native or Radix group primitive — CheckboxGroup owns its own coordination">
+
+- Renders a `<div role="group">` around its `Checkbox` children, each a real `<button
+  role="checkbox">` — every option keeps its own independent tab stop via `Tab`/`Shift+Tab`. Unlike
+  `RadioGroup`'s `role="radiogroup"`, a set of checkboxes has no single composite widget or
+  roving-tabindex/arrow-key behavior in the WAI-ARIA sense.
+- `role="group"` does not support `aria-invalid` per the ARIA spec (unlike `role="radiogroup"`, which
+  does) — `hasError` shows a colored left-border accent (`border.danger`) on the group itself as a
+  purely visual signal instead. Always pair it with a nearby `FieldError` so the reason for the
+  error is still available to assistive tech, not just sighted users. `border.danger` against
+  `bg.surface` is checked against real WCAG contrast ratios, not assumed — see
+  [Design tokens used](#design-tokens-used) below.
+- A dev-mode console warning fires once if a `CheckboxGroup` has no `aria-label` or
+  `aria-labelledby` — a group with no accessible name is confusing for screen reader users.
+- `disabled` cascades to every option automatically, via the same real context each grouped
+  `Checkbox` already reads from — an individual `Checkbox` can still layer its own additional
+  `disabled` on top.
+- Inside a `<form>` (or with an explicit `form` prop), each grouped `Checkbox` still renders its
+  own independent hidden native `<input type="checkbox">`, via Radix — `name`/`form` cascade from
+  the group to every option that doesn't set its own, so the whole group submits as a real native
+  checkbox group (`?interests=sports&interests=music`).
+
+</Callout>
+
+## Code examples
+
+```tsx
+<CheckboxGroup aria-label="Interests" defaultValue={["sports"]}>
+  <Checkbox value="sports">Sports</Checkbox>
+  <Checkbox value="music">Music</Checkbox>
+  <Checkbox value="travel">Travel</Checkbox>
+</CheckboxGroup>
+
+<CheckboxGroup aria-label="Interests" value={interests} onValueChange={setInterests}>
+  <Checkbox value="sports">Sports</Checkbox>
+  <Checkbox value="music">Music</Checkbox>
+</CheckboxGroup>
+
+<CheckboxGroup aria-label="Interests" orientation="horizontal" defaultValue={["sports"]}>
+  <Checkbox value="sports">Sports</Checkbox>
+  <Checkbox value="music">Music</Checkbox>
+</CheckboxGroup>
+
+<CheckboxGroup aria-label="Interests" name="interests" onFocus={() => trackFieldFocus('interests')}>
+  <Checkbox value="sports">Sports</Checkbox>
+  <Checkbox value="music">Music</Checkbox>
+</CheckboxGroup>
+
+{/* Every option inherits sm; one option overrides it back to md. */}
+<CheckboxGroup aria-label="Interests" size="sm" defaultValue={["sports"]}>
+  <Checkbox value="sports">Sports</Checkbox>
+  <Checkbox value="music" size="md">Music</Checkbox>
+</CheckboxGroup>
+```
+
+## Design tokens used
+
+<TokenRow token="space.2" usage="gap between options, vertical orientation" />
+<TokenRow token="space.2, space.4" usage="row-gap, column-gap between options, horizontal orientation" />
+<TokenRow token="border.danger" usage="hasError state left-border accent" />
+<TokenRow token="border-width.4" usage="hasError state left-border accent width" />
+<TokenRow token="space.4" usage="hasError state inline-start padding, offsetting content from the accent" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Checkbox"
+  description="A single checkbox — functions standalone too, or as this group's own child"
+  href="/?path=/docs/atoms-inputs-checkbox--docs"
+>
+  <Checkbox defaultChecked aria-label="Sports" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="A standalone label atom for pairing with the group's own aria-labelledby"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel>Interests</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="Pairs with hasError to show why the group failed validation, not just that it did"
+  href="/?path=/story/atoms-inputs-fielderror--playground"
+>
+  <FieldError>Please choose at least one interest</FieldError>
+</RelatedCard>
+</div>

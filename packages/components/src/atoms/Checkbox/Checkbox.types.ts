@@ -13,7 +13,13 @@ export interface CheckboxProps
    * `aria-label` instead (matches `IconButton`'s icon-only convention).
    */
   children?: ReactNode;
-  /** @default 'md' */
+  /**
+   * Inside a `CheckboxGroup`, omitting this inherits the group's own `size`
+   * (if it set one) instead of falling straight to the default — an
+   * explicit value here always wins over both. Standalone, or grouped with
+   * no inherited size either, falls back to `'md'`.
+   * @default 'md'
+   */
   size?: CheckboxSize;
   /**
    * Marks the checkbox as invalid, visually and via `aria-invalid`.
@@ -21,15 +27,24 @@ export interface CheckboxProps
    */
   hasError?: boolean;
   /**
-   * The controlled checked state. `"indeterminate"` renders a dash instead
-   * of a checkmark — a purely visual/semantic state you set explicitly
-   * (e.g. "some but not all children selected"); clicking always toggles
-   * between `true`/`false`, never back to `"indeterminate"` on its own.
+   * The controlled checked state — only meaningful when this `Checkbox` has
+   * no `CheckboxGroup` ancestor. Inside a group, the group's own `value`/
+   * `onValueChange` fully controls which items are checked instead; passing
+   * this there has no effect and warns once in development.
+   * `"indeterminate"` renders a dash instead of a checkmark — a purely
+   * visual/semantic state you set explicitly (e.g. "some but not all
+   * children selected"); clicking always toggles between `true`/`false`,
+   * never back to `"indeterminate"` on its own. Not meaningful for a
+   * grouped item, which is always a plain member of the group's own array.
    */
   checked?: boolean | "indeterminate";
-  /** The initial checked state when uncontrolled. */
+  /** The initial checked state when uncontrolled and standalone. */
   defaultChecked?: boolean | "indeterminate";
-  /** Called with the new checked state whenever it changes. */
+  /**
+   * Called with the new checked state whenever it changes, standalone. Not
+   * called inside a `CheckboxGroup`; use the group's own `onValueChange`
+   * there instead.
+   */
   onCheckedChange?: (checked: boolean | "indeterminate") => void;
   /**
    * Overrides the glyph shown when checked — a component reference, not a
@@ -75,18 +90,29 @@ export interface CheckboxProps
    * automatically renders a hidden native `<input type="checkbox">` there
    * so the checkbox participates in real form submission (including
    * uncontrolled forms with no JS handler), and `name` is what that hidden
-   * input submits under.
+   * input submits under. Inside a `CheckboxGroup`, omitting this inherits
+   * the group's own `name` (if it set one) instead — every native checkbox
+   * sharing one `name`, with each its own `value`, is exactly how a real
+   * checkbox group submits (unlike `Radio`/`RadioGroup`, where Radix's own
+   * primitive reserves `name` exclusively for the group; each Checkbox
+   * already renders its own independent hidden input, so sharing `name`
+   * across grouped items is cascaded, not forbidden).
    */
   name?: string;
   /**
    * Form field value, submitted by the hidden native input (see `name`)
    * when checked. Defaults to `"on"`, matching a native
-   * `<input type="checkbox">` with no explicit `value`.
+   * `<input type="checkbox">` with no explicit `value`. **Required, in
+   * practice, inside a `CheckboxGroup`** — it's what identifies this option
+   * among its siblings; two `Checkbox`es in the same group with the same
+   * (or no) `value` can't be told apart.
    */
   value?: string;
   /**
    * Associates the checkbox with a `<form>` by `id`, for use outside that
    * form's own DOM subtree — same purpose as the native `form` attribute.
+   * Inside a `CheckboxGroup`, omitting this inherits the group's own `form`
+   * the same way `name` does.
    */
   form?: string;
   /**
