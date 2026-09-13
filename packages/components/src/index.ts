@@ -50,6 +50,7 @@ export * from "./atoms/Tooltip";
 export * from "./atoms/VisuallyHidden";
 
 export * from "./molecules/CheckboxGroup";
+export * from "./molecules/FormField";
 export * from "./molecules/Grid";
 export * from "./molecules/List";
 export * from "./molecules/RadioGroup";

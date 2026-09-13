@@ -2,7 +2,9 @@ import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { FieldError } from "../FieldError";
 import { FieldLabel } from "../FieldLabel";
+import { Input } from "../Input";
 import { VisuallyHidden } from "../VisuallyHidden";
+import { FormField } from "../../molecules/FormField";
 import { FieldHelperText } from "./FieldHelperText";
 import * as FieldHelperTextStories from "./FieldHelperText.stories";
 
@@ -150,5 +152,14 @@ import { FieldHelperText } from "@dbm-design-system/components";
   href="/?path=/docs/atoms-inputs-fielderror--docs"
 >
   <FieldError>Enter a valid email address</FieldError>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this helper text with a label and control, with the id/aria-describedby wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <FormField label="Email address" helperText="We'll never share this">
+    {(fieldProps) => <Input {...fieldProps} placeholder="you@example.com" />}
+  </FormField>
 </RelatedCard>
 </div>

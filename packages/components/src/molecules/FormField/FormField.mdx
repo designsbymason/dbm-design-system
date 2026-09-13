@@ -1,0 +1,215 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Checkbox } from "../../atoms/Checkbox";
+import { FieldError } from "../../atoms/FieldError";
+import { FieldHelperText } from "../../atoms/FieldHelperText";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FormField } from "./FormField";
+import * as FormFieldStories from "./FormField.stories";
+
+export const propOrder = [
+  "label",
+  "children",
+  "helperText",
+  "error",
+  "required",
+  "disabled",
+  "size",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={FormFieldStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="FormField" tier="Molecule" />
+
+Composes a `FieldLabel`, a form control, and helper/error text into one correctly-wired field —
+computing the `id`/`aria-labelledby`/`aria-describedby` relationships between them and handing them
+to the control via a render-prop `children`, rather than rendering the control itself. There's no
+single primitive every possible control — `Input`, `Textarea`, `Checkbox`, `RadioGroup`,
+`CheckboxGroup`, `Select`, and any future one — could share, so `FormField` computes what a control
+needs and hands it back as a plain object to spread, instead of reaching into an arbitrary child to
+inject props or requiring every control atom to opt into a shared context. Every field-control atom
+in this system already accepts the exact shape it hands back (`id`, `aria-labelledby`,
+`aria-describedby`, `hasError`, `disabled`, `required`), so none of them need any change to work
+here.
+
+### Import
+
+```tsx
+import { FormField, Input } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FormFieldStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={FormFieldStories.Playground}
+  exclude={["children", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`FormField` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `onKeyDown`) — passed straight through to the outer wrapper.
+
+<PropertiesTable of={FormFieldStories} order={propOrder} />
+
+## Variants
+
+### Wrapping different control types
+
+<Canvas of={FormFieldStories.WithDifferentControls} />
+
+### States
+
+<Canvas of={FormFieldStories.States} />
+
+### Controlled, with live validation
+
+<Canvas of={FormFieldStories.ControlledWithLiveValidation} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Spread the received `fieldProps` directly onto the control — `(fieldProps) => <Input {...fieldProps} />` — that's the entire integration; don't hand-pick individual keys off it.
+- Reach for `error` once the field actually fails validation, and `helperText` for neutral,
+  always-relevant guidance — the two are mutually exclusive here, not stacked.
+- Let the control's own visual size (`Input`'s `size`, `Select`'s `size`, etc.) match `FormField`'s
+  `size` yourself — it isn't cascaded automatically, since this API already has you author the
+  control explicitly on the same line.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't set `id`/`aria-labelledby`/`aria-describedby`/`hasError`/`disabled`/`required` on the
+  control by hand alongside the spread — `fieldProps` already carries the correct value for every
+  one of those; setting your own afterward just silently overrides it (later JSX attributes win).
+- Don't forget to spread `fieldProps` at all — a control instantiated without them has no `id`, so
+  its label never associates and `jest-axe`/the Accessibility panel will catch the resulting
+  violation at review time, not silently pass.
+- Don't reach for `FormField` for a single standalone control with no label of its own (an
+  icon-only search box, say) — use the control's own `aria-label` directly instead.
+
+</Callout>
+</div>
+
+## Best practices
+
+- One `FormField` per real field — don't wrap multiple unrelated controls under one `label`/
+  `helperText`/`error`; compose several `FormField`s instead (a shared legend/heading across a
+  *set* of fields is `FieldGroup`'s job, not this component's).
+- Keep `helperText` to one line where possible, matching `FieldHelperText`'s own guidance — it
+  disappears the moment `error` is set, so don't rely on it to carry information the user needs
+  during a failed validation.
+- Prefer `Input`'s/`Textarea`'s/etc. own `hasError`-driven visual treatment over inventing a
+  parallel one — `fieldProps.hasError` already drives it once spread.
+
+## Accessibility
+
+<Callout tone="info" title="Computed ids, handed back for the consumer to spread — not injected automatically">
+
+- `FieldLabel` gets both `id` (so the control's `aria-labelledby` can reference it) and `htmlFor`
+  (so a natively labelable control — `Input`, `Textarea`, `Checkbox`'s own `<button>` — gets the
+  native click-label-to-focus behavior too, on top of `aria-labelledby`). `aria-labelledby` is what
+  actually establishes the accessible name, uniformly, regardless of whether the control is a
+  natively labelable element or a container role (`RadioGroup`'s `role="radiogroup"`,
+  `CheckboxGroup`'s `role="group"`) that `htmlFor` alone couldn't reach.
+- `aria-describedby` points at whichever of `FieldHelperText`/`FieldError` is actually rendered —
+  omitted entirely from `fieldProps` when neither is, rather than pointing at nothing.
+- `FieldError`'s own `role="alert"` announces the error message as soon as it mounts — no extra
+  wiring needed beyond spreading `fieldProps`.
+- **Verified by hand, not assumed:** clicking the label focuses the control (`Input`), and the
+  control's computed accessible name and description both resolve correctly, checked via
+  `getByRole` queries that only pass when the real underlying ARIA relationship resolves — see the
+  `WiringInteraction`/`ClickLabelInteraction` stories' own `play` functions.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<FormField label="Email address" helperText="We'll never share this">
+  {(fieldProps) => <Input {...fieldProps} type="email" />}
+</FormField>
+
+<FormField label="Password" error={errors.password} required>
+  {(fieldProps) => <Input {...fieldProps} type="password" />}
+</FormField>
+
+<FormField label="Bio" helperText="Up to 280 characters">
+  {(fieldProps) => <Textarea {...fieldProps} />}
+</FormField>
+
+<FormField label="Accept terms">
+  {(fieldProps) => <Checkbox {...fieldProps}>I agree to the Terms of Service</Checkbox>}
+</FormField>
+
+<FormField label="Contact method">
+  {(fieldProps) => (
+    <RadioGroup {...fieldProps} defaultValue="email">
+      <Radio value="email">Email</Radio>
+      <Radio value="sms">SMS</Radio>
+    </RadioGroup>
+  )}
+</FormField>
+
+<FormField label="Interests">
+  {(fieldProps) => (
+    <CheckboxGroup {...fieldProps} value={interests} onValueChange={setInterests}>
+      <Checkbox value="sports">Sports</Checkbox>
+      <Checkbox value="music">Music</Checkbox>
+    </CheckboxGroup>
+  )}
+</FormField>
+```
+
+## Design tokens used
+
+<TokenRow token="space.2" usage="gap between the label, control, and helper/error text" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom this component renders — also usable standalone for a hand-built field"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Email address</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="The neutral-guidance atom this component renders when there's no error"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>We'll never share this</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="The validation-error atom this component renders in place of helperText"
+  href="/?path=/docs/atoms-inputs-fielderror--docs"
+>
+  <FieldError>Enter a valid email address</FieldError>
+</RelatedCard>
+<RelatedCard
+  name="Input"
+  description="The most common control composed inside a FormField, shown throughout this page"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="you@example.com" />
+</RelatedCard>
+</div>
