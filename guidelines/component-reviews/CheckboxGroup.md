@@ -87,7 +87,7 @@ molecule's build, and no other component has needed it yet.
 **Self-verification, both components, all real runs:**
 - `tsc --noEmit` (package + `.storybook`): clean
 - `eslint --max-warnings 0`: clean
-- Vitest `unit` project: 1205/1205 whole package (`Checkbox` 36/36, `CheckboxGroup` 22/22)
+- Vitest `unit` project: 1206/1206 whole package (`Checkbox` 36/36, `CheckboxGroup` 23/23)
 - Vitest `storybook` (browser-mode play-function/a11y) project: 408/408 whole package
 - `tsup` build: clean, all four output targets
 - `check-component-bundle-size`: `CheckboxGroup` 0.72KB JS / 0.15KB CSS gzipped (in line with
@@ -103,5 +103,41 @@ molecule's build, and no other component has needed it yet.
 - Confirmed sidebar placement: **Molecules → Inputs → CheckboxGroup**, per the taxonomy in
   `07-storybook-and-documentation-standards.md` §3
 
-Not yet Finalized — awaiting explicit confirmation before marking it so, per
-`06-engineering-standards.md` §9's own rule.
+**Final review pass (2026-09-14, at explicit user request before Finalization).** Re-read every file
+fresh end to end (`CheckboxGroup.tsx`, `CheckboxGroup.types.ts`, `CheckboxGroup.module.css`,
+`CheckboxGroup.stories.tsx`, `CheckboxGroup.test.tsx`, `CheckboxGroup.mdx`, `index.ts`, plus
+`Checkbox.tsx`/`Checkbox.types.ts` for the authorized edit) rather than assuming the incremental
+build already covered everything — same discipline as `Radio`'s and `RadioGroup`'s own final
+passes. Found and fixed two real gaps:
+1. **Real bug, the project's own recurring JSX-attribute-ordering class
+   (`05-component-api-conventions.md` §3):** `role="group"` was declared *before* `{...props}` in
+   `CheckboxGroup.tsx`'s render — later JSX attributes win, so a consumer passing their own `role`
+   prop (already legal at the type level; `ComponentPropsWithoutRef<"div">` isn't `Omit`-ing `role`)
+   would have silently overridden `"group"`. `RadioGroup` never had this exposure since Radix's own
+   `RadioGroupPrimitive.Root` sets `role="radiogroup"` internally; `CheckboxGroup` renders a plain
+   `<div>` it owns outright, so this ordering was entirely this component's own responsibility, and
+   it was backwards. Fixed by moving `role="group"` to after `{...props}`, alongside `id`; added a
+   regression test (`"never lets a same-named consumer prop override the computed role"`) proving a
+   consumer-passed `role="list"` can't win, matching the project's own standing expectation that a
+   fix in this bug class always ships with a proof test, not just the fix itself.
+2. **Minor JSDoc drift:** `hasError`'s doc said "pair with a nearby `FieldError` (referenced via
+   `aria-describedby`)" — implying an `aria-describedby` wiring neither this component nor any of
+   its own stories/examples actually demonstrate (that cross-part id-wiring is explicitly `FormField`
+   territory, not yet built — see `04-component-inventory.md`'s own build order). Asymmetric with
+   `RadioGroup`'s plainer "pair with a nearby `FieldError`" phrasing for the same concept, with no
+   real difference between the two components to justify it. Trimmed to match.
+
+No other gaps found — the array-coordination logic, size/disabled/name/form cascade, dev warnings,
+`States`/`SizeCascade`/`Orientation` galleries, and every interaction story held up under a fresh
+read. Full re-verification, whole package: `tsc` (package + `.storybook`), `eslint --max-warnings 0`,
+Vitest `unit` (1206/1206 whole package; `CheckboxGroup` 23/23) and `storybook` browser-mode (8/8 for
+`CheckboxGroup`'s own stories) projects, `tsup` build, `check-component-bundle-size` (`CheckboxGroup`
+0.72KB JS / 0.15KB CSS, unchanged, still within budget) — all clean. Live-reconfirmed in Storybook
+after the `role` fix: `Playground` story renders identically, zero Accessibility-panel violations.
+
+**Finalized 2026-09-14, at explicit user direction**, following the final review pass above. Per
+`06-engineering-standards.md` §9's own rule, no further changes to `CheckboxGroup` (code, stories,
+docs, or tokens it alone drives) without asking first, even for something that would otherwise be
+an obvious, in-scope fix. With `CheckboxGroup` Finalized, item 1 in the itemized molecule-tier build
+order is done, alongside `Radio`/`RadioGroup` (items 2's prerequisite and item 2 itself);
+`FormField` (item 3) is next.

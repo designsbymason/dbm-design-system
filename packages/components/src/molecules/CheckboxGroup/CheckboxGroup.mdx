@@ -94,6 +94,14 @@ import { CheckboxGroup, Checkbox } from "@dbm-design-system/components";
   `role="group"` benefits from an accessible name of its own.
 - Reach for `orientation="horizontal"` for a short set of options in a compact filter bar or
   toolbar; keep the default `vertical` for anything inside a real form.
+- Set `required` directly on the one `Checkbox` that must be checked (e.g. "I agree to the Terms"
+  inside an otherwise-optional list) — `required` is a per-`Checkbox` prop, not something
+  `CheckboxGroup` has any notion of, and it isn't blocked while grouped the way `checked`/
+  `defaultChecked`/`onCheckedChange` are. When that specific item fails validation, set `hasError`
+  on that same `Checkbox` (its own red-bordered-control treatment), **not** on the `CheckboxGroup`
+  — the failure belongs to one option, not the set as a whole. Reserve `CheckboxGroup`'s own
+  `hasError` for a rule about the group as a whole (e.g. "choose at least 2 of these 5"), where no
+  single item is individually at fault.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -106,6 +114,10 @@ import { CheckboxGroup, Checkbox } from "@dbm-design-system/components";
 - Don't expect `hasError` to set `aria-invalid` here the way `RadioGroup`'s does — `role="group"`
   doesn't support it at all (see [Accessibility](#accessibility) below), so it's a visual-only
   signal; always pair it with a nearby `FieldError`.
+- Don't expect `required` to set `hasError` for you — `required` only controls native HTML5 form
+  validation (does the browser block submission?) and `aria-required`; it has no visual effect on
+  its own. Tracking "was this required item left unchecked after a submit attempt" and setting
+  `hasError` accordingly is left to you, the same as any other required field in this system.
 
 </Callout>
 </div>
@@ -144,6 +156,11 @@ import { CheckboxGroup, Checkbox } from "@dbm-design-system/components";
   own independent hidden native `<input type="checkbox">`, via Radix — `name`/`form` cascade from
   the group to every option that doesn't set its own, so the whole group submits as a real native
   checkbox group (`?interests=sports&interests=music`).
+- `required` is a per-`Checkbox` prop (not cascaded, and not something `CheckboxGroup` has any
+  notion of) — mark just the specific option that must be checked, not the whole group, since
+  there's no native browser concept of "at least N of these checkboxes." It sets that one item's
+  own `aria-required` and its hidden input's native `required` attribute; it does not set
+  `hasError` for you — see [Usage guidelines](#usage-guidelines) above for the full pattern.
 
 </Callout>
 
@@ -175,6 +192,21 @@ import { CheckboxGroup, Checkbox } from "@dbm-design-system/components";
 <CheckboxGroup aria-label="Interests" size="sm" defaultValue={["sports"]}>
   <Checkbox value="sports">Sports</Checkbox>
   <Checkbox value="music" size="md">Music</Checkbox>
+</CheckboxGroup>
+
+{/* One required option inside an otherwise-optional group — required and
+    hasError both live on that one Checkbox, not on CheckboxGroup, since only
+    that single item can fail this particular validation. */}
+<CheckboxGroup aria-label="Sign-up options">
+  <Checkbox
+    value="agree-terms"
+    required
+    hasError={submitted && !agreedToTerms}
+  >
+    I agree to the Terms of Service
+  </Checkbox>
+  <Checkbox value="newsletter">Send me the newsletter</Checkbox>
+  <Checkbox value="updates">Send me product updates</Checkbox>
 </CheckboxGroup>
 ```
 

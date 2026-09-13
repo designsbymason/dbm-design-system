@@ -96,8 +96,8 @@ export const CheckboxGroup = forwardRef<HTMLDivElement, CheckboxGroupProps>(
     return (
       <div
         ref={ref}
-        role="group"
         {...props}
+        role="group"
         id={id}
         className={cx(
           styles.root,

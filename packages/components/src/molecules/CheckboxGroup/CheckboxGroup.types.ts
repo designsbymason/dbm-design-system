@@ -37,8 +37,8 @@ export interface CheckboxGroupProps
    * supporting `aria-invalid`), this renders `role="group"`, which does
    * not — there's no ARIA-valid way to flag a plain group itself as
    * invalid, so this is a visual-only signal. Always pair it with a nearby
-   * `FieldError` (referenced via `aria-describedby`) so the reason is
-   * still available to assistive tech, not just sighted users.
+   * `FieldError` so the reason is still available to assistive tech, not
+   * just sighted users.
    * @default false
    */
   hasError?: boolean;

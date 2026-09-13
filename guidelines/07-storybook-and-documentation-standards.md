@@ -224,6 +224,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | Select | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [Select.md](component-reviews/Select.md) |
 | Radio | Atom | Inputs & Forms | ✅ | ✅ 2026-09-14 | [Radio.md](component-reviews/Radio.md) |
 | RadioGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [RadioGroup.md](component-reviews/RadioGroup.md) |
+| CheckboxGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [CheckboxGroup.md](component-reviews/CheckboxGroup.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see

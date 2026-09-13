@@ -205,6 +205,16 @@ describe("CheckboxGroup", () => {
     expect(screen.getByRole("group")).toHaveClass(styles.error as string);
   });
 
+  it("never lets a same-named consumer prop override the computed role", () => {
+    render(
+      <CheckboxGroup aria-label="Interests" role="list">
+        <Checkbox value="sports">Sports</Checkbox>
+      </CheckboxGroup>,
+    );
+    expect(screen.getByRole("group")).toBeInTheDocument();
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+  });
+
   it("does not set aria-invalid on the group itself (role=group doesn't support it)", () => {
     render(
       <CheckboxGroup aria-label="Interests" hasError>
