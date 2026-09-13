@@ -1,0 +1,250 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldError } from "../../atoms/FieldError";
+import { FieldHelperText } from "../../atoms/FieldHelperText";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { NumberInput } from "./NumberInput";
+import * as NumberInputStories from "./NumberInput.stories";
+
+export const propOrder = [
+  "placeholder",
+  "prefix",
+  "size",
+  "hasError",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "onChange",
+  "min",
+  "max",
+  "step",
+  "onClear",
+  "disabled",
+  "required",
+  "readOnly",
+  "autoFocus",
+  "autoComplete",
+  "inputMode",
+  "name",
+  "form",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={NumberInputStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="NumberInput" tier="Molecule" />
+
+A number input with increment/decrement stepper buttons, wrapping `Input`. Works with real numbers
+throughout — `value`/`defaultValue`/`onValueChange` are all typed `number`, not strings you parse
+yourself — while the raw native `onChange` (string-based, firing only on direct typing) stays
+available for anyone who needs it. `min`/`max` bound the stepper buttons (each disables once the
+value reaches that edge) and pass straight through as real native HTML5 validation attributes;
+typing itself isn't force-clamped, matching a native `<input type="number">`'s own unopinionated
+behavior — only the stepper buttons clamp.
+
+### Import
+
+```tsx
+import { NumberInput } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={NumberInputStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={NumberInputStories.Playground}
+  exclude={[
+    "prefix",
+    "value",
+    "onChange",
+    "autoFocus",
+    "autoComplete",
+    "inputMode",
+    "form",
+    "onClear",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`NumberInput` also accepts any other native `<input>` attribute beyond what's listed here (e.g.
+`autoCorrect`, `list`) — passed straight through to the underlying element.
+
+<PropertiesTable of={NumberInputStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={NumberInputStories.AllSizes} />
+
+### No min/max (unbounded)
+
+<Canvas of={NumberInputStories.NoBounds} />
+
+### Decimal step
+
+<Canvas of={NumberInputStories.DecimalStep} />
+
+### With a clear button
+
+<Canvas of={NumberInputStories.Clearable} />
+
+### Error state
+
+<Canvas of={NumberInputStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={NumberInputStories.Disabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Reach for `onValueChange` first — it fires the same way regardless of whether the value changed
+  by typing, a stepper click, or the clear button, and it hands you a real number (or `undefined`),
+  not a string to parse.
+- Set `min`/`max` whenever the value has a real domain floor/ceiling — they give you free HTML5
+  validation and stop the stepper buttons at the right edge, both at once.
+- Set `step` to match the value's own natural granularity (`0.5`, `0.25`, `5`) — the stepper always
+  rounds away floating-point drift for you, so a decimal step stays clean after repeated clicks.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `type` or `suffix` — neither is exposed. `type` is fixed to `"number"` internally, and
+  `suffix` is reserved for the stepper buttons themselves.
+- Don't expect typing an out-of-range value to be force-corrected live — only the stepper buttons
+  clamp to `min`/`max`; typing relies on native HTML5 validation instead, same as a plain
+  `<input type="number">`.
+- Don't reach for `onChange` as your primary handler — its string value needs your own parsing, and
+  it never fires for stepper-button or clear-button changes at all. Use `onValueChange` unless you
+  specifically need the raw native event.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the surrounding form's density, same as `Input`'s own guidance.
+- Keep `step` a "round" value relative to the field's own meaning (whole units for a quantity,
+  `0.01` for currency) — an oddly precise step (like `0.3`) is confusing to click through.
+- Pair with `FieldHelperText` to state the valid range in plain language when `min`/`max` aren't
+  self-evident from context (e.g. "Between 1 and 99").
+
+## Accessibility
+
+<Callout tone="info" title="Real stepper buttons, native HTML5 validation underneath">
+
+- Renders a real native `<input type="number">` — the browser's own Up/Down arrow-key stepping,
+  keyboard numeric input handling, and `min`/`max`/`step` constraint validation all apply
+  automatically, on top of the visible stepper buttons this component adds.
+- The stepper buttons are real, independently-focusable `<button aria-label="Increase value">` /
+  `<button aria-label="Decrease value">` elements, each disabled natively (not just visually) once
+  the value reaches `max`/`min` — a screen reader announces them as unavailable, not just dimmed.
+- Clicking a stepper button returns focus to the input immediately afterward, so keyboard users can
+  keep editing without an extra `Tab` back — same pattern as `Input`'s own clear button and
+  `PasswordInput`'s own toggle.
+- `readOnly` disables both stepper buttons (not just the input) — unlike `PasswordInput`'s own
+  visibility toggle (revealing isn't an edit), incrementing/decrementing genuinely changes the
+  value, which `readOnly` rules out.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<NumberInput defaultValue={1} min={0} max={10} />
+<NumberInput value={quantity} onValueChange={setQuantity} step={0.5} />
+<NumberInput hasError min={0} />
+<NumberInput disabled defaultValue={5} />
+<NumberInput
+  value={quantity}
+  onValueChange={setQuantity}
+  onClear={() => setQuantity(undefined)}
+/>
+
+{/* Composed inside a FormField for the label/helper-text wiring — see that
+    component's own Docs page for the full pattern. */}
+<FormField label="Quantity" helperText="Between 1 and 10">
+  {(fieldProps) => <NumberInput {...fieldProps} min={1} max={10} />}
+</FormField>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand-subtle" usage="stepper button hover background" />
+<TokenRow token="border.focus" usage="stepper button focus-visible outline" />
+<TokenRow token="border-width.1, border-width.2" usage="stepper button focus-visible outline and its offset" />
+<TokenRow token="icon.brand" usage="stepper button icon color" />
+<TokenRow token="icon.disabled" usage="stepper button icon color once disabled" />
+<TokenRow token="icon-size.xs, icon-size.sm" usage="stepper button icon size per NumberInput size step" />
+<TokenRow token="space.1, space.2" usage="stepper button horizontal padding per size" />
+<TokenRow token="motion.duration.fast" usage="stepper button hover background transition" />
+<TokenRow token="motion.easing.standard" usage="stepper button hover background transition" />
+
+Every other visual token (wrapper border/background, focus ring, error state, sizing) comes from
+the underlying `Input` this component wraps — see that component's own Docs page for the full list.
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Input"
+  description="The atom this component wraps — every other Input feature (prefix, hasError, etc.) carries through"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Enter text" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom for this input — sized to match its size scale"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Quantity</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="Pairs with hasError to show why the value failed validation, not just that it did"
+  href="/?path=/docs/atoms-inputs-fielderror--docs"
+>
+  <FieldError>Enter a value between 1 and 10</FieldError>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="Pairs below the field to state the valid range before it's ever violated"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>Between 1 and 10</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this control with a label and helper/error text, with the id/aria-describedby wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <NumberInput aria-label="Quantity" defaultValue={5} min={0} max={10} />
+</RelatedCard>
+</div>

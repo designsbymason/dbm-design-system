@@ -1,0 +1,76 @@
+/* `:global()` is needed on the `input[type="number"]` attribute selector
+   below since CSS Modules only scopes class/id selectors, not element/
+   attribute ones — this rule still only ever applies within `.wrapper`'s
+   own scoped subtree, since that class itself is still module-scoped. */
+.wrapper :global(input[type="number"])::-webkit-outer-spin-button,
+.wrapper :global(input[type="number"])::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wrapper :global(input[type="number"]) {
+  -moz-appearance: textfield;
+}
+
+/* Unlike Input's own single-icon `.clear` button (and PasswordInput's
+   `.toggle`), a two-button vertical stepper genuinely needs more vertical
+   space than a single inline icon — there's no way to fit both an
+   increase and a decrease control inside the same single-line row height
+   without either button becoming too small to see or tap. An explicit
+   `em`-relative height (rather than `align-self: stretch`, tried first —
+   confirmed live it does *not* work: `stretch` conforms an item to
+   whatever cross-axis size its container already has, it doesn't make
+   the container grow to fit the item, so both this and its parent
+   `.affix` span collapsed to a near-zero height with nothing else in the
+   row establishing one) is what actually forces `.wrapper` to grow to fit
+   the stepper — `2.2em` is relative to the font-size already cascading
+   down from `Input`'s own per-size `.sizeXs`–`.sizeXl` classes, so it
+   scales automatically with `size` without needing five duplicated
+   height values. This deliberately doesn't chase the same "never inflate
+   the row" constraint `.clear`/`.toggle` were built around — a legitimate,
+   common shape for a real number input with visible stepper buttons, not
+   a sizing bug. */
+.stepper {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 2.2em;
+}
+
+.stepperButton {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  color: var(--dbm-icon-brand);
+  cursor: pointer;
+  display: flex;
+  flex: 1 1 0;
+  justify-content: center;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.stepperButton:hover:not(:disabled) {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.stepperButton:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-1));
+}
+
+.stepperButton:disabled {
+  color: var(--dbm-icon-disabled);
+  cursor: not-allowed;
+}
+
+.stepperXs .stepperButton,
+.stepperSm .stepperButton,
+.stepperMd .stepperButton {
+  padding-inline: var(--dbm-space-1);
+}
+
+.stepperLg .stepperButton,
+.stepperXl .stepperButton {
+  padding-inline: var(--dbm-space-2);
+}

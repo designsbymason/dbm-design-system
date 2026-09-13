@@ -53,6 +53,7 @@ export * from "./molecules/CheckboxGroup";
 export * from "./molecules/FormField";
 export * from "./molecules/Grid";
 export * from "./molecules/List";
+export * from "./molecules/NumberInput";
 export * from "./molecules/PasswordInput";
 export * from "./molecules/RadioGroup";
 export * from "./molecules/Select";
