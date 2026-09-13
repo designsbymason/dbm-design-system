@@ -5,6 +5,7 @@ import { createRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Select } from "./Select";
+import styles from "./Select.module.css";
 
 function BasicSelect(props: Partial<ComponentProps<typeof Select>> = {}) {
   return (
@@ -505,7 +506,16 @@ describe("Select", () => {
         warnSpy.mockRestore();
       });
 
-      it("does not merge the built-in option class onto a custom row", async () => {
+      it("still applies the option chrome class (padding, hover highlight, outline reset) to a custom row, but not the built-in row's flex layout", async () => {
+        // Regression test for a real bug (found and fixed 2026-09-14, live
+        // in Storybook via the "Custom option row" story, user-reported
+        // with a screenshot): a custom row previously got *no* option
+        // styling at all, mirroring `SelectRoot`'s own trigger `asChild`
+        // treatment — but a trigger's custom element brings its own full
+        // chrome (e.g. `Button`), while an option's custom row is usually
+        // bare content that still needs to look/behave like every other
+        // option. See `Select.module.css`'s own `.option`/`.optionRow`
+        // comment for the full reasoning.
         const user = userEvent.setup();
         render(
           <Select aria-label="Variant" placeholder="Choose">
@@ -516,7 +526,8 @@ describe("Select", () => {
         );
         await user.click(screen.getByRole("combobox"));
         const option = await screen.findByRole("option");
-        expect(option.className.split(" ").filter(Boolean)).toEqual(["my-row"]);
+        expect(option).toHaveClass(styles.option as string, "my-row");
+        expect(option).not.toHaveClass(styles.optionRow as string);
       });
     });
   });
@@ -544,6 +555,29 @@ describe("Select", () => {
         <Select.Option value="primary">Primary</Select.Option>
       </Select>,
     );
+    expect((await axe(container)).violations).toHaveLength(0);
+  });
+
+  it("has no accessibility violations with a custom Select.Option asChild row, open", async () => {
+    // A custom option row is a materially different DOM structure from the
+    // built-in markup (a plain `<li>`/`<div>` instead of `ItemText` +
+    // `ItemIndicator`) — the existing open/closed axe checks above only
+    // ever exercise the built-in option markup, the same gap class the
+    // polymorphic-`as` accessibility convention (06-engineering-
+    // standards.md §9) already catches on components like `Avatar`.
+    const user = userEvent.setup();
+    const { container } = render(
+      <Select aria-label="Framework" placeholder="Choose a framework">
+        <Select.Option value="react" asChild textValue="React">
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span>React</span>
+            <span>UI library</span>
+          </div>
+        </Select.Option>
+      </Select>,
+    );
+    await user.click(screen.getByRole("combobox"));
+    await screen.findByRole("listbox");
     expect((await axe(container)).violations).toHaveLength(0);
   });
 });

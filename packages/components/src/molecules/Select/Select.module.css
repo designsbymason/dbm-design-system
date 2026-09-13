@@ -278,18 +278,45 @@
   transform: rotate(180deg);
 }
 
+/* Chrome every option gets regardless of content shape — padding, hover/
+   highlight background, focus-outline reset, checked/disabled coloring.
+   Deliberately excludes layout (see `.optionRow` below): a `Select.Option
+   asChild` custom row brings its own content structure (e.g. a 2-line
+   label+description column, `Select.stories.tsx`'s own "Custom option row"
+   demo) and must still look and behave like every other option — unlike
+   `SelectRoot`'s own trigger `asChild` case (a fully custom, already-
+   *chromed* interactive element like `Button`, which should keep its own
+   background/border/padding untouched), an option's custom row is usually
+   bare content with no chrome of its own, so it still needs this. Found and
+   fixed 2026-09-14, user-reported with a screenshot: the custom-row story
+   previously got none of this (the old single `.option` class, folding
+   layout and chrome together, was skipped entirely in `asChild` mode,
+   copying `SelectRoot`'s trigger treatment without checking whether the
+   same reasoning actually applied) — the row rendered with no padding and,
+   lacking `outline: none`, showed the browser's own default focus ring
+   instead of this system's `bg.brand-subtle` highlight on keyboard
+   navigation. */
 .option {
-  align-items: center;
   border-radius: var(--dbm-radius-sm);
   color: var(--dbm-text-primary);
   cursor: pointer;
-  display: flex;
   font-size: var(--dbm-font-size-base);
-  justify-content: space-between;
   outline: none;
   padding-block: var(--dbm-space-2);
   padding-inline: var(--dbm-space-3);
   user-select: none;
+}
+
+/* Layout for the built-in single-line row only (label + check indicator,
+   side by side) — applied in addition to `.option` above, but never for an
+   `asChild` custom row, whose own content dictates its layout (e.g. a
+   `flexDirection: column` label/description stack, which `align-items:
+   center`/`justify-content: space-between` here would otherwise fight:
+   centering each line horizontally instead of leaving them left-aligned). */
+.optionRow {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 .option[data-highlighted] {

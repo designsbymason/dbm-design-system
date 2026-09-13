@@ -46,7 +46,7 @@ packages/components/src/{tier}/{ComponentName}/
 
 ## 4. Compound components
 
-Complex components use the compound-component pattern (matching the Radix primitives underneath, for consistency): `Select.Root`, `Select.Trigger`, `Select.Content`, `Select.Item` rather than one component with 30 flags. Applies to: `Select`, `Tabs`, `Accordion`, `Menu`, `Dialog`, `DataTable` (with `DataTable.Toolbar`, `DataTable.Pagination` as composable sub-parts), `Form`.
+Complex components use the compound-component pattern (matching the Radix primitives underneath, for consistency): `Select.Root`, `Select.Trigger`, `Select.Content`, `Select.Item` rather than one component with 30 flags. Applies to: `Select`, `Tabs`, `Accordion`, `Menu`, `Dialog`, `DataTable` (with `DataTable.Toolbar`, `DataTable.Pagination` as composable sub-parts), `Form`. See [ADR-0013](adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md) for how a sub-part's own props get documented on the parent's Docs page (established via `Select.Option`) — a hidden, docs-only stories file per sub-part, not a second sidebar entry.
 
 ## 5. Icon props
 

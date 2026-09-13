@@ -62,6 +62,8 @@ One hand-authored `ComponentName.mdx` file per component (via `@storybook/addon-
 
 **Never reference an internal `guidelines/*.md` path in visible page content** (component Docs pages or Foundations pages alike) — those documents are internal-only working notes for building this library, not something a consumer of the published package or hosted Storybook should see cited as a source. Caught on the Foundations Color page (2026-07-27): its Contrast verification section cited `guidelines/03-token-system-spec.md` by path directly in reader-facing prose — removed, since the underlying claim ("checked against real WCAG ratios") stands on its own without pointing at an internal doc the reader can't access. This is distinct from source-code comments (`.storybook/**/*.ts(x)`, `.css`) citing a guideline for a future maintainer's benefit — those are fine, since they aren't rendered to a Storybook visitor.
 
+**Broadened 2026-09-14, at explicit direction, after a sweep across Select and 10 already-Finalized atoms found the same leak without a literal doc-path citation:** the same restriction covers internal decision-history/process narrative even when no `guidelines/*.md` path is cited directly — dates (`since the 2026-08-20 token consolidation`), review-process framing (`a real gap found and fixed during review`, `found and fixed 2026-08-24`), and provenance phrasing (`chosen at explicit direction`, `merged from the retired X and renamed from Y`) are the same class of internal-only content as a doc-path citation, just without the filename. The test: keep whatever is genuinely useful to a reader in evergreen, present-tense terms (what a token/behavior does, why a design tradeoff exists, how something is technically enforced) — drop only the *when/how/why-we-internally-decided-this* framing. Real example, Select's own shadow-token row: `"the dropdown content's own elevation — a fixed light/dark pair, not a reactive token (see 03-token-system-spec.md)"` → `"the dropdown content's own elevation"` — rationale and citation dropped, the usage fact kept. If the historical detail is worth preserving at all, it belongs in that component's own `guidelines/component-reviews/ComponentName.md` entry, not the shipped Docs page.
+
 ### 4.1 Visual presentation layer (confirmed on `Box`/`Button`, 2026-07-26)
 
 Beyond content and structure, the Docs page has a dedicated visual-polish layer — a custom Storybook theme, global CSS, and a small set of reusable MDX-only components — so every component's Docs page reads as a premium, cohesive reference rather than Storybook's default unstyled autodocs output. None of this ships in the published `@dbm-design-system/components` package; it lives entirely under `packages/components/.storybook/` and is wired in via `preview.tsx`'s `docs` parameter.
@@ -211,7 +213,7 @@ coverage.** [VisuallyHidden.md](component-reviews/VisuallyHidden.md) is the most
 | VisuallyHidden | Atom | Utility | ✅ | ✅ 2026-09-10 | [VisuallyHidden.md](component-reviews/VisuallyHidden.md) |
 | Grid | Molecule | Layout | ✅ | ✅ 2026-09-12 | [Grid.md](component-reviews/Grid.md) |
 | List | Molecule | Typography | ✅ | ✅ 2026-09-13 | [List.md](component-reviews/List.md) |
-| Select | Molecule | Inputs & Forms | ✅ | ⏳ pending (reviewed 2026-09-13) | [Select.md](component-reviews/Select.md) |
+| Select | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [Select.md](component-reviews/Select.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see
@@ -236,22 +238,25 @@ below for the per-category record:
 **Molecules (resolved 2026-08-16 — superseded, not just decided):** this used to be an open sequencing question, written back when Docs pages were produced by their own standalone sweep (Phase 4.9) running only loosely coordinated with Phase 5 (Molecules, which started early — `Grid`/`GridItem`/`Select` landed 2026-08-09, ahead of the original plan). That's no longer how it works: a Docs page is now one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, run one component at a time, strictly tier-order — atoms first, in full (Docs page included), before any molecule gets its own review pass. `GridItem` is no longer part of this molecule queue — it moved to atom-tier 2026-09-07 (ADR-0012) and is now tracked in the Layout bullet above instead.
 
 **Molecule review pass started 2026-09-11 (`Grid` first), `Grid` Finalized 2026-09-12, `List`
-Finalized 2026-09-13, `Select` reviewed 2026-09-13:** now that all 47 atoms are Finalized, the
+Finalized 2026-09-13, `Select` Finalized 2026-09-14:** now that all 47 atoms are Finalized, the
 queue moved to molecules per the plan recorded in `01-vision-and-goals.md`'s Phase 5 entry — review
 and finalize the 3 already-built molecules (`Grid`, `List`, `Select`) first, then build and review
-the remaining 33 not-yet-started molecules one at a time. `Grid`'s and `List`'s own full
-`06-engineering-standards.md` §9 passes are complete and **Finalized** (see the status table above
-and [Grid.md](component-reviews/Grid.md)/[List.md](component-reviews/List.md)). `Select`'s own full
-§9 pass is also complete (see [Select.md](component-reviews/Select.md)) — the first molecule review
-where the compound-component and Radix-primitive checkpoints actually apply (`Select.Option` is a
-real sub-part, `Select` wraps Radix Select) — found and fixed a real accessibility bug
-(`{...props}` spread after the computed `aria-invalid`), a real compound-sub-part gap
-(`Select.Option` couldn't accept `id`/`style`/`data-testid`/any native passthrough at all), added
-`side`/`align` (matching `Tooltip`'s own precedent) and `asChild` + a dedicated `trigger` prop
-(resolving a real `children`-already-used-for-options conflict `Button`'s own `asChild` precedent
-didn't directly cover) — but not yet Finalized, pending user confirmation. With all three
-review-first molecules now reviewed, the queue moves to building the remaining 33 not-yet-started
-molecules next.
+the remaining 33 not-yet-started molecules one at a time. All three review-first molecules' own
+full `06-engineering-standards.md` §9 passes are complete and **Finalized** (see the status table
+above and [Grid.md](component-reviews/Grid.md)/[List.md](component-reviews/List.md)/
+[Select.md](component-reviews/Select.md)). `Select`'s own pass was the first molecule review where
+the compound-component and Radix-primitive checkpoints actually apply (`Select.Option` is a real
+sub-part, `Select` wraps Radix Select) — found and fixed a real accessibility bug (`{...props}`
+spread after the computed `aria-invalid`), a real compound-sub-part gap (`Select.Option` couldn't
+accept `id`/`style`/`data-testid`/any native passthrough at all), added `side`/`align` (matching
+`Tooltip`'s own precedent), `asChild` + a dedicated `trigger` prop, `onClear`, and — across twelve
+further post-review fix rounds plus a second final-review pass before Finalization — a custom
+option row's own missing chrome, corrected Properties-table/native-Controls-panel prop ordering, a
+missing `autoComplete` JSDoc, and this codebase's first compound-sub-part Properties table (see
+[ADR-0013](adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md)
+for the pattern this establishes for any future compound component). Full detail:
+[Select.md](component-reviews/Select.md). With all three review-first molecules now Finalized, the
+queue moves to building the remaining 33 not-yet-started molecules next.
 
 ## 7. Foundations pages (added 2026-07-27)
 

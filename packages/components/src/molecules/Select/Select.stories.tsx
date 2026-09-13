@@ -30,9 +30,9 @@ const meta: Meta<typeof Select> = {
   parameters: { layout: "padded" },
   // Ordered to match SelectProps' own declaration order (value,
   // defaultValue, onValueChange, onClear, placeholder, size, hasError,
-  // name, required, open, defaultOpen, onOpenChange, dir, form,
-  // autoComplete, side, align, asChild, trigger, id, className, style,
-  // data-testid, aria-label, aria-labelledby, aria-describedby, children)
+  // disabled, name, required, open, defaultOpen, onOpenChange, dir, form,
+  // autoComplete, side, align, asChild, trigger, children, aria-label,
+  // aria-labelledby, aria-describedby, id, className, style, data-testid)
   // — same sequencing principle the Properties table uses
   // (07-storybook-and-documentation-standards.md §4 item 3).
   argTypes: {
@@ -117,7 +117,8 @@ const meta: Meta<typeof Select> = {
     },
     autoComplete: {
       control: "text",
-      description: "Native autocomplete hint, passed through to Radix Select.",
+      description:
+        "Native autocomplete hint, passed through to Radix Select's own hidden native <select> — not the visible trigger.",
     },
     side: {
       control: "select",
@@ -141,6 +142,23 @@ const meta: Meta<typeof Select> = {
       control: false,
       description: "The custom trigger element used when asChild is set.",
     },
+    children: {
+      control: false,
+      description: "<Select.Option> elements.",
+    },
+    "aria-label": {
+      control: "text",
+      description:
+        "Accessible name — required unless a visible label is associated via aria-labelledby or a native label/id pair.",
+    },
+    "aria-labelledby": {
+      control: false,
+      description: "References the id of an element that labels this select.",
+    },
+    "aria-describedby": {
+      control: false,
+      description: "References the id of an element that describes this select.",
+    },
     id: {
       control: false,
       description:
@@ -158,23 +176,6 @@ const meta: Meta<typeof Select> = {
       control: false,
       description:
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
-    },
-    "aria-label": {
-      control: "text",
-      description:
-        "Accessible name — required unless a visible label is associated via aria-labelledby or a native label/id pair.",
-    },
-    "aria-labelledby": {
-      control: false,
-      description: "References the id of an element that labels this select.",
-    },
-    "aria-describedby": {
-      control: false,
-      description: "References the id of an element that describes this select.",
-    },
-    children: {
-      control: false,
-      description: "<Select.Option> elements.",
     },
   },
   // Every controllable prop gets an explicit value matching its real,
@@ -349,6 +350,17 @@ export const Clearable: Story = {
   // `defaultValue`'s own control stays live and interactive here (unlike
   // `LongList`/`AllSizes` below) since it's exactly this story's own
   // point: pick a starting value, then clear it.
+  //
+  // `args.defaultValue` seeds a real starting selection (found and fixed
+  // 2026-09-14, user-reported): previously left unset, so this gallery
+  // entry rendered with nothing selected and no clear button visible at
+  // all until a reader manually opened the dropdown and picked an option
+  // — unlike `Input`'s own identically-named story, which seeds its local
+  // state with a real value for exactly this reason. A "Variants/states
+  // gallery" entry is meant to show its feature at a glance
+  // (07-storybook-and-documentation-standards.md §4 item 4), not require
+  // interaction first.
+  args: { defaultValue: "primary" },
   render: (args) => (
     <div style={demoContainerStyle}>
       <Select {...args} onClear={() => {}}>

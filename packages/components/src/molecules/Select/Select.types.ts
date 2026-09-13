@@ -67,6 +67,13 @@ export interface SelectProps
   dir?: "ltr" | "rtl";
   /** Associates the field with a `<form>` by id, for use outside one. */
   form?: string;
+  /**
+   * Native `autocomplete` hint. Passed through to Radix Select's own
+   * hidden native `<select>` (rendered internally for real browser
+   * autofill/password-manager/form-submission compatibility, since the
+   * visible trigger is a styled `<button>`, not a real `<select>`) — not
+   * to the trigger itself.
+   */
   autoComplete?: string;
   /**
    * Which side of the trigger the dropdown opens on. Radix repositions it
@@ -103,23 +110,8 @@ export interface SelectProps
    * system's own `Button`); only `className` still merges onto it.
    */
   trigger?: ReactElement;
-  /**
-   * Standard DOM id. Auto-generated via `useId` when omitted — pass your
-   * own when another element's `aria-labelledby`/`aria-describedby` needs
-   * to point at this component, or a test/router needs a stable, known
-   * anchor.
-   */
-  id?: string;
-  /** Additional CSS classes for customization. */
-  className?: string;
-  /** Inline styles, merged onto the component's own internal styles. */
-  style?: CSSProperties;
-  /**
-   * Test identifier for automated testing (e.g. Testing Library's
-   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
-   * `data-testid` attribute; has no visual or behavioral effect.
-   */
-  "data-testid"?: string;
+  /** `<Select.Option>` elements. */
+  children?: ReactNode;
   /**
    * Accessible name — required unless a visible `<label>`/`FieldLabel` is
    * associated via `aria-labelledby` or a native `<label for>`/`id` pair,
@@ -140,8 +132,23 @@ export interface SelectProps
    * multiple ids when pairing with both at once.
    */
   "aria-describedby"?: string;
-  /** `<Select.Option>` elements. */
-  children?: ReactNode;
+  /**
+   * Standard DOM id. Auto-generated via `useId` when omitted — pass your
+   * own when another element's `aria-labelledby`/`aria-describedby` needs
+   * to point at this component, or a test/router needs a stable, known
+   * anchor.
+   */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }
 
 export interface SelectOptionProps

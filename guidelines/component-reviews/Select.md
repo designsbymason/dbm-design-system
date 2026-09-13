@@ -1,6 +1,6 @@
 # Select
 
-**Tier:** Molecule · **Category:** Inputs & Forms · **Finalized:** Not yet — pending user confirmation
+**Tier:** Molecule · **Category:** Inputs & Forms · **Finalized:** 2026-09-14, at explicit user direction
 
 ## Review pass (2026-09-13)
 
@@ -450,7 +450,149 @@ Both stories: 0 accessibility violations. Full suite re-run clean: `pnpm lint`; 
 41/41, up from 26); `storybook` project (383/383, up from 381); `tsup` build; `check-component-
 bundle-size` (2.20KB JS / 1.19KB CSS gzipped, within budget).
 
+## Post-review fix #8 (2026-09-14, user-reported with a screenshot): custom option row had no chrome at all
+
+**"Select's custom option variant dropdown... has a different hover state as well as the padding is
+off compared to the non custom variant... Is this a storybook mismatch or component issue?"** A
+real component bug, not a Storybook demo issue. `Select.Option`'s `asChild` path copied
+`SelectRoot`'s own trigger `asChild` treatment verbatim — skip `styles.option` entirely — on the
+assumption a custom element always brings its own complete chrome. That's true for the trigger
+(`asChild` there is for a fully-styled element like `Button`), but not for an option row, which is
+usually bare content (a `<div>` + a couple of `<span>`s) that still needs to look and behave like
+every other option. Skipping `styles.option` meant no padding, and — lacking `outline: none` — the
+browser's own default focus ring showed instead of this system's `bg.brand-subtle` highlight.
+
+Fixed by splitting `.option` in `Select.module.css` into the chrome every option needs regardless of
+content shape (padding, radius, cursor, outline reset, checked/disabled/highlight coloring) and a new
+`.optionRow` modifier holding just the built-in single-line flex layout — applied for the default row,
+withheld for `asChild` (which would otherwise force a custom column layout into a horizontal,
+space-between arrangement). `Select.tsx` now always applies `.option`; `.optionRow` only when
+`!asChild`. Updated the one existing test that had encoded the old (buggy) behavior as intentional
+("does not merge the built-in option class onto a custom row") to assert the corrected contract
+instead. Re-verified live, both brand themes × both modes: the custom row now shows the same padding
+and highlight as a built-in option. `pnpm lint`, `tsc`, full `vitest` suite (1495/1495 package-wide)
+all clean.
+
+## Post-review fix #9 (2026-09-14, user-requested): "With a clear button" story didn't show a clear button
+
+Asked directly whether the Docs page's own code example for this story was correct — it was
+technically accurate to what rendered, but the story set no `defaultValue`, so the canvas showed
+nothing selected and no clear button at all until a reader manually opened the dropdown and picked
+something. `Input`'s own identically-named story seeds real local state for exactly this reason; this
+"Variants/states gallery" entry didn't. Fixed by seeding `args: { defaultValue: "primary" }` — the
+clear button now renders on load, matching `Input`'s convention. Verified live (button visible
+immediately, clicking it correctly resets to the placeholder) and via `pnpm lint`/`tsc`/tests.
+
+## Post-review fix #10 (2026-09-14, user-requested): Properties-table and native Controls-panel ordering
+
+Two related but genuinely separate ordering mechanisms, checked one at a time at explicit request.
+
+**Docs-page Properties table** (`Select.mdx`'s `propOrder`, feeding `<PropertiesTable>`): `onClear`
+was missing from the array entirely — `PropertiesTable`'s own "anything omitted falls through to the
+end" behavior meant it still rendered, just as the very last row instead of grouped with
+`value`/`defaultValue`/`onValueChange` above it. Separately, `aria-label`/`aria-labelledby`/
+`aria-describedby` were placed *after* `id`/`className`/`style`/`data-testid` — checked against seven
+other already-Finalized components' own `propOrder` arrays (Button, Input, Textarea, Tooltip, Switch,
+Checkbox, Avatar) and found every one of them places the `aria-*` cluster immediately *before* the
+escape-hatch cluster, never after. Fixed both. (A first attempt at explaining the fix added a
+narrative comment directly above the `export const propOrder = [...]` line, which broke the whole
+Docs page — MDX's ESM-block recognition requires the block to start with a literal `export`/`import`
+keyword, so a leading comment silently fails the parse. No other `.mdx` file in this codebase has a
+comment before or inside one of these arrays; removed it rather than establish a new, apparently
+unsafe pattern.)
+
+**Native per-story Controls panel** (a separate mechanism per `07-storybook-and-documentation-
+standards.md` §5 — driven by `SelectProps`' own field-declaration order in `Select.types.ts`, not by
+any `order` prop): had the identical two bugs, since it was reading the un-fixed interface. Fixed by
+reordering the actual fields in `Select.types.ts` (`children` moved next to `trigger`, `aria-*` moved
+before `id`/className/style/data-testid) — field order in a TS interface has no runtime/type-safety
+effect, so this was safe. Per the established fix pattern for this exact bug class, a full Storybook
+dev-server restart was required (Vite HMR doesn't invalidate docgen's cache for a changed type file) —
+done, then re-verified both the Docs-page table and the native panel render in the identical, corrected
+order. Also fixed a stale top-of-file comment in `Select.stories.tsx` that still described the
+pre-fix field order (and had been missing `disabled` even before that), and reordered the story
+file's own `argTypes` object to match — cosmetic (doesn't affect either rendered mechanism) but was
+contradicting the comment directly above it. `pnpm lint`/`tsc`/`typecheck:storybook`/tests all clean
+throughout.
+
+## Post-review fix #11 (2026-09-14, user-requested): missing `autoComplete` JSDoc
+
+Asked how `autoComplete` works, which surfaced that `autoComplete?: string;` in `Select.types.ts` had
+no JSDoc at all — unlike its neighbors `dir`/`form`. A full audit of every prop in both `SelectProps`
+(28 props) and `SelectOptionProps` (9 props) found this was the only gap. Fixed by adding a real JSDoc
+block explaining the actual mechanism (passed to Radix's own hidden native `<select>`, rendered
+internally for browser autofill/form-submission compatibility — not to the visible trigger). Also
+updated `Select.stories.tsx`'s own `argTypes.autoComplete.description` (the Storybook-side workaround
+for docgen not always surfacing JSDoc) to match, since it had drifted to a shorter, less complete
+version. `pnpm lint`/`tsc`/tests clean.
+
+## Post-review fix #12 (2026-09-14, user-directed): decision-point language and internal doc references removed
+
+A `TokenRow` in `Select.mdx`'s "Design tokens used" section read "the dropdown content's own
+elevation — a fixed light/dark pair, not a reactive token (see 03-token-system-spec.md)" — both an
+internal-doc citation and design-decision rationale, neither appropriate for public-facing Storybook
+content per `07-storybook-and-documentation-standards.md` §4. Fixed by trimming to the plain usage
+fact. Requested review of every other already-Finalized component's own Docs page for the same
+pattern — found 18 more instances across 10 components (ThemeProvider, GridItem, Avatar, Text, Icon,
+Badge, FieldError, Spinner, ProgressBar, ProgressCircle — see each of their own review files), all
+fixed the same session with user confirmation, plus one more on `Select.mdx` itself (an `aria-invalid`
+accessibility bullet citing "a real bug found and fixed during this component's own review (see
+`component-reviews/Select.md`)" — trimmed to the plain behavior fact). `guidelines/07-storybook-and-
+documentation-standards.md` §4 was broadened the same session to explicitly cover this
+no-literal-doc-path variant (dates, "found and fixed during review," "at explicit direction," token-
+consolidation history), not just literal `guidelines/*.md` path citations, so this doesn't need
+rediscovering per-component going forward. All doc-prose-only edits — no component code, tokens, or
+rendered behavior changed; `typecheck:storybook`/tests confirmed clean throughout.
+
+## Final pre-finalization review, round 2 (2026-09-14, user-requested)
+
+**"Let's do a final review of the Select component before finalizing it."** Re-ran the full
+`06-engineering-standards.md` §9 checklist once more against the component's current state (twelve
+post-review fix rounds landed since the original pass). Found and fixed two real gaps, plus closed one
+genuinely new-ground documentation gap at the user's explicit request:
+
+1. **Missing accessibility test coverage:** every existing `jest-axe` check with the dropdown open only
+   ever exercised the built-in option markup, never a `Select.Option asChild` custom row — a
+   materially different DOM structure (a plain `<div>` instead of `ItemText`+`ItemIndicator`), the same
+   coverage-gap class the polymorphic-`as` convention already catches on `Avatar`. Added a test
+   rendering a real two-line custom row with the dropdown open — **0 violations**, confirming fix #8's
+   CSS change is accessibility-clean, not just visually correct.
+2. **`Select.Option` (a real compound sub-part) had no Properties table of its own** on the Docs page —
+   only `SelectRoot`'s props were documented. Genuinely new ground: Select is the first molecule with a
+   dot-notation sub-part to go through review (`Grid`/`List` have none), so there was no established
+   precedent either way. Flagged as an open decision rather than actioned unilaterally; confirmed by the
+   user. Built via a docs-only `SelectOption.stories.tsx` (`tags: ["!dev"]` — a stable, documented CSF3
+   tag, not an internal API — keeps it out of the sidebar/dev view while staying indexed for `useOf`
+   resolution from the Docs page; its one story renders inside a real `<Select>` since Radix's own
+   `SelectItem` throws outside that context) plus a new `### Select.Option properties` sub-section in
+   `Select.mdx`. Along the way, found and fixed a real gap in the new table itself: the `value` prop's
+   required-marker wasn't rendering (confirmed by comparing against `Icon`/`IconButton`'s own required
+   `icon` prop, which do show it) — fixed by explicitly setting `type: { required: true }` in the new
+   story's own `argTypes.value`, rather than relying on docgen extraction alone. This established a
+   real, reusable pattern rather than a one-off — recorded as
+   [ADR-0013](../adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md)
+   for any future compound component's own sub-part(s).
+
+Also re-verified full Radix-prop parity (cross-checked `SelectProps` against every one of Radix
+`Select.Root`'s own props, including `autoComplete` — complete; cross-checked `side`/`align` scope
+against `Tooltip`'s own precedent, which `Select`'s JSDoc explicitly claims to mirror — confirmed
+identical, not a gap) and full keyboard flow live (Tab focuses → Enter opens → ArrowDown moves
+highlight → Enter selects → focus returns to trigger, visible ring throughout).
+
+**Final consolidated verification, everything from this round together:** `pnpm lint` (eslint + full
+`tsc --noEmit` + `typecheck:storybook`, clean), full `vitest` suite (1497/1497 package-wide, 42/42 for
+`Select` itself, 101 test files including the new hidden `SelectOption.stories.tsx` — confirming
+`@storybook/addon-vitest`'s full-sweep render actually exercised the hidden story and passed, not just
+that it typechecked), `tsup` build (clean), `check-component-bundle-size` (2.20KB JS / 1.19KB CSS
+gzipped, within budget), `build-storybook` (succeeds) and `check-storybook-bundle-size` (12005KB/
+20000KB total, largest chunk 1088KB/1536KB, within budget). Live-verified in Storybook: sidebar
+confirmed clean (no stray "Option" entry); the new `Select.Option` properties table renders in the
+intended order with the required marker on `value`; both brand themes × both modes spot-checked across
+Default, Custom Option Row, and With a Clear Button — 0 accessibility violations on every check.
+
 ## Status
 
-Review pass complete, all findings actioned. **Not yet Finalized** — per
-`06-engineering-standards.md` §9, only the user declares a component's review pass done.
+**Finalized 2026-09-14, at explicit user direction**, following this final review round. Per
+`06-engineering-standards.md` §9's finalization rule, no further changes to `Select` (code, stories,
+docs, or tokens it alone drives) without asking first, even for something that would otherwise be an
+obvious, in-scope fix.

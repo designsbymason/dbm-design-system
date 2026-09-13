@@ -370,11 +370,18 @@ const SelectOption = forwardRef<HTMLDivElement, SelectOptionProps>(
         disabled={disabled}
         textValue={textValue}
         asChild={asChild}
-        // Same reasoning as `SelectRoot`'s own `asChild` fix above: a custom
-        // `asChild` row brings its own complete styling, so `styles.option`
-        // isn't merged onto it — only the caller's own `className` passes
-        // through.
-        className={asChild ? className : cx(styles.option, className)}
+        // Unlike `SelectRoot`'s own trigger `asChild` case, `styles.option`
+        // (padding, hover/highlight background, outline reset, etc.) is
+        // always applied here, asChild or not — a custom row's content
+        // brings its own internal layout, not its own chrome, so it still
+        // needs to look and behave like every other option. `styles.
+        // optionRow` (the built-in single-line flex layout) is the one
+        // piece withheld in asChild mode, since it would otherwise force a
+        // custom row's own layout (e.g. a label/description column) into a
+        // horizontal, space-between arrangement it doesn't want. See
+        // `Select.module.css`'s own comment on `.option`/`.optionRow` for
+        // the full reasoning and the bug this fixes.
+        className={cx(styles.option, !asChild && styles.optionRow, className)}
         style={style}
       >
         {asChild ? (
