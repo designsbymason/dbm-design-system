@@ -1,0 +1,206 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Checkbox } from "../Checkbox";
+import { FieldError } from "../FieldError";
+import { FieldLabel } from "../FieldLabel";
+import { VisuallyHidden } from "../VisuallyHidden";
+import { Radio } from "./Radio";
+import * as RadioStories from "./Radio.stories";
+
+export const propOrder = [
+  "children",
+  "size",
+  "hasError",
+  "checked",
+  "defaultChecked",
+  "onCheckedChange",
+  "disabled",
+  "required",
+  "autoFocus",
+  "name",
+  "value",
+  "form",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={RadioStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Radio" tier="Atom" />
+
+A single radio input built on Radix UI's RadioGroup primitive, with a token-driven visual circle
+and an optional inline label. Functions correctly on its own — with no grouping ancestor, it
+manages its own checked state, exposed as a boolean `checked`/`onCheckedChange` API mirroring
+`Checkbox`. Composed inside a group of radios sharing one selection, it instead participates in
+that group's own shared value, identified by its own `value` prop among its siblings. Unlike
+`Checkbox`, clicking an already-checked radio never unchecks it — that matches real radio-button
+semantics, where the only way to change the selection is to choose a different option.
+
+### Import
+
+```tsx
+import { Radio } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={RadioStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={RadioStories.Playground}
+  exclude={["onCheckedChange", "autoFocus", "form", "aria-labelledby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Radio` also accepts any other native `<button>` attribute beyond what's listed here (e.g.
+`onFocus`, `onKeyDown`) — passed straight through to the underlying Radix-rendered `<button>`.
+
+<PropertiesTable of={RadioStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={RadioStories.AllSizes} />
+
+### States
+
+<Canvas of={RadioStories.States} />
+
+### Without a label (aria-label required)
+
+<Canvas of={RadioStories.WithoutLabel} />
+
+### Inside a RadioGroup (preview)
+
+<Canvas of={RadioStories.InsideARadioGroup} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use two or more `Radio`s together whenever the options are mutually exclusive and all worth
+  showing at once — the point of a radio's own shape is signaling "exactly one of these."
+- Pass a distinct `value` on every `Radio` sharing a group, so each one can be told apart.
+- Pass `aria-label` (or `aria-labelledby`) whenever there's no visible `children` label.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a single, standalone `Radio` for a plain yes/no choice — reach for `Switch` (immediate
+  effect) or `Checkbox` (pending until submit) instead; a lone radio button is an unusual pattern
+  outside a real set of options.
+- Don't expect a click on an already-checked `Radio` to uncheck it — set `checked={false}` from
+  your own state if you need to clear a standalone radio programmatically.
+- Don't drive `checked` from a live control without a real `onCheckedChange` wired back — Radix
+  always defers to the controlled value, which freezes the radio's own click handling.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reach for `Checkbox` instead when a choice can stand alone or multiple options can be selected
+  at once — `Radio` communicates "pick exactly one from this set" specifically.
+- Match `size` to the surrounding form/table density — the default `md` suits standalone forms;
+  drop to `sm`/`xs` inside dense tables or compact filter lists.
+- Let `Radio` generate its own `id` (via `useId`) unless something else — a test, a router, an
+  external `aria-describedby` — needs a stable, predictable value to point at.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard and ARIA state come from Radix's own radio primitive">
+
+- Renders a `<button role="radio">` (not a native `<input type="radio">`) — `Tab` focuses it, and
+  `Space` checks it, per the WAI-ARIA radio pattern.
+- `aria-checked` reflects the real state directly: `"false"` or `"true"`.
+- `aria-invalid="true"` is set automatically while `hasError`, in addition to the visual red
+  border — the two can't drift out of sync.
+- A dev-mode console warning fires once if a `Radio` has no `children`, `aria-label`, or
+  `aria-labelledby` — a radio with no accessible name is invisible to screen reader users.
+- The inline `children` label is a real `<label>` associated via `htmlFor`/`id`, so clicking the
+  label text checks the radio too, not just the circle itself.
+- A `disabled` radio uses the native `disabled` attribute, so it's skipped by `Tab` entirely — not
+  just visually dimmed while remaining reachable.
+- `required` sets `aria-required` and marks a standalone radio required for real HTML5 form
+  validation — inside a `<form>`, Radix automatically renders a hidden native `<input type="radio">`
+  that actually participates in submission, using `name`/`value` as its own name/value.
+- `bg.brand`/`icon.on-brand` (the checked-state fill and dot color) is checked against real WCAG
+  contrast ratios, not assumed — see [Design tokens used](#design-tokens-used) below.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Radio defaultChecked>Email</Radio>
+<Radio checked={checked} onCheckedChange={setChecked} aria-label="Enable feature" />
+<Radio hasError>Required field</Radio>
+<Radio data-testid="email-radio">Email</Radio>
+<Radio name="contact-method" value="email" required>Email</Radio>
+<Radio autoFocus onFocus={() => trackFieldFocus('contact-method')}>Email</Radio>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="unchecked resting fill" />
+<TokenRow token="bg.brand" usage="checked fill" />
+<TokenRow token="bg.brand-hover" usage="checked hover fill" />
+<TokenRow token="border.neutral" usage="unchecked resting border" />
+<TokenRow token="border.neutral-strong" usage="unchecked hover border" />
+<TokenRow token="border.danger" usage="hasError state border" />
+<TokenRow token="border.focus" usage="focus-visible outline" />
+<TokenRow token="icon.on-brand" usage="checked-state dot color" />
+<TokenRow token="text.primary" usage="label text color" />
+<TokenRow token="text.disabled" usage="disabled label text color" />
+<TokenRow token="border-width.1" usage="root border width" />
+<TokenRow token="border-width.2" usage="focus-visible outline width" />
+<TokenRow token="radius.full" usage="root and dot corner radius (fully round)" />
+<TokenRow token="icon-size.xs–icon-size.xl" usage="per-size box dimensions" />
+<TokenRow token="space.2" usage="gap between the circle and its inline label" />
+<TokenRow token="font-family.primary" usage="label text" />
+<TokenRow token="font-size.base" usage="label text" />
+<TokenRow token="line-height.normal" usage="label text" />
+<TokenRow token="motion.duration.fast" usage="hover transitions; also the dot mount-in animation" />
+<TokenRow token="motion.easing.standard" usage="hover transitions" />
+<TokenRow token="motion.easing.emphasized" usage="dot mount-in animation" />
+<TokenRow token="opacity.0–opacity.100" usage="dot mount-in fade" />
+<TokenRow token="opacity.40" usage="disabled state" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Checkbox"
+  description="For a choice that can stand alone, or when more than one option can be selected at once"
+  href="/?path=/docs/atoms-inputs-checkbox--docs"
+>
+  <Checkbox defaultChecked aria-label="Accept terms" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="A standalone label atom for pairing with form controls that need one outside their own inline label"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel>Email address</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldError"
+  description="Pairs with hasError to show why a radio group failed validation, not just that it did"
+  href="/?path=/story/atoms-inputs-fielderror--playground"
+>
+  <FieldError>This field is required</FieldError>
+</RelatedCard>
+</div>

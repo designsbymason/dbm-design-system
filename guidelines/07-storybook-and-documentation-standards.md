@@ -161,6 +161,14 @@ Foundational components first (prove the template before mass-applying it), then
 **47 of 47 atoms have a Docs page, a completed review pass, and are Finalized — full atom-tier
 coverage.** [VisuallyHidden.md](component-reviews/VisuallyHidden.md) is the most recently Finalized,
 2026-09-10 at explicit user direction, and was the last not-yet-reviewed atom in the inventory.
+**No longer literally "every atom in the inventory" as of 2026-09-14** — `Radio` was split out of the
+former combined `RadioGroup / Radio` molecule row into its own atom-tier entry that same day, per
+[ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md). This
+"47 of 47" figure describes the atom tier as it stood before that split. See
+`04-component-inventory.md`'s Rough count summary for the correction. `Radio` itself has since been
+built with a full `06-engineering-standards.md` §9 review pass, has a Docs page, and is awaiting
+Finalization — see its own row in the status table below and
+[Radio.md](component-reviews/Radio.md).
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -214,6 +222,7 @@ coverage.** [VisuallyHidden.md](component-reviews/VisuallyHidden.md) is the most
 | Grid | Molecule | Layout | ✅ | ✅ 2026-09-12 | [Grid.md](component-reviews/Grid.md) |
 | List | Molecule | Typography | ✅ | ✅ 2026-09-13 | [List.md](component-reviews/List.md) |
 | Select | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [Select.md](component-reviews/Select.md) |
+| Radio | Atom | Inputs & Forms | ✅ | ⏳ awaiting confirmation | [Radio.md](component-reviews/Radio.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see
@@ -221,7 +230,13 @@ is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a p
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) —
 `GridItem` now tracked here as atom-tier, `List` no longer is.) `VisuallyHidden` — the last
 not-yet-reviewed atom — was Finalized 2026-09-10 (see the status table above and
-[VisuallyHidden.md](component-reviews/VisuallyHidden.md)), completing full atom-tier coverage. Kept
+[VisuallyHidden.md](component-reviews/VisuallyHidden.md)), completing full atom-tier coverage as it
+stood at the time. **`Radio` joined the atom tier 2026-09-14** (split out of the former combined
+`RadioGroup / Radio` molecule row per ADR-0012 above), and was built with a full review pass the
+same day — see its own row in the status table above and [Radio.md](component-reviews/Radio.md) —
+but is awaiting Finalization, so "every atom-tier component... Finalized" no longer covers 100% of
+the current inventory until that happens; see `04-component-inventory.md`'s Rough count summary.
+Kept
 below for the per-category record:
 - **Layout:** every Layout atom now has a completed, Finalized review pass (`Grid` itself stays molecule-tier per ADR-0012 and isn't tracked in this atom-only list; GridItem moved to atom-tier 2026-09-07 — see the same ADR). See the status table above and [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md)/[GridItem.md](component-reviews/GridItem.md).
 - **Typography:** (`List` moved to molecule-tier 2026-09-07 per ADR-0012 — no longer tracked in this atom-only list) — every atom in this category is now Finalized: Blockquote's, Code's, Heading's, Highlight's, Kbd's, Link's, ListItem's, and Text's own review passes are complete, see the status table above and their own [Blockquote.md](component-reviews/Blockquote.md)/[Code.md](component-reviews/Code.md)/[Heading.md](component-reviews/Heading.md)/[Highlight.md](component-reviews/Highlight.md)/[Kbd.md](component-reviews/Kbd.md)/[Link.md](component-reviews/Link.md)/[ListItem.md](component-reviews/ListItem.md)/[Text.md](component-reviews/Text.md).

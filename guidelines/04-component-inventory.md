@@ -62,7 +62,8 @@ Anything that captures user input. Largest category by necessity — this is whe
 | MultiSelect | organism | 🟡 | Tag-based multi-value select |
 | Checkbox | atom | 🟢 | Indeterminate state support |
 | CheckboxGroup | molecule | 🟢 | |
-| RadioGroup / Radio | molecule | 🟢 | |
+| Radio | atom | 🟢 | A single radio input — functions correctly standalone, mirroring `Checkbox`'s own atom-tier precedent. Atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), which names this exact pair as a future application of its own standing test. **Split out of the former combined "RadioGroup / Radio" row, 2026-09-14** — a new, not-yet-built atom; the "47 of 47 atoms, fully Finalized" figures elsewhere in `guidelines/` predate this split and don't include it |
+| RadioGroup | molecule | 🟢 | Manages a group of `Radio` atoms — shared `name`, single selected value, roving-tabindex keyboard semantics. Meaningless without `Radio` children, so molecule-tier per the same ADR |
 | Switch | atom | 🟢 | |
 | Slider | molecule | 🟢 | Single value |
 | RangeSlider | molecule | 🟡 | Dual-handle range |
@@ -188,14 +189,16 @@ Not individual components, but composed patterns — worth planning for since a 
 
 | Priority | Count |
 |---|---|
-| 🟢 v1 (core) | ~64 |
+| 🟢 v1 (core) | ~65 |
 | 🟡 v1.5 (comprehensive) | ~26 |
 | ⚪ v2/deferred | ~17 |
-| **Total planned** | **~107** |
+| **Total planned** | **~108** |
 
 **Updated 2026-09-10** — added `Toolbar`, `Splitter`, `FieldGroup` (all ⚪, molecule-tier) following a molecule-tier feature-completeness gap-check run before the molecule review phase began; ⚪ count 14→17, total 104→107. A fourth candidate (a typeable tags/token input) was considered and deliberately deferred rather than added — it may already be covered by `MultiSelect`'s "tag-based" rendering, not yet confirmed since `MultiSelect` isn't built; revisit once `MultiSelect` exists.
 
-This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all ~107 at once.
+**Updated 2026-09-14** — split the combined `RadioGroup / Radio` row into `RadioGroup` (molecule) and `Radio` (atom), per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md)'s own standing test, which names this exact pair by name as a future application it hadn't yet been applied to. Every "47 of 47 atoms, fully Finalized" figure elsewhere in `guidelines/` (`01-vision-and-goals.md`, `07-storybook-and-documentation-standards.md`) describes the atom tier as it stood before this split and doesn't include `Radio`. 🟢 count 64→65, total 107→108. Atom tier: 48 planned. Molecule tier: 36→35 (Radio no longer counts here). **`Radio` built 2026-09-14, same day** — full `06-engineering-standards.md` §9 pass complete, awaiting Finalization; see [Radio.md](component-reviews/Radio.md).
+
+This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all ~108 at once.
 
 ## Sequencing recommendation for actual build order
 Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 (every atom-tier row in this doc, Grid/GridItem excepted — see the note on step 1) are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — **47 atoms total, none left unbuilt** (corrected 2026-08-12; this doc, `01-vision-and-goals.md`, and `07-storybook-and-documentation-standards.md` all previously said "49," which was simply a miscount against this doc's own table — count the atom-tier rows across all 9 categories above and it's 47):
@@ -212,6 +215,47 @@ Not alphabetical, not category-by-category — build in **dependency order**, si
 8. Feedback (Alert, Toast, ProgressBar, Spinner)
 9. Everything tagged 🟡, in the same dependency-aware order
 10. Templates, once enough organisms exist to compose them meaningfully
+
+### Molecule-tier build order, itemized (added 2026-09-14)
+
+`Grid`, `List`, `Select` (the three review-first molecules, `01-vision-and-goals.md` §13) are Finalized. This itemizes steps 4–9 above across the remaining 32 molecules (33 at the time this section was first written, 2026-09-14 — see the `RadioGroup`/`Radio` split noted in the Rough count summary above; `Radio` moved to atom-tier the same day, so it's no longer one of these 32), applying the same dependency-order + priority-tier (🟢 before 🟡 before ⚪) logic the steps above only stated in the abstract. Build one at a time, in this order, unless a later session finds a reason to deviate (note it here if so):
+
+**`Radio` (atom, the prerequisite for item 2 below) built 2026-09-14** — see [Radio.md](component-reviews/Radio.md); awaiting Finalization, not yet consumed by a real `RadioGroup`.
+
+**Form molecules (🟢, step 4's remaining scope)**
+1. CheckboxGroup, 2. RadioGroup — simple compositions over already-Finalized atoms (`Checkbox`, and `Radio` once Finalized), no dependency on anything else in this list
+3. FormField — label+control+helper/error composition; the review checklist's "cross-part ARIA/id wiring" checkpoint (`06-engineering-standards.md` §9) is written around this component specifically
+4. PasswordInput, 5. NumberInput, 6. SearchInput — each wraps `Input` independently of 1–3 and of each other
+7. Slider — standalone
+
+**Overlay foundation (🟢, step 5)**
+8. Popover — wraps Radix Popover; prioritized since it's the pattern later organisms (Menu, Combobox, DatePicker) will reuse
+9. Accordion — wraps Radix Accordion + the already-Finalized `Collapse` atom
+
+**Data Display core (🟢, step 6)**
+10. Table (simple) — before Card/EmptyState/Pagination since the future `DataTable` organism builds on it
+11. Card, 12. EmptyState, 13. Pagination
+
+**Navigation core (🟢, step 7)**
+14. Tabs, 15. Breadcrumb
+
+**Feedback (🟢, step 8)**
+16. Alert/Banner
+
+**🟡, step 9 — dependency-aware order within the tier**
+17. RangeSlider — extends Slider (#7); built here, right after Slider, rather than strictly after every 🟢 item, since the shared implementation context is worth reusing while fresh
+18. ButtonGroup, 19. ToggleGroup — both attached/segmented-control patterns, ButtonGroup first as the simpler of the two
+20. AvatarGroup, 21. CodeBlock — independent, wrap already-Finalized Avatar/Code atoms
+22. Stat/KPI, 23. DescriptionList — independent
+24. ScrollArea — wraps Radix ScrollArea, independent
+25. HoverCard — shares overlay mechanics with Popover (#8); sequenced here to build on that context
+26. TimePicker — closely related to the not-yet-built `DatePicker` organism, so lowest-value 🟡 to front-load; last in this tier
+
+**⚪ deferred, last — with one dependency-driven exception**
+27. **Toolbar** — nominally ⚪, promoted ahead of its tier because `Table Toolbar` (🟡, item 28) is documented above as likely building on it; building Table Toolbar first would mean either duplicating toolbar logic or refactoring it in later
+28. Table Toolbar — sequenced here instead of within the 🟡 batch above, for that reason
+29. FieldGroup — depends on FormField (#3), trivial once that exists
+30. Splitter, 31. PinInput, 32. RatingInput, 33. TableOfContents — no dependencies on anything else remaining; order among these four doesn't matter
 
 ## Related documents
 - `01-vision-and-goals.md` — why comprehensiveness and agent-legibility are core goals

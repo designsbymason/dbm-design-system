@@ -60,6 +60,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0011](./0011-darker-dark-mode-representative-background.md) | Darken dark mode's representative background (`bg.surface`) one step, cascading through dependent tokens, over adjusting brand tokens in isolation | Accepted |
 | [0012](./0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) | A "container + item" pair's tier is decided per-component by independent function, not inherited from its partner | Accepted |
 | [0013](./0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md) | A compound sub-part's own props get their own Properties table via a hidden, docs-only stories file | Accepted |
+| [0014](./0014-radio-self-wrapping-dual-mode-over-native-input-or-a-narrower-atom-bar.md) | `Radio` self-wraps a private Radix group standalone, over a native `<input>` or a narrower atom bar | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

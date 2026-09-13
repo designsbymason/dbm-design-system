@@ -36,6 +36,7 @@ export * from "./atoms/ListItem";
 export * from "./atoms/Portal";
 export * from "./atoms/ProgressBar";
 export * from "./atoms/ProgressCircle";
+export * from "./atoms/Radio";
 export * from "./atoms/Skeleton";
 export * from "./atoms/Spacer";
 export * from "./atoms/Spinner";
