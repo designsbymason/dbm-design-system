@@ -227,6 +227,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | CheckboxGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [CheckboxGroup.md](component-reviews/CheckboxGroup.md) |
 | FormField | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [FormField.md](component-reviews/FormField.md) |
 | PasswordInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [PasswordInput.md](component-reviews/PasswordInput.md) |
+| NumberInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [NumberInput.md](component-reviews/NumberInput.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see

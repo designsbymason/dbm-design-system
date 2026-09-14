@@ -181,7 +181,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               inputRef.current?.focus();
             }}
           >
-            <Icon icon={XIcon} size={clearIconSizeForInputSize[size]} tone="brand" />
+            <Icon icon={XIcon} size={clearIconSizeForInputSize[size]} tone="default" />
           </button>
         )}
       </span>

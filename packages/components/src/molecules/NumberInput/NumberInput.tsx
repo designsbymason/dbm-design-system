@@ -64,6 +64,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       min,
       max,
       step = 1,
+      onClear,
       disabled,
       readOnly,
       className,
@@ -102,6 +103,22 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       onChange?.(event);
     };
 
+    // Unlike `Input`'s own `onClear` — a bare notification with no value of
+    // its own to clear — `NumberInput` tracks its own value (controlled or
+    // not), so the clear button needs to actually reset it via `commit`,
+    // the same path the stepper buttons and typing both already go
+    // through. Passing `onClear` straight through to `Input` (the original
+    // implementation) only ever fired the caller's own callback: it never
+    // touched `uncontrolledValue`, so an uncontrolled field's displayed
+    // value silently stayed put after a "successful" clear — found during
+    // this component's own final review pass, since neither the unit test
+    // nor the interaction story for this button asserted the value
+    // actually changed, only that the callback fired.
+    const handleClear = () => {
+      commit(undefined);
+      onClear?.();
+    };
+
     const stepperDisabled = disabled || readOnly;
     const incrementDisabled =
       stepperDisabled ||
@@ -120,6 +137,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         readOnly={readOnly}
         value={effectiveValue === undefined ? "" : String(effectiveValue)}
         onChange={handleChange}
+        onClear={onClear ? handleClear : undefined}
         min={min}
         max={max}
         step={step}

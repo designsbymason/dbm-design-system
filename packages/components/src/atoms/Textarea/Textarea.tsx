@@ -269,7 +269,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             <Icon
               icon={XIcon}
               size={clearIconSizeForTextareaSize[size]}
-              tone="brand"
+              tone="default"
             />
           </button>
         )}

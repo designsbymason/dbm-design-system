@@ -161,3 +161,23 @@ Vitest `unit` (1234/1234) and `storybook` (422/422) projects — all clean.
 docs, or tokens it alone drives) without asking first, even for something that would otherwise be
 an obvious, in-scope fix. With `CheckboxGroup`, `Radio`/`RadioGroup`, `FormField`, and
 `PasswordInput` (items 1–4) all Finalized, item 5 (`NumberInput`) is next.
+
+**Authorized post-finalization change (2026-09-14): toggle button recolored from brand to neutral.**
+User-directed, applied identically across this button, `Input`'s own `.clear`, and `NumberInput`'s
+own `.stepperButton` — see each component's own entry. `tone="brand"` → `tone="default"` on the
+toggle's `Icon` (`icon.default` at rest, no background), and `.toggle:hover:not(:disabled)`'s
+background changed from `bg.brand-subtle` to `bg.neutral-subtle`. **Three-question finalization
+test:** (1) changes rendered output that existed at finalization time — yes; (2) not a defect fix —
+a deliberate preference change, same reasoning as `Input`'s own identical change; (3) blast radius
+scoped entirely to `PasswordInput.tsx`/`PasswordInput.module.css`'s own toggle-button rule — no
+shared token/infra change. **Result: partial re-finalization** — re-verified Design quality and
+Theming/Accessibility contrast (both tokens already carry vetted WCAG AA documentation; confirmed
+resolving correctly across all 4 theme combinations via direct CSSOM/token inspection in a running
+Storybook instance). No other checklist section touched. Full re-run: `tsc` (package + `.storybook`),
+`eslint --max-warnings 0`, Vitest `unit` (1256/1256 whole package) and `storybook` (432/432 whole
+package) — clean; `tsup` build and `check-component-bundle-size` clean. **Stays Finalized**,
+re-verified sections noted above, no other changes.
+
+Formalized the same day into a standing rule (`05-component-api-conventions.md` §6 — "icons used
+inside an input field use neutral colors"), applied identically to `Select`'s and `Textarea`'s own
+clear buttons too — see each component's own entry.

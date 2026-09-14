@@ -113,8 +113,13 @@
     var(--dbm-motion-easing-standard);
 }
 
+/* Neutral, not brand (2026-09-14, user-directed, applied consistently
+   across every in-field icon button — see `Input`'s own `.clear` comment
+   and `05-component-api-conventions.md` §6): `tone="default"` on the icon
+   itself (see Textarea.tsx) plus `bg.neutral-subtle` here on hover, in
+   place of the previous `icon.brand`/`bg.brand-subtle` pairing. */
 .clear:hover {
-  background-color: var(--dbm-bg-brand-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .clear:focus-visible {

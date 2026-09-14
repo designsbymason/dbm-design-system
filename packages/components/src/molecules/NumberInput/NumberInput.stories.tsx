@@ -65,7 +65,7 @@ const meta: Meta<typeof NumberInput> = {
     onClear: {
       control: false,
       description:
-        "Shows a clear (×) button after the stepper whenever the input has a value, calling this when it's clicked. See the \"With a clear button\" story for a live demo.",
+        "Shows a clear (×) button after the stepper whenever the input has a value, calling this when it's clicked. The value itself already resets via onValueChange — this is a supplementary notification, not required for the clear to work. See the \"With a clear button\" story for a live demo.",
     },
     disabled: {
       control: "boolean",
@@ -227,12 +227,14 @@ export const Clearable: Story = {
     const [value, setValue] = useState<number | undefined>(5);
     return (
       <div style={{ maxWidth: "12rem" }}>
-        <NumberInput
-          {...args}
-          value={value}
-          onValueChange={setValue}
-          onClear={() => setValue(undefined)}
-        />
+        {/* `onClear` itself doesn't need to reset `value` — clicking Clear
+            already resets the field via `onValueChange` (the same path
+            typing and the stepper both use), so passing `onClear` here is
+            only what makes the clear button render at all (its own
+            visibility is gated by `Boolean(onClear)`); a real consumer
+            would use it for something beyond value-tracking, e.g. an
+            analytics call. */}
+        <NumberInput {...args} value={value} onValueChange={setValue} onClear={() => {}} />
       </div>
     );
   },
@@ -295,6 +297,7 @@ export const ClearButtonInteraction: Story = {
     await userEvent.click(clearButton);
     await expect(args.onClear).toHaveBeenCalledTimes(1);
     await expect(input).toHaveFocus();
+    await expect(input).toHaveValue(null);
     await pause(600);
   },
 };

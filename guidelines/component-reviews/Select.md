@@ -596,3 +596,30 @@ Default, Custom Option Row, and With a Clear Button — 0 accessibility violatio
 `06-engineering-standards.md` §9's finalization rule, no further changes to `Select` (code, stories,
 docs, or tokens it alone drives) without asking first, even for something that would otherwise be an
 obvious, in-scope fix.
+
+**Authorized post-finalization change (2026-09-14): clear button and down chevron recolored to
+neutral.** Part of a system-wide rule established the same day (`05-component-api-conventions.md`
+§6 — "icons used inside an input field use neutral colors"), applied here alongside `Input`,
+`PasswordInput`, `NumberInput`, and `Textarea` — see each component's own entry.
+- `.clear`'s own `Icon`: `tone="brand"` → `tone="default"` (Select.tsx); `.clear:hover`'s background
+  changed from `var(--dbm-bg-brand-subtle)` to `var(--dbm-bg-neutral-subtle)`.
+- `.icon` (the down chevron, `CaretDownIcon`): `color` changed from `var(--dbm-text-tertiary)` to
+  `var(--dbm-icon-default)` — the two tokens share an identical resolved value in every theme
+  (`03-token-system-spec.md`), so this is a semantic correction (matching the same `icon.*`-not-
+  `text.*` principle `05-component-api-conventions.md` §6 already documents for `Image`), not a
+  visual one. No hover background — the chevron is purely decorative, not itself interactive.
+
+**Three-question finalization test:** (1) the clear button's rendered output changes (a real color
+swap); the chevron's does not (identical resolved value) — (2) the clear button's change is a
+deliberate preference change, not a defect, same reasoning as `Input`'s own identical change; the
+chevron's is a semantic correctness fix; (3) blast radius scoped entirely to `Select.tsx`/
+`Select.module.css`'s own `.clear`/`.icon` rules — no shared token/infra change. **Result: partial
+re-finalization** for the clear-button half (re-verified Design quality and Theming/Accessibility
+contrast — both tokens already carry vetted WCAG AA documentation; confirmed resolving correctly
+across all 4 theme combinations via direct CSSOM/token inspection and live Storybook screenshots),
+**stays Finalized with no new re-verification needed** for the chevron half (zero visual change).
+No other checklist section touched. Full re-run: `tsc` (package + `.storybook`), `eslint
+--max-warnings 0`, Vitest `unit` (1256/1256 whole package) and `storybook` (432/432 whole package),
+`tsup` build, `check-component-bundle-size` (`Select` 2.20KB JS / 1.19KB CSS, still within budget)
+— all clean. Live-reconfirmed in Storybook (`All sizes`, `With a clear button` stories, Purple
+Light and Emerald Dark), zero Accessibility-panel violations. **Stays Finalized.**

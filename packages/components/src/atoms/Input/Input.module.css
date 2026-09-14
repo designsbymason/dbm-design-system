@@ -50,9 +50,22 @@
   opacity: var(--dbm-opacity-40);
 }
 
+/* Neutral, not brand — `icon.default`, not `text.tertiary` (2026-09-14,
+   user-directed; see `05-component-api-conventions.md` §6): `.affix` wraps
+   both `prefix` and `suffix` content, most commonly a plain, decorative
+   `Icon` inheriting this `color` via `currentColor` (e.g. a search icon in
+   `prefix`) — `icon.default` is the semantically correct token family for
+   that case, per the same "icon color always comes from `icon.*`, never
+   `text.*`" principle `05-component-api-conventions.md` §6 already
+   documents elsewhere (found via `Image`). The two tokens share an
+   identical resolved value in every theme (`03-token-system-spec.md`), so
+   this is a semantic correction with zero visual change — including for
+   the rarer plain-text suffix case (e.g. `suffix="@example.com"`), which
+   also uses `.affix` and reads no differently. No hover background — a
+   plain prefix/suffix icon isn't itself interactive. */
 .affix {
   align-items: center;
-  color: var(--dbm-text-tertiary);
+  color: var(--dbm-icon-default);
   display: inline-flex;
   flex-shrink: 0;
 }
@@ -76,10 +89,15 @@
    content at every Input size — it always dominated the flex row and
    inflated `.wrapper` past the Button-matched height above, and neither
    its box nor its icon scaled with Input's own `size` prop. `background`
-   stays transparent at rest — `tone="brand"` on the Icon itself (see
-   Input.tsx) supplies the default `icon.brand` color, matching the
-   brand-tinted affordance a click target implies (unlike the plain
-   prefix/suffix `.affix` icons, which are purely informational). */
+   stays transparent at rest. Recolored to neutral (user-directed,
+   2026-09-14, applied consistently across this button, PasswordInput's
+   own `.toggle`, and NumberInput's own stepper — see each component's own
+   review file): `tone="default"` on the Icon itself (see Input.tsx)
+   supplies `icon.default`, and the hover fill below uses
+   `bg.neutral-subtle` — previously `icon.brand`/`bg.brand-subtle`,
+   treating this as a brand-tinted affordance; a plain neutral control
+   reads more consistently with the rest of the row (the plain prefix/
+   suffix `.affix` icons are already neutral/informational, not brand). */
 .clear {
   align-items: center;
   background-color: transparent;
@@ -94,7 +112,7 @@
 }
 
 .clear:hover {
-  background-color: var(--dbm-bg-brand-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .clear:focus-visible {

@@ -12,46 +12,46 @@
   -moz-appearance: textfield;
 }
 
-/* Unlike Input's own single-icon `.clear` button (and PasswordInput's
-   `.toggle`), a two-button vertical stepper genuinely needs more vertical
-   space than a single inline icon — there's no way to fit both an
-   increase and a decrease control inside the same single-line row height
-   without either button becoming too small to see or tap. An explicit
-   `em`-relative height (rather than `align-self: stretch`, tried first —
-   confirmed live it does *not* work: `stretch` conforms an item to
-   whatever cross-axis size its container already has, it doesn't make
-   the container grow to fit the item, so both this and its parent
-   `.affix` span collapsed to a near-zero height with nothing else in the
-   row establishing one) is what actually forces `.wrapper` to grow to fit
-   the stepper — `2.2em` is relative to the font-size already cascading
-   down from `Input`'s own per-size `.sizeXs`–`.sizeXl` classes, so it
-   scales automatically with `size` without needing five duplicated
-   height values. This deliberately doesn't chase the same "never inflate
-   the row" constraint `.clear`/`.toggle` were built around — a legitimate,
-   common shape for a real number input with visible stepper buttons, not
-   a sizing bug. */
+/* Revised (user-reported, 2026-09-14): an earlier version deliberately let
+   `.wrapper` grow taller than a plain `Input` at the same `size`, reasoning
+   two stacked buttons couldn't fit any other way. Live measurement proved
+   that reasoning overly pessimistic — `Input`'s own single-line content
+   height (`font-size × line-height-tight`, the same formula `.clear`'s own
+   per-size margin-block math already uses) has enough room for two real
+   stepper buttons at every step from `sm` up, once each button's own
+   padding is trimmed to fit rather than reused from `.clear`'s/`.toggle`'s
+   own (single-button, more generous) values. `.stepperXs`–`.stepperXl` set
+   an explicit `height` to exactly that content height via the same tokens
+   `Input.module.css` itself composes from — not a guessed pixel value —
+   so `.wrapper` renders at its normal, plain-`Input`-matching height
+   instead of growing. */
 .stepper {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  height: 2.2em;
 }
 
+/* Recolored to neutral (user-directed, 2026-09-14, applied consistently
+   across this button, Input's own `.clear`, and PasswordInput's own
+   `.toggle`) — `icon.default` at rest plus `bg.neutral-subtle` on hover,
+   in place of the previous `icon.brand`/`bg.brand-subtle` pairing. */
 .stepperButton {
   align-items: center;
   background-color: transparent;
   border: none;
-  color: var(--dbm-icon-brand);
+  color: var(--dbm-icon-default);
   cursor: pointer;
   display: flex;
   flex: 1 1 0;
   justify-content: center;
+  min-height: 0;
+  padding-inline: var(--dbm-space-1);
   transition: background-color var(--dbm-motion-duration-fast)
     var(--dbm-motion-easing-standard);
 }
 
 .stepperButton:hover:not(:disabled) {
-  background-color: var(--dbm-bg-brand-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .stepperButton:focus-visible {
@@ -64,13 +64,22 @@
   cursor: not-allowed;
 }
 
-.stepperXs .stepperButton,
-.stepperSm .stepperButton,
-.stepperMd .stepperButton {
-  padding-inline: var(--dbm-space-1);
+.stepperXs {
+  height: calc(var(--dbm-font-size-xs) * var(--dbm-line-height-tight));
 }
 
-.stepperLg .stepperButton,
-.stepperXl .stepperButton {
-  padding-inline: var(--dbm-space-2);
+.stepperSm {
+  height: calc(var(--dbm-font-size-sm) * var(--dbm-line-height-tight));
+}
+
+.stepperMd {
+  height: calc(var(--dbm-font-size-base) * var(--dbm-line-height-tight));
+}
+
+.stepperLg {
+  height: calc(var(--dbm-font-size-md) * var(--dbm-line-height-tight));
+}
+
+.stepperXl {
+  height: calc(var(--dbm-font-size-lg) * var(--dbm-line-height-tight));
 }

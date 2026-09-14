@@ -283,7 +283,7 @@ const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
                 className={cx(styles.clear, clearSizeClass[size])}
                 onClick={handleClear}
               >
-                <Icon icon={XIcon} size={clearIconSizeForSelectSize[size]} tone="brand" />
+                <Icon icon={XIcon} size={clearIconSizeForSelectSize[size]} tone="default" />
               </button>
             )}
           </span>

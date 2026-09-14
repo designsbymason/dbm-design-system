@@ -63,7 +63,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             <Icon
               icon={visible ? EyeSlashIcon : EyeIcon}
               size={toggleIconSizeForInputSize[size]}
-              tone="brand"
+              tone="default"
             />
           </button>
         }

@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { NumberInput } from "./NumberInput";
+import styles from "./NumberInput.module.css";
 
 describe("NumberInput", () => {
   it("renders a native number input", () => {
@@ -161,7 +162,7 @@ describe("NumberInput", () => {
     expect(screen.getByRole("button", { name: "Decrease value" })).toBeDisabled();
   });
 
-  it("shows a clear button that calls onClear and refocuses the input", async () => {
+  it("shows a clear button that calls onClear, refocuses the input, and actually clears the value when uncontrolled", async () => {
     const user = userEvent.setup();
     const onClear = vi.fn();
     render(
@@ -171,6 +172,34 @@ describe("NumberInput", () => {
     await user.click(clearButton);
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("spinbutton")).toHaveFocus();
+    expect(screen.getByRole("spinbutton")).toHaveValue(null);
+  });
+
+  it("clears a controlled value via onValueChange when the clear button is clicked", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <NumberInput
+        aria-label="Quantity"
+        value={5}
+        onValueChange={onValueChange}
+        onClear={() => {}}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    expect(onValueChange).toHaveBeenCalledWith(undefined);
+  });
+
+  it("defaults the stepper to size 'md' and passes an explicit size through to it", () => {
+    const { rerender } = render(<NumberInput aria-label="Quantity" />);
+    expect(screen.getByRole("button", { name: "Increase value" }).parentElement).toHaveClass(
+      styles.stepperMd as string,
+    );
+
+    rerender(<NumberInput aria-label="Quantity" size="xl" />);
+    expect(screen.getByRole("button", { name: "Increase value" }).parentElement).toHaveClass(
+      styles.stepperXl as string,
+    );
   });
 
   it("renders a prefix", () => {

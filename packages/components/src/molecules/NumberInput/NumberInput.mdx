@@ -181,11 +181,11 @@ import { NumberInput } from "@dbm-design-system/components";
 <NumberInput value={quantity} onValueChange={setQuantity} step={0.5} />
 <NumberInput hasError min={0} />
 <NumberInput disabled defaultValue={5} />
-<NumberInput
-  value={quantity}
-  onValueChange={setQuantity}
-  onClear={() => setQuantity(undefined)}
-/>
+{/* onClear shows the clear button; the value itself already resets via
+    onValueChange (the same path typing and the stepper both use), so
+    onClear itself is only needed for side effects beyond value-tracking
+    (e.g. analytics). */}
+<NumberInput value={quantity} onValueChange={setQuantity} onClear={() => {}} />
 
 {/* Composed inside a FormField for the label/helper-text wiring — see that
     component's own Docs page for the full pattern. */}
@@ -196,13 +196,14 @@ import { NumberInput } from "@dbm-design-system/components";
 
 ## Design tokens used
 
-<TokenRow token="bg.brand-subtle" usage="stepper button hover background" />
+<TokenRow token="bg.neutral-subtle" usage="stepper button hover background" />
 <TokenRow token="border.focus" usage="stepper button focus-visible outline" />
 <TokenRow token="border-width.1, border-width.2" usage="stepper button focus-visible outline and its offset" />
-<TokenRow token="icon.brand" usage="stepper button icon color" />
+<TokenRow token="icon.default" usage="stepper button icon color" />
 <TokenRow token="icon.disabled" usage="stepper button icon color once disabled" />
 <TokenRow token="icon-size.xs, icon-size.sm" usage="stepper button icon size per NumberInput size step" />
-<TokenRow token="space.1, space.2" usage="stepper button horizontal padding per size" />
+<TokenRow token="space.1" usage="stepper button horizontal padding" />
+<TokenRow token="font-size.xs–font-size.lg, line-height.tight" usage="stepper container height per size step, computed to match Input's own content-row height exactly" />
 <TokenRow token="motion.duration.fast" usage="stepper button hover background transition" />
 <TokenRow token="motion.easing.standard" usage="stepper button hover background transition" />
 

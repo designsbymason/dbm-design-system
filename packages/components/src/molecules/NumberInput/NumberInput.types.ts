@@ -80,9 +80,13 @@ export interface NumberInputProps
   step?: number;
   /**
    * Shows a clear ("×") button after the stepper whenever the input has a
-   * value, calling this when it's clicked. Clearing the value — whether
-   * that's your own controlled `value` state or the uncontrolled internal
-   * one — is the caller's responsibility, same as `Input`'s own.
+   * value, calling this when it's clicked. Unlike `Input`'s own `onClear`,
+   * clearing the value itself isn't the caller's responsibility here — the
+   * field resets to empty automatically (controlled or not), the same way
+   * `onValueChange` already fires for every other kind of change. This
+   * callback is a supplementary notification for anyone who wants to react
+   * to the clear itself (analytics, a linked field, etc.), not a required
+   * hook for making the clear actually work.
    */
   onClear?: () => void;
   /**

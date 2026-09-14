@@ -51,8 +51,15 @@
   color: var(--dbm-text-tertiary);
 }
 
+/* Neutral, not brand (2026-09-14, user-directed — see
+   `05-component-api-conventions.md` §6): an icon inside an input field's own
+   box reads as informational, not a branded affordance. Uses `icon.default`
+   rather than the `text.tertiary` this previously (coincidentally) shared a
+   value with in every theme — same "icon color always comes from `icon.*`"
+   principle that section already documents. No hover background — this is a
+   purely decorative, non-interactive chevron, not a button. */
 .icon {
-  color: var(--dbm-text-tertiary);
+  color: var(--dbm-icon-default);
   flex-shrink: 0;
 }
 
@@ -184,8 +191,13 @@
     var(--dbm-motion-easing-standard);
 }
 
+/* Neutral, not brand (2026-09-14, user-directed, applied consistently
+   across every in-field icon button — see `Input`'s own `.clear` comment
+   and `05-component-api-conventions.md` §6): `tone="default"` on the icon
+   itself (see Select.tsx) plus `bg.neutral-subtle` here on hover, in place
+   of the previous `icon.brand`/`bg.brand-subtle` pairing. */
 .clear:hover {
-  background-color: var(--dbm-bg-brand-subtle);
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .clear:focus-visible {
