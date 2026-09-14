@@ -1,0 +1,257 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldError } from "../../atoms/FieldError";
+import { FieldHelperText } from "../../atoms/FieldHelperText";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { Kbd } from "../../atoms/Kbd";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { SearchInput } from "./SearchInput";
+import * as SearchInputStories from "./SearchInput.stories";
+
+export const propOrder = [
+  "placeholder",
+  "suffix",
+  "size",
+  "hasError",
+  "isLoading",
+  "value",
+  "defaultValue",
+  "onChange",
+  "onSearch",
+  "debounceMs",
+  "onClear",
+  "disabled",
+  "required",
+  "readOnly",
+  "autoFocus",
+  "autoComplete",
+  "maxLength",
+  "minLength",
+  "pattern",
+  "inputMode",
+  "name",
+  "form",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={SearchInputStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="SearchInput" tier="Molecule" />
+
+A search input wrapping `Input`: a fixed leading search icon (swapped for a spinner via
+`isLoading`), a clear button, and a debounced `onSearch` callback kept separate from the raw,
+per-keystroke `onChange`. `onSearch` also fires immediately — bypassing any pending debounce — on
+Enter and when the value is cleared, since those are both "I want an answer right now" moments a
+debounce should never delay.
+
+### Import
+
+```tsx
+import { SearchInput } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SearchInputStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={SearchInputStories.Playground}
+  exclude={[
+    "suffix",
+    "value",
+    "onChange",
+    "onSearch",
+    "onClear",
+    "autoFocus",
+    "autoComplete",
+    "inputMode",
+    "form",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`SearchInput` also accepts any other native `<input>` attribute beyond what's listed here (e.g.
+`autoCorrect`, `list`) — passed straight through to the underlying element.
+
+<PropertiesTable of={SearchInputStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={SearchInputStories.AllSizes} />
+
+### Loading
+
+<Canvas of={SearchInputStories.Loading} />
+
+### With a clear button
+
+<Canvas of={SearchInputStories.Clearable} />
+
+### With a suffix hint
+
+<Canvas of={SearchInputStories.WithSuffix} />
+
+### No debounce (debounceMs=0)
+
+<Canvas of={SearchInputStories.NoDebounce} />
+
+### Error state
+
+<Canvas of={SearchInputStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={SearchInputStories.Disabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Reach for `onSearch` as your primary "run the search" hook — it fires once the user pauses,
+  immediately on Enter, and immediately when cleared, so you never need to build your own debounce
+  logic on top of `onChange`.
+- Set `debounceMs={0}` for a search that's cheap to re-run on every keystroke (filtering an
+  already-loaded local list) rather than an expensive one (a network request) — `onSearch` still
+  gives you one consistent callback either way.
+- Pass `isLoading` while an async search triggered by `onSearch` is still in flight, so the leading
+  icon reflects real state instead of looking idle during a slow request.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `type` or `prefix` — neither is exposed. `type` is fixed to `"search"` internally, and
+  `prefix` is reserved for the search icon (or the loading spinner).
+- Don't use `onChange` as your search trigger — it fires on every keystroke with no debounce, which
+  is the exact problem `onSearch` exists to solve.
+- Don't rely on the clear button alone to reset a controlled value — pair `onClear` with your own
+  state setter (e.g. `onClear={() => setQuery("")}`), the same contract `Input`'s and `NumberInput`'s
+  own `onClear` already establish.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the surrounding layout's density, same as `Input`'s own guidance.
+- Keep `debounceMs` in the 200–500ms range for a network-backed search — short enough to feel
+  responsive, long enough to avoid firing a request per keystroke on a fast typist.
+- Set `autoComplete="off"` for a live search field — browser autofill suggestions rarely make sense
+  for a query box, and can visually collide with your own results dropdown if you build one.
+
+## Accessibility
+
+<Callout tone="info" title="A real searchbox, with an Escape shortcut layered on top">
+
+- Renders a real native `<input type="search">`, exposed to assistive tech with the `searchbox`
+  role rather than the generic `textbox` role a plain `Input` gets.
+- The clear button is a real, independently-focusable `<button aria-label="Clear">`, disabled
+  natively (not just visually) when the field is `disabled` or `readOnly`.
+- Escape clears the field — matching the common platform convention (macOS Spotlight, browser
+  omnibars) — but only when there's a value to clear and `onClear` is set; the key event stops
+  there instead of also bubbling to, say, a parent Dialog's own Escape-to-close handler.
+- Clicking the clear button returns focus to the input immediately afterward, so keyboard users can
+  keep refining their query without an extra `Tab` back — same pattern as `Input`'s own clear
+  button.
+- The loading spinner shown via `isLoading` is decorative, matching `Spinner`'s own default — pair
+  `isLoading` with a visible or `aria-live` results-count update elsewhere if the loading state
+  itself needs to be announced.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<SearchInput aria-label="Search" placeholder="Search…" onSearch={runSearch} />
+
+{/* Cheap, local filtering — no need to wait out a debounce */}
+<SearchInput aria-label="Search" debounceMs={0} onSearch={filterLocalList} />
+
+{/* Reflects a real in-flight async search */}
+<SearchInput aria-label="Search" isLoading={isFetching} onSearch={runSearch} />
+
+{/* Controlled, with a working clear button */}
+<SearchInput
+  aria-label="Search"
+  value={query}
+  onChange={(e) => setQuery(e.target.value)}
+  onSearch={runSearch}
+  onClear={() => setQuery("")}
+/>
+
+{/* Composed inside a FormField for the label/helper-text wiring — see that
+    component's own Docs page for the full pattern. */}
+<FormField label="Search products" helperText="Try a name, SKU, or category">
+  {(fieldProps) => <SearchInput {...fieldProps} onSearch={runSearch} />}
+</FormField>
+```
+
+## Design tokens used
+
+Every visual token (wrapper border/background, focus ring, error state, sizing, the leading icon's
+own color) comes from the underlying `Input` and `Icon`/`Spinner` atoms this component composes —
+see each one's own Docs page for the full list; `SearchInput` itself introduces no new tokens.
+
+<TokenRow token="icon.default" usage="leading search icon / spinner color at rest" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Input"
+  description="The atom this component wraps — every other Input feature (suffix, hasError, etc.) carries through"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Enter text" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom for this input — sized to match its size scale"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Search</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="Pairs below the field to hint what a query can match before one's ever tried"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>Try a name, SKU, or category</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this control with a label and helper/error text, with the id/aria-describedby wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <SearchInput aria-label="Search" defaultValue="cats" />
+</RelatedCard>
+<RelatedCard
+  name="Kbd"
+  description="Pairs with the suffix slot for a keyboard-shortcut hint (⌘K)"
+  href="/?path=/docs/atoms-typography-kbd--docs"
+>
+  <Kbd aria-label="Command K">⌘K</Kbd>
+</RelatedCard>
+</div>

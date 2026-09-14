@@ -173,6 +173,20 @@ describe("Input", () => {
       expect(onClear).toHaveBeenCalledTimes(2);
     });
 
+    it("disables the clear button (not just the input) when disabled — found during SearchInput's own review, a real defect: previously the button stayed clickable regardless of disabled", () => {
+      render(
+        <Input defaultValue="hello" onClear={() => {}} disabled placeholder="Search" />,
+      );
+      expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
+    });
+
+    it("disables the clear button when readOnly, since clearing genuinely changes the value", () => {
+      render(
+        <Input defaultValue="hello" onClear={() => {}} readOnly placeholder="Search" />,
+      );
+      expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
+    });
+
     it("tracks a controlled value directly, showing the clear button whenever value is non-empty", () => {
       function Controlled() {
         const [value, setValue] = useState("hello");

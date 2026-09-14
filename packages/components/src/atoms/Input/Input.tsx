@@ -78,6 +78,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className,
       style,
       disabled,
+      readOnly,
       onClear,
       onChange,
       value,
@@ -157,6 +158,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={mergeRefs(ref, inputRef)}
           disabled={disabled}
+          readOnly={readOnly}
           className={styles.input}
           value={value}
           defaultValue={defaultValue}
@@ -171,10 +173,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {liveLength}/{maxLength}
           </span>
         )}
+        {/* Disabled/read-only natively (found 2026-09-14, during SearchInput's
+            review of what it consumes) — previously clickable regardless of
+            either state, letting a "disabled" or "read-only" field's value
+            still be reset via this button, unlike every sibling
+            same-row control (NumberInput's stepper, PasswordInput's own
+            toggle both already gate hover/disabled styling the same way).
+            A genuine defect fix, not a design change — see
+            guidelines/component-reviews/Input.md. */}
         {showClear && (
           <button
             type="button"
             aria-label="Clear"
+            disabled={disabled || readOnly}
             className={cx(styles.clear, clearButtonSizeClass[size])}
             onClick={() => {
               onClear?.();

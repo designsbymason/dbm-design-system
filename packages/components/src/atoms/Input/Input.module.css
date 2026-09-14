@@ -111,13 +111,17 @@
     var(--dbm-motion-easing-standard);
 }
 
-.clear:hover {
+.clear:hover:not(:disabled) {
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
 .clear:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
+}
+
+.clear:disabled {
+  cursor: not-allowed;
 }
 
 /* Each step gives the button real `padding` around its icon (the icon
@@ -179,6 +183,34 @@
   );
 }
 
+/* Found 2026-09-14, during SearchInput's own review — visually confirmed via
+   direct screenshot in a live Chromium build, not just checked via
+   `tsc`/`eslint`/Vitest: `appearance: none` on `.input` itself (below)
+   resets the *box's* own native searchfield chrome, but a plain, un-styled
+   `type="search"` input with a real value still rendered WebKit/Blink's own
+   native "×" cancel-button icon regardless — invisible until now since every
+   existing consumer (`Input` with `onClear`, `PasswordInput`, `NumberInput`)
+   always draws its own clear/toggle control in the same trailing position,
+   masking the native one underneath. The existing regression test only
+   asserted `appearance: "none"` on the `<input>` element itself, which
+   doesn't exercise this at all — a real, previously-uncaught gap. Fixed by
+   also resetting the `::-webkit-search-*` pseudo-elements directly — the
+   standard, documented technique (MDN/web-platform), not this project's own
+   invention. **Not covered by an automated test**: `getComputedStyle` on
+   these pseudo-elements proved unreliable to assert against (kept reporting
+   `display: block` even once the fix was visually confirmed working), and
+   Playwright's own bundled Chromium doesn't render this native decoration
+   at all regardless of this fix being present — verified empirically before
+   deciding not to add a test that would pass unconditionally either way. A
+   genuine defect fix — see guidelines/component-reviews/Input.md. */
+.input::-webkit-search-decoration,
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-results-button,
+.input::-webkit-search-results-decoration {
+  appearance: none;
+  display: none;
+}
+
 .input {
   /* Resets WebKit's native `type="search"` chrome (Safari/Chrome), which
      otherwise renders its own searchfield styling and — the specific
@@ -187,7 +219,9 @@
      to `.clear` (this component's own one). `type="search"` combined
      with `onClear` was the only way to see it; every other `type` was
      already unaffected. Same unprefixed `appearance: none` reset already
-     used on Checkbox/Avatar. */
+     used on Checkbox/Avatar. The pseudo-element rule above is what
+     actually suppresses the native cancel-button icon; this reset alone
+     doesn't reach it. */
   appearance: none;
   background: none;
   border: none;
