@@ -152,9 +152,20 @@ const meta: Meta<typeof Slider> = {
     onValueChange: fn(),
     onValueCommit: fn(),
   },
+  // Gives the canvas a real height once `orientation` is switched to
+  // "vertical" via the Controls panel — `Slider` itself now floors at a
+  // reasonable default height with zero sizing at all (found
+  // user-reported: toggling orientation here previously showed only the
+  // thumb), but a taller, explicit demo height still reads better live.
   render: (args) => (
-    <div style={{ maxWidth: "16rem" }}>
-      <Slider {...args} />
+    <div
+      style={
+        args.orientation === "vertical"
+          ? { height: "12rem" }
+          : { maxWidth: "16rem" }
+      }
+    >
+      <Slider {...args} style={args.orientation === "vertical" ? { height: "100%" } : undefined} />
     </div>
   ),
 };

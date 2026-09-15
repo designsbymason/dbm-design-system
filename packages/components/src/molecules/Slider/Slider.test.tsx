@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, useState } from "react";
@@ -159,6 +159,52 @@ describe("Slider", () => {
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Medium");
   });
 
+  it("keeps the value tooltip open through a pointer press and release, not just plain hover (found in user-reported drag regression)", async () => {
+    render(<Slider aria-label="Volume" defaultValue={30} showValueTooltip />);
+    const slider = screen.getByRole("slider");
+
+    fireEvent.pointerEnter(slider);
+    expect(await screen.findByRole("tooltip")).toBeInTheDocument();
+
+    // A real drag starts with a pointerdown on the thumb — Radix Tooltip's
+    // own *uncontrolled* hover trigger treats this as a dismiss signal and
+    // closes even though the pointer never left the thumb, which is
+    // exactly the bug this component's own controlled `open` state (driven
+    // by hover/press/focus together) exists to prevent.
+    fireEvent.pointerDown(slider);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+
+    fireEvent.pointerUp(slider);
+    // Still hovering after release — stays open.
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+
+    // A pointerdown/pointerup sequence on the thumb also leaves it
+    // genuinely focused (confirmed directly: `document.activeElement` is
+    // the slider afterward) — correct, expected behavior for an
+    // interactive control, and exactly why `pointerLeave` alone isn't
+    // enough to close the tooltip here: it's still open via the focus
+    // channel, matching real usage (a focused slider should keep showing
+    // its value). Blurring too is what actually dismisses it.
+    fireEvent.pointerLeave(slider);
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+
+    fireEvent.blur(slider);
+    await waitFor(() =>
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the value tooltip open on focus alone, without hovering or pressing", async () => {
+    render(<Slider aria-label="Volume" defaultValue={30} showValueTooltip />);
+    const slider = screen.getByRole("slider");
+    fireEvent.focus(slider);
+    expect(await screen.findByRole("tooltip")).toBeInTheDocument();
+    fireEvent.blur(slider);
+    await waitFor(() =>
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument(),
+    );
+  });
+
   it("shows min and max labels when showMinMaxLabels is set", () => {
     render(<Slider aria-label="Volume" min={0} max={75} showMinMaxLabels />);
     expect(screen.getByText("0")).toBeInTheDocument();
@@ -170,22 +216,91 @@ describe("Slider", () => {
     expect(screen.queryByText("75")).not.toBeInTheDocument();
   });
 
-  it("renders one tick per tickInterval, inclusive of min and max, when showTicks is set", () => {
+  it("places the slider and min/max row in the same grid column, independent of the value label's own width (found in two separate user-reported alignment regressions)", () => {
+    const { container } = render(
+      <Slider aria-label="Volume" defaultValue={50} showValue showMinMaxLabels />,
+    );
+    const combinedWrapper = container.querySelector(`.${styles.combinedWrapper}`);
+    expect(combinedWrapper).not.toBeNull();
+    expect(combinedWrapper?.textContent).toContain("50");
+    expect(combinedWrapper?.querySelector('[role="slider"]')).not.toBeNull();
+
+    const sliderSlot = container.querySelector(`.${styles.combinedSlider}`);
+    const minMaxRow = container.querySelector(`.${styles.combinedMinMaxRow}`);
+    expect(sliderSlot).not.toBeNull();
+    expect(minMaxRow).not.toBeNull();
+    // Both placed in the grid's first column (`grid-column: 1`) — sized to
+    // the slider alone — rather than the value label's own second column,
+    // so the min/max row's width always matches the slider's own, not the
+    // combined [slider + value label] width. Not something jsdom resolves
+    // real column widths for, so this checks the actual mechanism (the
+    // shared placement) rather than a computed pixel value.
+    expect(getComputedStyle(sliderSlot as Element).gridColumn).toBe(
+      getComputedStyle(minMaxRow as Element).gridColumn,
+    );
+    // The value label sits in the sibling second column, not nested inside
+    // either the slider's own slot or the min/max row.
+    const valueLabel = container.querySelector(`.${styles.combinedValue}`);
+    expect(valueLabel).not.toBeNull();
+    expect(sliderSlot?.contains(valueLabel)).toBe(false);
+    expect(minMaxRow?.contains(valueLabel)).toBe(false);
+  });
+
+  it("adds clearance between the value label and the min-label overlay when both are shown, vertical (found in user-reported overlap regression)", () => {
+    const { container } = render(
+      <Slider
+        aria-label="Volume"
+        orientation="vertical"
+        defaultValue={50}
+        showValue
+        showMinMaxLabels
+        style={{ height: "12rem" }}
+      />,
+    );
+    const value = container.querySelector(`.${styles.value}`);
+    expect(value).toHaveClass(styles.valueClearsMinMaxOverlay as string);
+  });
+
+  it("does not add min-overlay clearance to the value label when showMinMaxLabels is off", () => {
+    const { container } = render(
+      <Slider
+        aria-label="Volume"
+        orientation="vertical"
+        defaultValue={50}
+        showValue
+        style={{ height: "12rem" }}
+      />,
+    );
+    const value = container.querySelector(`.${styles.value}`);
+    expect(value).not.toHaveClass(styles.valueClearsMinMaxOverlay as string);
+  });
+
+  it("renders one tick per tickInterval, excluding min and max, when showTicks is set", () => {
     const { container } = render(
       <Slider aria-label="Volume" min={0} max={100} tickInterval={25} showTicks />,
     );
     const ticks = container.querySelectorAll(`.${styles.tick}`);
-    expect(ticks).toHaveLength(5); // 0, 25, 50, 75, 100
+    // 0, 25, 50, 75, 100 minus the excluded endpoints (0 and 100) — 3 left.
+    expect(ticks).toHaveLength(3);
   });
 
-  it("still places a final tick at max when the range doesn't divide evenly by tickInterval", () => {
+  it("never renders a tick past max, even when the range doesn't divide evenly by tickInterval", () => {
     const { container } = render(
       <Slider aria-label="Volume" min={0} max={100} tickInterval={30} showTicks />,
     );
     const ticks = container.querySelectorAll(`.${styles.tick}`);
-    // 0, 30, 60, 90, and a final tick at 100 even though 100 isn't a clean
-    // multiple of 30 past min — the max end is never silently dropped.
-    expect(ticks).toHaveLength(5);
+    // 0, 30, 60, 90, and (internally) a final computed tick at 100 — minus
+    // the excluded endpoints (0 and the computed 100), leaving 30/60/90.
+    expect(ticks).toHaveLength(3);
+  });
+
+  it("excludes ticks that land exactly on min or max", () => {
+    const { container } = render(
+      <Slider aria-label="Volume" min={0} max={100} tickInterval={50} showTicks />,
+    );
+    const ticks = container.querySelectorAll(`.${styles.tick}`);
+    // Only 50 (the midpoint) — 0 and 100 are both excluded endpoints.
+    expect(ticks).toHaveLength(1);
   });
 
   it("defaults tickInterval to step when not set explicitly", () => {
@@ -193,7 +308,8 @@ describe("Slider", () => {
       <Slider aria-label="Volume" min={0} max={20} step={5} showTicks />,
     );
     const ticks = container.querySelectorAll(`.${styles.tick}`);
-    expect(ticks).toHaveLength(5); // 0, 5, 10, 15, 20
+    // 0, 5, 10, 15, 20 minus the excluded endpoints (0 and 20) — 3 left.
+    expect(ticks).toHaveLength(3);
   });
 
   it("renders no ticks when showTicks is false", () => {

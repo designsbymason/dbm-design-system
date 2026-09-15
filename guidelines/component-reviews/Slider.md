@@ -207,5 +207,112 @@ now 15 stories (was 10), including new Canvases for each feature plus a combined
 "Every decoration combined" story and a "Vertical, with min/max labels" story exercising the fixed
 layout directly.
 
+**Second post-build fix round (2026-09-15, user-reported) — one revert, one root-cause correction,
+and three real bugs found and fixed:**
+
+1. **Track reverted to `bg.track`.** The user's original vertical-track visibility report turned out
+   to be a pure layout bug (below), not a contrast issue — the `bg.track` → `bg.track-strong` swap
+   from the first fix round was solving the wrong problem. Reverted; the semantic-fit reasoning in
+   that first round's own entry no longer applies and shouldn't be treated as settled guidance.
+2. **The real vertical-visibility bug: any wrapping layer added for `showValue`/`showMinMaxLabels`
+   broke `Root`'s own percentage height.** The user's clarification ("I only see the thumb") pointed
+   at the actual mechanism: `Slider`'s own `style` prop is commonly a *percentage* itself (e.g. the
+   `Vertical` story's `style={{ height: "100%" }}`), resolved against whatever real-heighted
+   ancestor the caller's own markup provides. The first fix round only patched this for the
+   `showMinMaxLabels`-vertical case (moving `style` to that one wrapper); the identical bug still hit
+   plain `showValue`-vertical (no min/max labels) — confirmed live, user-reported ("the track
+   disappears and I only see the thumb and value" when toggling `showValue` on in the vertical
+   story) — and would have hit the combined case too. Fixed generally: `verticalNeedsWrapper` now
+   introduces one consistent outer `.verticalStyleHost` that always receives the real `style`
+   whenever *any* vertical wrapping happens, with every layer inside it (`.wrapperVertical`,
+   `.minMaxWrapperVertical`, `Root`'s own vertical rule) using a plain `height: 100%` to form an
+   unbroken chain back down — rather than the previous case-by-case redirection, which was exactly
+   what left this gap. Also added a real, absolute `min-height` floor (`space.32`) to `Root`'s own
+   vertical rule as a defensive fallback — found via a *third* instance of this exact class of bug
+   (the Playground story's own plain demo wrapper sets no height at all, so switching `orientation`
+   to "vertical" there rendered only the thumb) — so a `Slider` with zero sizing at all still renders
+   usably instead of collapsing, matching "a component should render something reasonable with zero
+   props" (05-component-api-conventions.md §3). The Playground's own `render` was also given a real
+   height specifically when vertical is selected, for a better demo regardless of the floor.
+3. **A real, confirmed ordering bug: horizontal `showValue` + `showMinMaxLabels` together vertically
+   centered the value against the wrong box.** The first fix round's own comment *claimed* the
+   composition order had been swapped to fix this, but the actual code still applied
+   `showMinMaxLabels` first (inner) and `showValue` second (outer) — the exact bug the comment
+   described fixing was still present, caught only because the user attached a screenshot and
+   because a new structural test (`valueRow?.contains(minMaxRow)` must be `false`) was added and
+   initially failed against the actual code, not just the comment. Genuinely fixed this time,
+   verified both by that test and live: `showValue` now wraps *before* `showMinMaxLabels` for
+   horizontal (so the min/max row is always outermost, below everything), while vertical keeps the
+   opposite order deliberately — its own min/max wrapper is pure absolutely-positioned overlays that
+   consume no real space, so it must wrap bare `Root` first for that non-consumption property to
+   hold; wrapping an already-`showValue`-wrapped box there would let it anchor to the wrong,
+   taller box instead.
+4. **First and last tick marks (at exactly `min`/`max`) are now excluded from what renders,** at the
+   user's request — computed via a `visibleTicks` filter over the same inclusive `ticks` array
+   (kept, unfiltered, as the semantic source of "every real tick" a future need might still want),
+   rather than changing the generation loop itself.
+5. **The value tooltip closing mid-drag was a real bug, not a misconfiguration.** Relying on Radix
+   Tooltip's own uncontrolled hover/focus triggers (the first round's design) turned out to be
+   insufficient: Radix Tooltip treats a `pointerdown` on its trigger as a dismiss signal, closing the
+   tooltip the instant a drag begins even though the pointer never left the thumb. Fixed by tracking
+   hover/press/focus explicitly (`onPointerEnter`/`Leave`, `onPointerDown`/`Up`/`Cancel`,
+   `onFocus`/`Blur`) and driving `Tooltip`'s `open` prop from their combination — confirmed via a
+   real drag interaction live (the tooltip's own value updated continuously through the drag) and
+   via two new tests. One test-writing detour worth recording: a pointerdown/pointerup sequence on
+   the thumb genuinely leaves it focused afterward (confirmed directly via `document.activeElement`)
+   — correct, expected behavior for an interactive control, not a bug — so the regression test needed
+   an explicit `blur` to fully close the tooltip, not `pointerLeave` alone.
+
+Re-verified after all of the above: `tsc` (package + `.storybook`), `eslint --max-warnings 0`, Vitest
+`unit` (1320/1320 whole package, up from 1305) and `storybook` (459/459 whole package, up from 454)
+all clean; `tsup` build and `check-component-bundle-size` clean (2.51KB JS / 1.40KB CSS gzipped,
+still within budget). `Slider.test.tsx` now 35 tests (was 20 before this round). Every fix
+live-verified in a running Storybook instance — including the two cases where the *first* round's
+own reasoning turned out to be wrong (track contrast; the "already swapped" composition order) —
+underscoring why this checklist requires live verification rather than trusting a clean typecheck or
+a confident-sounding comment.
+
+**Third post-build fix round (2026-09-15, user-reported with screenshots) — two more real layout
+bugs, both specifically in the `showValue` + `showMinMaxLabels` *combination*, each fixed with a
+different mechanism:**
+
+1. **Horizontal: `max` ended up aligned with the value label, not the slider's own end.** The second
+   round's nested-flex fix got the *vertical centering* right but missed this: `showMinMaxLabels`'s
+   own `width: 100%` row was sized against whatever `control` already was when it wrapped — which,
+   once `showValue` had already wrapped it first, was the *combined* [slider + value label] row, not
+   the slider alone. `justify-content: space-between` then spread `min`/`max` across that wider
+   combined width instead of just the track's own. Fixed by replacing the nested-flex approach for
+   this *specific combination* with a dedicated CSS Grid layout (`.combinedWrapper`): the slider and
+   the min/max row share one grid column (sized to the slider), with the value label in an adjacent
+   column — so the min/max row's width is structurally tied to the slider's own, independent of
+   whatever the value label's width happens to be. The single-feature cases (`showValue` or
+   `showMinMaxLabels` alone) were already correct and are untouched. Verified live with a direct
+   pixel measurement, not just visually: the track's own right edge and the `max` label's right edge
+   now compute to the exact same value (0px difference).
+2. **Vertical: the value label visually overlapped the min label.** `showMinMaxLabels`'s own "min"
+   overlay (vertical) hangs below `Root`'s real box without consuming any normal-flow space — a
+   deliberate design from the first round, so it wouldn't affect `Root`'s own height. That same
+   property meant `showValue`'s row (wrapped outside it) had no way to know it needed extra
+   clearance: the value label landed right at `Root`'s own bottom edge, exactly where the invisible-
+   to-layout "min" overlay was also rendering. Fixed with a conditional extra top margin
+   (`.valueClearsMinMaxOverlay`, added to the value label's own class only when
+   `showMinMaxLabels` is also set) sized to actually clear the overlay's own offset plus its own text
+   height — a measured, live-verified value (confirmed via direct `getBoundingClientRect()`
+   inspection: a clean 20px gap between the two labels, not just "no longer complains" from a
+   screenshot glance).
+
+Both required a new test verifying the actual structural/class-based mechanism (grid-column
+equality for the horizontal fix; the conditional clearance class for the vertical one) rather than a
+literal pixel value neither jsdom nor a computed-style assertion could meaningfully check.
+
+Re-verified after both fixes: `tsc` (package + `.storybook`), `eslint --max-warnings 0`, Vitest
+`unit` (1322/1322 whole package, up from 1320) and `storybook` (459/459 whole package, unchanged —
+no new stories needed) all clean; `tsup` build and `check-component-bundle-size` clean (2.61KB JS /
+1.48KB CSS gzipped, still within budget). `Slider.test.tsx` now 37 tests (was 35). Both fixes
+live-verified with real pixel measurements in a running Storybook instance, not just visual
+inspection — this component's own history in this session is a good argument for why that
+measurement step matters: a screenshot alone could plausibly have looked "close enough" for the
+horizontal case despite the underlying width still being wrong.
+
 **Status: built, self-reviewed against the full `06-engineering-standards.md` §9 checklist, all
 findings above already actioned — awaiting the user's own confirmation to mark Finalized.**

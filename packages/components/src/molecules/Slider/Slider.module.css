@@ -12,7 +12,21 @@
   flex-direction: column;
   height: 100%;
   justify-content: center;
-  min-height: 100%;
+  /* A real, absolute fallback — not another percentage (this replaces an
+     earlier `min-height: 100%`, which had the exact same "needs a
+     definite ancestor" problem as `height: 100%` itself and did nothing
+     to prevent a collapse). Found user-reported: switching a Storybook
+     Controls panel's `orientation` to "vertical" with no explicit height
+     ever set (the Playground's own plain demo wrapper has none) rendered
+     only the thumb, no visible track — `height: 100%` resolved against
+     nothing and fell back to `auto`, which a flex column with no other
+     sized content collapses to near-zero. This floor guarantees a usable,
+     visible slider even with zero caller-provided sizing, matching "a
+     component should render something reasonable with zero props where
+     that's plausible" (05-component-api-conventions.md §3) — a caller
+     setting a real, larger height via `style` still wins normally, since
+     `height` only defers to `min-height` when it would compute *smaller*. */
+  min-height: var(--dbm-space-32);
   width: fit-content;
 }
 
@@ -21,18 +35,8 @@
   opacity: var(--dbm-opacity-40);
 }
 
-/* `bg.track-strong`, not the fainter `bg.track` (found user-reported,
-   2026-09-15 — the vertical story's track was structurally correct but
-   effectively invisible): `bg.track` is documented as a deliberate,
-   sub-3:1-contrast exception for a *passive* progress indicator's own
-   empty portion (03-token-system-spec.md) — appropriate for `ProgressBar`,
-   wrong for `Slider`, where the whole track (not just the filled range) is
-   itself the draggable hit area a user needs to actually see and grab.
-   `bg.track-strong` is the token spec's own named token for exactly this
-   "boundary must read as real" case (already used by `Switch`'s always-
-   interactive track and `Indicators`' inactive-dot fill). */
 .track {
-  background-color: var(--dbm-bg-track-strong);
+  background-color: var(--dbm-bg-track);
   border-radius: var(--dbm-radius-full);
   flex-grow: 1;
   position: relative;
@@ -122,8 +126,10 @@
    sized relative to the track's own thickness rather than a fixed pixel
    value, so it scales sensibly across sizes without its own token. Plain
    `bg.surface` (white) reads reasonably against both the unfilled
-   `bg.track-strong` and the filled `bg.brand`/`bg.danger` range without
-   needing fill-position-aware recoloring per tick. */
+   `bg.track` and the filled `bg.brand`/`bg.danger` range without needing
+   fill-position-aware recoloring per tick. Ticks landing exactly on `min`
+   or `max` are excluded from what Slider.tsx actually renders (not just
+   hidden here), so there's nothing for this rule to need to hide. */
 .tick {
   background-color: var(--dbm-bg-surface);
   border-radius: var(--dbm-radius-full);
@@ -163,16 +169,16 @@
 }
 
 /* `showMinMaxLabels` (vertical) — absolutely-positioned overlays anchored
-   to this wrapper's own box. This wrapper (not Root) receives the caller's
-   real explicit height (moved here in Slider.tsx, specifically for this
-   composition) — found live, not assumed, that a first version leaving
-   `style` on Root instead collapsed to 0 height: a CSS percentage height
-   only resolves against an ancestor with an *explicit* height, and
-   `display: inline-block` alone doesn't manufacture one just because its
-   only child wants to be "100%" of it. See Slider.tsx's own comment for
+   to this wrapper's own box. `height: 100%` here is one link in the
+   explicit-height chain `.verticalStyleHost` (below) starts — every layer
+   between that true outermost element and `Root` itself needs this same
+   `height: 100%`, or `Root`'s own percentage height has nothing real to
+   resolve against and collapses to 0 (found live, not assumed, the first
+   time this was missing). See Slider.tsx's own top-level doc comment for
    the full reasoning. */
 .minMaxWrapperVertical {
   display: inline-block;
+  height: 100%;
   position: relative;
 }
 
@@ -235,8 +241,24 @@
   width: 100%;
 }
 
+/* `height: 100%` — same explicit-height-chain link as
+   `.minMaxWrapperVertical` above; see that rule's own comment. */
 .wrapperVertical {
   flex-direction: column;
+  height: 100%;
+  width: fit-content;
+}
+
+/* The true outermost element whenever *any* vertical wrapping happens
+   (`Slider.tsx`'s own `verticalNeedsWrapper`) — the one element that
+   receives the caller's real `style` (e.g. `height: "100%"`, itself
+   resolved against whatever real-heighted ancestor the caller's own markup
+   provides). Every layer inside it — `.wrapperVertical`,
+   `.minMaxWrapperVertical`, and `Root`'s own `[data-orientation="vertical"]`
+   rule — uses a plain `height: 100%` of its own, forming an unbroken chain
+   back down from this one real, explicit height. */
+.verticalStyleHost {
+  display: block;
   width: fit-content;
 }
 
@@ -245,4 +267,45 @@
   font-variant-numeric: tabular-nums;
   min-width: 2ch;
   text-align: end;
+}
+
+/* Clears `showMinMaxLabels`' own "min" overlay (vertical), which hangs
+   below `Root`'s real box without consuming any normal-flow space of its
+   own — `.wrapperVertical`'s ordinary `gap` has no way to know it needs
+   extra room here. This value is a measured, live-verified clearance
+   (Root's own bottom edge, plus the min label's `space.5` offset below it,
+   plus roughly one line of its own `font-size.xs` text), not a guess. */
+.valueClearsMinMaxOverlay {
+  margin-block-start: var(--dbm-space-8);
+}
+
+/* `showValue` + `showMinMaxLabels` together, horizontal — see Slider.tsx's
+   own comment for why this needs real CSS Grid rather than the simpler
+   nested-flex approach the single-feature cases above use: the min/max
+   row must always match the *slider's own* width, independent of however
+   wide the value label ends up being, which nested flex sizing can't
+   express on its own. */
+.combinedWrapper {
+  align-items: center;
+  column-gap: var(--dbm-space-2);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: var(--dbm-space-1);
+  width: 100%;
+}
+
+.combinedSlider {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.combinedValue {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.combinedMinMaxRow {
+  grid-column: 1;
+  grid-row: 2;
 }
