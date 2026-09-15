@@ -208,8 +208,10 @@ import { Slider } from "@dbm-design-system/components";
   actual `<form>` (or `form` is set) — the same mechanism `Switch`'s own `name` documents, though
   Slider's hidden input carries no `type="range"` semantics of its own; it exists purely for
   form-data participation.
-- The unfilled track (`bg.track-strong`) and filled range (`bg.brand`) are both checked against real
-  WCAG contrast ratios, not assumed — see [Design tokens used](#design-tokens-used) below.
+- The filled range (`bg.brand`) is checked against real WCAG contrast ratios. The unfilled track
+  (`bg.track`) deliberately doesn't clear the 3:1 non-text floor — an accepted exception, since the
+  thumb and filled range already carry the boundary/state information a user needs (see
+  `03-token-system-spec.md`'s "Notable exceptions" and ADR-0016) — not an oversight.
 - `showTicks`' tick marks, `showMinMaxLabels`' end labels, and `showValueTooltip`'s bubble are all
   purely visual — ticks are `aria-hidden`, and none of the three change what's announced to
   assistive tech, which already gets the real state via `aria-valuenow`/`aria-valuemin`/
@@ -241,7 +243,7 @@ import { Slider } from "@dbm-design-system/components";
 
 ## Design tokens used
 
-<TokenRow token="bg.track-strong" usage="unfilled track background — the same token an always-interactive control's own boundary uses elsewhere (e.g. Switch's track)" />
+<TokenRow token="bg.track" usage="unfilled track background — a deliberate sub-3:1 exception, since the thumb and filled range already carry the boundary/state information (ADR-0016)" />
 <TokenRow token="bg.brand" usage="filled range background" />
 <TokenRow token="bg.danger" usage="filled range background while hasError" />
 <TokenRow token="bg.surface" usage="thumb fill" />
@@ -256,6 +258,11 @@ import { Slider } from "@dbm-design-system/components";
 <TokenRow token="bg.surface" usage="tick mark fill" />
 <TokenRow token="space.5" usage="min/max label offset from the track, vertical orientation" />
 <TokenRow token="space.1" usage="gap between the track and the min/max label row, horizontal orientation" />
+<TokenRow token="space.2" usage="gap between the slider and its value label when showValue is set" />
+<TokenRow token="space.8" usage="clearance between the value label and the min-label overlay, vertical, when showMinMaxLabels is also set" />
+<TokenRow token="space.32" usage='minimum height floor for orientation="vertical" when no explicit height is set' />
+<TokenRow token="shadow.light.sm / shadow.dark.sm" usage="thumb elevation at rest" />
+<TokenRow token="shadow.light.md / shadow.dark.md" usage="thumb elevation on hover" />
 <TokenRow token="motion.duration.fast" usage="range background, thumb border-color, and thumb shadow transitions" />
 <TokenRow token="motion.easing.standard" usage="range background, thumb border-color, and thumb shadow transitions" />
 <TokenRow token="opacity.40" usage="disabled state" />

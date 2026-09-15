@@ -2,6 +2,7 @@ import { cx } from "@dbm-design-system/primitives";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { forwardRef, useRef, useState } from "react";
 import { Text } from "../../atoms/Text";
+import type { TextSize } from "../../atoms/Text";
 import { Tooltip } from "../../atoms/Tooltip";
 import styles from "./Slider.module.css";
 import type { SliderProps, SliderSize } from "./Slider.types";
@@ -12,6 +13,20 @@ const sizeClass: Record<SliderSize, string | undefined> = {
   md: styles.sizeMd,
   lg: styles.sizeLg,
   xl: styles.sizeXl,
+};
+
+// The `showValue` label's own font size, scaled by the slider's `size` — a
+// fixed "sm" regardless of size read fine at xs/sm/md (user-confirmed), but
+// looked disproportionately small next to lg/xl's own larger thumb and
+// thicker track (24px/32px). xs/sm/md deliberately unchanged; lg/xl step up
+// one and two Text sizes respectively, matching how their own thumb
+// diameters (24px, 32px) each step further ahead of md's own 20px.
+const valueTextSize: Record<SliderSize, TextSize> = {
+  xs: "sm",
+  sm: "sm",
+  md: "sm",
+  lg: "base",
+  xl: "md",
 };
 
 /**
@@ -110,6 +125,20 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
     const [isThumbHovering, setIsThumbHovering] = useState(false);
     const [isThumbPressed, setIsThumbPressed] = useState(false);
     const [isThumbFocused, setIsThumbFocused] = useState(false);
+    // Clicking the thumb genuinely leaves it DOM-focused afterward (real,
+    // confirmed browser behavior, not a bug) — found live, user-reported,
+    // that counting *any* focus as a reason to keep the tooltip open made
+    // it linger after a click/drag ends, until something else stole focus.
+    // `:focus-visible` looked like the obvious browser-native way to tell
+    // "keyboard-driven focus" apart from that click residue, but jsdom's
+    // own implementation doesn't actually distinguish the two (confirmed
+    // directly: it matched after a plain `pointerdown`/`pointerup` too),
+    // so it can't be verified this way — tracked explicitly instead, fully
+    // testable regardless of environment: a `pointerdown` immediately
+    // preceding a `focus` event marks that focus as click-driven, so it's
+    // not counted; a `focus` with no immediately-preceding `pointerdown`
+    // (Tab) still is.
+    const wasPointerDownRef = useRef(false);
     const tooltipOpen = isThumbHovering || isThumbPressed || isThumbFocused;
 
     const handleValueChange = ([next]: number[]) => {
@@ -143,6 +172,16 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
       (tickValue) => tickValue !== min && tickValue !== max,
     );
 
+    // Shared by both the tooltip and every `showValue` label below — found
+    // during this component's final review pass that only the tooltip
+    // preferred `ariaValueText` over the raw number, while `showValue`'s own
+    // persistent label always showed the raw number regardless. A sighted
+    // user with both set (e.g. `aria-valuetext="Medium"` on a 1-3 scale)
+    // would see "2" in the permanent label but "Medium" in the tooltip —
+    // inconsistent with each other and with what's announced to assistive
+    // tech, which always gets `ariaValueText` when set.
+    const displayValue = ariaValueText || currentValue;
+
     let thumb = (
       <SliderPrimitive.Thumb
         className={styles.thumb}
@@ -158,11 +197,19 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
           ? {
               onPointerEnter: () => setIsThumbHovering(true),
               onPointerLeave: () => setIsThumbHovering(false),
-              onPointerDown: () => setIsThumbPressed(true),
+              onPointerDown: () => {
+                wasPointerDownRef.current = true;
+                setIsThumbPressed(true);
+              },
               onPointerUp: () => setIsThumbPressed(false),
               onPointerCancel: () => setIsThumbPressed(false),
-              onFocus: () => setIsThumbFocused(true),
-              onBlur: () => setIsThumbFocused(false),
+              onFocus: () => {
+                if (!wasPointerDownRef.current) setIsThumbFocused(true);
+              },
+              onBlur: () => {
+                setIsThumbFocused(false);
+                wasPointerDownRef.current = false;
+              },
             }
           : null)}
         // Applied last (after every other Thumb prop above) so a
@@ -176,7 +223,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
     if (showValueTooltip) {
       thumb = (
         <Tooltip
-          content={ariaValueText || currentValue}
+          content={displayValue}
           side={isVertical ? "right" : "top"}
           // Controlled explicitly (see the state above) rather than left to
           // Tooltip's own uncontrolled hover/focus handling, specifically
@@ -290,7 +337,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
           <span className={cx(styles.wrapper, styles.wrapperVertical)}>
             {control}
             <Text
-              size="sm"
+              size={valueTextSize[size]}
               color="secondary"
               // `showMinMaxLabels`'s own "min" overlay hangs below `Root`'s
               // real box (it consumes no normal-flow space of its own — see
@@ -303,7 +350,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
                 showMinMaxLabels && styles.valueClearsMinMaxOverlay,
               )}
             >
-              {currentValue}
+              {displayValue}
             </Text>
           </span>
         );
@@ -322,11 +369,11 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
         <span className={styles.combinedWrapper}>
           <span className={styles.combinedSlider}>{control}</span>
           <Text
-            size="sm"
+            size={valueTextSize[size]}
             color="secondary"
             className={cx(styles.value, styles.combinedValue)}
           >
-            {currentValue}
+            {displayValue}
           </Text>
           <span className={cx(styles.minMaxRow, styles.combinedMinMaxRow)}>
             <Text size="xs" color="tertiary" className={styles.minMaxLabel}>
@@ -342,8 +389,8 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
       control = (
         <span className={styles.wrapper}>
           {control}
-          <Text size="sm" color="secondary" className={styles.value}>
-            {currentValue}
+          <Text size={valueTextSize[size]} color="secondary" className={styles.value}>
+            {displayValue}
           </Text>
         </span>
       );

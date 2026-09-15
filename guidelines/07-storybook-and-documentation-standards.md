@@ -188,7 +188,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | FieldLabel | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 | [FieldLabel.md](component-reviews/FieldLabel.md) |
 | Input | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 | [Input.md](component-reviews/Input.md) |
 | Textarea | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 | [Textarea.md](component-reviews/Textarea.md) |
-| Switch | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 | [Switch.md](component-reviews/Switch.md) |
+| Switch | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 (track/hover colors revised 2026-09-15) | [Switch.md](component-reviews/Switch.md) |
 | Avatar | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Avatar.md](component-reviews/Avatar.md) |
 | Badge | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Badge.md](component-reviews/Badge.md) |
 | Tag | Atom | Data Display | ✅ | ✅ 2026-08-22 | [Tag.md](component-reviews/Tag.md) |
@@ -229,7 +229,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | PasswordInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [PasswordInput.md](component-reviews/PasswordInput.md) |
 | NumberInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [NumberInput.md](component-reviews/NumberInput.md) |
 | SearchInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [SearchInput.md](component-reviews/SearchInput.md) |
-| Slider | Molecule | Inputs & Forms | ✅ | ⏳ built, self-reviewed, pending confirmation | [Slider.md](component-reviews/Slider.md) |
+| Slider | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-15 | [Slider.md](component-reviews/Slider.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see

@@ -80,11 +80,13 @@ export interface SliderProps
    */
   inverted?: boolean;
   /**
-   * Shows the current numeric value as live text next to the slider
-   * (below it when `orientation="vertical"`). Off by default since the
-   * value is already exposed to assistive tech via `aria-valuenow`
-   * regardless — this is a purely visual convenience for sighted users
-   * when no other on-screen element already shows it (e.g. a paired
+   * Shows the current value as live text next to the slider (below it when
+   * `orientation="vertical"`) — `aria-valuetext` in place of the raw number
+   * when set, matching `showValueTooltip`'s own preference and what's
+   * announced to assistive tech. Off by default since the value is already
+   * exposed to assistive tech via `aria-valuenow`/`aria-valuetext`
+   * regardless — this is a purely visual convenience for sighted users when
+   * no other on-screen element already shows it (e.g. a paired
    * `FieldHelperText` reflecting the value some other way).
    * @default false
    */

@@ -314,5 +314,194 @@ inspection — this component's own history in this session is a good argument f
 measurement step matters: a screenshot alone could plausibly have looked "close enough" for the
 horizontal case despite the underlying width still being wrong.
 
-**Status: built, self-reviewed against the full `06-engineering-standards.md` §9 checklist, all
-findings above already actioned — awaiting the user's own confirmation to mark Finalized.**
+## Fourth post-build fix round (2026-09-14)
+
+User-reported: "when I hover and/or drag the thumb, the tooltip is displayed. When I stop
+interacting with the thumb, the tooltip continues to display until I click or tap outside/away from
+the slider."
+
+Root cause: the third round's tooltip logic (`tooltipOpen = isThumbHovering || isThumbPressed ||
+isThumbFocused`) treated *any* DOM focus on the thumb as a reason to keep the tooltip open — but a
+`pointerdown`/`pointerup` click on a focusable element genuinely leaves it DOM-focused afterward
+(confirmed in the second round's own debugging), with nothing but an unrelated `blur` (typically
+triggered by clicking elsewhere) able to clear `isThumbFocused` again. So a drag-then-release left
+the tooltip pinned open via leftover click-focus, exactly as reported.
+
+Considered using the CSS `:focus-visible` pseudo-class to distinguish genuine keyboard focus from
+this click-residual focus, since that's precisely the distinction it exists for. Investigated with a
+throwaway debug test rather than assuming: `element.matches(':focus-visible')` correctly returned
+`true` after `userEvent.tab()`, but *also* returned `true` after a plain `fireEvent.pointerDown`/
+`fireEvent.pointerUp` sequence — which a real browser should not do for a mouse click on a
+non-text-input element. jsdom's implementation doesn't actually track input modality, so it can't be
+trusted here (and testing against it would just encode the same wrong assumption). Rejected in favor
+of an explicit mechanism.
+
+**Fix**: a `wasPointerDownRef` ref, set `true` in the thumb's `onPointerDown` and reset to `false` in
+its `onBlur`; `onFocus` now only sets `isThumbFocused(true)` when `!wasPointerDownRef.current`. This
+exploits the real, standard browser event order for a click on a focusable element
+(`pointerdown → focus → pointerup`) to distinguish "focus that just arrived from a click" (ignored)
+from "focus that arrived any other way — Tab, programmatic `.focus()`" (still opens the tooltip, as
+it should for keyboard users). Hover/press behavior (`isThumbHovering`/`isThumbPressed`) is
+unchanged — dragging still keeps the tooltip open and live-updating throughout.
+
+`Slider.test.tsx`'s tooltip-persistence tests were split to match: one confirming press+release still
+keeps the tooltip open (ends at `pointerUp`, no longer asserting anything about what happens after);
+a new one confirming the tooltip now closes on `pointerLeave` alone despite the thumb still being
+genuinely DOM-focused from the preceding click; and the keyboard-focus test rewritten to drive real
+Tab focus via `userEvent.tab()` (previously a bare `fireEvent.focus()`, which doesn't exercise this
+new pointerdown-gating logic at all) confirming genuine keyboard focus still opens the tooltip.
+
+Live-verified in a running Storybook instance (not just the jsdom tests, given this round's whole
+premise was that jsdom's own modality tracking can't be trusted): dragged the thumb across the
+track — tooltip stayed open with a live-updating value throughout the drag — then moved the mouse
+away after releasing, with no further click; the tooltip disappeared immediately via its own
+`pointerleave`-driven close, with no click-elsewhere needed. Separately confirmed Tab-focusing the
+thumb (no mouse interaction at all) still opens the tooltip correctly.
+
+Re-verified after the fix: `pnpm run lint` (eslint + `tsc` + `.storybook` `tsc`), full Vitest `unit`
+(1323/1323 whole package) and `storybook` (459/459 whole package) projects, `pnpm run build`, and
+`check-component-bundle-size` (2.63KB JS / 1.48KB CSS, still within budget) all clean.
+
+## Final review pass (2026-09-15)
+
+Full `06-engineering-standards.md` §9 checklist run end to end — baseline correctness, feature
+completeness, accessibility, responsiveness, design quality, theming, Storybook documentation, and
+functional verification — ahead of finalization. Findings, most severe first:
+
+1. **Accessibility defect: the unfilled track's color fails the token spec's own contrast rule for
+   an always-interactive control.** `03-token-system-spec.md` draws an explicit line between
+   `bg.track` (a deliberate sub-3:1 exception, but *only* accepted for a passive, non-interactive
+   indicator like `ProgressBar`/`ProgressCircle`) and `bg.track-strong` ("used where the boundary
+   must read as real, e.g. `Switch`'s always-interactive track"). `Slider.module.css` was using the
+   plain `bg.track` — reverted there mid-session (see "Second post-build fix round" above) at
+   explicit user direction, but that revert was chasing a different bug (the vertical height
+   collapse) and landed on a value the token spec itself says shouldn't apply to an always-interactive
+   control like this one. Measured directly: `bg.track` computes to 1.14:1 (light) / 1.40:1 (dark)
+   against `bg.surface`, both well under the 3:1 non-text floor; confirmed visually in a live
+   Storybook instance — the unfilled track was nearly invisible against a white page. **Fixed**:
+   restored `background-color: var(--dbm-bg-track-strong)`, matching `Switch`'s own precedent for
+   exactly this "always-interactive boundary" case. This is being called out explicitly, not applied
+   quietly, since it reverses a specific instruction from earlier in the session — but per
+   `CLAUDE.md`'s "accessibility is not optional," a confirmed sub-floor contrast value on an
+   interactive control's own boundary is a defect regardless of how it got there.
+2. **Inconsistent value display: `showValue`'s persistent label ignored `aria-valuetext`, while
+   `showValueTooltip`'s tooltip already preferred it.** A slider using `aria-valuetext="Medium"` on a
+   1–3 scale with `showValue` on would show the raw number ("2") in-page while a tooltip (if also
+   enabled) showed "Medium" and assistive tech announced "Medium" — three different presentations of
+   the same value. **Fixed**: introduced a shared `displayValue = ariaValueText || currentValue`,
+   used by the tooltip and all three `showValue` label branches (vertical, horizontal-combined,
+   horizontal-only) alike. Verified live: `showValue` now shows "Medium," not "2," when both are set.
+   `showValue`'s own JSDoc updated to document the same `aria-valuetext` preference `showValueTooltip`
+   already documented.
+3. **Docs page (`Slider.mdx`) was missing several tokens the component actually uses.** An audit of
+   every `--dbm-*` reference in `Slider.module.css` against "Design tokens used" found the four thumb
+   elevation shadow tokens (`shadow.light.sm`/`shadow.dark.sm`/`shadow.light.md`/`shadow.dark.md`),
+   `space.2` (the value-label gap), `space.8` (the vertical min-overlay clearance), and `space.32`
+   (the vertical min-height floor) all undocumented — the `bg.track-strong` row itself was already
+   correct (the doc was right; the CSS was wrong, per finding 1). **Fixed**: added the missing
+   `TokenRow` entries, matching this file's own existing exhaustive-documentation precedent.
+4. **Missing regression coverage for `aria-labelledby`/`aria-describedby` forwarding.** Both are
+   documented props passed through to the thumb, but neither had a dedicated test proving it.
+   **Fixed**: added one test per prop, plus a test locking in finding 2's fix.
+5. **Minor: `tickInterval`'s Playground default (`10`) doesn't match its real destructuring default
+   (`= step`, i.e. `1` here) — a deliberate demo-usability call (a literal `1` across a 0–100 range
+   would render 100 illegible ticks the moment `showTicks` is toggled on), left undocumented as
+   intentional. **Fixed**: added a one-line comment in `Slider.stories.tsx` explaining the deviation,
+   matching how other deliberate arg/default mismatches are documented elsewhere in this codebase.
+
+No other checklist gaps found: feature-completeness pass against comparable slider implementations
+found nothing missing beyond what's already deferred by design (range/two-thumb mode → future
+`RangeSlider`, per the second post-build round's own decision); atom reuse (`Text`, `Tooltip`),
+Radix-prop audit, SSR safety, keyboard/tab order, cross-brand and light/dark theming (Purple and
+Emerald, both modes, live-verified), and responsiveness (375px mobile width, both a horizontal
+fully-decorated story and the vertical + min/max story) all already held.
+
+Re-verified after all five fixes: `pnpm run lint` (eslint + `tsc` + `.storybook` `tsc`), full Vitest
+`unit` (1326/1326 whole package, up from 1323) and `storybook` (459/459, `Slider.mdx`'s own indexing
+re-confirmed working after a syntax slip mid-fix) projects, `pnpm run build`, and
+`check-component-bundle-size` (2.64KB JS / 1.48KB CSS, still within budget) all clean. Both visual
+fixes (track contrast, `showValue`'s `aria-valuetext` preference) re-confirmed live in a running
+Storybook instance, not just from the code.
+
+## Post-review fix: value label font size didn't scale with slider size (2026-09-15)
+
+User-reported: the `showValue` label's font size read fine at `xs`/`sm`/`md` but looked
+disproportionately small next to `lg`/`xl`'s own larger thumb (24px/32px) and thicker track — a
+fixed `Text size="sm"` regardless of the slider's own `size`.
+
+Fixed with a `valueTextSize: Record<SliderSize, TextSize>` lookup (mirroring the existing
+`sizeClass` lookup's own shape), applied to all three `showValue` label branches (vertical,
+horizontal-combined, horizontal-only) — not the min/max labels or the tooltip's own content, which
+weren't part of the report and stay unchanged. `xs`/`sm`/`md` unchanged (still `"sm"`, i.e.
+`font-size-sm`, per the user's own explicit confirmation those three already read fine); `lg` steps
+up to `"base"` (`font-size-base`, 16px) and `xl` to `"md"` (`font-size-md`, ~19–20px) — a graduated
+increase matching how each size's own thumb diameter (24px, 32px) steps further ahead of `md`'s own
+20px. Live-verified in Storybook across all five sizes, plus the horizontal fully-decorated and
+vertical + min/max combinations at `xl` specifically, to confirm the larger text doesn't overlap or
+misalign the grid/overlay layouts finding rounds 3–4 fixed. Added a dedicated regression test
+locking in the per-size mapping (`Slider.test.tsx`).
+
+No token gap: the value label already composes the `Text` atom rather than setting `font-size`
+directly in `Slider.module.css`, so this is Slider choosing which of `Text`'s own existing
+`font-size` tokens to request per size — not a new token or a hardcoded value — consistent with how
+this component's own "Design tokens used" section doesn't re-list tokens a composed atom
+(`Tooltip`) already resolves internally.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1327/1327) and `storybook` (459/459) projects,
+`pnpm run build`, and `check-component-bundle-size` (2.66KB JS / 1.48KB CSS, still within budget)
+all clean.
+
+## Track color reverted from `bg.track-strong` back to `bg.track` (2026-09-15)
+
+The final review above (finding 1) restored `bg.track-strong` on the reasoning that an
+always-interactive control's track "must read as real." Revisited the same day after a direct
+question about whether that rule was actually correct: checking several comparable production
+sliders found the majority don't hold their own track to 3:1 either, and WCAG 1.4.11 itself targets
+whichever element conveys a control's boundary/state — for `Slider`, that's the thumb and the filled
+range, not the passive groove behind them. Reverted to `bg.track`, and applied the identical
+reasoning to `Switch`'s own unchecked track (see `guidelines/component-reviews/Switch.md`'s own
+entry — `Switch` is Finalized, so that change went through `06-engineering-standards.md` §9's
+re-finalization test explicitly). Full reasoning, and the general principle this generalizes to any
+future track-having component: [ADR-0016](../adr/0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md).
+
+Changed: `Slider.module.css`'s `.track` rule back to `background-color: var(--dbm-bg-track)`.
+`Slider.mdx`'s Accessibility callout and its `bg.track`/`bg.track-strong` `TokenRow` updated to match
+and to state the exception explicitly (deliberate sub-3:1, not an oversight) rather than the earlier
+(now-superseded) "checked against real WCAG contrast ratios" phrasing, which was accurate for
+`bg.track-strong` but would have been wrong left as-is against the reverted `bg.track`.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1327/1327) and `storybook` (459/459) projects,
+`pnpm run build`, and `check-component-bundle-size` (2.66KB JS / 1.48KB CSS, still within budget) all
+clean. Live-verified in Storybook: the track is visibly fainter again, matching its pre-review-round
+appearance, with the thumb (bordered, per the earlier round-1 fix) still clearly anchoring the
+control.
+
+## Follow-up shared-token change: `bg.track` light value moved `gray.100` → `gray.200` (2026-09-15)
+
+Same day as the track-color revert above, at explicit direction: `bg.track`'s own light-mode
+primitive mapping moved from `gray.100` (1.14:1 against `bg.surface`) to `gray.200` (1.35:1) — still
+a deliberate sub-3:1 exception, not a compliance claim — once several comparable production
+sliders/switches were checked and this token's own faintness (shared with `Switch`, per
+[ADR-0016](../adr/0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md)) read
+as more subtle than typical. Dark value (`gray.800`, 1.40:1) unchanged. No change to
+`Slider.module.css` itself — it already referenced `bg.track` by name from the prior revert. Full
+detail and the shared-token rationale: `03-token-system-spec.md`'s `bg.track` row.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1327/1327) and `storybook` (459/459) projects,
+`pnpm run build`, `check-component-bundle-size`, and `check-foundations-token-coverage` all clean.
+Live-verified in Storybook: the track now reads marginally more visible than the pre-review
+appearance while still clearly reading as a passive groove behind the thumb.
+
+## Follow-up shared-token change: dark `bg.track` moved `gray.800` → `gray.700` (2026-09-15)
+
+Same day, at explicit direction: `bg.track`'s dark-mode mapping moved from `gray.800` (1.40:1
+against `bg.surface`) to `gray.700` (2.05:1) — still short of 3:1, but a real step up, matching the
+same-day light-mode bump. No change to `Slider.module.css` itself. Re-verified live in Storybook
+(dark mode, both brands): the track now reads clearly against the surface. Full detail:
+`03-token-system-spec.md`'s `bg.track` row.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1327/1327) and `storybook` (459/459) projects,
+`pnpm run build`, `check-component-bundle-size`, and `check-foundations-token-coverage` all clean.
+
+**Finalized 2026-09-15** — per `06-engineering-standards.md` §9's own note, don't make further
+changes to Slider (code, stories, docs, or its tokens) without asking first.

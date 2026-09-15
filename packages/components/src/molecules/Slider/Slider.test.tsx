@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import textStyles from "../../atoms/Text/Text.module.css";
 import { Slider } from "./Slider";
 import styles from "./Slider.module.css";
 
@@ -129,6 +130,36 @@ describe("Slider", () => {
     expect(screen.queryByText("42")).not.toBeInTheDocument();
   });
 
+  it("scales the showValue label's font size with the slider's own size, lg/xl only (user-reported: fixed size read too small next to lg/xl's own larger thumb)", () => {
+    const { container: xsContainer } = render(
+      <Slider aria-label="Volume" size="xs" showValue defaultValue={50} />,
+    );
+    expect(xsContainer.querySelector(`.${styles.value}`)).toHaveClass(
+      textStyles.sizeSm as string,
+    );
+
+    const { container: mdContainer } = render(
+      <Slider aria-label="Volume" size="md" showValue defaultValue={50} />,
+    );
+    expect(mdContainer.querySelector(`.${styles.value}`)).toHaveClass(
+      textStyles.sizeSm as string,
+    );
+
+    const { container: lgContainer } = render(
+      <Slider aria-label="Volume" size="lg" showValue defaultValue={50} />,
+    );
+    expect(lgContainer.querySelector(`.${styles.value}`)).toHaveClass(
+      textStyles.sizeBase as string,
+    );
+
+    const { container: xlContainer } = render(
+      <Slider aria-label="Volume" size="xl" showValue defaultValue={50} />,
+    );
+    expect(xlContainer.querySelector(`.${styles.value}`)).toHaveClass(
+      textStyles.sizeMd as string,
+    );
+  });
+
   it("shows the current value in a tooltip on hover when showValueTooltip is set", async () => {
     const user = userEvent.setup();
     render(<Slider aria-label="Volume" defaultValue={30} showValueTooltip />);
@@ -177,29 +208,38 @@ describe("Slider", () => {
     fireEvent.pointerUp(slider);
     // Still hovering after release — stays open.
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
+  });
 
-    // A pointerdown/pointerup sequence on the thumb also leaves it
-    // genuinely focused (confirmed directly: `document.activeElement` is
-    // the slider afterward) — correct, expected behavior for an
-    // interactive control, and exactly why `pointerLeave` alone isn't
-    // enough to close the tooltip here: it's still open via the focus
-    // channel, matching real usage (a focused slider should keep showing
-    // its value). Blurring too is what actually dismisses it.
-    fireEvent.pointerLeave(slider);
+  it("hides the value tooltip once hover/press end, even though the thumb is still genuinely DOM-focused from the preceding click (found in user-reported lingering-tooltip regression)", async () => {
+    render(<Slider aria-label="Volume" defaultValue={30} showValueTooltip />);
+    const slider = screen.getByRole("slider");
+
+    fireEvent.pointerEnter(slider);
+    fireEvent.pointerDown(slider);
+    fireEvent.pointerUp(slider);
     expect(screen.getByRole("tooltip")).toBeInTheDocument();
 
-    fireEvent.blur(slider);
+    // A pointerdown/pointerup sequence on the thumb genuinely leaves it
+    // focused afterward (confirmed directly elsewhere via
+    // `document.activeElement`) — correct, expected browser behavior, not
+    // a bug. The tooltip must still close here regardless, since the user
+    // is no longer hovering or pressing — counting that leftover click
+    // focus as a reason to keep it open is exactly the bug this test
+    // guards against.
+    fireEvent.pointerLeave(slider);
     await waitFor(() =>
       expect(screen.queryByRole("tooltip")).not.toBeInTheDocument(),
     );
   });
 
-  it("keeps the value tooltip open on focus alone, without hovering or pressing", async () => {
+  it("keeps the value tooltip open on genuine keyboard focus alone, without hovering or pressing", async () => {
+    const user = userEvent.setup();
     render(<Slider aria-label="Volume" defaultValue={30} showValueTooltip />);
-    const slider = screen.getByRole("slider");
-    fireEvent.focus(slider);
+    await user.tab();
+    expect(screen.getByRole("slider")).toHaveFocus();
     expect(await screen.findByRole("tooltip")).toBeInTheDocument();
-    fireEvent.blur(slider);
+
+    fireEvent.blur(screen.getByRole("slider"));
     await waitFor(() =>
       expect(screen.queryByRole("tooltip")).not.toBeInTheDocument(),
     );
@@ -346,6 +386,42 @@ describe("Slider", () => {
   it("forwards aria-valuetext as a human-readable alternative", () => {
     render(<Slider aria-label="Quality" defaultValue={2} aria-valuetext="Medium" />);
     expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "Medium");
+  });
+
+  it("shows aria-valuetext, not the raw number, in the showValue label when set (found in review, matching the tooltip's own existing preference)", () => {
+    render(
+      <Slider
+        aria-label="Quality"
+        defaultValue={2}
+        min={1}
+        max={3}
+        aria-valuetext="Medium"
+        showValue
+      />,
+    );
+    expect(screen.getByText("Medium")).toBeInTheDocument();
+    expect(screen.queryByText("2")).not.toBeInTheDocument();
+  });
+
+  it("forwards aria-labelledby to the slider's own thumb", () => {
+    render(
+      <>
+        <span id="volume-label">Volume</span>
+        <Slider aria-labelledby="volume-label" />
+      </>,
+    );
+    expect(screen.getByRole("slider")).toHaveAttribute(
+      "aria-labelledby",
+      "volume-label",
+    );
+  });
+
+  it("forwards aria-describedby to the slider's own thumb", () => {
+    render(<Slider aria-label="Volume" aria-describedby="volume-help" />);
+    expect(screen.getByRole("slider")).toHaveAttribute(
+      "aria-describedby",
+      "volume-help",
+    );
   });
 
   it("renders a hidden native input for form participation when inside a real form", () => {

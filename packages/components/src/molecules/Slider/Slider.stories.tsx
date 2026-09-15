@@ -144,6 +144,14 @@ const meta: Meta<typeof Slider> = {
     showValueTooltip: false,
     showMinMaxLabels: false,
     showTicks: false,
+    // Deliberately not `1` (the component's real default, `tickInterval =
+    // step`, with `step` also `1` here) — a literal `1` across this
+    // Playground's 0–100 range would render 100 unreadable ticks the moment
+    // `showTicks` is toggled on, a bad demo default even though it's the
+    // technically "real" one. `10` is a sensible non-blank demo value for
+    // this specific prop instead (07-storybook-and-documentation-
+    // standards.md §5's own carve-out for props with no single literal
+    // default worth matching).
     tickInterval: 10,
     disabled: false,
     name: "",
