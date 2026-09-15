@@ -1,0 +1,174 @@
+.root {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  width: 100%;
+}
+
+.root[data-orientation="vertical"] {
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  min-height: 100%;
+  width: fit-content;
+}
+
+.root[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.track {
+  background-color: var(--dbm-bg-track);
+  border-radius: var(--dbm-radius-full);
+  flex-grow: 1;
+  position: relative;
+}
+
+.track[data-orientation="horizontal"] {
+  height: var(--slider-track-thickness);
+}
+
+.track[data-orientation="vertical"] {
+  width: var(--slider-track-thickness);
+}
+
+.range {
+  background-color: var(--dbm-bg-brand);
+  border-radius: inherit;
+  position: absolute;
+  transition: background-color var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.range[data-orientation="horizontal"] {
+  height: 100%;
+}
+
+.range[data-orientation="vertical"] {
+  width: 100%;
+}
+
+.error .range {
+  background-color: var(--dbm-bg-danger);
+}
+
+/* Shadows are a fixed light/dark primitive pair, not a reactive semantic
+   token (see guidelines/03-token-system-spec.md) — same established
+   pattern as Select's own dropdown `.content` shadow: a default light
+   value, overridden via the `[data-theme$="-dark"]` attribute selector
+   below, not a token that doesn't exist. */
+.thumb {
+  background-color: var(--dbm-bg-surface);
+  border-radius: var(--dbm-radius-full);
+  box-shadow: var(--dbm-shadow-light-sm);
+  display: block;
+  flex-shrink: 0;
+  height: var(--slider-thumb-size);
+  transition: box-shadow var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+  width: var(--slider-thumb-size);
+}
+
+[data-theme$="-dark"] .thumb {
+  box-shadow: var(--dbm-shadow-dark-sm);
+}
+
+.thumb:hover:not([data-disabled]) {
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .thumb:hover:not([data-disabled]) {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.thumb:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.thumb[data-disabled] {
+  cursor: not-allowed;
+}
+
+/* A box-shadow ring, not a border — same reasoning as Switch's own `.error`:
+   composes independently of `:focus-visible`'s own `outline` (both can
+   render at once, e.g. a focused+invalid slider) and doesn't disturb the
+   thumb's own box model the way adding a real border would. */
+.error .thumb {
+  box-shadow: 0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger);
+}
+
+.error .thumb:hover:not([data-disabled]) {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger),
+    var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .error .thumb {
+  box-shadow: 0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger);
+}
+
+[data-theme$="-dark"] .error .thumb:hover:not([data-disabled]) {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger),
+    var(--dbm-shadow-dark-md);
+}
+
+/* Sizes — thumb diameter reuses the shared icon-size scale directly (a
+   real, measured coincidence: 12/16/20/24/32px already reads as a natural
+   thumb-diameter progression, so no new component-layer token is needed).
+   Track thickness reuses ProgressBar's own already-established height
+   scale verbatim (`ProgressBar.module.css`'s `.sizeX` rules) rather than
+   inventing a second one — both are "thin bar whose thickness scales by
+   size" components, so sharing the exact values keeps them visually
+   consistent with each other. */
+.sizeXs {
+  --slider-thumb-size: var(--dbm-icon-size-xs);
+  --slider-track-thickness: var(--dbm-space-1);
+}
+
+.sizeSm {
+  --slider-thumb-size: var(--dbm-icon-size-sm);
+  --slider-track-thickness: calc(var(--dbm-space-1) * 1.5);
+}
+
+.sizeMd {
+  --slider-thumb-size: var(--dbm-icon-size-md);
+  --slider-track-thickness: var(--dbm-space-2);
+}
+
+.sizeLg {
+  --slider-thumb-size: var(--dbm-icon-size-lg);
+  --slider-track-thickness: var(--dbm-space-3);
+}
+
+.sizeXl {
+  --slider-thumb-size: var(--dbm-icon-size-xl);
+  --slider-track-thickness: var(--dbm-space-4);
+}
+
+/* `showValue`'s wrapper — purely a layout container (no exposed
+   `className`; see Slider.types.ts's own `className` doc) so the value
+   label can sit beside (or below, vertical) the slider control itself. */
+.wrapper {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+  width: 100%;
+}
+
+.wrapperVertical {
+  flex-direction: column;
+  width: fit-content;
+}
+
+.value {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: end;
+}

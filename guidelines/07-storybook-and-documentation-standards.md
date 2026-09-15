@@ -229,6 +229,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | PasswordInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [PasswordInput.md](component-reviews/PasswordInput.md) |
 | NumberInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [NumberInput.md](component-reviews/NumberInput.md) |
 | SearchInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [SearchInput.md](component-reviews/SearchInput.md) |
+| Slider | Molecule | Inputs & Forms | ✅ | ⏳ built, self-reviewed, pending confirmation | [Slider.md](component-reviews/Slider.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see

@@ -58,3 +58,4 @@ export * from "./molecules/PasswordInput";
 export * from "./molecules/RadioGroup";
 export * from "./molecules/SearchInput";
 export * from "./molecules/Select";
+export * from "./molecules/Slider";
