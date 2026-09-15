@@ -15,3 +15,82 @@ Switch — ✅ done (2026-08-30 — comprehensive `06-engineering-standards.md` 
   **Finalized 2026-08-30, at explicit user direction** — per `06-engineering-standards.md` §9's own note, don't make further changes to Switch (code, stories, docs, or its tokens) without asking first. A final consolidated self-verification was run immediately before this declaration, covering everything landed across the review, the `autoFocus` follow-up, and the size/icon-weight update together: `tsc` (package + `.storybook`), `eslint --max-warnings 0`, `tsup` build, both Vitest projects (`unit`: 811/811, `storybook`: 291/291), the Foundations token-coverage check (79/79 in sync), and the component bundle-size check (Switch 1.42KB JS / 1.12KB CSS, Checkbox 1.19KB JS / 0.82KB CSS — both within budget) all clean.
 
 **Inputs — all 10 atom-tier components now have a Docs page (Button, IconButton, CloseButton, Input, Textarea, Checkbox, Switch, FieldLabel, FieldError, FieldHelperText) — the first functional category to fully clear this pass.** Molecule/organism-tier Inputs & Forms components (`PasswordInput`, `NumberInput`, `Select`, `Combobox`, etc.) are separately queued per `07-storybook-and-documentation-standards.md` §6's own molecule-sequencing note, not part of this atom-tier count.
+
+## Unchecked track reverted from `bg.track-strong` to `bg.track` (2026-09-15, at explicit direction)
+
+The original review (above) added `bg.track-strong` specifically so the unchecked track would clear
+WCAG 1.4.11's 3:1 non-text floor, reasoning that an always-visible, always-interactive control's own
+track "must read as real." Revisited after a direct question (asked during `Slider`'s own review,
+which had applied the identical reasoning) about whether that rule was actually correct: checking
+several comparable production sliders/switches found the majority don't hold their own track to 3:1
+either, and WCAG 1.4.11 itself targets whichever element conveys a control's boundary/state — for
+`Switch`, that's the thumb (always visible, in either state), not the track behind it. Full reasoning
+and the general principle this generalizes to (any current or future track-having component): 
+[ADR-0016](../adr/0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md).
+
+**Applying `06-engineering-standards.md` §9's three-question test** (Switch is Finalized, so this
+needed authorization before touching it — given explicitly, alongside the same request for `Slider`):
+1. Changes rendered output of existing surface? Yes — the unchecked track's own color.
+2. Genuine defect fix (something that already violated a guideline requirement)? **No** — the reverse:
+   `bg.track-strong` was itself compliant with the rule as originally written; this is a deliberate
+   policy change to that rule, not a correction of a violation.
+3. Blast radius: touches the shared token-spec convention (`03-token-system-spec.md`'s `bg.track`/
+   `bg.track-strong` rows), which `Indicators` also consumes under a related but factually different
+   rationale (the dot itself, not a groove behind a thumb, is what a user reads state from there) —
+   evaluated and left unchanged; ADR-0016 records explicitly why `Indicators` isn't affected. Result:
+   **partial re-finalization** for `Switch` — only Theming and Accessibility/Design-quality (contrast)
+   needed re-verification, not the full checklist.
+
+Changed: `Switch.module.css`'s `.root` base rule, `background-color: var(--dbm-bg-track-strong)` →
+`var(--dbm-bg-track)`. `Switch.mdx`'s Accessibility callout and its `bg.track-strong` `TokenRow`
+updated to match and to state the exception explicitly (deliberate sub-3:1, not an oversight), same
+wording pattern used on `Slider.mdx`'s own equivalent line.
+
+Re-verified (Theming + Accessibness/contrast, plus a full regression run since both packages share a
+build): `pnpm run lint`, full Vitest `unit` (1327/1327 whole package) and `storybook` (459/459 whole
+package) projects, `pnpm run build`, and `check-component-bundle-size` (Switch: 1.44KB JS / 1.15KB
+CSS, still within budget) all clean. Live-verified in Storybook: unchecked track now visibly fainter
+but the thumb (with its own shadow) still clearly reads the switch's position in both states; checked
+state (`bg.brand`) unaffected.
+
+**Finalized status unchanged — this was a partial re-finalization, not a reopening of the full
+review.** Updated per `06-engineering-standards.md` §9's own re-finalization note: "Finalized
+2026-08-30, unchecked-track color revised 2026-09-15 (re-verified: theming, accessibility/contrast)."
+
+**Follow-up shared-token change, same day.** `bg.track` itself (the token `Switch` now consumes,
+per the entry above) had its own light-mode primitive mapping moved `gray.100` → `gray.200` (1.14:1
+→ 1.35:1 against `bg.surface`, still a deliberate sub-3:1 exception), at explicit direction — see
+[ADR-0016](../adr/0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md)'s own
+token, and `03-token-system-spec.md`'s `bg.track` row. No further change to `Switch.module.css`
+itself (it already referenced `bg.track` by name from the change above). Re-verified live in
+Storybook: the unchecked track is now marginally more visible than immediately after the
+`track-strong` → `track` change, still clearly fainter than the checked (`bg.brand`) state. Stays
+Finalized — purely a shared-token value adjustment, nothing in `Switch`'s own files changed.
+
+**Second follow-up, same day:** `bg.track`'s dark-mode mapping also moved, `gray.800` → `gray.700`
+(1.40:1 → 2.05:1 against `bg.surface`) — live-verified in dark mode, the unchecked track now reads
+clearly against the surface. Separately, `bg.track-strong` (the token `Switch`'s *resting* state no
+longer consumes, per the first follow-up above) itself moved to `gray.300`/`gray.600` — at that
+point irrelevant to `Switch`'s own resting state, but see `guidelines/component-reviews/Indicators.md`
+for the consequence to that token's other consumer. Stays Finalized.
+
+**Third follow-up, same day: `Switch`'s unchecked-hover state moved from `bg.neutral` to
+`bg.track-strong`, at explicit direction.** `Switch.module.css`'s `.root:hover:not(:disabled)` rule
+changed from `var(--dbm-bg-neutral)` to `var(--dbm-bg-track-strong)`; `Switch.mdx`'s own `TokenRow`
+updated to match. Live-verified via computed style, not just visually, since the resulting step is
+subtle in light mode: resting `rgb(222,221,229)` (`gray.200`) → hover `rgb(198,196,209)` (`gray.300`)
+— real, but a visibly smaller jump than `bg.neutral`'s own `gray.600` gave. Dark mode's step is
+clearer: resting `rgb(91,88,107)` (`gray.700`) → hover `rgb(117,113,135)` (`gray.600`), confirmed via
+both computed style and a live screenshot comparison. Checked (`bg.brand`/`bg.brand-hover`) state
+completely unaffected.
+
+Applying `06-engineering-standards.md` §9's three-question test (Switch is Finalized): (1) changes
+rendered output of existing surface — yes, the hover color; (2) genuine defect fix — no, a deliberate
+preference change; (3) blast radius — scoped to `Switch`'s own files only (this is `bg.track-strong`
+gaining a *second* consumer, not a value change to the token itself, so nothing else already
+consuming it is affected). **Partial re-finalization** — re-verified Theming and
+Accessibility/contrast for this state only. Full regression run: `pnpm run lint`, `unit` (1327/1327),
+`storybook` (459/459), `pnpm run build`, `check-component-bundle-size` (Switch: 1.44KB JS / 1.15KB
+CSS), and `check-foundations-token-coverage` all clean. Stays Finalized — "Finalized 2026-08-30,
+track color revised 2026-09-15, unchecked-hover state revised 2026-09-15 (re-verified: theming,
+accessibility/contrast)."

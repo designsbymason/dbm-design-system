@@ -148,8 +148,10 @@ import { Switch } from "@dbm-design-system/components";
   inside a `<form>`, Radix automatically renders a hidden native `<input type="checkbox">` that
   actually participates in submission (including an uncontrolled form with no JS handler), using
   `name`/`value` as its own name/value.
-- The unchecked track (`bg.track-strong`) and checked track (`bg.brand`) are both checked against
-  real WCAG contrast ratios, not assumed — see [Design tokens used](#design-tokens-used) below.
+- The checked track (`bg.brand`) is checked against real WCAG contrast ratios. The unchecked track
+  (`bg.track`) deliberately doesn't clear the 3:1 non-text floor — an accepted exception, since the
+  thumb (always visible, in either state) already carries the boundary/state information a user
+  needs (see `03-token-system-spec.md`'s "Notable exceptions" and ADR-0016) — not an oversight.
 
 </Callout>
 
@@ -168,8 +170,8 @@ import { Switch } from "@dbm-design-system/components";
 
 ## Design tokens used
 
-<TokenRow token="bg.track-strong" usage="unchecked resting track fill" />
-<TokenRow token="bg.neutral" usage="unchecked hover track fill" />
+<TokenRow token="bg.track" usage="unchecked resting track fill — a deliberate sub-3:1 exception, since the thumb already carries the boundary/state information (ADR-0016)" />
+<TokenRow token="bg.track-strong" usage="unchecked hover track fill" />
 <TokenRow token="bg.brand" usage="checked track fill" />
 <TokenRow token="bg.brand-hover" usage="checked hover track fill" />
 <TokenRow token="bg.surface" usage="thumb fill" />

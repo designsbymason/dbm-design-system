@@ -3,3 +3,21 @@
 *(Migrated from `07-storybook-and-documentation-standards.md` §6 during the guidelines retrofit pass, 2026-08-31 — this file's own content is unchanged from what was there, just relocated. See `07`'s own status table for this component's current Docs-page/Finalized status.)*
 
 **Feedback:** ProgressBar — ✅ done (2026-08-22 — comprehensive `06-engineering-standards.md` §9 review, worked one finding at a time: Playground story added (was missing entirely); `bg.track` token added for the previously-invisible empty track — a deliberate, documented low-contrast exception rather than a compliant fix, chosen at explicit direction after being shown the compliant alternative (see `bg.track`'s own row and the "Notable exceptions" list in `03-token-system-spec.md`'s Contrast verification section); `AllTones`/`AllSizes` stories' `render` functions fixed to accept and spread `args` (were silently ignoring the Controls panel entirely); a new `formatValueLabel` feature (customizes the visible value-label content, e.g. `"3 of 5 files"` instead of a bare percentage) added after a feature-completeness pass against comparable production components; `aria-valuetext`, `aria-labelledby`, and `id`/`className`/`style`/`data-testid` all redeclared for documentation visibility; three dev-mode warnings added (no accessible name, invalid `max`, `formatValueLabel` without `showValueLabel`). A real bug found and fixed: a same-named consumer prop (`aria-valuenow`/`aria-valuemax`/`role`) could silently override the component's own computed values, because TypeScript's JSX checker exempts `data-*`/`aria-*`-prefixed attributes from prop-type checking regardless of the component's declared type — an `Omit` in the props interface doesn't stop it; the real fix is JSX attribute ordering (see `05-component-api-conventions.md` §3's new note, which also corrects a previously-inaccurate claim about `data-testid` this same finding surfaced). Docs page includes a synthetic, Playground-only "Indeterminate" toggle (not a real prop) matching `Tag`'s own "Interaction mode" pattern, since indeterminate mode is triggered by omitting `value` entirely, which a `range` control can't represent on its own. Also fixed, as shared infrastructure found live during this review: `ComponentHeader`'s missing `flexWrap` (see `07-storybook-and-documentation-standards.md` §4.1). Full self-verification, whole package not just this component: `tsc` (package + `.storybook`), `eslint`, `tsup` build, and both Vitest projects (`unit`: 666/666, `storybook`: 268/268) all clean. **Finalized 2026-08-22** — per that section's own note, don't make further changes to ProgressBar (code, stories, docs, or its tokens) without asking first.
+
+**Shared-token value change, no component-file changes (2026-09-15).** `bg.track`'s own light-mode
+primitive mapping moved `gray.100` → `gray.200` (1.14:1 → 1.35:1 against `bg.surface`, still a
+deliberate sub-3:1 exception) at explicit direction, once the token also became `Switch`'s and
+`Slider`'s shared always-interactive-track value (see [ADR-0016](../adr/0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md)
+and `03-token-system-spec.md`'s own `bg.track` row). No file belonging to `ProgressBar` itself
+changed — it already referenced `bg.track` by name, so this is the token doing what a semantic token
+is for. Per `06-engineering-standards.md` §9's re-finalization test: purely additive/no rendered
+change to anything `ProgressBar`'s own review verified beyond the track reading marginally less
+faint — **stays Finalized, no re-verification needed**. Confirmed via the whole-package regression
+run done alongside `Slider`'s/`Switch`'s own re-verification (`unit`: 1327/1327, `storybook`:
+459/459, `check-component-bundle-size` and `check-foundations-token-coverage` both clean) and a live
+Storybook check of `ProgressBar`'s own Playground story specifically.
+
+**Second shared-token value change, same day.** `bg.track`'s dark-mode mapping also moved, `gray.800`
+→ `gray.700` (1.40:1 → 2.05:1 against `bg.surface`) — again no file belonging to `ProgressBar` itself
+changed. **Stays Finalized, no re-verification needed** — confirmed via the same whole-package
+regression run and a live Storybook check (dark mode) of `ProgressBar`'s own Playground story.

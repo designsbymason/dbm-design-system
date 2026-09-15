@@ -62,6 +62,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0013](./0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md) | A compound sub-part's own props get their own Properties table via a hidden, docs-only stories file | Accepted |
 | [0014](./0014-radio-self-wrapping-dual-mode-over-native-input-or-a-narrower-atom-bar.md) | `Radio` self-wraps a private Radix group standalone, over a native `<input>` or a narrower atom bar | Accepted |
 | [0015](./0015-formfield-render-prop-over-cloneelement-or-shared-context.md) | `FormField` computes field props and hands them back via a render-prop `children`, over `cloneElement` injection or a shared context | Accepted |
+| [0016](./0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md) | `bg.track` vs. `bg.track-strong` is scoped by whether the track itself must convey the boundary, not by whether the control is interactive | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

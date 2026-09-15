@@ -366,3 +366,26 @@ redesigned.
 
 **Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further changes
 to Indicators (code, stories, docs, or its tokens) without asking first.
+
+## ⚠️ Unresolved: shared-token change may have dropped the inactive dot below the 3:1 floor (2026-09-15)
+
+`bg.track-strong` — the token this component's own inactive-dot fill uses, chosen above specifically
+*because* it was the compliant (≥3:1) alternative for "a real, clickable dot a user needs to
+perceive," unlike a passive track — was moved at explicit direction from `gray.500`/`gray.400`
+(3.25:1/6.08:1 against `bg.surface`, both AA) to `gray.300`/`gray.600` (1.72:1/~3.00:1). The request
+was scoped to freeing this token up now that `Switch` no longer consumes it (see
+[ADR-0016](../adr/0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md)), not a
+request to re-examine `Indicators` itself — but `Indicators` is the token's only remaining consumer,
+so the new value applies here regardless of intent behind the request.
+
+**Live-verified the consequence, not just computed it:** the inactive dot is now visibly much
+fainter against `bg.surface` (light mode) than before this change. Light mode (1.72:1) is a real drop
+below the 3:1 floor this component's own review deliberately required; dark mode (~3.00:1) sits
+right at the line, functionally unchanged in practice.
+
+**Not fixed here** — per `06-engineering-standards.md` §9's finalized-component rule, this needs the
+user's own explicit direction before any further change lands, and the fix isn't obvious without
+knowing intent: options include reverting `bg.track-strong` for this consumer specifically, giving
+`Indicators` its own dedicated token (decoupling it from whatever `Switch`/`Slider` no longer need),
+or accepting the new fainter value as an intentional, informed exception the way `bg.track` itself
+already is. Flagging rather than guessing.
