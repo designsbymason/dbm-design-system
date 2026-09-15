@@ -3,10 +3,7 @@
 **Inputs & Forms:** SearchInput — initial build + full `06-engineering-standards.md` §9 review
 checklist worked through (2026-09-14), item 6 in the itemized molecule-tier build order
 (`04-component-inventory.md`), the third and last of the three thin `Input`-wrapping molecules
-(`PasswordInput`, `NumberInput`, `SearchInput`). **Not yet Finalized** — per
-`06-engineering-standards.md` §9's own reporting convention and the standing rule that only the
-user declares a component's review pass done, this file records what was built/checked/found, not
-a self-declared Finalized status.
+(`PasswordInput`, `NumberInput`, `SearchInput`). **Finalized 2026-09-14.**
 
 **Design choices made without an explicit ask (flagging the reasoning, not a fork-in-the-road
 architecture decision on the scale of `NumberInput`'s/`Radio`'s own ADRs):**
@@ -100,21 +97,80 @@ through to `Input` unchanged. Adding an empty or filler stylesheet solely to mat
 requires"). Confirmed via the per-component bundle-size check: `SearchInput`'s own reported CSS
 (1.16KB gzipped) is entirely `Input`'s own composed styles, not anything of `SearchInput`'s.
 
-**Functional verification:** `SearchInput.test.tsx` (33 tests) covers rendering, immediate
+**Functional verification:** `SearchInput.test.tsx` (25 tests) covers rendering, immediate
 `onChange`, debounced `onSearch` (fake timers — settling, custom `debounceMs`, `debounceMs={0}`),
 Enter-immediate (cancels rather than merely pre-empting a pending debounce, verified by advancing
 timers past the original delay afterward and confirming no second, stale call), the full `onClear`
 family (button click, Escape, Escape no-ops when empty or `onClear` unset, controlled-value contract,
 disabled/readOnly gating), controlled usage, the `isLoading` icon swap, native prop forwarding,
-`suffix`, timer cleanup on unmount, `aria-invalid`, and jest-axe across 4 states. Full package
+`suffix`, timer cleanup on unmount, `aria-invalid`, and jest-axe across 5 states (including one with
+the clear button actually rendered — see the final review pass below). Full package
 self-verification: `tsc` (package + `.storybook`), `eslint --max-warnings 0`, Vitest `unit`
-(1283/1283) and `storybook` (444/444, including this component's own 12 story tests) all clean;
-`tsup` build and `check-component-bundle-size` clean (1.90KB JS / 1.16KB CSS gzipped, well within
+(1285/1285) and `storybook` (444/444, including this component's own 12 story tests) all clean;
+`tsup` build and `check-component-bundle-size` clean (1.93KB JS / 1.21KB CSS gzipped, well within
 budget).
 
 **Feature completeness:** Named gap comparisons made explicit above (`isLoading`, `onSearch`
 debounce/immediate-triggers, Escape-to-clear) rather than an unscoped "make it fancier" pass — each
 traces to a concrete, stated rationale, per the §9 scope-creep guardrail.
 
-**Status: built, self-reviewed against the full `06-engineering-standards.md` §9 checklist, all
-findings above already actioned — awaiting the user's own confirmation to mark Finalized.**
+**Post-build fixes (2026-09-14, user-reported, before the final review pass):**
+
+1. **`maxLength`/`minLength`/`pattern` showed inert "Set number"/"Set string" placeholders in the
+   Playground instead of a real control or `–`.** `maxLength` had a `control: "number"` but no
+   matching value in the meta's `args`, leaving it `undefined`; `minLength`/`pattern` had the same
+   gap. Fixed to match `Input`'s own established precedent exactly: `maxLength` gets a real default
+   (`200`) so its control is genuinely interactive from the start; `minLength`/`pattern` are set to
+   `control: false` and added to `PlaygroundControls`' `exclude` list — HTML5 `minLength`/`pattern`
+   validation only surfaces on a real `<form>` submit, which the Playground's own plain, form-less
+   demo never triggers, so there's nothing to observe by live-editing either one (same reasoning
+   `Input.stories.tsx` already established for this exact pair).
+2. **Interaction stories played back too fast to actually watch.** Every `play` function jumped
+   straight into its first action with no leading pause, and `userEvent.type` used its own
+   near-instant default per-keystroke timing. Added a `pause(500)`+ before the first action in every
+   interaction story (so the starting state is visible before anything happens) and slowed typing to
+   a `150ms`-per-keystroke `delay`, lengthening the gaps between steps to match — confirmed via the
+   `storybook` Vitest project's own total runtime for these stories going from ~3.7s to ~8.6s.
+
+**Final review pass (2026-09-14):** re-ran the full `06-engineering-standards.md` §9 checklist from
+scratch rather than re-checking only what was previously found. Two real gaps found and fixed, one
+genuine design question asked rather than guessed:
+
+1. **Enter fired `onSearch` mid-IME-composition.** `SearchInput` is the first component in this
+   system to intercept Enter on a live free-text field, and the handler never accounted for IME
+   input (Japanese/Chinese/Korean): pressing Enter to *confirm* a composed character also dispatches
+   a plain `key === "Enter"` keydown, which would have run a search against a possibly incomplete or
+   wrong in-progress composition. Fixed with the standard, reliable guard —
+   `!event.nativeEvent.isComposing` — rather than the older, legacy-Safari-only `keyCode === 229`
+   fallback some codebases still carry. Regression test added.
+2. **jest-axe never exercised the state where the clear button actually renders.** All four
+   pre-existing a11y-check states (default/loading/error/disabled) render with no `onClear`, so the
+   clear `<button>` — a real, distinct interactive element — was never scanned. Added a fifth state
+   (`defaultValue` + `onClear`) to that test.
+3. **Escape's handler now also calls `preventDefault()`** — defensive, bundled in with the fixes
+   above: some browsers still tie a native "clear on Escape" behavior to `type="search"` fields, and
+   this avoids racing that against `SearchInput`'s own state update, even though both already
+   converge on the same empty result either way.
+4. **Asked, not guessed — Enter inside a real `<form>`.** A single-text-input `<input>` inside a
+   `<form>` submits it natively on Enter; before this pass, `SearchInput` never blocked that, so a
+   consumer using its own `name`/`form` props would get both `onSearch` firing *and* a native form
+   submission. Two genuinely valid answers existed — leave it (some consumers may want Enter to
+   submit a real search-results page as a fallback) or block it (this component stays a purely
+   in-page, `onSearch`-driven control) — so this was presented as an explicit choice rather than
+   decided unilaterally. **User chose to block it.** `handleKeyDown` now calls `event.preventDefault()`
+   on every non-composing Enter, documented on the component's own JSDoc, `onSearch`'s own JSDoc, and
+   the Docs page's Intro paragraph. Regression test added asserting `fireEvent`'s own return value
+   (`false` — the standard way to observe `preventDefault` having been called) alongside the existing
+   "Enter fires `onSearch`" assertion.
+
+Full re-verification after all of the above: `tsc` (package + `.storybook`), `eslint
+--max-warnings 0`, Vitest `unit` (1285/1285) and `storybook` (444/444) all clean; `tsup` build and
+`check-component-bundle-size` clean (1.93KB JS / 1.21KB CSS gzipped). Docs page re-verified live in a
+running Storybook instance after the Intro/Accessibility copy edits (both new sentences confirmed
+present in the rendered output, no MDX compile errors — cross-checked against `NumberInput.mdx`'s own
+page to confirm a handful of unrelated console errors present on both are pre-existing Storybook-
+manager noise, not a regression introduced here).
+
+**Status: Finalized 2026-09-14.** Per `06-engineering-standards.md` §9's finalization rule, further
+changes to this component need explicit confirmation first, even an in-scope-looking fix noticed in
+passing.

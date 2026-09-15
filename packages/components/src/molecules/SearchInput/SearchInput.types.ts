@@ -61,7 +61,10 @@ export interface SearchInputProps
    * bypassing any pending debounce: when the user presses Enter, and when
    * the value is cleared (via the clear button or the Escape key) — both
    * common "I want an answer right now" moments a debounce should never
-   * delay.
+   * delay. Pressing Enter never submits a surrounding `<form>` — this
+   * component is a purely in-page, `onSearch`-driven control, not a
+   * classic submit-to-navigate search form, even when composed with its
+   * own `name`/`form` props.
    */
   onSearch?: (value: string) => void;
   /**

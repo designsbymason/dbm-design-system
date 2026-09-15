@@ -93,6 +93,35 @@ describe("SearchInput", () => {
     vi.useRealTimers();
   });
 
+  it("does not fire onSearch on the Enter keystroke that confirms an IME composition (found in final review)", () => {
+    const onSearch = vi.fn();
+    render(<SearchInput aria-label="Search" onSearch={onSearch} />);
+    const input = screen.getByRole("searchbox");
+    fireEvent.change(input, { target: { value: "日本語" } });
+
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(onSearch).not.toHaveBeenCalled();
+
+    // A real, standalone Enter afterward (composition already confirmed)
+    // still works normally.
+    fireEvent.keyDown(input, { key: "Enter", isComposing: false });
+    expect(onSearch).toHaveBeenCalledWith("日本語");
+  });
+
+  it("prevents Enter's default action so it never submits a surrounding form (at explicit direction, final review)", () => {
+    const onSearch = vi.fn();
+    render(<SearchInput aria-label="Search" onSearch={onSearch} />);
+    const input = screen.getByRole("searchbox");
+    fireEvent.change(input, { target: { value: "cats" } });
+
+    // `fireEvent` returns the native `dispatchEvent` result — `false` means
+    // something called `preventDefault()`, which is what actually stops a
+    // real browser from submitting a surrounding `<form>` on Enter.
+    const notCancelled = fireEvent.keyDown(input, { key: "Enter", cancelable: true });
+    expect(notCancelled).toBe(false);
+    expect(onSearch).toHaveBeenCalledWith("cats");
+  });
+
   describe("onClear", () => {
     it("does not render a clear button when onClear is not provided", () => {
       render(<SearchInput aria-label="Search" defaultValue="hello" />);
@@ -268,7 +297,7 @@ describe("SearchInput", () => {
     vi.useRealTimers();
   });
 
-  it("has no accessibility violations, default, loading, with an error, or disabled", async () => {
+  it("has no accessibility violations, default, loading, with an error, disabled, or with the clear button rendered", async () => {
     const { container: defaultContainer } = render(
       <SearchInput aria-label="Search" />,
     );
@@ -283,6 +312,14 @@ describe("SearchInput", () => {
       <SearchInput aria-label="Search" hasError />,
     );
     expect((await axe(errorContainer)).violations).toHaveLength(0);
+
+    // The clear button is a distinct, real interactive element (found
+    // missing from this check in the final review pass) — none of the
+    // states above render it, since none pass both `onClear` and a value.
+    const { container: clearableContainer } = render(
+      <SearchInput aria-label="Search" defaultValue="cats" onClear={() => {}} />,
+    );
+    expect((await axe(clearableContainer)).violations).toHaveLength(0);
 
     const { container: disabledContainer } = render(
       <SearchInput aria-label="Search" disabled />,

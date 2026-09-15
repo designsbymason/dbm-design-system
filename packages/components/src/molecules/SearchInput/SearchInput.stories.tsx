@@ -89,16 +89,23 @@ const meta: Meta<typeof SearchInput> = {
       control: false,
       description: "Hints the browser's autofill — typically 'off' for a live search field.",
     },
+    // Live number control, defaulted generously (200) below rather than
+    // left at the component's own `undefined` default — matches Input's
+    // own `maxLength` Playground precedent.
     maxLength: {
       control: "number",
       description: "Maximum number of characters the input accepts.",
     },
+    // `control: false` — matches Input's own established precedent: HTML5
+    // minLength/pattern validation only surfaces on a real <form> submit,
+    // which the Playground's own plain, form-less demo never triggers, so
+    // there's nothing to visibly observe by live-editing either one here.
     minLength: {
-      control: "number",
+      control: false,
       description: "Minimum number of characters required for HTML5 form validation.",
     },
     pattern: {
-      control: "text",
+      control: false,
       description: "A regular expression the value must match for HTML5 form validation.",
     },
     // `control: false` — only affects which virtual keyboard a mobile
@@ -164,6 +171,7 @@ const meta: Meta<typeof SearchInput> = {
     disabled: false,
     required: false,
     readOnly: false,
+    maxLength: 200,
     name: "",
     "aria-label": "Search",
     onSearch: fn(),
@@ -261,9 +269,16 @@ export const SearchInteraction: Story = {
     const canvas = within(canvasElement);
     const input = canvas.getByRole("searchbox");
 
+    // Purely for human legibility when watching this replay in the
+    // Interactions panel — the assertions themselves need none of these
+    // pauses (same pattern as NumberInput's/PasswordInput's own
+    // interaction stories). `userEvent.type`'s own `delay` slows the
+    // keystrokes themselves down to a watchable, natural typing cadence
+    // instead of its (near-instant) default.
     const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    await userEvent.type(input, "cats");
+    await pause(500);
+    await userEvent.type(input, "cats", { delay: 150 });
     await expect(args.onSearch).not.toHaveBeenCalled();
 
     // Real timers in a play function — waits out the actual debounce
@@ -271,7 +286,7 @@ export const SearchInteraction: Story = {
     // runner doesn't fake timers the way a unit test can.
     await pause(400);
     await expect(args.onSearch).toHaveBeenCalledWith("cats");
-    await pause(400);
+    await pause(600);
   },
 };
 
@@ -283,10 +298,12 @@ export const EnterInteraction: Story = {
 
     const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    await userEvent.type(input, "dogs");
+    await pause(500);
+    await userEvent.type(input, "dogs", { delay: 150 });
+    await pause(400);
     await userEvent.keyboard("{Enter}");
     await expect(args.onSearch).toHaveBeenCalledWith("dogs");
-    await pause(500);
+    await pause(700);
   },
 };
 
@@ -299,13 +316,14 @@ export const ClearButtonInteraction: Story = {
     const clearButton = canvas.getByRole("button", { name: "Clear" });
 
     const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    await pause(500);
+    await pause(600);
 
     await userEvent.click(clearButton);
+    await pause(300);
     await expect(args.onClear).toHaveBeenCalledTimes(1);
     await expect(input).toHaveFocus();
     await expect(input).toHaveValue("");
-    await pause(600);
+    await pause(700);
   },
 };
 
@@ -316,6 +334,7 @@ export const DisabledInteraction: Story = {
     const canvas = within(canvasElement);
     const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+    await pause(500);
     await expect(canvas.getByRole("searchbox")).toBeDisabled();
     await pause(800);
   },

@@ -27,6 +27,8 @@ const prefixSizeForInputSize: Record<InputSize, "xs" | "sm" | "md" | "lg"> = {
  * fires immediately — bypassing any pending debounce — on Enter and when
  * the value is cleared (via the clear button or Escape), since those are
  * both "I want an answer right now" moments a debounce should never delay.
+ * Enter never submits a surrounding `<form>` — this is a purely in-page,
+ * `onSearch`-driven control, not a classic submit-to-navigate search form.
  * This component tracks its own value (controlled or not), so the built-in
  * clear button — shown whenever `onClear` is passed — always actually
  * clears it, the same contract `NumberInput`'s own `onClear` establishes.
@@ -115,13 +117,35 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
+      // Guards against firing mid-IME-composition (found in this final
+      // review pass) — the first component in this system to intercept
+      // Enter on a live free-text field. Pressing Enter to *confirm* a
+      // composed character (Japanese/Chinese/Korean input methods) also
+      // dispatches a plain `keydown` with `key === "Enter"`; without this
+      // guard, that keystroke would run a search against a possibly
+      // incomplete/wrong in-progress composition instead of only
+      // confirming it. `isComposing` is the standard, reliable check
+      // (unlike the older `keyCode === 229` fallback some codebases still
+      // carry for legacy Safari).
+      if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+        // Prevents a native form submission (asked, not guessed, at
+        // explicit direction) — a single-text-input `<input>` inside a
+        // real `<form>` submits it natively on Enter; `SearchInput` is
+        // meant to be a purely in-page `onSearch`-driven control, not a
+        // classic submit-to-navigate search form, even when composed with
+        // its own `name`/`form` props.
+        event.preventDefault();
         fireSearchNow(effectiveValue);
       } else if (event.key === "Escape" && onClear && effectiveValue !== "") {
         // Stops here rather than also bubbling to, say, a parent Dialog's
         // own Escape-to-close handler — clearing an active query takes
         // priority over dismissing the surrounding surface, matching the
         // common platform convention (macOS Spotlight, browser omnibars).
+        // `preventDefault` too, defensively — some browsers still tie a
+        // native "clear on Escape" behavior to `type="search"` fields, and
+        // this avoids racing that against our own state update even though
+        // both converge on the same empty result either way.
+        event.preventDefault();
         event.stopPropagation();
         handleClear();
       }

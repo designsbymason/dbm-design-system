@@ -51,7 +51,8 @@ A search input wrapping `Input`: a fixed leading search icon (swapped for a spin
 `isLoading`), a clear button, and a debounced `onSearch` callback kept separate from the raw,
 per-keystroke `onChange`. `onSearch` also fires immediately — bypassing any pending debounce — on
 Enter and when the value is cleared, since those are both "I want an answer right now" moments a
-debounce should never delay.
+debounce should never delay. Enter never submits a surrounding `<form>` — this is a purely in-page,
+`onSearch`-driven control, not a classic submit-to-navigate search form.
 
 ### Import
 
@@ -76,6 +77,8 @@ import { SearchInput } from "@dbm-design-system/components";
     "onClear",
     "autoFocus",
     "autoComplete",
+    "minLength",
+    "pattern",
     "inputMode",
     "form",
     "aria-labelledby",
@@ -172,6 +175,8 @@ import { SearchInput } from "@dbm-design-system/components";
 - Escape clears the field — matching the common platform convention (macOS Spotlight, browser
   omnibars) — but only when there's a value to clear and `onClear` is set; the key event stops
   there instead of also bubbling to, say, a parent Dialog's own Escape-to-close handler.
+- Enter correctly ignores the keystroke that confirms an IME composition (Japanese/Chinese/Korean
+  input methods), so `onSearch` never fires against an incomplete or wrong in-progress composition.
 - Clicking the clear button returns focus to the input immediately afterward, so keyboard users can
   keep refining their query without an extra `Tab` back — same pattern as `Input`'s own clear
   button.
