@@ -21,8 +21,18 @@
   opacity: var(--dbm-opacity-40);
 }
 
+/* `bg.track-strong`, not the fainter `bg.track` (found user-reported,
+   2026-09-15 — the vertical story's track was structurally correct but
+   effectively invisible): `bg.track` is documented as a deliberate,
+   sub-3:1-contrast exception for a *passive* progress indicator's own
+   empty portion (03-token-system-spec.md) — appropriate for `ProgressBar`,
+   wrong for `Slider`, where the whole track (not just the filled range) is
+   itself the draggable hit area a user needs to actually see and grab.
+   `bg.track-strong` is the token spec's own named token for exactly this
+   "boundary must read as real" case (already used by `Switch`'s always-
+   interactive track and `Indicators`' inactive-dot fill). */
 .track {
-  background-color: var(--dbm-bg-track);
+  background-color: var(--dbm-bg-track-strong);
   border-radius: var(--dbm-radius-full);
   flex-grow: 1;
   position: relative;
@@ -60,16 +70,22 @@
    token (see guidelines/03-token-system-spec.md) — same established
    pattern as Select's own dropdown `.content` shadow: a default light
    value, overridden via the `[data-theme$="-dark"]` attribute selector
-   below, not a token that doesn't exist. */
+   below, not a token that doesn't exist. `border-brand` added (user-
+   reported, 2026-09-15) — a plain white thumb, distinguished from its
+   surroundings only by a soft shadow, was hard to spot against a light
+   `bg.surface` page; a visible brand-colored ring fixes that and reads as
+   a deliberate, on-brand handle rather than a generic white dot. */
 .thumb {
   background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-2) solid var(--dbm-border-brand);
   border-radius: var(--dbm-radius-full);
   box-shadow: var(--dbm-shadow-light-sm);
   display: block;
   flex-shrink: 0;
   height: var(--slider-thumb-size);
-  transition: box-shadow var(--dbm-motion-duration-fast)
-    var(--dbm-motion-easing-standard);
+  transition:
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    box-shadow var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
   width: var(--slider-thumb-size);
 }
 
@@ -94,28 +110,86 @@
   cursor: not-allowed;
 }
 
-/* A box-shadow ring, not a border — same reasoning as Switch's own `.error`:
-   composes independently of `:focus-visible`'s own `outline` (both can
-   render at once, e.g. a focused+invalid slider) and doesn't disturb the
-   thumb's own box model the way adding a real border would. */
+/* Swaps the thumb's own border color to danger — simpler than layering a
+   second box-shadow ring on top of the border added above (which would
+   otherwise double up into a visually noisy double ring). The elevation
+   shadow (light/dark, hover included) is unaffected either way. */
 .error .thumb {
-  box-shadow: 0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger);
+  border-color: var(--dbm-border-danger);
 }
 
-.error .thumb:hover:not([data-disabled]) {
-  box-shadow:
-    0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger),
-    var(--dbm-shadow-light-md);
+/* Ticks — purely decorative (`aria-hidden` in Slider.tsx), a small dot
+   sized relative to the track's own thickness rather than a fixed pixel
+   value, so it scales sensibly across sizes without its own token. Plain
+   `bg.surface` (white) reads reasonably against both the unfilled
+   `bg.track-strong` and the filled `bg.brand`/`bg.danger` range without
+   needing fill-position-aware recoloring per tick. */
+.tick {
+  background-color: var(--dbm-bg-surface);
+  border-radius: var(--dbm-radius-full);
+  height: calc(var(--slider-track-thickness) * 0.6);
+  pointer-events: none;
+  position: absolute;
+  width: calc(var(--slider-track-thickness) * 0.6);
 }
 
-[data-theme$="-dark"] .error .thumb {
-  box-shadow: 0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger);
+.track[data-orientation="horizontal"] .tick {
+  inset-block-start: 50%;
+  transform: translate(-50%, -50%);
 }
 
-[data-theme$="-dark"] .error .thumb:hover:not([data-disabled]) {
-  box-shadow:
-    0 0 0 var(--dbm-border-width-2) var(--dbm-border-danger),
-    var(--dbm-shadow-dark-md);
+.track[data-orientation="vertical"] .tick {
+  inset-inline-start: 50%;
+  transform: translate(-50%, 50%);
+}
+
+/* `showMinMaxLabels`' own layout (horizontal) — a plain row below the
+   track, no positioning trickery needed since there's no percentage-height
+   chain at risk the way the vertical case has (below). */
+.minMaxWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  width: 100%;
+}
+
+.minMaxRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.minMaxLabel {
+  font-variant-numeric: tabular-nums;
+}
+
+/* `showMinMaxLabels` (vertical) — absolutely-positioned overlays anchored
+   to this wrapper's own box. This wrapper (not Root) receives the caller's
+   real explicit height (moved here in Slider.tsx, specifically for this
+   composition) — found live, not assumed, that a first version leaving
+   `style` on Root instead collapsed to 0 height: a CSS percentage height
+   only resolves against an ancestor with an *explicit* height, and
+   `display: inline-block` alone doesn't manufacture one just because its
+   only child wants to be "100%" of it. See Slider.tsx's own comment for
+   the full reasoning. */
+.minMaxWrapperVertical {
+  display: inline-block;
+  position: relative;
+}
+
+.minMaxLabelTop,
+.minMaxLabelBottom {
+  inset-inline-start: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.minMaxLabelTop {
+  inset-block-start: calc(-1 * var(--dbm-space-5));
+}
+
+.minMaxLabelBottom {
+  inset-block-end: calc(-1 * var(--dbm-space-5));
 }
 
 /* Sizes — thumb diameter reuses the shared icon-size scale directly (a

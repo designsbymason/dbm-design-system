@@ -129,6 +129,86 @@ describe("Slider", () => {
     expect(screen.queryByText("42")).not.toBeInTheDocument();
   });
 
+  it("shows the current value in a tooltip on hover when showValueTooltip is set", async () => {
+    const user = userEvent.setup();
+    render(<Slider aria-label="Volume" defaultValue={30} showValueTooltip />);
+    await user.hover(screen.getByRole("slider"));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("30");
+  });
+
+  it("does not render a tooltip trigger when showValueTooltip is false", async () => {
+    const user = userEvent.setup();
+    render(<Slider aria-label="Volume" defaultValue={30} />);
+    await user.hover(screen.getByRole("slider"));
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  it("prefers aria-valuetext over the raw number in the value tooltip", async () => {
+    const user = userEvent.setup();
+    render(
+      <Slider
+        aria-label="Quality"
+        defaultValue={2}
+        min={1}
+        max={3}
+        aria-valuetext="Medium"
+        showValueTooltip
+      />,
+    );
+    await user.hover(screen.getByRole("slider"));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Medium");
+  });
+
+  it("shows min and max labels when showMinMaxLabels is set", () => {
+    render(<Slider aria-label="Volume" min={0} max={75} showMinMaxLabels />);
+    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("75")).toBeInTheDocument();
+  });
+
+  it("does not show min/max labels by default", () => {
+    render(<Slider aria-label="Volume" min={0} max={75} />);
+    expect(screen.queryByText("75")).not.toBeInTheDocument();
+  });
+
+  it("renders one tick per tickInterval, inclusive of min and max, when showTicks is set", () => {
+    const { container } = render(
+      <Slider aria-label="Volume" min={0} max={100} tickInterval={25} showTicks />,
+    );
+    const ticks = container.querySelectorAll(`.${styles.tick}`);
+    expect(ticks).toHaveLength(5); // 0, 25, 50, 75, 100
+  });
+
+  it("still places a final tick at max when the range doesn't divide evenly by tickInterval", () => {
+    const { container } = render(
+      <Slider aria-label="Volume" min={0} max={100} tickInterval={30} showTicks />,
+    );
+    const ticks = container.querySelectorAll(`.${styles.tick}`);
+    // 0, 30, 60, 90, and a final tick at 100 even though 100 isn't a clean
+    // multiple of 30 past min — the max end is never silently dropped.
+    expect(ticks).toHaveLength(5);
+  });
+
+  it("defaults tickInterval to step when not set explicitly", () => {
+    const { container } = render(
+      <Slider aria-label="Volume" min={0} max={20} step={5} showTicks />,
+    );
+    const ticks = container.querySelectorAll(`.${styles.tick}`);
+    expect(ticks).toHaveLength(5); // 0, 5, 10, 15, 20
+  });
+
+  it("renders no ticks when showTicks is false", () => {
+    const { container } = render(<Slider aria-label="Volume" tickInterval={10} />);
+    expect(container.querySelectorAll(`.${styles.tick}`)).toHaveLength(0);
+  });
+
+  it("hides tick marks from assistive tech", () => {
+    const { container } = render(
+      <Slider aria-label="Volume" tickInterval={25} showTicks />,
+    );
+    const ticks = container.querySelectorAll(`.${styles.tick}`);
+    ticks.forEach((tick) => expect(tick).toHaveAttribute("aria-hidden", "true"));
+  });
+
   it("applies the correct size class", () => {
     // The root element (not the slider role's own immediate parent — Radix
     // inserts its own internal positioning wrapper around the thumb) is
@@ -203,5 +283,27 @@ describe("Slider", () => {
       <Slider aria-label="Volume" showValue defaultValue={42} />,
     );
     expect((await axe(showValueContainer)).violations).toHaveLength(0);
+  });
+
+  it("has no accessibility violations with showValueTooltip, showMinMaxLabels, or showTicks", async () => {
+    const { container: tooltipContainer } = render(
+      <Slider aria-label="Volume" showValueTooltip defaultValue={30} />,
+    );
+    expect((await axe(tooltipContainer)).violations).toHaveLength(0);
+
+    const { container: minMaxContainer } = render(
+      <Slider aria-label="Volume" showMinMaxLabels />,
+    );
+    expect((await axe(minMaxContainer)).violations).toHaveLength(0);
+
+    const { container: ticksContainer } = render(
+      <Slider aria-label="Volume" showTicks tickInterval={25} />,
+    );
+    expect((await axe(ticksContainer)).violations).toHaveLength(0);
+
+    const { container: verticalMinMaxContainer } = render(
+      <Slider aria-label="Volume" orientation="vertical" showMinMaxLabels style={{ height: "12rem" }} />,
+    );
+    expect((await axe(verticalMinMaxContainer)).violations).toHaveLength(0);
   });
 });

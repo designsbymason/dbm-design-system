@@ -130,5 +130,82 @@ added after verifying it isn't a real capability of the underlying primitive, ra
 `Switch`'s own prop list on the assumption that every Radix form-control wrapper shares the same
 surface.
 
+**Post-build fixes (2026-09-15, user-reported, before the final review pass):**
+
+1. **The thumb was hard to see** — a plain white circle distinguished from the page only by a soft
+   shadow. Fixed by adding a `border.brand` (danger when `hasError`) border around it — a real,
+   visible ring that also reads as a deliberate, on-brand handle rather than a generic dot. The
+   previous `hasError` treatment (a box-shadow ring) was simplified to a plain border-color swap now
+   that a real border already exists, avoiding a doubled-up ring look.
+2. **The vertical orientation demo appeared to render only the thumb, no track.** Direct DOM/rect
+   inspection showed the track was actually rendering correctly, at the right size and position — the
+   real issue was contrast, not layout: `bg.track` (what `.track` used) is documented as a
+   deliberate, sub-3:1 exception for a *passive* progress indicator's own empty portion
+   (`03-token-system-spec.md`), not a token built for an interactive control's own draggable hit
+   area. A thin, low-contrast vertical line is far harder to spot than the same low contrast on a
+   wide horizontal bar, which is why this read as "missing" specifically in the vertical story.
+   Fixed by switching `.track` to `bg.track-strong` — the token spec's own already-established
+   choice for exactly this "boundary must read as real" case (`Switch`'s own always-interactive
+   track, `Indicators`' inactive-dot fill). Re-verified via direct computed-style inspection in both
+   orientations, not just visually.
+
+Re-verified after both fixes: `tsc` (package + `.storybook`), `eslint --max-warnings 0`, Vitest
+`unit` (20/20 this component) and `storybook` (10/10 this component) clean.
+
+**Feature-completeness questions raised and resolved (2026-09-15, user-asked):** presented four
+open questions back to the user rather than deciding unilaterally, since one of them was a real
+fork affecting the documented build-order plan, not just this component's own surface:
+
+1. **Min/max end labels — add.** New `showMinMaxLabels` prop.
+2. **Hover/drag value tooltip — add, reusing the `Tooltip` atom.** New `showValueTooltip` prop.
+3. **Step tick marks — add now** (the other option offered was deferring). New `showTicks` +
+   `tickInterval` props.
+4. **Two-thumb range mode — keep separate.** Confirmed: stays the future `RangeSlider` component
+   already planned in `04-component-inventory.md` (item 17, "extends Slider"), not folded into
+   `Slider` itself via a variant prop. No change made to this component or the inventory as a
+   result — this only rules out an alternative, it doesn't require any action now.
+
+**Implementation notes for the three added features:**
+
+- **`showValueTooltip`** wraps the `Thumb` in the already-Finalized `Tooltip` atom
+  (`delayDuration={0}`, since the standalone 400ms default is tuned for discoverability hints, not
+  a value readout that should track a drag immediately) — relies on `Tooltip`'s own native
+  hover/focus triggers rather than custom drag-tracking state; the thumb visually tracks the
+  pointer throughout a drag, so hover stays naturally engaged for its whole duration. Content
+  prefers `aria-valuetext` when set, falling back to the raw number.
+- **`showMinMaxLabels`** renders `min`/`max` as `Text` — a plain row below the track for horizontal;
+  absolutely-positioned overlays for vertical (see the real bug this required fixing, below).
+- **`showTicks`/`tickInterval`** render small `aria-hidden` dots inside `Track`, computed inclusive
+  of both `min` and `max` (the last real tick always lands exactly at `max`, even when the range
+  doesn't divide evenly by `tickInterval`, rather than being silently dropped). A plain `bg.surface`
+  fill was used for every tick regardless of fill-position, deliberately simpler than per-tick
+  recoloring based on whether the filled range covers it — reads adequately against both the track
+  and the range without that added complexity.
+
+**A real, found-and-fixed layout bug: vertical + `showMinMaxLabels` initially rendered a 0-height
+slider.** The first implementation nested `Slider.Root` (which sizes itself via `height: 100%`,
+resolved against whatever explicit height the caller passes via `style`) inside a new wrapper span
+intended to "shrink-wrap" around it with no height of its own. That's not how CSS percentage
+heights work: a percentage height only resolves against an ancestor with a genuine, explicit
+height — an auto-sized wrapper doesn't retroactively gain one just because its only child wants to
+be "100%" of it, so Root's own height collapsed to 0. Found live, not caught by `tsc`/`eslint`/unit
+tests (jsdom doesn't lay out real percentage-height chains meaningfully) — only visible by actually
+rendering the vertical + min/max-labels story and looking at it, which is exactly why the review
+checklist requires live Storybook verification, not just a clean typecheck. Fixed by moving the
+explicit `style` (the real height) to the wrapper instead, in that one specific composition only —
+every other case (no wrapper, i.e. `showMinMaxLabels` unset) is unaffected and keeps receiving
+`style` directly on Root, unchanged. Re-verified via direct `getBoundingClientRect()` inspection
+after the fix, both in the standalone story and embedded in the full Docs page (0 zero-height
+vertical roots found across all 65 `Slider` instances rendered on that page).
+
+Full re-verification after all of the above: `tsc` (package + `.storybook`), `eslint
+--max-warnings 0`, Vitest `unit` (1316/1316 whole package, up from 1305) and `storybook` (459/459
+whole package, up from 454) all clean; `tsup` build and `check-component-bundle-size` clean
+(2.34KB JS / 1.38KB CSS gzipped, up from 1.72KB/1.04KB, still well within budget);
+`check-foundations-token-coverage` clean. `Slider.test.tsx` now 31 tests (was 20); `Slider.stories.tsx`
+now 15 stories (was 10), including new Canvases for each feature plus a combined
+"Every decoration combined" story and a "Vertical, with min/max labels" story exercising the fixed
+layout directly.
+
 **Status: built, self-reviewed against the full `06-engineering-standards.md` §9 checklist, all
 findings above already actioned — awaiting the user's own confirmation to mark Finalized.**

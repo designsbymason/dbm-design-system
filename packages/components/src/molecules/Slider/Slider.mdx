@@ -3,6 +3,7 @@ import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedC
 import { FieldError } from "../../atoms/FieldError";
 import { FieldHelperText } from "../../atoms/FieldHelperText";
 import { FieldLabel } from "../../atoms/FieldLabel";
+import { Tooltip } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { NumberInput } from "../NumberInput";
 import { Slider } from "./Slider";
@@ -21,6 +22,10 @@ export const propOrder = [
   "orientation",
   "inverted",
   "showValue",
+  "showValueTooltip",
+  "showMinMaxLabels",
+  "showTicks",
+  "tickInterval",
   "disabled",
   "autoFocus",
   "name",
@@ -99,6 +104,26 @@ import { Slider } from "@dbm-design-system/components";
 
 <Canvas of={SliderStories.WithValue} />
 
+### With a value tooltip
+
+<Canvas of={SliderStories.WithValueTooltip} />
+
+### With min/max labels
+
+<Canvas of={SliderStories.WithMinMaxLabels} />
+
+### With tick marks
+
+<Canvas of={SliderStories.WithTicks} />
+
+### Every decoration combined
+
+<Canvas of={SliderStories.FullyDecorated} />
+
+### Vertical, with min/max labels
+
+<Canvas of={SliderStories.VerticalWithMinMaxLabels} />
+
 ### Custom min/max/step
 
 <Canvas of={SliderStories.CustomRange} />
@@ -126,7 +151,11 @@ import { Slider } from "@dbm-design-system/components";
 - Pass `aria-label` (or `aria-labelledby`) — this component has no built-in visible-label slot of
   its own, so one of the two is required for the slider to be announced correctly.
 - Set an explicit `height` via `style` whenever `orientation="vertical"` — a vertical slider has no
-  intrinsic height, matching the underlying Radix primitive's own documented requirement.
+  intrinsic height, matching the underlying Radix primitive's own documented requirement. This
+  still holds when `showMinMaxLabels` is also set: `style` always targets the same real element
+  that ends up owning the explicit height, so nothing changes about where you set it.
+- Use `showTicks`/`tickInterval` for a coarser set of marks than every single `step` — a small
+  `step` on a wide range renders unreadably crowded ticks if `tickInterval` isn't set wider.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -137,6 +166,8 @@ import { Slider } from "@dbm-design-system/components";
   with `onValueCommit` instead, or you'll re-run that action on every pixel of drag movement.
 - Don't assume the numeric value alone is enough context for assistive tech on a non-obvious scale
   (e.g. a 1–5 rating) — set `aria-valuetext` with a human-readable equivalent instead.
+- Don't treat `showValueTooltip` as a substitute for `aria-valuetext` — the tooltip is a purely
+  visual aid for sighted mouse/keyboard users; it doesn't change what's announced to assistive tech.
 
 </Callout>
 </div>
@@ -151,6 +182,12 @@ import { Slider } from "@dbm-design-system/components";
 - Turn on `showValue` when no other on-screen element already reflects the current value — it's a
   purely visual convenience for sighted users, since the value is already exposed to assistive tech
   via `aria-valuenow` regardless of whether it's shown.
+- Reach for `showValueTooltip` instead of `showValue` when the value only matters *while*
+  interacting (a color-mixer opacity slider, say) — it appears on hover/drag/focus and gets out of
+  the way otherwise, rather than taking up permanent layout space.
+- `showMinMaxLabels` and `FieldHelperText`'s own plain-language range statement aren't mutually
+  exclusive — the labels anchor the two ends precisely; the helper text can still add context
+  (units, what the value controls) the bare numbers don't carry.
 
 ## Accessibility
 
@@ -171,8 +208,14 @@ import { Slider } from "@dbm-design-system/components";
   actual `<form>` (or `form` is set) — the same mechanism `Switch`'s own `name` documents, though
   Slider's hidden input carries no `type="range"` semantics of its own; it exists purely for
   form-data participation.
-- The unfilled track (`bg.track`) and filled range (`bg.brand`) are both checked against real WCAG
-  contrast ratios, not assumed — see [Design tokens used](#design-tokens-used) below.
+- The unfilled track (`bg.track-strong`) and filled range (`bg.brand`) are both checked against real
+  WCAG contrast ratios, not assumed — see [Design tokens used](#design-tokens-used) below.
+- `showTicks`' tick marks, `showMinMaxLabels`' end labels, and `showValueTooltip`'s bubble are all
+  purely visual — ticks are `aria-hidden`, and none of the three change what's announced to
+  assistive tech, which already gets the real state via `aria-valuenow`/`aria-valuemin`/
+  `aria-valuemax`/`aria-valuetext` regardless of what's visible on screen.
+- `showValueTooltip` opens on hover, drag, or keyboard focus — covering both pointer and
+  keyboard-only interaction, not just mouse hover.
 
 </Callout>
 
@@ -185,6 +228,9 @@ import { Slider } from "@dbm-design-system/components";
 <Slider aria-label="Opacity" orientation="vertical" style={{ height: "12rem" }} />
 <Slider aria-label="Quality" defaultValue={2} min={1} max={3} aria-valuetext="Medium" />
 <Slider aria-label="Volume" onFocus={() => trackFieldFocus("volume")} />
+<Slider aria-label="Volume" showValueTooltip />
+<Slider aria-label="Volume" showMinMaxLabels />
+<Slider aria-label="Zoom" min={0} max={200} step={10} showTicks tickInterval={50} />
 
 {/* Composed inside a FormField for the label/helper-text wiring — see that
     component's own Docs page for the full pattern. */}
@@ -195,19 +241,23 @@ import { Slider } from "@dbm-design-system/components";
 
 ## Design tokens used
 
-<TokenRow token="bg.track" usage="unfilled track background" />
+<TokenRow token="bg.track-strong" usage="unfilled track background — the same token an always-interactive control's own boundary uses elsewhere (e.g. Switch's track)" />
 <TokenRow token="bg.brand" usage="filled range background" />
 <TokenRow token="bg.danger" usage="filled range background while hasError" />
 <TokenRow token="bg.surface" usage="thumb fill" />
-<TokenRow token="border.danger" usage="hasError thumb ring" />
+<TokenRow token="border.brand" usage="thumb border at rest" />
+<TokenRow token="border.danger" usage="thumb border while hasError" />
 <TokenRow token="border.focus" usage="thumb focus-visible outline" />
-<TokenRow token="border-width.2" usage="focus-visible outline width; hasError ring width" />
+<TokenRow token="border-width.2" usage="thumb border width; focus-visible outline width" />
 <TokenRow token="radius.full" usage="track, range, and thumb corner radius (fully round)" />
 <TokenRow token="icon-size.xs–icon-size.xl" usage="per-size thumb diameter" />
 <TokenRow token="space.1–space.4" usage="per-size track thickness, matching ProgressBar's own height scale" />
 <TokenRow token="space.1" usage="focus-visible outline offset" />
-<TokenRow token="motion.duration.fast" usage="range/thumb hover and shadow transitions" />
-<TokenRow token="motion.easing.standard" usage="range/thumb hover and shadow transitions" />
+<TokenRow token="bg.surface" usage="tick mark fill" />
+<TokenRow token="space.5" usage="min/max label offset from the track, vertical orientation" />
+<TokenRow token="space.1" usage="gap between the track and the min/max label row, horizontal orientation" />
+<TokenRow token="motion.duration.fast" usage="range background, thumb border-color, and thumb shadow transitions" />
+<TokenRow token="motion.easing.standard" usage="range background, thumb border-color, and thumb shadow transitions" />
 <TokenRow token="opacity.40" usage="disabled state" />
 
 ## Related components
@@ -247,5 +297,14 @@ import { Slider } from "@dbm-design-system/components";
   href="/?path=/docs/molecules-inputs-formfield--docs"
 >
   <Slider aria-label="Volume" defaultValue={50} />
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="What showValueTooltip reuses internally to show the current value above the thumb"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="50">
+    <button type="button">Hover me</button>
+  </Tooltip>
 </RelatedCard>
 </div>

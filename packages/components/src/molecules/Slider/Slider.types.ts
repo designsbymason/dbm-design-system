@@ -90,6 +90,40 @@ export interface SliderProps
    */
   showValue?: boolean;
   /**
+   * Shows the current value in a tooltip above the thumb while hovering,
+   * dragging, or focused via keyboard — reusing the `Tooltip` atom.
+   * Independent of `showValue`; use either, both, or neither. Relies on
+   * `Tooltip`'s own native hover/focus triggers rather than custom
+   * drag-tracking state — the thumb visually tracks the pointer during a
+   * drag, so hover naturally stays engaged for its whole duration.
+   * @default false
+   */
+  showValueTooltip?: boolean;
+  /**
+   * Shows `min` and `max` as text labels at each end of the track. A
+   * purely visual convenience — pair with `FieldHelperText` instead when a
+   * plain sentence ("Between 0 and 100") reads more naturally than two
+   * floating numbers.
+   * @default false
+   */
+  showMinMaxLabels?: boolean;
+  /**
+   * Shows a small tick mark at every `tickInterval` between `min` and
+   * `max` (inclusive of both ends) — purely decorative and hidden from
+   * assistive tech, since the same information is already exposed via
+   * `aria-valuemin`/`aria-valuemax`/`step`.
+   * @default false
+   */
+  showTicks?: boolean;
+  /**
+   * The spacing between tick marks, in the same units as `value` — not
+   * necessarily every `step`, since a small `step` on a wide range would
+   * otherwise crowd the track with unreadable ticks (e.g. `step={1}` on a
+   * 0–100 range). Only meaningful when `showTicks` is set.
+   * @default step
+   */
+  tickInterval?: number;
+  /**
    * Disables the slider natively. Redeclared explicitly (the underlying
    * Radix primitive already has this) so it's positioned correctly in the
    * rendered Properties table and Storybook Controls panel, matching this

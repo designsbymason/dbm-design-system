@@ -54,6 +54,22 @@ const meta: Meta<typeof Slider> = {
       control: "boolean",
       description: "Shows the current numeric value as live text next to the slider.",
     },
+    showValueTooltip: {
+      control: "boolean",
+      description: "Shows the current value in a tooltip above the thumb while hovering, dragging, or focused.",
+    },
+    showMinMaxLabels: {
+      control: "boolean",
+      description: "Shows min and max as text labels at each end of the track.",
+    },
+    showTicks: {
+      control: "boolean",
+      description: "Shows a small tick mark at every tickInterval between min and max.",
+    },
+    tickInterval: {
+      control: "number",
+      description: "The spacing between tick marks, in the same units as value. Only meaningful when showTicks is set.",
+    },
     disabled: {
       control: "boolean",
       description: "Disables the slider natively.",
@@ -125,6 +141,10 @@ const meta: Meta<typeof Slider> = {
     orientation: "horizontal",
     inverted: false,
     showValue: false,
+    showValueTooltip: false,
+    showMinMaxLabels: false,
+    showTicks: false,
+    tickInterval: 10,
     disabled: false,
     name: "",
     "aria-label": "Volume",
@@ -182,6 +202,53 @@ export const WithValue: Story = {
   name: "With the live value shown",
   args: { showValue: true },
   argTypes: { showValue: { control: false } },
+};
+
+export const WithValueTooltip: Story = {
+  name: "With a value tooltip",
+  args: { showValueTooltip: true },
+  argTypes: { showValueTooltip: { control: false } },
+};
+
+export const WithMinMaxLabels: Story = {
+  name: "With min/max labels",
+  args: { showMinMaxLabels: true },
+  argTypes: { showMinMaxLabels: { control: false } },
+};
+
+export const WithTicks: Story = {
+  name: "With tick marks",
+  args: { showTicks: true, tickInterval: 10 },
+  argTypes: { showTicks: { control: false }, tickInterval: { control: false } },
+};
+
+export const FullyDecorated: Story = {
+  name: "Every decoration combined",
+  args: {
+    showValue: true,
+    showValueTooltip: true,
+    showMinMaxLabels: true,
+    showTicks: true,
+    tickInterval: 25,
+  },
+  argTypes: {
+    showValue: { control: false },
+    showValueTooltip: { control: false },
+    showMinMaxLabels: { control: false },
+    showTicks: { control: false },
+    tickInterval: { control: false },
+  },
+};
+
+export const VerticalWithMinMaxLabels: Story = {
+  name: "Vertical, with min/max labels",
+  args: { orientation: "vertical", showMinMaxLabels: true },
+  argTypes: { orientation: { control: false }, showMinMaxLabels: { control: false } },
+  render: (args) => (
+    <div style={{ height: "12rem", paddingInlineStart: "var(--dbm-space-6)" }}>
+      <Slider {...args} style={{ height: "100%" }} />
+    </div>
+  ),
 };
 
 export const CustomRange: Story = {
