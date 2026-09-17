@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Popover } from "./Popover";
+import styles from "./Popover.module.css";
 
 describe("Popover", () => {
   it("renders the trigger and keeps content closed by default", () => {
@@ -184,6 +185,28 @@ describe("Popover", () => {
       </Popover>,
     );
     expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
+  });
+
+  it("reserves extra inline-end padding when showCloseButton is set, so content doesn't run under the close icon (found in user-reported overlap regression)", () => {
+    const { rerender } = render(
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content>Content</Popover.Content>
+      </Popover>,
+    );
+    expect(screen.getByText("Content")).not.toHaveClass(
+      styles.contentWithCloseButton as string,
+    );
+
+    rerender(
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content showCloseButton>Content</Popover.Content>
+      </Popover>,
+    );
+    expect(screen.getByText("Content")).toHaveClass(
+      styles.contentWithCloseButton as string,
+    );
   });
 
   it("shows a close button when showCloseButton is set, and it closes the popover on click", async () => {

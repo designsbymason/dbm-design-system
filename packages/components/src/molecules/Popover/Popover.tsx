@@ -142,7 +142,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
           alignOffset={alignOffset}
           avoidCollisions={avoidCollisions}
           collisionPadding={collisionPadding}
-          className={cx(styles.content, className)}
+          className={cx(styles.content, showCloseButton && styles.contentWithCloseButton, className)}
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledBy}
           {...props}
@@ -153,7 +153,24 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
             </PopoverPrimitive.Close>
           )}
           {children}
-          {!hideArrow && <PopoverPrimitive.Arrow className={styles.arrow} />}
+          {!hideArrow && (
+            // `asChild` with custom markup, not Radix's own default single
+            // `<polygon>` — found user-reported: a plain `stroke` on a
+            // closed polygon borders all three sides, including the base
+            // that's meant to blend seamlessly into `.content`'s own edge,
+            // reading as an unwanted extra line right at the seam. A
+            // filled (unstroked) polygon for the shape, plus a separate
+            // *open* path (no closing "Z" segment back to the start) for
+            // just the two exposed sides, borders only those two — the
+            // base is never drawn as a path segment at all, not just
+            // hidden/clipped after the fact.
+            <PopoverPrimitive.Arrow asChild>
+              <svg>
+                <polygon points="0,0 30,0 15,10" className={styles.arrowFill} />
+                <path d="M0,0 L15,10 L30,0" className={styles.arrowStroke} />
+              </svg>
+            </PopoverPrimitive.Arrow>
+          )}
         </PopoverPrimitive.Content>
       </PopoverPrimitive.Portal>
     );

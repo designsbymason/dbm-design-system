@@ -143,5 +143,98 @@ the two problematic `play` functions) projects, `pnpm run build`, `check-compone
 (Popover: 1.42KB JS / 0.92KB CSS, well within budget), and `check-foundations-token-coverage` (80/80,
 unaffected — `popover.max-width` is a component-layer token, not a semantic color) all clean.
 
+## Post-build fix: the arrow had no border, reading as nearly invisible (2026-09-16)
+
+User-reported, with a screenshot: the arrow connecting the content to its trigger was a plain white
+fill with no edge of its own, blending into the page and making it hard to tell the popover was even
+"pointing" anywhere. Fixed by giving `.arrow` the same `border.default` stroke and `border-width.1`
+width `.content`'s own box border already uses, so the two read as one continuous edge rather than a
+bordered box with a borderless notch cut into it.
+
+Two things found live while implementing this, not obvious from the CSS alone:
+
+1. **`fill`/`stroke`/`stroke-width` are inheritable SVG presentation properties, but `vector-effect`
+   is explicitly not** (per the SVG spec) — setting all four on `.arrow` (the class Radix applies to
+   its own outer `<svg>`, not the inner `<polygon>` that actually paints) let the first three reach
+   the polygon by inheritance, but `getComputedStyle` on the polygon kept reporting
+   `vector-effect: none` regardless. Needed its own explicit `.arrow polygon { vector-effect:
+   non-scaling-stroke; }` rule.
+2. **`non-scaling-stroke` isn't cosmetic here, it's load-bearing**: Radix's own arrow `<svg>` renders
+   with `preserveAspectRatio="none"`, non-uniformly scaling its `30x10` viewBox down to a rendered
+   `10x5` (a 0.33x/0.5x split per axis) — without `vector-effect`, the exact same `stroke-width`
+   would render visibly thinner on the wider axis than the narrower one instead of a uniform line.
+
+Verified live in both brand themes × both color modes (the seam between trigger and content is now
+visibly notched, not a blank gap) and via a temporary 30x-scaled clone of the real arrow `<svg>` to
+confirm the stroke geometry itself was correct before checking it at true (10x5px) size, where a
+correct-but-tiny stroke is inherently harder to eyeball than a wrong one.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1350/1350) and `storybook` (471/471) projects,
+`pnpm run build`, and `check-component-bundle-size` (Popover: 1.42KB JS / 0.96KB CSS, still within
+budget) all clean.
+
+## Follow-up fix: the arrow's border covered all three sides, including the base (2026-09-16)
+
+User-reported, with a screenshot: the previous fix (a plain `stroke` on Radix's own single
+`<polygon>`) borders a closed shape's every side — including the base, the edge meant to blend
+seamlessly into `.content`'s own edge. That base-side stroke read as an unwanted extra line right at
+the seam between trigger and content, not the clean "content border continuing into a point" look the
+first fix was going for.
+
+A single stroked polygon can't express "border two sides, not the third" — stroking a closed shape
+strokes the whole outline as one continuous path with no way to selectively omit a segment via CSS
+alone. Fixed by replacing Radix's own default single-`<polygon>` arrow content with `asChild` and
+custom markup instead — confirmed live that `@radix-ui/react-arrow`'s own source explicitly supports
+this (`props.asChild ? children : <polygon .../>` in its render), not something assumed:
+
+```tsx
+<PopoverPrimitive.Arrow asChild>
+  <svg>
+    <polygon points="0,0 30,0 15,10" className={styles.arrowFill} />
+    <path d="M0,0 L15,10 L30,0" className={styles.arrowStroke} />
+  </svg>
+</PopoverPrimitive.Arrow>
+```
+
+Two elements doing two separate jobs: the `<polygon>` (no stroke) paints the filled shape; the
+`<path>` — deliberately *open*, no closing `Z` segment back to the start — draws a stroke along only
+the two exposed sides it explicitly lists, since an open path simply has no third segment to stroke in
+the first place, not a closed one with a hidden/clipped side. `viewBox`/`preserveAspectRatio`/`width`/
+`height`/`ref` all still land correctly on the custom `<svg>` via Radix's own `asChild`/Slot merging —
+confirmed live via the actual rendered `outerHTML`, not assumed from reading the source alone.
+
+Live-verified geometrically correct across all four `side` values, not just the default `bottom` —
+Radix rotates the whole arrow `<svg>` per placement (`top`/`right`/`left` each get their own
+`transform`), and since the custom path is defined in the same local coordinate space the original
+polygon used, it rotates as one consistent shape rather than needing separate per-side path
+definitions. Confirmed via a temporarily-scaled, counter-rotated clone of the real `left`-side arrow,
+not just the default bottom case.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1350/1350) and `storybook` (471/471) projects,
+`pnpm run build`, and `check-component-bundle-size` (Popover: 1.49KB JS / 0.96KB CSS, still well
+within budget) all clean.
+
+## Follow-up fix: the close button overlapped the content's own text (2026-09-16)
+
+User-reported, with a screenshot (`side="top"`, `showCloseButton`): the close icon in the content's
+own top-end corner visibly overlapped the tail end of a line of text sitting right underneath it.
+Root cause: `.closeButton` is `position: absolute`, positioned outside `.content`'s own normal
+document flow — nothing in that flow (including the text) had any reason to stop short of it, so a
+line long enough to reach that corner simply ran underneath the icon instead of wrapping before it.
+
+Fixed with a conditional class, `.contentWithCloseButton`, applied to `.content` only when
+`showCloseButton` is set, adding extra `padding-inline-end` (`space-10`, 40px) — a measured floor,
+not an arbitrary round number: the close button's own real footprint from the content's inline-end
+edge is `space-2` (8px, its own inset) plus `icon-button-size-xs` (30px, its own width) = 38px;
+`space-10` clears that with a couple of pixels to spare. The other three padding sides are untouched.
+
+Live-verified against the exact reported scenario (`side="top"`, `showCloseButton`) and the default
+(`side="bottom"`) case — both now show a clean gap between the text and the icon. Added a regression
+test asserting the class is present only when `showCloseButton` is set, not just a visual check.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1351/1351, up from 1350 with the new test) and
+`storybook` (471/471) projects, `pnpm run build`, and `check-component-bundle-size` (Popover: 1.51KB
+JS / 0.97KB CSS, still well within budget) all clean.
+
 **Status: built and self-reviewed against the full `06-engineering-standards.md` §9 checklist —
 awaiting the user's own request for a dedicated final review pass and Finalized confirmation.**

@@ -43,6 +43,19 @@
   box-shadow: var(--dbm-shadow-dark-md);
 }
 
+/* Reserves room for `.closeButton`'s own footprint — found user-reported,
+   with a screenshot: `showCloseButton`'s absolutely-positioned close icon
+   sits outside `.content`'s own normal flow, so ordinary text content had
+   no reason to stop short of it and visibly ran underneath it instead.
+   `space-10` (40px) clears the button's real inset (`space-2`, 8px) plus
+   its own `xs` width (`icon-button-size-xs`, 30px) with a couple of pixels
+   to spare — a measured floor, not an arbitrary round number. Only the
+   inline-end side changes; the other three keep the plain `.content`
+   padding. */
+.contentWithCloseButton {
+  padding-inline-end: var(--dbm-space-10);
+}
+
 .content[data-state="open"] {
   animation: fadeIn var(--dbm-motion-duration-fast)
     var(--dbm-motion-easing-emphasized);
@@ -53,15 +66,34 @@
     var(--dbm-motion-easing-standard);
 }
 
-.arrow {
+/* The shape's own fill — no stroke here. A plain `stroke` on this same
+   closed polygon would border all three sides, including the base that's
+   meant to blend into `.content`'s own edge (found user-reported: that
+   read as an unwanted extra line right at the seam) — see `.arrowStroke`
+   below, on a separate *open* path covering only the two exposed sides,
+   for why this needs two elements rather than one. */
+.arrowFill {
   fill: var(--dbm-bg-surface);
 }
 
-/* A visible border on the panel itself has no matching stroke on the
-   plain-fill Radix arrow triangle — an accepted, purely cosmetic gap
-   (the same one Tooltip's own borderless arrow has none of, since Tooltip
-   has no border to begin with); not worth a second layered SVG for a 1px
-   seam most users never consciously notice. */
+/* Matches `.content`'s own border. `fill: none` — this path exists only
+   for its stroke; without it, the browser's own default black fill would
+   paint a solid triangle on top of `.arrowFill`'s. `vector-effect:
+   non-scaling-stroke` keeps the stroke a crisp, consistent width despite
+   Radix's own arrow `<svg>` non-uniformly scaling its 30x10 viewBox down
+   to a rendered 10x5 (`preserveAspectRatio="none"`) — without it, the
+   stroke renders thinner on the wider axis than the narrower one instead
+   of a uniform width. Unlike `fill`/`stroke`/`stroke-width`,
+   `vector-effect` is explicitly not an inherited SVG property (per the SVG
+   spec) — found live, setting it one level up (on the parent `<svg>`) left
+   `getComputedStyle` on this element still reporting `none` — so it's set
+   directly here, not hoisted to a shared ancestor rule. */
+.arrowStroke {
+  fill: none;
+  stroke: var(--dbm-border-default);
+  stroke-width: var(--dbm-border-width-1);
+  vector-effect: non-scaling-stroke;
+}
 
 .closeButton {
   inset-block-start: var(--dbm-space-2);
