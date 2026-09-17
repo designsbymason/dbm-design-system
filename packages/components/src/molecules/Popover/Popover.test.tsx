@@ -275,6 +275,20 @@ describe("Popover", () => {
     await waitFor(() => expect(screen.queryByText("Content")).not.toBeInTheDocument());
   });
 
+  it("forwards ref to the close element", () => {
+    const ref = createRef<HTMLButtonElement>();
+    render(
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content>
+          Content
+          <Popover.Close ref={ref}>Done</Popover.Close>
+        </Popover.Content>
+      </Popover>,
+    );
+    expect(ref.current).toBeInstanceOf(HTMLButtonElement);
+  });
+
   it("closes when Popover.Close is clicked, wherever it's placed", async () => {
     const user = userEvent.setup();
     render(
@@ -392,6 +406,49 @@ describe("Popover", () => {
       </Popover>,
     );
     expect(ref.current).toBeInstanceOf(HTMLButtonElement);
+  });
+
+  it("passes id, className, style, and data-testid through to the trigger element", () => {
+    render(
+      <Popover>
+        <Popover.Trigger
+          id="my-trigger"
+          className="extra"
+          style={{ color: "red" }}
+          data-testid="popover-trigger"
+        >
+          Open
+        </Popover.Trigger>
+        <Popover.Content>Content</Popover.Content>
+      </Popover>,
+    );
+    const trigger = screen.getByTestId("popover-trigger");
+    expect(trigger).toHaveAttribute("id", "my-trigger");
+    expect(trigger).toHaveClass("extra");
+    expect(trigger).toHaveStyle({ color: "rgb(255, 0, 0)" });
+  });
+
+  it("passes id, className, style, and data-testid through to the close element", () => {
+    render(
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content>
+          Content
+          <Popover.Close
+            id="my-close"
+            className="extra"
+            style={{ color: "red" }}
+            data-testid="popover-close"
+          >
+            Done
+          </Popover.Close>
+        </Popover.Content>
+      </Popover>,
+    );
+    const close = screen.getByTestId("popover-close");
+    expect(close).toHaveAttribute("id", "my-close");
+    expect(close).toHaveClass("extra");
+    expect(close).toHaveStyle({ color: "rgb(255, 0, 0)" });
   });
 
   it("renders asChild on the trigger without introducing an extra wrapper element", () => {

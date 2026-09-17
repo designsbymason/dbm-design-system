@@ -11,7 +11,7 @@ import * as PopoverContentStories from "./PopoverContent.stories";
 import * as PopoverCloseStories from "./PopoverClose.stories";
 
 export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "modal"];
-export const triggerPropOrder = ["asChild", "children", "className", "style", "data-testid"];
+export const triggerPropOrder = ["asChild", "children", "id", "className", "style", "data-testid"];
 export const contentPropOrder = [
   "children",
   "side",
@@ -20,6 +20,8 @@ export const contentPropOrder = [
   "alignOffset",
   "avoidCollisions",
   "collisionPadding",
+  "collisionBoundary",
+  "hideWhenDetached",
   "hideArrow",
   "showCloseButton",
   "container",
@@ -36,7 +38,7 @@ export const contentPropOrder = [
   "style",
   "data-testid",
 ];
-export const closePropOrder = ["asChild", "children", "className", "style", "data-testid"];
+export const closePropOrder = ["asChild", "children", "id", "className", "style", "data-testid"];
 
 <Meta of={PopoverStories} />
 
@@ -115,6 +117,10 @@ any other native `<button>` attribute beyond what's listed here.
 ### Responsive side (bottom on mobile, right from lg up)
 
 <Canvas of={PopoverStories.ResponsiveSide} />
+
+### Hides when its trigger scrolls out of view
+
+<Canvas of={PopoverStories.HideWhenDetached} />
 
 ### With interactive form content
 

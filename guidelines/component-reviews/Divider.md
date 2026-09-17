@@ -2,8 +2,10 @@
 
 Full `06-engineering-standards.md` §9 review pass run 2026-09-02. A notably more sophisticated
 component than the other Layout atoms reviewed this session — a real SSR-safe `matchMedia` hook
-(`useResolvedOrientation`) keeps `aria-orientation` correct across a responsive `orientation` map,
-already well-tested (14 unit tests) before this pass. No feature-completeness gap found against
+(originally its own local `useResolvedOrientation`, migrated 2026-09-17 onto the shared
+`useResolvedResponsiveValue` — see the dated entry near the end of this file) keeps
+`aria-orientation` correct across a responsive `orientation` map, already well-tested (14 unit tests)
+before this pass. No feature-completeness gap found against
 comparable production `Divider` implementations (comparable shape); some do support label
 alignment, which DBM's didn't — see the `align` addition below.
 
@@ -368,3 +370,35 @@ earlier pass — but missed `aria-label`, which is also live at the meta level a
 every one of those same fixed renders. Added `"aria-label": { control: false }` to all 13 affected
 stories. Pure Storybook-metadata fix, no runtime code touched. Live-verified on `Horizontal`: all 8
 props now show `-`. Full suite re-run clean.
+
+## Post-review fix: migrated onto the shared `useResolvedResponsiveValue` primitive (2026-09-17)
+
+Divider's own local `useResolvedOrientation.ts` was the first (and until now, only) implementation
+of the `Responsive<T>` + `matchMedia` resolution pattern in this codebase. `Popover`'s own final
+review (`guidelines/component-reviews/Popover.md`) needed the identical logic for its `side` prop,
+and per this project's own DRY rule (`06-engineering-standards.md` §1 — shared logic belongs in
+`packages/primitives` once used in 2+ places), that second use case was extracted into a reusable
+`useResolvedResponsiveValue<T>(value, fallback)` hook there, generalized only by parameterizing the
+type and the "no match" fallback (Divider's own hardcoded `"horizontal"`) — Divider's own file was
+deliberately left untouched at that time, since Divider is Finalized and the standing rule requires
+asking before touching a Finalized component's files, even for an obvious DRY win.
+
+User authorized the follow-up migration explicitly. Applied per this project's own three-question
+finalization test: **stays Finalized** — this is a zero-visible-output internal refactor (same
+`matchMedia` resolution logic, same SSR-safe first-render behavior, same values `aria-orientation`
+and the CSS-driving `orientationStyle()` ever see), not a behavior or preference change. Changed:
+`Divider.tsx`'s import/call site (`useResolvedOrientation(orientation)` →
+`useResolvedResponsiveValue(orientation, "horizontal")`, now from `@dbm-design-system/primitives`),
+its own top-level JSDoc's cross-reference, `Divider.module.css`'s own comment pointing at the old
+filename, and deleted the now-unused `useResolvedOrientation.ts` (a single call site, no dedicated
+test file for the hook itself — only exercised indirectly through `Divider.test.tsx`'s own existing
+`matchMedia` tests, which needed no changes since the resolved *behavior* is identical).
+
+Re-verified: `pnpm run lint`, `tsc --noEmit`, full Vitest `unit` project (1355/1355, same count as
+before this change, confirming zero behavioral drift) and `storybook` project (472/472), `pnpm run
+build`, and `check-component-bundle-size` — Divider actually **dropped** from 1.35KB to 1.04KB JS
+(0.56KB CSS, unchanged), verified by rebuilding both before and after via `git stash`. Not what a
+"zero-visible-output" refactor might suggest by name, but consistent with it: the local
+`useResolvedOrientation.ts` used to bundle its own full copy of the resolution logic inline into
+Divider's own isolated per-component bundle; that logic now lives once in
+`@dbm-design-system/primitives` instead of being duplicated inline.

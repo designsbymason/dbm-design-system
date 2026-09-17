@@ -17,7 +17,8 @@
  * cascade together here since a single orientation choice drives
  * flex-direction, width, and height together. `aria-orientation` cannot be
  * driven by CSS at all (it's a static HTML attribute), so it's kept in
- * sync separately via matchMedia — see useResolvedOrientation.ts.
+ * sync separately via matchMedia — see @dbm-design-system/primitives'
+ * useResolvedResponsiveValue.
  */
 @media (min-width: 640px) {
   .root {

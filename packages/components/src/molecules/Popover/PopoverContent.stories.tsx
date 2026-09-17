@@ -46,6 +46,16 @@ const meta: Meta<typeof Popover.Content> = {
       description:
         "Minimum distance, in pixels, kept between the content and the edge of the viewport while repositioning to avoid a collision.",
     },
+    collisionBoundary: {
+      control: false,
+      description:
+        "Element(s) to use as the collision boundary instead of the viewport — e.g. a scrollable container the popover should stay within.",
+    },
+    hideWhenDetached: {
+      control: "boolean",
+      description:
+        "Hides the content entirely when its trigger is fully scrolled out of view, instead of leaving it floating in a now-meaningless position.",
+    },
     hideArrow: {
       control: "boolean",
       description: "Hides the small pointer arrow connecting the content to its trigger.",

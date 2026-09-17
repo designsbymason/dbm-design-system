@@ -564,5 +564,116 @@ new regression tests) and `storybook` (472/472, up from 471 — the new story's 
 smoke test) projects, and `check-component-bundle-size` (Popover: 1.54KB JS / 1.00KB CSS, negligible
 increase, still well within budget) all clean.
 
-**Status: final review pass complete, all findings and this feature addition fixed/built and
-re-verified — awaiting the user's own explicit Finalized confirmation.**
+## Post-review fix: `id` missing from `Popover.Trigger`/`Popover.Close`'s own Properties tables (2026-09-17)
+
+User asked why `id` didn't appear in `Popover.Trigger`'s and `Popover.Close`'s own Properties
+tables, alongside `className`/`style`/`data-testid` (all three of which were already there) —
+directly caught a genuine, real gap against `05-component-api-conventions.md` §3's own standing
+rule: "Always accept `className`, `style`, `id`, and `data-testid`" — unconditional, not just
+"when an `aria-labelledby` use case exists." The user's own separate observation, that the root
+`Popover`'s table is *also* missing all four, is correctly **not** a gap — `Popover` itself renders
+no DOM node (already documented in its own JSDoc and the Docs page's Properties section intro,
+added during the final review pass above).
+
+Root cause: `PopoverTriggerProps`/`PopoverCloseProps` both explicitly redeclare `className`/`style`/
+`data-testid` for docgen visibility, per this project's own established reasoning (Storybook's
+default docgen doesn't reliably surface inherited-only native props — the same finding `Input`/
+`Button` established) — but both simply omitted `id` from that same explicit redeclaration. `id`
+already worked correctly at runtime regardless (inherited generically via
+`ComponentPropsWithoutRef<"button">`, passed straight through via each component's own untouched
+`...props` spread) — this was purely a documentation-visibility gap, the exact same category as the
+six `Popover.Content` Radix event props found during the final review pass, not a functional defect.
+
+Fixed: added `id?: string` with JSDoc (matching `Button`'s own established phrasing) to both
+`PopoverTriggerProps` and `PopoverCloseProps`, added matching `argTypes` entries to the hidden
+`PopoverTrigger.stories.tsx`/`PopoverClose.stories.tsx` files, and updated `Popover.mdx`'s
+`triggerPropOrder`/`closePropOrder`. No implementation change needed in `Popover.tsx` — `id` was
+never destructured out of either component's own props, so it already flowed through automatically.
+
+While fixing this, also found (same "Compound-component sub-part completeness" category) that
+neither `Popover.Trigger` nor `Popover.Close` had a test proving `id`/`className`/`style`/
+`data-testid` actually reach the rendered element — only `Popover.Content` did — and `Popover.Close`
+had no ref-forwarding test either, though its implementation already forwards one. Added all three
+missing tests, mirroring `Popover.Content`'s own established pattern exactly.
+
+Live-verified on the Docs page: `Popover.Trigger`'s own Properties table now shows `id` in the
+correct position (right after `children`, before `className`).
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1358/1358, up from 1355 — three new regression
+tests) and `storybook` (472/472) projects, `pnpm run build`, and `check-component-bundle-size`
+(Popover: 1.54KB JS / 1.00KB CSS, unchanged — a type-only/docs-only fix has zero runtime cost) all
+clean.
+
+## Second review round, user-requested before finalizing (2026-09-17)
+
+Re-read every file fresh with skeptical eyes rather than re-confirming prior conclusions, with extra
+scrutiny on what changed since the first full pass (the responsive `side` prop, the six Radix event
+props, the `id` fix) — this is exactly where a second, genuinely-fresh pass earns its keep.
+
+**Found and fixed: the Radix-primitive prop audit from the first pass was itself incomplete.**
+Re-checked the *full* `PopperContentProps` inheritance chain (not just the `DismissableLayer`/
+`FocusScope` props already covered) and found two more real gaps: `collisionBoundary` (lets a
+popover stay within a specific scrollable container instead of the whole viewport — the natural,
+expected sibling to `collisionPadding`/`avoidCollisions`, both already exposed) and
+`hideWhenDetached` (hides the content instead of leaving it floating in a meaningless position once
+its trigger scrolls fully out of view — a real, common visual-correctness need for a trigger living
+inside a scrollable list/table/panel). Both added to `PopoverContentProps` with full JSDoc, typed via
+the same `PopoverPrimitiveContentProps["x"]` extraction as the six event props, and requiring no
+`Popover.tsx` implementation change for the same reason (neither is destructured out, so both already
+flow through the existing `{...props}` spread). Deliberately did **not** expose Popper's remaining
+three props (`sticky`, `arrowPadding`, `updatePositionStrategy`) — judged as narrower power-user/
+performance tuning knobs rather than "commonly-relevant" capability gaps, matching the checklist's own
+curation language ("commonly-relevant," not "every native/primitive attribute"); noted here explicitly
+so this reads as a deliberate, reasoned line rather than something a future pass rediscovers as an
+oversight.
+
+**`hideWhenDetached` got a real demonstration, not just a type.** Built a new permanent story,
+`HideWhenDetached` ("Hides when its trigger scrolls out of view"), rendering a popover inside a
+genuine scrollable container. First live-verification attempt (jumping `scrollTop` directly via script
+without dispatching a `scroll` event) produced a misleading "stuck hidden" result; re-tested with a
+gradual scroll dispatching real `scroll` events at each step, which correctly toggled `visibility`/
+`pointerEvents` at exactly the right point, round-tripping cleanly in both directions — the earlier
+result was a test-methodology gap (Radix's `autoUpdate` needs a real scroll event to recompute), not a
+component defect. `collisionBoundary` was not given its own dedicated demo story: an attempt to
+verify it live via a temporary experimental story edit (a boundary `<div>` + `useState`-held ref)
+tripped a real Storybook/Vite dev-server story-indexer bug — a `render` written as a named `function`
+expression with hooks, edited in place, left the static CSF (Component Story Format) analyzer stuck
+reporting "unable to index" even after the file was fixed back to valid, `tsc`-clean TypeScript,
+requiring a full dev-server restart to clear. Given the experiment was actively harmful without
+adding confidence beyond what was already established (identical pass-through mechanism already
+proven correct for six other props and for `hideWhenDetached`, plus a direct read of Radix's own
+installed source confirming `collisionBoundary` feeds `shift`/`flip`'s `detectOverflowOptions.boundary`
+exactly as documented), the experiment was reverted rather than pursued further — confidence here
+rests on type-check + source audit + the established pattern, not a dedicated live demo.
+
+**Found and fixed a genuine regression introduced within this very round.** Adding `hideWhenDetached`
+as a live (`control: "boolean"`) prop at the shared `meta.argTypes` level — rather than `control:
+false` like the six event props — meant every story automatically inherited a *visible, toggleable*
+control for it, whether or not that story's own render actually used it. Five of the file's stories
+didn't: `AllSides`, `WithForm`, `DisabledTrigger`, and `OutsideClickInteraction` all have custom
+renders that read the *other* shared Content args but never `hideWhenDetached`, and `ResponsiveSide`'s
+render takes no args at all — exactly the "silent no-op" failure mode the original Storybook
+Controls-panel audit (earlier in this file) exists to catch, this time self-inflicted rather than
+inherited. Fixed by threading `hideWhenDetached={args.hideWhenDetached}` through the four stories
+whose renders already wire through the equivalent props, and adding `hideWhenDetached: { control:
+false }` to `ResponsiveSide`'s own already-comprehensive disable list (matching `HideWhenDetached`'s
+own story, which already had this correct from the start since it hardcodes the prop directly rather
+than reading `args`). Live-verified on `AllSides` (`hideWhenDetached: true` via a direct story-args
+URL) that this renders cleanly with no console errors beyond the already-documented, pre-existing
+`act()` test-instrumentation noise.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1358/1358, unchanged — no new jsdom-testable
+behavior; jsdom doesn't run real layout, so it can't meaningfully exercise either new prop, same
+reasoning as the earlier `max-width` CSS fix) and `storybook` (473/473, up from 472 — the new
+`HideWhenDetached` story's own smoke test) projects, `pnpm run build`, and
+`check-component-bundle-size` (Popover: 1.54KB JS / 1.00KB CSS, unchanged) all clean. Docs page
+visually re-verified: the Properties table shows `collisionBoundary`/`hideWhenDetached` in the
+correct position, and the new "Hides when its trigger scrolls out of view" section renders correctly
+in the Variants gallery.
+
+**Status: second review round complete, all findings (including one self-inflicted regression) fixed
+and re-verified.**
+
+**Finalized 2026-09-17.** Re-confirmed clean immediately before finalizing: `pnpm run lint`, full
+Vitest `unit` (1358/1358) and `storybook` (473/473) projects, `pnpm run build`, and
+`check-component-bundle-size` (1.54KB JS / 1.00KB CSS, within budget).

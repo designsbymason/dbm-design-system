@@ -230,7 +230,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | NumberInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [NumberInput.md](component-reviews/NumberInput.md) |
 | SearchInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [SearchInput.md](component-reviews/SearchInput.md) |
 | Slider | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-15 | [Slider.md](component-reviews/Slider.md) |
-| Popover | Molecule | Overlay | ✅ | ⏳ built 2026-09-16, full §9 final review pass complete 2026-09-16, pending Finalized confirmation | [Popover.md](component-reviews/Popover.md) |
+| Popover | Molecule | Overlay | ✅ | ✅ 2026-09-17 | [Popover.md](component-reviews/Popover.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see

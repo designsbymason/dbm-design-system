@@ -57,6 +57,12 @@ export interface PopoverTriggerProps
   asChild?: boolean;
   /** The trigger's own content — a single element when `asChild` is set. */
   children?: ReactNode;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * trigger, or when a test or router needs a stable anchor.
+   */
+  id?: string;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
@@ -117,6 +123,21 @@ export interface PopoverContentProps
    * @default 8
    */
   collisionPadding?: number | Partial<Record<PopoverSide, number>>;
+  /**
+   * Element(s) to use as the collision boundary instead of the viewport —
+   * e.g. a scrollable container the popover should stay within, rather than
+   * the whole page. Leave unset for the common case (the viewport itself).
+   * @default []
+   */
+  collisionBoundary?: PopoverPrimitiveContentProps["collisionBoundary"];
+  /**
+   * Hides the content entirely when its trigger is fully scrolled out of
+   * view (clipped by an ancestor) instead of leaving it floating in a
+   * now-meaningless position — relevant for a trigger living inside a
+   * scrollable list/table/panel rather than the page's own normal scroll.
+   * @default false
+   */
+  hideWhenDetached?: PopoverPrimitiveContentProps["hideWhenDetached"];
   /**
    * Hides the small pointer arrow connecting the content to its trigger.
    * @default false
@@ -220,6 +241,12 @@ export interface PopoverCloseProps
   asChild?: boolean;
   /** The close control's own content — a single element when `asChild` is set. */
   children?: ReactNode;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * close control, or when a test or router needs a stable anchor.
+   */
+  id?: string;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */

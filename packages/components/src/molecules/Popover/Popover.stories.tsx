@@ -30,6 +30,7 @@ interface PlaygroundArgs {
   alignOffset: number;
   avoidCollisions: boolean;
   collisionPadding: number;
+  hideWhenDetached: boolean;
   hideArrow: boolean;
   showCloseButton: boolean;
   onOpenAutoFocus: PopoverContentProps["onOpenAutoFocus"];
@@ -90,6 +91,11 @@ const meta: Meta<PlaygroundArgs> = {
       control: "number",
       description: "Minimum distance kept from the viewport edge while repositioning.",
     },
+    hideWhenDetached: {
+      control: "boolean",
+      description:
+        "Hides the content entirely when its trigger is fully scrolled out of view, instead of leaving it floating in a now-meaningless position — relevant for a trigger inside a scrollable list/table/panel.",
+    },
     hideArrow: {
       control: "boolean",
       description: "Hides the small pointer arrow connecting the content to its trigger.",
@@ -132,6 +138,7 @@ const meta: Meta<PlaygroundArgs> = {
     alignOffset: 0,
     avoidCollisions: true,
     collisionPadding: 8,
+    hideWhenDetached: false,
     hideArrow: false,
     showCloseButton: false,
     onOpenChange: fn(),
@@ -155,6 +162,7 @@ const meta: Meta<PlaygroundArgs> = {
           alignOffset={args.alignOffset}
           avoidCollisions={args.avoidCollisions}
           collisionPadding={args.collisionPadding}
+          hideWhenDetached={args.hideWhenDetached}
           hideArrow={args.hideArrow}
           showCloseButton={args.showCloseButton}
           onOpenAutoFocus={args.onOpenAutoFocus}
@@ -255,6 +263,7 @@ export const AllSides: Story = {
             alignOffset={args.alignOffset}
             avoidCollisions={args.avoidCollisions}
             collisionPadding={args.collisionPadding}
+            hideWhenDetached={args.hideWhenDetached}
             hideArrow={args.hideArrow}
             showCloseButton={args.showCloseButton}
             aria-label={`Popover on the ${side}`}
@@ -279,6 +288,7 @@ export const ResponsiveSide: Story = {
     alignOffset: { control: false },
     avoidCollisions: { control: false },
     collisionPadding: { control: false },
+    hideWhenDetached: { control: false },
     hideArrow: { control: false },
     showCloseButton: { control: false },
   },
@@ -302,6 +312,58 @@ export const ResponsiveSide: Story = {
   ),
 };
 
+export const HideWhenDetached: Story = {
+  name: "Hides when its trigger scrolls out of view",
+  argTypes: {
+    defaultOpen: { control: false },
+    modal: { control: false },
+    onOpenChange: { control: false },
+    side: { control: false },
+    align: { control: false },
+    sideOffset: { control: false },
+    alignOffset: { control: false },
+    avoidCollisions: { control: false },
+    collisionPadding: { control: false },
+    hideWhenDetached: { control: false },
+    hideArrow: { control: false },
+    showCloseButton: { control: false },
+  },
+  render: () => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--dbm-space-4)",
+        alignItems: "center",
+      }}
+    >
+      <Text size="sm">Scroll the box below — the trigger&apos;s own popover hides once it scrolls out of view.</Text>
+      <div
+        style={{
+          height: "var(--dbm-space-32)",
+          width: "16rem",
+          overflow: "auto",
+          border: `var(--dbm-border-width-1) solid var(--dbm-border-default)`,
+          borderRadius: "var(--dbm-radius-md)",
+        }}
+      >
+        <div style={{ height: "16rem" }} />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Popover defaultOpen>
+            <Popover.Trigger asChild>
+              <Button>Trigger</Button>
+            </Popover.Trigger>
+            <Popover.Content hideWhenDetached aria-label="Hides when detached example">
+              <Text size="sm">Scroll me out of view.</Text>
+            </Popover.Content>
+          </Popover>
+        </div>
+        <div style={{ height: "16rem" }} />
+      </div>
+    </div>
+  ),
+};
+
 export const WithForm: Story = {
   name: "With interactive form content",
   args: { showCloseButton: true },
@@ -320,6 +382,7 @@ export const WithForm: Story = {
             alignOffset={args.alignOffset}
             avoidCollisions={args.avoidCollisions}
             collisionPadding={args.collisionPadding}
+            hideWhenDetached={args.hideWhenDetached}
             hideArrow={args.hideArrow}
             showCloseButton={args.showCloseButton}
             aria-label="Settings"
@@ -356,6 +419,7 @@ export const DisabledTrigger: Story = {
           alignOffset={args.alignOffset}
           avoidCollisions={args.avoidCollisions}
           collisionPadding={args.collisionPadding}
+          hideWhenDetached={args.hideWhenDetached}
           hideArrow={args.hideArrow}
           showCloseButton={args.showCloseButton}
           aria-label="Example popover"
@@ -421,6 +485,7 @@ export const OutsideClickInteraction: Story = {
           alignOffset={args.alignOffset}
           avoidCollisions={args.avoidCollisions}
           collisionPadding={args.collisionPadding}
+          hideWhenDetached={args.hideWhenDetached}
           hideArrow={args.hideArrow}
           showCloseButton={args.showCloseButton}
           aria-label="Example popover"

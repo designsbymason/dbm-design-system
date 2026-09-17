@@ -24,6 +24,11 @@ const meta: Meta<typeof Popover.Trigger> = {
       control: "text",
       description: "The trigger's own content — a single element when asChild is set.",
     },
+    id: {
+      control: "text",
+      description:
+        "Standard DOM id. Rarely needed directly, but required when another element's aria-labelledby/aria-describedby needs to point at this trigger, or when a test or router needs a stable anchor.",
+    },
     className: {
       control: false,
       description: "Additional CSS classes for customization.",

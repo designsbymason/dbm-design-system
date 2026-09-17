@@ -1,4 +1,4 @@
-import { cx, responsiveStyle } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import { forwardRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import styles from "./Divider.module.css";
@@ -8,7 +8,6 @@ import type {
   DividerThickness,
   DividerTone,
 } from "./Divider.types";
-import { useResolvedOrientation } from "./useResolvedOrientation";
 
 const THICKNESS_TOKEN: Record<DividerThickness, string> = {
   thin: "var(--dbm-border-width-1)",
@@ -71,7 +70,7 @@ function orientationStyle(value: DividerProps["orientation"]): CSSProperties {
  * applied to a separator instead of a layout container. The divider's
  * `aria-orientation` stays in sync with the currently-active breakpoint via
  * `matchMedia`, since that's a static HTML attribute CSS alone can't drive
- * responsively (see `useResolvedOrientation`) — the *visual* orientation
+ * responsively (see `useResolvedResponsiveValue`) — the *visual* orientation
  * itself is driven entirely by CSS and never depends on that JS timing.
  * When `label` is a plain string, it doubles as the accessible name
  * automatically (override via `aria-label` if needed).
@@ -108,7 +107,7 @@ export const Divider = forwardRef<HTMLDivElement, DividerProps>(
     },
     ref,
   ) => {
-    const resolvedOrientation = useResolvedOrientation(orientation);
+    const resolvedOrientation = useResolvedResponsiveValue(orientation, "horizontal");
     const lineClassName =
       variant === "dashed"
         ? resolvedOrientation === "horizontal"
