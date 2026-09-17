@@ -32,7 +32,19 @@
   border-radius: var(--dbm-radius-md);
   box-shadow: var(--dbm-shadow-light-md);
   font-family: var(--dbm-font-family-primary);
-  max-width: var(--dbm-popover-max-width);
+  /* `min()` against Radix's own live `--radix-popper-available-width` — found
+     live, mobile-width stress test with long content (2026-09-17): a fixed
+     `max-width` alone lets the panel overflow a narrow viewport. Radix's
+     `avoidCollisions` only *repositions* the box (shift/flip) to stay as
+     much on-screen as it can — confirmed live, it shifted all the way to
+     the collision boundary (8px from the left edge) — but repositioning
+     can't fix a box that's simply wider than the viewport has room for in
+     the first place; only shrinking it can. Radix's own `size` middleware
+     already computes the true available space every reposition and writes
+     it to this custom property unconditionally (not gated behind
+     `avoidCollisions`), so no extra prop or JS is needed here — just
+     consuming it as the other half of the `min()`. */
+  max-width: min(var(--dbm-popover-max-width), var(--radix-popper-available-width));
   padding: var(--dbm-space-4);
   position: relative;
   will-change: transform, opacity;

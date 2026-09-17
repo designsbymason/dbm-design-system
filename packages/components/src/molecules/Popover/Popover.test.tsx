@@ -156,6 +156,57 @@ describe("Popover", () => {
     expect(screen.getByText("Content")).toHaveAttribute("data-align", "center");
   });
 
+  it("resolves side from a responsive map via matchMedia, defaulting to base", () => {
+    render(
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content side={{ base: "bottom", lg: "right" }}>Content</Popover.Content>
+      </Popover>,
+    );
+    // jsdom's default matchMedia (see src/test/setup.ts) reports no query as
+    // matching, so this resolves to the `base` entry.
+    expect(screen.getByText("Content")).toHaveAttribute("data-side", "bottom");
+  });
+
+  it("updates the popover's side live when a matchMedia change listener fires", async () => {
+    const listeners: Record<string, Array<() => void>> = {};
+    const currentMatches: Record<string, boolean> = {
+      "(min-width: 1024px)": true,
+    };
+
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        get matches() {
+          return currentMatches[query] ?? false;
+        },
+        media: query,
+        addEventListener: (_event: string, cb: () => void) => {
+          (listeners[query] ??= []).push(cb);
+        },
+        removeEventListener: vi.fn(),
+      })),
+    );
+
+    render(
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content side={{ base: "bottom", lg: "right" }}>Content</Popover.Content>
+      </Popover>,
+    );
+    await waitFor(() =>
+      expect(screen.getByText("Content")).toHaveAttribute("data-side", "right"),
+    );
+
+    // Simulate the viewport dropping back below the lg breakpoint.
+    currentMatches["(min-width: 1024px)"] = false;
+    listeners["(min-width: 1024px)"]?.forEach((cb) => cb());
+
+    await waitFor(() =>
+      expect(screen.getByText("Content")).toHaveAttribute("data-side", "bottom"),
+    );
+  });
+
   it("renders an arrow by default, and omits it when hideArrow is set", () => {
     // Content renders in a Radix `Portal` appended to `document.body`, not
     // inside RTL's own render `container` — same reasoning as Slider's/
@@ -265,6 +316,39 @@ describe("Popover", () => {
 
     await user.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByText("Content")).not.toBeInTheDocument());
+  });
+
+  it("onEscapeKeyDown can prevent the default Escape dismissal", async () => {
+    const user = userEvent.setup();
+    const onEscapeKeyDown = vi.fn((event: KeyboardEvent) => event.preventDefault());
+    render(
+      <Popover defaultOpen>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Content onEscapeKeyDown={onEscapeKeyDown}>Content</Popover.Content>
+      </Popover>,
+    );
+
+    await user.keyboard("{Escape}");
+    expect(onEscapeKeyDown).toHaveBeenCalled();
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+
+  it("onPointerDownOutside can prevent the default outside-click dismissal", async () => {
+    const user = userEvent.setup();
+    const onPointerDownOutside = vi.fn((event: Event) => event.preventDefault());
+    render(
+      <div>
+        <Popover defaultOpen>
+          <Popover.Trigger>Open</Popover.Trigger>
+          <Popover.Content onPointerDownOutside={onPointerDownOutside}>Content</Popover.Content>
+        </Popover>
+        <button type="button">Outside</button>
+      </div>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Outside" }));
+    expect(onPointerDownOutside).toHaveBeenCalled();
+    expect(screen.getByText("Content")).toBeInTheDocument();
   });
 
   it("passes id, className, style, and data-testid through to the content element", () => {

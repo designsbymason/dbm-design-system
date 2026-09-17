@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useEffect } from "react";
 import { CloseButton } from "../../atoms/CloseButton";
@@ -23,6 +23,12 @@ import type {
  * a single-prop API) — deliberately, since later organisms (`Menu`,
  * `Combobox`, `DatePicker`) reuse this same positioning/dismissal
  * mechanism for their own dropdowns.
+ *
+ * `Popover` itself renders no DOM element of its own — a plain context
+ * provider around its sub-parts, matching Radix's own `Popover.Root` — so
+ * it takes no `ref`/`className`/`style`/`id`/`data-testid` of its own;
+ * those apply to `Popover.Trigger`/`Popover.Content`/`Popover.Close`
+ * instead, each of which does forward its own ref.
  *
  * Does **not** expose `Popover.Anchor` (Radix's own sub-part for anchoring
  * the content to an element other than the trigger) — live-verified
@@ -112,6 +118,13 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     },
     ref,
   ) => {
+    // Radix's own `side` needs one concrete value per render — it drives a
+    // real positioning computation, not a CSS cascade, so a
+    // `Responsive<PopoverSide>` map (side/left→top/bottom across a
+    // breakpoint) has to resolve to a single value in JS before reaching
+    // it, unlike a purely CSS-driven responsive prop.
+    const resolvedSide = useResolvedResponsiveValue(side, "bottom");
+
     // A dev-mode warning, not a render-time read — the "haven't warned yet"
     // check reads/writes a ref's `.current`, which `eslint-plugin-react-
     // hooks`'s newer `react-hooks/refs` rule (added since Slider's own
@@ -136,7 +149,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
       <PopoverPrimitive.Portal container={container}>
         <PopoverPrimitive.Content
           ref={ref}
-          side={side}
+          side={resolvedSide}
           align={align}
           sideOffset={sideOffset}
           alignOffset={alignOffset}

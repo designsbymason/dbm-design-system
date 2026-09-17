@@ -40,13 +40,14 @@ page via a hidden, docs-only stories file per `guidelines/adr/0013` — `Popover
   tone to track" carve-out — Popover has no varying tone of its own, so it qualifies) rather than
   forcing a dismiss affordance on every popover regardless of whether outside-click/Escape alone
   already covers it well enough.
-- **`modal` mirrors `Dialog`'s own future modal behavior** (focus trap, outside pointer interaction
-  fully blocked via `pointer-events: none` on the rest of the page, `aria-hidden` on the rest of the
-  page) rather than inventing separate terminology — live-verified: `Tab` cycles focus back to the
-  close button rather than escaping to the page, a genuine click on an outside element is swallowed
-  (confirmed both by `aria-hidden` making it unreachable via `getByRole` without `hidden: true`, and
-  by `userEvent.click` itself refusing with a `pointer-events: none` error), and `Escape` still closes
-  it either way.
+- **`modal` mirrors `Dialog`'s own future modal behavior** (focus trap, background interaction fully
+  blocked via `pointer-events: none` + `aria-hidden` on the rest of the page) rather than inventing
+  separate terminology — live-verified: `Tab` cycles focus back to the close button rather than
+  escaping to the page, a background element's own click handler never fires (confirmed both by
+  `aria-hidden` making it unreachable via `getByRole` without `hidden: true`, and by `userEvent.click`
+  itself refusing with a `pointer-events: none` error), and `Escape` still closes it either way. This
+  does **not** extend to blocking the popover's *own* outside-click dismissal, though — see the
+  dedicated finding below (2026-09-16).
 - **A dev-mode "no accessible name" console warning on `Popover.Content`** — `role="dialog"` needs
   one, matching every other component in this system with the same guardrail (`Slider`, `Switch`,
   `SearchInput`, …). Found the real gap live: `@storybook/addon-a11y`'s own automated sweep failed
@@ -236,5 +237,332 @@ Re-verified: `pnpm run lint`, full Vitest `unit` (1351/1351, up from 1350 with t
 `storybook` (471/471) projects, `pnpm run build`, and `check-component-bundle-size` (Popover: 1.51KB
 JS / 0.97KB CSS, still well within budget) all clean.
 
-**Status: built and self-reviewed against the full `06-engineering-standards.md` §9 checklist —
-awaiting the user's own request for a dedicated final review pass and Finalized confirmation.**
+## Follow-up fix: Storybook Controls-panel audit found several stories with dead or wrongly-disabled controls (2026-09-16)
+
+User-requested: review every `Popover.stories.tsx` story's Controls panel against the
+`06-engineering-standards.md` §9 checklist ("control genuinely interactive wherever it makes sense,
+`control: false` reserved for props that genuinely can't/shouldn't be live-edited" + "every story's
+panel actually drives its own canvas, checked live"). Found real issues in both directions across
+seven of the eleven stories:
+
+1. **`WithArrowHidden`, `WithCloseButton`, `Modal` unnecessarily disabled their own defining prop's
+   control** (`hideArrow`, `showCloseButton`, `modal`+`showCloseButton`) even though each uses the
+   shared, fully-`args`-wired default render — the control would have worked fine left live. Direct
+   precedent found in `Slider.stories.tsx` (`WithValue`/`ErrorState`/`Disabled` all leave their own
+   defining boolean prop's control live, no `argTypes` override). Fixed by removing the overrides —
+   these stories now just start from a preset value, same as Slider's own pattern.
+2. **`AllSides` had the inverse problem in two directions at once.** `align`'s control was disabled
+   even though it's a real, shared value applied uniformly to all four instances (only `side` is
+   actually varied per-instance and structurally can't take a single control value — that one stays
+   disabled, correctly, per the checklist's own "suppress only the varying-axis prop" guidance).
+   Meanwhile `sideOffset`/`alignOffset`/`avoidCollisions`/`collisionPadding`/`showCloseButton` were
+   left with *no* override at all — live, interactive-looking controls — despite the custom `render`
+   never reading them, making every one of them a silent no-op. Fixed by wiring all five through into
+   each of the four instances, re-enabling `align`, and explicitly disabling `defaultOpen`/`modal`/
+   `onOpenChange` (these three are structurally incompatible with this story's own hardcoded `open`,
+   itself a deliberate workaround for the multi-instance uncontrolled-open race documented above —
+   wiring them through would reintroduce that exact bug).
+3. **`WithForm` also had it backwards**: `side`/`align`/`showCloseButton` were disabled despite its
+   own `render` genuinely reading all three from `args`, while `defaultOpen`/`modal`/`sideOffset`/
+   `alignOffset`/`avoidCollisions`/`collisionPadding`/`hideArrow`/`onOpenChange` were left live with
+   no wiring at all. Fixed by fully wiring the story to every arg (matching `Playground`'s own shape),
+   removing the three unwarranted disables.
+4. **`DisabledTrigger` and `OutsideClickInteraction` were the most serious finding** — both used a
+   custom `render` taking no `args` parameter whatsoever, so *every* control shown for these two
+   stories (11 apiece) was a pure no-op with nothing in the UI signaling it — exactly the "worse than
+   the inert-placeholder case" failure mode the checklist calls out by name. Rather than disable the
+   whole panel (the checklist's own explicitly-rejected fix for a comparable case, reverted the same
+   day it was tried previously — see line 127 of `06-engineering-standards.md`), both were fully
+   rewired to `args`, matching `Playground`'s shape. This also made `DisabledTrigger` more informative
+   than before: setting `defaultOpen` to `true` now visibly opens the content despite the trigger
+   itself being unclickable, correctly demonstrating that `disabled` blocks *interaction* only, not a
+   forced-closed state. `OutsideClickInteraction` additionally disables `modal`'s own control (fixed
+   `false`) since a modal popover blocking outside pointer interaction would defeat the story's own
+   point.
+5. **`Playground` and `ClickInteraction`** were already fully correct (shared default render, no
+   overrides) — no changes.
+
+Every changed story's Controls panel was live-verified in a running Storybook instance by actually
+toggling values via the URL's `args` query param and confirming the canvas changed accordingly, not
+by re-reading the code and assuming it — including confirming `defaultOpen` behaves identically on
+`DisabledTrigger` as it already does on `Playground` (a pre-existing, expected Storybook/React
+limitation: toggling `defaultOpen` on an already-mounted story doesn't reopen it, since it's read only
+at mount — a fresh navigation with the arg pre-set does).
+
+Re-verified: `pnpm run lint` (eslint + `tsc` + `.storybook` `tsc`), full Vitest `unit` (1351/1351,
+unaffected — no unit test touches the stories file) and `storybook` (471/471) projects, `pnpm run
+build`, and `check-component-bundle-size` (Popover: 1.51KB JS / 0.97KB CSS, unchanged — stories aren't
+part of the shipped bundle) all clean.
+
+## Follow-up: `modal` prop dedicated live audit — one real story bug found, docs wording corrected (2026-09-16)
+
+User-requested: verify `modal` specifically, end to end, live rather than by re-reading the code. Four
+distinct behaviors checked in a real browser (not just the existing jsdom unit test):
+
+1. **Focus trap** — confirmed: 5× `Tab` inside a `defaultOpen modal` popover with only a close button
+   never moved focus off it (there's nothing else focusable inside the demo content to cycle to, and
+   it never escaped to the trigger or the page).
+2. **`Escape` still closes it, focus returns to the trigger** — confirmed via `document.activeElement`
+   after pressing `Escape`.
+3. **Background `aria-hidden` + `pointer-events: none`** — confirmed on the trigger's own container,
+   and separately on a temporary injected sibling `<button>` with its own `onclick`: a real mouse click
+   on it (not `userEvent`, an actual dispatched click) never fired that handler at all — genuine proof
+   background interaction is blocked, not just an assumption from the CSS.
+4. **Outside-click dismissal is identical whether `modal` is set or not** — this is the one place the
+   component's own docs overclaimed. Clicking blank page space, or the same blocked background button
+   from #3, still closed the popover in both modal and non-modal alike. Root cause: Radix's `Popover`
+   (unlike `Dialog`) exposes no `Overlay`/scrim sub-part, so there's nothing to swallow the dismissal
+   click itself — `disableOutsidePointerEvents` only blocks *hit-testing on background elements*, not
+   the `DismissableLayer`'s own document-level outside-pointerdown detection. `modal`'s real,
+   verified effect is limited to items 1-3 above, not "can only be dismissed via Escape/close button."
+
+**Fixed the wording** in `Popover.mdx`'s Accessibility section and this file's own "design decisions"
+bullet above (both previously said modal "blocks outside pointer interaction entirely" without
+qualifying that dismissal-by-outside-click is unaffected) — no runtime/behavioral change, since the
+actual implementation was already correct and faithful to Radix's own upstream `modal` semantics
+throughout; only the documentation was overclaiming.
+
+**Found and fixed a real bug in `OutsideClickInteraction`'s own layout while re-checking it against
+this corrected understanding**: wiring `modal` through this story (removing the unwarranted
+`argTypes: { modal: { control: false } }` from the prior controls-audit pass, since modal turns out
+not to defeat this story's own point after all) prompted re-testing the story's "Outside element"
+button with a real click — and `document.elementFromPoint` at that button's own center returned the
+popover's own content text, not the button. The button was genuinely unclickable by mouse: `Content`
+is portaled and contributes zero height to the flex column's layout, so "Outside element" sat directly
+below the trigger in normal flow, and the floating content (positioned via `sideOffset` on top of that
+same spot) visually and hit-test-wise covered it whenever the popover was open — for every opening
+method (`defaultOpen` or a real click), not just the `defaultOpen` case used to first notice it. Fixed
+by widening the flex column's `gap` from `space-4` to `space-16`, clearing the default `sideOffset`
+(8px) plus the content's own rendered height. Live-verified: `elementFromPoint` now correctly resolves
+to the button itself, and an actual click on it dismisses the popover end to end, both for `modal:
+false` (the story's own stated case) and `modal: true` (now that its control is live, confirming
+outside-click dismissal behaves identically either way, per the finding above).
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1351/1351) and `storybook` (471/471) projects,
+`pnpm run build`, and `check-component-bundle-size` (Popover: 1.51KB JS / 0.97KB CSS, unchanged) all
+clean.
+
+**User follow-up: asked for the corrected `modal` explanation to be propagated to the actual
+documentation surfaces**, not just this file and the Accessibility narrative in `Popover.mdx`. The
+same "blocks outside pointer interaction entirely" overclaim existed in two further places that
+directly feed the Docs page's own Properties table and sidebar, neither of which the first pass had
+touched: `PopoverProps.modal`'s own JSDoc in `Popover.types.ts` (the actual source of truth a
+consumer's IDE tooltip shows, and what docgen would extract), and the `modal` `argTypes.description`
+in `Popover.stories.tsx`'s `meta` (what the Properties table and Controls panel actually render, per
+this file's own established manual-argTypes pattern for the combined root+Content Playground). Also
+found the same overclaim baked into the `Modal` story's own `name` (`"Modal (traps focus, blocks
+outside pointer dismissal)"`) — used verbatim as both the sidebar label and the `Popover.mdx` Variants
+section heading via `<Canvas of={PopoverStories.Modal} />`. All three corrected to the same accurate
+characterization: focus trap + background `aria-hidden`/`pointer-events: none`, dismissal unaffected
+by `modal` either way. Live-verified in the running Docs page (not just re-reading the source) that
+the corrected Properties-table row text and the renamed "Modal (traps focus, blocks background
+interaction)" heading both actually render as edited.
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1351/1351) and `storybook` (471/471) projects,
+`pnpm run build`, and `check-component-bundle-size` (Popover: 1.51KB JS / 0.97KB CSS, unchanged) all
+clean.
+
+## Final review pass — full `06-engineering-standards.md` §9 checklist, end to end (2026-09-16)
+
+User-requested: a dedicated final review before finalizing, re-running the complete checklist rather
+than relying on the incremental self-review notes above. Five real, concrete findings, fixed; several
+other items investigated live and confirmed compliant (no change needed).
+
+**Findings fixed:**
+
+1. **`AllSides`'s fixed 2-column grid broke at mobile width (Responsiveness)** — live-verified at
+   375px: Radix's own collision avoidance repositioned a popover to stay within the true viewport,
+   but had no awareness of the *adjacent grid cell's own trigger* sitting right next to it, so a
+   flipped popover visually overlapped a sibling column's button instead of just avoiding the screen
+   edge. Fixed by switching `gridTemplateColumns: repeat(2, 1fr)` to
+   `repeat(auto-fit, minmax(180px, 1fr))`, which collapses to a single column once two columns no
+   longer fit — removing the adjacency itself rather than tuning gap/padding for one specific width.
+   Re-verified clean at 375px and confirmed the desktop layout still reads well (now a single row of
+   4 at the story canvas's own width, arguably cleaner than the original fixed 2×2).
+2. **`PopoverRoot`'s own JSDoc never justified why it takes no `ref`/`className`/`style`/`id`/
+   `data-testid` (Baseline correctness — standard prop patterns)** — the "no root DOM node" exception
+   requires justifying itself in the component's *own* JSDoc per the standing rule, matching
+   `Tooltip`'s established precedent (its own top-level JSDoc explicitly states this). Popover's own
+   version only had this explained in `Popover.mdx`'s prose, not in `Popover.tsx` itself. Fixed by
+   adding the same explicit justification directly to `PopoverRoot`'s own JSDoc block.
+3. **Code examples section had no snippet demonstrating a genuine native prop (Storybook
+   documentation)** — all three existing snippets used only this component's own custom props. Fixed
+   by adding a fourth: `<Popover.Trigger disabled>Open</Popover.Trigger>`, pairing with the
+   `disabled` example already named in the Trigger's own Properties-section disclaimer sentence.
+4. **Radix-primitive prop audit gap: six of `Popover.Content`'s own underlying Radix props were never
+   exposed (Baseline correctness — required, not a judgment-call feature addition)** — confirmed by
+   reading `@radix-ui/react-popover`'s actual installed source (`PopoverContentImpl`): it accepts
+   `onOpenAutoFocus`, `onCloseAutoFocus`, `onEscapeKeyDown`, `onPointerDownOutside`, `onFocusOutside`,
+   and `onInteractOutside`, none of which `PopoverContentProps` declared — meaning a consumer
+   literally could not customize or prevent auto-focus/dismiss behavior at all (a common, real-world
+   popover need — e.g. keeping a nested confirmation open through an Escape press, or ignoring a
+   click on an unrelated portaled element like a toast). Fixed by adding all six to
+   `PopoverContentProps` with full JSDoc, typed precisely via
+   `ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>["onX"]` extraction (Radix doesn't
+   publicly export the underlying custom event types directly, so this indirection avoids depending
+   on an unexported type). No implementation change was needed in `Popover.tsx` itself — since none
+   of the six are destructured out, they already flow through the existing `{...props}` spread onto
+   `PopoverPrimitive.Content` automatically. Documented in the hidden `PopoverContent.stories.tsx`
+   properties table, `Popover.mdx`'s `contentPropOrder`, and threaded into the root Playground's own
+   combined `meta` (mirroring `onOpenChange`'s existing pattern: `control: false`, wired with `fn()`
+   for Actions-panel visibility). Live-verified in the Actions panel: opening and Escaping out of the
+   Playground fires `onOpenChange` → `onOpenAutoFocus` → ... → `onEscapeKeyDown` → `onOpenChange` →
+   `onCloseAutoFocus`, each correctly. Added two new regression tests confirming
+   `onEscapeKeyDown`/`onPointerDownOutside` can each genuinely prevent the default dismissal via
+   `event.preventDefault()`, not just that the prop is accepted.
+5. **`Popover.Content`'s own Properties-section disclaimer sentence cited `aria-label` as a "not
+   listed here" example while it's actually redeclared and shown in the table right above it
+   (Storybook documentation)** — the exact `Avatar`/`Tag`-precedent mistake the checklist explicitly
+   warns about, checked for specifically and found real here. Fixed by swapping the example to
+   `onMouseEnter` (confirmed genuinely not redeclared).
+
+**Investigated live, confirmed compliant — no change needed:**
+
+- **`Popover.Trigger`'s own `disabled`** — deliberately left to the generic native-attribute
+  disclaimer sentence rather than redeclared, which is itself compliant (the disclaimer names it as
+  its own example, and it isn't also shown as a row in the table — no `Avatar`/`Tag`-style
+  contradiction here).
+- **Tab cycling within an open, non-modal popover never reaches the trigger** — live-verified via
+  `WithForm` (two focusable elements: Close button, Input) that Tab cycles only between them, never
+  escaping to the trigger. Traced to Radix's own installed source: `FocusScope`'s `loop` is hardcoded
+  `true` unconditionally on `Popover.Content`, independent of `modal` (only `trapped` varies by
+  `modal`) — `loop` governs "wrap within the scope once focus is inside it," a distinct concept from
+  `modal`'s own "block background interaction" — this matches this component's own already-accurate
+  documentation ("Tab moves focus into the content... Escape closes it and returns focus to the
+  trigger," which never claims Tab itself can escape). Not a defect; the initial expectation that
+  non-modal should let Tab escape via repeated presses was simply wrong.
+- **An "Inconclusive" (not "Violation") axe-core finding on `aria-controls`, Playground, both brand ×
+  mode combinations** — "unable to determine if aria-controls referenced ID exists on the page," a
+  known axe-core limitation scanning across a `Portal` boundary. Verified directly via
+  `document.getElementById` in the live DOM that the referenced id resolves correctly to the real
+  `role="dialog"` element — a false positive, not a real gap.
+- **Theming** — verified live across all four Purple/Emerald × Light/Dark combinations on the
+  Playground (arrow border, close button, shadows all correct in each); 0 real accessibility
+  violations in every combination.
+- **Responsiveness elsewhere** — `WithForm` and `DisabledTrigger`-style single-instance stories
+  confirmed clean at 375px (only `AllSides`'s multi-instance grid had the real gap above).
+- **`act()`/"suspended inside an act scope" console errors on the Docs page** — confirmed via a
+  side-by-side check against `Select`'s own, already-Finalized Docs page (identical warnings, same
+  count) that this is generic Storybook Docs-page test-instrumentation noise affecting any
+  Radix-Popper-based component's docs render, not something introduced by this component or this
+  pass.
+
+Re-verified: `pnpm run lint` (eslint + `tsc` + `.storybook` `tsc`), full Vitest `unit` (1353/1353, up
+from 1351 — two new regression tests) and `storybook` (471/471) projects, `pnpm run build`, and
+`check-component-bundle-size` (Popover: 1.51KB JS / 0.97KB CSS, unchanged — all fixes were
+type-level, documentation, or Storybook-only) all clean. Docs page visually re-verified end to end in
+a running Storybook instance after every fix (Properties tables, code examples, Variants headings).
+
+## Follow-up fix: long content overflowed the viewport at mobile width (2026-09-17)
+
+User asked, after the final review pass above, whether the content panel is genuinely responsive at
+mobile width — prompted a deeper stress test than the review pass itself had run: every prior
+responsiveness check used only the demo's own short canned text, which never approached
+`popover.max-width` (24rem/384px) in the first place. Testing with long content at 375px found a
+real gap: `avoidCollisions` (on by default) only *repositions* the panel (shift/flip) to stay as much
+on-screen as possible — confirmed live, it shifted the panel as far as the 8px collision boundary
+allowed — but repositioning alone can't fix a box that's simply wider than the viewport has room for;
+only shrinking it can. `.content`'s `max-width` was a fixed token value with no viewport-relative
+fallback, so long content rendered up to 17px past the right edge of a 375px viewport regardless of
+where Radix positioned it.
+
+Root cause traced directly in the installed `@radix-ui/react-popper` source: its `size` middleware
+runs unconditionally (not gated behind `avoidCollisions`) on every reposition and writes the true
+currently-available space to `--radix-popper-available-width`/`--radix-popper-available-height` as
+live inline custom properties on the content element — this component's CSS just never consumed
+them. Fixed with `max-width: min(var(--dbm-popover-max-width), var(--radix-popper-available-width))`
+— the design's own token still wins whenever there's enough room (unchanged desktop behavior,
+confirmed: content still caps at the normal 384px with plenty of viewport to spare), and Radix's own
+live value takes over as the binding constraint only when the viewport genuinely can't fit the
+token's full width.
+
+Live-verified: 375px width, long stress-test content, `getBoundingClientRect()` confirming the panel
+stays fully within the viewport (previously overflowed to `right: 392`–`404px` against a 375px
+viewport depending on `showCloseButton`, now consistently settles within it, e.g. `right: 367px`)
+across the default `side="bottom"` placement, `side="right"` (a much tighter available-width case,
+correctly shrinking to ~91px), and combined with `showCloseButton`'s own extra padding — confirmed
+`box-sizing: border-box` (this codebase's own global reset) means the padding is already accounted
+for inside the capped width, not added on top of it. One transient false alarm during this
+investigation: an initial test appeared to show a stuck, still-overflowing state, but repeated clean
+reproductions (fresh navigation each time, multiple animation-frame-synced measurements) consistently
+converged correctly — traced to residual DOM state from chaining multiple test mutations onto the
+same already-mutated instance without a fresh remount, not a real product defect.
+
+No jsdom unit test added for this — jsdom doesn't run real layout or evaluate Floating UI's own
+positioning math, so it can't meaningfully exercise this fix; live browser verification is the only
+way to actually prove it (same category as the earlier arrow-border/`vector-effect` CSS fixes this
+component's own review already established that pattern for).
+
+Re-verified: `pnpm run lint`, full Vitest `unit` (1353/1353, unaffected — CSS-only fix) and
+`storybook` (471/471) projects, `pnpm run build`, and `check-component-bundle-size` (Popover: 1.51KB
+JS / 1.00KB CSS, negligible increase, still well within budget) all clean.
+
+## Feature addition: `side` accepts a responsive map, so `left`/`right` can fall back to `top`/`bottom` at a chosen breakpoint (2026-09-17)
+
+User asked, after the `max-width` overflow fix above: should `side="left"`/`"right"` automatically
+cross over to `top`/`bottom` when there's no horizontal room (particularly at mobile width)? Checked
+the installed `@radix-ui/react-popper` source first, since this determines whether it's even possible
+today: `avoidCollisions`'s `flip({ ...detectOverflowOptions })` call never sets floating-ui's own
+`fallbackAxisSideDirection`, and `detectOverflowOptions` is built internally from `collisionPadding`/
+`collisionBoundary` only — so Radix's own `flip` middleware, as wired, **only flips within the same
+axis** (`left`↔`right`, `top`↔`bottom`), never across them, and there is no public prop on
+`Popover.Content` that reaches the option that would change this. Confirmed this is a real,
+architecture-level constraint of the underlying primitive, not something this component's own
+wrapper was simply missing a passthrough for.
+
+Recommended against building automatic cross-axis flipping: it's a genuine per-usage UX judgment call
+(some usages specifically want to stay beside the trigger even when cramped, e.g. an inline
+validation hint next to a field, rather than jumping to a different axis unprompted), it's not a
+capability gap today's API is missing (a consumer can already pass a different `side` based on their
+own breakpoint check), and building genuine runtime auto-detection would mean either bypassing
+Radix's own positioning engine (a real architecture change, contrary to `02-tech-stack-and-structure.md`'s
+"Radix as the behavior/accessibility foundation" stance) or a custom measure-and-override effect
+prone to reposition oscillation.
+
+**Proposed and built instead, at explicit user request: widen `side` to accept `Responsive<PopoverSide>`**
+(a value, or a mobile-first map keyed by breakpoint, e.g. `{ base: "bottom", lg: "right" }`) — giving
+the developer explicit, ergonomic per-breakpoint control without any runtime detection or fighting
+Radix's own same-axis-only `flip`. This is not a new pattern invented for Popover: `Divider`'s own
+already-Finalized `orientation` prop established the exact same `Responsive<T>` + `matchMedia`-based
+resolution shape (`useResolvedOrientation`) for the identical underlying problem — a prop driving
+something that can't be expressed as a pure CSS cascade (there, a static `aria-orientation` attribute;
+here, a value Radix's own JS positioning engine consumes directly, not CSS).
+
+**Extracted a reusable primitive** rather than duplicating Divider's local hook a second time, per
+this project's own DRY rule (`06-engineering-standards.md` §1: shared logic belongs in
+`packages/primitives` once used in 2+ places — this is exactly that second use case):
+`useResolvedResponsiveValue<T>(value, fallback)` now lives in
+`packages/primitives/src/hooks/useResolvedResponsiveValue.ts`, a direct generalization of
+`useResolvedOrientation` (SSR-safe: resolves to `base`/`fallback` on first render, corrects via
+`matchMedia` in a layout effect). `Divider`'s own `useResolvedOrientation.ts` is deliberately left
+untouched rather than retroactively migrated onto the new shared hook — `Divider` is already
+Finalized, and the standing rule is that a Finalized component's files aren't touched without asking
+first, even for an obvious DRY win. `02-tech-stack-and-structure.md` updated to reflect that
+`primitives` now holds a real shared hook (it previously documented "none has yet").
+
+In `Popover.tsx`, `PopoverContent` resolves `side` via `useResolvedResponsiveValue(side, "bottom")`
+before handing the single concrete value to `PopoverPrimitive.Content` — Radix's own positioning
+needs one real string per render, not the responsive union type. Matched `Divider`'s own Storybook
+convention exactly: the Playground's `side` control stays a plain `select` (a `Responsive<T>` map has
+no single control shape Storybook can represent), with its description noting the responsive form
+exists; a new dedicated story, `ResponsiveSide` ("Responsive side (bottom on mobile, right from lg
+up)"), demonstrates the map form with every other control disabled, matching `Divider`'s own
+`ResponsiveOrientation` story precedent. Added to `Popover.mdx`'s Variants section and as a fourth
+Code-examples snippet. Two new unit tests mirror `Divider`'s own exact `matchMedia` test pattern:
+resolving to `base` by default (jsdom's stubbed `matchMedia` never matches), and updating live when a
+stubbed `matchMedia` change listener fires in both directions.
+
+Live-verified in a running Storybook instance, `ResponsiveSide` story: at 375px, the popover renders
+`data-side="bottom"`, below the trigger; resizing to 1280px (past `lg`, 1024px) switches it live to
+`data-side="right"`, beside the trigger, with no remount; resizing back down below 1024px switches it
+back to `bottom` — confirmed via both visual screenshots and direct DOM inspection at each width, not
+assumed from the code. Also confirmed rendering correctly embedded in the Docs page itself.
+
+Re-verified: `pnpm run lint` (components and primitives), `pnpm --filter primitives run build`,
+`pnpm --filter components run typecheck`/`build`, full Vitest `unit` (1355/1355, up from 1353 — two
+new regression tests) and `storybook` (472/472, up from 471 — the new story's own auto-generated
+smoke test) projects, and `check-component-bundle-size` (Popover: 1.54KB JS / 1.00KB CSS, negligible
+increase, still well within budget) all clean.
+
+**Status: final review pass complete, all findings and this feature addition fixed/built and
+re-verified — awaiting the user's own explicit Finalized confirmation.**

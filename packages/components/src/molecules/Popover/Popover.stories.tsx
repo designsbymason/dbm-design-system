@@ -8,7 +8,7 @@ import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";
 import { GearIcon } from "@dbm-design-system/icons";
 import { Popover } from "./Popover";
-import type { PopoverAlign, PopoverSide } from "./Popover.types";
+import type { PopoverAlign, PopoverContentProps, PopoverSide } from "./Popover.types";
 
 // Combines Popover's own root-level args (open/defaultOpen/onOpenChange/
 // modal) with Popover.Content's own args (side/align/etc.) in one
@@ -32,6 +32,12 @@ interface PlaygroundArgs {
   collisionPadding: number;
   hideArrow: boolean;
   showCloseButton: boolean;
+  onOpenAutoFocus: PopoverContentProps["onOpenAutoFocus"];
+  onCloseAutoFocus: PopoverContentProps["onCloseAutoFocus"];
+  onEscapeKeyDown: PopoverContentProps["onEscapeKeyDown"];
+  onPointerDownOutside: PopoverContentProps["onPointerDownOutside"];
+  onFocusOutside: PopoverContentProps["onFocusOutside"];
+  onInteractOutside: PopoverContentProps["onInteractOutside"];
 }
 
 const meta: Meta<PlaygroundArgs> = {
@@ -45,16 +51,23 @@ const meta: Meta<PlaygroundArgs> = {
     modal: {
       control: "boolean",
       description:
-        "Traps focus inside the content and disables outside pointer dismissal while open, matching Dialog's own modal behavior.",
+        "Traps focus inside the content and blocks interaction with the rest of the page while open. Doesn't block dismissal — outside click/Escape still close it either way, unlike Dialog's own modal (Popover has no Overlay/scrim to swallow that click).",
     },
     onOpenChange: {
       control: false,
       description: "Called whenever the open state changes.",
     },
     side: {
+      // A `select` of the single-value form — `Responsive<PopoverSide>` (a
+      // value, or a breakpoint-keyed map) has no single control shape
+      // Storybook can represent, so the Playground demonstrates the common
+      // single-value case; the responsive-map form gets its own dedicated
+      // static-reference story below instead (same reasoning as `Divider`'s
+      // own `orientation`).
       control: "select",
       options: ["top", "right", "bottom", "left"],
-      description: "Which side of the trigger the content renders on.",
+      description:
+        "Which side of the trigger the content renders on — a single value (shown here) or a mobile-first responsive map keyed by breakpoint (e.g. { base: 'bottom', lg: 'right' }) to switch axes deliberately at a chosen breakpoint.",
     },
     align: {
       control: "select",
@@ -85,6 +98,30 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description: "Shows a CloseButton in the content's own top-end corner.",
     },
+    onOpenAutoFocus: {
+      control: false,
+      description: "Called when focus moves into the content on open. Can be prevented.",
+    },
+    onCloseAutoFocus: {
+      control: false,
+      description: "Called when focus would return to the trigger on close. Can be prevented.",
+    },
+    onEscapeKeyDown: {
+      control: false,
+      description: "Called when Escape is pressed while open. Can be prevented.",
+    },
+    onPointerDownOutside: {
+      control: false,
+      description: "Called on a pointer-down outside the content. Can be prevented.",
+    },
+    onFocusOutside: {
+      control: false,
+      description: "Called when focus moves outside the content. Can be prevented.",
+    },
+    onInteractOutside: {
+      control: false,
+      description: "Called on any interaction outside the content. Can be prevented.",
+    },
   },
   args: {
     defaultOpen: false,
@@ -98,6 +135,12 @@ const meta: Meta<PlaygroundArgs> = {
     hideArrow: false,
     showCloseButton: false,
     onOpenChange: fn(),
+    onOpenAutoFocus: fn(),
+    onCloseAutoFocus: fn(),
+    onEscapeKeyDown: fn(),
+    onPointerDownOutside: fn(),
+    onFocusOutside: fn(),
+    onInteractOutside: fn(),
   },
   render: (args) => (
     <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-16)" }}>
@@ -114,6 +157,12 @@ const meta: Meta<PlaygroundArgs> = {
           collisionPadding={args.collisionPadding}
           hideArrow={args.hideArrow}
           showCloseButton={args.showCloseButton}
+          onOpenAutoFocus={args.onOpenAutoFocus}
+          onCloseAutoFocus={args.onCloseAutoFocus}
+          onEscapeKeyDown={args.onEscapeKeyDown}
+          onPointerDownOutside={args.onPointerDownOutside}
+          onFocusOutside={args.onFocusOutside}
+          onInteractOutside={args.onInteractOutside}
           aria-label="Example popover"
         >
           <Text size="sm">This is the popover&apos;s own content.</Text>
@@ -133,29 +182,50 @@ export const Playground: Story = {};
 export const WithArrowHidden: Story = {
   name: "With the arrow hidden",
   args: { hideArrow: true },
-  argTypes: { hideArrow: { control: false } },
 };
 
 export const WithCloseButton: Story = {
   name: "With an explicit close button",
   args: { showCloseButton: true },
-  argTypes: { showCloseButton: { control: false } },
 };
 
 export const Modal: Story = {
-  name: "Modal (traps focus, blocks outside pointer dismissal)",
+  name: "Modal (traps focus, blocks background interaction)",
   args: { modal: true, showCloseButton: true },
-  argTypes: { modal: { control: false }, showCloseButton: { control: false } },
 };
 
 export const AllSides: Story = {
   name: "All sides",
-  argTypes: { side: { control: false }, align: { control: false } },
+  argTypes: {
+    // `side` is hardcoded per-instance by the loop below (that's the whole
+    // point of this gallery) — `args.side` is never read, so a control for
+    // it would be a silent no-op.
+    side: { control: false },
+    // `open` is hardcoded `true` on every instance (see the comment in the
+    // render below) instead of driven by `args.defaultOpen`/`args.modal`,
+    // specifically to sidestep the multi-instance uncontrolled-open race —
+    // wiring these through would reintroduce the very bug this story works
+    // around, so their controls stay disabled here (though both are freely
+    // interactive on `Playground`, where only one instance exists).
+    defaultOpen: { control: false },
+    modal: { control: false },
+    onOpenChange: { control: false },
+  },
   render: (args) => (
+    // `repeat(auto-fit, minmax(...))`, not a fixed 2-column grid — found
+    // live at 375px mobile width: a fixed 2-column grid leaves each column
+    // narrower than an open popover's own rendered width, and Radix's
+    // collision avoidance only keeps content within the true viewport
+    // edges, not clear of a *sibling grid cell's* own trigger — so a
+    // repositioned popover overlapped the adjacent column's button instead
+    // of just avoiding the screen edge. Auto-fit collapses to a single
+    // column once two 180px-minimum columns plus the gap no longer fit,
+    // which removes the adjacency entirely rather than tuning gap/padding
+    // to paper over it at one specific width.
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(2, 1fr)",
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
         gap: "var(--dbm-space-16)",
         placeItems: "center",
         paddingBlock: "var(--dbm-space-16)",
@@ -181,7 +251,12 @@ export const AllSides: Story = {
           <Popover.Content
             side={side}
             align={args.align}
+            sideOffset={args.sideOffset}
+            alignOffset={args.alignOffset}
+            avoidCollisions={args.avoidCollisions}
+            collisionPadding={args.collisionPadding}
             hideArrow={args.hideArrow}
+            showCloseButton={args.showCloseButton}
             aria-label={`Popover on the ${side}`}
           >
             <Text size="sm">side=&quot;{side}&quot;</Text>
@@ -192,25 +267,60 @@ export const AllSides: Story = {
   ),
 };
 
-export const WithForm: Story = {
-  name: "With interactive form content",
+export const ResponsiveSide: Story = {
+  name: "Responsive side (bottom on mobile, right from lg up)",
   argTypes: {
+    defaultOpen: { control: false },
+    modal: { control: false },
+    onOpenChange: { control: false },
     side: { control: false },
     align: { control: false },
+    sideOffset: { control: false },
+    alignOffset: { control: false },
+    avoidCollisions: { control: false },
+    collisionPadding: { control: false },
+    hideArrow: { control: false },
     showCloseButton: { control: false },
   },
+  render: () => (
+    <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-16)" }}>
+      <Popover defaultOpen>
+        <Popover.Trigger asChild>
+          <Button>Resize the viewport</Button>
+        </Popover.Trigger>
+        <Popover.Content
+          side={{ base: "bottom", lg: "right" }}
+          aria-label="Responsive side example"
+        >
+          <Text size="sm">
+            side=&quot;bottom&quot; below <code>lg</code>, side=&quot;right&quot; from <code>lg</code>{" "}
+            up.
+          </Text>
+        </Popover.Content>
+      </Popover>
+    </div>
+  ),
+};
+
+export const WithForm: Story = {
+  name: "With interactive form content",
   args: { showCloseButton: true },
   render: function WithFormStory(args) {
     const [name, setName] = useState("");
     return (
       <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-16)" }}>
-        <Popover>
+        <Popover defaultOpen={args.defaultOpen} modal={args.modal} onOpenChange={args.onOpenChange}>
           <Popover.Trigger asChild>
             <IconButton icon={GearIcon} aria-label="Settings" />
           </Popover.Trigger>
           <Popover.Content
             side={args.side}
             align={args.align}
+            sideOffset={args.sideOffset}
+            alignOffset={args.alignOffset}
+            avoidCollisions={args.avoidCollisions}
+            collisionPadding={args.collisionPadding}
+            hideArrow={args.hideArrow}
             showCloseButton={args.showCloseButton}
             aria-label="Settings"
           >
@@ -233,13 +343,23 @@ export const WithForm: Story = {
 
 export const DisabledTrigger: Story = {
   name: "Disabled trigger",
-  render: () => (
+  render: (args) => (
     <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-16)" }}>
-      <Popover>
+      <Popover defaultOpen={args.defaultOpen} modal={args.modal} onOpenChange={args.onOpenChange}>
         <Popover.Trigger asChild>
           <Button disabled>Open popover</Button>
         </Popover.Trigger>
-        <Popover.Content aria-label="Example popover">
+        <Popover.Content
+          side={args.side}
+          align={args.align}
+          sideOffset={args.sideOffset}
+          alignOffset={args.alignOffset}
+          avoidCollisions={args.avoidCollisions}
+          collisionPadding={args.collisionPadding}
+          hideArrow={args.hideArrow}
+          showCloseButton={args.showCloseButton}
+          aria-label="Example popover"
+        >
           <Text size="sm">This is the popover&apos;s own content.</Text>
         </Popover.Content>
       </Popover>
@@ -278,13 +398,33 @@ export const ClickInteraction: Story = {
 // present alongside an open Popover — not a defect in this component.
 export const OutsideClickInteraction: Story = {
   name: "Click outside to dismiss (non-modal)",
-  render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", alignItems: "center", paddingBlock: "var(--dbm-space-16)" }}>
-      <Popover>
+  render: (args) => (
+    // `space-16` (not the `space-4` this used before threading `side`/
+    // `sideOffset`/etc. through as live args) — found live: with only a 4px
+    // gap, `side="bottom"`'s default-rendered content (portaled, so it
+    // contributes zero height to this flex column's own layout) visually
+    // overlapped "Outside element" entirely, putting the popover's own
+    // content on top in z-order — `document.elementFromPoint` at the
+    // button's own center hit the popover's text, not the button, meaning a
+    // real click could never reach it despite `data-testid` making it look
+    // reachable. `space-16` clears the default `sideOffset` (8) plus the
+    // content's own rendered height with room to spare.
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-16)", alignItems: "center", paddingBlock: "var(--dbm-space-16)" }}>
+      <Popover defaultOpen={args.defaultOpen} modal={args.modal} onOpenChange={args.onOpenChange}>
         <Popover.Trigger asChild>
           <Button>Open popover</Button>
         </Popover.Trigger>
-        <Popover.Content aria-label="Example popover">
+        <Popover.Content
+          side={args.side}
+          align={args.align}
+          sideOffset={args.sideOffset}
+          alignOffset={args.alignOffset}
+          avoidCollisions={args.avoidCollisions}
+          collisionPadding={args.collisionPadding}
+          hideArrow={args.hideArrow}
+          showCloseButton={args.showCloseButton}
+          aria-label="Example popover"
+        >
           <Text size="sm">This is the popover&apos;s own content.</Text>
         </Popover.Content>
       </Popover>

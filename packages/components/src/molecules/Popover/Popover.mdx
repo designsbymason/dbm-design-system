@@ -23,6 +23,12 @@ export const contentPropOrder = [
   "hideArrow",
   "showCloseButton",
   "container",
+  "onOpenAutoFocus",
+  "onCloseAutoFocus",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
   "aria-label",
   "aria-labelledby",
   "id",
@@ -77,7 +83,7 @@ attribute beyond what's listed here (e.g. `onFocus`, `disabled`) — passed stra
 ### Popover.Content properties
 
 The floating panel itself. Also accepts any other native `<div>` attribute beyond what's listed
-here (e.g. `onFocus`, `aria-label`) — passed straight through to the underlying content element.
+here (e.g. `onFocus`, `onMouseEnter`) — passed straight through to the underlying content element.
 
 <PropertiesTable of={PopoverContentStories} order={contentPropOrder} />
 
@@ -98,13 +104,17 @@ any other native `<button>` attribute beyond what's listed here.
 
 <Canvas of={PopoverStories.WithCloseButton} />
 
-### Modal (traps focus, blocks outside pointer dismissal)
+### Modal (traps focus, blocks background interaction)
 
 <Canvas of={PopoverStories.Modal} />
 
 ### All sides
 
 <Canvas of={PopoverStories.AllSides} />
+
+### Responsive side (bottom on mobile, right from lg up)
+
+<Canvas of={PopoverStories.ResponsiveSide} />
 
 ### With interactive form content
 
@@ -166,9 +176,12 @@ any other native `<button>` attribute beyond what's listed here.
   `aria-controls` kept in sync on the trigger automatically.
 - `Tab` moves focus into the content once open (auto-focus); `Escape` closes it and returns focus to
   the trigger, in both modal and non-modal mode.
-- Clicking outside the content, or a genuine loss of focus outside it, dismisses a non-modal popover
-  — a `modal` one blocks outside pointer interaction entirely (`pointer-events: none` on the rest of
-  the page) and traps `Tab` focus inside the content until it's dismissed.
+- Clicking outside the content, a genuine loss of focus outside it, or `Escape` dismisses the popover
+  the same way whether `modal` is set or not — Radix's `Popover` has no `Overlay`/scrim sub-part the
+  way `Dialog` does, so there's nothing to swallow that dismissal click. What `modal` actually adds:
+  the rest of the page becomes `aria-hidden` and gets `pointer-events: none`, so its own elements
+  can't be interacted with while the popover is open (a background button's own click handler won't
+  fire, live-verified), and `Tab` focus is trapped inside the content until it's dismissed.
 - A dev-mode console warning fires once per instance if `Popover.Content` has no `aria-label` or
   `aria-labelledby` — a `role="dialog"` element with no accessible name is invisible to screen
   reader users, and `@storybook/addon-a11y`'s own automated sweep enforces this across every story.
@@ -214,6 +227,14 @@ function Example() {
     </Popover>
   );
 }
+
+{/* A native <button> attribute, passed straight through */}
+<Popover.Trigger disabled>Open</Popover.Trigger>
+
+{/* Responsive side — bottom below lg, right from lg up */}
+<Popover.Content side={{ base: "bottom", lg: "right" }}>
+  <Text size="sm">Popover content</Text>
+</Popover.Content>
 ```
 
 ## Design tokens used

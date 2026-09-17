@@ -1,4 +1,8 @@
+import type * as PopoverPrimitive from "@radix-ui/react-popover";
+import type { Responsive } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+
+type PopoverPrimitiveContentProps = ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;
 
 export type PopoverSide = "top" | "right" | "bottom" | "left";
 export type PopoverAlign = "start" | "center" | "end";
@@ -21,15 +25,18 @@ export interface PopoverProps {
    */
   onOpenChange?: (open: boolean) => void;
   /**
-   * When `true`, focus is trapped inside the content while open, the rest
-   * of the page becomes `aria-hidden`, and clicking outside no longer
-   * dismisses it through pointer interaction alone (Escape and an explicit
-   * `Popover.Close` still work) — the same modal behavior `Dialog` uses.
-   * Reach for this when the popover's own content is the only thing the
-   * user should be able to interact with until they finish or dismiss it
-   * (e.g. a form); leave it `false` (the default) for a lighter-weight
-   * popover that coexists with the rest of the page, like a menu or an
-   * info card.
+   * When `true`, focus is trapped inside the content while open, and the
+   * rest of the page becomes `aria-hidden` with `pointer-events: none` —
+   * background elements can't be focused, clicked, or otherwise interacted
+   * with while it's open. This does **not** block dismissal: clicking
+   * outside, Escape, and an explicit `Popover.Close` all still close it
+   * either way — `Popover` has no `Overlay`/scrim sub-part the way `Dialog`
+   * does, so there's nothing to swallow that click. Reach for this when the
+   * popover's own content should be the only thing the user can interact
+   * with while it's open (e.g. a multi-field form, where a mistimed `Tab`
+   * or click shouldn't land on the page behind it); leave it `false` (the
+   * default) for a lighter-weight popover that coexists with the rest of
+   * the page, like a menu or an info card.
    * @default false
    */
   modal?: boolean;
@@ -69,10 +76,15 @@ export interface PopoverContentProps
   /**
    * Which side of the trigger the content renders on. Radix repositions it
    * automatically to stay within the viewport if the requested side would
-   * overflow.
+   * overflow — but only within the same axis (`left`↔`right`,
+   * `top`↔`bottom`), never across them, so a `side="right"` popover with no
+   * horizontal room left/right of the trigger shrinks to fit rather than
+   * flipping to `top`/`bottom` on its own. Pass a mobile-first responsive
+   * map instead of a single value (e.g. `{ base: "bottom", lg: "right" }`)
+   * to switch axes deliberately at a chosen breakpoint.
    * @default 'bottom'
    */
-  side?: PopoverSide;
+  side?: Responsive<PopoverSide>;
   /**
    * Alignment along the chosen `side` — e.g. `side="bottom"` with
    * `align="start"` left-aligns the content under the trigger instead of
@@ -127,6 +139,45 @@ export interface PopoverContentProps
    * requirement. Leave unset for the common case.
    */
   container?: HTMLElement | null;
+  /**
+   * Called when focus moves into the content on open. Call
+   * `event.preventDefault()` inside to keep focus wherever it already is
+   * (e.g. the trigger) instead of the default auto-focus onto the
+   * content's first focusable element.
+   */
+  onOpenAutoFocus?: PopoverPrimitiveContentProps["onOpenAutoFocus"];
+  /**
+   * Called when focus would return to the trigger on close. Call
+   * `event.preventDefault()` inside to send focus elsewhere instead of the
+   * default return-to-trigger behavior.
+   */
+  onCloseAutoFocus?: PopoverPrimitiveContentProps["onCloseAutoFocus"];
+  /**
+   * Called when Escape is pressed while open. Call `event.preventDefault()`
+   * inside to keep the popover open instead of the default dismissal (e.g.
+   * while a nested confirmation inside it is showing).
+   */
+  onEscapeKeyDown?: PopoverPrimitiveContentProps["onEscapeKeyDown"];
+  /**
+   * Called on a pointer-down outside the content. Call
+   * `event.preventDefault()` inside to keep the popover open instead of the
+   * default dismissal (e.g. to ignore a click on a specific portaled
+   * element, like a toast, that isn't really "outside" for this purpose).
+   */
+  onPointerDownOutside?: PopoverPrimitiveContentProps["onPointerDownOutside"];
+  /**
+   * Called when focus moves outside the content. Call
+   * `event.preventDefault()` inside to keep the popover open instead of the
+   * default dismissal.
+   */
+  onFocusOutside?: PopoverPrimitiveContentProps["onFocusOutside"];
+  /**
+   * Called on any interaction outside the content — a pointer-down or a
+   * focus move. Call `event.preventDefault()` inside to keep the popover
+   * open instead of the default dismissal. Fires alongside
+   * `onPointerDownOutside`/`onFocusOutside`, not instead of them.
+   */
+  onInteractOutside?: PopoverPrimitiveContentProps["onInteractOutside"];
   /**
    * Accessible name for this `role="dialog"` element — required unless
    * `aria-labelledby` points at an already-visible heading inside the

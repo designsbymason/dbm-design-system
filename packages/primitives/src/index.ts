@@ -1,3 +1,4 @@
+export * from "./hooks/useResolvedResponsiveValue";
 export * from "./utils/cx";
 export * from "./utils/mergeRefs";
 export * from "./utils/responsiveStyle";

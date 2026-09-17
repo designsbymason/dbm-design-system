@@ -21,7 +21,7 @@ const meta: Meta<typeof Popover.Content> = {
       control: "select",
       options: ["top", "right", "bottom", "left"],
       description:
-        "Which side of the trigger the content renders on. Radix repositions it automatically to stay within the viewport if the requested side would overflow.",
+        "Which side of the trigger the content renders on — a single value, or a mobile-first responsive map keyed by breakpoint (e.g. { base: 'bottom', lg: 'right' }). Radix repositions it automatically to stay within the viewport, but only within the same axis; a responsive map lets you switch axes deliberately at a chosen breakpoint.",
     },
     align: {
       control: "select",
@@ -59,6 +59,36 @@ const meta: Meta<typeof Popover.Content> = {
       control: false,
       description:
         "Renders the content into a different DOM node than document.body (Radix's own default).",
+    },
+    onOpenAutoFocus: {
+      control: false,
+      description:
+        "Called when focus moves into the content on open. Call event.preventDefault() inside to keep focus wherever it already is instead of the default auto-focus.",
+    },
+    onCloseAutoFocus: {
+      control: false,
+      description:
+        "Called when focus would return to the trigger on close. Call event.preventDefault() inside to send focus elsewhere instead.",
+    },
+    onEscapeKeyDown: {
+      control: false,
+      description:
+        "Called when Escape is pressed while open. Call event.preventDefault() inside to keep the popover open instead of the default dismissal.",
+    },
+    onPointerDownOutside: {
+      control: false,
+      description:
+        "Called on a pointer-down outside the content. Call event.preventDefault() inside to keep the popover open instead of the default dismissal.",
+    },
+    onFocusOutside: {
+      control: false,
+      description:
+        "Called when focus moves outside the content. Call event.preventDefault() inside to keep the popover open instead of the default dismissal.",
+    },
+    onInteractOutside: {
+      control: false,
+      description:
+        "Called on any interaction outside the content (a pointer-down or a focus move). Call event.preventDefault() inside to keep the popover open instead of the default dismissal.",
     },
     "aria-label": {
       control: "text",
