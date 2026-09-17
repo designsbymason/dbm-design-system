@@ -1,0 +1,9 @@
+{
+  "popover": {
+    "max-width": {
+      "$type": "dimension",
+      "$value": "24rem",
+      "$description": "New token (2026-09-16), added for Popover's own floating content panel — richer, more interactive content than Tooltip's short hint text, so a wider cap than tooltip.max-width (20rem) reads better without forcing most real content (a short form, a card) to wrap awkwardly."
+    }
+  }
+}

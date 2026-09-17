@@ -1,0 +1,92 @@
+/* The default (non-`asChild`) trigger — a minimal, unstyled-but-clean
+   native <button> reset, not real chrome of its own. Callers are expected
+   to reach for `asChild` with one of this system's own interactive
+   components (`Button`, `IconButton`) for anything visually real; this
+   just keeps the fallback from looking like a raw, unstyled browser
+   button when someone hasn't. */
+.trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+}
+
+/* The floating panel — same "elevated surface" chrome as Select's own
+   dropdown `.content` (background/border/radius/shadow), since both are a
+   token-driven, portaled panel floating over the page; font-family is set
+   explicitly for the same reason Select's own comment documents (a
+   `Portal` renders outside this component's own tree, so it doesn't pick
+   up page-level font styling the way an inline element incidentally
+   would). Shadows are a fixed light/dark primitive pair, not a reactive
+   semantic token (see guidelines/03-token-system-spec.md), selected via
+   the same `[data-theme$="-dark"]` attribute-selector pattern used
+   elsewhere in this codebase. */
+.content {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  font-family: var(--dbm-font-family-primary);
+  max-width: var(--dbm-popover-max-width);
+  padding: var(--dbm-space-4);
+  position: relative;
+  will-change: transform, opacity;
+  z-index: var(--dbm-z-index-popover);
+}
+
+[data-theme$="-dark"] .content {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.content[data-state="open"] {
+  animation: fadeIn var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-state="closed"] {
+  animation: fadeOut var(--dbm-motion-duration-fast)
+    var(--dbm-motion-easing-standard);
+}
+
+.arrow {
+  fill: var(--dbm-bg-surface);
+}
+
+/* A visible border on the panel itself has no matching stroke on the
+   plain-fill Radix arrow triangle — an accepted, purely cosmetic gap
+   (the same one Tooltip's own borderless arrow has none of, since Tooltip
+   has no border to begin with); not worth a second layered SVG for a 1px
+   seam most users never consciously notice. */
+
+.closeButton {
+  inset-block-start: var(--dbm-space-2);
+  inset-inline-end: var(--dbm-space-2);
+  position: absolute;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
+}

@@ -1,0 +1,262 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Tooltip } from "../../atoms/Tooltip";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Popover } from "./Popover";
+import * as PopoverStories from "./Popover.stories";
+import * as PopoverTriggerStories from "./PopoverTrigger.stories";
+import * as PopoverContentStories from "./PopoverContent.stories";
+import * as PopoverCloseStories from "./PopoverClose.stories";
+
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "modal"];
+export const triggerPropOrder = ["asChild", "children", "className", "style", "data-testid"];
+export const contentPropOrder = [
+  "children",
+  "side",
+  "align",
+  "sideOffset",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "hideArrow",
+  "showCloseButton",
+  "container",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const closePropOrder = ["asChild", "children", "className", "style", "data-testid"];
+
+<Meta of={PopoverStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Popover" tier="Molecule" />
+
+A floating panel of arbitrary, fully-interactive content anchored to a trigger, built on Radix
+Popover. Unlike `Tooltip` (a short, non-interactive hint), a popover's own content stays open until
+the user dismisses it — outside click, Escape, or an explicit `Popover.Close` — not just while
+hovering. A compound component: compose `Popover.Trigger` and `Popover.Content` inside `Popover`
+itself.
+
+### Import
+
+```tsx
+import { Popover } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={PopoverStories.Playground} />
+
+</div>
+<PlaygroundControls of={PopoverStories.Playground} order={propOrder} />
+
+## Properties
+
+`Popover` itself renders no DOM element of its own — it's a plain context provider around
+`Popover.Trigger`/`Popover.Content` (matching Radix's own `Popover.Root`), so it has no
+`className`/`style`/`id`/`data-testid`/`ref` of its own to accept.
+
+<PropertiesTable of={PopoverStories} order={propOrder} />
+
+### Popover.Trigger properties
+
+The element that opens/closes the popover on click. Also accepts any other native `<button>`
+attribute beyond what's listed here (e.g. `onFocus`, `disabled`) — passed straight through.
+
+<PropertiesTable of={PopoverTriggerStories} order={triggerPropOrder} />
+
+### Popover.Content properties
+
+The floating panel itself. Also accepts any other native `<div>` attribute beyond what's listed
+here (e.g. `onFocus`, `aria-label`) — passed straight through to the underlying content element.
+
+<PropertiesTable of={PopoverContentStories} order={contentPropOrder} />
+
+### Popover.Close properties
+
+An element that closes the popover on click, placed anywhere inside `Popover.Content`. Also accepts
+any other native `<button>` attribute beyond what's listed here.
+
+<PropertiesTable of={PopoverCloseStories} order={closePropOrder} />
+
+## Variants
+
+### With the arrow hidden
+
+<Canvas of={PopoverStories.WithArrowHidden} />
+
+### With an explicit close button
+
+<Canvas of={PopoverStories.WithCloseButton} />
+
+### Modal (traps focus, blocks outside pointer dismissal)
+
+<Canvas of={PopoverStories.Modal} />
+
+### All sides
+
+<Canvas of={PopoverStories.AllSides} />
+
+### With interactive form content
+
+<Canvas of={PopoverStories.WithForm} />
+
+### Disabled trigger
+
+<Canvas of={PopoverStories.DisabledTrigger} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Reach for `Popover` when the content needs to stay open and be genuinely interactive (a form, a
+  list of actions, a longer read) — reach for `Tooltip` instead for a short, non-interactive hint
+  that only needs to be visible while hovering/focused.
+- Set `modal` when the popover's own content should be the only thing the user can interact with
+  until they finish or dismiss it (e.g. a form) — leave it unset for a lighter-weight popover that
+  coexists with the rest of the page (a menu, an info card).
+- Pass `asChild` on `Popover.Trigger` with one of this system's own interactive components
+  (`Button`, `IconButton`) as the visible trigger — the built-in fallback is deliberately unstyled.
+- Turn on `showCloseButton` for a popover substantial enough (a form, a longer read) that a visible
+  dismiss affordance genuinely helps, not for a small, quick info bubble relying on outside-click/
+  Escape alone.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Popover` for a short, non-interactive hint shown on hover — that's exactly what
+  `Tooltip` already covers, with the right ARIA role and timing behavior for that case.
+- Don't nest a `Popover` trigger inside another `Popover`'s own content expecting independent
+  positioning without testing it — Radix's own dismissable-layer stack coordinates nested/stacked
+  overlays, and the interaction gets more involved the deeper it goes.
+- Don't rely on `defaultOpen` to pre-open more than one `Popover` at once in the same view — Radix's
+  own focus-management timing for multiple *simultaneously* uncontrolled-open instances isn't
+  reliable (see the `AllSides` story's own code comment); open additional popovers one at a time
+  from real user interaction instead, which works correctly.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep popover content focused — a single form, a short list of actions, one card's worth of
+  information. A popover that needs its own scrolling or multiple sections is usually a sign the
+  content belongs in a `Dialog` instead.
+- Set `aria-label` (or `aria-labelledby`) on `Popover.Content` when it has no visible heading of its
+  own, so assistive tech announces something meaningful when it opens.
+- Match `side`/`align` to where the trigger actually sits in the layout — `avoidCollisions` (on by
+  default) repositions automatically near a viewport edge, but a sensible starting placement still
+  reads better than relying on the fallback alone.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard and ARIA state come from Radix's own popover primitive">
+
+- Renders `role="dialog"` on the content, with `aria-haspopup="dialog"`/`aria-expanded`/
+  `aria-controls` kept in sync on the trigger automatically.
+- `Tab` moves focus into the content once open (auto-focus); `Escape` closes it and returns focus to
+  the trigger, in both modal and non-modal mode.
+- Clicking outside the content, or a genuine loss of focus outside it, dismisses a non-modal popover
+  — a `modal` one blocks outside pointer interaction entirely (`pointer-events: none` on the rest of
+  the page) and traps `Tab` focus inside the content until it's dismissed.
+- A dev-mode console warning fires once per instance if `Popover.Content` has no `aria-label` or
+  `aria-labelledby` — a `role="dialog"` element with no accessible name is invisible to screen
+  reader users, and `@storybook/addon-a11y`'s own automated sweep enforces this across every story.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Popover>
+  <Popover.Trigger asChild>
+    <Button>Open</Button>
+  </Popover.Trigger>
+  <Popover.Content>
+    <Text size="sm">Popover content</Text>
+  </Popover.Content>
+</Popover>
+
+{/* Modal, with an explicit close button */}
+<Popover modal>
+  <Popover.Trigger asChild>
+    <IconButton icon={GearIcon} aria-label="Settings" />
+  </Popover.Trigger>
+  <Popover.Content showCloseButton side="bottom" align="end">
+    <SettingsForm />
+  </Popover.Content>
+</Popover>
+
+{/* Controlled open state */}
+function Example() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <Button>Open</Button>
+      </Popover.Trigger>
+      <Popover.Content>
+        <Text size="sm">Popover content</Text>
+        <Popover.Close asChild>
+          <Button variant="tertiary" onClick={() => setOpen(false)}>Done</Button>
+        </Popover.Close>
+      </Popover.Content>
+    </Popover>
+  );
+}
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="content background; also the arrow's own fill" />
+<TokenRow token="border.default" usage="content border" />
+<TokenRow token="border-width.1" usage="content border width" />
+<TokenRow token="radius.md" usage="content corner radius" />
+<TokenRow token="shadow.light.md / shadow.dark.md" usage="content elevation" />
+<TokenRow token="font-family.primary" usage="content typography — set explicitly since the content renders in a Portal outside this component's own tree" />
+<TokenRow token="popover.max-width" usage="content max width" />
+<TokenRow token="space.4" usage="content padding" />
+<TokenRow token="space.2" usage="close button offset from the content's own top-end corner" />
+<TokenRow token="z-index.popover" usage="content stacking order" />
+<TokenRow token="motion.duration.fast" usage="open/close fade transition" />
+<TokenRow token="motion.easing.emphasized" usage="open fade-in transition" />
+<TokenRow token="motion.easing.standard" usage="close fade-out transition" />
+<TokenRow token="opacity.0 / opacity.100" usage="open/close fade transition endpoints" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Tooltip"
+  description="A short, non-interactive hint shown on hover/focus — reach for this instead when content doesn't need to stay open or be interactive"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="A short hint">
+    <button type="button">Hover me</button>
+  </Tooltip>
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="The most common asChild trigger for a Popover"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button>Open</Button>
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="Pairs with interactive form content placed inside a Popover's own content"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Display name</FieldLabel>
+</RelatedCard>
+</div>
