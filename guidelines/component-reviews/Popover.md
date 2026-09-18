@@ -87,7 +87,10 @@ feature with a warning label — `PopoverAnchorProps` and the sub-part itself we
 prominently in `Popover.tsx`'s own top-level JSDoc (not just here) so a future session doesn't
 re-discover this from scratch. **Revisit once a newer Radix release fixes it** — re-add `Anchor`,
 its own hidden sub-part stories file, and its own Properties subsection at that point, following the
-exact pattern the other three sub-parts already establish.
+exact pattern the other three sub-parts already establish. Recorded as its own decision record,
+[ADR-0017](adr/0017-popover-omits-anchor-sub-part-pending-upstream-fix.md) — added 2026-09-17, during
+a guidelines audit, once this qualified as a genuine fork-in-the-road decision that had only ever
+been narrated inline rather than given its own immutable entry.
 
 ## A real, but environment-specific, test-runner flake — not a component defect
 

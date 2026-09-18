@@ -41,7 +41,8 @@ import type {
  * separately-provided `Popover.Anchor` (a render-vs-effect timing issue in
  * Radix's own `hasCustomAnchor` mechanism), not an `asChild`/Slot issue on
  * either side. Revisit once a newer Radix release fixes this — see
- * `guidelines/component-reviews/Popover.md` for the full investigation.
+ * `guidelines/component-reviews/Popover.md` for the full investigation and
+ * `guidelines/adr/0017` for the decision record.
  *
  * @example
  * ```tsx
