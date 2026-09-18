@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Accordion } from "./Accordion";
+import styles from "./Accordion.module.css";
 
 function BasicItems() {
   return (
@@ -380,6 +381,43 @@ describe("Accordion", () => {
       </Accordion>,
     );
     expect(ref).toHaveBeenCalled();
+  });
+
+  it("defaults to the bordered variant", () => {
+    const { container } = render(
+      <Accordion>
+        <BasicItems />
+      </Accordion>,
+    );
+    expect(container.firstElementChild).not.toHaveClass(styles.ghost ?? "");
+  });
+
+  it("applies the ghost variant's own class, removing the outer border", () => {
+    const { container } = render(
+      <Accordion variant="ghost">
+        <BasicItems />
+      </Accordion>,
+    );
+    expect(container.firstElementChild).toHaveClass(styles.ghost ?? "");
+  });
+
+  const triggerClassForSize = {
+    xs: styles.triggerXs,
+    sm: styles.triggerSm,
+    md: styles.triggerMd,
+    lg: styles.triggerLg,
+    xl: styles.triggerXl,
+  } as const;
+
+  it.each(["xs", "sm", "md", "lg", "xl"] as const)("renders correctly at size=\"%s\"", (size) => {
+    render(
+      <Accordion size={size} defaultValue="shipping">
+        <BasicItems />
+      </Accordion>,
+    );
+    const trigger = screen.getByRole("button", { name: "Shipping" });
+    expect(trigger).toHaveClass(triggerClassForSize[size] ?? "");
+    expect(screen.getByText("Shipping content")).toBeInTheDocument();
   });
 
   it("passes id, className, style, data-testid, and other native attributes through to the root element", () => {

@@ -10,12 +10,15 @@ import type {
   AccordionHeadingLevel,
   AccordionItemProps,
   AccordionProps,
+  AccordionSize,
   AccordionTriggerProps,
 } from "./Accordion.types";
+import type { IconSize } from "../../atoms/Icon";
 
 type AccordionPrimitiveRootProps = ComponentPropsWithoutRef<typeof AccordionPrimitive.Root>;
 
 const AccordionHeadingLevelContext = createContext<AccordionHeadingLevel>(3);
+const AccordionSizeContext = createContext<AccordionSize>("md");
 
 const elementForHeadingLevel: Record<AccordionHeadingLevel, string> = {
   1: "h1",
@@ -24,6 +27,35 @@ const elementForHeadingLevel: Record<AccordionHeadingLevel, string> = {
   4: "h4",
   5: "h5",
   6: "h6",
+};
+
+// The disclosure icon renders one size step down from the accordion's own
+// `size` at the small end, matching the established step-down convention
+// elsewhere in this system (`Input`'s/`Select`'s own clear-icon sizing) —
+// `Icon`'s scale (xs-3xl) is wider than Accordion's own (xs-xl), so this
+// maps onto it rather than reusing the same step names 1:1.
+const iconSizeForAccordionSize: Record<AccordionSize, IconSize> = {
+  xs: "xs",
+  sm: "xs",
+  md: "sm",
+  lg: "md",
+  xl: "lg",
+};
+
+const triggerSizeClass: Record<AccordionSize, string | undefined> = {
+  xs: styles.triggerXs,
+  sm: styles.triggerSm,
+  md: styles.triggerMd,
+  lg: styles.triggerLg,
+  xl: styles.triggerXl,
+};
+
+const contentSizeClass: Record<AccordionSize, string | undefined> = {
+  xs: styles.contentInnerXs,
+  sm: styles.contentInnerSm,
+  md: styles.contentInnerMd,
+  lg: styles.contentInnerLg,
+  xl: styles.contentInnerXl,
 };
 
 /**
@@ -75,6 +107,8 @@ const AccordionRoot = forwardRef<HTMLDivElement, AccordionProps>((props, ref) =>
   const {
     children,
     disabled = false,
+    variant = "bordered",
+    size = "md",
     orientation = "vertical",
     dir,
     headingLevel = 3,
@@ -146,10 +180,10 @@ const AccordionRoot = forwardRef<HTMLDivElement, AccordionProps>((props, ref) =>
       id={id}
       style={style}
       data-testid={dataTestId}
-      className={cx(styles.root, className)}
+      className={cx(styles.root, variant === "ghost" && styles.ghost, className)}
     >
       <AccordionHeadingLevelContext.Provider value={headingLevel}>
-        {children}
+        <AccordionSizeContext.Provider value={size}>{children}</AccordionSizeContext.Provider>
       </AccordionHeadingLevelContext.Provider>
     </AccordionPrimitive.Root>
   );
@@ -186,6 +220,7 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
     const { asChild = false, icon = CaretDownIcon, hideIcon = false, className, children, ...props } = triggerProps;
     const headingLevel = useContext(AccordionHeadingLevelContext);
     const HeadingTag = elementForHeadingLevel[headingLevel] as ElementType;
+    const size = useContext(AccordionSizeContext);
 
     const hasWarnedIconIgnoredWithAsChildRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
@@ -208,14 +243,16 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
             {...props}
             ref={ref}
             asChild={asChild}
-            className={asChild ? className : cx(styles.trigger, className)}
+            className={asChild ? className : cx(styles.trigger, triggerSizeClass[size], className)}
           >
             {asChild ? (
               children
             ) : (
               <>
                 <span className={styles.triggerLabel}>{children}</span>
-                {!hideIcon && <Icon icon={icon} size="sm" className={styles.triggerIcon} />}
+                {!hideIcon && (
+                  <Icon icon={icon} size={iconSizeForAccordionSize[size]} className={styles.triggerIcon} />
+                )}
               </>
             )}
           </AccordionPrimitive.Trigger>
@@ -228,11 +265,14 @@ AccordionTrigger.displayName = "Accordion.Trigger";
 
 /** The panel revealed/hidden as its item's own open state toggles. */
 const AccordionContent = forwardRef<HTMLDivElement, AccordionContentProps>(
-  ({ className, children, ...props }, ref) => (
-    <AccordionPrimitive.Content {...props} ref={ref} className={cx(styles.content, className)}>
-      <div className={styles.contentInner}>{children}</div>
-    </AccordionPrimitive.Content>
-  ),
+  ({ className, children, ...props }, ref) => {
+    const size = useContext(AccordionSizeContext);
+    return (
+      <AccordionPrimitive.Content {...props} ref={ref} className={cx(styles.content, className)}>
+        <div className={cx(styles.contentInner, contentSizeClass[size])}>{children}</div>
+      </AccordionPrimitive.Content>
+    );
+  },
 );
 AccordionContent.displayName = "Accordion.Content";
 

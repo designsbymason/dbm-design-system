@@ -6,7 +6,7 @@ import { RocketLaunchIcon } from "@dbm-design-system/icons";
 import { Icon } from "../../atoms/Icon";
 import { Text } from "../../atoms/Text";
 import { Accordion } from "./Accordion";
-import type { AccordionHeadingLevel, AccordionOrientation } from "./Accordion.types";
+import type { AccordionHeadingLevel, AccordionOrientation, AccordionSize, AccordionVariant } from "./Accordion.types";
 
 // `Accordion`'s own root props are a discriminated union keyed by `type`
 // (`value`/`defaultValue`/`onValueChange` are a plain `string` under
@@ -27,6 +27,8 @@ import type { AccordionHeadingLevel, AccordionOrientation } from "./Accordion.ty
 interface PlaygroundArgs {
   type: "single" | "multiple";
   onValueChange: (value: string | string[]) => void;
+  variant: AccordionVariant;
+  size: AccordionSize;
   disabled: boolean;
   orientation: AccordionOrientation;
   dir: "ltr" | "rtl";
@@ -93,6 +95,17 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description: "Called with the newly-open item's value (or values, under type=\"multiple\") whenever it changes.",
     },
+    variant: {
+      control: "select",
+      options: ["bordered", "ghost"],
+      description:
+        "The group's own visual treatment — a self-contained bordered group, or a borderless treatment for embedding inside an already-bordered container (e.g. a Card).",
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "Trigger padding/typography and the disclosure icon's own size.",
+    },
     collapsible: {
       control: "boolean",
       description:
@@ -140,6 +153,8 @@ const meta: Meta<PlaygroundArgs> = {
   },
   args: {
     type: "single",
+    variant: "bordered",
+    size: "md",
     disabled: false,
     orientation: "vertical",
     headingLevel: 3,
@@ -148,6 +163,8 @@ const meta: Meta<PlaygroundArgs> = {
   },
   render: (args) => {
     const commonProps = {
+      variant: args.variant,
+      size: args.size,
       disabled: args.disabled,
       orientation: args.orientation,
       headingLevel: args.headingLevel,
@@ -179,6 +196,8 @@ export const Multiple: Story = {
   name: "Multiple items open at once (type=\"multiple\")",
   argTypes: {
     type: { control: false },
+    variant: { control: false },
+    size: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -198,6 +217,8 @@ export const DisabledItem: Story = {
   name: "One item disabled",
   argTypes: {
     type: { control: false },
+    variant: { control: false },
+    size: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -228,6 +249,8 @@ export const CustomIcon: Story = {
   name: "Custom disclosure icon",
   argTypes: {
     type: { control: false },
+    variant: { control: false },
+    size: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -252,6 +275,8 @@ export const AsChildTrigger: Story = {
   name: "Fully custom trigger row (asChild)",
   argTypes: {
     type: { control: false },
+    variant: { control: false },
+    size: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -294,10 +319,94 @@ export const AsChildTrigger: Story = {
   ),
 };
 
+export const Ghost: Story = {
+  name: "Ghost variant (borderless, for embedding in a Card)",
+  argTypes: {
+    type: { control: false },
+    variant: { control: false },
+    size: { control: false },
+    disabled: { control: false },
+    orientation: { control: false },
+    headingLevel: { control: false },
+    collapsible: { control: false },
+    defaultValue: { control: false },
+  },
+  render: () => (
+    // A real `Card`-shaped wrapper isn't built yet (see 04-component-
+    // inventory.md), so this fakes one — deliberately with its own title
+    // and generous padding (`space-4`, distinct from the accordion's own
+    // `radius-md`) so the wrapper's own border reads as a *separate*
+    // container the ghost accordion sits inside, not as the accordion's
+    // own (removed) border redrawn in the same place. Found live,
+    // user-reported: an earlier version of this demo used only `space-2`
+    // padding with no title, which put the wrapper's edge close enough to
+    // the accordion that the two were visually indistinguishable — the
+    // demo looked identical to the default `variant="bordered"` story.
+    <div
+      style={{
+        ...demoContainerStyle,
+        background: "var(--dbm-bg-surface)",
+        border: `var(--dbm-border-width-1) solid var(--dbm-border-default)`,
+        borderRadius: "var(--dbm-radius-lg)",
+        padding: "var(--dbm-space-4)",
+      }}
+    >
+      <Text size="md" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-3)" }}>
+        Shipping &amp; returns
+      </Text>
+      <Accordion variant="ghost" defaultValue="shipping">
+        <DemoItems />
+      </Accordion>
+    </div>
+  ),
+};
+
+export const Sizes: Story = {
+  name: "All sizes",
+  argTypes: {
+    type: { control: false },
+    variant: { control: false },
+    size: { control: false },
+    disabled: { control: false },
+    orientation: { control: false },
+    headingLevel: { control: false },
+    collapsible: { control: false },
+    defaultValue: { control: false },
+  },
+  render: () => (
+    // Closed by default, deliberately — opening all five simultaneously
+    // would create five `role="region"` landmarks sharing the identical
+    // accessible name ("How long does shipping take?"), a real
+    // `landmark-unique` a11y violation found live via this exact story
+    // (`@storybook/addon-vitest`'s own a11y check). The padding/typography
+    // difference this gallery exists to show is already fully visible on
+    // the closed trigger itself.
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <div key={size}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
+            size=&quot;{size}&quot;
+          </Text>
+          <Accordion size={size}>
+            <Accordion.Item value="shipping">
+              <Accordion.Trigger>How long does shipping take?</Accordion.Trigger>
+              <Accordion.Content>
+                <Text size="sm">Standard shipping takes 3-5 business days.</Text>
+              </Accordion.Content>
+            </Accordion.Item>
+          </Accordion>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 export const Controlled: Story = {
   name: "Controlled open item",
   argTypes: {
     type: { control: false },
+    variant: { control: false },
+    size: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -321,6 +430,8 @@ export const KeyboardInteraction: Story = {
   name: "Click to open, arrow keys to move between triggers",
   argTypes: {
     type: { control: false },
+    variant: { control: false },
+    size: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },

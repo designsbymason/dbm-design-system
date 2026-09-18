@@ -17,6 +17,24 @@ export type AccordionHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
  */
 export type AccordionOrientation = "horizontal" | "vertical";
 
+/**
+ * `"bordered"` (the default) draws an outer border and rounded corners
+ * around the whole group, with a hairline divider between items — a
+ * self-contained group meant to stand on its own. `"ghost"` removes the
+ * outer border/corners (keeping the between-item dividers) for embedding
+ * inside a container that already provides its own boundary, e.g. a `Card`.
+ */
+export type AccordionVariant = "bordered" | "ghost";
+
+/**
+ * Trigger padding/typography and the disclosure icon's own size, on the
+ * standard 5-step scale (`05-component-api-conventions.md` §2) — never a
+ * component-specific scale. `Accordion.Content`'s own inline padding tracks
+ * the same step, so its text stays aligned under the trigger's own label at
+ * every size.
+ */
+export type AccordionSize = "xs" | "sm" | "md" | "lg" | "xl";
+
 interface AccordionSharedProps
   extends Omit<
     ComponentPropsWithoutRef<"div">,
@@ -26,6 +44,18 @@ interface AccordionSharedProps
   children: ReactNode;
   /** Disables every item in the accordion at once — each item still accepts its own additional `disabled` on top of this. */
   disabled?: boolean;
+  /**
+   * The group's own visual treatment — a self-contained bordered group, or
+   * a borderless treatment for embedding inside an already-bordered
+   * container.
+   * @default 'bordered'
+   */
+  variant?: AccordionVariant;
+  /**
+   * Trigger padding/typography and the disclosure icon's own size.
+   * @default 'md'
+   */
+  size?: AccordionSize;
   /**
    * Which arrow-key pair moves roving focus between triggers: `Up`/`Down`
    * when `"vertical"`, `Left`/`Right` when `"horizontal"`.

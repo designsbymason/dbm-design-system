@@ -300,4 +300,62 @@ gzipped, still well within budget. Live-verified in a running Storybook instance
 tables, and the disabled-item arrow-key skip was independently confirmed via direct DOM inspection
 of a live story, not just the unit test.
 
-**Not yet Finalized** — per the standing rule, that declaration is the user's to make.
+## Feature-completeness gaps built (2026-09-18, at explicit direction)
+
+The two gaps flagged (not built) in the final review pass above — implemented once confirmed:
+
+- **`variant?: "bordered" | "ghost"` (default `"bordered"`)** — `"bordered"` is the pre-existing
+  shipped look (outer border/radius, unchanged); `"ghost"` removes the outer border/radius only,
+  keeping the between-item dividers, for embedding inside an already-bordered container (a `Card`).
+  A single `.root.ghost` CSS class, no React Context needed (unlike `size` below) — variant only
+  affects the root's own boundary, styled entirely via descendant selectors already scoped under
+  `.root`.
+- **`size?: "xs" | "sm" | "md" | "lg" | "xl"` (default `"md"`)** — the standard 5-step scale
+  (`05-component-api-conventions.md` §2), never a component-specific one. Drives trigger padding/
+  font-size/label-icon gap, the disclosure icon's own size (via `Icon`'s existing scale, stepped
+  down one notch at the small end — same convention as `Input`'s/`Select`'s own clear-icon sizing),
+  and `Accordion.Content`'s own inline padding (tracking the trigger's padding at the same step, so
+  panel text stays aligned under the trigger's label). Propagated via a new `AccordionSizeContext`,
+  the same pattern already established for `headingLevel`. `md` is byte-identical to the
+  pre-existing shipped default (`space-4`/`font-size-base`/`space-3` gap/`icon size="sm"`) — zero
+  visual change for any existing consumer.
+
+Both are purely additive on top of an unreviewed (not-yet-Finalized) component, so there's no
+finalization-status question here — this is still first-pass build work, not a post-Finalization
+reopening.
+
+**One real bug found and fixed while building the `Sizes` gallery story, not in the component
+itself:** rendering all five size-comparison instances pre-opened (`defaultValue="shipping"` on
+each) created five simultaneous `role="region"` landmarks sharing the identical accessible name
+("How long does shipping take?") — a genuine `landmark-unique` a11y violation, caught by
+`@storybook/addon-vitest`'s own a11y check on this exact story, not assumed. Fixed by rendering the
+gallery closed by default instead (the padding/typography difference this story exists to show is
+already fully visible on the closed trigger) — not a component defect, purely a story-authoring
+fix, but worth recording since it's the kind of gallery-of-many-instances mistake other future
+multi-instance stories should watch for.
+
+Re-verified after both additions: `tsc --noEmit` (both tsconfigs), `eslint --max-warnings 0`, the
+full Vitest `unit` project (1395 tests) and `storybook` project (485 tests, including the two new
+`Ghost`/`Sizes` stories), a real `tsup` build, and `storybook build` — all clean. Per-component
+bundle size: 1.78KB JS / 0.90KB CSS gzipped, still comfortably within budget. Live-verified in a
+running Storybook instance: both new Playground controls, the Properties table's own `variant`/
+`size` rows, and both new gallery stories, across both light and dark mode.
+
+**Follow-up (2026-09-18, same day), user-reported: the `Ghost` story's own demo "Card" wrapper was
+visually indistinguishable from the real thing it's meant to show the *absence* of.** The fake
+`Card` wrapper (a real `Card` molecule isn't built yet) used only `space-2` padding with no content
+of its own beyond the accordion — the wrapper's edge sat close enough to the ghost accordion, with
+no other visual cue separating the two, that the whole demo read identically to the default
+`variant="bordered"` story: a bordered box around the same three items. Fixed by giving the wrapper
+a real reason to look like a distinct container — a "Shipping & returns" title above the accordion,
+generous `space-4` padding, and `radius-lg` (distinct from the accordion's own `radius-md`) — so the
+border now reads as belonging to a card *containing* the accordion, not the accordion's own
+(removed) border redrawn in the same place. Re-verified: `tsc --noEmit`, `eslint --max-warnings 0`,
+and the full `unit`/`storybook` Vitest projects, all clean; visually confirmed live in Storybook.
+
+**Finalized 2026-09-18.** Re-confirmed clean immediately before finalizing: `tsc --noEmit` (both the
+main and `.storybook` tsconfigs), `eslint --max-warnings 0`, the full Vitest `unit` (1395/1395) and
+`storybook` (485/485) projects, a real `tsup` build, `storybook build`, and
+`check-component-bundle-size` (1.78KB JS / 0.90KB CSS gzipped, within budget) — all clean, per
+`06-engineering-standards.md` §9's own note, don't make further changes to `Accordion` (code,
+stories, docs, or its tokens) without asking first.

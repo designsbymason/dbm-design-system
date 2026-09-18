@@ -10,6 +10,16 @@
   border-radius: var(--dbm-radius-md);
 }
 
+/* `variant="ghost"` — for embedding inside an already-bordered container
+   (a Card). Keeps the between-item dividers (`.item`'s own
+   `border-block-end` below) and the first/last trigger's own corner
+   rounding (harmless with no outer border to round against) — only the
+   group's own outer boundary is removed. */
+.root.ghost {
+  border: none;
+  border-radius: 0;
+}
+
 .item {
   border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
@@ -41,13 +51,46 @@
   cursor: pointer;
   display: flex;
   font-family: var(--dbm-font-family-primary);
-  font-size: var(--dbm-font-size-base);
   font-weight: var(--dbm-font-weight-semibold);
-  gap: var(--dbm-space-3);
   justify-content: space-between;
-  padding: var(--dbm-space-4);
   text-align: start;
   width: 100%;
+}
+
+/* Per-`size` padding/typography/icon-gap — `Accordion.Content`'s own
+   matching `.contentInnerXs`-`.contentInnerXl` classes below track the same
+   `padding-inline` value at each step, so a panel's text stays aligned
+   under its own trigger's label regardless of size. `md` is the pre-
+   existing shipped default (`space-4`/`font-size-base`/`space-3` gap),
+   unchanged by this addition. */
+.triggerXs {
+  font-size: var(--dbm-font-size-xs);
+  gap: var(--dbm-space-2);
+  padding: var(--dbm-space-2);
+}
+
+.triggerSm {
+  font-size: var(--dbm-font-size-sm);
+  gap: var(--dbm-space-2);
+  padding: var(--dbm-space-3);
+}
+
+.triggerMd {
+  font-size: var(--dbm-font-size-base);
+  gap: var(--dbm-space-3);
+  padding: var(--dbm-space-4);
+}
+
+.triggerLg {
+  font-size: var(--dbm-font-size-md);
+  gap: var(--dbm-space-3);
+  padding: var(--dbm-space-5);
+}
+
+.triggerXl {
+  font-size: var(--dbm-font-size-lg);
+  gap: var(--dbm-space-4);
+  padding: var(--dbm-space-6);
 }
 
 .trigger:hover:not(:disabled) {
@@ -96,8 +139,36 @@
 
 .contentInner {
   color: var(--dbm-text-secondary);
+}
+
+/* Tracks `.triggerXs`-`.triggerXl`'s own `padding` at each step — inline
+   padding matches exactly (so text stays aligned under the trigger's own
+   label), block-end padding reuses the same step's value for a
+   proportional bottom gap. `md` matches the pre-existing shipped default
+   (`space-4`), unchanged by this addition. */
+.contentInnerXs {
+  padding-block-end: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-2);
+}
+
+.contentInnerSm {
+  padding-block-end: var(--dbm-space-3);
+  padding-inline: var(--dbm-space-3);
+}
+
+.contentInnerMd {
   padding-block-end: var(--dbm-space-4);
   padding-inline: var(--dbm-space-4);
+}
+
+.contentInnerLg {
+  padding-block-end: var(--dbm-space-5);
+  padding-inline: var(--dbm-space-5);
+}
+
+.contentInnerXl {
+  padding-block-end: var(--dbm-space-6);
+  padding-inline: var(--dbm-space-6);
 }
 
 @keyframes slideDown {

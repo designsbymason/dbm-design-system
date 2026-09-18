@@ -233,7 +233,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | SearchInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [SearchInput.md](component-reviews/SearchInput.md) |
 | Slider | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-15 | [Slider.md](component-reviews/Slider.md) |
 | Popover | Molecule | Overlay | ✅ | ✅ 2026-09-17 | [Popover.md](component-reviews/Popover.md) |
-| Accordion | Molecule | Overlay | ✅ | — (built 2026-09-17, not yet Finalized) | [Accordion.md](component-reviews/Accordion.md) |
+| Accordion | Molecule | Overlay | ✅ | ✅ 2026-09-18 | [Accordion.md](component-reviews/Accordion.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see

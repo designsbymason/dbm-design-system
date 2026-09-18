@@ -18,6 +18,8 @@ export const rootPropOrder = [
   "defaultValue",
   "onValueChange",
   "collapsible",
+  "variant",
+  "size",
   "disabled",
   "orientation",
   "headingLevel",
@@ -93,6 +95,14 @@ through to the underlying element.
 
 ## Variants
 
+### Ghost variant (borderless, for embedding in a Card)
+
+<Canvas of={AccordionStories.Ghost} />
+
+### All sizes
+
+<Canvas of={AccordionStories.Sizes} />
+
 ### Multiple items open at once (type="multiple")
 
 <Canvas of={AccordionStories.Multiple} />
@@ -131,6 +141,8 @@ through to the underlying element.
   mutually exclusive by nature (a wizard-like set of steps).
 - Pass `asChild` on `Accordion.Trigger` for a fully custom trigger row (a leading icon, a secondary
   line of text) — the built-in label+icon row covers the common case.
+- Use `variant="ghost"` when embedding an `Accordion` inside a container that already has its own
+  border (a `Card`) — the default `variant="bordered"` would otherwise double up on the boundary.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -238,11 +250,11 @@ function Example() {
 <TokenRow token="icon.disabled" usage="a disabled item's own disclosure icon color" />
 <TokenRow token="bg.brand-subtle" usage="trigger hover background" />
 <TokenRow token="font-family.primary" usage="trigger typography" />
-<TokenRow token="font-size.base" usage="trigger label size" />
+<TokenRow token="font-size.xs–font-size.lg" usage="trigger label size across the five size steps" />
 <TokenRow token="font-weight.semibold" usage="trigger label weight" />
 <TokenRow token="space.1" usage="trigger focus-visible outline offset" />
-<TokenRow token="space.3" usage="gap between a trigger's label and its disclosure icon" />
-<TokenRow token="space.4" usage="trigger and content padding" />
+<TokenRow token="space.2–space.4" usage="gap between a trigger's label and its disclosure icon, across the five size steps" />
+<TokenRow token="space.2–space.6" usage="trigger and content padding across the five size steps" />
 <TokenRow token="motion.duration.fast" usage="disclosure icon rotation transition" />
 <TokenRow token="motion.duration.base" usage="content open/close height animation" />
 <TokenRow token="motion.easing.standard" usage="disclosure icon rotation and content open/close transitions" />
