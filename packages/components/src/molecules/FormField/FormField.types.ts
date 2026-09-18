@@ -44,7 +44,7 @@ export interface FormFieldProps
    * Supplementary helper/hint text, rendered via `FieldHelperText` below
    * the control. Hidden while `error` is set — the error message replaces
    * it rather than showing both at once, matching the common "one message
-   * at a time" convention (Chakra UI, Material UI) so the field doesn't
+   * at a time" convention common to form components, so the field doesn't
    * show two stacked, only-sometimes-relevant lines of text.
    */
   helperText?: ReactNode;
