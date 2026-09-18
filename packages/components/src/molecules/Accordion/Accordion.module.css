@@ -1,0 +1,121 @@
+/* The outer group. Deliberately no `overflow: hidden` here — rounding only
+   the very first/last item's own trigger corners (see
+   `.item:first-child .trigger`/`.item:last-child .trigger` below) gets the
+   same visually-rounded-group result without it, so the standard positive
+   `outline-offset` focus-ring pattern (`05-component-api-conventions.md`
+   §6) never gets clipped on either end item the way a hidden-overflow
+   wrapper would cut it off. */
+.root {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+}
+
+.item {
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.item:last-child {
+  border-block-end: none;
+}
+
+.header {
+  margin: 0;
+  font: inherit;
+}
+
+.item:first-child .trigger {
+  border-start-start-radius: var(--dbm-radius-md);
+  border-start-end-radius: var(--dbm-radius-md);
+}
+
+.item:last-child .trigger {
+  border-end-start-radius: var(--dbm-radius-md);
+  border-end-end-radius: var(--dbm-radius-md);
+}
+
+.trigger {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-base);
+  font-weight: var(--dbm-font-weight-semibold);
+  gap: var(--dbm-space-3);
+  justify-content: space-between;
+  padding: var(--dbm-space-4);
+  text-align: start;
+  width: 100%;
+}
+
+.trigger:hover:not(:disabled) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.trigger:disabled {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+.trigger:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.triggerLabel {
+  min-width: 0;
+}
+
+.triggerIcon {
+  flex-shrink: 0;
+  transition: transform var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.trigger[data-state="open"] .triggerIcon {
+  transform: rotate(180deg);
+}
+
+.trigger[data-disabled] .triggerIcon {
+  color: var(--dbm-icon-disabled);
+}
+
+.content {
+  overflow: hidden;
+}
+
+.content[data-state="open"] {
+  animation: slideDown var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.content[data-state="closed"] {
+  animation: slideUp var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.contentInner {
+  color: var(--dbm-text-secondary);
+  padding-block-end: var(--dbm-space-4);
+  padding-inline: var(--dbm-space-4);
+}
+
+@keyframes slideDown {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+
+  to {
+    height: 0;
+  }
+}

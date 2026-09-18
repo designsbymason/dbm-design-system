@@ -49,6 +49,7 @@ export * from "./atoms/ThemeProvider";
 export * from "./atoms/Tooltip";
 export * from "./atoms/VisuallyHidden";
 
+export * from "./molecules/Accordion";
 export * from "./molecules/CheckboxGroup";
 export * from "./molecules/FormField";
 export * from "./molecules/Grid";

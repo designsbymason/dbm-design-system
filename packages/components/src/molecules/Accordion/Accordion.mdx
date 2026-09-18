@@ -1,0 +1,283 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Collapse } from "../../atoms/Collapse";
+import { Text } from "../../atoms/Text";
+import { RadioGroup } from "../RadioGroup";
+import { Radio } from "../../atoms/Radio";
+import { Popover } from "../Popover";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Accordion } from "./Accordion";
+import * as AccordionStories from "./Accordion.stories";
+import * as AccordionItemStories from "./AccordionItem.stories";
+import * as AccordionTriggerStories from "./AccordionTrigger.stories";
+import * as AccordionContentStories from "./AccordionContent.stories";
+
+export const rootPropOrder = [
+  "type",
+  "defaultValue",
+  "onValueChange",
+  "collapsible",
+  "disabled",
+  "orientation",
+  "headingLevel",
+  "dir",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const itemPropOrder = ["value", "disabled", "asChild", "children", "id", "className", "style", "data-testid"];
+export const triggerPropOrder = ["children", "icon", "hideIcon", "asChild", "id", "className", "style", "data-testid"];
+export const contentPropOrder = ["children", "id", "className", "style", "data-testid"];
+
+<Meta of={AccordionStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Accordion" tier="Molecule" />
+
+A vertically-stacked set of expand/collapse disclosure panels, built on Radix Accordion — one item
+open at a time by default, or several independently. A compound component: compose `Accordion.Item`,
+`Accordion.Trigger`, and `Accordion.Content` inside `Accordion` itself, mirroring `Popover`'s own
+Radix-shaped sub-parts.
+
+### Import
+
+```tsx
+import { Accordion } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={AccordionStories.Playground} />
+
+</div>
+<PlaygroundControls of={AccordionStories.Playground} order={rootPropOrder} exclude={["type", "onValueChange", "dir", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`Accordion` accepts a single string `value`/`defaultValue` under the default `type="single"`, or a
+`string[]` under `type="multiple"` — the value shape always matches whichever `type` is active,
+mirroring Radix's own discriminated Accordion props. `ref` forwards to the root `<div>`.
+
+<PropertiesTable of={AccordionStories} order={rootPropOrder} />
+
+### Accordion.Item properties
+
+A single disclosure section within an `Accordion` — an `Accordion.Trigger` and `Accordion.Content`
+pair. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`,
+`onMouseEnter`) — passed straight through to the underlying element.
+
+<PropertiesTable of={AccordionItemStories} order={itemPropOrder} />
+
+### Accordion.Trigger properties
+
+The clickable header that toggles its item's own open state. Also accepts any other native
+`<button>` attribute beyond what's listed here (e.g. `onFocus`, `disabled`) — passed straight
+through.
+
+<PropertiesTable of={AccordionTriggerStories} order={triggerPropOrder} />
+
+### Accordion.Content properties
+
+The panel revealed/hidden as its item's own open state toggles. Also accepts any other native
+`<div>` attribute beyond what's listed here (e.g. `onFocus`, `onMouseEnter`) — passed straight
+through to the underlying element.
+
+<PropertiesTable of={AccordionContentStories} order={contentPropOrder} />
+
+## Variants
+
+### Multiple items open at once (type="multiple")
+
+<Canvas of={AccordionStories.Multiple} />
+
+### One item disabled
+
+<Canvas of={AccordionStories.DisabledItem} />
+
+### Custom disclosure icon
+
+<Canvas of={AccordionStories.CustomIcon} />
+
+### Fully custom trigger row (asChild)
+
+<Canvas of={AccordionStories.AsChildTrigger} />
+
+### Controlled open item
+
+<Canvas of={AccordionStories.Controlled} />
+
+### Click to open, arrow keys to move between triggers
+
+<Canvas of={AccordionStories.KeyboardInteraction} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Reach for `Accordion` when several sections of content compete for the same space and only one
+  (or a few) need to be visible at once — an FAQ list, a settings page's collapsible sections.
+- Set `headingLevel` to match this accordion's real position in the surrounding page's own heading
+  outline, the same concern `Heading`'s own `level` prop addresses.
+- Use `type="multiple"` when a reader might reasonably want more than one section open for
+  comparison (e.g. comparing two FAQ answers) — leave the default `type="single"` when sections are
+  mutually exclusive by nature (a wizard-like set of steps).
+- Pass `asChild` on `Accordion.Trigger` for a fully custom trigger row (a leading icon, a secondary
+  line of text) — the built-in label+icon row covers the common case.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Accordion` for a single expand/collapse region with no sibling sections — reach for the
+  plain `Collapse` atom instead, which is exactly what `Accordion.Content`'s own animation technique
+  is built on.
+- Don't set `collapsible={false}` without also setting a `defaultValue`/`value` — with nothing open
+  to start, a reader has no way to tell one section is meant to always stay open until they've
+  already closed every other one and hit the floor.
+- Don't nest interactive form controls that need to survive a section closing (e.g. an in-progress
+  multi-step form) inside `Accordion.Content` — closing an item unmounts its content by design,
+  the same as `Collapse`'s own behavior.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep trigger labels short and scannable — a full sentence works, but a trigger crowded with
+  secondary detail is better split into the label plus a first line of `Accordion.Content`.
+- Prefer `type="single"` (the default) for the common FAQ/disclosure-list case; reach for
+  `type="multiple"` deliberately, not as a default, since letting every section open at once can
+  defeat the point of using an accordion instead of a plain list of `Collapse` regions.
+- `orientation="horizontal"` only changes which arrow-key pair moves focus between triggers — pair
+  it with your own layout `className` if a genuinely side-by-side accordion is needed; the built-in
+  styling stays a vertical stack either way.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard and ARIA state come from Radix's own accordion primitive">
+
+- Each trigger is a real `<button>` inside a heading element (`headingLevel`, default `3`), with
+  `aria-expanded`/`aria-controls` kept in sync automatically, and its panel carries
+  `aria-labelledby` pointing back at the trigger.
+- `Tab`/`Shift+Tab` moves focus between triggers and the rest of the page normally; `Up`/`Down`
+  arrow keys (`Left`/`Right` under `orientation="horizontal"`) move roving focus directly between
+  triggers without leaving the accordion, `Home`/`End` jump to the first/last trigger.
+- `Enter`/`Space` on a focused trigger toggles its own item's open state.
+- A disabled item's trigger is skipped by both `Tab` and arrow-key navigation, matching native
+  `disabled`-button behavior.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Accordion>
+  <Accordion.Item value="shipping">
+    <Accordion.Trigger>How long does shipping take?</Accordion.Trigger>
+    <Accordion.Content>
+      <Text size="sm">3-5 business days for standard shipping.</Text>
+    </Accordion.Content>
+  </Accordion.Item>
+  <Accordion.Item value="returns">
+    <Accordion.Trigger>What's your return policy?</Accordion.Trigger>
+    <Accordion.Content>
+      <Text size="sm">Returns accepted within 30 days.</Text>
+    </Accordion.Content>
+  </Accordion.Item>
+</Accordion>
+
+{/* Several items open independently */}
+<Accordion type="multiple" defaultValue={["shipping"]}>
+  <Accordion.Item value="shipping">
+    <Accordion.Trigger>How long does shipping take?</Accordion.Trigger>
+    <Accordion.Content>3-5 business days for standard shipping.</Accordion.Content>
+  </Accordion.Item>
+</Accordion>
+
+{/* Controlled open item */}
+function Example() {
+  const [value, setValue] = useState("shipping");
+  return (
+    <Accordion value={value} onValueChange={setValue}>
+      <Accordion.Item value="shipping">
+        <Accordion.Trigger>How long does shipping take?</Accordion.Trigger>
+        <Accordion.Content>3-5 business days for standard shipping.</Accordion.Content>
+      </Accordion.Item>
+    </Accordion>
+  );
+}
+
+{/* A native <button> attribute on Accordion.Trigger, passed straight through */}
+<Accordion.Trigger onFocus={() => console.log("focused")}>Label</Accordion.Trigger>
+
+{/* A disabled item */}
+<Accordion.Item value="shipping" disabled>
+  <Accordion.Trigger>How long does shipping take?</Accordion.Trigger>
+  <Accordion.Content>3-5 business days for standard shipping.</Accordion.Content>
+</Accordion.Item>
+```
+
+## Design tokens used
+
+<TokenRow token="border.default" usage="group border; the divider between items" />
+<TokenRow token="border-width.1" usage="group border and item-divider width" />
+<TokenRow token="border-width.2" usage="trigger focus-visible outline width" />
+<TokenRow token="border.focus" usage="trigger focus-visible outline color" />
+<TokenRow token="radius.md" usage="the group's own outer corners, applied to the first/last item's own trigger" />
+<TokenRow token="radius.sm" usage="trigger focus-visible outline radius, per the standardized focus-ring convention" />
+<TokenRow token="text.primary" usage="trigger label color" />
+<TokenRow token="text.secondary" usage="content text color" />
+<TokenRow token="text.disabled" usage="a disabled item's own trigger label color" />
+<TokenRow token="icon.disabled" usage="a disabled item's own disclosure icon color" />
+<TokenRow token="bg.neutral-subtle" usage="trigger hover background" />
+<TokenRow token="font-family.primary" usage="trigger typography" />
+<TokenRow token="font-size.base" usage="trigger label size" />
+<TokenRow token="font-weight.semibold" usage="trigger label weight" />
+<TokenRow token="space.1" usage="trigger focus-visible outline offset" />
+<TokenRow token="space.3" usage="gap between a trigger's label and its disclosure icon" />
+<TokenRow token="space.4" usage="trigger and content padding" />
+<TokenRow token="motion.duration.fast" usage="disclosure icon rotation transition" />
+<TokenRow token="motion.duration.base" usage="content open/close height animation" />
+<TokenRow token="motion.easing.standard" usage="disclosure icon rotation and content open/close transitions" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Collapse"
+  description="The single-region expand/collapse atom Accordion.Content's own animation technique is built on"
+  href="/?path=/docs/atoms-overlay-collapse--docs"
+>
+  <Collapse trigger={<Button size="sm" variant="secondary">Toggle</Button>}>
+    <Text size="sm">Hidden content</Text>
+  </Collapse>
+</RelatedCard>
+<RelatedCard
+  name="Popover"
+  description="Another compound molecule wrapping a Radix primitive fully, with its own Radix-shaped sub-parts"
+  href="/?path=/docs/molecules-overlay-popover--docs"
+>
+  <Popover>
+    <Popover.Trigger asChild>
+      <Button size="sm" variant="secondary">Open</Button>
+    </Popover.Trigger>
+    <Popover.Content aria-label="Example">
+      <Text size="sm">Content</Text>
+    </Popover.Content>
+  </Popover>
+</RelatedCard>
+<RelatedCard
+  name="RadioGroup"
+  description="Another grouped molecule with roving-tabindex keyboard navigation across its own items"
+  href="/?path=/docs/molecules-inputs-radiogroup--docs"
+>
+  <RadioGroup aria-label="Example" defaultValue="a">
+    <Radio value="a">A</Radio>
+  </RadioGroup>
+</RelatedCard>
+</div>
