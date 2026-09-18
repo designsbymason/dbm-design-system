@@ -64,6 +64,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0015](./0015-formfield-render-prop-over-cloneelement-or-shared-context.md) | `FormField` computes field props and hands them back via a render-prop `children`, over `cloneElement` injection or a shared context | Accepted |
 | [0016](./0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md) | `bg.track` vs. `bg.track-strong` is scoped by whether the track itself must convey the boundary, not by whether the control is interactive | Accepted |
 | [0017](./0017-popover-omits-anchor-sub-part-pending-upstream-fix.md) | `Popover` omits Radix's own `Anchor` sub-part, over shipping it with a broken-feature warning | Accepted |
+| [0018](./0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) | `Accordion` wraps Radix Accordion's own `Content` directly, not the `Collapse` atom | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

@@ -18,7 +18,7 @@ same signature `Input` already has, where the stepper buttons would need to synt
 a real event) to feed back through that same `onChange` typing already uses, rather than exposing a
 second callback. **User chose (A)** — matches how developers actually think about a number field
 (`min`/`max`/`step` are just number math, no parsing) and matches production `NumberInput`
-precedent (e.g. Mantine's own), without needing the event-synthesis trick option (B) would have
+precedent in comparable production libraries, without needing the event-synthesis trick option (B) would have
 required. `onChange` still exists, documented as firing only on direct typing, not stepper/clear
 clicks — a real, disclosed limitation of choice (A), not a bug.
 

@@ -1,6 +1,6 @@
 # DBM Design System — Component API & Coding Conventions
 
-**Status: v1 draft.** This is the contract every component follows, regardless of which build phase or Claude Code session creates it. Consistency here is what keeps a 99-component system feeling like one system instead of 99 one-off decisions.
+**Status: v1 draft.** This is the contract every component follows, regardless of which build phase or Claude Code session creates it. Consistency here is what keeps a 100+-component system feeling like one system instead of 100+ one-off decisions.
 
 ---
 

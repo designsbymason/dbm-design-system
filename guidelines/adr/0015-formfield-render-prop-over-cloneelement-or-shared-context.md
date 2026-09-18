@@ -45,13 +45,13 @@ Every control atom in this system already accepted this exact prop shape before 
 ## Alternatives considered
 
 **Clone the control child via `cloneElement`**, injecting `id`/`aria-describedby` automatically
-(Ant Design's `Form.Item` approach) — the closest thing to "just wrap it, no spreading needed."
+(a common form-library approach) — the closest thing to "just wrap it, no spreading needed."
 Rejected: `cloneElement`'s ref-merging is a well-documented fragility (an injected `ref` competing
 with whatever ref the child already carries), and it assumes exactly one valid element child —
 break that assumption (a fragment, a component that doesn't forward props/refs correctly) and the
 wiring silently fails with no error, for an ergonomics win that trades away verifiable correctness.
 
-**A shared context every control atom opts into** (Chakra UI's `FormControl` approach) — mirrors
+**A shared context every control atom opts into** (a common headless-form-control approach) — mirrors
 this codebase's own dominant coordination pattern elsewhere. Rejected for this specific case: unlike
 `RadioGroup`/`CheckboxGroup` (each built to expect exactly one atom's own context), `FormField` has
 to work with an open-ended, growing set of unrelated control atoms — this would mean an authorized

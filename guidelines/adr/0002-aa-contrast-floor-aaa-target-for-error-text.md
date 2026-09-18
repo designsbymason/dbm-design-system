@@ -9,7 +9,7 @@
 AA (4.5:1 for text) stays the enforced floor across the entire system — no component or token pairing may fall below it. AAA (7:1) is a *target*, not a hard requirement, specifically for error/critical-alert text (form validation errors, destructive-action confirmations).
 
 ## Alternatives considered
-Requiring AAA as a blanket policy across all text — rejected. WCAG's own conformance guidance explicitly recommends against this ("not possible to satisfy all Level AAA Success Criteria for some content"). Treating AA as sufficient everywhere with no elevated target for error text — rejected in favor of the higher bar for this one case, matching common practice in accessibility-mature systems (GOV.UK Design System, IBM Carbon), since misread error/destructive-action text carries outsized real-world consequences relative to ordinary body text.
+Requiring AAA as a blanket policy across all text — rejected. WCAG's own conformance guidance explicitly recommends against this ("not possible to satisfy all Level AAA Success Criteria for some content"). Treating AA as sufficient everywhere with no elevated target for error text — rejected in favor of the higher bar for this one case, matching common practice in accessibility-mature government and enterprise design systems, since misread error/destructive-action text carries outsized real-world consequences relative to ordinary body text.
 
 ## Consequences
 No token change resulted from this decision — AAA was never a hard requirement, only a target — but the actual measured numbers (verified 2026-08-16, replacing a previously-unverified "several... already land at or above 7:1" claim) are:

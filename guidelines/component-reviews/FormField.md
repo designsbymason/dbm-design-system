@@ -22,8 +22,8 @@ the exact shape `FormField` hands back (`id`, `aria-labelledby`, `aria-described
 
 **`error` alone marks the field invalid — no separate `hasError` boolean.** Its mere presence is
 what computes `hasError: true` in the handed-back field props and swaps `FieldHelperText` out for
-`FieldError`; `helperText` and `error` are deliberately mutually exclusive (matching Chakra's/
-Material UI's own convention) rather than stacking both, so a field never shows two lines of
+`FieldError`; `helperText` and `error` are deliberately mutually exclusive (matching the common
+"one message at a time" convention in comparable form components) rather than stacking both, so a field never shows two lines of
 possibly-conflicting guidance at once.
 
 **Molecule composition checkpoints (`06-engineering-standards.md` §9):**

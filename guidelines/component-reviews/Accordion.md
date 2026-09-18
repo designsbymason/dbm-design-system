@@ -2,8 +2,8 @@
 
 **Overlay & Disclosure:** Accordion — built 2026-09-17, item 9 in the itemized molecule-tier build
 order (`04-component-inventory.md`). Adds `@radix-ui/react-accordion` (^1.2.20) as a new dependency.
-**Not yet Finalized** — per the standing rule that only the user declares a component's review pass
-done, this file records what was built/checked/found, not a self-declared Finalized status.
+**Finalized 2026-09-18** — declared by the user after the final review pass; see the closing entry at
+the bottom of this file. Everything above it records the build and review history leading there.
 
 **The second component in this system exposing real Radix-mirroring compound sub-parts**, after
 `Popover`. Composes `Accordion.Item`, `Accordion.Trigger`, `Accordion.Content` inside `Accordion`
@@ -19,9 +19,9 @@ page via a hidden, docs-only stories file per `guidelines/adr/0013` — `Accordi
   JSDoc previously assumed. `Accordion.Trigger`/`Accordion.Content` read from the same Radix `Item`
   context to track open state — swapping in `Collapse` for the content half only would either
   duplicate that wiring for no benefit or require re-deriving Radix's own open-state/id-linking/
-  keyboard-navigation logic by hand, against [ADR-0004](adr/0004-radix-ui-primitives-for-accessibility-logic.md)'s
+  keyboard-navigation logic by hand, against [ADR-0004](../adr/0004-radix-ui-primitives-for-accessibility-logic.md)'s
   standing rule to lean on Radix rather than hand-roll interaction logic. Recorded as a real
-  fork-in-the-road decision: [ADR-0018](adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md).
+  fork-in-the-road decision: [ADR-0018](../adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md).
   The animation *technique* is still the same one `Collapse` uses (a measured-height CSS custom
   property driving a `slideDown`/`slideUp` keyframe pair) — just against Radix Accordion's own copy
   of that mechanism (`--radix-accordion-content-height`) instead of Radix Collapsible's.
