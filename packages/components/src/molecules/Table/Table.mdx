@@ -1,0 +1,322 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../../atoms/Badge";
+import { Skeleton } from "../../atoms/Skeleton";
+import { ListItem } from "../../atoms/ListItem";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { List } from "../List";
+import * as TableStories from "./Table.stories";
+import * as TableHeaderStories from "./TableHeader.stories";
+import * as TableBodyStories from "./TableBody.stories";
+import * as TableFooterStories from "./TableFooter.stories";
+import * as TableRowStories from "./TableRow.stories";
+import * as TableHeaderCellStories from "./TableHeaderCell.stories";
+import * as TableCellStories from "./TableCell.stories";
+import * as TableCaptionStories from "./TableCaption.stories";
+
+export const rootPropOrder = [
+  "variant",
+  "size",
+  "striped",
+  "hoverable",
+  "stickyHeader",
+  "maxHeight",
+  "containerClassName",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+];
+export const captionPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const headerCellPropOrder = ["children", "scope", "align", "id", "className", "style", "data-testid"];
+export const cellPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
+
+<Meta of={TableStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Table" tier="Molecule" />
+
+A lightweight, non-interactive table for presenting tabular data — real `<table>` semantics with DBM's own
+styling, density, and responsive scrolling. It's a compound component, meaning it's made of named sub-parts you
+compose together rather than one component with a long list of props: put `Table.Caption`, `Table.Header`,
+`Table.Body`, and (optionally) `Table.Footer` inside `Table`, each holding rows (`Table.Row`) made of header cells
+(`Table.HeaderCell`) and data cells (`Table.Cell`). Every sub-part renders the native element its name suggests, so native table features like
+`colSpan`, `rowSpan`, and `scope` work directly.
+
+`Table` deliberately has no sorting, row selection, or pagination — it's for displaying data, not manipulating it.
+A sortable, selectable, paginated table is the job of the future `DataTable`, which builds on this one.
+
+### Import
+
+```tsx
+import { Table } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TableStories.Playground} />
+
+</div>
+<PlaygroundControls of={TableStories.Playground} order={rootPropOrder} exclude={["containerClassName", "id", "className", "style", "data-testid", "aria-label", "aria-labelledby", "aria-describedby"]} />
+
+## Properties
+
+`ref`, `className`, `style`, `id`, `data-testid`, and the `aria-*` props all apply to the `<table>` element itself,
+where assistive technology expects them; `containerClassName` and `maxHeight` target the scroll container around
+it instead. Also accepts any other native `<table>` attribute beyond what's listed here (e.g. `onClick`, `title`) —
+passed straight through to the `<table>`.
+
+<PropertiesTable of={TableStories} order={rootPropOrder} />
+
+### Table.Caption properties
+
+The table's visible title or description, rendered as a native `<caption>`. Also accepts any other native
+`<caption>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={TableCaptionStories} order={captionPropOrder} />
+
+### Table.Header properties
+
+The header group, rendered as a native `<thead>`. Also accepts any other native `<thead>` attribute beyond what's
+listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={TableHeaderStories} order={groupPropOrder} />
+
+### Table.Body properties
+
+The body group, rendered as a native `<tbody>`. Also accepts any other native `<tbody>` attribute beyond what's
+listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={TableBodyStories} order={groupPropOrder} />
+
+### Table.Footer properties
+
+The footer group, rendered as a native `<tfoot>`. Also accepts any other native `<tfoot>` attribute beyond what's
+listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={TableFooterStories} order={groupPropOrder} />
+
+### Table.Row properties
+
+A row, rendered as a native `<tr>`. Also accepts any other native `<tr>` attribute beyond what's listed here (e.g.
+`onClick`, `onMouseEnter`) — passed straight through.
+
+<PropertiesTable of={TableRowStories} order={groupPropOrder} />
+
+### Table.HeaderCell properties
+
+A header cell, rendered as a native `<th>` — a column label inside `Table.Header`, or (with `scope="row"`) a row
+label at the start of a body row. Also accepts any other native `<th>` attribute beyond what's listed here (e.g.
+`colSpan`, `rowSpan`) — passed straight through.
+
+<PropertiesTable of={TableHeaderCellStories} order={headerCellPropOrder} />
+
+### Table.Cell properties
+
+A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` attribute beyond what's listed here
+(e.g. `colSpan`, `rowSpan`) — passed straight through.
+
+<PropertiesTable of={TableCellStories} order={cellPropOrder} />
+
+## Variants
+
+### Striped rows
+
+<Canvas of={TableStories.Striped} />
+
+### Hoverable rows
+
+<Canvas of={TableStories.Hoverable} />
+
+### Striped and hoverable together
+
+<Canvas of={TableStories.StripedAndHoverable} />
+
+### Sticky header (scroll the body)
+
+<Canvas of={TableStories.StickyHeader} />
+
+### Ghost variant (borderless, for embedding in a Card)
+
+<Canvas of={TableStories.Ghost} />
+
+### All sizes
+
+<Canvas of={TableStories.Sizes} />
+
+### Cell alignment (start, center, end)
+
+<Canvas of={TableStories.Alignment} />
+
+### Grouped columns (colSpan)
+
+<Canvas of={TableStories.GroupedColumns} />
+
+### Narrow container (scrolls sideways, keyboard-reachable)
+
+<Canvas of={TableStories.NarrowScroll} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Reach for `Table` to present read-only tabular data — invoices, rosters, comparison charts — where rows and
+  columns genuinely relate to each other.
+- Give every table a name: a visible `Table.Caption` is best, or `aria-label`/`aria-labelledby` when a visible one
+  doesn't fit the layout.
+- Right-align (`align="end"`) numeric columns, in both the header and body cells, so digits line up.
+- Mark the first cell of a row that labels the rest of it as `<Table.HeaderCell scope="row">`, not a plain
+  `Table.Cell`.
+- Set `maxHeight` whenever you use `stickyHeader` — a header can only stay pinned inside a scroll area that has a
+  height to scroll.
+- Use `variant="ghost"` when embedding a `Table` inside a container that already has its own border (a `Card`).
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a `Table` for page layout. If the content isn't genuinely tabular, reach for `Grid` or `Stack`.
+- Don't put interactive controls in every cell of a large table and expect sorting or selection to come with them —
+  those belong to the future `DataTable`.
+- Don't skip `Table.Header` and put column labels in ordinary body cells — assistive technology relies on real
+  header cells to announce which column a value belongs to.
+- Don't rely on `striped` or `hoverable` to communicate meaning (a "selected" or "flagged" row) — they're purely
+  reading aids and carry no semantics.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep column labels short. A long label makes its column wider than its data needs.
+- Choose `size` by data density, not decoration: `xs`/`sm` for dense reference data, `md` for general use, `lg`/`xl`
+  when a table is the primary content of a spacious page.
+- Put summary rows (totals, averages) in `Table.Footer` rather than as the last body row, so they read as a
+  summary and stay visually set apart.
+- Don't wrap a table in your own `overflow` container to make it responsive — `Table` already scrolls sideways
+  inside its own frame when it's wider than the space it's in. Use `containerClassName` if you need to adjust that
+  frame.
+- For a very large dataset (hundreds of rows), prefer pagination or the future `DataTable`'s virtualized rendering
+  over one enormous `Table`.
+
+## Accessibility
+
+<Callout tone="info" title="A real table, plus keyboard access to its own scrolling">
+
+- Each sub-part renders the native table element, so screen readers announce it as a table with its row and column
+  structure, and read each cell together with its header. `Table.HeaderCell` defaults to `scope="col"`; set
+  `scope="row"` for a row header.
+- A `Table.Caption` names the table automatically. Without one, provide `aria-label` or `aria-labelledby`.
+- A scrollable area has to be reachable from the keyboard (WCAG 2.1.1). While the table is wider than its space, its
+  scroll frame becomes focusable — `Tab` onto it, then use the arrow keys to scroll — and is announced as a region
+  named after the table. When the table fits, the frame is not focusable at all, so it adds no extra tab stop.
+- `striped` and `hoverable` backgrounds keep body text (`text.primary`) at 6.5:1 or better — comfortably above the
+  4.5:1 AA text-contrast floor — in every theme, light and dark.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Table striped>
+  <Table.Caption>Recent invoices</Table.Caption>
+  <Table.Header>
+    <Table.Row>
+      <Table.HeaderCell>Invoice</Table.HeaderCell>
+      <Table.HeaderCell>Status</Table.HeaderCell>
+      <Table.HeaderCell align="end">Amount</Table.HeaderCell>
+    </Table.Row>
+  </Table.Header>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">INV-001</Table.HeaderCell>
+      <Table.Cell>Paid</Table.Cell>
+      <Table.Cell align="end">$250.00</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+  <Table.Footer>
+    <Table.Row>
+      <Table.HeaderCell scope="row" colSpan={2}>Total</Table.HeaderCell>
+      <Table.Cell align="end">$250.00</Table.Cell>
+    </Table.Row>
+  </Table.Footer>
+</Table>
+
+{/* A header that stays pinned while a long body scrolls */}
+<Table stickyHeader maxHeight="24rem">
+  {/* … */}
+</Table>
+
+{/* No visible caption — name the table another way */}
+<Table aria-label="Team roster" size="sm" hoverable>
+  {/* … */}
+</Table>
+
+{/* A native <td> attribute, passed straight through: a cell spanning two columns */}
+<Table.Cell colSpan={2}>Spans two columns</Table.Cell>
+
+{/* A native <table> attribute, passed straight through */}
+<Table title="Invoices" aria-label="Invoices">
+  {/* … */}
+</Table>
+```
+
+## Design tokens used
+
+<TokenRow token="text.primary" usage="data cell text" />
+<TokenRow token="text.secondary" usage="header cell text and caption text" />
+<TokenRow token="bg.surface" usage="header cell background (opaque, so a sticky header fully covers rows scrolling beneath it) and caption background" />
+<TokenRow token="bg.neutral-subtle" usage="striped row background and footer background" />
+<TokenRow token="bg.neutral-subtle-hover" usage="hovered row background" />
+<TokenRow token="border.default" usage="table border (bordered variant) and the divider between rows" />
+<TokenRow token="border.neutral" usage="the stronger divider beneath the header row" />
+<TokenRow token="border.focus" usage="scroll frame focus-visible outline color" />
+<TokenRow token="border-width.1" usage="table border and row-divider width" />
+<TokenRow token="border-width.2" usage="scroll frame focus-visible outline width" />
+<TokenRow token="radius.md" usage="the bordered variant's outer corners" />
+<TokenRow token="radius.sm" usage="scroll frame focus-visible outline radius, per the standardized focus-ring convention" />
+<TokenRow token="font-family.primary" usage="table typography" />
+<TokenRow token="font-size.xs–font-size.lg" usage="cell text size across the five size steps" />
+<TokenRow token="font-size.sm" usage="caption text size" />
+<TokenRow token="font-weight.semibold" usage="header cell and footer text weight" />
+<TokenRow token="space.1" usage="scroll frame focus-visible outline offset" />
+<TokenRow token="space.1–space.6" usage="cell padding across the five size steps" />
+<TokenRow token="space.3–space.4" usage="caption padding" />
+<TokenRow token="z-index.sticky" usage="sticky header layering, above the rows scrolling beneath it" />
+<TokenRow token="motion.duration.fast" usage="hovered row background transition" />
+<TokenRow token="motion.easing.standard" usage="hovered row background transition" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Badge"
+  description="A common cell occupant — a compact status or count indicator inside a Table.Cell"
+  href="/?path=/docs/atoms-data-display-badge--docs"
+>
+  <Badge tone="success" size="sm">Paid</Badge>
+</RelatedCard>
+<RelatedCard
+  name="Skeleton"
+  description="A loading placeholder shape — stand-in for cell content while a table's data is still arriving"
+  href="/?path=/docs/atoms-data-display-skeleton--docs"
+>
+  <Skeleton variant="text" width="6rem" />
+</RelatedCard>
+<RelatedCard
+  name="List"
+  description="For a single column of related items with no columns to compare, a List is the lighter choice"
+  href="/?path=/docs/molecules-typography-list--docs"
+>
+  <List>
+    <ListItem>An item</ListItem>
+  </List>
+</RelatedCard>
+</div>

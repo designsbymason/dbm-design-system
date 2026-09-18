@@ -1,0 +1,156 @@
+/* The scroll frame around the `<table>`. Always present, so a wide table
+   scrolls sideways inside its own frame instead of overflowing the page —
+   responsiveness is built in, not opt-in. `overflow: auto` also makes this
+   the scroll container `position: sticky` resolves against for
+   `stickyHeader`, and clips the rounded corners of the bordered variant. */
+.container {
+  overflow: auto;
+}
+
+.containerBordered {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+}
+
+/* `variant="ghost"` — for embedding inside an already-bordered container (a
+   Card). Only the outer boundary is removed; the between-row dividers stay. */
+.containerGhost {
+  border: none;
+  border-radius: 0;
+}
+
+/* The container only takes focus while it actually scrolls (see
+   `useScrollableRegion`), so this ring only ever appears on a real,
+   keyboard-reachable scroll region. Radius follows the standardized
+   focus-ring convention (`05-component-api-conventions.md` §6). */
+.container:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* `border-collapse: separate` (with zero spacing) rather than `collapse`,
+   because collapsed borders don't travel with a `position: sticky` header —
+   the divider would scroll away while the header text stayed pinned. */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  inline-size: 100%;
+  text-align: start;
+}
+
+.caption {
+  background-color: var(--dbm-bg-surface);
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  padding: var(--dbm-space-3) var(--dbm-space-4);
+  text-align: start;
+}
+
+/* Every cell carries its own bottom divider — set on the cells rather than
+   the row, since `border` on a `<tr>` only renders under `border-collapse:
+   collapse`. */
+.cell,
+.headerCell {
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  text-align: start;
+  vertical-align: middle;
+}
+
+/* Every header cell is semibold — including a body row's own row header
+   (`scope="row"`), which keeps its data-row background, divider, and text
+   color so it reads as part of its row, not as a second header. */
+.headerCell {
+  font-weight: var(--dbm-font-weight-semibold);
+  /* Header cells are short labels (column names, row identifiers like
+     `INV-001`) — breaking one mid-word to squeeze a narrow container reads
+     worse than letting the table scroll sideways sooner. Data cells still
+     wrap normally, since their content can be arbitrarily long. */
+  white-space: nowrap;
+}
+
+/* The column-header row's own look, scoped to `<thead>` so it never leaks
+   onto a body row header. The background is opaque on purpose: a sticky
+   header must fully cover the rows scrolling beneath it. */
+.header > tr > .headerCell {
+  background-color: var(--dbm-bg-surface);
+  border-block-end-color: var(--dbm-border-neutral);
+  color: var(--dbm-text-secondary);
+}
+
+/* The table's very last row draws no bottom divider — the bordered
+   variant's own outer border (or nothing, for ghost) closes it off, and a
+   divider there would double up against it. Child combinators, so a table
+   nested inside a cell can't match the outer table's last row. */
+.table > :last-child > tr:last-child > * {
+  border-block-end: none;
+}
+
+.footer > tr > * {
+  background-color: var(--dbm-bg-neutral-subtle);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+/* `stickyHeader` — pinned on the header cells themselves (not the `<thead>`),
+   which is the placement browsers support consistently. Resolves against
+   `.container`'s own scroll, so it only bites once `maxHeight` gives the
+   container a height to scroll within. */
+.headerSticky > tr > .headerCell {
+  inset-block-start: 0;
+  position: sticky;
+  z-index: var(--dbm-z-index-sticky);
+}
+
+.bodyStriped > tr:nth-child(even) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* Declared after `.bodyStriped` so hover wins over a stripe when both apply
+   (equal specificity, later rule takes precedence). */
+.bodyHoverable > tr {
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.bodyHoverable > tr:hover {
+  background-color: var(--dbm-bg-neutral-subtle-hover);
+}
+
+/* Per-`size` padding and typography, shared by `Table.Cell` and
+   `Table.HeaderCell` so a header always lines up with its column. The
+   font-size mapping matches `Accordion`'s own trigger scale. */
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  padding: var(--dbm-space-1) var(--dbm-space-2);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+  padding: var(--dbm-space-3) var(--dbm-space-4);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
+  padding: var(--dbm-space-4) var(--dbm-space-5);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+  padding: var(--dbm-space-5) var(--dbm-space-6);
+}
+
+/* Logical values, so alignment mirrors under RTL with no extra work. Declared
+   after `.cell`/`.headerCell` so they win the equal-specificity tie. */
+.alignCenter {
+  text-align: center;
+}
+
+.alignEnd {
+  text-align: end;
+}
