@@ -133,6 +133,52 @@ interaction test (click to open, `ArrowDown`/`ArrowUp` roving focus, click to cl
 under `@storybook/addon-vitest`'s full browser-mode sweep (67 story files, 483 tests, including the
 three hidden sub-part stories).
 
+**Follow-up (2026-09-17, same day), a shared-infrastructure fix found via this component's own
+`defaultValue` control.** The `""` option (meaning "nothing open by default") rendered as a
+genuinely blank, invisible-text row in the embedded Docs-page Playground's own dropdown — confirmed
+directly in the DOM, not just suspected — since `PlaygroundControls.tsx` built every option's label
+straight from its own stringified value with no way to override it. Fixed at the shared-block level
+(`.storybook/blocks/PlaygroundControls.tsx`, full incident and fix in
+`07-storybook-and-documentation-standards.md` §4.1) by adding support for Storybook's own
+`argType.control.labels` convention; `Accordion.stories.tsx`'s `defaultValue` argType set
+`labels: { "": "None" }`. Verified live: the control displayed "None", the real `defaultValue` arg
+stayed `""` (confirmed via the Canvas's own "Show code" panel), and the fix was fully backward
+compatible — spot-checked `Select`'s own `size` control and `Icon`'s `mapping`-backed `icon` control,
+both unaffected.
+
+**Follow-up (2026-09-17, same day, at explicit direction) — three refinements.**
+1. **`labels`' own display text lowercased**, `"None"` → `"none"`, matching this system's other
+   option labels (`shipping`/`returns`/`warranty`), none of which are capitalized.
+2. **The same blank-pill bug also affected the Docs page's own Properties table** —
+   `PropertiesTable.tsx`'s `ValueOptions` had the identical gap as `PlaygroundControls.tsx`
+   (building each pill's text straight from `String(option)`, with no override), so the `""` option
+   rendered as an invisible pill there too, not just in the Playground's own control. Fixed the same
+   way: `PropertiesTable.tsx`'s `ArgTypeLike` now also reads `argType.control.labels`, falling back
+   to `String(option)` when unset — same backward-compatible pattern, spot-checked against `Select`'s
+   own `defaultValue` table row (unaffected). Both fixes now documented together in
+   `07-storybook-and-documentation-standards.md` §4.1.
+3. **`Accordion.Trigger`'s hover background moved from `bg.neutral-subtle` to
+   `bg.brand-subtle-hover`** (`Accordion.module.css`'s `.trigger:hover:not(:disabled)`, and the
+   Design tokens table's own row) — a deliberate brand-tinted hover instead of a neutral one.
+   Contrast unaffected in either direction: `text.primary` (the trigger label) against
+   `brand-subtle-hover` is comfortably high-contrast in all 4 themes (the token's own light value is
+   a pale brand tint, `purple.100`/`emerald.100`; its dark value, `gray.800`, is shared and unchanged
+   from before), confirmed live across all 4 brand/mode combinations.
+
+Re-verified after all three: `tsc --noEmit` (both tsconfigs), `eslint --max-warnings 0`, the full
+Vitest `unit` project (1376 tests), `storybook build`, and both bundle-size tripwires — all clean.
+
+**Follow-up (2026-09-17, same day, at explicit direction) — trigger hover token revised again**,
+`bg.brand-subtle-hover` → `bg.brand-subtle` (`Accordion.module.css`'s `.trigger:hover:not(:disabled)`
+and the Design tokens table's own row, both updated). Verified live across all 4 brand/mode
+combinations, including a direct `getComputedStyle` check against the built primitive values (not
+just eyeballed): Emerald/Light resolves to `rgb(247, 251, 250)`, an exact match for `emerald.50`;
+Purple/Dark resolves to `rgb(36, 34, 42)`, an exact match for `gray.950` — confirming `bg.brand-subtle`
+is applying correctly even where the effect reads as a subtle darkening rather than a visible
+lightening (dark mode's own value, `gray.950`, is shared across brands and slightly darker than the
+group's own `bg.surface`/`gray.900`, unlike the light-mode pale-tint case). Re-verified: `tsc
+--noEmit`, `eslint --max-warnings 0`, the full Vitest `unit` project (1376 tests) — all clean.
+
 ## Functional verification
 
 - 18 unit tests (React Testing Library + jest-axe), all passing: render, click-to-open/close, single-

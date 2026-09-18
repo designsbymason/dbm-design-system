@@ -6,6 +6,17 @@ import { sortEntriesByOrder } from "./sortEntriesByOrder";
 interface ArgTypeLike {
   description?: string;
   options?: unknown[];
+  /**
+   * `labels` (Storybook's own select-control convention, keyed by
+   * `String(option)`) overrides an option's own *displayed* pill text here
+   * too, mirroring `PlaygroundControls`' identical need — without it, an
+   * option whose own stringified value is falsy/empty (`Accordion`'s own
+   * `defaultValue: ""`, meaning "nothing open by default") rendered as a
+   * genuinely blank, invisible `<code>` pill in this table (the same bug
+   * class `PlaygroundControls` had, found and fixed the same day — see
+   * `07-storybook-and-documentation-standards.md` §4.1).
+   */
+  control?: { labels?: Record<string, string> };
   table?: {
     disable?: boolean;
     defaultValue?: { summary?: string };
@@ -28,9 +39,10 @@ function ValueOptions({ argType }: { argType: ArgTypeLike }) {
   if (Array.isArray(argType.options) && argType.options.length > 0) {
     return (
       <span className="dbm-proptable-options">
-        {argType.options.map((option) => (
-          <code key={String(option)}>{String(option)}</code>
-        ))}
+        {argType.options.map((option) => {
+          const label = argType.control?.labels?.[String(option)] ?? String(option);
+          return <code key={String(option)}>{label}</code>;
+        })}
       </span>
     );
   }

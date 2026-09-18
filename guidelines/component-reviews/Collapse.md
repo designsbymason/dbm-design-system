@@ -330,9 +330,32 @@ disclosure, achieving the same user-facing result with zero changes to `Collapse
 **Finalized 2026-09-05** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Collapse (code, stories, docs, or its tokens) without asking first.
 
+**Follow-up (2026-09-17, authorized), correcting a claim this review itself made.** `Accordion`
+(built 2026-09-17, see `component-reviews/Accordion.md`) does not literally compose `Collapse` for
+its own per-item content the way this file's own "Related components" section below and
+`Collapse.tsx`'s own component-level JSDoc both assumed while `Accordion` was still unbuilt —
+`Accordion.Trigger`/`Accordion.Content` need to share Radix Accordion's own `Item` context, which
+`Collapse` (wrapping the separate Radix Collapsible primitive instead) can't provide; see
+[ADR-0018](adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) for
+the full reasoning. `Accordion` does reuse this exact animation *technique* (a measured-height CSS
+custom property driving a `slideDown`/`slideUp` keyframe pair), just against Radix Accordion's own
+copy of the mechanism. Per the three-question finalization test (`06-engineering-standards.md` §9):
+this is a doc-only correction with zero rendered/behavioral change, so `Collapse` **stays
+Finalized** — no re-review needed. Fixed: `Collapse.tsx`'s own component-level JSDoc (no longer claims `Accordion` composes it), this
+file's own "Related components" line below, and — authorized the same day, once flagged —
+`Collapse.mdx`'s own Docs page, which repeated the same claim in four places (the Intro paragraph,
+two Usage-guidelines/Best-practices bullets each citing "an `Accordion` item's own header
+button"/"a future `Accordion`'s header button" as an example, and a code-example comment). All four
+replaced with accurate, `Accordion`-agnostic phrasing (a generic "custom disclosure row's own
+header" in place of the `Accordion`-specific examples) rather than simply removed, so the underlying
+usage guidance stays intact. Visually re-verified live in a running Storybook instance (Intro,
+Usage guidelines, Best practices, and the corrected code-example comment all render correctly) —
+`tsc --noEmit` doesn't check `.mdx` content at all, so this was the only way to confirm the fix.
+
 ## Related components
 
 `Button` (the most common `trigger` element), `Text` (a common `children` pairing), `Affix` (the
 precedent this review's `asChild` support and Playground-control-suppression pattern followed),
-`Indicators` (the precedent this review's `orientation` naming followed) — a future `Accordion`
-(the molecule this atom is the building block for) is not yet built.
+`Indicators` (the precedent this review's `orientation` naming followed). `Accordion` (built
+2026-09-17) reuses this component's own animation technique for its `Accordion.Content`, but wraps
+Radix Accordion directly rather than composing `Collapse` — see the follow-up note above.

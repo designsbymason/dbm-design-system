@@ -13,7 +13,26 @@ import { sortEntriesByOrder } from "./sortEntriesByOrder";
 import { usePlaygroundArgs } from "./usePlaygroundArgs";
 
 interface ArgTypeLike {
-  control?: { type?: string; disable?: boolean } | false;
+  control?:
+    | {
+        type?: string;
+        disable?: boolean;
+        /**
+         * Overrides an option's own *displayed* text without changing the
+         * real value `onChange` sends — Storybook's own select-control
+         * convention (`argType.control.labels`), keyed by `String(option)`.
+         * Missing entries fall back to the option's own stringified value,
+         * unaffected. Added for `Accordion`'s own `defaultValue` (`""`
+         * meaning "nothing open by default") — before this, an option
+         * whose own stringified value was falsy/empty rendered as a
+         * genuinely blank, invisible-text row in the dropdown (confirmed
+         * live in the DOM: a real `role="option"` with empty
+         * `textContent`, easy to miss as a UI bug rather than see as
+         * "unlabeled" until inspected directly) rather than a labeled one.
+         */
+        labels?: Record<string, string>;
+      }
+    | false;
   options?: unknown[];
   mapping?: Record<string, unknown>;
   table?: { disable?: boolean };
@@ -169,6 +188,19 @@ function ControlField({
     // including `undefined`, which some option lists include as a valid
     // choice, e.g. Avatar's `loading`/`status`) before calling `onChange`.
     const options = Array.isArray(argType.options) ? argType.options : [];
+    const labels = argType.control ? argType.control.labels : undefined;
+    // The label an option should *display* as — falls back to the option's
+    // own stringified value when `labels` has no entry for it, so every
+    // existing select/radio control (none of which set `labels` before
+    // `Accordion`'s own `defaultValue`) behaves exactly as before. Also
+    // used as the option's own underlying `Select.Option` `value` below,
+    // not just its visible text — routes around a real, separate bug this
+    // fix incidentally closes: DBM's own `Select` reserves `""` as its
+    // internal "nothing selected" sentinel (see `Select.tsx`'s own
+    // `onClear` comment), so an option whose real value stringifies to `""`
+    // (or any other falsy-looking string) needs a non-empty stand-in value
+    // to be reliably selectable at all, not just correctly labeled.
+    const labelFor = (option: unknown) => labels?.[String(option)] ?? String(option);
     // A `mapping`-backed control (a component-reference prop like Icon's
     // own `icon`, matching Button's leadingIcon/trailingIcon — see
     // 05-component-api-conventions.md §5) needs its display value
@@ -189,13 +221,13 @@ function ControlField({
       ? Object.entries(argType.mapping).find(([, mapped]) => mapped === draft)?.[0]
       : draft === undefined
         ? undefined
-        : String(draft);
+        : labelFor(draft);
     widget = (
       <Select
         id={fieldId}
         value={displayValue}
         onValueChange={(selected) => {
-          const index = options.findIndex((option) => String(option) === selected);
+          const index = options.findIndex((option) => labelFor(option) === selected);
           const resolved = index === -1 ? selected : options[index];
           setDraft(resolved);
           onChange(resolved);
@@ -203,8 +235,8 @@ function ControlField({
         placeholder="Choose option…"
       >
         {options.map((option) => (
-          <Select.Option key={String(option)} value={String(option)}>
-            {String(option)}
+          <Select.Option key={String(option)} value={labelFor(option)}>
+            {labelFor(option)}
           </Select.Option>
         ))}
       </Select>

@@ -5,11 +5,15 @@ import styles from "./Collapse.module.css";
 import type { CollapseProps } from "./Collapse.types";
 
 /**
- * A simple animated expand/collapse region built on Radix Collapsible —
- * the building block `Accordion` composes for each of its items. With
- * `trigger`, it's a self-contained disclosure; without it, `open` can be
- * driven entirely externally (what `Accordion` does with its own trigger
- * UI). `ref` forwards to the root element.
+ * A simple animated expand/collapse region built on Radix Collapsible — a
+ * single region. See `Accordion` for a coordinated set of several (only one
+ * open at a time by default, shared keyboard navigation across triggers) —
+ * it wraps Radix Accordion directly rather than composing this component,
+ * since Accordion's own Trigger/Content need to share Radix's own Item
+ * context (see `guidelines/adr/0018`), but reuses this exact animation
+ * technique for its own Content. With `trigger`, `Collapse` is a
+ * self-contained disclosure; without it, `open` can be driven entirely
+ * externally. `ref` forwards to the root element.
  *
  * @example
  * ```tsx

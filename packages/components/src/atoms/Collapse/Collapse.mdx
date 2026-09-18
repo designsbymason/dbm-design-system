@@ -27,11 +27,12 @@ export const propOrder = [
 
 <ComponentHeader title="Collapse" tier="Atom" />
 
-A simple animated expand/collapse region, built directly on Radix `Collapsible` — the
-building block a future `Accordion` composes for each of its own items. With `trigger`, it's a
-self-contained disclosure that manages its own open state and renders a toggle button above the
-content; without one, `open` can be driven entirely externally instead (what `Accordion` does with
-its own trigger UI, using `Collapse` only for the animated content region underneath it).
+A simple animated expand/collapse region, built directly on Radix `Collapsible` — for a single
+region. Reach for `Accordion` instead when several sibling disclosure sections need coordinated
+behavior (only one open at a time by default, shared keyboard navigation across triggers). With
+`trigger`, `Collapse` is a self-contained disclosure that manages its own open state and renders a
+toggle button above the content; without one, `open` can be driven entirely externally by a
+consumer's own trigger UI.
 
 ### Import
 
@@ -108,7 +109,7 @@ import { Collapse } from "@dbm-design-system/components";
 - Use `trigger` for a self-contained disclosure (an FAQ answer, a details panel) — it wires up
   `aria-expanded`/`aria-controls` and click/keyboard activation with no extra work.
 - Omit `trigger` and drive `open` externally when another element already owns the toggle
-  affordance — an `Accordion` item's own header button, a menu item that expands a sub-panel.
+  affordance — a custom disclosure row's own header, a menu item that expands a sub-panel.
 - Use `orientation="horizontal"` for a region that grows/shrinks sideways (a collapsible
   sidebar/rail), and make sure its container is laid out so the element isn't stretched back to
   full width regardless (a flex row, or an explicit `inline-block` context) — see Best practices.
@@ -141,8 +142,8 @@ import { Collapse } from "@dbm-design-system/components";
 - Prefer the `trigger` prop for any standalone disclosure — it's the least code and the most
   correct accessibility wiring available, matching Radix's own convention.
 - Reserve the externally-driven (no `trigger`) mode for composition, where a parent component
-  already owns a semantically-correct trigger element of its own (a future `Accordion`'s header
-  button) — duplicating a second toggle affordance next to it would be confusing.
+  already owns a semantically-correct trigger element of its own (a custom disclosure row's own
+  header) — duplicating a second toggle affordance next to it would be confusing.
 - Keep `orientation` consistent with what the collapsing content actually represents — `vertical`
   for content that reads top-to-bottom (the overwhelming majority of disclosure content), reserving
   `horizontal` specifically for sidebar/rail-shaped panels.
@@ -183,7 +184,7 @@ import { Collapse } from "@dbm-design-system/components";
 ```
 
 ```tsx
-{/* Externally driven — Accordion uses Collapse this way. */}
+{/* Externally driven — open is controlled by a consumer's own trigger UI. */}
 <Collapse open={isOpen}>
   <Text>Driven by external state, no built-in trigger.</Text>
 </Collapse>

@@ -73,7 +73,14 @@ const meta: Meta<PlaygroundArgs> = {
         "At most one item open at a time (\"single\", the default), or any number open independently (\"multiple\") — see the dedicated Multiple story, since the value shape changes with this prop and no single Playground control can drive both.",
     },
     defaultValue: {
-      control: "select",
+      // `labels` overrides just the empty-string option's own displayed
+      // text ("none" — nothing open by default) via Storybook's own
+      // select-control label-mapping mechanism, without changing the
+      // underlying value the control actually sets, which still needs to
+      // stay `""` (Accordion has no separate sentinel for "nothing open,"
+      // matching Radix's own convention). The other three options are left
+      // to their default display (the raw `value` string), unaffected.
+      control: { type: "select", labels: { "": "none" } },
       options: ["", "shipping", "returns", "warranty"],
       description: "The initial open item's value when uncontrolled (type=\"single\").",
     },
