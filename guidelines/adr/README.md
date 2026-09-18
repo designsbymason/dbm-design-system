@@ -65,6 +65,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0016](./0016-track-vs-track-strong-scoped-to-decorative-need-not-interactivity.md) | `bg.track` vs. `bg.track-strong` is scoped by whether the track itself must convey the boundary, not by whether the control is interactive | Accepted |
 | [0017](./0017-popover-omits-anchor-sub-part-pending-upstream-fix.md) | `Popover` omits Radix's own `Anchor` sub-part, over shipping it with a broken-feature warning | Accepted |
 | [0018](./0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) | `Accordion` wraps Radix Accordion's own `Content` directly, not the `Collapse` atom | Accepted |
+| [0019](./0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md) | `Table` owns an overflow-aware scroll container and puts native props on the `<table>` element | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 
