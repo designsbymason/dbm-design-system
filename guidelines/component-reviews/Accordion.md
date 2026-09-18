@@ -179,6 +179,36 @@ lightening (dark mode's own value, `gray.950`, is shared across brands and sligh
 group's own `bg.surface`/`gray.900`, unlike the light-mode pale-tint case). Re-verified: `tsc
 --noEmit`, `eslint --max-warnings 0`, the full Vitest `unit` project (1376 tests) — all clean.
 
+**Follow-up (2026-09-17, same day) — `type` made genuinely interactive in the Playground, and its
+own real gap in the Properties table fixed.** Two real, user-identified gaps, both closed:
+
+1. **`type`'s own Playground control was `control: false`** (per the original comment, "no single
+   control shape can drive both" value shapes) — reconsidered: `type` itself only ever has two
+   possible values, so it doesn't have the same open-ended-shape problem `Popover`'s own responsive
+   `side` map does; only `defaultValue`'s *shape* changes with it. Made `type` a live `select`
+   (`options: ["single", "multiple"]`); `render` now branches on `args.type` (mirroring
+   `Accordion.tsx`'s own two-arm `rootProps` pattern) so each JSX branch satisfies exactly one arm of
+   the discriminated union, no `any`/cast needed. `defaultValue` stays a single-string control either
+   way — wrapped into a one-element array (or `[]` for "none") under `type="multiple"`, demonstrating
+   the mechanism rather than the full multi-select case, which the dedicated `Multiple` story still
+   covers (two items open at once). All 6 other, fixed-render stories (`Multiple`, `DisabledItem`,
+   `CustomIcon`, `AsChildTrigger`, `Controlled`, `KeyboardInteraction`) got their own
+   `type: { control: false }` override, matching this system's standing rule for any story whose
+   render doesn't consume a given arg (`06-engineering-standards.md` §9's Storybook checklist).
+   Verified live: toggling `type` to `"multiple"` in the embedded Docs-page Playground actually let
+   two items ("Shipping" and "Returns") open independently at once, confirmed by clicking both.
+2. **`type`'s own `argType` never set `options` at all** (only a `description`), so
+   `PropertiesTable`'s "Value options" column — which reads directly from `argType.options` — showed
+   an empty dash for `type` regardless of the control being interactive or not; this was a plain
+   oversight from the original build, unrelated to the `control: false` decision. Added
+   `options: ["single", "multiple"]` to the same argType (the same array now also driving the live
+   `select` control above), and confirmed live: the Properties table now shows both `single` and
+   `multiple` pills under `type`.
+
+Re-verified after both fixes: `tsc --noEmit`, `eslint --max-warnings 0`, the full Vitest `unit`
+project (1376 tests) and `storybook` project (483 tests, including all 6 revised fixed-render
+stories) — all clean.
+
 ## Functional verification
 
 - 18 unit tests (React Testing Library + jest-axe), all passing: render, click-to-open/close, single-
@@ -194,3 +224,80 @@ group's own `bg.surface`/`gray.900`, unlike the light-mode pale-tint case). Re-v
   exclusivity, `type="multiple"` independence), every variant gallery story, all four Properties
   tables (root + three sub-parts), Design tokens table swatches, Related Components cards, and all
   four brand/mode theme combinations.
+
+## Final review pass (2026-09-18)
+
+A full `06-engineering-standards.md` §9 pass, re-checking the checklist end to end rather than
+assuming prior turns already covered everything. Found and fixed five real, concrete gaps — not
+proposed and left pending, since each is a checklist-compliance fix (baseline correctness / test
+coverage), not a new design decision:
+
+1. **`Accordion`'s own root didn't accept arbitrary native `<div>` attributes** (`onClick`,
+   `onFocus`, `aria-*`, `role`, etc.) — a real gap against the standing "always extend native props
+   where applicable" rule (`05-component-api-conventions.md` §3), and against Radix's own `Root`,
+   which supports full native div passthrough natively. Left unfixed during the original build as a
+   presumed TypeScript limitation (spreading a native-attribute `rest` alongside the separately
+   -computed, discriminated-union-typed `rootProps` in the same JSX tag doesn't type-check — confirmed
+   by reproducing the exact failure in isolation). Fixed properly, not worked around: added
+   `collapsible?: never` to `AccordionMultipleProps` (a standard TypeScript idiom that makes a
+   discriminated union destructure-friendly across both arms at once), then destructured every
+   branch-specific key out by name before computing `rest`, so `rest` holds only genuine native
+   passthrough. Verified in isolation first (a throwaway experiment file, deleted after confirming)
+   before touching the real component. Zero `any`/casts anywhere in the fix. Added a Docs-page
+   disclaimer sentence matching every sub-part's own existing one, and a dedicated test (`passes id,
+   className, style, data-testid, and other native attributes through to the root element`,
+   asserting `aria-label`/`onFocus` specifically).
+2. **`Accordion.Content` was missing Radix's own `forceMount` prop** — confirmed by tracing the
+   *full* Radix inheritance chain (`AccordionContentProps extends CollapsibleContentProps`, which
+   declares `forceMount?: true`), the exact lesson `Popover`'s own second review round already
+   flagged ("trace the entire inheritance chain, not just the layer that happens to hold the first
+   gap"). Added to `AccordionContentProps`, sourced from the real Radix type rather than hand-typed,
+   flows through automatically via the existing `{...props}` spread — no component-code change
+   needed beyond the type addition. Added to the Docs page's `Accordion.Content` argTypes and
+   `contentPropOrder`.
+3. **Two real, silently-ignored prop combinations had no dev-mode warning** — `collapsible` under
+   `type="multiple"` (now prevented at compile time too via the `never` addition above, but still a
+   real runtime no-op for a non-TS/plain-JS consumer) and `icon`/`hideIcon` under `Accordion.Trigger
+   asChild` (the exact same class of gap already warned about elsewhere in this codebase —
+   `IconButton`'s own `icon`-ignored-under-`asChild` warning, visible in this same session's own
+   `addon-vitest` console output). Both now warn once per mount in development, matching the
+   established `hasWarned*Ref` pattern (`Collapse`, `Select`, `Tag`, `RadioGroup`), with dedicated
+   tests for the warn-once behavior and the no-false-positive case.
+4. **Test-coverage gap: no test verified `id`/`className`/`style`/`data-testid` passthrough** on any
+   of the four parts (Root/Item/Trigger/Content) — confirmed missing by direct comparison against
+   `Popover`'s own test suite, which has this exact test for each of its three sub-parts. Added one
+   per part.
+5. **Test-coverage gap: keyboard/ARIA claims made on the Docs page had no verifying test** —
+   `Home`/`End` jumping to the first/last trigger, a disabled item's trigger being skipped by
+   arrow-key roving focus, and the `aria-controls`/`aria-labelledby` wiring between a trigger and its
+   own panel. All three were asserted as real behavior in the Docs page's own Accessibility section
+   prose but never actually exercised by a unit test. Added all three — the disabled-skip test in
+   particular was also live-verified directly in a running Storybook instance (via `activeElement`
+   inspection, not just the jsdom unit test) before being written up here.
+6. **`Accordion.Item`'s own `asChild` prop had zero coverage anywhere** — no story, no unit test —
+   despite being a real, documented prop with the same "no extra wrapper" contract as `Collapse`'s
+   identical `asChild`. Added a test rendering it as a real `<li>` inside a `<ul>`, confirming no
+   wrapper element and that the `<ul>`'s own first child is the `<li>` itself.
+
+**Feature-completeness pass against comparable production accordion components — two real gaps
+named, deliberately not built without confirmation (per `06-engineering-standards.md` §9's own
+scope-creep guardrail):**
+- **No `variant`/visual-style prop** — comparable accordion components typically also offer a
+  borderless/flush treatment (for use inside another already-bordered container, e.g. a `Card`),
+  distinct from the single bordered-group look this component ships today.
+- **No `size` prop** — comparable accordion components sometimes offer a compact/comfortable density
+  option; this component currently has one fixed trigger padding/font-size.
+
+Both are real, nameable gaps, not blanket "make it fancier" — but both are genuine design decisions
+(a new token/visual system, not a narrow bug fix), so they're surfaced here rather than built
+unprompted.
+
+**Re-verified after all six fixes:** `tsc --noEmit` (both tsconfigs), `eslint --max-warnings 0`, the
+full Vitest `unit` project (1388 tests, up from 1376) and `storybook` project (483 tests), a real
+`tsup` build, and `storybook build` — all clean. Per-component bundle size: 1.59KB JS / 0.80KB CSS
+gzipped, still well within budget. Live-verified in a running Storybook instance: the new native
+-passthrough disclaimer and `forceMount` row both render correctly on their respective Properties
+tables, and the disabled-item arrow-key skip was independently confirmed via direct DOM inspection
+of a live story, not just the unit test.
+
+**Not yet Finalized** — per the standing rule, that declaration is the user's to make.

@@ -29,7 +29,7 @@ export const rootPropOrder = [
 ];
 export const itemPropOrder = ["value", "disabled", "asChild", "children", "id", "className", "style", "data-testid"];
 export const triggerPropOrder = ["children", "icon", "hideIcon", "asChild", "id", "className", "style", "data-testid"];
-export const contentPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const contentPropOrder = ["children", "forceMount", "id", "className", "style", "data-testid"];
 
 <Meta of={AccordionStories} />
 
@@ -55,13 +55,15 @@ import { Accordion } from "@dbm-design-system/components";
 <Canvas of={AccordionStories.Playground} />
 
 </div>
-<PlaygroundControls of={AccordionStories.Playground} order={rootPropOrder} exclude={["type", "onValueChange", "dir", "id", "className", "style", "data-testid"]} />
+<PlaygroundControls of={AccordionStories.Playground} order={rootPropOrder} exclude={["onValueChange", "dir", "id", "className", "style", "data-testid"]} />
 
 ## Properties
 
 `Accordion` accepts a single string `value`/`defaultValue` under the default `type="single"`, or a
 `string[]` under `type="multiple"` — the value shape always matches whichever `type` is active,
-mirroring Radix's own discriminated Accordion props. `ref` forwards to the root `<div>`.
+mirroring Radix's own discriminated Accordion props. `ref` forwards to the root `<div>`. Also
+accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`,
+`onMouseEnter`) — passed straight through to the root element.
 
 <PropertiesTable of={AccordionStories} order={rootPropOrder} />
 

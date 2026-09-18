@@ -10,12 +10,16 @@ import type { AccordionHeadingLevel, AccordionOrientation } from "./Accordion.ty
 
 // `Accordion`'s own root props are a discriminated union keyed by `type`
 // (`value`/`defaultValue`/`onValueChange` are a plain `string` under
-// `type="single"`, a `string[]` under `type="multiple"`) — no single control
-// shape can drive both at once (the same class of issue `Popover`'s own
-// `side` prop hit with its responsive-map form, see Popover.stories.tsx).
-// The Playground below demonstrates the common `type="single"` case with
-// every one of *that* branch's own props live; `type="multiple"` gets its
-// own dedicated static-reference story further down instead.
+// `type="single"`, a `string[]` under `type="multiple"`). `type` itself is
+// still genuinely interactive here — `render` below branches on
+// `args.type` (mirroring `Accordion.tsx`'s own two-arm `rootProps`
+// pattern) rather than trying to force one shape to cover both. `defaultValue`
+// stays a single-string select either way for a simple, consistent control:
+// under `type="multiple"` it's wrapped into a one-element array (or `[]` for
+// "none") — demonstrating the mechanism, not every possible combination. The
+// dedicated `Multiple` story below still shows the *real* multi-open case
+// (two items open at once), which the Playground's own single-string control
+// can't represent on its own.
 // `Accordion.Item`/`Accordion.Trigger`/`Accordion.Content` each get their
 // own Properties table via a hidden docs-only stories file
 // (guidelines/adr/0013), where their argTypes are auto-resolved from real
@@ -68,9 +72,10 @@ const meta: Meta<PlaygroundArgs> = {
   parameters: { layout: "padded" },
   argTypes: {
     type: {
-      control: false,
+      control: "select",
+      options: ["single", "multiple"],
       description:
-        "At most one item open at a time (\"single\", the default), or any number open independently (\"multiple\") — see the dedicated Multiple story, since the value shape changes with this prop and no single Playground control can drive both.",
+        "At most one item open at a time (\"single\", the default), or any number open independently (\"multiple\"). Switching this also changes defaultValue's own shape — the Playground wraps it into a one-element array under \"multiple\"; see the dedicated Multiple story for the real multi-open case.",
     },
     defaultValue: {
       // `labels` overrides just the empty-string option's own displayed
@@ -91,7 +96,7 @@ const meta: Meta<PlaygroundArgs> = {
     collapsible: {
       control: "boolean",
       description:
-        "Whether the open item can be closed by activating its own trigger again, leaving every item closed at once. Only applies to type=\"single\" (the default).",
+        "Whether the open item can be closed by activating its own trigger again, leaving every item closed at once. Only applies to type=\"single\" (the default) — has no effect at all under type=\"multiple\".",
     },
     disabled: {
       control: "boolean",
@@ -134,37 +139,46 @@ const meta: Meta<PlaygroundArgs> = {
     },
   },
   args: {
+    type: "single",
     disabled: false,
     orientation: "vertical",
     headingLevel: 3,
     collapsible: true,
     defaultValue: "shipping",
   },
-  render: (args) => (
-    <div style={demoContainerStyle}>
-      <Accordion
-        disabled={args.disabled}
-        orientation={args.orientation}
-        headingLevel={args.headingLevel}
-        collapsible={args.collapsible}
-        defaultValue={args.defaultValue}
-      >
-        <DemoItems />
-      </Accordion>
-    </div>
-  ),
+  render: (args) => {
+    const commonProps = {
+      disabled: args.disabled,
+      orientation: args.orientation,
+      headingLevel: args.headingLevel,
+    };
+    return (
+      <div style={demoContainerStyle}>
+        {args.type === "multiple" ? (
+          <Accordion {...commonProps} type="multiple" defaultValue={args.defaultValue ? [args.defaultValue] : []}>
+            <DemoItems />
+          </Accordion>
+        ) : (
+          <Accordion {...commonProps} type="single" collapsible={args.collapsible} defaultValue={args.defaultValue}>
+            <DemoItems />
+          </Accordion>
+        )}
+      </div>
+    );
+  },
 };
 
 export default meta;
 
 type Story = StoryObj<PlaygroundArgs>;
 
-/** Drive every `type="single"` prop live via the Controls panel below. */
+/** Drive every prop live via the Controls panel below, including `type` itself. */
 export const Playground: Story = {};
 
 export const Multiple: Story = {
   name: "Multiple items open at once (type=\"multiple\")",
   argTypes: {
+    type: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -183,6 +197,7 @@ export const Multiple: Story = {
 export const DisabledItem: Story = {
   name: "One item disabled",
   argTypes: {
+    type: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -212,6 +227,7 @@ export const DisabledItem: Story = {
 export const CustomIcon: Story = {
   name: "Custom disclosure icon",
   argTypes: {
+    type: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -235,6 +251,7 @@ export const CustomIcon: Story = {
 export const AsChildTrigger: Story = {
   name: "Fully custom trigger row (asChild)",
   argTypes: {
+    type: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -280,6 +297,7 @@ export const AsChildTrigger: Story = {
 export const Controlled: Story = {
   name: "Controlled open item",
   argTypes: {
+    type: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },
@@ -302,6 +320,7 @@ export const Controlled: Story = {
 export const KeyboardInteraction: Story = {
   name: "Click to open, arrow keys to move between triggers",
   argTypes: {
+    type: { control: false },
     disabled: { control: false },
     orientation: { control: false },
     headingLevel: { control: false },

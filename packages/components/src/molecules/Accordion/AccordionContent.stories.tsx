@@ -16,6 +16,11 @@ const meta: Meta<typeof Accordion.Content> = {
       control: false,
       description: "The panel's own content, revealed when this item is open.",
     },
+    forceMount: {
+      control: false,
+      description:
+        "Forces the panel to stay mounted while closed, instead of being removed from the DOM — for an external animation library that needs to control its own mount/unmount timing directly.",
+    },
     id: {
       control: false,
       description:

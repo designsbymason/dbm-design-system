@@ -1,5 +1,8 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type * as AccordionPrimitive from "@radix-ui/react-accordion";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+
+type AccordionPrimitiveContentProps = ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>;
 
 /** Which heading level `Accordion.Trigger` renders as, for correct page-outline placement. */
 export type AccordionHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -14,7 +17,11 @@ export type AccordionHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
  */
 export type AccordionOrientation = "horizontal" | "vertical";
 
-interface AccordionSharedProps {
+interface AccordionSharedProps
+  extends Omit<
+    ComponentPropsWithoutRef<"div">,
+    "dir" | "defaultValue" | "onChange" | "children" | "id" | "className" | "style"
+  > {
   /** One or more `Accordion.Item` elements. */
   children: ReactNode;
   /** Disables every item in the accordion at once — each item still accepts its own additional `disabled` on top of this. */
@@ -93,6 +100,14 @@ export interface AccordionMultipleProps extends AccordionSharedProps {
   defaultValue?: string[];
   /** Called with the full set of currently-open items' `value`s whenever it changes. */
   onValueChange?: (value: string[]) => void;
+  /**
+   * Not applicable under `type="multiple"` — `collapsible` only governs
+   * whether `type="single"` can reach "nothing open." Declared as `never`
+   * (rather than omitted) purely so this discriminated union stays
+   * destructure-friendly across both arms at once, matching a standard
+   * TypeScript idiom for this exact case.
+   */
+  collapsible?: never;
 }
 
 /**
@@ -184,6 +199,13 @@ export interface AccordionContentProps
   extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /** The panel's own content, revealed when this item is open. */
   children?: ReactNode;
+  /**
+   * Forces the panel to stay mounted (rather than removed from the DOM
+   * while closed) — for a case where an external animation library needs
+   * to control its own mount/unmount timing directly instead of relying on
+   * this component's own CSS-driven exit. Leave unset for the common case.
+   */
+  forceMount?: AccordionPrimitiveContentProps["forceMount"];
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */

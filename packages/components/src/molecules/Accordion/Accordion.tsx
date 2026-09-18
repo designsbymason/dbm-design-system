@@ -1,7 +1,7 @@
 import { CaretDownIcon } from "@dbm-design-system/icons";
 import { cx } from "@dbm-design-system/primitives";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { createContext, forwardRef, useContext } from "react";
+import { createContext, forwardRef, useContext, useRef } from "react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";
 import { Icon } from "../../atoms/Icon";
 import styles from "./Accordion.module.css";
@@ -82,7 +82,36 @@ const AccordionRoot = forwardRef<HTMLDivElement, AccordionProps>((props, ref) =>
     style,
     id,
     "data-testid": dataTestId,
+    // Destructured out (rather than left in `...rest`) purely so `rest`
+    // below holds only genuine native `<div>` passthrough (`onClick`,
+    // `aria-*`, `role`, etc.) — each of these five is already handled
+    // explicitly via `rootProps` below, computed from `props` directly
+    // (not from these locals, which exist only to keep them out of `rest`).
+    // Unused by design; `collapsible` is typed `never` on the `"multiple"`
+    // arm specifically so this still destructures cleanly across both arms
+    // of the union at once.
+    type: _type,
+    value: _value,
+    defaultValue: _defaultValue,
+    onValueChange: _onValueChange,
+    collapsible: _collapsible,
+    ...rest
   } = props;
+
+  const hasWarnedCollapsibleUnderMultipleRef = useRef(false);
+  if (process.env.NODE_ENV !== "production") {
+    if (
+      props.type === "multiple" &&
+      "collapsible" in props &&
+      props.collapsible !== undefined &&
+      !hasWarnedCollapsibleUnderMultipleRef.current
+    ) {
+      hasWarnedCollapsibleUnderMultipleRef.current = true;
+      console.warn(
+        "Accordion: `collapsible` has no effect under `type=\"multiple\"` — it only governs whether `type=\"single\"` can reach \"nothing open.\" Remove `collapsible`, or remove `type=\"multiple\"`.",
+      );
+    }
+  }
 
   // Two distinct object literals, each satisfying exactly one arm of
   // Radix's own discriminated `type`/`value`/`onValueChange` union — not
@@ -108,6 +137,7 @@ const AccordionRoot = forwardRef<HTMLDivElement, AccordionProps>((props, ref) =>
 
   return (
     <AccordionPrimitive.Root
+      {...rest}
       {...rootProps}
       ref={ref}
       disabled={disabled}
@@ -152,9 +182,24 @@ AccordionItem.displayName = "Accordion.Item";
  * it's a semantic-only wrapper with no visible styling of its own.
  */
 const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
-  ({ asChild = false, icon = CaretDownIcon, hideIcon = false, className, children, ...props }, ref) => {
+  (triggerProps, ref) => {
+    const { asChild = false, icon = CaretDownIcon, hideIcon = false, className, children, ...props } = triggerProps;
     const headingLevel = useContext(AccordionHeadingLevelContext);
     const HeadingTag = elementForHeadingLevel[headingLevel] as ElementType;
+
+    const hasWarnedIconIgnoredWithAsChildRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (
+        asChild &&
+        (triggerProps.icon !== undefined || triggerProps.hideIcon !== undefined) &&
+        !hasWarnedIconIgnoredWithAsChildRef.current
+      ) {
+        hasWarnedIconIgnoredWithAsChildRef.current = true;
+        console.warn(
+          "Accordion.Trigger: `icon`/`hideIcon` have no effect when `asChild` is set — the slotted child is responsible for rendering its own disclosure indicator, if any. Render the icon as part of the slotted child instead.",
+        );
+      }
+    }
 
     return (
       <AccordionPrimitive.Header asChild>

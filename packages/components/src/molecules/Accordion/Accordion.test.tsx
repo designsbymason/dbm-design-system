@@ -162,6 +162,76 @@ describe("Accordion", () => {
     expect(shipping).toHaveFocus();
   });
 
+  it("jumps to the first/last trigger with Home/End", async () => {
+    const user = userEvent.setup();
+    render(
+      <Accordion>
+        <Accordion.Item value="shipping">
+          <Accordion.Trigger>Shipping</Accordion.Trigger>
+          <Accordion.Content>Shipping content</Accordion.Content>
+        </Accordion.Item>
+        <Accordion.Item value="returns">
+          <Accordion.Trigger>Returns</Accordion.Trigger>
+          <Accordion.Content>Returns content</Accordion.Content>
+        </Accordion.Item>
+        <Accordion.Item value="warranty">
+          <Accordion.Trigger>Warranty</Accordion.Trigger>
+          <Accordion.Content>Warranty content</Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    const shipping = screen.getByRole("button", { name: "Shipping" });
+    const returns = screen.getByRole("button", { name: "Returns" });
+    const warranty = screen.getByRole("button", { name: "Warranty" });
+
+    returns.focus();
+    await user.keyboard("{End}");
+    expect(warranty).toHaveFocus();
+
+    await user.keyboard("{Home}");
+    expect(shipping).toHaveFocus();
+  });
+
+  it("skips a disabled item's trigger when moving roving focus with arrow keys", async () => {
+    const user = userEvent.setup();
+    render(
+      <Accordion>
+        <Accordion.Item value="shipping">
+          <Accordion.Trigger>Shipping</Accordion.Trigger>
+          <Accordion.Content>Shipping content</Accordion.Content>
+        </Accordion.Item>
+        <Accordion.Item value="returns" disabled>
+          <Accordion.Trigger>Returns</Accordion.Trigger>
+          <Accordion.Content>Returns content</Accordion.Content>
+        </Accordion.Item>
+        <Accordion.Item value="warranty">
+          <Accordion.Trigger>Warranty</Accordion.Trigger>
+          <Accordion.Content>Warranty content</Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    const shipping = screen.getByRole("button", { name: "Shipping" });
+    const warranty = screen.getByRole("button", { name: "Warranty" });
+
+    shipping.focus();
+    await user.keyboard("{ArrowDown}");
+    expect(warranty).toHaveFocus();
+  });
+
+  it("wires aria-controls/aria-labelledby between a trigger and its own panel", () => {
+    render(
+      <Accordion defaultValue="shipping">
+        <BasicItems />
+      </Accordion>,
+    );
+    const trigger = screen.getByRole("button", { name: "Shipping" });
+    const panel = screen.getByText("Shipping content").closest('[role="region"]');
+
+    expect(panel).not.toBeNull();
+    expect(trigger).toHaveAttribute("aria-controls", panel?.id);
+    expect(panel).toHaveAttribute("aria-labelledby", trigger.id);
+  });
+
   it("renders the trigger's heading level via headingLevel", () => {
     render(
       <Accordion headingLevel={2}>
@@ -178,6 +248,25 @@ describe("Accordion", () => {
       </Accordion>,
     );
     expect(screen.getByRole("heading", { level: 3, name: "Shipping" })).toBeInTheDocument();
+  });
+
+  it("renders an item's own root behavior onto a single provided child via asChild, with no extra wrapper", () => {
+    const { container } = render(
+      <Accordion defaultValue="shipping">
+        <ul>
+          <Accordion.Item value="shipping" asChild>
+            <li data-testid="shipping-item">
+              <Accordion.Trigger>Shipping</Accordion.Trigger>
+              <Accordion.Content>Shipping content</Accordion.Content>
+            </li>
+          </Accordion.Item>
+        </ul>
+      </Accordion>,
+    );
+    const item = screen.getByTestId("shipping-item");
+    expect(item.tagName).toBe("LI");
+    expect(container.querySelector("ul")?.firstElementChild).toBe(item);
+    expect(screen.getByText("Shipping content")).toBeInTheDocument();
   });
 
   it("renders a fully custom trigger row via asChild", () => {
@@ -206,6 +295,83 @@ describe("Accordion", () => {
     expect(container.querySelector("svg")).not.toBeInTheDocument();
   });
 
+  it("warns once in development when icon or hideIcon is combined with asChild", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { rerender } = render(
+      <Accordion>
+        <Accordion.Item value="shipping">
+          <Accordion.Trigger asChild hideIcon>
+            <button type="button">Custom trigger</button>
+          </Accordion.Trigger>
+          <Accordion.Content>Shipping content</Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0]?.[0]).toContain("icon");
+
+    rerender(
+      <Accordion>
+        <Accordion.Item value="shipping">
+          <Accordion.Trigger asChild hideIcon>
+            <button type="button">Custom trigger again</button>
+          </Accordion.Trigger>
+          <Accordion.Content>Shipping content</Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn when asChild is used without icon or hideIcon", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <Accordion>
+        <Accordion.Item value="shipping">
+          <Accordion.Trigger asChild>
+            <button type="button">Custom trigger</button>
+          </Accordion.Trigger>
+          <Accordion.Content>Shipping content</Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("warns once in development when collapsible is set under type=\"multiple\"", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { rerender } = render(
+      // @ts-expect-error -- collapsible is typed `never` under type="multiple"; testing the runtime warning for a non-TS/JS consumer who ignores the type error.
+      <Accordion type="multiple" collapsible={false}>
+        <BasicItems />
+      </Accordion>,
+    );
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0]?.[0]).toContain("collapsible");
+
+    rerender(
+      // @ts-expect-error -- see above
+      <Accordion type="multiple" collapsible={false}>
+        <BasicItems />
+      </Accordion>,
+    );
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn about collapsible under type=\"single\"", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <Accordion collapsible={false}>
+        <BasicItems />
+      </Accordion>,
+    );
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it("forwards the root ref to the underlying element", () => {
     const ref = vi.fn();
     render(
@@ -214,6 +380,76 @@ describe("Accordion", () => {
       </Accordion>,
     );
     expect(ref).toHaveBeenCalled();
+  });
+
+  it("passes id, className, style, data-testid, and other native attributes through to the root element", () => {
+    const onFocus = vi.fn();
+    render(
+      <Accordion
+        id="accordion-root"
+        className="extra"
+        style={{ color: "red" }}
+        data-testid="accordion-testid"
+        aria-label="Example accordion"
+        onFocus={onFocus}
+      >
+        <BasicItems />
+      </Accordion>,
+    );
+    const root = screen.getByTestId("accordion-testid");
+    expect(root).toHaveAttribute("id", "accordion-root");
+    expect(root).toHaveClass("extra");
+    expect(root).toHaveStyle({ color: "rgb(255, 0, 0)" });
+    expect(root).toHaveAttribute("aria-label", "Example accordion");
+  });
+
+  it("passes id, className, style, and data-testid through to an item element", () => {
+    render(
+      <Accordion>
+        <Accordion.Item value="shipping" id="item-id" className="extra" style={{ color: "red" }} data-testid="item-testid">
+          <Accordion.Trigger>Shipping</Accordion.Trigger>
+          <Accordion.Content>Shipping content</Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    const item = screen.getByTestId("item-testid");
+    expect(item).toHaveAttribute("id", "item-id");
+    expect(item).toHaveClass("extra");
+    expect(item).toHaveStyle({ color: "rgb(255, 0, 0)" });
+  });
+
+  it("passes id, className, style, and data-testid through to a trigger element", () => {
+    render(
+      <Accordion>
+        <Accordion.Item value="shipping">
+          <Accordion.Trigger id="trigger-id" className="extra" style={{ color: "red" }} data-testid="trigger-testid">
+            Shipping
+          </Accordion.Trigger>
+          <Accordion.Content>Shipping content</Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    const trigger = screen.getByTestId("trigger-testid");
+    expect(trigger).toHaveAttribute("id", "trigger-id");
+    expect(trigger).toHaveClass("extra");
+    expect(trigger).toHaveStyle({ color: "rgb(255, 0, 0)" });
+  });
+
+  it("passes id, className, style, and data-testid through to a content element", () => {
+    render(
+      <Accordion defaultValue="shipping">
+        <Accordion.Item value="shipping">
+          <Accordion.Trigger>Shipping</Accordion.Trigger>
+          <Accordion.Content id="content-id" className="extra" style={{ color: "red" }} data-testid="content-testid">
+            Shipping content
+          </Accordion.Content>
+        </Accordion.Item>
+      </Accordion>,
+    );
+    const content = screen.getByTestId("content-testid");
+    expect(content).toHaveAttribute("id", "content-id");
+    expect(content).toHaveClass("extra");
+    expect(content).toHaveStyle({ color: "rgb(255, 0, 0)" });
   });
 
   it("has no accessibility violations, closed or open", async () => {
