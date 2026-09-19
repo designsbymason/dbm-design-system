@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Link } from "./Link";
+import { linkPlaygroundSnippet, linkSnippets } from "./Link.snippets";
 
 const meta: Meta<typeof Link> = {
   title: "Atoms/Typography/Link",
@@ -100,9 +101,19 @@ export default meta;
 type Story = StoryObj<typeof Link>;
 
 /** Drive every prop live. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => linkPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Internal: Story = {
+  parameters: { docs: { source: { code: linkSnippets.internal } } },
   argTypes: {
     href: { control: false },
     children: { control: false },
@@ -116,6 +127,7 @@ export const Internal: Story = {
 
 export const External: Story = {
   name: "External (auto-detected, shows icon)",
+  parameters: { docs: { source: { code: linkSnippets.external } } },
   argTypes: {
     href: { control: false },
     children: { control: false },
@@ -129,6 +141,7 @@ export const External: Story = {
 
 export const ForcedExternal: Story = {
   name: "Forced external via explicit prop",
+  parameters: { docs: { source: { code: linkSnippets.forcedExternal } } },
   argTypes: {
     href: { control: false },
     children: { control: false },
@@ -146,6 +159,7 @@ export const ForcedExternal: Story = {
 
 export const AsChild: Story = {
   name: "asChild (composes with a custom element)",
+  parameters: { docs: { source: { code: linkSnippets.asChild } } },
   argTypes: {
     href: { control: false },
     children: { control: false },
@@ -178,6 +192,7 @@ export const AsChild: Story = {
 
 export const Disabled: Story = {
   name: "Disabled (aria-disabled, click blocked)",
+  parameters: { docs: { source: { code: linkSnippets.disabled } } },
   argTypes: {
     href: { control: false },
     children: { control: false },
@@ -195,6 +210,7 @@ export const Disabled: Story = {
 
 export const InParagraph: Story = {
   name: "Inline within body text",
+  parameters: { docs: { source: { code: linkSnippets.inParagraph } } },
   argTypes: {
     href: { control: false },
     children: { control: false },
@@ -213,6 +229,7 @@ export const InParagraph: Story = {
 
 export const UnderlineVariants: Story = {
   name: "underline variants (always / hover / none)",
+  parameters: { docs: { source: { code: linkSnippets.underlineVariants } } },
   argTypes: {
     href: { control: false },
     children: { control: false },

@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Text } from "../Text";
 import { Code } from "./Code";
+import { codePlaygroundSnippet, codeSnippets } from "./Code.snippets";
 
 const meta: Meta<typeof Code> = {
   title: "Atoms/Typography/Code",
@@ -48,9 +49,26 @@ export default meta;
 type Story = StoryObj<typeof Code>;
 
 /** Drive every prop live. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => codePlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => codePlaygroundSnippet(context.args),
+      },
+    },
+  },
   argTypes: {
     children: { control: false },
   },
@@ -58,6 +76,7 @@ export const Default: Story = {
 
 export const WithinText: Story = {
   name: "Within body text",
+  parameters: { docs: { source: { code: codeSnippets.withinText } } },
   argTypes: {
     children: { control: false },
   },
@@ -71,6 +90,7 @@ export const WithinText: Story = {
 
 export const InheritsSurroundingSize: Story = {
   name: "Inherits surrounding font size",
+  parameters: { docs: { source: { code: codeSnippets.inheritsSurroundingSize } } },
   argTypes: {
     children: { control: false },
   },

@@ -11,6 +11,7 @@
 // `07-storybook-and-documentation-standards.md` §4.2.
 
 import type { TooltipAlign, TooltipSide } from "./Tooltip.types";
+import { quote } from "../../snippetHelpers";
 
 export const tooltipSnippets = {
   sides: `{/* side: "top" (default) | "right" | "bottom" | "left". align: "start" | "center" (default) | "end". */}
@@ -32,10 +33,6 @@ export const tooltipSnippets = {
   </Tooltip>
 </TooltipProvider>`,
 } as const;
-
-// An attribute value as a reader would write it: a plain string, or a `{"…"}` expression when the
-// text holds a quote or an ampersand (which a JSX string attribute would misread).
-const quote = (value: string): string => (/["&\\]/.test(value) ? `{${JSON.stringify(value)}}` : `"${value}"`);
 
 /** Which trigger a story puts inside the `Tooltip`. */
 export type TooltipSnippetTrigger = "button" | "save" | "icon";

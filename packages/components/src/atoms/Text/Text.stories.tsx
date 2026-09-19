@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Text } from "./Text";
+import { textPlaygroundSnippet, textSnippets } from "./Text.snippets";
 
 /**
  * `truncate`'s Storybook control is a plain text field, paired with a real
@@ -145,12 +146,21 @@ type Story = StoryObj<typeof Text>;
 
 export const Playground: Story = {
   name: "Playground",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => textPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };
 
 export const Default: Story = {};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: textSnippets.allSizes } } },
   // `size` is the deliberate varying axis (one instance per size, so no
   // single control value could represent "all of them" — per
   // 06-engineering-standards.md §9's multi-instance-gallery exception);
@@ -180,6 +190,7 @@ export const AllSizes: Story = {
 
 export const AllWeights: Story = {
   name: "All weights",
+  parameters: { docs: { source: { code: textSnippets.allWeights } } },
   argTypes: {
     weight: { control: false },
     children: { control: false },
@@ -210,7 +221,7 @@ export const AllColors: Story = {
   // new defect. axe has no way to know that on its own. Confirmed still the
   // case during this component's own 2026-09-07 review pass — not a new
   // finding. See guidelines/01-vision-and-goals.md §12.
-  parameters: { a11y: { test: "todo" } },
+  parameters: { a11y: { test: "todo" }, docs: { source: { code: textSnippets.allColors } } },
   argTypes: {
     color: { control: false },
     children: { control: false },
@@ -245,6 +256,7 @@ export const AllColors: Story = {
 
 export const FontFamily: Story = {
   name: "Font family (primary vs secondary/editorial)",
+  parameters: { docs: { source: { code: textSnippets.fontFamily } } },
   argTypes: {
     fontFamily: { control: false },
     children: { control: false },
@@ -263,6 +275,7 @@ export const FontFamily: Story = {
 
 export const Align: Story = {
   name: "Text alignment (start/center/end)",
+  parameters: { docs: { source: { code: textSnippets.align } } },
   argTypes: {
     align: { control: false },
     children: { control: false },
@@ -285,6 +298,7 @@ export const Align: Story = {
 
 export const Wrap: Story = {
   name: "Line-wrapping (wrap vs balance vs pretty)",
+  parameters: { docs: { source: { code: textSnippets.wrap } } },
   // `wrap` is the deliberate varying axis; `children` is hardcoded per
   // instance (text describing its own wrap value, calibrated to actually
   // wrap at the demo width) — matches Heading.stories.tsx's own identical
@@ -323,6 +337,7 @@ export const Wrap: Story = {
 
 export const Truncate: Story = {
   name: "truncate (line-clamp)",
+  parameters: { docs: { source: { code: textSnippets.truncate } } },
   argTypes: { truncate: { control: false } },
   args: {
     truncate: "2" as unknown as number,
@@ -338,6 +353,7 @@ export const Truncate: Story = {
 
 export const AsLabel: Story = {
   name: 'Polymorphic: as="label" (native props type-check, e.g. htmlFor)',
+  parameters: { docs: { source: { code: textSnippets.asLabel } } },
   argTypes: { as: { control: false }, children: { control: false } },
   args: { weight: "medium", children: "Email address" },
   render: (args) => (
@@ -372,6 +388,14 @@ export const AsLabel: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (wraps, never overflows)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => textPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
   // tool this project never adopted (02-tech-stack-and-structure.md picked
   // Playwright's own self-hosted visual regression instead); this

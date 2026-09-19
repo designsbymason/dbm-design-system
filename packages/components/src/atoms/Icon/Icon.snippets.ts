@@ -19,6 +19,7 @@ import {
   type IconWeight,
 } from "@dbm-design-system/icons";
 import type { IconSize, IconTone } from "./Icon.types";
+import { quote } from "../../snippetHelpers";
 
 export const iconSnippets = {
   default: `{/* icon takes any icon from @dbm-design-system/icons — WalletIcon here. Without a label the icon is
@@ -70,10 +71,6 @@ const iconName = (icon: unknown): string | undefined => {
   // *option key* (`"Star"`), not the mapped component — so accept that form too.
   return typeof icon === "string" && iconKeys.includes(icon) ? `${icon}Icon` : undefined;
 };
-
-// An attribute value as a reader would write it: a plain string, or a `{"…"}` expression when the
-// text holds a quote or an ampersand (which a JSX string attribute would misread).
-const quote = (value: string): string => (/["&\\]/.test(value) ? `{${JSON.stringify(value)}}` : `"${value}"`);
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface IconPlaygroundSnippetArgs {

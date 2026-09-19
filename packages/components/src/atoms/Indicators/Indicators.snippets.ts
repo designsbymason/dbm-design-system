@@ -10,6 +10,7 @@
 // checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
 import type { IndicatorsOrientation, IndicatorsSize, IndicatorsVariant } from "./Indicators.types";
+import { quote } from "../../snippetHelpers";
 
 const state = "{/* const [index, setIndex] = useState(0); — Indicators is controlled, so your component holds the position */}";
 
@@ -33,10 +34,6 @@ export const indicatorsSnippets = {
   aria-label="Gallery navigation"
 />`,
 } as const;
-
-// An attribute value as a reader would write it: a plain string, or a `{"…"}` expression when the
-// text holds a quote or an ampersand (which a JSX string attribute would misread).
-const quote = (value: string): string => (/["&\\]/.test(value) ? `{${JSON.stringify(value)}}` : `"${value}"`);
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface IndicatorsPlaygroundSnippetArgs {

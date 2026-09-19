@@ -13,6 +13,7 @@
 
 import { ratioLiteral } from "../AspectRatio/AspectRatio.snippets";
 import type { ImageObjectFit, ImageObjectPosition, ImageRadius } from "./Image.types";
+import { quote } from "../../snippetHelpers";
 
 export const imageSnippets = {
   default: `{/* An Image fills the width of its container, so size the container. alt is required: describe the
@@ -69,10 +70,6 @@ export const imageSnippets = {
   <Image src="/pattern.png" alt="" />
 </div>`,
 } as const;
-
-// An attribute value as a reader would write it: a plain string, or a `{"…"}` expression when the
-// text holds a quote or an ampersand (which a JSX string attribute would misread).
-const quote = (value: string): string => (/["&\\]/.test(value) ? `{${JSON.stringify(value)}}` : `"${value}"`);
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface ImagePlaygroundSnippetArgs {

@@ -11,6 +11,7 @@
 // See `07-storybook-and-documentation-standards.md` §4.2.
 
 import type { BackToTopProps } from "./BackToTop.types";
+import { quote } from "../../snippetHelpers";
 
 export const backToTopSnippets = {
   withinScrollContainer: `{/* const containerRef = useRef<HTMLDivElement>(null); */}
@@ -22,10 +23,6 @@ export const backToTopSnippets = {
 </div>
 <BackToTop scrollContainerRef={containerRef} threshold={200} />`,
 } as const;
-
-// An attribute value as a reader would write it: a plain string, or a `{"…"}` expression when the
-// text holds a quote or an ampersand (which a JSX string attribute would misread).
-const quote = (value: string): string => (/["&\\]/.test(value) ? `{${JSON.stringify(value)}}` : `"${value}"`);
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface BackToTopPlaygroundSnippetArgs {

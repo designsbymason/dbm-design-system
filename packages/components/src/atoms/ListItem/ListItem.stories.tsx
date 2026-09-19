@@ -1,10 +1,11 @@
 import { CheckIcon, GearIcon, HouseIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Badge } from "../Badge";
 import { IconButton } from "../IconButton";
 import { List } from "../../molecules/List";
 import { ListItem } from "./ListItem";
+import { listItemPlaygroundSnippet, listItemSnippets } from "./ListItem.snippets";
 
 const meta: Meta<typeof ListItem> = {
   title: "Atoms/Typography/ListItem",
@@ -95,6 +96,14 @@ type Story = StoryObj<typeof ListItem>;
 
 /** Drive every prop live. */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => listItemPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <List>
       <ListItem {...args} />
@@ -103,6 +112,7 @@ export const Playground: Story = {
 };
 
 export const Default: Story = {
+  parameters: { docs: { source: { code: listItemSnippets.default } } },
   argTypes: {
     children: { control: false },
     interactive: { control: false },
@@ -119,6 +129,7 @@ export const Default: Story = {
 
 export const CustomIconMarker: Story = {
   name: "Custom icon marker",
+  parameters: { docs: { source: { code: listItemSnippets.customIconMarker } } },
   argTypes: {
     children: { control: false },
     interactive: { control: false },
@@ -137,6 +148,7 @@ export const CustomIconMarker: Story = {
 
 export const TrailingContent: Story = {
   name: "Trailing content",
+  parameters: { docs: { source: { code: listItemSnippets.trailingContent } } },
   argTypes: {
     children: { control: false },
     interactive: { control: false },
@@ -161,6 +173,7 @@ export const TrailingContent: Story = {
 
 export const Interactive: Story = {
   name: "Interactive (nav-menu-style list)",
+  parameters: { docs: { source: { code: listItemSnippets.interactive } } },
   argTypes: {
     children: { control: false },
     interactive: { control: false },
@@ -195,6 +208,7 @@ export const Interactive: Story = {
 
 export const Disabled: Story = {
   name: "Disabled (aria-disabled, click blocked)",
+  parameters: { docs: { source: { code: listItemSnippets.disabled } } },
   argTypes: {
     children: { control: false },
     interactive: { control: false },

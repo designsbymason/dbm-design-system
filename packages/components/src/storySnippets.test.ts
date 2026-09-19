@@ -14,6 +14,15 @@ import { inputPlaygroundSnippet } from "./atoms/Input/Input.snippets";
 import { radioPlaygroundSnippet } from "./atoms/Radio/Radio.snippets";
 import { switchPlaygroundSnippet } from "./atoms/Switch/Switch.snippets";
 import { textareaPlaygroundSnippet } from "./atoms/Textarea/Textarea.snippets";
+import { blockquotePlaygroundSnippet } from "./atoms/Blockquote/Blockquote.snippets";
+import { codePlaygroundSnippet } from "./atoms/Code/Code.snippets";
+import { headingPlaygroundSnippet } from "./atoms/Heading/Heading.snippets";
+import { highlightPlaygroundSnippet } from "./atoms/Highlight/Highlight.snippets";
+import { kbdPlaygroundSnippet } from "./atoms/Kbd/Kbd.snippets";
+import { linkPlaygroundSnippet } from "./atoms/Link/Link.snippets";
+import { listItemPlaygroundSnippet } from "./atoms/ListItem/ListItem.snippets";
+import { textPlaygroundSnippet } from "./atoms/Text/Text.snippets";
+import { escapeJsxText, quote, truncateValue } from "./snippetHelpers";
 import { backdropPlaygroundSnippet } from "./atoms/Backdrop/Backdrop.snippets";
 import { backToTopPlaygroundSnippet } from "./atoms/BackToTop/BackToTop.snippets";
 import { clientOnlyPlaygroundSnippet } from "./atoms/ClientOnly/ClientOnly.snippets";
@@ -147,8 +156,8 @@ for (const [file, module] of Object.entries(snippetModules)) {
 
 describe("story snippets", () => {
   it("finds the snippet files", () => {
-    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(53);
-    expect(namedSnippets.length).toBeGreaterThan(245);
+    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(61);
+    expect(namedSnippets.length).toBeGreaterThan(280);
   });
 
   it.each(namedSnippets)("%s is a real, pasteable snippet", (_name, code) => {
@@ -963,6 +972,140 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
   it("VisuallyHidden writes the text, and `focusable` only when it's on", () => {
     expect(visuallyHiddenPlaygroundSnippet({ children: "Hidden", focusable: false })).toBe("<VisuallyHidden>Hidden</VisuallyHidden>");
     expect(visuallyHiddenPlaygroundSnippet({ children: "Hidden", focusable: true })).toBe("<VisuallyHidden focusable>Hidden</VisuallyHidden>");
+  });
+});
+
+describe("Playground snippets for the eight typography atoms", () => {
+  it("the shared helpers: entities in text, safe attribute quoting, and a truncate text field read as a number", () => {
+    expect(escapeJsxText("a < b && {c}")).toBe("a &lt; b &amp;&amp; &#123;c&#125;");
+    expect(quote("plain")).toBe('"plain"');
+    expect(quote('say "hi"')).toBe('{"say \\"hi\\""}');
+    expect(quote("a & b")).toBe('{"a & b"}');
+    expect(truncateValue("")).toBeUndefined();
+    expect(truncateValue(" ")).toBeUndefined();
+    expect(truncateValue("2")).toBe(2);
+    expect(truncateValue(3)).toBe(3);
+    expect(truncateValue(0)).toBeUndefined();
+    expect(truncateValue("nope")).toBeUndefined();
+    expect(truncateValue(undefined)).toBeUndefined();
+  });
+
+  it.each([
+    {},
+    { children: "Quote", variant: "pull-quote", attribution: "Someone", cite: "https://example.com/x" },
+    { children: "A < B & C", attribution: 'A "quoted" name' },
+  ])("Blockquote %j is a real snippet", (args) => {
+    expect(problemsIn(blockquotePlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Blockquote writes only what differs, and swaps the stories' own source URL for a neutral one", () => {
+    expect(blockquotePlaygroundSnippet({ children: "Quote", variant: "default", attribution: undefined, cite: undefined })).toBe("<Blockquote>\n  Quote\n</Blockquote>");
+    expect(blockquotePlaygroundSnippet({ children: "Q", variant: "pull-quote", attribution: "Steve Jobs", cite: "https://en.wikiquote.org/wiki/Steve_Jobs" })).toBe(
+      '<Blockquote variant="pull-quote" attribution="Steve Jobs" cite="https://example.com/quotes/design">\n  Q\n</Blockquote>',
+    );
+    expect(blockquotePlaygroundSnippet({ children: "Q", cite: "https://example.org/mine" })).toContain('cite="https://example.org/mine"');
+  });
+
+  it.each([{}, { children: "pnpm dev" }, { children: "a < b" }])("Code %j is a real snippet", (args) => {
+    expect(problemsIn(codePlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Code writes the text as an inline Code", () => {
+    expect(codePlaygroundSnippet({ children: "pnpm install" })).toBe("<Code>pnpm install</Code>");
+    expect(codePlaygroundSnippet({ children: "a < b" })).toBe("<Code>a &lt; b</Code>");
+  });
+
+  it.each([{}, { children: "Esc", "aria-label": "Escape" }, { children: "⌘", "aria-label": 'The "Command" key' }])("Kbd %j is a real snippet", (args) => {
+    expect(problemsIn(kbdPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Kbd writes an aria-label only when there is one", () => {
+    expect(kbdPlaygroundSnippet({ children: "Esc", "aria-label": "" })).toBe("<Kbd>Esc</Kbd>");
+    expect(kbdPlaygroundSnippet({ children: "Esc", "aria-label": "Escape" })).toBe('<Kbd aria-label="Escape">Esc</Kbd>');
+  });
+
+  it.each([
+    {},
+    { children: "Find design", query: "design", tone: "danger", caseSensitive: true },
+    { children: "Design and agents", query: ["design", "agent"], tone: "info" },
+    { children: "x", query: "" },
+  ])("Highlight %j is a real snippet", (args) => {
+    expect(problemsIn(highlightPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Highlight writes only what differs, a single query as a string and several as an array", () => {
+    expect(highlightPlaygroundSnippet({ children: "x", tone: "warning", caseSensitive: false })).toBe("<Highlight>x</Highlight>");
+    expect(highlightPlaygroundSnippet({ children: "x", query: "design" })).toBe('<Highlight query="design">x</Highlight>');
+    expect(highlightPlaygroundSnippet({ children: "x", query: ["design", "agent"], tone: "info", caseSensitive: true })).toBe(
+      '<Highlight query={["design", "agent"]} tone="info" caseSensitive>x</Highlight>',
+    );
+    expect(highlightPlaygroundSnippet({ children: "x", query: [""] })).toBe("<Highlight>x</Highlight>");
+  });
+
+  it.each([
+    {},
+    { href: "/docs", children: "Docs", external: false, underline: "always", disabled: false, "aria-label": "" },
+    { href: "https://example.com/?a=1&b=2", children: "Out", external: false, underline: "none", disabled: true, "aria-label": 'Go to "Out"' },
+  ])("Link %j is a real snippet", (args) => {
+    expect(problemsIn(linkPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Link writes only what differs, and `external` only where it changes the auto-detection from the href", () => {
+    expect(linkPlaygroundSnippet({ href: "/docs", children: "Documentation", external: false, underline: "always", disabled: false, "aria-label": "" })).toBe(
+      '<Link href="/docs">Documentation</Link>',
+    );
+    expect(linkPlaygroundSnippet({ href: "/download", children: "x", external: true })).toBe('<Link href="/download" external>x</Link>');
+    expect(linkPlaygroundSnippet({ href: "https://example.com", children: "x", external: true })).toBe('<Link href="https://example.com">x</Link>');
+    expect(linkPlaygroundSnippet({ href: "https://example.com", children: "x", external: false })).toBe('<Link href="https://example.com" external={false}>x</Link>');
+    expect(linkPlaygroundSnippet({ href: "//cdn.example.com/a", children: "x", external: false })).toContain("external={false}");
+    expect(linkPlaygroundSnippet({ href: "/docs", children: "x", underline: "hover", disabled: true })).toBe('<Link href="/docs" underline="hover" disabled>x</Link>');
+  });
+
+  it.each([{}, { children: "Inbox", interactive: true, selected: true, disabled: true, "aria-label": "Inbox" }])("ListItem %j is a real snippet", (args) => {
+    expect(problemsIn(listItemPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("ListItem sits in the List it needs, and an interactive one gets the handler it needs", () => {
+    expect(listItemPlaygroundSnippet({ children: "One", interactive: false, selected: false, disabled: false, "aria-label": "" })).toBe(
+      "<List>\n  <ListItem>One</ListItem>\n</List>",
+    );
+    const interactive = listItemPlaygroundSnippet({ children: "Home", interactive: true, selected: true });
+    expect(interactive).toContain("<ListItem interactive selected onClick={handleClick}>Home</ListItem>");
+    expect(interactive).toContain("handleClick is yours");
+  });
+
+  it.each([
+    {},
+    { children: "Title", level: 1 },
+    { children: "Title", level: 3, size: "xl", align: "center", weight: "medium", color: "secondary", fontFamily: "primary", wrap: "balance", trim: "both", truncate: "2", as: "div" },
+  ])("Heading %j is a real snippet", (args) => {
+    expect(problemsIn(headingPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Heading writes only what differs, and `size` only where it isn't the level's own default", () => {
+    expect(headingPlaygroundSnippet({ children: "Design builds meaning", level: 2, size: "4xl", align: "start", weight: "bold", color: "primary", fontFamily: "secondary", wrap: "wrap", truncate: "" })).toBe(
+      "<Heading>Design builds meaning</Heading>",
+    );
+    expect(headingPlaygroundSnippet({ children: "x", level: 3, size: "3xl" })).toBe("<Heading level={3}>x</Heading>");
+    expect(headingPlaygroundSnippet({ children: "x", level: 1, size: "5xl" })).toBe("<Heading level={1}>x</Heading>");
+    expect(headingPlaygroundSnippet({ children: "x", level: 2, size: "xl" })).toBe('<Heading size="xl">x</Heading>');
+    expect(headingPlaygroundSnippet({ children: "x", level: 3, size: "3xl", truncate: "2", trim: "start" })).toBe('<Heading level={3} trim="start" truncate={2}>x</Heading>');
+    expect(headingPlaygroundSnippet({ children: "x", as: "div", level: 3, size: "lg" })).toBe('<Heading as="div" level={3} size="lg">x</Heading>');
+  });
+
+  it.each([
+    {},
+    { children: "Body", size: "lg", align: "end", weight: "semibold", color: "danger", fontFamily: "secondary", wrap: "pretty", truncate: 3, as: "label" },
+  ])("Text %j is a real snippet", (args) => {
+    expect(problemsIn(textPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Text writes only what differs (p, base, start, regular, primary, primary, wrap)", () => {
+    expect(textPlaygroundSnippet({ children: "Design builds meaning", size: "base", align: "start", weight: "regular", color: "primary", fontFamily: "primary", wrap: "wrap", truncate: "" })).toBe(
+      "<Text>Design builds meaning</Text>",
+    );
+    expect(textPlaygroundSnippet({ children: "x", size: "lg", as: "span", truncate: "2" })).toBe('<Text as="span" size="lg" truncate={2}>x</Text>');
+    expect(textPlaygroundSnippet({ children: "x", as: "p" })).toBe("<Text>x</Text>");
   });
 });
 

@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Text } from "../Text";
 import { Kbd } from "./Kbd";
+import { kbdPlaygroundSnippet, kbdSnippets } from "./Kbd.snippets";
 
 const meta: Meta<typeof Kbd> = {
   title: "Atoms/Typography/Kbd",
@@ -50,12 +51,28 @@ type Story = StoryObj<typeof Kbd>;
 
 /** Drive every prop live. */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => kbdPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     "aria-label": "Escape",
   },
 };
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => kbdPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // "Esc" is already a readable word and doesn't need an aria-label — kept
   // as a non-nullish "" rather than left undefined, so the control itself
   // stays live/interactive instead of rendering as an inert placeholder
@@ -71,6 +88,7 @@ export const Default: Story = {
 
 export const Chord: Story = {
   name: "A keyboard chord",
+  parameters: { docs: { source: { code: kbdSnippets.chord } } },
   // Both Kbds' children and aria-label are fixed, literal values in the
   // render below (one instance even differs from the other — the ⌘ key
   // has an aria-label, the K key doesn't) — no single control value could

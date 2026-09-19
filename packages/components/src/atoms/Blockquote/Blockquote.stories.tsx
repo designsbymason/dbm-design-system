@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Blockquote } from "./Blockquote";
+import { blockquotePlaygroundSnippet } from "./Blockquote.snippets";
 
 const meta: Meta<typeof Blockquote> = {
   title: "Atoms/Typography/Blockquote",
@@ -67,9 +68,26 @@ export default meta;
 type Story = StoryObj<typeof Blockquote>;
 
 /** Drive every prop live. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => blockquotePlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => blockquotePlaygroundSnippet(context.args),
+      },
+    },
+  },
   argTypes: {
     variant: { control: false },
     attribution: { control: false },
@@ -83,6 +101,14 @@ export const Default: Story = {
 
 export const WithAttribution: Story = {
   name: "With attribution",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => blockquotePlaygroundSnippet(context.args),
+      },
+    },
+  },
   argTypes: {
     variant: { control: false },
     attribution: { control: false },
@@ -92,6 +118,14 @@ export const WithAttribution: Story = {
 
 export const PullQuote: Story = {
   name: "Pull quote",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => blockquotePlaygroundSnippet(context.args),
+      },
+    },
+  },
   argTypes: {
     variant: { control: false },
     attribution: { control: false },
@@ -106,6 +140,14 @@ export const PullQuote: Story = {
 
 export const PullQuoteWithAttribution: Story = {
   name: "Pull quote with attribution",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => blockquotePlaygroundSnippet(context.args),
+      },
+    },
+  },
   argTypes: {
     variant: { control: false },
     attribution: { control: false },
@@ -118,6 +160,14 @@ export const PullQuoteWithAttribution: Story = {
 
 export const LongQuote: Story = {
   name: "Long quote (wrapping)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => blockquotePlaygroundSnippet(context.args),
+      },
+    },
+  },
   argTypes: {
     variant: { control: false },
     attribution: { control: false },

@@ -10,6 +10,8 @@
 // `storySnippets.test.ts` checks that stays true. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
+import { escapeJsxText } from "../../snippetHelpers";
+
 export const boxSnippets = {
   asButton: `{/* as renders a different element, and that element's own props type-check — here a native button's type */}
 <Box as="button" type="button">Save</Box>`,
@@ -18,10 +20,6 @@ export const boxSnippets = {
     <span><strong>{label}: </strong>{children}</span>, and its own label prop type-checks too. */}
 <Box as={CustomLabel} label="Status">Ready</Box>`,
 } as const;
-
-// Text that goes inside JSX: the characters JSX would read as markup or an expression.
-const escapeJsxText = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface BoxPlaygroundSnippetArgs {

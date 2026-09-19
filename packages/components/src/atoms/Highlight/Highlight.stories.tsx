@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Text } from "../Text";
 import { Highlight } from "./Highlight";
+import { highlightPlaygroundSnippet, highlightSnippets } from "./Highlight.snippets";
 
 const meta: Meta<typeof Highlight> = {
   title: "Atoms/Typography/Highlight",
@@ -65,6 +66,14 @@ type Story = StoryObj<typeof Highlight>;
 
 /** Drive every prop live. */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => highlightPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     children: "Results for design system",
     query: "design",
@@ -83,6 +92,7 @@ export const Default: Story = {
 
 export const AllTones: Story = {
   name: "All tones",
+  parameters: { docs: { source: { code: highlightSnippets.allTones } } },
   argTypes: {
     children: { control: false },
     query: { control: false },
@@ -102,6 +112,7 @@ export const AllTones: Story = {
 
 export const SearchMatch: Story = {
   name: "Search-match emphasis",
+  parameters: { docs: { source: { code: highlightSnippets.searchMatch } } },
   argTypes: {
     children: { control: false },
     query: { control: false },
@@ -118,6 +129,7 @@ export const SearchMatch: Story = {
 
 export const AutoMatching: Story = {
   name: "Auto-matching (query prop)",
+  parameters: { docs: { source: { code: highlightSnippets.autoMatching } } },
   argTypes: {
     children: { control: false },
     query: { control: false },
@@ -135,6 +147,7 @@ export const AutoMatching: Story = {
 
 export const MultipleQueries: Story = {
   name: "Multiple queries (array)",
+  parameters: { docs: { source: { code: highlightSnippets.multipleQueries } } },
   argTypes: {
     children: { control: false },
     query: { control: false },

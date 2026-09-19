@@ -1,8 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useEffect } from "react";
 import { useArgs } from "storybook/preview-api";
 import { Stack } from "../Stack";
 import { defaultSizeForLevel, Heading } from "./Heading";
+import { headingPlaygroundSnippet, headingSnippets } from "./Heading.snippets";
 import type { HeadingLevel, HeadingTrim } from "./Heading.types";
 
 /**
@@ -221,6 +222,14 @@ type Story = StoryObj<typeof Heading>;
 
 export const Playground: Story = {
   name: "Playground",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => headingPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // The *native* per-story Controls panel (the addon tab beside this
   // canvas, distinct from the Docs page's own custom PlaygroundControls
   // block) is Storybook's own vanilla `<select>` — it can only ever display
@@ -265,6 +274,7 @@ export const Default: Story = {
 
 export const AllLevels: Story = {
   name: "All levels (h1-h6, matched default sizes)",
+  parameters: { docs: { source: { code: headingSnippets.allLevels } } },
   // `level` is the deliberate varying axis (one instance per level, so no
   // single control value could represent "all of them" — per
   // 06-engineering-standards.md §9's multi-instance-gallery exception);
@@ -287,6 +297,7 @@ export const AllLevels: Story = {
 
 export const SizeIndependentOfLevel: Story = {
   name: "Size set independently of level",
+  parameters: { docs: { source: { code: headingSnippets.sizeIndependentOfLevel } } },
   // `level`/`size`/`children` are all fixed to preserve this story's own
   // specific point (a semantic h2 rendered visually smaller); every other
   // prop stays live.
@@ -304,6 +315,7 @@ export const SizeIndependentOfLevel: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes (full font-size scale)",
+  parameters: { docs: { source: { code: headingSnippets.allSizes } } },
   // `size` is the deliberate varying axis; `children` is hardcoded per
   // instance to label which size it is. `level` stays live and shared
   // (changing it re-renders all 11 instances as a different heading tag,
@@ -327,6 +339,7 @@ export const AllSizes: Story = {
 
 export const FontFamily: Story = {
   name: "Font family (secondary/editorial vs primary)",
+  parameters: { docs: { source: { code: headingSnippets.fontFamily } } },
   // `fontFamily` is the deliberate varying axis; `children` is hardcoded
   // per instance to describe each. Everything else stays live and shared.
   // Wrapped in `Stack` (this system's own layout atom, not a bare
@@ -354,6 +367,7 @@ export const FontFamily: Story = {
 
 export const Align: Story = {
   name: "Text alignment (start/center/end)",
+  parameters: { docs: { source: { code: headingSnippets.align } } },
   // `align` is the deliberate varying axis; `children` is hardcoded per
   // instance to describe each. `level` defaults to 3 via `args` (not a
   // JSX-literal override) specifically so it stays live — a literal
@@ -386,6 +400,7 @@ export const Align: Story = {
 
 export const Wrap: Story = {
   name: "Line-wrapping (wrap vs balance vs pretty)",
+  parameters: { docs: { source: { code: headingSnippets.wrap } } },
   // `wrap` is the deliberate varying axis; `children` is hardcoded per
   // instance (text calibrated to actually wrap at the demo width). `level`
   // defaults via `args` rather than a JSX-literal override, same reasoning
@@ -432,6 +447,7 @@ const trimRows: { label: string; trim: HeadingTrim | undefined }[] = [
 
 export const Trim: Story = {
   name: "Leading-trim (unset vs start/end/both)",
+  parameters: { docs: { source: { code: headingSnippets.trim } } },
   // `trim` is the deliberate varying axis — all 4 real states shown as
   // separate rows (not just the two most different ones), each with its
   // own label so it's clear which is which without relying on the heading
@@ -478,6 +494,7 @@ export const Trim: Story = {
 
 export const Truncate: Story = {
   name: "truncate (line-clamp)",
+  parameters: { docs: { source: { code: headingSnippets.truncate } } },
   // `level`/`children` are fixed so the demo text (calibrated to clamp at
   // exactly two lines at this width) stays consistent; `truncate` itself
   // defaults to 2 via `args` (not a JSX-literal override) so its own
@@ -511,6 +528,7 @@ export const Truncate: Story = {
 
 export const AsCardTitle: Story = {
   name: 'Polymorphic: as="div" (card title, kept out of the page heading outline)',
+  parameters: { docs: { source: { code: headingSnippets.asCardTitle } } },
   // `as`/`level`/`size`/`children` are all fixed to preserve this story's
   // own specific point (a card title using the ARIA-fallback mechanism);
   // every other prop stays live.
@@ -548,6 +566,14 @@ export const AsCardTitle: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (large heading wraps, never overflows)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => headingPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
   // tool this project never adopted (02-tech-stack-and-structure.md picked
   // Playwright's own self-hosted visual regression instead); this
