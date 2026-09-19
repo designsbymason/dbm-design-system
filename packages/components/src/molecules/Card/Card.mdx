@@ -1,0 +1,317 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Box } from "../../atoms/Box";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Accordion } from "../Accordion";
+import { Grid } from "../Grid";
+import { Table } from "../Table";
+import * as CardStories from "./Card.stories";
+import * as CardMediaStories from "./CardMedia.stories";
+import * as CardHeaderStories from "./CardHeader.stories";
+import * as CardBodyStories from "./CardBody.stories";
+import * as CardFooterStories from "./CardFooter.stories";
+
+export const rootPropOrder = [
+  "variant",
+  "tone",
+  "size",
+  "interactive",
+  "asChild",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const sectionPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const footerPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
+
+<Meta of={CardStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Card" tier="Molecule" />
+
+A surface that groups related content — the container for a self-contained chunk of a page: a summary, a
+profile, a product, a plan. It's a compound component, meaning it's made of named sub-parts you compose
+together rather than one component with a long list of props: put any of `Card.Media` (edge-to-edge media),
+`Card.Header`, `Card.Body`, and `Card.Footer` inside `Card`, in any order — every one is optional.
+
+The card itself carries no padding: each section pads itself and spaces itself evenly from its neighbours,
+so `Card.Media` can run edge to edge and is clipped to the card's rounded corners. `size` sets that padding.
+A `variant` picks the surface — a border, a shadow, a fill, or none — and a `tone` adds a colour accent.
+
+### Import
+
+```tsx
+import { Card } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CardStories.Playground} />
+
+</div>
+<PlaygroundControls of={CardStories.Playground} order={rootPropOrder} exclude={["asChild", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the root element — the `<div>`, or the slotted child under `asChild`. Also accepts any other
+native `<div>` attribute beyond what's listed here (e.g. `onMouseEnter`, `title`) — passed straight through to the
+root element.
+
+<PropertiesTable of={CardStories} order={rootPropOrder} />
+
+### Card.Media properties
+
+Edge-to-edge media — an image, a video, a chart — clipped to the card's rounded corners. Also accepts any other
+native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={CardMediaStories} order={sectionPropOrder} />
+
+### Card.Header properties
+
+The card's header — a row for a title (and description) with an optional action on the end. Tinted when the card
+has a non-neutral `tone`. Also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={CardHeaderStories} order={sectionPropOrder} />
+
+### Card.Body properties
+
+The card's main content. It grows to fill spare height, so footers line up in a row of equal-height cards. Also
+accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed straight
+through.
+
+<PropertiesTable of={CardBodyStories} order={sectionPropOrder} />
+
+### Card.Footer properties
+
+The card's footer — a row for actions or supporting meta. Also accepts any other native `<div>` attribute beyond
+what's listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={CardFooterStories} order={footerPropOrder} />
+
+## Variants
+
+### All variants
+
+<Canvas of={CardStories.Variants} />
+
+### All tones
+
+<Canvas of={CardStories.Tones} />
+
+### All sizes
+
+<Canvas of={CardStories.Sizes} />
+
+### With media
+
+<Canvas of={CardStories.WithMedia} />
+
+### Interactive — the whole card is a link
+
+<Canvas of={CardStories.InteractiveLink} />
+
+### Footer alignment
+
+<Canvas of={CardStories.FooterAlignment} />
+
+### Equal-height cards (footers line up)
+
+<Canvas of={CardStories.EqualHeight} />
+
+### Composition — a ghost table inside a card
+
+<Canvas of={CardStories.WithTable} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a `Card` to group a self-contained chunk of content that a reader treats as one thing — a plan, a
+  profile, an item in a list of items.
+- Pick the `variant` for the surface it sits on: `outlined` (the default) for most cases, `elevated` to lift a
+  card off the page, `filled` for a quiet card on a plain page, and `ghost` when the card is already inside a
+  container that draws its own boundary.
+- Make a whole card clickable by rendering it as a link: `<Card asChild interactive><a href="…">…</a></Card>`.
+  The link gives it real semantics and keyboard support.
+- Put media in `Card.Media` so it runs edge to edge — the card has no padding of its own to fight.
+- Use `tone` for a card whose whole subject carries that meaning — a failed payment, a pending review. Pair the
+  colour with words in the header, so it doesn't rely on colour alone.
+- Lay equal-height cards out in a grid — `Card.Body` grows to fill the spare height, so the footers line up.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't put other interactive controls (buttons, links, inputs) inside a card that is itself a link. Nested
+  interactive elements are invalid and confusing for keyboard and assistive-technology users.
+- Don't set `interactive` on a plain card and stop there — it's styling only. A `<div>` styled as clickable
+  can't be reached or activated from the keyboard, and `Card` warns in development when it sees one.
+- Don't use a `Card` just to add a border around one element. If there's a single piece of content and no
+  sections, reach for a plain bordered container instead.
+- Don't nest cards several levels deep — the surfaces compete. Use `ghost` for an inner one, or restructure.
+- Don't rely on a tone's colour alone to convey its meaning — not everyone perceives the difference.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep a card focused on one subject. If a card is accumulating unrelated sections, it wants to be two cards or
+  a page section.
+- Put the primary action in `Card.Footer`, aligned to the end (the default), and secondary or destructive ones
+  before it — or spread a status and an action with `align="between"`.
+- Use `size` for density, not decoration: `xs`/`sm` for dense lists of cards, `md` for general use, `lg`/`xl`
+  for a card that is the main content of a spacious page.
+- Give each card in a list a heading in its header — it's how a screen-reader user skims the cards.
+- For a card whose content is mainly a table or a list, use that component's `ghost` variant inside the card
+  so the two boundaries don't double up.
+
+## Accessibility
+
+<Callout tone="info" title="A plain container by default — semantics come from what you put in it">
+
+- A `Card` renders a plain `<div>`: it adds no role and is not focusable, so it never adds a tab stop or
+  changes how a screen reader reads its content. Put a real heading in `Card.Header` so each card is
+  identifiable.
+- To make a card a landmark or name it, give it a `role` and `aria-label`/`aria-labelledby` (for example
+  `role="region"` with `aria-labelledby` pointing at its heading).
+- A clickable card is a real link or button, via `asChild`. The slotted element supplies the role, keyboard
+  behaviour (`Enter` on a link, `Enter`/`Space` on a button), and accessible name — which is the card's content
+  read as one string, so keep it concise.
+- The interactive focus ring is an outline on the card itself, following the card's rounded corners.
+- A colour `tone` tints the header behind `text.primary` at 13:1 or better in every theme, and outlines the card
+  with the state-identifying border tokens.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Card>
+  <Card.Header>
+    <Heading level={3}>Team plan</Heading>
+    <Badge tone="success">Active</Badge>
+  </Card.Header>
+  <Card.Body>Up to 10 members and unlimited projects.</Card.Body>
+  <Card.Footer>
+    <Button variant="tertiary">Cancel</Button>
+    <Button>Manage</Button>
+  </Card.Footer>
+</Card>
+
+{/* Media runs edge to edge, clipped to the rounded corners */}
+<Card variant="elevated">
+  <Card.Media>
+    <img src="/retreat.jpg" alt="A mountain valley at dawn" />
+  </Card.Media>
+  <Card.Body>Three nights in a quiet valley.</Card.Body>
+</Card>
+
+{/* The whole card is a link */}
+<Card asChild interactive variant="elevated">
+  <a href="/plans/team">
+    <Card.Header>
+      <Heading level={3}>Team plan</Heading>
+    </Card.Header>
+    <Card.Body>Up to 10 members.</Card.Body>
+  </a>
+</Card>
+
+{/* A colour accent, a denser size, and a footer spread across the row */}
+<Card tone="danger" size="sm">
+  <Card.Header>
+    <Heading level={3}>Payment failed</Heading>
+  </Card.Header>
+  <Card.Body>Your card ending 4242 was declined.</Card.Body>
+  <Card.Footer align="between">
+    <Text size="sm">Retry by Friday</Text>
+    <Button>Update card</Button>
+  </Card.Footer>
+</Card>
+
+{/* A native <div> attribute, passed straight through to the root */}
+<Card title="Billing summary" onMouseEnter={() => prefetch()}>
+  <Card.Body>…</Card.Body>
+</Card>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="the card's surface (outlined and elevated variants)" />
+<TokenRow token="bg.neutral-subtle" usage="the filled variant's fill, and the hovered outlined and ghost cards' background" />
+<TokenRow token="bg.neutral-subtle-hover" usage="the filled variant's hovered background, and any pressed card's background" />
+<TokenRow token="text.primary" usage="text color" />
+<TokenRow token="border.default" usage="the outlined variant's border (and the elevated variant's hairline in dark mode)" />
+<TokenRow token="border.neutral" usage="the hovered outlined card's border" />
+<TokenRow token="border.focus" usage="an interactive card's focus-visible outline color" />
+<TokenRow token="border.brand" usage="tone=brand: the card's border" />
+<TokenRow token="bg.brand-subtle" usage="tone=brand: the tint behind the header" />
+<TokenRow token="border.info" usage="tone=info: the card's border" />
+<TokenRow token="bg.info-subtle" usage="tone=info: the tint behind the header" />
+<TokenRow token="border.success" usage="tone=success: the card's border" />
+<TokenRow token="bg.success-subtle" usage="tone=success: the tint behind the header" />
+<TokenRow token="border.warning" usage="tone=warning: the card's border" />
+<TokenRow token="bg.warning-subtle" usage="tone=warning: the tint behind the header" />
+<TokenRow token="border.danger" usage="tone=danger: the card's border" />
+<TokenRow token="bg.danger-subtle" usage="tone=danger: the tint behind the header" />
+<TokenRow token="border-width.1" usage="the card's border width" />
+<TokenRow token="border-width.2" usage="an interactive card's focus-visible outline width" />
+<TokenRow token="radius.lg" usage="the card's corners (and the clip for edge-to-edge media)" />
+<TokenRow token="shadow.light.xs–shadow.light.md" usage="the elevated variant's shadow in light mode: resting, hovered, pressed" />
+<TokenRow token="shadow.dark.xs–shadow.dark.md" usage="the elevated variant's shadow in dark mode: resting, hovered, pressed" />
+<TokenRow token="font-family.primary" usage="card typography" />
+<TokenRow token="space.3–space.10" usage="section padding across the five size steps" />
+<TokenRow token="space.3" usage="the gap inside a header and a footer" />
+<TokenRow token="space.1" usage="an interactive card's focus-visible outline offset" />
+<TokenRow token="motion.duration.fast" usage="interactive hover and pressed transitions" />
+<TokenRow token="motion.easing.standard" usage="interactive hover and pressed transitions" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Table"
+  description="Its ghost variant exists for exactly this — a table inside a card that already draws the boundary"
+  href="/?path=/docs/molecules-data-display-table--docs"
+>
+  <Table size="xs" variant="ghost" aria-label="Example">
+    <Table.Body>
+      <Table.Row>
+        <Table.Cell>Cell</Table.Cell>
+        <Table.Cell>Cell</Table.Cell>
+      </Table.Row>
+    </Table.Body>
+  </Table>
+</RelatedCard>
+<RelatedCard
+  name="Accordion"
+  description="Its ghost variant likewise drops its own border for use inside a card"
+  href="/?path=/docs/molecules-overlay-accordion--docs"
+>
+  <Accordion variant="ghost" size="xs">
+    <Accordion.Item value="a">
+      <Accordion.Trigger>Section</Accordion.Trigger>
+      <Accordion.Content>Content</Accordion.Content>
+    </Accordion.Item>
+  </Accordion>
+</RelatedCard>
+<RelatedCard
+  name="Grid"
+  description="For laying out a set of cards in equal-height rows — Card.Body grows so the footers line up"
+  href="/?path=/docs/molecules-layout-grid--docs"
+>
+  <Grid columns={3} gap={2} style={{ width: 60 }}>
+    <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+    <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
+  </Grid>
+</RelatedCard>
+</div>

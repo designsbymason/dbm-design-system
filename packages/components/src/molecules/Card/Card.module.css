@@ -1,0 +1,235 @@
+/* The card's surface, driven by a handful of local custom properties so each
+   variant, tone, and interactive state only *sets values* rather than repeating
+   the whole rule. Every value is a semantic token (or a shadow primitive pair,
+   swapped per theme below — shadows aren't a reactive semantic token).
+
+   `overflow: hidden` clips `Card.Media` to the rounded corners. It never clips
+   the card's own shadow (drawn outside the box) or its focus ring (an outline). */
+.card {
+  --card-pad: var(--dbm-space-6);
+  --card-bg: var(--dbm-bg-surface);
+  --card-bg-hover: var(--dbm-bg-neutral-subtle);
+  --card-bg-active: var(--dbm-bg-neutral-subtle-hover);
+  --card-border: var(--dbm-border-default);
+  --card-border-hover: var(--dbm-border-neutral);
+  --card-shadow: none;
+  --card-shadow-hover: none;
+  --card-shadow-active: none;
+
+  background-color: var(--card-bg);
+  border: var(--dbm-border-width-1) solid var(--card-border);
+  border-radius: var(--dbm-radius-lg);
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  min-inline-size: 0;
+  overflow: hidden;
+  position: relative;
+  /* Under `asChild` the root can be an <a>; keep it from picking up link styling. */
+  text-decoration: none;
+}
+
+/* --- Variants. `outlined` is the base above and needs no class. --- */
+
+/* A soft shadow instead of a border. The border stays (transparent) so every
+   variant has the same box size; in dark mode a hairline border comes back,
+   since a shadow alone barely reads on a dark surface. */
+.elevated {
+  --card-bg-hover: var(--dbm-bg-surface);
+  --card-bg-active: var(--dbm-bg-surface);
+  --card-border: transparent;
+  --card-border-hover: transparent;
+  --card-shadow: var(--dbm-shadow-light-sm);
+  --card-shadow-hover: var(--dbm-shadow-light-md);
+  --card-shadow-active: var(--dbm-shadow-light-xs);
+}
+
+[data-theme$="-dark"] .elevated {
+  --card-border: var(--dbm-border-default);
+  --card-border-hover: var(--dbm-border-default);
+  --card-shadow: var(--dbm-shadow-dark-sm);
+  --card-shadow-hover: var(--dbm-shadow-dark-md);
+  --card-shadow-active: var(--dbm-shadow-dark-xs);
+}
+
+.filled {
+  --card-bg: var(--dbm-bg-neutral-subtle);
+  --card-bg-hover: var(--dbm-bg-neutral-subtle-hover);
+  --card-border: transparent;
+  --card-border-hover: transparent;
+}
+
+/* --- Tone. Each tone only defines its border and header tint; `.toned` (below)
+   reads them. `neutral` has no class. --- */
+
+.toneBrand {
+  --tone-border: var(--dbm-border-brand);
+  --tone-subtle: var(--dbm-bg-brand-subtle);
+}
+
+.toneInfo {
+  --tone-border: var(--dbm-border-info);
+  --tone-subtle: var(--dbm-bg-info-subtle);
+}
+
+.toneSuccess {
+  --tone-border: var(--dbm-border-success);
+  --tone-subtle: var(--dbm-bg-success-subtle);
+}
+
+.toneWarning {
+  --tone-border: var(--dbm-border-warning);
+  --tone-subtle: var(--dbm-bg-warning-subtle);
+}
+
+.toneDanger {
+  --tone-border: var(--dbm-border-danger);
+  --tone-subtle: var(--dbm-bg-danger-subtle);
+}
+
+/* Two classes, declared after the variants, so a tone's border wins over every
+   variant's own (including the dark-mode elevated rule above, which is the same
+   specificity — later wins). */
+.card.toned {
+  --card-border: var(--tone-border);
+  --card-border-hover: var(--tone-border);
+}
+
+/* Declared after `.toned` so a ghost card stays borderless even when toned: the
+   tone then only tints its header. */
+.card.ghost {
+  --card-bg: transparent;
+  --card-bg-hover: var(--dbm-bg-neutral-subtle);
+  --card-border: transparent;
+  --card-border-hover: transparent;
+}
+
+.toned > .header {
+  background-color: var(--tone-subtle);
+}
+
+/* --- Size: the section padding (and so the card's overall density). --- */
+
+.sizeXs {
+  --card-pad: var(--dbm-space-3);
+}
+
+.sizeSm {
+  --card-pad: var(--dbm-space-4);
+}
+
+.sizeMd {
+  --card-pad: var(--dbm-space-6);
+}
+
+.sizeLg {
+  --card-pad: var(--dbm-space-8);
+}
+
+.sizeXl {
+  --card-pad: var(--dbm-space-10);
+}
+
+/* --- Sections. The card has no padding of its own, so media runs edge to edge;
+   each section pads itself. --- */
+
+.media {
+  display: block;
+  inline-size: 100%;
+}
+
+.media > img,
+.media > picture,
+.media > video {
+  display: block;
+  inline-size: 100%;
+}
+
+.header {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-3);
+  justify-content: space-between;
+  padding: var(--card-pad);
+}
+
+.body {
+  flex: 1 1 auto;
+  padding: var(--card-pad);
+}
+
+.footer {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  padding: var(--card-pad);
+}
+
+/* A section that follows another drops its own top padding — the previous
+   section's bottom padding is already the gap — so sections are spaced evenly
+   by one padding unit rather than two. Media has no padding, so whatever follows
+   it keeps its top padding. */
+.header + .body,
+.header + .footer,
+.body + .footer,
+.body + .body {
+  padding-block-start: 0;
+}
+
+/* ...except after a *tinted* header (a toned card): the tint gives the header a
+   visible bottom edge, so the section beneath needs its own breathing room
+   instead of sitting against that edge. */
+.toned > .header + .body,
+.toned > .header + .footer {
+  padding-block-start: var(--card-pad);
+}
+
+.alignStart {
+  justify-content: flex-start;
+}
+
+.alignCenter {
+  justify-content: center;
+}
+
+.alignEnd {
+  justify-content: flex-end;
+}
+
+.alignBetween {
+  justify-content: space-between;
+}
+
+/* --- Interactive: the card as a whole is clickable (a link or button, via
+   `asChild`). Styling only — the semantics come from the slotted element. --- */
+
+.interactive {
+  cursor: pointer;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    box-shadow var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.interactive:hover {
+  background-color: var(--card-bg-hover);
+  border-color: var(--card-border-hover);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.interactive:active {
+  background-color: var(--card-bg-active);
+  box-shadow: var(--card-shadow-active);
+}
+
+/* The ring follows the card's own (large) radius rather than the standardized
+   small focus-ring radius: the card clips its media to that radius, so shrinking
+   it on focus would visibly square off the media's corners. */
+.interactive:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
