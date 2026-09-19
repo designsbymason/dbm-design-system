@@ -16,3 +16,7 @@ regression run and a live Storybook check of `ProgressCircle`'s own Playground s
 → `gray.700` (1.40:1 → 2.05:1 against `bg.surface`). Stays Finalized — confirmed via the same
 whole-package regression run and a live Storybook check (dark mode) of `ProgressCircle`'s own
 Playground story.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: same as `ProgressBar`'s — five generated snippets spelled out defaults, and **"With custom value label" showed `formatValueLabel={() => {}}`** in place of the real ``(value, max) => `${value}/${max}` ``. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `ProgressCircle.snippets.ts`, with the real formatter; the Playground builds its snippet from the live controls exactly as `ProgressBar`'s does, and the value-label, `aria-valuetext`, and indeterminate stories use the same builder. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

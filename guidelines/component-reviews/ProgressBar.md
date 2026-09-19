@@ -21,3 +21,7 @@ Storybook check of `ProgressBar`'s own Playground story specifically.
 → `gray.700` (1.40:1 → 2.05:1 against `bg.surface`) — again no file belonging to `ProgressBar` itself
 changed. **Stays Finalized, no re-verification needed** — confirmed via the same whole-package
 regression run and a live Storybook check (dark mode) of `ProgressBar`'s own Playground story.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: all seven generated snippets kept the demo `<div style={{ maxWidth: '24rem' }}>` wrapper, five spelled out defaults (`showValueLabel={false}`, `max={100}`, `aria-valuetext=""`), and **"With custom value label" showed `formatValueLabel={() => {}}`** in place of the real ``(value, max) => `${value} of ${max} files` ``, hiding the one thing the story demonstrates. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `ProgressBar.snippets.ts`, with the real formatter; the Playground builds its snippet from the live controls, writes indeterminate by leaving `value` out (the Playground-only `indeterminate` control is not a prop), and always writes the `label` a progress bar needs. The value-label, `aria-valuetext`, and indeterminate stories use the same builder. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

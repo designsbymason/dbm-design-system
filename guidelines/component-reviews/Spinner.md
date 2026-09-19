@@ -17,3 +17,7 @@ finalized**. Re-verified live: `Backdrop`'s `WithContent` story now uses `tone="
 (replacing an earlier manual `style` override) and renders a clearly visible white spinner in both
 light and dark mode. `tsc`, `eslint`, full Vitest suite (1281/1281 package-wide), and a real `tsup`
 build all clean.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: nearly clean already — four short generated snippets — but they kept the demo wrapper `div`s and the Playground printed an empty `label=""`. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Spinner.snippets.ts`; the Playground builds its snippet from the live controls (`Spinner` has no default tone — with none it takes the surrounding text colour — so a tone is written whenever one is set, and `label` only when it isn't empty, since a spinner without one is decorative and silent to assistive technology). The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
