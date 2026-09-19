@@ -14,6 +14,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: [["html", { open: "never" }]],
+  // In CI, Storybook starts cold: the dev server compiles each story on its
+  // first request, and a shared runner is slower than a laptop. The default 5s
+  // `expect` timeout was too tight — on the first CI run that actually started a
+  // server, 2 of the 8 tests failed their first attempt waiting for a button to
+  // appear (the single retry can only paper over so many such misses). Give CI
+  // more room; locally the server is already warm, so the default stays.
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
   use: {
     baseURL: "http://localhost:6006",
     trace: "on-first-retry",
