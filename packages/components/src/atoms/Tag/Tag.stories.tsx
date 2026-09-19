@@ -4,10 +4,11 @@ import {
   StarIcon,
   TagIcon,
 } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Tag } from "./Tag";
+import { tagPlaygroundSnippet, tagSnippets } from "./Tag.snippets";
 import type { TagProps } from "./Tag.types";
 
 // `leadingIcon`/`trailingIcon` take component references, not strings (see
@@ -208,6 +209,14 @@ interface PlaygroundArgs extends TagProps {
 }
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => tagPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // Cast: `interactionMode` isn't part of `TagProps` — see the interface
   // and comment above. `onClick`/`onSelectedChange` are created once here
   // (module-eval time, not per-render) so their identity — and Actions-
@@ -251,6 +260,7 @@ export const Default: Story = {};
 
 export const AllTones: Story = {
   name: "All tones (subtle)",
+  parameters: { docs: { source: { code: tagSnippets.allTones } } },
   // `tone`/`children` are the whole point of this grid — each instance
   // intentionally varies both together, so no single control value could
   // represent them. Every other prop stays live and shared via `{...args}`
@@ -283,6 +293,7 @@ export const AllTones: Story = {
 
 export const Solid: Story = {
   name: "All tones (solid)",
+  parameters: { docs: { source: { code: tagSnippets.solid } } },
   argTypes: {
     tone: { control: false },
     children: { control: false },
@@ -304,6 +315,7 @@ export const Solid: Story = {
 
 export const Outline: Story = {
   name: "All tones (outline)",
+  parameters: { docs: { source: { code: tagSnippets.outline } } },
   argTypes: {
     tone: { control: false },
     children: { control: false },
@@ -325,6 +337,7 @@ export const Outline: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: tagSnippets.allSizes } } },
   // `size`/`children` are the whole point of this grid, same reasoning as
   // AllTones above — `removeLabel` gets the same per-instance reset for
   // the same reason (every instance's real label is "Size {size}", not
@@ -354,6 +367,7 @@ export const AllSizes: Story = {
 
 export const WithIcon: Story = {
   name: "With leading icon",
+  parameters: { docs: { source: { code: tagSnippets.withIcon } } },
   // `leadingIcon` uses the mapped string key ("Tag"), not the raw TagIcon
   // reference — the Controls-panel select can only show as "selected"
   // when the arg value matches one of its mapping's option keys (same
@@ -365,6 +379,7 @@ export const WithIcon: Story = {
 
 export const WithTrailingIcon: Story = {
   name: "With trailing icon",
+  parameters: { docs: { source: { code: tagSnippets.withTrailingIcon } } },
   args: {
     trailingIcon: "Star" as unknown as TagProps["leadingIcon"],
     tone: "warning",
@@ -373,6 +388,7 @@ export const WithTrailingIcon: Story = {
 
 export const Clickable: Story = {
   name: "Clickable (no selection state)",
+  parameters: { docs: { source: { code: tagSnippets.clickable } } },
   // `onClick` alone applies no built-in "active" look — just makes the
   // tag focusable/keyboard-activatable. Pair with `selected` for a
   // visual toggle state (see the Selectable stories below).
@@ -381,6 +397,7 @@ export const Clickable: Story = {
 
 export const Selectable: Story = {
   name: "Selectable (click to toggle)",
+  parameters: { docs: { source: { code: tagSnippets.selectable } } },
   // Uncontrolled (`defaultSelected`) — Tag manages its own toggle state
   // internally, so clicking directly in the canvas below visibly toggles
   // the selected ring with no story-level state needed. Starts
@@ -393,6 +410,7 @@ export const Selectable: Story = {
 
 export const SelectableOutline: Story = {
   name: "Selectable (outline)",
+  parameters: { docs: { source: { code: tagSnippets.selectableOutline } } },
   // Same toggle behavior as `Selectable` above, but on the `outline`
   // variant specifically — demonstrates that selecting it swaps in a
   // full tone fill with on-color text (converging toward `solid`'s own
@@ -408,6 +426,7 @@ export const SelectableOutline: Story = {
 
 export const SelectableFilterGroup: Story = {
   name: "Selectable filter group",
+  parameters: { docs: { source: { code: tagSnippets.selectableFilterGroup } } },
   // Fully bespoke — tone/selected/onSelectedChange are hardcoded/wired to
   // local state per instance below, not read from `args` at all. Every
   // inherited control is explicitly marked dead rather than left looking
@@ -452,6 +471,7 @@ export const SelectableFilterGroup: Story = {
 
 export const Disabled: Story = {
   name: "Disabled (interactive)",
+  parameters: { docs: { source: { code: tagSnippets.disabled } } },
   // `disabled` only has an effect once the tag is interactive — this
   // story fixes `onClick`/`defaultSelected`/`onSelectedChange` so the
   // control panel's own `disabled` toggle demonstrates a real blocked
@@ -474,6 +494,7 @@ export const Disabled: Story = {
 
 export const RemovableAndSelectable: Story = {
   name: "Removable + selectable together",
+  parameters: { docs: { source: { code: tagSnippets.removableAndSelectable } } },
   // Confirms the two coexist correctly: clicking the tag body toggles
   // `selected`, clicking the trailing × removes it — neither triggers the
   // other (Tag.tsx's `handleRemoveClick` stopPropagation on the mouse
@@ -524,6 +545,7 @@ export const RemovableAndSelectable: Story = {
 
 export const RemovableFilterList: Story = {
   name: "Removable filter list",
+  parameters: { docs: { source: { code: tagSnippets.removableFilterList } } },
   // Fully bespoke, same reasoning as `SelectableFilterGroup` above — every
   // inherited control is dead here too (real per-tag `onRemove` wired to
   // local state, tone/removable hardcoded).

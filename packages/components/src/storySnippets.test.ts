@@ -1,6 +1,13 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import * as library from "./index";
+import { avatarPlaygroundSnippet } from "./atoms/Avatar/Avatar.snippets";
+import { badgePlaygroundSnippet } from "./atoms/Badge/Badge.snippets";
+import { progressBarPlaygroundSnippet } from "./atoms/ProgressBar/ProgressBar.snippets";
+import { progressCirclePlaygroundSnippet } from "./atoms/ProgressCircle/ProgressCircle.snippets";
+import { skeletonPlaygroundSnippet } from "./atoms/Skeleton/Skeleton.snippets";
+import { spinnerPlaygroundSnippet } from "./atoms/Spinner/Spinner.snippets";
+import { tagPlaygroundSnippet } from "./atoms/Tag/Tag.snippets";
 import { accordionPlaygroundSnippet } from "./molecules/Accordion/Accordion.snippets";
 import { cardPlaygroundSnippet } from "./molecules/Card/Card.snippets";
 import { checkboxGroupPlaygroundSnippet } from "./molecules/CheckboxGroup/CheckboxGroup.snippets";
@@ -32,7 +39,8 @@ const banned: Array<[RegExp, string]> = [
   [/\bWideTable\b/, "a demo-only helper component"],
   [/\bnoControls\b|\bargTypes\b|\brender:/, "story-object scaffolding"],
   [/\bgridStyle\b|\bdemoContainerStyle\b|\ballTones\b|\ballVariants\b|\ballSizes\b|\bwideRows\b/, "a stories-file constant"],
-  [/\.map\(/, "a loop — write the elements out"],
+  // A loop over a stories-file constant (`allTones.map(…)`) is caught by the constants
+  // above; a `.map(` over the reader's own state is real usage and is allowed.
   [/preventDefault|data-testid|onActivate/, "test or demo wiring"],
   [/guidelines\/|\.md\b|\bADR-\d/, "a reference to an internal document"],
 ];
@@ -106,8 +114,8 @@ for (const [file, module] of Object.entries(snippetModules)) {
 
 describe("story snippets", () => {
   it("finds the snippet files", () => {
-    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(14);
-    expect(namedSnippets.length).toBeGreaterThan(90);
+    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(21);
+    expect(namedSnippets.length).toBeGreaterThan(130);
   });
 
   it.each(namedSnippets)("%s is a real, pasteable snippet", (_name, code) => {
@@ -115,9 +123,9 @@ describe("story snippets", () => {
   });
 
   describe("the checker itself", () => {
-    it("rejects a demo helper, a loop, and an internal reference", () => {
+    it("rejects a demo helper, a loop over a demo constant, and an internal reference", () => {
       expect(problemsIn("<DemoCard />").length).toBeGreaterThan(0);
-      expect(problemsIn("{items.map((item) => <Card key={item}>x</Card>)}").length).toBeGreaterThan(0);
+      expect(problemsIn("{allTones.map((tone) => <Card key={tone}>x</Card>)}").length).toBeGreaterThan(0);
       expect(problemsIn("{/* see guidelines/04-component-inventory.md */}\n<Card>x</Card>").length).toBeGreaterThan(0);
     });
 
@@ -128,6 +136,10 @@ describe("story snippets", () => {
 
     it("rejects invalid TSX", () => {
       expect(problemsIn("<Card>").length).toBeGreaterThan(0);
+    });
+
+    it("allows a .map over the reader's own state", () => {
+      expect(problemsIn("{filters.map((filter) => <Tag key={filter}>{filter}</Tag>)}")).toEqual([]);
     });
 
     it("accepts a comment followed by real markup", () => {
@@ -396,5 +408,113 @@ describe("Playground snippets for the eight input molecules", () => {
     const snippet = sliderPlaygroundSnippet({ orientation: "vertical" });
     expect(snippet).toContain('orientation="vertical"');
     expect(snippet).toContain('<div style={{ height: "12rem" }}>');
+  });
+});
+
+describe("Playground snippets for the seven feedback and data-display atoms", () => {
+  it.each([
+    {},
+    { alt: "Jane Doe", initials: "JD" },
+    { as: "button", alt: "Jane Doe", initials: "JD", status: "online", disabled: true, shape: "square", size: "xl", colorful: true, name: "Jane Doe", src: "https://i.pravatar.cc/128?img=5", "aria-label": "Open profile" },
+  ])("Avatar %j is a real snippet", (args) => {
+    expect(problemsIn(avatarPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Avatar writes only what's set, and gives a button its handler", () => {
+    expect(avatarPlaygroundSnippet({ as: "span", src: "", alt: "", initials: "", name: "", colorful: false, size: "md", shape: "circle" })).toBe("<Avatar />");
+    expect(avatarPlaygroundSnippet({ alt: "Jane Doe", initials: "JD", size: "md" })).toBe('<Avatar alt="Jane Doe" initials="JD" />');
+    expect(avatarPlaygroundSnippet({ as: "button", initials: "JD" })).toBe('<Avatar as="button" initials="JD" onClick={handleClick} />');
+  });
+
+  it.each([
+    {},
+    { children: "New", tone: "success", size: "lg", variant: "subtle", max: 9, hideZero: true, position: "bottom-left", overlap: "circular", "aria-label": "New items" },
+    { children: 42, tone: "danger" },
+    { dot: true, tone: "warning" },
+  ])("Badge %j is a real snippet", (args) => {
+    expect(problemsIn(badgePlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Badge writes only what differs, numbers as expressions, and a dot with a name", () => {
+    expect(badgePlaygroundSnippet({ children: "Badge", tone: "danger", size: "md", variant: "solid", max: 99 })).toBe("<Badge>Badge</Badge>");
+    expect(badgePlaygroundSnippet({ children: 4 })).toBe("<Badge>{4}</Badge>");
+    expect(badgePlaygroundSnippet({ dot: true, "aria-label": "Online", tone: "success" })).toBe('<Badge dot tone="success" aria-label="Online" />');
+    expect(badgePlaygroundSnippet({ dot: true })).toContain("aria-label=");
+  });
+
+  it.each([
+    {},
+    { variant: "circular", width: 48, height: 48 },
+    { variant: "rectangular", width: "16rem", height: "var(--dbm-space-32)", animation: "wave" },
+    { variant: "text", width: "", height: "", animation: "pulse" },
+  ])("Skeleton %j is a real snippet", (args) => {
+    expect(problemsIn(skeletonPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Skeleton writes numbers as expressions and strings as strings", () => {
+    expect(skeletonPlaygroundSnippet({ variant: "text", width: "", height: "", animation: "pulse" })).toBe("<Skeleton />");
+    expect(skeletonPlaygroundSnippet({ variant: "circular", width: 48, height: 48 })).toBe('<Skeleton variant="circular" width={48} height={48} />');
+    expect(skeletonPlaygroundSnippet({ width: "12rem" })).toBe('<Skeleton width="12rem" />');
+  });
+
+  it.each([
+    {},
+    { children: "Design", tone: "info", variant: "outline", size: "sm", removable: true, removeLabel: "Delete it", disabled: true, "aria-label": "Design tag" },
+    { leadingIcon: undefined, trailingIcon: undefined, removable: true, removeLabel: "Remove Design" },
+  ])("Tag %j is a real snippet", (args) => {
+    expect(problemsIn(tagPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Tag writes only what differs, and gives a removable tag its onRemove", () => {
+    expect(tagPlaygroundSnippet({ children: "Design", tone: "neutral", variant: "subtle", size: "md", removable: false })).toBe("<Tag>Design</Tag>");
+    expect(tagPlaygroundSnippet({ children: "Design", removable: true, removeLabel: "Remove Design" })).toBe(
+      "<Tag removable onRemove={handleRemove}>Design</Tag>",
+    );
+    expect(tagPlaygroundSnippet({ children: "Design", removable: true, removeLabel: "Delete" })).toContain('removeLabel="Delete"');
+  });
+
+  it("Tag turns the icon control's component back into its name, and ignores anything else", async () => {
+    const { TagIcon, StarIcon } = await import("@dbm-design-system/icons");
+    expect(tagPlaygroundSnippet({ children: "Design", leadingIcon: TagIcon })).toBe("<Tag leadingIcon={TagIcon}>Design</Tag>");
+    expect(tagPlaygroundSnippet({ children: "Design", trailingIcon: StarIcon })).toBe("<Tag trailingIcon={StarIcon}>Design</Tag>");
+    expect(tagPlaygroundSnippet({ children: "Design", leadingIcon: "None" })).toBe("<Tag>Design</Tag>");
+  });
+
+  it.each([
+    {},
+    { value: 3, max: 5, size: "lg", tone: "success", label: "Uploading files", "aria-valuetext": "3 of 5 files uploaded", showValueLabel: true },
+    { value: 40, indeterminate: true, label: "Loading" },
+  ])("ProgressBar %j is a real snippet", (args) => {
+    expect(problemsIn(progressBarPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it.each([
+    {},
+    { value: 3, max: 5, size: "lg", tone: "success", label: "Uploading files", "aria-valuetext": "3 of 5 files uploaded", showValueLabel: true },
+    { value: 65, indeterminate: true, label: "Loading" },
+  ])("ProgressCircle %j is a real snippet", (args) => {
+    expect(problemsIn(progressCirclePlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("ProgressBar and ProgressCircle write indeterminate by leaving value out, and always a label", () => {
+    expect(progressBarPlaygroundSnippet({ value: 40, indeterminate: true, label: "Loading" })).toBe('<ProgressBar label="Loading" />');
+    expect(progressBarPlaygroundSnippet({ value: undefined, label: "Loading" })).toBe('<ProgressBar label="Loading" />');
+    expect(progressBarPlaygroundSnippet({ value: 40, max: 100, size: "md", tone: "brand", label: "Uploading" })).toBe(
+      '<ProgressBar label="Uploading" value={40} />',
+    );
+    expect(progressCirclePlaygroundSnippet({ value: 65, indeterminate: true, label: "" })).toBe('<ProgressCircle label="Progress" />');
+    expect(progressCirclePlaygroundSnippet({ value: 65, showValueLabel: true, label: "Uploading" })).toBe(
+      '<ProgressCircle label="Uploading" value={65} showValueLabel />',
+    );
+  });
+
+  it.each([{}, { size: "lg", tone: "brand", label: "Loading" }, { tone: "secondary" }])("Spinner %j is a real snippet", (args) => {
+    expect(problemsIn(spinnerPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Spinner writes only what's set — no default tone, so a tone is always written", () => {
+    expect(spinnerPlaygroundSnippet({ size: "md", label: "" })).toBe("<Spinner />");
+    expect(spinnerPlaygroundSnippet({ size: "md", tone: "brand", label: "" })).toBe('<Spinner tone="brand" />');
+    expect(spinnerPlaygroundSnippet({ tone: "brand", label: "Loading" })).toBe('<Spinner tone="brand" label="Loading" />');
   });
 });

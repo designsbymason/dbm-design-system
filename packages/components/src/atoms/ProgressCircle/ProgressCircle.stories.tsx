@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { ProgressCircle } from "./ProgressCircle";
+import { progressCirclePlaygroundSnippet, progressCircleSnippets } from "./ProgressCircle.snippets";
 import type { ProgressCircleProps } from "./ProgressCircle.types";
 
 const meta: Meta<typeof ProgressCircle> = {
@@ -115,6 +116,14 @@ interface PlaygroundArgs extends ProgressCircleProps {
 }
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressCirclePlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { indeterminate: false } as ProgressCircleProps,
   argTypes: {
     indeterminate: {
@@ -134,11 +143,27 @@ export const Playground: Story = {
 
 export const WithValueLabel: Story = {
   name: "With value label",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressCirclePlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { showValueLabel: true },
 };
 
 export const WithValueText: Story = {
   name: "With aria-valuetext",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressCirclePlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     value: 3,
     max: 5,
@@ -149,6 +174,7 @@ export const WithValueText: Story = {
 
 export const WithCustomValueLabel: Story = {
   name: "With custom value label",
+  parameters: { docs: { source: { code: progressCircleSnippets.withCustomValueLabel } } },
   args: {
     value: 3,
     max: 5,
@@ -160,11 +186,20 @@ export const WithCustomValueLabel: Story = {
 };
 
 export const Indeterminate: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressCirclePlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { value: undefined, label: "Loading" },
 };
 
 export const AllTones: Story = {
   name: "All tones",
+  parameters: { docs: { source: { code: progressCircleSnippets.allTones } } },
   // `tone`/`label` are the whole point of this grid — each instance
   // intentionally varies both together (a distinct accessible label per
   // tone), so no single control value could represent them. Every other
@@ -187,6 +222,7 @@ export const AllTones: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: progressCircleSnippets.allSizes } } },
   // `size`/`label` are the whole point of this grid, same reasoning as
   // AllTones above. Every other prop (`value`, `max`, `tone`,
   // `showValueLabel`) stays live and shared via `{...args}`.

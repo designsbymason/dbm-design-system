@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Stack } from "../Stack";
 import { Skeleton } from "./Skeleton";
+import { skeletonPlaygroundSnippet, skeletonSnippets } from "./Skeleton.snippets";
 
 const meta: Meta<typeof Skeleton> = {
   title: "Atoms/Data Display/Skeleton",
@@ -81,22 +82,56 @@ export default meta;
 
 type Story = StoryObj<typeof Skeleton>;
 
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => skeletonPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Text: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => skeletonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { variant: "text", width: "12rem" },
 };
 
 export const Circular: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => skeletonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { variant: "circular", width: 48, height: 48 },
 };
 
 export const Rectangular: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => skeletonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { variant: "rectangular", width: "16rem", height: "var(--dbm-space-32)" },
 };
 
 export const DefaultSizes: Story = {
   name: "Default sizes (no width/height passed)",
+  parameters: { docs: { source: { code: skeletonSnippets.defaultSizes } } },
   // `variant`/`width`/`height` are all central to what this story
   // demonstrates (two different variants, deliberately with no width/height
   // passed to either) — no single control value could represent them
@@ -131,6 +166,14 @@ export const DefaultSizes: Story = {
 
 export const WaveAnimation: Story = {
   name: "Wave animation",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => skeletonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     variant: "rectangular",
     width: "16rem",
@@ -141,6 +184,7 @@ export const WaveAnimation: Story = {
 
 export const CardPlaceholder: Story = {
   name: "Composed: card loading placeholder",
+  parameters: { docs: { source: { code: skeletonSnippets.cardPlaceholder } } },
   // Same reasoning as DefaultSizes above: `variant`/`width`/`height` are
   // each fixed per-instance by the composition itself (an avatar-shaped
   // circle plus two differently-sized text lines), so no single control

@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { ProgressBar } from "./ProgressBar";
+import { progressBarPlaygroundSnippet, progressBarSnippets } from "./ProgressBar.snippets";
 import type { ProgressBarProps } from "./ProgressBar.types";
 
 const meta: Meta<typeof ProgressBar> = {
@@ -115,6 +116,14 @@ interface PlaygroundArgs extends ProgressBarProps {
 }
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressBarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { indeterminate: false } as ProgressBarProps,
   argTypes: {
     indeterminate: {
@@ -136,6 +145,14 @@ export const Playground: Story = {
 
 export const WithValueLabel: Story = {
   name: "With value label",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressBarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { showValueLabel: true },
   render: (args) => (
     <div style={{ maxWidth: "24rem" }}>
@@ -146,6 +163,14 @@ export const WithValueLabel: Story = {
 
 export const WithValueText: Story = {
   name: "With aria-valuetext",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressBarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     value: 3,
     max: 5,
@@ -161,6 +186,7 @@ export const WithValueText: Story = {
 
 export const WithCustomValueLabel: Story = {
   name: "With custom value label",
+  parameters: { docs: { source: { code: progressBarSnippets.withCustomValueLabel } } },
   // Pairs the two ways this component describes a non-percentage unit of
   // progress: `aria-valuetext` for screen readers, `formatValueLabel` for
   // the matching visible text — same "3 of 5 files" story, both channels.
@@ -180,6 +206,14 @@ export const WithCustomValueLabel: Story = {
 };
 
 export const Indeterminate: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => progressBarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { value: undefined, label: "Loading" },
   render: (args) => (
     <div style={{ maxWidth: "24rem" }}>
@@ -190,6 +224,7 @@ export const Indeterminate: Story = {
 
 export const AllTones: Story = {
   name: "All tones",
+  parameters: { docs: { source: { code: progressBarSnippets.allTones } } },
   // `tone`/`label` are the whole point of this grid — each instance
   // intentionally varies both together (a distinct accessible label per
   // tone), so no single control value could represent them. Every other
@@ -218,6 +253,7 @@ export const AllTones: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: progressBarSnippets.allSizes } } },
   // `size`/`label` are the whole point of this grid, same reasoning as
   // AllTones above. Every other prop (`value`, `max`, `tone`) stays live
   // and shared via `{...args}`.

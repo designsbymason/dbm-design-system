@@ -1,8 +1,9 @@
 import { Bell } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Button } from "../Button";
 import { Icon } from "../Icon";
 import { Badge } from "./Badge";
+import { badgePlaygroundSnippet, badgeSnippets } from "./Badge.snippets";
 
 const meta: Meta<typeof Badge> = {
   title: "Atoms/Data Display/Badge",
@@ -138,6 +139,14 @@ export default meta;
 type Story = StoryObj<typeof Badge>;
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => badgePlaygroundSnippet(context.args),
+      },
+    },
+  },
   // `anchor` stays unset here (Playground shows Badge's plain standalone
   // mode, matching every other component's Playground convention) — which
   // makes `position`/`overlap` genuinely inert from this story's own UI
@@ -149,6 +158,7 @@ export const Playground: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: badgeSnippets.allSizes } } },
   argTypes: { size: { control: false }, children: { control: false } },
   render: (args) => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-2)" }}>
@@ -177,6 +187,7 @@ export const AllSizes: Story = {
 // all, so every Controls-panel toggle was a silent no-op.
 export const AllTonesSubtle: Story = {
   name: "All tones (subtle)",
+  parameters: { docs: { source: { code: badgeSnippets.allTonesSubtle } } },
   // `variant: "subtle"` is now an explicit override, not the default (the
   // component default flipped to "solid") — without it this story would
   // silently render solid badges under a name that says otherwise.
@@ -197,6 +208,7 @@ export const AllTonesSubtle: Story = {
 
 export const AllTonesSolid: Story = {
   name: "All tones (solid)",
+  parameters: { docs: { source: { code: badgeSnippets.allTonesSolid } } },
   argTypes: { tone: { control: false }, children: { control: false } },
   args: { variant: "solid" },
   render: (args) => (
@@ -214,6 +226,7 @@ export const AllTonesSolid: Story = {
 
 export const StatusLabels: Story = {
   name: "As status labels",
+  parameters: { docs: { source: { code: badgeSnippets.statusLabels } } },
   // `variant: "subtle"` is now an explicit override (see AllTonesSubtle's
   // own note) — needed here specifically to keep this the deliberately
   // low-emphasis counterpart to SolidStatusLabels below.
@@ -239,6 +252,7 @@ export const StatusLabels: Story = {
 
 export const CountWithMax: Story = {
   name: "Count with max overflow (99+)",
+  parameters: { docs: { source: { code: badgeSnippets.countWithMax } } },
   argTypes: { children: { control: false } },
   args: { tone: "danger" },
   render: (args) => (
@@ -251,6 +265,7 @@ export const CountWithMax: Story = {
 
 export const HideZero: Story = {
   name: "Hide when count is zero (hideZero)",
+  parameters: { docs: { source: { code: badgeSnippets.hideZero } } },
   // `children` is a fixed identity per instance (0 vs 3 — the whole point
   // of this story is comparing those two specific values), same reasoning
   // as the tone/status galleries above. Every other prop, including
@@ -273,6 +288,7 @@ export const HideZero: Story = {
 
 export const Dot: Story = {
   name: "Dot indicator",
+  parameters: { docs: { source: { code: badgeSnippets.dot } } },
   argTypes: { tone: { control: false } },
   args: { dot: true },
   render: (args) => (
@@ -286,6 +302,7 @@ export const Dot: Story = {
 
 export const SolidStatusLabels: Story = {
   name: "As high-emphasis status labels (solid)",
+  parameters: { docs: { source: { code: badgeSnippets.solidStatusLabels } } },
   argTypes: { tone: { control: false }, children: { control: false } },
   args: { variant: "solid" },
   render: (args) => (
@@ -315,6 +332,7 @@ export const SolidStatusLabels: Story = {
 // tone/dot/size/variant) stays genuinely live via `{...args}`.
 export const AnchorOnIcon: Story = {
   name: "Anchor: notification dot on an icon",
+  parameters: { docs: { source: { code: badgeSnippets.anchorOnIcon } } },
   argTypes: { anchor: { control: false } },
   args: { dot: true, tone: "danger" },
   render: (args) => (
@@ -328,6 +346,7 @@ export const AnchorOnIcon: Story = {
 
 export const AnchorWithCount: Story = {
   name: "Anchor: count on an icon",
+  parameters: { docs: { source: { code: badgeSnippets.anchorWithCount } } },
   argTypes: { anchor: { control: false } },
   // `variant="solid"` matters here in a way it doesn't for `dot` (which
   // always ignores `variant` and uses its own indicator fill regardless —
@@ -348,6 +367,7 @@ export const AnchorWithCount: Story = {
 
 export const AllPositions: Story = {
   name: "Anchor: all positions",
+  parameters: { docs: { source: { code: badgeSnippets.allPositions } } },
   argTypes: { anchor: { control: false }, position: { control: false } },
   args: { dot: true, tone: "danger" },
   render: (args) => (
@@ -386,6 +406,7 @@ const shapeStyle = {
 
 export const AnchorOverlapComparison: Story = {
   name: "Anchor: overlap — rectangular vs circular anchor",
+  parameters: { docs: { source: { code: badgeSnippets.anchorOverlapComparison } } },
   // `anchor` is a fixed identity per instance (four different shapes — an
   // icon, a square, a rectangle, and a circle — a single control couldn't
   // represent "four different elements at once"). `overlap` is *not*
@@ -438,6 +459,7 @@ export const AnchorOverlapComparison: Story = {
 // only affect anchor mode and have no effect on plain in-flow composition.
 export const InlineInButton: Story = {
   name: "Composed inline (no anchor): inside a Button",
+  parameters: { docs: { source: { code: badgeSnippets.inlineInButton } } },
   argTypes: { position: { control: false }, overlap: { control: false } },
   args: { size: "xs", tone: "danger", variant: "solid", children: 3 },
   render: (args) => (

@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { Avatar } from "./Avatar";
+import { avatarPlaygroundSnippet, avatarSnippets } from "./Avatar.snippets";
 
 const meta: Meta<typeof Avatar> = {
   title: "Atoms/Data Display/Avatar",
@@ -181,14 +182,39 @@ export default meta;
 type Story = StoryObj<typeof Avatar>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => avatarPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const InitialsFallback: Story = {
   name: "Initials (no image)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => avatarPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };
 
 export const WithImage: Story = {
   name: "With image",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => avatarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     src: "https://i.pravatar.cc/128?img=5",
   },
@@ -196,6 +222,14 @@ export const WithImage: Story = {
 
 export const BrokenImage: Story = {
   name: "Broken image URL (falls back to initials)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => avatarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     src: "https://example.com/does-not-exist.jpg",
   },
@@ -203,6 +237,14 @@ export const BrokenImage: Story = {
 
 export const IconFallback: Story = {
   name: "Generic icon (no image, no initials)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => avatarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     // Empty string, not undefined — undefined renders as an inert "Set
     // string" placeholder instead of a live control (see the Playground's
@@ -216,6 +258,14 @@ export const IconFallback: Story = {
 
 export const SquareShape: Story = {
   name: "Square shape",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => avatarPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     shape: "square",
   },
@@ -223,6 +273,7 @@ export const SquareShape: Story = {
 
 export const AsButton: Story = {
   name: 'Polymorphic: as="button" (interactive trigger, keeps its own content)',
+  parameters: { docs: { source: { code: avatarSnippets.asButton } } },
   // `render: (args) => ...`, not `render: () => ...` — a render function
   // that ignores its own `args` parameter renders correctly once but makes
   // every Controls-panel toggle a no-op, since the JSX below never reads
@@ -245,6 +296,7 @@ export const AsButton: Story = {
 
 export const AsButtonColorful: Story = {
   name: 'Polymorphic: as="button" + colorful (hover steps the family-specific token, not brand)',
+  parameters: { docs: { source: { code: avatarSnippets.asButtonColorful } } },
   // `name`/`initials`/`alt`/`src` drive this story's entire point — four
   // distinct identities producing four distinct color-family hashes — so a
   // single shared control for any of them couldn't represent what's shown
@@ -286,6 +338,7 @@ export const AsButtonColorful: Story = {
 
 export const AsButtonSquare: Story = {
   name: 'Polymorphic: as="button" + square shape (square focus ring, sm radius)',
+  parameters: { docs: { source: { code: avatarSnippets.asButtonSquare } } },
   args: {
     as: "button",
     status: "online",
@@ -298,6 +351,7 @@ export const AsButtonSquare: Story = {
 
 export const AsButtonDisabled: Story = {
   name: 'Polymorphic: as="button" + disabled',
+  parameters: { docs: { source: { code: avatarSnippets.asButtonDisabled } } },
   args: {
     as: "button",
     status: "online",
@@ -321,6 +375,7 @@ export const AsButtonDisabled: Story = {
 // §5 and 06-engineering-standards.md §9).
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: avatarSnippets.allSizes } } },
   argTypes: { size: { control: false } },
   render: (args) => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
@@ -333,6 +388,7 @@ export const AllSizes: Story = {
 
 export const ResponsiveSize: Story = {
   name: "Responsive size (sm on mobile, xl from md up)",
+  parameters: { docs: { source: { code: avatarSnippets.responsiveSize } } },
   // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
   // tool this project never adopted (02-tech-stack-and-structure.md picked
   // Playwright's own self-hosted visual regression instead); this
@@ -344,6 +400,7 @@ export const ResponsiveSize: Story = {
 
 export const AllStatuses: Story = {
   name: "All statuses",
+  parameters: { docs: { source: { code: avatarSnippets.allStatuses } } },
   argTypes: { status: { control: false } },
   render: (args) => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
@@ -361,6 +418,7 @@ export const AllStatuses: Story = {
 // time and wouldn't have caught it.
 export const SizeStatusMatrix: Story = {
   name: "Size × status matrix",
+  parameters: { docs: { source: { code: avatarSnippets.sizeStatusMatrix } } },
   argTypes: { size: { control: false }, status: { control: false } },
   render: (args) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>

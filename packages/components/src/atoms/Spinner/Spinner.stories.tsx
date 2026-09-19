@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Spinner } from "./Spinner";
+import { spinnerPlaygroundSnippet, spinnerSnippets } from "./Spinner.snippets";
 
 const meta: Meta<typeof Spinner> = {
   title: "Atoms/Feedback/Spinner",
@@ -71,10 +72,20 @@ export default meta;
 
 type Story = StoryObj<typeof Spinner>;
 
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => spinnerPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: spinnerSnippets.allSizes } } },
   // `size` is the whole point of this grid — each instance intentionally
   // varies it, so no single control value could represent them all. `tone`
   // and `label` stay live and shared via `{...args}`, matching
@@ -93,6 +104,7 @@ export const AllSizes: Story = {
 
 export const AllTones: Story = {
   name: "All tones",
+  parameters: { docs: { source: { code: spinnerSnippets.allTones } } },
   // `tone` is the whole point of this grid, same reasoning as AllSizes
   // above. `size` and `label` stay live and shared via `{...args}`.
   argTypes: { tone: { control: false } },
@@ -107,5 +119,13 @@ export const AllTones: Story = {
 
 export const Labeled: Story = {
   name: "With an accessible label",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => spinnerPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { tone: "brand", label: "Loading" },
 };
