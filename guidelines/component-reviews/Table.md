@@ -395,3 +395,19 @@ plus both `tsc` passes, the `unit` project (132 tests for `Table`; 1527 for the 
 `HeaderCell`, `Cell`, `Empty`); root props `variant`, `tone` (six values), `size`, `striped`, `hoverable`, `stickyHeader`,
 `stickyFirstColumn`, `stickyLastColumn`, `maxHeight`, `containerClassName`; `Table.Body`'s `loading`; and `numeric` on the cells.
 Per `06-engineering-standards.md` §9, don't make further changes to `Table` (code, stories, docs, or its tokens) without asking first.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Reviewing the Docs pages found that every "Show code" snippet was the story object's source rather than pasteable code: 8 of the 19
+stories used the demo-only `DemoTable` helper, others used `.map(…)` over stories-file arrays, the Playground snippet was literally
+`{}`, and the Ghost story's comment named `04-component-inventory.md` (an internal path, in visible page content) and said a real
+`Card` "isn't built yet". The fix, recorded as the standard in `07-storybook-and-documentation-standards.md` §4.2:
+
+- Every visible story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Table.snippets.ts` (only real
+  exports, one small representative example per story, no demo scaffolding); the Playground builds its snippet from the live controls.
+  All snippets and Playground combinations were typechecked against the real `Table`/`Card` types, and a guard test
+  (`src/storySnippets.test.ts`) keeps them valid.
+- **The Ghost story now uses the real `Card`** (a `Card.Header` titled "Billing" around the ghost table) instead of a styled `div`
+  standing in for one, so the story, its snippet, and the Docs prose agree. The stale comment is gone.
+- **Finalized status is unchanged.** Three-question test (`06-engineering-standards.md` §9): a story-file and docs-only change with no
+  component code, props, or tokens touched, so it stays finalized; it was made only after the user asked for it.

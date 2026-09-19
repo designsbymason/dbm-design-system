@@ -223,3 +223,14 @@ Controls panel and the Docs page's own custom Playground block; `ListItem.mdx`'s
 Per `06-engineering-standards.md` §9's finalization rule, no further changes to `List` (code,
 stories, docs, or tokens it alone drives) without asking first, even for something that would
 otherwise be an obvious, in-scope fix.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's snippet was
+`{ name: "Playground" }`; all 9 gallery snippets were the story object's source, spreading the Playground's `args` and calling story-only
+helpers (`parseNumberArg` in every one, and the `useSyncMarkerToAs` hook in four) that don't exist in a reader's code; and "Responsive
+spacing" displayed `06-engineering-standards.md` in a comment. Every story now sets `parameters.docs.source.code` to a hand-written snippet
+from the new `List.snippets.ts`, and the Playground builds its snippet from the live controls — writing a marker only when it differs from
+the element's natural one (via the component's own `defaultMarkerFor`, so the two can't drift) and `start`/`reversed`/`type` only on an
+`ol`. Typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens
+touched.

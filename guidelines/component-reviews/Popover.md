@@ -680,3 +680,21 @@ and re-verified.**
 **Finalized 2026-09-17.** Re-confirmed clean immediately before finalizing: `pnpm run lint`, full
 Vitest `unit` (1358/1358) and `storybook` (473/473) projects, `pnpm run build`, and
 `check-component-bundle-size` (1.54KB JS / 1.00KB CSS, within budget).
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code", and a Docs-page render error
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's snippet was
+literally `{}`; three stories ("With the arrow hidden", "With an explicit close button", "Modal") showed only `{ name, args: {…} }` — no
+code at all; "All sides" showed `<PopoverRoot>` (the internal function name; only `Popover` is exported) with every default prop spelled
+out; and **"Hides when its trigger scrolls out of view" failed to render on the Docs page**, showing `Error: Should not already be working`
+in place of the canvas (and so no "Show code" button).
+
+- **The render error:** two demo stories open a popover on mount (`defaultOpen`), and on one Docs page they race each other's mount-time
+  auto-focus; Storybook's patched `focus()` then calls React's `act()` while React is mid-commit, which throws. Reproduced on fresh loads;
+  fine standalone and in the 530-test browser run, so only the Docs page showed it. **Fixed** by passing `onOpenAutoFocus={(event) =>
+  event.preventDefault()}` on the two open-on-mount demos ("Responsive side" and "Hides when its trigger scrolls out of view") — a static
+  demo shouldn't take focus on page load anyway. No component code changed; `Popover.Content` already exposed that prop.
+- **Snippets:** every story now uses a hand-written snippet from the new `Popover.snippets.ts`, and the Playground *and* the three
+  args-only stories build theirs from the live controls, so they show real code (`<Popover.Content hideArrow …>`, `<Popover modal>`).
+
+Typechecked against the real types. **Finalized status unchanged** — story-file and docs-only.

@@ -255,3 +255,15 @@ green on the last push. Final surface: four sub-parts (`Media`, `Header`, `Body`
 `tone` (six), `size`, `orientation` (a single value or a responsive map), `mediaPosition`, `divided`, `interactive`, `disabled`,
 and `asChild`; and `Card.Footer`'s `align`. Per `06-engineering-standards.md` §9, don't make further changes to `Card` (code,
 stories, docs, or its tokens) without asking first.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Table`'s (see `Table.md`, and the standard in `07-storybook-and-documentation-standards.md` §4.2): 11 of Card's 14
+"Show code" snippets depended on demo-only helpers (`DemoCard`, `DemoSections`, `DemoMedia`, `gridStyle`, `.map(…)` over story arrays),
+every gallery snippet was the story object's source, and the Playground's showed a `<DemoSections />` placeholder. Every visible story
+now sets `parameters.docs.source.code` to a hand-written snippet from the new `Card.snippets.ts`, and the Playground builds its snippet
+from the live controls — including the Storybook-only `media` control, which is written out as a real `Card.Media`. All snippets and
+Playground combinations were typechecked against the real components, and `src/storySnippets.test.ts` keeps them valid.
+
+**Finalized status is unchanged.** A story-file and docs-only change, no component code, props, or tokens touched (three-question test,
+`06-engineering-standards.md` §9), made only after the user asked for it.

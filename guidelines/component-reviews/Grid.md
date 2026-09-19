@@ -627,3 +627,16 @@ genuinely interactive.
 Per `06-engineering-standards.md` §9's finalization rule, no further changes to `Grid` (code,
 stories, docs, or tokens it alone drives) without asking first, even for something that would
 otherwise be an obvious, in-scope fix.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's snippet was
+`{ name: "Playground" }`; all 10 gallery snippets were the story object's source, built from demo-only helpers (`ColumnTrackOverlay`,
+`toCssContentAlign`, `Cells`, `Chips`, `cellStyle`) and spreading the Playground's `args` (`<Grid {...args} …>`), which doesn't exist in a
+reader's code; and two of them displayed **internal document names** in their comments (`06-engineering-standards.md`, and
+`02-tech-stack-and-structure.md`), against the §4 rule about internal paths in visible content, alongside development-history comments
+("found and fixed 2026-09-11, user-reported"). Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new
+`Grid.snippets.ts` — a few plain `<div>`/`<GridItem>` children around exactly the props the story is about (`columns={{ base: 1, md: 2,
+lg: 3 }}`, `autoFlow="row dense"`, `justifyContent="between"`…) — and the Playground builds its snippet from the live controls, including
+the `autoRows="6rem"` fallback it shows on screen. Typechecked against the real types. **Finalized status unchanged** — story-file and
+docs-only, no component code, props, or tokens touched.

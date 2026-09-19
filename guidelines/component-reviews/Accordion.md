@@ -359,3 +359,13 @@ main and `.storybook` tsconfigs), `eslint --max-warnings 0`, the full Vitest `un
 `check-component-bundle-size` (1.78KB JS / 0.90KB CSS gzipped, within budget) — all clean, per
 `06-engineering-standards.md` §9's own note, don't make further changes to `Accordion` (code,
 stories, docs, or its tokens) without asking first.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). The Playground's snippet was a
+`<DemoItems />` placeholder, every gallery snippet was the story object's source, 4 of 8 used the demo-only `DemoItems`, "Click to open,
+arrow keys" included its `play` test code, and the Ghost story's comment named `04-component-inventory.md` (split across a line break, so
+easy to miss) and said a real `Card` "isn't built yet". Every story now sets `parameters.docs.source.code` to a hand-written snippet from
+the new `Accordion.snippets.ts`; the Playground builds its snippet from the live controls (`type="multiple"` turns the single default value
+into a one-element array, as the demo does). **The Ghost story now uses the real `Card`.** Typechecked against the real types. **Finalized
+status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
