@@ -2,9 +2,9 @@
 
 **Data Display:** Table — built 2026-09-18, item 10 in the itemized molecule-tier build order
 (`04-component-inventory.md`). Adds no new dependency and no new token — every value already had a home
-on an existing scale. **Not yet Finalized** — per the standing rule that only the user declares a
-component's review pass done, this file records what was built/checked/found, not a self-declared
-Finalized status.
+on an existing scale. **Finalized 2026-09-19** — declared by the user after the full review pass and
+every follow-up recorded below; see the closing entry at the bottom of this file. Everything above it
+records the build and review history leading there.
 
 **The first molecule with no Radix primitive underneath it.** A compound component of native table
 elements: `Table` (root) with `Table.Caption`, `Table.Header`, `Table.Body`, `Table.Footer`, `Table.Row`,
@@ -336,12 +336,62 @@ loading rows matching the header's column count, and the empty cell's `colspan`.
 1518 unit tests, 510 browser tests, the build, and all size/coverage checks pass. Per-component bundle size grew from
 1.73KB JS / 0.76KB CSS gzipped to 2.52KB / 1.32KB (it now bundles `Skeleton` and `VisuallyHidden`); still within budget.
 
+## Follow-up (2026-09-19, same day, at explicit direction) — sticky last column
+
+Added `stickyLastColumn` on `Table` (boolean, default `false`) — the mirror of `stickyFirstColumn`, the first of the two adjacent
+ideas the previous section had left unbuilt. Placed right after `stickyFirstColumn` in every prop order.
+
+- Pins the last cell of every row in the header, body, and footer to the inline-end edge (logical, so it follows RTL), with the
+  same opaque-cell technique: the pinned cell takes its row's `--row-tint`, falling back to `bg.surface`, so a striped or hovered
+  row keeps matching. Its divider sits on the inner (inline-start) side. Combinable with `stickyFirstColumn` and `stickyHeader`.
+- **Same opt-outs as the first column**, for the same reason: a last cell spanning several columns, and the full-width empty-state
+  cell, don't pin (a sticky cell can only travel within its own row).
+- **Layering:** pinned first/last column cells sit at `z-index.sticky`, the pinned header cells one above, and a corner cell — the
+  header's first or last cell when that column is also pinned — one above that. The corner rule now covers both ends.
+- **Toned header:** the divider beside a pinned last header cell takes the tone's fill colour, mirroring the first-column rule; the
+  rules stay at the same specificity as the header rules and ordered before them, so a toned or pinned header wins by order.
+- **Verified live, all in a real browser:** the pinned last cell holds at the end edge when unscrolled, mid-scroll, and scrolled to
+  the end (gap stays at the frame's own 1px border) across the header, body rows, and footer; the striped row's pinned cell matches
+  its row tint exactly; the success-tone header's pinned cell keeps its fill; with both edges and the header pinned, both corner
+  cells (`1102`) layer above the header (`1101`) above the pinned columns (`1100`) and are the elements at their own corner points;
+  and in RTL the first column pins to the *right* edge and the last to the *left*, each with its divider on the inner side. A
+  1:1-scale capture showed no leaking content at the pinned edge — apparent specks in a downscaled screenshot were a scaling
+  artifact, as with the header hairlines noted earlier (and confirmed by measurement: the pinned cell's edge equals the frame's
+  inner edge, and hit-testing across it lands on the pinned cell).
+- **Verification:** 9 new unit tests (132 total): the class on all three row groups without the first-column class, the caption left
+  alone, combination with `stickyFirstColumn`/`stickyHeader`/tones/striping/hover, nesting isolation, loading and empty-state row
+  groups, and jest-axe with both columns and the header pinned. Two new stories (`Sticky last column`, `Sticky first and last columns
+  together`); the first has a `play` function that scrolls the wide table and asserts the pinned cell stays at the end edge.
+
+## Considered and not added to `Table`
+
+Sorting per column, filtering per column, a selectable-row checkbox column, and a per-first-column tone were weighed against `Table`'s
+role (2026-09-19). Only the sticky last column was requested, so none of these was built. The reasoning, for the next person to ask:
+
+- **Sorting, filtering, and row selection belong in `DataTable`**, the planned organism that builds on `Table` (`04-component-inventory.md`:
+  sort, select rows, pagination). `Table` has no data model — rows and cells are composed as children, and it knows a "column" only as
+  the first row's cell count — while all three need to know about data, rows, and columns. Filtering UI is also the job of the planned
+  `Table Toolbar`. A "checkbox column at a configurable index" in particular would require `Table` to insert a column, i.e. hold a column
+  model. `Table.HeaderCell` already passes a native `aria-sort` through to the `<th>`, so `DataTable` can compose a sortable header
+  without any change to `Table`.
+- **A first-column tone** is purely visual, so it isn't out of scope, but it interacts with stripes, hover, tones, and the pinned
+  column's `--row-tint`; deferred until there's a concrete use case. Row headers are already semibold, and cells accept `className` and
+  `style`. If built, better shaped as a per-cell or per-row `tone` than as "the first column".
+- **No speculative "seams" for `DataTable`.** Features and tokens in this system are added when a real consumer needs them; building
+  `DataTable` will show exactly what `Table` has to expose (a selected-row visual state, for instance), and it can be added then.
+
 ## Remaining gaps named, deliberately not built
 
-Nothing further is outstanding from the original three. Two adjacent ideas surfaced while building them, both design
-decisions rather than narrow fixes, so recorded here instead of built unprompted:
+- **Pinning more than one leading (or trailing) column** — e.g. an ID and a name together. The second pinned column's offset must
+  equal the first's rendered width, which CSS alone can't know; it would need measuring or a consumer-supplied width.
 
-- **A sticky last column** (an actions or total column pinned to the end edge) — the mirror of `stickyFirstColumn`; would
-  reuse the same opaque-cell/tint technique with `inset-inline-end`.
-- **Pinning more than one leading column** — e.g. an ID and a name together. Needs the second column's offset to equal the
-  first's rendered width, which CSS alone can't know; would require measuring or a consumer-supplied width.
+**Finalized 2026-09-19.** Before finalizing, the review checklist (`06-engineering-standards.md` §9) was re-run against the
+final state: no hardcoded design values in `Table.module.css` (the only non-token numbers are the documented decorative
+skeleton widths and the `+1`/`+2` layering offsets applied to the `z-index.sticky` token), every prop in `Table.types.ts` carries
+JSDoc, and the Docs page and stories were re-verified live. The full package was re-confirmed clean immediately before: `eslint`
+plus both `tsc` passes, the `unit` project (132 tests for `Table`; 1527 for the package), the real-browser `storybook` project
+(512 tests, including axe on every story and the `play` functions), `tsup` build, and every size and coverage check (`Table`:
+2.57KB JS / 1.37KB CSS gzipped, within budget). Final surface: eight sub-parts (`Caption`, `Header`, `Body`, `Footer`, `Row`,
+`HeaderCell`, `Cell`, `Empty`); root props `variant`, `tone` (six values), `size`, `striped`, `hoverable`, `stickyHeader`,
+`stickyFirstColumn`, `stickyLastColumn`, `maxHeight`, `containerClassName`; `Table.Body`'s `loading`; and `numeric` on the cells.
+Per `06-engineering-standards.md` §9, don't make further changes to `Table` (code, stories, docs, or its tokens) without asking first.
