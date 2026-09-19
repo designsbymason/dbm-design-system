@@ -66,6 +66,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0017](./0017-popover-omits-anchor-sub-part-pending-upstream-fix.md) | `Popover` omits Radix's own `Anchor` sub-part, over shipping it with a broken-feature warning | Accepted |
 | [0018](./0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) | `Accordion` wraps Radix Accordion's own `Content` directly, not the `Collapse` atom | Accepted |
 | [0019](./0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md) | `Table` owns an overflow-aware scroll container and puts native props on the `<table>` element | Accepted |
+| [0020](./0020-show-code-uses-hand-written-snippets-over-storybook-generated-source.md) | "Show code" shows hand-written snippets, not Storybook's own or generated source | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

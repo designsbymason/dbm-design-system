@@ -12,6 +12,8 @@ packages/components/src/{tier}/{ComponentName}/
 ├── ComponentName.module.css   # scoped styles, tokens only
 ├── ComponentName.types.ts     # exported prop types/interfaces
 ├── ComponentName.stories.tsx  # Storybook stories, one per variant/state
+├── ComponentName.snippets.ts  # hand-written code for each story's "Show code" button (ADR-0020)
+├── ComponentName.mdx          # the Docs page (07-storybook-and-documentation-standards.md §4)
 ├── ComponentName.test.tsx     # unit + interaction tests
 └── index.ts                   # barrel: re-exports component + types
 ```
@@ -108,6 +110,7 @@ A component isn't complete until all of these are true:
 - [ ] Full TypeScript types, no `any`
 - [ ] JSDoc on the component and every prop
 - [ ] Storybook story covering every variant/size/state combination, including error and disabled states
+- [ ] Docs page (`ComponentName.mdx`) per `07-storybook-and-documentation-standards.md` §4, and every visible story's "Show code" set to a hand-written snippet from `ComponentName.snippets.ts` (§4.2, [ADR-0020](adr/0020-show-code-uses-hand-written-snippets-over-storybook-generated-source.md))
 - [ ] Unit test (React Testing Library) covering rendering and interaction
 - [ ] Accessibility test passes (jest-axe/vitest-axe) with zero violations
 - [ ] Keyboard navigation verified (tab order, focus visible, escape/enter/arrow behavior where applicable)

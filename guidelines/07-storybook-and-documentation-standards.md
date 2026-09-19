@@ -135,7 +135,7 @@ Every `<Canvas>` on a Docs page has a "Show code" button, and what it shows is m
 
 **Two failure modes, depending on the story.** A story with its own `render` and no `args` shows the *story object's source* permanently (Card, Table). A story that spreads `args` (`<Grid {...args}>`) shows that source for a second or so, and then Storybook **swaps in a snippet generated from the rendered tree** — so what a reader actually sees is the generated one, and **a check has to be a settled read (wait ~3s after opening "Show code"), not a first read**. The generated snippet has its own problems, found on the eight input molecules (`CheckboxGroup`, `FormField`, `NumberInput`, `PasswordInput`, `RadioGroup`, `SearchInput`, `Select`, `Slider`): it spells out every default and every empty placeholder (`hasError={false}`, `name=""`, `aria-valuetext=""`, twenty props on a `Slider`); it fills every handler with a no-op (`onValueChange={() => {}}`); it keeps the story's demo wrapper `div`; it **freezes controlled state** — a "Controlled" story shows `value={50} onValueChange={() => {}}` and a hardcoded "Live: 50" line, which can't be pasted into anything that works; it **drops a render-prop child entirely** (`FormField`'s snippets were `<FormField label="…" />` with no control in it); it prints a helper component's name as a placeholder (`<DemoOptions />`); and a one-prop variant of the Playground hides that one prop among all the rest.
 
-**The rule:** every visible story on a Docs page points `parameters.docs.source` at hand-written code — never at its own source, and never at the generated snippet.
+**The rule:** every visible story on a Docs page points `parameters.docs.source` at hand-written code — never at its own source, and never at the generated snippet. The decision and the alternatives it was chosen over are recorded in [ADR-0020](adr/0020-show-code-uses-hand-written-snippets-over-storybook-generated-source.md); this section is the working rules.
 
 - **Gallery stories** put their snippets in a `ComponentName.snippets.ts` file next to the stories (`export const componentSnippets = { variants: "…", … }`, plain strings) and set `parameters: { docs: { source: { code: componentSnippets.variants } } }`. Storybook uses `code` verbatim when it's set. A snippet is the **smallest real usage of what its story shows** — one representative element with a comment naming the other values (`{/* variant: "outlined" (default) | "elevated" | … */}`), not the whole demo grid. It uses only exports of the package (plus plain HTML elements), no imports (the Import section covers those), and none of the story's own layout scaffolding (wrapper `div`s, `maxWidth` styles, test ids, `preventDefault`).
 - **The Playground** builds its snippet from the live controls with `parameters.docs.source: { type: "dynamic", transform: (_code, context) => componentPlaygroundSnippet(context.args) }` — only the props that differ from their defaults, around a small real example, so it updates as the controls change. The builder lives in the same `.snippets.ts` file. A Storybook-only control (Card's `media`) is rendered into the example as real markup; it never appears as a prop.
@@ -157,7 +157,7 @@ Every `<Canvas>` on a Docs page has a "Show code" button, and what it shows is m
 - **A `.map(` over the reader's own state is fine** (a `Tag` per filter in state); a `.map(` over a stories-file constant (`allTones.map(…)`) is the scaffolding the guard test rejects.
 - **A Playground-only control the story strips before rendering** (`ProgressBar`'s `indeterminate`, which leaves `value` out) has to be handled by the builder the same way — it isn't a real prop, so it never appears in the snippet.
 
-**Scope.** Applied to `Card`, `Table`, `Accordion`, `Popover`, `Grid`, `List`, `CheckboxGroup`, `FormField`, `NumberInput`, `PasswordInput`, `RadioGroup`, `SearchInput`, `Select`, and `Slider` (2026-09-19) — **every molecule built so far (all 14)** — and the atoms `Avatar`, `Badge`, `Skeleton`, `Tag`, `ProgressBar`, `ProgressCircle`, `Spinner`, `Button`, `Checkbox`, `CloseButton`, `FieldError`, `FieldHelperText`, `FieldLabel`, `IconButton`, `Input`, `Radio`, `Switch`, `Textarea`, `Affix`, `AspectRatio`, `Bleed`, `Box`, `Center`, `Container`, `Divider`, `GridItem`, `Spacer`, `Stack`, `Icon`, `Image`, `Indicators`, `BackToTop`, `Backdrop`, `Collapse`, `Tooltip`, `ClientOnly`, `FocusTrap`, `Portal`, `VisuallyHidden`, `Blockquote`, `Code`, `Heading`, `Highlight`, `Kbd`, `Link`, `ListItem`, and `Text` (2026-09-19) — **every atom built so far (all 47)**; `ThemeProvider` has no story demos on its Docs page, so there was nothing to convert there. Every component built from here on follows it from the start (the §5 checklist item). It is a docs-only change, so under the `06-engineering-standards.md` §9 three-question test it does not reopen a Finalized component, but converting a Finalized one still needs the user's go-ahead first.
+**Scope.** Applied to `Card`, `Table`, `Accordion`, `Popover`, `Grid`, `List`, `CheckboxGroup`, `FormField`, `NumberInput`, `PasswordInput`, `RadioGroup`, `SearchInput`, `Select`, and `Slider` (2026-09-19) — all 14 molecules — and the atoms `Avatar`, `Badge`, `Skeleton`, `Tag`, `ProgressBar`, `ProgressCircle`, `Spinner`, `Button`, `Checkbox`, `CloseButton`, `FieldError`, `FieldHelperText`, `FieldLabel`, `IconButton`, `Input`, `Radio`, `Switch`, `Textarea`, `Affix`, `AspectRatio`, `Bleed`, `Box`, `Center`, `Container`, `Divider`, `GridItem`, `Spacer`, `Stack`, `Icon`, `Image`, `Indicators`, `BackToTop`, `Backdrop`, `Collapse`, `Tooltip`, `ClientOnly`, `FocusTrap`, `Portal`, `VisuallyHidden`, `Blockquote`, `Code`, `Heading`, `Highlight`, `Kbd`, `Link`, `ListItem`, and `Text` (2026-09-19) — **every component built so far that has story demos: all 14 molecules and 47 of the 48 atoms**; `ThemeProvider` is the exception, with no story demos on its Docs page, so there was nothing to convert. Every component built from here on follows it from the start (the §5 checklist item). It is a docs-only change, so under the `06-engineering-standards.md` §9 three-question test it does not reopen a Finalized component, but converting a Finalized one still needs the user's go-ahead first.
 
 ## 5. Per-component checklist
 
@@ -191,17 +191,13 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**47 of 47 atoms have a Docs page, a completed review pass, and are Finalized — full atom-tier
-coverage.** [VisuallyHidden.md](component-reviews/VisuallyHidden.md) is the most recently Finalized,
-2026-09-10 at explicit user direction, and was the last not-yet-reviewed atom in the inventory.
-**No longer literally "every atom in the inventory" as of 2026-09-14** — `Radio` was split out of the
-former combined `RadioGroup / Radio` molecule row into its own atom-tier entry that same day, per
-[ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md). This
-"47 of 47" figure describes the atom tier as it stood before that split. See
-`04-component-inventory.md`'s Rough count summary for the correction. `Radio` itself has since been
-built with a full `06-engineering-standards.md` §9 review pass, has a Docs page, and was Finalized
-2026-09-14 — see its own row in the status table below and
-[Radio.md](component-reviews/Radio.md).
+**All 48 atoms and the first 14 molecules have a Docs page and a completed review pass, and are
+Finalized** — full atom-tier coverage. `Radio` joined the atom tier on 2026-09-14 (split out of the
+former combined `RadioGroup / Radio` row per
+[ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
+built and Finalized the same day), which is why the atom count is 48, not the 47 several docs carried
+before then. The rows below are the authoritative record; check this table rather than any count
+quoted in prose elsewhere.
 
 | Component | Tier | Category | Docs page | Finalized | Findings |
 |---|---|---|---|---|---|
@@ -268,53 +264,26 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | Table | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [Table.md](component-reviews/Table.md) |
 | Card | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [Card.md](component-reviews/Card.md) |
 
-**Not yet started, by category: none — every atom-tier component now has a completed review pass and
-is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see
-`01-vision-and-goals.md` §13 and `04-component-inventory.md`; membership updated 2026-09-07 per
-[ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) —
-`GridItem` now tracked here as atom-tier, `List` no longer is.) `VisuallyHidden` — the last
-not-yet-reviewed atom — was Finalized 2026-09-10 (see the status table above and
-[VisuallyHidden.md](component-reviews/VisuallyHidden.md)), completing full atom-tier coverage as it
-stood at the time. **`Radio` joined the atom tier 2026-09-14** (split out of the former combined
-`RadioGroup / Radio` molecule row per ADR-0012 above), was built with a full review pass, and was
-Finalized the same day — see its own row in the status table above and
-[Radio.md](component-reviews/Radio.md). With `Radio` Finalized, "every atom-tier component...
-Finalized" is once again true for the full current inventory. Kept
-below for the per-category record:
-- **Layout:** every Layout atom now has a completed, Finalized review pass (`Grid` itself stays molecule-tier per ADR-0012 and isn't tracked in this atom-only list; GridItem moved to atom-tier 2026-09-07 — see the same ADR). See the status table above and [Spacer.md](component-reviews/Spacer.md)/[Stack.md](component-reviews/Stack.md)/[GridItem.md](component-reviews/GridItem.md).
-- **Typography:** (`List` moved to molecule-tier 2026-09-07 per ADR-0012 — no longer tracked in this atom-only list) — every atom in this category is now Finalized: Blockquote's, Code's, Heading's, Highlight's, Kbd's, Link's, ListItem's, and Text's own review passes are complete, see the status table above and their own [Blockquote.md](component-reviews/Blockquote.md)/[Code.md](component-reviews/Code.md)/[Heading.md](component-reviews/Heading.md)/[Highlight.md](component-reviews/Highlight.md)/[Kbd.md](component-reviews/Kbd.md)/[Link.md](component-reviews/Link.md)/[ListItem.md](component-reviews/ListItem.md)/[Text.md](component-reviews/Text.md).
-- **Navigation:** BackToTop's own review pass is complete, see the status table above and its own [BackToTop.md](component-reviews/BackToTop.md).
-- **Overlay:** Backdrop's, Collapse's, and Tooltip's own review passes are
-  complete, see the status table above and their own
-  [Backdrop.md](component-reviews/Backdrop.md)/[Collapse.md](component-reviews/Collapse.md)/
-  [Tooltip.md](component-reviews/Tooltip.md).
-- **Media:** Icon's, Image's, and Indicators' own review passes are complete, see the status table above and their own [Icon.md](component-reviews/Icon.md)/[Image.md](component-reviews/Image.md)/[Indicators.md](component-reviews/Indicators.md).
-- **Utility:** every Utility atom now has a completed, Finalized review pass (Docs pages included) — `ClientOnly`'s, `FocusTrap`'s, `Portal`'s, `ThemeProvider`'s, and `VisuallyHidden`'s, see the status table above and their own [ClientOnly.md](component-reviews/ClientOnly.md)/[FocusTrap.md](component-reviews/FocusTrap.md)/[Portal.md](component-reviews/Portal.md)/[ThemeProvider.md](component-reviews/ThemeProvider.md)/[VisuallyHidden.md](component-reviews/VisuallyHidden.md).
+**Not yet started among atoms: none.** Every atom-tier component (48, per
+`04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
+and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
+`component-reviews/`, not here.
 
-**Next up (updated 2026-09-18):** every atom and the first 13 molecules (`Grid`, `List`, `Select`, `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`, `Popover`, `Accordion`, `Table`) are reviewed and Finalized — see the status table above. The queue continues through the remaining 23 of the 36 molecules, one at a time, in the dependency order itemized in `04-component-inventory.md` (`Card` is next), each with the same full `06-engineering-standards.md` §9 process.
+**Next up (updated 2026-09-19):** every atom and the first 14 molecules (`Grid`, `List`, `Select`,
+`CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
+`Popover`, `Accordion`, `Table`, `Card`) are reviewed and Finalized — see the table above. The queue
+continues through the remaining 22 of the 36 molecules, one at a time, in the dependency order itemized
+in `04-component-inventory.md` (`EmptyState` is next), each with the same full
+`06-engineering-standards.md` §9 process.
 
-**Molecules (resolved 2026-08-16 — superseded, not just decided):** this used to be an open sequencing question, written back when Docs pages were produced by their own standalone sweep (Phase 4.9) running only loosely coordinated with Phase 5 (Molecules, which started early — `Grid`/`GridItem`/`Select` landed 2026-08-09, ahead of the original plan). That's no longer how it works: a Docs page is now one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, run one component at a time, strictly tier-order — atoms first, in full (Docs page included), before any molecule gets its own review pass. `GridItem` is no longer part of this molecule queue — it moved to atom-tier 2026-09-07 (ADR-0012) and is now tracked in the Layout bullet above instead.
-
-**Molecule review pass started 2026-09-11 (`Grid` first), `Grid` Finalized 2026-09-12, `List`
-Finalized 2026-09-13, `Select` Finalized 2026-09-14:** now that all 47 atoms are Finalized, the
-queue moved to molecules per the plan recorded in `01-vision-and-goals.md`'s Phase 5 entry — review
-and finalize the 3 already-built molecules (`Grid`, `List`, `Select`) first, then build and review
-the remaining 33 not-yet-started molecules one at a time. All three review-first molecules' own
-full `06-engineering-standards.md` §9 passes are complete and **Finalized** (see the status table
-above and [Grid.md](component-reviews/Grid.md)/[List.md](component-reviews/List.md)/
-[Select.md](component-reviews/Select.md)). `Select`'s own pass was the first molecule review where
-the compound-component and Radix-primitive checkpoints actually apply (`Select.Option` is a real
-sub-part, `Select` wraps Radix Select) — found and fixed a real accessibility bug (`{...props}`
-spread after the computed `aria-invalid`), a real compound-sub-part gap (`Select.Option` couldn't
-accept `id`/`style`/`data-testid`/any native passthrough at all), added `side`/`align` (matching
-`Tooltip`'s own precedent), `asChild` + a dedicated `trigger` prop, `onClear`, and — across twelve
-further post-review fix rounds plus a second final-review pass before Finalization — a custom
-option row's own missing chrome, corrected Properties-table/native-Controls-panel prop ordering, a
-missing `autoComplete` JSDoc, and this codebase's first compound-sub-part Properties table (see
-[ADR-0013](adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md)
-for the pattern this establishes for any future compound component). Full detail:
-[Select.md](component-reviews/Select.md). With all three review-first molecules now Finalized, the
-queue moves to building the remaining 33 not-yet-started molecules next (as of 2026-09-14 — 10 of those 33 have since been built, leaving 23; see the Next-up note above).
+**How the molecule queue works:** a Docs page is one deliverable inside each component's full
+`06-engineering-standards.md` §9 review pass, not a separate sweep, run one component at a time. The atom
+tier was finished first, in full; the three molecules built ahead of schedule (`Grid`, `List`, `Select`)
+were then reviewed and Finalized before any new molecule was started, and every molecule since gets the
+same pass, including the six composition-specific checkpoints in §9. `Select`'s pass was the first where
+the compound-component and Radix-primitive checkpoints applied, and produced the first compound-sub-part
+Properties table — see [ADR-0013](adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md)
+and [Select.md](component-reviews/Select.md).
 
 ## 7. Foundations pages (added 2026-07-27)
 

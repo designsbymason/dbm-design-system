@@ -43,7 +43,9 @@ dbm-design-system/
 │   │   │   ├── organisms/        # Not started yet — DataTable, Modal, Navbar, CommandPalette, Form...
 │   │   │   ├── templates/        # Not started yet — page-level layout scaffolds (optional, later)
 │   │   │   ├── foundations/      # Storybook-only Foundations pages (*.mdx) — not shipped in the package
-│   │   │   └── styles/           # global.css, resets, css var consumption
+│   │   │   ├── styles/           # global.css, resets, css var consumption
+│   │   │   ├── snippetHelpers.ts # helpers for the "Show code" snippet builders — docs-only, not shipped
+│   │   │   └── storySnippets.test.ts  # guard test for every *.snippets.ts (ADR-0020)
 │   │   └── .storybook/           # The real, active Storybook config/build lives HERE, not in
 │   │                              # apps/storybook/ above — see note below
 │   │

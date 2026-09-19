@@ -336,7 +336,7 @@ its own per-item content the way this file's own "Related components" section be
 `Collapse.tsx`'s own component-level JSDoc both assumed while `Accordion` was still unbuilt —
 `Accordion.Trigger`/`Accordion.Content` need to share Radix Accordion's own `Item` context, which
 `Collapse` (wrapping the separate Radix Collapsible primitive instead) can't provide; see
-[ADR-0018](adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) for
+[ADR-0018](../adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) for
 the full reasoning. `Accordion` does reuse this exact animation *technique* (a measured-height CSS
 custom property driving a `slideDown`/`slideUp` keyframe pair), just against Radix Accordion's own
 copy of the mechanism. Per the three-question finalization test (`06-engineering-standards.md` §9):

@@ -70,6 +70,9 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | Building a new component | `guidelines/04-component-inventory.md` (tier + scope) |
 | Unsure about a dependency or tool choice | `guidelines/02-tech-stack-and-structure.md` |
 | Overall project goals/scope | `guidelines/01-vision-and-goals.md` |
+| A component's props, file structure, or definition of done | `guidelines/05-component-api-conventions.md` |
+| Reviewing or finalizing a component, or how to work across sessions | `guidelines/06-engineering-standards.md` (§8 process rules, §9 review checklist) |
+| A Storybook story, Docs page, or a story's "Show code" snippet | `guidelines/07-storybook-and-documentation-standards.md` (§4 template, §4.2 snippets) |
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 
 ## Component index (planned: auto-synced)

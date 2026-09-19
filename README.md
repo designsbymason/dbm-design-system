@@ -9,7 +9,7 @@ An agentic, standalone React component library built for both AI coding agents a
 This is a monorepo. Once published, packages will live under the `@dbm-design-system` npm scope:
 
 - `@dbm-design-system/tokens` — design tokens (primitive + semantic layers)
-- `@dbm-design-system/primitives` — headless behavior layer
+- `@dbm-design-system/primitives` — small shared utilities (class-name and ref merging, responsive-value helpers)
 - `@dbm-design-system/icons` — Phosphor Icons wrapper
 - `@dbm-design-system/components` — the component library itself
 - `@dbm-design-system/manifest` — agent-readable component manifest generator
