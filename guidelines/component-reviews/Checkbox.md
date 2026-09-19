@@ -30,3 +30,7 @@ size inheritance ×2, both dev warnings, a11y as a group), Storybook coverage li
 whole package: `tsc` (package + `.storybook`), `eslint --max-warnings 0`, Vitest `unit` (1205/1205)
 and `storybook` browser-mode (408/408) projects, `tsup` build, `check-component-bundle-size`
 (`Checkbox` 1.63KB JS / 0.82KB CSS, still within budget) — all clean.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the first seven atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: all six generated snippets spelled out defaults and empty placeholders (`hasError={false}`, `required={false}`, `name=""`, `value=""`, `aria-label=""`) and a no-op `onCheckedChange`; "Custom check/indeterminate icons" printed the icons as `$$typeof` garbage; and "Select-all / indeterminate pattern" showed every checkbox as `checked={false}` **and** `defaultChecked={false}` — contradictory, and no state. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Checkbox.snippets.ts`; the select-all one shows the real `useState` (as a comment) and the real `.map`. The Playground builds its snippet from the live controls, including the icon controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
