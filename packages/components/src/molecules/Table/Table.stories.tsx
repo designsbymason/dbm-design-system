@@ -1,10 +1,13 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import type { CSSProperties } from "react";
 import { Badge } from "../../atoms/Badge";
 import type { BadgeTone } from "../../atoms/Badge";
+import { Heading } from "../../atoms/Heading";
 import { Text } from "../../atoms/Text";
+import { Card } from "../Card";
 import { Table } from "./Table";
+import { tablePlaygroundSnippet, tableSnippets } from "./Table.snippets";
 import type { TableProps, TableSize, TableTone, TableVariant } from "./Table.types";
 
 // `Table`'s own root props get hand-written argTypes here (this meta has no
@@ -287,11 +290,24 @@ export default meta;
 type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below. Set `stickyHeader` together with a `maxHeight` (e.g. `12rem`) to see the header pin. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  // The snippet is built from the live controls — only the props that differ from
+  // their defaults, on a small real table — instead of the story's own source,
+  // which is helper components a reader can't paste.
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext<PlaygroundArgs>) => tablePlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const WithCaption: Story = {
   name: "With a caption",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.withCaption } } },
   render: () => (
     // The one story with a visible caption — shown in every tone, since a
     // non-neutral tone's caption takes that tone's fill along with the header.
@@ -311,6 +327,7 @@ export const WithCaption: Story = {
 export const Striped: Story = {
   name: "Striped rows",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.striped } } },
   render: () => (
     <div style={demoContainerStyle}>
       <DemoTable striped />
@@ -321,6 +338,7 @@ export const Striped: Story = {
 export const Hoverable: Story = {
   name: "Hoverable rows",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.hoverable } } },
   render: () => (
     <div style={demoContainerStyle}>
       <DemoTable hoverable />
@@ -331,6 +349,7 @@ export const Hoverable: Story = {
 export const StripedAndHoverable: Story = {
   name: "Striped and hoverable together",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.stripedAndHoverable } } },
   render: () => (
     <div style={demoContainerStyle}>
       <DemoTable striped hoverable />
@@ -341,6 +360,7 @@ export const StripedAndHoverable: Story = {
 export const Tones: Story = {
   name: "All tones",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.tones } } },
   render: () => (
     // Striped and hoverable so each tone's stripe and hover tint are visible
     // too, not just its header.
@@ -360,6 +380,7 @@ export const Tones: Story = {
 export const StickyHeader: Story = {
   name: "Sticky header (scroll the body)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.stickyHeader } } },
   render: () => (
     <div style={demoContainerStyle}>
       <DemoTable stickyHeader maxHeight="18rem" rows={12} striped />
@@ -370,25 +391,21 @@ export const StickyHeader: Story = {
 export const Ghost: Story = {
   name: "Ghost variant (borderless, for embedding in a Card)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.ghost } } },
   render: () => (
-    // A real `Card` molecule isn't built yet (see 04-component-inventory.md),
-    // so this fakes one — with its own title and generous padding, so the
-    // wrapper's border reads as a *separate* container the ghost table sits
-    // inside, not as the table's own (removed) border redrawn in the same
-    // place.
-    <div
-      style={{
-        ...demoContainerStyle,
-        background: "var(--dbm-bg-surface)",
-        border: "var(--dbm-border-width-1) solid var(--dbm-border-default)",
-        borderRadius: "var(--dbm-radius-lg)",
-        padding: "var(--dbm-space-4)",
-      }}
-    >
-      <Text size="md" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-3)" }}>
-        Billing
-      </Text>
-      <DemoTable variant="ghost" rows={4} />
+    // `ghost` exists for exactly this: a table inside a container that already
+    // draws the boundary. Here that container is a real `Card`, with its own
+    // title, so its border reads as a separate container the ghost table sits
+    // inside, not as the table's own (removed) border redrawn in the same place.
+    <div style={demoContainerStyle}>
+      <Card>
+        <Card.Header>
+          <Heading level={3} size="md">
+            Billing
+          </Heading>
+        </Card.Header>
+        <DemoTable variant="ghost" rows={4} />
+      </Card>
     </div>
   ),
 };
@@ -396,6 +413,7 @@ export const Ghost: Story = {
 export const Sizes: Story = {
   name: "All sizes",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.sizes } } },
   render: () => (
     <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
@@ -413,6 +431,7 @@ export const Sizes: Story = {
 export const Alignment: Story = {
   name: "Cell alignment (start, center, end)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.alignment } } },
   render: () => (
     <div style={demoContainerStyle}>
       <Table aria-label="Quarterly revenue">
@@ -448,6 +467,7 @@ export const Alignment: Story = {
 export const GroupedColumns: Story = {
   name: "Grouped columns (colSpan)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.groupedColumns } } },
   render: () => (
     <div style={demoContainerStyle}>
       <Table aria-label="Signups by plan">
@@ -538,6 +558,7 @@ const WideTable = (props: Partial<Omit<TableProps, "children">>) => (
 export const StickyFirstColumn: Story = {
   name: "Sticky first column (scroll sideways)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.stickyFirstColumn } } },
   render: () => (
     // Striped and hoverable so the pinned cells visibly keep matching their
     // row's tint; a brand tone shows the pinned header cell keeping its fill.
@@ -565,6 +586,7 @@ export const StickyFirstColumn: Story = {
 export const StickyLastColumn: Story = {
   name: "Sticky last column (scroll sideways)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.stickyLastColumn } } },
   render: () => (
     // The last column — here the amounts and the total — stays in view at the
     // end edge. Striped and hoverable so the pinned cells visibly keep matching
@@ -594,6 +616,7 @@ export const StickyLastColumn: Story = {
 export const StickyFirstAndLastColumns: Story = {
   name: "Sticky first and last columns together",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.stickyFirstAndLastColumns } } },
   render: () => (
     // Both edges pinned, plus the header: scroll in either direction and the
     // row label, the trailing figure, and the header row all stay in view.
@@ -606,6 +629,7 @@ export const StickyFirstAndLastColumns: Story = {
 export const StickyHeaderAndColumn: Story = {
   name: "Sticky header and first column together",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.stickyHeaderAndColumn } } },
   render: () => (
     // Both pinned: scroll in either direction and the header row and the first
     // column stay in view, with the corner cell above both.
@@ -618,6 +642,7 @@ export const StickyHeaderAndColumn: Story = {
 export const Numeric: Story = {
   name: "Numeric columns (tabular figures)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.numeric } } },
   render: () => (
     // The same figures twice: right-aligned alone, then with `numeric`. Shown in
     // the system UI font on purpose — its digits are proportional by default (a
@@ -676,6 +701,7 @@ export const Numeric: Story = {
 export const Loading: Story = {
   name: "Loading state (skeleton rows)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.loading } } },
   render: () => (
     <div style={demoContainerStyle}>
       <Table aria-label="Recent invoices">
@@ -696,6 +722,7 @@ export const Loading: Story = {
 export const Empty: Story = {
   name: "Empty state",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.empty } } },
   render: () => (
     <div style={demoContainerStyle}>
       <Table aria-label="Recent invoices">
@@ -718,6 +745,7 @@ export const Empty: Story = {
 export const NarrowScroll: Story = {
   name: "Narrow container (scrolls sideways, keyboard-reachable)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.narrowScroll } } },
   render: () => (
     // A deliberately narrow frame — the table is wider than it, so its own
     // scroll container overflows. Tab onto it and use the arrow keys.

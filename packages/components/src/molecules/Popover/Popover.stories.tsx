@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { useState } from "react";
 import { Button } from "../../atoms/Button";
@@ -8,6 +8,7 @@ import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";
 import { GearIcon } from "@dbm-design-system/icons";
 import { Popover } from "./Popover";
+import { popoverPlaygroundSnippet, popoverSnippets } from "./Popover.snippets";
 import type { PopoverAlign, PopoverContentProps, PopoverSide } from "./Popover.types";
 
 // Combines Popover's own root-level args (open/defaultOpen/onOpenChange/
@@ -185,25 +186,59 @@ export default meta;
 type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => popoverPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const WithArrowHidden: Story = {
   name: "With the arrow hidden",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => popoverPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { hideArrow: true },
 };
 
 export const WithCloseButton: Story = {
   name: "With an explicit close button",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => popoverPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { showCloseButton: true },
 };
 
 export const Modal: Story = {
   name: "Modal (traps focus, blocks background interaction)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => popoverPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { modal: true, showCloseButton: true },
 };
 
 export const AllSides: Story = {
   name: "All sides",
+  parameters: { docs: { source: { code: popoverSnippets.allSides } } },
   argTypes: {
     // `side` is hardcoded per-instance by the loop below (that's the whole
     // point of this gallery) — `args.side` is never read, so a control for
@@ -278,6 +313,7 @@ export const AllSides: Story = {
 
 export const ResponsiveSide: Story = {
   name: "Responsive side (bottom on mobile, right from lg up)",
+  parameters: { docs: { source: { code: popoverSnippets.responsiveSide } } },
   argTypes: {
     defaultOpen: { control: false },
     modal: { control: false },
@@ -301,6 +337,10 @@ export const ResponsiveSide: Story = {
         <Popover.Content
           side={{ base: "bottom", lg: "right" }}
           aria-label="Responsive side example"
+          // Open on mount for the demo, but don't take focus: several popovers
+          // opening and focusing at once on a Docs page race each other, and
+          // Storybook's own `focus()` instrumentation then throws mid-commit.
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Text size="sm">
             side=&quot;bottom&quot; below <code>lg</code>, side=&quot;right&quot; from <code>lg</code>{" "}
@@ -314,6 +354,7 @@ export const ResponsiveSide: Story = {
 
 export const HideWhenDetached: Story = {
   name: "Hides when its trigger scrolls out of view",
+  parameters: { docs: { source: { code: popoverSnippets.hideWhenDetached } } },
   argTypes: {
     defaultOpen: { control: false },
     modal: { control: false },
@@ -353,7 +394,14 @@ export const HideWhenDetached: Story = {
             <Popover.Trigger asChild>
               <Button>Trigger</Button>
             </Popover.Trigger>
-            <Popover.Content hideWhenDetached aria-label="Hides when detached example">
+            <Popover.Content
+              hideWhenDetached
+              aria-label="Hides when detached example"
+              // Open on mount for the demo, but don't take focus: several popovers
+              // opening and focusing at once on a Docs page race each other, and
+              // Storybook's own `focus()` instrumentation then throws mid-commit.
+              onOpenAutoFocus={(event) => event.preventDefault()}
+            >
               <Text size="sm">Scroll me out of view.</Text>
             </Popover.Content>
           </Popover>
@@ -366,6 +414,7 @@ export const HideWhenDetached: Story = {
 
 export const WithForm: Story = {
   name: "With interactive form content",
+  parameters: { docs: { source: { code: popoverSnippets.withForm } } },
   args: { showCloseButton: true },
   render: function WithFormStory(args) {
     const [name, setName] = useState("");
@@ -406,6 +455,7 @@ export const WithForm: Story = {
 
 export const DisabledTrigger: Story = {
   name: "Disabled trigger",
+  parameters: { docs: { source: { code: popoverSnippets.disabledTrigger } } },
   render: (args) => (
     <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-16)" }}>
       <Popover defaultOpen={args.defaultOpen} modal={args.modal} onOpenChange={args.onOpenChange}>

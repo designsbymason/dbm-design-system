@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { Badge } from "../../atoms/Badge";
@@ -7,6 +7,7 @@ import { Heading } from "../../atoms/Heading";
 import { Text } from "../../atoms/Text";
 import { Table } from "../Table";
 import { Card } from "./Card";
+import { cardPlaygroundSnippet, cardSnippets } from "./Card.snippets";
 import type {
   CardFooterAlign,
   CardMediaPosition,
@@ -281,11 +282,24 @@ export default meta;
 type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below. Turning `interactive` on renders the card as a real link. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  // The snippet is built from the live controls — only the props that differ from
+  // their defaults, around a small real card — instead of the story's own source,
+  // which is helper components a reader can't paste.
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext<PlaygroundArgs>) => cardPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Variants: Story = {
   name: "All variants",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.variants } } },
   render: () => (
     <div style={{ ...gridStyle(2), maxWidth: "48rem", marginInline: "auto" }}>
       {allVariants.map((variant) => (
@@ -303,6 +317,7 @@ export const Variants: Story = {
 export const Tones: Story = {
   name: "All tones",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.tones } } },
   render: () => (
     <div style={{ ...gridStyle(3), maxWidth: "60rem", marginInline: "auto" }}>
       {allTones.map((tone) => (
@@ -320,6 +335,7 @@ export const Tones: Story = {
 export const Sizes: Story = {
   name: "All sizes",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.sizes } } },
   render: () => (
     <div
       style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}
@@ -339,6 +355,7 @@ export const Sizes: Story = {
 export const WithMedia: Story = {
   name: "With media",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.withMedia } } },
   render: () => (
     // `Card.Media` runs edge to edge (the card has no padding of its own) and is
     // clipped to the rounded corners. A gradient of design tokens stands in for a
@@ -355,6 +372,7 @@ export const WithMedia: Story = {
 export const InteractiveLink: Story = {
   name: "Interactive — the whole card is a link",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.interactiveLink } } },
   render: () => (
     <div style={{ maxWidth: "24rem", marginInline: "auto" }}>
       <Card asChild interactive variant="elevated">
@@ -390,6 +408,7 @@ export const InteractiveLink: Story = {
 export const MediaPosition: Story = {
   name: "Media position",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.mediaPosition } } },
   render: () => (
     // `mediaPosition` pins the media to the start or the end of the card: the top
     // or bottom of a vertical one, the inline-start or inline-end side of a
@@ -434,6 +453,7 @@ export const MediaPosition: Story = {
 export const Divided: Story = {
   name: "Divided sections",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.divided } } },
   render: () => (
     // A hairline between header, body, and footer. It never sits against
     // `Card.Media`, and a toned card skips the line under its tinted header.
@@ -466,6 +486,7 @@ export const Divided: Story = {
 export const Horizontal: Story = {
   name: "Horizontal orientation",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.horizontal } } },
   render: () => (
     // `Card.Media` sits beside the content and fills its full height; the body
     // absorbs spare height, so the footer stays at the bottom. `mediaPosition`
@@ -518,6 +539,7 @@ export const Horizontal: Story = {
 export const ResponsiveOrientation: Story = {
   name: "Responsive orientation",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.responsiveOrientation } } },
   render: () => (
     // `orientation` takes a mobile-first map keyed by breakpoint, exactly like
     // `Stack`'s `direction`: stacked below 768px, media beside the content from
@@ -548,6 +570,7 @@ const onActivate = fn((event: MouseEvent) => event.preventDefault());
 export const Disabled: Story = {
   name: "Interactive — disabled",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.disabled } } },
   render: () => (
     // `disabled` dims the card, drops its hover and pressed feedback, and blocks
     // the click — but the link keeps its `href` and stays focusable.
@@ -596,6 +619,7 @@ export const Disabled: Story = {
 export const FooterAlignment: Story = {
   name: "Footer alignment",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.footerAlignment } } },
   render: () => (
     <div style={{ ...gridStyle(2), maxWidth: "48rem", marginInline: "auto" }}>
       {(["start", "center", "end", "between"] as CardFooterAlign[]).map((align) => (
@@ -625,6 +649,7 @@ export const FooterAlignment: Story = {
 export const EqualHeight: Story = {
   name: "Equal-height cards (footers line up)",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.equalHeight } } },
   render: () => (
     // Three cards of very different body lengths in one grid row: each stretches
     // to the row's height, and because `Card.Body` grows to fill the spare space,
@@ -657,6 +682,7 @@ export const EqualHeight: Story = {
 export const WithTable: Story = {
   name: "Composition — a ghost table inside a card",
   argTypes: noControls,
+  parameters: { docs: { source: { code: cardSnippets.withTable } } },
   render: () => (
     // `Table`'s `ghost` variant exists for exactly this: a table inside a
     // container that already provides the boundary.

@@ -1,11 +1,12 @@
 import { CheckIcon, GearIcon, HouseIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useEffect, useState } from "react";
 import { useArgs } from "storybook/preview-api";
 import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
 import { ListItem } from "../../atoms/ListItem";
 import { defaultMarkerFor, List } from "./List";
+import { listPlaygroundSnippet, listSnippets } from "./List.snippets";
 import type { ListElement } from "./List.types";
 
 /**
@@ -176,10 +177,19 @@ type Story = StoryObj<typeof List>;
 
 export const Playground: Story = {
   name: "Playground",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => listPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };
 
 export const Unordered: Story = {
   name: "Unordered (default)",
+  parameters: { docs: { source: { code: listSnippets.unordered } } },
   // `as` fixed to the default `ul` — the whole point of this story is the
   // default marker/element, so it must never actually receive a live `as`
   // override (explicitly forced `undefined` after the spread below, not
@@ -197,6 +207,7 @@ export const Unordered: Story = {
 
 export const Ordered: Story = {
   name: "Ordered",
+  parameters: { docs: { source: { code: listSnippets.ordered } } },
   // `marker` explicitly set to `"decimal"` — its own real, effective
   // resolved value once `as="ol"` (not the meta-level default of `"disc"`,
   // which only matches the default `ul` context) — same "control must
@@ -215,6 +226,7 @@ export const Ordered: Story = {
 
 export const NoMarker: Story = {
   name: 'marker="none"',
+  parameters: { docs: { source: { code: listSnippets.noMarker } } },
   // `marker` fixed to `"none"` — the whole point of this story, and the
   // one case exercising the Safari/VoiceOver `role="list"` fix. Every
   // other prop stays live via `{...args}`.
@@ -230,6 +242,7 @@ export const NoMarker: Story = {
 
 export const CustomSpacing: Story = {
   name: "Custom spacing between items",
+  parameters: { docs: { source: { code: listSnippets.customSpacing } } },
   argTypes: { spacing: { control: false } },
   args: { spacing: 6 },
   render: function CustomSpacingStory(args) {
@@ -246,6 +259,7 @@ export const CustomSpacing: Story = {
 
 export const OrderedListSpecificProps: Story = {
   name: 'as="ol" with start/reversed/type (ol-specific native props)',
+  parameters: { docs: { source: { code: listSnippets.orderedListSpecificProps } } },
   // `as` fixed to `"ol"` — `start`/`reversed`/`type` are inert (and warn in
   // development) on the default `ul`, so this story exists specifically to
   // demonstrate them with a real, non-default value. `marker` explicitly
@@ -272,6 +286,7 @@ export const OrderedListSpecificProps: Story = {
 
 export const ResponsiveSpacing: Story = {
   name: "Responsive spacing (tight on mobile, roomy from lg up)",
+  parameters: { docs: { source: { code: listSnippets.responsiveSpacing } } },
   // `spacing` is hardcoded to a responsive map here — no single control
   // could represent "1 at base, 6 at lg" as one value, the
   // multi-instance-gallery exception (06-engineering-standards.md §9),
@@ -291,6 +306,7 @@ export const ResponsiveSpacing: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (long items wrap)",
+  parameters: { docs: { source: { code: listSnippets.narrowViewport } } },
   render: function NarrowViewportStory(args) {
     useSyncMarkerToAs(args.as as ListElement);
     return (
@@ -307,6 +323,7 @@ export const NarrowViewport: Story = {
 
 export const WithListItemFeatures: Story = {
   name: "Composed with ListItem's icon/trailing/interactive features",
+  parameters: { docs: { source: { code: listSnippets.withListItemFeatures } } },
   // `marker` fixed to `"none"` — every item here uses a custom `icon`,
   // which already suppresses the native marker on its own, so an explicit
   // marker style would be a visible no-op competing with it. See
@@ -354,6 +371,7 @@ export const WithListItemFeatures: Story = {
 
 export const NestedLists: Story = {
   name: "Nested lists",
+  parameters: { docs: { source: { code: listSnippets.nestedLists } } },
   // Nesting already works mechanically with no code changes needed — a
   // `<ul>`/`<ol>` inside a `<li>`'s own content is standard, unguarded
   // HTML, and `ListItem` renders `children` as-is — this story exists to

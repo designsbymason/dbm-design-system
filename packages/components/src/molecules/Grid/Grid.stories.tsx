@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { GridItem } from "../../atoms/GridItem";
 import { Grid } from "./Grid";
+import { gridPlaygroundSnippet, gridSnippets } from "./Grid.snippets";
 import styles from "./Grid.stories.module.css";
 
 const cellStyle = {
@@ -405,10 +406,19 @@ type Story = StoryObj<typeof Grid>;
 
 export const Playground: Story = {
   name: "Playground",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => gridPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };
 
 export const DefaultColumns: Story = {
   name: "Default (12 columns, no columns prop)",
+  parameters: { docs: { source: { code: gridSnippets.defaultColumns } } },
   // `columns` isn't just hidden — it must never actually reach `Grid` at
   // all (the whole point of this story is the *default*, un-set value), so
   // it's explicitly overridden to `undefined` after the spread below, not
@@ -461,6 +471,7 @@ export const DefaultColumns: Story = {
 
 export const FixedColumns: Story = {
   name: "Fixed 4 columns",
+  parameters: { docs: { source: { code: gridSnippets.fixedColumns } } },
   // `minChildWidth` disabled alongside `columns` — same reasoning as
   // DefaultColumns above: it silently overrides the fixed 4-column
   // structure this story exists to demonstrate (confirmed live 2026-09-12 —
@@ -500,6 +511,7 @@ export const FixedColumns: Story = {
 
 export const ResponsiveColumns: Story = {
   name: "Responsive: 1 column mobile, 2 tablet, 3 desktop",
+  parameters: { docs: { source: { code: gridSnippets.responsiveColumns } } },
   // `columns` is hardcoded to a responsive map here — no single `number`
   // control could represent "base=1, md=2, lg=3" as one value, the
   // multi-instance-gallery exception (06-engineering-standards.md §9).
@@ -555,6 +567,7 @@ export const ResponsiveColumns: Story = {
 
 export const WithSpanningItems: Story = {
   name: "With GridItem colSpan/rowSpan",
+  parameters: { docs: { source: { code: gridSnippets.withSpanningItems } } },
   // `columns` is fixed at 4 — structural to this demo's own colSpan={2}/
   // colSpan={4} values, which assume a 4-column grid. Every other prop
   // (gap, autoFlow, alignment, etc.) stays live via `{...args}`.
@@ -601,6 +614,7 @@ export const WithSpanningItems: Story = {
 
 export const ResponsiveGap: Story = {
   name: "Responsive gap (tight on mobile, roomy from lg up)",
+  parameters: { docs: { source: { code: gridSnippets.responsiveGap } } },
   // `gap` is hardcoded to a responsive map here — same multi-instance-
   // gallery exception as ResponsiveColumns above. `columns` stays live via
   // `{...args}` (its own meta default, 3, already matches this story's
@@ -650,6 +664,7 @@ export const ResponsiveGap: Story = {
 
 export const FluidMinChildWidth: Story = {
   name: "Fluid: minChildWidth (no explicit breakpoints)",
+  parameters: { docs: { source: { code: gridSnippets.fluidMinChildWidth } } },
   // `columns` disabled too, not just `minChildWidth` — `minChildWidth` is
   // hardcoded truthy below, and per Grid.tsx's own precedence (inline
   // `gridTemplateColumns` from `minChildWidth` always wins over the
@@ -703,6 +718,7 @@ export const FluidMinChildWidth: Story = {
 
 export const DensePacking: Story = {
   name: 'autoFlow="row dense" (backfills gaps from mixed spans)',
+  parameters: { docs: { source: { code: gridSnippets.densePacking } } },
   // `autoFlow` and `columns` are both fixed — the demo's specific colSpan
   // values and gap-backfilling behavior are only meaningful against this
   // exact 4-column, row-dense combination. Every other prop stays live.
@@ -751,6 +767,7 @@ export const DensePacking: Story = {
 
 export const ItemAlignment: Story = {
   name: "justifyItems/alignItems (aligning every item within its own cell)",
+  parameters: { docs: { source: { code: gridSnippets.itemAlignment } } },
   // `justifyItems`/`alignItems` are set on the *grid container* and apply
   // uniformly to every item in it (the CSS Grid item-alignment properties
   // are not settable per-item through Grid alone — GridItem has no such
@@ -849,6 +866,7 @@ export const ItemAlignment: Story = {
 
 export const ContentAlignment: Story = {
   name: "justifyContent/alignContent (positioning the grid's own tracks)",
+  parameters: { docs: { source: { code: gridSnippets.contentAlignment } } },
   // `justifyContent`/`alignContent` only have a visible effect when the
   // grid's own tracks total less than the container's size — not the case
   // for `columns`/`minChildWidth`, both of which always generate 1fr-based
@@ -922,6 +940,7 @@ export const ContentAlignment: Story = {
 
 export const AsUnorderedList: Story = {
   name: 'Polymorphic: as="ul" (real semantic list, Grid layout behavior)',
+  parameters: { docs: { source: { code: gridSnippets.asUnorderedList } } },
   // `as` is fixed to "ul" — necessary for valid list markup, the whole
   // point of this story. Every other prop (columns/gap default to 3 here,
   // overriding the Playground's own meta defaults) stays live via

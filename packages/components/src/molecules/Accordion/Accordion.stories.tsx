@@ -1,11 +1,14 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { RocketLaunchIcon } from "@dbm-design-system/icons";
+import { Heading } from "../../atoms/Heading";
 import { Icon } from "../../atoms/Icon";
 import { Text } from "../../atoms/Text";
+import { Card } from "../Card";
 import { Accordion } from "./Accordion";
+import { accordionPlaygroundSnippet, accordionSnippets } from "./Accordion.snippets";
 import type { AccordionHeadingLevel, AccordionOrientation, AccordionSize, AccordionVariant } from "./Accordion.types";
 
 // `Accordion`'s own root props are a discriminated union keyed by `type`
@@ -190,10 +193,20 @@ export default meta;
 type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below, including `type` itself. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => accordionPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Multiple: Story = {
   name: "Multiple items open at once (type=\"multiple\")",
+  parameters: { docs: { source: { code: accordionSnippets.multiple } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
@@ -215,6 +228,7 @@ export const Multiple: Story = {
 
 export const DisabledItem: Story = {
   name: "One item disabled",
+  parameters: { docs: { source: { code: accordionSnippets.disabledItem } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
@@ -247,6 +261,7 @@ export const DisabledItem: Story = {
 
 export const CustomIcon: Story = {
   name: "Custom disclosure icon",
+  parameters: { docs: { source: { code: accordionSnippets.customIcon } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
@@ -273,6 +288,7 @@ export const CustomIcon: Story = {
 
 export const AsChildTrigger: Story = {
   name: "Fully custom trigger row (asChild)",
+  parameters: { docs: { source: { code: accordionSnippets.asChildTrigger } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
@@ -321,6 +337,7 @@ export const AsChildTrigger: Story = {
 
 export const Ghost: Story = {
   name: "Ghost variant (borderless, for embedding in a Card)",
+  parameters: { docs: { source: { code: accordionSnippets.ghost } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
@@ -332,37 +349,29 @@ export const Ghost: Story = {
     defaultValue: { control: false },
   },
   render: () => (
-    // A real `Card`-shaped wrapper isn't built yet (see 04-component-
-    // inventory.md), so this fakes one — deliberately with its own title
-    // and generous padding (`space-4`, distinct from the accordion's own
-    // `radius-md`) so the wrapper's own border reads as a *separate*
-    // container the ghost accordion sits inside, not as the accordion's
-    // own (removed) border redrawn in the same place. Found live,
-    // user-reported: an earlier version of this demo used only `space-2`
-    // padding with no title, which put the wrapper's edge close enough to
-    // the accordion that the two were visually indistinguishable — the
-    // demo looked identical to the default `variant="bordered"` story.
-    <div
-      style={{
-        ...demoContainerStyle,
-        background: "var(--dbm-bg-surface)",
-        border: `var(--dbm-border-width-1) solid var(--dbm-border-default)`,
-        borderRadius: "var(--dbm-radius-lg)",
-        padding: "var(--dbm-space-4)",
-      }}
-    >
-      <Text size="md" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-3)" }}>
-        Shipping &amp; returns
-      </Text>
-      <Accordion variant="ghost" defaultValue="shipping">
-        <DemoItems />
-      </Accordion>
+    // `ghost` exists for exactly this: an accordion inside a container that
+    // already draws the boundary. Here that container is a real `Card`, with its
+    // own title, so its border reads as a separate container the ghost accordion
+    // sits inside, not as the accordion's own (removed) border redrawn in the
+    // same place.
+    <div style={demoContainerStyle}>
+      <Card>
+        <Card.Header>
+          <Heading level={3} size="md">
+            Shipping &amp; returns
+          </Heading>
+        </Card.Header>
+        <Accordion variant="ghost" defaultValue="shipping">
+          <DemoItems />
+        </Accordion>
+      </Card>
     </div>
   ),
 };
 
 export const Sizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: accordionSnippets.sizes } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
@@ -403,6 +412,7 @@ export const Sizes: Story = {
 
 export const Controlled: Story = {
   name: "Controlled open item",
+  parameters: { docs: { source: { code: accordionSnippets.controlled } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
@@ -428,6 +438,7 @@ export const Controlled: Story = {
 
 export const KeyboardInteraction: Story = {
   name: "Click to open, arrow keys to move between triggers",
+  parameters: { docs: { source: { code: accordionSnippets.keyboardInteraction } } },
   argTypes: {
     type: { control: false },
     variant: { control: false },
