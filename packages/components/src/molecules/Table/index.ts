@@ -10,5 +10,6 @@ export type {
   TableProps,
   TableRowProps,
   TableSize,
+  TableTone,
   TableVariant,
 } from "./Table.types";

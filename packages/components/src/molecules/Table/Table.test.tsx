@@ -254,6 +254,140 @@ describe("Table", () => {
     });
   });
 
+  describe("tone", () => {
+    const tintedTones = ["brand", "info", "success", "warning", "danger"] as const;
+    const toneClassFor: Record<(typeof tintedTones)[number], string | undefined> = {
+      brand: styles.toneBrand,
+      info: styles.toneInfo,
+      success: styles.toneSuccess,
+      warning: styles.toneWarning,
+      danger: styles.toneDanger,
+    };
+    const allToneClasses = Object.values(toneClassFor).map((name) => name ?? "");
+
+    it("defaults to neutral — no tinted or tone classes anywhere", () => {
+      renderTable({ striped: true, hoverable: true });
+      const [header, body] = screen.getAllByRole("rowgroup");
+      const caption = screen.getByText("Recent invoices");
+      expect(header).not.toHaveClass(styles.headerTinted ?? "");
+      expect(caption).not.toHaveClass(styles.captionTinted ?? "");
+      expect(body).toHaveClass(styles.bodyStriped ?? "");
+      expect(body).toHaveClass(styles.bodyHoverable ?? "");
+      expect(body).not.toHaveClass(styles.bodyStripedTinted ?? "");
+      expect(body).not.toHaveClass(styles.bodyHoverableTinted ?? "");
+      [header, body, caption].forEach((element) => {
+        allToneClasses.forEach((toneClass) => expect(element).not.toHaveClass(toneClass));
+      });
+    });
+
+    it("treats an explicit tone=neutral exactly like the default", () => {
+      renderTable({ tone: "neutral", striped: true });
+      const [header, body] = screen.getAllByRole("rowgroup");
+      expect(header).not.toHaveClass(styles.headerTinted ?? "");
+      expect(body).toHaveClass(styles.bodyStriped ?? "");
+    });
+
+    describe.each(tintedTones)("tone=%s", (tone) => {
+      const toneClass = toneClassFor[tone] ?? "";
+
+      it("tints the header, and only the header row group", () => {
+        renderTable({ tone });
+        const [header, body, footer] = screen.getAllByRole("rowgroup");
+        expect(header).toHaveClass(styles.headerTinted ?? "", toneClass);
+        expect(body).not.toHaveClass(styles.headerTinted ?? "");
+        expect(footer).not.toHaveClass(styles.headerTinted ?? "");
+      });
+
+      it("tints the caption in the same tone", () => {
+        renderTable({ tone });
+        expect(screen.getByText("Recent invoices")).toHaveClass(styles.captionTinted ?? "", toneClass);
+      });
+
+      it("swaps the neutral stripe and hover classes for the tinted ones, in this tone", () => {
+        renderTable({ tone, striped: true, hoverable: true });
+        const body = screen.getAllByRole("rowgroup")[1];
+        expect(body).toHaveClass(styles.bodyStripedTinted ?? "", styles.bodyHoverableTinted ?? "", toneClass);
+        expect(body).not.toHaveClass(styles.bodyStriped ?? "");
+        expect(body).not.toHaveClass(styles.bodyHoverable ?? "");
+      });
+
+      it("carries only its own tone class, never another tone's", () => {
+        renderTable({ tone, striped: true });
+        const [header, body] = screen.getAllByRole("rowgroup");
+        const caption = screen.getByText("Recent invoices");
+        [header, body, caption].forEach((element) => {
+          allToneClasses
+            .filter((other) => other !== toneClass)
+            .forEach((otherClass) => expect(element).not.toHaveClass(otherClass));
+        });
+      });
+
+      it("adds no stripe/hover classes when striped/hoverable are off", () => {
+        renderTable({ tone });
+        const body = screen.getAllByRole("rowgroup")[1];
+        expect(body).not.toHaveClass(styles.bodyStripedTinted ?? "");
+        expect(body).not.toHaveClass(styles.bodyHoverableTinted ?? "");
+      });
+
+      it("composes with stickyHeader — a pinned toned header carries both classes", () => {
+        renderTable({ tone, stickyHeader: true, maxHeight: "10rem" });
+        expect(screen.getAllByRole("rowgroup")[0]).toHaveClass(styles.headerTinted ?? "", styles.headerSticky ?? "");
+      });
+
+      it("has no jest-axe violations with striped, hoverable, and a sticky header", async () => {
+        const { container } = renderTable({
+          tone,
+          striped: true,
+          hoverable: true,
+          stickyHeader: true,
+          maxHeight: "10rem",
+        });
+        expect(await axe(container)).toHaveNoViolations();
+      });
+    });
+
+    it("leaves cell sizing and row headers untouched by any tone", () => {
+      renderTable({ tone: "success", size: "lg" });
+      expect(screen.getByText("Paid")).toHaveClass(styles.sizeLg ?? "");
+      expect(screen.getByText("INV-001")).toHaveClass(styles.headerCell ?? "");
+    });
+
+    it("doesn't leak an outer toned table's tone into a neutral table nested in a cell", () => {
+      render(
+        <Table tone="danger" striped aria-label="Outer">
+          <Table.Header data-testid="outer-header">
+            <Table.Row>
+              <Table.HeaderCell>Outer</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>
+                <Table aria-label="Inner" striped>
+                  <Table.Header data-testid="inner-header">
+                    <Table.Row>
+                      <Table.HeaderCell>Inner</Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body data-testid="inner-body">
+                    <Table.Row>
+                      <Table.Cell>x</Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                </Table>
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("outer-header")).toHaveClass(styles.headerTinted ?? "", styles.toneDanger ?? "");
+      expect(screen.getByTestId("inner-header")).not.toHaveClass(styles.headerTinted ?? "");
+      expect(screen.getByTestId("inner-header")).not.toHaveClass(styles.toneDanger ?? "");
+      expect(screen.getByTestId("inner-body")).toHaveClass(styles.bodyStriped ?? "");
+      expect(screen.getByTestId("inner-body")).not.toHaveClass(styles.bodyStripedTinted ?? "");
+    });
+  });
+
   describe("align", () => {
     it("applies center and end alignment classes, and none for the start default", () => {
       render(

@@ -12,10 +12,12 @@ import type {
   TableProps,
   TableRowProps,
   TableSize,
+  TableTone,
 } from "./Table.types";
 import { useScrollableRegion } from "./useScrollableRegion";
 
 interface TableContextValue {
+  tone: TableTone;
   size: TableSize;
   striped: boolean;
   hoverable: boolean;
@@ -28,6 +30,7 @@ interface TableContextValue {
 // themselves from this context (never from descendant selectors) for the
 // same reason.
 const TableContext = createContext<TableContextValue>({
+  tone: "neutral",
   size: "md",
   striped: false,
   hoverable: false,
@@ -41,6 +44,20 @@ const sizeClass: Record<TableSize, string | undefined> = {
   md: styles.sizeMd,
   lg: styles.sizeLg,
   xl: styles.sizeXl,
+};
+
+// Each non-neutral tone's class only *defines* that tone's four colours as
+// local custom properties (solid fill, on-solid text, subtle stripe, subtle
+// hover) — the shared `*Tinted` rules read them, so five tones need five short
+// definitions instead of five copies of every header/caption/stripe/hover
+// rule. `neutral` has no class: its treatment is the un-tinted base styling.
+const toneClass: Record<TableTone, string | undefined> = {
+  neutral: undefined,
+  brand: styles.toneBrand,
+  info: styles.toneInfo,
+  success: styles.toneSuccess,
+  warning: styles.toneWarning,
+  danger: styles.toneDanger,
 };
 
 const alignClass: Record<TableCellAlign, string | undefined> = {
@@ -102,6 +119,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
   const {
     children,
     variant = "bordered",
+    tone = "neutral",
     size = "md",
     striped = false,
     hoverable = false,
@@ -133,8 +151,8 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
   }
 
   const contextValue = useMemo<TableContextValue>(
-    () => ({ size, striped, hoverable, stickyHeader, captionId: generatedCaptionId }),
-    [size, striped, hoverable, stickyHeader, generatedCaptionId],
+    () => ({ tone, size, striped, hoverable, stickyHeader, captionId: generatedCaptionId }),
+    [tone, size, striped, hoverable, stickyHeader, generatedCaptionId],
   );
 
   // While the container scrolls it must be reachable by keyboard (WCAG
@@ -184,19 +202,37 @@ TableRoot.displayName = "Table";
 
 /** The header group (`<thead>`) — holds the `Table.Row`(s) of column-label `Table.HeaderCell`s. Pinned in place while the body scrolls when the table's `stickyHeader` is set. */
 const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ className, ...props }, ref) => {
-  const { stickyHeader } = useContext(TableContext);
-  return <thead {...props} ref={ref} className={cx(styles.header, stickyHeader && styles.headerSticky, className)} />;
+  const { tone, stickyHeader } = useContext(TableContext);
+  return (
+    <thead
+      {...props}
+      ref={ref}
+      className={cx(
+        styles.header,
+        tone !== "neutral" && styles.headerTinted,
+        toneClass[tone],
+        stickyHeader && styles.headerSticky,
+        className,
+      )}
+    />
+  );
 });
 TableHeader.displayName = "Table.Header";
 
 /** The body group (`<tbody>`) — holds the table's data `Table.Row`s. Rows stripe/highlight per the table's `striped`/`hoverable`. */
 const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(({ className, ...props }, ref) => {
-  const { striped, hoverable } = useContext(TableContext);
+  const { tone, striped, hoverable } = useContext(TableContext);
+  const isTinted = tone !== "neutral";
   return (
     <tbody
       {...props}
       ref={ref}
-      className={cx(striped && styles.bodyStriped, hoverable && styles.bodyHoverable, className)}
+      className={cx(
+        toneClass[tone],
+        striped && (isTinted ? styles.bodyStripedTinted : styles.bodyStriped),
+        hoverable && (isTinted ? styles.bodyHoverableTinted : styles.bodyHoverable),
+        className,
+      )}
     />
   );
 });
@@ -248,8 +284,15 @@ TableCell.displayName = "Table.Cell";
  */
 const TableCaption = forwardRef<HTMLTableCaptionElement, TableCaptionProps>(
   ({ id, className, ...props }, ref) => {
-    const { captionId } = useContext(TableContext);
-    return <caption {...props} ref={ref} id={id ?? captionId} className={cx(styles.caption, className)} />;
+    const { tone, captionId } = useContext(TableContext);
+    return (
+      <caption
+        {...props}
+        ref={ref}
+        id={id ?? captionId}
+        className={cx(styles.caption, tone !== "neutral" && styles.captionTinted, toneClass[tone], className)}
+      />
+    );
   },
 );
 TableCaption.displayName = "Table.Caption";

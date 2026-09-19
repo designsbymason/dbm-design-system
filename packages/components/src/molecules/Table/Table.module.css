@@ -42,11 +42,20 @@
 }
 
 .caption {
-  background-color: var(--dbm-bg-surface);
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-sm);
   padding: var(--dbm-space-3) var(--dbm-space-4);
   text-align: start;
+}
+
+/* Any non-neutral tone's caption — the same solid fill and on-colour text as
+   that tone's header, so a captioned toned table reads as one continuous block
+   from the caption down through the header row. The colours come from the
+   `.tone*` classes below. Declared after `.caption` (equal specificity, later
+   wins). */
+.captionTinted {
+  background-color: var(--tone-solid);
+  color: var(--tone-on-solid);
 }
 
 /* Every cell carries its own bottom divider — set on the cells rather than
@@ -72,10 +81,9 @@
 }
 
 /* The column-header row's own look, scoped to `<thead>` so it never leaks
-   onto a body row header. The background is opaque on purpose: a sticky
-   header must fully cover the rows scrolling beneath it. */
+   onto a body row header. No background of its own — the table sits directly
+   on whatever surface it's placed on. */
 .header > tr > .headerCell {
-  background-color: var(--dbm-bg-surface);
   border-block-end-color: var(--dbm-border-neutral);
   color: var(--dbm-text-secondary);
 }
@@ -89,32 +97,107 @@
 }
 
 .footer > tr > * {
-  background-color: var(--dbm-bg-neutral-subtle);
   font-weight: var(--dbm-font-weight-semibold);
 }
 
 /* `stickyHeader` — pinned on the header cells themselves (not the `<thead>`),
    which is the placement browsers support consistently. Resolves against
    `.container`'s own scroll, so it only bites once `maxHeight` gives the
-   container a height to scroll within. */
+   container a height to scroll within. This is the one place the header gets
+   a background: a pinned header must be opaque, or the rows scrolling
+   beneath it would show straight through the header text. */
 .headerSticky > tr > .headerCell {
+  background-color: var(--dbm-bg-surface);
   inset-block-start: 0;
   position: sticky;
   z-index: var(--dbm-z-index-sticky);
+}
+
+/* Any non-neutral tone's header — a solid fill with on-colour text. Declared
+   after `.headerSticky` (equal specificity, later wins) so a pinned toned
+   header keeps its tone's fill instead of the neutral opaque `bg.surface` a
+   neutral pinned header gets; it's opaque either way. The divider is the
+   fill's own colour, so it reads as part of the fill rather than a stray line. */
+.headerTinted > tr {
+  /* The same fill on the row itself, beneath the cells — a guard against the
+     faint sub-pixel seam adjacent cell backgrounds can antialias into at
+     fractional column widths: any such gap shows the identical colour instead
+     of the page behind. */
+  background-color: var(--tone-solid);
+}
+
+.headerTinted > tr > .headerCell {
+  background-color: var(--tone-solid);
+  border-block-end-color: var(--tone-solid);
+  color: var(--tone-on-solid);
 }
 
 .bodyStriped > tr:nth-child(even) {
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
+/* Any non-neutral tone's stripes — that tone's subtle tint in place of the
+   neutral one. */
+.bodyStripedTinted > tr:nth-child(even) {
+  background-color: var(--tone-subtle);
+}
+
 /* Declared after `.bodyStriped` so hover wins over a stripe when both apply
    (equal specificity, later rule takes precedence). */
-.bodyHoverable > tr {
+.bodyHoverable > tr,
+.bodyHoverableTinted > tr {
   transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
 .bodyHoverable > tr:hover {
   background-color: var(--dbm-bg-neutral-subtle-hover);
+}
+
+/* Any non-neutral tone's hover — that tone's subtle-hover tint. Declared after
+   `.bodyStripedTinted` so it wins over a stripe when both apply. */
+.bodyHoverableTinted > tr:hover {
+  background-color: var(--tone-subtle-hover);
+}
+
+/* Tone definitions — each non-neutral tone only *defines* its four colours as
+   local custom properties, on whichever part (`<thead>`, `<tbody>`,
+   `<caption>`) carries the class; the shared `*Tinted` rules above read them.
+   `neutral` has no class: it's the un-tinted base styling. Every value is a
+   semantic token, and each tone's on-colour text pairs with its own solid fill
+   (measured AA in all four themes). */
+.toneBrand {
+  --tone-solid: var(--dbm-bg-brand);
+  --tone-on-solid: var(--dbm-text-on-brand);
+  --tone-subtle: var(--dbm-bg-brand-subtle);
+  --tone-subtle-hover: var(--dbm-bg-brand-subtle-hover);
+}
+
+.toneInfo {
+  --tone-solid: var(--dbm-bg-info);
+  --tone-on-solid: var(--dbm-text-on-info);
+  --tone-subtle: var(--dbm-bg-info-subtle);
+  --tone-subtle-hover: var(--dbm-bg-info-subtle-hover);
+}
+
+.toneSuccess {
+  --tone-solid: var(--dbm-bg-success);
+  --tone-on-solid: var(--dbm-text-on-success);
+  --tone-subtle: var(--dbm-bg-success-subtle);
+  --tone-subtle-hover: var(--dbm-bg-success-subtle-hover);
+}
+
+.toneWarning {
+  --tone-solid: var(--dbm-bg-warning);
+  --tone-on-solid: var(--dbm-text-on-warning);
+  --tone-subtle: var(--dbm-bg-warning-subtle);
+  --tone-subtle-hover: var(--dbm-bg-warning-subtle-hover);
+}
+
+.toneDanger {
+  --tone-solid: var(--dbm-bg-danger);
+  --tone-on-solid: var(--dbm-text-on-danger);
+  --tone-subtle: var(--dbm-bg-danger-subtle);
+  --tone-subtle-hover: var(--dbm-bg-danger-subtle-hover);
 }
 
 /* Per-`size` padding and typography, shared by `Table.Cell` and

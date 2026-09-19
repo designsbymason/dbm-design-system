@@ -17,6 +17,17 @@ export type TableSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type TableVariant = "bordered" | "ghost";
 
 /**
+ * The table's colour treatment, on the standard tone scale
+ * (`05-component-api-conventions.md` §2). `"neutral"` (the default) has no
+ * header or caption fill and neutral striping and hover. Every other tone
+ * applies the same treatment in its own colour: a solid header and caption
+ * fill (with the matching on-colour text), tinted striped rows, and a tinted
+ * row hover. `"brand"` follows the active brand theme; `"success"`,
+ * `"warning"`, `"danger"`, and `"info"` are fixed status colours.
+ */
+export type TableTone = "brand" | "neutral" | "info" | "success" | "warning" | "danger";
+
+/**
  * Horizontal alignment of a cell's content, in logical terms — `"start"`
  * follows reading direction (left in LTR, right in RTL) and `"end"` is its
  * opposite, so alignment mirrors correctly under RTL with no extra work.
@@ -35,6 +46,16 @@ export interface TableProps
    * @default 'bordered'
    */
   variant?: TableVariant;
+  /**
+   * The table's colour treatment. `"neutral"` (the default) is uncoloured;
+   * every other tone gives the header and the caption a solid fill in that
+   * colour with matching on-colour text, and tints the `striped` and
+   * `hoverable` row backgrounds to match. `"brand"` follows the active brand
+   * theme (Purple or Emerald); `"success"`, `"warning"`, `"danger"`, and
+   * `"info"` are fixed status colours that don't change with the brand.
+   * @default 'neutral'
+   */
+  tone?: TableTone;
   /**
    * Cell padding and typography for every `Table.Cell`/`Table.HeaderCell`
    * inside this table.
@@ -72,6 +93,21 @@ export interface TableProps
    */
   maxHeight?: CSSProperties["maxHeight"];
   /**
+   * An accessible name for the table, for when there's no visible
+   * `Table.Caption` to provide one. Also names the table's own scroll
+   * region when the table overflows and becomes keyboard-focusable.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of an element that names this table (e.g. a nearby heading), for
+   * when there's no visible `Table.Caption` to provide one. Also names the
+   * table's own scroll region when the table overflows and becomes
+   * keyboard-focusable.
+   */
+  "aria-labelledby"?: string;
+  /** The id of an element that describes this table (e.g. a paragraph of context above it). */
+  "aria-describedby"?: string;
+  /**
    * Additional CSS classes for the table's own scroll container — the
    * `<div>` wrapping the `<table>` that provides horizontal (and, with
    * `maxHeight`, vertical) scrolling. `className` targets the `<table>`
@@ -97,21 +133,6 @@ export interface TableProps
    * effect.
    */
   "data-testid"?: string;
-  /**
-   * An accessible name for the table, for when there's no visible
-   * `Table.Caption` to provide one. Also names the table's own scroll
-   * region when the table overflows and becomes keyboard-focusable.
-   */
-  "aria-label"?: string;
-  /**
-   * The id of an element that names this table (e.g. a nearby heading), for
-   * when there's no visible `Table.Caption` to provide one. Also names the
-   * table's own scroll region when the table overflows and becomes
-   * keyboard-focusable.
-   */
-  "aria-labelledby"?: string;
-  /** The id of an element that describes this table (e.g. a paragraph of context above it). */
-  "aria-describedby"?: string;
 }
 
 export interface TableHeaderProps extends Omit<ComponentPropsWithoutRef<"thead">, "children" | "className" | "style" | "id"> {

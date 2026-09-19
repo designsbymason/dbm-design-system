@@ -5,7 +5,7 @@ import { Badge } from "../../atoms/Badge";
 import type { BadgeTone } from "../../atoms/Badge";
 import { Text } from "../../atoms/Text";
 import { Table } from "./Table";
-import type { TableProps, TableSize, TableVariant } from "./Table.types";
+import type { TableProps, TableSize, TableTone, TableVariant } from "./Table.types";
 
 // `Table`'s own root props get hand-written argTypes here (this meta has no
 // `component`, so docgen doesn't supply them) — mirroring `Accordion`'s own
@@ -15,19 +15,20 @@ import type { TableProps, TableSize, TableVariant } from "./Table.types";
 // docgen.
 interface PlaygroundArgs {
   variant: TableVariant;
+  tone: TableTone;
   size: TableSize;
   striped: boolean;
   hoverable: boolean;
   stickyHeader: boolean;
   maxHeight: string;
+  "aria-label": string;
+  "aria-labelledby": string;
+  "aria-describedby": string;
   containerClassName: string;
   id: string;
   className: string;
   style: CSSProperties;
   "data-testid": string;
-  "aria-label": string;
-  "aria-labelledby": string;
-  "aria-describedby": string;
 }
 
 interface Invoice {
@@ -59,6 +60,8 @@ const statusTone: Record<Invoice["status"], BadgeTone> = {
   Draft: "neutral",
 };
 
+const allTones: TableTone[] = ["neutral", "brand", "info", "success", "warning", "danger"];
+
 const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
 
 interface DemoTableProps extends Partial<Omit<TableProps, "children">> {
@@ -67,12 +70,22 @@ interface DemoTableProps extends Partial<Omit<TableProps, "children">> {
   caption?: string;
 }
 
-const DemoTable = ({ rows = 5, withFooter = true, caption = "Recent invoices", ...tableProps }: DemoTableProps) => {
+// No caption by default — the demos below show the table itself. A table
+// still needs an accessible name, so without a `caption` it's named via
+// `aria-label` instead; only the dedicated `WithCaption` story renders a
+// visible `Table.Caption`.
+const DemoTable = ({
+  rows = 5,
+  withFooter = true,
+  caption,
+  "aria-label": ariaLabel = "Recent invoices",
+  ...tableProps
+}: DemoTableProps) => {
   const shown = invoices.slice(0, rows);
   const total = shown.reduce((sum, invoice) => sum + invoice.amount, 0);
   return (
-    <Table {...tableProps}>
-      <Table.Caption>{caption}</Table.Caption>
+    <Table {...tableProps} aria-label={caption ? undefined : ariaLabel}>
+      {caption && <Table.Caption>{caption}</Table.Caption>}
       <Table.Header>
         <Table.Row>
           <Table.HeaderCell>Invoice</Table.HeaderCell>
@@ -120,19 +133,20 @@ const demoContainerStyle = {
 // Controls panel would show live-looking toggles that silently do nothing.
 const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   variant: { control: false },
+  tone: { control: false },
   size: { control: false },
   striped: { control: false },
   hoverable: { control: false },
   stickyHeader: { control: false },
   maxHeight: { control: false },
+  "aria-label": { control: false },
+  "aria-labelledby": { control: false },
+  "aria-describedby": { control: false },
   containerClassName: { control: false },
   id: { control: false },
   className: { control: false },
   style: { control: false },
   "data-testid": { control: false },
-  "aria-label": { control: false },
-  "aria-labelledby": { control: false },
-  "aria-describedby": { control: false },
 };
 
 const meta: Meta<PlaygroundArgs> = {
@@ -145,6 +159,13 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The table's own visual treatment — a self-contained bordered table, or a borderless treatment for embedding inside an already-bordered container (e.g. a Card).",
       table: { defaultValue: { summary: "'bordered'" } },
+    },
+    tone: {
+      control: "select",
+      options: ["neutral", "brand", "info", "success", "warning", "danger"],
+      description:
+        "The table's colour treatment. neutral (the default) is uncoloured; every other tone gives the header and caption a solid fill in that colour with matching on-colour text, and tints the striped and hoverable row backgrounds to match. brand follows the active Purple/Emerald theme; success, warning, danger, and info are fixed status colours.",
+      table: { defaultValue: { summary: "'neutral'" } },
     },
     size: {
       control: "select",
@@ -178,6 +199,20 @@ const meta: Meta<PlaygroundArgs> = {
       // matching this prop's real "no cap" default.
       placeholder: "none — e.g. 16rem",
     },
+    "aria-label": {
+      control: false,
+      description:
+        "An accessible name for the table, for when there's no visible Table.Caption. Also names the table's own scroll region when it overflows.",
+    },
+    "aria-labelledby": {
+      control: false,
+      description:
+        "The id of an element that names this table (e.g. a nearby heading), for when there's no visible Table.Caption. Also names the table's own scroll region when it overflows.",
+    },
+    "aria-describedby": {
+      control: false,
+      description: "The id of an element that describes this table (e.g. a paragraph of context above it).",
+    },
     containerClassName: {
       control: false,
       description:
@@ -201,23 +236,10 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute on the <table>; has no visual or behavioral effect.",
     },
-    "aria-label": {
-      control: false,
-      description:
-        "An accessible name for the table, for when there's no visible Table.Caption. Also names the table's own scroll region when it overflows.",
-    },
-    "aria-labelledby": {
-      control: false,
-      description:
-        "The id of an element that names this table (e.g. a nearby heading), for when there's no visible Table.Caption. Also names the table's own scroll region when it overflows.",
-    },
-    "aria-describedby": {
-      control: false,
-      description: "The id of an element that describes this table (e.g. a paragraph of context above it).",
-    },
   },
   args: {
     variant: "bordered",
+    tone: "neutral",
     size: "md",
     striped: false,
     hoverable: false,
@@ -229,6 +251,7 @@ const meta: Meta<PlaygroundArgs> = {
       <DemoTable
         rows={6}
         variant={args.variant}
+        tone={args.tone}
         size={args.size}
         striped={args.striped}
         hoverable={args.hoverable}
@@ -245,6 +268,25 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below. Set `stickyHeader` together with a `maxHeight` (e.g. `12rem`) to see the header pin. */
 export const Playground: Story = {};
+
+export const WithCaption: Story = {
+  name: "With a caption",
+  argTypes: noControls,
+  render: () => (
+    // The one story with a visible caption — shown in every tone, since a
+    // non-neutral tone's caption takes that tone's fill along with the header.
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      {allTones.map((tone) => (
+        <div key={tone}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
+            tone=&quot;{tone}&quot;
+          </Text>
+          <DemoTable tone={tone} caption="Recent invoices" rows={2} withFooter={false} />
+        </div>
+      ))}
+    </div>
+  ),
+};
 
 export const Striped: Story = {
   name: "Striped rows",
@@ -272,6 +314,25 @@ export const StripedAndHoverable: Story = {
   render: () => (
     <div style={demoContainerStyle}>
       <DemoTable striped hoverable />
+    </div>
+  ),
+};
+
+export const Tones: Story = {
+  name: "All tones",
+  argTypes: noControls,
+  render: () => (
+    // Striped and hoverable so each tone's stripe and hover tint are visible
+    // too, not just its header.
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      {allTones.map((tone) => (
+        <div key={tone}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
+            tone=&quot;{tone}&quot;
+          </Text>
+          <DemoTable tone={tone} striped hoverable rows={3} withFooter={false} aria-label={`Invoices (${tone})`} />
+        </div>
+      ))}
     </div>
   ),
 };
@@ -307,7 +368,7 @@ export const Ghost: Story = {
       <Text size="md" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-3)" }}>
         Billing
       </Text>
-      <DemoTable variant="ghost" caption="Recent invoices" rows={4} />
+      <DemoTable variant="ghost" rows={4} />
     </div>
   ),
 };
@@ -322,7 +383,7 @@ export const Sizes: Story = {
           <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
             size=&quot;{size}&quot;
           </Text>
-          <DemoTable size={size} rows={2} withFooter={false} caption={`Invoices (${size})`} />
+          <DemoTable size={size} rows={2} withFooter={false} aria-label={`Invoices (${size})`} />
         </div>
       ))}
     </div>
@@ -334,8 +395,7 @@ export const Alignment: Story = {
   argTypes: noControls,
   render: () => (
     <div style={demoContainerStyle}>
-      <Table>
-        <Table.Caption>Quarterly revenue</Table.Caption>
+      <Table aria-label="Quarterly revenue">
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell>Region</Table.HeaderCell>
@@ -370,8 +430,7 @@ export const GroupedColumns: Story = {
   argTypes: noControls,
   render: () => (
     <div style={demoContainerStyle}>
-      <Table>
-        <Table.Caption>Signups by plan</Table.Caption>
+      <Table aria-label="Signups by plan">
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell rowSpan={2}>Month</Table.HeaderCell>

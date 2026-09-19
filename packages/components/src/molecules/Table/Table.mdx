@@ -16,19 +16,20 @@ import * as TableCaptionStories from "./TableCaption.stories";
 
 export const rootPropOrder = [
   "variant",
+  "tone",
   "size",
   "striped",
   "hoverable",
   "stickyHeader",
   "maxHeight",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
   "containerClassName",
   "id",
   "className",
   "style",
   "data-testid",
-  "aria-label",
-  "aria-labelledby",
-  "aria-describedby",
 ];
 export const captionPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["children", "id", "className", "style", "data-testid"];
@@ -127,6 +128,10 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 
 ## Variants
 
+### With a caption
+
+<Canvas of={TableStories.WithCaption} />
+
 ### Striped rows
 
 <Canvas of={TableStories.Striped} />
@@ -138,6 +143,10 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 ### Striped and hoverable together
 
 <Canvas of={TableStories.StripedAndHoverable} />
+
+### All tones
+
+<Canvas of={TableStories.Tones} />
 
 ### Sticky header (scroll the body)
 
@@ -178,6 +187,11 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 - Set `maxHeight` whenever you use `stickyHeader` — a header can only stay pinned inside a scroll area that has a
   height to scroll.
 - Use `variant="ghost"` when embedding a `Table` inside a container that already has its own border (a `Card`).
+- Use `tone="brand"` to give a table a strong, on-brand header — typically the primary table on a page. It follows
+  the active brand theme, so it resolves to Purple or Emerald automatically.
+- Use `tone="success"`, `"warning"`, `"danger"`, or `"info"` when a table's whole subject carries that meaning — a
+  list of failed payments, a set of items awaiting review. These are fixed status colours that don't change with the
+  brand.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -187,6 +201,10 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
   those belong to the future `DataTable`.
 - Don't skip `Table.Header` and put column labels in ordinary body cells — assistive technology relies on real
   header cells to announce which column a value belongs to.
+- Don't put a non-neutral `tone` on every table on a page — a filled header is a strong accent, and it stops
+  standing out when everything has one.
+- Don't rely on a tone's colour alone to convey its meaning. A `danger` table should also say so in its caption or
+  surrounding text — not everyone perceives the colour difference.
 - Don't rely on `striped` or `hoverable` to communicate meaning (a "selected" or "flagged" row) — they're purely
   reading aids and carry no semantics.
 
@@ -218,7 +236,9 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
   scroll frame becomes focusable — `Tab` onto it, then use the arrow keys to scroll — and is announced as a region
   named after the table. When the table fits, the frame is not focusable at all, so it adds no extra tab stop.
 - `striped` and `hoverable` backgrounds keep body text (`text.primary`) at 6.5:1 or better — comfortably above the
-  4.5:1 AA text-contrast floor — in every theme, light and dark.
+  4.5:1 AA text-contrast floor — in every theme, light and dark. Under any non-neutral `tone`, header
+  and caption text (its `text.on-*` token on its solid fill) is 4.71:1 or better in every theme, and body text on the
+  tinted stripe and hover backgrounds is 9.66:1 or better.
 
 </Callout>
 
@@ -249,6 +269,16 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
   </Table.Footer>
 </Table>
 
+{/* A toned table: solid header and caption, tinted stripes and hover */}
+<Table tone="brand" striped hoverable>
+  {/* … */}
+</Table>
+
+{/* A status-toned table */}
+<Table tone="danger" aria-label="Failed payments">
+  {/* … */}
+</Table>
+
 {/* A header that stays pinned while a long body scrolls */}
 <Table stickyHeader maxHeight="24rem">
   {/* … */}
@@ -272,9 +302,29 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 
 <TokenRow token="text.primary" usage="data cell text" />
 <TokenRow token="text.secondary" usage="header cell text and caption text" />
-<TokenRow token="bg.surface" usage="header cell background (opaque, so a sticky header fully covers rows scrolling beneath it) and caption background" />
-<TokenRow token="bg.neutral-subtle" usage="striped row background and footer background" />
+<TokenRow token="bg.surface" usage="a pinned (sticky) header cell's background — opaque, so rows scrolling beneath it never show through; the header, caption, and footer have no background otherwise" />
+<TokenRow token="bg.neutral-subtle" usage="striped row background" />
 <TokenRow token="bg.neutral-subtle-hover" usage="hovered row background" />
+<TokenRow token="bg.brand" usage="tone=brand: header cell and caption background, and the header's divider" />
+<TokenRow token="text.on-brand" usage="tone=brand: header cell and caption text" />
+<TokenRow token="bg.brand-subtle" usage="tone=brand: striped row background" />
+<TokenRow token="bg.brand-subtle-hover" usage="tone=brand: hovered row background" />
+<TokenRow token="bg.success" usage="tone=success: header cell and caption background, and the header's divider" />
+<TokenRow token="text.on-success" usage="tone=success: header cell and caption text" />
+<TokenRow token="bg.success-subtle" usage="tone=success: striped row background" />
+<TokenRow token="bg.success-subtle-hover" usage="tone=success: hovered row background" />
+<TokenRow token="bg.warning" usage="tone=warning: header cell and caption background, and the header's divider" />
+<TokenRow token="text.on-warning" usage="tone=warning: header cell and caption text" />
+<TokenRow token="bg.warning-subtle" usage="tone=warning: striped row background" />
+<TokenRow token="bg.warning-subtle-hover" usage="tone=warning: hovered row background" />
+<TokenRow token="bg.danger" usage="tone=danger: header cell and caption background, and the header's divider" />
+<TokenRow token="text.on-danger" usage="tone=danger: header cell and caption text" />
+<TokenRow token="bg.danger-subtle" usage="tone=danger: striped row background" />
+<TokenRow token="bg.danger-subtle-hover" usage="tone=danger: hovered row background" />
+<TokenRow token="bg.info" usage="tone=info: header cell and caption background, and the header's divider" />
+<TokenRow token="text.on-info" usage="tone=info: header cell and caption text" />
+<TokenRow token="bg.info-subtle" usage="tone=info: striped row background" />
+<TokenRow token="bg.info-subtle-hover" usage="tone=info: hovered row background" />
 <TokenRow token="border.default" usage="table border (bordered variant) and the divider between rows" />
 <TokenRow token="border.neutral" usage="the stronger divider beneath the header row" />
 <TokenRow token="border.focus" usage="scroll frame focus-visible outline color" />
