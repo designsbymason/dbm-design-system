@@ -146,3 +146,7 @@ were equally ignored by each story's own zero-arg `render`. Fixed by adding the 
 each story's `argTypes`. `Default` was checked and correctly left alone — it has no custom `render`
 (uses the default args-spread render), so `tone`/`caseSensitive` genuinely stay live there. Pure
 Storybook-metadata fix, no runtime code touched. Full suite re-run clean.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground printed `caseSensitive={false}`, and the other four panels showed the story object itself, each with a four-entry `argTypes` block of `control: false`. Every story now sets `parameters.docs.source.code` to a snippet from the new `Highlight.snippets.ts`, and the Playground builds its own from the live controls, writing a single `query` as a string and several as an array. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

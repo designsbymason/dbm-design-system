@@ -482,3 +482,7 @@ correctly zeroed to avoid double-trimming); the underlying fallback custom-prope
 resolving to the correct per-font values in that same real browser (unlike jsdom, which does not
 resolve it — see the test-suite finding above); the Trim gallery story's own box height measurably
 shrinks between untrimmed and `trim="both"` instances.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: every panel printed `align="start" color="primary" fontFamily="secondary" weight="bold" wrap="wrap"` on every heading, plus a `size` that was only the level's own default, and the gallery panels ran to 62, 123 and 121 lines of that ("Leading-trim" with the story's label boxes and its `trimRows` constant besides). Every story now sets `parameters.docs.source.code` to a snippet from the new `Heading.snippets.ts` — one representative heading with a comment naming the other values — and the Playground and "Narrow viewport" build theirs from the live controls, writing `level` only when it isn't 2 and `size` only where it differs from that level's own default (the Playground's level-synced `size` would otherwise print every time). The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

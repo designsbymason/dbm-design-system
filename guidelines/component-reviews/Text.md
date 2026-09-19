@@ -125,3 +125,7 @@ same defect in the `Wrap` story, test coverage extension, accessibility, respons
 quality, theming, Storybook documentation, and functional verification) is complete. This was the
 last unreviewed atom in the Typography category — every Typography atom now has a completed,
 Finalized review pass.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: every panel printed `align="start" color="primary" fontFamily="primary" size="base" weight="regular" wrap="wrap"` on every `Text`, the gallery panels ran to 112, 92 and 42 lines of that, and "As label" printed the story's own `htmlFor="story-email-input"`. Every story now sets `parameters.docs.source.code` to a snippet from the new `Text.snippets.ts` — one representative `Text` with a comment naming the other values — and the Playground and "Narrow viewport" build theirs from the live controls, writing only what differs from the defaults. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

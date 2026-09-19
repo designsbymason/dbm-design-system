@@ -108,3 +108,7 @@ confirmed identical rather than assumed), Storybook documentation (Docs page, Pr
 Design Tokens table all consistent), and functional verification (`tsc`, `eslint`, full 972-test
 suite, `tsup` build all clean). No further changes without asking first, per
 `06-engineering-standards.md` §9's finalization rule.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground and Default panels were usable but identical, and the other two showed the story object itself (`argTypes: { children: { control: false } }, render: () => …`). Every story now sets `parameters.docs.source.code` to a snippet from the new `Code.snippets.ts`, and the Playground and Default build theirs from the live controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

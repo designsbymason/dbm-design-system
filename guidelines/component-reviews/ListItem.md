@@ -168,3 +168,7 @@ page — flagged during `List`'s own final review pass, authorized here, fixed b
 `List`'s Docs page instead (`/?path=/docs/molecules-typography-list--docs`). Re-verified live: the
 rendered `<a>`'s `href` now reads the corrected path. Per the finalization re-check test (§9): a
 defect fix (stale link, not a design change) — **stays finalized**, no re-review needed.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground printed `aria-label="" disabled={false} interactive={false} selected={false}`, and the five gallery panels showed the story object itself — "Interactive" with its own `useState`, the trailing-content and disabled ones with `onClick={() => {}}`. Every story now sets `parameters.docs.source.code` to a snippet from the new `ListItem.snippets.ts`, each keeping the one `List` an item needs, with the reader's state named in a comment and handlers named `handleClick`; the Playground builds its own from the live controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
