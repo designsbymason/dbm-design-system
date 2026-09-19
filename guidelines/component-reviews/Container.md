@@ -48,3 +48,7 @@ budget). No new findings.
 
 **Finalized 2026-09-02** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Container (code, stories, docs, or its tokens) without asking first.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the generated code spelled out `as="div"`, `paddingInline={4}` and the story's demo content wrapper, and three panels showed the story object itself — two calling a `demoContent` helper defined in the stories file. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Container.snippets.ts`, and the Playground, Default and Narrow-viewport stories build theirs from the live controls, writing only what differs from `xl` and a padding of 4. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

@@ -69,3 +69,7 @@ JS / 0.23KB CSS gzipped — within budget). No new findings.
 
 **Finalized 2026-09-02** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Bleed (code, stories, docs, or its tokens) without asking first.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: four of the five panels showed the story object itself, with development notes inside it. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Bleed.snippets.ts` — each keeping the one padded parent a `Bleed` needs, with an `inset` that matches it — and the Playground builds its snippet from the live controls, writing that parent's padding to match the chosen `side` and `inset`. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

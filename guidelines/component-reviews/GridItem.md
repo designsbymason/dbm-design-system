@@ -227,3 +227,7 @@ Docs page instead (`/?path=/docs/molecules-layout-grid--docs`). Re-verified live
 own Markdown-syntax link to Grid (line 29, `[Grid](/story/molecules-layout-grid--default-columns)`)
 was found to have the identical staleness but was *not* in scope of this authorization — flagged
 separately, not touched.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: every cell repeated a seven-line style object, the Playground wrote `colSpan={1} rowSpan={1} order={1}` on a cell that uses none of them, and it printed filler cells that exist only to demonstrate `order`. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `GridItem.snippets.ts` — each keeping the one `Grid` a `GridItem` needs — and the Playground builds its snippet from the live controls, writing only what differs, reading a blank `colStart`/`rowStart` as unset, and putting an `as="li"` item inside the `ul` it needs. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

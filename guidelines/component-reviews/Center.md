@@ -36,3 +36,7 @@ budget). No new findings.
 
 **Finalized 2026-09-02** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Center (code, stories, docs, or its tokens) without asking first.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's generated code spelled out `as="div" inline={false}` and the story's demo `style`, and the two gallery panels showed the story object itself. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Center.snippets.ts`, and the Playground builds its snippet from the live controls — a block-level `Center` with the height its centering needs, an inline one as the `span` it should be. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

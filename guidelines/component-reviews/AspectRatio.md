@@ -86,3 +86,7 @@ above: a deliberate preference change (step 2: no), scoped to this component's o
 (step 3) — partial re-finalization, re-verified: design quality, theming (both brands × both
 modes, live), Storybook documentation. Untouched by this change: accessibility, feature-
 completeness, functional behavior.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's generated code printed the default ratio as `ratio={1.7777777777777777}` and kept the story's demo wrapper, and the three gallery panels showed the story object itself. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `AspectRatio.snippets.ts`, and the Playground builds its snippet from the live controls, writing the ratio as a fraction (`16 / 9`, `21 / 9`) and only when it isn't the default. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

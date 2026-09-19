@@ -402,3 +402,7 @@ build`, and `check-component-bundle-size` — Divider actually **dropped** from 
 `useResolvedOrientation.ts` used to bundle its own full copy of the resolution logic inline into
 Divider's own isolated per-component bundle; that logic now lives once in
 `@dbm-design-system/primitives` instead of being duplicated inline.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: twelve of the thirteen panels showed the story object itself, with development notes inside it, and the Playground's generated code spelled out `emphasis="none" thickness="thin" tone="default" variant="solid"` and an empty `aria-label=""`. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Divider.snippets.ts` — a vertical divider keeps the one flex row with a height that it needs to show anything — and the Playground builds its snippet from the live controls, writing only what differs and `align` only beside a label. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
