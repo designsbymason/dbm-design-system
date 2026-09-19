@@ -6,8 +6,9 @@ import {
   TrashIcon,
   WalletIcon,
 } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Icon } from "./Icon";
+import { iconPlaygroundSnippet, iconSnippets } from "./Icon.snippets";
 import type { IconProps, IconTone } from "./Icon.types";
 
 // `icon` takes a component reference, not a string (see
@@ -144,7 +145,16 @@ const disableAllAxes = {
 } as const;
 
 /** Drive every prop live. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => iconPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 // A literal, args-free render, not `{...args}` — Storybook's "Show code"
 // panel dumps a non-primitive resolved arg's raw runtime shape instead of
@@ -156,12 +166,14 @@ export const Playground: Story = {};
 // one, so this explanation itself never reaches the rendered "Show code"
 // panel the way one placed inside the object would).
 export const Default: Story = {
+  parameters: { docs: { source: { code: iconSnippets.default } } },
   argTypes: disableAllAxes,
   render: () => <Icon icon={WalletIcon} size="md" weight="bold" />,
 };
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: iconSnippets.allSizes } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
@@ -174,6 +186,7 @@ export const AllSizes: Story = {
 
 export const AllWeights: Story = {
   name: "All weights",
+  parameters: { docs: { source: { code: iconSnippets.allWeights } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>
@@ -194,6 +207,7 @@ export const AllWeights: Story = {
 
 export const AllTones: Story = {
   name: "All tones",
+  parameters: { docs: { source: { code: iconSnippets.allTones } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
@@ -238,12 +252,14 @@ export const AllTones: Story = {
 
 export const Labeled: Story = {
   name: "With accessible label (role=img)",
+  parameters: { docs: { source: { code: iconSnippets.labeled } } },
   argTypes: disableAllAxes,
   render: () => <Icon icon={HeartIcon} label="Favorite" />,
 };
 
 export const Mirrored: Story = {
   name: "Mirrored (RTL-flipped directional icon)",
+  parameters: { docs: { source: { code: iconSnippets.mirrored } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>

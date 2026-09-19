@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Skeleton } from "../Skeleton";
 import { Text } from "../Text";
 import { ClientOnly } from "./ClientOnly";
+import { clientOnlyPlaygroundSnippet, clientOnlySnippets } from "./ClientOnly.snippets";
 
 const meta: Meta<typeof ClientOnly> = {
   title: "Atoms/Utility/ClientOnly",
@@ -44,6 +45,14 @@ type Story = StoryObj<typeof ClientOnly>;
  * the full explanation and a real, verified example of the fallback phase.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => clientOnlyPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <ClientOnly fallback={<Text color="secondary">{args.fallback}</Text>}>
       <Text>{args.children}</Text>
@@ -63,6 +72,7 @@ export const Default: Story = {
 
 export const WithFallback: Story = {
   name: "With a loading fallback",
+  parameters: { docs: { source: { code: clientOnlySnippets.withFallback } } },
   argTypes: { children: { control: false } },
   args: { children: "Content that depends on a browser-only API." },
   render: (args) => (

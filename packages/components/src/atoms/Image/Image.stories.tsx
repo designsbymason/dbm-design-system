@@ -1,7 +1,8 @@
 import { UserIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Icon } from "../Icon";
 import { Image } from "./Image";
+import { imagePlaygroundSnippet, imageSnippets } from "./Image.snippets";
 
 // A real photo (1000×667, ~3:2 landscape), served from `.storybook/public/`
 // via Storybook's `staticDirs` config (see `.storybook/main.ts`) — used
@@ -156,6 +157,14 @@ type Story = StoryObj<typeof Image>;
 
 /** Drive every prop live — wrapped in a fixed-width demo container so radius/objectFit/position/aspectRatio/width/height all read visually. */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => imagePlaygroundSnippet(context.args),
+      },
+    },
+  },
   // `width`/`height` default here (not at the meta level) specifically so
   // AspectRatio169/Rounded below — which inherit meta args and only
   // override `aspectRatio`/`radius` locally — aren't affected. Chosen to
@@ -184,6 +193,7 @@ const disableAllAxes = {
 } as const;
 
 export const Default: Story = {
+  parameters: { docs: { source: { code: imageSnippets.default } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ width: "16rem" }}>
@@ -194,6 +204,7 @@ export const Default: Story = {
 
 export const AllRadii: Story = {
   name: "All radii",
+  parameters: { docs: { source: { code: imageSnippets.allRadii } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
@@ -213,6 +224,7 @@ export const AllRadii: Story = {
 
 export const AllObjectFit: Story = {
   name: "All objectFit modes",
+  parameters: { docs: { source: { code: imageSnippets.allObjectFit } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
@@ -238,6 +250,7 @@ export const AllObjectFit: Story = {
 
 export const AllPositions: Story = {
   name: "All positions (objectFit=\"cover\")",
+  parameters: { docs: { source: { code: imageSnippets.allPositions } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
@@ -276,6 +289,14 @@ const disableWidthHeight = {
 
 export const AspectRatio169: Story = {
   name: "Locked aspect ratio (16:9)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => imagePlaygroundSnippet(context.args, "20rem"),
+      },
+    },
+  },
   argTypes: disableWidthHeight,
   args: { aspectRatio: 16 / 9 },
   render: (args) => (
@@ -286,6 +307,14 @@ export const AspectRatio169: Story = {
 };
 
 export const Rounded: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => imagePlaygroundSnippet(context.args, "8rem"),
+      },
+    },
+  },
   argTypes: disableWidthHeight,
   args: { radius: "full", aspectRatio: 1 },
   render: (args) => (
@@ -297,6 +326,7 @@ export const Rounded: Story = {
 
 export const SizingPrecedence: Story = {
   name: "Sizing precedence (width/height vs aspectRatio)",
+  parameters: { docs: { source: { code: imageSnippets.sizingPrecedence } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "flex-start", display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
@@ -324,6 +354,7 @@ export const SizingPrecedence: Story = {
 
 export const BrokenDefaultFallback: Story = {
   name: "Broken src, default fallback",
+  parameters: { docs: { source: { code: imageSnippets.brokenDefaultFallback } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ width: "12rem" }}>
@@ -339,6 +370,7 @@ export const BrokenDefaultFallback: Story = {
 
 export const BrokenCustomFallback: Story = {
   name: "Broken src, custom fallback (overrides the default)",
+  parameters: { docs: { source: { code: imageSnippets.brokenCustomFallback } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ width: "12rem" }}>
@@ -355,6 +387,7 @@ export const BrokenCustomFallback: Story = {
 
 export const Decorative: Story = {
   name: 'Decorative (alt="") — hidden from the accessibility tree either way',
+  parameters: { docs: { source: { code: imageSnippets.decorative } } },
   argTypes: disableAllAxes,
   render: () => (
     <div style={{ alignItems: "center", display: "flex", gap: "var(--dbm-space-4)" }}>

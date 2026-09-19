@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { useArgs } from "storybook/preview-api";
 import {
@@ -13,6 +13,7 @@ import { Spinner } from "../Spinner";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
 import { Backdrop } from "./Backdrop";
+import { backdropPlaygroundSnippet, backdropSnippets } from "./Backdrop.snippets";
 
 // A colorful mock "page content" block — purely a Storybook demo aid, not
 // shipped code. `opacity`/`blur` have no visible effect dimming/blurring a
@@ -141,6 +142,14 @@ export default meta;
 type Story = StoryObj<typeof Backdrop>;
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => backdropPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // Once `open` is toggled on, the live scrim (position: fixed, a high
   // z-index) sits directly on top of this same Controls panel — since a
   // Docs page's embedded Canvas and its controls share one document, the
@@ -173,6 +182,7 @@ export const Playground: Story = {
 
 export const ClickToDismiss: Story = {
   name: "Click to dismiss",
+  parameters: { docs: { source: { code: backdropSnippets.clickToDismiss } } },
   // This story demonstrates the original conditional-mount pattern —
   // Backdrop's own `open` prop is never used at all (visibility is
   // whether the parent renders `<Backdrop>` at all, per usage pattern (1)
@@ -208,6 +218,7 @@ export const ClickToDismiss: Story = {
 
 export const AnimatedDismiss: Story = {
   name: "Animated dismiss (open prop)",
+  parameters: { docs: { source: { code: backdropSnippets.animatedDismiss } } },
   // `open` is bound to this story's own trigger button rather than the
   // Controls panel, so its control is suppressed here — same "suppress
   // only the one axis a control can't represent" reasoning as above.
@@ -238,6 +249,7 @@ export const AnimatedDismiss: Story = {
 
 export const Blurred: Story = {
   name: "With blur",
+  parameters: { docs: { source: { code: backdropSnippets.blurred } } },
   // `blur` is this story's whole point, fixed on — suppressed like any
   // "the whole point" axis; `open` unused for the same reason as
   // `ClickToDismiss` above. `children`/`opacity` stay genuinely live.
@@ -265,6 +277,7 @@ export const Blurred: Story = {
 
 export const WithContent: Story = {
   name: "With content (loading overlay)",
+  parameters: { docs: { source: { code: backdropSnippets.withContent } } },
   // `children` is fixed to a real Spinner instance here — the whole point
   // of this story — so suppressed like `blur` above; `open` unused for the
   // same reason as `ClickToDismiss`. `opacity`/`blur` stay genuinely live.
@@ -298,6 +311,7 @@ export const WithContent: Story = {
 
 export const InPlace: Story = {
   name: "Rendered in place (no portal)",
+  parameters: { docs: { source: { code: backdropSnippets.inPlace } } },
   // Overrides the meta-level `open` default (`false`) back to `true` so
   // this always-visible, contained demo actually shows something on load
   // — `open` stays a genuinely live control here (toggling it plays the

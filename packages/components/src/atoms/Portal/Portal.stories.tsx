@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Portal } from "./Portal";
+import { portalPlaygroundSnippet, portalSnippets } from "./Portal.snippets";
 
 // Purely structural/behavioral — no visual variants or breakpoint behavior of
 // its own, so the story demonstrates *where in the DOM* content ends up
@@ -89,6 +90,14 @@ const badgeStyle = {
  * demonstrates directly.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => portalPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: function PlaygroundStory({ disablePortal, asChild }) {
     const [target, setTarget] = useState<HTMLDivElement | null>(null);
     return (
@@ -170,6 +179,7 @@ export const Default: Story = {
 
 export const CustomContainer: Story = {
   name: "Custom container target",
+  parameters: { docs: { source: { code: portalSnippets.customContainer } } },
   // A real, confirmed bug (found during this component's own review pass):
   // the original version of this story read `document.getElementById` for
   // a sibling <div> directly during render — but that sibling hasn't
@@ -215,6 +225,7 @@ export const CustomContainer: Story = {
 
 export const DisabledPortal: Story = {
   name: "disablePortal (renders in place)",
+  parameters: { docs: { source: { code: portalSnippets.disabledPortal } } },
   // Fixed render — doesn't read `args`; see Default's own comment above.
   argTypes: { disablePortal: { control: false }, asChild: { control: false } },
   render: () => (

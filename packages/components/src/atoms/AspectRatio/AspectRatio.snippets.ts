@@ -50,7 +50,7 @@ const commonRatios: Array<[number, number]> = [
 // A ratio as a reader would write it: a common named ratio (`16 / 9`, `21 / 9`), else a
 // fraction with a denominator up to 12, else a plain number. Storybook hands the builder the
 // evaluated number (1.7777…), so this recovers the fraction.
-function ratioLiteral(ratio: number): string {
+export function ratioLiteral(ratio: number): string {
   const close = (a: number, b: number) => Math.abs(a - b) < 1e-9;
   const common = commonRatios.find(([numerator, denominator]) => close(numerator / denominator, ratio));
   if (common) return common[1] === 1 ? String(common[0]) : `${common[0]} / ${common[1]}`;

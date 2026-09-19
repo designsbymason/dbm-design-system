@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { FocusTrap } from "./FocusTrap";
+import { focusTrapPlaygroundSnippet } from "./FocusTrap.snippets";
 
 const meta: Meta<typeof FocusTrap> = {
   title: "Atoms/Utility/FocusTrap",
@@ -94,6 +95,14 @@ const boxStyle = {
 
 /** Drive every prop live. */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => focusTrapPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <FocusTrap {...args}>
       <div style={boxStyle}>

@@ -1,11 +1,12 @@
 import { TrashIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
 import { Text } from "../Text";
 import { Tooltip } from "./Tooltip";
+import { tooltipPlaygroundSnippet, tooltipSnippets } from "./Tooltip.snippets";
 import { TooltipProvider } from "./TooltipProvider";
 import type { TooltipProps } from "./Tooltip.types";
 
@@ -163,6 +164,14 @@ export default meta;
 type Story = StoryObj<typeof Tooltip>;
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => tooltipPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <div style={{ padding: "var(--dbm-space-12)" }}>
       <Tooltip {...args} />
@@ -171,6 +180,14 @@ export const Playground: Story = {
 };
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => tooltipPlaygroundSnippet(context.args, "save"),
+      },
+    },
+  },
   argTypes: { children: { control: false } },
   render: (args) => (
     <div style={{ padding: "var(--dbm-space-12)" }}>
@@ -183,6 +200,7 @@ export const Default: Story = {
 
 export const Sides: Story = {
   name: "All sides",
+  parameters: { docs: { source: { code: tooltipSnippets.sides } } },
   argTypes: { children: { control: false }, side: { control: false } },
   render: (args) => (
     <div
@@ -203,6 +221,14 @@ export const Sides: Story = {
 
 export const IconTrigger: Story = {
   name: "Icon-only trigger",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => tooltipPlaygroundSnippet(context.args, "icon"),
+      },
+    },
+  },
   argTypes: { children: { control: false } },
   args: { content: "Delete item" },
   render: (args) => (
@@ -216,6 +242,7 @@ export const IconTrigger: Story = {
 
 export const MultipleWithSharedProvider: Story = {
   name: "Multiple tooltips (shared TooltipProvider)",
+  parameters: { docs: { source: { code: tooltipSnippets.multipleWithSharedProvider } } },
   argTypes: {
     children: { control: false },
     content: { control: false },

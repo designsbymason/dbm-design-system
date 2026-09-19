@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Indicators } from "./Indicators";
+import { indicatorsPlaygroundSnippet, indicatorsSnippets } from "./Indicators.snippets";
 
 const meta: Meta<typeof Indicators> = {
   title: "Atoms/Media/Indicators",
@@ -120,6 +121,14 @@ type Story = StoryObj<typeof Indicators>;
  * the arrow/Home/End keys once one is focused, to move the active index.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => indicatorsPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: function PlaygroundStory(args) {
     const [index, setIndex] = useState(0);
     const clampedIndex = Math.min(index, Math.max(args.count - 1, 0));
@@ -138,6 +147,7 @@ export const Playground: Story = {
 
 export const ManySlides: Story = {
   name: "Many slides with custom labels",
+  parameters: { docs: { source: { code: indicatorsSnippets.manySlides } } },
   args: {
     count: 10,
     "aria-label": "Gallery navigation",
@@ -161,6 +171,14 @@ export const ManySlides: Story = {
 
 export const Vertical: Story = {
   name: "Vertical orientation",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => indicatorsPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     orientation: "vertical",
     "aria-label": "Side gallery navigation",
@@ -183,6 +201,14 @@ export const Vertical: Story = {
 
 export const WithProgressLabel: Story = {
   name: "With progress label",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => indicatorsPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     showLabel: true,
   },
@@ -204,6 +230,7 @@ export const WithProgressLabel: Story = {
 
 export const AllVariants: Story = {
   name: "All variants",
+  parameters: { docs: { source: { code: indicatorsSnippets.allVariants } } },
   // `variant` is the whole point of this grid — every other shared prop
   // stays wired through `args` and controllable (07-storybook-and-
   // documentation-standards.md §5), only this one axis is fixed per row.
@@ -234,6 +261,7 @@ export const AllVariants: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: indicatorsSnippets.allSizes } } },
   // `size` is the whole point of this grid — every other shared prop stays
   // wired through `args` and controllable (07-storybook-and-documentation-
   // standards.md §5), only this one axis is fixed per row.

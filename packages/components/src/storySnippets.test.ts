@@ -14,6 +14,17 @@ import { inputPlaygroundSnippet } from "./atoms/Input/Input.snippets";
 import { radioPlaygroundSnippet } from "./atoms/Radio/Radio.snippets";
 import { switchPlaygroundSnippet } from "./atoms/Switch/Switch.snippets";
 import { textareaPlaygroundSnippet } from "./atoms/Textarea/Textarea.snippets";
+import { backdropPlaygroundSnippet } from "./atoms/Backdrop/Backdrop.snippets";
+import { backToTopPlaygroundSnippet } from "./atoms/BackToTop/BackToTop.snippets";
+import { clientOnlyPlaygroundSnippet } from "./atoms/ClientOnly/ClientOnly.snippets";
+import { collapsePlaygroundSnippet } from "./atoms/Collapse/Collapse.snippets";
+import { focusTrapPlaygroundSnippet } from "./atoms/FocusTrap/FocusTrap.snippets";
+import { iconPlaygroundSnippet } from "./atoms/Icon/Icon.snippets";
+import { imagePlaygroundSnippet } from "./atoms/Image/Image.snippets";
+import { indicatorsPlaygroundSnippet } from "./atoms/Indicators/Indicators.snippets";
+import { portalPlaygroundSnippet } from "./atoms/Portal/Portal.snippets";
+import { tooltipPlaygroundSnippet } from "./atoms/Tooltip/Tooltip.snippets";
+import { visuallyHiddenPlaygroundSnippet } from "./atoms/VisuallyHidden/VisuallyHidden.snippets";
 import { aspectRatioPlaygroundSnippet } from "./atoms/AspectRatio/AspectRatio.snippets";
 import { bleedPlaygroundSnippet } from "./atoms/Bleed/Bleed.snippets";
 import { boxPlaygroundSnippet } from "./atoms/Box/Box.snippets";
@@ -136,8 +147,8 @@ for (const [file, module] of Object.entries(snippetModules)) {
 
 describe("story snippets", () => {
   it("finds the snippet files", () => {
-    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(42);
-    expect(namedSnippets.length).toBeGreaterThan(210);
+    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(53);
+    expect(namedSnippets.length).toBeGreaterThan(245);
   });
 
   it.each(namedSnippets)("%s is a real, pasteable snippet", (_name, code) => {
@@ -798,6 +809,160 @@ describe("Playground snippets for the ten layout atoms", () => {
       "<Stack>\n  <div>One</div>\n  <div>Two</div>\n  <div>Three</div>\n</Stack>",
     );
     expect(stackPlaygroundSnippet({ direction: "row", gap: 4, wrap: true })).toContain('<Stack direction="row" gap={4} wrap>');
+  });
+});
+
+describe("Playground snippets for the eleven media, overlay and utility atoms", () => {
+  it.each([
+    {},
+    { icon: "Heart", size: "3xl", weight: "duotone", tone: "danger", label: "Favorite", mirrored: true },
+    { icon: "Nonsense", tone: "on-brand" },
+  ])("Icon %j is a real snippet", (args) => {
+    expect(problemsIn(iconPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Icon always writes its icon, and only what differs (md, bold, no tone, no label, not mirrored)", async () => {
+    const { StarIcon } = await import("@dbm-design-system/icons");
+    expect(iconPlaygroundSnippet({ icon: "Wallet", size: "md", weight: "bold", label: "", mirrored: false })).toBe("<Icon icon={WalletIcon} />");
+    expect(iconPlaygroundSnippet({ icon: StarIcon, size: "lg", tone: "brand" })).toBe('<Icon icon={StarIcon} size="lg" tone="brand" />');
+    expect(iconPlaygroundSnippet({ icon: "Nonsense" })).toBe("<Icon icon={WalletIcon} />");
+    expect(iconPlaygroundSnippet({ icon: "ArrowRight", mirrored: true })).toBe("<Icon icon={ArrowRightIcon} mirrored />");
+  });
+
+  it("text with a quote or an ampersand becomes a `{…}` expression, so the snippet stays valid", () => {
+    const tricky = iconPlaygroundSnippet({ label: 'The "best" & brightest' });
+    expect(tricky).toBe('<Icon icon={WalletIcon} label={"The \\"best\\" & brightest"} />');
+    expect(problemsIn(tricky)).toEqual([]);
+    expect(problemsIn(imagePlaygroundSnippet({ alt: 'A "quoted" alt & more' }))).toEqual([]);
+    expect(problemsIn(tooltipPlaygroundSnippet({ content: 'Say "hi" & bye' }))).toEqual([]);
+  });
+
+  it.each([
+    {},
+    { src: "/photo.jpg", alt: "Photo", aspectRatio: 4 / 3, width: 200, height: 150, objectFit: "contain", position: "top-left", radius: "full", loading: "eager" },
+    { aspectRatio: 16 / 9, width: "50%" },
+  ])("Image %j is a real snippet", (args) => {
+    expect(problemsIn(imagePlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Image writes src and alt always, the ratio as a fraction, and only what differs", () => {
+    expect(imagePlaygroundSnippet({ src: "/placeholder-img.png", alt: "Placeholder image", objectFit: "cover", position: "center", radius: "none", loading: "lazy" })).toBe(
+      '<div style={{ width: "16rem" }}>\n  <Image src="/hero.jpg" alt="Placeholder image" />\n</div>',
+    );
+    expect(imagePlaygroundSnippet({ src: "/a.png", alt: "A", aspectRatio: 4 / 3, width: 200, height: "10rem" }, "20rem")).toBe(
+      '<div style={{ width: "20rem" }}>\n  <Image src="/a.png" alt="A" aspectRatio={4 / 3} width={200} height="10rem" />\n</div>',
+    );
+    expect(imagePlaygroundSnippet({ alt: "A", aspectRatio: 1, radius: "full" })).toContain('aspectRatio={1} radius="full"');
+  });
+
+  it.each([{}, { count: 10, size: "xl", orientation: "vertical", variant: "bars", showLabel: true, "aria-label": "Gallery navigation" }])(
+    "Indicators %j is a real snippet",
+    (args) => {
+      expect(problemsIn(indicatorsPlaygroundSnippet(args as never))).toEqual([]);
+    },
+  );
+
+  it("Indicators wires its position to the reader's state and writes only what differs", () => {
+    expect(indicatorsPlaygroundSnippet({ count: 5, size: "md", orientation: "horizontal", variant: "dots", showLabel: false, "aria-label": "Slide navigation" })).toBe(
+      "{/* const [index, setIndex] = useState(0); — Indicators is controlled, so your component holds the position */}\n<Indicators count={5} activeIndex={index} onIndexChange={setIndex} />",
+    );
+    expect(indicatorsPlaygroundSnippet({ count: 3, orientation: "vertical", showLabel: true })).toContain(
+      'count={3} activeIndex={index} onIndexChange={setIndex} orientation="vertical" showLabel',
+    );
+  });
+
+  it.each([{}, { size: "lg", variant: "secondary", threshold: -1, label: "Top" }])("BackToTop %j is a real snippet", (args) => {
+    expect(problemsIn(backToTopPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("BackToTop is just the component until a prop differs", () => {
+    expect(backToTopPlaygroundSnippet({ size: "md", variant: "primary", threshold: 400, label: "Back to top" })).toBe("<BackToTop />");
+    expect(backToTopPlaygroundSnippet({ threshold: -1 })).toBe("<BackToTop threshold={-1} />");
+  });
+
+  it.each([{}, { open: true, opacity: 80, blur: true, inPortal: false }])("Backdrop %j is a real snippet", (args) => {
+    expect(problemsIn(backdropPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Backdrop always shows the Backdrop, wired to the reader's state", () => {
+    expect(backdropPlaygroundSnippet({ open: false, opacity: 60, blur: false, inPortal: true })).toBe(
+      "{/* const [isOpen, setIsOpen] = useState(false); */}\n<Backdrop open={isOpen} onClick={() => setIsOpen(false)} />",
+    );
+    expect(backdropPlaygroundSnippet({ opacity: 80, blur: true, inPortal: false })).toContain("opacity={80} blur inPortal={false}");
+  });
+
+  it.each([
+    {},
+    { children: "Body", defaultOpen: true, disabled: true, orientation: "horizontal", trigger: "Button trigger" },
+    { trigger: "None (externally driven)" },
+  ])("Collapse %j is a real snippet", (args) => {
+    expect(problemsIn(collapsePlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Collapse turns the trigger control's option key back into a trigger (or none), and writes only what differs", () => {
+    expect(collapsePlaygroundSnippet({ trigger: "Button trigger", defaultOpen: false, disabled: false, orientation: "vertical" })).toBe(
+      '<Collapse trigger={<Button variant="secondary">Toggle details</Button>}>\n  <Text>Hidden content revealed on toggle.</Text>\n</Collapse>',
+    );
+    expect(collapsePlaygroundSnippet({ trigger: "None (externally driven)" })).not.toContain("trigger=");
+    // The stories that always render a button say so, whatever the (stripped) control holds.
+    expect(collapsePlaygroundSnippet({ trigger: undefined, defaultOpen: true }, true)).toContain('trigger={<Button variant="secondary">Toggle details</Button>} defaultOpen');
+    expect(collapsePlaygroundSnippet({ trigger: "Button trigger", orientation: "horizontal" })).toContain('orientation="horizontal"');
+  });
+
+  it.each([
+    {},
+    { content: "Delete", children: "Icon-only trigger", side: "left", align: "end", delayDuration: 0, disableHoverableContent: true, hideArrow: true, defaultOpen: true, "aria-label": "Help" },
+  ])("Tooltip %j is a real snippet", (args) => {
+    expect(problemsIn(tooltipPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Tooltip writes only what differs, and knows its trigger from the control's option key", () => {
+    expect(tooltipPlaygroundSnippet({ content: "Save your changes", children: "Button trigger", side: "top", align: "center", delayDuration: 400 })).toBe(
+      '<Tooltip content="Save your changes">\n  <Button variant="secondary">Hover or focus me</Button>\n</Tooltip>',
+    );
+    const icon = tooltipPlaygroundSnippet({ content: "Delete item", children: "Icon-only trigger" });
+    expect(icon).toContain("<IconButton icon={TrashIcon}");
+    expect(icon).toContain("TrashIcon comes from @dbm-design-system/icons");
+    expect(tooltipPlaygroundSnippet({ content: "Save", children: "Icon-only trigger" }, "save")).toContain("<Button>Save</Button>");
+    expect(tooltipPlaygroundSnippet({ content: "x", delayDuration: 0, hideArrow: true })).toContain("delayDuration={0} hideArrow");
+  });
+
+  it.each([{}, { children: "Loading data", fallback: "Please wait" }, { fallback: "" }])("ClientOnly %j is a real snippet", (args) => {
+    expect(problemsIn(clientOnlyPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("ClientOnly writes a fallback only when there is one", () => {
+    expect(clientOnlyPlaygroundSnippet({ children: "Body", fallback: "" })).toBe("<ClientOnly>\n  <Text>Body</Text>\n</ClientOnly>");
+    expect(clientOnlyPlaygroundSnippet({ children: "Body", fallback: "Loading…" })).toBe(
+      '<ClientOnly fallback={<Text color="secondary">Loading…</Text>}>\n  <Text>Body</Text>\n</ClientOnly>',
+    );
+  });
+
+  it.each([{}, { trapped: true, loop: true, asChild: true }])("FocusTrap %j is a real snippet", (args) => {
+    expect(problemsIn(focusTrapPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("FocusTrap writes only the props that are on", () => {
+    expect(focusTrapPlaygroundSnippet({ trapped: false, loop: false, asChild: false }).startsWith("<FocusTrap>\n")).toBe(true);
+    expect(focusTrapPlaygroundSnippet({ trapped: true, loop: true })).toContain("<FocusTrap trapped loop>");
+  });
+
+  it.each([{}, { disablePortal: true }, { disablePortal: false, asChild: true }])("Portal %j is a real snippet", (args) => {
+    expect(problemsIn(portalPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Portal writes only the props that are on, and says where it renders by default", () => {
+    expect(portalPlaygroundSnippet({ disablePortal: true })).toBe("<Portal disablePortal>\n  <span>Portaled content</span>\n</Portal>");
+    expect(portalPlaygroundSnippet({})).toContain("document.body");
+  });
+
+  it.each([{}, { children: "Skip to content", focusable: true }])("VisuallyHidden %j is a real snippet", (args) => {
+    expect(problemsIn(visuallyHiddenPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("VisuallyHidden writes the text, and `focusable` only when it's on", () => {
+    expect(visuallyHiddenPlaygroundSnippet({ children: "Hidden", focusable: false })).toBe("<VisuallyHidden>Hidden</VisuallyHidden>");
+    expect(visuallyHiddenPlaygroundSnippet({ children: "Hidden", focusable: true })).toBe("<VisuallyHidden focusable>Hidden</VisuallyHidden>");
   });
 });
 

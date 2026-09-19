@@ -1,8 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Text } from "../Text";
 import { BackToTop } from "./BackToTop";
+import { backToTopPlaygroundSnippet, backToTopSnippets } from "./BackToTop.snippets";
 import type { BackToTopProps } from "./BackToTop.types";
 
 const meta: Meta<typeof BackToTop> = {
@@ -135,11 +136,27 @@ function BoundedScrollDemo(args: BackToTopProps) {
  * demo area down past `threshold` to reveal the button.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => backToTopPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => <BoundedScrollDemo {...args} />,
 };
 
 export const Visible: Story = {
   name: "Visible state (no scrolling needed)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => backToTopPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // A negative threshold means the demo box's own `scrollTop > threshold`
   // is already true before any scrolling — the only way to show this
   // component's own "on" state as a static reference without requiring a
@@ -198,6 +215,7 @@ export const ScrollInteraction: Story = {
 
 export const WithinScrollContainer: Story = {
   name: "Within a scroll container (scrollContainerRef)",
+  parameters: { docs: { source: { code: backToTopSnippets.withinScrollContainer } } },
   // `scrollContainerRef` is the one thing this story exists to demonstrate
   // — exploring size/variant/threshold/label combinations is `Playground`'s
   // job, not this one's (same reasoning Affix's own equivalent story

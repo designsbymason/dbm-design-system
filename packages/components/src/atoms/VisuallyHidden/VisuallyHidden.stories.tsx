@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { XIcon } from "@dbm-design-system/icons";
 import { IconButton } from "../IconButton";
 import { VisuallyHidden } from "./VisuallyHidden";
+import { visuallyHiddenPlaygroundSnippet, visuallyHiddenSnippets } from "./VisuallyHidden.snippets";
 
 const meta: Meta<typeof VisuallyHidden> = {
   title: "Atoms/Utility/VisuallyHidden",
@@ -73,6 +74,14 @@ type Story = StoryObj<typeof VisuallyHidden>;
  * by definition, not visible on its own.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => visuallyHiddenPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <div style={{ color: "var(--dbm-text-primary)" }}>
       <p style={{ marginTop: 0 }}>
@@ -96,6 +105,7 @@ const disableAllAxes = {
 
 export const IconOnlyButtonLabel: Story = {
   name: "Icon-only button label",
+  parameters: { docs: { source: { code: visuallyHiddenSnippets.iconOnlyButtonLabel } } },
   argTypes: disableAllAxes,
   render: () => (
     <>
@@ -119,6 +129,7 @@ export const IconOnlyButtonLabel: Story = {
 
 export const InlineWithinText: Story = {
   name: "Inline within visible text",
+  parameters: { docs: { source: { code: visuallyHiddenSnippets.inlineWithinText } } },
   argTypes: disableAllAxes,
   render: () => (
     <p style={{ color: "var(--dbm-text-primary)" }}>
@@ -131,6 +142,7 @@ export const InlineWithinText: Story = {
 
 export const SkipLink: Story = {
   name: "focusable (skip link pattern)",
+  parameters: { docs: { source: { code: visuallyHiddenSnippets.skipLink } } },
   argTypes: disableAllAxes,
   render: () => (
     <div>

@@ -1,9 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { CSSProperties, ReactElement } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Button } from "../Button";
 import { Text } from "../Text";
 import { Collapse } from "./Collapse";
+import { collapsePlaygroundSnippet, collapseSnippets } from "./Collapse.snippets";
 import type { CollapseOrientation, CollapseProps } from "./Collapse.types";
 
 // Shared across every story below whose revealed content is plain text —
@@ -140,6 +141,14 @@ export default meta;
 type Story = StoryObj<typeof Collapse>;
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => collapsePlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <div style={{ maxWidth: "24rem" }}>
       {/*
@@ -161,6 +170,14 @@ export const Playground: Story = {
 };
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => collapsePlaygroundSnippet(context.args, true),
+      },
+    },
+  },
   // `trigger` is fixed to this story's own Button — the demonstrated
   // pattern is "self-contained disclosure with a built-in trigger," so
   // swapping it to "None" would defeat the point. `children`/`disabled`/
@@ -182,6 +199,14 @@ export const Default: Story = {
 
 export const OpenByDefault: Story = {
   name: "Open by default",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => collapsePlaygroundSnippet(context.args, true),
+      },
+    },
+  },
   argTypes: { trigger: { control: false }, defaultOpen: { control: false } },
   args: { defaultOpen: true },
   render: (args) => (
@@ -200,6 +225,7 @@ export const OpenByDefault: Story = {
 
 export const WithoutTrigger: Story = {
   name: "Externally driven (no built-in trigger)",
+  parameters: { docs: { source: { code: collapseSnippets.withoutTrigger } } },
   argTypes: { trigger: { control: false } },
   render: function WithoutTriggerStory(args) {
     return (
@@ -217,6 +243,7 @@ export const WithoutTrigger: Story = {
 
 export const Horizontal: Story = {
   name: "Horizontal orientation",
+  parameters: { docs: { source: { code: collapseSnippets.horizontal } } },
   argTypes: {
     trigger: { control: false },
     orientation: { control: false },
@@ -243,6 +270,7 @@ export const Horizontal: Story = {
 
 export const AsChild: Story = {
   name: "As child (no wrapper element)",
+  parameters: { docs: { source: { code: collapseSnippets.asChild } } },
   // `asChild` had no dedicated demo before this addition — the concrete
   // use case that motivates it (a `<li>` in a real `<ul>` can't have a
   // `<div>` wrapped around it without an invalid-list-child warning), so
