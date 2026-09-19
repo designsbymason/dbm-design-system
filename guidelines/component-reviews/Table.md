@@ -83,15 +83,18 @@ Asked rather than guessed, since the guidelines were silent on all three:
 
   | Pairing | Light | Dark |
   |---|---|---|
-  | `text.primary` on `bg.neutral-subtle` (striped row, footer) | 13.53:1 | 9.66:1 |
+  | `text.primary` on `bg.neutral-subtle` (striped row) | 13.53:1 | 9.66:1 |
   | `text.primary` on `bg.neutral-subtle-hover` (hovered row) | 12.41:1 | 6.59:1 |
-  | `text.secondary` on `bg.surface` (header cells, caption) | 6.88:1 | 10.47:1 |
+  | `text.secondary` on `bg.surface` (header cells and caption on a surface-coloured page; a pinned header's own background) | 6.88:1 | 10.47:1 |
+  | `text.secondary` on `bg.canvas` (header cells and caption on a canvas-coloured page) | 6.05:1 | 5.10:1 |
   | `text.secondary` on `bg.neutral-subtle` | 6.59:1 | 7.47:1 |
   | `text.secondary` on `bg.neutral-subtle-hover` | 6.05:1 | 5.10:1 |
 
-  All clear the 4.5:1 AA floor in all four themes. The tightest pairing actually rendered is `text.primary` on a
-  hovered row in dark mode (6.59:1); `text.secondary` never sits on a hover background in Table's own markup, but
-  consumer content inside a cell could, and it still clears AA (5.10:1).
+  All clear the 4.5:1 AA floor in all four themes. Since the header, caption, and footer have no background of
+  their own (see the follow-up below), their text sits on whatever surface the table is placed on; the tightest
+  such pairing is header/caption `text.secondary` on `bg.canvas` in dark mode (5.10:1). Never place a `Table` on a
+  surface where `text.secondary` falls below AA — `text.tertiary` on `bg.canvas` is the documented failing case, and
+  Table doesn't use it.
 - **Known, accepted trait (not a defect):** in dark mode the striped-row background (`bg.neutral-subtle`, `gray.800`)
   is byte-identical to the row divider (`border.default`), so a divider on a striped row's edge is invisible against
   its stripe. This is the same consequence [ADR-0011](../adr/0011-darker-dark-mode-representative-background.md)
@@ -137,14 +140,14 @@ running Storybook check is required:
 visually-hidden Intro). Verified live: all 10 `h2` sections in order, all 8 Properties tables (root plus 7
 sub-parts) present with rows in the intended order and no empty descriptions, and the Playground's controls
 demonstrably drive the canvas (`striped`/`hoverable`/`maxHeight`/`stickyHeader` each applied). The Playground
-covers the root's live props; nine further stories cover striped, hoverable, both together, sticky header, ghost
+covers the root's live props; ten further stories cover a caption, striped, hoverable, both together, sticky header, ghost
 variant, all sizes, cell alignment, grouped columns (`colSpan`/`rowSpan`), and a narrow-container story with a
 `play` function that tabs onto the overflowing region. Every fixed-render story suppresses every control it doesn't
 consume via a shared `noControls` map.
 
 ## Functional verification
 
-- 50 unit tests (React Testing Library + jest-axe), all passing: semantics and structure, `scope` defaults and
+- 50 unit tests at first build (89 after the `tone` follow-up below) (React Testing Library + jest-axe), all passing: semantics and structure, `scope` defaults and
   overrides, native attribute passthrough (`colSpan`), the scroll container, both variants, all five sizes,
   striped/hoverable/sticky scoping, `maxHeight`, alignment (and that it doesn't leak into a native `align`), `id`/
   `className`/`style`/`data-testid` on all 8 parts, ref forwarding on all 8, nesting isolation, the full overflow
@@ -156,6 +159,105 @@ consume via a shared `noControls` map.
   (previously 67 / 485), including a11y on every story and the new `play` test; `tsup` build, `storybook build`,
   and all three CI checks (`check-component-bundle-size` — Table at 1.57KB JS / 0.58KB CSS gzipped, within budget;
   `check-foundations-token-coverage`; `check-storybook-bundle-size`).
+
+## Follow-up (2026-09-18, same day, at explicit direction) — three refinements
+
+1. **No caption in the demo stories.** Every demo table (Playground and all gallery stories) now renders with no
+   visible `Table.Caption`, named via `aria-label` instead; a single dedicated "With a caption" story shows a caption.
+   A story-level change only — the component's `Table.Caption` sub-part is unchanged.
+2. **No background on the header, caption, or footer.** The three surfaces previously drew `bg.surface` (header,
+   caption) and `bg.neutral-subtle` (footer); all three are removed, so a table sits directly on whatever surface it's
+   placed on. **One deliberate exception, flagged:** a *pinned* header (`stickyHeader`) keeps an opaque `bg.surface`
+   background, scoped to that state only — without it, rows scrolling beneath the header would show straight through
+   the header text. Verified live in dark mode, scrolled: the header stays opaque and rows scroll cleanly under it.
+   The footer keeps its semibold weight; it's now set apart by the divider above it rather than a fill.
+3. **Prop order.** The root's props now read variant → size → striped → hoverable → stickyHeader → maxHeight →
+   aria-label → aria-labelledby → aria-describedby → containerClassName → id → className → style → data-testid,
+   with the escape-hatch props last, in the Controls panel (`argTypes` key order), the Playground and Properties
+   table (`rootPropOrder`), and the `TableProps` interface. Previously the `aria-*` props trailed `data-testid`.
+
+Re-verified: `tsc --noEmit` (both tsconfigs) and `eslint --max-warnings 0` clean; the `unit` project (50 tests) and
+the `storybook` project's Table files (18 tests, up from 17 with the new story) pass.
+
+## Follow-up (2026-09-18, same day, at explicit direction) — `tone` prop
+
+Added `tone?: "brand" | "neutral" | "info" | "success" | "warning" | "danger"` (default `"neutral"`), placed right after
+`variant` in every prop order. Built in two steps at explicit direction: first `"default" | "brand"`, then renamed
+`"default"` → `"neutral"` and extended with the four status tones.
+
+- **`"neutral"`** — the un-tinted base treatment: no header or caption fill, neutral stripe (`bg.neutral-subtle`) and
+  hover (`bg.neutral-subtle-hover`). Renamed from `"default"` so `tone` matches every other tone type in the system
+  (`Badge`, `Tag`, and the scale in `05-component-api-conventions.md` §2 all name the uncoloured option `neutral`).
+- **Every other tone** applies one shared treatment in its own colour: a solid header and caption fill with that tone's
+  `text.on-*` text, `striped` rows in its `bg.*-subtle`, `hoverable` rows in its `bg.*-subtle-hover`. Footer, body cells,
+  and body row headers are untouched. `"brand"` follows the active brand theme (Purple/Emerald); `"success"`,
+  `"warning"`, `"danger"`, `"info"` are fixed status colours that don't change with the brand.
+
+  | Tone | Header + caption fill | Header + caption text | Stripe | Hover |
+  |---|---|---|---|---|
+  | `brand` | `bg.brand` | `text.on-brand` | `bg.brand-subtle` | `bg.brand-subtle-hover` |
+  | `success` | `bg.success` | `text.on-success` | `bg.success-subtle` | `bg.success-subtle-hover` |
+  | `warning` | `bg.warning` | `text.on-warning` | `bg.warning-subtle` | `bg.warning-subtle-hover` |
+  | `danger` | `bg.danger` | `text.on-danger` | `bg.danger-subtle` | `bg.danger-subtle-hover` |
+  | `info` | `bg.info` | `text.on-info` | `bg.info-subtle` | `bg.info-subtle-hover` |
+
+- **`danger`, not `error`.** The request said "error"; the system's tone vocabulary is `info | success | warning | danger |
+  neutral` and every token is `bg.danger`/`text.on-danger`, so the value is `danger` for consistency (a one-word rename
+  if `error` is preferred).
+- **The caption takes the same fill and text as the header** (added earlier the same day, at explicit direction — it had
+  no background in any tone before), so a captioned toned table reads as one continuous block from the caption through
+  the header row. The header's bottom divider is the fill's own colour so it reads as part of it (`border.<tone>` equals
+  `bg.<tone>` in every tone and theme — verified — so either would be correct).
+- **Composes with `stickyHeader`:** a pinned toned header keeps its tone's fill. The tinted header rule is declared after
+  the sticky rule (equal specificity, later wins), so the neutral opaque `bg.surface` a neutral pinned header gets never
+  overrides it. Verified live while scrolled, and by a test per tone asserting both classes land on the `<thead>`.
+- **Implementation — one shared treatment, five tone definitions.** Each non-neutral tone has a short CSS class that only
+  *defines* four local custom properties (`--tone-solid`, `--tone-on-solid`, `--tone-subtle`, `--tone-subtle-hover`) from
+  semantic tokens; the shared `headerTinted`/`captionTinted`/`bodyStripedTinted`/`bodyHoverableTinted` rules read them.
+  Five tones therefore cost five 4-line definitions rather than twenty near-identical rules, and adding a sixth is one more
+  definition. `tone` is in the per-`Table` React Context and each part picks its classes from it, so a nested table reads
+  its own tone (tested).
+
+**Contrast, measured from the built token values.** Header/caption text on its own fill, and body text (`text.primary`)
+on each tone's stripe and hover. Purple and Emerald are identical for the four status tones (they're brand-agnostic):
+
+| Pairing | Purple light | Purple dark | Emerald light | Emerald dark |
+|---|---|---|---|---|
+| `brand`: `text.on-brand` on `bg.brand` | 7.37:1 | 7.45:1 | 6.08:1 | 8.51:1 |
+| `success`: `text.on-success` on `bg.success` | 6.50:1 | 8.19:1 | 6.50:1 | 8.19:1 |
+| `warning`: `text.on-warning` on `bg.warning` | 4.78:1 | 8.19:1 | 4.78:1 | 8.19:1 |
+| `danger`: `text.on-danger` on `bg.danger` | 5.10:1 | 8.22:1 | 5.10:1 | 8.22:1 |
+| `info`: `text.on-info` on `bg.info` | 4.71:1 | 8.20:1 | 4.71:1 | 8.20:1 |
+| `text.primary` on any tone's `*-subtle` (stripe) | 13.46:1 or better | 15.05:1 or better | 13.49:1 or better | 15.05:1 or better |
+| `text.primary` on any tone's `*-subtle-hover` (hover) | 12.28:1 or better | 9.66:1 or better | 12.28:1 or better | 9.66:1 or better |
+
+All clear the 4.5:1 AA floor. The tightest are `text.on-info` on `bg.info` (4.71:1) and `text.on-warning` on
+`bg.warning` (4.78:1), both in light mode, matching the figures `03-token-system-spec.md` already documents for those
+pairings — which validates the measurement. Header text is semibold and caption text regular at `font-size-sm`, both
+ordinary-size text, so the 4.5:1 floor is the applicable one.
+
+**Verified live in a running Storybook, all four themes.** A script compared every rendered colour to the resolved value
+of the intended token, for all six tones in each theme (24 combinations): header fill, header text, divider, stripe, and —
+via a probe element inside each tone's `<tbody>` — the hover tint; and the caption fill/text (equal to the header's) in
+Purple/light and Emerald/dark. All matched. Visual check: the four status tones read clearly and distinctly, and the
+caption merges into the header in each. Dark modes use the lighter tone step with dark text per
+[ADR-0005](../adr/0005-dark-mode-light-fill-dark-text-pattern.md), and the dark-mode tinted stripes are very dark
+(`*-subtle` resolves to a `950`-step primitive) — a property of those tokens
+([ADR-0011](../adr/0011-darker-dark-mode-representative-background.md) for the brand one), not of `Table`.
+Verification notes: a hover transition doesn't advance in a tab that isn't painting (reading it straight after hovering
+returned the pre-transition value until a screenshot forced frames — hence the probe approach); and faint hairlines
+between header cells in captures were a rasterization artifact, not a layout gap — measured directly: zero gap between
+adjacent cells, no inline borders, identical fills, at 2× DPR with fractional column edges. A same-colour fill on the
+header `<tr>` beneath the cells is kept as a cheap guard.
+
+**Stories and docs.** The single "With a caption" story now shows the caption in every tone; a new "All tones" story
+(replacing the interim brand-only one) shows every tone striped and hoverable; the Docs page's tokens table lists all
+20 tone tokens, and its Usage/Accessibility sections gained guidance on status tones, including not relying on colour
+alone to convey a tone's meaning.
+
+Re-verified: 89 unit tests (up from 50 at first build — the tone tests run per tone across all five tinted tones,
+including jest-axe with striped + hoverable + sticky for each); the Table story files (19 tests, including axe on the
+all-tones and caption stories); `tsc --noEmit` (both tsconfigs) and `eslint` clean.
 
 ## Feature-completeness gaps named, deliberately not built
 
