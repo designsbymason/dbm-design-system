@@ -19,9 +19,14 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   // Locally, this attaches to the Storybook dev server you already have
-  // running (`reuseExistingServer`); in CI it starts a fresh one.
+  // running (`reuseExistingServer`); in CI it starts a fresh one. No `--`
+  // before the flags: pnpm 11 appends extra arguments to the script itself, so
+  // a literal `--` reaches `storybook dev` as an unexpected positional
+  // argument and it exits ("too many arguments for 'dev'") before Playwright
+  // ever gets a server. That only ever bites in CI, since locally the existing
+  // server is reused and this command never runs.
   webServer: {
-    command: "pnpm storybook -- --ci --quiet",
+    command: "pnpm storybook --ci --quiet",
     url: "http://localhost:6006",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
