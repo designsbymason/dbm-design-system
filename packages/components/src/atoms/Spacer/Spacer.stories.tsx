@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Spacer } from "./Spacer";
+import { spacerSnippets } from "./Spacer.snippets";
 
 const meta: Meta<typeof Spacer> = {
   title: "Atoms/Layout/Spacer",
@@ -48,6 +49,7 @@ const chipStyle = {
  * inside a real flex row.
  */
 export const Playground: Story = {
+  parameters: { docs: { source: { code: spacerSnippets.playground } } },
   render: () => (
     <div style={{ alignItems: "center", display: "flex", width: "100%" }}>
       <span style={chipStyle}>Logo</span>
@@ -59,6 +61,7 @@ export const Playground: Story = {
 
 export const InARow: Story = {
   name: "Pushes content apart in a row",
+  parameters: { docs: { source: { code: spacerSnippets.inARow } } },
   render: () => (
     <div
       style={{

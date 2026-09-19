@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { AspectRatio } from "./AspectRatio";
+import { aspectRatioPlaygroundSnippet, aspectRatioSnippets } from "./AspectRatio.snippets";
 
 const meta: Meta<typeof AspectRatio> = {
   title: "Atoms/Layout/AspectRatio",
@@ -68,6 +69,14 @@ type Story = StoryObj<typeof AspectRatio>;
  * with plain text content) — not part of the component itself.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => aspectRatioPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <div
       style={{
@@ -82,6 +91,7 @@ export const Playground: Story = {
 };
 
 export const Default: Story = {
+  parameters: { docs: { source: { code: aspectRatioSnippets.default } } },
   // `ratio`/`children` are the whole point of this story — a static
   // reference showing one exact, deliberately-chosen combination — so no
   // single control value could represent it without contradicting the
@@ -97,6 +107,7 @@ export const Default: Story = {
 };
 
 export const Square: Story = {
+  parameters: { docs: { source: { code: aspectRatioSnippets.square } } },
   argTypes: { ratio: { control: false }, children: { control: false } },
   render: () => (
     <div style={{ width: "12rem" }}>
@@ -109,6 +120,7 @@ export const Square: Story = {
 
 export const VideoEmbed: Story = {
   name: "Video embed (21:9)",
+  parameters: { docs: { source: { code: aspectRatioSnippets.videoEmbed } } },
   argTypes: { ratio: { control: false }, children: { control: false } },
   render: () => (
     <div style={{ width: "24rem" }}>

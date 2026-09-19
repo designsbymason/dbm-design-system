@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Spinner } from "../Spinner";
 import { Center } from "./Center";
+import { centerPlaygroundSnippet, centerSnippets } from "./Center.snippets";
 
 const meta: Meta<typeof Center> = {
   title: "Atoms/Layout/Center",
@@ -62,6 +63,14 @@ type Story = StoryObj<typeof Center>;
  * component itself.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => centerPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <Center
       {...args}
@@ -74,6 +83,7 @@ export const Playground: Story = {
 };
 
 export const Default: Story = {
+  parameters: { docs: { source: { code: centerSnippets.default } } },
   // `children` is the whole point of this story — a static reference
   // showing a real interactive child (Spinner) — so no single control
   // value could represent it without contradicting the story's own point
@@ -92,6 +102,7 @@ export const Default: Story = {
 };
 
 export const Inline: Story = {
+  parameters: { docs: { source: { code: centerSnippets.inline } } },
   argTypes: { as: { control: false }, inline: { control: false }, children: { control: false } },
   render: () => (
     <p>

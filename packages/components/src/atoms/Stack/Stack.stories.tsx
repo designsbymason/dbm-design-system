@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Divider } from "../Divider";
 import { Stack } from "./Stack";
+import { stackPlaygroundSnippet, stackSnippets } from "./Stack.snippets";
 
 const meta: Meta<typeof Stack> = {
   title: "Atoms/Layout/Stack",
@@ -126,6 +127,14 @@ const disableAllAxes = {
  * as/direction/gap/align/justify/wrap are all live.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => stackPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <Stack {...args}>
       <Swatches />
@@ -134,6 +143,14 @@ export const Playground: Story = {
 };
 
 export const Row: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => stackPlaygroundSnippet(context.args),
+      },
+    },
+  },
   argTypes: disableAllAxes,
   args: { direction: "row", gap: 4 },
   render: (args) => (
@@ -145,6 +162,7 @@ export const Row: Story = {
 
 export const AlignAndJustify: Story = {
   name: "Align + justify",
+  parameters: { docs: { source: { code: stackSnippets.alignAndJustify } } },
   argTypes: disableAllAxes,
   args: { direction: "row", gap: 4, align: "center", justify: "between" },
   render: (args) => (
@@ -164,6 +182,7 @@ export const AlignAndJustify: Story = {
 
 export const ReversedDirection: Story = {
   name: "Reversed direction (row-reverse / column-reverse)",
+  parameters: { docs: { source: { code: stackSnippets.reversedDirection } } },
   argTypes: disableAllAxes,
   render: () => (
     <Stack gap={8}>
@@ -179,6 +198,7 @@ export const ReversedDirection: Story = {
 
 export const AllGapSteps: Story = {
   name: "All gap steps",
+  parameters: { docs: { source: { code: stackSnippets.allGapSteps } } },
   argTypes: disableAllAxes,
   render: () => (
     <Stack gap={6}>
@@ -196,6 +216,7 @@ export const AllGapSteps: Story = {
 
 export const Wrapping: Story = {
   name: "Wrapping row at narrow widths",
+  parameters: { docs: { source: { code: stackSnippets.wrapping } } },
   argTypes: disableAllAxes,
   args: { direction: "row", gap: 2, wrap: true },
   render: (args) => (
@@ -211,6 +232,7 @@ export const Wrapping: Story = {
 
 export const ResponsiveDirection: Story = {
   name: "Responsive direction (column on mobile, row from md up)",
+  parameters: { docs: { source: { code: stackSnippets.responsiveDirection } } },
   argTypes: disableAllAxes,
   render: () => (
     <Stack direction={{ base: "column", md: "row" }} gap={4}>
@@ -221,6 +243,7 @@ export const ResponsiveDirection: Story = {
 
 export const ResponsiveEverything: Story = {
   name: "Responsive gap, align, justify, and wrap together",
+  parameters: { docs: { source: { code: stackSnippets.responsiveEverything } } },
   argTypes: disableAllAxes,
   render: () => (
     <Stack
@@ -242,6 +265,7 @@ export const ResponsiveEverything: Story = {
 
 export const AsUnorderedList: Story = {
   name: 'Polymorphic: as="ul" (real semantic list, Stack layout behavior)',
+  parameters: { docs: { source: { code: stackSnippets.asUnorderedList } } },
   argTypes: disableAllAxes,
   render: () => (
     <Stack
@@ -259,6 +283,7 @@ export const AsUnorderedList: Story = {
 
 export const WithDivider: Story = {
   name: "divider (auto-inserted between children)",
+  parameters: { docs: { source: { code: stackSnippets.withDivider } } },
   argTypes: disableAllAxes,
   render: () => (
     // `height`, not `minHeight` — a vertical Divider's own `height: 100%`

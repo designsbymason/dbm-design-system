@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Container } from "./Container";
+import { containerPlaygroundSnippet, containerSnippets } from "./Container.snippets";
 
 const meta: Meta<typeof Container> = {
   title: "Atoms/Layout/Container",
@@ -94,10 +95,26 @@ const demoContent = (
  * as/size/paddingInline are all live.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => containerPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => <Container {...args}>{demoContent}</Container>,
 };
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => containerPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // `as`/`paddingInline` aren't the point of this story — a static
   // reference showing the true defaults at whichever `size` you pick — so
   // both are suppressed here, leaving `size` as the one live axis (same
@@ -109,6 +126,7 @@ export const Default: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes stacked",
+  parameters: { docs: { source: { code: containerSnippets.allSizes } } },
   argTypes: {
     as: { control: false },
     size: { control: false },
@@ -140,6 +158,14 @@ export const AllSizes: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (padding never disappears)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => containerPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
   // tool this project never adopted (02-tech-stack-and-structure.md picked
   // Playwright's own self-hosted visual regression instead); this
@@ -152,6 +178,7 @@ export const NarrowViewport: Story = {
 
 export const ResponsivePadding: Story = {
   name: "Responsive paddingInline (tight on mobile, roomy from lg up)",
+  parameters: { docs: { source: { code: containerSnippets.responsivePadding } } },
   // `parameters.chromatic` removed (2026-08-29) — see NarrowViewport above,
   // same file, for why.
   argTypes: {
@@ -168,6 +195,7 @@ export const ResponsivePadding: Story = {
 
 export const AsMain: Story = {
   name: 'Polymorphic: as="main" (real landmark element, Container layout behavior)',
+  parameters: { docs: { source: { code: containerSnippets.asMain } } },
   argTypes: {
     as: { control: false },
     size: { control: false },

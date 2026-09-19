@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Stack } from "../Stack";
 import { Divider } from "./Divider";
+import { dividerPlaygroundSnippet, dividerSnippets } from "./Divider.snippets";
 
 const meta: Meta<typeof Divider> = {
   title: "Atoms/Layout/Divider",
@@ -111,6 +112,14 @@ type Story = StoryObj<typeof Divider>;
  * for both orientations at once.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => dividerPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) =>
     args.orientation === "vertical" ? (
       <div
@@ -135,6 +144,7 @@ export const Playground: Story = {
 };
 
 export const Horizontal: Story = {
+  parameters: { docs: { source: { code: dividerSnippets.horizontal } } },
   // `orientation`/`variant`/`thickness`/`emphasis`/`tone`/`label`/`align`
   // are the whole point of each of these gallery stories — a static
   // reference showing one exact, deliberately-chosen combination — so no
@@ -161,6 +171,7 @@ export const Horizontal: Story = {
 
 export const HorizontalWithLabel: Story = {
   name: "Horizontal with label",
+  parameters: { docs: { source: { code: dividerSnippets.horizontalWithLabel } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -182,6 +193,7 @@ export const HorizontalWithLabel: Story = {
 
 export const LabelAlignment: Story = {
   name: "Label alignment (start / center / end)",
+  parameters: { docs: { source: { code: dividerSnippets.labelAlignment } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -202,6 +214,7 @@ export const LabelAlignment: Story = {
 };
 
 export const Vertical: Story = {
+  parameters: { docs: { source: { code: dividerSnippets.vertical } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -256,6 +269,7 @@ export const NarrowViewport: Story = {
 
 export const VerticalWithLabel: Story = {
   name: "Vertical with label",
+  parameters: { docs: { source: { code: dividerSnippets.verticalWithLabel } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -282,6 +296,7 @@ export const VerticalWithLabel: Story = {
 };
 
 export const Dashed: Story = {
+  parameters: { docs: { source: { code: dividerSnippets.dashed } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -302,6 +317,7 @@ export const Dashed: Story = {
 };
 
 export const Dotted: Story = {
+  parameters: { docs: { source: { code: dividerSnippets.dotted } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -323,6 +339,7 @@ export const Dotted: Story = {
 
 export const Double: Story = {
   name: "Double (equal weight)",
+  parameters: { docs: { source: { code: dividerSnippets.double } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -344,6 +361,7 @@ export const Double: Story = {
 
 export const DoubleEmphasisStart: Story = {
   name: "Double (thicker start line)",
+  parameters: { docs: { source: { code: dividerSnippets.doubleEmphasisStart } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -365,6 +383,7 @@ export const DoubleEmphasisStart: Story = {
 
 export const DoubleEmphasisEnd: Story = {
   name: "Double (thicker end line)",
+  parameters: { docs: { source: { code: dividerSnippets.doubleEmphasisEnd } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -386,6 +405,7 @@ export const DoubleEmphasisEnd: Story = {
 
 export const Tones: Story = {
   name: "Tones (default / brand / info / success / warning / danger)",
+  parameters: { docs: { source: { code: dividerSnippets.tones } } },
   argTypes: {
     orientation: { control: false },
     variant: { control: false },
@@ -410,6 +430,7 @@ export const Tones: Story = {
 
 export const ResponsiveOrientation: Story = {
   name: "Responsive orientation (horizontal on mobile, vertical from lg up)",
+  parameters: { docs: { source: { code: dividerSnippets.responsiveOrientation } } },
   // `parameters.chromatic` removed (2026-08-29) — see NarrowViewport above,
   // same file, for why.
   argTypes: {

@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Container } from "../Container";
 import { Text } from "../Text";
 import { Bleed } from "./Bleed";
+import { bleedPlaygroundSnippet, bleedSnippets } from "./Bleed.snippets";
 
 const meta: Meta<typeof Bleed> = {
   title: "Atoms/Layout/Bleed",
@@ -78,6 +79,14 @@ type Story = StoryObj<typeof Bleed>;
  * against something) — not part of the component itself.
  */
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => bleedPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <div
       style={{
@@ -104,6 +113,7 @@ export const Playground: Story = {
 
 export const Default: Story = {
   name: "Bleeds a full-width block out of a padded article",
+  parameters: { docs: { source: { code: bleedSnippets.default } } },
   // `inset`/`side`/`children` are the whole point of this story — a static
   // reference showing one exact, deliberately-chosen combination — so no
   // single control value could represent it without contradicting the
@@ -138,6 +148,7 @@ export const Default: Story = {
 
 export const Block: Story = {
   name: 'side="block" (bleeds vertically, stays inset horizontally)',
+  parameters: { docs: { source: { code: bleedSnippets.block } } },
   argTypes: {
     inset: { control: false },
     side: { control: false },
@@ -172,6 +183,7 @@ export const Block: Story = {
 
 export const All: Story = {
   name: 'side="all" (bleeds on every edge)',
+  parameters: { docs: { source: { code: bleedSnippets.all } } },
   argTypes: {
     inset: { control: false },
     side: { control: false },
@@ -205,6 +217,7 @@ export const All: Story = {
 
 export const ResponsiveInset: Story = {
   name: "Responsive inset, paired with Container's own responsive padding",
+  parameters: { docs: { source: { code: bleedSnippets.responsiveInset } } },
   argTypes: {
     inset: { control: false },
     side: { control: false },

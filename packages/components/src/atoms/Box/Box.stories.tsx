@@ -1,8 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { forwardRef } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Box } from "./Box";
+import { boxPlaygroundSnippet, boxSnippets } from "./Box.snippets";
 
 const meta: Meta<typeof Box> = {
   title: "Atoms/Layout/Box",
@@ -60,15 +61,33 @@ type Story = StoryObj<typeof Box>;
  * DOM (inspect via your browser devtools) while the component itself never
  * re-renders its own markup, only the underlying element.
  */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => boxPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AsSection: Story = {
   name: 'Polymorphic: as="section"',
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => boxPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { as: "section", children: 'Rendered as a <section> element via the `as` prop.' },
 };
 
 export const AsButton: Story = {
   name: 'Polymorphic: as="button" (native button props type-check)',
+  parameters: { docs: { source: { code: boxSnippets.asButton } } },
   // Fixed render — doesn't read `args`, so `as`/`children` would otherwise
   // show as live-looking controls that silently do nothing (07-storybook-
   // and-documentation-standards.md §5's own "inert controls" convention).
@@ -108,6 +127,7 @@ CustomLabel.displayName = "CustomLabel";
 
 export const AsCustomComponent: Story = {
   name: "Polymorphic: as={CustomComponent} (renders another React component, not just a tag)",
+  parameters: { docs: { source: { code: boxSnippets.asCustomComponent } } },
   // Fixed render — doesn't read `args`; see AsButton's own comment above.
   argTypes: { as: { control: false }, children: { control: false } },
   render: () => (

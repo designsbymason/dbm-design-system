@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { expect, fn, waitFor, within } from "storybook/test";
 import { Text } from "../Text";
 import { Affix } from "./Affix";
+import { affixSnippets } from "./Affix.snippets";
 import type { AffixProps } from "./Affix.types";
 
 const meta: Meta<typeof Affix> = {
@@ -313,6 +314,7 @@ export const StickyHeader: Story = {
 
 export const WithinScrollContainer: Story = {
   name: "Within a scroll container (scrollContainerRef)",
+  parameters: { docs: { source: { code: affixSnippets.withinScrollContainer } } },
   // `axis`/`edge`/`offset` now also disabled, alongside `children` —
   // real, previously-shipped bug (found via direct user report): left
   // controllable, `side="bottom"` (`edge="end"`, after the rename)
@@ -621,6 +623,7 @@ export const BottomScrollInteraction: Story = {
 
 export const HorizontalScrollInteraction: Story = {
   name: "Interaction: axis=horizontal sticks to the leading edge while scrolling",
+  parameters: { docs: { source: { code: affixSnippets.horizontalScrollInteraction } } },
   // `axis="horizontal"` had never been exercised by any test before this
   // addition — direct user request, after confirming the real-world use
   // cases (a sticky lead column in a horizontally-scrolling comparison
@@ -879,6 +882,7 @@ export const HorizontalEndScrollInteraction: Story = {
 
 export const WithinTable: Story = {
   name: "Sticky lead column in a real <table> (asChild)",
+  parameters: { docs: { source: { code: affixSnippets.withinTable } } },
   // `asChild` had no dedicated demo before this addition — the concrete
   // use case that motivated adding it in the first place (a real HTML
   // `<table>`'s `<td>`/`<th>` can't have a `<div>` wrapped around it

@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Grid } from "../../molecules/Grid";
 import { GridItem } from "./GridItem";
+import { gridItemPlaygroundSnippet, gridItemSnippets } from "./GridItem.snippets";
 
 const cellStyle = {
   background: "var(--dbm-bg-brand-subtle)",
@@ -192,10 +193,19 @@ type Story = StoryObj<typeof GridItem>;
 
 export const Playground: Story = {
   name: "Playground",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => gridItemPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };
 
 export const ColSpan: Story = {
   name: "colSpan",
+  parameters: { docs: { source: { code: gridItemSnippets.colSpan } } },
   argTypes: {
     colSpan: { control: false },
     children: { control: false },
@@ -218,6 +228,7 @@ export const ColSpan: Story = {
 
 export const ExplicitColumnPlacement: Story = {
   name: "colStart + colSpan (explicit placement)",
+  parameters: { docs: { source: { code: gridItemSnippets.explicitColumnPlacement } } },
   argTypes: {
     colStart: { control: false },
     colSpan: { control: false },
@@ -240,6 +251,7 @@ export const ExplicitColumnPlacement: Story = {
 
 export const ExplicitRowPlacement: Story = {
   name: "rowStart + rowSpan (explicit placement)",
+  parameters: { docs: { source: { code: gridItemSnippets.explicitRowPlacement } } },
   argTypes: {
     rowStart: { control: false },
     rowSpan: { control: false },
@@ -273,6 +285,7 @@ export const ExplicitRowPlacement: Story = {
 
 export const RowAndColSpanCombined: Story = {
   name: "rowSpan + colSpan on the same item",
+  parameters: { docs: { source: { code: gridItemSnippets.rowAndColSpanCombined } } },
   argTypes: {
     rowSpan: { control: false },
     colSpan: { control: false },
@@ -300,6 +313,7 @@ export const RowAndColSpanCombined: Story = {
 
 export const Order: Story = {
   name: "order (visual reordering, independent of DOM order)",
+  parameters: { docs: { source: { code: gridItemSnippets.order } } },
   // `order` is the deliberate varying axis (one instance per value, so no
   // single control value could represent "all of them" — per
   // 06-engineering-standards.md §9's multi-instance-gallery exception);
@@ -348,6 +362,7 @@ export const Order: Story = {
 
 export const ResponsiveSpan: Story = {
   name: "Responsive colSpan (full-width on mobile, half on desktop)",
+  parameters: { docs: { source: { code: gridItemSnippets.responsiveSpan } } },
   // `parameters.chromatic` removed (2026-08-29) — Chromatic is a paid SaaS
   // tool this project never adopted (02-tech-stack-and-structure.md picked
   // Playwright's own self-hosted visual regression instead); this
@@ -387,6 +402,7 @@ export const ResponsiveSpan: Story = {
 
 export const AsListItem: Story = {
   name: 'Polymorphic: as="li" (real semantic list item, GridItem layout behavior)',
+  parameters: { docs: { source: { code: gridItemSnippets.asListItem } } },
   // `as` is fixed to "li" on every instance (necessary for valid list
   // markup — every child of a real <ul> must be an <li>), matching
   // Heading's/Text's own identical `as` argType (globally disabled — see

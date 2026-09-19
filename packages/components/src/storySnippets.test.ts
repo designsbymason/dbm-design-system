@@ -14,6 +14,14 @@ import { inputPlaygroundSnippet } from "./atoms/Input/Input.snippets";
 import { radioPlaygroundSnippet } from "./atoms/Radio/Radio.snippets";
 import { switchPlaygroundSnippet } from "./atoms/Switch/Switch.snippets";
 import { textareaPlaygroundSnippet } from "./atoms/Textarea/Textarea.snippets";
+import { aspectRatioPlaygroundSnippet } from "./atoms/AspectRatio/AspectRatio.snippets";
+import { bleedPlaygroundSnippet } from "./atoms/Bleed/Bleed.snippets";
+import { boxPlaygroundSnippet } from "./atoms/Box/Box.snippets";
+import { centerPlaygroundSnippet } from "./atoms/Center/Center.snippets";
+import { containerPlaygroundSnippet } from "./atoms/Container/Container.snippets";
+import { dividerPlaygroundSnippet } from "./atoms/Divider/Divider.snippets";
+import { gridItemPlaygroundSnippet } from "./atoms/GridItem/GridItem.snippets";
+import { stackPlaygroundSnippet } from "./atoms/Stack/Stack.snippets";
 import { badgePlaygroundSnippet } from "./atoms/Badge/Badge.snippets";
 import { progressBarPlaygroundSnippet } from "./atoms/ProgressBar/ProgressBar.snippets";
 import { progressCirclePlaygroundSnippet } from "./atoms/ProgressCircle/ProgressCircle.snippets";
@@ -128,8 +136,8 @@ for (const [file, module] of Object.entries(snippetModules)) {
 
 describe("story snippets", () => {
   it("finds the snippet files", () => {
-    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(32);
-    expect(namedSnippets.length).toBeGreaterThan(165);
+    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(42);
+    expect(namedSnippets.length).toBeGreaterThan(210);
   });
 
   it.each(namedSnippets)("%s is a real, pasteable snippet", (_name, code) => {
@@ -681,6 +689,115 @@ describe("Playground snippets for the eleven input and field atoms", () => {
   it("Textarea writes only what differs (rows defaults to 3, resize to vertical)", () => {
     expect(textareaPlaygroundSnippet({ size: "md", rows: 3, resize: "vertical", autoResize: false, "aria-label": "" })).toBe('<Textarea aria-label="Comment" />');
     expect(textareaPlaygroundSnippet({ autoResize: true, rows: 5, resize: "none" })).toBe('<Textarea aria-label="Comment" autoResize rows={5} resize="none" />');
+  });
+});
+
+describe("Playground snippets for the ten layout atoms", () => {
+  it.each([{}, { ratio: 1 }, { ratio: 21 / 9 }, { ratio: 4 / 3 }, { ratio: 1.85, children: "Poster" }])("AspectRatio %j is a real snippet", (args) => {
+    expect(problemsIn(aspectRatioPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("AspectRatio writes the ratio as a fraction, and nothing at the default", () => {
+    expect(aspectRatioPlaygroundSnippet({ ratio: 16 / 9, children: "x" })).toBe("<AspectRatio>x</AspectRatio>");
+    expect(aspectRatioPlaygroundSnippet({ ratio: 1, children: "x" })).toBe("<AspectRatio ratio={1}>x</AspectRatio>");
+    expect(aspectRatioPlaygroundSnippet({ ratio: 21 / 9, children: "x" })).toBe("<AspectRatio ratio={21 / 9}>x</AspectRatio>");
+    expect(aspectRatioPlaygroundSnippet({ ratio: 4 / 3, children: "x" })).toBe("<AspectRatio ratio={4 / 3}>x</AspectRatio>");
+    expect(aspectRatioPlaygroundSnippet({ ratio: 1.85, children: "x" })).toBe("<AspectRatio ratio={1.85}>x</AspectRatio>");
+  });
+
+  it.each([{}, { inset: 4, side: "block" }, { inset: 8, side: "all", children: "Banner" }])("Bleed %j is a real snippet", (args) => {
+    expect(problemsIn(bleedPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Bleed sits in a parent whose padding matches its inset on the side it bleeds", () => {
+    expect(bleedPlaygroundSnippet({ inset: 6, side: "inline", children: "x" })).toBe(
+      '<div style={{ paddingInline: "var(--dbm-space-6)" }}>\n  <Bleed inset={6}>x</Bleed>\n</div>',
+    );
+    expect(bleedPlaygroundSnippet({ inset: 4, side: "block", children: "x" })).toContain('paddingBlock: "var(--dbm-space-4)"');
+    expect(bleedPlaygroundSnippet({ inset: 4, side: "block", children: "x" })).toContain('<Bleed inset={4} side="block">');
+    expect(bleedPlaygroundSnippet({ inset: 2, side: "all", children: "x" })).toContain('padding: "var(--dbm-space-2)"');
+  });
+
+  it.each([{}, { as: "section" }, { as: "button", children: "Save" }])("Box %j is a real snippet", (args) => {
+    expect(problemsIn(boxPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Box writes the element only when it isn't a div, and escapes text that JSX would read as markup", () => {
+    expect(boxPlaygroundSnippet({ as: "div", children: "x" })).toBe("<Box>x</Box>");
+    expect(boxPlaygroundSnippet({ as: "section", children: "x" })).toBe('<Box as="section">x</Box>');
+    // The AsSection story's own children contain `<section>` and backticks.
+    expect(problemsIn(boxPlaygroundSnippet({ as: "section", children: "Rendered as a <section> element via the `as` prop." }))).toEqual([]);
+    expect(boxPlaygroundSnippet({ children: "a {b}" })).toBe("<Box>a &#123;b&#125;</Box>");
+  });
+
+  it.each([{}, { as: "span", inline: true }, { as: "section", inline: false, children: "Loading" }])("Center %j is a real snippet", (args) => {
+    expect(problemsIn(centerPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Center gives a block-level one the height it needs, and an inline one none", () => {
+    expect(centerPlaygroundSnippet({ as: "div", inline: false, children: "x" })).toBe('<Center style={{ height: "12rem" }}>x</Center>');
+    expect(centerPlaygroundSnippet({ as: "span", inline: true, children: "x" })).toBe('<Center as="span" inline>x</Center>');
+  });
+
+  it.each([{}, { size: "sm", as: "main", paddingInline: 8 }, { size: "full" }])("Container %j is a real snippet", (args) => {
+    expect(problemsIn(containerPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Container writes only what differs (div, xl, a padding of 4)", () => {
+    expect(containerPlaygroundSnippet({ as: "div", size: "xl", paddingInline: 4 })).toBe(
+      "<Container>\n  <p>Page content, centered and constrained by size.</p>\n</Container>",
+    );
+    expect(containerPlaygroundSnippet({ as: "main", size: "md", paddingInline: 6 })).toContain('<Container as="main" size="md" paddingInline={6}>');
+  });
+
+  it.each([
+    {},
+    { orientation: "vertical", variant: "double", thickness: "thick", emphasis: "start", tone: "danger", label: "OR", align: "end", "aria-label": "Separator" },
+    { label: "Section", align: "center" },
+  ])("Divider %j is a real snippet", (args) => {
+    expect(problemsIn(dividerPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Divider writes only what differs, `align` only beside a label, and a vertical one inside the flex row it needs", () => {
+    expect(dividerPlaygroundSnippet({ orientation: "horizontal", variant: "solid", thickness: "thin", emphasis: "none", tone: "default", align: "end" })).toBe("<Divider />");
+    expect(dividerPlaygroundSnippet({ label: "OR", align: "end" })).toBe('<Divider label="OR" align="end" />');
+    const vertical = dividerPlaygroundSnippet({ orientation: "vertical", label: "OR" });
+    expect(vertical).toContain('<Divider orientation="vertical" label="OR" />');
+    expect(vertical).toContain('display: "flex"');
+    expect(vertical).toContain('height: "6rem"');
+  });
+
+  it.each([
+    {},
+    { children: "Wide", colSpan: 3, rowSpan: 2, colStart: 2, rowStart: 2, order: 4 },
+    { colStart: "", rowStart: "" },
+    { colStart: "3", as: "li" },
+  ])("GridItem %j is a real snippet", (args) => {
+    expect(problemsIn(gridItemPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("GridItem writes only what differs, reads the control's blank as unset, and puts a list item inside a list", () => {
+    expect(gridItemPlaygroundSnippet({ children: "Grid cell", colSpan: 1, rowSpan: 1, colStart: "", rowStart: "", order: 1 })).toBe(
+      "<Grid columns={4} gap={4}>\n  <GridItem>Grid cell</GridItem>\n</Grid>",
+    );
+    expect(gridItemPlaygroundSnippet({ children: "x", colSpan: 2, colStart: "3" })).toContain("<GridItem colSpan={2} colStart={3}>x</GridItem>");
+    expect(gridItemPlaygroundSnippet({ children: "x", as: "li" })).toContain('<Grid as="ul"');
+    expect(gridItemPlaygroundSnippet({ children: "x", as: "li" })).toContain('<GridItem as="li">x</GridItem>');
+  });
+
+  it.each([
+    {},
+    { direction: "row", gap: 4, align: "center", justify: "between", wrap: true },
+    { as: "ul", direction: "column-reverse", gap: 8, align: "baseline", justify: "evenly" },
+  ])("Stack %j is a real snippet", (args) => {
+    expect(problemsIn(stackPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Stack writes only what differs (div, column, a gap of 0, stretch, start, no wrap)", () => {
+    expect(stackPlaygroundSnippet({ as: "div", direction: "column", gap: 0, align: "stretch", justify: "start", wrap: false })).toBe(
+      "<Stack>\n  <div>One</div>\n  <div>Two</div>\n  <div>Three</div>\n</Stack>",
+    );
+    expect(stackPlaygroundSnippet({ direction: "row", gap: 4, wrap: true })).toContain('<Stack direction="row" gap={4} wrap>');
   });
 });
 
