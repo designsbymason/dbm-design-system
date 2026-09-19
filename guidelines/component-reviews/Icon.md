@@ -118,3 +118,7 @@ its own scoped mini-pass (JSDoc on `tone` explaining why `white` doesn't flip in
 checklist re-run. Re-verified live: white heart icon renders correctly against the `bg.overlay`
 swatch in the "All tones" gallery, both brands × both modes. `tsc`, `eslint`, full Vitest suite
 (1281/1281 package-wide), and a real `tsup` build all clean.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's generated code printed the icon as `{ $$typeof: Symbol(react.forward_ref), render: () => {} }` next to `label=""` and `mirrored={false}`, and the six gallery panels showed the story object itself, with `argTypes: disableAllAxes`, a `standaloneTones` constant and `.map(` loops. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Icon.snippets.ts` (icons named, with a comment saying they come from `@dbm-design-system/icons`), and the Playground builds its snippet from the live controls, accepting both the icon component and the control's option key. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

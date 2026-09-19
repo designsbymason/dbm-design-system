@@ -229,3 +229,7 @@ across all ~25+ other components it affects. Each fix was verified live in a run
 instance, including two live user reports (the `RelatedCard` layout bug, the `IconButton` component
 swap) that shaped the fix directly. No further changes without asking first, per
 `06-engineering-standards.md` §9's finalization rule.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's generated code printed `focusable={false} tabIndex={0}` inside the story's explanatory paragraph (the `tabIndex` is only there so the demo can be tabbed into), and the other three panels showed the story object itself — one with a development comment about `IconButton` and `aria-labelledby` inside it. Every story now sets `parameters.docs.source.code` to a snippet from the new `VisuallyHidden.snippets.ts`, with the Playground building its own from the live controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

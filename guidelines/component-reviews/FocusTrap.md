@@ -287,3 +287,7 @@ not with a prop), a pre-existing broken-link pattern affecting 8 other already-F
 effect, a too-fast interaction replay, and a Playground/documented-default mismatch caught on final
 review — each verified live in a running Storybook instance, not assumed from the code. No further
 changes without asking first, per `06-engineering-standards.md` §9's finalization rule.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the one panel ran to 67 lines: `asChild={false} loop={false} trapped={false}` around the story's styled box and explanatory paragraph. The Playground now builds its snippet from the live controls (only the props that are on) around a small group of focusable fields, from the new `FocusTrap.snippets.ts`. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

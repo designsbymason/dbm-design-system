@@ -258,3 +258,7 @@ Storybook/`addon-vitest` tests (all passing, confirming no contrast regression),
 
 **Finalized 2026-09-04** — per `06-engineering-standards.md` §9's own note, don't make further
 changes to Image (code, stories, docs, or its tokens) without asking first.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: eight panels showed the story object itself, built from `radiusOptions`, `objectFitOptions`, `positionOptions` and a `PLACEHOLDER_IMAGE_URL` constant; the Playground, "Locked aspect ratio" and "Rounded" printed every default plus `aspectRatio={1.3333333333333333}` / `{1.7777777777777777}` and the story's own `/placeholder-img.png`. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Image.snippets.ts` — each keeping the one sized container an `Image` needs, since it fills its container's width — and the three args-driven stories build theirs from the live controls, writing the ratio as a fraction (the helper is shared with `AspectRatio`'s snippets). The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

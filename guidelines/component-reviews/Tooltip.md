@@ -230,3 +230,7 @@ despite both stories' fully-bespoke, zero-arg renders ignoring every one of them
 all 7 missing keys to both stories' `argTypes`. Pure Storybook-metadata fix, no runtime code
 touched. Live-verified: all 15 controls now show `-` on `MultipleWithSharedProvider`. Full suite
 re-run clean.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: four panels printed `aria-label="" defaultOpen={false} delayDuration={400} disableHoverableContent={false} hideArrow={false} side="top"` inside the story's padding wrapper, "Icon-only trigger" printed its icon as `{ $$typeof: Symbol(react.forward_ref), render: () => {} }`, and "Multiple tooltips" showed the story object with a nine-entry `argTypes` block. Every story now sets `parameters.docs.source.code` to a snippet from the new `Tooltip.snippets.ts`, and the Playground, "Default" and "Icon-only trigger" build theirs from the live controls, reading the trigger control's option key. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

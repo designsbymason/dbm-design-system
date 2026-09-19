@@ -203,3 +203,7 @@ suite (943 tests), the Storybook interaction suite (`pnpm test:storybook`, 330 t
 `tsup` build — all green.
 
 **Finalized 2026-09-05**, at the user's explicit direction.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground and "Visible state" printed `<BoundedScrollDemo …>`, a helper defined in the stories file (a `BackToTop` is fixed to the viewport, so the stories wrap it in a scroll area of their own), and "Within a scroll container" ran to 198 lines with `ref={{ current: '[Circular]' }}` and a `data-testid`. Every story now sets `parameters.docs.source.code` to a snippet from the new `BackToTop.snippets.ts` — plain `<BackToTop />` plus whichever props differ, and, for the scroll-container story, the one container and ref it is about — with the Playground and "Visible state" building theirs from the live controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

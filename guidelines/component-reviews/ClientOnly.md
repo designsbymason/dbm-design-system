@@ -122,3 +122,7 @@ changing `tone` to `color`. Re-verified: `tsc --noEmit` clean for this file, ful
 project (375/375) still passing, live-checked in Storybook with no console errors. Per the
 finalization re-check test (§9): a defect fix (an invalid prop that never should have compiled as
 intended) — **stays finalized**, no re-review needed.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: no defect — the generated code for both stories was already usable. They now point at hand-written snippets from the new `ClientOnly.snippets.ts` anyway, because the standard is that every visible story does, and it gives the Playground a snippet that follows its controls (a fallback written only when there is one). The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

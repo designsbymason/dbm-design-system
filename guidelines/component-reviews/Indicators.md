@@ -389,3 +389,7 @@ knowing intent: options include reverting `bg.track-strong` for this consumer sp
 `Indicators` its own dedicated token (decoupling it from whatever `Switch`/`Slider` no longer need),
 or accepting the new fainter value as an intentional, informed exception the way `bg.track` itself
 already is. Flagging rather than guessing.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: every panel was generated from a story that holds its position in its own `useState`, so they printed `activeIndex={1}` frozen and `onIndexChange={() => {}}`; "Many slides" printed `getLabel={() => {}}`, hiding the one thing it demonstrates; and "All variants" / "All sizes" ran to 38 and 58 lines of the same boilerplate. Every story now sets `parameters.docs.source.code` to a snippet from the new `Indicators.snippets.ts`, each naming the reader's state in a comment and wiring `activeIndex` / `onIndexChange` to it, with `getLabel`'s real body written out; the Playground, "Vertical orientation" and "With progress label" stories build theirs from the live controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

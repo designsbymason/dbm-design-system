@@ -279,3 +279,7 @@ precedent), and inert Controls-panel toggles on all four fixed-render stories (f
 convention swept across 5 other already-Finalized atoms the same day) — each verified live in a
 running Storybook instance, not assumed from the code. No further changes without asking first, per
 `06-engineering-standards.md` §9's finalization rule.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the Playground's generated code ran to 57 lines of the story's dashed box and prose, and the other two panels showed the story object itself — with development notes inside it ("A real, confirmed bug (found during this component's own review pass)…", "see Default's own comment above") that were never meant for a reader. Every story now sets `parameters.docs.source.code` to a snippet from the new `Portal.snippets.ts`; the Playground builds its own from the live controls, and the custom-container snippet shows the ref-callback pattern with its state named in a comment. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

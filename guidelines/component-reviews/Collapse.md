@@ -359,3 +359,7 @@ precedent this review's `asChild` support and Playground-control-suppression pat
 `Indicators` (the precedent this review's `orientation` naming followed). `Accordion` (built
 2026-09-17) reuses this component's own animation technique for its `Accordion.Content`, but wraps
 Radix Accordion directly rather than composing `Collapse` — see the follow-up note above.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: every panel printed `defaultOpen={false} disabled={false} onOpenChange={() => {}} orientation="vertical"` and inlined the story's content-box style, "Playground" and "Default" came out identical, and "Externally driven" printed a frozen `open`. Every story now sets `parameters.docs.source.code` to a snippet from the new `Collapse.snippets.ts`; the Playground, "Default" and "Open by default" build theirs from the live controls, including the trigger control (which has a `mapping`, so its builder reads the option key). "Playground" and "Default" still read alike because the Playground's own defaults are that example. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

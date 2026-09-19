@@ -308,3 +308,7 @@ changes to Backdrop (code, stories, docs, or its tokens) without asking first.
 
 `Portal` (composition dependency), `Spinner` (a `children` pairing), `guidelines/adr/0010` (the
 `open`/`Presence` pattern this review established).
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: three of the six panels ("Click to dismiss", "With blur", "With content") contained no `<Backdrop>` at all — it only mounts after a click, so the generated code showed the `Button` and the story's `<DemoBackground />` and nothing else — and the rest printed `onClick={() => {}}`, `blur={false}` and `open={false}` beside that helper. Every story now sets `parameters.docs.source.code` to a snippet from the new `Backdrop.snippets.ts`, each naming the reader's `isOpen` state in a comment and wiring `open` / `onClick` to it, and the Playground builds its snippet from the live controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
