@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Slider } from "./Slider";
+import { sliderPlaygroundSnippet, sliderSnippets } from "./Slider.snippets";
 
 const meta: Meta<typeof Slider> = {
   title: "Molecules/Inputs/Slider",
@@ -183,10 +184,20 @@ export default meta;
 type Story = StoryObj<typeof Slider>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: sliderSnippets.allSizes } } },
   // `size` is the whole point of this grid — each instance intentionally
   // varies it, so no single control value could represent them.
   // `hasError`/`disabled` still stay live and shared via `{...args}`.
@@ -208,6 +219,14 @@ export const AllSizes: Story = {
 };
 
 export const Vertical: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { orientation: "vertical" },
   argTypes: { orientation: { control: false } },
   render: (args) => (
@@ -219,30 +238,70 @@ export const Vertical: Story = {
 
 export const WithValue: Story = {
   name: "With the live value shown",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { showValue: true },
   argTypes: { showValue: { control: false } },
 };
 
 export const WithValueTooltip: Story = {
   name: "With a value tooltip",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { showValueTooltip: true },
   argTypes: { showValueTooltip: { control: false } },
 };
 
 export const WithMinMaxLabels: Story = {
   name: "With min/max labels",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { showMinMaxLabels: true },
   argTypes: { showMinMaxLabels: { control: false } },
 };
 
 export const WithTicks: Story = {
   name: "With tick marks",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { showTicks: true, tickInterval: 10 },
   argTypes: { showTicks: { control: false }, tickInterval: { control: false } },
 };
 
 export const FullyDecorated: Story = {
   name: "Every decoration combined",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: {
     showValue: true,
     showValueTooltip: true,
@@ -261,6 +320,14 @@ export const FullyDecorated: Story = {
 
 export const VerticalWithMinMaxLabels: Story = {
   name: "Vertical, with min/max labels",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { orientation: "vertical", showMinMaxLabels: true },
   argTypes: { orientation: { control: false }, showMinMaxLabels: { control: false } },
   render: (args) => (
@@ -272,21 +339,46 @@ export const VerticalWithMinMaxLabels: Story = {
 
 export const CustomRange: Story = {
   name: "Custom min/max/step",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { min: -10, max: 10, step: 5, defaultValue: 0, showValue: true },
   argTypes: { min: { control: false }, max: { control: false }, step: { control: false } },
 };
 
 export const ErrorState: Story = {
   name: "Error state",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { hasError: true, defaultValue: 20 },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => sliderPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true, defaultValue: 50 },
 };
 
 export const Controlled: Story = {
   name: "Controlled, with onValueCommit for an expensive operation",
+  parameters: { docs: { source: { code: sliderSnippets.controlled } } },
   // `value`/`onValueChange` are driven by this story's own local state (the
   // whole point of the demo) — but `size`/`hasError`/`disabled` are still
   // meaningful to preview here and stay live via `{...args}`.

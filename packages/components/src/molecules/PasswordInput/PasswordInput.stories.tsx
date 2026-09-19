@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { PasswordInput } from "./PasswordInput";
+import { passwordInputPlaygroundSnippet, passwordInputSnippets } from "./PasswordInput.snippets";
 
 const meta: Meta<typeof PasswordInput> = {
   title: "Molecules/Inputs/PasswordInput",
@@ -168,10 +169,20 @@ export default meta;
 type Story = StoryObj<typeof PasswordInput>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => passwordInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: passwordInputSnippets.allSizes } } },
   // `size`/`placeholder` are the whole point of this grid — each instance
   // intentionally varies size, so no single control value could represent
   // them. `hasError`/`disabled` still stay live and shared via `{...args}`.
@@ -194,6 +205,7 @@ export const AllSizes: Story = {
 
 export const Clearable: Story = {
   name: "With a clear button",
+  parameters: { docs: { source: { code: passwordInputSnippets.clearable } } },
   // `value`/`onChange`/`onClear` are all driven by this story's own local
   // state (the whole point of the demo), plus `placeholder` fixed per
   // instance — but `size`/`hasError`/`disabled` are still meaningful to
@@ -226,10 +238,26 @@ export const Clearable: Story = {
 
 export const ErrorState: Story = {
   name: "Error state",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => passwordInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { hasError: true, defaultValue: "wrong-password" },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => passwordInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true, defaultValue: "hunter2" },
 };
 

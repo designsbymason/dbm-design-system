@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, within } from "storybook/test";
 import { Checkbox } from "../../atoms/Checkbox";
@@ -9,6 +9,7 @@ import { RadioGroup } from "../RadioGroup";
 import { Radio } from "../../atoms/Radio";
 import { Select } from "../Select";
 import { FormField } from "./FormField";
+import { formFieldPlaygroundSnippet, formFieldSnippets } from "./FormField.snippets";
 
 // Matches Input's/Select's own established "constrain the demo width"
 // convention — a bare text field stretched to the full padded canvas width
@@ -100,10 +101,20 @@ export default meta;
 type Story = StoryObj<typeof FormField>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => formFieldPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const WithDifferentControls: Story = {
   name: "Wrapping different control types",
+  parameters: { docs: { source: { code: formFieldSnippets.withDifferentControls } } },
   argTypes: {
     label: { control: false },
     helperText: { control: false },
@@ -170,7 +181,7 @@ export const States: Story = {
   // state via aria-describedby rather than a native disabled control's own
   // <label for> (which axe already exempts on its own). See
   // guidelines/01-vision-and-goals.md §12.
-  parameters: { a11y: { test: "todo" } },
+  parameters: { a11y: { test: "todo" }, docs: { source: { code: formFieldSnippets.states } } },
   argTypes: {
     helperText: { control: false },
     error: { control: false },
@@ -209,6 +220,7 @@ export const States: Story = {
 
 export const ControlledWithLiveValidation: Story = {
   name: "Controlled, with live validation",
+  parameters: { docs: { source: { code: formFieldSnippets.controlledWithLiveValidation } } },
   argTypes: {
     label: { control: false },
     helperText: { control: false },

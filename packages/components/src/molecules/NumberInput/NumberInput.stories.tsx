@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { NumberInput } from "./NumberInput";
+import { numberInputPlaygroundSnippet, numberInputSnippets } from "./NumberInput.snippets";
 
 const meta: Meta<typeof NumberInput> = {
   title: "Molecules/Inputs/NumberInput",
@@ -172,10 +173,20 @@ export default meta;
 type Story = StoryObj<typeof NumberInput>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => numberInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: numberInputSnippets.allSizes } } },
   // `size` is the whole point of this grid — each instance intentionally
   // varies it, so no single control value could represent them.
   // `hasError`/`disabled` still stay live and shared via `{...args}`.
@@ -198,18 +209,35 @@ export const AllSizes: Story = {
 
 export const NoBounds: Story = {
   name: "No min/max (unbounded)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => numberInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { min: undefined, max: undefined },
   argTypes: { min: { control: false }, max: { control: false } },
 };
 
 export const DecimalStep: Story = {
   name: "Decimal step",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => numberInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { defaultValue: 1, min: 0, max: 5, step: 0.5 },
   argTypes: { step: { control: false } },
 };
 
 export const Clearable: Story = {
   name: "With a clear button",
+  parameters: { docs: { source: { code: numberInputSnippets.clearable } } },
   // `value`/`onValueChange`/`onClear` are all driven by this story's own
   // local state (the whole point of the demo) — but `size`/`hasError`/
   // `disabled` are still meaningful to preview here and stay live via
@@ -242,10 +270,26 @@ export const Clearable: Story = {
 
 export const ErrorState: Story = {
   name: "Error state",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => numberInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { hasError: true, defaultValue: 15 },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => numberInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true, defaultValue: 5 },
 };
 

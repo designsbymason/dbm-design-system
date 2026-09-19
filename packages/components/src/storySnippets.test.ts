@@ -3,9 +3,17 @@ import { describe, expect, it } from "vitest";
 import * as library from "./index";
 import { accordionPlaygroundSnippet } from "./molecules/Accordion/Accordion.snippets";
 import { cardPlaygroundSnippet } from "./molecules/Card/Card.snippets";
+import { checkboxGroupPlaygroundSnippet } from "./molecules/CheckboxGroup/CheckboxGroup.snippets";
+import { formFieldPlaygroundSnippet } from "./molecules/FormField/FormField.snippets";
 import { gridPlaygroundSnippet } from "./molecules/Grid/Grid.snippets";
 import { listPlaygroundSnippet } from "./molecules/List/List.snippets";
+import { numberInputPlaygroundSnippet } from "./molecules/NumberInput/NumberInput.snippets";
+import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/PasswordInput.snippets";
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
+import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
+import { searchInputPlaygroundSnippet } from "./molecules/SearchInput/SearchInput.snippets";
+import { selectPlaygroundSnippet } from "./molecules/Select/Select.snippets";
+import { sliderPlaygroundSnippet } from "./molecules/Slider/Slider.snippets";
 import { tablePlaygroundSnippet } from "./molecules/Table/Table.snippets";
 
 // Guards the code shown under "Show code" on Docs pages
@@ -98,8 +106,8 @@ for (const [file, module] of Object.entries(snippetModules)) {
 
 describe("story snippets", () => {
   it("finds the snippet files", () => {
-    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(6);
-    expect(namedSnippets.length).toBeGreaterThan(60);
+    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(14);
+    expect(namedSnippets.length).toBeGreaterThan(90);
   });
 
   it.each(namedSnippets)("%s is a real, pasteable snippet", (_name, code) => {
@@ -261,5 +269,132 @@ describe("Playground snippets for Accordion, Popover, Grid and List", () => {
       /^<List as="ol" start=\{5\} reversed type="A">\n/,
     );
     expect(listPlaygroundSnippet({ as: "ul", start: "5", reversed: true, type: "A" })).toMatch(/^<List>\n/);
+  });
+});
+
+describe("Playground snippets for the eight input molecules", () => {
+  it.each([
+    {},
+    { "aria-label": "Interests", defaultValue: ["sports", "music"], size: "lg", orientation: "horizontal", hasError: true, disabled: true, name: "interests" },
+    { defaultValue: [] },
+  ])("CheckboxGroup %j is a real snippet", (args) => {
+    expect(problemsIn(checkboxGroupPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("CheckboxGroup writes only what differs, and always an accessible name", () => {
+    expect(checkboxGroupPlaygroundSnippet({ size: "md", orientation: "vertical", defaultValue: [], name: "" })).toMatch(
+      /^<CheckboxGroup aria-label="Interests">\n/,
+    );
+    expect(checkboxGroupPlaygroundSnippet({ defaultValue: ["sports"], orientation: "horizontal" })).toMatch(
+      /^<CheckboxGroup aria-label="Interests" defaultValue=\{\["sports"\]\} orientation="horizontal">\n/,
+    );
+  });
+
+  it.each([
+    {},
+    { defaultValue: "email", size: "sm", orientation: "horizontal", loop: false, dir: "rtl", hasError: true, required: true, disabled: true, name: "contact" },
+    { loop: true, dir: "ltr" },
+  ])("RadioGroup %j is a real snippet", (args) => {
+    expect(problemsIn(radioGroupPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("RadioGroup writes only what differs (loop defaults to true, dir to ltr)", () => {
+    expect(radioGroupPlaygroundSnippet({ loop: true, dir: "ltr", orientation: "vertical", size: "md" })).toMatch(
+      /^<RadioGroup aria-label="Contact method">\n/,
+    );
+    expect(radioGroupPlaygroundSnippet({ loop: false, dir: "rtl" })).toMatch(
+      /^<RadioGroup aria-label="Contact method" loop=\{false\} dir="rtl">\n/,
+    );
+  });
+
+  it.each([
+    {},
+    { label: "Full name", helperText: "As on your ID", error: "Required", required: true, disabled: true, size: "lg" },
+    { helperText: 'Say "hello"' },
+  ])("FormField %j is a real snippet, and always has a control in it", (args) => {
+    const snippet = formFieldPlaygroundSnippet(args as never);
+    expect(problemsIn(snippet)).toEqual([]);
+    expect(snippet).toContain("<Input {...fieldProps}");
+  });
+
+  it.each([
+    {},
+    { "aria-label": "Guests", size: "xs", defaultValue: 5, min: 0, max: 10, step: 0.5, placeholder: "0", hasError: true, required: true, readOnly: true, disabled: true, name: "guests" },
+    { min: undefined, max: undefined, defaultValue: 5 },
+  ])("NumberInput %j is a real snippet", (args) => {
+    expect(problemsIn(numberInputPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("NumberInput writes only what differs, including no bounds at all", () => {
+    expect(numberInputPlaygroundSnippet({ size: "md", step: 1, "aria-label": "" })).toBe('<NumberInput aria-label="Quantity" />');
+    expect(numberInputPlaygroundSnippet({ min: undefined, max: undefined, defaultValue: 5 })).toBe(
+      '<NumberInput aria-label="Quantity" defaultValue={5} />',
+    );
+  });
+
+  it.each([
+    {},
+    { "aria-label": "Password", size: "lg", placeholder: "Enter it", defaultValue: "hunter2", maxLength: 200, showCount: true, hasError: true, required: true, readOnly: true, disabled: true, name: "pw" },
+  ])("PasswordInput %j is a real snippet", (args) => {
+    expect(problemsIn(passwordInputPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("PasswordInput writes only what differs", () => {
+    expect(passwordInputPlaygroundSnippet({ size: "md", defaultValue: "", hasError: false })).toBe('<PasswordInput aria-label="Password" />');
+    expect(passwordInputPlaygroundSnippet({ hasError: true, defaultValue: "wrong" })).toBe(
+      '<PasswordInput aria-label="Password" defaultValue="wrong" hasError />',
+    );
+  });
+
+  it.each([
+    {},
+    { size: "sm", placeholder: "Search…", defaultValue: "cats", debounceMs: 0, maxLength: 200, isLoading: true, hasError: true, required: true, readOnly: true, disabled: true, name: "q" },
+    { suffix: {} },
+  ])("SearchInput %j is a real snippet", (args) => {
+    expect(problemsIn(searchInputPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("SearchInput writes only what differs (debounceMs defaults to 300; 0 turns it off)", () => {
+    expect(searchInputPlaygroundSnippet({ debounceMs: 300 })).toBe('<SearchInput aria-label="Search" />');
+    expect(searchInputPlaygroundSnippet({ debounceMs: 0 })).toBe('<SearchInput aria-label="Search" debounceMs={0} />');
+    expect(searchInputPlaygroundSnippet({ suffix: {} })).toContain("suffix={<Kbd");
+  });
+
+  it.each([
+    {},
+    { "aria-label": "Country", placeholder: "Choose", defaultValue: "primary", size: "xl", side: "top", align: "end", defaultOpen: true, dir: "rtl", hasError: true, required: true, disabled: true, name: "c", form: "f", autoComplete: "country" },
+    { side: "bottom", align: "start", dir: "ltr" },
+  ])("Select %j is a real snippet, with real options", (args) => {
+    const snippet = selectPlaygroundSnippet(args as never);
+    expect(problemsIn(snippet)).toEqual([]);
+    expect(snippet).toContain("<Select.Option");
+  });
+
+  it("Select writes only what differs (side defaults to bottom, align to start)", () => {
+    expect(selectPlaygroundSnippet({ side: "bottom", align: "start", size: "md" })).toMatch(/^<Select aria-label="Variant">\n/);
+    expect(selectPlaygroundSnippet({ side: "right", align: "start" })).toMatch(/^<Select aria-label="Variant" side="right">\n/);
+  });
+
+  it.each([
+    {},
+    { size: "xs", defaultValue: 20, min: -10, max: 10, step: 5, orientation: "horizontal", inverted: true, showValue: true, showValueTooltip: true, showMinMaxLabels: true, showTicks: true, tickInterval: 25, hasError: true, disabled: true, name: "v", "aria-valuetext": "Loud" },
+    { orientation: "vertical", showMinMaxLabels: true },
+  ])("Slider %j is a real snippet", (args) => {
+    expect(problemsIn(sliderPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Slider writes only what differs, and tickInterval only when ticks are on and it differs from step", () => {
+    expect(sliderPlaygroundSnippet({ size: "md", min: 0, max: 100, step: 1, "aria-label": "" })).toBe('<Slider aria-label="Volume" />');
+    expect(sliderPlaygroundSnippet({ showTicks: true, tickInterval: 10 })).toBe(
+      '<Slider aria-label="Volume" showTicks tickInterval={10} />',
+    );
+    expect(sliderPlaygroundSnippet({ showTicks: true, tickInterval: 1, step: 1 })).toBe('<Slider aria-label="Volume" showTicks />');
+    expect(sliderPlaygroundSnippet({ showTicks: false, tickInterval: 10 })).toBe('<Slider aria-label="Volume" />');
+  });
+
+  it("Slider puts a vertical slider in a container with a height", () => {
+    const snippet = sliderPlaygroundSnippet({ orientation: "vertical" });
+    expect(snippet).toContain('orientation="vertical"');
+    expect(snippet).toContain('<div style={{ height: "12rem" }}>');
   });
 });

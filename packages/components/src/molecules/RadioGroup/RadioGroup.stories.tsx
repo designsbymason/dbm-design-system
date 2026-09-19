@@ -1,9 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { FieldError } from "../../atoms/FieldError";
 import { Radio } from "../../atoms/Radio";
 import { RadioGroup } from "./RadioGroup";
+import { radioGroupPlaygroundSnippet, radioGroupSnippets } from "./RadioGroup.snippets";
 
 const meta: Meta<typeof RadioGroup> = {
   title: "Molecules/Inputs/RadioGroup",
@@ -123,10 +124,20 @@ export default meta;
 type Story = StoryObj<typeof RadioGroup>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => radioGroupPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Orientation: Story = {
   name: "Vertical vs. horizontal",
+  parameters: { docs: { source: { code: radioGroupSnippets.orientation } } },
   // `orientation` is the whole point of this comparison, fixed per
   // instance — every other prop stays live via `{...args}`.
   argTypes: { orientation: { control: false } },
@@ -148,6 +159,7 @@ export const Orientation: Story = {
 
 export const SizeCascade: Story = {
   name: "Size cascade, with a per-item override",
+  parameters: { docs: { source: { code: radioGroupSnippets.sizeCascade } } },
   // `size` is the whole point of this comparison, fixed per instance —
   // every other prop stays live via `{...args}`.
   argTypes: { size: { control: false } },
@@ -172,6 +184,7 @@ export const SizeCascade: Story = {
 };
 
 export const States: Story = {
+  parameters: { docs: { source: { code: radioGroupSnippets.states } } },
   // Each row demonstrates a specific, fixed state combination — same
   // reasoning as Radio's/Checkbox's own States stories.
   argTypes: {
@@ -220,6 +233,7 @@ export const States: Story = {
 
 export const ControlledSelectionSummary: Story = {
   name: "Controlled, with a live selection summary",
+  parameters: { docs: { source: { code: radioGroupSnippets.controlled } } },
   // `value`/`onValueChange`/`children`/`defaultValue` are all driven by
   // this story's own local state (the whole point of the demo), so those
   // are excluded from the live controls — every other prop stays live via

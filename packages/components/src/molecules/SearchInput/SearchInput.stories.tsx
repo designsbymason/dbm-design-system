@@ -1,8 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Kbd } from "../../atoms/Kbd";
 import { SearchInput } from "./SearchInput";
+import { searchInputPlaygroundSnippet, searchInputSnippets } from "./SearchInput.snippets";
 
 const meta: Meta<typeof SearchInput> = {
   title: "Molecules/Inputs/SearchInput",
@@ -188,10 +189,20 @@ export default meta;
 type Story = StoryObj<typeof SearchInput>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => searchInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: searchInputSnippets.allSizes } } },
   // `size` is the whole point of this grid — each instance intentionally
   // varies it, so no single control value could represent them.
   // `hasError`/`disabled` still stay live and shared via `{...args}`.
@@ -214,11 +225,20 @@ export const AllSizes: Story = {
 
 export const Loading: Story = {
   name: "Loading",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => searchInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { isLoading: true, defaultValue: "cats" },
 };
 
 export const Clearable: Story = {
   name: "With a clear button",
+  parameters: { docs: { source: { code: searchInputSnippets.clearable } } },
   // `value`/`onChange`/`onClear` are all driven by this story's own local
   // state (the whole point of the demo) — but `size`/`hasError`/`disabled`
   // are still meaningful to preview here and stay live via `{...args}`.
@@ -245,21 +265,53 @@ export const Clearable: Story = {
 
 export const WithSuffix: Story = {
   name: "With a suffix hint",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => searchInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { suffix: <Kbd aria-label="Command K">⌘K</Kbd> },
 };
 
 export const NoDebounce: Story = {
   name: "No debounce (debounceMs=0)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => searchInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { debounceMs: 0, defaultValue: "" },
   argTypes: { debounceMs: { control: false } },
 };
 
 export const ErrorState: Story = {
   name: "Error state",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => searchInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { hasError: true, defaultValue: "xk#" },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => searchInputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true, defaultValue: "cats" },
 };
 

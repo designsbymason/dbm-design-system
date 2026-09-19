@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Select } from "./Select";
+import { selectPlaygroundSnippet, selectSnippets } from "./Select.snippets";
 
 // `Select`'s own `.trigger` CSS sets `width: 100%`, filling its container
 // by design (the same convention `Input` uses) — every story below
@@ -226,9 +227,25 @@ type Story = StoryObj<typeof Select>;
 
 export const Playground: Story = {
   name: "Playground",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => selectPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => selectPlaygroundSnippet(context.args),
+      },
+    },
+  },
   render: (args) => (
     <div style={demoContainerStyle}>
       <Select {...args}>
@@ -240,6 +257,7 @@ export const Default: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: selectSnippets.allSizes } } },
   // `size` is the deliberate varying axis (one instance per size, so no
   // single control value could represent "all of them" — per
   // 06-engineering-standards.md §9's multi-instance-gallery exception).
@@ -277,6 +295,7 @@ export const AllSizes: Story = {
 };
 
 export const States: Story = {
+  parameters: { docs: { source: { code: selectSnippets.states } } },
   // `hasError`/`disabled` are the deliberate varying axes here (each of
   // the four instances demonstrates a different fixed combination) — same
   // multi-instance-gallery exception as `AllSizes` above. `defaultValue`
@@ -319,6 +338,7 @@ export const States: Story = {
 
 export const DisabledOption: Story = {
   name: "Disabled option",
+  parameters: { docs: { source: { code: selectSnippets.disabledOption } } },
   // `defaultValue`'s own options overridden to match this story's actual
   // three children (the shared meta-level options list is the 5-variant
   // demo set, which doesn't apply here) — kept live, not disabled, since
@@ -342,6 +362,7 @@ export const DisabledOption: Story = {
 
 export const Clearable: Story = {
   name: "With a clear button",
+  parameters: { docs: { source: { code: selectSnippets.clearable } } },
   // Unlike `Input`'s own `onClear` (which needs a real controlled
   // `value`/`onChange` to actually reset what's displayed — see that
   // component's own "With a clear button" story), `Select` fully resets
@@ -372,6 +393,7 @@ export const Clearable: Story = {
 
 export const LongList: Story = {
   name: "Long list (scroll buttons)",
+  parameters: { docs: { source: { code: selectSnippets.longList } } },
   // `defaultValue` disabled — the shared meta-level options list (the
   // 5-variant demo set) doesn't match this story's own 30 country values,
   // and the story's own point (scroll buttons on a long list) doesn't
@@ -400,6 +422,7 @@ export const LongList: Story = {
 
 export const SideAndAlign: Story = {
   name: "side/align (dropdown placement)",
+  parameters: { docs: { source: { code: selectSnippets.sideAndAlign } } },
   args: { side: "right", align: "start" },
   render: (args) => (
     <div style={{ paddingBlock: "var(--dbm-space-16)", ...demoContainerStyle }}>
@@ -412,6 +435,7 @@ export const SideAndAlign: Story = {
 
 export const CustomTrigger: Story = {
   name: 'asChild + trigger (custom trigger element)',
+  parameters: { docs: { source: { code: selectSnippets.customTrigger } } },
   // `asChild`/`trigger` stay disabled at the meta level (no Storybook
   // control can produce a real `ReactElement`) — this story demonstrates
   // them with a real, hardcoded custom trigger instead. Select's own
@@ -443,6 +467,7 @@ export const CustomTrigger: Story = {
 
 export const CustomOptionRow: Story = {
   name: "Custom option row (Select.Option asChild)",
+  parameters: { docs: { source: { code: selectSnippets.customOptionRow } } },
   // `defaultValue` disabled — the shared meta-level options list (the
   // 5-variant demo set) doesn't match this story's own framework values.
   argTypes: { defaultValue: { control: false } },
@@ -480,6 +505,7 @@ export const CustomOptionRow: Story = {
 };
 
 export const Controlled: Story = {
+  parameters: { docs: { source: { code: selectSnippets.controlled } } },
   // `defaultValue` disabled — `value` (this story's own local state) is
   // already controlling the selection; passing both at once is the exact
   // controlled/uncontrolled conflict `Select.mdx`'s own "Don't" list warns
