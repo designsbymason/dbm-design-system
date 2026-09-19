@@ -27,6 +27,7 @@ interface TableContextValue {
   hoverable: boolean;
   stickyHeader: boolean;
   stickyFirstColumn: boolean;
+  stickyLastColumn: boolean;
   columnCount: number;
   captionId: string | undefined;
 }
@@ -42,6 +43,7 @@ const TableContext = createContext<TableContextValue>({
   hoverable: false,
   stickyHeader: false,
   stickyFirstColumn: false,
+  stickyLastColumn: false,
   columnCount: 1,
   captionId: undefined,
 });
@@ -133,6 +135,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
     hoverable = false,
     stickyHeader = false,
     stickyFirstColumn = false,
+    stickyLastColumn = false,
     maxHeight,
     containerClassName,
     className,
@@ -170,10 +173,21 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
       hoverable,
       stickyHeader,
       stickyFirstColumn,
+      stickyLastColumn,
       columnCount,
       captionId: generatedCaptionId,
     }),
-    [tone, size, striped, hoverable, stickyHeader, stickyFirstColumn, columnCount, generatedCaptionId],
+    [
+      tone,
+      size,
+      striped,
+      hoverable,
+      stickyHeader,
+      stickyFirstColumn,
+      stickyLastColumn,
+      columnCount,
+      generatedCaptionId,
+    ],
   );
 
   // While the container scrolls it must be reachable by keyboard (WCAG
@@ -223,7 +237,7 @@ TableRoot.displayName = "Table";
 
 /** The header group (`<thead>`) — holds the `Table.Row`(s) of column-label `Table.HeaderCell`s. Pinned in place while the body scrolls when the table's `stickyHeader` is set. */
 const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ className, ...props }, ref) => {
-  const { tone, stickyHeader, stickyFirstColumn } = useContext(TableContext);
+  const { tone, stickyHeader, stickyFirstColumn, stickyLastColumn } = useContext(TableContext);
   return (
     <thead
       {...props}
@@ -234,6 +248,7 @@ const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ cla
         toneClass[tone],
         stickyHeader && styles.headerSticky,
         stickyFirstColumn && styles.firstColumnSticky,
+        stickyLastColumn && styles.lastColumnSticky,
         className,
       )}
     />
@@ -262,7 +277,7 @@ const SkeletonRows = ({ rows, label }: { rows: number; label: string }) => {
 /** The body group (`<tbody>`) — holds the table's data `Table.Row`s. Rows stripe/highlight per the table's `striped`/`hoverable`. Shows skeleton rows in place of its children while `loading`. */
 const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
   ({ loading = false, loadingRows = 3, loadingLabel = "Loading", className, children, ...props }, ref) => {
-    const { tone, striped, hoverable, stickyFirstColumn } = useContext(TableContext);
+    const { tone, striped, hoverable, stickyFirstColumn, stickyLastColumn } = useContext(TableContext);
     const isTinted = tone !== "neutral";
     return (
       <tbody
@@ -276,6 +291,7 @@ const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
           striped && (isTinted ? styles.bodyStripedTinted : styles.bodyStriped),
           hoverable && (isTinted ? styles.bodyHoverableTinted : styles.bodyHoverable),
           stickyFirstColumn && styles.firstColumnSticky,
+          stickyLastColumn && styles.lastColumnSticky,
           className,
         )}
       >
@@ -288,9 +304,18 @@ TableBody.displayName = "Table.Body";
 
 /** The footer group (`<tfoot>`) — holds summary/totals `Table.Row`s, set apart from the body rows. */
 const TableFooter = forwardRef<HTMLTableSectionElement, TableFooterProps>(({ className, ...props }, ref) => {
-  const { stickyFirstColumn } = useContext(TableContext);
+  const { stickyFirstColumn, stickyLastColumn } = useContext(TableContext);
   return (
-    <tfoot {...props} ref={ref} className={cx(styles.footer, stickyFirstColumn && styles.firstColumnSticky, className)} />
+    <tfoot
+      {...props}
+      ref={ref}
+      className={cx(
+        styles.footer,
+        stickyFirstColumn && styles.firstColumnSticky,
+        stickyLastColumn && styles.lastColumnSticky,
+        className,
+      )}
+    />
   );
 });
 TableFooter.displayName = "Table.Footer";

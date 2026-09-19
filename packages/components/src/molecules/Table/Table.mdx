@@ -23,6 +23,7 @@ export const rootPropOrder = [
   "hoverable",
   "stickyHeader",
   "stickyFirstColumn",
+  "stickyLastColumn",
   "maxHeight",
   "aria-label",
   "aria-labelledby",
@@ -170,6 +171,14 @@ from the table's first row.
 
 <Canvas of={TableStories.StickyFirstColumn} />
 
+### Sticky last column (scroll sideways)
+
+<Canvas of={TableStories.StickyLastColumn} />
+
+### Sticky first and last columns together
+
+<Canvas of={TableStories.StickyFirstAndLastColumns} />
+
 ### Sticky header and first column together
 
 <Canvas of={TableStories.StickyHeaderAndColumn} />
@@ -225,6 +234,8 @@ from the table's first row.
   height to scroll.
 - Use `stickyFirstColumn` on a wide table whose first column identifies the row (an ID, a name), so the label stays in
   view while the reader scrolls sideways.
+- Use `stickyLastColumn` when the trailing column should stay in view too — an actions column, a running total. It
+  combines with `stickyFirstColumn` to pin both edges.
 - Show a skeleton while data is on its way with `<Table.Body loading>`, so the table keeps its shape and doesn't jump
   when the rows arrive; and render a `Table.Empty` — saying what to do next — when there's genuinely nothing to show.
 - Use `variant="ghost"` when embedding a `Table` inside a container that already has its own border (a `Card`).
@@ -279,7 +290,7 @@ from the table's first row.
 - While `loading`, the body is marked busy (`aria-busy`) and a visually hidden "Loading" message (set your own with
   `loadingLabel`) is announced; the skeleton shapes themselves are hidden from assistive technology. `Table.Empty`
   is an ordinary cell spanning the table, read like any other content.
-- `stickyFirstColumn` changes only how the table looks while scrolling — the DOM order, header associations, and
+- `stickyFirstColumn` and `stickyLastColumn` change only how the table looks while scrolling — the DOM order, header associations, and
   keyboard behaviour are unchanged.
 - `striped` and `hoverable` backgrounds keep body text (`text.primary`) at 6.5:1 or better — comfortably above the
   4.5:1 AA text-contrast floor — in every theme, light and dark. Under any non-neutral `tone`, header
@@ -334,6 +345,14 @@ from the table's first row.
   {/* … */}
 </Table>
 
+{/* A trailing column that stays in view too — alone, or with the first column */}
+<Table stickyLastColumn>
+  {/* … */}
+</Table>
+<Table stickyFirstColumn stickyLastColumn>
+  {/* … */}
+</Table>
+
 {/* Skeleton rows while loading; an empty message when there's nothing to show */}
 <Table.Body loading loadingRows={5} />
 <Table.Body>{rows.length ? rows : <Table.Empty>No invoices yet</Table.Empty>}</Table.Body>
@@ -361,7 +380,7 @@ from the table's first row.
 
 <TokenRow token="text.primary" usage="data cell text" />
 <TokenRow token="text.secondary" usage="header cell text, caption text, and empty-state / loading rows" />
-<TokenRow token="bg.surface" usage="a pinned (sticky) cell's background — a pinned header cell, or a pinned first-column cell in an untinted row — opaque, so content scrolling beneath it never shows through; the header, caption, and footer have no background otherwise" />
+<TokenRow token="bg.surface" usage="a pinned (sticky) cell's background — a pinned header cell, or a pinned first- or last-column cell in an untinted row — opaque, so content scrolling beneath it never shows through; the header, caption, and footer have no background otherwise" />
 <TokenRow token="bg.neutral-subtle" usage="striped row background" />
 <TokenRow token="bg.neutral-subtle-hover" usage="hovered row background" />
 <TokenRow token="bg.brand" usage="tone=brand: header cell and caption background, and the header's divider" />
@@ -384,7 +403,7 @@ from the table's first row.
 <TokenRow token="text.on-info" usage="tone=info: header cell and caption text" />
 <TokenRow token="bg.info-subtle" usage="tone=info: striped row background" />
 <TokenRow token="bg.info-subtle-hover" usage="tone=info: hovered row background" />
-<TokenRow token="border.default" usage="table border (bordered variant), the divider between rows, and the divider beside a pinned first column" />
+<TokenRow token="border.default" usage="table border (bordered variant), the divider between rows, and the divider beside a pinned first or last column" />
 <TokenRow token="border.neutral" usage="the stronger divider beneath the header row" />
 <TokenRow token="border.focus" usage="scroll frame focus-visible outline color" />
 <TokenRow token="border-width.1" usage="table border and row-divider width" />
@@ -399,7 +418,7 @@ from the table's first row.
 <TokenRow token="space.1–space.6" usage="cell padding across the five size steps" />
 <TokenRow token="space.3–space.4" usage="caption padding" />
 <TokenRow token="space.8" usage="empty-state message cell's vertical padding" />
-<TokenRow token="z-index.sticky" usage="sticky layering: a pinned first column sits at this level, the pinned header one above it, and the corner cell (both pinned) one above that" />
+<TokenRow token="z-index.sticky" usage="sticky layering: a pinned first or last column sits at this level, the pinned header one above it, and a corner cell (header and column both pinned) one above that" />
 <TokenRow token="motion.duration.fast" usage="hovered row and pinned-cell background transition" />
 <TokenRow token="motion.easing.standard" usage="hovered row and pinned-cell background transition" />
 

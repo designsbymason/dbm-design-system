@@ -777,6 +777,104 @@ describe("Table", () => {
     });
   });
 
+  describe("stickyLastColumn", () => {
+    it("pins no last column by default", () => {
+      renderTable();
+      screen.getAllByRole("rowgroup").forEach((group) => {
+        expect(group).not.toHaveClass(styles.lastColumnSticky ?? "");
+      });
+    });
+
+    it("marks the header, body, and footer row groups when set — and only the last column, not the first", () => {
+      renderTable({ stickyLastColumn: true });
+      screen.getAllByRole("rowgroup").forEach((group) => {
+        expect(group).toHaveClass(styles.lastColumnSticky ?? "");
+        expect(group).not.toHaveClass(styles.firstColumnSticky ?? "");
+      });
+    });
+
+    it("leaves the caption alone", () => {
+      renderTable({ stickyLastColumn: true });
+      expect(screen.getByText("Recent invoices")).not.toHaveClass(styles.lastColumnSticky ?? "");
+    });
+
+    it("can be combined with stickyFirstColumn — each row group carries both", () => {
+      renderTable({ stickyFirstColumn: true, stickyLastColumn: true });
+      screen.getAllByRole("rowgroup").forEach((group) => {
+        expect(group).toHaveClass(styles.firstColumnSticky ?? "", styles.lastColumnSticky ?? "");
+      });
+    });
+
+    it("composes with stickyHeader — the header group carries both classes", () => {
+      renderTable({ stickyLastColumn: true, stickyHeader: true, maxHeight: "10rem" });
+      expect(screen.getAllByRole("rowgroup")[0]).toHaveClass(
+        styles.lastColumnSticky ?? "",
+        styles.headerSticky ?? "",
+      );
+    });
+
+    it("composes with a tone and striped/hoverable rows", () => {
+      renderTable({ stickyLastColumn: true, tone: "danger", striped: true, hoverable: true });
+      const [header, body] = screen.getAllByRole("rowgroup");
+      expect(header).toHaveClass(styles.lastColumnSticky ?? "", styles.headerTinted ?? "", styles.toneDanger ?? "");
+      expect(body).toHaveClass(
+        styles.lastColumnSticky ?? "",
+        styles.bodyStripedTinted ?? "",
+        styles.bodyHoverableTinted ?? "",
+      );
+    });
+
+    it("doesn't leak into a table nested in a cell", () => {
+      render(
+        <Table stickyLastColumn aria-label="Outer">
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>
+                <Table aria-label="Inner">
+                  <Table.Body data-testid="inner-body">
+                    <Table.Row>
+                      <Table.Cell>x</Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                </Table>
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("inner-body")).not.toHaveClass(styles.lastColumnSticky ?? "");
+    });
+
+    it("also applies to loading skeleton rows and the empty state's row group", () => {
+      render(
+        <Table stickyLastColumn aria-label="States">
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>One</Table.HeaderCell>
+              <Table.HeaderCell>Two</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body data-testid="loading-body" loading />
+          <Table.Body data-testid="empty-body">
+            <Table.Empty>Nothing</Table.Empty>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("loading-body")).toHaveClass(styles.lastColumnSticky ?? "");
+      expect(screen.getByTestId("empty-body")).toHaveClass(styles.lastColumnSticky ?? "");
+    });
+
+    it("has no jest-axe violations with both columns and the header pinned", async () => {
+      const { container } = renderTable({
+        stickyFirstColumn: true,
+        stickyLastColumn: true,
+        stickyHeader: true,
+        maxHeight: "10rem",
+      });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe("numeric", () => {
     const renderCells = (cellProps: object, headerProps: object = {}) =>
       render(

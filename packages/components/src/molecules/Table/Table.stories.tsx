@@ -21,6 +21,7 @@ interface PlaygroundArgs {
   hoverable: boolean;
   stickyHeader: boolean;
   stickyFirstColumn: boolean;
+  stickyLastColumn: boolean;
   maxHeight: string;
   "aria-label": string;
   "aria-labelledby": string;
@@ -140,6 +141,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   hoverable: { control: false },
   stickyHeader: { control: false },
   stickyFirstColumn: { control: false },
+  stickyLastColumn: { control: false },
   maxHeight: { control: false },
   "aria-label": { control: false },
   "aria-labelledby": { control: false },
@@ -198,6 +200,12 @@ const meta: Meta<PlaygroundArgs> = {
         "Pins the first column to the start edge of the table's own scroll area while the rest scrolls sideways beneath it, so a row's label stays in view in a wide table. Only has a visible effect when the table is wider than its space; needs no maxHeight.",
       table: { defaultValue: { summary: "false" } },
     },
+    stickyLastColumn: {
+      control: "boolean",
+      description:
+        "Pins the last column to the end edge of the table's own scroll area while the rest scrolls sideways beneath it — the mirror of stickyFirstColumn, for a trailing column (an actions column, a running total) that should stay in view. Can be combined with stickyFirstColumn; needs no maxHeight.",
+      table: { defaultValue: { summary: "false" } },
+    },
     maxHeight: {
       control: "text",
       description:
@@ -253,6 +261,7 @@ const meta: Meta<PlaygroundArgs> = {
     hoverable: false,
     stickyHeader: false,
     stickyFirstColumn: false,
+    stickyLastColumn: false,
     maxHeight: "",
   },
   render: (args) => (
@@ -266,6 +275,7 @@ const meta: Meta<PlaygroundArgs> = {
         hoverable={args.hoverable}
         stickyHeader={args.stickyHeader}
         stickyFirstColumn={args.stickyFirstColumn}
+        stickyLastColumn={args.stickyLastColumn}
         maxHeight={args.maxHeight || undefined}
       />
     </div>
@@ -550,6 +560,47 @@ export const StickyFirstColumn: Story = {
     await expect(container.scrollLeft).toBeGreaterThan(0);
     await expect(Math.abs(after - before)).toBeLessThan(2);
   },
+};
+
+export const StickyLastColumn: Story = {
+  name: "Sticky last column (scroll sideways)",
+  argTypes: noControls,
+  render: () => (
+    // The last column — here the amounts and the total — stays in view at the
+    // end edge. Striped and hoverable so the pinned cells visibly keep matching
+    // their row's tint; a success tone shows the pinned header cell's fill.
+    <div style={{ maxWidth: "34rem", marginInline: "auto" }}>
+      <WideTable stickyLastColumn striped hoverable tone="success" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector("table");
+    const container = table?.parentElement;
+    const lastCell = table?.querySelector("tbody tr td:last-child");
+    if (!table || !container || !lastCell) throw new Error("Table not rendered");
+    await expect(container.scrollWidth).toBeGreaterThan(container.clientWidth);
+    const gapToEndEdge = () => container.getBoundingClientRect().right - lastCell.getBoundingClientRect().right;
+    // Unscrolled, the last column's natural position is far off the end edge; if
+    // it's pinned it already sits against that edge (the frame's own 1px border).
+    const before = gapToEndEdge();
+    await expect(before).toBeLessThan(4);
+    container.scrollLeft = 150;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(container.scrollLeft).toBeGreaterThan(0);
+    await expect(Math.abs(gapToEndEdge() - before)).toBeLessThan(2);
+  },
+};
+
+export const StickyFirstAndLastColumns: Story = {
+  name: "Sticky first and last columns together",
+  argTypes: noControls,
+  render: () => (
+    // Both edges pinned, plus the header: scroll in either direction and the
+    // row label, the trailing figure, and the header row all stay in view.
+    <div style={{ maxWidth: "34rem", marginInline: "auto" }}>
+      <WideTable stickyFirstColumn stickyLastColumn stickyHeader maxHeight="13rem" striped />
+    </div>
+  ),
 };
 
 export const StickyHeaderAndColumn: Story = {

@@ -96,6 +96,18 @@ export interface TableProps
    */
   stickyFirstColumn?: boolean;
   /**
+   * Pins the last column to the end edge of the table's own scroll area while
+   * the rest of the table scrolls sideways beneath it — the mirror of
+   * `stickyFirstColumn`, for a trailing column that should stay in view (an
+   * actions column, a running total). Applies to the last cell of every row in
+   * the header, body, and footer, and can be combined with `stickyFirstColumn`.
+   * Only has a visible effect when the table is actually wider than its space;
+   * it needs no `maxHeight`. The pinned cells are opaque so scrolling content
+   * never shows through them.
+   * @default false
+   */
+  stickyLastColumn?: boolean;
+  /**
    * Caps the height of the table's own scroll container (any valid CSS
    * `max-height` value, e.g. `"24rem"`), so a long body scrolls inside it
    * instead of growing the page. Required for `stickyHeader` to have any

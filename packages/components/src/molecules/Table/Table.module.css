@@ -132,6 +132,30 @@
   position: static;
 }
 
+/* `stickyLastColumn` — the mirror of `stickyFirstColumn`: the last cell of every
+   row is pinned to the inline-end edge, with the same opaque-cell technique (the
+   row's own tint, else `bg.surface`), its divider on the inner side, and the same
+   ordering before the header rules so a toned or pinned header keeps its fill.
+   The two can be combined; a single-cell row simply matches both. */
+.lastColumnSticky > tr > :last-child {
+  background-color: var(--row-tint, var(--dbm-bg-surface));
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  inset-inline-end: 0;
+  position: sticky;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-sticky);
+}
+
+/* A last cell that spans several columns opts out, for the same reason the first
+   cell does (a sticky cell can only travel within its own row), as does the
+   full-width empty-state cell. */
+.lastColumnSticky > tr > :last-child[colspan]:not([colspan="1"]),
+.lastColumnSticky > .emptyRow > :last-child {
+  background-color: transparent;
+  border-inline-start: none;
+  position: static;
+}
+
 /* `stickyHeader` — pinned on the header cells themselves (not the `<thead>`),
    which is the placement browsers support consistently. Resolves against
    `.container`'s own scroll, so it only bites once `maxHeight` gives the
@@ -149,7 +173,8 @@
 
 /* The corner — the first header cell when both the header and the first column
    are pinned — sits above both. */
-.headerSticky.firstColumnSticky > tr > :first-child {
+.headerSticky.firstColumnSticky > tr > :first-child,
+.headerSticky.lastColumnSticky > tr > :last-child {
   z-index: calc(var(--dbm-z-index-sticky) + 2);
 }
 
@@ -174,6 +199,10 @@
 
 .headerTinted.firstColumnSticky > tr > :first-child {
   border-inline-end-color: var(--tone-solid);
+}
+
+.headerTinted.lastColumnSticky > tr > :last-child {
+  border-inline-start-color: var(--tone-solid);
 }
 
 .bodyStriped > tr:nth-child(even) {
