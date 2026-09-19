@@ -94,7 +94,7 @@ Presenting information/content.
 | Avatar | atom | 🟢 | Image/initials fallback, status dot |
 | AvatarGroup | molecule | 🟡 | Stacked/overflow-counted |
 | DataTable | organism | 🟢 | Sort, select rows, pagination integration — this is the enterprise-critical component |
-| Table (simple) | molecule | 🟢 | Lighter-weight, non-interactive tabular display — compound (`Table.Header`/`Body`/`Footer`/`Row`/`HeaderCell`/`Cell`/`Caption`); owns an overflow-aware scroll container, see [ADR-0019](adr/0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md). No sorting/selection/pagination — that's `DataTable` |
+| Table (simple) | molecule | 🟢 | Lighter-weight, non-interactive tabular display — compound (`Table.Header`/`Body`/`Footer`/`Row`/`HeaderCell`/`Cell`/`Caption`); owns an overflow-aware scroll container, see [ADR-0019](adr/0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md). Also: `stickyHeader`/`stickyFirstColumn`, six colour `tone`s, a `numeric` cell option, a `loading` body with skeleton rows, and a `Table.Empty` state. No sorting/selection/pagination — that's `DataTable` |
 | Pagination | molecule | 🟢 | (Cross-listed conceptually with Navigation, lives here as it's data-bound) |
 | Stat / KPI | molecule | 🟡 | Metric + label + trend indicator |
 | Timeline | organism | 🟡 | Vertical event sequence |

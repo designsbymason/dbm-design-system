@@ -10,8 +10,8 @@ Finalized status.
 elements: `Table` (root) with `Table.Caption`, `Table.Header`, `Table.Body`, `Table.Footer`, `Table.Row`,
 `Table.HeaderCell`, and `Table.Cell`. Each sub-part's own props get a `### Table.{Part} properties`
 subsection on the Docs page via a hidden, docs-only stories file per
-[ADR-0013](../adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md) — seven of
-them, the most of any component so far.
+[ADR-0013](../adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md) — seven at
+first build, eight once `Table.Empty` was added (see the 2026-09-19 section), the most of any component so far.
 
 ## Decisions made with the user before building
 
@@ -47,8 +47,8 @@ Asked rather than guessed, since the guidelines were silent on all three:
   (which takes `left`/`right`/…) from `<th>`/`<td>`/`<tr>` so the typed prop can't collide with it.
 - **Header cells don't wrap** (`white-space: nowrap`) — found live, see below. Data cells still wrap.
 - **Not built, deliberately:** no sorting, selection, or pagination (that's `DataTable`, an organism built on
-  this); no `numeric` convenience prop (right-aligned tabular figures) — `align="end"` covers the alignment and
-  the rest is a judgment call, flagged below rather than built unprompted.
+  this). *(A `numeric` convenience prop, a sticky first column, and loading/empty states were initially left out
+  and flagged for a go-ahead; all three were built afterwards — see the 2026-09-19 section below.)*
 
 ## Baseline correctness
 
@@ -259,15 +259,89 @@ Re-verified: 89 unit tests (up from 50 at first build — the tone tests run per
 including jest-axe with striped + hoverable + sticky for each); the Table story files (19 tests, including axe on the
 all-tones and caption stories); `tsc --noEmit` (both tsconfigs) and `eslint` clean.
 
-## Feature-completeness gaps named, deliberately not built
+## Feature-completeness gaps built (2026-09-19, at explicit direction)
 
-Per `06-engineering-standards.md` §9's scope-creep guardrail — real, nameable gaps relative to what comparable
-production tables offer, each a design decision rather than a narrow fix, so surfaced here for a go-ahead instead of
-built unprompted:
+The three gaps this review had named and deliberately not built — a sticky first column, a `numeric` convenience, and
+loading/empty states — were built on request. The sub-decisions below are mine, made where the request left the API
+open; each is a small, reversible choice.
 
-- **A sticky first column** — the common companion to a sticky header for wide tables (keeping the row label in view
-  while scrolling sideways). Needs its own opaque-background and z-index layering decisions.
-- **A `numeric` (or `Table.Cell` `tabular`) convenience** — right-aligned tabular figures in one prop, instead of
-  `align="end"` alone, since proportional digits don't line up even when right-aligned.
-- **A loading / empty state** — a built-in skeleton-row pattern while data arrives, and an empty-body message. Both are
-  arguably `DataTable` concerns, but a simple table showing "no results" is common enough to consider here.
+**1. Sticky first column — `stickyFirstColumn` on `Table`** (boolean, default `false`, mirroring `stickyHeader`).
+- Pins the first cell of every row in the header, body, and footer to the inline-start edge (logical, so it follows RTL),
+  resolving against the same scroll frame as everything else. Needs no `maxHeight`.
+- **Pinned cells must be opaque, yet a striped or hovered row is tinted on the row itself.** Solved with a per-row custom
+  property: a striped or hovered `<tr>` sets `--row-tint` alongside its own background, and the pinned cell paints
+  `var(--row-tint, var(--dbm-bg-surface))` — the row's tint if it has one, else `bg.surface`. The property is reset on
+  every `.table` so a table nested in a cell can't inherit an outer row's tint. Hover still transitions on the pinned cell.
+- **Layering.** Pinned column cells sit at `z-index.sticky`, the pinned header cells one above, and the corner cell (both
+  pinned) one above that, so neither scrolled axis ever paints over the header. (This raised the sticky header's own
+  `z-index` by one step; verified in a real browser, not just by reading the CSS.)
+- **Composes with tones:** a toned header keeps its fill on its first cell, and the divider beside a pinned header cell
+  takes the fill's own colour. The rule is kept at the same specificity as the header rules and ordered before them, so a
+  toned or pinned header wins by declaration order.
+- **A first cell that spans several columns opts out of pinning** (`colspan` > 1, or the empty-state cell). Found live: a
+  footer's "Total" label spanning six columns sat at `-126px` after a 230px scroll instead of pinning, because a sticky
+  cell can only travel within its own row, so one as wide as most of the table runs out of room. Not pinning it is cleaner
+  than pinning it partway; the story's footer now uses a non-spanning label cell (`Total` + a `colSpan={5}` filler).
+
+**2. `numeric` on `Table.Cell` and `Table.HeaderCell`** (boolean, default `false`) — end-aligns and sets
+`font-variant-numeric: tabular-nums`. An explicit `align` always wins over the end-alignment `numeric` implies (tested,
+including `align="start"`); `align`'s default is now derived (`start`, or `end` under `numeric`) rather than a fixed
+`"start"`.
+- **Correction to this review's own earlier rationale.** The gap was named on the grounds that right-alignment alone
+  doesn't line digits up "because proportional digits differ in width". Measured directly in a real browser, that is
+  **font-dependent**: Nunito, the primary font, already has equal-width digits (a row of `1`s and a row of `8`s measure
+  identically at 192px), so with it `numeric` changes nothing visible beyond the alignment shorthand. It matters where a
+  font has proportional digits *and* a tabular-figures feature — the system UI font a page falls back to when Nunito isn't
+  loaded (146px vs 196px proportional, identical at 197.5px with `tabular-nums`). Fonts without the feature (Georgia,
+  Helvetica/Arial) are unaffected either way. The JSDoc, the Docs page, and the story now say this plainly instead of
+  overclaiming, and the "Numeric columns" story is rendered in the system font on purpose so the difference is actually
+  visible (in Nunito the two tables would be identical). Still worth having: it keeps figures aligned in the fallback case
+  and is one prop instead of `align` plus a class.
+
+**3. Loading and empty states.**
+- **`loading` on `Table.Body`** (plus `loadingRows`, default 3, and `loadingLabel`, default `"Loading"`) replaces the rows
+  with skeleton rows — one cell per column, built from the existing `Skeleton` atom (atom-reuse audit). The body is marked
+  `aria-busy`, and a `VisuallyHidden` label is announced once in the first cell; the skeleton shapes are `aria-hidden`.
+  Placeholder widths vary from CSS so a block of them reads as ragged text. Row height matches real rows (41px vs ~41px), so
+  nothing jumps when data arrives. `aria-busy` is set *after* the props spread and only while loading, so it can't clobber a
+  consumer's own value the rest of the time (tested).
+- **`Table.Empty`** — a new eighth sub-part: `<tr>` + one `<td>` spanning every column, centered, `text.secondary`, roomier
+  padding (`space.8`), sized by the table's `size`. Placed inside `Table.Body` in place of rows, so the consumer decides when
+  the table is empty. Doesn't stripe or highlight on hover (rows marked `statusRow` are excluded from both hover rules).
+  `ref` forwards to the `<td>`; a native `colSpan` overrides the inferred count. Gets its own hidden docs-only stories file
+  per [ADR-0013](../adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md).
+- **Both need the column count, which `Table` now infers rather than asking for.** A new `useColumnCount` hook reads the
+  first row's cells and sums their `colSpan` (`HTMLTableElement.rows` lists only this table's own rows, so a nested table
+  never contributes; a grouped header whose first row has fewer, wider cells still totals correctly — tested with
+  `rowSpan`/`colSpan` cells). It uses `useSyncExternalStore` for the same reason `useScrollableRegion` does (correct on the
+  first frame, and it satisfies the lint rule against setting state in effects). With no header row it falls back to one
+  column; `Table.Empty`'s `colSpan` can override it. Verified live: a 4-column table renders 4 skeleton cells per row and a
+  `colspan="4"` empty cell on the first frame.
+
+**One lint-driven change to existing code.** Adding these features made the React Compiler lint rule flag the component's
+long-standing dev-mode warning, which read and wrote a ref during render (`hasWarnedStickyWithoutHeightRef`). Bisected to
+confirm it wasn't caused by any one new ref, then replaced with a `useEffect` — the warning now fires after commit, needs no
+ref, and still fires once for unchanged props (the existing warn-once tests pass unchanged).
+
+**Verification.** 34 new unit tests (123 total for the component), covering: the sticky-column classes on all three row
+groups and their composition with `stickyHeader`, tones, striping, and nesting; `numeric` and its `align` interplay; loading
+(default and custom row counts and labels, `aria-busy`, the hidden label, `aria-hidden` skeletons, grouped-header and
+no-header column counts, nested tables); `Table.Empty` (colSpan inference and override, ref/passthrough, status-row
+marking); and jest-axe for each new state. In a real Chromium: the story tests (24 in the Table files, 510 across the
+package) include a `play` function that scrolls the wide table sideways and asserts the pinned cell does not move, and axe on
+every new story. Checked live in a running Storybook: pinned cells at the frame's edge after scrolling (header, both body
+rows, and footer), striped-row pinned cells matching their row tint exactly, the brand/info-toned pinned header keeping its
+fill, the corner cell layering (`1102` over `1101` over `1100`) with the element at the corner point being the corner cell,
+loading rows matching the header's column count, and the empty cell's `colspan`. Lint (`eslint` plus both `tsc` passes),
+1518 unit tests, 510 browser tests, the build, and all size/coverage checks pass. Per-component bundle size grew from
+1.73KB JS / 0.76KB CSS gzipped to 2.52KB / 1.32KB (it now bundles `Skeleton` and `VisuallyHidden`); still within budget.
+
+## Remaining gaps named, deliberately not built
+
+Nothing further is outstanding from the original three. Two adjacent ideas surfaced while building them, both design
+decisions rather than narrow fixes, so recorded here instead of built unprompted:
+
+- **A sticky last column** (an actions or total column pinned to the end edge) — the mirror of `stickyFirstColumn`; would
+  reuse the same opaque-cell/tint technique with `inset-inline-end`.
+- **Pinning more than one leading column** — e.g. an ID and a name together. Needs the second column's offset to equal the
+  first's rendered width, which CSS alone can't know; would require measuring or a consumer-supplied width.
