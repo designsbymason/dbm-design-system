@@ -1,8 +1,9 @@
 import { HeartIcon, StarIcon, XIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Checkbox } from "./Checkbox";
+import { checkboxPlaygroundSnippet, checkboxSnippets } from "./Checkbox.snippets";
 import type { CheckboxProps } from "./Checkbox.types";
 
 // The Controls panel can't natively drive an arbitrary component reference,
@@ -158,10 +159,20 @@ export default meta;
 type Story = StoryObj<typeof Checkbox>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => checkboxPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: checkboxSnippets.allSizes } } },
   // `size`/`children` are the whole point of this grid — each instance
   // intentionally varies both together (the size name doubles as its own
   // label), so no single control value could represent them. Defaulted to
@@ -184,6 +195,7 @@ export const AllSizes: Story = {
 };
 
 export const States: Story = {
+  parameters: { docs: { source: { code: checkboxSnippets.states } } },
   // Each row demonstrates a specific, fixed state combination — together,
   // `defaultChecked`/`checked`/`disabled`/`hasError`/`children` are what
   // define that row, so all five are pinned per instance rather than
@@ -252,6 +264,7 @@ export const States: Story = {
 
 export const IconOnly: Story = {
   name: "Without a label (aria-label required)",
+  parameters: { docs: { source: { code: checkboxSnippets.iconOnly } } },
   // The whole point is demonstrating a label-less checkbox, so `children`
   // is deliberately dropped regardless of the shared Playground default —
   // every other prop stays live via `{...args}`.
@@ -262,6 +275,7 @@ export const IconOnly: Story = {
 
 export const CustomIcons: Story = {
   name: "Custom check/indeterminate icons",
+  parameters: { docs: { source: { code: checkboxSnippets.customIcons } } },
   // `icon`/`indeterminateIcon` are the whole point here, fixed per instance
   // so the comparison against the default glyph is visible side by side —
   // `size`/`hasError`/`disabled` still stay live via `{...args}`.
@@ -288,6 +302,7 @@ export const CustomIcons: Story = {
 
 export const SelectAllPattern: Story = {
   name: "Select-all / indeterminate pattern",
+  parameters: { docs: { source: { code: checkboxSnippets.selectAllPattern } } },
   // `checked`/`onCheckedChange`/`defaultChecked`/`children` are all driven
   // by this story's own local state (the whole point of the demo), so
   // those are excluded from the live controls — but `size`/`hasError`/

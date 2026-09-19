@@ -1,7 +1,19 @@
+import * as icons from "@dbm-design-system/icons";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import * as library from "./index";
 import { avatarPlaygroundSnippet } from "./atoms/Avatar/Avatar.snippets";
+import { buttonPlaygroundSnippet } from "./atoms/Button/Button.snippets";
+import { checkboxPlaygroundSnippet } from "./atoms/Checkbox/Checkbox.snippets";
+import { closeButtonPlaygroundSnippet } from "./atoms/CloseButton/CloseButton.snippets";
+import { fieldErrorPlaygroundSnippet } from "./atoms/FieldError/FieldError.snippets";
+import { fieldHelperTextPlaygroundSnippet } from "./atoms/FieldHelperText/FieldHelperText.snippets";
+import { fieldLabelPlaygroundSnippet } from "./atoms/FieldLabel/FieldLabel.snippets";
+import { iconButtonPlaygroundSnippet } from "./atoms/IconButton/IconButton.snippets";
+import { inputPlaygroundSnippet } from "./atoms/Input/Input.snippets";
+import { radioPlaygroundSnippet } from "./atoms/Radio/Radio.snippets";
+import { switchPlaygroundSnippet } from "./atoms/Switch/Switch.snippets";
+import { textareaPlaygroundSnippet } from "./atoms/Textarea/Textarea.snippets";
 import { badgePlaygroundSnippet } from "./atoms/Badge/Badge.snippets";
 import { progressBarPlaygroundSnippet } from "./atoms/ProgressBar/ProgressBar.snippets";
 import { progressCirclePlaygroundSnippet } from "./atoms/ProgressCircle/ProgressCircle.snippets";
@@ -66,7 +78,9 @@ function problemsIn(code: string): string[] {
     problems.push(`is not valid TSX: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`);
   }
 
-  const exported = library as unknown as Record<string, Record<string, unknown> | undefined>;
+  // The components package, plus the icons package — a snippet's comment says where an
+  // icon comes from (`{/* HeartIcon comes from @dbm-design-system/icons */}`).
+  const exported = { ...icons, ...library } as unknown as Record<string, Record<string, unknown> | undefined>;
   const source = ts.createSourceFile("snippet.tsx", wrapped, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const visit = (node: ts.Node) => {
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
@@ -114,8 +128,8 @@ for (const [file, module] of Object.entries(snippetModules)) {
 
 describe("story snippets", () => {
   it("finds the snippet files", () => {
-    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(21);
-    expect(namedSnippets.length).toBeGreaterThan(130);
+    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(32);
+    expect(namedSnippets.length).toBeGreaterThan(165);
   });
 
   it.each(namedSnippets)("%s is a real, pasteable snippet", (_name, code) => {
@@ -516,5 +530,202 @@ describe("Playground snippets for the seven feedback and data-display atoms", ()
     expect(spinnerPlaygroundSnippet({ size: "md", label: "" })).toBe("<Spinner />");
     expect(spinnerPlaygroundSnippet({ size: "md", tone: "brand", label: "" })).toBe('<Spinner tone="brand" />');
     expect(spinnerPlaygroundSnippet({ tone: "brand", label: "Loading" })).toBe('<Spinner tone="brand" label="Loading" />');
+  });
+});
+
+describe("Playground snippets for the eleven input and field atoms", () => {
+  it.each([
+    {},
+    { children: "Pay", variant: "destructive", size: "lg", type: "submit", "aria-label": "Pay now", isLoading: true, loadingText: "Paying…", fullWidth: true, disabled: true },
+    { children: "Export", variant: "secondary" },
+  ])("Button %j is a real snippet", (args) => {
+    expect(problemsIn(buttonPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Button writes only what differs, and turns an icon component back into its name", async () => {
+    const { WalletIcon, ArrowRightIcon } = await import("@dbm-design-system/icons");
+    expect(buttonPlaygroundSnippet({ children: "Button", variant: "primary", size: "md", type: "button", leadingIcon: "None" })).toBe("<Button>Button</Button>");
+    expect(buttonPlaygroundSnippet({ children: "Pay", leadingIcon: WalletIcon, trailingIcon: ArrowRightIcon })).toBe(
+      "<Button leadingIcon={WalletIcon} trailingIcon={ArrowRightIcon}>Pay</Button>",
+    );
+    expect(buttonPlaygroundSnippet({ children: "Saving", isLoading: true })).toBe("<Button isLoading>Saving</Button>");
+  });
+
+  it.each([
+    {},
+    { variant: "ghost", size: "xs", rounded: true, type: "submit", isLoading: true, loadingLabel: "Saving…", disabled: true, "aria-label": "Like" },
+    { interactionMode: "Toggle", defaultPressed: true, variant: "ghost" },
+  ])("IconButton %j is a real snippet", (args) => {
+    expect(problemsIn(iconButtonPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("IconButton always writes its icon and name, and toggle as defaultPressed plus a handler", async () => {
+    const { TrashIcon } = await import("@dbm-design-system/icons");
+    expect(iconButtonPlaygroundSnippet({})).toBe('<IconButton icon={HeartIcon} aria-label="Favorite" />');
+    expect(iconButtonPlaygroundSnippet({ icon: TrashIcon, "aria-label": "Delete" })).toBe('<IconButton icon={TrashIcon} aria-label="Delete" />');
+    expect(iconButtonPlaygroundSnippet({ interactionMode: "Non-toggle", defaultPressed: true })).not.toContain("defaultPressed");
+    expect(iconButtonPlaygroundSnippet({ interactionMode: "Toggle", defaultPressed: false })).toContain("defaultPressed={false} onPressedChange={handlePressedChange}");
+  });
+
+  it.each([
+    {},
+    { children: "Accept", size: "lg", defaultChecked: true, hasError: true, required: true, name: "terms", value: "yes", "aria-label": "Accept terms", disabled: true },
+    { children: "", "aria-label": "Select row", defaultChecked: "indeterminate" },
+  ])("Checkbox %j is a real snippet", (args) => {
+    expect(problemsIn(checkboxPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Checkbox writes only what differs, and a label-less one as self-closing", async () => {
+    const { StarIcon, XIcon } = await import("@dbm-design-system/icons");
+    expect(checkboxPlaygroundSnippet({ children: "Accept", size: "md", defaultChecked: false })).toBe("<Checkbox>Accept</Checkbox>");
+    expect(checkboxPlaygroundSnippet({ children: "", "aria-label": "Select row" })).toBe('<Checkbox aria-label="Select row" />');
+    expect(checkboxPlaygroundSnippet({ children: "x", icon: StarIcon, indeterminateIcon: XIcon })).toBe(
+      "<Checkbox icon={StarIcon} indeterminateIcon={XIcon}>x</Checkbox>",
+    );
+  });
+
+  it.each([{}, { size: "xl", rounded: true, hasBackground: true, type: "reset", disabled: true, "aria-label": "Dismiss" }])(
+    "CloseButton %j is a real snippet",
+    (args) => {
+      expect(problemsIn(closeButtonPlaygroundSnippet(args as never))).toEqual([]);
+    },
+  );
+
+  it("CloseButton always writes a name, and only what differs", () => {
+    expect(closeButtonPlaygroundSnippet({ size: "md", rounded: false, hasBackground: false, type: "button", "aria-label": "" })).toBe(
+      '<CloseButton aria-label="Close" />',
+    );
+    expect(closeButtonPlaygroundSnippet({ rounded: true })).toBe('<CloseButton aria-label="Close" rounded />');
+  });
+
+  it("FieldError writes the icon as true (nothing), false, or a named component", async () => {
+    const { StarIcon } = await import("@dbm-design-system/icons");
+    for (const args of [{}, { icon: true }, { icon: false }, { icon: StarIcon }, { disabled: true }, { icon: "Default" }]) {
+      expect(problemsIn(fieldErrorPlaygroundSnippet(args))).toEqual([]);
+    }
+    expect(fieldErrorPlaygroundSnippet({ children: "Bad", icon: true })).toBe("<FieldError>Bad</FieldError>");
+    expect(fieldErrorPlaygroundSnippet({ children: "Bad", icon: false })).toBe("<FieldError icon={false}>Bad</FieldError>");
+    expect(fieldErrorPlaygroundSnippet({ children: "Bad", icon: StarIcon, disabled: true })).toBe(
+      "<FieldError icon={StarIcon} disabled>Bad</FieldError>",
+    );
+  });
+
+  it("FieldHelperText writes disabled only when set", () => {
+    expect(problemsIn(fieldHelperTextPlaygroundSnippet({}))).toEqual([]);
+    expect(fieldHelperTextPlaygroundSnippet({ children: "Help", disabled: false })).toBe("<FieldHelperText>Help</FieldHelperText>");
+    expect(fieldHelperTextPlaygroundSnippet({ children: "Help", disabled: true })).toBe("<FieldHelperText disabled>Help</FieldHelperText>");
+  });
+
+  it.each([{}, { children: "Name", htmlFor: "name", size: "lg", required: true, disabled: true }])("FieldLabel %j is a real snippet", (args) => {
+    expect(problemsIn(fieldLabelPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("FieldLabel always writes htmlFor, and only what differs", () => {
+    expect(fieldLabelPlaygroundSnippet({ children: "Email address", htmlFor: "email", size: "md", required: false })).toBe(
+      '<FieldLabel htmlFor="email">Email address</FieldLabel>',
+    );
+    expect(fieldLabelPlaygroundSnippet({ htmlFor: "", required: true })).toContain('htmlFor="email" required');
+  });
+
+  it.each([
+    {},
+    { placeholder: "Email", size: "sm", type: "email", defaultValue: "x@y.z", hasError: true, required: true, readOnly: true, disabled: true, maxLength: 20, showCount: true, name: "email", "aria-label": "Email", suffix: "@example.com" },
+  ])("Input %j is a real snippet", (args) => {
+    expect(problemsIn(inputPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Input always writes a name, and only what differs", () => {
+    expect(inputPlaygroundSnippet({ type: "text", size: "md", "aria-label": "" })).toBe('<Input aria-label="Text" />');
+    expect(inputPlaygroundSnippet({ placeholder: "Email", hasError: true, defaultValue: "not-an-email" })).toBe(
+      '<Input aria-label="Text" placeholder="Email" defaultValue="not-an-email" hasError />',
+    );
+  });
+
+  it.each([
+    {},
+    { children: "Email", size: "lg", defaultChecked: true, hasError: true, required: true, name: "c", value: "sms", "aria-label": "SMS", disabled: true },
+    { children: "", "aria-label": "Select row", value: "row" },
+  ])("Radio %j is a real snippet", (args) => {
+    expect(problemsIn(radioPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Radio always writes a value, and a label-less one as self-closing", () => {
+    expect(radioPlaygroundSnippet({ children: "Email", value: "" })).toBe('<Radio value="email">Email</Radio>');
+    expect(radioPlaygroundSnippet({ children: "", value: "row", "aria-label": "Select row" })).toBe('<Radio value="row" aria-label="Select row" />');
+  });
+
+  it.each([
+    {},
+    { children: "Notify", size: "xs", defaultChecked: true, loading: true, hasError: true, required: true, name: "n", value: "on", "aria-label": "Notify", disabled: true },
+    { children: "", "aria-label": "Airplane mode" },
+  ])("Switch %j is a real snippet", (args) => {
+    expect(problemsIn(switchPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Switch writes only what differs, and thumb icons by name", async () => {
+    const { MoonIcon, SunIcon } = await import("@dbm-design-system/icons");
+    expect(switchPlaygroundSnippet({ children: "Email", size: "md", defaultChecked: false, loading: false })).toBe("<Switch>Email</Switch>");
+    expect(switchPlaygroundSnippet({ children: "Dark mode", checkedIcon: MoonIcon, uncheckedIcon: SunIcon })).toBe(
+      "<Switch checkedIcon={MoonIcon} uncheckedIcon={SunIcon}>Dark mode</Switch>",
+    );
+    expect(switchPlaygroundSnippet({ children: "", "aria-label": "Airplane mode" })).toBe('<Switch aria-label="Airplane mode" />');
+  });
+
+  it.each([
+    {},
+    { placeholder: "Add a comment…", hasError: true, size: "lg", autoResize: true, resize: "none", rows: 5, minRows: 3, maxRows: 6, defaultValue: "Hi", disabled: true, required: true, readOnly: true, maxLength: 140, showCount: true, name: "c", "aria-label": "Bio" },
+  ])("Textarea %j is a real snippet", (args) => {
+    expect(problemsIn(textareaPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("Textarea writes only what differs (rows defaults to 3, resize to vertical)", () => {
+    expect(textareaPlaygroundSnippet({ size: "md", rows: 3, resize: "vertical", autoResize: false, "aria-label": "" })).toBe('<Textarea aria-label="Comment" />');
+    expect(textareaPlaygroundSnippet({ autoResize: true, rows: 5, resize: "none" })).toBe('<Textarea aria-label="Comment" autoResize rows={5} resize="none" />');
+  });
+});
+
+describe("icon controls: Storybook's snippet transform is handed the control's option key, not the mapped component", () => {
+  // For a control with a `mapping` (`{ Star: StarIcon }`), `context.args` holds `"Star"`. A builder
+  // that only recognised the component silently dropped the icon (found on FieldError's "Without
+  // icon" story, whose snippet came out identical to the Playground's).
+  it("Button", () => {
+    expect(buttonPlaygroundSnippet({ children: "Pay", leadingIcon: "Wallet", trailingIcon: "ArrowRight" })).toBe(
+      "<Button leadingIcon={WalletIcon} trailingIcon={ArrowRightIcon}>Pay</Button>",
+    );
+    expect(buttonPlaygroundSnippet({ children: "Pay", leadingIcon: "None", trailingIcon: "Nonsense" })).toBe("<Button>Pay</Button>");
+  });
+
+  it("IconButton — and an unknown key still gives the required icon a name", () => {
+    expect(iconButtonPlaygroundSnippet({ icon: "Trash", "aria-label": "Delete" })).toBe('<IconButton icon={TrashIcon} aria-label="Delete" />');
+    expect(iconButtonPlaygroundSnippet({ icon: "Heart" })).toContain("icon={HeartIcon}");
+    expect(iconButtonPlaygroundSnippet({ icon: "Nonsense" })).toContain("icon={HeartIcon}");
+  });
+
+  it("Checkbox", () => {
+    expect(checkboxPlaygroundSnippet({ children: "x", icon: "Star", indeterminateIcon: "X" })).toBe(
+      "<Checkbox icon={StarIcon} indeterminateIcon={XIcon}>x</Checkbox>",
+    );
+    expect(checkboxPlaygroundSnippet({ children: "x", icon: "Default", indeterminateIcon: "Default" })).toBe("<Checkbox>x</Checkbox>");
+  });
+
+  it("Switch", () => {
+    expect(switchPlaygroundSnippet({ children: "Dark", checkedIcon: "Moon", uncheckedIcon: "Sun" })).toBe(
+      "<Switch checkedIcon={MoonIcon} uncheckedIcon={SunIcon}>Dark</Switch>",
+    );
+    expect(switchPlaygroundSnippet({ children: "x", checkedIcon: "None", uncheckedIcon: "None" })).toBe("<Switch>x</Switch>");
+  });
+
+  it("FieldError — Default is nothing, Hidden is icon={false}, a name is that icon", () => {
+    expect(fieldErrorPlaygroundSnippet({ children: "Bad", icon: "Default" })).toBe("<FieldError>Bad</FieldError>");
+    expect(fieldErrorPlaygroundSnippet({ children: "Bad", icon: "Hidden" })).toBe("<FieldError icon={false}>Bad</FieldError>");
+    expect(fieldErrorPlaygroundSnippet({ children: "Bad", icon: "Star" })).toBe("<FieldError icon={StarIcon}>Bad</FieldError>");
+    expect(fieldErrorPlaygroundSnippet({ children: "Bad", icon: "Heart" })).toBe("<FieldError icon={HeartIcon}>Bad</FieldError>");
+  });
+
+  it("Tag", () => {
+    expect(tagPlaygroundSnippet({ children: "Design", leadingIcon: "Tag", trailingIcon: "CheckCircle" })).toBe(
+      "<Tag leadingIcon={TagIcon} trailingIcon={CheckCircleIcon}>Design</Tag>",
+    );
+    expect(tagPlaygroundSnippet({ children: "Design", leadingIcon: "None", trailingIcon: "None" })).toBe("<Tag>Design</Tag>");
   });
 });

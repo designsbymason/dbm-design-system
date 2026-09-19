@@ -8,9 +8,10 @@ import {
   TrashIcon,
   WalletIcon,
 } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Button } from "./Button";
+import { buttonPlaygroundSnippet, buttonSnippets } from "./Button.snippets";
 import type { ButtonProps } from "./Button.types";
 
 // `leadingIcon`/`trailingIcon` take component references, not strings (see
@@ -170,10 +171,20 @@ export default meta;
 type Story = StoryObj<typeof Button>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => buttonPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllVariants: Story = {
   name: "All variants",
+  parameters: { docs: { source: { code: buttonSnippets.allVariants } } },
   // `variant`/`children` are the whole point of this grid — each instance
   // intentionally varies both together (the variant name doubles as its own
   // label), so no single control value could represent them. Every other
@@ -197,6 +208,7 @@ export const AllVariants: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: buttonSnippets.allSizes } } },
   // `size`/`children` are the whole point of this grid, same reasoning as
   // AllVariants above. Every other prop stays live and shared via
   // `{...args}`.
@@ -221,6 +233,7 @@ export const AllSizes: Story = {
 
 export const WithIcons: Story = {
   name: "Leading and trailing icons",
+  parameters: { docs: { source: { code: buttonSnippets.withIcons } } },
   // Each instance demonstrates a distinct, fixed icon/variant/label
   // combination, so `leadingIcon`/`trailingIcon`/`variant`/`children` are
   // pinned per instance rather than controllable. Every other prop (`size`,
@@ -274,20 +287,52 @@ export const WithIcons: Story = {
 
 export const Loading: Story = {
   name: "Loading state",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => buttonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { isLoading: true, children: "Saving" },
 };
 
 export const LoadingWithLoadingText: Story = {
   name: "Loading state with loadingText",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => buttonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { isLoading: true, loadingText: "Saving…", children: "Save" },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => buttonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true },
 };
 
 export const FullWidth: Story = {
   name: "Full width",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => buttonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // A single instance, so every prop (including `fullWidth` itself) stays
   // live and shared via `{...args}` — no axis to exclude here. Previously
   // this story used a bare `render: () => (...)` that ignored args
@@ -307,6 +352,7 @@ export const FullWidth: Story = {
 
 export const AsChild: Story = {
   name: "asChild (renders as an anchor)",
+  parameters: { docs: { source: { code: buttonSnippets.asChild } } },
   // A single instance, so every prop stays live and shared via `{...args}`
   // (`asChild` itself is forced regardless, matching the story's purpose —
   // it's already `control: false` at the meta level). Previously this
@@ -320,6 +366,7 @@ export const AsChild: Story = {
 
 export const AsChildDisabled: Story = {
   name: "asChild + disabled (aria-disabled, click blocked)",
+  parameters: { docs: { source: { code: buttonSnippets.asChildDisabled } } },
   // Same reasoning as AsChild above — `disabled: true` is a story-level arg
   // default (live/toggleable in Controls) rather than hardcoded in render.
   args: { disabled: true },

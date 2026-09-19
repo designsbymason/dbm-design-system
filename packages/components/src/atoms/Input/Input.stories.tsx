@@ -1,9 +1,10 @@
 import { MagnifyingGlassIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Icon } from "../Icon";
 import { Input } from "./Input";
+import { inputPlaygroundSnippet, inputSnippets } from "./Input.snippets";
 
 const meta: Meta<typeof Input> = {
   title: "Atoms/Inputs/Input",
@@ -197,10 +198,20 @@ export default meta;
 type Story = StoryObj<typeof Input>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => inputPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: inputSnippets.allSizes } } },
   // `size`/`placeholder` are the whole point of this grid — each instance
   // intentionally varies size (the size name doubles as its own label), so
   // no single control value could represent them. `hasError`/`disabled`
@@ -226,6 +237,7 @@ export const AllSizes: Story = {
 
 export const WithPrefixIcon: Story = {
   name: "With prefix icon",
+  parameters: { docs: { source: { code: inputSnippets.withPrefixIcon } } },
   // `prefix`/`placeholder` are the whole point here, fixed per instance —
   // `size`/`hasError`/`disabled` stay live via `{...args}`.
   argTypes: { prefix: { control: false }, placeholder: { control: false } },
@@ -242,6 +254,7 @@ export const WithPrefixIcon: Story = {
 
 export const WithSuffix: Story = {
   name: "With suffix text",
+  parameters: { docs: { source: { code: inputSnippets.withSuffix } } },
   // `suffix`/`placeholder` are the whole point here, fixed per instance —
   // `size`/`hasError`/`disabled` stay live via `{...args}`.
   argTypes: { suffix: { control: false }, placeholder: { control: false } },
@@ -254,6 +267,7 @@ export const WithSuffix: Story = {
 
 export const Clearable: Story = {
   name: "With a clear button",
+  parameters: { docs: { source: { code: inputSnippets.clearable } } },
   // `value`/`onChange`/`onClear` are all driven by this story's own local
   // state (the whole point of the demo), plus `prefix`/`placeholder` fixed
   // per instance — but `size`/`hasError`/`disabled` are still meaningful
@@ -296,6 +310,7 @@ export const Clearable: Story = {
 
 export const CharacterCount: Story = {
   name: "With character count",
+  parameters: { docs: { source: { code: inputSnippets.characterCount } } },
   // `value`/`onChange` are driven by this story's own local state (the
   // whole point of the demo), `maxLength`/`showCount`/`placeholder` fixed
   // per instance — but `size`/`hasError`/`disabled` still stay live via
@@ -335,15 +350,32 @@ export const CharacterCount: Story = {
 
 export const ErrorState: Story = {
   name: "Error state",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => inputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { hasError: true, placeholder: "Email", defaultValue: "not-an-email" },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => inputPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true, placeholder: "Disabled" },
 };
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (fills container width)",
+  parameters: { docs: { source: { code: inputSnippets.narrowViewport } } },
   // `placeholder` is the whole point, fixed per instance — `size`/
   // `hasError`/`disabled` stay live via `{...args}`. Previously this story
   // used a bare `render: () => (...)` that ignored args entirely.

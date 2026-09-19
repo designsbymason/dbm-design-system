@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { CloseButton } from "./CloseButton";
+import { closeButtonPlaygroundSnippet, closeButtonSnippets } from "./CloseButton.snippets";
 
 const meta: Meta<typeof CloseButton> = {
   title: "Atoms/Inputs/CloseButton",
@@ -87,10 +88,20 @@ export default meta;
 type Story = StoryObj<typeof CloseButton>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => closeButtonPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: closeButtonSnippets.allSizes } } },
   // `size` is the whole point of this grid, paired with `aria-label`
   // (fixed together per instance so each button keeps a distinct
   // accessible name) — no single control value could represent either
@@ -119,11 +130,20 @@ export const AllSizes: Story = {
 
 export const Rounded: Story = {
   name: "Rounded (circular)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => closeButtonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { rounded: true },
 };
 
 export const OnBusyBackground: Story = {
   name: "hasBackground, over unpredictable content",
+  parameters: { docs: { source: { code: closeButtonSnippets.onBusyBackground } } },
   // A CSS gradient stands in for a real photo/hero-image background here —
   // the point either way is content this component has no control over.
   // Side-by-side comparison: without hasBackground, the icon has nothing
@@ -148,5 +168,13 @@ export const OnBusyBackground: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => closeButtonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true },
 };

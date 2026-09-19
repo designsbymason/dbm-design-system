@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Textarea } from "./Textarea";
+import { textareaPlaygroundSnippet, textareaSnippets } from "./Textarea.snippets";
 
 const meta: Meta<typeof Textarea> = {
   title: "Atoms/Inputs/Textarea",
@@ -203,10 +204,20 @@ export default meta;
 type Story = StoryObj<typeof Textarea>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => textareaPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: textareaSnippets.allSizes } } },
   // `size`/`placeholder` are the whole point of this grid — each instance
   // intentionally varies size (the size name doubles as its own label), so
   // no single control value could represent them. Every other prop
@@ -238,6 +249,7 @@ export const AllSizes: Story = {
 
 export const AutoResize: Story = {
   name: "Auto-resize",
+  parameters: { docs: { source: { code: textareaSnippets.autoResize } } },
   // `autoResize`/`value`/`onChange`/`placeholder` are all driven by this
   // story's own local state/fixed setup (the whole point of the demo) —
   // but every other prop (`size`/`hasError`/`disabled`/etc.) still stays
@@ -276,6 +288,7 @@ export const AutoResize: Story = {
 
 export const BoundedAutoResize: Story = {
   name: "Auto-resize (bounded)",
+  parameters: { docs: { source: { code: textareaSnippets.boundedAutoResize } } },
   // Feature-completeness addition (guidelines/06-engineering-standards.md
   // §9 finding): a bounded auto-grow range (`minRows`/`maxRows`) was a
   // real, concrete gap — this component's own `autoResize` was on/off-only
@@ -312,6 +325,7 @@ export const BoundedAutoResize: Story = {
 
 export const Clearable: Story = {
   name: "With a clear button",
+  parameters: { docs: { source: { code: textareaSnippets.clearable } } },
   // Feature-completeness addition (guidelines/06-engineering-standards.md
   // §9 finding): a clear button was a real, concrete gap — this
   // component's own `Input` sibling already has `onClear`, Textarea
@@ -345,6 +359,7 @@ export const Clearable: Story = {
 
 export const CharacterCount: Story = {
   name: "With character count",
+  parameters: { docs: { source: { code: textareaSnippets.characterCount } } },
   // `value`/`onChange`/`maxLength`/`showCount`/`placeholder` are all
   // driven by this story's own local state/fixed setup (the whole point
   // of the demo) — but every other prop (`size`/`hasError`/`disabled`/
@@ -393,6 +408,14 @@ export const CharacterCount: Story = {
 
 export const ErrorState: Story = {
   name: "Error state",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => textareaPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { hasError: true, defaultValue: "" },
   render: (args) => (
     <div style={{ maxWidth: "24rem" }}>
@@ -402,6 +425,14 @@ export const ErrorState: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => textareaPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true, defaultValue: "Can't edit this" },
   render: (args) => (
     <div style={{ maxWidth: "24rem" }}>
@@ -412,6 +443,7 @@ export const Disabled: Story = {
 
 export const NarrowViewport: Story = {
   name: "Narrow viewport (fills container width)",
+  parameters: { docs: { source: { code: textareaSnippets.narrowViewport } } },
   // `placeholder` is the whole point, fixed per instance — every other
   // prop (`size`/`hasError`/`disabled`/etc.) stays live via `{...args}`.
   // Previously this story used a bare `render: () => (...)` that ignored

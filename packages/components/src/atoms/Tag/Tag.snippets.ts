@@ -101,15 +101,22 @@ export const tagSnippets = {
 ))}`,
 } as const;
 
-// The Playground's icon control hands the builder the icon component itself; this
-// turns it back into the name a reader would write.
+// The Playground's icon control hands the builder an icon — the component itself, or the
+// control's option key for it — and this turns either back into the name a reader would write.
 const iconNames: Array<[unknown, string]> = [
   [TagIcon, "TagIcon"],
   [StarIcon, "StarIcon"],
   [CheckCircleIcon, "CheckCircleIcon"],
   [InfoIcon, "InfoIcon"],
 ];
-const iconName = (icon: unknown) => iconNames.find(([component]) => component === icon)?.[1];
+const iconKeys = "Tag|Star|CheckCircle|Info".split("|");
+const iconName = (icon: unknown): string | undefined => {
+  const byComponent = iconNames.find(([component]) => component === icon)?.[1];
+  if (byComponent) return byComponent;
+  // For a control with a `mapping`, Storybook's snippet `transform` is handed the control's
+  // *option key* (`"Star"`), not the mapped component — so accept that form too.
+  return typeof icon === "string" && iconKeys.includes(icon) ? `${icon}Icon` : undefined;
+};
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface TagPlaygroundSnippetArgs {

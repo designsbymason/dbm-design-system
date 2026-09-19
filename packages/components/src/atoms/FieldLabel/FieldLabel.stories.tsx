@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { FieldLabel } from "./FieldLabel";
+import { fieldLabelPlaygroundSnippet, fieldLabelSnippets } from "./FieldLabel.snippets";
 
 const meta: Meta<typeof FieldLabel> = {
   title: "Atoms/Inputs/FieldLabel",
@@ -72,9 +73,26 @@ export default meta;
 type Story = StoryObj<typeof FieldLabel>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldLabelPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Required: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldLabelPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { required: true },
 };
 
@@ -88,11 +106,20 @@ export const Disabled: Story = {
   // no way to know that on its own. Deferred to this component's own
   // future review pass rather than annotated permanently here — see
   // guidelines/01-vision-and-goals.md §12.
-  parameters: { a11y: { test: "todo" } },
+  parameters: {
+    a11y: { test: "todo" },
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldLabelPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: fieldLabelSnippets.allSizes } } },
   // `size`/`children`/`htmlFor` are the whole point of this grid — each
   // instance intentionally varies size (the size name doubles as its own
   // label) and needs a unique `htmlFor` for a valid per-instance

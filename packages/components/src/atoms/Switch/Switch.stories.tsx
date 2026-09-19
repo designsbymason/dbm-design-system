@@ -1,7 +1,8 @@
 import { CheckIcon, MoonIcon, SunIcon, XIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Switch } from "./Switch";
+import { switchPlaygroundSnippet, switchSnippets } from "./Switch.snippets";
 import type { SwitchProps } from "./Switch.types";
 
 // The Controls panel can't natively drive an arbitrary component reference,
@@ -157,10 +158,20 @@ export default meta;
 type Story = StoryObj<typeof Switch>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => switchPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: switchSnippets.allSizes } } },
   // `size`/`children` are the whole point of this grid — each instance
   // intentionally varies both together (the size name doubles as its own
   // label), so no single control value could represent them. Defaulted to
@@ -183,6 +194,7 @@ export const AllSizes: Story = {
 };
 
 export const States: Story = {
+  parameters: { docs: { source: { code: switchSnippets.states } } },
   // Each row demonstrates a specific, fixed state combination — together,
   // `defaultChecked`/`disabled`/`hasError`/`loading`/`children` are what
   // define that row, so all five are pinned per instance rather than
@@ -221,6 +233,7 @@ export const States: Story = {
 
 export const WithThumbIcons: Story = {
   name: "With thumb icons",
+  parameters: { docs: { source: { code: switchSnippets.withThumbIcons } } },
   argTypes: { checkedIcon: { control: false }, uncheckedIcon: { control: false } },
   args: {
     checkedIcon: MoonIcon as unknown as SwitchProps["checkedIcon"],
@@ -232,6 +245,7 @@ export const WithThumbIcons: Story = {
 
 export const IconOnly: Story = {
   name: "Without a label (aria-label required)",
+  parameters: { docs: { source: { code: switchSnippets.iconOnly } } },
   // The whole point is demonstrating a label-less switch, so `children` is
   // deliberately dropped regardless of the shared Playground default —
   // every other prop stays live via `{...args}`.

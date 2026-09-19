@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { FieldHelperText } from "./FieldHelperText";
+import { fieldHelperTextPlaygroundSnippet } from "./FieldHelperText.snippets";
 
 const meta: Meta<typeof FieldHelperText> = {
   title: "Atoms/Inputs/FieldHelperText",
@@ -53,7 +54,16 @@ export default meta;
 type Story = StoryObj<typeof FieldHelperText>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldHelperTextPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const Disabled: Story = {
   args: { disabled: true },
@@ -65,5 +75,13 @@ export const Disabled: Story = {
   // no way to know that on its own. Deferred to this component's own
   // future review pass rather than annotated permanently here — see
   // guidelines/01-vision-and-goals.md §12.
-  parameters: { a11y: { test: "todo" } },
+  parameters: {
+    a11y: { test: "todo" },
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldHelperTextPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };

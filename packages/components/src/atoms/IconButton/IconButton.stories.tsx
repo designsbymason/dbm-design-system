@@ -1,7 +1,8 @@
 import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { IconButton } from "./IconButton";
+import { iconButtonPlaygroundSnippet, iconButtonSnippets } from "./IconButton.snippets";
 import type { IconButtonProps } from "./IconButton.types";
 
 // `icon` takes a component reference, not a string name (see
@@ -184,6 +185,14 @@ interface PlaygroundArgs extends IconButtonProps {
 }
 
 export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => iconButtonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   // Cast: `interactionMode` isn't part of `IconButtonProps` — see the
   // interface and comment above. `onPressedChange` is created once here
   // (module-eval time, not per-render) so its identity — and Actions-panel
@@ -221,6 +230,7 @@ export const Playground: Story = {
 
 export const AllVariants: Story = {
   name: "All variants",
+  parameters: { docs: { source: { code: iconButtonSnippets.allVariants } } },
   // `variant` is the whole point of this grid, paired with `icon`/
   // `aria-label` (fixed together per instance so every button keeps the
   // "delete" narrative and a distinct accessible name) — no single control
@@ -254,6 +264,7 @@ export const AllVariants: Story = {
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: iconButtonSnippets.allSizes } } },
   // `size` is the whole point of this grid, paired with `icon`/
   // `aria-label` (fixed together per instance, same reasoning as
   // AllVariants above). Every other prop stays live and shared via
@@ -280,25 +291,51 @@ export const AllSizes: Story = {
 
 export const Loading: Story = {
   name: "Loading state",
+  parameters: { docs: { source: { code: iconButtonSnippets.loading } } },
   args: { isLoading: true },
 };
 
 export const LoadingWithLoadingLabel: Story = {
   name: "Loading state with loadingLabel",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => iconButtonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { isLoading: true, loadingLabel: "Favoriting…" },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => iconButtonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { disabled: true },
 };
 
 export const Rounded: Story = {
   name: "Rounded (circular)",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => iconButtonPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { rounded: true },
 };
 
 export const Toggle: Story = {
   name: "Toggle (click to favorite)",
+  parameters: { docs: { source: { code: iconButtonSnippets.toggle } } },
   // Uncontrolled (`defaultPressed`) — IconButton manages its own pressed
   // state internally, so clicking directly in the canvas visibly toggles
   // the pressed treatment with no story-level state needed, same pattern
@@ -311,6 +348,7 @@ export const Toggle: Story = {
 
 export const AsChild: Story = {
   name: "asChild (renders as an anchor)",
+  parameters: { docs: { source: { code: iconButtonSnippets.asChild } } },
   // Every other prop stays live and shared via `{...args}` (`asChild`
   // itself is forced regardless, matching the story's purpose — it's
   // already `control: false` at the meta level). Previously this story
@@ -328,6 +366,7 @@ export const AsChild: Story = {
 
 export const AsChildDisabled: Story = {
   name: "asChild + disabled (aria-disabled, click blocked)",
+  parameters: { docs: { source: { code: iconButtonSnippets.asChildDisabled } } },
   // Same reasoning as AsChild above — `disabled: true` is a story-level
   // arg default (live/toggleable in Controls) rather than hardcoded in
   // render.

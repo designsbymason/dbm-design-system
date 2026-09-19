@@ -1,6 +1,7 @@
 import { HeartIcon, StarIcon } from "@dbm-design-system/icons";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { FieldError } from "./FieldError";
+import { fieldErrorPlaygroundSnippet, fieldErrorSnippets } from "./FieldError.snippets";
 import type { FieldErrorProps } from "./FieldError.types";
 
 // The Controls panel can't natively drive an arbitrary component reference
@@ -82,15 +83,33 @@ export default meta;
 type Story = StoryObj<typeof FieldError>;
 
 /** Drive every prop live via the Controls panel below. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldErrorPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const WithoutIcon: Story = {
   name: "Without icon",
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldErrorPlaygroundSnippet(context.args),
+      },
+    },
+  },
   args: { icon: "Hidden" as unknown as FieldErrorProps["icon"] },
 };
 
 export const CustomIcon: Story = {
   name: "Custom icon",
+  parameters: { docs: { source: { code: fieldErrorSnippets.customIcon } } },
   // `icon` is the whole point here, fixed per instance so the comparison
   // against the default glyph is visible side by side — `disabled` still
   // stays live via `{...args}`.
@@ -115,5 +134,13 @@ export const Disabled: Story = {
   // already carry this identical annotation for, not a new defect. axe has
   // no way to know that on its own. See guidelines/01-vision-and-goals.md
   // §12.
-  parameters: { a11y: { test: "todo" } },
+  parameters: {
+    a11y: { test: "todo" },
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => fieldErrorPlaygroundSnippet(context.args),
+      },
+    },
+  },
 };

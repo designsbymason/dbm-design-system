@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { RadioGroup } from "../../molecules/RadioGroup";
 import { Radio } from "./Radio";
-import { RadioGroupContext } from "./RadioGroupContext";
+import { radioPlaygroundSnippet, radioSnippets } from "./Radio.snippets";
 
 const meta: Meta<typeof Radio> = {
   title: "Atoms/Inputs/Radio",
@@ -104,10 +104,20 @@ export default meta;
 type Story = StoryObj<typeof Radio>;
 
 /** Drive every prop live via the Controls panel below. Standalone — see "Inside a RadioGroup" below for the grouped case. */
-export const Playground: Story = {};
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) => radioPlaygroundSnippet(context.args),
+      },
+    },
+  },
+};
 
 export const AllSizes: Story = {
   name: "All sizes",
+  parameters: { docs: { source: { code: radioSnippets.allSizes } } },
   // `size`/`children` are the whole point of this grid — each instance
   // intentionally varies both together, so no single control value could
   // represent them. `defaultChecked: true` so the checked state is visible
@@ -127,6 +137,7 @@ export const AllSizes: Story = {
 };
 
 export const States: Story = {
+  parameters: { docs: { source: { code: radioSnippets.states } } },
   // Each row demonstrates a specific, fixed state combination — same
   // reasoning as Checkbox's own States story.
   argTypes: {
@@ -159,19 +170,18 @@ export const States: Story = {
 
 export const WithoutLabel: Story = {
   name: "Without a label (aria-label required)",
+  parameters: { docs: { source: { code: radioSnippets.withoutLabel } } },
   argTypes: { children: { control: false } },
   args: { "aria-label": "Select row" },
   render: ({ children: _children, ...args }) => <Radio {...args} />,
 };
 
 export const InsideARadioGroup: Story = {
-  name: "Inside a RadioGroup (preview)",
-  // `RadioGroup` (the molecule that composes `Radio` for real) hasn't been
-  // built yet — this story constructs the same harness `RadioGroup` will
-  // use internally (Radix's real `RadioGroupPrimitive.Root` plus this
-  // package's own internal `RadioGroupContext` signal) purely to prove
-  // grouped-mode behavior works today. Once `RadioGroup` exists, this
-  // story should be rewritten to use it directly instead.
+  name: "Inside a RadioGroup",
+  parameters: { docs: { source: { code: radioSnippets.insideARadioGroup } } },
+  // The real `RadioGroup` molecule, which owns the selection and the keyboard
+  // navigation between its radios. The Playground's own args (size, hasError,
+  // disabled) still reach each `Radio`; the group-level ones live on `RadioGroup`.
   argTypes: {
     checked: { control: false },
     defaultChecked: { control: false },
@@ -185,27 +195,20 @@ export const InsideARadioGroup: Story = {
   render: function InsideARadioGroupStory(args) {
     const [value, setValue] = useState("email");
     return (
-      <RadioGroupPrimitive.Root
-        value={value}
-        onValueChange={setValue}
-        style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}
-      >
-        <RadioGroupContext.Provider value={true}>
-          <Radio {...args} value="email">
-            Email
-          </Radio>
-          <Radio {...args} value="sms">
-            SMS
-          </Radio>
-          <Radio {...args} value="phone">
-            Phone call
-          </Radio>
-        </RadioGroupContext.Provider>
-      </RadioGroupPrimitive.Root>
+      <RadioGroup aria-label="Contact method" value={value} onValueChange={setValue}>
+        <Radio {...args} value="email">
+          Email
+        </Radio>
+        <Radio {...args} value="sms">
+          SMS
+        </Radio>
+        <Radio {...args} value="phone">
+          Phone call
+        </Radio>
+      </RadioGroup>
     );
   },
 };
-
 export const ClickInteraction: Story = {
   name: "Interaction: checks on click, stays checked on a second click",
   args: { children: "Email" },
