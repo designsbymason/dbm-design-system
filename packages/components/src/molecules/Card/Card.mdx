@@ -15,7 +15,11 @@ export const rootPropOrder = [
   "variant",
   "tone",
   "size",
+  "orientation",
+  "mediaPosition",
+  "divided",
   "interactive",
+  "disabled",
   "asChild",
   "aria-label",
   "aria-labelledby",
@@ -24,6 +28,19 @@ export const rootPropOrder = [
   "className",
   "style",
   "data-testid",
+];
+// The Playground also has a Storybook-only `media` control (a demo `Card.Media`,
+// not a `Card` prop), which sits just before the props it makes visible.
+export const playgroundPropOrder = [
+  "variant",
+  "tone",
+  "size",
+  "media",
+  "orientation",
+  "mediaPosition",
+  "divided",
+  "interactive",
+  "disabled",
 ];
 export const sectionPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const footerPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
@@ -42,6 +59,9 @@ together rather than one component with a long list of props: put any of `Card.M
 The card itself carries no padding: each section pads itself and spaces itself evenly from its neighbours,
 so `Card.Media` can run edge to edge and is clipped to the card's rounded corners. `size` sets that padding.
 A `variant` picks the surface — a border, a shadow, a fill, or none — and a `tone` adds a colour accent.
+`orientation="horizontal"` puts the media beside the content (on either side, and switchable per breakpoint), `divided` draws a hairline between the sections,
+and `interactive` (with `asChild`) makes the whole card a link or button — which `disabled` can then take out
+of use.
 
 ### Import
 
@@ -56,7 +76,7 @@ import { Card } from "@dbm-design-system/components";
 <Canvas of={CardStories.Playground} />
 
 </div>
-<PlaygroundControls of={CardStories.Playground} order={rootPropOrder} exclude={["asChild", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]} />
+<PlaygroundControls of={CardStories.Playground} order={playgroundPropOrder} exclude={["asChild", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]} />
 
 ## Properties
 
@@ -68,7 +88,10 @@ root element.
 
 ### Card.Media properties
 
-Edge-to-edge media — an image, a video, a chart — clipped to the card's rounded corners. Also accepts any other
+Edge-to-edge media — an image, a video, a chart — clipped to the card's rounded corners. In a
+`orientation="horizontal"` card it sits beside the content instead — on the side `mediaPosition` names (the start side unless told otherwise) — filling the card's full height: an `<img>`,
+`<picture>`, or `<video>` is cropped to fit (`object-fit: cover`), and any other element should size itself to
+`100%` of the height. Also accepts any other
 native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed straight through.
 
 <PropertiesTable of={CardMediaStories} order={sectionPropOrder} />
@@ -114,9 +137,29 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
 
 <Canvas of={CardStories.WithMedia} />
 
+### Divided sections
+
+<Canvas of={CardStories.Divided} />
+
+### Horizontal orientation
+
+<Canvas of={CardStories.Horizontal} />
+
+### Media position
+
+<Canvas of={CardStories.MediaPosition} />
+
+### Responsive orientation
+
+<Canvas of={CardStories.ResponsiveOrientation} />
+
 ### Interactive — the whole card is a link
 
 <Canvas of={CardStories.InteractiveLink} />
+
+### Interactive — disabled
+
+<Canvas of={CardStories.Disabled} />
 
 ### Footer alignment
 
@@ -143,6 +186,13 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
 - Make a whole card clickable by rendering it as a link: `<Card asChild interactive><a href="…">…</a></Card>`.
   The link gives it real semantics and keyboard support.
 - Put media in `Card.Media` so it runs edge to edge — the card has no padding of its own to fight.
+- Use `divided` for a card with several distinct sections (a form, a settings panel) where the hairlines help
+  the eye separate them, and `orientation="horizontal"` for a compact card in a list, where a thumbnail beside
+  the text scans faster than a tall stacked card.
+- Use a responsive `orientation` (`{ base: "vertical", md: "horizontal" }`) for a card that should stack on a
+  phone and put its media beside the content from tablet width up.
+- Use `disabled` for a card that is temporarily unavailable but should still be seen — an unavailable plan, a
+  locked item — rather than removing it.
 - Use `tone` for a card whose whole subject carries that meaning — a failed payment, a pending review. Pair the
   colour with words in the header, so it doesn't rely on colour alone.
 - Lay equal-height cards out in a grid — `Card.Body` grows to fill the spare height, so the footers line up.
@@ -157,6 +207,10 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
 - Don't use a `Card` just to add a border around one element. If there's a single piece of content and no
   sections, reach for a plain bordered container instead.
 - Don't nest cards several levels deep — the surfaces compete. Use `ghost` for an inner one, or restructure.
+- Don't set `disabled` and expect it to do anything on a card that isn't `interactive` — there's nothing to
+  disable, and `Card` warns in development.
+- Don't use `orientation="horizontal"` without a `Card.Media`: with nothing to sit beside the content, it looks
+  exactly like a vertical card.
 - Don't rely on a tone's colour alone to convey its meaning — not everyone perceives the difference.
 
 </Callout>
@@ -171,6 +225,17 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
 - Use `size` for density, not decoration: `xs`/`sm` for dense lists of cards, `md` for general use, `lg`/`xl`
   for a card that is the main content of a spacious page.
 - Give each card in a list a heading in its header — it's how a screen-reader user skims the cards.
+- A horizontal card needs room: the content gets about three fifths of the card, so below roughly 24rem (384px) it
+  gets cramped and titles start to break. Use the responsive form so it stacks on small screens. The breakpoints
+  are *viewport* widths (the same as `Stack`'s and `Grid`'s), not the card's own width — a horizontal card in a
+  narrow sidebar on a wide screen still needs `orientation="vertical"`.
+- Use `mediaPosition="end"` to put the media at the bottom of a vertical card or on the end side of a horizontal
+  one — to alternate sides in a list of horizontal cards, or when the media reads better after the text. Leave it
+  unset and the media stays where you placed it among the sections (the top, if it's first).
+- If the media holds a link or button, place `Card.Media` in the DOM where it should be reached and leave
+  `mediaPosition` unset: `mediaPosition` moves the media visually but not in the tab order.
+- Keep a horizontal card's header, body, and footer to one of each: the media spans the whole height, and the body
+  is the flexible row that keeps the footer at the bottom.
 - For a card whose content is mainly a table or a list, use that component's `ghost` variant inside the card
   so the two boundaries don't double up.
 
@@ -187,6 +252,16 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
   behaviour (`Enter` on a link, `Enter`/`Space` on a button), and accessible name — which is the card's content
   read as one string, so keep it concise.
 - The interactive focus ring is an outline on the card itself, following the card's rounded corners.
+- A `disabled` card is `aria-disabled="true"` — announced as dimmed/unavailable — with the click blocked, rather
+  than a native `disabled` attribute (an `<a>` has none). The slotted link keeps its `href` and stays focusable,
+  so a keyboard user can still reach it and hear why it's unavailable; put that reason in the card's content.
+- Dividers, horizontal layout, and `mediaPosition` are visual only: the DOM order — media, header, body, footer —
+  is what assistive technology reads, and what keyboard focus follows, at every breakpoint and wherever the media
+  is shown. So write the sections in the order they should be read, and don't rely on `mediaPosition` to reorder
+  content. In particular, media at the bottom of a vertical card is still *first* to a screen reader and in the tab
+  order; if it contains something focusable, put `Card.Media` last in the DOM instead.
+- `mediaPosition` is logical (`start`/`end`), so on a horizontal card it mirrors under right-to-left text: `"end"`
+  is the left side in RTL.
 - A colour `tone` tints the header behind `text.primary` at 13:1 or better in every theme, and outlines the card
   with the state-identifying border tokens.
 
@@ -225,6 +300,49 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
   </a>
 </Card>
 
+{/* Media beside the content, with hairlines between the sections */}
+<Card orientation="horizontal" divided variant="elevated">
+  <Card.Media>
+    <img src="/retreat.jpg" alt="A mountain valley at dawn" />
+  </Card.Media>
+  <Card.Header>
+    <Heading level={3}>Mountain retreat</Heading>
+  </Card.Header>
+  <Card.Body>Three nights in a quiet valley.</Card.Body>
+  <Card.Footer>
+    <Button size="sm">Book</Button>
+  </Card.Footer>
+</Card>
+
+{/* Media at the bottom of a vertical card */}
+<Card mediaPosition="end">
+  <Card.Media>
+    <img src="/retreat.jpg" alt="A mountain valley at dawn" />
+  </Card.Media>
+  <Card.Header>
+    <Heading level={3}>Mountain retreat</Heading>
+  </Card.Header>
+  <Card.Body>Three nights in a quiet valley.</Card.Body>
+</Card>
+
+{/* Stacked on a phone, media beside the content from tablet width, on the end side */}
+<Card orientation={{ base: "vertical", md: "horizontal" }} mediaPosition="end">
+  <Card.Media>
+    <img src="/retreat.jpg" alt="A mountain valley at dawn" />
+  </Card.Media>
+  <Card.Header>
+    <Heading level={3}>Mountain retreat</Heading>
+  </Card.Header>
+  <Card.Body>Three nights in a quiet valley.</Card.Body>
+</Card>
+
+{/* An unavailable card: still visible and focusable, but dimmed and not clickable */}
+<Card asChild interactive disabled>
+  <a href="/plans/enterprise">
+    <Card.Body>Enterprise — not available in your region.</Card.Body>
+  </a>
+</Card>
+
 {/* A colour accent, a denser size, and a footer spread across the row */}
 <Card tone="danger" size="sm">
   <Card.Header>
@@ -249,7 +367,7 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
 <TokenRow token="bg.neutral-subtle" usage="the filled variant's fill, and the hovered outlined and ghost cards' background" />
 <TokenRow token="bg.neutral-subtle-hover" usage="the filled variant's hovered background, and any pressed card's background" />
 <TokenRow token="text.primary" usage="text color" />
-<TokenRow token="border.default" usage="the outlined variant's border (and the elevated variant's hairline in dark mode)" />
+<TokenRow token="border.default" usage="the outlined variant's border (and the elevated variant's hairline in dark mode), and the hairline between sections when divided" />
 <TokenRow token="border.neutral" usage="the hovered outlined card's border" />
 <TokenRow token="border.focus" usage="an interactive card's focus-visible outline color" />
 <TokenRow token="border.brand" usage="tone=brand: the card's border" />
@@ -262,7 +380,8 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
 <TokenRow token="bg.warning-subtle" usage="tone=warning: the tint behind the header" />
 <TokenRow token="border.danger" usage="tone=danger: the card's border" />
 <TokenRow token="bg.danger-subtle" usage="tone=danger: the tint behind the header" />
-<TokenRow token="border-width.1" usage="the card's border width" />
+<TokenRow token="border-width.1" usage="the card's border width, and the divider's" />
+<TokenRow token="opacity.40" usage="a disabled interactive card's dimmed opacity" />
 <TokenRow token="border-width.2" usage="an interactive card's focus-visible outline width" />
 <TokenRow token="radius.lg" usage="the card's corners (and the clip for edge-to-edge media)" />
 <TokenRow token="shadow.light.xs–shadow.light.md" usage="the elevated variant's shadow in light mode: resting, hovered, pressed" />

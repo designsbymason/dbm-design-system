@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -252,6 +252,312 @@ describe("Card", () => {
     });
   });
 
+  describe("orientation", () => {
+    it("defaults to vertical — no orientation class at all", () => {
+      renderCard();
+      const card = screen.getByTestId("card");
+      for (const name of Object.keys(styles).filter((key) => key.startsWith("orient"))) {
+        expect(card).not.toHaveClass(styles[name] ?? "");
+      }
+    });
+
+    it("applies the base horizontal class for orientation=horizontal, leaving the DOM order unchanged", () => {
+      renderCard({ orientation: "horizontal" });
+      const card = screen.getByTestId("card");
+      expect(card).toHaveClass(styles.orientBaseHorizontal ?? "");
+      expect(Array.from(card.children).map((child) => child.getAttribute("data-testid"))).toEqual([
+        "media",
+        "header",
+        "body",
+        "footer",
+      ]);
+    });
+
+    it("applies the base vertical class for an explicit orientation=vertical", () => {
+      renderCard({ orientation: "vertical" });
+      expect(screen.getByTestId("card")).toHaveClass(styles.orientBaseVertical ?? "");
+    });
+
+    it("composes with every variant, tone, and size", () => {
+      renderCard({ orientation: "horizontal", variant: "elevated", tone: "info", size: "sm" });
+      expect(screen.getByTestId("card")).toHaveClass(
+        styles.orientBaseHorizontal ?? "",
+        styles.elevated ?? "",
+        styles.toned ?? "",
+        styles.sizeSm ?? "",
+      );
+    });
+
+    it("doesn't leak into a card nested in its body", () => {
+      render(
+        <Card orientation="horizontal" data-testid="outer">
+          <Card.Body>
+            <Card data-testid="inner">
+              <Card.Body>Nested</Card.Body>
+            </Card>
+          </Card.Body>
+        </Card>,
+      );
+      expect(screen.getByTestId("outer")).toHaveClass(styles.orientBaseHorizontal ?? "");
+      expect(screen.getByTestId("inner").className).not.toContain(styles.orientBaseHorizontal ?? "x");
+    });
+
+    describe("responsive", () => {
+      it("applies one class per breakpoint in the map", () => {
+        renderCard({ orientation: { base: "vertical", md: "horizontal", xl: "vertical" } });
+        const card = screen.getByTestId("card");
+        expect(card).toHaveClass(
+          styles.orientBaseVertical ?? "",
+          styles.orientMdHorizontal ?? "",
+          styles.orientXlVertical ?? "",
+        );
+        expect(card).not.toHaveClass(styles.orientMdVertical ?? "");
+        expect(card).not.toHaveClass(styles.orientBaseHorizontal ?? "");
+      });
+
+      it("supports every breakpoint, including 2xl and 3xl", () => {
+        renderCard({
+          orientation: { base: "horizontal", sm: "vertical", md: "horizontal", lg: "vertical", xl: "horizontal", "2xl": "vertical", "3xl": "horizontal" },
+        });
+        expect(screen.getByTestId("card")).toHaveClass(
+          styles.orientBaseHorizontal ?? "",
+          styles.orientSmVertical ?? "",
+          styles.orientMdHorizontal ?? "",
+          styles.orientLgVertical ?? "",
+          styles.orientXlHorizontal ?? "",
+          styles.orient2xlVertical ?? "",
+          styles.orient3xlHorizontal ?? "",
+        );
+      });
+
+      it("treats a map with no base as vertical until its first breakpoint (mobile-first)", () => {
+        renderCard({ orientation: { lg: "horizontal" } });
+        const card = screen.getByTestId("card");
+        expect(card).toHaveClass(styles.orientLgHorizontal ?? "");
+        expect(card).not.toHaveClass(styles.orientBaseHorizontal ?? "");
+        expect(card).not.toHaveClass(styles.orientBaseVertical ?? "");
+      });
+
+      it("ignores a breakpoint whose value is undefined", () => {
+        renderCard({ orientation: { base: "horizontal", md: undefined } });
+        const card = screen.getByTestId("card");
+        expect(card).toHaveClass(styles.orientBaseHorizontal ?? "");
+        expect(card).not.toHaveClass(styles.orientMdHorizontal ?? "");
+        expect(card).not.toHaveClass(styles.orientMdVertical ?? "");
+      });
+
+      it("keeps the DOM order the same, whatever the map says", () => {
+        renderCard({ orientation: { base: "vertical", md: "horizontal" } });
+        expect(
+          Array.from(screen.getByTestId("card").children).map((child) => child.getAttribute("data-testid")),
+        ).toEqual(["media", "header", "body", "footer"]);
+      });
+    });
+  });
+
+  describe("mediaPosition", () => {
+    it("is unset by default — neither position class, so the media stays where it sits in the DOM", () => {
+      renderCard();
+      const card = screen.getByTestId("card");
+      expect(card).not.toHaveClass(styles.mediaStart ?? "");
+      expect(card).not.toHaveClass(styles.mediaEnd ?? "");
+    });
+
+    it("applies the start class for mediaPosition=start", () => {
+      renderCard({ mediaPosition: "start" });
+      const card = screen.getByTestId("card");
+      expect(card).toHaveClass(styles.mediaStart ?? "");
+      expect(card).not.toHaveClass(styles.mediaEnd ?? "");
+    });
+
+    it("applies the end class for mediaPosition=end", () => {
+      renderCard({ mediaPosition: "end" });
+      const card = screen.getByTestId("card");
+      expect(card).toHaveClass(styles.mediaEnd ?? "");
+      expect(card).not.toHaveClass(styles.mediaStart ?? "");
+    });
+
+    it("works in a vertical card too (top or bottom), not just a horizontal one", () => {
+      renderCard({ orientation: "vertical", mediaPosition: "end" });
+      expect(screen.getByTestId("card")).toHaveClass(styles.orientBaseVertical ?? "", styles.mediaEnd ?? "");
+    });
+
+    it("is visual only — the media stays first in the DOM, in either orientation", () => {
+      for (const orientation of ["vertical", "horizontal"] as const) {
+        const { unmount } = renderCard({ orientation, mediaPosition: "end" });
+        const card = screen.getByTestId("card");
+        // Reading and tab order follow the DOM, so the media is still the first child.
+        expect(card.firstElementChild).toBe(screen.getByTestId("media"));
+        expect(Array.from(card.children).map((child) => child.getAttribute("data-testid"))).toEqual([
+          "media",
+          "header",
+          "body",
+          "footer",
+        ]);
+        unmount();
+      }
+    });
+
+    it("adds no position class to media placed last in the DOM when mediaPosition is unset", () => {
+      render(
+        <Card data-testid="card">
+          <Card.Body data-testid="body">Body</Card.Body>
+          <Card.Media data-testid="media">
+            <img src="/example.png" alt="An example" />
+          </Card.Media>
+        </Card>,
+      );
+      const card = screen.getByTestId("card");
+      // Neither class: the media follows the DOM, so it renders after the body.
+      expect(card).not.toHaveClass(styles.mediaStart ?? "");
+      expect(card).not.toHaveClass(styles.mediaEnd ?? "");
+    });
+
+    it("composes with a responsive orientation", () => {
+      renderCard({ orientation: { base: "vertical", md: "horizontal" }, mediaPosition: "end" });
+      expect(screen.getByTestId("card")).toHaveClass(styles.orientMdHorizontal ?? "", styles.mediaEnd ?? "");
+    });
+
+    it("doesn't leak into a card nested in its body", () => {
+      render(
+        <Card mediaPosition="end" data-testid="outer">
+          <Card.Body>
+            <Card data-testid="inner">
+              <Card.Body>Nested</Card.Body>
+            </Card>
+          </Card.Body>
+        </Card>,
+      );
+      expect(screen.getByTestId("outer")).toHaveClass(styles.mediaEnd ?? "");
+      expect(screen.getByTestId("inner").className).not.toContain(styles.mediaEnd ?? "x");
+    });
+  });
+
+  describe("divided", () => {
+    it("is off by default", () => {
+      renderCard();
+      expect(screen.getByTestId("card")).not.toHaveClass(styles.divided ?? "");
+    });
+
+    it("applies the divided class", () => {
+      renderCard({ divided: true });
+      expect(screen.getByTestId("card")).toHaveClass(styles.divided ?? "");
+    });
+
+    it("composes with a tone (whose header tint replaces the line beneath it)", () => {
+      renderCard({ divided: true, tone: "danger" });
+      expect(screen.getByTestId("card")).toHaveClass(styles.divided ?? "", styles.toned ?? "");
+    });
+
+    it("adds no elements — dividers are drawn by CSS, so the DOM is unchanged", () => {
+      const { unmount } = renderCard();
+      const before = screen.getByTestId("card").querySelectorAll("*").length;
+      unmount();
+      renderCard({ divided: true });
+      expect(screen.getByTestId("card").querySelectorAll("*").length).toBe(before);
+    });
+  });
+
+  describe("disabled", () => {
+    function renderLinkCard(props: Partial<CardProps> = {}, onClick = vi.fn()) {
+      render(
+        <Card asChild interactive {...props}>
+          <a href="/plans" onClick={onClick}>
+            <Card.Body>Plans</Card.Body>
+          </a>
+        </Card>,
+      );
+      return { link: screen.getByRole("link", { name: "Plans" }), onClick };
+    }
+
+    it("is off by default — no aria-disabled and no disabled class", () => {
+      const { link } = renderLinkCard();
+      expect(link).not.toHaveAttribute("aria-disabled");
+      expect(link).not.toHaveClass(styles.disabled ?? "");
+    });
+
+    it("marks an interactive card aria-disabled and applies the disabled class", () => {
+      const { link } = renderLinkCard({ disabled: true });
+      expect(link).toHaveAttribute("aria-disabled", "true");
+      expect(link).toHaveClass(styles.disabled ?? "");
+    });
+
+    it("keeps the link's href and keeps it focusable", () => {
+      const { link } = renderLinkCard({ disabled: true });
+      expect(link).toHaveAttribute("href", "/plans");
+      link.focus();
+      expect(link).toHaveFocus();
+    });
+
+    it("blocks the click before the slotted child's own handler runs", () => {
+      const { link, onClick } = renderLinkCard({ disabled: true });
+      const notPrevented = fireEvent.click(link);
+      expect(onClick).not.toHaveBeenCalled();
+      // `preventDefault` was called, so a real link wouldn't navigate.
+      expect(notPrevented).toBe(false);
+    });
+
+    it("lets a click through when not disabled", () => {
+      const { link, onClick } = renderLinkCard();
+      fireEvent.click(link);
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("still runs a consumer's own onClickCapture when not disabled", () => {
+      const onClickCapture = vi.fn();
+      const enabled = renderLinkCard({ onClickCapture });
+      fireEvent.click(enabled.link);
+      expect(onClickCapture).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips a consumer's onClickCapture while disabled", () => {
+      const onClickCapture = vi.fn();
+      const { link } = renderLinkCard({ disabled: true, onClickCapture });
+      fireEvent.click(link);
+      expect(onClickCapture).not.toHaveBeenCalled();
+    });
+
+    it("works on a slotted button too", () => {
+      const onClick = vi.fn();
+      render(
+        <Card asChild interactive disabled>
+          <button type="button" onClick={onClick}>
+            Open
+          </button>
+        </Card>,
+      );
+      const button = screen.getByRole("button", { name: "Open" });
+      expect(button).toHaveAttribute("aria-disabled", "true");
+      fireEvent.click(button);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("has no effect without interactive — no aria-disabled, no class — and warns once", () => {
+      const { rerender } = renderCard({ disabled: true });
+      const card = screen.getByTestId("card");
+      expect(card).not.toHaveAttribute("aria-disabled");
+      expect(card).not.toHaveClass(styles.disabled ?? "");
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("disabled"));
+      rerender(
+        <Card disabled data-testid="card">
+          <Card.Body>x</Card.Body>
+        </Card>,
+      );
+      expect(console.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it("doesn't warn for a disabled interactive card", () => {
+      renderLinkCard({ disabled: true });
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    it("lets a consumer's own aria-disabled through when the card isn't disabled", () => {
+      renderCard({ "aria-disabled": true, role: "group" });
+      expect(screen.getByTestId("card")).toHaveAttribute("aria-disabled", "true");
+    });
+  });
+
   describe("asChild", () => {
     it("renders the card's styling onto the slotted child, with no wrapper element", () => {
       render(
@@ -419,6 +725,22 @@ describe("Card", () => {
           </a>
         </Card>,
       );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+
+    it("has no violations as a disabled link card", async () => {
+      const { container } = render(
+        <Card asChild interactive disabled>
+          <a href="/plans">
+            <Card.Body>Plans</Card.Body>
+          </a>
+        </Card>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+
+    it("has no violations for a horizontal, divided card with media on the end", async () => {
+      const { container } = renderCard({ orientation: "horizontal", mediaPosition: "end", divided: true });
       expect(await axe(container)).toHaveNoViolations();
     });
 

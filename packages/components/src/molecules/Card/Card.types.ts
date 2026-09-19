@@ -1,3 +1,4 @@
+import type { Responsive } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /**
@@ -31,6 +32,30 @@ export type CardTone = "brand" | "neutral" | "info" | "success" | "warning" | "d
  */
 export type CardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
+/**
+ * How the card's sections are arranged.
+ *
+ * - `"vertical"` (the default) — everything stacks: media on top, then the
+ *   header, body, and footer.
+ * - `"horizontal"` — `Card.Media` sits beside the content on the inline-start
+ *   side (about two fifths of the width), and the header, body, and footer stack
+ *   on the other. A card with no `Card.Media` looks the same as a vertical one.
+ */
+export type CardOrientation = "vertical" | "horizontal";
+
+/**
+ * Where `Card.Media` sits, in the reading direction.
+ *
+ * - `"start"` — the top of a vertical card, or the inline-start side of a
+ *   horizontal one (the left in left-to-right text, the right in right-to-left).
+ * - `"end"` — the bottom of a vertical card, or the inline-end side of a
+ *   horizontal one.
+ *
+ * Purely visual: the media stays where it is in the DOM, so reading and tab
+ * order don't change.
+ */
+export type CardMediaPosition = "start" | "end";
+
 /** How `Card.Footer` lays out its content along the row. */
 export type CardFooterAlign = "start" | "center" | "end" | "between";
 
@@ -58,6 +83,34 @@ export interface CardProps
    */
   size?: CardSize;
   /**
+   * How the sections are arranged: stacked top to bottom, or with `Card.Media`
+   * beside the content. A single value, or a mobile-first responsive map keyed
+   * by breakpoint (`{ base: "vertical", md: "horizontal" }`) — the same shape
+   * `Stack` and `Grid` use. The breakpoints are viewport widths. Horizontal needs
+   * a `Card.Media` to have any effect, and gives the content about three fifths
+   * of the card, so it wants roughly 24rem or more.
+   * @default 'vertical'
+   */
+  orientation?: Responsive<CardOrientation>;
+  /**
+   * Pins `Card.Media` to the start or the end of the card: the top or bottom of a
+   * vertical card, or the inline-start or inline-end side of a horizontal one
+   * (so the left or right in left-to-right text, mirrored in right-to-left).
+   * Leave it unset and the media stays where you placed it among the sections —
+   * on the start side of a horizontal card. It's visual only, so it doesn't
+   * change reading or tab order; if the media holds a link or button, place
+   * `Card.Media` in the DOM where it should be reached instead.
+   */
+  mediaPosition?: CardMediaPosition;
+  /**
+   * Draws a hairline between adjacent sections (header, body, footer) — a
+   * quieter alternative to giving each section its own background. There is no
+   * line against `Card.Media`, which already has a hard edge, or under a tinted
+   * header of a card with a non-neutral `tone`.
+   * @default false
+   */
+  divided?: boolean;
+  /**
    * Styles the card as clickable as a whole — a pointer cursor, and hover,
    * focus, and pressed states. This is styling only: to make the card genuinely
    * interactive, also set `asChild` and render the card *as* a link or button
@@ -67,6 +120,16 @@ export interface CardProps
    * @default false
    */
   interactive?: boolean;
+  /**
+   * Marks an `interactive` card as unavailable: dimmed, with a not-allowed
+   * cursor and no hover or pressed states, and it can't be activated by click
+   * or key. It sets `aria-disabled` and blocks the click rather than using a
+   * native `disabled` attribute (an `<a>` has none), so a slotted link keeps its
+   * `href` and stays reachable by keyboard, as WAI-ARIA recommends. Has no
+   * effect without `interactive`.
+   * @default false
+   */
+  disabled?: boolean;
   /**
    * Renders the card's styling onto a single provided child element (via Radix
    * `Slot`) instead of a `<div>` — the way to make the card itself a link or a
@@ -187,7 +250,10 @@ export interface CardMediaProps
   /**
    * The media itself — an image, a video, a chart, any full-bleed content. It
    * runs edge to edge (the card carries no padding of its own) and is clipped
-   * to the card's rounded corners.
+   * to the card's rounded corners. In a horizontal card it sits beside the
+   * content and fills the card's full height: an `<img>`, `<picture>`, or
+   * `<video>` is cropped to fit, and any other element should size itself to
+   * `100%` of the height.
    */
   children: ReactNode;
   /** Additional CSS classes for customization. */

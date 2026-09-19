@@ -15,6 +15,16 @@
   --card-shadow: none;
   --card-shadow-hover: none;
   --card-shadow-active: none;
+  --card-divider: var(--dbm-border-default);
+  /* Layout: vertical unless an orientation class (below) says otherwise. Set on
+     every card because custom properties inherit — a card nested in a
+     horizontal card's body must not pick up its layout. */
+  --card-display: flex;
+  --card-columns: none;
+  --card-footer-self: auto;
+  --card-columns-start: [media-start] minmax(0, 2fr) [media-end content-start] minmax(0, 3fr) [content-end];
+  --card-columns-end: [content-start] minmax(0, 3fr) [content-end media-start] minmax(0, 2fr) [media-end];
+  --card-columns-horizontal: var(--card-columns-start);
 
   background-color: var(--card-bg);
   border: var(--dbm-border-width-1) solid var(--card-border);
@@ -156,6 +166,19 @@
   padding: var(--card-pad);
 }
 
+/* In a narrow card the title gives way (it wraps) rather than the action beside
+   it: a trailing badge or button keeps its size instead of shrinking below its
+   own label. A word too long for what's left breaks as a last resort, rather than
+   running under the action. */
+.header > :first-child {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.header > :not(:first-child) {
+  flex-shrink: 0;
+}
+
 .body {
   flex: 1 1 auto;
   padding: var(--card-pad);
@@ -188,6 +211,183 @@
   padding-block-start: var(--card-pad);
 }
 
+/* --- Divided: a hairline between adjacent sections. Media has a hard edge of
+   its own, so a divider only ever sits between header, body, and footer. The
+   section after a divider takes its top padding back (the "drop the top padding"
+   rule above would otherwise leave its content touching the line). --- */
+
+.divided > :is(.header, .body, .footer) + :is(.header, .body, .footer) {
+  border-block-start: var(--dbm-border-width-1) solid var(--card-divider);
+  padding-block-start: var(--card-pad);
+}
+
+/* A toned card's header is already set apart by its tint, so it needs no line
+   beneath it (its padding is restored by the `.toned` rule above). */
+.divided.toned > .header + :is(.body, .footer) {
+  border-block-start: 0;
+}
+
+/* --- Orientation. `Card.Media` beside the content instead of above it, and
+   responsive: the card only ever reads three custom properties, and a class per
+   breakpoint and orientation (below) sets them. Only a card that actually has
+   media becomes a grid, so a horizontal card with none just stacks like any
+   other. Media takes one column spanning every content row; everything else
+   stacks in the other. The named column lines (`media`, `content`) mean the
+   items are placed the same way whichever side the media is on — only the
+   template differs. The middle row is the flexible one, so the body absorbs
+   spare height and the footer sits at the bottom when the media is taller. --- */
+
+.card:has(> .media) {
+  display: var(--card-display);
+  grid-template-columns: var(--card-columns);
+  grid-template-rows: auto 1fr auto;
+}
+
+.card:has(> .media) > .media {
+  grid-column: media;
+  grid-row: 1 / span 99;
+}
+
+.card:has(> .media) > :not(.media) {
+  grid-column: content;
+}
+
+.footer {
+  align-self: var(--card-footer-self);
+}
+
+/* Images and video fill the media's full height when it has one, cropped rather
+   than stretched. In a stacked card the media's height is its content's, so the
+   percentage resolves to nothing and these are inert. */
+.media > img,
+.media > picture,
+.media > picture > img,
+.media > video {
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* Where the media goes. In a horizontal card, which side it takes (the named
+   column lines above do the placing). In a vertical card it's the top or the
+   bottom, done with `order` — visual only, the DOM order (and so reading and tab
+   order) is untouched. Neither class is applied by default, so with no
+   `mediaPosition` the media simply stays where it sits in the DOM. In a horizontal
+   card, `order` has no effect: the media is placed by its grid lines. */
+.mediaStart > .media {
+  order: -1;
+}
+
+.mediaEnd {
+  --card-columns-horizontal: var(--card-columns-end);
+}
+
+.mediaEnd > .media {
+  order: 1;
+}
+
+/* The thresholds below are the literal values of the breakpoint.sm/md/lg/xl/
+   2xl/3xl primitive tokens — custom properties can't be used in an @media
+   condition (the same limitation `Stack` and `Grid` note), so if those tokens
+   change these six blocks must be updated by hand. Declared in ascending
+   order, and each class has the same specificity, so the larger breakpoint
+   wins when several apply. */
+
+.orientBaseHorizontal {
+  --card-display: grid;
+  --card-columns: var(--card-columns-horizontal);
+  --card-footer-self: end;
+}
+
+.orientBaseVertical {
+  --card-display: flex;
+  --card-columns: none;
+  --card-footer-self: auto;
+}
+
+@media (min-width: 640px) {
+  .orientSmHorizontal {
+    --card-display: grid;
+    --card-columns: var(--card-columns-horizontal);
+    --card-footer-self: end;
+  }
+
+  .orientSmVertical {
+    --card-display: flex;
+    --card-columns: none;
+    --card-footer-self: auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .orientMdHorizontal {
+    --card-display: grid;
+    --card-columns: var(--card-columns-horizontal);
+    --card-footer-self: end;
+  }
+
+  .orientMdVertical {
+    --card-display: flex;
+    --card-columns: none;
+    --card-footer-self: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .orientLgHorizontal {
+    --card-display: grid;
+    --card-columns: var(--card-columns-horizontal);
+    --card-footer-self: end;
+  }
+
+  .orientLgVertical {
+    --card-display: flex;
+    --card-columns: none;
+    --card-footer-self: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .orientXlHorizontal {
+    --card-display: grid;
+    --card-columns: var(--card-columns-horizontal);
+    --card-footer-self: end;
+  }
+
+  .orientXlVertical {
+    --card-display: flex;
+    --card-columns: none;
+    --card-footer-self: auto;
+  }
+}
+
+@media (min-width: 1536px) {
+  .orient2xlHorizontal {
+    --card-display: grid;
+    --card-columns: var(--card-columns-horizontal);
+    --card-footer-self: end;
+  }
+
+  .orient2xlVertical {
+    --card-display: flex;
+    --card-columns: none;
+    --card-footer-self: auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .orient3xlHorizontal {
+    --card-display: grid;
+    --card-columns: var(--card-columns-horizontal);
+    --card-footer-self: end;
+  }
+
+  .orient3xlVertical {
+    --card-display: flex;
+    --card-columns: none;
+    --card-footer-self: auto;
+  }
+}
+
 .alignStart {
   justify-content: flex-start;
 }
@@ -215,15 +415,25 @@
     box-shadow var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
-.interactive:hover {
+.interactive:not(.disabled):hover {
   background-color: var(--card-bg-hover);
   border-color: var(--card-border-hover);
   box-shadow: var(--card-shadow-hover);
 }
 
-.interactive:active {
+.interactive:not(.disabled):active {
   background-color: var(--card-bg-active);
   box-shadow: var(--card-shadow-active);
+}
+
+/* An interactive card that is out of use: dimmed like every other disabled
+   control in the system (`Link`, `Button`), a not-allowed cursor, and — via the
+   `:not(.disabled)` above — no hover or pressed feedback. Deliberately no
+   `pointer-events: none`, which would also suppress that cursor; the click itself
+   is blocked in `Card.tsx`. Declared after `.interactive` so its cursor wins. */
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
 }
 
 /* The ring follows the card's own (large) radius rather than the standardized
