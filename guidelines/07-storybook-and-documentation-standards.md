@@ -235,7 +235,7 @@ built with a full `06-engineering-standards.md` §9 review pass, has a Docs page
 | Popover | Molecule | Overlay | ✅ | ✅ 2026-09-17 | [Popover.md](component-reviews/Popover.md) |
 | Accordion | Molecule | Overlay | ✅ | ✅ 2026-09-18 | [Accordion.md](component-reviews/Accordion.md) |
 | Table | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [Table.md](component-reviews/Table.md) |
-| Card | Molecule | Data Display | ✅ | ⏳ built 2026-09-19, not yet Finalized | [Card.md](component-reviews/Card.md) |
+| Card | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [Card.md](component-reviews/Card.md) |
 
 **Not yet started, by category: none — every atom-tier component now has a completed review pass and
 is Finalized.** (47 atom-tier components total — corrected 2026-08-12 from a prior "49," see

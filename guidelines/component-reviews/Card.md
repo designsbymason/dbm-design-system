@@ -2,8 +2,9 @@
 
 **Data Display:** Card — built 2026-09-19, item 11 in the itemized molecule-tier build order
 (`04-component-inventory.md`). Adds no new dependency and no new token — every value already had a home on an
-existing scale. **Not yet Finalized** — only the user declares that; see the status row in
-`07-storybook-and-documentation-standards.md` §6.
+existing scale. **Finalized 2026-09-19** — declared by the user after the full review pass and the four same-day
+follow-ups recorded below; see the closing entry at the bottom of this file. Everything above it records the build and
+review history leading there.
 
 A compound component of native elements: `Card` (root) with `Card.Media`, `Card.Header`, `Card.Body`, and
 `Card.Footer`. Each sub-part's own props get a `### Card.{Part} properties` subsection on the Docs page via a hidden,
@@ -242,3 +243,15 @@ Left out deliberately; each can be added without breaking the current API:
 - **A responsive `mediaPosition`** — plain today; only worth adding if a real case wants the side to change per breakpoint.
 - **Moving the media in the tab and reading order too** — `mediaPosition` is visual only by design; a real DOM reorder would
   need the sections to be re-rendered in a different order, which is what placing `Card.Media` in the DOM already does.
+
+**Finalized 2026-09-19.** Before finalizing, the review checklist (`06-engineering-standards.md` §9) was re-run against the final
+state: the only numeric literals in `Card.module.css` are the six documented breakpoint thresholds inside `@media` conditions
+(custom properties can't appear there — the same limitation `Stack` and `Grid` note), every prop in `Card.types.ts` carries JSDoc
+(17 on `CardProps`, and every sub-part's props), there is no `any`, and `{...rest}` is spread before every computed attribute. The
+full package was re-confirmed clean immediately before: `eslint` plus both `tsc` passes, the `unit` project (83 tests for `Card`;
+1610 for the package), the real-browser `storybook` project (530 tests, including axe on every story and all six `play` functions),
+`tsup` build, `storybook build`, and every size and coverage check (`Card`: 1.59KB JS / 1.31KB CSS gzipped, within budget). CI
+green on the last push. Final surface: four sub-parts (`Media`, `Header`, `Body`, `Footer`); root props `variant` (four values),
+`tone` (six), `size`, `orientation` (a single value or a responsive map), `mediaPosition`, `divided`, `interactive`, `disabled`,
+and `asChild`; and `Card.Footer`'s `align`. Per `06-engineering-standards.md` §9, don't make further changes to `Card` (code,
+stories, docs, or its tokens) without asking first.
