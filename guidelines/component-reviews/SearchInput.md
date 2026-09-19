@@ -174,3 +174,7 @@ manager noise, not a regression introduced here).
 **Status: Finalized 2026-09-14.** Per `06-engineering-standards.md` §9's finalization rule, further
 changes to this component need explicit confirmation first, even an in-scope-looking fix noticed in
 passing.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: same shape as `NumberInput`'s — spelled-out defaults (`isLoading={false}`, `debounceMs={300}`), a no-op `onSearch={() => {}}`, five one-arg stories ("Loading", "With a suffix hint", "No debounce", "Error state", "Disabled") lost in the noise, and a frozen "With a clear button". Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `SearchInput.snippets.ts`; the one-arg stories use the Playground's builder (so "No debounce" is just `debounceMs={0}`, and the suffix story writes the real `Kbd` hint), and the clearable example shows real state. All snippets and Playground combinations were typechecked against the real types (the controlled ones with the real `useState` lines, so the state handlers' types were checked too). **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

@@ -623,3 +623,7 @@ No other checklist section touched. Full re-run: `tsc` (package + `.storybook`),
 `tsup` build, `check-component-bundle-size` (`Select` 2.20KB JS / 1.19KB CSS, still within budget)
 — all clean. Live-reconfirmed in Storybook (`All sizes`, `With a clear button` stories, Purple
 Light and Emerald Dark), zero Accessibility-panel violations. **Stays Finalized.**
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: five snippets (the Playground, "Default", "With a clear button", "side/align", "asChild + trigger") showed a `<DemoOptions />` placeholder where the options belong; every one spelled out ~16 props of defaults (`autoComplete=""`, `form=""`, `dir="ltr"`, `defaultOpen={false}`); and "Controlled" showed no `value`, a no-op handler and a hardcoded "Selected: none". Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Select.snippets.ts` — real `Select.Option`s, the long list and the custom option rows written out (no `.map`), the controlled example as real state with a `useState` comment — and the Playground and "Default" build theirs from the live controls. All snippets and Playground combinations were typechecked against the real types (the controlled ones with the real `useState` lines, so the state handlers' types were checked too). **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

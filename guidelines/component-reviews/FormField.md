@@ -136,3 +136,7 @@ JS / 0.57KB CSS, unchanged, still within budget) — all clean.
 or tokens it alone drives) without asking first, even for something that would otherwise be an
 obvious, in-scope fix. With `CheckboxGroup`, `Radio`/`RadioGroup`, and `FormField` (items 1–3) all
 Finalized, item 4 (`PasswordInput`) is next.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: the generated snippets for the Playground, "States" and "Controlled, with live validation" were `<FormField label="…" />` with **no control inside** — `FormField`'s child is a render function, which the generator drops — so none of them showed the one thing the component is for; "Wrapping different control types" showed the story object with `demoContainerStyle`. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `FormField.snippets.ts`, each with its `fieldProps` render-prop child, and the Playground's builder always includes a real `Input` so its snippet is always usable. All snippets and Playground combinations were typechecked against the real types (the controlled ones with the real `useState` lines, so the state handlers' types were checked too). **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

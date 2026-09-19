@@ -181,3 +181,7 @@ re-verified sections noted above, no other changes.
 Formalized the same day into a standing rule (`05-component-api-conventions.md` §6 — "icons used
 inside an input field use neutral colors"), applied identically to `Select`'s and `Textarea`'s own
 clear buttons too — see each component's own entry.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: same shape as `NumberInput`'s — spelled-out defaults, empty props, two one-arg stories ("Error state", "Disabled") lost in the noise, and a frozen "With a clear button". Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `PasswordInput.snippets.ts`, with the same approach; the clearable example shows real state (`onClear={() => setValue("")}`). All snippets and Playground combinations were typechecked against the real types (the controlled ones with the real `useState` lines, so the state handlers' types were checked too). **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.

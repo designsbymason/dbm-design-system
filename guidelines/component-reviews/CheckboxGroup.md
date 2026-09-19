@@ -141,3 +141,7 @@ docs, or tokens it alone drives) without asking first, even for something that w
 an obvious, in-scope fix. With `CheckboxGroup` Finalized, item 1 in the itemized molecule-tier build
 order is done, alongside `Radio`/`RadioGroup` (items 2's prerequisite and item 2 itself);
 `FormField` (item 3) is next.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
+
+Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: every snippet was the generated one — all defaults spelled out (`hasError={false}`, `name=""`), a no-op `onValueChange={() => {}}`, the demo wrapper `div` — and the "Controlled, with a live selection summary" story showed a frozen `value` with a no-op handler, not state. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `CheckboxGroup.snippets.ts`; the Controlled one writes the `useState` as a comment above the JSX. The Playground builds its snippet from the live controls, always including the accessible name a group needs. All snippets and Playground combinations were typechecked against the real types (the controlled ones with the real `useState` lines, so the state handlers' types were checked too). **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
