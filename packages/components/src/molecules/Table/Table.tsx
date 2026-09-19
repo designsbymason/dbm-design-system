@@ -1,11 +1,14 @@
-import { cx } from "@dbm-design-system/primitives";
-import { createContext, forwardRef, useContext, useId, useMemo, useRef } from "react";
+import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { createContext, forwardRef, useContext, useEffect, useId, useMemo, useRef } from "react";
+import { Skeleton } from "../../atoms/Skeleton";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./Table.module.css";
 import type {
   TableBodyProps,
   TableCaptionProps,
   TableCellAlign,
   TableCellProps,
+  TableEmptyProps,
   TableFooterProps,
   TableHeaderCellProps,
   TableHeaderProps,
@@ -14,6 +17,7 @@ import type {
   TableSize,
   TableTone,
 } from "./Table.types";
+import { useColumnCount } from "./useColumnCount";
 import { useScrollableRegion } from "./useScrollableRegion";
 
 interface TableContextValue {
@@ -22,6 +26,8 @@ interface TableContextValue {
   striped: boolean;
   hoverable: boolean;
   stickyHeader: boolean;
+  stickyFirstColumn: boolean;
+  columnCount: number;
   captionId: string | undefined;
 }
 
@@ -35,6 +41,8 @@ const TableContext = createContext<TableContextValue>({
   striped: false,
   hoverable: false,
   stickyHeader: false,
+  stickyFirstColumn: false,
+  columnCount: 1,
   captionId: undefined,
 });
 
@@ -124,6 +132,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
     striped = false,
     hoverable = false,
     stickyHeader = false,
+    stickyFirstColumn = false,
     maxHeight,
     containerClassName,
     className,
@@ -137,22 +146,34 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
   } = tableProps;
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
   const { scrollable, captionId } = useScrollableRegion(containerRef);
+  const columnCount = useColumnCount(tableRef);
   const generatedCaptionId = useId();
 
-  const hasWarnedStickyWithoutHeightRef = useRef(false);
-  if (process.env.NODE_ENV !== "production") {
-    if (stickyHeader && maxHeight === undefined && !containerClassName && !hasWarnedStickyWithoutHeightRef.current) {
-      hasWarnedStickyWithoutHeightRef.current = true;
+  // A dev-mode misuse warning, run as an effect rather than read-and-set from a
+  // ref during render: it only ever fires after commit, needs no ref at all, and
+  // still warns just once for as long as the props are unchanged.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" && stickyHeader && maxHeight === undefined && !containerClassName) {
       console.warn(
         "Table: `stickyHeader` has no effect without a constrained height — the table never scrolls vertically, so there is nothing for the header to stay pinned against. Set `maxHeight` (e.g. `maxHeight=\"24rem\"`), or constrain the scroll container yourself via `containerClassName`.",
       );
     }
-  }
+  }, [stickyHeader, maxHeight, containerClassName]);
 
   const contextValue = useMemo<TableContextValue>(
-    () => ({ tone, size, striped, hoverable, stickyHeader, captionId: generatedCaptionId }),
-    [tone, size, striped, hoverable, stickyHeader, generatedCaptionId],
+    () => ({
+      tone,
+      size,
+      striped,
+      hoverable,
+      stickyHeader,
+      stickyFirstColumn,
+      columnCount,
+      captionId: generatedCaptionId,
+    }),
+    [tone, size, striped, hoverable, stickyHeader, stickyFirstColumn, columnCount, generatedCaptionId],
   );
 
   // While the container scrolls it must be reachable by keyboard (WCAG
@@ -183,7 +204,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
       <TableContext.Provider value={contextValue}>
         <table
           {...rest}
-          ref={ref}
+          ref={mergeRefs(ref, tableRef)}
           id={id}
           style={style}
           data-testid={dataTestId}
@@ -202,7 +223,7 @@ TableRoot.displayName = "Table";
 
 /** The header group (`<thead>`) — holds the `Table.Row`(s) of column-label `Table.HeaderCell`s. Pinned in place while the body scrolls when the table's `stickyHeader` is set. */
 const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ className, ...props }, ref) => {
-  const { tone, stickyHeader } = useContext(TableContext);
+  const { tone, stickyHeader, stickyFirstColumn } = useContext(TableContext);
   return (
     <thead
       {...props}
@@ -212,6 +233,7 @@ const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ cla
         tone !== "neutral" && styles.headerTinted,
         toneClass[tone],
         stickyHeader && styles.headerSticky,
+        stickyFirstColumn && styles.firstColumnSticky,
         className,
       )}
     />
@@ -219,29 +241,58 @@ const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ cla
 });
 TableHeader.displayName = "Table.Header";
 
-/** The body group (`<tbody>`) — holds the table's data `Table.Row`s. Rows stripe/highlight per the table's `striped`/`hoverable`. */
-const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(({ className, ...props }, ref) => {
-  const { tone, striped, hoverable } = useContext(TableContext);
-  const isTinted = tone !== "neutral";
-  return (
-    <tbody
-      {...props}
-      ref={ref}
-      className={cx(
-        toneClass[tone],
-        striped && (isTinted ? styles.bodyStripedTinted : styles.bodyStriped),
-        hoverable && (isTinted ? styles.bodyHoverableTinted : styles.bodyHoverable),
-        className,
-      )}
-    />
-  );
-});
+// Skeleton placeholder rows for a loading `Table.Body` — one cell per column,
+// each cell sized like a real one so the table doesn't change height when the
+// data arrives. The placeholders are decorative (`Skeleton` is `aria-hidden`),
+// so the first cell also carries the visually hidden `label` for screen readers.
+const SkeletonRows = ({ rows, label }: { rows: number; label: string }) => {
+  const { size, columnCount } = useContext(TableContext);
+  return Array.from({ length: rows }, (_, rowIndex) => (
+    <tr key={rowIndex} className={styles.statusRow}>
+      {Array.from({ length: columnCount }, (_, columnIndex) => (
+        <td key={columnIndex} className={cx(styles.cell, sizeClass[size])}>
+          <Skeleton variant="text" className={styles.skeleton} />
+          {rowIndex === 0 && columnIndex === 0 && <VisuallyHidden>{label}</VisuallyHidden>}
+        </td>
+      ))}
+    </tr>
+  ));
+};
+
+/** The body group (`<tbody>`) — holds the table's data `Table.Row`s. Rows stripe/highlight per the table's `striped`/`hoverable`. Shows skeleton rows in place of its children while `loading`. */
+const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
+  ({ loading = false, loadingRows = 3, loadingLabel = "Loading", className, children, ...props }, ref) => {
+    const { tone, striped, hoverable, stickyFirstColumn } = useContext(TableContext);
+    const isTinted = tone !== "neutral";
+    return (
+      <tbody
+        {...props}
+        // After the spread, and only when loading, so it can't clobber a
+        // consumer's own `aria-busy` the rest of the time.
+        {...(loading ? { "aria-busy": true } : {})}
+        ref={ref}
+        className={cx(
+          toneClass[tone],
+          striped && (isTinted ? styles.bodyStripedTinted : styles.bodyStriped),
+          hoverable && (isTinted ? styles.bodyHoverableTinted : styles.bodyHoverable),
+          stickyFirstColumn && styles.firstColumnSticky,
+          className,
+        )}
+      >
+        {loading ? <SkeletonRows rows={loadingRows} label={loadingLabel} /> : children}
+      </tbody>
+    );
+  },
+);
 TableBody.displayName = "Table.Body";
 
 /** The footer group (`<tfoot>`) — holds summary/totals `Table.Row`s, set apart from the body rows. */
-const TableFooter = forwardRef<HTMLTableSectionElement, TableFooterProps>(({ className, ...props }, ref) => (
-  <tfoot {...props} ref={ref} className={cx(styles.footer, className)} />
-));
+const TableFooter = forwardRef<HTMLTableSectionElement, TableFooterProps>(({ className, ...props }, ref) => {
+  const { stickyFirstColumn } = useContext(TableContext);
+  return (
+    <tfoot {...props} ref={ref} className={cx(styles.footer, stickyFirstColumn && styles.firstColumnSticky, className)} />
+  );
+});
 TableFooter.displayName = "Table.Footer";
 
 /** A row (`<tr>`) of `Table.HeaderCell`s and/or `Table.Cell`s. */
@@ -254,14 +305,20 @@ TableRow.displayName = "Table.Row";
  * table's own `size`.
  */
 const TableHeaderCell = forwardRef<HTMLTableCellElement, TableHeaderCellProps>(
-  ({ scope = "col", align = "start", className, ...props }, ref) => {
+  ({ scope = "col", align, numeric = false, className, ...props }, ref) => {
     const { size } = useContext(TableContext);
     return (
       <th
         {...props}
         ref={ref}
         scope={scope}
-        className={cx(styles.headerCell, sizeClass[size], alignClass[align], className)}
+        className={cx(
+          styles.headerCell,
+          sizeClass[size],
+          alignClass[align ?? (numeric ? "end" : "start")],
+          numeric && styles.numeric,
+          className,
+        )}
       />
     );
   },
@@ -270,12 +327,48 @@ TableHeaderCell.displayName = "Table.HeaderCell";
 
 /** A data cell (`<td>`). Sized by the table's own `size`. */
 const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ align = "start", className, ...props }, ref) => {
+  ({ align, numeric = false, className, ...props }, ref) => {
     const { size } = useContext(TableContext);
-    return <td {...props} ref={ref} className={cx(styles.cell, sizeClass[size], alignClass[align], className)} />;
+    return (
+      <td
+        {...props}
+        ref={ref}
+        className={cx(
+          styles.cell,
+          sizeClass[size],
+          alignClass[align ?? (numeric ? "end" : "start")],
+          numeric && styles.numeric,
+          className,
+        )}
+      />
+    );
   },
 );
 TableCell.displayName = "Table.Cell";
+
+/**
+ * The message row for a table with no data — one cell spanning every column,
+ * centered, in the table's own cell sizing. Render it inside `Table.Body` in
+ * place of the rows:
+ * `<Table.Body>{rows.length ? rows : <Table.Empty>No invoices yet</Table.Empty>}</Table.Body>`.
+ * The column count is read from the table's first row (normally the header row);
+ * pass `colSpan` to override it. It doesn't stripe or highlight on hover, being
+ * a message rather than a data row. `ref` forwards to the `<td>`.
+ */
+const TableEmpty = forwardRef<HTMLTableCellElement, TableEmptyProps>(({ colSpan, className, ...props }, ref) => {
+  const { size, columnCount } = useContext(TableContext);
+  return (
+    <tr className={cx(styles.statusRow, styles.emptyRow)}>
+      <td
+        {...props}
+        ref={ref}
+        colSpan={colSpan ?? columnCount}
+        className={cx(styles.cell, sizeClass[size], styles.emptyCell, className)}
+      />
+    </tr>
+  );
+});
+TableEmpty.displayName = "Table.Empty";
 
 /**
  * The table's visible title/description (`<caption>`) — the native,
@@ -304,6 +397,7 @@ type TableComponent = typeof TableRoot & {
   Row: typeof TableRow;
   HeaderCell: typeof TableHeaderCell;
   Cell: typeof TableCell;
+  Empty: typeof TableEmpty;
   Caption: typeof TableCaption;
 };
 
@@ -314,5 +408,6 @@ export const Table: TableComponent = Object.assign(TableRoot, {
   Row: TableRow,
   HeaderCell: TableHeaderCell,
   Cell: TableCell,
+  Empty: TableEmpty,
   Caption: TableCaption,
 });

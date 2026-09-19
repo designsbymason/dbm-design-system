@@ -4,6 +4,7 @@ export type {
   TableCaptionProps,
   TableCellAlign,
   TableCellProps,
+  TableEmptyProps,
   TableFooterProps,
   TableHeaderCellProps,
   TableHeaderProps,

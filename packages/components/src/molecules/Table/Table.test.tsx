@@ -711,6 +711,361 @@ describe("Table", () => {
     });
   });
 
+  describe("stickyFirstColumn", () => {
+    it("pins no first column by default", () => {
+      renderTable();
+      screen.getAllByRole("rowgroup").forEach((group) => {
+        expect(group).not.toHaveClass(styles.firstColumnSticky ?? "");
+      });
+    });
+
+    it("marks the header, body, and footer row groups when set", () => {
+      renderTable({ stickyFirstColumn: true });
+      screen.getAllByRole("rowgroup").forEach((group) => {
+        expect(group).toHaveClass(styles.firstColumnSticky ?? "");
+      });
+    });
+
+    it("leaves the caption alone", () => {
+      renderTable({ stickyFirstColumn: true });
+      expect(screen.getByText("Recent invoices")).not.toHaveClass(styles.firstColumnSticky ?? "");
+    });
+
+    it("composes with stickyHeader — the header group carries both classes", () => {
+      renderTable({ stickyFirstColumn: true, stickyHeader: true, maxHeight: "10rem" });
+      expect(screen.getAllByRole("rowgroup")[0]).toHaveClass(
+        styles.firstColumnSticky ?? "",
+        styles.headerSticky ?? "",
+      );
+    });
+
+    it("composes with a tone and striped/hoverable rows", () => {
+      renderTable({ stickyFirstColumn: true, tone: "success", striped: true, hoverable: true });
+      const [header, body] = screen.getAllByRole("rowgroup");
+      expect(header).toHaveClass(styles.firstColumnSticky ?? "", styles.headerTinted ?? "", styles.toneSuccess ?? "");
+      expect(body).toHaveClass(
+        styles.firstColumnSticky ?? "",
+        styles.bodyStripedTinted ?? "",
+        styles.bodyHoverableTinted ?? "",
+      );
+    });
+
+    it("doesn't leak into a table nested in a cell", () => {
+      render(
+        <Table stickyFirstColumn aria-label="Outer">
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>
+                <Table aria-label="Inner">
+                  <Table.Body data-testid="inner-body">
+                    <Table.Row>
+                      <Table.Cell>x</Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                </Table>
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("inner-body")).not.toHaveClass(styles.firstColumnSticky ?? "");
+    });
+
+    it("has no jest-axe violations", async () => {
+      const { container } = renderTable({ stickyFirstColumn: true, stickyHeader: true, maxHeight: "10rem" });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("numeric", () => {
+    const renderCells = (cellProps: object, headerProps: object = {}) =>
+      render(
+        <Table aria-label="Numbers">
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell data-testid="head" {...headerProps}>
+                Amount
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell data-testid="cell" {...cellProps}>
+                1,234.50
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+
+    it("is off by default: start-aligned, proportional figures", () => {
+      renderCells({});
+      expect(screen.getByTestId("cell")).not.toHaveClass(styles.numeric ?? "", styles.alignEnd ?? "");
+    });
+
+    it("end-aligns and sets tabular figures on a numeric cell", () => {
+      renderCells({ numeric: true });
+      expect(screen.getByTestId("cell")).toHaveClass(styles.numeric ?? "", styles.alignEnd ?? "");
+    });
+
+    it("does the same on a numeric header cell", () => {
+      renderCells({}, { numeric: true });
+      expect(screen.getByTestId("head")).toHaveClass(styles.numeric ?? "", styles.alignEnd ?? "");
+    });
+
+    it("lets an explicit align win over the end-alignment numeric implies, while keeping tabular figures", () => {
+      renderCells({ numeric: true, align: "center" });
+      const cell = screen.getByTestId("cell");
+      expect(cell).toHaveClass(styles.numeric ?? "", styles.alignCenter ?? "");
+      expect(cell).not.toHaveClass(styles.alignEnd ?? "");
+    });
+
+    it("treats an explicit align=start as a real override of numeric's end-alignment", () => {
+      renderCells({ numeric: true, align: "start" });
+      expect(screen.getByTestId("cell")).not.toHaveClass(styles.alignEnd ?? "");
+      expect(screen.getByTestId("cell")).toHaveClass(styles.numeric ?? "");
+    });
+
+    it("doesn't render a native align attribute", () => {
+      renderCells({ numeric: true });
+      expect(screen.getByTestId("cell")).not.toHaveAttribute("align");
+      expect(screen.getByTestId("cell")).not.toHaveAttribute("numeric");
+    });
+  });
+
+  describe("loading", () => {
+    const renderLoading = (bodyProps: object = {}, tableProps: object = {}) =>
+      render(
+        <Table aria-label="Loading example" {...tableProps}>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>One</Table.HeaderCell>
+              <Table.HeaderCell>Two</Table.HeaderCell>
+              <Table.HeaderCell>Three</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body data-testid="body" {...bodyProps}>
+            <Table.Row>
+              <Table.Cell>real row</Table.Cell>
+              <Table.Cell>real row</Table.Cell>
+              <Table.Cell>real row</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+
+    it("shows the real rows, not skeletons, when not loading", () => {
+      renderLoading();
+      expect(screen.getAllByText("real row")).toHaveLength(3);
+      expect(screen.getByTestId("body").querySelectorAll("tr")).toHaveLength(1);
+      expect(screen.getByTestId("body")).not.toHaveAttribute("aria-busy");
+    });
+
+    it("replaces the rows with three skeleton rows by default, one cell per column", () => {
+      renderLoading({ loading: true });
+      const rows = screen.getByTestId("body").querySelectorAll("tr");
+      expect(rows).toHaveLength(3);
+      rows.forEach((row) => expect(row.querySelectorAll("td")).toHaveLength(3));
+      expect(screen.queryByText("real row")).toBeNull();
+    });
+
+    it("honours loadingRows", () => {
+      renderLoading({ loading: true, loadingRows: 5 });
+      expect(screen.getByTestId("body").querySelectorAll("tr")).toHaveLength(5);
+    });
+
+    it("marks the body busy while loading", () => {
+      renderLoading({ loading: true });
+      expect(screen.getByTestId("body")).toHaveAttribute("aria-busy", "true");
+    });
+
+    it("keeps a consumer's own aria-busy when not loading", () => {
+      renderLoading({ "aria-busy": false });
+      expect(screen.getByTestId("body")).toHaveAttribute("aria-busy", "false");
+    });
+
+    it("announces a visually hidden 'Loading' once, in the first cell", () => {
+      renderLoading({ loading: true });
+      expect(screen.getAllByText("Loading")).toHaveLength(1);
+      expect(screen.getByTestId("body").querySelector("td")).toContainElement(screen.getByText("Loading"));
+    });
+
+    it("announces a custom loadingLabel instead", () => {
+      renderLoading({ loading: true, loadingLabel: "Chargement" });
+      expect(screen.getByText("Chargement")).toBeInTheDocument();
+      expect(screen.queryByText("Loading")).toBeNull();
+    });
+
+    it("renders decorative, aria-hidden skeletons", () => {
+      renderLoading({ loading: true });
+      const skeletons = screen.getByTestId("body").querySelectorAll('[aria-hidden="true"]');
+      expect(skeletons).toHaveLength(9);
+    });
+
+    it("marks the rows as status rows so hover highlighting skips them", () => {
+      renderLoading({ loading: true, hoverable: true });
+      screen
+        .getByTestId("body")
+        .querySelectorAll("tr")
+        .forEach((row) => expect(row).toHaveClass(styles.statusRow ?? ""));
+    });
+
+    it("counts a grouped header's columns correctly (colSpan and rowSpan cells)", () => {
+      render(
+        <Table aria-label="Grouped">
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell rowSpan={2}>Month</Table.HeaderCell>
+              <Table.HeaderCell colSpan={2}>Free</Table.HeaderCell>
+              <Table.HeaderCell colSpan={2}>Pro</Table.HeaderCell>
+            </Table.Row>
+            <Table.Row>
+              <Table.HeaderCell>New</Table.HeaderCell>
+              <Table.HeaderCell>Churned</Table.HeaderCell>
+              <Table.HeaderCell>New</Table.HeaderCell>
+              <Table.HeaderCell>Churned</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body data-testid="body" loading loadingRows={1} />
+        </Table>,
+      );
+      expect(screen.getByTestId("body").querySelectorAll("td")).toHaveLength(5);
+    });
+
+    it("falls back to a single column when there is no header to read", () => {
+      render(
+        <Table aria-label="No header">
+          <Table.Body data-testid="body" loading loadingRows={2} />
+        </Table>,
+      );
+      expect(screen.getByTestId("body").querySelectorAll("tr")).toHaveLength(2);
+      screen
+        .getByTestId("body")
+        .querySelectorAll("tr")
+        .forEach((row) => expect(row.querySelectorAll("td")).toHaveLength(1));
+    });
+
+    it("reads each table's own column count when tables are nested", () => {
+      render(
+        <Table aria-label="Outer">
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Only</Table.HeaderCell>
+              <Table.HeaderCell>Two</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell colSpan={2}>
+                <Table aria-label="Inner">
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.HeaderCell>A</Table.HeaderCell>
+                      <Table.HeaderCell>B</Table.HeaderCell>
+                      <Table.HeaderCell>C</Table.HeaderCell>
+                      <Table.HeaderCell>D</Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body data-testid="inner-body" loading loadingRows={1} />
+                </Table>
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("inner-body").querySelectorAll("td")).toHaveLength(4);
+    });
+
+    it("has no jest-axe violations while loading", async () => {
+      const { container } = renderLoading({ loading: true });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("Table.Empty", () => {
+    const renderEmpty = (emptyProps: object = {}, tableProps: object = {}) =>
+      render(
+        <Table aria-label="Empty example" {...tableProps}>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>One</Table.HeaderCell>
+              <Table.HeaderCell>Two</Table.HeaderCell>
+              <Table.HeaderCell>Three</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            <Table.Empty data-testid="empty" {...emptyProps}>
+              No invoices yet
+            </Table.Empty>
+          </Table.Body>
+        </Table>,
+      );
+
+    it("renders its message in a single cell spanning every column", () => {
+      renderEmpty();
+      const cell = screen.getByTestId("empty");
+      expect(cell.tagName).toBe("TD");
+      expect(cell).toHaveAttribute("colspan", "3");
+      expect(cell).toHaveTextContent("No invoices yet");
+      expect(cell.parentElement?.tagName).toBe("TR");
+    });
+
+    it("lets colSpan override the inferred column count", () => {
+      renderEmpty({ colSpan: 2 });
+      expect(screen.getByTestId("empty")).toHaveAttribute("colspan", "2");
+    });
+
+    it("falls back to one column when there's no header row to read", () => {
+      render(
+        <Table aria-label="No header">
+          <Table.Body>
+            <Table.Empty data-testid="empty">Nothing here</Table.Empty>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("empty")).toHaveAttribute("colspan", "1");
+    });
+
+    it("marks its row so hover highlighting and the pinned column skip it", () => {
+      renderEmpty();
+      const row = screen.getByTestId("empty").parentElement;
+      expect(row).toHaveClass(styles.statusRow ?? "", styles.emptyRow ?? "");
+    });
+
+    it("is sized by the table's own size", () => {
+      renderEmpty({}, { size: "lg" });
+      expect(screen.getByTestId("empty")).toHaveClass(styles.sizeLg ?? "", styles.emptyCell ?? "");
+    });
+
+    it("forwards its ref to the <td> and passes id/className/style/data-testid through", () => {
+      const ref = createRef<HTMLTableCellElement>();
+      render(
+        <Table aria-label="Ref">
+          <Table.Body>
+            <Table.Empty ref={ref} id="e" className="c-e" style={{ opacity: 0.9 }} data-testid="e">
+              Nothing
+            </Table.Empty>
+          </Table.Body>
+        </Table>,
+      );
+      expect(ref.current?.tagName).toBe("TD");
+      const cell = screen.getByTestId("e");
+      expect(cell).toHaveAttribute("id", "e");
+      expect(cell).toHaveClass("c-e");
+      expect(cell).toHaveStyle({ opacity: "0.9" });
+    });
+
+    it("passes other native <td> attributes through", () => {
+      renderEmpty({ title: "No data" });
+      expect(screen.getByTestId("empty")).toHaveAttribute("title", "No data");
+    });
+
+    it("has no jest-axe violations", async () => {
+      const { container } = renderEmpty();
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe("dev-mode warnings", () => {
     it("warns once when stickyHeader is set with no way to constrain height", () => {
       const { rerender } = renderTable({ stickyHeader: true });

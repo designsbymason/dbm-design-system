@@ -29,6 +29,12 @@ const meta: Meta<typeof Table.HeaderCell> = {
         "Horizontal alignment of the cell's content, in logical terms — start follows reading direction, end is its opposite, so alignment mirrors correctly under RTL.",
       table: { defaultValue: { summary: "'start'" } },
     },
+    numeric: {
+      control: "boolean",
+      description:
+        "Marks this header as labelling a numeric column: end-aligns it (so it sits over right-aligned figures) and sets tabular figures. Pair it with numeric on the column's Table.Cells.",
+      table: { defaultValue: { summary: "false" } },
+    },
     id: {
       control: false,
       description:
@@ -52,6 +58,7 @@ const meta: Meta<typeof Table.HeaderCell> = {
     children: "Invoice",
     scope: "col",
     align: "start",
+    numeric: false,
   },
 };
 

@@ -19,8 +19,14 @@ const meta: Meta<typeof Table.Cell> = {
       control: "select",
       options: ["start", "center", "end"],
       description:
-        "Horizontal alignment of the cell's content, in logical terms. Right-align (end) numeric columns so digits line up.",
+        "Horizontal alignment of the cell's content, in logical terms. Defaults to start, or to end when numeric is set — an explicit align always wins over that.",
       table: { defaultValue: { summary: "'start'" } },
+    },
+    numeric: {
+      control: "boolean",
+      description:
+        "Marks this cell as holding a number: end-aligns it and sets tabular figures, so every digit takes the same width and a column of figures lines up exactly. In a font whose digits are proportional by default (the system UI font, for instance) right-alignment alone doesn't do that; Nunito's digits are already equal-width, so with it numeric is chiefly the alignment shorthand.",
+      table: { defaultValue: { summary: "false" } },
     },
     id: {
       control: false,
@@ -44,6 +50,7 @@ const meta: Meta<typeof Table.Cell> = {
   args: {
     children: "INV-001",
     align: "start",
+    numeric: false,
   },
 };
 

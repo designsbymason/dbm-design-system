@@ -38,6 +38,10 @@
   color: var(--dbm-text-primary);
   font-family: var(--dbm-font-family-primary);
   inline-size: 100%;
+  /* `--row-tint` is set on a striped or hovered row (below) and read by a pinned
+     first-column cell, which must be opaque yet match its row. Resetting it here
+     stops a table nested inside a cell from inheriting an outer row's tint. */
+  --row-tint: initial;
   text-align: start;
 }
 
@@ -100,6 +104,34 @@
   font-weight: var(--dbm-font-weight-semibold);
 }
 
+/* `stickyFirstColumn` — the first cell of every row is pinned to the inline-start
+   edge (logical, so it follows RTL) and resolves against `.container`'s own
+   horizontal scroll. Pinned cells must be opaque or scrolling content shows
+   through them, yet a striped/hovered row is tinted on the row itself — so the
+   cell takes its row's tint (`--row-tint`) and falls back to `bg.surface` for an
+   untinted row. Declared before the header rules below (equal specificity, later
+   wins) so a toned or pinned header keeps its own fill on its first cell. */
+.firstColumnSticky > tr > :first-child {
+  background-color: var(--row-tint, var(--dbm-bg-surface));
+  border-inline-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  inset-inline-start: 0;
+  position: sticky;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-sticky);
+}
+
+/* A first cell that spans several columns opts out of pinning. A sticky cell can
+   only travel within its own row, so one as wide as most of the table (a
+   footer's "Total" label, the empty-state message) can only follow the scroll
+   part of the way before it runs out of room and slides off — worse than not
+   pinning it at all. It then scrolls with the rest, showing its row's own tint. */
+.firstColumnSticky > tr > :first-child[colspan]:not([colspan="1"]),
+.firstColumnSticky > .emptyRow > :first-child {
+  background-color: transparent;
+  border-inline-end: none;
+  position: static;
+}
+
 /* `stickyHeader` — pinned on the header cells themselves (not the `<thead>`),
    which is the placement browsers support consistently. Resolves against
    `.container`'s own scroll, so it only bites once `maxHeight` gives the
@@ -110,7 +142,15 @@
   background-color: var(--dbm-bg-surface);
   inset-block-start: 0;
   position: sticky;
-  z-index: var(--dbm-z-index-sticky);
+  /* One above the pinned first column's cells, so a column scrolled vertically
+     underneath the header never paints over it. */
+  z-index: calc(var(--dbm-z-index-sticky) + 1);
+}
+
+/* The corner — the first header cell when both the header and the first column
+   are pinned — sits above both. */
+.headerSticky.firstColumnSticky > tr > :first-child {
+  z-index: calc(var(--dbm-z-index-sticky) + 2);
 }
 
 /* Any non-neutral tone's header — a solid fill with on-colour text. Declared
@@ -132,14 +172,20 @@
   color: var(--tone-on-solid);
 }
 
+.headerTinted.firstColumnSticky > tr > :first-child {
+  border-inline-end-color: var(--tone-solid);
+}
+
 .bodyStriped > tr:nth-child(even) {
-  background-color: var(--dbm-bg-neutral-subtle);
+  --row-tint: var(--dbm-bg-neutral-subtle);
+  background-color: var(--row-tint);
 }
 
 /* Any non-neutral tone's stripes — that tone's subtle tint in place of the
    neutral one. */
 .bodyStripedTinted > tr:nth-child(even) {
-  background-color: var(--tone-subtle);
+  --row-tint: var(--tone-subtle);
+  background-color: var(--row-tint);
 }
 
 /* Declared after `.bodyStriped` so hover wins over a stripe when both apply
@@ -149,14 +195,16 @@
   transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
-.bodyHoverable > tr:hover {
-  background-color: var(--dbm-bg-neutral-subtle-hover);
+.bodyHoverable > tr:not(.statusRow):hover {
+  --row-tint: var(--dbm-bg-neutral-subtle-hover);
+  background-color: var(--row-tint);
 }
 
 /* Any non-neutral tone's hover — that tone's subtle-hover tint. Declared after
    `.bodyStripedTinted` so it wins over a stripe when both apply. */
-.bodyHoverableTinted > tr:hover {
-  background-color: var(--tone-subtle-hover);
+.bodyHoverableTinted > tr:not(.statusRow):hover {
+  --row-tint: var(--tone-subtle-hover);
+  background-color: var(--row-tint);
 }
 
 /* Tone definitions — each non-neutral tone only *defines* its four colours as
@@ -236,4 +284,54 @@
 
 .alignEnd {
   text-align: end;
+}
+
+/* Tabular figures: every digit takes the same width, so a column of numbers
+   lines up exactly. End-alignment (from `numeric` on the cell) alone doesn't
+   do that, since proportional digits differ in width. */
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A row that carries a message or placeholder rather than data — the empty-state
+   row and the loading skeleton rows. Marked so hover highlighting skips them
+   (see the `:not(.statusRow)` hover rules above). */
+.statusRow {
+  color: var(--dbm-text-secondary);
+}
+
+/* The empty-state row itself, marked separately so the pinned first column can
+   opt out of it (see `.firstColumnSticky > .emptyRow` above). */
+.emptyRow {
+  color: var(--dbm-text-secondary);
+}
+
+/* The empty-state message cell. Declared after the `.size*` classes so its
+   roomier vertical padding wins the equal-specificity tie. */
+.emptyCell {
+  padding-block: var(--dbm-space-8);
+  text-align: center;
+}
+
+/* Loading placeholders fill their cell, at a few different lengths so a block
+   of them reads as ragged text rather than a solid bar. The percentages are
+   shape variation for a decorative placeholder, not design values. */
+.skeleton {
+  inline-size: 100%;
+}
+
+.statusRow > td:nth-child(4n + 1) > .skeleton {
+  inline-size: 70%;
+}
+
+.statusRow > td:nth-child(4n + 2) > .skeleton {
+  inline-size: 90%;
+}
+
+.statusRow > td:nth-child(4n + 3) > .skeleton {
+  inline-size: 55%;
+}
+
+.statusRow > td:nth-child(4n + 4) > .skeleton {
+  inline-size: 80%;
 }

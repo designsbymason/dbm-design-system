@@ -86,6 +86,16 @@ export interface TableProps
    */
   stickyHeader?: boolean;
   /**
+   * Pins the first column to the start edge of the table's own scroll area
+   * while the rest of the table scrolls sideways beneath it, so a row's label
+   * (an ID, a name) stays in view in a wide table. Applies to the first cell
+   * of every row in the header, body, and footer. Only has a visible effect
+   * when the table is actually wider than its space; it needs no `maxHeight`.
+   * The pinned cells are opaque so scrolling content never shows through them.
+   * @default false
+   */
+  stickyFirstColumn?: boolean;
+  /**
    * Caps the height of the table's own scroll container (any valid CSS
    * `max-height` value, e.g. `"24rem"`), so a long body scrolls inside it
    * instead of growing the page. Required for `stickyHeader` to have any
@@ -157,8 +167,32 @@ export interface TableHeaderProps extends Omit<ComponentPropsWithoutRef<"thead">
 }
 
 export interface TableBodyProps extends Omit<ComponentPropsWithoutRef<"tbody">, "children" | "className" | "style" | "id"> {
-  /** One or more `Table.Row`s. */
-  children: ReactNode;
+  /**
+   * One or more `Table.Row`s. Ignored while `loading` is set. For an empty
+   * table, render a single `Table.Empty` here in place of rows.
+   */
+  children?: ReactNode;
+  /**
+   * Replaces the body's rows with skeleton placeholder rows — one cell per
+   * column, sized to match the table — while data is on its way, and marks the
+   * body as busy (`aria-busy`) for assistive technology. `children` are not
+   * rendered while this is set. The column count is read from the table's
+   * first row (normally the header row), so a `Table.Header` should be present.
+   * @default false
+   */
+  loading?: boolean;
+  /**
+   * How many skeleton rows to show while `loading`.
+   * @default 3
+   */
+  loadingRows?: number;
+  /**
+   * The text announced to screen readers while `loading` — rendered visually
+   * hidden inside the first skeleton cell. Pass a translated string for a
+   * non-English interface.
+   * @default 'Loading'
+   */
+  loadingLabel?: string;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
@@ -233,10 +267,19 @@ export interface TableHeaderCellProps
    */
   scope?: "col" | "row" | "colgroup" | "rowgroup";
   /**
-   * Horizontal alignment of the cell's content, in logical terms.
+   * Horizontal alignment of the cell's content, in logical terms. Defaults to
+   * `"start"`, or to `"end"` when `numeric` is set — an explicit `align` always
+   * wins over that.
    * @default 'start'
    */
   align?: TableCellAlign;
+  /**
+   * Marks this header as labelling a numeric column: end-aligns it (so it sits
+   * over right-aligned figures) and sets tabular figures. Pair it with
+   * `numeric` on the column's `Table.Cell`s.
+   * @default false
+   */
+  numeric?: boolean;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
@@ -260,11 +303,24 @@ export interface TableCellProps extends Omit<ComponentPropsWithoutRef<"td">, "ch
   /** The cell's own content — text, a `Badge`, an `Avatar`, anything. */
   children?: ReactNode;
   /**
-   * Horizontal alignment of the cell's content, in logical terms.
-   * Right-align (`"end"`) numeric columns so digits line up.
+   * Horizontal alignment of the cell's content, in logical terms. Defaults to
+   * `"start"`, or to `"end"` when `numeric` is set — an explicit `align` always
+   * wins over that.
    * @default 'start'
    */
   align?: TableCellAlign;
+  /**
+   * Marks this cell as holding a number: end-aligns it and sets tabular
+   * figures (`font-variant-numeric: tabular-nums`), so every digit takes the
+   * same width and a column of figures lines up exactly. In a font whose digits
+   * are proportional by default — the system UI font a consumer falls back to
+   * when Nunito isn't loaded, for instance — right-alignment alone doesn't do
+   * that. Nunito's own digits are already equal-width, so with it `numeric` is
+   * chiefly the alignment shorthand, and keeps figures aligned if the fallback
+   * font is ever used. Fonts without a tabular-figures feature are unaffected.
+   * @default false
+   */
+  numeric?: boolean;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
@@ -301,6 +357,31 @@ export interface TableCaptionProps extends Omit<ComponentPropsWithoutRef<"captio
    * so the table's own scroll region can name itself after this caption.
    * Rarely needed directly — pass one only when another element needs a
    * predictable id to point at.
+   */
+  id?: string;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface TableEmptyProps
+  extends Omit<ComponentPropsWithoutRef<"td">, "children" | "className" | "style" | "id" | "align"> {
+  /**
+   * The message shown when the table has no rows — text, or anything that
+   * explains the empty state and, ideally, what to do about it.
+   */
+  children: ReactNode;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * message, or when a test or router needs a stable anchor.
    */
   id?: string;
   /**

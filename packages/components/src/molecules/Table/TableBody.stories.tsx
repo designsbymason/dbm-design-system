@@ -13,7 +13,24 @@ const meta: Meta<typeof Table.Body> = {
     children: {
       control: false,
       description:
-        "One or more Table.Rows.",
+        "One or more Table.Rows. Ignored while loading is set. For an empty table, render a single Table.Empty here in place of rows.",
+    },
+    loading: {
+      control: "boolean",
+      description:
+        "Replaces the body's rows with skeleton placeholder rows — one cell per column — while data is on its way, and marks the body busy (aria-busy) for assistive technology. children are not rendered while this is set. The column count is read from the table's first row, so a Table.Header should be present.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    loadingRows: {
+      control: "number",
+      description: "How many skeleton rows to show while loading.",
+      table: { defaultValue: { summary: "3" } },
+    },
+    loadingLabel: {
+      control: "text",
+      description:
+        "The text announced to screen readers while loading — rendered visually hidden inside the first skeleton cell. Pass a translated string for a non-English interface.",
+      table: { defaultValue: { summary: "'Loading'" } },
     },
     id: {
       control: false,
@@ -35,6 +52,9 @@ const meta: Meta<typeof Table.Body> = {
     },
   },
   args: {
+    loading: false,
+    loadingRows: 3,
+    loadingLabel: "Loading",
   },
 };
 

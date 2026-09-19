@@ -12,6 +12,7 @@ import * as TableFooterStories from "./TableFooter.stories";
 import * as TableRowStories from "./TableRow.stories";
 import * as TableHeaderCellStories from "./TableHeaderCell.stories";
 import * as TableCellStories from "./TableCell.stories";
+import * as TableEmptyStories from "./TableEmpty.stories";
 import * as TableCaptionStories from "./TableCaption.stories";
 
 export const rootPropOrder = [
@@ -21,6 +22,7 @@ export const rootPropOrder = [
   "striped",
   "hoverable",
   "stickyHeader",
+  "stickyFirstColumn",
   "maxHeight",
   "aria-label",
   "aria-labelledby",
@@ -33,8 +35,10 @@ export const rootPropOrder = [
 ];
 export const captionPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["children", "id", "className", "style", "data-testid"];
-export const headerCellPropOrder = ["children", "scope", "align", "id", "className", "style", "data-testid"];
-export const cellPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
+export const bodyPropOrder = ["children", "loading", "loadingRows", "loadingLabel", "id", "className", "style", "data-testid"];
+export const emptyPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const headerCellPropOrder = ["children", "scope", "align", "numeric", "id", "className", "style", "data-testid"];
+export const cellPropOrder = ["children", "align", "numeric", "id", "className", "style", "data-testid"];
 
 <Meta of={TableStories} />
 
@@ -92,10 +96,11 @@ listed here (e.g. `onClick`, `title`) — passed straight through.
 
 ### Table.Body properties
 
-The body group, rendered as a native `<tbody>`. Also accepts any other native `<tbody>` attribute beyond what's
-listed here (e.g. `onClick`, `title`) — passed straight through.
+The body group, rendered as a native `<tbody>`. With `loading` set it shows skeleton placeholder rows in place of its
+children. Also accepts any other native `<tbody>` attribute beyond what's listed here (e.g. `onClick`, `title`) —
+passed straight through.
 
-<PropertiesTable of={TableBodyStories} order={groupPropOrder} />
+<PropertiesTable of={TableBodyStories} order={bodyPropOrder} />
 
 ### Table.Footer properties
 
@@ -126,6 +131,15 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 
 <PropertiesTable of={TableCellStories} order={cellPropOrder} />
 
+### Table.Empty properties
+
+The message row for a table with no data, rendered as a native `<tr>` holding a single `<td>` that spans every column.
+Place it inside `Table.Body` in place of the rows. Also accepts any other native `<td>` attribute beyond what's listed
+here (e.g. `colSpan`, `title`) — passed straight through to the cell; `colSpan` overrides the column count it reads
+from the table's first row.
+
+<PropertiesTable of={TableEmptyStories} order={emptyPropOrder} />
+
 ## Variants
 
 ### With a caption
@@ -152,6 +166,14 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 
 <Canvas of={TableStories.StickyHeader} />
 
+### Sticky first column (scroll sideways)
+
+<Canvas of={TableStories.StickyFirstColumn} />
+
+### Sticky header and first column together
+
+<Canvas of={TableStories.StickyHeaderAndColumn} />
+
 ### Ghost variant (borderless, for embedding in a Card)
 
 <Canvas of={TableStories.Ghost} />
@@ -164,9 +186,21 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 
 <Canvas of={TableStories.Alignment} />
 
+### Numeric columns (tabular figures)
+
+<Canvas of={TableStories.Numeric} />
+
 ### Grouped columns (colSpan)
 
 <Canvas of={TableStories.GroupedColumns} />
+
+### Loading state (skeleton rows)
+
+<Canvas of={TableStories.Loading} />
+
+### Empty state
+
+<Canvas of={TableStories.Empty} />
 
 ### Narrow container (scrolls sideways, keyboard-reachable)
 
@@ -181,11 +215,18 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
   columns genuinely relate to each other.
 - Give every table a name: a visible `Table.Caption` is best, or `aria-label`/`aria-labelledby` when a visible one
   doesn't fit the layout.
-- Right-align (`align="end"`) numeric columns, in both the header and body cells, so digits line up.
+- Mark numeric columns with `numeric` — on both the header cell and the body cells. It right-aligns and sets tabular
+  figures, so every digit takes the same width and a column of figures lines up exactly. (Nunito's digits are already
+  equal-width, so with it `numeric` is chiefly the alignment shorthand; it matters where a font's digits are
+  proportional, such as the system font a page falls back to if Nunito isn't loaded.)
 - Mark the first cell of a row that labels the rest of it as `<Table.HeaderCell scope="row">`, not a plain
   `Table.Cell`.
 - Set `maxHeight` whenever you use `stickyHeader` — a header can only stay pinned inside a scroll area that has a
   height to scroll.
+- Use `stickyFirstColumn` on a wide table whose first column identifies the row (an ID, a name), so the label stays in
+  view while the reader scrolls sideways.
+- Show a skeleton while data is on its way with `<Table.Body loading>`, so the table keeps its shape and doesn't jump
+  when the rows arrive; and render a `Table.Empty` — saying what to do next — when there's genuinely nothing to show.
 - Use `variant="ghost"` when embedding a `Table` inside a container that already has its own border (a `Card`).
 - Use `tone="brand"` to give a table a strong, on-brand header — typically the primary table on a page. It follows
   the active brand theme, so it resolves to Purple or Emerald automatically.
@@ -235,6 +276,11 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 - A scrollable area has to be reachable from the keyboard (WCAG 2.1.1). While the table is wider than its space, its
   scroll frame becomes focusable — `Tab` onto it, then use the arrow keys to scroll — and is announced as a region
   named after the table. When the table fits, the frame is not focusable at all, so it adds no extra tab stop.
+- While `loading`, the body is marked busy (`aria-busy`) and a visually hidden "Loading" message (set your own with
+  `loadingLabel`) is announced; the skeleton shapes themselves are hidden from assistive technology. `Table.Empty`
+  is an ordinary cell spanning the table, read like any other content.
+- `stickyFirstColumn` changes only how the table looks while scrolling — the DOM order, header associations, and
+  keyboard behaviour are unchanged.
 - `striped` and `hoverable` backgrounds keep body text (`text.primary`) at 6.5:1 or better — comfortably above the
   4.5:1 AA text-contrast floor — in every theme, light and dark. Under any non-neutral `tone`, header
   and caption text (its `text.on-*` token on its solid fill) is 4.71:1 or better in every theme, and body text on the
@@ -279,6 +325,19 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
   {/* … */}
 </Table>
 
+{/* Numeric columns: right-aligned, tabular figures */}
+<Table.HeaderCell numeric>Amount</Table.HeaderCell>
+<Table.Cell numeric>$1,234.50</Table.Cell>
+
+{/* A first column that stays put while the rest scrolls sideways */}
+<Table stickyFirstColumn>
+  {/* … */}
+</Table>
+
+{/* Skeleton rows while loading; an empty message when there's nothing to show */}
+<Table.Body loading loadingRows={5} />
+<Table.Body>{rows.length ? rows : <Table.Empty>No invoices yet</Table.Empty>}</Table.Body>
+
 {/* A header that stays pinned while a long body scrolls */}
 <Table stickyHeader maxHeight="24rem">
   {/* … */}
@@ -301,8 +360,8 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 ## Design tokens used
 
 <TokenRow token="text.primary" usage="data cell text" />
-<TokenRow token="text.secondary" usage="header cell text and caption text" />
-<TokenRow token="bg.surface" usage="a pinned (sticky) header cell's background — opaque, so rows scrolling beneath it never show through; the header, caption, and footer have no background otherwise" />
+<TokenRow token="text.secondary" usage="header cell text, caption text, and empty-state / loading rows" />
+<TokenRow token="bg.surface" usage="a pinned (sticky) cell's background — a pinned header cell, or a pinned first-column cell in an untinted row — opaque, so content scrolling beneath it never shows through; the header, caption, and footer have no background otherwise" />
 <TokenRow token="bg.neutral-subtle" usage="striped row background" />
 <TokenRow token="bg.neutral-subtle-hover" usage="hovered row background" />
 <TokenRow token="bg.brand" usage="tone=brand: header cell and caption background, and the header's divider" />
@@ -325,7 +384,7 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 <TokenRow token="text.on-info" usage="tone=info: header cell and caption text" />
 <TokenRow token="bg.info-subtle" usage="tone=info: striped row background" />
 <TokenRow token="bg.info-subtle-hover" usage="tone=info: hovered row background" />
-<TokenRow token="border.default" usage="table border (bordered variant) and the divider between rows" />
+<TokenRow token="border.default" usage="table border (bordered variant), the divider between rows, and the divider beside a pinned first column" />
 <TokenRow token="border.neutral" usage="the stronger divider beneath the header row" />
 <TokenRow token="border.focus" usage="scroll frame focus-visible outline color" />
 <TokenRow token="border-width.1" usage="table border and row-divider width" />
@@ -339,9 +398,10 @@ A data cell, rendered as a native `<td>`. Also accepts any other native `<td>` a
 <TokenRow token="space.1" usage="scroll frame focus-visible outline offset" />
 <TokenRow token="space.1–space.6" usage="cell padding across the five size steps" />
 <TokenRow token="space.3–space.4" usage="caption padding" />
-<TokenRow token="z-index.sticky" usage="sticky header layering, above the rows scrolling beneath it" />
-<TokenRow token="motion.duration.fast" usage="hovered row background transition" />
-<TokenRow token="motion.easing.standard" usage="hovered row background transition" />
+<TokenRow token="space.8" usage="empty-state message cell's vertical padding" />
+<TokenRow token="z-index.sticky" usage="sticky layering: a pinned first column sits at this level, the pinned header one above it, and the corner cell (both pinned) one above that" />
+<TokenRow token="motion.duration.fast" usage="hovered row and pinned-cell background transition" />
+<TokenRow token="motion.easing.standard" usage="hovered row and pinned-cell background transition" />
 
 ## Related components
 

@@ -20,6 +20,7 @@ interface PlaygroundArgs {
   striped: boolean;
   hoverable: boolean;
   stickyHeader: boolean;
+  stickyFirstColumn: boolean;
   maxHeight: string;
   "aria-label": string;
   "aria-labelledby": string;
@@ -91,7 +92,7 @@ const DemoTable = ({
           <Table.HeaderCell>Invoice</Table.HeaderCell>
           <Table.HeaderCell>Customer</Table.HeaderCell>
           <Table.HeaderCell>Status</Table.HeaderCell>
-          <Table.HeaderCell align="end">Amount</Table.HeaderCell>
+          <Table.HeaderCell numeric>Amount</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -104,7 +105,7 @@ const DemoTable = ({
                 {invoice.status}
               </Badge>
             </Table.Cell>
-            <Table.Cell align="end">{formatCurrency(invoice.amount)}</Table.Cell>
+            <Table.Cell numeric>{formatCurrency(invoice.amount)}</Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>
@@ -114,7 +115,7 @@ const DemoTable = ({
             <Table.HeaderCell scope="row" colSpan={3}>
               Total
             </Table.HeaderCell>
-            <Table.Cell align="end">{formatCurrency(total)}</Table.Cell>
+            <Table.Cell numeric>{formatCurrency(total)}</Table.Cell>
           </Table.Row>
         </Table.Footer>
       )}
@@ -138,6 +139,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   striped: { control: false },
   hoverable: { control: false },
   stickyHeader: { control: false },
+  stickyFirstColumn: { control: false },
   maxHeight: { control: false },
   "aria-label": { control: false },
   "aria-labelledby": { control: false },
@@ -188,6 +190,12 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description:
         "Pins the Table.Header row to the top of the table's own scroll area while the body scrolls beneath it. Only has an effect when the table's height is constrained — set maxHeight.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    stickyFirstColumn: {
+      control: "boolean",
+      description:
+        "Pins the first column to the start edge of the table's own scroll area while the rest scrolls sideways beneath it, so a row's label stays in view in a wide table. Only has a visible effect when the table is wider than its space; needs no maxHeight.",
       table: { defaultValue: { summary: "false" } },
     },
     maxHeight: {
@@ -244,6 +252,7 @@ const meta: Meta<PlaygroundArgs> = {
     striped: false,
     hoverable: false,
     stickyHeader: false,
+    stickyFirstColumn: false,
     maxHeight: "",
   },
   render: (args) => (
@@ -256,6 +265,7 @@ const meta: Meta<PlaygroundArgs> = {
         striped={args.striped}
         hoverable={args.hoverable}
         stickyHeader={args.stickyHeader}
+        stickyFirstColumn={args.stickyFirstColumn}
         maxHeight={args.maxHeight || undefined}
       />
     </div>
@@ -463,6 +473,191 @@ export const GroupedColumns: Story = {
             <Table.Cell align="end">121</Table.Cell>
             <Table.Cell align="end">11</Table.Cell>
           </Table.Row>
+        </Table.Body>
+      </Table>
+    </div>
+  ),
+};
+
+// A wide table — seven columns — for the sticky-first-column demo. Sits in a
+// deliberately narrow frame so the table overflows and scrolls sideways.
+const wideRows = [
+  { id: "INV-001", customer: "Acme Corp", email: "billing@acme.example", plan: "Enterprise annual", renewal: "Jan 15, 2027", status: "Paid", amount: 2500 },
+  { id: "INV-002", customer: "Globex", email: "accounts@globex.example", plan: "Team monthly", renewal: "Oct 2, 2026", status: "Pending", amount: 150 },
+  { id: "INV-003", customer: "Initech", email: "ap@initech.example", plan: "Business annual", renewal: "Mar 30, 2027", status: "Overdue", amount: 1200 },
+  { id: "INV-004", customer: "Umbrella Ltd", email: "finance@umbrella.example", plan: "Team monthly", renewal: "Nov 11, 2026", status: "Paid", amount: 450 },
+  { id: "INV-005", customer: "Hooli", email: "ar@hooli.example", plan: "Enterprise annual", renewal: "Jun 1, 2027", status: "Draft", amount: 3100 },
+] as const;
+
+const WideTable = (props: Partial<Omit<TableProps, "children">>) => (
+  <Table aria-label="Wide invoices" {...props}>
+    <Table.Header>
+      <Table.Row>
+        <Table.HeaderCell>Invoice</Table.HeaderCell>
+        <Table.HeaderCell>Customer</Table.HeaderCell>
+        <Table.HeaderCell>Email</Table.HeaderCell>
+        <Table.HeaderCell>Plan</Table.HeaderCell>
+        <Table.HeaderCell>Renewal</Table.HeaderCell>
+        <Table.HeaderCell>Status</Table.HeaderCell>
+        <Table.HeaderCell numeric>Amount</Table.HeaderCell>
+      </Table.Row>
+    </Table.Header>
+    <Table.Body>
+      {wideRows.map((row) => (
+        <Table.Row key={row.id}>
+          <Table.HeaderCell scope="row">{row.id}</Table.HeaderCell>
+          <Table.Cell>{row.customer}</Table.Cell>
+          <Table.Cell>{row.email}</Table.Cell>
+          <Table.Cell>{row.plan}</Table.Cell>
+          <Table.Cell>{row.renewal}</Table.Cell>
+          <Table.Cell>{row.status}</Table.Cell>
+          <Table.Cell numeric>{formatCurrency(row.amount)}</Table.Cell>
+        </Table.Row>
+      ))}
+    </Table.Body>
+    <Table.Footer>
+      <Table.Row>
+        <Table.HeaderCell scope="row">Total</Table.HeaderCell>
+        <Table.Cell colSpan={5} />
+        <Table.Cell numeric>{formatCurrency(wideRows.reduce((sum, row) => sum + row.amount, 0))}</Table.Cell>
+      </Table.Row>
+    </Table.Footer>
+  </Table>
+);
+
+export const StickyFirstColumn: Story = {
+  name: "Sticky first column (scroll sideways)",
+  argTypes: noControls,
+  render: () => (
+    // Striped and hoverable so the pinned cells visibly keep matching their
+    // row's tint; a brand tone shows the pinned header cell keeping its fill.
+    <div style={{ maxWidth: "34rem", marginInline: "auto" }}>
+      <WideTable stickyFirstColumn striped hoverable tone="brand" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector("table");
+    const container = table?.parentElement;
+    const firstCell = table?.querySelector("tbody th");
+    if (!table || !container || !firstCell) throw new Error("Table not rendered");
+    await expect(container.scrollWidth).toBeGreaterThan(container.clientWidth);
+    const before = firstCell.getBoundingClientRect().left - container.getBoundingClientRect().left;
+    container.scrollLeft = 200;
+    // Scrolling moves the rest of the table under the pinned column; the pinned
+    // cell itself must not move relative to the frame.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const after = firstCell.getBoundingClientRect().left - container.getBoundingClientRect().left;
+    await expect(container.scrollLeft).toBeGreaterThan(0);
+    await expect(Math.abs(after - before)).toBeLessThan(2);
+  },
+};
+
+export const StickyHeaderAndColumn: Story = {
+  name: "Sticky header and first column together",
+  argTypes: noControls,
+  render: () => (
+    // Both pinned: scroll in either direction and the header row and the first
+    // column stay in view, with the corner cell above both.
+    <div style={{ maxWidth: "34rem", marginInline: "auto" }}>
+      <WideTable stickyHeader stickyFirstColumn maxHeight="13rem" tone="info" striped />
+    </div>
+  ),
+};
+
+export const Numeric: Story = {
+  name: "Numeric columns (tabular figures)",
+  argTypes: noControls,
+  render: () => (
+    // The same figures twice: right-aligned alone, then with `numeric`. Shown in
+    // the system UI font on purpose — its digits are proportional by default (a
+    // "1" is narrower than an "8"), and `numeric`'s tabular figures fix that.
+    // Nunito's own digits are already equal-width, so in Nunito the two would
+    // look identical and demonstrate nothing; the system font is what a page
+    // falls back to when Nunito isn't loaded.
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      <Text size="sm" color="secondary">
+        Shown in the system UI font, whose digits are proportional by default. Nunito&apos;s digits are already
+        equal-width, so there the two tables would look the same.
+      </Text>
+      {(["align", "numeric"] as const).map((mode) => (
+        <div key={mode}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
+            {mode === "align" ? 'align="end" only' : "numeric"}
+          </Text>
+          <Table aria-label={`Figures (${mode})`} style={{ fontFamily: "system-ui, sans-serif" }}>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Region</Table.HeaderCell>
+                {mode === "align" ? (
+                  <Table.HeaderCell align="end">Revenue</Table.HeaderCell>
+                ) : (
+                  <Table.HeaderCell numeric>Revenue</Table.HeaderCell>
+                )}
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {[
+                ["North America", "$1,111,111.11"],
+                ["Europe", "$888,888.88"],
+                ["Asia Pacific", "$1,010,101.01"],
+                ["Latin America", "$8,181,818.18"],
+              ].map(([region, amount]) =>
+                mode === "align" ? (
+                  <Table.Row key={region}>
+                    <Table.Cell>{region}</Table.Cell>
+                    <Table.Cell align="end">{amount}</Table.Cell>
+                  </Table.Row>
+                ) : (
+                  <Table.Row key={region}>
+                    <Table.Cell>{region}</Table.Cell>
+                    <Table.Cell numeric>{amount}</Table.Cell>
+                  </Table.Row>
+                ),
+              )}
+            </Table.Body>
+          </Table>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const Loading: Story = {
+  name: "Loading state (skeleton rows)",
+  argTypes: noControls,
+  render: () => (
+    <div style={demoContainerStyle}>
+      <Table aria-label="Recent invoices">
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>Invoice</Table.HeaderCell>
+            <Table.HeaderCell>Customer</Table.HeaderCell>
+            <Table.HeaderCell>Status</Table.HeaderCell>
+            <Table.HeaderCell numeric>Amount</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body loading loadingRows={4} />
+      </Table>
+    </div>
+  ),
+};
+
+export const Empty: Story = {
+  name: "Empty state",
+  argTypes: noControls,
+  render: () => (
+    <div style={demoContainerStyle}>
+      <Table aria-label="Recent invoices">
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>Invoice</Table.HeaderCell>
+            <Table.HeaderCell>Customer</Table.HeaderCell>
+            <Table.HeaderCell>Status</Table.HeaderCell>
+            <Table.HeaderCell numeric>Amount</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          <Table.Empty>No invoices yet — create one to get started.</Table.Empty>
         </Table.Body>
       </Table>
     </div>
