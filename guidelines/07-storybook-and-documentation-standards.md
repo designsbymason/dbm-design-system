@@ -192,8 +192,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and the first 14 molecules have a Docs page and a completed review pass, and are
-Finalized**; `EmptyState` (the 15th molecule) has both but is awaiting sign-off — full atom-tier coverage. `Radio` joined the atom tier on 2026-09-14 (split out of the
+**All 48 atoms and the first 15 molecules have a Docs page and a completed review pass, and are
+Finalized** — full atom-tier coverage. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
 built and Finalized the same day), which is why the atom count is 48, not the 47 several docs carried
@@ -264,17 +264,17 @@ quoted in prose elsewhere.
 | Accordion | Molecule | Overlay | ✅ | ✅ 2026-09-18 | [Accordion.md](component-reviews/Accordion.md) |
 | Table | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [Table.md](component-reviews/Table.md) |
 | Card | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [Card.md](component-reviews/Card.md) |
-| EmptyState | Molecule | Data Display | ✅ | ⏳ built 2026-09-19, awaiting sign-off | [EmptyState.md](component-reviews/EmptyState.md) |
+| EmptyState | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [EmptyState.md](component-reviews/EmptyState.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-09-19):** every atom and the first 14 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-09-19):** every atom and the first 15 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
-`Popover`, `Accordion`, `Table`, `Card`) are reviewed and Finalized, and `EmptyState` is built and reviewed,
-awaiting sign-off — see the table above. The queue continues through the remaining 21 of the 36 molecules,
+`Popover`, `Accordion`, `Table`, `Card`, `EmptyState`) are reviewed and Finalized — see the table above.
+The queue continues through the remaining 21 of the 36 molecules,
 one at a time, in the dependency order itemized in `04-component-inventory.md` (`Pagination` is next), each
 with the same full
 `06-engineering-standards.md` §9 process.

@@ -2,8 +2,9 @@
 
 **Data Display:** EmptyState — built 2026-09-19, item 12 in the itemized molecule-tier build order
 (`04-component-inventory.md`). Adds two component-token families (`empty-state.content-max-width`, `empty-state.media-max-width.*`) and no new dependency.
-**Not Finalized** — the full `06-engineering-standards.md` §9 pass below is complete, but only the user declares a
-component Finalized.
+**Finalized 2026-09-19** — declared by the user after the full `06-engineering-standards.md` §9 pass and the follow-ups and final
+review pass recorded below; see the closing entry at the bottom of this file. Everything above it records the build and review history
+leading there.
 
 A compound component of native elements and three existing atoms: `EmptyState` (root) with `EmptyState.Media`,
 `EmptyState.Icon`, `EmptyState.Title`, `EmptyState.Description`, and `EmptyState.Actions`. Each sub-part's own props get a
@@ -249,11 +250,23 @@ Left out deliberately; each can be added without breaking the current API:
 - **`Table` and `Card` docs linking back to `EmptyState`.** Done afterwards at explicit direction — see the follow-up entry in each of
   `Table.md` and `Card.md`.
 
-## Status
+## Finalized 2026-09-19
 
-Built 2026-09-19 and fully reviewed against `06-engineering-standards.md` §9; **not Finalized** — that is the user's call. Final
-verification, run after the follow-up's last code change: `eslint --max-warnings 0` plus both `tsc --noEmit` passes clean; the
-jsdom `unit` project and the real-browser `storybook` project (including axe on every story and all five `play` tests); `tsup` build;
-`storybook build`; and every size, coverage, and audit check. The exact counts are in the commit message. Per
-`06-engineering-standards.md` §9, once Finalized, don't change `EmptyState` (code, stories, docs, or the tokens only it uses) without
+Before finalizing, the review checklist (`06-engineering-standards.md` §9) was re-run against the final state, and the full package was
+re-confirmed clean immediately before: `eslint --max-warnings 0` plus both `tsc --noEmit` passes; the jsdom `unit` project (64 files /
+2253 tests, 86 of them `EmptyState`'s own, including the `StrictMode`, non-Latin-punctuation, and nested-empty-state cases); the
+real-browser `storybook` project (87 files / 546 tests, including axe on every story and all five `play` functions — the phone-width
+one confirmed to fail when the CSS it guards is broken on purpose); `tsup` build; `storybook build`; and every size, coverage, and audit
+check (`EmptyState`: 3.53KB JS / 1.69KB CSS gzipped, which includes the atoms it composes, within budget; `pnpm audit`: no known
+vulnerabilities). CI green on the last push before this one.
+
+Final surface: five parts (`Media`, `Icon`, `Title`, `Description`, `Actions`); root props `variant` (four values), `tone` (six), `size`,
+`align`, and `announce`; `EmptyState.Title`'s `level`; `EmptyState.Icon`'s `label`; and `EmptyState.Actions`' `stackOnMobile`. Two component-token
+families. Every prop in `EmptyState.types.ts` carries JSDoc, there is no `any`, and `{...rest}` is spread before every computed attribute.
+
+**Accepted open risk.** `announce` has never been heard through a real screen reader (none was available). The mechanism is the widely
+used one and its timing is measured in a real browser, and the Docs page tells authors to check the wording in the screen readers they
+support — but its real-world behaviour rests on that assumption until someone tests it in VoiceOver or NVDA. Finalized with that known.
+
+Per `06-engineering-standards.md` §9, don't make further changes to `EmptyState` (code, stories, docs, or the tokens only it uses) without
 asking first.
