@@ -53,8 +53,11 @@ they are mine, made where the request left the API open, and listed so they can 
 
 - `forwardRef` to the `<nav>`; `className`/`style`/`id`/`data-testid` and the relevant `aria-*` accepted and documented; `{...rest}` is spread first,
   the computed `aria-label`/`aria-labelledby` after it. Every prop in `Pagination.types.ts` carries JSDoc; no `any`.
-- **Atom-reuse audit:** every control is `Button`; icons are `Icon`; the compact summary is `Text`. Nothing is re-implemented. No defect was found
-  in any consumed atom. `Button`'s slotted-disabled guard is bubble-phase (`05-component-api-conventions.md` §3 notes it can't stop a slotted
+- **Atom-reuse audit:** every control is `Button`; the arrows are `Icon`; the compact summary is `Text`; and the controls are sized with
+  `IconButton`'s size tokens (the `IconButton` component itself isn't used: slotted onto a link it doesn't render its icon and warns on every
+  render). What is hand-rolled: the `<nav>`/`<ul>`/`<li>` elements, the gap (`…`, a plain character — no atom fits it), and the row's flex layout
+  (`Stack` could have laid it out, but its alignment and compact behaviour hang off custom properties and classes the component sets — the same
+  call `EmptyState.Actions` and `Card.Footer` made). No defect was found in any consumed atom. `Button`'s slotted-disabled guard is bubble-phase (`05-component-api-conventions.md` §3 notes it can't stop a slotted
   child's own `onClick`); it isn't exposed here because the component's own handler already returns for an unavailable control (an edge page is
   out of range, or `disabled` is set) — covered by tests.
 - Zero hardcoded values: the only literal in `Pagination.module.css` is the `640px` in an `@media` condition.
