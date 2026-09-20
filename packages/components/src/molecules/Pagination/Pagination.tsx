@@ -30,7 +30,9 @@ const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffec
 const defaultLabels = (format: (page: number) => string): PaginationLabels => ({
   navigation: "Pagination",
   previous: "Previous page",
+  previousText: "Previous",
   next: "Next page",
+  nextText: "Next",
   first: "First page",
   last: "Last page",
   page: (page) => `Page ${format(page)}`,
@@ -123,7 +125,8 @@ const followLink = (href: string): void => {
  * and `boundaryCount` set how many page numbers show around the current page and at each
  * end; the row keeps the same number of slots wherever you are, so the controls don't
  * shift as you move through the pages. `showFirstLast` adds jump-to-first and
- * jump-to-last buttons, and `showJump` adds a "Go to page" field for long lists.
+ * jump-to-last buttons, `showLabel` writes "Previous" and "Next" beside their arrows, and `showJump` adds a
+ * "Go to page" field for long lists.
  *
  * With `getPageHref`, every control is a real link to its page, so it can be opened in a
  * new tab or followed without JavaScript. The numbers collapse to a short "Page 3 of 20"
@@ -164,6 +167,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
     siblingCount: rawSiblingCount = 1,
     boundaryCount: rawBoundaryCount = 1,
     showFirstLast = false,
+    showLabel = false,
     size = "md",
     compact = "auto",
     variant = "ghost",
@@ -218,6 +222,24 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
       );
     }
   }, [value, paginationProps.defaultValue]);
+
+  // The words on the previous and next buttons should be part of their accessible names (WCAG 2.5.3): a
+  // translated `previous` without a matching `previousText` would leave the button called one thing and
+  // reading another.
+  const { previous: previousName, previousText, next: nextName, nextText } = labels;
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production" || !showLabel) return;
+    for (const [name, text] of [
+      [previousName, previousText],
+      [nextName, nextText],
+    ] as const) {
+      if (!name.toLowerCase().includes(text.toLowerCase())) {
+        console.warn(
+          `Pagination: with \`showLabel\`, the button's visible text "${text}" isn't part of its accessible name "${name}". Keep the text inside the name (or change \`labels.previousText\` / \`labels.nextText\`), so what the button shows is what it is called.`,
+        );
+      }
+    }
+  }, [showLabel, previousName, previousText, nextName, nextText]);
 
   // Announce a page change. The status region is in the page from the start and only its text
   // changes, which is what a live region needs to be announced reliably.
@@ -292,7 +314,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
       nav.removeEventListener("focusout", onFocusOut);
       observer?.disconnect();
     };
-  }, [containerMode, fit, rowKey, showFirstLast, size]);
+  }, [containerMode, fit, rowKey, showFirstLast, showLabel, size]);
 
   // Nothing to paginate: no pages yet, or none at all.
   if (pageCount === 0) return null;
@@ -335,10 +357,11 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
     target: number,
     accessibleName: string,
     content: ReactNode,
-    options: { isCurrent?: boolean; isDisabled?: boolean; isNav?: boolean },
+    options: { isCurrent?: boolean; isDisabled?: boolean; isNav?: boolean; hasText?: boolean },
   ) => {
-    const { isCurrent = false, isDisabled = false, isNav = false } = options;
-    const controlClass = cx(styles.item, isNav && styles.navItem);
+    const { isCurrent = false, isDisabled = false, isNav = false, hasText = false } = options;
+    // An arrow-only button is a square; one with words beside its arrow is as wide as it needs to be.
+    const controlClass = cx(styles.item, isNav && (hasText ? styles.navItemText : styles.navItem));
     const handleClick = (event: MouseEvent<HTMLElement>) => goTo(target, event);
     return (
       <Button
@@ -402,7 +425,19 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
           </Entry>
         )}
         <Entry>
-          {control(current - 1, labels.previous, arrow(CaretLeftIcon), { isDisabled: atStart, isNav: true })}
+          {control(
+            current - 1,
+            labels.previous,
+            showLabel ? (
+              <>
+                {arrow(CaretLeftIcon)}
+                <span>{labels.previousText}</span>
+              </>
+            ) : (
+              arrow(CaretLeftIcon)
+            ),
+            { isDisabled: atStart, isNav: true, hasText: showLabel },
+          )}
         </Entry>
         <Entry className={styles.summary}>
           <Text as="span" size={summarySize[size]} color="secondary">
@@ -421,7 +456,19 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
           ),
         )}
         <Entry>
-          {control(current + 1, labels.next, arrow(CaretRightIcon), { isDisabled: atEnd, isNav: true })}
+          {control(
+            current + 1,
+            labels.next,
+            showLabel ? (
+              <>
+                <span>{labels.nextText}</span>
+                {arrow(CaretRightIcon)}
+              </>
+            ) : (
+              arrow(CaretRightIcon)
+            ),
+            { isDisabled: atEnd, isNav: true, hasText: showLabel },
+          )}
         </Entry>
         {showFirstLast && (
           <Entry>

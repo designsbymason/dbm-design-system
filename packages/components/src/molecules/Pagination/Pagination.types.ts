@@ -49,8 +49,19 @@ export interface PaginationLabels {
   navigation: string;
   /** The accessible name of the previous-page button. @default "Previous page" */
   previous: string;
+  /**
+   * The visible text on the previous-page button when `showLabel` is set. Keep it inside `previous` (the
+   * accessible name), so what the button shows is part of what it is called: "Previous" is inside
+   * "Previous page". @default "Previous"
+   */
+  previousText: string;
   /** The accessible name of the next-page button. @default "Next page" */
   next: string;
+  /**
+   * The visible text on the next-page button when `showLabel` is set. Keep it inside `next` (the
+   * accessible name), as for `previousText`. @default "Next"
+   */
+  nextText: string;
   /** The accessible name of the first-page button. @default "First page" */
   first: string;
   /** The accessible name of the last-page button. @default "Last page" */
@@ -125,6 +136,17 @@ export interface PaginationProps
    * @default false
    */
   showFirstLast?: boolean;
+  /**
+   * Shows the words "Previous" and "Next" on the previous and next buttons, beside their arrows: the
+   * arrow then "Previous" on the previous button, and "Next" then the arrow on the next button — in
+   * reading order, so both mirror under right-to-left text. Without it those buttons hold only an
+   * arrow. The first and last buttons (`showFirstLast`) stay icon-only. The words are `labels.previousText`
+   * and `labels.nextText`, so they translate; the buttons keep their accessible names (`labels.previous`
+   * and `labels.next`), which should contain them. The row is wider, so in a narrow place it wraps
+   * before it overflows, and `compact="container"` takes the words into account.
+   * @default false
+   */
+  showLabel?: boolean;
   /**
    * The size of every control in the row.
    * @default 'md'

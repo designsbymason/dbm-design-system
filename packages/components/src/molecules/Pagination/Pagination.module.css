@@ -10,6 +10,7 @@
   --pagination-item: var(--dbm-icon-button-size-md);
   --pagination-font: var(--dbm-font-size-base);
   --pagination-jump: var(--dbm-space-20);
+  --pagination-label-padding: var(--dbm-space-4);
   --pagination-justify: center;
 
   align-items: center;
@@ -33,30 +34,35 @@
 }
 
 .sizeXs {
+  --pagination-label-padding: var(--dbm-space-3);
   --pagination-item: var(--dbm-icon-button-size-xs);
   --pagination-font: var(--dbm-font-size-xs);
   --pagination-jump: var(--dbm-space-16);
 }
 
 .sizeSm {
+  --pagination-label-padding: var(--dbm-space-3);
   --pagination-item: var(--dbm-icon-button-size-sm);
   --pagination-font: var(--dbm-font-size-sm);
   --pagination-jump: var(--dbm-space-16);
 }
 
 .sizeMd {
+  --pagination-label-padding: var(--dbm-space-4);
   --pagination-item: var(--dbm-icon-button-size-md);
   --pagination-font: var(--dbm-font-size-base);
   --pagination-jump: var(--dbm-space-20);
 }
 
 .sizeLg {
+  --pagination-label-padding: var(--dbm-space-4);
   --pagination-item: var(--dbm-icon-button-size-lg);
   --pagination-font: var(--dbm-font-size-md);
   --pagination-jump: var(--dbm-space-24);
 }
 
 .sizeXl {
+  --pagination-label-padding: var(--dbm-space-4);
   --pagination-item: var(--dbm-icon-button-size-xl);
   --pagination-font: var(--dbm-font-size-lg);
   --pagination-jump: var(--dbm-space-24);
@@ -92,6 +98,14 @@
 .list .navItem {
   padding-inline: 0;
   inline-size: var(--pagination-item);
+}
+
+/* The previous and next buttons when `showLabel` gives them words: as wide as arrow, gap, and text need, at
+   the same height as every other control. The side padding and the gap between the arrow and the word are
+   deliberately tighter than `Button`'s own, so the compact form (`Previous  Page 5 of 20  Next`) fits a phone. */
+.list .navItemText {
+  gap: var(--dbm-space-2);
+  padding-inline: var(--pagination-label-padding);
 }
 
 /* The arrows point along the reading direction, so they flip under right-to-left text.

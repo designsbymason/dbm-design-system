@@ -240,6 +240,7 @@ describe("Playground snippets, built from the live controls", () => {
     { size: "xl", compact: "always", align: "end", disabled: true },
     { variant: "outlined", showJump: true, announce: false, compact: "container" },
     { rounded: true, showJump: true },
+    { showLabel: true, showFirstLast: true, size: "sm" },
   ] as const;
 
   it.each(paginationArgs)("Pagination %j is a real snippet", (args) => {
@@ -264,6 +265,8 @@ describe("Playground snippets, built from the live controls", () => {
     expect(paginationPlaygroundSnippet({ compact: "container" })).toContain('compact="container"');
     expect(paginationPlaygroundSnippet({ rounded: true })).toContain(" rounded");
     expect(paginationPlaygroundSnippet({ rounded: false })).not.toContain("rounded");
+    expect(paginationPlaygroundSnippet({ showLabel: true })).toContain(" showLabel");
+    expect(paginationPlaygroundSnippet({ showLabel: false })).not.toContain("showLabel");
   });
 
   const emptyStateArgs = [

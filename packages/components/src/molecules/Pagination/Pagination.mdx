@@ -15,6 +15,7 @@ export const propOrder = [
   "siblingCount",
   "boundaryCount",
   "showFirstLast",
+  "showLabel",
   "size",
   "compact",
   "variant",
@@ -39,6 +40,7 @@ export const playgroundPropOrder = [
   "siblingCount",
   "boundaryCount",
   "showFirstLast",
+  "showLabel",
   "size",
   "compact",
   "variant",
@@ -107,6 +109,15 @@ import { Pagination } from "@dbm-design-system/components";
 The "Go to page" field and its button keep their own corners.
 
 <Canvas of={PaginationStories.Rounded} />
+
+### Previous and Next labels
+
+`showLabel` writes "Previous" and "Next" beside the arrows: the arrow and then "Previous" on the previous button, "Next"
+and then the arrow on the next one. It follows reading order, so under right-to-left text both mirror, just as the
+arrows do. The first and last buttons stay icon-only. The words are `labels.previousText` and `labels.nextText`, so
+they translate.
+
+<Canvas of={PaginationStories.Labels} />
 
 ### Numbers in your own locale
 
@@ -200,6 +211,12 @@ switch.
   available in the compact form, where it is the way to reach a page the summary hides.
 - Use `compact="container"` where the width isn't the screen's — a sidebar, a resizable panel, a card — so the numbers
   give way to the summary exactly when they stop fitting.
+- Use `showLabel` where there is room and the reader benefits from the words — a results page, a table footer. The row is
+  wider, so in a narrow place it wraps before it overflows; `compact="container"` takes the words into account, and in
+  the compact form the summary simply sits between the labelled buttons. On a phone that form —
+  "Previous  Page 5 of 20  Next" — fits one line at `md` and smaller in the 343px that a 375px screen leaves after
+  a 16px gutter (it measures about 320px at `md`); `lg` and `xl`, and any size with `showFirstLast`, wrap onto a
+  second line.
 - Use `rounded` for a softer, friendlier look — a consumer app or a marketing page — and leave it off (square-cornered) for a dense,
   data-heavy screen where it should match the table and form controls around it.
 - Choose `variant` to suit the surroundings: `ghost` (the default) is quietest, `outlined` gives every control a
@@ -267,6 +284,10 @@ switch.
   written with it, so they still contain what the button shows; if you write your own `labels.page`, write its number
   with the same function. The previous, next, first, and last
   buttons have names only — they hold an icon.
+- With `showLabel`, the previous and next buttons keep their accessible names ("Previous page", "Next page"), which contain
+  the words they show, as label-in-name expects. If you translate `labels.previous` or `labels.next`, translate
+  `labels.previousText` or `labels.nextText` with them and keep the words inside the names — in development a
+  mismatch is warned about.
 - The gaps ("…") are decorative and hidden from assistive technology.
 - Every control is a `<button>`, or, with `getPageHref`, a real `<a href>` — so a link can be opened in a new tab.
   A modified click (Ctrl, Cmd, Shift, Alt, or the middle button) is left to the browser and doesn't count as a page
@@ -372,6 +393,9 @@ const [page, setPage] = useState(1);
     summary: (page, pageCount) => `Página ${page} de ${pageCount}`,
   }}
 />
+
+// Write "Previous" and "Next" beside the arrows (translate the words with labels.previousText / nextText)
+<Pagination pageCount={20} value={page} onValueChange={setPage} showLabel />
 
 // Page numbers in a locale's own numerals or grouping (the default names and summary follow it)
 <Pagination pageCount={20} value={page} onValueChange={setPage} formatNumber={new Intl.NumberFormat("ar-EG").format} />

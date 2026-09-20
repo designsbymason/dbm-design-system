@@ -65,6 +65,25 @@ export const paginationSnippets = {
 
 <Pagination pageCount={5000} defaultValue={1234} rounded showJump />`,
 
+  labels: `{/* showLabel writes "Previous" and "Next" beside the arrows: the arrow then "Previous", and "Next" then the arrow. The
+    first and last buttons (showFirstLast) stay icon-only. The words are labels.previousText and labels.nextText, so they
+    translate — keep them inside the buttons' accessible names (labels.previous and labels.next). */}
+<Pagination pageCount={20} defaultValue={5} showLabel />
+
+<Pagination pageCount={20} defaultValue={5} showLabel variant="outlined" rounded />
+
+<Pagination
+  pageCount={20}
+  defaultValue={5}
+  showLabel
+  labels={{
+    previous: "Página anterior",
+    previousText: "Anterior",
+    next: "Página siguiente",
+    nextText: "Siguiente",
+  }}
+/>`,
+
   locale: `{/* formatNumber writes each page number the way a language or region does — here Arabic-Indic digits, and
     digit grouping, through the browser's own Intl. The default "Page 5" and "Page 5 of 20" text uses it too, so
     a button's name always contains the number it shows. */}
@@ -165,6 +184,7 @@ export interface PaginationPlaygroundSnippetArgs {
   siblingCount?: number;
   boundaryCount?: number;
   showFirstLast?: boolean;
+  showLabel?: boolean;
   size?: PaginationSize;
   compact?: PaginationCompact;
   variant?: PaginationVariant;
@@ -184,6 +204,7 @@ export function paginationPlaygroundSnippet(args: PaginationPlaygroundSnippetArg
   if (args.siblingCount !== undefined && args.siblingCount !== 1) attributes.push(`siblingCount={${args.siblingCount}}`);
   if (args.boundaryCount !== undefined && args.boundaryCount !== 1) attributes.push(`boundaryCount={${args.boundaryCount}}`);
   if (args.showFirstLast) attributes.push("showFirstLast");
+  if (args.showLabel) attributes.push("showLabel");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.compact && args.compact !== "auto") attributes.push(`compact="${args.compact}"`);
   if (args.variant && args.variant !== "ghost") attributes.push(`variant="${args.variant}"`);

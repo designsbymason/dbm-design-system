@@ -486,6 +486,119 @@ describe("Pagination", () => {
     });
   });
 
+  describe("showLabel", () => {
+    const previousButton = () => screen.getByRole("button", { name: "Previous page" });
+    const nextButton = () => screen.getByRole("button", { name: "Next page" });
+    /** What a button holds, in order: "icon" for its arrow, else its text. */
+    const parts = (button: HTMLElement) =>
+      [...button.childNodes].map((node) => (node instanceof Element && node.tagName.toLowerCase() === "svg" ? "icon" : node.textContent));
+
+    it("is off by default: the previous and next buttons hold only an arrow", () => {
+      renderPagination({ defaultValue: 5 });
+      expect(parts(previousButton())).toEqual(["icon"]);
+      expect(parts(nextButton())).toEqual(["icon"]);
+      expect(previousButton()).toHaveClass(styles.navItem ?? "");
+    });
+
+    it("puts the arrow first on Previous, and the text first on Next (reading order)", () => {
+      renderPagination({ defaultValue: 5, showLabel: true });
+      expect(parts(previousButton())).toEqual(["icon", "Previous"]);
+      expect(parts(nextButton())).toEqual(["Next", "icon"]);
+    });
+
+    it("keeps each button's accessible name, which contains the words it shows", () => {
+      renderPagination({ defaultValue: 5, showLabel: true });
+      for (const [button, text] of [
+        [previousButton(), "Previous"],
+        [nextButton(), "Next"],
+      ] as const) {
+        expect(button).toHaveTextContent(text);
+        expect(button.getAttribute("aria-label")).toContain(text);
+      }
+    });
+
+    it("leaves the first and last buttons icon-only", () => {
+      renderPagination({ defaultValue: 5, showLabel: true, showFirstLast: true });
+      expect(parts(screen.getByRole("button", { name: "First page" }))).toEqual(["icon"]);
+      expect(parts(screen.getByRole("button", { name: "Last page" }))).toEqual(["icon"]);
+      expect(screen.getByRole("button", { name: "First page" })).toHaveClass(styles.navItem ?? "");
+    });
+
+    it("sizes a button with words to its content, not to a square", () => {
+      renderPagination({ defaultValue: 5, showLabel: true });
+      expect(previousButton()).toHaveClass(styles.navItemText ?? "");
+      expect(previousButton()).not.toHaveClass(styles.navItem ?? "");
+      expect(nextButton()).toHaveClass(styles.navItemText ?? "");
+    });
+
+    it("shows the words you give it, and a translated name keeps them inside", () => {
+      renderPagination({
+        defaultValue: 5,
+        showLabel: true,
+        labels: { previous: "Página anterior", previousText: "Anterior", next: "Página siguiente", nextText: "Siguiente" },
+      });
+      expect(screen.getByRole("button", { name: "Página anterior" })).toHaveTextContent("Anterior");
+      expect(screen.getByRole("button", { name: "Página siguiente" })).toHaveTextContent("Siguiente");
+    });
+
+    it("still shows the words on an unavailable button, which stays aria-disabled and focusable", () => {
+      renderPagination({ defaultValue: 1, showLabel: true });
+      expect(previousButton()).toHaveAttribute("aria-disabled", "true");
+      expect(previousButton()).toHaveTextContent("Previous");
+      act(() => previousButton().focus());
+      expect(previousButton()).toHaveFocus();
+    });
+
+    it("still moves a page when its words are clicked", () => {
+      const onValueChange = vi.fn();
+      renderPagination({ defaultValue: 5, showLabel: true, onValueChange });
+      fireEvent.click(screen.getByText("Next"));
+      expect(onValueChange).toHaveBeenCalledWith(6, expect.anything());
+      fireEvent.click(screen.getByText("Previous"));
+      expect(onValueChange).toHaveBeenLastCalledWith(5, expect.anything());
+    });
+
+    it("works with links, the compact form, and rounded", () => {
+      renderPagination({ defaultValue: 5, showLabel: true, getPageHref: (n) => `/p/${n}`, compact: "always", rounded: true });
+      expect(screen.getByRole("link", { name: "Next page" })).toHaveTextContent("Next");
+      expect(screen.getByRole("link", { name: "Next page" })).toHaveAttribute("href", "/p/6");
+      expect(screen.getByText("Page 5 of 20")).toBeInTheDocument();
+    });
+
+    it("has no accessibility violations", async () => {
+      const { container } = renderPagination({ defaultValue: 5, showLabel: true, showFirstLast: true });
+      expect((await axe(container)).violations).toHaveLength(0);
+    });
+
+    describe("dev-mode warning", () => {
+      it("warns when a name doesn't contain the words its button shows", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        renderPagination({ showLabel: true, labels: { previous: "Página anterior" } });
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('"Previous" isn\'t part of its accessible name "Página anterior"'));
+        warn.mockRestore();
+      });
+
+      it("is quiet when the names contain the words, including a translated pair", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        renderPagination({ showLabel: true });
+        renderPagination({
+          showLabel: true,
+          labels: { previous: "Página anterior", previousText: "anterior", next: "Página siguiente", nextText: "Siguiente" },
+        });
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+      });
+
+      it("says nothing when the words aren't shown", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        renderPagination({ labels: { previous: "Página anterior" } });
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+      });
+    });
+  });
+
   describe("formatNumber", () => {
     const arabic = new Intl.NumberFormat("ar-EG").format;
     const german = new Intl.NumberFormat("de-DE").format;
@@ -975,6 +1088,14 @@ describe("Pagination", () => {
         // The release would have measured the row again. It must not.
         expect(reads).toBe(0);
       });
+    });
+
+    it("measures again when the words are added to the previous and next buttons, which widen the row", () => {
+      const { rerender } = renderPagination({ compact: "container" });
+      expect(collapsed()).toBe(false);
+      rowWidth = 700; // the words make the row wider than the component
+      rerender(<Pagination pageCount={20} compact="container" showLabel data-testid="pagination" />);
+      expect(collapsed()).toBe(true);
     });
 
     it("doesn't observe anything in the other modes", () => {

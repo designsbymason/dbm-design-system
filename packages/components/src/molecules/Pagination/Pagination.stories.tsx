@@ -20,6 +20,7 @@ interface PlaygroundArgs {
   siblingCount: number;
   boundaryCount: number;
   showFirstLast: boolean;
+  showLabel: boolean;
   size: PaginationSize;
   compact: PaginationCompact;
   variant: PaginationVariant;
@@ -54,6 +55,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   siblingCount: { control: false },
   boundaryCount: { control: false },
   showFirstLast: { control: false },
+  showLabel: { control: false },
   size: { control: false },
   compact: { control: false },
   variant: { control: false },
@@ -116,6 +118,12 @@ const meta: Meta<PlaygroundArgs> = {
         "Adds buttons that jump straight to the first and the last page, either side of the previous and next buttons.",
       table: { defaultValue: { summary: "false" } },
     },
+    showLabel: {
+      control: "boolean",
+      description:
+        "Shows the words \"Previous\" and \"Next\" on the previous and next buttons, beside their arrows: the arrow then \"Previous\" on the previous button, and \"Next\" then the arrow on the next button — in reading order, so both mirror under right-to-left text. The first and last buttons stay icon-only. The words are labels.previousText and labels.nextText, so they translate; keep them inside the buttons' accessible names.",
+      table: { defaultValue: { summary: "false" } },
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -175,7 +183,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       control: false,
       description:
-        "The text the component supplies itself — accessible names and the compact summary. Any you leave out keep their English default. Keys: navigation, previous, next, first, last, page (a function of the page number), and summary (a function of the page and the page count).",
+        "The text the component supplies itself — accessible names and the compact summary. Any you leave out keep their English default. Keys: navigation, previous, previousText, next, nextText, first, last, page (a function of the page number), summary (a function of the page and the page count), jump, and jumpSubmit. previousText and nextText are the visible words when showLabel is set.",
     },
     formatNumber: {
       control: false,
@@ -211,6 +219,7 @@ const meta: Meta<PlaygroundArgs> = {
     siblingCount: 1,
     boundaryCount: 1,
     showFirstLast: false,
+    showLabel: false,
     size: "md",
     compact: "auto",
     variant: "ghost",
@@ -231,6 +240,7 @@ const meta: Meta<PlaygroundArgs> = {
           siblingCount={args.siblingCount}
           boundaryCount={args.boundaryCount}
           showFirstLast={args.showFirstLast}
+          showLabel={args.showLabel}
           size={args.size}
           compact={args.compact}
           variant={args.variant}
@@ -587,6 +597,48 @@ export const RoundedInteraction: Story = {
     const height = focused.getBoundingClientRect().height;
     await expect(parseFloat(getComputedStyle(focused).borderTopLeftRadius)).toBeGreaterThanOrEqual(height / 2 - 0.5);
   },
+};
+
+export const Labels: Story = {
+  name: "Previous and Next labels",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: paginationSnippets.labels } } },
+  render: () => (
+    // `showLabel` writes "Previous" and "Next" beside the arrows — the arrow then "Previous", and "Next" then the arrow,
+    // in reading order, so they mirror under right-to-left text. The first and last buttons stay icon-only.
+    <div style={{ ...containerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          showLabel
+        </Text>
+        <Pagination pageCount={20} defaultValue={5} showLabel compact="never" align="start" aria-label="With labels" />
+      </div>
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          showLabel, outlined and rounded
+        </Text>
+        <Pagination pageCount={20} defaultValue={5} showLabel variant="outlined" rounded compact="never" align="start" aria-label="Outlined with labels" />
+      </div>
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          showLabel with first and last, small
+        </Text>
+        <Pagination pageCount={20} defaultValue={5} showLabel showFirstLast size="sm" compact="never" align="start" aria-label="With first and last" />
+      </div>
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          showLabel in the compact form, small — the summary between the labelled buttons
+        </Text>
+        <Pagination pageCount={20} defaultValue={5} showLabel compact="always" size="sm" align="start" aria-label="Compact with labels" />
+      </div>
+      <div style={labelledColumn} dir="rtl">
+        <Text size="sm" weight="semibold">
+          showLabel in right-to-left text — the order mirrors
+        </Text>
+        <Pagination pageCount={20} defaultValue={5} showLabel compact="never" align="start" aria-label="Right to left with labels" />
+      </div>
+    </div>
+  ),
 };
 
 export const Locale: Story = {
@@ -1124,5 +1176,68 @@ export const FitContainerDigitsInteraction: Story = {
     await expect(numbersShown()).toBe(false);
     await expect(next).toHaveFocus();
     await expect(next).toBeVisible();
+  },
+};
+
+// Where the words sit, measured in a real browser: on Previous the arrow comes first and the text after it, on Next the
+// text first and the arrow after it — and mirrored in right-to-left text. Every button keeps the row's height, is wider
+// than tall (it isn't a square any more), and shows its words in full. Not a demo, so hidden from the sidebar and
+// Docs (`!dev`), still run as a test.
+export const LabelsInteraction: Story = {
+  name: "Previous and Next labels — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      {(["ltr", "rtl"] as const).map((direction) => (
+        <div key={direction} dir={direction} data-testid={direction}>
+          <Pagination pageCount={20} defaultValue={5} showLabel showFirstLast compact="never" align="start" aria-label={direction} />
+        </div>
+      ))}
+      {/* A phone: 375px less a 16px gutter. The compact form with the words is the default there (`auto` collapses
+          the numbers below the `sm` breakpoint), and at the default size it has to fit on one line. */}
+      <div style={{ inlineSize: 343 }} data-testid="phone">
+        <Pagination pageCount={20} defaultValue={5} showLabel compact="always" aria-label="Phone" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = (element: Element) => element.getBoundingClientRect();
+    for (const direction of ["ltr", "rtl"] as const) {
+      const root = canvasElement.querySelector<HTMLElement>(`[data-testid=${direction}]`)!;
+      const within_ = within(root);
+      const previous = within_.getByRole("button", { name: "Previous page" });
+      const next = within_.getByRole("button", { name: "Next page" });
+      const height = box(within_.getByRole("button", { name: "Page 5" })).height;
+      const parts = (button: HTMLElement) => ({ icon: box(button.querySelector("svg")!), text: box(button.querySelector("span")!) });
+
+      // Reading order: Previous is arrow then words, Next is words then arrow (the arrow trailing).
+      const before = parts(previous);
+      const after = parts(next);
+      if (direction === "ltr") {
+        await expect(before.icon.right).toBeLessThanOrEqual(before.text.left + 1);
+        await expect(after.text.right).toBeLessThanOrEqual(after.icon.left + 1);
+      } else {
+        await expect(before.text.right).toBeLessThanOrEqual(before.icon.left + 1);
+        await expect(after.icon.right).toBeLessThanOrEqual(after.text.left + 1);
+      }
+
+      for (const button of [previous, next]) {
+        // The row's height, wider than tall, and the words not clipped.
+        await expect(Math.abs(box(button).height - height)).toBeLessThan(1);
+        await expect(box(button).width).toBeGreaterThan(height * 1.5);
+        await expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth + 1);
+      }
+      // First and last are still square icon buttons.
+      const first = within_.getByRole("button", { name: "First page" });
+      await expect(Math.abs(box(first).width - height)).toBeLessThan(1);
+    }
+
+    // On a 343px phone, the default size's compact row — "Previous", "Page 5 of 20", "Next" — is one line.
+    const phone = canvasElement.querySelector<HTMLElement>("[data-testid=phone]")!;
+    const row = [...phone.querySelectorAll("ul > li")].filter((item) => getComputedStyle(item).display !== "none");
+    await expect(row).toHaveLength(3);
+    await expect(new Set(row.map((item) => Math.round(box(item).top))).size).toBe(1);
+    await expect(phone.querySelector("ul")!.scrollWidth).toBeLessThanOrEqual(phone.clientWidth);
   },
 };
