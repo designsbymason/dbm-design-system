@@ -2,8 +2,10 @@
 
 **Data Display:** Pagination — built 2026-09-19, item 13 in the itemized molecule-tier build order
 (`04-component-inventory.md`). Adds no new dependency and **no new token** — its controls are sized with `IconButton`'s existing
-size tokens. **Not Finalized** — the full `06-engineering-standards.md` §9 pass below is complete, but only the user declares a
-component Finalized.
+size tokens. **Finalized 2026-09-20** — the full `06-engineering-standards.md` §9 pass below, including the final review pass of
+that date, is complete, and the user declared it Finalized. Per that section, don't change its code, stories, docs, or tokens without
+asking first. Everything after the first build (the four named gaps, `rounded`, `formatNumber`, `showLabel`, the review's fixes) was
+added while it was still open, and is recorded below in the order it happened; its follow-up sections say "not Finalized" because it was not, then.
 
 A single props-driven component: a `<nav>` holding a list of previous / page-number / next controls (and, optionally, first / last),
 with a gap standing in for the pages that don't fit and a compact "Page 3 of 20" form on a phone. Every control is a `Button`.
