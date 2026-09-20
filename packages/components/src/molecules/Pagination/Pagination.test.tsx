@@ -603,6 +603,37 @@ describe("Pagination", () => {
     });
   });
 
+  describe("rounded", () => {
+    it("is off by default", () => {
+      renderPagination();
+      expect(screen.getByTestId("pagination")).not.toHaveClass(styles.rounded ?? "");
+    });
+
+    it("turns on the rounded treatment, which the stylesheet applies to every control", () => {
+      renderPagination({ rounded: true, showFirstLast: true });
+      expect(screen.getByTestId("pagination")).toHaveClass(styles.rounded ?? "");
+      // Every control carries the class the rounded rule targets (`.rounded .item`).
+      for (const control of screen.getAllByRole("button")) expect(control).toHaveClass(styles.item ?? "");
+    });
+
+    it.each(["ghost", "outlined", "filled"] as const)("combines with the %s variant, without changing it", (variant) => {
+      renderPagination({ rounded: true, variant, defaultValue: 4 });
+      expect(page(5)).toHaveClass(variant === "ghost" ? (buttonStyles.variantTertiary ?? "") : variant === "outlined" ? (buttonStyles.variantSecondary ?? "") : (buttonStyles.variantGhost ?? ""));
+      expect(page(4)).toHaveClass(buttonStyles.variantPrimary ?? "");
+    });
+
+    it("rounds the jump field's button too, so the row doesn't end in a square-cornered one", () => {
+      renderPagination({ rounded: true, showJump: true });
+      expect(screen.getByRole("button", { name: "Go" })).toHaveClass(styles.jumpSubmit ?? "");
+    });
+
+    it("works in link mode and in the compact form", () => {
+      renderPagination({ rounded: true, getPageHref: (n) => `/p/${n}`, compact: "always" });
+      expect(screen.getByTestId("pagination")).toHaveClass(styles.rounded ?? "");
+      expect(screen.getByRole("link", { name: "Next page" })).toHaveClass(styles.item ?? "");
+    });
+  });
+
   describe("compact=container", () => {
     // jsdom has no layout, so the component's measurements are supplied: `navWidth` is the width the
     // component is given, and `rowWidth` the natural width of its row of numbers (only readable while
@@ -942,6 +973,7 @@ describe("Pagination", () => {
       ["the outlined variant", { variant: "outlined", defaultValue: 5 }],
       ["the filled variant", { variant: "filled", defaultValue: 5 }],
       ["the jump field", { showJump: true }],
+      ["rounded controls", { rounded: true, showJump: true, showFirstLast: true }],
       ["the jump field, disabled", { showJump: true, disabled: true }],
       ["announcing turned off", { announce: false }],
     ];

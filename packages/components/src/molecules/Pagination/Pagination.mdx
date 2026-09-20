@@ -18,6 +18,7 @@ export const propOrder = [
   "size",
   "compact",
   "variant",
+  "rounded",
   "showJump",
   "announce",
   "align",
@@ -40,6 +41,7 @@ export const playgroundPropOrder = [
   "size",
   "compact",
   "variant",
+  "rounded",
   "showJump",
   "announce",
   "align",
@@ -97,6 +99,13 @@ import { Pagination } from "@dbm-design-system/components";
 ### All variants
 
 <Canvas of={PaginationStories.Variants} />
+
+### Rounded
+
+`rounded` makes every control a circle — or, for a page number too wide to be a square (like 1234), a pill. The "Go to
+page" field and its button follow, so the row doesn't end in a square-cornered field.
+
+<Canvas of={PaginationStories.Rounded} />
 
 ### Where you are in the pages
 
@@ -181,6 +190,8 @@ switch.
   available in the compact form, where it is the way to reach a page the summary hides.
 - Use `compact="container"` where the width isn't the screen's — a sidebar, a resizable panel, a card — so the numbers
   give way to the summary exactly when they stop fitting.
+- Use `rounded` for a softer, friendlier look — a consumer app or a marketing page — and leave it off (square-cornered) for a dense,
+  data-heavy screen where it should match the table and form controls around it.
 - Choose `variant` to suit the surroundings: `ghost` (the default) is quietest, `outlined` gives every control a
   boundary on a plain page, and `filled` gives a soft tint. The current page is always the filled brand colour.
 
@@ -325,6 +336,9 @@ const [page, setPage] = useState(1);
 // A different treatment for the controls (the current page is always the filled brand colour)
 <Pagination pageCount={20} value={page} onValueChange={setPage} variant="outlined" />
 
+// Round controls: circles, and pills for wide page numbers
+<Pagination pageCount={20} value={page} onValueChange={setPage} rounded />
+
 // Your own content region already announces the change, so don't announce it twice
 <Pagination pageCount={20} value={page} onValueChange={setPage} announce={false} />
 
@@ -360,6 +374,7 @@ const [page, setPage] = useState(1);
 <TokenRow token="border.focus" usage="a focused control's outline color" />
 <TokenRow token="border-width.2" usage="a focused control's outline width" />
 <TokenRow token="radius.md" usage="the corners of each control" />
+<TokenRow token="radius.full" usage="the corners of every control (and the jump field and its button) when rounded, and of their focus ring" />
 <TokenRow token="opacity.40" usage="an unavailable control's dimmed opacity" />
 <TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="the width and height of every control across the five size steps — the same tokens IconButton uses, matched to Button's own height at each step, so each control is a square" />
 <TokenRow token="font-size.xs–font-size.lg" usage="the page numbers' and the summary's size across the five size steps" />

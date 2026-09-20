@@ -239,6 +239,7 @@ describe("Playground snippets, built from the live controls", () => {
     { pageCount: 200, value: 100, siblingCount: 2, boundaryCount: 0, showFirstLast: true },
     { size: "xl", compact: "always", align: "end", disabled: true },
     { variant: "outlined", showJump: true, announce: false, compact: "container" },
+    { rounded: true, showJump: true },
   ] as const;
 
   it.each(paginationArgs)("Pagination %j is a real snippet", (args) => {
@@ -261,6 +262,8 @@ describe("Playground snippets, built from the live controls", () => {
     expect(paginationPlaygroundSnippet({ showJump: true })).toContain(" showJump");
     expect(paginationPlaygroundSnippet({ announce: false })).toContain("announce={false}");
     expect(paginationPlaygroundSnippet({ compact: "container" })).toContain('compact="container"');
+    expect(paginationPlaygroundSnippet({ rounded: true })).toContain(" rounded");
+    expect(paginationPlaygroundSnippet({ rounded: false })).not.toContain("rounded");
   });
 
   const emptyStateArgs = [

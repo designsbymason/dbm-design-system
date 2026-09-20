@@ -88,6 +88,22 @@
   padding-inline: var(--dbm-space-2);
 }
 
+/* `rounded`: every control a circle — or, for a page number too wide for a square (`1,000`), a pill.
+   `Button` has no such option (only `IconButton` does), so it's set here: two classes, so it beats
+   `Button`'s own `radius.md`, and — following the focus-ring rule for a fully round element — a
+   `radius.full` ring instead of the standard small one. The jump field and its button are rounded
+   too, so a rounded row doesn't end in a square-cornered field. */
+.rounded .item,
+.rounded .jump .jumpSubmit,
+.rounded .jump .jumpInput {
+  border-radius: var(--dbm-radius-full);
+}
+
+.rounded .item:focus-visible,
+.rounded .jump .jumpSubmit:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
 /* A previous, next, first, or last button holds only an icon. */
 .list .navItem {
   padding-inline: 0;
@@ -141,6 +157,11 @@
 
 .jump .jumpInput {
   inline-size: var(--pagination-jump);
+}
+
+.jumpSubmit {
+  /* A hook for the `rounded` treatment above (`Button` takes a `className`). */
+  flex-shrink: 0;
 }
 
 /* `compact="container"`: the component fills the space it is given (a block; in a flex row, what

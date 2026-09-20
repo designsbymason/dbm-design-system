@@ -100,7 +100,8 @@ const followLink = (href: string): void => {
  * on a phone-width screen (`compact="auto"`), or when they don't fit the component's own
  * width (`compact="container"`). The previous and next buttons at either end are
  * `aria-disabled` rather than natively disabled, so keyboard focus is never lost when you
- * reach the first or last page. `variant` sets how the controls look, and a page change is
+ * reach the first or last page. `variant` sets how the controls look, `rounded` makes them
+ * round, and a page change is
  * announced to screen readers (`announce`). Text the component supplies itself can be
  * replaced with `labels`.
  *
@@ -136,6 +137,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
     size = "md",
     compact = "auto",
     variant = "ghost",
+    rounded = false,
     showJump = false,
     announce = true,
     align = "center",
@@ -317,7 +319,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
       data-testid={dataTestId}
       aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? labels.navigation)}
       aria-labelledby={ariaLabelledBy}
-      className={cx(styles.root, sizeClass[size], alignClass[align], compactClasses, className)}
+      className={cx(styles.root, sizeClass[size], alignClass[align], compactClasses, rounded && styles.rounded, className)}
     >
       <ul ref={listRef} className={styles.list}>
         {showFirstLast && (
@@ -364,7 +366,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
             disabled={disabled}
             className={styles.jumpInput}
           />
-          <Button type="submit" variant="secondary" size={size} disabled={disabled}>
+          <Button type="submit" variant="secondary" size={size} disabled={disabled} className={styles.jumpSubmit}>
             {labels.jumpSubmit}
           </Button>
         </form>

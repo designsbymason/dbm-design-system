@@ -23,6 +23,7 @@ interface PlaygroundArgs {
   size: PaginationSize;
   compact: PaginationCompact;
   variant: PaginationVariant;
+  rounded: boolean;
   showJump: boolean;
   announce: boolean;
   align: PaginationAlign;
@@ -55,6 +56,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   size: { control: false },
   compact: { control: false },
   variant: { control: false },
+  rounded: { control: false },
   showJump: { control: false },
   announce: { control: false },
   align: { control: false },
@@ -132,6 +134,12 @@ const meta: Meta<PlaygroundArgs> = {
         "How the page controls look. The current page is always the filled brand colour; this is the treatment of every other control: ghost (no surface at rest, a tint on hover — the quietest), outlined (a brand-coloured border), or filled (a soft brand tint).",
       table: { defaultValue: { summary: "'ghost'" } },
     },
+    rounded: {
+      control: "boolean",
+      description:
+        "Makes every control round: a circle for a page number or an arrow, a pill for a page number too wide to be a square. The \"Go to page\" field and its button are rounded too, so the row doesn't end in a square-cornered field.",
+      table: { defaultValue: { summary: "false" } },
+    },
     showJump: {
       control: "boolean",
       description:
@@ -198,6 +206,7 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     compact: "auto",
     variant: "ghost",
+    rounded: false,
     showJump: false,
     announce: true,
     align: "center",
@@ -217,6 +226,7 @@ const meta: Meta<PlaygroundArgs> = {
           size={args.size}
           compact={args.compact}
           variant={args.variant}
+          rounded={args.rounded}
           showJump={args.showJump}
           announce={args.announce}
           align={args.align}
@@ -486,6 +496,90 @@ export const Variants: Story = {
     await expect(surface("Page 6", 2).borderWidth).toBe(0);
     for (const row of [0, 1, 2]) await expect(surface("Page 5", row).background).not.toBe(transparent);
     await expect(surface("Page 5", 0).background).not.toBe(surface("Page 6", 2).background);
+  },
+};
+
+export const Rounded: Story = {
+  name: "Rounded",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: paginationSnippets.rounded } } },
+  render: () => (
+    // `rounded` makes every control a circle (a pill for a number too wide for a square, like 1234), and the jump
+    // field and its button follow. The last row is the default, for comparison.
+    <div style={{ ...containerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }} data-testid="rounded">
+      {(["ghost", "outlined", "filled"] as const).map((variant) => (
+        <div key={variant} style={labelledColumn}>
+          <Text size="sm" weight="semibold">
+            rounded, variant=&quot;{variant}&quot;
+          </Text>
+          <Pagination pageCount={20} defaultValue={5} rounded variant={variant} showFirstLast compact="never" align="start" aria-label={`Rounded ${variant}`} />
+        </div>
+      ))}
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          rounded, with the jump field and a wide page number
+        </Text>
+        <Pagination pageCount={5000} defaultValue={1234} rounded showJump compact="never" align="start" aria-label="Rounded with jump" />
+      </div>
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          default (for comparison)
+        </Text>
+        <Pagination pageCount={20} defaultValue={5} compact="never" align="start" aria-label="Not rounded" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Measures only — nothing changes on screen. How round is a corner, against half the control's height?
+    const rounding = (control: Element) => {
+      const box = control.getBoundingClientRect();
+      const radius = parseFloat(getComputedStyle(control).borderTopLeftRadius);
+      return { radius, half: box.height / 2, width: box.width, height: box.height };
+    };
+    const navs = [...canvasElement.querySelectorAll<HTMLElement>("[data-testid=rounded] nav")];
+    await expect(navs.length).toBe(5);
+    // Every control of the four rounded rows is fully round: a corner at least half its height.
+    for (const nav of navs.slice(0, 4)) {
+      const controls = [...nav.querySelectorAll("ul button")];
+      await expect(controls.length).toBeGreaterThan(5);
+      for (const control of controls) {
+        const { radius, half } = rounding(control);
+        await expect(radius).toBeGreaterThanOrEqual(half - 0.5);
+      }
+    }
+    // The jump field and its button are round too.
+    const withJump = navs[3]!;
+    // `Input`'s own wrapper (the rounded box around the field), which the component gives a `jumpInput` class.
+    const field = withJump.querySelector("[class*=jumpInput]")!;
+    await expect(rounding(field).radius).toBeGreaterThanOrEqual(rounding(field).half - 0.5);
+    await expect(rounding(within(withJump).getByRole("button", { name: "Go" })).radius).toBeGreaterThanOrEqual(
+      rounding(within(withJump).getByRole("button", { name: "Go" })).half - 0.5,
+    );
+    // A narrow number is a circle, a wide one a pill.
+    const narrow = rounding(within(withJump).getByRole("button", { name: "Page 1" }));
+    await expect(Math.abs(narrow.width - narrow.height)).toBeLessThan(1);
+    const wide = rounding(within(withJump).getByRole("button", { name: "Page 1234" }));
+    await expect(wide.width).toBeGreaterThan(wide.height);
+    // The default row is rounded-square, well short of half its height.
+    const plain = rounding(within(navs[4]!).getByRole("button", { name: "Page 6" }));
+    await expect(plain.radius).toBeLessThan(plain.half - 4);
+  },
+};
+
+// The keyboard focus ring of a rounded control is round too (the repo's rule for a fully round element). Focusing
+// leaves a ring on screen, so this runs in a hidden twin rather than in the visible story.
+export const RoundedInteraction: Story = {
+  ...Rounded,
+  name: "Rounded — interaction test",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const nav = canvasElement.querySelector<HTMLElement>("[data-testid=rounded] nav")!;
+    await userEvent.tab();
+    const focused = document.activeElement as HTMLElement;
+    await expect(nav.contains(focused)).toBe(true);
+    await expect(getComputedStyle(focused).outlineStyle).toBe("solid");
+    const height = focused.getBoundingClientRect().height;
+    await expect(parseFloat(getComputedStyle(focused).borderTopLeftRadius)).toBeGreaterThanOrEqual(height / 2 - 0.5);
   },
 };
 

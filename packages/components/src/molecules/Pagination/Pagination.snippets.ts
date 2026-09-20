@@ -59,6 +59,12 @@ export const paginationSnippets = {
     this is the treatment of every other control. */}
 <Pagination pageCount={20} defaultValue={5} variant="outlined" />`,
 
+  rounded: `{/* rounded makes every control a circle — a pill for a page number too wide for a square. The
+    "Go to page" field and its button are rounded too. */}
+<Pagination pageCount={20} defaultValue={5} rounded />
+
+<Pagination pageCount={5000} defaultValue={1234} rounded showJump />`,
+
   jump: `{/* showJump adds a "Go to page" field and button, for a list long enough that stepping is slow.
     A number outside the range goes to the nearest page; an empty field does nothing. */}
 <Pagination pageCount={500} defaultValue={42} showJump />`,
@@ -139,6 +145,7 @@ export interface PaginationPlaygroundSnippetArgs {
   size?: PaginationSize;
   compact?: PaginationCompact;
   variant?: PaginationVariant;
+  rounded?: boolean;
   showJump?: boolean;
   announce?: boolean;
   align?: PaginationAlign;
@@ -157,6 +164,7 @@ export function paginationPlaygroundSnippet(args: PaginationPlaygroundSnippetArg
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.compact && args.compact !== "auto") attributes.push(`compact="${args.compact}"`);
   if (args.variant && args.variant !== "ghost") attributes.push(`variant="${args.variant}"`);
+  if (args.rounded) attributes.push("rounded");
   if (args.showJump) attributes.push("showJump");
   if (args.announce === false) attributes.push("announce={false}");
   if (args.align && args.align !== "center") attributes.push(`align="${args.align}"`);

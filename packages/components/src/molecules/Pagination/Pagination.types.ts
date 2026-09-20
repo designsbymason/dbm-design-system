@@ -136,6 +136,13 @@ export interface PaginationProps
    */
   variant?: PaginationVariant;
   /**
+   * Makes every control round: a circle for a page number or an arrow, a pill for a page
+   * number too wide to be a square. The "Go to page" field and its button are rounded too, so
+   * the row doesn't end in a square-cornered field.
+   * @default false
+   */
+  rounded?: boolean;
+  /**
    * Adds a "Go to page" field and button after the row, for a list long enough that stepping
    * or picking from the window is slow. Type a page number and press Enter (or the button);
    * a number outside `1` to `pageCount` goes to the nearest page, and an empty field does
