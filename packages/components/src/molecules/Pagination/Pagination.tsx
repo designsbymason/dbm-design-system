@@ -274,6 +274,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
         asChild
         variant={isCurrent ? "primary" : variantForControl[variant]}
         size={size}
+        rounded={rounded}
         disabled={disabled || isDisabled}
         className={controlClass}
       >
@@ -319,7 +320,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
       data-testid={dataTestId}
       aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? labels.navigation)}
       aria-labelledby={ariaLabelledBy}
-      className={cx(styles.root, sizeClass[size], alignClass[align], compactClasses, rounded && styles.rounded, className)}
+      className={cx(styles.root, sizeClass[size], alignClass[align], compactClasses, className)}
     >
       <ul ref={listRef} className={styles.list}>
         {showFirstLast && (

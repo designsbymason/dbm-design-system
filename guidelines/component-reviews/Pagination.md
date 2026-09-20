@@ -208,18 +208,19 @@ component's own width, and a jump-to-page input. `Pagination` is still not Final
 The user asked for a `rounded` prop so the numbered page buttons and the icon controls can be round. Pagination isn't Finalized, so it was built freely.
 
 - **`rounded` (default `false`)** — every page number and arrow a circle, and a pill for a page number too wide to be a square (`1234`). Named as `IconButton`'s
-  `rounded` is. `Button` has no such option (only `IconButton` does), so the radius is set in `Pagination.module.css`: two classes (`.rounded .item`),
-  so it beats `Button`'s own `radius.md` whatever order the stylesheets load in, and `radius.full` — the token `IconButton`'s own rounded state uses.
+  `rounded` is. **Now `Button`'s own `rounded` prop, passed through (2026-09-20, at explicit direction — see the note at the end of this section).**
+  It was first built before `Button` had the prop, with `Pagination`'s own CSS (`.rounded .item`, two classes, `radius.full`).
 - **The focus ring is round too**, following the repo's rule (`05-component-api-conventions.md` §6) that a fully round element gets a `radius.full`
-  ring instead of the standard small one. **This one rule is not guarded by any test I could write:** removing it changes nothing here, because
-  `Pagination`'s stylesheet loads after `Button`'s and so already wins the tie on the focus state. It is insurance against a different load order
-  (it raises the specificity so the ring is round regardless), which no test in this environment can produce; kept, and stated rather than claimed.
+  ring instead of the standard small one. That rule now lives in `Button` (`.rounded:focus-visible`), where it *is* guarded: removing it fails both `Button`'s
+  own hidden twin and `Pagination`'s `RoundedInteraction`. (While `Pagination` carried its own copy it was the one rule here no test could reach, because
+  the load order made it redundant; moving it to `Button` removed that gap rather than papering over it.)
 - **The jump field and its "Go" button are deliberately *not* rounded.** The first build rounded them too, so a round row wouldn't end in a
   square-cornered field; the user asked for that to be reverted, so `rounded` affects only the page numbers and the arrows and the field and
   button keep their own corners. The story asserts it (both stay well short of half their height).
 - **Nothing else changes:** the current page is still `primary`, variants, `compact`, the arrows' RTL flip, and all colour pairings are as before, so
   no contrast was re-measured (only corner radii differ).
-- **Tests:** 5 unit tests for the class and its combinations, and a visible "Rounded" story that *measures* (so the demo never changes) that every page number's and arrow's
+- **Tests:** unit tests that every page number and arrow (including an `aria-disabled` one, and links in the compact form) carries `Button`'s `rounded` class and
+  the `radius.full` token, that the Go button doesn't, and that the default is `radius.md`; and a visible "Rounded" story that *measures* (so the demo never changes) that every page number's and arrow's
   corner is at least half its height, the jump field and its button are *not* round, a narrow number is a circle and `1234` a pill, and the default
   row stays a rounded square. The keyboard focus ring is checked in a hidden twin (`RoundedInteraction`), since focusing would leave a ring on the demo.
   Breaking the CSS on purpose: un-rounding the controls, rounding the jump field, and rounding the Go button each fail the story; the focus-ring rule is
@@ -239,3 +240,5 @@ Left out deliberately; each can be added without breaking the current API:
 - **A built-in range summary and page-size select** — deliberately left to the table footer (`DataTable`).
 - **A router-link integration** (`asChild` onto a framework's `Link`) — `getPageHref` with `event.preventDefault()` covers it without coupling to
   any router.
+
+**Moved onto `Button`'s `rounded` (2026-09-20, at explicit direction).** `Button` gained its own optional `rounded` prop (see `Button.md`), so `Pagination` passes it to each page number and arrow instead of styling them itself: `rounded={rounded}` on the `Button` in `control()`, and the `.rounded` root class and its two rules removed from `Pagination.module.css`. The Go button is a `Button` too but is deliberately not given it. What a reader sees is unchanged (the Rounded story's measurements are the same and still pass); what changes is that there is one implementation of the shape and its focus ring, in the atom, rather than two. Mutation-checked: not passing the prop fails the unit tests and both stories; also rounding the Go button fails the unit test and the Rounded story; removing `Button`'s focus-ring rule fails `RoundedInteraction`. Docs, snippets and the public prop are unchanged.

@@ -604,35 +604,53 @@ describe("Pagination", () => {
   });
 
   describe("rounded", () => {
-    it("is off by default", () => {
-      renderPagination();
-      expect(screen.getByTestId("pagination")).not.toHaveClass(styles.rounded ?? "");
+    // Every control is a `Button`, so `rounded` is `Button`'s own prop passed through: the radius each one
+    // ends up with is `Button`'s (the stylesheets are loaded, so the token shows in the computed style).
+    it("is off by default: every control keeps the standard corner radius", () => {
+      renderPagination({ showFirstLast: true });
+      for (const control of screen.getAllByRole("button")) expect(control).toHaveStyle({ borderRadius: "var(--dbm-radius-md)" });
+      for (const control of screen.getAllByRole("button")) expect(control).not.toHaveClass(buttonStyles.rounded ?? "");
     });
 
-    it("turns on the rounded treatment, which the stylesheet applies to every control", () => {
+    it("passes rounded to every page number and arrow", () => {
       renderPagination({ rounded: true, showFirstLast: true });
-      expect(screen.getByTestId("pagination")).toHaveClass(styles.rounded ?? "");
-      // Every control carries the class the rounded rule targets (`.rounded .item`).
-      for (const control of screen.getAllByRole("button")) expect(control).toHaveClass(styles.item ?? "");
+      const controls = screen.getAllByRole("button");
+      // The first, previous, next and last arrows and a window of page numbers.
+      expect(controls.length).toBeGreaterThan(6);
+      for (const control of controls) {
+        expect(control).toHaveClass(buttonStyles.rounded ?? "");
+        expect(control).toHaveStyle({ borderRadius: "var(--dbm-radius-full)" });
+      }
     });
 
     it.each(["ghost", "outlined", "filled"] as const)("combines with the %s variant, without changing it", (variant) => {
       renderPagination({ rounded: true, variant, defaultValue: 4 });
       expect(page(5)).toHaveClass(variant === "ghost" ? (buttonStyles.variantTertiary ?? "") : variant === "outlined" ? (buttonStyles.variantSecondary ?? "") : (buttonStyles.variantGhost ?? ""));
       expect(page(4)).toHaveClass(buttonStyles.variantPrimary ?? "");
+      expect(page(5)).toHaveClass(buttonStyles.rounded ?? "");
+      expect(page(4)).toHaveClass(buttonStyles.rounded ?? "");
     });
 
-    it("leaves the jump field and its button alone: they aren't among the controls the rounded rule targets", () => {
+    it("leaves the jump field and its button alone", () => {
       renderPagination({ rounded: true, showJump: true });
-      // The rule is `.rounded .item`; the jump form's controls aren't `.item`s.
-      expect(screen.getByRole("button", { name: "Go" })).not.toHaveClass(styles.item ?? "");
-      expect(screen.getByLabelText("Go to page").closest("form")?.querySelector(`.${styles.item}`)).toBeNull();
+      // The Go button is a `Button` too, but it isn't given `rounded`.
+      const go = screen.getByRole("button", { name: "Go" });
+      expect(go).not.toHaveClass(buttonStyles.rounded ?? "");
+      expect(go).toHaveStyle({ borderRadius: "var(--dbm-radius-md)" });
+      expect(screen.getByLabelText("Go to page").closest("form")?.querySelector(`.${buttonStyles.rounded}`)).toBeNull();
     });
 
     it("works in link mode and in the compact form", () => {
       renderPagination({ rounded: true, getPageHref: (n) => `/p/${n}`, compact: "always" });
-      expect(screen.getByTestId("pagination")).toHaveClass(styles.rounded ?? "");
-      expect(screen.getByRole("link", { name: "Next page" })).toHaveClass(styles.item ?? "");
+      expect(screen.getByRole("link", { name: "Next page" })).toHaveClass(buttonStyles.rounded ?? "");
+      expect(screen.getByRole("link", { name: "Previous page" })).toHaveClass(buttonStyles.rounded ?? "");
+    });
+
+    it("rounds an unavailable (aria-disabled) arrow too", () => {
+      renderPagination({ rounded: true, defaultValue: 1 });
+      const previous = screen.getByRole("button", { name: "Previous page" });
+      expect(previous).toHaveAttribute("aria-disabled", "true");
+      expect(previous).toHaveClass(buttonStyles.rounded ?? "");
     });
   });
 
