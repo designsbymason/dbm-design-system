@@ -246,8 +246,9 @@ switch.
 
 <Callout tone="info" title="A named navigation landmark, a list of real buttons or links, and the current page announced">
 
-- The component renders `<nav>` containing a list. The list announces how many controls there are; the `<nav>` is a
-  landmark that screen-reader users can jump to by name. It's called "Pagination" unless you say otherwise — give each
+- The component renders `<nav>` containing a list. The list announces how many controls there are (its list and item
+  roles are stated explicitly, because Safari with VoiceOver otherwise stops treating a list with no bullets as a
+  list); the `<nav>` is a landmark that screen-reader users can jump to by name. It's called "Pagination" unless you say otherwise — give each
   one on a page its own `aria-label` (or point `aria-labelledby` at a heading), because two with the same name can't
   be told apart.
 - The current page is marked `aria-current="page"`, and every page's accessible name is "Page 3" (translatable through

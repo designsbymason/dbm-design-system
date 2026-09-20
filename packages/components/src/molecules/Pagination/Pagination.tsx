@@ -2,7 +2,7 @@ import { CaretDoubleLeftIcon, CaretDoubleRightIcon, CaretLeftIcon, CaretRightIco
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import { cx, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
 import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent, MouseEvent, ReactNode, SyntheticEvent } from "react";
+import type { ComponentPropsWithoutRef, FormEvent, MouseEvent, ReactNode, SyntheticEvent } from "react";
 import { Button } from "../../atoms/Button";
 import type { ButtonVariant } from "../../atoms/Button/Button.types";
 import { FieldLabel } from "../../atoms/FieldLabel";
@@ -74,6 +74,18 @@ const nonNegative = (count: number): number => Math.max(Math.trunc(count) || 0, 
 /** A click that means "take me there", as opposed to "open this link somewhere else". */
 const isPlainClick = (event: MouseEvent<HTMLElement>): boolean =>
   event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+
+/**
+ * One item of the row's list. Its `listitem` role is stated outright: Safari with VoiceOver stops treating
+ * a list as one once its markers are removed (`list-style: none`), and the items with it — the same fix
+ * `List` and `ListItem` apply. Redundant on paper, which is what the lint rule objects to.
+ */
+const Entry = ({ children, ...props }: ComponentPropsWithoutRef<"li">) => (
+  // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
+  <li {...props} role="listitem">
+    {children}
+  </li>
+);
 
 /** Follows a link the way a click on it would, for the jump field (which is a form, not a link). */
 const followLink = (href: string): void => {
@@ -188,12 +200,23 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
   // Announce a page change. The status region is in the page from the start and only its text
   // changes, which is what a live region needs to be announced reliably.
   const { message: announcement, announce: announcePage } = useAnnouncement();
-  const previousPage = useRef(current);
+  // Only a change between two pages that were both on screen is announced. With no pages (`pageCount` 0,
+  // nothing rendered) the page is forgotten, so the first page shown once they arrive — a page from the URL,
+  // say — is not announced as if someone had chosen it.
+  const previousPage = useRef<number | undefined>(undefined);
   const summaryLabel = labels.summary;
   useEffect(() => {
+    if (pageCount === 0) {
+      previousPage.current = undefined;
+      return;
+    }
+    if (previousPage.current === undefined) {
+      previousPage.current = current;
+      return;
+    }
     if (previousPage.current === current) return;
     previousPage.current = current;
-    if (announce && pageCount > 0) announcePage(summaryLabel(current, pageCount));
+    if (announce) announcePage(summaryLabel(current, pageCount));
   }, [announce, announcePage, current, pageCount, summaryLabel]);
 
   // `compact="container"`: show the numbers only while they fit the width this component is given.
@@ -322,30 +345,40 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
       aria-labelledby={ariaLabelledBy}
       className={cx(styles.root, sizeClass[size], alignClass[align], compactClasses, className)}
     >
-      <ul ref={listRef} className={styles.list}>
+      {/* The `list` role is stated outright, for the reason given at `Entry`. */}
+      {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see `Entry`. */}
+      <ul ref={listRef} role="list" className={styles.list}>
         {showFirstLast && (
-          <li>{control(1, labels.first, arrow(CaretDoubleLeftIcon), { isDisabled: atStart, isNav: true })}</li>
+          <Entry>
+            {control(1, labels.first, arrow(CaretDoubleLeftIcon), { isDisabled: atStart, isNav: true })}
+          </Entry>
         )}
-        <li>{control(current - 1, labels.previous, arrow(CaretLeftIcon), { isDisabled: atStart, isNav: true })}</li>
-        <li className={styles.summary}>
+        <Entry>
+          {control(current - 1, labels.previous, arrow(CaretLeftIcon), { isDisabled: atStart, isNav: true })}
+        </Entry>
+        <Entry className={styles.summary}>
           <Text as="span" size={summarySize[size]} color="secondary">
             {labels.summary(current, pageCount)}
           </Text>
-        </li>
+        </Entry>
         {items.map((item) =>
           typeof item === "number" ? (
-            <li key={item} className={styles.pageItem}>
+            <Entry key={item} className={styles.pageItem}>
               {control(item, labels.page(item), item, { isCurrent: item === current })}
-            </li>
+            </Entry>
           ) : (
-            <li key={item} className={styles.ellipsis} aria-hidden="true">
+            <Entry key={item} className={styles.ellipsis} aria-hidden="true">
               …
-            </li>
+            </Entry>
           ),
         )}
-        <li>{control(current + 1, labels.next, arrow(CaretRightIcon), { isDisabled: atEnd, isNav: true })}</li>
+        <Entry>
+          {control(current + 1, labels.next, arrow(CaretRightIcon), { isDisabled: atEnd, isNav: true })}
+        </Entry>
         {showFirstLast && (
-          <li>{control(pageCount, labels.last, arrow(CaretDoubleRightIcon), { isDisabled: atEnd, isNav: true })}</li>
+          <Entry>
+            {control(pageCount, labels.last, arrow(CaretDoubleRightIcon), { isDisabled: atEnd, isNav: true })}
+          </Entry>
         )}
       </ul>
       {showJump && (

@@ -928,3 +928,57 @@ export const InATableFooterInteraction: Story = {
     await expect(canvas.getByRole("button", { name: "Next page" })).toHaveAttribute("aria-disabled", "true");
   },
 };
+
+// Right-to-left text, in a real browser (jsdom can't evaluate `:dir(rtl)`). An RTL row and an LTR row side by
+// side: in RTL the previous button sits to the right of the next one, the arrows point the other way, and
+// `align="start"` puts the controls against the right edge. Not a demo, so hidden from the sidebar and Docs (`!dev`),
+// but still run as a test.
+export const RightToLeftInteraction: Story = {
+  name: "Right-to-left — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      <div dir="ltr" data-testid="ltr">
+        <Pagination pageCount={20} defaultValue={5} compact="never" align="start" aria-label="Left to right" />
+      </div>
+      <div dir="rtl" data-testid="rtl">
+        <Pagination pageCount={20} defaultValue={5} compact="never" align="start" aria-label="Right to left" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const side = (testId: string) => {
+      const root = canvasElement.querySelector<HTMLElement>(`[data-testid=${testId}]`)!;
+      const control = (name: string) => within(root).getByRole("button", { name });
+      return {
+        root,
+        previous: control("Previous page"),
+        next: control("Next page"),
+        arrow: (name: string) => control(name).querySelector("svg")!,
+      };
+    };
+    const ltr = side("ltr");
+    const rtl = side("rtl");
+
+    // Order follows the reading direction.
+    await expect(ltr.previous.getBoundingClientRect().left).toBeLessThan(ltr.next.getBoundingClientRect().left);
+    await expect(rtl.previous.getBoundingClientRect().left).toBeGreaterThan(rtl.next.getBoundingClientRect().left);
+
+    // The arrows are mirrored in RTL only.
+    await expect(getComputedStyle(ltr.arrow("Previous page")).transform).toBe("none");
+    await expect(getComputedStyle(rtl.arrow("Previous page")).transform).toBe("matrix(-1, 0, 0, 1, 0, 0)");
+    await expect(getComputedStyle(rtl.arrow("Next page")).transform).toBe("matrix(-1, 0, 0, 1, 0, 0)");
+
+    // `align="start"` is the start edge of the text: the left in LTR, the right in RTL.
+    const edges = (root: HTMLElement) => {
+      const nav = root.querySelector("nav")!.getBoundingClientRect();
+      const list = root.querySelector("ul")!.getBoundingClientRect();
+      return { fromLeft: list.left - nav.left, fromRight: nav.right - list.right };
+    };
+    await expect(edges(ltr.root).fromLeft).toBeLessThan(1);
+    await expect(edges(ltr.root).fromRight).toBeGreaterThan(10);
+    await expect(edges(rtl.root).fromRight).toBeLessThan(1);
+    await expect(edges(rtl.root).fromLeft).toBeGreaterThan(10);
+  },
+};

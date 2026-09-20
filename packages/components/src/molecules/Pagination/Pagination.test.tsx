@@ -486,6 +486,21 @@ describe("Pagination", () => {
     });
   });
 
+  describe("list semantics", () => {
+    it("names the list and every item explicitly, since list-style: none makes Safari with VoiceOver drop them", () => {
+      renderPagination({ showFirstLast: true });
+      const nav = screen.getByTestId("pagination");
+      const list = nav.querySelector("ul")!;
+      expect(list).toHaveAttribute("role", "list");
+      const items = [...list.children];
+      expect(items.length).toBeGreaterThan(0);
+      for (const item of items) expect(item).toHaveAttribute("role", "listitem");
+      // They are still exposed as a list a reader can move through: the controls, in order, in one list.
+      expect(within(nav).getAllByRole("list")).toHaveLength(1);
+      expect(within(within(nav).getByRole("list")).getAllByRole("button").length).toBeGreaterThan(4);
+    });
+  });
+
   describe("announcing a page change", () => {
     afterEach(() => vi.useRealTimers());
     const statusRegion = () => screen.getByRole("status");
@@ -514,6 +529,16 @@ describe("Pagination", () => {
       await advance(100);
       expect(statusRegion()).toHaveTextContent("Page 4 of 20");
       await advance(1000);
+      expect(statusRegion()).toBeEmptyDOMElement();
+    });
+
+    it("says nothing when the pages arrive after mount on a page from the URL (no page changed)", async () => {
+      vi.useFakeTimers();
+      // `pageCount={data?.pages ?? 0}` above data that hasn't loaded yet: nothing renders, then the pages
+      // arrive and the current page (already 3) is shown for the first time. Nobody chose a page.
+      const { rerender } = renderPagination({ pageCount: 0, value: 3 });
+      rerender(<Pagination pageCount={20} compact="never" data-testid="pagination" value={3} />);
+      await advance(500);
       expect(statusRegion()).toBeEmptyDOMElement();
     });
 
