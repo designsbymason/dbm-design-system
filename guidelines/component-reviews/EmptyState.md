@@ -235,7 +235,8 @@ re-checked in Emerald dark (all colours resolve to the dark values; nothing hard
   one and the timing is measured, but this is the one piece of the component whose real-world behaviour rests on unverified assumptions.
   The Docs page says so. Finalizing means accepting that until someone tests it in VoiceOver/NVDA.
 - **A second consumer of the live-region pattern is coming** (`Alert`, `Toast`, `Banner`). Per `06-engineering-standards.md` §1 a shared
-  hook belongs in `packages/primitives` once it's used in two places; it is deliberately not extracted for one.
+  hook belongs in `packages/primitives` once it's used in two places; it was deliberately not extracted for one. *(Done since: `Pagination`
+  became the second consumer and the timing was extracted as `useAnnouncement`; `EmptyState` was moved onto it — see the last entry below.)*
 
 ## Gaps named, not built
 
@@ -270,3 +271,21 @@ support — but its real-world behaviour rests on that assumption until someone 
 
 Per `06-engineering-standards.md` §9, don't make further changes to `EmptyState` (code, stories, docs, or the tokens only it uses) without
 asking first.
+
+## Post-Finalization follow-up (2026-09-20, at explicit direction) — `announce` moved onto the shared `useAnnouncement` hook
+
+`Pagination` needed the same "put text into a live region a moment later, then clear it" timing, which made it a second consumer, so the timing was
+extracted as `useAnnouncement` in `packages/primitives` (`06-engineering-standards.md` §1). `EmptyState`'s inline copy — the message state, the two
+timers, their cleanup — was replaced by the hook. What stays in `EmptyState` is what is specific to it: reading the title and description text from
+the DOM (only its own parts, sentence-ended), remembering which text was last announced so it only announces when the text is new, and forgetting
+that on unmount (the `StrictMode` fix). The hook's timings (100ms to fill, 1000ms to clear) are the ones `EmptyState` already had.
+
+**Verification that nothing changed:** all 86 existing `EmptyState` tests pass *unchanged*, including the `StrictMode`, non-Latin punctuation, and
+nested-empty-state ones; and they were shown to be a real net by breaking the migrated code three ways — dropping the unmount memory reset, never
+calling the hook, and never remembering what was announced — each fails the intended tests. In a real browser the announcement timeline is identical
+to before the change (region present and empty at 12ms, filled at 117ms, cleared at 1116ms, against 12/117/1117), and the region is the same 1×1
+absolutely positioned span. The package's other checks were re-run (lint, both type checks, the full unit and browser suites, both builds, the size
+and coverage checks, and the audit).
+
+**Finalized status is unchanged.** Under the three-question test (`06-engineering-standards.md` §9), the change alters no rendered or behavioural
+output of anything that existed at finalization time, adds no props, stories, docs, or tokens, and was made only after the user asked for it.

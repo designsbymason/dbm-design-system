@@ -1,5 +1,5 @@
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
-import { createContext, forwardRef, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { cx, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
+import { createContext, forwardRef, useContext, useEffect, useMemo, useRef } from "react";
 import { Heading } from "../../atoms/Heading";
 import type { HeadingSize } from "../../atoms/Heading/Heading.types";
 import { Icon } from "../../atoms/Icon";
@@ -75,15 +75,6 @@ const descriptionSize: Record<EmptyStateSize, TextSize> = {
   xl: "md",
 };
 
-// `announce` fills a visually hidden live region a moment after it mounts, then
-// clears it again. A live region announces a *change* to its content, not content
-// that arrives with it, so the region has to be in the page — and known to the
-// screen reader — before it is filled; the short delay is that gap. Clearing it
-// afterwards stops the same text being read a second time in browse mode. Both are
-// timings for assistive technology, not design values.
-const ANNOUNCE_DELAY_MS = 100;
-const ANNOUNCE_CLEAR_MS = 1000;
-
 // A title or description that already ends a sentence needs no full stop added, in
 // whatever script: Latin, full-width (CJK), Arabic, and Devanagari terminators.
 const endsAsSentence = /[.!?…。！？؟۔।]$/;
@@ -148,14 +139,15 @@ const EmptyStateRoot = forwardRef<HTMLDivElement, EmptyStateProps>((emptyStatePr
 
   const rootRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMemo(() => mergeRefs(ref, rootRef), [ref]);
-  const [announcement, setAnnouncement] = useState("");
+  // `announce` fills a visually hidden live region a moment after it mounts, then clears it
+  // again: the timing is `useAnnouncement`'s. What's specific here is *what* to announce and
+  // *when it's new*.
+  const { message: announcement, announce: announceText } = useAnnouncement();
   const announced = useRef("");
-  const timers = useRef<{ show?: number; clear?: number }>({});
 
   // Read the title and description straight from the rendered DOM, so any content
   // they hold (not only a string) is announced as it reads. Runs after every
-  // render but only acts when that text is new. `setAnnouncement` is only ever
-  // called from the timers below, never synchronously from this effect.
+  // render but only acts when that text is new.
   useEffect(() => {
     if (!announce) {
       announced.current = "";
@@ -171,22 +163,15 @@ const EmptyStateRoot = forwardRef<HTMLDivElement, EmptyStateProps>((emptyStatePr
     const text = parts.join(" ");
     if (!text || text === announced.current) return;
     announced.current = text;
-    window.clearTimeout(timers.current.show);
-    window.clearTimeout(timers.current.clear);
-    timers.current.show = window.setTimeout(() => {
-      setAnnouncement(text);
-      timers.current.clear = window.setTimeout(() => setAnnouncement(""), ANNOUNCE_CLEAR_MS);
-    }, ANNOUNCE_DELAY_MS);
+    announceText(text);
   });
 
-  // On unmount, cancel the timers and forget what was announced. Forgetting matters
-  // beyond tidiness: React's StrictMode (development) mounts, unmounts, and remounts
-  // a component, keeping its refs — so a remembered text would make the remount think
-  // it had already announced, and nothing would ever be announced.
+  // On unmount, forget what was announced (the hook cancels its own timers). Forgetting
+  // matters beyond tidiness: React's StrictMode (development) mounts, unmounts, and
+  // remounts a component, keeping its refs — so a remembered text would make the remount
+  // think it had already announced, and nothing would ever be announced.
   useEffect(
     () => () => {
-      window.clearTimeout(timers.current.show);
-      window.clearTimeout(timers.current.clear);
       announced.current = "";
     },
     [],

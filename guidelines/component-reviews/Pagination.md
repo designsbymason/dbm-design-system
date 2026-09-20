@@ -143,9 +143,8 @@ component's own width, and a jump-to-page input. `Pagination` is still not Final
   fill-after-mount shape — and it is: the region needs no delay before it exists, only a change. What the two share is the timing (put text in
   after a short delay, take it out again, cancel on unmount), and that is now a real second consumer, so it is extracted:
   **`useAnnouncement` in `packages/primitives`** (`06-engineering-standards.md` §1's "2+ places"), tested from the components package (primitives
-  has no runner of its own), including under `StrictMode`. **`EmptyState` is Finalized and was not moved onto it** — it still carries its own
-  inline copy; migrating it is an internal refactor (three-question test: stays Finalized) that needs the user's go-ahead, so it is flagged
-  rather than done.
+  has no runner of its own), including under `StrictMode`. **`EmptyState` was moved onto it afterwards** (2026-09-20, at the user's go-ahead, since `EmptyState` is Finalized)
+  — an internal refactor that changed no behaviour, recorded in `EmptyState.md`.
 - **`variant` — `ghost` (default), `outlined`, `filled`.** Names follow `Card`'s (no surface / bordered / tinted), mapped onto `Button`'s variants
   (`tertiary` / `secondary` / `ghost` respectively — `Button`'s own `ghost` is a tint, which is why the names differ). The current page is
   `primary` in all three, so the position is always the strongest signal. Contrast, measured for the pairings the new variants introduce, in all
@@ -200,7 +199,6 @@ Left out deliberately; each can be added without breaking the current API:
   visible validation would be a different, more explicit contract.
 - **`variant` values beyond the three** (a neutral outlined item, a pill). Each maps to a `Button` variant today; anything else needs a `Button`
   change first.
-- **Migrating `EmptyState` onto `useAnnouncement`** — a two-line internal change, held for the user's go-ahead because `EmptyState` is Finalized.
 - **A built-in range summary and page-size select** — deliberately left to the table footer (`DataTable`).
 - **A router-link integration** (`asChild` onto a framework's `Link`) — `getPageHref` with `event.preventDefault()` covers it without coupling to
   any router.
