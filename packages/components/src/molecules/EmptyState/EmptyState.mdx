@@ -205,6 +205,8 @@ sits in the wide page, so narrow the window to watch it switch.
   be announced twice — and `EmptyState` warns in development when it sees both.
 - Don't set `announce` on an empty state that is part of the page as it loads: nothing prompted it, so
   announcing it is noise.
+- Don't put an icon-only button in a `stackOnMobile` row: every action is stretched to the full width, which
+  suits a labelled button or link but not a small icon button.
 - Don't skip heading levels for the title (an `h4` straight under an `h2`) — set `level` to fit.
 - Don't fill an empty state with a long explanation. If it needs paragraphs, link to help instead.
 

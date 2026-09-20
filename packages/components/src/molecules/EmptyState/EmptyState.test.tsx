@@ -1,7 +1,7 @@
 import { TrayIcon } from "@dbm-design-system/icons";
 import { act, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { createRef } from "react";
+import { createRef, StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import headingStyles from "../../atoms/Heading/Heading.module.css";
 import iconStyles from "../../atoms/Icon/Icon.module.css";
@@ -526,6 +526,51 @@ describe("EmptyState", () => {
         vi.advanceTimersByTime(1000);
       });
       expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    });
+
+    it("still announces under StrictMode, which mounts, unmounts, and remounts in development", async () => {
+      vi.useFakeTimers();
+      render(
+        <StrictMode>
+          <EmptyState announce>
+            <EmptyState.Title>No results</EmptyState.Title>
+          </EmptyState>
+        </StrictMode>,
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("No results.");
+    });
+
+    it("doesn't add a Latin full stop after full-width or Arabic punctuation", async () => {
+      vi.useFakeTimers();
+      render(
+        <EmptyState announce>
+          <EmptyState.Title>検索結果がありません？</EmptyState.Title>
+          <EmptyState.Description>別の言葉で試してください。</EmptyState.Description>
+        </EmptyState>,
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status").textContent).toBe("検索結果がありません？ 別の言葉で試してください。");
+    });
+
+    it("announces only its own parts, not those of an empty state nested inside it", async () => {
+      vi.useFakeTimers();
+      render(
+        <EmptyState announce>
+          <EmptyState.Title>Outer</EmptyState.Title>
+          <EmptyState>
+            <EmptyState.Title>Inner</EmptyState.Title>
+          </EmptyState>
+        </EmptyState>,
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status").textContent).toBe("Outer.");
     });
 
     it("announces again when the text changes", async () => {

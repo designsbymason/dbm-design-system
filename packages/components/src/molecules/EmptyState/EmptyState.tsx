@@ -84,7 +84,9 @@ const descriptionSize: Record<EmptyStateSize, TextSize> = {
 const ANNOUNCE_DELAY_MS = 100;
 const ANNOUNCE_CLEAR_MS = 1000;
 
-const endsAsSentence = /[.!?…]$/;
+// A title or description that already ends a sentence needs no full stop added, in
+// whatever script: Latin, full-width (CJK), Arabic, and Devanagari terminators.
+const endsAsSentence = /[.!?…。！？؟۔।]$/;
 
 /**
  * What a page, a panel, or a list shows when there is nothing to show yet — no
@@ -159,7 +161,10 @@ const EmptyStateRoot = forwardRef<HTMLDivElement, EmptyStateProps>((emptyStatePr
       announced.current = "";
       return;
     }
-    const parts = [...(rootRef.current?.querySelectorAll(`.${styles.title}, .${styles.description}`) ?? [])]
+    // Only this empty state's own parts — not those of one nested inside it.
+    const root = rootRef.current;
+    const parts = [...(root?.querySelectorAll(`.${styles.title}, .${styles.description}`) ?? [])]
+      .filter((element) => element.closest(`.${styles.root}`) === root)
       .map((element) => element.textContent?.trim() ?? "")
       .filter(Boolean)
       .map((text) => (endsAsSentence.test(text) ? text : `${text}.`));
@@ -174,10 +179,15 @@ const EmptyStateRoot = forwardRef<HTMLDivElement, EmptyStateProps>((emptyStatePr
     }, ANNOUNCE_DELAY_MS);
   });
 
+  // On unmount, cancel the timers and forget what was announced. Forgetting matters
+  // beyond tidiness: React's StrictMode (development) mounts, unmounts, and remounts
+  // a component, keeping its refs — so a remembered text would make the remount think
+  // it had already announced, and nothing would ever be announced.
   useEffect(
     () => () => {
       window.clearTimeout(timers.current.show);
       window.clearTimeout(timers.current.clear);
+      announced.current = "";
     },
     [],
   );

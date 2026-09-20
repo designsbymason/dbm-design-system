@@ -136,7 +136,7 @@ artefacts. The Playground's canvas and snippet were both confirmed to follow its
 
 ## Functional verification
 
-- 83 unit tests (React Testing Library + jest-axe; 63 from the first build, 20 from the follow-up): structure and DOM order, every variant, size, tone, and alignment (with the
+- 86 unit tests (React Testing Library + jest-axe; 63 from the first build, 20 from the follow-up, 3 from the final pass): structure and DOM order, every variant, size, tone, and alignment (with the
   atoms' own size classes asserted at each step), nesting isolation, the icon's decorative/labelled modes, every heading level,
   accessibility wiring, native-attribute passthrough, refs on all 6 parts, and jest-axe scenarios. Class-name assertions were
   confirmed to be non-vacuous (the CSS-module classes resolve to real strings in the test environment).
@@ -206,6 +206,36 @@ found while proposing them and fixed with the first slot.
 - **Snippets:** the illustration and search stories' snippets now show `EmptyState.Media` and `announce`, a new one shows
   `stackOnMobile`, the Playground builder writes `announce`, and all of it (240 Playground combinations plus every gallery snippet) was
   typechecked against the real components, with a planted bad value caught.
+
+## Final review pass (2026-09-19, before Finalization)
+
+A fresh read of the source and a fresh run of the §9 checklist, testing anything suspicious rather than assuming. Three real defects,
+all in `announce`, all confirmed by a failing test before being fixed:
+
+1. **`announce` did nothing under `StrictMode`.** The effect remembers the last text it announced so it doesn't repeat itself;
+   `StrictMode` (development) mounts, unmounts, and remounts a component keeping its refs, and the unmount cleanup cleared the timers but
+   not that memory — so the remount believed it had already announced and never scheduled anything. Invisible in production and in the
+   suite, and would have read as "announce is broken" to anyone testing in a normal dev setup. Fixed by resetting the memory in the
+   cleanup; a permanent `StrictMode` test fails without it. Added to the review checklist (`06-engineering-standards.md` §9), since it is
+   a class of bug, not a one-off. The other two components in the repo that use timers (`SearchInput`, `ThemeProvider`) were checked and
+   don't share it (user-event debounce; a local timer with its own cleanup).
+2. **A title ending in full-width or Arabic punctuation got a stray Latin full stop** in the announcement (`検索結果がありません？` became
+   `…？.`). The sentence-ender check knew only `.!?…`; it now covers the CJK, Arabic, and Devanagari terminators.
+3. **A nested empty state's title and description were announced by the outer one.** The parts are now filtered to the ones whose nearest
+   `EmptyState` root is this one.
+
+Also done: the `stackOnMobile` limitation (every action stretches, so an icon-only button would too) was only in this file; it is now a
+"Don't" on the Docs page. The newer parts (`Media`, the stacked actions) were only measured in Purple light at the time, so they were
+re-checked in Emerald dark (all colours resolve to the dark values; nothing hardcoded).
+
+**Open, and for the user to weigh before Finalizing:**
+
+- **`announce` has never been heard through a real screen reader.** None is available in this environment. The mechanism is the widely used
+  one and the timing is measured, but this is the one piece of the component whose real-world behaviour rests on unverified assumptions.
+  The Docs page says so. Finalizing means accepting that until someone tests it in VoiceOver/NVDA.
+- **A second consumer of the live-region pattern is coming** (`Alert`, `Toast`, `Banner`). Per `06-engineering-standards.md` §1 a shared
+  hook belongs in `packages/primitives` once it's used in two places; it is deliberately not extracted for one.
+- **`Table` and `Card` Docs pages don't link back to `EmptyState`** (both Finalized, so untouched).
 
 ## Gaps named, not built
 
