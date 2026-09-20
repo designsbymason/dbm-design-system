@@ -25,6 +25,7 @@ export const propOrder = [
   "disabled",
   "getPageHref",
   "labels",
+  "formatNumber",
   "aria-label",
   "aria-labelledby",
   "id",
@@ -106,6 +107,15 @@ import { Pagination } from "@dbm-design-system/components";
 The "Go to page" field and its button keep their own corners.
 
 <Canvas of={PaginationStories.Rounded} />
+
+### Numbers in your own locale
+
+`formatNumber` writes each page number the way a language or region does — Arabic-Indic digits, or `1.234` with its
+digit grouping — usually through the browser's own `Intl.NumberFormat`. The default "Page 5" names and the
+"Page 3 of 20" summary use it too, so what a button shows is always inside its accessible name. If you write your own
+`labels.page` or `labels.summary`, they are given the plain numbers, so write them with the same function.
+
+<Canvas of={PaginationStories.Locale} />
 
 ### Where you are in the pages
 
@@ -253,7 +263,9 @@ switch.
   one on a page its own `aria-label` (or point `aria-labelledby` at a heading), because two with the same name can't
   be told apart.
 - The current page is marked `aria-current="page"`, and every page's accessible name is "Page 3" (translatable through
-  `labels`), which contains the number it shows, as label-in-name expects. The previous, next, first, and last
+  `labels`), which contains the number it shows, as label-in-name expects. With `formatNumber` the default names are
+  written with it, so they still contain what the button shows; if you write your own `labels.page`, write its number
+  with the same function. The previous, next, first, and last
   buttons have names only — they hold an icon.
 - The gaps ("…") are decorative and hidden from assistive technology.
 - Every control is a `<button>`, or, with `getPageHref`, a real `<a href>` — so a link can be opened in a new tab.
@@ -360,6 +372,9 @@ const [page, setPage] = useState(1);
     summary: (page, pageCount) => `Página ${page} de ${pageCount}`,
   }}
 />
+
+// Page numbers in a locale's own numerals or grouping (the default names and summary follow it)
+<Pagination pageCount={20} value={page} onValueChange={setPage} formatNumber={new Intl.NumberFormat("ar-EG").format} />
 
 // A native <nav> attribute, passed straight through
 <Pagination pageCount={20} value={page} onValueChange={setPage} title="Result pages" lang="en" />

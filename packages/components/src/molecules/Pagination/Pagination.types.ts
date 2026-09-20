@@ -55,11 +55,16 @@ export interface PaginationLabels {
   first: string;
   /** The accessible name of the last-page button. @default "Last page" */
   last: string;
-  /** The accessible name of a page's button, given its number. @default `Page ${page}` */
+  /**
+   * The accessible name of a page's button, given its number (the plain number — write it with your own
+   * `formatNumber` if you use one, so the name contains what the button shows).
+   * @default `Page ${page}`, the number written with `formatNumber`
+   */
   page: (page: number) => string;
   /**
    * The compact summary — also what is announced to a screen reader when the page changes — given
-   * the current page and the page count. @default `Page ${page} of ${pageCount}`
+   * the current page and the page count (plain numbers, as for `page`).
+   * @default `Page ${page} of ${pageCount}`, the numbers written with `formatNumber`
    */
   summary: (page: number, pageCount: number) => string;
   /** The label of the jump-to-page field (`showJump`). @default "Go to page" */
@@ -191,6 +196,18 @@ export interface PaginationProps
    * English default.
    */
   labels?: Partial<PaginationLabels>;
+  /**
+   * How a page number is written, for a language or region whose numerals or digit grouping differ
+   * from the plain `5` and `1234`: given a page number, returns the text to show. It is used for the
+   * number on each page's button and, by the default `page` and `summary` labels, in the accessible
+   * names and the "Page 3 of 20" summary — so what a button shows is always contained in its
+   * accessible name. For example, `new Intl.NumberFormat("ar-EG").format` shows `٥`, and
+   * `new Intl.NumberFormat("de-DE").format` shows `1.234`. If you supply your own `labels.page` or
+   * `labels.summary`, they receive the plain numbers, so write them with the same function. The jump
+   * field is the browser's own number field and isn't affected.
+   * @default (page) => String(page)
+   */
+  formatNumber?: (page: number) => string;
   /**
    * An accessible name for the `<nav>` landmark. Defaults to `labels.navigation`
    * ("Pagination"). Give each one on a page its own name — "Search results", "Comments" —

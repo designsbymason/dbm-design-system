@@ -26,17 +26,18 @@ import type {
 // server" warning, and the measurement below only ever runs where there is a layout to measure.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-const defaultLabels: PaginationLabels = {
+/** The English text. The numbers in it are written with `format`, so a button's name contains what it shows. */
+const defaultLabels = (format: (page: number) => string): PaginationLabels => ({
   navigation: "Pagination",
   previous: "Previous page",
   next: "Next page",
   first: "First page",
   last: "Last page",
-  page: (page) => `Page ${page}`,
-  summary: (page, pageCount) => `Page ${page} of ${pageCount}`,
+  page: (page) => `Page ${format(page)}`,
+  summary: (page, pageCount) => `Page ${format(page)} of ${format(pageCount)}`,
   jump: "Go to page",
   jumpSubmit: "Go",
-};
+});
 
 const sizeClass: Record<PaginationSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -132,7 +133,7 @@ const followLink = (href: string): void => {
  * reach the first or last page. `variant` sets how the controls look, `rounded` makes them
  * round, and a page change is
  * announced to screen readers (`announce`). Text the component supplies itself can be
- * replaced with `labels`.
+ * replaced with `labels`, and `formatNumber` writes the page numbers in a locale's own numerals.
  *
  * `ref` forwards to the `<nav>` element.
  *
@@ -173,6 +174,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
     disabled = false,
     getPageHref,
     labels: labelOverrides,
+    formatNumber = String,
     "aria-label": ariaLabel,
     "aria-labelledby": ariaLabelledBy,
     className,
@@ -197,7 +199,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
   const siblingCount = nonNegative(rawSiblingCount);
   const boundaryCount = nonNegative(rawBoundaryCount);
   const current = Math.min(Math.max(Math.trunc(value ?? uncontrolledPage) || 1, 1), Math.max(pageCount, 1));
-  const labels: PaginationLabels = { ...defaultLabels, ...labelOverrides };
+  const labels: PaginationLabels = { ...defaultLabels(formatNumber), ...labelOverrides };
   const items = getPaginationRange({ page: current, pageCount, siblingCount, boundaryCount });
   const rowKey = items.join(",");
 
@@ -410,7 +412,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
         {items.map((item) =>
           typeof item === "number" ? (
             <Entry key={item} className={styles.pageItem}>
-              {control(item, labels.page(item), item, { isCurrent: item === current })}
+              {control(item, labels.page(item), formatNumber(item), { isCurrent: item === current })}
             </Entry>
           ) : (
             <Entry key={item} className={styles.ellipsis} aria-hidden="true">

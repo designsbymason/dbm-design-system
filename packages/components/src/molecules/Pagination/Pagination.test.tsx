@@ -486,6 +486,101 @@ describe("Pagination", () => {
     });
   });
 
+  describe("formatNumber", () => {
+    const arabic = new Intl.NumberFormat("ar-EG").format;
+    const german = new Intl.NumberFormat("de-DE").format;
+    const tagged = (n: number) => `<${n}>`;
+
+    it("writes the page numbers as they are without it", () => {
+      renderPagination({ defaultValue: 5 });
+      expect(page(5)).toHaveTextContent(/^5$/);
+      expect(page(5)).toHaveAccessibleName("Page 5");
+      expect(row()).toEqual(["1", "…", "4", "5", "6", "…", "20"]);
+    });
+
+    it("shows each number the way it is given, on the button", () => {
+      renderPagination({ defaultValue: 5, formatNumber: tagged });
+      expect(row()).toEqual(["<1>", "…", "<4>", "<5>", "<6>", "…", "<20>"]);
+    });
+
+    it("keeps what a button shows inside its accessible name, for every button", () => {
+      renderPagination({ defaultValue: 5, formatNumber: arabic });
+      expect(arabic(5)).not.toBe("5"); // a real locale, so this proves something
+      // The page-number buttons (their names start "Page "; the arrows' are "Previous page" and so on).
+      const numbered = screen.getAllByRole("button").filter((button) => /^Page /.test(button.getAttribute("aria-label") ?? ""));
+      expect(numbered.length).toBeGreaterThan(3);
+      for (const button of numbered) {
+        expect(button.getAttribute("aria-label")).toContain(button.textContent ?? "never");
+      }
+      expect(screen.getByRole("button", { name: `Page ${arabic(5)}` })).toHaveTextContent(arabic(5));
+    });
+
+    it("groups digits for a locale that does", () => {
+      renderPagination({ pageCount: 5000, defaultValue: 1234, formatNumber: german, compact: "never" });
+      const current = screen.getByRole("button", { current: "page" });
+      expect(current).toHaveTextContent("1.234");
+      expect(current).toHaveAccessibleName("Page 1.234");
+      expect(screen.getByRole("button", { name: "Page 5.000" })).toHaveTextContent("5.000");
+    });
+
+    it("writes the compact summary's numbers too", () => {
+      renderPagination({ pageCount: 20, defaultValue: 3, compact: "always", formatNumber: arabic });
+      expect(screen.getByText(`Page ${arabic(3)} of ${arabic(20)}`)).toBeInTheDocument();
+    });
+
+    it("announces the summary with the formatted numbers", async () => {
+      vi.useFakeTimers();
+      try {
+        renderPagination({ defaultValue: 3, formatNumber: tagged });
+        fireEvent.click(screen.getByRole("button", { name: "Page <4>" }));
+        await act(async () => void vi.advanceTimersByTime(100));
+        expect(screen.getByRole("status")).toHaveTextContent("Page <4> of <20>");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("hands your own labels the plain numbers, and they win over the default text", () => {
+      const seen: number[] = [];
+      renderPagination({
+        defaultValue: 5,
+        formatNumber: tagged,
+        labels: {
+          page: (n) => {
+            seen.push(n);
+            return `Seite ${tagged(n)}`;
+          },
+        },
+      });
+      expect(seen.every((n) => Number.isInteger(n))).toBe(true);
+      expect(screen.getByRole("button", { name: "Seite <5>" })).toHaveTextContent("<5>");
+    });
+
+    it("gives onValueChange the plain number, not the formatted text", () => {
+      const onValueChange = vi.fn();
+      renderPagination({ defaultValue: 3, formatNumber: tagged, onValueChange });
+      fireEvent.click(screen.getByRole("button", { name: "Page <4>" }));
+      expect(onValueChange).toHaveBeenCalledWith(4, expect.anything());
+    });
+
+    it("leaves the jump field alone: its limits are still plain numbers", () => {
+      renderPagination({ pageCount: 500, defaultValue: 42, showJump: true, formatNumber: arabic });
+      const field = screen.getByLabelText("Go to page");
+      expect(field).toHaveAttribute("min", "1");
+      expect(field).toHaveAttribute("max", "500");
+    });
+
+    it("works with links, and with the numbers collapsed to the summary", () => {
+      renderPagination({ defaultValue: 5, formatNumber: tagged, getPageHref: (n) => `/p/${n}` });
+      expect(screen.getByRole("link", { name: "Page <6>" })).toHaveAttribute("href", "/p/6");
+    });
+
+    it("has no accessibility violations with a locale's numerals", async () => {
+      const { container } = renderPagination({ defaultValue: 5, formatNumber: arabic, showFirstLast: true });
+      expect((await axe(container)).violations).toHaveLength(0);
+    });
+  });
+
   describe("list semantics", () => {
     it("names the list and every item explicitly, since list-style: none makes Safari with VoiceOver drop them", () => {
       renderPagination({ showFirstLast: true });

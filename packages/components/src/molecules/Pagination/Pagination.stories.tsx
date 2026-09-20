@@ -31,6 +31,7 @@ interface PlaygroundArgs {
   onValueChange: unknown;
   getPageHref: unknown;
   labels: unknown;
+  formatNumber: unknown;
   "aria-label": string;
   "aria-labelledby": string;
   id: string;
@@ -64,6 +65,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   onValueChange: { control: false },
   getPageHref: { control: false },
   labels: { control: false },
+  formatNumber: { control: false },
   "aria-label": { control: false },
   "aria-labelledby": { control: false },
   id: { control: false },
@@ -174,6 +176,12 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description:
         "The text the component supplies itself — accessible names and the compact summary. Any you leave out keep their English default. Keys: navigation, previous, next, first, last, page (a function of the page number), and summary (a function of the page and the page count).",
+    },
+    formatNumber: {
+      control: false,
+      description:
+        "How a page number is written, for a language or region whose numerals or digit grouping differ from the plain 5 and 1234: given a page number, returns the text to show. Used for the number on each button and, by the default page and summary labels, in the accessible names and the \"Page 3 of 20\" summary, so what a button shows is always contained in its name. For example new Intl.NumberFormat(\"ar-EG\").format shows ٥, and \"de-DE\" shows 1.234. Your own labels.page and labels.summary are given the plain numbers, so write them with the same function. The jump field is the browser's own number field and isn't affected.",
+      table: { defaultValue: { summary: "(page) => String(page)" } },
     },
     "aria-label": {
       control: false,
@@ -578,6 +586,54 @@ export const RoundedInteraction: Story = {
     await expect(getComputedStyle(focused).outlineStyle).toBe("solid");
     const height = focused.getBoundingClientRect().height;
     await expect(parseFloat(getComputedStyle(focused).borderTopLeftRadius)).toBeGreaterThanOrEqual(height / 2 - 0.5);
+  },
+};
+
+export const Locale: Story = {
+  name: "Numbers in your own locale",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: paginationSnippets.locale } } },
+  render: () => {
+    // `formatNumber` writes each page number the way a language or region does, through the browser's own `Intl`.
+    // The default "Page 5" names use it, so a button's name always contains what it shows; the last row also
+    // translates the text, and its own labels are given the plain numbers, so they write them the same way.
+    const arabic = new Intl.NumberFormat("ar-EG");
+    const german = new Intl.NumberFormat("de-DE");
+    return (
+      <div style={{ ...containerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+        <div style={labelledColumn}>
+          <Text size="sm" weight="semibold">
+            Arabic-Indic digits (ar-EG)
+          </Text>
+          <Pagination pageCount={20} defaultValue={5} compact="never" align="start" formatNumber={arabic.format} aria-label="Arabic digits" />
+        </div>
+        <div style={labelledColumn}>
+          <Text size="sm" weight="semibold">
+            Digit grouping (de-DE)
+          </Text>
+          <Pagination pageCount={5000} defaultValue={1234} compact="never" align="start" formatNumber={german.format} aria-label="Grouped digits" />
+        </div>
+        <div style={labelledColumn} dir="rtl">
+          <Text size="sm" weight="semibold">
+            Arabic, with the text translated too (right-to-left)
+          </Text>
+          <Pagination
+            pageCount={20}
+            defaultValue={5}
+            compact="never"
+            align="start"
+            formatNumber={arabic.format}
+            labels={{
+              navigation: "التنقل بين الصفحات",
+              previous: "الصفحة السابقة",
+              next: "الصفحة التالية",
+              page: (page) => `الصفحة ${arabic.format(page)}`,
+              summary: (page, pageCount) => `الصفحة ${arabic.format(page)} من ${arabic.format(pageCount)}`,
+            }}
+          />
+        </div>
+      </div>
+    );
   },
 };
 

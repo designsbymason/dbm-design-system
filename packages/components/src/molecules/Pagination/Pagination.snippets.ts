@@ -65,6 +65,29 @@ export const paginationSnippets = {
 
 <Pagination pageCount={5000} defaultValue={1234} rounded showJump />`,
 
+  locale: `{/* formatNumber writes each page number the way a language or region does — here Arabic-Indic digits, and
+    digit grouping, through the browser's own Intl. The default "Page 5" and "Page 5 of 20" text uses it too, so
+    a button's name always contains the number it shows. */}
+<Pagination pageCount={20} defaultValue={5} formatNumber={new Intl.NumberFormat("ar-EG").format} />
+
+<Pagination pageCount={5000} defaultValue={1234} formatNumber={new Intl.NumberFormat("de-DE").format} />
+
+{/* If you write your own page and summary labels, they are given the plain numbers, so write them with the same
+    function. */}
+<Pagination
+  pageCount={20}
+  defaultValue={5}
+  formatNumber={new Intl.NumberFormat("ar-EG").format}
+  labels={{
+    navigation: "التنقل بين الصفحات",
+    previous: "الصفحة السابقة",
+    next: "الصفحة التالية",
+    page: (page) => \`الصفحة \${new Intl.NumberFormat("ar-EG").format(page)}\`,
+    summary: (page, pageCount) =>
+      \`الصفحة \${new Intl.NumberFormat("ar-EG").format(page)} من \${new Intl.NumberFormat("ar-EG").format(pageCount)}\`,
+  }}
+/>`,
+
   jump: `{/* showJump adds a "Go to page" field and button, for a list long enough that stepping is slow.
     A number outside the range goes to the nearest page; an empty field does nothing. */}
 <Pagination pageCount={500} defaultValue={42} showJump />`,
