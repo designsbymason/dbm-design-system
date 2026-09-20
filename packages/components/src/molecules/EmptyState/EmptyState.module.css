@@ -221,6 +221,10 @@
    can't be used in an @media condition (see the size rules above). */
 .actionsStack {
   align-items: stretch;
+  /* The root centres (or start-aligns) its children, which would shrink this row to
+     its widest action; stretching makes the row, and so each action, the full width
+     of the empty state. */
+  align-self: stretch;
   flex-direction: column;
 }
 
@@ -231,6 +235,7 @@
 @media (min-width: 640px) {
   .actionsStack {
     align-items: center;
+    align-self: auto;
     flex-direction: row;
   }
 

@@ -504,13 +504,18 @@ export const OnAPhone: Story = {
     await expect(padding(roots[0]!)).toBe(32);
     await expect(padding(roots[1]!)).toBe(40);
     for (const root of roots) {
-      // ...the actions are a column, each one the full width of the actions row...
+      // ...the actions are a column, each one the full width of the empty state's
+      // content box (its width less its padding and 1px border on each side) — not
+      // just of the row, which would also be true of a row that shrank to fit...
       const actions = root.lastElementChild as HTMLElement;
       await expect(getComputedStyle(actions).flexDirection).toBe("column");
+      const styles = getComputedStyle(root);
+      const content =
+        root.getBoundingClientRect().width - parseFloat(styles.paddingInlineStart) - parseFloat(styles.paddingInlineEnd) - 2;
       const buttons = [...actions.querySelectorAll("button")];
       await expect(buttons.length).toBe(2);
       for (const button of buttons) {
-        await expect(Math.round(button.getBoundingClientRect().width)).toBe(Math.round(actions.getBoundingClientRect().width));
+        await expect(Math.round(button.getBoundingClientRect().width)).toBe(Math.round(content));
       }
       // ...stacked one above the other, and nothing spills out sideways.
       await expect(buttons[0]!.getBoundingClientRect().bottom).toBeLessThanOrEqual(buttons[1]!.getBoundingClientRect().top + 1);

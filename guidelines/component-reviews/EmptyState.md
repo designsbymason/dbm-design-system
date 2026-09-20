@@ -184,9 +184,18 @@ found while proposing them and fixed with the first slot.
   **On a phone**, is pinned to a phone width with `globals: { viewport: { value: "mobile1" } }` (the vitest addon applies it — its
   default viewport is 1200px — and the Storybook UI resizes the canvas to match; both confirmed). Its `play` first asserts
   `window.innerWidth < 640`, so it fails loudly if the viewport didn't apply, then asserts `lg`/`xl` padding is 32/40px, the actions
-  are a column, each button is exactly the actions row's width and stacked, and nothing spills sideways. **All sizes** gained the
+  are a column, each button is exactly the width of the empty state's content box and stacked, and nothing spills sideways. **All sizes** gained the
   matching desktop assertion (16/24/32/48/64px from `sm` up). This technique is now a checklist item in
   `07-storybook-and-documentation-standards.md` §5.
+- **A defect in `stackOnMobile`, found by the user on first look, that my own test missed.** The stacked buttons were equal-width but
+  not full-width: the actions row is a child of the root, which centres (or start-aligns) its children, so the row shrank to its
+  widest button (142px in a 174px content box). My assertion compared each button to the *row*, which is true of any row however
+  narrow, so it could never fail; the Docs also over-claimed "the full width of the empty state". Fixed with `align-self: stretch`
+  on the stacked row below `sm` (reset to `auto` from `sm` up, so the wide layout is byte-for-byte what it was — re-measured: still a
+  centred, side-by-side row at natural widths). The assertion now measures against the empty state's content box, and was re-checked
+  the same way as the others: with the fix removed it fails (`expected 142 to be 206`). The lesson is recorded in
+  `07-storybook-and-documentation-standards.md` §5: measure against the thing the requirement names, not an element that can itself
+  shrink.
 - **Verified that the new tests bite,** by breaking the code on purpose and watching them fail: reverting the `lg` phone padding
   (`expected 48 to be 32`), removing the stacking (`'row' to be 'column'`), and removing the media cap (`1200 to be ≤ 193`) each fail the
   intended story; and for `announce`, removing the same-text guard, removing the clear, and removing the delay each fail a unit test
