@@ -52,6 +52,7 @@ export * from "./atoms/VisuallyHidden";
 export * from "./molecules/Accordion";
 export * from "./molecules/Card";
 export * from "./molecules/CheckboxGroup";
+export * from "./molecules/EmptyState";
 export * from "./molecules/FormField";
 export * from "./molecules/Grid";
 export * from "./molecules/List";

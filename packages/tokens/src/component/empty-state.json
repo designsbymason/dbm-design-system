@@ -1,0 +1,9 @@
+{
+  "empty-state": {
+    "content-max-width": {
+      "$type": "dimension",
+      "$value": "28rem",
+      "$description": "New token (2026-09-19), added for EmptyState's own description text — a width cap so a centred message keeps a comfortable line length (roughly 45-75 characters) inside a wide container such as a full page or a wide table cell, instead of stretching across it. No home on any existing primitive scale: the spacing scale tops out at 8rem, and this is a content-measure constraint rather than a gap or padding."
+    }
+  }
+}

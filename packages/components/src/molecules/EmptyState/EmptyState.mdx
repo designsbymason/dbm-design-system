@@ -1,0 +1,368 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Card } from "../Card";
+import { Table } from "../Table";
+import * as EmptyStateStories from "./EmptyState.stories";
+import * as EmptyStateIconStories from "./EmptyStateIcon.stories";
+import * as EmptyStateTitleStories from "./EmptyStateTitle.stories";
+import * as EmptyStateDescriptionStories from "./EmptyStateDescription.stories";
+import * as EmptyStateActionsStories from "./EmptyStateActions.stories";
+
+export const rootPropOrder = [
+  "variant",
+  "tone",
+  "size",
+  "align",
+  "role",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+// The Playground also has a Storybook-only `actions` control (a demo
+// `EmptyState.Actions` row, not an `EmptyState` prop), which sits last.
+export const playgroundPropOrder = ["variant", "tone", "size", "align", "actions"];
+export const iconPropOrder = ["icon", "label", "id", "className", "style", "data-testid"];
+export const titlePropOrder = ["children", "level", "id", "className", "style", "data-testid"];
+export const sectionPropOrder = ["children", "id", "className", "style", "data-testid"];
+
+<Meta of={EmptyStateStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="EmptyState" tier="Molecule" />
+
+What a page, a panel, or a list shows when there is nothing to show yet — no data, no search results, nothing
+left to do, or something that went wrong. It says what is empty and, ideally, offers the next step. It's a
+compound component, meaning it's made of named sub-parts you compose together rather than one component with a
+long list of props: put any of `EmptyState.Icon` (an icon in a round badge), `EmptyState.Title`,
+`EmptyState.Description`, and `EmptyState.Actions` inside `EmptyState`, in the order they should be read — every
+one is optional.
+
+`size` sets the padding, the spacing, and the size of the icon and text — small for a table cell or a narrow
+panel, large for a whole page. A `variant` picks the surface (none, a solid or dashed border, or a fill), a
+`tone` tints the icon badge so that "nothing here yet" and "something went wrong" can share one layout, and
+`align` centres the content or sets it flush with the start edge.
+
+### Import
+
+```tsx
+import { EmptyState } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={EmptyStateStories.Playground} />
+
+</div>
+<PlaygroundControls of={EmptyStateStories.Playground} order={playgroundPropOrder} exclude={["role", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the root `<div>`. Also accepts any other native `<div>` attribute beyond what's listed here
+(e.g. `onMouseEnter`, `title`) — passed straight through to the root element.
+
+<PropertiesTable of={EmptyStateStories} order={rootPropOrder} />
+
+### EmptyState.Icon properties
+
+The icon, in a round badge tinted by the empty state's `tone`, sized by its `size`. Decorative unless given a
+`label`. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) —
+passed straight through to the badge.
+
+<PropertiesTable of={EmptyStateIconStories} order={iconPropOrder} />
+
+### EmptyState.Title properties
+
+The title — a real heading, sized to the empty state's `size`. Also accepts any other native heading attribute
+beyond what's listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={EmptyStateTitleStories} order={titlePropOrder} />
+
+### EmptyState.Description properties
+
+The supporting text, in the secondary text colour and held to a comfortable line length. Also accepts any other
+native `<p>` attribute beyond what's listed here (e.g. `onClick`, `lang`) — passed straight through.
+
+<PropertiesTable of={EmptyStateDescriptionStories} order={sectionPropOrder} />
+
+### EmptyState.Actions properties
+
+The next step — buttons or links in a row that wraps on a narrow screen, aligned with the rest of the content.
+Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed
+straight through.
+
+<PropertiesTable of={EmptyStateActionsStories} order={sectionPropOrder} />
+
+## Variants
+
+### All variants
+
+<Canvas of={EmptyStateStories.Variants} />
+
+### All tones
+
+<Canvas of={EmptyStateStories.Tones} />
+
+### All sizes
+
+<Canvas of={EmptyStateStories.Sizes} />
+
+### Alignment
+
+<Canvas of={EmptyStateStories.Alignment} />
+
+### Every part is optional
+
+<Canvas of={EmptyStateStories.PartsOptional} />
+
+### With an illustration
+
+<Canvas of={EmptyStateStories.Illustration} />
+
+### Search with no results — announced as a status
+
+<Canvas of={EmptyStateStories.SearchNoResults} />
+
+### Composition — inside a card
+
+<Canvas of={EmptyStateStories.InCard} />
+
+### Composition — inside a table
+
+<Canvas of={EmptyStateStories.InTable} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use an empty state wherever a region can legitimately have nothing in it — a new account's list, a search that
+  matched nothing, a finished queue, a failed load — instead of leaving a blank area.
+- Say what is empty in the title ("No invoices yet") and, in the description, why or what to do about it. A
+  reader who lands on an empty page should know their next step.
+- Offer one clear primary action in `EmptyState.Actions` when there is something the reader can do — create the
+  first item, clear the filter, try again. A second, quieter action (`variant="tertiary"`) is fine for an
+  alternative such as importing.
+- Match the `size` to the room: `xs` or `sm` inside a table cell, a card, or a narrow panel; `md` for a section;
+  `lg` or `xl` when the empty state is the whole page.
+- Use `variant="ghost"` (the default) inside a container that already draws a boundary — a `Card`, a `Table`
+  cell — so the two borders don't double up. Use `dashed` or `outlined` when the empty area needs a boundary of
+  its own, such as an empty drop area or a list with no rows.
+- Use `tone` to match the situation: `success` for "all caught up", `danger` for a failure, `info` for a neutral
+  notice, and leave it `neutral` for a plain "nothing here yet". Put the meaning in the words as well.
+- Give the title the heading level that fits the page outline — one below the heading of the section it's in.
+- Add `role="status"` when the empty state appears because of something the user just did, such as a search or
+  a filter, so a screen reader announces it.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use an empty state for a loading state. Show a `Skeleton` or `Spinner` while content is on its way, and
+  the empty state only once it has arrived and there really is nothing.
+- Don't leave the reader with no way forward. "No results" alone is a dead end — say what to try, or offer the
+  action that fills the space.
+- Don't write a title that describes the interface instead of the situation ("Empty list", "No data"). Say what
+  is missing in the reader's terms ("No invoices yet").
+- Don't rely on `tone` alone to say something went wrong — not everyone perceives the colour, and the badge is
+  decorative. The title and description carry the meaning.
+- Don't put several competing primary actions in `EmptyState.Actions`. One primary, at most one or two quieter
+  alternatives.
+- Don't skip heading levels for the title (an `h4` straight under an `h2`) — set `level` to fit.
+- Don't fill an empty state with a long explanation. If it needs paragraphs, link to help instead.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Write the title as a plain statement of fact ("No invoices yet", "You're all caught up") and the description
+  as the way out ("Invoices you create will show up here."). Avoid apologies and exclamation marks.
+- Make the action the thing that fills the space: an empty invoice list offers "Create invoice", an empty search
+  offers "Clear search". An action that leads somewhere unrelated wastes the moment.
+- Pick the icon for the *subject*, not for decoration — a tray for an empty list, a magnifying glass for a search,
+  a check for "done". It's hidden from assistive technology by default because the title already says it.
+- Keep the description short. It's held to a comfortable line length (about 28rem) however wide the empty state
+  is, so a long paragraph becomes a tall, narrow column that reads badly.
+- Anything you place among the parts is laid out in the same column, so an illustration (an `<img>` or an inline
+  SVG, with empty `alt` text when it's purely decorative) can take the icon's place. Keep it modest in size so it
+  doesn't outweigh the message.
+- Use `align="start"` in layouts that are start-aligned throughout — a settings section, a list header — where a
+  centred empty state would look adrift.
+- Inside a `Table`, put the empty state in `Table.Empty`, which is the row a table shows when it has no rows; use
+  `size="sm"` there so it doesn't dwarf the header.
+
+## Accessibility
+
+<Callout tone="info" title="Static content by default — a real heading and real buttons">
+
+- An `EmptyState` renders a plain `<div>`: it adds no role and is not focusable, so it never adds a tab stop or
+  changes how a screen reader reads its content. The title is a real heading (`<h3>` unless you set `level`), so
+  a screen-reader user can find it by navigating headings; the actions are ordinary buttons and links, reached
+  in the normal tab order.
+- When the empty state appears *because of something the user did* — a search or filter that returns nothing —
+  pass `role="status"`, which is announced politely without moving focus. Support for announcing a live region
+  that is inserted already filled varies between screen readers; where it matters, keep a `role="status"`
+  container in the page and render the empty state inside it.
+- To make the empty state a named region, give it `role="region"` and `aria-labelledby` pointing at its title's
+  `id` (or an `aria-label`).
+- The icon is decorative by default and hidden from assistive technology (`aria-hidden`), because the title
+  already says what it shows. Give `EmptyState.Icon` a `label` only when the icon conveys something the text
+  doesn't.
+- The parts read in the order they are written, and nothing is reordered visually, so the reading order and the
+  tab order always match what is on screen — at every size, alignment, and screen width.
+- `tone` is decorative: it tints the icon badge only. The icon against its tinted badge measures at least 3:1 in
+  every theme (the standard for meaningful graphics), and the title and description text sit on the page
+  surface (or the `filled` variant's fill) at 6.5:1 or better.
+- `align="start"` is logical, so it mirrors under right-to-left text: the content sits flush with the right edge.
+- The description breaks long words rather than overflowing, and the actions wrap, so the layout holds at a
+  narrow width and when text is enlarged.
+
+</Callout>
+
+## Code examples
+
+```tsx
+import { TrayIcon } from "@dbm-design-system/icons";
+
+<EmptyState>
+  <EmptyState.Icon icon={TrayIcon} />
+  <EmptyState.Title>No invoices yet</EmptyState.Title>
+  <EmptyState.Description>Invoices you create will show up here.</EmptyState.Description>
+  <EmptyState.Actions>
+    <Button>Create invoice</Button>
+  </EmptyState.Actions>
+</EmptyState>
+
+{/* A search with no results, announced to a screen reader */}
+<EmptyState role="status" variant="dashed">
+  <EmptyState.Icon icon={MagnifyingGlassIcon} />
+  <EmptyState.Title>No results for “fjord”</EmptyState.Title>
+  <EmptyState.Description>Check the spelling, or try a broader search term.</EmptyState.Description>
+  <EmptyState.Actions>
+    <Button variant="secondary" onClick={clearSearch}>Clear search</Button>
+  </EmptyState.Actions>
+</EmptyState>
+
+{/* A failure: the same layout, a danger tone, and a retry action */}
+<EmptyState tone="danger" variant="outlined">
+  <EmptyState.Icon icon={WarningCircleIcon} />
+  <EmptyState.Title>Something went wrong</EmptyState.Title>
+  <EmptyState.Description>The list couldn't be loaded. Try again.</EmptyState.Description>
+  <EmptyState.Actions>
+    <Button onClick={retry}>Try again</Button>
+  </EmptyState.Actions>
+</EmptyState>
+
+{/* A whole-page empty state, at the largest size */}
+<EmptyState size="xl">
+  <EmptyState.Icon icon={RocketLaunchIcon} />
+  <EmptyState.Title level={1}>Welcome aboard</EmptyState.Title>
+  <EmptyState.Description>Create your first project to get going.</EmptyState.Description>
+  <EmptyState.Actions>
+    <Button size="lg">Create project</Button>
+  </EmptyState.Actions>
+</EmptyState>
+
+{/* Inside a table with no rows */}
+<Table aria-label="Invoices">
+  <Table.Header>
+    <Table.Row>
+      <Table.HeaderCell>Invoice</Table.HeaderCell>
+      <Table.HeaderCell>Status</Table.HeaderCell>
+    </Table.Row>
+  </Table.Header>
+  <Table.Body>
+    <Table.Empty>
+      <EmptyState size="sm">
+        <EmptyState.Title level={3}>No invoices yet</EmptyState.Title>
+      </EmptyState>
+    </Table.Empty>
+  </Table.Body>
+</Table>
+
+{/* Start-aligned, named as a region by its own title */}
+<EmptyState align="start" role="region" aria-labelledby="notes-title">
+  <EmptyState.Title id="notes-title">No notes</EmptyState.Title>
+  <EmptyState.Description>Notes you add will be listed here.</EmptyState.Description>
+</EmptyState>
+
+{/* A native <div> attribute, passed straight through to the root */}
+<EmptyState title="Empty invoice list" onMouseEnter={() => prefetch()}>
+  <EmptyState.Title>No invoices yet</EmptyState.Title>
+</EmptyState>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.neutral-subtle" usage="the neutral icon badge's tint, and the filled variant's fill" />
+<TokenRow token="bg.surface" usage="the icon badge's tint on the filled variant" />
+<TokenRow token="icon.default" usage="the neutral icon's colour" />
+<TokenRow token="text.primary" usage="text color, and the title's" />
+<TokenRow token="text.secondary" usage="the description's color" />
+<TokenRow token="border.default" usage="the outlined variant's border" />
+<TokenRow token="border.neutral" usage="the dashed variant's border" />
+<TokenRow token="bg.brand-subtle" usage="tone=brand: the icon badge's tint" />
+<TokenRow token="icon.brand" usage="tone=brand: the icon's colour" />
+<TokenRow token="bg.info-subtle" usage="tone=info: the icon badge's tint" />
+<TokenRow token="icon.info" usage="tone=info: the icon's colour" />
+<TokenRow token="bg.success-subtle" usage="tone=success: the icon badge's tint" />
+<TokenRow token="icon.success" usage="tone=success: the icon's colour" />
+<TokenRow token="bg.warning-subtle" usage="tone=warning: the icon badge's tint" />
+<TokenRow token="icon.warning" usage="tone=warning: the icon's colour" />
+<TokenRow token="bg.danger-subtle" usage="tone=danger: the icon badge's tint" />
+<TokenRow token="icon.danger" usage="tone=danger: the icon's colour" />
+<TokenRow token="border-width.1" usage="the border's width (transparent on the variants without one, so every variant is the same size)" />
+<TokenRow token="radius.lg" usage="the empty state's corners" />
+<TokenRow token="radius.full" usage="the round icon badge" />
+<TokenRow token="font-family.primary" usage="empty state typography" />
+<TokenRow token="space.4–space.16" usage="padding across the five size steps" />
+<TokenRow token="space.2–space.6" usage="the gap between parts across the five size steps" />
+<TokenRow token="space.8–space.20" usage="the icon badge's diameter across the five size steps" />
+<TokenRow token="space.2" usage="the gap between the title and the description" />
+<TokenRow token="space.3" usage="the gap between actions" />
+<TokenRow token="icon-size.sm–icon-size.2xl" usage="the icon's size across the five size steps" />
+<TokenRow token="font-size.base–font-size.2xl" usage="the title's size across the five size steps" />
+<TokenRow token="empty-state.content-max-width" usage="the description's maximum width, so its line length stays comfortable" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Card"
+  description="A ghost empty state sits inside a card without doubling up the border"
+  href="/?path=/docs/molecules-data-display-card--docs"
+>
+  <Card size="xs">
+    <Card.Body>Card body</Card.Body>
+  </Card>
+</RelatedCard>
+<RelatedCard
+  name="Table"
+  description="Table.Empty is the message row of a table with no rows — an empty state fits inside it"
+  href="/?path=/docs/molecules-data-display-table--docs"
+>
+  <Table size="xs" variant="ghost" aria-label="Example">
+    <Table.Body>
+      <Table.Row>
+        <Table.Cell>Cell</Table.Cell>
+        <Table.Cell>Cell</Table.Cell>
+      </Table.Row>
+    </Table.Body>
+  </Table>
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="The primary action in EmptyState.Actions — the way out of the empty state"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button size="sm">Create</Button>
+</RelatedCard>
+</div>

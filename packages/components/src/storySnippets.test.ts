@@ -51,6 +51,7 @@ import { tagPlaygroundSnippet } from "./atoms/Tag/Tag.snippets";
 import { accordionPlaygroundSnippet } from "./molecules/Accordion/Accordion.snippets";
 import { cardPlaygroundSnippet } from "./molecules/Card/Card.snippets";
 import { checkboxGroupPlaygroundSnippet } from "./molecules/CheckboxGroup/CheckboxGroup.snippets";
+import { emptyStatePlaygroundSnippet } from "./molecules/EmptyState/EmptyState.snippets";
 import { formFieldPlaygroundSnippet } from "./molecules/FormField/FormField.snippets";
 import { gridPlaygroundSnippet } from "./molecules/Grid/Grid.snippets";
 import { listPlaygroundSnippet } from "./molecules/List/List.snippets";
@@ -222,6 +223,32 @@ describe("Playground snippets, built from the live controls", () => {
     expect(cardPlaygroundSnippet({ media: true, mediaPosition: "start" })).not.toContain("mediaPosition");
     expect(cardPlaygroundSnippet({ media: true, mediaPosition: "end" })).toContain('mediaPosition="end"');
     expect(cardPlaygroundSnippet({ media: false })).not.toContain("Card.Media");
+  });
+
+  const emptyStateArgs = [
+    {},
+    { variant: "dashed", tone: "danger", size: "lg", align: "start" },
+    { variant: "filled", actions: false },
+    { size: "xs", tone: "success", actions: true },
+  ] as const;
+
+  it.each(emptyStateArgs)("EmptyState %j is a real snippet", (args) => {
+    expect(problemsIn(emptyStatePlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("EmptyState writes only what differs from the defaults", () => {
+    expect(emptyStatePlaygroundSnippet({ variant: "ghost", tone: "neutral", size: "md", align: "center" })).toMatch(
+      /\n<EmptyState>\n/,
+    );
+    expect(emptyStatePlaygroundSnippet({ variant: "dashed", align: "start" })).toContain(
+      '<EmptyState variant="dashed" align="start">',
+    );
+  });
+
+  it("EmptyState leaves out the actions row when the demo-actions control is off", () => {
+    expect(emptyStatePlaygroundSnippet({ actions: false })).not.toContain("EmptyState.Actions");
+    expect(emptyStatePlaygroundSnippet({ actions: true })).toContain("EmptyState.Actions");
+    expect(emptyStatePlaygroundSnippet({})).toContain("EmptyState.Actions");
   });
 
   const tableArgs = [

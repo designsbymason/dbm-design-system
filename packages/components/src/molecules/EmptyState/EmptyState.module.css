@@ -1,0 +1,183 @@
+/* The empty state's layout and surface, driven by a handful of local custom
+   properties so each size, variant, and tone only *sets values* rather than
+   repeating the whole rule. Every value is a semantic or primitive token.
+
+   The root is a centred column; the parts flow down it with one gap between
+   each, and each part reads what it needs (the badge's size, the actions'
+   alignment) from a custom property the root sets — so no part needs to know
+   which size or alignment it's inside. */
+.root {
+  --empty-pad: var(--dbm-space-8);
+  --empty-gap: var(--dbm-space-4);
+  --empty-badge: var(--dbm-space-12);
+  --empty-bg: transparent;
+  --empty-border: transparent;
+  --empty-border-style: solid;
+  --empty-badge-bg: var(--dbm-bg-neutral-subtle);
+  --empty-badge-color: var(--dbm-icon-default);
+  --empty-align: center;
+  --empty-align-text: center;
+  --empty-justify: center;
+
+  align-items: var(--empty-align);
+  background-color: var(--empty-bg);
+  border: var(--dbm-border-width-1) var(--empty-border-style) var(--empty-border);
+  border-radius: var(--dbm-radius-lg);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--empty-gap);
+  min-inline-size: 0;
+  padding: var(--empty-pad);
+  text-align: var(--empty-align-text);
+}
+
+/* --- Alignment. `start` is logical, so it mirrors under right-to-left text. --- */
+
+.alignStart {
+  --empty-align: flex-start;
+  --empty-align-text: start;
+  --empty-justify: flex-start;
+}
+
+/* --- Size: padding, the gap between parts, and the icon badge. (The icon and the
+   title/description type sizes step with `size` too, but those are props of the
+   atoms they render, set in EmptyState.tsx.) --- */
+
+.sizeXs {
+  --empty-pad: var(--dbm-space-4);
+  --empty-gap: var(--dbm-space-2);
+  --empty-badge: var(--dbm-space-8);
+}
+
+.sizeSm {
+  --empty-pad: var(--dbm-space-6);
+  --empty-gap: var(--dbm-space-3);
+  --empty-badge: var(--dbm-space-10);
+}
+
+.sizeMd {
+  --empty-pad: var(--dbm-space-8);
+  --empty-gap: var(--dbm-space-4);
+  --empty-badge: var(--dbm-space-12);
+}
+
+.sizeLg {
+  --empty-pad: var(--dbm-space-8);
+  --empty-gap: var(--dbm-space-4);
+  --empty-badge: var(--dbm-space-16);
+}
+
+.sizeXl {
+  --empty-pad: var(--dbm-space-10);
+  --empty-gap: var(--dbm-space-6);
+  --empty-badge: var(--dbm-space-20);
+}
+
+/* The two large sizes are generous on a roomy screen but would leave only a
+   sliver for the text on a phone, so they take a smaller padding until the `sm`
+   breakpoint. The threshold is the literal value of the breakpoint.sm primitive
+   token — custom properties can't be used in an @media condition (the same
+   limitation `Card`, `Stack`, and `Grid` note), so if that token changes this
+   must be updated by hand. */
+@media (min-width: 640px) {
+  .sizeLg {
+    --empty-pad: var(--dbm-space-12);
+  }
+
+  .sizeXl {
+    --empty-pad: var(--dbm-space-16);
+  }
+}
+
+/* --- Variants. `ghost` is the base above and needs no class. The border stays
+   (transparent) on every variant so they all have the same box size. --- */
+
+.outlined {
+  --empty-border: var(--dbm-border-default);
+}
+
+.dashed {
+  --empty-border: var(--dbm-border-neutral);
+  --empty-border-style: dashed;
+}
+
+/* On the fill, the neutral badge would vanish (it shares the fill's colour), so
+   it sits on the surface colour instead. A toned badge overrides this below. */
+.filled {
+  --empty-bg: var(--dbm-bg-neutral-subtle);
+  --empty-badge-bg: var(--dbm-bg-surface);
+}
+
+/* --- Tone: only the icon badge. `neutral` has no class. Declared after the
+   variants, so a tone's badge wins over the filled variant's. --- */
+
+.toneBrand {
+  --empty-badge-bg: var(--dbm-bg-brand-subtle);
+  --empty-badge-color: var(--dbm-icon-brand);
+}
+
+.toneInfo {
+  --empty-badge-bg: var(--dbm-bg-info-subtle);
+  --empty-badge-color: var(--dbm-icon-info);
+}
+
+.toneSuccess {
+  --empty-badge-bg: var(--dbm-bg-success-subtle);
+  --empty-badge-color: var(--dbm-icon-success);
+}
+
+.toneWarning {
+  --empty-badge-bg: var(--dbm-bg-warning-subtle);
+  --empty-badge-color: var(--dbm-icon-warning);
+}
+
+.toneDanger {
+  --empty-badge-bg: var(--dbm-bg-danger-subtle);
+  --empty-badge-color: var(--dbm-icon-danger);
+}
+
+/* --- Parts. --- */
+
+.iconBadge {
+  align-items: center;
+  background-color: var(--empty-badge-bg);
+  block-size: var(--empty-badge);
+  border-radius: var(--dbm-radius-full);
+  /* The icon takes its colour from this — an `icon.*` token, never a `text.*` one. */
+  color: var(--empty-badge-color);
+  display: flex;
+  flex-shrink: 0;
+  inline-size: var(--empty-badge);
+  justify-content: center;
+}
+
+/* Long words break rather than overflow a narrow container. */
+.title,
+.description {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The title sits closer to its own description than the gap between other parts:
+   a fixed small gap, expressed as an adjustment to the column's own. (Two classes,
+   so it beats the atoms' own `margin: 0`.) */
+.title + .description {
+  margin-block-start: calc(var(--dbm-space-2) - var(--empty-gap));
+}
+
+/* A comfortable line length however wide the empty state is. The block is
+   centred (or start-aligned) by the column's own cross-axis alignment. */
+.description {
+  max-inline-size: var(--dbm-empty-state-content-max-width);
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  justify-content: var(--empty-justify);
+}
