@@ -75,6 +75,11 @@ const meta: Meta<typeof Button> = {
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
     },
     size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
+    rounded: {
+      control: "boolean",
+      description:
+        "Renders with fully rounded ends — a pill, or a circle when the button is as wide as it is tall — instead of the standard rounded-corner shape.",
+    },
     leadingIcon: {
       ...iconControl,
       description: "Leading icon (select 'None' to omit).",
@@ -149,6 +154,7 @@ const meta: Meta<typeof Button> = {
     children: "Button",
     variant: "primary",
     size: "md",
+    rounded: false,
     type: "button",
     "aria-label": "",
     // Storybook's `mapping` (see `iconControl` above) resolves these
@@ -227,6 +233,33 @@ export const AllSizes: Story = {
           Size {size}
         </Button>
       ))}
+    </div>
+  ),
+};
+
+export const Rounded: Story = {
+  parameters: { docs: { source: { code: buttonSnippets.rounded } } },
+  // Three fixed examples — a plain label, a different variant, and one with an icon — so
+  // `variant`/`leadingIcon`/`children` are pinned per instance. `rounded` (on here) and every other
+  // prop stay live and shared via `{...args}`.
+  args: { rounded: true },
+  argTypes: {
+    variant: { control: false },
+    leadingIcon: { control: false },
+    trailingIcon: { control: false },
+    children: { control: false },
+  },
+  render: (args) => (
+    <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
+      <Button {...args} variant="primary">
+        Get started
+      </Button>
+      <Button {...args} variant="secondary">
+        Learn more
+      </Button>
+      <Button {...args} variant="destructive" leadingIcon={TrashIcon}>
+        Delete
+      </Button>
     </div>
   ),
 };
@@ -448,5 +481,68 @@ export const AsChildDisabledInteraction: Story = {
     // click-blocking handler stops the click, not the browser.
     await userEvent.click(link);
     await expect(args.onClick).not.toHaveBeenCalled();
+  },
+};
+
+// The corners and the keyboard focus ring in a real browser, which jsdom can't lay out: a rounded button's
+// ends are round at every size and variant (its corner radius is at least half its height), a plain button
+// keeps its standard corners, and the focus ring is round too. Focusing leaves a ring on screen, so this runs
+// in a hidden twin (`!dev`: out of the sidebar and Docs, still run as a test).
+export const RoundedInteraction: Story = {
+  name: "Rounded — interaction test",
+  tags: ["!dev"],
+  args: { children: "Go" },
+  argTypes: { rounded: { control: false }, size: { control: false }, variant: { control: false } },
+  render: (args) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <div key={size} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
+          {(["primary", "secondary", "tertiary", "ghost", "destructive"] as const).map((variant) => (
+            <Button key={variant} {...args} rounded size={size} variant={variant} data-testid="rounded">
+              {variant}
+            </Button>
+          ))}
+        </div>
+      ))}
+      <div>
+        <Button {...args} data-testid="plain">
+          Plain
+        </Button>
+      </div>
+      <Button {...args} rounded fullWidth data-testid="wide">
+        Full width
+      </Button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const radius = (element: HTMLElement) => parseFloat(getComputedStyle(element).borderTopLeftRadius);
+    const halfHeight = (element: HTMLElement) => element.getBoundingClientRect().height / 2;
+
+    const rounded = Array.from(canvasElement.querySelectorAll<HTMLElement>("[data-testid=rounded]"));
+    await expect(rounded).toHaveLength(25);
+    for (const button of rounded) {
+      await expect(radius(button)).toBeGreaterThanOrEqual(halfHeight(button) - 0.5);
+    }
+
+    // Standard corners (the token, 8px) for a button that isn't rounded — well short of half its height.
+    const plain = canvasElement.querySelector<HTMLElement>("[data-testid=plain]")!;
+    await expect(radius(plain)).toBeLessThan(halfHeight(plain) - 4);
+
+    // Wider than it is tall (a pill) still has round ends, and it stays that way at full width.
+    const wide = canvasElement.querySelector<HTMLElement>("[data-testid=wide]")!;
+    await expect(wide.getBoundingClientRect().width).toBeGreaterThan(wide.getBoundingClientRect().height * 4);
+    await expect(radius(wide)).toBeGreaterThanOrEqual(halfHeight(wide) - 0.5);
+
+    // The keyboard focus ring follows the shape: round for a rounded button, the standard ring corner for a plain one.
+    await userEvent.tab();
+    const first = document.activeElement as HTMLElement;
+    await expect(first).toBe(rounded[0]);
+    await expect(getComputedStyle(first).outlineStyle).toBe("solid");
+    await expect(radius(first)).toBeGreaterThanOrEqual(halfHeight(first) - 0.5);
+    // Focused after a keyboard Tab, so the browser treats it as keyboard focus (`:focus-visible`).
+    plain.focus();
+    await expect(plain.matches(":focus-visible")).toBe(true);
+    await expect(getComputedStyle(plain).outlineStyle).toBe("solid");
+    await expect(radius(plain)).toBeLessThan(halfHeight(plain) - 4);
   },
 };

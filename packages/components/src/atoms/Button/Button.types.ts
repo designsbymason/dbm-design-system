@@ -21,6 +21,14 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    * @default 'md'
    */
   size?: ButtonSize;
+  /**
+   * Renders with fully rounded ends — a pill, or a circle when the button is
+   * as wide as it is tall — instead of the standard rounded-corner shape.
+   * Matches `IconButton`'s and `CloseButton`'s own `rounded` prop, and the
+   * focus ring follows the same shape. Height, padding, and gap don't change.
+   * @default false
+   */
+  rounded?: boolean;
   /** Leading icon — a component reference, not a string name. */
   leadingIcon?: PhosphorIcon;
   /** Trailing icon — a component reference, not a string name. */

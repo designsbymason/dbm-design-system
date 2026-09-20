@@ -119,6 +119,81 @@ describe("Button", () => {
     });
   });
 
+  describe("rounded", () => {
+    it("uses the full radius token when rounded, and stays on md when it isn't", () => {
+      const { rerender } = render(<Button data-testid="btn">Go</Button>);
+      expect(screen.getByTestId("btn")).toHaveStyle({ borderRadius: "var(--dbm-radius-md)" });
+
+      rerender(
+        <Button rounded data-testid="btn">
+          Go
+        </Button>,
+      );
+      expect(screen.getByTestId("btn")).toHaveStyle({ borderRadius: "var(--dbm-radius-full)" });
+
+      rerender(
+        <Button rounded={false} data-testid="btn">
+          Go
+        </Button>,
+      );
+      expect(screen.getByTestId("btn")).toHaveStyle({ borderRadius: "var(--dbm-radius-md)" });
+    });
+
+    it.each(["primary", "secondary", "tertiary", "ghost", "destructive"] as const)(
+      "rounds the %s variant",
+      (variant) => {
+        render(
+          <Button rounded variant={variant} data-testid="btn">
+            Go
+          </Button>,
+        );
+        expect(screen.getByTestId("btn")).toHaveStyle({ borderRadius: "var(--dbm-radius-full)" });
+      },
+    );
+
+    it("rounds an asChild link, and leaves it alone when not rounded", () => {
+      const { rerender } = render(
+        <Button asChild rounded>
+          <a href="/next">Continue</a>
+        </Button>,
+      );
+      expect(screen.getByRole("link", { name: "Continue" })).toHaveStyle({
+        borderRadius: "var(--dbm-radius-full)",
+      });
+
+      rerender(
+        <Button asChild>
+          <a href="/next">Continue</a>
+        </Button>,
+      );
+      expect(screen.getByRole("link", { name: "Continue" })).toHaveStyle({
+        borderRadius: "var(--dbm-radius-md)",
+      });
+    });
+
+    it("combines with fullWidth, an icon and loading without dropping any of them", () => {
+      render(
+        <Button rounded fullWidth isLoading leadingIcon={WalletIcon} data-testid="btn">
+          Save
+        </Button>,
+      );
+      const button = screen.getByTestId("btn");
+      expect(button.className).toMatch(/rounded/);
+      expect(button.className).toMatch(/fullWidth/);
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute("aria-busy", "true");
+    });
+
+    it("keeps a consumer className alongside", () => {
+      render(
+        <Button rounded className="custom" data-testid="btn">
+          Go
+        </Button>,
+      );
+      expect(screen.getByTestId("btn")).toHaveClass("custom");
+    });
+  });
+
   it("renders a leading icon", () => {
     render(<Button leadingIcon={WalletIcon}>Balance</Button>);
     expect(screen.getByRole("button").querySelector("svg")).toBeInTheDocument();
@@ -400,6 +475,13 @@ describe("Button", () => {
     expect((await axe(container)).violations).toHaveLength(0);
 
     rerender(<Button isLoading>Saving</Button>);
+    expect((await axe(container)).violations).toHaveLength(0);
+
+    rerender(
+      <Button rounded variant="secondary" leadingIcon={WalletIcon}>
+        Rounded
+      </Button>,
+    );
     expect((await axe(container)).violations).toHaveLength(0);
 
     // The `asChild` anchor is a structurally different rendered element

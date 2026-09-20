@@ -52,6 +52,19 @@
   opacity: var(--dbm-opacity-40);
 }
 
+/* `rounded`: fully rounded ends — a pill, or a circle when the button is as wide as it is tall.
+   The `.rounded:focus-visible` rule is the `full` counterpart to `.root:focus-visible`'s `sm`
+   above (`05-component-api-conventions.md` §6 names a fully round element as the case for
+   `radius-full` on the ring). Both selectors have the same specificity, so this one has to stay
+   after `.root:focus-visible` to win — the same arrangement as IconButton's and CloseButton's. */
+.rounded {
+  border-radius: var(--dbm-radius-full);
+}
+
+.rounded:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
 .fullWidth {
   width: 100%;
 }

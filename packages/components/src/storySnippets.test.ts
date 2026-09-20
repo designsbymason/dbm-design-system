@@ -651,6 +651,7 @@ describe("Playground snippets for the eleven input and field atoms", () => {
     {},
     { children: "Pay", variant: "destructive", size: "lg", type: "submit", "aria-label": "Pay now", isLoading: true, loadingText: "Paying…", fullWidth: true, disabled: true },
     { children: "Export", variant: "secondary" },
+    { children: "Get started", rounded: true, size: "xl" },
   ])("Button %j is a real snippet", (args) => {
     expect(problemsIn(buttonPlaygroundSnippet(args as never))).toEqual([]);
   });
@@ -662,6 +663,8 @@ describe("Playground snippets for the eleven input and field atoms", () => {
       "<Button leadingIcon={WalletIcon} trailingIcon={ArrowRightIcon}>Pay</Button>",
     );
     expect(buttonPlaygroundSnippet({ children: "Saving", isLoading: true })).toBe("<Button isLoading>Saving</Button>");
+    expect(buttonPlaygroundSnippet({ children: "Go", rounded: true })).toBe("<Button rounded>Go</Button>");
+    expect(buttonPlaygroundSnippet({ children: "Go", rounded: false })).toBe("<Button>Go</Button>");
   });
 
   it.each([

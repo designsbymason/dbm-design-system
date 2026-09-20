@@ -48,7 +48,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
-| Button | atom | 🟢 | Primary/secondary/tertiary/destructive/ghost variants, loading state |
+| Button | atom | 🟢 | Primary/secondary/tertiary/destructive/ghost variants, loading state, optional `rounded` (pill/circle, same prop as `IconButton`/`CloseButton`) |
 | ButtonGroup | molecule | 🟡 | Attached/segmented button set, shared border-radius |
 | Toolbar | molecule | ⚪ | Generic action-grouping container (buttons/icon buttons/dividers) with ARIA toolbar keyboard semantics (roving tabindex) — distinct from `ButtonGroup`'s single fused/segmented control. `Table Toolbar` (Data Display, below) likely builds on this once it exists rather than reinventing the same behavior. Added 2026-09-10 following a molecule feature-completeness gap-check |
 | IconButton | atom | 🟢 | Icon-only, requires `aria-label` |

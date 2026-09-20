@@ -60,6 +60,7 @@ const iconSizeForButtonSize: Record<ButtonSize, "xs" | "sm" | "md"> = {
  * <Button variant="destructive" leadingIcon={TrashIcon}>Delete</Button>
  * <Button isLoading loadingText="Saving…">Save</Button>
  * <Button fullWidth>Continue</Button>
+ * <Button rounded>Get started</Button>
  * <Button asChild><a href="/next">Continue</a></Button>
  * ```
  */
@@ -68,6 +69,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     {
       variant = "primary",
       size = "md",
+      rounded = false,
       leadingIcon,
       trailingIcon,
       isLoading = false,
@@ -156,6 +158,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           styles.root,
           variantClass[variant],
           sizeClass[size],
+          rounded && styles.rounded,
           fullWidth && styles.fullWidth,
           slottedDisabled && styles.disabled,
           className,

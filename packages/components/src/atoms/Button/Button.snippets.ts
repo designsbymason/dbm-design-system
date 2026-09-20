@@ -29,6 +29,11 @@ export const buttonSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Button size="lg">Size lg</Button>`,
 
+  rounded: `{/* rounded gives the button fully rounded ends — a pill. It works with every variant and size. */}
+<Button rounded>Get started</Button>
+<Button rounded variant="secondary">Learn more</Button>
+<Button rounded variant="destructive" leadingIcon={TrashIcon}>Delete</Button>`,
+
   withIcons: `{/* leadingIcon and trailingIcon take an icon component. WalletIcon, DownloadIcon, ArrowRightIcon and
     TrashIcon come from @dbm-design-system/icons. */}
 <Button leadingIcon={WalletIcon}>Pay</Button>
@@ -75,6 +80,7 @@ export interface ButtonPlaygroundSnippetArgs {
   children?: unknown;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  rounded?: boolean;
   type?: "button" | "submit" | "reset";
   "aria-label"?: string;
   leadingIcon?: unknown;
@@ -95,6 +101,7 @@ export function buttonPlaygroundSnippet(args: ButtonPlaygroundSnippetArgs): stri
   const attributes: string[] = [];
   if (args.variant && args.variant !== "primary") attributes.push(`variant="${args.variant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.rounded) attributes.push("rounded");
   if (args.type && args.type !== "button") attributes.push(`type="${args.type}"`);
   const leading = iconName(args.leadingIcon);
   const trailing = iconName(args.trailingIcon);

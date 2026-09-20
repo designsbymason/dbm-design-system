@@ -12,6 +12,7 @@ export const propOrder = [
   "children",
   "variant",
   "size",
+  "rounded",
   "leadingIcon",
   "trailingIcon",
   "isLoading",
@@ -78,6 +79,10 @@ element `asChild`'s slotted child renders).
 
 <Canvas of={ButtonStories.AllSizes} />
 
+### Rounded
+
+<Canvas of={ButtonStories.Rounded} />
+
 ### Leading and trailing icons
 
 <Canvas of={ButtonStories.WithIcons} />
@@ -135,6 +140,9 @@ element `asChild`'s slotted child renders).
 
 ## Best practices
 
+- Use `rounded` for a softer, friendlier look — a call to action on a landing page, or a pill-shaped
+  control in a toolbar. Keep it consistent within a view: don't mix rounded and standard-corner
+  buttons side by side unless the difference means something.
 - Match `size` to context density: `sm`/`xs` for compact toolbars and tables, `md` (the default)
   for standard forms, `lg`/`xl` for high-emphasis marketing/landing contexts.
 - Keep labels as short, specific verbs ("Save changes", not "Submit") — this is what makes a
@@ -170,6 +178,7 @@ element `asChild`'s slotted child renders).
 <Button variant="destructive" leadingIcon={TrashIcon}>Delete</Button>
 <Button isLoading loadingText="Saving…">Save</Button>
 <Button fullWidth>Continue</Button>
+<Button rounded>Get started</Button>
 <Button asChild><a href="/next">Continue</a></Button>
 <Button type="submit" data-testid="checkout-submit">Place order</Button>
 <Button form="checkout-form" name="action" onFocus={trackButtonFocus}>Continue</Button>
@@ -191,7 +200,7 @@ element `asChild`'s slotted child renders).
 <TokenRow token="border.focus" usage="focus-visible outline" />
 <TokenRow token="radius.md" usage="corner radius (8px)" />
 <TokenRow token="radius.sm" usage="focus-visible outline corner radius (overrides radius.md while focused)" />
-<TokenRow token="radius.full" usage="loading spinner shape" />
+<TokenRow token="radius.full" usage="loading spinner shape; the `rounded` prop's corner radius and its focus-visible outline radius" />
 <TokenRow token="space.1–space.8" usage="per-size padding/gap (scales with `size`)" />
 <TokenRow token="font-size.xs–font-size.lg" usage="per-size type scale" />
 <TokenRow token="font-weight.semibold" usage="label weight" />
