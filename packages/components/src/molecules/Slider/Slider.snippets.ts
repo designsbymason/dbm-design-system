@@ -10,6 +10,37 @@
 // true. See `07-storybook-and-documentation-standards.md` §4.2.
 
 export const sliderSnippets = {
+  locale: `{/* formatNumber writes each number the slider shows — the value, and the min and max labels — the way a language or
+    region does, or with a unit. It also becomes what assistive tech announces, unless you pass your own aria-valuetext.
+    onValueChange still receives the plain number. */}
+<Slider
+  aria-label="Volume"
+  defaultValue={50}
+  showValue
+  showMinMaxLabels
+  formatNumber={new Intl.NumberFormat("ar-EG").format}
+/>
+
+<Slider
+  aria-label="Opacity"
+  defaultValue={60}
+  step={5}
+  showValue
+  showMinMaxLabels
+  formatNumber={(value) => \`\${value}%\`}
+/>
+
+<Slider
+  aria-label="Ratio"
+  defaultValue={0.5}
+  min={0}
+  max={1}
+  step={0.1}
+  showValue
+  showMinMaxLabels
+  formatNumber={new Intl.NumberFormat("de-DE").format}
+/>`,
+
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Slider aria-label="Size sm" size="sm" defaultValue={50} />`,
 

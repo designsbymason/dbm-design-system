@@ -129,4 +129,23 @@ describe("PasswordInput", () => {
     );
     expect((await axe(disabledContainer)).violations).toHaveLength(0);
   });
+  describe("formatNumber", () => {
+    it("passes straight through to Input's counter, so the count can be written in a locale's own numerals", async () => {
+      const user = userEvent.setup();
+      const tagged = (n: number) => `<${n}>`;
+      render(<PasswordInput aria-label="Password" maxLength={12} showCount formatNumber={tagged} />);
+      expect(screen.getByText("<0>/<12>")).toBeInTheDocument();
+      await user.type(screen.getByLabelText("Password"), "abc");
+      expect(screen.getByText("<3>/<12>")).toBeInTheDocument();
+    });
+
+    it("writes a real locale's numerals, and isn't passed on to the DOM element (React would warn)", () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const arabic = new Intl.NumberFormat("ar-EG").format;
+      render(<PasswordInput aria-label="Password" maxLength={12} showCount defaultValue="abc" formatNumber={arabic} />);
+      expect(screen.getByText(`${arabic(3)}/${arabic(12)}`)).toBeInTheDocument();
+      expect(error).not.toHaveBeenCalled();
+      error.mockRestore();
+    });
+  });
 });

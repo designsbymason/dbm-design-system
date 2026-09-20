@@ -83,6 +83,12 @@ const meta: Meta<typeof PasswordInput> = {
       description:
         "Shows a live current/max character count inline, before the show/hide toggle. Only renders when maxLength is also set.",
     },
+    formatNumber: {
+      control: false,
+      description:
+        "How the numbers in the showCount counter are written — both the current length and maxLength — for a language or region whose numerals or digit grouping differ from the plain 5 and 1234: given a number, returns the text to show. For example new Intl.NumberFormat(\"ar-EG\").format shows ٥/١٠. Only used while the counter is shown (showCount with maxLength); the native maxLength limit and the value itself are unaffected. Passed straight through to Input.",
+      table: { defaultValue: { summary: "(count) => String(count)" } },
+    },
     minLength: {
       control: false,
       description: "Minimum number of characters required for HTML5 form validation.",

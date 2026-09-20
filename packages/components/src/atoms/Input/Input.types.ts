@@ -116,6 +116,15 @@ export interface InputProps extends Omit<
    * @default false
    */
   showCount?: boolean;
+  /**
+   * How the numbers in the `showCount` counter are written — both the current length and `maxLength` —
+   * for a language or region whose numerals or digit grouping differ from the plain `5` and `1234`:
+   * given a number, returns the text to show. For example, `new Intl.NumberFormat("ar-EG").format`
+   * shows `٥/١٠`. Only used while the counter is shown (`showCount` with `maxLength`); the native
+   * `maxLength` limit and the value itself are unaffected.
+   * @default (count) => String(count)
+   */
+  formatNumber?: (count: number) => string;
   /** Minimum number of characters required for HTML5 form validation. */
   minLength?: number;
   /**

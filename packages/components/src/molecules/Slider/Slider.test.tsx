@@ -498,4 +498,112 @@ describe("Slider", () => {
     );
     expect((await axe(verticalMinMaxContainer)).violations).toHaveLength(0);
   });
+  describe("formatNumber", () => {
+    const tagged = (n: number) => `<${n}>`;
+    const arabic = new Intl.NumberFormat("ar-EG").format;
+    const german = new Intl.NumberFormat("de-DE").format;
+
+    it("changes nothing when it isn't given: the plain number, and no aria-valuetext", () => {
+      render(<Slider aria-label="Volume" defaultValue={42} min={0} max={100} showValue showMinMaxLabels />);
+      expect(screen.getByText("42")).toBeInTheDocument();
+      expect(screen.getByText("0")).toBeInTheDocument();
+      expect(screen.getByText("100")).toBeInTheDocument();
+      expect(screen.getByRole("slider")).not.toHaveAttribute("aria-valuetext");
+    });
+
+    it("writes the value label with it, and keeps it current as the value changes", async () => {
+      const user = userEvent.setup();
+      render(<Slider aria-label="Volume" defaultValue={42} showValue formatNumber={tagged} />);
+      expect(screen.getByText("<42>")).toBeInTheDocument();
+      screen.getByRole("slider").focus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByText("<43>")).toBeInTheDocument();
+    });
+
+    it("writes the value tooltip with it", async () => {
+      const user = userEvent.setup();
+      render(<Slider aria-label="Volume" defaultValue={30} showValueTooltip formatNumber={tagged} />);
+      await user.hover(screen.getByRole("slider"));
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("<30>");
+    });
+
+    it.each([
+      ["horizontal", { orientation: "horizontal" as const }],
+      ["vertical", { orientation: "vertical" as const }],
+      ["horizontal with the value label", { orientation: "horizontal" as const, showValue: true }],
+      ["vertical with the value label", { orientation: "vertical" as const, showValue: true }],
+    ])("writes the min and max labels with it, %s", (_name, extra) => {
+      render(<Slider aria-label="Volume" min={0} max={75} defaultValue={10} showMinMaxLabels formatNumber={tagged} {...extra} />);
+      expect(screen.getByText("<0>")).toBeInTheDocument();
+      expect(screen.getByText("<75>")).toBeInTheDocument();
+      expect(screen.queryByText("75")).not.toBeInTheDocument();
+    });
+
+    it("announces the formatted number (aria-valuetext) so what is shown is what is announced, and follows changes", async () => {
+      const user = userEvent.setup();
+      render(<Slider aria-label="Volume" defaultValue={42} showValue formatNumber={tagged} />);
+      const thumb = screen.getByRole("slider");
+      expect(thumb).toHaveAttribute("aria-valuetext", "<42>");
+      thumb.focus();
+      await user.keyboard("{ArrowRight}");
+      expect(thumb).toHaveAttribute("aria-valuetext", "<43>");
+      expect(thumb).toHaveAttribute("aria-valuenow", "43");
+    });
+
+    it("lets an aria-valuetext of your own win everywhere, in the label, the tooltip and the announcement — but not over the min and max", async () => {
+      const user = userEvent.setup();
+      render(
+        <Slider aria-label="Quality" defaultValue={2} min={1} max={3} aria-valuetext="Medium" showValue showValueTooltip showMinMaxLabels formatNumber={tagged} />,
+      );
+      expect(screen.getByText("Medium")).toBeInTheDocument();
+      expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "Medium");
+      await user.hover(screen.getByRole("slider"));
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Medium");
+      expect(screen.getByText("<1>")).toBeInTheDocument();
+      expect(screen.getByText("<3>")).toBeInTheDocument();
+    });
+
+    it("gives onValueChange and onValueCommit the plain number", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      const onValueCommit = vi.fn();
+      render(<Slider aria-label="Volume" defaultValue={42} formatNumber={tagged} onValueChange={onValueChange} onValueCommit={onValueCommit} />);
+      screen.getByRole("slider").focus();
+      await user.keyboard("{ArrowRight}");
+      expect(onValueChange).toHaveBeenCalledWith(43);
+      expect(onValueCommit).toHaveBeenCalledWith(43);
+    });
+
+    it("leaves the form value alone: the hidden input still holds the plain number", () => {
+      const { container } = render(
+        <form>
+          <Slider aria-label="Volume" name="volume" defaultValue={42} formatNumber={arabic} />
+        </form>,
+      );
+      expect(container.querySelector<HTMLInputElement>("input[name=volume]")?.value).toBe("42");
+    });
+
+    it("writes a real locale's numerals and decimals", () => {
+      const { unmount } = render(<Slider aria-label="Volume" defaultValue={50} showValue formatNumber={arabic} />);
+      expect(arabic(50)).not.toBe("50");
+      expect(screen.getByText(arabic(50))).toBeInTheDocument();
+      unmount();
+      render(<Slider aria-label="Volume" defaultValue={0.5} min={0} max={1} step={0.5} showValue showMinMaxLabels formatNumber={german} />);
+      expect(screen.getByText("0,5")).toBeInTheDocument();
+      expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "0,5");
+    });
+
+    it("can add a unit", () => {
+      render(<Slider aria-label="Volume" defaultValue={50} showValue formatNumber={(n) => `${n}%`} />);
+      expect(screen.getByText("50%")).toBeInTheDocument();
+      expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "50%");
+    });
+
+    it("has no accessibility violations with it, everything shown", async () => {
+      const { container } = render(
+        <Slider aria-label="Volume" defaultValue={50} showValue showValueTooltip showMinMaxLabels showTicks tickInterval={25} formatNumber={arabic} />,
+      );
+      expect((await axe(container)).violations).toHaveLength(0);
+    });
+  });
 });

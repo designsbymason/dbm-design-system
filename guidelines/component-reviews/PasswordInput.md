@@ -185,3 +185,9 @@ clear buttons too — see each component's own entry.
 ## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
 
 Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: same shape as `NumberInput`'s — spelled-out defaults, empty props, two one-arg stories ("Error state", "Disabled") lost in the noise, and a frozen "With a clear button". Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `PasswordInput.snippets.ts`, with the same approach; the clearable example shows real state (`onClear={() => setValue("")}`). All snippets and Playground combinations were typechecked against the real types (the controlled ones with the real `useState` lines, so the state handlers' types were checked too). **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
+
+## Post-Finalization follow-up (2026-09-20, at explicit direction) — `formatNumber` for the `showCount` counter
+
+`PasswordInput` re-exposes `Input`'s `showCount`, so once `Input` gained `formatNumber` ([ADR-0021](../adr/0021-labels-object-and-optional-formatnumber-over-an-implicit-intl-default.md); see `Input.md`) its counter could be localised at runtime through the spread, but not by a consumer using the types, since `PasswordInput` declares its own prop list. Fixed by declaring `formatNumber` on `PasswordInputProps` with its own JSDoc; the value is passed straight through to `Input`, which writes the counter. No component code changed.
+
+- **Finalized status unchanged:** a type declaration and docs only, purely additive. Scoped pass: JSDoc, 2 unit tests (the counter follows the formatter as you type; a real Arabic locale, and no React "unknown prop" warning), a Properties row and default, and a code example. Mutation-checked: dropping the prop before it reaches `Input` fails both tests.

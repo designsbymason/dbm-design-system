@@ -27,6 +27,7 @@ export const propOrder = [
   "autoComplete",
   "maxLength",
   "showCount",
+  "formatNumber",
   "minLength",
   "pattern",
   "inputMode",
@@ -72,6 +73,7 @@ import { Input } from "@dbm-design-system/components";
 <PlaygroundControls
   of={InputStories.Playground}
   exclude={[
+    "formatNumber",
     "prefix",
     "suffix",
     "value",
@@ -120,6 +122,13 @@ import { Input } from "@dbm-design-system/components";
 ### With character count
 
 <Canvas of={InputStories.CharacterCount} />
+
+### Character count in your locale
+
+`formatNumber` writes the counter's numbers — the current length and `maxLength` — the way a language or region does,
+usually through the browser's own `Intl.NumberFormat`. The native `maxLength` limit and the value are unaffected.
+
+<Canvas of={InputStories.CharacterCountLocale} />
 
 ### Error state
 
@@ -209,6 +218,7 @@ import { Input } from "@dbm-design-system/components";
 <Input size="sm" placeholder="Compact" />
 <Input type="email" name="email" required spellCheck={false} />
 <Input maxLength={140} showCount />
+<Input maxLength={140} showCount formatNumber={new Intl.NumberFormat("ar-EG").format} />
 ```
 
 ## Design tokens used

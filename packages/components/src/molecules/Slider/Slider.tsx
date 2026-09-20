@@ -76,6 +76,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
       showValue = false,
       showValueTooltip = false,
       showMinMaxLabels = false,
+      formatNumber,
       showTicks = false,
       tickInterval = step,
       disabled,
@@ -180,7 +181,9 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
     // would see "2" in the permanent label but "Medium" in the tooltip —
     // inconsistent with each other and with what's announced to assistive
     // tech, which always gets `ariaValueText` when set.
-    const displayValue = ariaValueText || currentValue;
+    // With no `formatNumber` the number is written exactly as before (`String`); `aria-valuetext` still wins.
+    const format = formatNumber ?? String;
+    const displayValue = ariaValueText || format(currentValue);
 
     let thumb = (
       <SliderPrimitive.Thumb
@@ -192,7 +195,9 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
-        aria-valuetext={ariaValueText}
+        // Announce what is shown: the consumer's own text, else the formatted number, but only when a formatter
+        // was given — without one the plain number is announced, as before.
+        aria-valuetext={ariaValueText ?? (formatNumber ? format(currentValue) : undefined)}
         {...(showValueTooltip
           ? {
               onPointerEnter: () => setIsThumbHovering(true),
@@ -320,14 +325,14 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
               color="tertiary"
               className={cx(styles.minMaxLabel, styles.minMaxLabelTop)}
             >
-              {max}
+              {format(max)}
             </Text>
             <Text
               size="xs"
               color="tertiary"
               className={cx(styles.minMaxLabel, styles.minMaxLabelBottom)}
             >
-              {min}
+              {format(min)}
             </Text>
           </span>
         );
@@ -377,10 +382,10 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
           </Text>
           <span className={cx(styles.minMaxRow, styles.combinedMinMaxRow)}>
             <Text size="xs" color="tertiary" className={styles.minMaxLabel}>
-              {min}
+              {format(min)}
             </Text>
             <Text size="xs" color="tertiary" className={styles.minMaxLabel}>
-              {max}
+              {format(max)}
             </Text>
           </span>
         </span>
@@ -400,10 +405,10 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
           {control}
           <span className={styles.minMaxRow}>
             <Text size="xs" color="tertiary" className={styles.minMaxLabel}>
-              {min}
+              {format(min)}
             </Text>
             <Text size="xs" color="tertiary" className={styles.minMaxLabel}>
-              {max}
+              {format(max)}
             </Text>
           </span>
         </span>

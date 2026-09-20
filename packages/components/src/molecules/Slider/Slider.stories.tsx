@@ -1,6 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { Text } from "../../atoms/Text";
 import { Slider } from "./Slider";
 import { sliderPlaygroundSnippet, sliderSnippets } from "./Slider.snippets";
 
@@ -62,6 +63,12 @@ const meta: Meta<typeof Slider> = {
     showMinMaxLabels: {
       control: "boolean",
       description: "Shows min and max as text labels at each end of the track.",
+    },
+    formatNumber: {
+      control: false,
+      description:
+        "How a number is written where the slider shows one — the current value (showValue, showValueTooltip) and the min and max labels (showMinMaxLabels) — for a language or region whose numerals or digit grouping differ from the plain 5 and 1234, or to add a unit (50%, $50): given a number, returns the text to show. It also becomes what assistive tech announces (aria-valuetext) unless you pass an aria-valuetext of your own, which wins everywhere, so what is shown and what is announced always agree. For example new Intl.NumberFormat(\"ar-EG\").format shows ٥٠. onValueChange, onValueCommit and the form value still get the plain number.",
+      table: { defaultValue: { summary: "(value) => String(value)" } },
     },
     showTicks: {
       control: "boolean",
@@ -276,6 +283,54 @@ export const WithMinMaxLabels: Story = {
   },
   args: { showMinMaxLabels: true },
   argTypes: { showMinMaxLabels: { control: false } },
+};
+
+export const LocalisedNumbers: Story = {
+  name: "Numbers in your own locale",
+  parameters: { docs: { source: { code: sliderSnippets.locale } } },
+  // Three fixed examples — a locale's numerals, a unit, and a locale's decimal separator — so the value, range,
+  // label, `formatNumber` and the display props are pinned per instance rather than controllable. `size`,
+  // `disabled`, `hasError` and the rest stay live and shared via `{...args}`.
+  argTypes: {
+    formatNumber: { control: false },
+    showValue: { control: false },
+    showValueTooltip: { control: false },
+    showMinMaxLabels: { control: false },
+    defaultValue: { control: false },
+    min: { control: false },
+    max: { control: false },
+    step: { control: false },
+    orientation: { control: false },
+    "aria-label": { control: false },
+    "aria-valuetext": { control: false },
+  },
+  render: (args) => {
+    const arabic = new Intl.NumberFormat("ar-EG");
+    const german = new Intl.NumberFormat("de-DE");
+    const shared = { ...args, orientation: "horizontal" as const, showValue: true, showMinMaxLabels: true, showValueTooltip: false, "aria-valuetext": undefined };
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", maxWidth: "16rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+          <Text size="sm" weight="semibold">
+            Arabic-Indic digits (ar-EG)
+          </Text>
+          <Slider {...shared} aria-label="Volume, Arabic digits" defaultValue={50} min={0} max={100} step={1} formatNumber={arabic.format} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+          <Text size="sm" weight="semibold">
+            A unit
+          </Text>
+          <Slider {...shared} aria-label="Opacity, as a percentage" defaultValue={60} min={0} max={100} step={5} formatNumber={(value) => `${value}%`} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+          <Text size="sm" weight="semibold">
+            Decimal separator (de-DE)
+          </Text>
+          <Slider {...shared} aria-label="Ratio, German decimals" defaultValue={0.5} min={0} max={1} step={0.1} formatNumber={german.format} />
+        </div>
+      </div>
+    );
+  },
 };
 
 export const WithTicks: Story = {

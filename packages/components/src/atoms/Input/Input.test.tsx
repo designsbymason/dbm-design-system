@@ -277,6 +277,53 @@ describe("Input", () => {
       rerender(<Controlled value="" />);
       expect(screen.getByText("0/10")).toBeInTheDocument();
     });
+
+    describe("formatNumber", () => {
+      const tagged = (n: number) => `<${n}>`;
+      const arabic = new Intl.NumberFormat("ar-EG").format;
+
+      it("writes the counter's current length and its limit with it, and keeps both current as you type", async () => {
+        const user = userEvent.setup();
+        render(<Input placeholder="Field" maxLength={10} showCount formatNumber={tagged} />);
+        expect(screen.getByText("<0>/<10>")).toBeInTheDocument();
+        await user.type(screen.getByPlaceholderText("Field"), "hello");
+        expect(screen.getByText("<5>/<10>")).toBeInTheDocument();
+      });
+
+      it("writes a real locale's numerals", () => {
+        render(<Input placeholder="Field" maxLength={10} showCount defaultValue="abc" formatNumber={arabic} />);
+        expect(arabic(3)).not.toBe("3");
+        expect(screen.getByText(`${arabic(3)}/${arabic(10)}`)).toBeInTheDocument();
+      });
+
+      it("follows an externally-driven controlled value too", () => {
+        const { rerender } = render(<Input placeholder="Field" maxLength={10} showCount value="hi" onChange={() => {}} formatNumber={tagged} />);
+        expect(screen.getByText("<2>/<10>")).toBeInTheDocument();
+        rerender(<Input placeholder="Field" maxLength={10} showCount value="hello" onChange={() => {}} formatNumber={tagged} />);
+        expect(screen.getByText("<5>/<10>")).toBeInTheDocument();
+      });
+
+      it("leaves the plain number where it isn't display: the native limit, and the value", () => {
+        render(<Input placeholder="Field" maxLength={10} showCount defaultValue="abc" formatNumber={arabic} />);
+        const field = screen.getByPlaceholderText("Field");
+        expect(field).toHaveAttribute("maxlength", "10");
+        expect(field).toHaveValue("abc");
+      });
+
+      it("is never called when there is no counter, and is not passed on to the DOM element (React would warn)", () => {
+        const error = vi.spyOn(console, "error").mockImplementation(() => {});
+        const spy = vi.fn((n: number) => String(n));
+        render(<Input placeholder="Field" maxLength={10} formatNumber={spy} />);
+        expect(spy).not.toHaveBeenCalled();
+        expect(error).not.toHaveBeenCalled();
+        error.mockRestore();
+      });
+
+      it("has no accessibility violations with a locale's numerals", async () => {
+        const { container } = render(<Input aria-label="Field" maxLength={10} showCount defaultValue="abc" formatNumber={arabic} />);
+        expect((await axe(container)).violations).toHaveLength(0);
+      });
+    });
   });
 
   it("has no accessibility violations, plain, with an error, or with a clear button", async () => {

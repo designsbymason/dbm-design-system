@@ -27,6 +27,7 @@ export const propOrder = [
   "autoComplete",
   "maxLength",
   "showCount",
+  "formatNumber",
   "minLength",
   "name",
   "form",
@@ -68,6 +69,7 @@ import { Textarea } from "@dbm-design-system/components";
 <PlaygroundControls
   of={TextareaStories.Playground}
   exclude={[
+    "formatNumber",
     "minRows",
     "maxRows",
     "value",
@@ -115,6 +117,13 @@ import { Textarea } from "@dbm-design-system/components";
 ### With character count
 
 <Canvas of={TextareaStories.CharacterCount} />
+
+### Character count in your locale
+
+`formatNumber` writes the counter's numbers — the current length and `maxLength` — the way a language or region does,
+usually through the browser's own `Intl.NumberFormat`. The native `maxLength` limit and the value are unaffected.
+
+<Canvas of={TextareaStories.CharacterCountLocale} />
 
 ### Error state
 
@@ -202,6 +211,7 @@ import { Textarea } from "@dbm-design-system/components";
 <Textarea autoResize minRows={3} maxRows={8} />
 <Textarea value={value} onChange={(e) => setValue(e.target.value)} onClear={() => setValue('')} />
 <Textarea maxLength={280} showCount />
+<Textarea maxLength={280} showCount formatNumber={new Intl.NumberFormat("ar-EG").format} />
 <Textarea hasError defaultValue="" />
 <Textarea disabled defaultValue="Can't edit this" />
 <Textarea name="bio" required spellCheck={false} />

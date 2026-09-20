@@ -24,6 +24,7 @@ export const propOrder = [
   "showValue",
   "showValueTooltip",
   "showMinMaxLabels",
+  "formatNumber",
   "showTicks",
   "tickInterval",
   "disabled",
@@ -69,6 +70,7 @@ import { Slider } from "@dbm-design-system/components";
   of={SliderStories.Playground}
   exclude={[
     "value",
+    "formatNumber",
     "onValueChange",
     "onValueCommit",
     "autoFocus",
@@ -111,6 +113,14 @@ import { Slider } from "@dbm-design-system/components";
 ### With min/max labels
 
 <Canvas of={SliderStories.WithMinMaxLabels} />
+
+### Numbers in your own locale
+
+`formatNumber` writes each number the slider shows — the value, and the min and max labels — the way a language
+or region does (Arabic-Indic digits, a decimal comma), or with a unit (`50%`). It also becomes what assistive tech
+announces, unless you pass an `aria-valuetext` of your own, which wins everywhere.
+
+<Canvas of={SliderStories.LocalisedNumbers} />
 
 ### With tick marks
 
@@ -216,6 +226,10 @@ import { Slider } from "@dbm-design-system/components";
   purely visual — ticks are `aria-hidden`, and none of the three change what's announced to
   assistive tech, which already gets the real state via `aria-valuenow`/`aria-valuemin`/
   `aria-valuemax`/`aria-valuetext` regardless of what's visible on screen.
+- With `formatNumber`, `aria-valuetext` becomes the formatted number (`٥٠`, `50%`), so what a sighted user reads
+  and what a screen reader announces agree; `aria-valuenow` stays the plain number. An `aria-valuetext` you pass
+  yourself takes precedence over the formatter in the value label, the tooltip and the announcement, and the min and
+  max labels still use the formatter.
 - `showValueTooltip` opens on hover, drag, or keyboard focus — covering both pointer and
   keyboard-only interaction, not just mouse hover.
 
@@ -233,6 +247,8 @@ import { Slider } from "@dbm-design-system/components";
 <Slider aria-label="Volume" showValueTooltip />
 <Slider aria-label="Volume" showMinMaxLabels />
 <Slider aria-label="Zoom" min={0} max={200} step={10} showTicks tickInterval={50} />
+<Slider aria-label="Volume" showValue showMinMaxLabels formatNumber={new Intl.NumberFormat("ar-EG").format} />
+<Slider aria-label="Opacity" step={5} showValue formatNumber={(value) => `${value}%`} />
 
 {/* Composed inside a FormField for the label/helper-text wiring — see that
     component's own Docs page for the full pattern. */}

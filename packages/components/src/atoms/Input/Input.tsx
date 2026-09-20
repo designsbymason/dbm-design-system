@@ -85,6 +85,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       defaultValue,
       maxLength,
       showCount = false,
+      formatNumber = String,
       ...props
     },
     ref,
@@ -170,7 +171,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {suffix && <span className={styles.affix}>{suffix}</span>}
         {showCountText && (
           <span className={styles.count}>
-            {liveLength}/{maxLength}
+            {formatNumber(liveLength)}/{formatNumber(maxLength)}
           </span>
         )}
         {/* Disabled/read-only natively (found 2026-09-14, during SearchInput's

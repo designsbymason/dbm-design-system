@@ -128,6 +128,12 @@ const meta: Meta<typeof Textarea> = {
       description:
         "Shows a live current/max character count below the textarea. Only renders when maxLength is also set.",
     },
+    formatNumber: {
+      control: false,
+      description:
+        "How the numbers in the showCount counter are written — both the current length and maxLength — for a language or region whose numerals or digit grouping differ from the plain 5 and 1234: given a number, returns the text to show. For example new Intl.NumberFormat(\"ar-EG\").format shows ٥/١٠. Only used while the counter is shown (showCount with maxLength); the native maxLength limit and the value itself are unaffected.",
+      table: { defaultValue: { summary: "(count) => String(count)" } },
+    },
     minLength: {
       control: false,
       description: "Minimum number of characters required for HTML5 form validation.",
@@ -404,6 +410,26 @@ export const CharacterCount: Story = {
       </div>
     );
   },
+};
+
+export const CharacterCountLocale: Story = {
+  name: "Character count in your locale",
+  parameters: { docs: { source: { code: textareaSnippets.characterCountLocale } } },
+  // `formatNumber` writes the counter's numbers the way a language or region does — here Arabic-Indic digits, in a
+  // right-to-left container. Uncontrolled, so typing updates the count. `maxLength`/`showCount`/`formatNumber` and the
+  // starting text are pinned; `size`/`hasError`/`disabled` stay live via `{...args}`.
+  argTypes: {
+    maxLength: { control: false },
+    showCount: { control: false },
+    formatNumber: { control: false },
+    placeholder: { control: false },
+    defaultValue: { control: false },
+  },
+  render: (args) => (
+    <div dir="rtl" style={{ maxWidth: "24rem" }}>
+      <Textarea {...args} defaultValue="مرحبا" maxLength={140} showCount formatNumber={new Intl.NumberFormat("ar-EG").format} aria-label="Bio" />
+    </div>
+  ),
 };
 
 export const ErrorState: Story = {

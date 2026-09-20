@@ -65,6 +65,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       minRows,
       maxRows,
       showCount = false,
+      formatNumber = String,
       className,
       style,
       disabled,
@@ -253,7 +254,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         />
         {showCountText && (
           <span className={styles.count}>
-            {liveLength}/{maxLength}
+            {formatNumber(liveLength)}/{formatNumber(maxLength)}
           </span>
         )}
         {showClear && (

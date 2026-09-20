@@ -110,6 +110,19 @@ export interface SliderProps
    */
   showMinMaxLabels?: boolean;
   /**
+   * How a number is written where the slider shows one — the current value (`showValue` and
+   * `showValueTooltip`) and the `min` and `max` labels (`showMinMaxLabels`) — for a language or region
+   * whose numerals or digit grouping differ from the plain `5` and `1234`, or to add a unit
+   * (`50%`, `$50`): given a number, returns the text to show. It also becomes what assistive tech
+   * announces (`aria-valuetext`) unless you pass an `aria-valuetext` of your own, which wins everywhere
+   * — in the value label and tooltip too — so what is shown and what is announced always agree. For
+   * example, `new Intl.NumberFormat("ar-EG").format` shows `٥٠`. `onValueChange` and `onValueCommit`
+   * still receive the plain number, and the hidden form input's value is unaffected. Tick marks are
+   * decorative and show no number.
+   * @default (value) => String(value)
+   */
+  formatNumber?: (value: number) => string;
+  /**
    * Shows a small tick mark at every `tickInterval` between `min` and
    * `max` (inclusive of both ends) — purely decorative and hidden from
    * assistive tech, since the same information is already exposed via

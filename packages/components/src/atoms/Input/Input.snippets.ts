@@ -47,6 +47,16 @@ export const inputSnippets = {
   placeholder="Tell us about yourself"
 />`,
 
+  characterCountLocale: `{/* formatNumber writes the counter's numbers the way a language or region does — here Arabic-Indic digits.
+    The native maxLength limit and the value itself are unaffected. */}
+<Input
+  aria-label="Bio"
+  defaultValue="مرحبا"
+  maxLength={140}
+  showCount
+  formatNumber={new Intl.NumberFormat("ar-EG").format}
+/>`,
+
   narrowViewport: `{/* An Input fills the width of its container, so on a narrow screen it simply gets narrower */}
 <Input aria-label="Full width" placeholder="Full width on narrow screens" />`,
 } as const;
