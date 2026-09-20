@@ -97,13 +97,25 @@ they are mine, made where the request left the API open, and listed so they can 
 Docs page follows the §4 template (ten sections, hidden Intro heading; the TOC lists exactly the template's sections, and every Properties row has a
 description — checked in the DOM). Fifteen visible stories — Playground, All sizes, All variants, Where you are in the pages, Siblings and boundaries, First and last,
 Jump to a page, As links, Announcing a page change, Disabled, Alignment, Compact, Collapses to fit its container, On a phone, and the table-footer
-composition. **Twelve have `play` functions** (eight from the first build, plus variants, jump, announcing, and the container collapse — the last two
-asserting against real layout): sizes (every control is a
+composition. **Six of them have `play` functions that only measure** (so the demo never changes) and six more interaction tests live in **hidden twins** (see
+the next paragraph). The measuring plays and the twins together are twelve; the last two twins assert against real layout: sizes (every control is a
 square and each step larger), where-you-are (the row shape at seven positions, always seven slots), links (real anchors, `aria-current`, the click
 reported), disabled (all `aria-disabled`, still focusable, a click changes nothing), alignment (flush start, centred, flush end), compact (the
 summary shows, the numbers leave the accessibility tree, next still works), on-a-phone (see above), and the table footer (page 2, the last page,
 next dimmed). The Playground is genuinely controlled through `useArgs`: choosing a page in the canvas writes it back to the `value` control, the
 window, and the snippet — confirmed live (5 → 6, `1 … 5 6 7 … 20`, `useState(6)`).
+
+**Interaction tests are in hidden twins, not in the visible stories (2026-09-20, after the user reported the selected page "changing a couple of times
+before settling" in several stories).** It was Storybook running the stories' `play` functions — a script that clicked and typed on load, so "Jump to a page"
+went 42 → 250 → 500 → 1 in about 110ms and ended on a page it hadn't started on — not the component: sampled every 10ms from the first frame with no `play`
+attached (a throwaway story, since deleted), the component showed exactly one state, including in `compact="container"`. The six stories whose play changed
+what they showed (Jump, As links, Announcing, Compact, Collapses to fit its container, the table footer) are now play-free, and each has a twin —
+`XInteraction`, `...X` with `tags: ["!dev"]` — that carries the same assertions verbatim: hidden from the sidebar and Docs, still run as a test (the story
+project is now 21 stories for this component, from 15). Re-sampled after the change, all six visible stories show one state, the one they start in. The
+container-collapse boxes now have `resize: horizontal`, so a person can drag one and watch the row switch instead of being shown a script doing it.
+The rule is recorded in `07-storybook-and-documentation-standards.md` §5. (Verifying a live resize in the development pane wasn't possible — the pane reports
+`visibilityState: "hidden"`, where even an unrelated `ResizeObserver` never fires — so the resize behaviour rests on the headless-Chromium test, which
+resizes the boxes both ways and waits for the collapse to follow.)
 
 **"Show code":** every visible story sets `parameters.docs.source.code` to a hand-written snippet from `Pagination.snippets.ts`; the Playground
 builds its own from the live controls, naming the controlled state in a comment. Checked three ways: the guard test, a throwaway typecheck of every

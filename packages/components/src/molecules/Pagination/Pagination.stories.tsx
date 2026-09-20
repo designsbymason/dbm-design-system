@@ -375,6 +375,15 @@ export const Links: Story = {
       />
     </div>
   ),
+};
+
+// Runs Links's assertions in a real browser without making the visible story animate: Storybook plays a story's
+// `play` function whenever it is opened, so a play that changes what the story shows would leave the demo on a
+// different state from the one it starts in. Hidden from the sidebar and Docs (`!dev`), still run as a test.
+export const LinksInteraction: Story = {
+  ...Links,
+  name: "As links — interaction test",
+  tags: ["!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     onLinkChange.mockClear();
@@ -491,6 +500,15 @@ export const Jump: Story = {
       <Pagination pageCount={500} defaultValue={42} showJump aria-label="A long list" />
     </div>
   ),
+};
+
+// Runs Jump's assertions in a real browser without making the visible story animate: Storybook plays a story's
+// `play` function whenever it is opened, so a play that changes what the story shows would leave the demo on a
+// different state from the one it starts in. Hidden from the sidebar and Docs (`!dev`), still run as a test.
+export const JumpInteraction: Story = {
+  ...Jump,
+  name: "Jump to a page — interaction test",
+  tags: ["!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const field = canvas.getByLabelText("Go to page");
@@ -529,7 +547,9 @@ export const FitContainer: Story = {
             {label}
           </Text>
           <div
-            style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", maxWidth: "100%", width }}
+            // `resize: horizontal` gives each box a drag handle in its bottom-right corner, so the collapse can be
+            // watched by resizing (it needs an `overflow` other than `visible`).
+            style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", maxWidth: "100%", minWidth: "10rem", overflow: "hidden", resize: "horizontal", width }}
             data-testid={`box-${width}`}
           >
             <Pagination pageCount={20} defaultValue={7} compact="container" align="start" aria-label={`In a ${label} box`} />
@@ -538,6 +558,15 @@ export const FitContainer: Story = {
       ))}
     </div>
   ),
+};
+
+// Runs FitContainer's assertions in a real browser without making the visible story animate: Storybook plays a story's
+// `play` function whenever it is opened, so a play that changes what the story shows would leave the demo on a
+// different state from the one it starts in. Hidden from the sidebar and Docs (`!dev`), still run as a test.
+export const FitContainerInteraction: Story = {
+  ...FitContainer,
+  name: "Collapses to fit its container — interaction test",
+  tags: ["!dev"],
   play: async ({ canvasElement }) => {
     const box = (width: string) => within(canvasElement.querySelector<HTMLElement>(`[data-testid=box-${width}]`)!);
     // The screen is wide, so `auto` would show the numbers everywhere; only the narrow box collapses.
@@ -601,6 +630,15 @@ export const Announcing: Story = {
       <AnnouncementDemo />
     </div>
   ),
+};
+
+// Runs Announcing's assertions in a real browser without making the visible story animate: Storybook plays a story's
+// `play` function whenever it is opened, so a play that changes what the story shows would leave the demo on a
+// different state from the one it starts in. Hidden from the sidebar and Docs (`!dev`), still run as a test.
+export const AnnouncingInteraction: Story = {
+  ...Announcing,
+  name: "Announcing a page change — interaction test",
+  tags: ["!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The status region is in the page from the start, and empty.
@@ -625,6 +663,15 @@ export const Compact: Story = {
       <Pagination pageCount={20} defaultValue={7} compact="always" aria-label="Compact" />
     </div>
   ),
+};
+
+// Runs Compact's assertions in a real browser without making the visible story animate: Storybook plays a story's
+// `play` function whenever it is opened, so a play that changes what the story shows would leave the demo on a
+// different state from the one it starts in. Hidden from the sidebar and Docs (`!dev`), still run as a test.
+export const CompactInteraction: Story = {
+  ...Compact,
+  name: "Compact — interaction test",
+  tags: ["!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The summary shows, and the page numbers are out of the accessibility tree and the tab order.
@@ -765,6 +812,15 @@ export const InATableFooter: Story = {
       <TableFooter />
     </div>
   ),
+};
+
+// Runs InATableFooter's assertions in a real browser without making the visible story animate: Storybook plays a story's
+// `play` function whenever it is opened, so a play that changes what the story shows would leave the demo on a
+// different state from the one it starts in. Hidden from the sidebar and Docs (`!dev`), still run as a test.
+export const InATableFooterInteraction: Story = {
+  ...InATableFooter,
+  name: "Composition — a table footer with a page size — interaction test",
+  tags: ["!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByTestId("range")).toHaveTextContent("Showing 1–5 of 47");
