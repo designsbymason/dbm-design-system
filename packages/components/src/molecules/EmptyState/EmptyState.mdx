@@ -26,9 +26,10 @@ export const rootPropOrder = [
   "style",
   "data-testid",
 ];
-// The Playground also has a Storybook-only `actions` control (a demo
-// `EmptyState.Actions` row, not an `EmptyState` prop), which sits last.
-export const playgroundPropOrder = ["variant", "tone", "size", "align", "announce", "actions"];
+// The Playground also has two Storybook-only controls, which sit last: `actions` (a
+// demo `EmptyState.Actions` row) and `stackOnMobile` (a prop of that part, not of
+// `EmptyState`).
+export const playgroundPropOrder = ["variant", "tone", "size", "align", "announce", "actions", "stackOnMobile"];
 export const iconPropOrder = ["icon", "label", "id", "className", "style", "data-testid"];
 export const titlePropOrder = ["children", "level", "id", "className", "style", "data-testid"];
 export const sectionPropOrder = ["children", "id", "className", "style", "data-testid"];

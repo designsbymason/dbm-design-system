@@ -121,8 +121,10 @@ scaled to its size step's cap with its proportions kept, nothing overflows), **S
 with the message, the icon stays out of the accessibility tree, the title is a level-3 heading), and **On a phone** (see the
 follow-up below). Every fixed-render story suppresses the controls it doesn't consume via a shared `noControls` map. Props read
 variant → tone → size → align → announce → role → aria-* → id → className → style → data-testid, matching Controls, Playground, and
-the Properties table. The Playground has a Storybook-only `actions` control (a demo `EmptyState.Actions` row), kept out of the
-Properties table the same way `Card`'s `media` is.
+the Properties table. The Playground has two Storybook-only controls, kept out of the root Properties table the same way `Card`'s `media` is: `actions`
+(a demo `EmptyState.Actions` row) and `stackOnMobile` (a prop of that part, added after a review question — without it the prop had
+no live control anywhere visible; it only shows below 640px, so its description says to pick a phone size in the toolbar, and the
+Playground's snippet writes it on the `Actions` line).
 
 **"Show code"** — every visible story sets `parameters.docs.source.code` to a hand-written snippet from
 `EmptyState.snippets.ts`, and the Playground builds its snippet from the live controls (only what differs from the defaults,

@@ -35,6 +35,7 @@ interface PlaygroundArgs {
   size: EmptyStateSize;
   align: EmptyStateAlign;
   actions: boolean;
+  stackOnMobile: boolean;
   announce: boolean;
   role: string;
   "aria-label": string;
@@ -80,6 +81,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   size: { control: false },
   align: { control: false },
   actions: { control: false },
+  stackOnMobile: { control: false },
   announce: { control: false },
   role: { control: false },
   "aria-label": { control: false },
@@ -127,6 +129,12 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description:
         "Storybook only — not an EmptyState prop. Shows a demo EmptyState.Actions row (a primary and a secondary button).",
+      table: { disable: true },
+    },
+    stackOnMobile: {
+      control: "boolean",
+      description:
+        "Storybook only — not an EmptyState prop: it belongs to EmptyState.Actions (see its Properties table), and applies to the demo's actions. Below the sm breakpoint (640px) it stacks them in a full-width column, so it only shows on a phone — pick a phone size in the viewport toolbar, or open the story on its own and narrow the window. Ignored while the actions control is off.",
       table: { disable: true },
     },
     announce: {
@@ -178,6 +186,7 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     align: "center",
     actions: true,
+    stackOnMobile: false,
     announce: false,
   },
   render: (args) => (
@@ -187,7 +196,7 @@ const meta: Meta<PlaygroundArgs> = {
         <EmptyState.Title>No invoices yet</EmptyState.Title>
         <EmptyState.Description>Invoices you create will show up here.</EmptyState.Description>
         {args.actions && (
-          <EmptyState.Actions>
+          <EmptyState.Actions stackOnMobile={args.stackOnMobile}>
             <Button size={args.size === "xs" ? "xs" : "sm"}>Create invoice</Button>
             <Button size={args.size === "xs" ? "xs" : "sm"} variant="tertiary">
               Import

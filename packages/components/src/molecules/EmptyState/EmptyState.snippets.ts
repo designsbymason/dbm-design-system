@@ -22,7 +22,7 @@ const invoiceParts = `${invoiceText}
   </EmptyState.Actions>`;
 
 // The Playground's demo shows a primary and a quieter secondary action.
-const playgroundActions = `  <EmptyState.Actions>
+const playgroundActions = (stackOnMobile: boolean) => `  <EmptyState.Actions${stackOnMobile ? " stackOnMobile" : ""}>
     <Button>Create invoice</Button>
     <Button variant="tertiary">Import</Button>
   </EmptyState.Actions>`;
@@ -147,6 +147,8 @@ export interface EmptyStatePlaygroundSnippetArgs {
   announce?: boolean;
   /** Storybook only — whether the demo shows an `EmptyState.Actions` row. */
   actions?: boolean;
+  /** Storybook only — `stackOnMobile` on the demo's `EmptyState.Actions` (a prop of that part, not the root). */
+  stackOnMobile?: boolean;
 }
 
 /**
@@ -162,6 +164,6 @@ export function emptyStatePlaygroundSnippet(args: EmptyStatePlaygroundSnippetArg
   if (args.align && args.align !== "center") attributes.push(`align="${args.align}"`);
   if (args.announce) attributes.push("announce");
 
-  const parts = args.actions === false ? invoiceText : `${invoiceText}\n${playgroundActions}`;
+  const parts = args.actions === false ? invoiceText : `${invoiceText}\n${playgroundActions(args.stackOnMobile === true)}`;
   return `${iconNote}\n${emptyState(attributes.join(" "), parts)}`;
 }

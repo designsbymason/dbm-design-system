@@ -231,6 +231,7 @@ describe("Playground snippets, built from the live controls", () => {
     { variant: "filled", actions: false },
     { size: "xs", tone: "success", actions: true },
     { announce: true, variant: "dashed" },
+    { stackOnMobile: true },
   ] as const;
 
   it.each(emptyStateArgs)("EmptyState %j is a real snippet", (args) => {
@@ -252,6 +253,13 @@ describe("Playground snippets, built from the live controls", () => {
     expect(emptyStatePlaygroundSnippet({ variant: "dashed", announce: true })).toContain(
       '<EmptyState variant="dashed" announce>',
     );
+  });
+
+  it("EmptyState writes stackOnMobile on the actions row, and only with the actions shown", () => {
+    expect(emptyStatePlaygroundSnippet({ stackOnMobile: true })).toContain("<EmptyState.Actions stackOnMobile>");
+    expect(emptyStatePlaygroundSnippet({ stackOnMobile: false })).toContain("<EmptyState.Actions>");
+    expect(emptyStatePlaygroundSnippet({ stackOnMobile: true, actions: false })).not.toContain("stackOnMobile");
+    expect(emptyStatePlaygroundSnippet({ stackOnMobile: true })).not.toMatch(/<EmptyState[^.]*stackOnMobile/);
   });
 
   it("EmptyState leaves out the actions row when the demo-actions control is off", () => {
