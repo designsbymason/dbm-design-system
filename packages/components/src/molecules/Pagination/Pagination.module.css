@@ -1,0 +1,153 @@
+/* The row of controls. Every value is a token. The controls themselves are `Button`s;
+   this file only sizes them into squares, lays the row out, and decides what shows on
+   a phone.
+
+   `--pagination-item` is the width and height of every control — `IconButton`'s size
+   tokens, which are already matched to `Button`'s real height at each size step, so a
+   control is an exact square. `--pagination-font` is the number's and the summary's
+   font size, the same step `Button` uses. */
+.root {
+  --pagination-item: var(--dbm-icon-button-size-md);
+  --pagination-font: var(--dbm-font-size-base);
+  --pagination-justify: center;
+
+  box-sizing: border-box;
+  display: flex;
+  font-family: var(--dbm-font-family-primary);
+  justify-content: var(--pagination-justify);
+  min-inline-size: 0;
+}
+
+.alignStart {
+  --pagination-justify: flex-start;
+}
+
+.alignEnd {
+  --pagination-justify: flex-end;
+}
+
+.sizeXs {
+  --pagination-item: var(--dbm-icon-button-size-xs);
+  --pagination-font: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  --pagination-item: var(--dbm-icon-button-size-sm);
+  --pagination-font: var(--dbm-font-size-sm);
+}
+
+.sizeMd {
+  --pagination-item: var(--dbm-icon-button-size-md);
+  --pagination-font: var(--dbm-font-size-base);
+}
+
+.sizeLg {
+  --pagination-item: var(--dbm-icon-button-size-lg);
+  --pagination-font: var(--dbm-font-size-md);
+}
+
+.sizeXl {
+  --pagination-item: var(--dbm-icon-button-size-xl);
+  --pagination-font: var(--dbm-font-size-lg);
+}
+
+/* Wraps rather than overflows, if there's ever too little room. */
+.list {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-1);
+  justify-content: inherit;
+  list-style: none;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+/* Two classes (`.list .item`), so the square sizing beats `Button`'s own size padding
+   whatever order the stylesheets load in. An explicit block size, not padding-derived, so
+   every control is the same height however wide its number is; the inline size grows only
+   for a number too wide for a square (`1,000`). */
+.list .item {
+  block-size: var(--pagination-item);
+  font-size: var(--pagination-font);
+  font-variant-numeric: tabular-nums;
+  min-inline-size: var(--pagination-item);
+  padding-block: 0;
+  padding-inline: var(--dbm-space-2);
+}
+
+/* A previous, next, first, or last button holds only an icon. */
+.list .navItem {
+  padding-inline: 0;
+  inline-size: var(--pagination-item);
+}
+
+/* The arrows point along the reading direction, so they flip under right-to-left text.
+   `:dir(rtl)` (not a `[dir]` attribute selector) so it follows the real, inherited
+   direction of the element. */
+.flip:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+/* The gap standing in for left-out pages. Decorative (`aria-hidden`). */
+.ellipsis {
+  align-items: center;
+  block-size: var(--pagination-item);
+  color: var(--dbm-text-secondary);
+  display: flex;
+  font-size: var(--pagination-font);
+  justify-content: center;
+  min-inline-size: var(--pagination-item);
+  user-select: none;
+}
+
+.pageItem {
+  display: flex;
+}
+
+/* The compact "Page 3 of 20". Hidden unless the row is collapsed. Its side padding is small
+   on purpose: with the first and last buttons too, the whole row has to fit the narrowest
+   phone (320px, less a normal 16px gutter) on one line. */
+.summary {
+  align-items: center;
+  block-size: var(--pagination-item);
+  display: none;
+  padding-inline: var(--dbm-space-1);
+  white-space: nowrap;
+}
+
+/* --- Compact. `always` collapses the row at every width; `auto` only below the `sm`
+   breakpoint (mobile-first: collapsed, then expanded from `sm` up). `never` has no class
+   and leaves the numbers showing. The hidden numbers are `display: none`, so they leave
+   the tab order and the accessibility tree along with the screen. --- */
+
+.compactAlways .pageItem,
+.compactAlways .ellipsis,
+.compactAuto .pageItem,
+.compactAuto .ellipsis {
+  display: none;
+}
+
+.compactAlways .summary,
+.compactAuto .summary {
+  display: flex;
+}
+
+/* The threshold is the literal value of the breakpoint.sm primitive token — custom
+   properties can't be used in an @media condition (the same limitation `Card`,
+   `EmptyState`, `Stack`, and `Grid` note), so if that token changes this must be updated
+   by hand. */
+@media (min-width: 640px) {
+  .compactAuto .pageItem {
+    display: flex;
+  }
+
+  .compactAuto .ellipsis {
+    display: flex;
+  }
+
+  .compactAuto .summary {
+    display: none;
+  }
+}

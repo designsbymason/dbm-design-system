@@ -57,6 +57,7 @@ export * from "./molecules/FormField";
 export * from "./molecules/Grid";
 export * from "./molecules/List";
 export * from "./molecules/NumberInput";
+export * from "./molecules/Pagination";
 export * from "./molecules/PasswordInput";
 export * from "./molecules/Popover";
 export * from "./molecules/RadioGroup";

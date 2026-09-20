@@ -56,6 +56,7 @@ import { formFieldPlaygroundSnippet } from "./molecules/FormField/FormField.snip
 import { gridPlaygroundSnippet } from "./molecules/Grid/Grid.snippets";
 import { listPlaygroundSnippet } from "./molecules/List/List.snippets";
 import { numberInputPlaygroundSnippet } from "./molecules/NumberInput/NumberInput.snippets";
+import { paginationPlaygroundSnippet } from "./molecules/Pagination/Pagination.snippets";
 import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/PasswordInput.snippets";
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
@@ -82,7 +83,9 @@ const banned: Array<[RegExp, string]> = [
   [/\bgridStyle\b|\bdemoContainerStyle\b|\ballTones\b|\ballVariants\b|\ballSizes\b|\bwideRows\b/, "a stories-file constant"],
   // A loop over a stories-file constant (`allTones.map(…)`) is caught by the constants
   // above; a `.map(` over the reader's own state is real usage and is allowed.
-  [/preventDefault|data-testid|onActivate/, "test or demo wiring"],
+  // A story cancelling its own link's navigation (`onClick={(event) => event.preventDefault()}`) is demo wiring;
+  // `event.preventDefault()` inside a real handler (handing a link to a router) is genuine usage.
+  [/onClick=\{\(event\) => event\.preventDefault\(\)\}|data-testid|onActivate/, "test or demo wiring"],
   [/guidelines\/|\.md\b|\bADR-\d/, "a reference to an internal document"],
 ];
 
@@ -172,6 +175,11 @@ describe("story snippets", () => {
       expect(problemsIn("{/* see guidelines/04-component-inventory.md */}\n<Card>x</Card>").length).toBeGreaterThan(0);
     });
 
+    it("rejects a story's own click-cancelling wiring but allows preventDefault in a real handler", () => {
+      expect(problemsIn('<a href="#x" onClick={(event) => event.preventDefault()}>x</a>').length).toBeGreaterThan(0);
+      expect(problemsIn('<Pagination pageCount={5} onValueChange={(page, event) => { event.preventDefault(); navigate(page); }} />')).toEqual([]);
+    });
+
     it("rejects a component or sub-part that doesn't exist", () => {
       expect(problemsIn("<NotAComponent />")).toEqual(["uses <NotAComponent>, which the package doesn't export"]);
       expect(problemsIn("<Card><Card.Sidebar /></Card>")).toEqual(["uses <Card.Sidebar>, which doesn't exist"]);
@@ -223,6 +231,26 @@ describe("Playground snippets, built from the live controls", () => {
     expect(cardPlaygroundSnippet({ media: true, mediaPosition: "start" })).not.toContain("mediaPosition");
     expect(cardPlaygroundSnippet({ media: true, mediaPosition: "end" })).toContain('mediaPosition="end"');
     expect(cardPlaygroundSnippet({ media: false })).not.toContain("Card.Media");
+  });
+
+  const paginationArgs = [
+    {},
+    { pageCount: 5, value: 3 },
+    { pageCount: 200, value: 100, siblingCount: 2, boundaryCount: 0, showFirstLast: true },
+    { size: "xl", compact: "always", align: "end", disabled: true },
+  ] as const;
+
+  it.each(paginationArgs)("Pagination %j is a real snippet", (args) => {
+    expect(problemsIn(paginationPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Pagination writes the controlled page, and only what differs from the defaults", () => {
+    expect(paginationPlaygroundSnippet({ pageCount: 20, value: 5 })).toBe(
+      "{/* const [page, setPage] = useState(5); */}\n<Pagination pageCount={20} value={page} onValueChange={setPage} />",
+    );
+    const snippet = paginationPlaygroundSnippet({ siblingCount: 1, boundaryCount: 1, size: "md", compact: "auto", align: "center", showFirstLast: false, disabled: false });
+    expect(snippet).not.toMatch(/siblingCount|boundaryCount|size=|compact=|align=|showFirstLast|disabled/);
+    expect(paginationPlaygroundSnippet({ siblingCount: 0, boundaryCount: 0 })).toContain("siblingCount={0} boundaryCount={0}");
   });
 
   const emptyStateArgs = [

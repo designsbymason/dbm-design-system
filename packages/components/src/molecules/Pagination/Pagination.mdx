@@ -1,0 +1,328 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Select } from "../Select";
+import { Table } from "../Table";
+import * as PaginationStories from "./Pagination.stories";
+
+export const propOrder = [
+  "pageCount",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "siblingCount",
+  "boundaryCount",
+  "showFirstLast",
+  "size",
+  "compact",
+  "align",
+  "disabled",
+  "getPageHref",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundPropOrder = [
+  "pageCount",
+  "value",
+  "siblingCount",
+  "boundaryCount",
+  "showFirstLast",
+  "size",
+  "compact",
+  "align",
+  "disabled",
+];
+
+<Meta of={PaginationStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Pagination" tier="Molecule" />
+
+Page navigation for a list, a table, or a set of search results that is split into pages: a previous and a next
+button around a row of page numbers, with a gap standing in for the pages that don't fit. Every control is a
+`Button`, laid out as a list inside a `<nav>` element (a *landmark* — a named region of the page that screen-reader
+users can jump to), and the current page is marked so it's announced as such.
+
+`pageCount` is how many pages there are, and the current page — counted from 1 — is either controlled by you
+(`value` and `onValueChange`) or tracked by the component itself (`defaultValue`). `siblingCount` and `boundaryCount`
+set how many page numbers show around the current page and at each end, and the row always keeps the same number of
+slots, so the controls don't shift sideways as you move through the pages. With `getPageHref` every control is a real
+link, so each page can have its own address. Below the `sm` breakpoint (a phone) the numbers collapse to a short "Page
+7 of 20" between the buttons.
+
+### Import
+
+```tsx
+import { Pagination } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={PaginationStories.Playground} />
+
+</div>
+<PlaygroundControls of={PaginationStories.Playground} order={playgroundPropOrder} exclude={["defaultValue", "onValueChange", "getPageHref", "labels", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the `<nav>` element. Also accepts any other native `<nav>` attribute beyond what's listed here
+(e.g. `title`, `lang`) — passed straight through to it.
+
+<PropertiesTable of={PaginationStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={PaginationStories.Sizes} />
+
+### Where you are in the pages
+
+<Canvas of={PaginationStories.Windows} />
+
+### Siblings and boundaries
+
+<Canvas of={PaginationStories.SiblingsAndBoundaries} />
+
+### First and last buttons
+
+<Canvas of={PaginationStories.FirstLast} />
+
+### As links
+
+<Canvas of={PaginationStories.Links} />
+
+### Disabled
+
+<Canvas of={PaginationStories.Disabled} />
+
+### Alignment
+
+<Canvas of={PaginationStories.Alignment} />
+
+### Compact
+
+<Canvas of={PaginationStories.Compact} />
+
+### On a phone — collapses to a summary
+
+Below the `sm` breakpoint (640px) the page numbers collapse to a "Page 7 of 20" summary between the buttons, since a
+full row doesn't fit; from `sm` up the numbers are back. Opened on its own from the sidebar this story is shown at a
+phone's width; here it sits in the wide page, so narrow the window to watch it switch.
+
+<Canvas of={PaginationStories.OnAPhone} />
+
+### Composition — a table footer with a page size
+
+<Canvas of={PaginationStories.InATableFooter} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Pagination` when a list or table is too long to show at once and the reader needs to reach a particular page,
+  or to know how far through they are. It suits results that stay put while you move between pages.
+- Compute `pageCount` from your data — `Math.ceil(totalItems / pageSize)` — and keep the current page in your own
+  state (`value` and `onValueChange`), so the rest of the page can react to it.
+- Give each pagination on a page its own `aria-label` ("Search results", "Comments"): a screen reader lists
+  landmarks by name, and two called "Pagination" can't be told apart.
+- Use `getPageHref` when each page has its own address — a server-rendered list, or a router. Links can be
+  opened in a new tab, bookmarked, and followed without JavaScript.
+- Put a range summary ("Showing 6–10 of 47") and a page-size `Select` beside it under a data table. `Pagination` does
+  the page navigation and leaves the rest to you.
+- Go back to page 1 when something that changes the number of pages changes — a new filter, a new page size.
+- Set `disabled` while the next page is loading, so a second click can't queue another request. The controls stay
+  focusable.
+- Use `align="end"` under a table, and the default centred alignment under a list of cards or results.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Pagination` for content that flows and should keep loading as you scroll, or for a handful of items that
+  fit on one screen. A single page (`pageCount={1}`) shows just "1"; usually you'll want to leave the pagination out.
+- Don't hand it a `value` and forget `onValueChange`. A controlled component that never hears the change looks
+  frozen. Use `defaultValue` if you don't need to know the page.
+- Don't give both `value` and `defaultValue`. `value` wins, and `Pagination` warns in development.
+- Don't set `compact="never"` on a phone with lots of controls: the row wraps onto more than one line. Leave it on
+  `auto`, which collapses to "Page 7 of 20" there.
+- Don't put the pagination inside the scrolling area of a long table. It should stay in view, below the table.
+- Don't load a page yourself from `onValueChange` in link mode without calling `event.preventDefault()`: the
+  browser will still follow the link as well.
+- Don't use it for a step-by-step flow (a checkout, a wizard). Those are steps in a sequence, not pages of the same
+  content.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep `siblingCount` and `boundaryCount` at their defaults (1 and 1) unless you have a reason. The row is then seven
+  slots plus the previous and next buttons — about 410px at `md` — which is why it collapses to the summary on a phone. A
+  wider window makes it wider still.
+- The row never changes width as you move, so it's safe to right-align (`align="end"`) or centre it without the
+  controls jumping under the pointer.
+- Use `showFirstLast` for long lists where jumping to the ends is common — a log, a long archive. For a few pages it
+  is clutter.
+- Match `size` to the surroundings: `sm` under a dense table, `md` (the default) under a list, and `md` or larger
+  where touch is the main input, so the controls are easy to hit.
+- `pageCount` can change while the user is on a page — a filter applied, a row deleted. The current page is clamped
+  to the new count, but tell your own state too so the page you show matches.
+- Translate the text the component supplies with `labels` — the accessible names ("Previous page", "Page 3") and the
+  "Page 3 of 20" summary. Anything you leave out stays English.
+- A paginated table needs its own accessible name and a way to know which rows are showing. The range summary
+  ("Showing 6–10 of 47") does both for sighted users; give the table an `aria-label` or a caption for everyone else.
+
+## Accessibility
+
+<Callout tone="info" title="A named navigation landmark, a list of real buttons or links, and the current page announced">
+
+- The component renders `<nav>` containing a list. The list announces how many controls there are; the `<nav>` is a
+  landmark that screen-reader users can jump to by name. It's called "Pagination" unless you say otherwise — give each
+  one on a page its own `aria-label` (or point `aria-labelledby` at a heading), because two with the same name can't
+  be told apart.
+- The current page is marked `aria-current="page"`, and every page's accessible name is "Page 3" (translatable through
+  `labels`), which contains the number it shows, as label-in-name expects. The previous, next, first, and last
+  buttons have names only — they hold an icon.
+- The gaps ("…") are decorative and hidden from assistive technology.
+- Every control is a `<button>`, or, with `getPageHref`, a real `<a href>` — so a link can be opened in a new tab.
+  A modified click (Ctrl, Cmd, Shift, Alt, or the middle button) is left to the browser and doesn't count as a page
+  change.
+- When a control isn't available — Previous on page 1, Next on the last page, or everything while `disabled` — it is
+  `aria-disabled`, not natively `disabled`. It stays in the tab order, so if you press Previous and land on page 1,
+  keyboard focus stays on that button instead of falling back to the top of the page.
+- Keyboard: `Tab` moves through the controls in reading order. `Enter` activates any control, and `Space` activates a
+  button (a link, like every link, responds to `Enter` only).
+- On a phone the page numbers are removed with `display: none`, so they leave the tab order and the accessibility tree
+  along with the screen. What's left — the buttons and the "Page 7 of 20" text — is what's read.
+- The arrows follow the reading direction: under right-to-left text they flip, and `align` mirrors.
+- Contrast: the current page's label on its fill measures at least 6.08:1, the other pages' labels at least 4.63:1
+  (including hovered), and the gap and summary text at least 6.88:1, in every theme. The arrow icons are at least
+  4.16:1, above the 3:1 floor for graphics.
+- The smallest size (`xs`) is a 30px square, above the 24px minimum for a target; prefer `md` or larger where touch is
+  the main input.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Controlled: you hold the page, so the rest of the page can react to it
+const [page, setPage] = useState(1);
+
+<Pagination pageCount={Math.ceil(items.length / 10)} value={page} onValueChange={setPage} />
+
+// Uncontrolled: it tracks the page itself; you're told when it changes
+<Pagination pageCount={20} defaultValue={3} onValueChange={(page) => track(page)} />
+
+// Each page has its own address, so every control is a real link
+<Pagination
+  pageCount={20}
+  defaultValue={3}
+  getPageHref={(page) => `/results?page=${page}`}
+  aria-label="Search results"
+/>
+
+// Client-side routing: cancel the browser's navigation and hand the page to your router
+<Pagination
+  pageCount={20}
+  value={page}
+  getPageHref={(page) => `/results?page=${page}`}
+  onValueChange={(page, event) => {
+    event.preventDefault();
+    navigate(`/results?page=${page}`);
+  }}
+  aria-label="Search results"
+/>
+
+// A wider window, jump-to-first and jump-to-last, and right-aligned under a table
+<Pagination pageCount={200} value={page} onValueChange={setPage} siblingCount={2} showFirstLast align="end" />
+
+// While the next page loads, and a smaller size for a dense table
+<Pagination pageCount={20} value={page} onValueChange={setPage} size="sm" disabled={isLoading} />
+
+// A narrow place, such as a sidebar: always the compact summary
+<Pagination pageCount={20} value={page} onValueChange={setPage} compact="always" />
+
+// Translated
+<Pagination
+  pageCount={20}
+  value={page}
+  onValueChange={setPage}
+  labels={{
+    navigation: "Paginación",
+    previous: "Página anterior",
+    next: "Página siguiente",
+    page: (page) => `Página ${page}`,
+    summary: (page, pageCount) => `Página ${page} de ${pageCount}`,
+  }}
+/>
+
+// A native <nav> attribute, passed straight through
+<Pagination pageCount={20} value={page} onValueChange={setPage} title="Result pages" lang="en" />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand" usage="the current page's fill (through Button's primary variant)" />
+<TokenRow token="text.on-brand" usage="the current page's label" />
+<TokenRow token="bg.brand-hover" usage="the current page's fill when hovered" />
+<TokenRow token="text.brand" usage="the other pages' labels" />
+<TokenRow token="bg.brand-subtle-hover" usage="the background of a hovered control" />
+<TokenRow token="icon.brand" usage="the previous, next, first, and last arrows" />
+<TokenRow token="text.secondary" usage="the gaps between page numbers, and the compact summary" />
+<TokenRow token="border.focus" usage="a focused control's outline color" />
+<TokenRow token="border-width.2" usage="a focused control's outline width" />
+<TokenRow token="radius.md" usage="the corners of each control" />
+<TokenRow token="opacity.40" usage="an unavailable control's dimmed opacity" />
+<TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="the width and height of every control across the five size steps — the same tokens IconButton uses, matched to Button's own height at each step, so each control is a square" />
+<TokenRow token="font-size.xs–font-size.lg" usage="the page numbers' and the summary's size across the five size steps" />
+<TokenRow token="font-family.primary" usage="pagination typography" />
+<TokenRow token="space.1" usage="the gap between controls, and the summary's side padding" />
+<TokenRow token="space.2" usage="a wide page number's side padding" />
+<TokenRow token="motion.duration.fast" usage="control hover transitions" />
+<TokenRow token="motion.easing.standard" usage="control hover transitions" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Table"
+  description="The usual companion — the pagination sits under a table, and the table shows the rows for the current page"
+  href="/?path=/docs/molecules-data-display-table--docs"
+>
+  <Table size="xs" variant="ghost" aria-label="Example">
+    <Table.Body>
+      <Table.Row>
+        <Table.Cell>Cell</Table.Cell>
+        <Table.Cell>Cell</Table.Cell>
+      </Table.Row>
+    </Table.Body>
+  </Table>
+</RelatedCard>
+<RelatedCard
+  name="Select"
+  description="For a rows-per-page choice beside the pagination"
+  href="/?path=/docs/molecules-inputs-select--docs"
+>
+  <Select aria-label="Rows per page" size="sm" defaultValue="10">
+    <Select.Option value="10">10 per page</Select.Option>
+  </Select>
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="Every control in the row is a Button, so it looks and behaves like one"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button size="sm">Page 3</Button>
+</RelatedCard>
+</div>
