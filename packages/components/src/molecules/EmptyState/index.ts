@@ -4,6 +4,7 @@ export type {
   EmptyStateAlign,
   EmptyStateDescriptionProps,
   EmptyStateIconProps,
+  EmptyStateMediaProps,
   EmptyStateProps,
   EmptyStateSize,
   EmptyStateTitleProps,

@@ -230,6 +230,7 @@ describe("Playground snippets, built from the live controls", () => {
     { variant: "dashed", tone: "danger", size: "lg", align: "start" },
     { variant: "filled", actions: false },
     { size: "xs", tone: "success", actions: true },
+    { announce: true, variant: "dashed" },
   ] as const;
 
   it.each(emptyStateArgs)("EmptyState %j is a real snippet", (args) => {
@@ -242,6 +243,14 @@ describe("Playground snippets, built from the live controls", () => {
     );
     expect(emptyStatePlaygroundSnippet({ variant: "dashed", align: "start" })).toContain(
       '<EmptyState variant="dashed" align="start">',
+    );
+  });
+
+  it("EmptyState writes announce only when it is on", () => {
+    expect(emptyStatePlaygroundSnippet({ announce: true })).toContain("<EmptyState announce>");
+    expect(emptyStatePlaygroundSnippet({ announce: false })).not.toContain("announce");
+    expect(emptyStatePlaygroundSnippet({ variant: "dashed", announce: true })).toContain(
+      '<EmptyState variant="dashed" announce>',
     );
   });
 

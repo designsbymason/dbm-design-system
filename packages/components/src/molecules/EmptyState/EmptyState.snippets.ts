@@ -63,22 +63,38 @@ ${iconNote}
   <EmptyState.Description>Drag a file here to upload it.</EmptyState.Description>
 </EmptyState>`,
 
-  illustration: `{/* Anything you place among the parts is laid out in the same column —
-    here an illustration in place of the icon */}
+  illustration: `{/* EmptyState.Media holds an illustration. It is never wider than the empty state or
+    than its size step's cap (6rem at xs up to 15rem at xl): a larger image is scaled down,
+    keeping its proportions, and a smaller one keeps its size. */}
 <EmptyState size="lg">
-  <img src="/empty-inbox.svg" alt="" width={160} />
+  <EmptyState.Media>
+    <img src="/empty-inbox.svg" alt="" width={160} height={120} />
+  </EmptyState.Media>
   <EmptyState.Title>Your inbox is empty</EmptyState.Title>
   <EmptyState.Description>New messages will appear here.</EmptyState.Description>
 </EmptyState>`,
 
-  searchNoResults: `{/* role="status" makes a screen reader announce the message when it appears in
-    response to a search or a filter. MagnifyingGlassIcon comes from @dbm-design-system/icons */}
-<EmptyState role="status" variant="dashed">
+  searchNoResults: `{/* announce tells a screen reader about an empty state that appears in response to a
+    search or a filter. Nothing changes visually. MagnifyingGlassIcon comes from @dbm-design-system/icons */}
+<EmptyState announce variant="dashed">
   <EmptyState.Icon icon={MagnifyingGlassIcon} />
   <EmptyState.Title>No results for “fjord”</EmptyState.Title>
   <EmptyState.Description>Check the spelling, or try a broader search term.</EmptyState.Description>
   <EmptyState.Actions>
     <Button variant="secondary" onClick={clearSearch}>Clear search</Button>
+  </EmptyState.Actions>
+</EmptyState>`,
+
+  onAPhone: `{/* stackOnMobile: below the sm breakpoint (640px) the actions stack in a full-width column;
+    from sm up they sit in a row. lg and xl also take a smaller padding on a phone. */}
+${iconNote}
+<EmptyState size="xl" variant="outlined">
+  <EmptyState.Icon icon={TrayIcon} />
+  <EmptyState.Title>No invoices yet</EmptyState.Title>
+  <EmptyState.Description>Invoices you create will show up here.</EmptyState.Description>
+  <EmptyState.Actions stackOnMobile>
+    <Button>Create invoice</Button>
+    <Button variant="tertiary">Import</Button>
   </EmptyState.Actions>
 </EmptyState>`,
 
@@ -128,6 +144,7 @@ export interface EmptyStatePlaygroundSnippetArgs {
   tone?: EmptyStateTone;
   size?: EmptyStateSize;
   align?: EmptyStateAlign;
+  announce?: boolean;
   /** Storybook only — whether the demo shows an `EmptyState.Actions` row. */
   actions?: boolean;
 }
@@ -143,6 +160,7 @@ export function emptyStatePlaygroundSnippet(args: EmptyStatePlaygroundSnippetArg
   if (args.tone && args.tone !== "neutral") attributes.push(`tone="${args.tone}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.align && args.align !== "center") attributes.push(`align="${args.align}"`);
+  if (args.announce) attributes.push("announce");
 
   const parts = args.actions === false ? invoiceText : `${invoiceText}\n${playgroundActions}`;
   return `${iconNote}\n${emptyState(attributes.join(" "), parts)}`;

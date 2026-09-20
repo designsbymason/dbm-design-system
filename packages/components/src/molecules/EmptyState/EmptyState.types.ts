@@ -48,9 +48,9 @@ export type EmptyStateAlign = "center" | "start";
 export interface EmptyStateProps
   extends Omit<ComponentPropsWithoutRef<"div">, "children" | "className" | "style" | "id"> {
   /**
-   * `EmptyState.Icon`, `EmptyState.Title`, `EmptyState.Description`, and
-   * `EmptyState.Actions` — in reading order, any of them optional. Anything else
-   * (an illustration `<img>`, say) is laid out in the same column.
+   * `EmptyState.Media`, `EmptyState.Icon`, `EmptyState.Title`,
+   * `EmptyState.Description`, and `EmptyState.Actions` — in reading order, any of
+   * them optional. Anything else is laid out in the same column.
    */
   children: ReactNode;
   /**
@@ -78,10 +78,24 @@ export interface EmptyStateProps
    */
   align?: EmptyStateAlign;
   /**
+   * Announces the title and description to screen readers when the empty state
+   * appears (and again if their text changes) — for an empty state that shows up
+   * *because of something the user did*, such as a search or a filter that
+   * returns nothing, where sighted users see it appear but a screen-reader user
+   * would otherwise get no news of it. Renders a visually hidden status region
+   * that starts empty and is filled a moment after mounting, because a live
+   * region reliably announces a *change*, not content that arrives with it; the
+   * text is cleared again shortly after, so it isn't read a second time in
+   * browse mode. Leave it off for an empty state that is simply part of the page.
+   * Don't combine it with `role="status"` on the root — that would announce
+   * twice.
+   * @default false
+   */
+  announce?: boolean;
+  /**
    * The ARIA role. Unset by default: an empty state is static content and adds
-   * no role. When it appears *in response to something the user did* — a search
-   * or filter that returns nothing — pass `role="status"` so a screen reader
-   * announces it.
+   * no role. To have a screen reader announce an empty state that appears in
+   * response to something the user did, use `announce` rather than a role here.
    */
   role?: ComponentPropsWithoutRef<"div">["role"];
   /**
@@ -137,6 +151,35 @@ export interface EmptyStateIconProps
    * Standard DOM id. Rarely needed directly, but required when another
    * element's `aria-labelledby`/`aria-describedby` needs to point at this icon,
    * or when a test or router needs a stable anchor.
+   */
+  id?: string;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface EmptyStateMediaProps
+  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "className" | "style" | "id"> {
+  /**
+   * The illustration — an `<img>`, `<picture>`, `<video>`, or inline `<svg>`. It
+   * is never allowed to grow wider than the empty state or than the largest size
+   * for the empty state's `size` (6rem at `xs` up to 15rem at `xl`): a larger
+   * image is scaled down, keeping its proportions, and a smaller one keeps its own
+   * size. Give a purely decorative illustration empty `alt` text (`alt=""`), since
+   * the title already says what is empty.
+   */
+  children: ReactNode;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * media, or when a test or router needs a stable anchor.
    */
   id?: string;
   /**
@@ -215,6 +258,14 @@ export interface EmptyStateActionsProps
    * wraps on a narrow screen.
    */
   children: ReactNode;
+  /**
+   * Below the `sm` breakpoint (a phone), stacks the actions in a column with each
+   * one the full width of the empty state — bigger touch targets, and the primary
+   * action first. From `sm` up they sit in a row as usual. The breakpoint is a
+   * viewport width, as everywhere else in the system.
+   * @default false
+   */
+  stackOnMobile?: boolean;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */

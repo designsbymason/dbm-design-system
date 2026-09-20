@@ -5,6 +5,7 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Card } from "../Card";
 import { Table } from "../Table";
 import * as EmptyStateStories from "./EmptyState.stories";
+import * as EmptyStateMediaStories from "./EmptyStateMedia.stories";
 import * as EmptyStateIconStories from "./EmptyStateIcon.stories";
 import * as EmptyStateTitleStories from "./EmptyStateTitle.stories";
 import * as EmptyStateDescriptionStories from "./EmptyStateDescription.stories";
@@ -15,6 +16,7 @@ export const rootPropOrder = [
   "tone",
   "size",
   "align",
+  "announce",
   "role",
   "aria-label",
   "aria-labelledby",
@@ -26,10 +28,11 @@ export const rootPropOrder = [
 ];
 // The Playground also has a Storybook-only `actions` control (a demo
 // `EmptyState.Actions` row, not an `EmptyState` prop), which sits last.
-export const playgroundPropOrder = ["variant", "tone", "size", "align", "actions"];
+export const playgroundPropOrder = ["variant", "tone", "size", "align", "announce", "actions"];
 export const iconPropOrder = ["icon", "label", "id", "className", "style", "data-testid"];
 export const titlePropOrder = ["children", "level", "id", "className", "style", "data-testid"];
 export const sectionPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const actionsPropOrder = ["children", "stackOnMobile", "id", "className", "style", "data-testid"];
 
 <Meta of={EmptyStateStories} />
 
@@ -40,14 +43,16 @@ export const sectionPropOrder = ["children", "id", "className", "style", "data-t
 What a page, a panel, or a list shows when there is nothing to show yet — no data, no search results, nothing
 left to do, or something that went wrong. It says what is empty and, ideally, offers the next step. It's a
 compound component, meaning it's made of named sub-parts you compose together rather than one component with a
-long list of props: put any of `EmptyState.Icon` (an icon in a round badge), `EmptyState.Title`,
-`EmptyState.Description`, and `EmptyState.Actions` inside `EmptyState`, in the order they should be read — every
-one is optional.
+long list of props: put any of `EmptyState.Media` (an illustration), `EmptyState.Icon` (an icon in a round
+badge), `EmptyState.Title`, `EmptyState.Description`, and `EmptyState.Actions` inside `EmptyState`, in the order
+they should be read — every one is optional.
 
 `size` sets the padding, the spacing, and the size of the icon and text — small for a table cell or a narrow
 panel, large for a whole page. A `variant` picks the surface (none, a solid or dashed border, or a fill), a
 `tone` tints the icon badge so that "nothing here yet" and "something went wrong" can share one layout, and
-`align` centres the content or sets it flush with the start edge.
+`align` centres the content or sets it flush with the start edge. `announce` tells a screen reader about an empty
+state that appears because of something the user did, and `stackOnMobile` on `EmptyState.Actions` stacks the
+actions full width on a phone.
 
 ### Import
 
@@ -70,6 +75,14 @@ import { EmptyState } from "@dbm-design-system/components";
 (e.g. `onMouseEnter`, `title`) — passed straight through to the root element.
 
 <PropertiesTable of={EmptyStateStories} order={rootPropOrder} />
+
+### EmptyState.Media properties
+
+An illustration, kept within the empty state and within a cap that grows with the empty state's `size` — a larger
+image is scaled down, keeping its proportions, and a smaller one keeps its own size. Also accepts any other native
+`<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={EmptyStateMediaStories} order={sectionPropOrder} />
 
 ### EmptyState.Icon properties
 
@@ -95,11 +108,11 @@ native `<p>` attribute beyond what's listed here (e.g. `onClick`, `lang`) — pa
 
 ### EmptyState.Actions properties
 
-The next step — buttons or links in a row that wraps on a narrow screen, aligned with the rest of the content.
-Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed
+The next step — buttons or links in a row that wraps on a narrow screen (or, with `stackOnMobile`, a full-width
+column on a phone), aligned with the rest of the content. Also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed
 straight through.
 
-<PropertiesTable of={EmptyStateActionsStories} order={sectionPropOrder} />
+<PropertiesTable of={EmptyStateActionsStories} order={actionsPropOrder} />
 
 ## Variants
 
@@ -127,9 +140,17 @@ straight through.
 
 <Canvas of={EmptyStateStories.Illustration} />
 
-### Search with no results — announced as a status
+### Search with no results — announced to screen readers
 
 <Canvas of={EmptyStateStories.SearchNoResults} />
+
+### On a phone — smaller padding, stacked actions
+
+Below the `sm` breakpoint (640px) the two large sizes take a smaller padding, and `stackOnMobile` stacks the
+actions in a full-width column. Opened on its own from the sidebar this story is shown at a phone's width; here it
+sits in the wide page, so narrow the window to watch it switch.
+
+<Canvas of={EmptyStateStories.OnAPhone} />
 
 ### Composition — inside a card
 
@@ -159,8 +180,12 @@ straight through.
 - Use `tone` to match the situation: `success` for "all caught up", `danger` for a failure, `info` for a neutral
   notice, and leave it `neutral` for a plain "nothing here yet". Put the meaning in the words as well.
 - Give the title the heading level that fits the page outline — one below the heading of the section it's in.
-- Add `role="status"` when the empty state appears because of something the user just did, such as a search or
-  a filter, so a screen reader announces it.
+- Set `announce` when the empty state appears because of something the user just did, such as a search or a
+  filter, so a screen reader is told about it. Leave it off for an empty state that is simply part of the page.
+- Set `stackOnMobile` on `EmptyState.Actions` when there are two actions or more, so on a phone they become
+  full-width, easy-to-hit targets with the primary action first.
+- Put an illustration in `EmptyState.Media` rather than loose in the column: it's kept within the empty state
+  and within a cap that suits the `size`, however large the image file is.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -175,6 +200,10 @@ straight through.
   decorative. The title and description carry the meaning.
 - Don't put several competing primary actions in `EmptyState.Actions`. One primary, at most one or two quieter
   alternatives.
+- Don't set both `announce` and `role="status"`. `announce` already renders a status region, so the message would
+  be announced twice — and `EmptyState` warns in development when it sees both.
+- Don't set `announce` on an empty state that is part of the page as it loads: nothing prompted it, so
+  announcing it is noise.
 - Don't skip heading levels for the title (an `h4` straight under an `h2`) — set `level` to fit.
 - Don't fill an empty state with a long explanation. If it needs paragraphs, link to help instead.
 
@@ -191,9 +220,13 @@ straight through.
   a check for "done". It's hidden from assistive technology by default because the title already says it.
 - Keep the description short. It's held to a comfortable line length (about 28rem) however wide the empty state
   is, so a long paragraph becomes a tall, narrow column that reads badly.
-- Anything you place among the parts is laid out in the same column, so an illustration (an `<img>` or an inline
-  SVG, with empty `alt` text when it's purely decorative) can take the icon's place. Keep it modest in size so it
-  doesn't outweigh the message.
+- An illustration (an `<img>` or an inline SVG, with empty `alt` text when it's purely decorative) goes in
+  `EmptyState.Media` and can take the icon's place. Its cap grows with `size` (6rem at `xs` up to 15rem at `xl`), so
+  it stays in proportion to the text; supply an image at least that large so it isn't scaled up blurry. An image
+  placed loose among the parts is still kept inside the empty state, but only `EmptyState.Media` applies the
+  size cap.
+- On a phone, `stackOnMobile` puts the primary action first and full width. Order the actions with the primary
+  one first in the code, so it's also first in the tab order.
 - Use `align="start"` in layouts that are start-aligned throughout — a settings section, a list header — where a
   centred empty state would look adrift.
 - Inside a `Table`, put the empty state in `Table.Empty`, which is the row a table shows when it has no rows; use
@@ -208,9 +241,14 @@ straight through.
   a screen-reader user can find it by navigating headings; the actions are ordinary buttons and links, reached
   in the normal tab order.
 - When the empty state appears *because of something the user did* — a search or filter that returns nothing —
-  pass `role="status"`, which is announced politely without moving focus. Support for announcing a live region
-  that is inserted already filled varies between screen readers; where it matters, keep a `role="status"`
-  container in the page and render the empty state inside it.
+  set `announce`. A live region reliably announces a *change*, not content that arrives with it, so `announce`
+  renders a visually hidden `role="status"` region that starts empty, fills it with the title and description a
+  moment after the empty state mounts, and clears it again about a second later so the text isn't also read a
+  second time when browsing. It is announced politely, without moving focus, and only when the text is new. This
+  is the widely used pattern for it, but announcements are ultimately up to each screen reader, so check the
+  wording in the ones you support.
+- On a phone, `stackOnMobile` puts the actions in a column with each one the full width of the empty state, which
+  makes them larger touch targets. Order and focus are unchanged — the same order in the code and the tab order.
 - To make the empty state a named region, give it `role="region"` and `aria-labelledby` pointing at its title's
   `id` (or an `aria-label`).
 - The icon is decorative by default and hidden from assistive technology (`aria-hidden`), because the title
@@ -241,13 +279,26 @@ import { TrayIcon } from "@dbm-design-system/icons";
   </EmptyState.Actions>
 </EmptyState>
 
-{/* A search with no results, announced to a screen reader */}
-<EmptyState role="status" variant="dashed">
+{/* A search with no results, announced to a screen reader when it appears */}
+<EmptyState announce variant="dashed">
   <EmptyState.Icon icon={MagnifyingGlassIcon} />
   <EmptyState.Title>No results for “fjord”</EmptyState.Title>
   <EmptyState.Description>Check the spelling, or try a broader search term.</EmptyState.Description>
   <EmptyState.Actions>
     <Button variant="secondary" onClick={clearSearch}>Clear search</Button>
+  </EmptyState.Actions>
+</EmptyState>
+
+{/* An illustration, scaled to fit, and actions that stack full width on a phone */}
+<EmptyState size="lg">
+  <EmptyState.Media>
+    <img src="/empty-inbox.svg" alt="" width={160} height={120} />
+  </EmptyState.Media>
+  <EmptyState.Title>Your inbox is empty</EmptyState.Title>
+  <EmptyState.Description>New messages will appear here.</EmptyState.Description>
+  <EmptyState.Actions stackOnMobile>
+    <Button>Compose</Button>
+    <Button variant="tertiary">Import mail</Button>
   </EmptyState.Actions>
 </EmptyState>
 
@@ -331,6 +382,7 @@ import { TrayIcon } from "@dbm-design-system/icons";
 <TokenRow token="icon-size.sm–icon-size.2xl" usage="the icon's size across the five size steps" />
 <TokenRow token="font-size.base–font-size.2xl" usage="the title's size across the five size steps" />
 <TokenRow token="empty-state.content-max-width" usage="the description's maximum width, so its line length stays comfortable" />
+<TokenRow token="empty-state.media-max-width" usage="the widest an illustration in EmptyState.Media can grow, across the five size steps" />
 
 ## Related components
 

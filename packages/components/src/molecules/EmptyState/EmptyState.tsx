@@ -1,16 +1,18 @@
-import { cx } from "@dbm-design-system/primitives";
-import { createContext, forwardRef, useContext } from "react";
+import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { createContext, forwardRef, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Heading } from "../../atoms/Heading";
 import type { HeadingSize } from "../../atoms/Heading/Heading.types";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon/Icon.types";
 import { Text } from "../../atoms/Text";
 import type { TextSize } from "../../atoms/Text/Text.types";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./EmptyState.module.css";
 import type {
   EmptyStateActionsProps,
   EmptyStateDescriptionProps,
   EmptyStateIconProps,
+  EmptyStateMediaProps,
   EmptyStateProps,
   EmptyStateSize,
   EmptyStateTitleProps,
@@ -73,14 +75,25 @@ const descriptionSize: Record<EmptyStateSize, TextSize> = {
   xl: "md",
 };
 
+// `announce` fills a visually hidden live region a moment after it mounts, then
+// clears it again. A live region announces a *change* to its content, not content
+// that arrives with it, so the region has to be in the page — and known to the
+// screen reader — before it is filled; the short delay is that gap. Clearing it
+// afterwards stops the same text being read a second time in browse mode. Both are
+// timings for assistive technology, not design values.
+const ANNOUNCE_DELAY_MS = 100;
+const ANNOUNCE_CLEAR_MS = 1000;
+
+const endsAsSentence = /[.!?…]$/;
+
 /**
  * What a page, a panel, or a list shows when there is nothing to show yet — no
  * data, no search results, nothing left to do, or something that went wrong. It
  * says what's empty and, ideally, offers the next step. A compound component,
  * meaning it's made of named sub-parts you compose together:
- * `EmptyState.Icon` (an icon in a round badge), `EmptyState.Title`,
- * `EmptyState.Description`, and `EmptyState.Actions`, in reading order, any of
- * them optional.
+ * `EmptyState.Media` (an illustration), `EmptyState.Icon` (an icon in a round
+ * badge), `EmptyState.Title`, `EmptyState.Description`, and `EmptyState.Actions`,
+ * in reading order, any of them optional.
  *
  * `size` sets the padding, the spacing, and the size of the icon and text on the
  * standard xs–xl scale — small for a table cell or a narrow panel, large for a
@@ -90,8 +103,8 @@ const descriptionSize: Record<EmptyStateSize, TextSize> = {
  * with the start edge.
  *
  * An empty state is static content and adds no role. When it appears in response
- * to something the user did — a search that returns nothing — pass
- * `role="status"` so a screen reader announces it.
+ * to something the user did — a search that returns nothing — set `announce` so a
+ * screen reader is told about it.
  *
  * `ref` forwards to the root `<div>`.
  *
@@ -110,7 +123,7 @@ const descriptionSize: Record<EmptyStateSize, TextSize> = {
  *   </EmptyState.Actions>
  * </EmptyState>
  *
- * <EmptyState role="status" size="sm" variant="dashed">
+ * <EmptyState announce size="sm" variant="dashed">
  *   <EmptyState.Title>No results for “fjord”</EmptyState.Title>
  *   <EmptyState.Description>Try a different search term.</EmptyState.Description>
  * </EmptyState>
@@ -123,6 +136,7 @@ const EmptyStateRoot = forwardRef<HTMLDivElement, EmptyStateProps>((emptyStatePr
     tone = "neutral",
     size = "md",
     align = "center",
+    announce = false,
     className,
     style,
     id,
@@ -130,11 +144,60 @@ const EmptyStateRoot = forwardRef<HTMLDivElement, EmptyStateProps>((emptyStatePr
     ...rest
   } = emptyStateProps;
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  const mergedRef = useMemo(() => mergeRefs(ref, rootRef), [ref]);
+  const [announcement, setAnnouncement] = useState("");
+  const announced = useRef("");
+  const timers = useRef<{ show?: number; clear?: number }>({});
+
+  // Read the title and description straight from the rendered DOM, so any content
+  // they hold (not only a string) is announced as it reads. Runs after every
+  // render but only acts when that text is new. `setAnnouncement` is only ever
+  // called from the timers below, never synchronously from this effect.
+  useEffect(() => {
+    if (!announce) {
+      announced.current = "";
+      return;
+    }
+    const parts = [...(rootRef.current?.querySelectorAll(`.${styles.title}, .${styles.description}`) ?? [])]
+      .map((element) => element.textContent?.trim() ?? "")
+      .filter(Boolean)
+      .map((text) => (endsAsSentence.test(text) ? text : `${text}.`));
+    const text = parts.join(" ");
+    if (!text || text === announced.current) return;
+    announced.current = text;
+    window.clearTimeout(timers.current.show);
+    window.clearTimeout(timers.current.clear);
+    timers.current.show = window.setTimeout(() => {
+      setAnnouncement(text);
+      timers.current.clear = window.setTimeout(() => setAnnouncement(""), ANNOUNCE_CLEAR_MS);
+    }, ANNOUNCE_DELAY_MS);
+  });
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(timers.current.show);
+      window.clearTimeout(timers.current.clear);
+    },
+    [],
+  );
+
+  // `announce` already provides a status region; a `status` role on the root too
+  // would announce everything twice.
+  const { role } = rest;
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" && announce && role === "status") {
+      console.warn(
+        "EmptyState: `announce` already renders a status region, so also setting `role=\"status\"` on the root announces the message twice. Remove `role`, or remove `announce`.",
+      );
+    }
+  }, [announce, role]);
+
   return (
     <EmptyStateSizeContext.Provider value={size}>
       <div
         {...rest}
-        ref={ref}
+        ref={mergedRef}
         id={id}
         style={style}
         data-testid={dataTestId}
@@ -148,11 +211,20 @@ const EmptyStateRoot = forwardRef<HTMLDivElement, EmptyStateProps>((emptyStatePr
         )}
       >
         {children}
+        {announce && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
       </div>
     </EmptyStateSizeContext.Provider>
   );
 });
 EmptyStateRoot.displayName = "EmptyState";
+
+/** An illustration, kept within the empty state and the size step's cap — a larger image is scaled down, a smaller one keeps its size. */
+const EmptyStateMedia = forwardRef<HTMLDivElement, EmptyStateMediaProps>(
+  ({ className, ...props }, ref) => (
+    <div {...props} ref={ref} className={cx(styles.media, className)} />
+  ),
+);
+EmptyStateMedia.displayName = "EmptyState.Media";
 
 /** The icon, in a round badge tinted by the empty state's `tone`. Decorative unless given a `label`. */
 const EmptyStateIcon = forwardRef<HTMLDivElement, EmptyStateIconProps>(
@@ -202,15 +274,20 @@ const EmptyStateDescription = forwardRef<HTMLParagraphElement, EmptyStateDescrip
 );
 EmptyStateDescription.displayName = "EmptyState.Description";
 
-/** The next step — buttons or links in a row that wraps on a narrow screen, aligned with the rest of the content. */
+/** The next step — buttons or links in a row that wraps on a narrow screen (or, with `stackOnMobile`, a full-width column on a phone), aligned with the rest of the content. */
 const EmptyStateActions = forwardRef<HTMLDivElement, EmptyStateActionsProps>(
-  ({ className, ...props }, ref) => (
-    <div {...props} ref={ref} className={cx(styles.actions, className)} />
+  ({ stackOnMobile = false, className, ...props }, ref) => (
+    <div
+      {...props}
+      ref={ref}
+      className={cx(styles.actions, stackOnMobile && styles.actionsStack, className)}
+    />
   ),
 );
 EmptyStateActions.displayName = "EmptyState.Actions";
 
 type EmptyStateComponent = typeof EmptyStateRoot & {
+  Media: typeof EmptyStateMedia;
   Icon: typeof EmptyStateIcon;
   Title: typeof EmptyStateTitle;
   Description: typeof EmptyStateDescription;
@@ -218,6 +295,7 @@ type EmptyStateComponent = typeof EmptyStateRoot & {
 };
 
 export const EmptyState: EmptyStateComponent = Object.assign(EmptyStateRoot, {
+  Media: EmptyStateMedia,
   Icon: EmptyStateIcon,
   Title: EmptyStateTitle,
   Description: EmptyStateDescription,

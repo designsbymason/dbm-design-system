@@ -8,7 +8,7 @@ import {
   WarningIcon,
 } from "@dbm-design-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 import type { CSSProperties } from "react";
 import { Button } from "../../atoms/Button";
 import { Heading } from "../../atoms/Heading";
@@ -35,6 +35,7 @@ interface PlaygroundArgs {
   size: EmptyStateSize;
   align: EmptyStateAlign;
   actions: boolean;
+  announce: boolean;
   role: string;
   "aria-label": string;
   "aria-labelledby": string;
@@ -79,6 +80,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   size: { control: false },
   align: { control: false },
   actions: { control: false },
+  announce: { control: false },
   role: { control: false },
   "aria-label": { control: false },
   "aria-labelledby": { control: false },
@@ -127,10 +129,16 @@ const meta: Meta<PlaygroundArgs> = {
         "Storybook only — not an EmptyState prop. Shows a demo EmptyState.Actions row (a primary and a secondary button).",
       table: { disable: true },
     },
+    announce: {
+      control: "boolean",
+      description:
+        "Announces the title and description to screen readers when the empty state appears (and again if their text changes) — for one that shows up because of something the user did, such as a search or filter that returns nothing. Renders a visually hidden status region that starts empty and is filled a moment after mounting, then cleared. Nothing changes visually. Don't combine it with role=\"status\".",
+      table: { defaultValue: { summary: "false" } },
+    },
     role: {
       control: false,
       description:
-        "The ARIA role. Unset by default: an empty state is static content and adds no role. When it appears in response to something the user did — a search or filter that returns nothing — pass role=\"status\" so a screen reader announces it.",
+        "The ARIA role. Unset by default: an empty state is static content and adds no role. To have a screen reader announce an empty state that appears in response to something the user did, use announce rather than a role here.",
     },
     "aria-label": {
       control: false,
@@ -170,10 +178,11 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     align: "center",
     actions: true,
+    announce: false,
   },
   render: (args) => (
     <div style={demoContainerStyle}>
-      <EmptyState variant={args.variant} tone={args.tone} size={args.size} align={args.align}>
+      <EmptyState variant={args.variant} tone={args.tone} size={args.size} align={args.align} announce={args.announce}>
         <EmptyState.Icon icon={TrayIcon} />
         <EmptyState.Title>No invoices yet</EmptyState.Title>
         <EmptyState.Description>Invoices you create will show up here.</EmptyState.Description>
@@ -300,6 +309,13 @@ export const Sizes: Story = {
       if (index > 0) await expect(width).toBeGreaterThan(widths[index - 1]!);
       await expect(badges[index]!.getBoundingClientRect().height).toBeCloseTo(width, 0);
     }
+    // From the `sm` breakpoint up every size has its full padding (the phone
+    // values are asserted in the "On a phone" story).
+    if (window.matchMedia("(min-width: 640px)").matches) {
+      const roots = [...canvasElement.querySelectorAll<HTMLElement>("[data-testid=sizes] > div > div:last-child")];
+      const paddings = roots.map((root) => parseFloat(getComputedStyle(root).paddingInlineStart));
+      await expect(paddings).toEqual([16, 24, 32, 48, 64]);
+    }
   },
 };
 
@@ -365,27 +381,69 @@ export const Illustration: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: emptyStateSnippets.illustration } } },
   render: () => (
-    // Anything placed among the parts is laid out in the same column, so an
-    // illustration simply takes the place of `EmptyState.Icon`.
-    <div style={demoContainerStyle}>
-      <EmptyState size="lg">
-        <DemoIllustration />
-        <EmptyState.Title>Your inbox is empty</EmptyState.Title>
-        <EmptyState.Description>New messages will appear here.</EmptyState.Description>
-      </EmptyState>
+    // `EmptyState.Media` holds an illustration in place of (or above) the icon. It
+    // never grows wider than the empty state or than its size step's cap, so a large
+    // image is scaled down keeping its proportions, and a small one keeps its size.
+    <div style={{ ...gridStyle(2), maxWidth: "60rem", marginInline: "auto" }} data-testid="illustrations">
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          A small illustration keeps its size
+        </Text>
+        <EmptyState size="lg" variant="outlined">
+          <EmptyState.Media>
+            <DemoIllustration />
+          </EmptyState.Media>
+          <EmptyState.Title>Your inbox is empty</EmptyState.Title>
+          <EmptyState.Description>New messages will appear here.</EmptyState.Description>
+        </EmptyState>
+      </div>
+      <div style={labelledColumn}>
+        <Text size="sm" weight="semibold">
+          A large image is scaled down
+        </Text>
+        <EmptyState size="lg" variant="outlined">
+          <EmptyState.Media>
+            <svg width="1200" height="300" viewBox="0 0 1200 300" aria-hidden="true">
+              <rect width="1200" height="300" rx="24" fill="var(--dbm-bg-brand-subtle)" stroke="var(--dbm-border-brand)" strokeWidth="6" />
+            </svg>
+          </EmptyState.Media>
+          <EmptyState.Title>A 1200px image</EmptyState.Title>
+          <EmptyState.Description>Scaled to fit, proportions kept.</EmptyState.Description>
+        </EmptyState>
+      </div>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const [small, large] = [...canvasElement.querySelectorAll<HTMLElement>("[data-testid=illustrations] > div > div:last-child")];
+    const measure = (root: HTMLElement) => {
+      const media = root.firstElementChild as HTMLElement;
+      const svg = media.querySelector("svg")!;
+      return { root: root.getBoundingClientRect(), media: media.getBoundingClientRect(), svg: svg.getBoundingClientRect() };
+    };
+    const a = measure(small!);
+    const b = measure(large!);
+    // The small illustration keeps its own 160px width...
+    await expect(Math.round(a.svg.width)).toBe(160);
+    // ...and the 1200px one is scaled down to the lg cap (12rem = 192px), never wider
+    // than its empty state, with its 4:1 proportions intact.
+    await expect(b.svg.width).toBeLessThanOrEqual(192 + 1);
+    await expect(b.svg.width).toBeLessThanOrEqual(b.root.width);
+    await expect(b.svg.width / b.svg.height).toBeCloseTo(4, 1);
+    // Nothing overflows the canvas.
+    await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
+  },
 };
 
 export const SearchNoResults: Story = {
-  name: "Search with no results — announced as a status",
+  name: "Search with no results — announced to screen readers",
   argTypes: noControls,
   parameters: { docs: { source: { code: emptyStateSnippets.searchNoResults } } },
   render: () => (
-    // `role="status"` is for an empty state that appears because of something the
-    // user did: a screen reader announces it when it's inserted.
+    // `announce` is for an empty state that appears because of something the user
+    // did: a hidden status region is filled a moment after it mounts, so a screen
+    // reader is told about it. Nothing changes visually.
     <div style={demoContainerStyle}>
-      <EmptyState role="status" variant="dashed">
+      <EmptyState announce variant="dashed">
         <EmptyState.Icon icon={MagnifyingGlassIcon} />
         <EmptyState.Title>No results for “fjord”</EmptyState.Title>
         <EmptyState.Description>Check the spelling, or try a broader search term.</EmptyState.Description>
@@ -399,12 +457,65 @@ export const SearchNoResults: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const status = canvas.getByRole("status");
-    // The live region carries the whole message, and the icon stays out of the
-    // accessibility tree.
-    await expect(status).toHaveTextContent("No results for “fjord”");
-    await expect(status.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    // The status region is in the page from the start...
+    const status = await canvas.findByRole("status");
+    // ...and is filled with the message shortly afterwards.
+    await waitFor(() =>
+      expect(status).toHaveTextContent("No results for “fjord”. Check the spelling, or try a broader search term."),
+    );
+    // The icon stays out of the accessibility tree, and the title is a real heading.
+    await expect(canvasElement.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
     await expect(canvas.getByRole("heading", { level: 3 })).toBeInTheDocument();
+  },
+};
+
+export const OnAPhone: Story = {
+  name: "On a phone — smaller padding, stacked actions",
+  argTypes: noControls,
+  // Opened on its own, this story is shown at a phone's width (and it is in the
+  // test run); on the Docs page it sits in the wide page like every other story.
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  parameters: { docs: { source: { code: emptyStateSnippets.onAPhone } } },
+  render: () => (
+    // Below the `sm` breakpoint the two large sizes take a smaller padding, and
+    // `stackOnMobile` stacks the actions in a full-width column. From `sm` up both
+    // are back to their usual layout — narrow the window to watch it switch.
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }} data-testid="phone">
+      {(["lg", "xl"] as const).map((size) => (
+        <EmptyState key={size} size={size} variant="outlined">
+          <EmptyState.Icon icon={TrayIcon} />
+          <EmptyState.Title>No invoices yet</EmptyState.Title>
+          <EmptyState.Description>Invoices you create will show up here.</EmptyState.Description>
+          <EmptyState.Actions stackOnMobile>
+            <Button>Create invoice</Button>
+            <Button variant="tertiary">Import</Button>
+          </EmptyState.Actions>
+        </EmptyState>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // The story really is at a phone's width (fails loudly if the viewport didn't apply).
+    await expect(window.innerWidth).toBeLessThan(640);
+    const roots = [...canvasElement.querySelectorAll<HTMLElement>("[data-testid=phone] > div")];
+    await expect(roots.length).toBe(2);
+    const padding = (root: HTMLElement) => parseFloat(getComputedStyle(root).paddingInlineStart);
+    // lg and xl step down to space.8 (32px) and space.10 (40px)...
+    await expect(padding(roots[0]!)).toBe(32);
+    await expect(padding(roots[1]!)).toBe(40);
+    for (const root of roots) {
+      // ...the actions are a column, each one the full width of the actions row...
+      const actions = root.lastElementChild as HTMLElement;
+      await expect(getComputedStyle(actions).flexDirection).toBe("column");
+      const buttons = [...actions.querySelectorAll("button")];
+      await expect(buttons.length).toBe(2);
+      for (const button of buttons) {
+        await expect(Math.round(button.getBoundingClientRect().width)).toBe(Math.round(actions.getBoundingClientRect().width));
+      }
+      // ...stacked one above the other, and nothing spills out sideways.
+      await expect(buttons[0]!.getBoundingClientRect().bottom).toBeLessThanOrEqual(buttons[1]!.getBoundingClientRect().top + 1);
+      await expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
+    }
   },
 };
 

@@ -15,6 +15,7 @@
   --empty-border-style: solid;
   --empty-badge-bg: var(--dbm-bg-neutral-subtle);
   --empty-badge-color: var(--dbm-icon-default);
+  --empty-media-max: var(--dbm-empty-state-media-max-width-md);
   --empty-align: center;
   --empty-align-text: center;
   --empty-justify: center;
@@ -31,6 +32,8 @@
   gap: var(--empty-gap);
   min-inline-size: 0;
   padding: var(--empty-pad);
+  /* The visually hidden live region (`announce`) is positioned against this. */
+  position: relative;
   text-align: var(--empty-align-text);
 }
 
@@ -50,30 +53,35 @@
   --empty-pad: var(--dbm-space-4);
   --empty-gap: var(--dbm-space-2);
   --empty-badge: var(--dbm-space-8);
+  --empty-media-max: var(--dbm-empty-state-media-max-width-xs);
 }
 
 .sizeSm {
   --empty-pad: var(--dbm-space-6);
   --empty-gap: var(--dbm-space-3);
   --empty-badge: var(--dbm-space-10);
+  --empty-media-max: var(--dbm-empty-state-media-max-width-sm);
 }
 
 .sizeMd {
   --empty-pad: var(--dbm-space-8);
   --empty-gap: var(--dbm-space-4);
   --empty-badge: var(--dbm-space-12);
+  --empty-media-max: var(--dbm-empty-state-media-max-width-md);
 }
 
 .sizeLg {
   --empty-pad: var(--dbm-space-8);
   --empty-gap: var(--dbm-space-4);
   --empty-badge: var(--dbm-space-16);
+  --empty-media-max: var(--dbm-empty-state-media-max-width-lg);
 }
 
 .sizeXl {
   --empty-pad: var(--dbm-space-10);
   --empty-gap: var(--dbm-space-6);
   --empty-badge: var(--dbm-space-20);
+  --empty-media-max: var(--dbm-empty-state-media-max-width-xl);
 }
 
 /* The two large sizes are generous on a roomy screen but would leave only a
@@ -141,6 +149,31 @@
 
 /* --- Parts. --- */
 
+/* The illustration slot. It never grows wider than the empty state or than the
+   size step's cap (`--empty-media-max`): a larger image is scaled down, keeping
+   its proportions, and a smaller one keeps its own size. The wrapper is centred
+   or start-aligned by the column's own cross-axis alignment. */
+.media {
+  max-inline-size: min(100%, var(--empty-media-max));
+  min-inline-size: 0;
+}
+
+/* The same rules apply to an image, video, or SVG placed directly in the column
+   without `EmptyState.Media`, so a stray large one still can't overflow and drag
+   the page into horizontal scroll. */
+.media > :is(img, picture, video, svg),
+.root > :is(img, picture, video, svg) {
+  block-size: auto;
+  display: block;
+  max-inline-size: 100%;
+}
+
+.media > picture > img {
+  block-size: auto;
+  display: block;
+  max-inline-size: 100%;
+}
+
 .iconBadge {
   align-items: center;
   background-color: var(--empty-badge-bg);
@@ -180,4 +213,28 @@
   flex-wrap: wrap;
   gap: var(--dbm-space-3);
   justify-content: var(--empty-justify);
+}
+
+/* Stacked below the `sm` breakpoint: a column with each action the full width of
+   the empty state, then back to the row from `sm` up. Mobile-first. The threshold
+   is the literal value of the breakpoint.sm primitive token — custom properties
+   can't be used in an @media condition (see the size rules above). */
+.actionsStack {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.actionsStack > * {
+  inline-size: 100%;
+}
+
+@media (min-width: 640px) {
+  .actionsStack {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .actionsStack > * {
+    inline-size: auto;
+  }
 }

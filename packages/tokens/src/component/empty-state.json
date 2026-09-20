@@ -4,6 +4,29 @@
       "$type": "dimension",
       "$value": "28rem",
       "$description": "New token (2026-09-19), added for EmptyState's own description text — a width cap so a centred message keeps a comfortable line length (roughly 45-75 characters) inside a wide container such as a full page or a wide table cell, instead of stretching across it. No home on any existing primitive scale: the spacing scale tops out at 8rem, and this is a content-measure constraint rather than a gap or padding."
+    },
+    "media-max-width": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "6rem",
+        "$description": "New token family (2026-09-19), added for EmptyState.Media — the widest an illustration is allowed to grow at each size step, so a large image is scaled down rather than overflowing, and every size step gets a proportionate illustration. Steps of 6/8/10/12/15rem: the first two happen to equal space.24/space.32, but the rest have no home on the spacing scale (which tops out at 8rem), so the whole family is dedicated rather than mixing token references with literals — the same reasoning as badge.size.* and indicators.size.*."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "8rem"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "10rem"
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "12rem"
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "15rem"
+      }
     }
   }
 }

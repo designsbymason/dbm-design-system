@@ -1,8 +1,8 @@
 import { TrayIcon } from "@dbm-design-system/icons";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import headingStyles from "../../atoms/Heading/Heading.module.css";
 import iconStyles from "../../atoms/Icon/Icon.module.css";
 import textStyles from "../../atoms/Text/Text.module.css";
@@ -394,6 +394,242 @@ describe("EmptyState", () => {
     });
   });
 
+  describe("EmptyState.Media", () => {
+    it("renders a <div> holding the illustration, in DOM order with the other parts", () => {
+      render(
+        <EmptyState data-testid="empty">
+          <EmptyState.Media data-testid="media">
+            <img src="/empty.svg" alt="" />
+          </EmptyState.Media>
+          <EmptyState.Title>Nothing here</EmptyState.Title>
+        </EmptyState>,
+      );
+      const media = screen.getByTestId("media");
+      expect(media.tagName).toBe("DIV");
+      expect(media).toHaveClass(styles.media ?? "");
+      expect(media.querySelector("img")).toBeInTheDocument();
+      expect([...screen.getByTestId("empty").children].map((child) => child.tagName)).toEqual(["DIV", "H3"]);
+    });
+
+    it("accepts className, style, id, data-testid, native attributes, and a ref", () => {
+      const ref = createRef<HTMLDivElement>();
+      render(
+        <EmptyState>
+          <EmptyState.Media ref={ref} className="c" style={{ opacity: 0.5 }} id="m" data-testid="media" title="Illustration">
+            <span />
+          </EmptyState.Media>
+        </EmptyState>,
+      );
+      const media = screen.getByTestId("media");
+      expect(media).toHaveClass("c", styles.media ?? "");
+      expect(media).toHaveStyle({ opacity: "0.5" });
+      expect(media).toHaveAttribute("id", "m");
+      expect(media).toHaveAttribute("title", "Illustration");
+      expect(ref.current).toBe(media);
+    });
+  });
+
+  describe("EmptyState.Actions stackOnMobile", () => {
+    it("is off by default, leaving the actions a wrapping row", () => {
+      renderEmptyState();
+      expect(screen.getByTestId("actions")).not.toHaveClass(styles.actionsStack ?? "");
+    });
+
+    it("applies the stacking class when set, alongside the base actions class", () => {
+      render(
+        <EmptyState>
+          <EmptyState.Actions stackOnMobile data-testid="actions">
+            <button type="button">Create</button>
+          </EmptyState.Actions>
+        </EmptyState>,
+      );
+      expect(screen.getByTestId("actions")).toHaveClass(styles.actions ?? "", styles.actionsStack ?? "");
+    });
+
+    it("doesn't leak the prop onto the DOM element", () => {
+      render(
+        <EmptyState>
+          <EmptyState.Actions stackOnMobile data-testid="actions">
+            <button type="button">Create</button>
+          </EmptyState.Actions>
+        </EmptyState>,
+      );
+      expect(screen.getByTestId("actions")).not.toHaveAttribute("stackonmobile");
+    });
+  });
+
+  describe("announce", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    const renderAnnounced = (props: Partial<EmptyStateProps> = {}, title = "No results for “fjord”") =>
+      render(
+        <EmptyState announce data-testid="empty" {...props}>
+          <EmptyState.Title>{title}</EmptyState.Title>
+          <EmptyState.Description>Try a different search term.</EmptyState.Description>
+        </EmptyState>,
+      );
+
+    it("renders no status region by default", () => {
+      renderEmptyState();
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    it("renders a status region that is empty when the empty state first appears", () => {
+      vi.useFakeTimers();
+      renderAnnounced();
+      const region = screen.getByRole("status");
+      expect(region).toBeEmptyDOMElement();
+    });
+
+    it("keeps the region empty for a moment after mounting, so the fill is a change the screen reader sees", async () => {
+      vi.useFakeTimers();
+      renderAnnounced();
+      await act(async () => {
+        vi.advanceTimersByTime(50);
+      });
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+      await act(async () => {
+        vi.advanceTimersByTime(50);
+      });
+      expect(screen.getByRole("status")).not.toBeEmptyDOMElement();
+    });
+
+    it("fills the region a moment later with the title and description, as sentences", async () => {
+      vi.useFakeTimers();
+      renderAnnounced();
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("No results for “fjord”. Try a different search term.");
+    });
+
+    it("doesn't add a full stop to a title that already ends in punctuation", async () => {
+      vi.useFakeTimers();
+      renderAnnounced({}, "Nothing here!");
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("Nothing here! Try a different search term.");
+    });
+
+    it("clears the region again, so the text isn't read twice in browse mode", async () => {
+      vi.useFakeTimers();
+      renderAnnounced();
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status")).not.toBeEmptyDOMElement();
+      await act(async () => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    });
+
+    it("announces again when the text changes", async () => {
+      vi.useFakeTimers();
+      const { rerender } = renderAnnounced();
+      await act(async () => {
+        vi.advanceTimersByTime(100 + 1000);
+      });
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+      rerender(
+        <EmptyState announce data-testid="empty">
+          <EmptyState.Title>No results for “lake”</EmptyState.Title>
+          <EmptyState.Description>Try a different search term.</EmptyState.Description>
+        </EmptyState>,
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("No results for “lake”.");
+    });
+
+    it("doesn't announce again when it re-renders with the same text", async () => {
+      vi.useFakeTimers();
+      const { rerender } = renderAnnounced();
+      await act(async () => {
+        vi.advanceTimersByTime(100 + 1000);
+      });
+      rerender(
+        <EmptyState announce data-testid="empty" className="other">
+          <EmptyState.Title>No results for “fjord”</EmptyState.Title>
+          <EmptyState.Description>Try a different search term.</EmptyState.Description>
+        </EmptyState>,
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    });
+
+    it("announces nothing for an empty state with no title or description text", async () => {
+      vi.useFakeTimers();
+      render(
+        <EmptyState announce>
+          <EmptyState.Icon icon={TrayIcon} />
+        </EmptyState>,
+      );
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    });
+
+    it("stops announcing when turned off", async () => {
+      vi.useFakeTimers();
+      const { rerender } = renderAnnounced();
+      rerender(
+        <EmptyState data-testid="empty">
+          <EmptyState.Title>No results for “fjord”</EmptyState.Title>
+        </EmptyState>,
+      );
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    it("cleans up its timers when unmounted mid-announcement", async () => {
+      vi.useFakeTimers();
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { unmount } = renderAnnounced();
+      unmount();
+      await act(async () => {
+        vi.advanceTimersByTime(5000);
+      });
+      expect(error).not.toHaveBeenCalled();
+    });
+
+    it("keeps the region out of the layout and the tab order", () => {
+      renderAnnounced();
+      const region = screen.getByRole("status");
+      expect(region.tagName).toBe("SPAN");
+      expect(region).not.toHaveAttribute("tabindex");
+      expect(screen.getByTestId("empty")).toHaveClass(styles.root ?? "");
+    });
+
+    it("warns once when also given role=status, and not otherwise", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      renderAnnounced({ role: "status" });
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toContain("announces the message twice");
+      warn.mockClear();
+      renderAnnounced();
+      renderEmptyState({ role: "status" });
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it("keeps forwarding the consumer's ref to the root", () => {
+      const ref = createRef<HTMLDivElement>();
+      render(
+        <EmptyState announce ref={ref} data-testid="empty">
+          <EmptyState.Title>Nothing</EmptyState.Title>
+        </EmptyState>,
+      );
+      expect(ref.current).toBe(screen.getByTestId("empty"));
+    });
+  });
+
   describe("accessibility (jest-axe)", () => {
     it("has no violations for the default composition", async () => {
       const { container } = renderEmptyState();
@@ -412,6 +648,21 @@ describe("EmptyState", () => {
         expect(await axe(container)).toHaveNoViolations();
       },
     );
+
+    it("has no violations with an announcing status region", async () => {
+      const { container } = render(
+        <EmptyState announce>
+          <EmptyState.Media>
+            <img src="/empty.svg" alt="" />
+          </EmptyState.Media>
+          <EmptyState.Title>No results</EmptyState.Title>
+          <EmptyState.Actions stackOnMobile>
+            <button type="button">Clear search</button>
+          </EmptyState.Actions>
+        </EmptyState>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
 
     it("has no violations as a status message", async () => {
       const { container } = renderEmptyState({ role: "status" });

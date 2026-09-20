@@ -15,6 +15,12 @@ const meta: Meta<typeof EmptyState.Actions> = {
       description:
         "The next step — usually one primary Button (the way out of the empty state), optionally with a secondary one or a Link. Laid out in a row that wraps on a narrow screen.",
     },
+    stackOnMobile: {
+      control: "boolean",
+      description:
+        "Below the sm breakpoint (a phone), stacks the actions in a column with each one the full width of the empty state — bigger touch targets, and the primary action first. From sm up they sit in a row as usual. The breakpoint is a viewport width, as everywhere else in the system.",
+      table: { defaultValue: { summary: "false" } },
+    },
     id: {
       control: false,
       description:
@@ -34,7 +40,9 @@ const meta: Meta<typeof EmptyState.Actions> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: {},
+  args: {
+    stackOnMobile: false,
+  },
 };
 
 export default meta;
