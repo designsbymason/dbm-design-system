@@ -366,7 +366,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
             disabled={disabled}
             className={styles.jumpInput}
           />
-          <Button type="submit" variant="secondary" size={size} disabled={disabled} className={styles.jumpSubmit}>
+          <Button type="submit" variant="secondary" size={size} disabled={disabled}>
             {labels.jumpSubmit}
           </Button>
         </form>

@@ -137,7 +137,7 @@ const meta: Meta<PlaygroundArgs> = {
     rounded: {
       control: "boolean",
       description:
-        "Makes every control round: a circle for a page number or an arrow, a pill for a page number too wide to be a square. The \"Go to page\" field and its button are rounded too, so the row doesn't end in a square-cornered field.",
+        "Makes every page number and arrow round: a circle, or a pill for a page number too wide to be a square. The \"Go to page\" field and its button (showJump) keep their own corners.",
       table: { defaultValue: { summary: "false" } },
     },
     showJump: {
@@ -504,8 +504,8 @@ export const Rounded: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: paginationSnippets.rounded } } },
   render: () => (
-    // `rounded` makes every control a circle (a pill for a number too wide for a square, like 1234), and the jump
-    // field and its button follow. The last row is the default, for comparison.
+    // `rounded` makes every page number and arrow a circle (a pill for a number too wide for a square, like 1234).
+    // The jump field and its button keep their own corners. The last row is the default, for comparison.
     <div style={{ ...containerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }} data-testid="rounded">
       {(["ghost", "outlined", "filled"] as const).map((variant) => (
         <div key={variant} style={labelledColumn}>
@@ -517,7 +517,7 @@ export const Rounded: Story = {
       ))}
       <div style={labelledColumn}>
         <Text size="sm" weight="semibold">
-          rounded, with the jump field and a wide page number
+          rounded, with a wide page number and the jump field (which keeps its corners)
         </Text>
         <Pagination pageCount={5000} defaultValue={1234} rounded showJump compact="never" align="start" aria-label="Rounded with jump" />
       </div>
@@ -547,14 +547,12 @@ export const Rounded: Story = {
         await expect(radius).toBeGreaterThanOrEqual(half - 0.5);
       }
     }
-    // The jump field and its button are round too.
+    // The jump field and its button are NOT round: they keep their own (rounded-square) corners, well short of half
+    // their height. (`Input`'s own wrapper carries the component's `jumpInput` class.)
     const withJump = navs[3]!;
-    // `Input`'s own wrapper (the rounded box around the field), which the component gives a `jumpInput` class.
-    const field = withJump.querySelector("[class*=jumpInput]")!;
-    await expect(rounding(field).radius).toBeGreaterThanOrEqual(rounding(field).half - 0.5);
-    await expect(rounding(within(withJump).getByRole("button", { name: "Go" })).radius).toBeGreaterThanOrEqual(
-      rounding(within(withJump).getByRole("button", { name: "Go" })).half - 0.5,
-    );
+    const field = rounding(withJump.querySelector("[class*=jumpInput]")!);
+    const go = rounding(within(withJump).getByRole("button", { name: "Go" }));
+    for (const jump of [field, go]) await expect(jump.radius).toBeLessThan(jump.half - 4);
     // A narrow number is a circle, a wide one a pill.
     const narrow = rounding(within(withJump).getByRole("button", { name: "Page 1" }));
     await expect(Math.abs(narrow.width - narrow.height)).toBeLessThan(1);

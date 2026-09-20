@@ -136,9 +136,9 @@ export interface PaginationProps
    */
   variant?: PaginationVariant;
   /**
-   * Makes every control round: a circle for a page number or an arrow, a pill for a page
-   * number too wide to be a square. The "Go to page" field and its button are rounded too, so
-   * the row doesn't end in a square-cornered field.
+   * Makes every page number and arrow round: a circle, or a pill for a page number too wide
+   * to be a square. The "Go to page" field and its button (`showJump`) keep their own
+   * corners.
    * @default false
    */
   rounded?: boolean;

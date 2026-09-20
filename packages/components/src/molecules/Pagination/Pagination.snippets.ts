@@ -59,8 +59,8 @@ export const paginationSnippets = {
     this is the treatment of every other control. */}
 <Pagination pageCount={20} defaultValue={5} variant="outlined" />`,
 
-  rounded: `{/* rounded makes every control a circle — a pill for a page number too wide for a square. The
-    "Go to page" field and its button are rounded too. */}
+  rounded: `{/* rounded makes every page number and arrow a circle — a pill for a page number too wide for a square.
+    The "Go to page" field and its button keep their own corners. */}
 <Pagination pageCount={20} defaultValue={5} rounded />
 
 <Pagination pageCount={5000} defaultValue={1234} rounded showJump />`,

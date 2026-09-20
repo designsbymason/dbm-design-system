@@ -102,8 +102,8 @@ import { Pagination } from "@dbm-design-system/components";
 
 ### Rounded
 
-`rounded` makes every control a circle — or, for a page number too wide to be a square (like 1234), a pill. The "Go to
-page" field and its button follow, so the row doesn't end in a square-cornered field.
+`rounded` makes every page number and arrow a circle — or, for a page number too wide to be a square (like 1234), a pill.
+The "Go to page" field and its button keep their own corners.
 
 <Canvas of={PaginationStories.Rounded} />
 
@@ -374,7 +374,7 @@ const [page, setPage] = useState(1);
 <TokenRow token="border.focus" usage="a focused control's outline color" />
 <TokenRow token="border-width.2" usage="a focused control's outline width" />
 <TokenRow token="radius.md" usage="the corners of each control" />
-<TokenRow token="radius.full" usage="the corners of every control (and the jump field and its button) when rounded, and of their focus ring" />
+<TokenRow token="radius.full" usage="the corners of every page number and arrow when rounded, and of their focus ring" />
 <TokenRow token="opacity.40" usage="an unavailable control's dimmed opacity" />
 <TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="the width and height of every control across the five size steps — the same tokens IconButton uses, matched to Button's own height at each step, so each control is a square" />
 <TokenRow token="font-size.xs–font-size.lg" usage="the page numbers' and the summary's size across the five size steps" />

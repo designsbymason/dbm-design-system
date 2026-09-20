@@ -207,24 +207,24 @@ component's own width, and a jump-to-page input. `Pagination` is still not Final
 
 The user asked for a `rounded` prop so the numbered page buttons and the icon controls can be round. Pagination isn't Finalized, so it was built freely.
 
-- **`rounded` (default `false`)** — every control a circle, and a pill for a page number too wide to be a square (`1234`). Named as `IconButton`'s
+- **`rounded` (default `false`)** — every page number and arrow a circle, and a pill for a page number too wide to be a square (`1234`). Named as `IconButton`'s
   `rounded` is. `Button` has no such option (only `IconButton` does), so the radius is set in `Pagination.module.css`: two classes (`.rounded .item`),
   so it beats `Button`'s own `radius.md` whatever order the stylesheets load in, and `radius.full` — the token `IconButton`'s own rounded state uses.
 - **The focus ring is round too**, following the repo's rule (`05-component-api-conventions.md` §6) that a fully round element gets a `radius.full`
   ring instead of the standard small one. **This one rule is not guarded by any test I could write:** removing it changes nothing here, because
   `Pagination`'s stylesheet loads after `Button`'s and so already wins the tie on the focus state. It is insurance against a different load order
   (it raises the specificity so the ring is round regardless), which no test in this environment can produce; kept, and stated rather than claimed.
-- **The jump field and its "Go" button are rounded too**, which the request didn't strictly name (it said the numbered pages and the icon controls). A
-  round row that ends in a square-cornered field looks like a mistake, so they follow; it is easy to narrow if unwanted. The field's wrapper is
-  `Input`'s (which has no rounded option either), rounded through the `jumpInput` class.
+- **The jump field and its "Go" button are deliberately *not* rounded.** The first build rounded them too, so a round row wouldn't end in a
+  square-cornered field; the user asked for that to be reverted, so `rounded` affects only the page numbers and the arrows and the field and
+  button keep their own corners. The story asserts it (both stay well short of half their height).
 - **Nothing else changes:** the current page is still `primary`, variants, `compact`, the arrows' RTL flip, and all colour pairings are as before, so
   no contrast was re-measured (only corner radii differ).
-- **Tests:** 5 unit tests for the class and its combinations, and a visible "Rounded" story that *measures* (so the demo never changes) that every control's
-  corner is at least half its height, the jump field and its button too, a narrow number is a circle and `1234` a pill, and the default row stays a
-  rounded square. The keyboard focus ring is checked in a hidden twin (`RoundedInteraction`), since focusing would leave a ring on the demo.
-  Breaking the CSS on purpose: un-rounding the controls and un-rounding the jump field each fail the story; the focus-ring rule is the one that doesn't
-  (above).
-- **Docs:** a `rounded` Playground control and Properties row, a "Rounded" gallery entry, usage guidance (softer for a consumer app; square-cornered
+- **Tests:** 5 unit tests for the class and its combinations, and a visible "Rounded" story that *measures* (so the demo never changes) that every page number's and arrow's
+  corner is at least half its height, the jump field and its button are *not* round, a narrow number is a circle and `1234` a pill, and the default
+  row stays a rounded square. The keyboard focus ring is checked in a hidden twin (`RoundedInteraction`), since focusing would leave a ring on the demo.
+  Breaking the CSS on purpose: un-rounding the controls, rounding the jump field, and rounding the Go button each fail the story; the focus-ring rule is
+  the one that doesn't (above).
+- **Docs:** a `rounded` Playground control and Properties row, a "Rounded" gallery entry (with a jump-field row showing it keeps its corners), usage guidance (softer for a consumer app; square-cornered
   where it should match a dense data screen's table and form controls), a code example, the `radius.full` token row, and a snippet (all typechecked
   against the real component).
 

@@ -622,9 +622,11 @@ describe("Pagination", () => {
       expect(page(4)).toHaveClass(buttonStyles.variantPrimary ?? "");
     });
 
-    it("rounds the jump field's button too, so the row doesn't end in a square-cornered one", () => {
+    it("leaves the jump field and its button alone: they aren't among the controls the rounded rule targets", () => {
       renderPagination({ rounded: true, showJump: true });
-      expect(screen.getByRole("button", { name: "Go" })).toHaveClass(styles.jumpSubmit ?? "");
+      // The rule is `.rounded .item`; the jump form's controls aren't `.item`s.
+      expect(screen.getByRole("button", { name: "Go" })).not.toHaveClass(styles.item ?? "");
+      expect(screen.getByLabelText("Go to page").closest("form")?.querySelector(`.${styles.item}`)).toBeNull();
     });
 
     it("works in link mode and in the compact form", () => {
