@@ -87,6 +87,23 @@ const Entry = ({ children, ...props }: ComponentPropsWithoutRef<"li">) => (
   </li>
 );
 
+/**
+ * Whether keyboard focus is on one of the page numbers — the controls that collapsing the row hides. A
+ * mouse click also focuses a button but isn't keyboard focus (`:focus-visible`), and only keyboard focus is
+ * worth holding a collapse back for.
+ */
+const keyboardIsOnPageNumber = (nav: HTMLElement): boolean => {
+  const active = document.activeElement;
+  const pageItem = styles.pageItem;
+  if (!active || !pageItem || !nav.contains(active) || !active.closest(`.${pageItem}`)) return false;
+  try {
+    return active.matches(":focus-visible");
+  } catch {
+    // A browser that can't answer: assume keyboard focus, the safe side.
+    return true;
+  }
+};
+
 /** Follows a link the way a click on it would, for the jump field (which is a form, not a link). */
 const followLink = (href: string): void => {
   const link = document.createElement("a");
@@ -173,6 +190,8 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
   const listRef = useRef<HTMLUListElement>(null);
   const mergedRef = useMemo(() => mergeRefs(ref, navRef), [ref]);
   const naturalWidth = useRef(0);
+  // The row (which pages it holds) that `naturalWidth` was measured for.
+  const measuredRow = useRef("");
 
   const pageCount = wholeCount(rawPageCount);
   const siblingCount = nonNegative(rawSiblingCount);
@@ -180,6 +199,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
   const current = Math.min(Math.max(Math.trunc(value ?? uncontrolledPage) || 1, 1), Math.max(pageCount, 1));
   const labels: PaginationLabels = { ...defaultLabels, ...labelOverrides };
   const items = getPaginationRange({ page: current, pageCount, siblingCount, boundaryCount });
+  const rowKey = items.join(",");
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
@@ -224,6 +244,13 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
   // `display: none`), so it is measured then and remembered; the decision is that width against the
   // component's own. Until the first measurement (and on the server) it behaves like `auto`, so
   // there's no jump. The measurement runs before the browser paints.
+  //
+  // The row's width depends on which pages it shows (a page in the thousands is wider than one in the
+  // tens), so it is measured again whenever the row changes — `rowKey`. While collapsed the numbers
+  // can't be measured, so a changed row shows them again for that (before the paint, so it can't be
+  // seen) and then decides. And a collapse is held back while keyboard focus is on a page number: taking
+  // the focused button out of the page would drop focus to the top of the document. The row stays as it
+  // is until focus has moved (to an arrow, or out of the component), which is the `focusout` below.
   const containerMode = compact === "container";
   useIsomorphicLayoutEffect(() => {
     if (!containerMode) return;
@@ -235,16 +262,35 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
       setFit("expanded");
       return;
     }
+    if (fit === "collapsed" && measuredRow.current !== rowKey) {
+      setFit("expanded");
+      return;
+    }
     const measure = () => {
-      if (fit === "expanded") naturalWidth.current = list.scrollWidth;
-      setFit(naturalWidth.current > nav.clientWidth ? "collapsed" : "expanded");
+      if (fit === "expanded") {
+        naturalWidth.current = list.scrollWidth;
+        measuredRow.current = rowKey;
+      }
+      const tooWide = naturalWidth.current > nav.clientWidth;
+      if (tooWide && fit === "expanded" && keyboardIsOnPageNumber(nav)) return;
+      setFit(tooWide ? "collapsed" : "expanded");
     };
     measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(measure);
-    observer.observe(nav);
-    return () => observer.disconnect();
-  }, [containerMode, fit, items.length, showFirstLast, size]);
+    // After the browser has finished moving focus, not while it is still on the control being left.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onFocusOut = () => {
+      clearTimeout(timer);
+      timer = setTimeout(measure, 0);
+    };
+    nav.addEventListener("focusout", onFocusOut);
+    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
+    observer?.observe(nav);
+    return () => {
+      clearTimeout(timer);
+      nav.removeEventListener("focusout", onFocusOut);
+      observer?.disconnect();
+    };
+  }, [containerMode, fit, rowKey, showFirstLast, size]);
 
   // Nothing to paginate: no pages yet, or none at all.
   if (pageCount === 0) return null;

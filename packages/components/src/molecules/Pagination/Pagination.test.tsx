@@ -685,6 +685,8 @@ describe("Pagination", () => {
     // the numbers are showing — collapsed, they would be `display: none`).
     let navWidth = 600;
     let rowWidth = 500;
+    // Lets a test make the row's width depend on which page is showing, as it does with real digits.
+    let rowWidthFor: (() => number) | undefined;
     const observers: Array<{ callback: () => void; disconnected: boolean }> = [];
     const clientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth");
     const scrollWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollWidth");
@@ -692,6 +694,7 @@ describe("Pagination", () => {
     beforeEach(() => {
       navWidth = 600;
       rowWidth = 500;
+      rowWidthFor = undefined;
       observers.length = 0;
       Object.defineProperty(HTMLElement.prototype, "clientWidth", {
         configurable: true,
@@ -702,7 +705,7 @@ describe("Pagination", () => {
       Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
         configurable: true,
         get() {
-          return (this as HTMLElement).tagName === "UL" ? rowWidth : 0;
+          return (this as HTMLElement).tagName === "UL" ? (rowWidthFor?.() ?? rowWidth) : 0;
         },
       });
       vi.stubGlobal(
@@ -774,6 +777,109 @@ describe("Pagination", () => {
       rowWidth = 700; // adding first and last buttons makes the row wider than the component
       rerender(<Pagination pageCount={20} compact="container" showFirstLast data-testid="pagination" />);
       expect(collapsed()).toBe(true);
+    });
+
+    describe("as the page changes the row", () => {
+      // A page in the hundreds or more is wider than one in the tens: 700 against a 600 box, or 500.
+      const widthByPage = () => {
+        const current = Number(document.querySelector("[aria-current=page]")?.textContent);
+        return current >= 100 ? 700 : 500;
+      };
+      const big = (value: number) => (
+        <Pagination pageCount={5000} value={value} compact="container" data-testid="pagination" />
+      );
+      const settle = () => act(async () => void (await new Promise((resolve) => setTimeout(resolve, 0))));
+
+      it("collapses when the new page's row is too wide, and expands when a narrower one fits", () => {
+        rowWidthFor = widthByPage;
+        const { rerender } = render(big(1));
+        expect(collapsed()).toBe(false);
+        rerender(big(2000));
+        expect(collapsed()).toBe(true);
+        // While collapsed the numbers can't be measured; the changed row is shown again to be.
+        rerender(big(1));
+        expect(collapsed()).toBe(false);
+        rerender(big(2000));
+        expect(collapsed()).toBe(true);
+      });
+
+      it("collapses at once when keyboard focus is on an arrow, which stays in the page", () => {
+        rowWidthFor = widthByPage;
+        const { rerender } = render(big(1));
+        act(() => screen.getByRole("button", { name: "Next page" }).focus());
+        rerender(big(2000));
+        expect(collapsed()).toBe(true);
+        expect(screen.getByRole("button", { name: "Next page" })).toHaveFocus();
+      });
+
+      // jsdom's `:focus-visible` depends on which tests ran before, so it is stated outright: the focused element
+      // is keyboard focus (`true`) or, as after a mouse click, isn't (`false`). The page is changed by re-rendering
+      // with a new controlled value. The real keyboard-versus-mouse behaviour is checked in a real browser, in
+      // the story.
+      let focusVisible: ReturnType<typeof vi.spyOn> | undefined;
+      const keyboardFocus = (visible: boolean) => {
+        const matches = Element.prototype.matches;
+        focusVisible = vi.spyOn(Element.prototype, "matches").mockImplementation(function (this: Element, selector: string) {
+          return selector === ":focus-visible" ? visible && document.activeElement === this : matches.call(this, selector);
+        });
+      };
+      afterEach(() => focusVisible?.mockRestore());
+
+      it("holds a collapse back while keyboard focus is on a page number, and applies it once focus moves on", async () => {
+        rowWidthFor = widthByPage;
+        keyboardFocus(true);
+        const { rerender } = render(big(1));
+        act(() => screen.getByRole("button", { name: "Page 5000" }).focus());
+        rerender(big(5000));
+        await settle();
+        expect(screen.getByRole("button", { current: "page" })).toHaveAccessibleName("Page 5000");
+        expect(collapsed()).toBe(false);
+        expect(screen.getByRole("button", { name: "Page 5000" })).toHaveFocus();
+
+        act(() => screen.getByRole("button", { name: "Next page" }).focus());
+        await settle();
+        expect(collapsed()).toBe(true);
+        expect(screen.getByRole("button", { name: "Next page" })).toHaveFocus();
+      });
+
+      it("collapses at once when a page number has focus that isn't keyboard focus (after a mouse click)", () => {
+        rowWidthFor = widthByPage;
+        keyboardFocus(false);
+        const { rerender } = render(big(1));
+        act(() => screen.getByRole("button", { name: "Page 5000" }).focus());
+        rerender(big(5000));
+        expect(collapsed()).toBe(true);
+      });
+
+      it("keeps holding while focus moves from one page number to another", async () => {
+        rowWidthFor = widthByPage;
+        keyboardFocus(true);
+        const { rerender } = render(big(1));
+        act(() => screen.getByRole("button", { name: "Page 5000" }).focus());
+        rerender(big(5000));
+        act(() => screen.getByRole("button", { name: "Page 4999" }).focus());
+        await settle();
+        expect(collapsed()).toBe(false);
+      });
+
+      it("cancels a pending release when it is unmounted", async () => {
+        let reads = 0;
+        rowWidthFor = () => {
+          reads += 1;
+          return widthByPage();
+        };
+        keyboardFocus(true);
+        const { rerender, unmount } = render(big(1));
+        act(() => screen.getByRole("button", { name: "Page 5000" }).focus());
+        rerender(big(5000));
+        // Moving focus off the number schedules the release; unmount before it runs.
+        act(() => screen.getByRole("button", { name: "Next page" }).focus());
+        unmount();
+        reads = 0;
+        await settle();
+        // The release would have measured the row again. It must not.
+        expect(reads).toBe(0);
+      });
     });
 
     it("doesn't observe anything in the other modes", () => {

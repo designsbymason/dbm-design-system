@@ -982,3 +982,91 @@ export const RightToLeftInteraction: Story = {
     await expect(edges(rtl.root).fromLeft).toBeGreaterThan(10);
   },
 };
+
+function DigitsHost() {
+  const [page, setPage] = useState(1);
+  return (
+    <div data-testid="box" style={{ inlineSize: "1000px" }}>
+      <Pagination pageCount={5000} value={page} onValueChange={setPage} compact="container" showJump aria-label="Wide page numbers" />
+    </div>
+  );
+}
+
+// `compact="container"` decides from the row's own width, and that width depends on which pages it shows: a page in the
+// thousands is wider than one in the tens. In a box between the two widths the row fits at page 1 and not at page 5000,
+// so it has to be measured again when the page changes — collapsing when it stops fitting and expanding when it fits
+// again — and it must not take a page number out from under keyboard focus. Not a demo (it drives the box's width and
+// the page itself), so hidden from the sidebar and Docs (`!dev`), still run as a test.
+export const FitContainerDigitsInteraction: Story = {
+  name: "Collapses to fit its container, as the page numbers get wider — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <DigitsHost />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvasElement.querySelector<HTMLElement>("[data-testid=box]")!;
+    const nav = () => canvasElement.querySelector("nav")!;
+    const rowWidth = () => nav().querySelector("ul")!.scrollWidth;
+    const shown = (selector: string) => {
+      const element = nav().querySelector(selector);
+      return !!element && getComputedStyle(element).display !== "none";
+    };
+    const numbersShown = () => shown("[class*=pageItem]");
+    const summaryShown = () => shown("[class*=summary]");
+    const overflows = () => rowWidth() > nav().clientWidth;
+    const current = () => canvas.getByRole("button", { current: "page" });
+
+    // The premise: in a roomy box, the row is wider at page 5000 than at page 1.
+    await expect(numbersShown()).toBe(true);
+    const narrow = rowWidth();
+    await userEvent.click(canvas.getByRole("button", { name: "Page 5000" }));
+    await expect(current()).toHaveAccessibleName("Page 5000");
+    const wide = rowWidth();
+    await expect(wide).toBeGreaterThan(narrow);
+    await userEvent.click(canvas.getByRole("button", { name: "Page 1" }));
+    await expect(current()).toHaveAccessibleName("Page 1");
+
+    // A box between the two: the row fits at page 1.
+    box.style.inlineSize = `${Math.floor((narrow + wide) / 2)}px`;
+    await waitFor(() => expect(numbersShown()).toBe(true));
+    await expect(overflows()).toBe(false);
+
+    // A jump to page 5000 (focus is in the jump field, not on a number) makes the row too wide: it collapses.
+    const field = canvas.getByLabelText("Go to page");
+    await userEvent.type(field, "5000{Enter}");
+    await waitFor(() => expect(summaryShown()).toBe(true));
+    await expect(numbersShown()).toBe(false);
+    await expect(canvas.getByText("Page 5000 of 5000", { selector: "[class*=summary] *" })).toBeVisible();
+
+    // And back to page 1, whose row fits: the numbers, hidden while it was collapsed, are measured again and return.
+    await userEvent.type(field, "1{Enter}");
+    await waitFor(() => expect(numbersShown()).toBe(true));
+    await expect(summaryShown()).toBe(false);
+    await expect(overflows()).toBe(false);
+
+    // Keyboard focus on a page number holds the collapse back. Tab to page 5000 and press Enter.
+    (document.activeElement as HTMLElement).blur();
+    for (let i = 0; i < 12 && document.activeElement?.getAttribute("aria-label") !== "Page 5000"; i += 1) {
+      await userEvent.tab();
+    }
+    const focused = document.activeElement as HTMLElement;
+    await expect(focused).toHaveAccessibleName("Page 5000");
+    await userEvent.keyboard("{Enter}");
+    await expect(current()).toHaveAccessibleName("Page 5000");
+    // Give a wrongly-eager collapse time to happen.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(document.activeElement).toBe(focused);
+    await expect(focused.isConnected).toBe(true);
+    await expect(numbersShown()).toBe(true);
+    await expect(summaryShown()).toBe(false);
+
+    // Moving focus on — to the next arrow, which stays in the page — lets the collapse happen, with focus kept.
+    await userEvent.tab();
+    const next = canvas.getByRole("button", { name: "Next page" });
+    await expect(next).toHaveFocus();
+    await waitFor(() => expect(summaryShown()).toBe(true));
+    await expect(numbersShown()).toBe(false);
+    await expect(next).toHaveFocus();
+    await expect(next).toBeVisible();
+  },
+};

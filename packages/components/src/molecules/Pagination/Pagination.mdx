@@ -238,7 +238,8 @@ switch.
   about 305px, which is more than a 320px phone leaves once the page has its gutters, so it wraps onto a second line.
   Where that matters, use `showJump` instead of `showFirstLast` on a phone; the field goes on its own line.
 - `compact="container"` measures the row while its numbers are showing, and again whenever the component's width
-  changes. It grows to fill the space it is given, so in a flex row it takes what the other items leave.
+  or the pages it shows change (four-digit pages make a wider row than two-digit ones). It grows to fill the space
+  it is given, so in a flex row it takes what the other items leave.
 - A paginated table needs its own accessible name and a way to know which rows are showing. The range summary
   ("Showing 6–10 of 47") does both for sighted users; give the table an `aria-label` or a caption for everyone else.
 
@@ -271,7 +272,10 @@ switch.
   ultimately up to each screen reader, so check the wording in the ones you support.
 - When the numbers collapse (on a phone, or in `container` mode) they are removed with `display: none`, so they leave
   the tab order and the accessibility tree along with the screen. What's left — the buttons and the "Page 7 of 20"
-  text — is what's read.
+  text — is what's read. In `container` mode, a collapse that a page change would cause while keyboard focus is on a
+  page number waits until focus moves on (to an arrow, or out of the component), so the button you are on is never
+  removed from under you; until then the row can be a few pixels wider than its box. A mouse click doesn't count
+  as keyboard focus, so the row collapses at once.
 - The jump field is a real form: a visible label ("Go to page") tied to a number field with `<label for>`, and a
   submit button, so it works with a keyboard (Enter) and with a touch keyboard that has no Enter key. A number outside
   the range goes to the nearest page rather than raising an error, and the field is emptied afterwards. It is natively

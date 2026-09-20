@@ -17,7 +17,10 @@ export type PaginationSize = "xs" | "sm" | "md" | "lg" | "xl";
  * - `"container"` — the numbers whenever they fit the component's own width, the summary
  *   when they don't. Decided by the width the component is actually given, so it works in a
  *   narrow sidebar on a wide screen, or a wide panel on a narrow one. The component fills the
- *   space available to it (in a flex row it grows to take what the other items leave).
+ *   space available to it (in a flex row it grows to take what the other items leave). It
+ *   decides again as the page changes, since a row of four-digit pages is wider than one of
+ *   two-digit pages; if that would collapse the row while keyboard focus is on a page number,
+ *   the collapse waits until focus moves on, so the focused button is never taken from under it.
  * - `"always"` — always the summary, for a narrow place such as a sidebar.
  * - `"never"` — always the numbers; on a very narrow screen the row wraps onto more than
  *   one line rather than overflowing.
