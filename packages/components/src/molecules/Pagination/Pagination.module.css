@@ -9,13 +9,19 @@
 .root {
   --pagination-item: var(--dbm-icon-button-size-md);
   --pagination-font: var(--dbm-font-size-base);
+  --pagination-jump: var(--dbm-space-20);
   --pagination-justify: center;
 
+  align-items: center;
   box-sizing: border-box;
   display: flex;
+  flex-wrap: wrap;
   font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2) var(--dbm-space-4);
   justify-content: var(--pagination-justify);
   min-inline-size: 0;
+  /* The visually hidden status region (`announce`) is positioned against this. */
+  position: relative;
 }
 
 .alignStart {
@@ -29,26 +35,31 @@
 .sizeXs {
   --pagination-item: var(--dbm-icon-button-size-xs);
   --pagination-font: var(--dbm-font-size-xs);
+  --pagination-jump: var(--dbm-space-16);
 }
 
 .sizeSm {
   --pagination-item: var(--dbm-icon-button-size-sm);
   --pagination-font: var(--dbm-font-size-sm);
+  --pagination-jump: var(--dbm-space-16);
 }
 
 .sizeMd {
   --pagination-item: var(--dbm-icon-button-size-md);
   --pagination-font: var(--dbm-font-size-base);
+  --pagination-jump: var(--dbm-space-20);
 }
 
 .sizeLg {
   --pagination-item: var(--dbm-icon-button-size-lg);
   --pagination-font: var(--dbm-font-size-md);
+  --pagination-jump: var(--dbm-space-24);
 }
 
 .sizeXl {
   --pagination-item: var(--dbm-icon-button-size-xl);
   --pagination-font: var(--dbm-font-size-lg);
+  --pagination-jump: var(--dbm-space-24);
 }
 
 /* Wraps rather than overflows, if there's ever too little room. */
@@ -115,6 +126,32 @@
   display: none;
   padding-inline: var(--dbm-space-1);
   white-space: nowrap;
+}
+
+/* The "Go to page" field: a label, a number field, and a button, in a row that wraps under the
+   controls when there isn't room beside them. `.jump .jumpInput` (two classes) so the fixed width
+   beats `Input`'s own `width: 100%` whatever order the stylesheets load in. */
+.jump {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--dbm-space-2);
+  margin: 0;
+}
+
+.jump .jumpInput {
+  inline-size: var(--pagination-jump);
+}
+
+/* `compact="container"`: the component fills the space it is given (a block; in a flex row, what
+   the other items leave), so its own width means something, and its row never wraps — it either
+   fits or collapses (see Pagination.tsx). */
+.compactContainer {
+  flex: 1 1 0;
+}
+
+.compactContainer .list {
+  flex-wrap: nowrap;
 }
 
 /* --- Compact. `always` collapses the row at every width; `auto` only below the `sm`

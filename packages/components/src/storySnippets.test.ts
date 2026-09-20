@@ -238,6 +238,7 @@ describe("Playground snippets, built from the live controls", () => {
     { pageCount: 5, value: 3 },
     { pageCount: 200, value: 100, siblingCount: 2, boundaryCount: 0, showFirstLast: true },
     { size: "xl", compact: "always", align: "end", disabled: true },
+    { variant: "outlined", showJump: true, announce: false, compact: "container" },
   ] as const;
 
   it.each(paginationArgs)("Pagination %j is a real snippet", (args) => {
@@ -251,6 +252,15 @@ describe("Playground snippets, built from the live controls", () => {
     const snippet = paginationPlaygroundSnippet({ siblingCount: 1, boundaryCount: 1, size: "md", compact: "auto", align: "center", showFirstLast: false, disabled: false });
     expect(snippet).not.toMatch(/siblingCount|boundaryCount|size=|compact=|align=|showFirstLast|disabled/);
     expect(paginationPlaygroundSnippet({ siblingCount: 0, boundaryCount: 0 })).toContain("siblingCount={0} boundaryCount={0}");
+  });
+
+  it("Pagination writes variant, showJump, and announce only when they differ from the defaults", () => {
+    const snippet = paginationPlaygroundSnippet({ variant: "ghost", showJump: false, announce: true });
+    expect(snippet).not.toMatch(/variant|showJump|announce/);
+    expect(paginationPlaygroundSnippet({ variant: "filled" })).toContain('variant="filled"');
+    expect(paginationPlaygroundSnippet({ showJump: true })).toContain(" showJump");
+    expect(paginationPlaygroundSnippet({ announce: false })).toContain("announce={false}");
+    expect(paginationPlaygroundSnippet({ compact: "container" })).toContain('compact="container"');
   });
 
   const emptyStateArgs = [

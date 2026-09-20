@@ -7,7 +7,7 @@
 // real usage of what its story shows — only exports of the package, no demo scaffolding — and
 // `storySnippets.test.ts` checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { PaginationAlign, PaginationCompact, PaginationSize } from "./Pagination.types";
+import type { PaginationAlign, PaginationCompact, PaginationSize, PaginationVariant } from "./Pagination.types";
 
 export const paginationSnippets = {
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
@@ -51,13 +51,38 @@ export const paginationSnippets = {
   align: `{/* align: "start" | "center" (default) | "end" — end is the usual place under a table */}
 <Pagination pageCount={10} defaultValue={3} align="end" />`,
 
-  compact: `{/* compact: "auto" (default) | "always" | "never". "always" collapses the numbers to a summary
-    at every width, for a narrow place such as a sidebar. */}
+  compact: `{/* compact: "auto" (default) | "container" | "always" | "never". "always" collapses the numbers to a
+    summary at every width, for a narrow place such as a sidebar. */}
 <Pagination pageCount={20} defaultValue={7} compact="always" />`,
 
+  variants: `{/* variant: "ghost" (default) | "outlined" | "filled". The current page is always the filled brand colour;
+    this is the treatment of every other control. */}
+<Pagination pageCount={20} defaultValue={5} variant="outlined" />`,
+
+  jump: `{/* showJump adds a "Go to page" field and button, for a list long enough that stepping is slow.
+    A number outside the range goes to the nearest page; an empty field does nothing. */}
+<Pagination pageCount={500} defaultValue={42} showJump />`,
+
+  container: `{/* compact="container" decides by the width the component is *given*, not the screen's: the numbers
+    while they fit, the "Page 7 of 20" summary when they don't. It fills the space available to it. */}
+<div style={{ width: "18rem" }}>
+  <Pagination pageCount={20} defaultValue={7} compact="container" />
+</div>`,
+
+  announce: `{/* By default a page change is announced to screen readers — "Page 6 of 20" — through a visually
+    hidden status region. Nothing changes visually. */}
+<Pagination pageCount={20} value={page} onValueChange={setPage} />
+
+{/* Turn it off if your own content region already announces the change */}
+<Pagination pageCount={20} value={page} onValueChange={setPage} announce={false} />`,
+
   onAPhone: `{/* The default, compact="auto": below the sm breakpoint (640px) the numbers collapse to a
-    "Page 7 of 20" summary between the buttons; from sm up the numbers are back. */}
-<Pagination pageCount={20} defaultValue={7} showFirstLast />`,
+    "Page 7 of 20" summary between the buttons; from sm up the numbers are back. The jump field stays,
+    on a line of its own, as the way to reach a page the summary hides. */}
+<Pagination pageCount={20} defaultValue={7} showFirstLast />
+
+{/* With a three-digit page count the summary is wider; use the jump field rather than first and last */}
+<Pagination pageCount={200} defaultValue={7} showJump />`,
 
   tableFooter: `{/* const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState("5");
@@ -113,6 +138,9 @@ export interface PaginationPlaygroundSnippetArgs {
   showFirstLast?: boolean;
   size?: PaginationSize;
   compact?: PaginationCompact;
+  variant?: PaginationVariant;
+  showJump?: boolean;
+  announce?: boolean;
   align?: PaginationAlign;
   disabled?: boolean;
 }
@@ -128,6 +156,9 @@ export function paginationPlaygroundSnippet(args: PaginationPlaygroundSnippetArg
   if (args.showFirstLast) attributes.push("showFirstLast");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.compact && args.compact !== "auto") attributes.push(`compact="${args.compact}"`);
+  if (args.variant && args.variant !== "ghost") attributes.push(`variant="${args.variant}"`);
+  if (args.showJump) attributes.push("showJump");
+  if (args.announce === false) attributes.push("announce={false}");
   if (args.align && args.align !== "center") attributes.push(`align="${args.align}"`);
   if (args.disabled) attributes.push("disabled");
   return `{/* const [page, setPage] = useState(${args.value ?? 1}); */}\n<Pagination ${attributes.join(" ")} />`;

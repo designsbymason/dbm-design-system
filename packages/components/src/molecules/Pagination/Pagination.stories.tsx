@@ -1,14 +1,14 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { useArgs } from "storybook/preview-api";
 import { Text } from "../../atoms/Text";
 import { Select } from "../Select";
 import { Table } from "../Table";
 import { Pagination } from "./Pagination";
 import { paginationPlaygroundSnippet, paginationSnippets } from "./Pagination.snippets";
-import type { PaginationAlign, PaginationCompact, PaginationSize } from "./Pagination.types";
+import type { PaginationAlign, PaginationCompact, PaginationSize, PaginationVariant } from "./Pagination.types";
 
 // `Pagination`'s own props get hand-written argTypes here (this meta has no `component`, so
 // docgen doesn't supply them). The Playground is controlled: `value` is a real control, and
@@ -22,6 +22,9 @@ interface PlaygroundArgs {
   showFirstLast: boolean;
   size: PaginationSize;
   compact: PaginationCompact;
+  variant: PaginationVariant;
+  showJump: boolean;
+  announce: boolean;
   align: PaginationAlign;
   disabled: boolean;
   onValueChange: unknown;
@@ -51,6 +54,9 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   showFirstLast: { control: false },
   size: { control: false },
   compact: { control: false },
+  variant: { control: false },
+  showJump: { control: false },
+  announce: { control: false },
   align: { control: false },
   disabled: { control: false },
   onValueChange: { control: false },
@@ -114,10 +120,29 @@ const meta: Meta<PlaygroundArgs> = {
     },
     compact: {
       control: "radio",
-      options: ["auto", "always", "never"],
+      options: ["auto", "container", "always", "never"],
       description:
-        "Whether the page numbers collapse to a \"Page 3 of 20\" summary between the previous and next buttons: only on a phone (auto), always, or never. The Docs page is wide, so auto shows the numbers here — open the 'On a phone' story to see it collapse.",
+        "Whether the page numbers collapse to a \"Page 3 of 20\" summary between the previous and next buttons: on a phone-width screen (auto), when they don't fit the component's own width (container), always, or never. The Docs page is wide, so auto shows the numbers here — open the 'On a phone' story to see it collapse; container collapses in a narrow box on any screen.",
       table: { defaultValue: { summary: "'auto'" } },
+    },
+    variant: {
+      control: "select",
+      options: ["ghost", "outlined", "filled"],
+      description:
+        "How the page controls look. The current page is always the filled brand colour; this is the treatment of every other control: ghost (no surface at rest, a tint on hover — the quietest), outlined (a brand-coloured border), or filled (a soft brand tint).",
+      table: { defaultValue: { summary: "'ghost'" } },
+    },
+    showJump: {
+      control: "boolean",
+      description:
+        "Adds a \"Go to page\" field and button after the row, for a list long enough that stepping or picking from the window is slow. Type a page number and press Enter (or the button); a number outside 1 to pageCount goes to the nearest page, and an empty field does nothing. It stays available in the compact form. A form control, so it is natively disabled while disabled is set.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    announce: {
+      control: "boolean",
+      description:
+        "Announces the new page to screen readers whenever the page changes — \"Page 3 of 20\" (the summary label) — through a visually hidden status region that stays in the page. Set it to false if your own content region already announces the change. (Nothing changes visually; see the 'Announcing a page change' story.)",
+      table: { defaultValue: { summary: "true" } },
     },
     align: {
       control: "radio",
@@ -172,6 +197,9 @@ const meta: Meta<PlaygroundArgs> = {
     showFirstLast: false,
     size: "md",
     compact: "auto",
+    variant: "ghost",
+    showJump: false,
+    announce: true,
     align: "center",
     disabled: false,
   },
@@ -188,6 +216,9 @@ const meta: Meta<PlaygroundArgs> = {
           showFirstLast={args.showFirstLast}
           size={args.size}
           compact={args.compact}
+          variant={args.variant}
+          showJump={args.showJump}
+          announce={args.announce}
           align={args.align}
           disabled={args.disabled}
         />
@@ -413,6 +444,176 @@ export const Alignment: Story = {
   },
 };
 
+export const Variants: Story = {
+  name: "All variants",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: paginationSnippets.variants } } },
+  render: () => (
+    // Every control but the current page takes the treatment; the current page is always the filled brand colour.
+    <div style={{ ...containerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }} data-testid="variants">
+      {(["ghost", "outlined", "filled"] as const).map((variant) => (
+        <div key={variant} style={labelledColumn}>
+          <Text size="sm" weight="semibold">
+            variant=&quot;{variant}&quot;
+          </Text>
+          <Pagination pageCount={20} defaultValue={5} variant={variant} compact="never" align="start" aria-label={`Variant ${variant}`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const surface = (name: string, row: number) => {
+      const nav = canvasElement.querySelectorAll("[data-testid=variants] nav")[row]!;
+      const control = within(nav as HTMLElement).getByRole("button", { name });
+      const style = getComputedStyle(control);
+      return { background: style.backgroundColor, borderWidth: parseFloat(style.borderTopWidth) };
+    };
+    const transparent = "rgba(0, 0, 0, 0)";
+    // Ghost: no surface. Outlined: a border. Filled: a tint. The current page is filled in all three.
+    await expect(surface("Page 6", 0)).toEqual({ background: transparent, borderWidth: 0 });
+    await expect(surface("Page 6", 1).borderWidth).toBeGreaterThan(0);
+    await expect(surface("Page 6", 1).background).toBe(transparent);
+    await expect(surface("Page 6", 2).background).not.toBe(transparent);
+    await expect(surface("Page 6", 2).borderWidth).toBe(0);
+    for (const row of [0, 1, 2]) await expect(surface("Page 5", row).background).not.toBe(transparent);
+    await expect(surface("Page 5", 0).background).not.toBe(surface("Page 6", 2).background);
+  },
+};
+
+export const Jump: Story = {
+  name: "Jump to a page",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: paginationSnippets.jump } } },
+  render: () => (
+    // For a list long enough that stepping, or choosing from the window, is slow. Type a page and press Enter
+    // or the button; a number outside the range goes to the nearest page.
+    <div style={containerStyle}>
+      <Pagination pageCount={500} defaultValue={42} showJump aria-label="A long list" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const field = canvas.getByLabelText("Go to page");
+    const current = () => canvas.getByRole("button", { current: "page" });
+    await expect(current()).toHaveAccessibleName("Page 42");
+    await userEvent.type(field, "250{Enter}");
+    await expect(current()).toHaveAccessibleName("Page 250");
+    await expect(field).toHaveValue(null);
+    // A number outside the range goes to the nearest page — the browser's own range check must not block it.
+    await userEvent.type(field, "9999{Enter}");
+    await expect(current()).toHaveAccessibleName("Page 500");
+    await userEvent.type(field, "0");
+    await userEvent.click(canvas.getByRole("button", { name: "Go" }));
+    await expect(current()).toHaveAccessibleName("Page 1");
+    // An empty field does nothing.
+    await userEvent.click(canvas.getByRole("button", { name: "Go" }));
+    await expect(current()).toHaveAccessibleName("Page 1");
+  },
+};
+
+export const FitContainer: Story = {
+  name: "Collapses to fit its container",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: paginationSnippets.container } } },
+  render: () => (
+    // `compact="container"` decides by the width the component is *given*, not the screen's: the same row shows its
+    // numbers in a wide box and the summary in a narrow one, on the same screen.
+    <div style={{ ...containerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }} data-testid="fit">
+      {[
+        { label: "18rem wide", width: "18rem" },
+        { label: "30rem wide", width: "30rem" },
+        { label: "46rem wide", width: "46rem" },
+      ].map(({ label, width }) => (
+        <div key={width} style={labelledColumn}>
+          <Text size="sm" weight="semibold">
+            {label}
+          </Text>
+          <div
+            style={{ border: "var(--dbm-border-width-1) dashed var(--dbm-border-neutral)", maxWidth: "100%", width }}
+            data-testid={`box-${width}`}
+          >
+            <Pagination pageCount={20} defaultValue={7} compact="container" align="start" aria-label={`In a ${label} box`} />
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = (width: string) => within(canvasElement.querySelector<HTMLElement>(`[data-testid=box-${width}]`)!);
+    // The screen is wide, so `auto` would show the numbers everywhere; only the narrow box collapses.
+    await waitFor(() => expect(box("18rem").getByText("Page 7 of 20")).toBeVisible());
+    await expect(box("18rem").queryByRole("button", { name: "Page 8" })).toBeNull();
+    await expect(box("30rem").getByRole("button", { name: "Page 8" })).toBeVisible();
+    await expect(box("46rem").getByRole("button", { name: "Page 8" })).toBeVisible();
+    // Resizing the box changes it: widen the narrow one, and it expands; narrow the wide one, and it collapses.
+    const narrow = canvasElement.querySelector<HTMLElement>("[data-testid=box-18rem]")!;
+    const wide = canvasElement.querySelector<HTMLElement>("[data-testid=box-46rem]")!;
+    narrow.style.width = "46rem";
+    wide.style.width = "18rem";
+    await waitFor(() => expect(box("18rem").getByRole("button", { name: "Page 8" })).toBeVisible());
+    await waitFor(() => expect(box("46rem").queryByRole("button", { name: "Page 8" })).toBeNull());
+    await expect(box("46rem").getByText("Page 7 of 20")).toBeVisible();
+    // Whichever it shows, it never wraps onto a second line.
+    for (const box of [narrow, canvasElement.querySelector<HTMLElement>("[data-testid=box-30rem]")!, wide]) {
+      const tops = new Set([...box.querySelectorAll("ul > li")].filter((li) => li.getBoundingClientRect().width > 0).map((li) => Math.round(li.getBoundingClientRect().top)));
+      await expect(tops.size).toBe(1);
+    }
+    // Put the boxes back as they were, so the labels above them are true again.
+    narrow.style.width = "18rem";
+    wide.style.width = "46rem";
+    await waitFor(() => expect(box("18rem").getByText("Page 7 of 20")).toBeVisible());
+    await waitFor(() => expect(box("46rem").getByRole("button", { name: "Page 8" })).toBeVisible());
+  },
+};
+
+// Mirrors what the hidden status region says, so the demo can show it: a screen reader hears it but a
+// sighted reader can't, and the region is emptied again a second later.
+const AnnouncementDemo = () => {
+  const [heard, setHeard] = useState("");
+  const wrapper = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const region = wrapper.current?.querySelector("[role=status]");
+    if (!region) return;
+    const observer = new MutationObserver(() => {
+      if (region.textContent) setHeard(region.textContent);
+    });
+    observer.observe(region, { childList: true, characterData: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div ref={wrapper} style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
+      <Pagination pageCount={20} defaultValue={5} compact="never" align="start" aria-label="Announcing" />
+      <Text size="sm" color="secondary" data-testid="heard">
+        Announced to screen readers: {heard || "nothing yet — choose a page"}
+      </Text>
+    </div>
+  );
+};
+
+export const Announcing: Story = {
+  name: "Announcing a page change",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: paginationSnippets.announce } } },
+  render: () => (
+    // By default, choosing a page is announced to screen readers ("Page 6 of 20") through a hidden status region.
+    // It's invisible, so this demo mirrors it in the line below.
+    <div style={containerStyle}>
+      <AnnouncementDemo />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The status region is in the page from the start, and empty.
+    const region = canvas.getByRole("status");
+    await expect(region).toBeEmptyDOMElement();
+    await userEvent.click(canvas.getByRole("button", { name: "Page 6" }));
+    await waitFor(() => expect(region).toHaveTextContent("Page 6 of 20"));
+    await waitFor(() => expect(canvas.getByTestId("heard")).toHaveTextContent("Page 6 of 20"));
+    // It is cleared again afterwards, so it isn't read a second time when browsing.
+    await waitFor(() => expect(region).toBeEmptyDOMElement(), { timeout: 3000 });
+  },
+};
+
 export const Compact: Story = {
   name: "Compact",
   argTypes: noControls,
@@ -444,28 +645,52 @@ export const OnAPhone: Story = {
   parameters: { docs: { source: { code: paginationSnippets.onAPhone } } },
   render: () => (
     // With the default `compact="auto"`, below the `sm` breakpoint the numbers collapse to a "Page 7 of 20"
-    // summary between previous and next, since a full row doesn't fit; from `sm` up the numbers are back.
+    // summary between the buttons, since a full row doesn't fit; from `sm` up the numbers are back.
     // Storybook's own wrapper pads every story by space.6; this cancels it and applies a phone's usual
     // 16px gutter instead, so the row gets the 288px a real 320px-wide phone gives it.
-    <div data-testid="phone" style={{ marginInline: "calc(-1 * var(--dbm-space-6))", paddingInline: "var(--dbm-space-4)" }}>
-      <Pagination pageCount={20} defaultValue={7} showFirstLast aria-label="On a phone" />
+    <div
+      data-testid="phone"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--dbm-space-6)",
+        marginInline: "calc(-1 * var(--dbm-space-6))",
+        paddingInline: "var(--dbm-space-4)",
+      }}
+    >
+      <Pagination pageCount={20} defaultValue={7} showFirstLast aria-label="With first and last" />
+      <Pagination pageCount={200} defaultValue={7} showJump aria-label="With a jump field" />
     </div>
   ),
   play: async ({ canvasElement }) => {
     // The story really is at a phone's width (fails loudly if the viewport didn't apply).
     await expect(window.innerWidth).toBeLessThan(640);
     const canvas = within(canvasElement);
-    await expect(canvas.getByText("Page 7 of 20")).toBeVisible();
-    // The page numbers are gone (`display: none`), and previous, next, first, and last remain.
-    await expect(canvas.queryByRole("button", { name: "Page 8" })).toBeNull();
+    const [first, long] = [...canvasElement.querySelectorAll<HTMLElement>("[data-testid=phone] nav")];
+    const inFirst = within(first!);
+    const inLong = within(long!);
+    // The numbers collapse to a summary, and are gone from the accessibility tree and the tab order.
+    await expect(inFirst.getByText("Page 7 of 20")).toBeVisible();
+    await expect(inFirst.queryByRole("button", { name: "Page 8" })).toBeNull();
+    await expect(inLong.getByText("Page 7 of 200")).toBeVisible();
+    // With first and last, all four buttons and the summary fit one line of a 320px phone.
     for (const name of ["First page", "Previous page", "Next page", "Last page"]) {
-      await expect(canvas.getByRole("button", { name })).toBeVisible();
+      await expect(inFirst.getByRole("button", { name })).toBeVisible();
     }
-    // The whole row fits the screen — nothing wraps onto a second line or spills sideways.
-    const nav = canvasElement.querySelector("[data-testid=phone] nav") as HTMLElement;
-    await expect(nav.scrollWidth).toBeLessThanOrEqual(nav.clientWidth);
-    const tops = new Set([...nav.querySelectorAll("li")].filter((li) => li.getBoundingClientRect().width > 0).map((li) => Math.round(li.getBoundingClientRect().top)));
-    await expect(tops.size).toBe(1);
+    const oneLine = (nav: HTMLElement) =>
+      new Set([...nav.querySelectorAll("ul > li")].filter((li) => li.getBoundingClientRect().width > 0).map((li) => Math.round(li.getBoundingClientRect().top))).size;
+    await expect(oneLine(first!)).toBe(1);
+    await expect(first!.scrollWidth).toBeLessThanOrEqual(first!.clientWidth);
+    // With a three-digit page count the summary is wider, so the jump field (the way to reach a page the
+    // summary hides) is offered instead of first and last: the controls are on one line, and the field
+    // is on a line of its own below them, inside the screen.
+    await expect(oneLine(long!)).toBe(1);
+    const jump = canvas.getByLabelText("Go to page");
+    await expect(jump).toBeVisible();
+    const jumpBox = jump.closest("form")!.getBoundingClientRect();
+    await expect(jumpBox.top).toBeGreaterThanOrEqual(long!.querySelector("ul")!.getBoundingClientRect().bottom - 1);
+    await expect(jumpBox.right).toBeLessThanOrEqual(window.innerWidth);
+    await expect(long!.scrollWidth).toBeLessThanOrEqual(long!.clientWidth);
   },
 };
 

@@ -1,8 +1,8 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import buttonStyles from "../../atoms/Button/Button.module.css";
 import { Pagination } from "./Pagination";
 import styles from "./Pagination.module.css";
@@ -486,6 +486,387 @@ describe("Pagination", () => {
     });
   });
 
+  describe("announcing a page change", () => {
+    afterEach(() => vi.useRealTimers());
+    const statusRegion = () => screen.getByRole("status");
+    const advance = (ms: number) => act(async () => void vi.advanceTimersByTime(ms));
+
+    it("has a status region in the page from the start, empty", () => {
+      vi.useFakeTimers();
+      renderPagination({ defaultValue: 3 });
+      expect(statusRegion()).toBeEmptyDOMElement();
+    });
+
+    it("says nothing when it first appears", async () => {
+      vi.useFakeTimers();
+      renderPagination({ defaultValue: 3 });
+      // Checked while a message would still be showing (it appears at 100ms and clears at 1100ms), so an
+      // announcement on mount can't hide by having already cleared.
+      await advance(500);
+      expect(statusRegion()).toBeEmptyDOMElement();
+    });
+
+    it("announces the new page a moment after the user chooses one, then clears", async () => {
+      vi.useFakeTimers();
+      renderPagination({ defaultValue: 3 });
+      fireEvent.click(page(4));
+      expect(statusRegion()).toBeEmptyDOMElement();
+      await advance(100);
+      expect(statusRegion()).toHaveTextContent("Page 4 of 20");
+      await advance(1000);
+      expect(statusRegion()).toBeEmptyDOMElement();
+    });
+
+    it("announces a page the consumer changes too, in controlled mode", async () => {
+      vi.useFakeTimers();
+      const { rerender } = renderPagination({ value: 3 });
+      rerender(<Pagination pageCount={20} compact="never" data-testid="pagination" value={9} />);
+      await advance(100);
+      expect(statusRegion()).toHaveTextContent("Page 9 of 20");
+    });
+
+    it("announces a choice that doesn't move a controlled component only once the consumer moves it", async () => {
+      vi.useFakeTimers();
+      renderPagination({ value: 3, onValueChange: vi.fn() });
+      fireEvent.click(page(4));
+      await advance(500);
+      expect(statusRegion()).toBeEmptyDOMElement();
+    });
+
+    it("says nothing for a click on the current page", async () => {
+      vi.useFakeTimers();
+      renderPagination({ defaultValue: 3 });
+      fireEvent.click(page(3));
+      await advance(500);
+      expect(statusRegion()).toBeEmptyDOMElement();
+    });
+
+    it("announces what the summary label says, so it translates", async () => {
+      vi.useFakeTimers();
+      renderPagination({ defaultValue: 3, labels: { summary: (n, count) => `Página ${n} de ${count}` } });
+      fireEvent.click(page(4));
+      await advance(100);
+      expect(statusRegion()).toHaveTextContent("Página 4 de 20");
+    });
+
+    it("can be turned off, leaving no status region", () => {
+      renderPagination({ announce: false });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    it("keeps the region out of the tab order and out of the layout", () => {
+      renderPagination();
+      expect(statusRegion().tagName).toBe("SPAN");
+      expect(statusRegion()).not.toHaveAttribute("tabindex");
+    });
+
+    it("still announces under StrictMode", async () => {
+      vi.useFakeTimers();
+      render(
+        <StrictMode>
+          <Pagination pageCount={20} compact="never" defaultValue={3} data-testid="pagination" />
+        </StrictMode>,
+      );
+      fireEvent.click(page(4));
+      await advance(100);
+      expect(statusRegion()).toHaveTextContent("Page 4 of 20");
+    });
+  });
+
+  describe("variant", () => {
+    const variantClass = {
+      ghost: buttonStyles.variantTertiary,
+      outlined: buttonStyles.variantSecondary,
+      filled: buttonStyles.variantGhost,
+    } as const;
+
+    it("is ghost by default", () => {
+      renderPagination({ defaultValue: 4 });
+      expect(page(5)).toHaveClass(variantClass.ghost ?? "");
+    });
+
+    it.each(["ghost", "outlined", "filled"] as const)("gives every control but the current page the %s treatment", (variant) => {
+      renderPagination({ defaultValue: 4, variant, showFirstLast: true });
+      for (const control of [page(1), page(5), previous(), next(), screen.getByRole("button", { name: "First page" })]) {
+        expect(control).toHaveClass(variantClass[variant] ?? "");
+      }
+    });
+
+    it.each(["ghost", "outlined", "filled"] as const)("always fills the current page with the brand colour (%s)", (variant) => {
+      renderPagination({ defaultValue: 4, variant });
+      expect(page(4)).toHaveClass(buttonStyles.variantPrimary ?? "");
+    });
+
+    it("applies to links as well as buttons", () => {
+      renderPagination({ defaultValue: 4, variant: "outlined", getPageHref: (n) => `/p/${n}` });
+      expect(screen.getByRole("link", { name: "Page 5" })).toHaveClass(buttonStyles.variantSecondary ?? "");
+    });
+  });
+
+  describe("compact=container", () => {
+    // jsdom has no layout, so the component's measurements are supplied: `navWidth` is the width the
+    // component is given, and `rowWidth` the natural width of its row of numbers (only readable while
+    // the numbers are showing — collapsed, they would be `display: none`).
+    let navWidth = 600;
+    let rowWidth = 500;
+    const observers: Array<{ callback: () => void; disconnected: boolean }> = [];
+    const clientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth");
+    const scrollWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollWidth");
+
+    beforeEach(() => {
+      navWidth = 600;
+      rowWidth = 500;
+      observers.length = 0;
+      Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+        configurable: true,
+        get() {
+          return (this as HTMLElement).tagName === "NAV" ? navWidth : 0;
+        },
+      });
+      Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+        configurable: true,
+        get() {
+          return (this as HTMLElement).tagName === "UL" ? rowWidth : 0;
+        },
+      });
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          entry: { callback: () => void; disconnected: boolean };
+          constructor(callback: () => void) {
+            this.entry = { callback, disconnected: false };
+            observers.push(this.entry);
+          }
+          observe() {}
+          unobserve() {}
+          disconnect() {
+            this.entry.disconnected = true;
+          }
+        },
+      );
+    });
+    afterEach(() => {
+      if (clientWidth) Object.defineProperty(HTMLElement.prototype, "clientWidth", clientWidth);
+      if (scrollWidth) Object.defineProperty(HTMLElement.prototype, "scrollWidth", scrollWidth);
+    });
+
+    const resize = (width: number) =>
+      act(() => {
+        navWidth = width;
+        for (const observer of observers.filter((o) => !o.disconnected)) observer.callback();
+      });
+    const nav = () => screen.getByTestId("pagination");
+    const collapsed = () => nav().classList.contains(styles.compactAlways ?? "");
+
+    it("keeps the numbers when the row fits the component's own width", () => {
+      renderPagination({ compact: "container" });
+      expect(collapsed()).toBe(false);
+      expect(nav()).not.toHaveClass(styles.compactAuto ?? "");
+      expect(nav()).toHaveClass(styles.compactContainer ?? "");
+    });
+
+    it("collapses to the summary when the row doesn't fit", () => {
+      navWidth = 300;
+      renderPagination({ compact: "container" });
+      expect(collapsed()).toBe(true);
+    });
+
+    it("collapses and expands as the component's width changes", () => {
+      renderPagination({ compact: "container" });
+      expect(collapsed()).toBe(false);
+      resize(300);
+      expect(collapsed()).toBe(true);
+      resize(700);
+      expect(collapsed()).toBe(false);
+      resize(499);
+      expect(collapsed()).toBe(true);
+      resize(500);
+      expect(collapsed()).toBe(false);
+    });
+
+    it("decides by the row's width, not the screen's", () => {
+      // The screen is wide (the default `auto` would show the numbers), but the component isn't.
+      vi.stubGlobal("innerWidth", 1600);
+      navWidth = 200;
+      renderPagination({ compact: "container" });
+      expect(collapsed()).toBe(true);
+    });
+
+    it("re-measures when what the row holds changes", () => {
+      const { rerender } = renderPagination({ compact: "container" });
+      expect(collapsed()).toBe(false);
+      rowWidth = 700; // adding first and last buttons makes the row wider than the component
+      rerender(<Pagination pageCount={20} compact="container" showFirstLast data-testid="pagination" />);
+      expect(collapsed()).toBe(true);
+    });
+
+    it("doesn't observe anything in the other modes", () => {
+      renderPagination({ compact: "auto" });
+      renderPagination({ compact: "always" });
+      renderPagination({ compact: "never" });
+      expect(observers).toHaveLength(0);
+    });
+
+    it("stops observing on unmount", () => {
+      const { unmount } = renderPagination({ compact: "container" });
+      expect(observers.some((o) => !o.disconnected)).toBe(true);
+      unmount();
+      expect(observers.every((o) => o.disconnected)).toBe(true);
+    });
+
+    it("still decides once, from the first measurement, where there is no ResizeObserver", () => {
+      vi.stubGlobal("ResizeObserver", undefined);
+      navWidth = 300;
+      renderPagination({ compact: "container" });
+      expect(collapsed()).toBe(true);
+    });
+
+    it("renders the summary and the numbers either way, so nothing is missing from the page", () => {
+      navWidth = 300;
+      renderPagination({ compact: "container", defaultValue: 4 });
+      expect(screen.getByText("Page 4 of 20")).toBeInTheDocument();
+    });
+  });
+
+  describe("the jump-to-page field", () => {
+    const jumpInput = () => screen.getByLabelText("Go to page") as HTMLInputElement;
+    const go = () => screen.getByRole("button", { name: "Go" });
+
+    it("is off by default", () => {
+      renderPagination();
+      expect(screen.queryByLabelText("Go to page")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Go" })).not.toBeInTheDocument();
+    });
+
+    it("adds a labelled number field and a button", () => {
+      renderPagination({ showJump: true });
+      expect(jumpInput().type).toBe("number");
+      expect(jumpInput()).toHaveAttribute("min", "1");
+      expect(jumpInput()).toHaveAttribute("max", "20");
+      expect(jumpInput()).toHaveAttribute("inputmode", "numeric");
+      expect(go()).toHaveAttribute("type", "submit");
+    });
+
+    it("goes to the typed page on Enter, reports it, and clears the field", async () => {
+      const onValueChange = vi.fn();
+      renderPagination({ showJump: true, onValueChange });
+      await userEvent.type(jumpInput(), "12{Enter}");
+      expect(page(12)).toHaveAttribute("aria-current", "page");
+      expect(onValueChange.mock.calls[0]?.[0]).toBe(12);
+      expect(onValueChange.mock.calls[0]?.[1]).toMatchObject({ type: "submit" });
+      expect(jumpInput().value).toBe("");
+    });
+
+    it("goes to the typed page with the button, too", async () => {
+      renderPagination({ showJump: true });
+      await userEvent.type(jumpInput(), "7");
+      await userEvent.click(go());
+      expect(page(7)).toHaveAttribute("aria-current", "page");
+    });
+
+    it("goes to the nearest page for a number outside the range, and reports that page", async () => {
+      const onValueChange = vi.fn();
+      renderPagination({ showJump: true, defaultValue: 10, onValueChange });
+      await userEvent.type(jumpInput(), "999{Enter}");
+      expect(page(20)).toHaveAttribute("aria-current", "page");
+      await userEvent.type(jumpInput(), "0{Enter}");
+      expect(page(1)).toHaveAttribute("aria-current", "page");
+      // What the consumer is told is the page it goes to, not what was typed.
+      expect(onValueChange.mock.calls.map((call) => call[0])).toEqual([20, 1]);
+    });
+
+    it("treats a negative number as the first page", async () => {
+      const onValueChange = vi.fn();
+      renderPagination({ showJump: true, defaultValue: 10, onValueChange });
+      await userEvent.type(jumpInput(), "-5{Enter}");
+      expect(onValueChange.mock.calls[0]?.[0]).toBe(1);
+    });
+
+    it("does nothing for an empty field, or for the page already showing", async () => {
+      const onValueChange = vi.fn();
+      renderPagination({ showJump: true, defaultValue: 5, onValueChange });
+      await userEvent.click(go());
+      await userEvent.type(jumpInput(), "5{Enter}");
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(page(5)).toHaveAttribute("aria-current", "page");
+    });
+
+    it("never submits the form natively", () => {
+      renderPagination({ showJump: true });
+      const form = jumpInput().closest("form") as HTMLFormElement;
+      for (const typed of ["", "3", "999"]) {
+        fireEvent.change(jumpInput(), { target: { value: typed } });
+        expect(fireEvent.submit(form)).toBe(false); // preventDefault was called
+      }
+    });
+
+    it("reports a choice without moving on its own when controlled", async () => {
+      const onValueChange = vi.fn();
+      renderPagination({ showJump: true, value: 3, onValueChange });
+      await userEvent.type(jumpInput(), "9{Enter}");
+      expect(onValueChange.mock.calls[0]?.[0]).toBe(9);
+      expect(page(3)).toHaveAttribute("aria-current", "page");
+    });
+
+    it("is natively disabled while the component is disabled", () => {
+      renderPagination({ showJump: true, disabled: true });
+      expect(jumpInput()).toBeDisabled();
+      expect(go()).toBeDisabled();
+    });
+
+    it("takes translated text", () => {
+      renderPagination({ showJump: true, labels: { jump: "Ir a la página", jumpSubmit: "Ir" } });
+      expect(screen.getByLabelText("Ir a la página")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Ir" })).toBeInTheDocument();
+    });
+
+    it("stays available in the compact form, where the numbers are gone", () => {
+      renderPagination({ showJump: true, compact: "always" });
+      expect(jumpInput()).toBeInTheDocument();
+    });
+
+    describe("in link mode", () => {
+      const getPageHref = (n: number) => `/results?page=${n}`;
+      const clicks: string[] = [];
+      let clickSpy: ReturnType<typeof vi.spyOn>;
+      beforeEach(() => {
+        clicks.length = 0;
+        // The component follows the link by clicking a real anchor; record it instead of navigating.
+        clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+          clicks.push(this.getAttribute("href") ?? "");
+        });
+      });
+      afterEach(() => clickSpy.mockRestore());
+
+      it("follows the page's link", async () => {
+        renderPagination({ showJump: true, getPageHref });
+        await userEvent.type(jumpInput(), "12{Enter}");
+        expect(clicks).toEqual(["/results?page=12"]);
+      });
+
+      it("doesn't follow it when onValueChange cancels the default", async () => {
+        const onValueChange = vi.fn((_: number, event: { preventDefault: () => void }) => event.preventDefault());
+        renderPagination({ showJump: true, getPageHref, onValueChange });
+        await userEvent.type(jumpInput(), "12{Enter}");
+        expect(onValueChange).toHaveBeenCalledTimes(1);
+        expect(clicks).toEqual([]);
+      });
+
+      it("follows nothing for an empty field or the current page", async () => {
+        renderPagination({ showJump: true, getPageHref, defaultValue: 5 });
+        await userEvent.click(go());
+        await userEvent.type(jumpInput(), "5{Enter}");
+        expect(clicks).toEqual([]);
+      });
+
+      it("doesn't follow anything in button mode", async () => {
+        renderPagination({ showJump: true });
+        await userEvent.type(jumpInput(), "12{Enter}");
+        expect(clicks).toEqual([]);
+      });
+    });
+  });
+
   describe("StrictMode", () => {
     it("works under StrictMode, which mounts, unmounts, and remounts in development", async () => {
       const onValueChange = vi.fn();
@@ -558,6 +939,11 @@ describe("Pagination", () => {
       ["a single page", { pageCount: 1 }],
       ["the compact row", { compact: "always" }],
       ["a labelled landmark", { "aria-label": "Search results" }],
+      ["the outlined variant", { variant: "outlined", defaultValue: 5 }],
+      ["the filled variant", { variant: "filled", defaultValue: 5 }],
+      ["the jump field", { showJump: true }],
+      ["the jump field, disabled", { showJump: true, disabled: true }],
+      ["announcing turned off", { announce: false }],
     ];
     it.each(cases)("has no violations for %s", async (_name, props) => {
       const { container } = renderPagination(props);

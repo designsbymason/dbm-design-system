@@ -1,6 +1,7 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Select } from "../Select";
 import { Table } from "../Table";
@@ -16,6 +17,9 @@ export const propOrder = [
   "showFirstLast",
   "size",
   "compact",
+  "variant",
+  "showJump",
+  "announce",
   "align",
   "disabled",
   "getPageHref",
@@ -35,6 +39,9 @@ export const playgroundPropOrder = [
   "showFirstLast",
   "size",
   "compact",
+  "variant",
+  "showJump",
+  "announce",
   "align",
   "disabled",
 ];
@@ -54,8 +61,10 @@ users can jump to), and the current page is marked so it's announced as such.
 (`value` and `onValueChange`) or tracked by the component itself (`defaultValue`). `siblingCount` and `boundaryCount`
 set how many page numbers show around the current page and at each end, and the row always keeps the same number of
 slots, so the controls don't shift sideways as you move through the pages. With `getPageHref` every control is a real
-link, so each page can have its own address. Below the `sm` breakpoint (a phone) the numbers collapse to a short "Page
-7 of 20" between the buttons.
+link, so each page can have its own address. The numbers collapse to a short "Page 7 of 20" between the buttons on a
+phone-width screen, or — with `compact="container"` — whenever they don't fit the width the component is given.
+`variant` sets how the controls look, `showJump` adds a "Go to page" field for very long lists, and every page change
+is announced to screen readers.
 
 ### Import
 
@@ -85,6 +94,10 @@ import { Pagination } from "@dbm-design-system/components";
 
 <Canvas of={PaginationStories.Sizes} />
 
+### All variants
+
+<Canvas of={PaginationStories.Variants} />
+
 ### Where you are in the pages
 
 <Canvas of={PaginationStories.Windows} />
@@ -97,9 +110,20 @@ import { Pagination } from "@dbm-design-system/components";
 
 <Canvas of={PaginationStories.FirstLast} />
 
+### Jump to a page
+
+<Canvas of={PaginationStories.Jump} />
+
 ### As links
 
 <Canvas of={PaginationStories.Links} />
+
+### Announcing a page change
+
+A page change is announced to screen readers by default — "Page 6 of 20" — through a visually hidden status region.
+Nothing changes visually, so this demo mirrors the announcement in the line below the pagination.
+
+<Canvas of={PaginationStories.Announcing} />
 
 ### Disabled
 
@@ -113,11 +137,19 @@ import { Pagination } from "@dbm-design-system/components";
 
 <Canvas of={PaginationStories.Compact} />
 
+### Collapses to fit its container
+
+`compact="container"` decides by the width the component is *given*, not the screen's. The same row shows its numbers
+in a wide box and the summary in a narrow one, on the same screen — and switches as a box is resized.
+
+<Canvas of={PaginationStories.FitContainer} />
+
 ### On a phone — collapses to a summary
 
-Below the `sm` breakpoint (640px) the page numbers collapse to a "Page 7 of 20" summary between the buttons, since a
-full row doesn't fit; from `sm` up the numbers are back. Opened on its own from the sidebar this story is shown at a
-phone's width; here it sits in the wide page, so narrow the window to watch it switch.
+With the default `compact="auto"`, below the `sm` breakpoint (640px) the page numbers collapse to a "Page 7 of 20"
+summary between the buttons, since a full row doesn't fit; from `sm` up the numbers are back. Opened on its own from
+the sidebar this story is shown at a phone's width; here it sits in the wide page, so narrow the window to watch it
+switch.
 
 <Canvas of={PaginationStories.OnAPhone} />
 
@@ -144,6 +176,12 @@ phone's width; here it sits in the wide page, so narrow the window to watch it s
 - Set `disabled` while the next page is loading, so a second click can't queue another request. The controls stay
   focusable.
 - Use `align="end"` under a table, and the default centred alignment under a list of cards or results.
+- Add `showJump` for a list of hundreds of pages, where stepping or choosing from the window is slow. It stays
+  available in the compact form, where it is the way to reach a page the summary hides.
+- Use `compact="container"` where the width isn't the screen's — a sidebar, a resizable panel, a card — so the numbers
+  give way to the summary exactly when they stop fitting.
+- Choose `variant` to suit the surroundings: `ghost` (the default) is quietest, `outlined` gives every control a
+  boundary on a plain page, and `filled` gives a soft tint. The current page is always the filled brand colour.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -160,6 +198,11 @@ phone's width; here it sits in the wide page, so narrow the window to watch it s
   browser will still follow the link as well.
 - Don't use it for a step-by-step flow (a checkout, a wizard). Those are steps in a sequence, not pages of the same
   content.
+- Don't add `showJump` to a handful of pages. The numbers are enough, and the extra field is clutter.
+- Don't leave `announce` on if your own content region already announces the change — a screen reader would hear it
+  twice. Set `announce={false}`.
+- Don't put `compact="container"` in a place that has no width of its own — a shrink-wrapping flex item, say. It
+  measures the width it is given, and one that always fits its content always "fits".
 
 </Callout>
 </div>
@@ -179,6 +222,11 @@ phone's width; here it sits in the wide page, so narrow the window to watch it s
   to the new count, but tell your own state too so the page you show matches.
 - Translate the text the component supplies with `labels` — the accessible names ("Previous page", "Page 3") and the
   "Page 3 of 20" summary. Anything you leave out stays English.
+- With `showFirstLast` and a page count of 100 or more, the compact row ("Page 7 of 200" between four buttons) needs
+  about 305px, which is more than a 320px phone leaves once the page has its gutters, so it wraps onto a second line.
+  Where that matters, use `showJump` instead of `showFirstLast` on a phone; the field goes on its own line.
+- `compact="container"` measures the row while its numbers are showing, and again whenever the component's width
+  changes. It grows to fill the space it is given, so in a flex row it takes what the other items leave.
 - A paginated table needs its own accessible name and a way to know which rows are showing. The range summary
   ("Showing 6–10 of 47") does both for sighted users; give the table an `aria-label` or a caption for everyone else.
 
@@ -202,12 +250,24 @@ phone's width; here it sits in the wide page, so narrow the window to watch it s
   keyboard focus stays on that button instead of falling back to the top of the page.
 - Keyboard: `Tab` moves through the controls in reading order. `Enter` activates any control, and `Space` activates a
   button (a link, like every link, responds to `Enter` only).
-- On a phone the page numbers are removed with `display: none`, so they leave the tab order and the accessibility tree
-  along with the screen. What's left — the buttons and the "Page 7 of 20" text — is what's read.
+- When the page changes, "Page 6 of 20" is announced (politely, without moving focus) through a visually hidden
+  `role="status"` region that is in the page from the start and only has its text changed — which is what a live
+  region needs to be announced reliably. The text is cleared about a second later, so it isn't also read a second time
+  when browsing. It uses the `summary` label, so it translates with the rest. Turn it off with `announce={false}` if
+  your own content region already announces the change. This is the widely used pattern, but announcements are
+  ultimately up to each screen reader, so check the wording in the ones you support.
+- When the numbers collapse (on a phone, or in `container` mode) they are removed with `display: none`, so they leave
+  the tab order and the accessibility tree along with the screen. What's left — the buttons and the "Page 7 of 20"
+  text — is what's read.
+- The jump field is a real form: a visible label ("Go to page") tied to a number field with `<label for>`, and a
+  submit button, so it works with a keyboard (Enter) and with a touch keyboard that has no Enter key. A number outside
+  the range goes to the nearest page rather than raising an error, and the field is emptied afterwards. It is natively
+  disabled, not `aria-disabled`, while `disabled` is set, because it is a form control.
 - The arrows follow the reading direction: under right-to-left text they flip, and `align` mirrors.
 - Contrast: the current page's label on its fill measures at least 6.08:1, the other pages' labels at least 4.63:1
-  (including hovered), and the gap and summary text at least 6.88:1, in every theme. The arrow icons are at least
-  4.16:1, above the 3:1 floor for graphics.
+  (including hovered, and on the `filled` variant's tint), and the gap and summary text at least 6.88:1, in every
+  theme. The arrow icons are at least 3.99:1, above the 3:1 floor for graphics, and the `outlined` variant's border is
+  at least 6.08:1 against the page.
 - The smallest size (`xs`) is a 30px square, above the 24px minimum for a target; prefer `md` or larger where touch is
   the main input.
 
@@ -253,6 +313,20 @@ const [page, setPage] = useState(1);
 // A narrow place, such as a sidebar: always the compact summary
 <Pagination pageCount={20} value={page} onValueChange={setPage} compact="always" />
 
+// Numbers while they fit the width it is given, the summary when they don't
+<div style={{ width: "18rem" }}>
+  <Pagination pageCount={20} value={page} onValueChange={setPage} compact="container" />
+</div>
+
+// A long list: a jump-to-page field. Type a page and press Enter; out of range goes to the nearest page
+<Pagination pageCount={500} value={page} onValueChange={setPage} showJump />
+
+// A different treatment for the controls (the current page is always the filled brand colour)
+<Pagination pageCount={20} value={page} onValueChange={setPage} variant="outlined" />
+
+// Your own content region already announces the change, so don't announce it twice
+<Pagination pageCount={20} value={page} onValueChange={setPage} announce={false} />
+
 // Translated
 <Pagination
   pageCount={20}
@@ -278,6 +352,8 @@ const [page, setPage] = useState(1);
 <TokenRow token="bg.brand-hover" usage="the current page's fill when hovered" />
 <TokenRow token="text.brand" usage="the other pages' labels" />
 <TokenRow token="bg.brand-subtle-hover" usage="the background of a hovered control" />
+<TokenRow token="bg.brand-subtle" usage="the filled variant's tint behind every control but the current page" />
+<TokenRow token="border.brand" usage="the outlined variant's border (and the jump button's)" />
 <TokenRow token="icon.brand" usage="the previous, next, first, and last arrows" />
 <TokenRow token="text.secondary" usage="the gaps between page numbers, and the compact summary" />
 <TokenRow token="border.focus" usage="a focused control's outline color" />
@@ -288,7 +364,9 @@ const [page, setPage] = useState(1);
 <TokenRow token="font-size.xs–font-size.lg" usage="the page numbers' and the summary's size across the five size steps" />
 <TokenRow token="font-family.primary" usage="pagination typography" />
 <TokenRow token="space.1" usage="the gap between controls, and the summary's side padding" />
-<TokenRow token="space.2" usage="a wide page number's side padding" />
+<TokenRow token="space.2" usage="a wide page number's side padding, the gaps in the jump field, and the row gap when the jump field wraps" />
+<TokenRow token="space.4" usage="the gap between the controls and the jump field" />
+<TokenRow token="space.16–space.24" usage="the jump field's width across the five size steps" />
 <TokenRow token="motion.duration.fast" usage="control hover transitions" />
 <TokenRow token="motion.easing.standard" usage="control hover transitions" />
 
@@ -317,6 +395,13 @@ const [page, setPage] = useState(1);
   <Select aria-label="Rows per page" size="sm" defaultValue="10">
     <Select.Option value="10">10 per page</Select.Option>
   </Select>
+</RelatedCard>
+<RelatedCard
+  name="Input"
+  description="The jump-to-page field is an Input"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input type="number" size="sm" aria-label="Example" />
 </RelatedCard>
 <RelatedCard
   name="Button"

@@ -5,4 +5,5 @@ export type {
   PaginationLabels,
   PaginationProps,
   PaginationSize,
+  PaginationVariant,
 } from "./Pagination.types";
