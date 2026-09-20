@@ -267,3 +267,12 @@ Playground combinations were typechecked against the real components, and `src/s
 
 **Finalized status is unchanged.** A story-file and docs-only change, no component code, props, or tokens touched (three-question test,
 `06-engineering-standards.md` §9), made only after the user asked for it.
+
+## Post-Finalization follow-up (2026-09-19, at explicit direction) — link to EmptyState
+
+`EmptyState` now exists, so `Card.mdx` gained a fourth Related-components card for it, noting that a ghost empty state sits inside a card without doubling the border. Verified live: the new card renders inside its fixed-height preview slot without clipping (60px of content in the 80px slot; its
+preview title is a level-4 heading, since the docs stylesheet's prose rules only reach `h1`–`h3`), and the link's rendered `href` and
+click-through navigation both land on `EmptyState`'s Docs page. The page's table of contents and console are unchanged.
+
+**Finalized status is unchanged.** A docs-only, purely additive change (no component code, props, stories, or tokens touched), made only
+after the user asked for it — the first of the three-question test (`06-engineering-standards.md` §9) answers "no".

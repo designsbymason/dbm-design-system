@@ -1,9 +1,11 @@
+import { TrayIcon } from "@dbm-design-system/icons";
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { Badge } from "../../atoms/Badge";
 import { Skeleton } from "../../atoms/Skeleton";
 import { ListItem } from "../../atoms/ListItem";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { EmptyState } from "../EmptyState";
 import { List } from "../List";
 import * as TableStories from "./Table.stories";
 import * as TableHeaderStories from "./TableHeader.stories";
@@ -208,6 +210,10 @@ from the table's first row.
 <Canvas of={TableStories.Loading} />
 
 ### Empty state
+
+`Table.Empty` is the message a table shows when it has no rows. It takes any content, so for more than a line of
+text — an icon, a title, and a next step — put an [`EmptyState`](/docs/molecules-data-display-emptystate--docs)
+inside it.
 
 <Canvas of={TableStories.Empty} />
 
@@ -447,5 +453,15 @@ from the table's first row.
   <List>
     <ListItem>An item</ListItem>
   </List>
+</RelatedCard>
+<RelatedCard
+  name="EmptyState"
+  description="What to show when there is nothing to show — for more than a line of text, put one inside Table.Empty"
+  href="/?path=/docs/molecules-data-display-emptystate--docs"
+>
+  <EmptyState size="xs" style={{ padding: 0 }}>
+    <EmptyState.Icon icon={TrayIcon} />
+    <EmptyState.Title level={4}>No items</EmptyState.Title>
+  </EmptyState>
 </RelatedCard>
 </div>

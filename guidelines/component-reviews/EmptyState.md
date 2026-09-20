@@ -235,7 +235,6 @@ re-checked in Emerald dark (all colours resolve to the dark values; nothing hard
   The Docs page says so. Finalizing means accepting that until someone tests it in VoiceOver/NVDA.
 - **A second consumer of the live-region pattern is coming** (`Alert`, `Toast`, `Banner`). Per `06-engineering-standards.md` §1 a shared
   hook belongs in `packages/primitives` once it's used in two places; it is deliberately not extracted for one.
-- **`Table` and `Card` Docs pages don't link back to `EmptyState`** (both Finalized, so untouched).
 
 ## Gaps named, not built
 
@@ -247,8 +246,8 @@ Left out deliberately; each can be added without breaking the current API:
 - **An icon without the badge** (a bare, larger, muted glyph). `EmptyState.Media` already covers "no badge" with an illustration; a
   `bare` option is only worth adding if that turns out not to be enough.
 - **A one-line props shorthand** (`icon`/`title`/`description` on the root). See the first decision above.
-- **`Table` and `Card` docs linking back to `EmptyState`.** Both are Finalized, so their Docs pages weren't touched; `EmptyState`'s own
-  page links to both.
+- **`Table` and `Card` docs linking back to `EmptyState`.** Done afterwards at explicit direction — see the follow-up entry in each of
+  `Table.md` and `Card.md`.
 
 ## Status
 

@@ -1,8 +1,10 @@
+import { TrayIcon } from "@dbm-design-system/icons";
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { Box } from "../../atoms/Box";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Accordion } from "../Accordion";
+import { EmptyState } from "../EmptyState";
 import { Grid } from "../Grid";
 import { Table } from "../Table";
 import * as CardStories from "./Card.stories";
@@ -432,5 +434,15 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
     <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
     <Box style={{ height: 16, background: "var(--dbm-bg-canvas)", borderRadius: "var(--dbm-radius-xs)" }} />
   </Grid>
+</RelatedCard>
+<RelatedCard
+  name="EmptyState"
+  description="What to show when there is nothing to show — a ghost empty state sits inside a card without doubling the border"
+  href="/?path=/docs/molecules-data-display-emptystate--docs"
+>
+  <EmptyState size="xs" style={{ padding: 0 }}>
+    <EmptyState.Icon icon={TrayIcon} />
+    <EmptyState.Title level={4}>No items</EmptyState.Title>
+  </EmptyState>
 </RelatedCard>
 </div>
