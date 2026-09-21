@@ -273,7 +273,7 @@ quoted in prose elsewhere.
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-09-19):** every atom and the first 15 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-09-20):** every atom and the first 16 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`) are reviewed and Finalized — see the table above. The queue continues through the remaining 20 of the 36 molecules,
 one at a time, in the dependency order itemized in `04-component-inventory.md` (`Tabs` is next), each
