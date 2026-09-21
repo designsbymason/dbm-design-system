@@ -393,3 +393,15 @@ already is. Flagging rather than guessing.
 ## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
 
 Same review as the molecules' and the earlier atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: every panel was generated from a story that holds its position in its own `useState`, so they printed `activeIndex={1}` frozen and `onIndexChange={() => {}}`; "Many slides" printed `getLabel={() => {}}`, hiding the one thing it demonstrates; and "All variants" / "All sizes" ran to 38 and 58 lines of the same boilerplate. Every story now sets `parameters.docs.source.code` to a snippet from the new `Indicators.snippets.ts`, each naming the reader's state in a comment and wiring `activeIndex` / `onIndexChange` to it, with `getLabel`'s real body written out; the Playground, "Vertical orientation" and "With progress label" stories build theirs from the live controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
+
+
+## Post-Finalization change (2026-09-21, at explicit direction) — `variant="outline"` renamed `variant="outlined"`
+
+A survey of the system's variant values found `outline` (`Tag`, `Indicators`) and `outlined` (`Card`, `EmptyState`, `Pagination`); `outlined` was chosen as the single spelling and is now a
+rule (`05-component-api-conventions.md` §2). `IndicatorsVariant` is now `"dots" | "outlined" | "bars"`. **Earlier entries in this file use the old spelling `outline`; they are history and
+were not rewritten.** Everything named after the variant moved with it: the `.outline` CSS class (now `.outlined`), the stories' option lists, the Docs page prose and examples, and the tests. **Breaking for a consumer** (`variant="outline"` is no longer valid) — the package is unpublished (`0.0.0`), so no migration is needed yet.
+
+Under the three-question test in `06-engineering-standards.md` §9 this is a preference change to already-compliant surface confined to the component's own files, so a **partial
+re-finalization**: re-verified — types and JSDoc, stories and Docs page, tests, and rendering. Rendering is unchanged, and provably so: with the rename reversed, all seven files
+are byte-identical to what was committed, so no logic, style, token or behaviour changed. Not re-run, because nothing they cover was touched: the contrast and theming checks and the
+feature-completeness pass. A first pass missed nothing here; the two class selectors that pattern skipped were in `Tabs`, not `Indicators`.

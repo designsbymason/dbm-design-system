@@ -14,9 +14,10 @@ a `### Tabs.{Part} properties` subsection on the Docs page via a hidden, docs-on
 The inventory only said "wraps Radix Tabs". As with `EmptyState` and `Pagination`, none of these were put to the user first — they are mine, made
 where the request left the API open, and listed so they can be reversed cheaply.
 
-- **`variant`: `underline` (default) | `subtle` | `solid`.** `subtle` and `solid` are `Tag`'s and `Badge`'s own words for a tint and a fill, so the same
-  name means the same treatment across the system. `underline` is the tab-specific one: a bar under the selected tab, on a hairline the length of the
-  list. A fourth, raised-chip "segmented" treatment was considered and left out (see Gaps).
+- **`variant`: `underline` (default) | `subtle` | `outlined` | `solid`.** `subtle` and `solid` are `Tag`'s and `Badge`'s own words for a tint and a fill, and `outlined`
+  is the system-wide spelling of a bordered variant (`05-component-api-conventions.md` §2), so the names are shared across the system, though not every treatment is
+  identical — a `Tag`'s `outlined` has no tint. `outlined` was added afterwards, at explicit direction — see the follow-ups below. `underline` is the tab-specific one:
+  a bar under the selected tab, on a hairline the length of the list. A raised-chip "segmented" treatment was considered and left out (see Gaps).
 - **One `icon` prop, not `leadingIcon`/`trailingIcon`.** A trigger has one icon slot, and `05-component-api-conventions.md` §5 keeps the plain name
   for a component with one. Anything else (a count, a status) is composed into the label; the Docs show a `Badge`.
 - **Root settings travel by context, not by descendant CSS.** `variant`, `size`, `fullWidth` and the resolved `orientation` are read from a small
@@ -93,12 +94,11 @@ Three things the source showed that the types don't:
   6.08–8.51:1 (solid; hovered 9.01–10.74:1); selected + hovered underline label on `bg.neutral-subtle` 4.63–7.07:1; the underline bar (`bg.brand`) on the
   surface 6.08–8.51:1; icons 3.67–9.47:1 across their states; `border.focus` on the surface 4.16–6.49:1, on `bg.brand-subtle` 3.99–7.22:1, on
   `bg.neutral-subtle` 3.56–4.63:1. Everything clears its floor. The lowest text pairing is Emerald dark's selected + hovered label at 4.63:1 (the same
-  known low point `Pagination` recorded); the lowest graphic is Emerald light's `icon.brand` on the hovered tint at 3.67:1. **One failure found and
-  designed around:** `border.focus` on `bg.brand` is 1.31–1.64:1, so a standard ring on the selected `solid` tab would all but vanish — that one ring
-  uses `icon.on-brand` (6.08–8.51:1).
+  known low point `Pagination` recorded); the lowest graphic is Emerald light's `icon.brand` on the hovered tint at 3.67:1. **Superseded by the follow-up below:** the ring on the selected `solid` tab was first drawn in `icon.on-brand` (6.08–8.51:1, because `border.focus` is
+  1.31–1.64:1 on `bg.brand`); it is now `bg.brand-hover`, at explicit direction, and that is 1.24–1.48:1.
 - **The focus ring is drawn inside the trigger** (a negative `outline-offset`), unlike every other component. The list scrolls sideways, and a scrolling
   box clips whatever is drawn outside its edge, so an outside ring loses its top and bottom. `radius-sm` is kept. Browser-tested: the ring is 2px, its
-  offset is negative, and its colour is `border.focus` (or the on-brand icon token on the selected solid tab). Recorded as a convention in
+  offset is negative, and its colour is the one the follow-up below lists for each variant. Recorded as a convention in
   `05-component-api-conventions.md` §6.
 - Touch target: the smallest size (`xs`) is a 30px-high trigger, above the 24px minimum; the Docs recommend `md`+ where touch is the main input.
 
@@ -149,6 +149,8 @@ the animation is correctly "not visible"); they now wait for it. The fade is int
 
 ## Functional verification
 
+*Figures in this section are from the first build (2026-09-20); the current ones, after the 2026-09-21 follow-up, are in that section below.*
+
 - 69 unit tests (React Testing Library + jest-axe) for `Tabs`, plus 20 in `storySnippets.test.ts` for its snippets: structure and roles, id/aria wiring,
   selection (click, controlled, parent-owned state, no selection), keyboard (enter once, arrows, wrap, `Home`/`End`, no-loop, vertical, manual,
   right-to-left), disabled, variants/sizes/full width/orientation classes and attributes, nested tabs, responsive orientation (base, a matching
@@ -163,6 +165,68 @@ the animation is correctly "not visible"); they now wait for it. The fade is int
   Storybook browser project (92 files, 604 tests) pass; `tsup` build; `storybook build` and its bundle-size check; the per-component size check
   (`Tabs`: 2.25KB JS / 1.30KB CSS gzipped, within budget); the Foundations token-coverage check; `pnpm audit`: no known vulnerabilities. The visual-regression
   suite was not run — no `Tabs` story is in it.
+
+## Follow-up (2026-09-21, at explicit direction) — hover fills, ring colours, `outlined`, `rounded`
+
+`Tabs` is not Finalized, so all of it was changed freely. What was asked, and what was found:
+
+- **Unselected-tab hover fill: `bg.neutral-subtle` → `bg.brand-subtle`** in the `underline`, `subtle` and `solid` variants. Every text and icon pairing on it clears
+  its floor (measured in all four themes: `text.primary` 13.46–15.05:1, `text.brand` 5.83–8.29:1, `icon.default` 4.48–9.14:1, `icon.brand` 3.99–9.47:1). Two
+  consequences worth knowing: the fill is barely visible against the page on its own (1.04–1.11:1, the same as the token everywhere else), so the hover is
+  carried mostly by the label changing from `text.secondary` to `text.primary`; and in the `subtle` variant a hovered unselected tab now has the *same* fill
+  as the selected one, so the two are told apart by label colour alone (`text.primary` against `text.brand`).
+- **Solid variant, selected tab's focus ring: `icon.on-brand` → `bg.brand-hover`. This fails the 3:1 floor, and is a deliberate, user-directed exception.**
+  `bg.brand-hover` against the tab's own `bg.brand` fill is **1.24–1.48:1** (Purple light 1.46, Purple dark 1.39, Emerald light 1.48, Emerald dark 1.24), and it
+  is the *same colour* as the fill while the tab is hovered, so the ring is invisible then. Seen live: a `rgb(62, 49, 128)` ring on a `rgb(85, 72, 164)` fill
+  reads as a faint darker edge. Because automatic activation selects the tab as focus arrives, the focused tab is usually the selected one, so a keyboard
+  reader on `solid` can see the selection change but not where focus is. The Docs page says so. Not changed: it was asked for by name.
+- **New variant `outlined`:** `subtle` with a border on every tab — `border.brand` on the selected tab, `border.brand-subtle` on the others (one border width
+  in every state, so nothing moves on selection; box-sizing is `border-box`, so heights are unchanged). Hover: `bg.brand-subtle` on an unselected tab,
+  `bg.brand-subtle-hover` on the selected one. **Ring: `bg.brand-hover` on both.** It is drawn *inside* the border with a gap of one border width (offset
+  `-(2 + 2 × border)`), because laid on the border it would be almost the same colour (1.24–1.48:1); read against the tab's fill and the page it is 8.64–11.74:1,
+  which passes. The unselected tabs' borders are a faint decorative tint (`border.brand-subtle`, 1.08–1.24:1 against the page) — nearly invisible in dark mode —
+  so the selected border and the labels carry the state.
+- **New prop `rounded`** (default `false`, on the root, like `Button`'s, `IconButton`'s and `Pagination`'s): fully rounds the ends of every tab in `subtle`, `outlined`
+  and `solid`, and has **no effect on `underline`** — `Tabs.tsx` does not apply the class there. The ring goes fully round too (`radius-full`), per
+  `05-component-api-conventions.md` §6.
+- **Naming:** built as `outlined` (as asked); renamed to `outlined` the same day on request, to match `Tag`; and back to `outlined` once that spelling was made the rule for every component (see the last follow-up below).
+
+**Tests (each checked by breaking the code on purpose, and failing the intended test):** a hidden story reads the compiled hover rule for each variant (a story's
+pointer events are synthetic and never set `:hover`, so the fill can't be read from a hovered element — it was confirmed with a real mouse live instead); a
+hidden `outlined` story checks the borders, that heights match, and the ring's colour, width and offset on a selected *and* an unselected tab under real keyboard
+focus; the focus-ring twin now expects `bg.brand-hover` on `outlined` and `solid`; a visible `Rounded` story measures every tab's radius against half its height
+(and `underline` at 0), with a hidden twin checking the ring is round too; unit tests for the class on each variant, none by default, none on `underline`,
+and nested sets. Reverted, in turn: the underline hover fill, the solid ring colour, the outlined ring offset, the outlined border colour, `rounded` reaching
+`underline`, and the round ring — six failures, one per guard. Full package after the change: lint and both `tsc` passes clean; unit 68 files / 2,646 tests
+(`Tabs`: 78); Storybook browser 92 files / 608 tests; build, `storybook build` and its size check, the per-component size check (`Tabs`: 2.30KB JS / 1.37KB CSS
+gzipped), the Foundations coverage check and `pnpm audit` all clean. Live, in a real browser: a real-mouse hover on an unselected `solid` tab reads
+`rgb(249, 249, 255)` (`bg.brand-subtle`, not the old `rgb(250, 250, 251)`); the `outlined` ring shows as a clear double line; `rounded` gives pills on three variants
+and leaves `underline` alone; Emerald dark checked.
+
+**Docs page:** `outlined` and a `Rounded` gallery entry added; `rounded` in the Playground and Properties (14 rows on the root table); the token list and the
+Accessibility section rewritten to the numbers above, including the `solid` ring's contrast stated plainly.
+
+## Follow-up (2026-09-21, later) — variant renames, and the panel's focus ring
+
+- **`outlined` → `outlined` → `outlined`.** Renamed to `outlined` on request so it matched `Tag`. Then the spelling was settled for the whole system as **`outlined`**, and `Tag` and
+  `Indicators` were renamed to it instead (see the next follow-up and `05-component-api-conventions.md` §2), so `Tabs` went back. Net effect on `Tabs`: none — the variant is
+  `outlined`, as first built. Both renames were mechanical (type, CSS class, stories, snippets, tests, Docs page, this record) and left every other component's own `outlined` alone.
+- **A real defect: the panel's focus ring was cut off by the tab list** (reported with a screenshot, subtle variant, keyboard focus on the panel). Reproduced first, then
+  measured: the space between the list and the panel was *padding inside the panel* (20px at `md`), so the list-to-panel gap was **0px**. The panel takes focus and draws the
+  standard ring outside its box (4px offset + 2px line = 6px), so the ring started 6px *inside* the tab list — and the tabs, being positioned elements, painted over the top
+  edge of it. It also made the ring a tall box with the text pinned to its bottom. **Fix:** that spacing is now `margin-block-start` (`margin-inline-start` when vertical) instead
+  of padding, at the same size steps, so the ring sits in the gap: measured live, gap 20px against a 6px ring at `md`; at the smallest step it is 12px against 6px. The cost, worth
+  knowing: the ring now hugs the panel's content (4px), since the panel has no inner padding of its own — the same as every other focusable box here.
+- **Guard:** a hidden `!dev` story focuses the panel with the keyboard and asserts the list-to-panel gap is at least as wide as the ring, at `xs` and `xl` horizontally and `xs`
+  vertically. It failed on the old code with `expected 0 to be >= 6` before the fix, and passes after. Recorded as a convention in `05-component-api-conventions.md` §6.
+- Verification after both changes: lint and both `tsc` passes clean; unit 68 files / 2,646 tests; Storybook browser 92 files / 609 tests; build, `storybook build` and its size
+  check, the per-component size check (`Tabs`: 2.30KB JS / 1.38KB CSS gzipped), the Foundations coverage check and `pnpm audit` all clean.
+
+## Follow-up (2026-09-21, later still) — `outlined` is the rule, and `Tag`/`Indicators` were renamed to it
+
+A survey of every component's variant values found `outline` on `Tag`, `Indicators` and (briefly) `Tabs`, and `outlined` on `Card`, `EmptyState` and `Pagination`. `outlined` was chosen as the
+one spelling; the rule is in `05-component-api-conventions.md` §2. `Tabs` needed no work beyond the rename back — its two pseudo-class selectors (`.outlined:focus-visible`,
+`.outlined:not(:disabled):hover`) were the only ones a first pass missed (the pattern that protected CSS `outline:` properties also skipped a class followed by `:`); the browser tests caught both.
 
 ## Gaps named, not built
 

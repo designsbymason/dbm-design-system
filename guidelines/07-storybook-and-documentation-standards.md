@@ -222,7 +222,7 @@ quoted in prose elsewhere.
 | Switch | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 (track/hover colors revised 2026-09-15) | [Switch.md](component-reviews/Switch.md) |
 | Avatar | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Avatar.md](component-reviews/Avatar.md) |
 | Badge | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Badge.md](component-reviews/Badge.md) |
-| Tag | Atom | Data Display | ✅ | ✅ 2026-08-22 | [Tag.md](component-reviews/Tag.md) |
+| Tag | Atom | Data Display | ✅ | ✅ 2026-08-22 (variant `outline` renamed `outlined` 2026-09-21; re-verified: types, stories, Docs, tests) | [Tag.md](component-reviews/Tag.md) |
 | Skeleton | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Skeleton.md](component-reviews/Skeleton.md) |
 | ProgressBar | Atom | Feedback | ✅ | ✅ 2026-08-22 | [ProgressBar.md](component-reviews/ProgressBar.md) |
 | ProgressCircle | Atom | Feedback | ✅ | ✅ 2026-08-23 | [ProgressCircle.md](component-reviews/ProgressCircle.md) |
@@ -232,7 +232,7 @@ quoted in prose elsewhere.
 | GridItem | Atom | Layout | ✅ | ✅ 2026-09-07 | [GridItem.md](component-reviews/GridItem.md) |
 | Icon | Atom | Media | ✅ | ✅ 2026-09-03 | [Icon.md](component-reviews/Icon.md) |
 | Image | Atom | Media | ✅ | ✅ 2026-09-04 | [Image.md](component-reviews/Image.md) |
-| Indicators | Atom | Media | ✅ | ✅ 2026-09-05 | [Indicators.md](component-reviews/Indicators.md) |
+| Indicators | Atom | Media | ✅ | ✅ 2026-09-05 (variant `outline` renamed `outlined` 2026-09-21; re-verified: types, stories, Docs, tests) | [Indicators.md](component-reviews/Indicators.md) |
 | BackToTop | Atom | Navigation | ✅ | ✅ 2026-09-05 | [BackToTop.md](component-reviews/BackToTop.md) |
 | Backdrop | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Backdrop.md](component-reviews/Backdrop.md) |
 | Collapse | Atom | Overlay | ✅ | ✅ 2026-09-05 | [Collapse.md](component-reviews/Collapse.md) |

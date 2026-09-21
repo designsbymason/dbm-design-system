@@ -22,3 +22,16 @@ fix, no runtime code touched. Full suite re-run clean.
 Same review as the molecules' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: eleven generated snippets spelled out defaults and empty or derived props (`aria-label=""`, `removeLabel="Remove Design"`, `variant="subtle"`) and no-op handlers, so "Clickable" and "Selectable" reduced to a bare `() => {}`; **the two icon stories printed `leadingIcon={{ $$typeof: Symbol(react.forward_ref), … }}`**; and **three panels ("Selectable filter group", "Removable filter list", "Removable + selectable together") showed the story object itself** — about thirty lines of `argTypes` plus development notes ("found in review: none of them had any effect here, the same 'dead controls' bug class…"). Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Tag.snippets.ts`: the icon stories name the icon in a comment, the handler stories name the reader's handler (`onClick={handleClick}`), and the three stateful ones show the real `useState` (as a comment) with the real `.map` over it. The Playground writes the icon control's component back as its name (`leadingIcon={TagIcon}`) and gives a removable tag its `onRemove`. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
 
 **A later fix to this entry (2026-09-19):** while converting the field atoms, the Playground's icon controls turned out to hand Storybook's snippet `transform` the option key (`"Star"`), not the mapped component, so `Tag`'s builder — which only recognised the component — dropped a chosen icon from the snippet. It now accepts both (see `07-storybook-and-documentation-standards.md` §4.2), with a unit test for the key form.
+
+
+## Post-Finalization change (2026-09-21, at explicit direction) — `variant="outline"` renamed `variant="outlined"`
+
+A survey of the system's variant values found `outline` (`Tag`, `Indicators`) and `outlined` (`Card`, `EmptyState`, `Pagination`); `outlined` was chosen as the single spelling and is now a
+rule (`05-component-api-conventions.md` §2). `TagVariant` is now `"subtle" | "solid" | "outlined"`. **Earlier entries in this file use the old spelling `outline`; they are history and
+were not rewritten.** Everything named after the variant moved with it: the `.outline{Tone}` CSS classes (now `.outlined{Tone}`), the story export and snippet keys, the Docs page prose and
+examples, and the tests. **Breaking for a consumer** (`variant="outline"` is no longer valid) — the package is unpublished (`0.0.0`), so no migration is needed yet.
+
+Under the three-question test in `06-engineering-standards.md` §9 this is a preference change to already-compliant surface confined to the component's own files, so a **partial
+re-finalization**: re-verified — types and JSDoc, stories and Docs page, tests, and rendering. Rendering is unchanged, and provably so: with the rename reversed, all seven files
+are byte-identical to what was committed, so no logic, style, token or behaviour changed. Not re-run, because nothing they cover was touched: the contrast and theming checks and the
+feature-completeness pass. A first pass missed nothing here; the two class selectors that pattern skipped were in `Tabs`, not `Tag`.
