@@ -18,6 +18,7 @@ interface PlaygroundArgs {
   onValueChange: (value: string) => void;
   variant: TabsVariant;
   size: TabsSize;
+  rounded: boolean;
   orientation: TabsOrientation;
   activationMode: TabsActivationMode;
   fullWidth: boolean;
@@ -59,6 +60,7 @@ const noControls = {
   defaultValue: { control: false },
   variant: { control: false },
   size: { control: false },
+  rounded: { control: false },
   orientation: { control: false },
   activationMode: { control: false },
   fullWidth: { control: false },
@@ -85,14 +87,19 @@ const meta: Meta<PlaygroundArgs> = {
     },
     variant: {
       control: "select",
-      options: ["underline", "subtle", "solid"],
+      options: ["underline", "subtle", "outlined", "solid"],
       description:
-        "How the selected tab is marked: an underline bar, a soft brand tint, or a solid brand fill.",
+        "How the selected tab is marked: an underline bar, a soft brand tint, a tint with a border on every tab, or a solid brand fill.",
     },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "Trigger height, padding and type size, and the panel's own spacing.",
+    },
+    rounded: {
+      control: "boolean",
+      description:
+        "Fully rounds the ends of every tab, in the subtle, outlined and solid variants. It has no effect on underline, whose tabs have no shape to round.",
     },
     orientation: {
       control: "select",
@@ -139,6 +146,7 @@ const meta: Meta<PlaygroundArgs> = {
     defaultValue: "overview",
     variant: "underline",
     size: "md",
+    rounded: false,
     orientation: "horizontal",
     activationMode: "automatic",
     fullWidth: false,
@@ -153,6 +161,7 @@ const meta: Meta<PlaygroundArgs> = {
         defaultValue={args.defaultValue}
         variant={args.variant}
         size={args.size}
+        rounded={args.rounded}
         orientation={args.orientation}
         activationMode={args.activationMode}
         fullWidth={args.fullWidth}
@@ -184,7 +193,7 @@ export const Variants: Story = {
   parameters: { docs: { source: { code: tabsSnippets.variants } } },
   render: () => (
     <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)" }}>
-      {(["underline", "subtle", "solid"] as const).map((variant) => (
+      {(["underline", "subtle", "outlined", "solid"] as const).map((variant) => (
         <div key={variant}>
           <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
             variant=&quot;{variant}&quot;
@@ -212,6 +221,44 @@ export const Sizes: Story = {
       ))}
     </div>
   ),
+};
+
+export const Rounded: Story = {
+  name: "Rounded",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tabsSnippets.rounded } } },
+  render: () => (
+    <div
+      data-testid="rounded"
+      style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}
+    >
+      {(["underline", "subtle", "outlined", "solid"] as const).map((variant) => (
+        <div key={variant}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
+            variant=&quot;{variant}&quot; rounded
+          </Text>
+          <DemoTabs variant={variant} rounded listLabel={`Project (${variant}, rounded)`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Measures only — the demo never changes.
+    const lists = within(canvasElement).getAllByRole("tablist");
+    const radiusOf = (tab: HTMLElement) => parseFloat(getComputedStyle(tab).borderTopLeftRadius);
+    for (const [index, list] of lists.entries()) {
+      for (const tab of within(list).getAllByRole("tab")) {
+        const half = tab.getBoundingClientRect().height / 2;
+        if (index === 0) {
+          // `rounded` does nothing to the underline variant.
+          await expect(radiusOf(tab)).toBe(0);
+        } else {
+          // Every other variant's ends are fully round: the radius reaches at least half the height.
+          await expect(radiusOf(tab)).toBeGreaterThanOrEqual(half);
+        }
+      }
+    }
+  },
 };
 
 export const Vertical: Story = {
@@ -674,7 +721,7 @@ export const KeepMountedInteraction: Story = {
 
 export const FocusRingInteraction: Story = {
   ...Variants,
-  name: "Focus ring — inside the trigger, on-brand on a solid selected tab",
+  name: "Focus ring — inside the trigger, bg.brand-hover on solid and outlined",
   tags: ["!dev"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -705,11 +752,157 @@ export const FocusRingInteraction: Story = {
       await expect(parseFloat(style.outlineWidth)).toBe(2);
       // Drawn inside the trigger — a scrolling list would clip a ring outside it.
       await expect(parseFloat(style.outlineOffset)).toBeLessThan(0);
-      // `underline` and `subtle` use the standard ring; `solid` swaps in the on-brand colour,
-      // since `border.focus` all but disappears on a brand fill.
-      const expected = index === 2 ? colourOf("--dbm-icon-on-brand") : colourOf("--dbm-border-focus");
+      // `underline` and `subtle` use the standard ring; `outlined` and `solid` (its selected tab)
+      // draw it in `bg.brand-hover`. The lists run underline, subtle, outlined, solid.
+      const expected = index >= 2 ? colourOf("--dbm-bg-brand-hover") : colourOf("--dbm-border-focus");
       await expect(style.outlineColor).toBe(expected);
     }
     probe.remove();
+  },
+};
+
+export const HoverInteraction: Story = {
+  ...Variants,
+  name: "Hover — the fills are bg.brand-subtle, read from the styles",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    // A story can't make the browser report `:hover` (its pointer events are synthetic), so this
+    // reads the hover rule each variant's stylesheet actually carries and checks what fill it sets.
+    const rules = [...document.styleSheets]
+      .flatMap((sheet) => {
+        try {
+          return [...sheet.cssRules];
+        } catch {
+          return [];
+        }
+      })
+      .filter((rule): rule is CSSStyleRule => rule instanceof CSSStyleRule);
+    const hoverFill = (tab: HTMLElement, selected: boolean) => {
+      const variantClass = [...tab.classList].find((name) => /_(underline|subtle|outlined|solid)_/.test(name));
+      const rule = rules.find(
+        (candidate) =>
+          candidate.selectorText.includes(`.${variantClass}`) &&
+          candidate.selectorText.endsWith(":hover") &&
+          candidate.selectorText.includes('[data-state="active"]') === selected,
+      );
+      return rule?.style.backgroundColor;
+    };
+
+    const lists = within(canvasElement).getAllByRole("tablist");
+    const [underline, subtle, outlined, solid] = lists.map((list) => ({
+      unselected: within(list).getByRole("tab", { name: "Activity" }),
+      selected: within(list).getByRole("tab", { selected: true }),
+    }));
+    // An unselected tab fills with bg.brand-subtle on hover, in every variant.
+    for (const { unselected } of [underline!, subtle!, outlined!, solid!]) {
+      await expect(hoverFill(unselected, false)).toBe("var(--dbm-bg-brand-subtle)");
+    }
+    // A selected tab in the tinted variants steps to the next tint; a solid one to its hover fill.
+    await expect(hoverFill(subtle!.selected, true)).toBe("var(--dbm-bg-brand-subtle-hover)");
+    await expect(hoverFill(outlined!.selected, true)).toBe("var(--dbm-bg-brand-subtle-hover)");
+    await expect(hoverFill(solid!.selected, true)).toBe("var(--dbm-bg-brand-hover)");
+    // ...and the neutral fill is gone.
+    await expect(rules.some((rule) => rule.style.backgroundColor === "var(--dbm-bg-neutral-subtle)" && rule.selectorText.includes(":hover") && /_(underline|subtle|outlined|solid)_/.test(rule.selectorText))).toBe(false);
+  },
+};
+
+export const OutlinedInteraction: Story = {
+  ...ManualActivation,
+  name: "Outlined — borders, and the ring on a selected and an unselected tab",
+  tags: ["!dev"],
+  render: () => (
+    <div style={demoContainerStyle}>
+      <DemoTabs variant="outlined" activationMode="manual" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const probe = document.createElement("span");
+    canvasElement.appendChild(probe);
+    const colour = (token: string) => {
+      probe.style.color = `var(${token})`;
+      return getComputedStyle(probe).color;
+    };
+    const selected = canvas.getByRole("tab", { name: "Overview" });
+    const unselected = canvas.getByRole("tab", { name: "Activity" });
+
+    // Every tab has the border, so nothing moves when the selection does: the selected one in the
+    // brand colour, the others in the faint tint.
+    await expect(getComputedStyle(selected).borderTopColor).toBe(colour("--dbm-border-brand"));
+    await expect(getComputedStyle(unselected).borderTopColor).toBe(colour("--dbm-border-brand-subtle"));
+    await expect(getComputedStyle(unselected).borderTopWidth).toBe(getComputedStyle(selected).borderTopWidth);
+    await expect(unselected.getBoundingClientRect().height).toBe(selected.getBoundingClientRect().height);
+
+    // The ring is bg.brand-hover on both, drawn inside the border with a gap (a real keyboard focus).
+    const border = parseFloat(getComputedStyle(selected).borderTopWidth);
+    for (const tab of [selected, unselected]) {
+      if (tab === selected) await userEvent.tab();
+      else await userEvent.keyboard("{ArrowRight}");
+      await expect(tab).toHaveFocus();
+      const style = getComputedStyle(tab);
+      await expect(style.outlineColor).toBe(colour("--dbm-bg-brand-hover"));
+      await expect(parseFloat(style.outlineWidth)).toBe(2);
+      // Inside the tab, past the border and one border width beyond it: -(2 + 2 * border).
+      await expect(parseFloat(style.outlineOffset)).toBe(-(2 + 2 * border));
+    }
+  },
+};
+
+export const RoundedInteraction: Story = {
+  ...Rounded,
+  name: "Rounded — the focus ring is round too, and only where the tab is",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const lists = within(canvasElement).getAllByRole("tablist");
+    for (const [index, list] of lists.entries()) {
+      const selected = within(list).getByRole("tab", { selected: true });
+      let guard = 0;
+      await userEvent.tab();
+      while (document.activeElement !== selected && guard++ < 8) await userEvent.tab();
+      await expect(selected).toHaveFocus();
+      const radius = parseFloat(getComputedStyle(selected).borderTopLeftRadius);
+      const half = selected.getBoundingClientRect().height / 2;
+      // A fully round tab has a fully round ring (`radius-full`); the underline tab keeps the small one.
+      if (index === 0) await expect(radius).toBeLessThan(half);
+      else await expect(radius).toBeGreaterThanOrEqual(half);
+    }
+  },
+};
+
+export const PanelFocusRingInteraction: Story = {
+  ...Variants,
+  name: "Panel focus ring — clear of the tab list, at every size and orientation",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-10)" }}>
+      <DemoTabs size="xs" variant="subtle" listLabel="Horizontal, xs" data-testid="horizontal-xs" />
+      <DemoTabs size="xl" variant="solid" listLabel="Horizontal, xl" data-testid="horizontal-xl" />
+      <DemoTabs size="xs" variant="underline" orientation="vertical" listLabel="Vertical, xs" data-testid="vertical-xs" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The panel takes keyboard focus and draws the standard ring OUTSIDE its box. The list sits right
+    // above (or beside) it, and its tabs paint on top of anything that reaches into them, so the
+    // space between the two has to be at least as wide as the ring — or the ring is cut off by the tabs.
+    for (const [id, vertical] of [
+      ["horizontal-xs", false],
+      ["horizontal-xl", false],
+      ["vertical-xs", true],
+    ] as const) {
+      const root = canvas.getByTestId(id);
+      const panel = within(root).getByRole("tabpanel");
+      let guard = 0;
+      await userEvent.tab();
+      while (document.activeElement !== panel && guard++ < 12) await userEvent.tab();
+      await expect(panel).toHaveFocus();
+      const style = getComputedStyle(panel);
+      await expect(style.outlineStyle).toBe("solid");
+      const ring = parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth);
+      const list = within(root).getByRole("tablist").getBoundingClientRect();
+      const box = panel.getBoundingClientRect();
+      const gap = vertical ? box.left - list.right : box.top - list.bottom;
+      await expect(gap).toBeGreaterThanOrEqual(ring);
+    }
   },
 };

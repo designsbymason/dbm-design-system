@@ -18,6 +18,7 @@ interface TabsContextValue {
   variant: TabsVariant;
   size: TabsSize;
   fullWidth: boolean;
+  rounded: boolean;
   orientation: TabsOrientation;
 }
 
@@ -29,6 +30,7 @@ const TabsContext = createContext<TabsContextValue>({
   variant: "underline",
   size: "md",
   fullWidth: false,
+  rounded: false,
   orientation: "horizontal",
 });
 
@@ -61,12 +63,14 @@ const contentSizeClass: Record<TabsSize, string | undefined> = {
 const triggerVariantClass: Record<TabsVariant, string | undefined> = {
   underline: styles.underline,
   subtle: styles.subtle,
+  outlined: styles.outlined,
   solid: styles.solid,
 };
 
 const listVariantClass: Record<TabsVariant, string | undefined> = {
   underline: styles.listUnderline,
   subtle: styles.listFilled,
+  outlined: styles.listFilled,
   solid: styles.listFilled,
 };
 
@@ -95,8 +99,9 @@ function revealTab(list: HTMLElement, tab: HTMLElement, behavior: ScrollBehavior
  *
  * Uncontrolled with `defaultValue`, or controlled with `value`/
  * `onValueChange`. Pass one of them: with neither, no tab is selected and no
- * panel shows. `variant`, `size`, `orientation` and `fullWidth` are set once
- * here and apply to every part. `orientation` accepts a breakpoint map for a
+ * panel shows. `variant`, `size`, `rounded`, `orientation` and `fullWidth` are set once
+ * here and apply to every part. `rounded` fully rounds the tabs of every variant
+ * but `underline`. `orientation` accepts a breakpoint map for a
  * vertical list that becomes a horizontal one on a phone. A horizontal list
  * that is wider than its container scrolls sideways, and keeps the selected tab
  * in view.
@@ -128,6 +133,7 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsProps>((props, ref) => {
     orientation: orientationProp = "horizontal",
     activationMode = "automatic",
     fullWidth = false,
+    rounded = false,
     dir,
     className,
     style,
@@ -156,8 +162,8 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsProps>((props, ref) => {
   }
 
   const context = useMemo<TabsContextValue>(
-    () => ({ variant, size, fullWidth, orientation }),
-    [variant, size, fullWidth, orientation],
+    () => ({ variant, size, fullWidth, rounded, orientation }),
+    [variant, size, fullWidth, rounded, orientation],
   );
 
   return (
@@ -245,7 +251,7 @@ TabsList.displayName = "Tabs.List";
  */
 const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProps, ref) => {
   const { value, icon, asChild = false, className, children, ...props } = triggerProps;
-  const { variant, size, fullWidth, orientation } = useContext(TabsContext);
+  const { variant, size, fullWidth, rounded, orientation } = useContext(TabsContext);
 
   const hasWarnedIconRef = useRef(false);
   const hasWarnedNameRef = useRef(false);
@@ -282,6 +288,8 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((triggerProp
         triggerSizeClass[size],
         triggerVariantClass[variant],
         fullWidth && styles.triggerFullWidth,
+        // The underline variant has no shape to round, so `rounded` never reaches it.
+        rounded && variant !== "underline" && styles.rounded,
         className,
       )}
     >

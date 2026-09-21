@@ -15,6 +15,7 @@ export const rootPropOrder = [
   "onValueChange",
   "variant",
   "size",
+  "rounded",
   "orientation",
   "activationMode",
   "fullWidth",
@@ -53,8 +54,9 @@ page, and the keyboard works the way a reader of any tabbed interface expects: `
 list once, and the arrow keys move between tabs from there (this is called *roving focus* — the
 whole list is a single stop in the tab order).
 
-Choose how the selected tab is marked with `variant` (an underline, a soft tint, or a solid fill),
-how big everything is with `size`, and whether the tabs run across or down with `orientation`. A
+Choose how the selected tab is marked with `variant` (an underline, a soft tint, a tint with a border
+on every tab, or a solid fill), how big everything is with `size`, whether the tabs have fully round
+ends with `rounded`, and whether the tabs run across or down with `orientation`. A
 horizontal list that is too wide for its container scrolls sideways and keeps the selected tab in
 view.
 
@@ -118,6 +120,13 @@ The panel a tab reveals. Also accepts any other native `<div>` attribute beyond 
 ### All sizes
 
 <Canvas of={TabsStories.Sizes} />
+
+### Rounded
+
+`rounded` fully rounds the ends of every tab in the `subtle`, `outlined` and `solid` variants. It has
+no effect on `underline`, whose tabs have no shape to round.
+
+<Canvas of={TabsStories.Rounded} />
 
 ### Vertical orientation
 
@@ -252,12 +261,20 @@ read or reached (with `forceMount` it stays, hidden from view and from assistive
 Arrow keys wrap from the last tab to the first unless `loop={false}`, and skip a disabled tab.
 
 **Contrast**, measured for every pairing in Purple and Emerald, light and dark: an unselected label
-on the surface is 6.88–10.47:1; a selected label is 5.83–8.29:1 on its tint and 6.08–8.51:1 on the
-solid fill; a hovered selected label is at least 4.63:1; the underline bar is 6.08–8.51:1 against
-the page; icons are at least 3.67:1. The focus ring is 4.16–6.49:1. It is drawn inside the tab, so a
-list that scrolls sideways can't clip it; on the selected tab of the `solid` variant it is drawn in
-the on-brand colour instead (6.08–8.51:1), because the standard ring colour would all but disappear
-on that fill.
+on the surface is 6.88–10.47:1, and 13.46–15.05:1 once hovered (on `bg.brand-subtle`); a selected
+label is 5.83–8.29:1 on its tint and 6.08–8.51:1 on the solid fill; a hovered selected label is at
+least 4.63:1; the underline bar and the outlined variant's selected border are 6.08–8.51:1 against
+the page; icons are at least 3.67:1. The unselected tabs' borders in the outlined variant are a
+faint decorative tint (1.08–1.24:1), so the selected tab's border and every label carry the state,
+not those.
+
+**The focus ring** is drawn inside the tab, so a list that scrolls sideways can't clip it. On the
+underline and subtle variants it is `border.focus` (4.16–6.49:1 against the page). On the outlined
+variant it is `bg.brand-hover` (8.64–11.74:1 against the tab's fill and the page), drawn just inside
+the border so it doesn't sit on top of it. On the selected tab of the **solid** variant it is also
+`bg.brand-hover`, which is only 1.24–1.48:1 against that tab's own fill — well under the 3:1 a focus
+indicator should have — and is the same colour as the fill while the tab is hovered. A keyboard
+reader will find the ring hard to see there; where that matters most, choose another variant.
 
 </Callout>
 
@@ -309,18 +326,20 @@ function Example() {
 <TokenRow token="text.brand" usage="the selected tab's label in the underline and subtle variants" />
 <TokenRow token="text.on-brand" usage="the selected tab's label in the solid variant" />
 <TokenRow token="bg.brand" usage="the underline bar; the selected tab's fill in the solid variant" />
-<TokenRow token="bg.brand-hover" usage="the solid variant's selected tab while hovered" />
-<TokenRow token="bg.brand-subtle" usage="the subtle variant's selected tab" />
-<TokenRow token="bg.brand-subtle-hover" usage="the subtle variant's selected tab while hovered" />
-<TokenRow token="bg.neutral-subtle" usage="any unselected tab while hovered" />
+<TokenRow token="bg.brand-hover" usage="the solid variant's selected tab while hovered; the focus ring on the outlined variant and on the solid variant's selected tab" />
+<TokenRow token="bg.brand-subtle" usage="the subtle and outlined variants' selected tab; any unselected tab while hovered" />
+<TokenRow token="bg.brand-subtle-hover" usage="the subtle and outlined variants' selected tab while hovered" />
 <TokenRow token="border.default" usage="the hairline the underline variant's bar sits on" />
-<TokenRow token="border.focus" usage="the focus ring on a tab and on a panel" />
+<TokenRow token="border.focus" usage="the focus ring on a tab in the underline and subtle variants, and on a panel" />
+<TokenRow token="border.brand" usage="the outlined variant's selected tab's border" />
+<TokenRow token="border.brand-subtle" usage="the outlined variant's other tabs' borders" />
 <TokenRow token="icon.default" usage="an unselected tab's icon" />
 <TokenRow token="icon.brand" usage="the selected tab's icon in the underline and subtle variants" />
-<TokenRow token="icon.on-brand" usage="the selected tab's icon in the solid variant, and its focus ring" />
-<TokenRow token="border-width.1" usage="the underline variant's hairline" />
+<TokenRow token="icon.on-brand" usage="the selected tab's icon in the solid variant" />
+<TokenRow token="border-width.1" usage="the underline variant's hairline; the outlined variant's border" />
 <TokenRow token="border-width.2" usage="the underline bar and the focus ring" />
-<TokenRow token="radius.md" usage="a tab's corners in the subtle and solid variants" />
+<TokenRow token="radius.md" usage="a tab's corners in the subtle, outlined and solid variants" />
+<TokenRow token="radius.full" usage="the ends of a rounded tab, and its focus ring" />
 <TokenRow token="radius.sm" usage="the focus ring's corners, per the standardized focus-ring convention" />
 <TokenRow token="opacity.40" usage="a disabled tab" />
 <TokenRow token="font-family.primary" usage="tab typography" />
@@ -328,7 +347,7 @@ function Example() {
 <TokenRow token="font-weight.medium" usage="tab label weight" />
 <TokenRow token="line-height.tight" usage="tab label line height" />
 <TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="a tab's minimum height, matching a Button of the same size" />
-<TokenRow token="space.1" usage="the gap between tabs in the subtle and solid variants" />
+<TokenRow token="space.1" usage="the gap between tabs in the subtle, outlined and solid variants" />
 <TokenRow token="space.2–space.3" usage="the gap between a tab's icon and its label" />
 <TokenRow token="space.3–space.6" usage="a tab's inline padding across the five size steps" />
 <TokenRow token="space.3–space.8" usage="the space between the list and its panel across the five size steps" />

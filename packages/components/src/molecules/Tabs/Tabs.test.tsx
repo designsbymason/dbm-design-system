@@ -317,6 +317,7 @@ describe("Tabs — variants, sizes and layout", () => {
   it.each([
     ["underline", "underline", "listUnderline"],
     ["subtle", "subtle", "listFilled"],
+    ["outlined", "outlined", "listFilled"],
     ["solid", "solid", "listFilled"],
   ] as const)("styles the %s variant on the trigger and the list", (variant, triggerClass, listClass) => {
     render(<Basic variant={variant} />);
@@ -334,6 +335,44 @@ describe("Tabs — variants, sizes and layout", () => {
     render(<Basic size={size} />);
     expect(screen.getByRole("tab", { name: "Overview" })).toHaveClass(styles[triggerClass]!);
     expect(screen.getByRole("tabpanel")).toHaveClass(styles[contentClass]!);
+  });
+
+  it("does not round any tab by default", () => {
+    for (const variant of ["underline", "subtle", "outlined", "solid"] as const) {
+      const { unmount } = render(<Basic variant={variant} />);
+      for (const tab of screen.getAllByRole("tab")) expect(tab).not.toHaveClass(styles.rounded!);
+      unmount();
+    }
+  });
+
+  it.each(["subtle", "outlined", "solid"] as const)("rounds every tab of the %s variant with rounded", (variant) => {
+    render(<Basic variant={variant} rounded />);
+    for (const tab of screen.getAllByRole("tab")) expect(tab).toHaveClass(styles.rounded!);
+  });
+
+  it("does nothing to the underline variant with rounded", () => {
+    render(<Basic variant="underline" rounded />);
+    for (const tab of screen.getAllByRole("tab")) expect(tab).not.toHaveClass(styles.rounded!);
+  });
+
+  it("rounds a nested Tabs only when that Tabs asks for it", () => {
+    render(
+      <Tabs defaultValue="outer" variant="solid" rounded>
+        <Tabs.List aria-label="Outer">
+          <Tabs.Trigger value="outer">Outer tab</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="outer">
+          <Tabs defaultValue="inner" variant="subtle">
+            <Tabs.List aria-label="Inner">
+              <Tabs.Trigger value="inner">Inner tab</Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="inner">Inner content</Tabs.Content>
+          </Tabs>
+        </Tabs.Content>
+      </Tabs>,
+    );
+    expect(screen.getByRole("tab", { name: "Outer tab" })).toHaveClass(styles.rounded!);
+    expect(screen.getByRole("tab", { name: "Inner tab" })).not.toHaveClass(styles.rounded!);
   });
 
   it("stretches the triggers with fullWidth", () => {
@@ -816,8 +855,13 @@ describe("Tabs — accessibility (jest-axe)", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it.each(["underline", "subtle", "solid"] as const)("has no violations in the %s variant", async (variant) => {
+  it.each(["underline", "subtle", "outlined", "solid"] as const)("has no violations in the %s variant", async (variant) => {
     const { container } = render(<Basic variant={variant} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("has no violations when rounded", async () => {
+    const { container } = render(<Basic variant="outlined" rounded />);
     expect(await axe(container)).toHaveNoViolations();
   });
 

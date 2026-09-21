@@ -210,7 +210,7 @@
 }
 
 .underline:not(:disabled):not([data-disabled]):hover {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-brand-subtle);
   color: var(--dbm-text-primary);
 }
 
@@ -225,7 +225,7 @@
 }
 
 .subtle:not(:disabled):not([data-disabled]):hover {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-brand-subtle);
   color: var(--dbm-text-primary);
 }
 
@@ -250,7 +250,7 @@
 }
 
 .solid:not(:disabled):not([data-disabled]):hover {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-brand-subtle);
   color: var(--dbm-text-primary);
 }
 
@@ -268,10 +268,65 @@
   color: var(--dbm-icon-on-brand);
 }
 
-/* `border.focus` is 1.3–1.6:1 against `bg.brand` — a ring in it would vanish on
-   the selected solid tab — so this one ring is drawn in the on-brand colour. */
+/* The ring on the selected solid tab is drawn in `bg.brand-hover`. That is only
+   1.24–1.48:1 against the tab's own `bg.brand` fill, below the 3:1 floor for a
+   focus indicator, and it is the very colour of the fill while the tab is hovered,
+   so the ring is invisible then. A deliberate choice, not a measured pass. */
 .solid[data-state="active"]:focus-visible {
-  outline-color: var(--dbm-icon-on-brand);
+  outline-color: var(--dbm-bg-brand-hover);
+}
+
+/* --- Variant: outlined ---
+   `subtle` with a border on every tab: the selected one in the brand colour, the
+   others in a faint brand tint. Every tab has the border in every state, so
+   nothing moves when the selection does. */
+
+.outlined {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-brand-subtle);
+  border-radius: var(--dbm-radius-md);
+}
+
+.outlined:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-primary);
+}
+
+.outlined[data-state="active"] {
+  background-color: var(--dbm-bg-brand-subtle);
+  border-color: var(--dbm-border-brand);
+  color: var(--dbm-text-brand);
+}
+
+.outlined[data-state="active"]:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+  color: var(--dbm-text-brand);
+}
+
+.outlined[data-state="active"] .triggerIcon {
+  color: var(--dbm-icon-brand);
+}
+
+/* `bg.brand-hover` for every state. Inside the border with a gap of one border width
+   (offset = the border, the gap, then the ring's own width), so the ring is read
+   against the tab's fill and the page, not laid over the border, which is nearly
+   the same colour (1.2–1.5:1). */
+.outlined:focus-visible {
+  outline-color: var(--dbm-bg-brand-hover);
+  outline-offset: calc(-1 * (var(--dbm-border-width-2) + 2 * var(--dbm-border-width-1)));
+}
+
+/* --- rounded ---
+   Fully rounded ends on every variant but `underline`, which has no shape to round
+   (`Tabs.tsx` doesn't apply the class there). Declared after the variants so it wins
+   over their `radius-md`; the ring gets the `full` radius too, per the convention for
+   a fully round element (`05-component-api-conventions.md` §6). */
+
+.rounded {
+  border-radius: var(--dbm-radius-full);
+}
+
+.rounded:focus-visible {
+  border-radius: var(--dbm-radius-full);
 }
 
 /* --- A panel --- */
@@ -283,18 +338,24 @@
   display: none;
 }
 
+/* The space between the list and its panel is a MARGIN, not padding. The panel takes
+   focus and draws the standard ring outside its own box (a 4px offset and a 2px line, so
+   6px), and the list sits right beside it: with the space as padding inside the panel the
+   ring started inside the tab list, where the tabs (which are positioned) paint over it.
+   As a margin the ring sits in the gap, and the smallest gap (`space.3`, 12px) leaves it
+   6px of clear space to spare. */
 .content {
   --tabs-panel-gap: var(--dbm-space-4);
 }
 
 .content[data-orientation="horizontal"] {
-  padding-block-start: var(--tabs-panel-gap);
+  margin-block-start: var(--tabs-panel-gap);
 }
 
 .content[data-orientation="vertical"] {
   flex: 1 1 0;
+  margin-inline-start: var(--tabs-panel-gap);
   min-inline-size: 0;
-  padding-inline-start: var(--tabs-panel-gap);
 }
 
 .contentXs {

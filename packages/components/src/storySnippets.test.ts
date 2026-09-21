@@ -1253,6 +1253,7 @@ describe("Playground snippets for Tabs", () => {
     { defaultValue: "activity", variant: "subtle", size: "sm" },
     { defaultValue: "settings", variant: "solid", size: "xl", orientation: "vertical", activationMode: "manual" },
     { fullWidth: true, dir: "rtl" },
+    { variant: "outlined", rounded: true, size: "lg" },
   ] as const;
 
   it.each(tabsArgs)("Tabs %j is a real snippet", (args) => {
@@ -1274,6 +1275,10 @@ describe("Playground snippets for Tabs", () => {
     expect(tabsPlaygroundSnippet({ defaultValue: "activity", variant: "subtle", size: "sm" })).toMatch(
       /^<Tabs defaultValue="activity" variant="subtle" size="sm">\n/,
     );
+    expect(tabsPlaygroundSnippet({ variant: "outlined", rounded: true })).toMatch(
+      /^<Tabs defaultValue="overview" variant="outlined" rounded>\n/,
+    );
+    expect(tabsPlaygroundSnippet({ rounded: false })).toMatch(/^<Tabs defaultValue="overview">\n/);
     expect(tabsPlaygroundSnippet({ orientation: "vertical", activationMode: "manual", fullWidth: true, dir: "rtl" })).toMatch(
       /^<Tabs defaultValue="overview" orientation="vertical" activationMode="manual" fullWidth dir="rtl">\n/,
     );

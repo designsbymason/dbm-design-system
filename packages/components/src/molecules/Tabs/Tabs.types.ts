@@ -6,11 +6,12 @@ import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
  * How the selected tab is marked. `"underline"` (the default) draws a bar
  * under the selected tab, on a hairline that runs the length of the list —
  * the classic tab strip. `"subtle"` gives the selected tab a soft brand tint
- * and no baseline; `"solid"` fills it with the brand colour for the strongest
- * emphasis. `subtle` and `solid` share their names, and their meaning, with
- * `Tag` and `Badge`.
+ * and no baseline; `"outlined"` is `"subtle"` with a border on every tab, in
+ * the brand colour on the selected one and a faint tint on the rest; `"solid"`
+ * fills the selected tab with the brand colour for the strongest emphasis.
+ * `subtle`, `outlined` and `solid` are the variant names `Tag` uses too.
  */
-export type TabsVariant = "underline" | "subtle" | "solid";
+export type TabsVariant = "underline" | "subtle" | "outlined" | "solid";
 
 /**
  * Trigger height, padding and type size, on the standard 5-step scale
@@ -55,8 +56,8 @@ export interface TabsProps
   /** Called with the newly selected tab's `value` whenever the selection changes. */
   onValueChange?: (value: string) => void;
   /**
-   * How the selected tab is marked: an underline bar, a soft brand tint, or a
-   * solid brand fill.
+   * How the selected tab is marked: an underline bar, a soft brand tint, a tint
+   * with a border on every tab, or a solid brand fill.
    * @default 'underline'
    */
   variant?: TabsVariant;
@@ -65,6 +66,12 @@ export interface TabsProps
    * @default 'md'
    */
   size?: TabsSize;
+  /**
+   * Fully rounds the ends of every tab, in the `subtle`, `outlined` and `solid`
+   * variants. It has no effect on `underline`, whose tabs have no shape to round.
+   * @default false
+   */
+  rounded?: boolean;
   /**
    * The direction the tabs run, and which arrow-key pair moves between them.
    * Accepts a mobile-first breakpoint map, so a vertical list beside its panel on

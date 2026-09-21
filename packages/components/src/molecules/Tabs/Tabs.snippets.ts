@@ -24,11 +24,15 @@ const tabs = (attributes: string, listBlock = list(), panelBlock = panels) =>
   `<Tabs${attributes ? ` ${attributes}` : ""}>\n${listBlock}\n${panelBlock}\n</Tabs>`;
 
 export const tabsSnippets = {
-  variants: `{/* variant: "underline" (default) | "subtle" | "solid" — how the selected tab is marked */}
+  variants: `{/* variant: "underline" (default) | "subtle" | "outlined" | "solid" — how the selected tab is marked */}
 ${tabs('defaultValue="overview" variant="subtle"')}`,
 
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — trigger height, padding and type size */}
 ${tabs('defaultValue="overview" size="sm"')}`,
+
+  rounded: `{/* rounded fully rounds the ends of every tab in the subtle, outlined and solid variants.
+    It does nothing to underline. */}
+${tabs('defaultValue="overview" variant="outlined" rounded')}`,
 
   vertical: `{/* orientation="vertical" puts the list beside its panel; Up and Down move between tabs */}
 ${tabs('defaultValue="overview" orientation="vertical"')}`,
@@ -133,6 +137,7 @@ export interface TabsPlaygroundSnippetArgs {
   defaultValue?: string;
   variant?: TabsVariant;
   size?: TabsSize;
+  rounded?: boolean;
   orientation?: TabsOrientation;
   activationMode?: TabsActivationMode;
   fullWidth?: boolean;
@@ -148,6 +153,7 @@ export function tabsPlaygroundSnippet(args: TabsPlaygroundSnippetArgs): string {
   attributes.push(`defaultValue="${args.defaultValue || "overview"}"`);
   if (args.variant && args.variant !== "underline") attributes.push(`variant="${args.variant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.rounded) attributes.push("rounded");
   if (args.orientation && args.orientation !== "horizontal") attributes.push(`orientation="${args.orientation}"`);
   if (args.activationMode && args.activationMode !== "automatic") attributes.push(`activationMode="${args.activationMode}"`);
   if (args.fullWidth) attributes.push("fullWidth");
