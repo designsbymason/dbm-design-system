@@ -1,0 +1,369 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../../atoms/Badge";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Accordion } from "../Accordion";
+import { Pagination } from "../Pagination";
+import * as TabsStories from "./Tabs.stories";
+import * as TabsListStories from "./TabsList.stories";
+import * as TabsTriggerStories from "./TabsTrigger.stories";
+import * as TabsContentStories from "./TabsContent.stories";
+
+export const rootPropOrder = [
+  "defaultValue",
+  "value",
+  "onValueChange",
+  "variant",
+  "size",
+  "orientation",
+  "activationMode",
+  "fullWidth",
+  "dir",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const listPropOrder = ["children", "loop", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const triggerPropOrder = [
+  "value",
+  "children",
+  "icon",
+  "disabled",
+  "asChild",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const contentPropOrder = ["value", "children", "forceMount", "id", "className", "style", "data-testid"];
+
+<Meta of={TabsStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Tabs" tier="Molecule" />
+
+A set of tabs, each switching which of several panels is showing, built on Radix Tabs. A compound
+component: put a `Tabs.List` holding one `Tabs.Trigger` per tab inside `Tabs`, and one
+`Tabs.Content` per trigger beside it, matched by `value`. Only the selected tab's panel is in the
+page, and the keyboard works the way a reader of any tabbed interface expects: `Tab` enters the
+list once, and the arrow keys move between tabs from there (this is called *roving focus* — the
+whole list is a single stop in the tab order).
+
+Choose how the selected tab is marked with `variant` (an underline, a soft tint, or a solid fill),
+how big everything is with `size`, and whether the tabs run across or down with `orientation`. A
+horizontal list that is too wide for its container scrolls sideways and keeps the selected tab in
+view.
+
+### Import
+
+```tsx
+import { Tabs } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TabsStories.Playground} />
+
+</div>
+<PlaygroundControls of={TabsStories.Playground} order={rootPropOrder} exclude={["value", "onValueChange", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`Tabs` is uncontrolled with `defaultValue`, or controlled with `value` and `onValueChange` — pass
+one of them, since with neither no tab is selected and no panel shows. `variant`, `size`,
+`orientation` and `fullWidth` are set once here and apply to every part inside. `ref` forwards to
+the root `<div>`. Also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `onMouseEnter`) — passed straight through to the root element.
+
+<PropertiesTable of={TabsStories} order={rootPropOrder} />
+
+`orientation` also accepts a mobile-first map of breakpoint to value, such as
+`{ base: "horizontal", md: "vertical" }` — see the responsive example below. A map is resolved in
+JavaScript, so a server-rendered page uses the `base` value until the page loads in the browser.
+
+### Tabs.List properties
+
+The row (or column) of triggers — the element with the `tablist` role. Also accepts any other
+native `<div>` attribute beyond what's listed here (e.g. `onFocus`, `title`) — passed straight
+through to the underlying element.
+
+<PropertiesTable of={TabsListStories} order={listPropOrder} />
+
+### Tabs.Trigger properties
+
+One tab — a real `<button>`. Also accepts any other native `<button>` attribute beyond what's
+listed here (e.g. `onFocus`, `title`) — passed straight through.
+
+<PropertiesTable of={TabsTriggerStories} order={triggerPropOrder} />
+
+### Tabs.Content properties
+
+The panel a tab reveals. Also accepts any other native `<div>` attribute beyond what's listed here
+(e.g. `onFocus`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={TabsContentStories} order={contentPropOrder} />
+
+## Variants
+
+### All variants
+
+<Canvas of={TabsStories.Variants} />
+
+### All sizes
+
+<Canvas of={TabsStories.Sizes} />
+
+### Vertical orientation
+
+<Canvas of={TabsStories.Vertical} />
+
+### Vertical on a wide screen, horizontal on a phone
+
+A breakpoint map on `orientation`. On a page this wide it shows the vertical form; narrow the
+window below the `md` breakpoint (768px) to watch it become a horizontal strip.
+
+<Canvas of={TabsStories.ResponsiveOrientation} />
+
+### With icons
+
+<Canvas of={TabsStories.WithIcons} />
+
+### With a count
+
+<Canvas of={TabsStories.WithBadge} />
+
+### One tab disabled
+
+<Canvas of={TabsStories.DisabledTab} />
+
+### Full width
+
+<Canvas of={TabsStories.FullWidth} />
+
+### Manual activation
+
+<Canvas of={TabsStories.ManualActivation} />
+
+### Controlled selection
+
+<Canvas of={TabsStories.Controlled} />
+
+### Too many tabs for the width
+
+Drag the bottom-right corner of the box to change how much room the tabs have.
+
+<Canvas of={TabsStories.Scrolling} />
+
+### Keeping a panel mounted
+
+Type something into the field, switch to the other tab and back.
+
+<Canvas of={TabsStories.KeepMounted} />
+
+### Tabs as links (asChild)
+
+<Canvas of={TabsStories.AsLink} />
+
+### Right-to-left
+
+<Canvas of={TabsStories.RightToLeft} />
+
+### On a phone
+
+Opened on its own, this story is shown at a phone's width. On this page it sits in the wide page like
+every other story, so pick a phone size in the viewport toolbar to see it as a phone would.
+
+<Canvas of={TabsStories.OnAPhone} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Tabs` for peer views of the same subject where a reader needs one at a time — a project's
+  overview, activity and settings.
+- Always pass `defaultValue` (or a controlled `value`), and give every tab a matching
+  `Tabs.Content`.
+- Name the list with `aria-label` when a page holds more than one set of tabs, or when the
+  surrounding heading doesn't already say what they switch between.
+- Keep labels to a word or two. When there are many, the list scrolls; past six or seven,
+  consider a vertical list or a `Select`.
+- Use `activationMode="manual"` when showing a panel is expensive (a large table, a network
+  request), so a reader can move through the tabs without loading each one.
+- Use `forceMount` on a panel that holds state a reader would be upset to lose, such as a form
+  they've started filling in.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `Tabs` to move between pages. Tabs switch views in place; use links, or a navigation
+  component, for a change of page. Tabs rendered as links with `asChild` are for tabs that still
+  switch panels.
+- Don't hide content every reader must see behind a tab — someone may never open it.
+- Don't leave `defaultValue` out. With no tab selected, nothing is shown and the list has no
+  obvious place to start.
+- Don't disable a tab without saying why somewhere nearby; a disabled tab can't be focused, so a
+  keyboard reader gets no explanation from it.
+- Don't nest tabs more than one level deep, or put a `Tabs` inside a `Tabs.Trigger`.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Put the tabs' own controls (a filter, an "Add" button) inside the panel, not in the list. The
+  list is only for choosing a view.
+- To let a reader share or bookmark a tab, control it: keep the selected value in the URL, pass it
+  as `value`, and update the URL from `onValueChange`.
+- `size` also sets the space between the list and its panel, so tabs and their content stay in
+  proportion. A trigger's height matches a `Button` or `IconButton` of the same size, so a tab list
+  lines up beside either.
+- For a vertical list beside its panel on a wide screen that has to become a strip on a phone, use a
+  breakpoint map on `orientation` rather than two separate components — the arrow keys follow the
+  layout.
+- An icon-only tab needs an `aria-label`; the icon is decorative. A count or status belongs in the
+  label itself — a `Badge` placed next to the words.
+
+## Accessibility
+
+<Callout tone="info" title="Roles, state and keyboard behaviour come from Radix's own tabs primitive">
+
+The list is a `tablist`, each trigger a `tab` with `aria-selected`, and each panel a `tabpanel`
+named by its trigger (`aria-labelledby`). Each trigger's `aria-controls` points at its panel, and
+the list's `aria-orientation` follows `orientation`. A panel is focusable, so a reader can press
+`Tab` from the list straight into it. An unselected panel is not in the page at all, so it can't be
+read or reached (with `forceMount` it stays, hidden from view and from assistive technology).
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Enters the list on the selected tab; pressed again, moves to the panel |
+| `Shift+Tab` | Moves back out of the panel, then out of the list |
+| `Right` / `Left` | Next / previous tab in a horizontal list (swapped when the text runs right to left); selects it too, unless `activationMode="manual"` |
+| `Down` / `Up` | Next / previous tab in a vertical list |
+| `Home` / `End` | First / last tab |
+| `Enter` / `Space` | Selects the focused tab (needed only in manual mode) |
+
+Arrow keys wrap from the last tab to the first unless `loop={false}`, and skip a disabled tab.
+
+**Contrast**, measured for every pairing in Purple and Emerald, light and dark: an unselected label
+on the surface is 6.88–10.47:1; a selected label is 5.83–8.29:1 on its tint and 6.08–8.51:1 on the
+solid fill; a hovered selected label is at least 4.63:1; the underline bar is 6.08–8.51:1 against
+the page; icons are at least 3.67:1. The focus ring is 4.16–6.49:1. It is drawn inside the tab, so a
+list that scrolls sideways can't clip it; on the selected tab of the `solid` variant it is drawn in
+the on-brand colour instead (6.08–8.51:1), because the standard ring colour would all but disappear
+on that fill.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Tabs defaultValue="overview">
+  <Tabs.List aria-label="Project">
+    <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+    <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+    <Tabs.Trigger value="settings" disabled>Settings</Tabs.Trigger>
+  </Tabs.List>
+  <Tabs.Content value="overview">A summary of the project.</Tabs.Content>
+  <Tabs.Content value="activity">Recent changes to the project.</Tabs.Content>
+</Tabs>
+
+{/* Vertical on a wide screen, horizontal below the md breakpoint */}
+<Tabs defaultValue="overview" orientation={{ base: "horizontal", md: "vertical" }} variant="subtle">
+  {/* ... */}
+</Tabs>
+
+{/* Controlled, and kept in the URL so a tab can be shared */}
+function Example() {
+  const [tab, setTab] = useTabFromUrl("overview");
+  return (
+    <Tabs value={tab} onValueChange={setTab}>
+      {/* ... */}
+    </Tabs>
+  );
+}
+
+{/* A count next to the label, and an icon-only tab */}
+<Tabs.Trigger value="inbox">Inbox <Badge size="sm">12</Badge></Tabs.Trigger>
+<Tabs.Trigger value="settings" icon={GearIcon} aria-label="Settings" />
+
+{/* A native <button> attribute on Tabs.Trigger, passed straight through */}
+<Tabs.Trigger value="reports" onFocus={() => prefetchReports()}>Reports</Tabs.Trigger>
+
+{/* Keep a panel's state while its tab isn't selected */}
+<Tabs.Content value="details" forceMount>
+  <form>{/* ... */}</form>
+</Tabs.Content>
+```
+
+## Design tokens used
+
+<TokenRow token="text.secondary" usage="an unselected tab's label" />
+<TokenRow token="text.primary" usage="a hovered, unselected tab's label" />
+<TokenRow token="text.brand" usage="the selected tab's label in the underline and subtle variants" />
+<TokenRow token="text.on-brand" usage="the selected tab's label in the solid variant" />
+<TokenRow token="bg.brand" usage="the underline bar; the selected tab's fill in the solid variant" />
+<TokenRow token="bg.brand-hover" usage="the solid variant's selected tab while hovered" />
+<TokenRow token="bg.brand-subtle" usage="the subtle variant's selected tab" />
+<TokenRow token="bg.brand-subtle-hover" usage="the subtle variant's selected tab while hovered" />
+<TokenRow token="bg.neutral-subtle" usage="any unselected tab while hovered" />
+<TokenRow token="border.default" usage="the hairline the underline variant's bar sits on" />
+<TokenRow token="border.focus" usage="the focus ring on a tab and on a panel" />
+<TokenRow token="icon.default" usage="an unselected tab's icon" />
+<TokenRow token="icon.brand" usage="the selected tab's icon in the underline and subtle variants" />
+<TokenRow token="icon.on-brand" usage="the selected tab's icon in the solid variant, and its focus ring" />
+<TokenRow token="border-width.1" usage="the underline variant's hairline" />
+<TokenRow token="border-width.2" usage="the underline bar and the focus ring" />
+<TokenRow token="radius.md" usage="a tab's corners in the subtle and solid variants" />
+<TokenRow token="radius.sm" usage="the focus ring's corners, per the standardized focus-ring convention" />
+<TokenRow token="opacity.40" usage="a disabled tab" />
+<TokenRow token="font-family.primary" usage="tab typography" />
+<TokenRow token="font-size.xs–font-size.lg" usage="tab label size across the five size steps" />
+<TokenRow token="font-weight.medium" usage="tab label weight" />
+<TokenRow token="line-height.tight" usage="tab label line height" />
+<TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="a tab's minimum height, matching a Button of the same size" />
+<TokenRow token="space.1" usage="the gap between tabs in the subtle and solid variants" />
+<TokenRow token="space.2–space.3" usage="the gap between a tab's icon and its label" />
+<TokenRow token="space.3–space.6" usage="a tab's inline padding across the five size steps" />
+<TokenRow token="space.3–space.8" usage="the space between the list and its panel across the five size steps" />
+<TokenRow token="motion.duration.fast" usage="colour changes on hover; a panel fading in" />
+<TokenRow token="motion.duration.base" usage="the underline bar growing under the selected tab" />
+<TokenRow token="motion.easing.standard" usage="colour changes and the underline bar" />
+<TokenRow token="motion.easing.decelerate" usage="a panel fading in" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Accordion"
+  description="Stacked disclosure panels — for sections that read top to bottom rather than one at a time"
+  href="/?path=/docs/molecules-overlay-accordion--docs"
+>
+  <Accordion defaultValue="a">
+    <Accordion.Item value="a">
+      <Accordion.Trigger>Section</Accordion.Trigger>
+      <Accordion.Content>Content</Accordion.Content>
+    </Accordion.Item>
+  </Accordion>
+</RelatedCard>
+<RelatedCard
+  name="Pagination"
+  description="Moves through numbered pages of one list, rather than between different views"
+  href="/?path=/docs/molecules-data-display-pagination--docs"
+>
+  <Pagination pageCount={5} defaultValue={2} size="xs" aria-label="Example" />
+</RelatedCard>
+<RelatedCard
+  name="Badge"
+  description="A count or status to put next to a tab's label"
+  href="/?path=/docs/atoms-data-display-badge--docs"
+>
+  <Badge tone="brand">12</Badge>
+</RelatedCard>
+</div>

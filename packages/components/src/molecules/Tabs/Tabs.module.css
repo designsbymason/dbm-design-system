@@ -1,0 +1,344 @@
+/* The whole set. A column (list above panel) or, for a vertical list, a row
+   (list beside panel). `data-orientation` is set by `Tabs.tsx` to the
+   resolved value — a breakpoint map is resolved in JavaScript, so the layout
+   and the arrow keys always agree. */
+.root {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+}
+
+.root[data-orientation="vertical"] {
+  align-items: flex-start;
+  flex-direction: row;
+}
+
+/* --- The list --- */
+
+.list {
+  display: flex;
+  min-inline-size: 0;
+}
+
+/* Wider than its container: scrolls sideways rather than overflowing the page
+   or wrapping onto a second row. The scrollbar is hidden: an overlay scrollbar
+   is drawn over the bottom of the list, on top of the selected tab's underline,
+   and the list already shows what a scrollbar would say — a tab cut off at the
+   edge means more lies that way, the selected tab is always brought into view,
+   and the arrow keys and a touch or trackpad swipe still scroll it. `overflow-y:
+   hidden` is implied by `overflow-x: auto` anyway; stated so nothing here can
+   grow a vertical scrollbar. Everything drawn on a trigger stays inside the
+   trigger (see the inset focus ring below), because this box clips anything
+   that doesn't. */
+.list[data-orientation="horizontal"] {
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+/* Safari before it understood `scrollbar-width`. */
+.list[data-orientation="horizontal"]::-webkit-scrollbar {
+  display: none;
+}
+
+.list[data-orientation="vertical"] {
+  flex: 0 0 auto;
+  flex-direction: column;
+}
+
+/* `underline`: a hairline the length of the list, which the selected tab's bar
+   sits on top of. Horizontal: an inset shadow, because it is painted inside the
+   list's own padding box, so the scrolling clip can't cut it or the bar, and
+   it stays put as the tabs scroll. Vertical: a real border on the side that
+   faces the panel — nothing scrolls there, so nothing clips the bar. */
+.listUnderline[data-orientation="horizontal"] {
+  box-shadow: inset 0 calc(-1 * var(--dbm-border-width-1)) 0 0 var(--dbm-border-default);
+}
+
+.listUnderline[data-orientation="vertical"] {
+  border-inline-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* `subtle` and `solid`: separate the tabs so neighbouring tints and fills read
+   as distinct shapes. */
+.listFilled {
+  gap: var(--dbm-space-1);
+}
+
+/* --- A trigger --- */
+
+.trigger {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  color: var(--dbm-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-weight: var(--dbm-font-weight-medium);
+  justify-content: center;
+  line-height: var(--dbm-line-height-tight);
+  position: relative;
+  /* A native <button> never underlines, but the `asChild` anchor case does. */
+  text-decoration: none;
+  transition:
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  white-space: nowrap;
+}
+
+.trigger[data-orientation="vertical"] {
+  inline-size: 100%;
+  justify-content: flex-start;
+  text-align: start;
+}
+
+/* `fullWidth`: each tab takes an equal share of what is left after its own
+   label, so the row fills the list. Never shrinks below its label — a list
+   that is too narrow scrolls instead. */
+.triggerFullWidth[data-orientation="horizontal"] {
+  flex: 1 0 auto;
+}
+
+/* The focus ring is drawn INSIDE the trigger (a negative offset), unlike every
+   other component here (`05-component-api-conventions.md` §6): the list scrolls
+   sideways, and a scrolling box clips whatever is drawn outside its edge, so
+   an outside ring would lose its top and bottom. `radius-sm` is still the
+   standardized focus-ring radius. */
+.trigger:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.trigger:disabled,
+.trigger[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* Height, padding, type and icon gap per size step. `min-block-size` is
+   `IconButton`'s size token for the same step, which is `Button`'s real height
+   there, so a tab list lines up beside either. */
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-icon-button-size-xs);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-icon-button-size-sm);
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-icon-button-size-md);
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
+  gap: var(--dbm-space-3);
+  min-block-size: var(--dbm-icon-button-size-lg);
+  padding-inline: var(--dbm-space-5);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+  gap: var(--dbm-space-3);
+  min-block-size: var(--dbm-icon-button-size-xl);
+  padding-inline: var(--dbm-space-6);
+}
+
+.triggerLabel {
+  min-inline-size: 0;
+}
+
+/* An icon's colour comes from the `icon.*` tokens, never `text.*`, even where
+   the two happen to match today (`05-component-api-conventions.md` §6). */
+.triggerIcon {
+  color: var(--dbm-icon-default);
+  flex-shrink: 0;
+  transition: color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* --- Variant: underline ---
+   A bar grows out from the middle of the selected tab, drawn as a pseudo-element
+   so it needs no measuring and no extra element, follows the tab it belongs to
+   however the list scrolls, and reads the same in right-to-left. */
+
+.underline::after {
+  background-color: var(--dbm-bg-brand);
+  block-size: var(--dbm-border-width-2);
+  content: "";
+  inset-block-end: 0;
+  inset-inline: 0;
+  position: absolute;
+  transform: scaleX(0);
+  transition: transform var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.underline[data-orientation="vertical"]::after {
+  block-size: auto;
+  inline-size: var(--dbm-border-width-2);
+  inset-block: 0;
+  inset-inline: auto calc(-1 * var(--dbm-border-width-1));
+  transform: scaleY(0);
+}
+
+.underline[data-state="active"] {
+  color: var(--dbm-text-brand);
+}
+
+.underline[data-state="active"]::after {
+  transform: scaleX(1);
+}
+
+.underline[data-orientation="vertical"][data-state="active"]::after {
+  transform: scaleY(1);
+}
+
+.underline[data-state="active"] .triggerIcon {
+  color: var(--dbm-icon-brand);
+}
+
+.underline:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-text-primary);
+}
+
+.underline[data-state="active"]:not(:disabled):not([data-disabled]):hover {
+  color: var(--dbm-text-brand);
+}
+
+/* --- Variant: subtle --- */
+
+.subtle {
+  border-radius: var(--dbm-radius-md);
+}
+
+.subtle:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-text-primary);
+}
+
+.subtle[data-state="active"] {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
+}
+
+.subtle[data-state="active"]:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+  color: var(--dbm-text-brand);
+}
+
+.subtle[data-state="active"] .triggerIcon {
+  color: var(--dbm-icon-brand);
+}
+
+/* --- Variant: solid --- */
+
+.solid {
+  border-radius: var(--dbm-radius-md);
+}
+
+.solid:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-text-primary);
+}
+
+.solid[data-state="active"] {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+}
+
+.solid[data-state="active"]:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-brand-hover);
+  color: var(--dbm-text-on-brand);
+}
+
+.solid[data-state="active"] .triggerIcon {
+  color: var(--dbm-icon-on-brand);
+}
+
+/* `border.focus` is 1.3–1.6:1 against `bg.brand` — a ring in it would vanish on
+   the selected solid tab — so this one ring is drawn in the on-brand colour. */
+.solid[data-state="active"]:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+}
+
+/* --- A panel --- */
+
+/* Radix hides a panel by not rendering it. With `forceMount` it renders every
+   panel and leaves hiding to the consumer, so do it here: a panel kept mounted
+   for its state must still not show, or be read, while its tab is not selected. */
+.content[data-state="inactive"] {
+  display: none;
+}
+
+.content {
+  --tabs-panel-gap: var(--dbm-space-4);
+}
+
+.content[data-orientation="horizontal"] {
+  padding-block-start: var(--tabs-panel-gap);
+}
+
+.content[data-orientation="vertical"] {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  padding-inline-start: var(--tabs-panel-gap);
+}
+
+.contentXs {
+  --tabs-panel-gap: var(--dbm-space-3);
+}
+
+.contentSm {
+  --tabs-panel-gap: var(--dbm-space-4);
+}
+
+.contentMd {
+  --tabs-panel-gap: var(--dbm-space-5);
+}
+
+.contentLg {
+  --tabs-panel-gap: var(--dbm-space-6);
+}
+
+.contentXl {
+  --tabs-panel-gap: var(--dbm-space-8);
+}
+
+/* The panel takes focus (a reader can Tab from the list into it), so it needs
+   the standard ring. Outside, unlike a trigger: nothing here scrolls. */
+.content:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* A short, quiet arrival. Radix sets `animation-duration: 0s` on the panel that is
+   showing when the page first renders, so nothing fades in on load. */
+.content[data-state="active"] {
+  animation: panelIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-decelerate);
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--dbm-space-1));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

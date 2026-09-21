@@ -64,6 +64,7 @@ import { searchInputPlaygroundSnippet } from "./molecules/SearchInput/SearchInpu
 import { selectPlaygroundSnippet } from "./molecules/Select/Select.snippets";
 import { sliderPlaygroundSnippet } from "./molecules/Slider/Slider.snippets";
 import { tablePlaygroundSnippet } from "./molecules/Table/Table.snippets";
+import { tabsPlaygroundSnippet } from "./molecules/Tabs/Tabs.snippets";
 
 // Guards the code shown under "Show code" on Docs pages
 // (`07-storybook-and-documentation-standards.md` §4.2). A story's own source is
@@ -160,7 +161,7 @@ for (const [file, module] of Object.entries(snippetModules)) {
 
 describe("story snippets", () => {
   it("finds the snippet files", () => {
-    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(61);
+    expect(Object.keys(snippetModules).length).toBeGreaterThanOrEqual(64);
     expect(namedSnippets.length).toBeGreaterThan(280);
   });
 
@@ -1243,5 +1244,38 @@ describe("icon controls: Storybook's snippet transform is handed the control's o
       "<Tag leadingIcon={TagIcon} trailingIcon={CheckCircleIcon}>Design</Tag>",
     );
     expect(tagPlaygroundSnippet({ children: "Design", leadingIcon: "None", trailingIcon: "None" })).toBe("<Tag>Design</Tag>");
+  });
+});
+
+describe("Playground snippets for Tabs", () => {
+  const tabsArgs = [
+    {},
+    { defaultValue: "activity", variant: "subtle", size: "sm" },
+    { defaultValue: "settings", variant: "solid", size: "xl", orientation: "vertical", activationMode: "manual" },
+    { fullWidth: true, dir: "rtl" },
+  ] as const;
+
+  it.each(tabsArgs)("Tabs %j is a real snippet", (args) => {
+    expect(problemsIn(tabsPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Tabs writes only what differs from the defaults, and always the starting tab", () => {
+    expect(
+      tabsPlaygroundSnippet({
+        defaultValue: "overview",
+        variant: "underline",
+        size: "md",
+        orientation: "horizontal",
+        activationMode: "automatic",
+        fullWidth: false,
+        dir: "ltr",
+      }),
+    ).toMatch(/^<Tabs defaultValue="overview">\n/);
+    expect(tabsPlaygroundSnippet({ defaultValue: "activity", variant: "subtle", size: "sm" })).toMatch(
+      /^<Tabs defaultValue="activity" variant="subtle" size="sm">\n/,
+    );
+    expect(tabsPlaygroundSnippet({ orientation: "vertical", activationMode: "manual", fullWidth: true, dir: "rtl" })).toMatch(
+      /^<Tabs defaultValue="overview" orientation="vertical" activationMode="manual" fullWidth dir="rtl">\n/,
+    );
   });
 });
