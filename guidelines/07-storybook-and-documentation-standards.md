@@ -157,7 +157,7 @@ Every `<Canvas>` on a Docs page has a "Show code" button, and what it shows is m
 - **A `.map(` over the reader's own state is fine** (a `Tag` per filter in state); a `.map(` over a stories-file constant (`allTones.map(…)`) is the scaffolding the guard test rejects.
 - **A Playground-only control the story strips before rendering** (`ProgressBar`'s `indeterminate`, which leaves `value` out) has to be handled by the builder the same way — it isn't a real prop, so it never appears in the snippet.
 
-**Scope.** Applied to `Card`, `Table`, `Accordion`, `Popover`, `Grid`, `List`, `CheckboxGroup`, `FormField`, `NumberInput`, `PasswordInput`, `RadioGroup`, `SearchInput`, `Select`, and `Slider` (2026-09-19) — the first 14 molecules; `EmptyState` and `Pagination` (2026-09-19) have had it from the start — and the atoms `Avatar`, `Badge`, `Skeleton`, `Tag`, `ProgressBar`, `ProgressCircle`, `Spinner`, `Button`, `Checkbox`, `CloseButton`, `FieldError`, `FieldHelperText`, `FieldLabel`, `IconButton`, `Input`, `Radio`, `Switch`, `Textarea`, `Affix`, `AspectRatio`, `Bleed`, `Box`, `Center`, `Container`, `Divider`, `GridItem`, `Spacer`, `Stack`, `Icon`, `Image`, `Indicators`, `BackToTop`, `Backdrop`, `Collapse`, `Tooltip`, `ClientOnly`, `FocusTrap`, `Portal`, `VisuallyHidden`, `Blockquote`, `Code`, `Heading`, `Highlight`, `Kbd`, `Link`, `ListItem`, and `Text` (2026-09-19) — **every component built so far that has story demos: all 16 molecules and 47 of the 48 atoms**; `ThemeProvider` is the exception, with no story demos on its Docs page, so there was nothing to convert. Every component built from here on follows it from the start (the §5 checklist item). It is a docs-only change, so under the `06-engineering-standards.md` §9 three-question test it does not reopen a Finalized component, but converting a Finalized one still needs the user's go-ahead first.
+**Scope.** Applied to `Card`, `Table`, `Accordion`, `Popover`, `Grid`, `List`, `CheckboxGroup`, `FormField`, `NumberInput`, `PasswordInput`, `RadioGroup`, `SearchInput`, `Select`, and `Slider` (2026-09-19) — the first 14 molecules; `EmptyState` and `Pagination` (2026-09-19) and `Tabs` (2026-09-20) have had it from the start — and the atoms `Avatar`, `Badge`, `Skeleton`, `Tag`, `ProgressBar`, `ProgressCircle`, `Spinner`, `Button`, `Checkbox`, `CloseButton`, `FieldError`, `FieldHelperText`, `FieldLabel`, `IconButton`, `Input`, `Radio`, `Switch`, `Textarea`, `Affix`, `AspectRatio`, `Bleed`, `Box`, `Center`, `Container`, `Divider`, `GridItem`, `Spacer`, `Stack`, `Icon`, `Image`, `Indicators`, `BackToTop`, `Backdrop`, `Collapse`, `Tooltip`, `ClientOnly`, `FocusTrap`, `Portal`, `VisuallyHidden`, `Blockquote`, `Code`, `Heading`, `Highlight`, `Kbd`, `Link`, `ListItem`, and `Text` (2026-09-19) — **every component built so far that has story demos: all 17 molecules and 47 of the 48 atoms**; `ThemeProvider` is the exception, with no story demos on its Docs page, so there was nothing to convert. Every component built from here on follows it from the start (the §5 checklist item). It is a docs-only change, so under the `06-engineering-standards.md` §9 three-question test it does not reopen a Finalized component, but converting a Finalized one still needs the user's go-ahead first.
 
 ## 5. Per-component checklist
 
@@ -193,7 +193,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and the first 16 molecules have a Docs page and a completed review pass, and are
+**All 48 atoms and 17 molecules have a Docs page and a completed review pass, and all but the newest, `Tabs`, are
 Finalized** — full atom-tier coverage. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
@@ -267,6 +267,7 @@ quoted in prose elsewhere.
 | Card | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [Card.md](component-reviews/Card.md) |
 | EmptyState | Molecule | Data Display | ✅ | ✅ 2026-09-19 | [EmptyState.md](component-reviews/EmptyState.md) |
 | Pagination | Molecule | Data Display | ✅ | ✅ 2026-09-20 | [Pagination.md](component-reviews/Pagination.md) |
+| Tabs | Molecule | Navigation | ✅ | Built 2026-09-20; awaiting declaration | [Tabs.md](component-reviews/Tabs.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
@@ -275,8 +276,9 @@ and `List` are molecules) has a completed review pass and is Finalized. Per-comp
 
 **Next up (updated 2026-09-20):** every atom and the first 16 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
-`Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`) are reviewed and Finalized — see the table above. The queue continues through the remaining 20 of the 36 molecules,
-one at a time, in the dependency order itemized in `04-component-inventory.md` (`Tabs` is next), each
+`Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`) are reviewed and Finalized — see the table above. `Tabs` is built and
+has had its full review pass; it stays out of that list until it is declared Finalized. The queue continues through the remaining 19 of the 36 molecules,
+one at a time, in the dependency order itemized in `04-component-inventory.md` (`Breadcrumb` is next), each
 with the same full
 `06-engineering-standards.md` §9 process.
 
