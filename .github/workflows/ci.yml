@@ -57,8 +57,28 @@ jobs:
   # joined this job rather than getting its own, since it needs the exact
   # same setup (workspace build + a real Chromium via Playwright) and a
   # second full checkout/install/build cycle would just duplicate that cost.
+  #
+  # Pinned to ubuntu-24.04 rather than ubuntu-latest: this job installs OS
+  # packages for Chromium and compares a screenshot against a baseline
+  # rendered on 24.04, so it is the one job that can notice an OS change.
+  # `ubuntu-latest` moves to 26.04 gradually between 2026-10-19 and
+  # 2026-11-19, so leaving it floating could flip between images from one push
+  # to the next. The ubuntu-26.04 leg is informational (continue-on-error)
+  # until it is known to pass; then either move the required leg to it
+  # (regenerating the -linux baseline if the screenshot differs — see
+  # guidelines/02-tech-stack-and-structure.md) or drop the leg.
   browser-tests:
-    runs-on: ubuntu-latest
+    name: browser-tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            experimental: false
+          - os: ubuntu-26.04
+            experimental: true
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -90,7 +110,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.os }}
           path: packages/components/playwright-report/
           retention-days: 14
 
@@ -101,5 +121,6 @@ jobs:
       # stays at the global `error` default, so a real new regression here
       # fails the build the same way a broken unit test already does.
       - name: Run Storybook component/interaction/a11y tests
+        if: ${{ !cancelled() }}
         working-directory: packages/components
         run: pnpm test:storybook
