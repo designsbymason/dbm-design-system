@@ -2,7 +2,7 @@ import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 export type IndicatorsSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type IndicatorsOrientation = "horizontal" | "vertical";
-export type IndicatorsVariant = "dots" | "outline" | "bars";
+export type IndicatorsVariant = "dots" | "outlined" | "bars";
 
 export interface IndicatorsProps
   extends Omit<ComponentPropsWithoutRef<"div">, "onChange"> {
@@ -25,7 +25,7 @@ export interface IndicatorsProps
   orientation?: IndicatorsOrientation;
   /**
    * Visual style. `dots` (the default) is a solid-filled circle per step;
-   * `outline` renders inactive steps as a hollow ring instead of a solid
+   * `outlined` renders inactive steps as a hollow ring instead of a solid
    * fill, with the active step staying solid for contrast; `bars` renders
    * every step at the same length (no active-step elongation — see
    * `size`), with the active step at full thickness and every inactive

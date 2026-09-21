@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` is the one non-status tone — the system's own identity color, matching Badge's own tone scale (which Tag otherwise mirrors) rather than a status. */
 export type TagTone = "brand" | "neutral" | "info" | "success" | "warning" | "danger";
-export type TagVariant = "subtle" | "solid" | "outline";
+export type TagVariant = "subtle" | "solid" | "outlined";
 export type TagSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface TagProps extends ComponentPropsWithoutRef<"span"> {
@@ -15,9 +15,9 @@ export interface TagProps extends ComponentPropsWithoutRef<"span"> {
   tone?: TagTone;
   /**
    * Low-emphasis subtle-background style, high-emphasis solid-fill, or
-   * `outline` — a bordered style with no background of its own (one not
+   * `outlined` — a bordered style with no background of its own (one not
    * shared with Badge, whose own variant scale is subtle/solid only).
-   * A selected `outline` tag converges toward `solid`'s own look — full
+   * A selected `outlined` tag converges toward `solid`'s own look — full
    * tone fill with on-color text — while keeping the same border it had
    * unselected, rather than an offset-halo ring, since its own border
    * already frames it.

@@ -90,7 +90,7 @@
   color: var(--dbm-text-on-danger);
 }
 
-/* `outline` — no background of its own, framed by a real, WCAG-1.4.11-
+/* `outlined` — no background of its own, framed by a real, WCAG-1.4.11-
    verified border. `neutral` is the one tone still using `border.strong`
    (the token this system's own `border.*` rotation, Phase 32, produced —
    originally `border.{tone}-strong`, Token spec Phase 20) rather than the
@@ -113,37 +113,37 @@
    reuses each tone's own `text.*` color, the same one `subtle*` already
    uses, legible against the (transparent, so effectively
    page-background-colored) fill either way. */
-.outlineBrand {
+.outlinedBrand {
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-brand);
   color: var(--dbm-text-brand);
 }
 
-.outlineNeutral {
+.outlinedNeutral {
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-strong);
   color: var(--dbm-text-secondary);
 }
 
-.outlineInfo {
+.outlinedInfo {
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-info);
   color: var(--dbm-text-info);
 }
 
-.outlineSuccess {
+.outlinedSuccess {
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-success);
   color: var(--dbm-text-success);
 }
 
-.outlineWarning {
+.outlinedWarning {
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-warning);
   color: var(--dbm-text-warning);
 }
 
-.outlineDanger {
+.outlinedDanger {
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-danger);
   color: var(--dbm-text-danger);
@@ -275,7 +275,7 @@
    `background-color`, so a hover-fill change never actually competes with
    either one; the original "skip while selected" reasoning assumed a
    conflict that, checked directly, isn't there for either variant. `hover`
-   is fully independent of `selected` for both now. `outline` still skips
+   is fully independent of `selected` for both now. `outlined` still skips
    `.selected` below, pending its own pass — its selected state converges
    to `solid`'s own *background*, so a hover-fill change there would
    compete with the very thing that signals "selected." */
@@ -327,66 +327,66 @@
   background-color: var(--dbm-bg-danger-hover);
 }
 
-/* `outline`'s own unselected hover reuses the same `*-subtle-hover`
-   tokens `subtle` itself hovers to — a transparent-background outline tag
+/* `outlined`'s own unselected hover reuses the same `*-subtle-hover`
+   tokens `subtle` itself hovers to — a transparent-background outlined tag
    picking up a light tone tint on hover reads as "starting to fill in,"
    a natural lead-in to what `.selected` below commits to fully. Still
    excludes `.selected` (unlike `subtle`/`solid`, Phase 42/44) — selected
-   `outline` converges to `solid`'s own full-fill background (see
-   `.selected.outline{Tone}` further below), a real conflict a
+   `outlined` converges to `solid`'s own full-fill background (see
+   `.selected.outlined{Tone}` further below), a real conflict a
    subtle-tint hover would visually compete with, not an assumed one. */
-.interactive.outlineBrand:hover:not(.disabled):not(.selected) {
+.interactive.outlinedBrand:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
-.interactive.outlineNeutral:hover:not(.disabled):not(.selected) {
+.interactive.outlinedNeutral:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-neutral-subtle-hover);
 }
 
-.interactive.outlineInfo:hover:not(.disabled):not(.selected) {
+.interactive.outlinedInfo:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-info-subtle-hover);
 }
 
-.interactive.outlineSuccess:hover:not(.disabled):not(.selected) {
+.interactive.outlinedSuccess:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-success-subtle-hover);
 }
 
-.interactive.outlineWarning:hover:not(.disabled):not(.selected) {
+.interactive.outlinedWarning:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-warning-subtle-hover);
 }
 
-.interactive.outlineDanger:hover:not(.disabled):not(.selected) {
+.interactive.outlinedDanger:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-danger-subtle-hover);
 }
 
-/* `outline`'s own *selected* hover — a separate rule, not just dropping
+/* `outlined`'s own *selected* hover — a separate rule, not just dropping
    `:not(.selected)` above, since the token itself differs by state: once
    selected, the background is the full `bg.{tone}` fill (matching
    `solid`), so its hover reuses `solid`'s own `bg.{tone}-hover` token,
    not the `-subtle-hover` step the unselected rim uses. 2026-08-22, at
-   explicit direction — previously hovering a selected outline tag had no
+   explicit direction — previously hovering a selected outlined tag had no
    feedback at all. */
-.interactive.selected.outlineBrand:hover:not(.disabled) {
+.interactive.selected.outlinedBrand:hover:not(.disabled) {
   background-color: var(--dbm-bg-brand-hover);
 }
 
-.interactive.selected.outlineNeutral:hover:not(.disabled) {
+.interactive.selected.outlinedNeutral:hover:not(.disabled) {
   background-color: var(--dbm-bg-neutral-hover);
 }
 
-.interactive.selected.outlineInfo:hover:not(.disabled) {
+.interactive.selected.outlinedInfo:hover:not(.disabled) {
   background-color: var(--dbm-bg-info-hover);
 }
 
-.interactive.selected.outlineSuccess:hover:not(.disabled) {
+.interactive.selected.outlinedSuccess:hover:not(.disabled) {
   background-color: var(--dbm-bg-success-hover);
 }
 
-.interactive.selected.outlineWarning:hover:not(.disabled) {
+.interactive.selected.outlinedWarning:hover:not(.disabled) {
   background-color: var(--dbm-bg-warning-hover);
 }
 
-.interactive.selected.outlineDanger:hover:not(.disabled) {
+.interactive.selected.outlinedDanger:hover:not(.disabled) {
   background-color: var(--dbm-bg-danger-hover);
 }
 
@@ -395,7 +395,7 @@
    variant combination already overrides it below with its own more
    specific rule, so the base rule's own box-shadow was genuinely
    unreachable dead code, not a fallback anything used. Removed rather
-   than left in place. `subtle` (Phase 40) and `outline` (2026-08-22) both
+   than left in place. `subtle` (Phase 40) and `outlined` (2026-08-22) both
    draw their border as a real `border` property now, not a box-shadow
    trick — `solid`'s own offset halo is the one deliberate holdout,
    confirmed correct as box-shadow (Phase 44): a two-ring "gap, then
@@ -408,9 +408,9 @@
 /* `subtle`'s own selected-state border — swaps `border-color` from this
    combo's decorative `border.{tone}-subtle` (barely-there by design, see
    the `.subtleBrand` etc. rules above) to the same confident,
-   state-identifying `border.{tone}` token `outline`'s own default rim
+   state-identifying `border.{tone}` token `outlined`'s own default rim
    already uses (`border.strong` for `neutral`, matching that variant's
-   own choice — see the comment above `.outlineNeutral`). `border-width`
+   own choice — see the comment above `.outlinedNeutral`). `border-width`
    is unchanged (`border.js-width-1`, set on the base `.subtle{Tone}` rule
    above) — only the color changes, so selecting never resizes the tag.
    Measured directly against this combo's own unchanged `bg.{tone}-subtle`
@@ -519,11 +519,11 @@
     0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-danger);
 }
 
-/* `outline`'s own selected state converges toward `solid`'s own look —
+/* `outlined`'s own selected state converges toward `solid`'s own look —
    background switches to the tone's full fill (`bg.{tone}`, the same
    token `solid{Tone}` uses) with the matching `text.on-{tone}` text,
    rather than the light `-subtle` tint. The border itself is unchanged
-   from the unselected `.outline{Tone}` rule above — same border token
+   from the unselected `.outlined{Tone}` rule above — same border token
    (`border.strong`/`border.brand`/`border.danger`/`border.warning`/
    `border.success`/`border.info`, whichever that tone's own unselected
    rule uses), and no longer redeclared here at all (2026-08-22, at
@@ -531,7 +531,7 @@
    the cascade over the generic `.selected` rule's own ring; now that
    `border` is a real property and the generic `.selected` rule no longer
    sets any border/box-shadow of its own, Phase 40, this class's own
-   `border` from the base `.outline{Tone}` rule simply carries through
+   `border` from the base `.outlined{Tone}` rule simply carries through
    untouched — nothing to override).
    Measured directly against the new `bg.{tone}` fill before keeping
    this: for `brand`/`danger`/`warning`/`success`/`info`, whose border
@@ -547,32 +547,32 @@
    that already lets the `-subtle` decorative border tokens elsewhere
    in this system sit below 3:1. The unselected border, where it *is*
    the sole state-identifying signal, stays fully contrast-verified. */
-.selected.outlineBrand {
+.selected.outlinedBrand {
   background-color: var(--dbm-bg-brand);
   color: var(--dbm-text-on-brand);
 }
 
-.selected.outlineNeutral {
+.selected.outlinedNeutral {
   background-color: var(--dbm-bg-neutral);
   color: var(--dbm-text-on-neutral);
 }
 
-.selected.outlineInfo {
+.selected.outlinedInfo {
   background-color: var(--dbm-bg-info);
   color: var(--dbm-text-on-info);
 }
 
-.selected.outlineSuccess {
+.selected.outlinedSuccess {
   background-color: var(--dbm-bg-success);
   color: var(--dbm-text-on-success);
 }
 
-.selected.outlineWarning {
+.selected.outlinedWarning {
   background-color: var(--dbm-bg-warning);
   color: var(--dbm-text-on-warning);
 }
 
-.selected.outlineDanger {
+.selected.outlinedDanger {
   background-color: var(--dbm-bg-danger);
   color: var(--dbm-text-on-danger);
 }

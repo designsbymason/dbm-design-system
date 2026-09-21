@@ -41,7 +41,7 @@ the active dot) sits in the page's Tab order at a time, and the arrow keys move 
 and that single Tab stop together, rather than every dot being individually tabbable. `orientation`
 switches both the layout axis and which pair of arrow keys drives it — Left/Right for the default
 horizontal row, Up/Down for a vertical column. `variant` switches the visual style only — `dots`
-(solid fill, the default), `outline` (a hollow ring when inactive), or `bars` (same-length segments,
+(solid fill, the default), `outlined` (a hollow ring when inactive), or `bars` (same-length segments,
 the active one at full thickness and every inactive one at half) — with identical behavior
 underneath in every case.
 
@@ -118,7 +118,7 @@ as in a real consuming app.
   slides; a numeric label scales to any `count` without the row itself growing unreadably wide.
 - Reach for `variant="bars"` when the indicators sit over a photo or video (a hero carousel, a
   Stories-style flow) — the segmented look reads clearly against busy imagery the same way solid
-  dots can visually disappear into. Reach for `variant="outline"` for a lighter, lower-emphasis
+  dots can visually disappear into. Reach for `variant="outlined"` for a lighter, lower-emphasis
   treatment on a plain background, where a solid-filled row would compete with surrounding content.
 
 </Callout>
@@ -172,7 +172,7 @@ as in a real consuming app.
   of the group, not a child of it, so it never becomes part of any dot's own accessible name.
 - **Contrast:** the inactive dot's fill (`bg.track-strong`) and the active dot's fill (`bg.brand`)
   are both verified against `bg.surface` at the WCAG 1.4.11 3:1 non-text floor, across every brand
-  and mode combination — see Design tokens used below. `variant="outline"`'s ring (`border.neutral-
+  and mode combination — see Design tokens used below. `variant="outlined"`'s ring (`border.neutral-
   strong`, hover `border.strong`) is verified to the same floor.
 
 </Callout>
@@ -237,9 +237,9 @@ const [index, setIndex] = useState(0);
 <TokenRow token="bg.track-strong" usage="inactive dot fill (dots, bars variants)" />
 <TokenRow token="bg.neutral" usage="inactive dot's hover fill (dots, bars variants)" />
 <TokenRow token="bg.brand" usage="active dot fill (all variants)" />
-<TokenRow token="border.neutral-strong" usage="inactive ring (outline variant)" />
-<TokenRow token="border.strong" usage="inactive ring's hover state (outline variant)" />
-<TokenRow token="border-width.1" usage="ring width (outline variant)" />
+<TokenRow token="border.neutral-strong" usage="inactive ring (outlined variant)" />
+<TokenRow token="border.strong" usage="inactive ring's hover state (outlined variant)" />
+<TokenRow token="border-width.1" usage="ring width (outlined variant)" />
 <TokenRow token="border.focus" usage="focus-visible ring" />
 <TokenRow token="border-width.2" usage="focus-visible ring width" />
 <TokenRow token="radius.full" usage="dot/pill shape, both states" />

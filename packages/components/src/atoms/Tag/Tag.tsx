@@ -8,7 +8,7 @@ import styles from "./Tag.module.css";
 import type { TagProps, TagSize, TagTone, TagVariant } from "./Tag.types";
 
 // text.on-{tone} (a text token, not an icon one) is what colors the label
-// in these two states — solid always, outline once selected (it converges
+// in these two states — solid always, outlined once selected (it converges
 // to solid's own look, see Tag.module.css). The icon must not just inherit
 // that value via currentColor; it gets its own explicit icon.on-{tone}
 // instead.
@@ -21,11 +21,11 @@ const onToneIcon: Record<TagTone, IconTone> = {
   neutral: "on-neutral",
 };
 
-// `subtle`'s and unselected `outline`'s own label color is a plain
+// `subtle`'s and unselected `outlined`'s own label color is a plain
 // text.{tone} (text.secondary for neutral, no text.neutral token exists)
 // — same category problem, same fix, just the non-"on-" sibling since
 // neither is a solid-fill pairing. Shared by both variants (2026-08-22 —
-// outline's own icon was still inheriting currentColor until this pass,
+// outlined's own icon was still inheriting currentColor until this pass,
 // pending back when only subtle had been fixed), renamed from
 // `subtleToneIcon` since it's no longer subtle-specific.
 const standaloneToneIcon: Record<TagTone, IconTone> = {
@@ -54,13 +54,13 @@ const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
     warning: styles.solidWarning,
     danger: styles.solidDanger,
   },
-  outline: {
-    brand: styles.outlineBrand,
-    neutral: styles.outlineNeutral,
-    info: styles.outlineInfo,
-    success: styles.outlineSuccess,
-    warning: styles.outlineWarning,
-    danger: styles.outlineDanger,
+  outlined: {
+    brand: styles.outlinedBrand,
+    neutral: styles.outlinedNeutral,
+    info: styles.outlinedInfo,
+    success: styles.outlinedSuccess,
+    warning: styles.outlinedWarning,
+    danger: styles.outlinedDanger,
   },
 };
 
@@ -100,14 +100,14 @@ const removeButtonSizeClass: Record<"xs" | "sm" | "md", string | undefined> = {
  * leading/trailing icon, an optional removable ("×") affordance, and an
  * optional clickable/selectable mode. Shares `Badge`'s tone scale but at
  * larger, touch-friendly sizes suited to interactive contexts like filter
- * bars — its own variant scale adds `outline` (a bordered, no-background
+ * bars — its own variant scale adds `outlined` (a bordered, no-background
  * style) on top of the subtle/solid pair Badge also has.
  *
  * @example
  * ```tsx
  * <Tag tone="info">Design</Tag>
  * <Tag leadingIcon={TagIcon} tone="success" variant="solid">Shipped</Tag>
- * <Tag tone="brand" variant="outline">Beta</Tag>
+ * <Tag tone="brand" variant="outlined">Beta</Tag>
  * <Tag trailingIcon={CaretDownIcon}>Sort by</Tag>
  * <Tag removable onRemove={() => removeFilter('status')}>Status: Active</Tag>
  * <Tag selected={isActive} onSelectedChange={setIsActive}>Design</Tag>
@@ -175,12 +175,12 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
       }
     }
     // Every `TagVariant` now resolves to one of these two icon-tone
-    // families — `solid` always, `outline` once selected (both real
-    // solid-fill pairings); `subtle` always, `outline` unselected (both
+    // families — `solid` always, `outlined` once selected (both real
+    // solid-fill pairings); `subtle` always, `outlined` unselected (both
     // standalone-on-a-non-solid-fill) — so this covers every case
     // directly, no `undefined` fallback left to reach (2026-08-22, once
-    // outline's own unselected icon got the same fix subtle already had).
-    const isOnSolidFill = variant === "solid" || (variant === "outline" && isSelected);
+    // outlined's own unselected icon got the same fix subtle already had).
+    const isOnSolidFill = variant === "solid" || (variant === "outlined" && isSelected);
     const iconTone = isOnSolidFill ? onToneIcon[tone] : standaloneToneIcon[tone];
 
     const handleActivate = () => {

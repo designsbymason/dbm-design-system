@@ -72,22 +72,22 @@
   width: var(--dot-size);
 }
 
-/* Outline variant — inactive steps render as a hollow ring instead of a
+/* Outlined variant — inactive steps render as a hollow ring instead of a
    solid fill; the active step stays solid for contrast. Border widths are
    included in `--dot-size` via the global `box-sizing: border-box` reset,
    so adding a border here doesn't change the rendered diameter. */
 
-.root.outline .dot {
+.root.outlined .dot {
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-neutral-strong);
 }
 
-.root.outline .dot:hover:not(.active) {
+.root.outlined .dot:hover:not(.active) {
   background-color: transparent;
   border-color: var(--dbm-border-strong);
 }
 
-.root.outline .active {
+.root.outlined .active {
   background-color: var(--dbm-bg-brand);
   border-color: transparent;
 }

@@ -16,7 +16,7 @@ const state = "{/* const [index, setIndex] = useState(0); — Indicators is cont
 
 export const indicatorsSnippets = {
   allVariants: `${state}
-{/* variant: "dots" (default) | "outline" | "bars" */}
+{/* variant: "dots" (default) | "outlined" | "bars" */}
 <Indicators count={5} activeIndex={index} onIndexChange={setIndex} variant="bars" />`,
 
   allSizes: `${state}

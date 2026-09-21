@@ -590,7 +590,7 @@ describe("Playground snippets for the seven feedback and data-display atoms", ()
 
   it.each([
     {},
-    { children: "Design", tone: "info", variant: "outline", size: "sm", removable: true, removeLabel: "Delete it", disabled: true, "aria-label": "Design tag" },
+    { children: "Design", tone: "info", variant: "outlined", size: "sm", removable: true, removeLabel: "Delete it", disabled: true, "aria-label": "Design tag" },
     { leadingIcon: undefined, trailingIcon: undefined, removable: true, removeLabel: "Remove Design" },
   ])("Tag %j is a real snippet", (args) => {
     expect(problemsIn(tagPlaygroundSnippet(args as never))).toEqual([]);

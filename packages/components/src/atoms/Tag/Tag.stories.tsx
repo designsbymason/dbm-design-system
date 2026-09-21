@@ -50,9 +50,9 @@ const meta: Meta<typeof Tag> = {
     },
     variant: {
       control: "select",
-      options: ["subtle", "solid", "outline"],
+      options: ["subtle", "solid", "outlined"],
       description:
-        "Low-emphasis subtle-background style, high-emphasis solid-fill, or a bordered style with no background of its own (selecting an outline tag adds one).",
+        "Low-emphasis subtle-background style, high-emphasis solid-fill, or a bordered style with no background of its own (selecting an outlined tag adds one).",
     },
     size: {
       control: "select",
@@ -313,15 +313,15 @@ export const Solid: Story = {
   ),
 };
 
-export const Outline: Story = {
-  name: "All tones (outline)",
-  parameters: { docs: { source: { code: tagSnippets.outline } } },
+export const Outlined: Story = {
+  name: "All tones (outlined)",
+  parameters: { docs: { source: { code: tagSnippets.outlined } } },
   argTypes: {
     tone: { control: false },
     children: { control: false },
     removeLabel: { control: false },
   },
-  args: { variant: "outline" },
+  args: { variant: "outlined" },
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
       {(
@@ -409,9 +409,9 @@ export const Selectable: Story = {
 };
 
 export const SelectableOutline: Story = {
-  name: "Selectable (outline)",
-  parameters: { docs: { source: { code: tagSnippets.selectableOutline } } },
-  // Same toggle behavior as `Selectable` above, but on the `outline`
+  name: "Selectable (outlined)",
+  parameters: { docs: { source: { code: tagSnippets.selectableOutlined } } },
+  // Same toggle behavior as `Selectable` above, but on the `outlined`
   // variant specifically — demonstrates that selecting it swaps in a
   // full tone fill with on-color text (converging toward `solid`'s own
   // look) rather than the offset-halo ring `solid`'s own selected state
@@ -420,7 +420,7 @@ export const SelectableOutline: Story = {
     defaultSelected: false,
     onSelectedChange: fn(),
     tone: "info",
-    variant: "outline",
+    variant: "outlined",
   },
 };
 

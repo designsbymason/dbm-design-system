@@ -37,7 +37,7 @@ export const propOrder = [
 A labeled pill for categorization or active filters, with an optional leading/trailing icon, an
 optional removable ("×") affordance, and an optional clickable/selectable interactive mode. Shares
 `Badge`'s six-tone scale but at larger, touch-friendly sizes suited to interactive contexts like
-filter bars — its own variant scale adds `outline` (a bordered, no-background style) on top of the
+filter bars — its own variant scale adds `outlined` (a bordered, no-background style) on top of the
 `subtle`/`solid` pair `Badge` also has. Passing `onClick`, `selected`, `defaultSelected`, or
 `onSelectedChange` makes the whole tag focusable and keyboard-activatable, not just visually
 styled; `removable` adds its own independent remove control that composes cleanly with either mode
@@ -82,9 +82,9 @@ passthrough.
 
 <Canvas of={TagStories.Solid} />
 
-### All tones (outline)
+### All tones (outlined)
 
-<Canvas of={TagStories.Outline} />
+<Canvas of={TagStories.Outlined} />
 
 ### All sizes
 
@@ -106,7 +106,7 @@ passthrough.
 
 <Canvas of={TagStories.Selectable} />
 
-### Selectable (outline)
+### Selectable (outlined)
 
 <Canvas of={TagStories.SelectableOutline} />
 
@@ -132,8 +132,8 @@ passthrough.
 <Callout tone="success" title="Do">
 
 - Use `variant="subtle"` (the default) for low-emphasis categorization labels, `solid` for
-  high-emphasis status, and `outline` for a bordered style with no background — selecting an
-  outline tag fills it in, converging toward `solid`'s own look.
+  high-emphasis status, and `outlined` for a bordered style with no background — selecting an
+  outlined tag fills it in, converging toward `solid`'s own look.
 - Pass `onRemove` whenever `removable` is set — Tag warns once in development if `removable` is
   set without it, since the button would render but do nothing on click.
 - Reach for `tone` for feedback-type meaning (`danger`/`warning`/`success`/`info`) independent of
@@ -176,7 +176,7 @@ passthrough.
   usually the better fit over `defaultSelected` (uncontrolled) — a filter's selected state is
   normally driven by, and needs to stay in sync with, application state elsewhere (see "Selectable
   filter group" above).
-- `outline`'s selected state deliberately reuses the exact `solid`-fill tokens `variant="solid"`
+- `outlined`'s selected state deliberately reuses the exact `solid`-fill tokens `variant="solid"`
   itself uses — treat outline-selected and solid as visually equivalent "committed" states, not two
   different looks that happen to look similar.
 
@@ -224,7 +224,7 @@ passthrough.
 ```tsx
 <Tag tone="info">Design</Tag>
 <Tag leadingIcon={TagIcon} tone="success" variant="solid">Shipped</Tag>
-<Tag tone="brand" variant="outline">Beta</Tag>
+<Tag tone="brand" variant="outlined">Beta</Tag>
 <Tag trailingIcon={CaretDownIcon}>Sort by</Tag>
 <Tag removable onRemove={() => removeFilter('status')}>Status: Active</Tag>
 <Tag selected={isActive} onSelectedChange={setIsActive}>Design</Tag>
@@ -245,49 +245,49 @@ passthrough.
 <TokenRow token="border.success-subtle" usage="subtle variant's decorative success border" />
 <TokenRow token="border.warning-subtle" usage="subtle variant's decorative warning border" />
 <TokenRow token="border.danger-subtle" usage="subtle variant's decorative danger border" />
-<TokenRow token="text.brand" usage="subtle & unselected-outline variants' brand text" />
-<TokenRow token="text.secondary" usage="subtle & unselected-outline variants' neutral text (no dedicated text.neutral token)" />
-<TokenRow token="text.info" usage="subtle & unselected-outline variants' info text" />
-<TokenRow token="text.success" usage="subtle & unselected-outline variants' success text" />
-<TokenRow token="text.warning" usage="subtle & unselected-outline variants' warning text" />
-<TokenRow token="text.danger" usage="subtle & unselected-outline variants' danger text" />
-<TokenRow token="icon.brand" usage="subtle & unselected-outline variants' brand icon (leading/trailing/remove)" />
-<TokenRow token="icon.secondary" usage="subtle & unselected-outline variants' neutral icon" />
-<TokenRow token="icon.info" usage="subtle & unselected-outline variants' info icon" />
-<TokenRow token="icon.success" usage="subtle & unselected-outline variants' success icon" />
-<TokenRow token="icon.warning" usage="subtle & unselected-outline variants' warning icon" />
-<TokenRow token="icon.danger" usage="subtle & unselected-outline variants' danger icon" />
-<TokenRow token="border.brand" usage="outline variant's default border; also subtle variant's selected-state border, and solid variant's selected-state offset-halo accent ring" />
+<TokenRow token="text.brand" usage="subtle & unselected-outlined variants' brand text" />
+<TokenRow token="text.secondary" usage="subtle & unselected-outlined variants' neutral text (no dedicated text.neutral token)" />
+<TokenRow token="text.info" usage="subtle & unselected-outlined variants' info text" />
+<TokenRow token="text.success" usage="subtle & unselected-outlined variants' success text" />
+<TokenRow token="text.warning" usage="subtle & unselected-outlined variants' warning text" />
+<TokenRow token="text.danger" usage="subtle & unselected-outlined variants' danger text" />
+<TokenRow token="icon.brand" usage="subtle & unselected-outlined variants' brand icon (leading/trailing/remove)" />
+<TokenRow token="icon.secondary" usage="subtle & unselected-outlined variants' neutral icon" />
+<TokenRow token="icon.info" usage="subtle & unselected-outlined variants' info icon" />
+<TokenRow token="icon.success" usage="subtle & unselected-outlined variants' success icon" />
+<TokenRow token="icon.warning" usage="subtle & unselected-outlined variants' warning icon" />
+<TokenRow token="icon.danger" usage="subtle & unselected-outlined variants' danger icon" />
+<TokenRow token="border.brand" usage="outlined variant's default border; also subtle variant's selected-state border, and solid variant's selected-state offset-halo accent ring" />
 <TokenRow token="border.strong" usage="same three roles as border.brand above, for the neutral tone — this component's own border-rotation choice, not the separate, unrelated border.neutral token" />
 <TokenRow token="border.info" usage="same three roles as border.brand above, for the info tone" />
 <TokenRow token="border.success" usage="same three roles as border.brand above, for the success tone" />
 <TokenRow token="border.warning" usage="same three roles as border.brand above, for the warning tone" />
 <TokenRow token="border.danger" usage="same three roles as border.brand above, for the danger tone" />
-<TokenRow token="bg.brand" usage="solid variant's brand fill; also outline variant's selected-state fill" />
-<TokenRow token="bg.neutral" usage="solid variant's neutral fill; also outline variant's selected-state fill" />
-<TokenRow token="bg.info" usage="solid variant's info fill; also outline variant's selected-state fill" />
-<TokenRow token="bg.success" usage="solid variant's success fill; also outline variant's selected-state fill" />
-<TokenRow token="bg.warning" usage="solid variant's warning fill; also outline variant's selected-state fill" />
-<TokenRow token="bg.danger" usage="solid variant's danger fill; also outline variant's selected-state fill" />
-<TokenRow token="text.on-brand" usage="solid variant's brand text; also outline variant's selected-state text" />
-<TokenRow token="text.on-neutral" usage="solid variant's neutral text; also outline variant's selected-state text" />
-<TokenRow token="text.on-info" usage="solid variant's info text; also outline variant's selected-state text" />
-<TokenRow token="text.on-success" usage="solid variant's success text; also outline variant's selected-state text" />
-<TokenRow token="text.on-warning" usage="solid variant's warning text; also outline variant's selected-state text" />
-<TokenRow token="text.on-danger" usage="solid variant's danger text; also outline variant's selected-state text" />
-<TokenRow token="icon.on-brand" usage="solid variant's brand icon; also outline variant's selected-state icon" />
-<TokenRow token="icon.on-neutral" usage="solid variant's neutral icon; also outline variant's selected-state icon" />
-<TokenRow token="icon.on-info" usage="solid variant's info icon; also outline variant's selected-state icon" />
-<TokenRow token="icon.on-success" usage="solid variant's success icon; also outline variant's selected-state icon" />
-<TokenRow token="icon.on-warning" usage="solid variant's warning icon; also outline variant's selected-state icon" />
-<TokenRow token="icon.on-danger" usage="solid variant's danger icon; also outline variant's selected-state icon" />
-<TokenRow token="bg.brand-subtle-hover" usage="subtle variant's hover fill (interactive mode); also outline variant's unselected-state hover fill" />
+<TokenRow token="bg.brand" usage="solid variant's brand fill; also outlined variant's selected-state fill" />
+<TokenRow token="bg.neutral" usage="solid variant's neutral fill; also outlined variant's selected-state fill" />
+<TokenRow token="bg.info" usage="solid variant's info fill; also outlined variant's selected-state fill" />
+<TokenRow token="bg.success" usage="solid variant's success fill; also outlined variant's selected-state fill" />
+<TokenRow token="bg.warning" usage="solid variant's warning fill; also outlined variant's selected-state fill" />
+<TokenRow token="bg.danger" usage="solid variant's danger fill; also outlined variant's selected-state fill" />
+<TokenRow token="text.on-brand" usage="solid variant's brand text; also outlined variant's selected-state text" />
+<TokenRow token="text.on-neutral" usage="solid variant's neutral text; also outlined variant's selected-state text" />
+<TokenRow token="text.on-info" usage="solid variant's info text; also outlined variant's selected-state text" />
+<TokenRow token="text.on-success" usage="solid variant's success text; also outlined variant's selected-state text" />
+<TokenRow token="text.on-warning" usage="solid variant's warning text; also outlined variant's selected-state text" />
+<TokenRow token="text.on-danger" usage="solid variant's danger text; also outlined variant's selected-state text" />
+<TokenRow token="icon.on-brand" usage="solid variant's brand icon; also outlined variant's selected-state icon" />
+<TokenRow token="icon.on-neutral" usage="solid variant's neutral icon; also outlined variant's selected-state icon" />
+<TokenRow token="icon.on-info" usage="solid variant's info icon; also outlined variant's selected-state icon" />
+<TokenRow token="icon.on-success" usage="solid variant's success icon; also outlined variant's selected-state icon" />
+<TokenRow token="icon.on-warning" usage="solid variant's warning icon; also outlined variant's selected-state icon" />
+<TokenRow token="icon.on-danger" usage="solid variant's danger icon; also outlined variant's selected-state icon" />
+<TokenRow token="bg.brand-subtle-hover" usage="subtle variant's hover fill (interactive mode); also outlined variant's unselected-state hover fill" />
 <TokenRow token="bg.neutral-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the neutral tone" />
 <TokenRow token="bg.info-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the info tone" />
 <TokenRow token="bg.success-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the success tone" />
 <TokenRow token="bg.warning-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the warning tone" />
 <TokenRow token="bg.danger-subtle-hover" usage="same hover roles as bg.brand-subtle-hover above, for the danger tone" />
-<TokenRow token="bg.brand-hover" usage="solid variant's hover fill (interactive mode); also outline variant's selected-state hover fill" />
+<TokenRow token="bg.brand-hover" usage="solid variant's hover fill (interactive mode); also outlined variant's selected-state hover fill" />
 <TokenRow token="bg.neutral-hover" usage="same hover roles as bg.brand-hover above, for the neutral tone" />
 <TokenRow token="bg.info-hover" usage="same hover roles as bg.brand-hover above, for the info tone" />
 <TokenRow token="bg.success-hover" usage="same hover roles as bg.brand-hover above, for the success tone" />
@@ -297,7 +297,7 @@ passthrough.
 <TokenRow token="opacity.40" usage="disabled state (interactive tags only)" />
 <TokenRow token="border.focus" usage="focus-visible outline (interactive mode)" />
 <TokenRow token="radius.full" usage="pill shape, and the round focus ring" />
-<TokenRow token="border-width.1" usage="subtle & outline variants' own border width" />
+<TokenRow token="border-width.1" usage="subtle & outlined variants' own border width" />
 <TokenRow token="border-width.2" usage="focus ring width; also both rings of the solid variant's selected-state offset halo" />
 <TokenRow token="space.1" usage="gap between leading icon/label/trailing icon/remove; also the remove button's own negative inline-end margin (optical alignment)" />
 <TokenRow token="font-family.primary" usage="tag text" />

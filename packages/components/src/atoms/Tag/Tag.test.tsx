@@ -150,27 +150,27 @@ describe("Tag", () => {
     expect(screen.getByTestId("tag").className).toMatch(/solidDanger/);
   });
 
-  it("applies the matching class for the outline variant, per tone", () => {
+  it("applies the matching class for the outlined variant, per tone", () => {
     const { rerender } = render(
-      <Tag tone="brand" variant="outline" data-testid="tag">
+      <Tag tone="brand" variant="outlined" data-testid="tag">
         Design
       </Tag>,
     );
-    expect(screen.getByTestId("tag").className).toMatch(/outlineBrand/);
+    expect(screen.getByTestId("tag").className).toMatch(/outlinedBrand/);
 
     rerender(
-      <Tag tone="neutral" variant="outline" data-testid="tag">
+      <Tag tone="neutral" variant="outlined" data-testid="tag">
         Design
       </Tag>,
     );
-    expect(screen.getByTestId("tag").className).toMatch(/outlineNeutral/);
+    expect(screen.getByTestId("tag").className).toMatch(/outlinedNeutral/);
 
     rerender(
-      <Tag tone="danger" variant="outline" data-testid="tag">
+      <Tag tone="danger" variant="outlined" data-testid="tag">
         Design
       </Tag>,
     );
-    expect(screen.getByTestId("tag").className).toMatch(/outlineDanger/);
+    expect(screen.getByTestId("tag").className).toMatch(/outlinedDanger/);
   });
 
   it("defaults to size md", () => {
@@ -296,14 +296,14 @@ describe("Tag", () => {
       expect(screen.getByTestId("tag").className).toMatch(/selected/);
     });
 
-    it("applies both the outline tone class and the selected class together when an outline tag is selected", () => {
+    it("applies both the outlined tone class and the selected class together when an outlined tag is selected", () => {
       render(
-        <Tag variant="outline" tone="danger" selected data-testid="tag">
+        <Tag variant="outlined" tone="danger" selected data-testid="tag">
           Design
         </Tag>,
       );
       const className = screen.getByTestId("tag").className;
-      expect(className).toMatch(/outlineDanger/);
+      expect(className).toMatch(/outlinedDanger/);
       expect(className).toMatch(/selected/);
     });
 

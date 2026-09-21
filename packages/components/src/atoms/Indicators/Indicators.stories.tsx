@@ -32,9 +32,9 @@ const meta: Meta<typeof Indicators> = {
     },
     variant: {
       control: "select",
-      options: ["dots", "outline", "bars"],
+      options: ["dots", "outlined", "bars"],
       description:
-        "Visual style. dots (solid fill, the default), outline (hollow ring when inactive), or bars (same-length segments — active at full thickness, inactive at half).",
+        "Visual style. dots (solid fill, the default), outlined (hollow ring when inactive), or bars (same-length segments — active at full thickness, inactive at half).",
     },
     // Driving `activeIndex` directly from a Controls-panel field without a
     // real click/keyboard-driven `onIndexChange` wired back into it would
@@ -236,7 +236,7 @@ export const AllVariants: Story = {
   // documentation-standards.md §5), only this one axis is fixed per row.
   argTypes: { variant: { control: false } },
   render: function AllVariantsStory(args) {
-    const variants = ["dots", "outline", "bars"] as const;
+    const variants = ["dots", "outlined", "bars"] as const;
     const [indices, setIndices] = useState<number[]>(variants.map(() => 1));
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

@@ -18,10 +18,10 @@ export const tagSnippets = {
   allTones: `{/* tone: "neutral" (default) | "brand" | "info" | "success" | "warning" | "danger" */}
 <Tag variant="subtle" tone="success">success</Tag>`,
 
-  solid: `{/* variant: "subtle" (default) | "solid" | "outline" */}
+  solid: `{/* variant: "subtle" (default) | "solid" | "outlined" */}
 <Tag variant="solid" tone="success">success</Tag>`,
 
-  outline: `<Tag variant="outline" tone="success">success</Tag>`,
+  outlined: `<Tag variant="outlined" tone="success">success</Tag>`,
 
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Tag size="lg">Size lg</Tag>`,
@@ -39,7 +39,7 @@ export const tagSnippets = {
     about changes. handleSelectedChange receives the new boolean. */}
 <Tag tone="info" defaultSelected={false} onSelectedChange={handleSelectedChange}>Design</Tag>`,
 
-  selectableOutline: `<Tag tone="info" variant="outline" defaultSelected={false} onSelectedChange={handleSelectedChange}>
+  selectableOutlined: `<Tag tone="info" variant="outlined" defaultSelected={false} onSelectedChange={handleSelectedChange}>
   Design
 </Tag>`,
 

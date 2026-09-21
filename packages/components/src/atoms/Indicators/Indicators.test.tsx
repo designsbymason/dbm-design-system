@@ -38,23 +38,23 @@ describe("Indicators", () => {
   });
 
   describe("variant", () => {
-    it("defaults to dots (no outline/bars class)", () => {
+    it("defaults to dots (no outlined/bars class)", () => {
       render(<Indicators count={3} activeIndex={0} onIndexChange={() => {}} />);
       const group = screen.getByRole("group");
-      expect(group).not.toHaveClass(styles.outline as string);
+      expect(group).not.toHaveClass(styles.outlined as string);
       expect(group).not.toHaveClass(styles.bars as string);
     });
 
-    it("applies the outline class when variant='outline'", () => {
+    it("applies the outlined class when variant='outlined'", () => {
       render(
         <Indicators
           count={3}
           activeIndex={0}
           onIndexChange={() => {}}
-          variant="outline"
+          variant="outlined"
         />,
       );
-      expect(screen.getByRole("group")).toHaveClass(styles.outline as string);
+      expect(screen.getByRole("group")).toHaveClass(styles.outlined as string);
     });
 
     it("applies the bars class when variant='bars'", () => {
@@ -69,13 +69,13 @@ describe("Indicators", () => {
       expect(screen.getByRole("group")).toHaveClass(styles.bars as string);
     });
 
-    it("has no accessibility violations with variant='outline'", async () => {
+    it("has no accessibility violations with variant='outlined'", async () => {
       const { container } = render(
         <Indicators
           count={4}
           activeIndex={1}
           onIndexChange={() => {}}
-          variant="outline"
+          variant="outlined"
         />,
       );
       const results = await axe(container);

@@ -22,7 +22,7 @@ const sizeClass: Record<IndicatorsSize, string | undefined> = {
 
 const variantClass: Record<IndicatorsVariant, string | undefined> = {
   dots: undefined,
-  outline: styles.outline,
+  outlined: styles.outlined,
   bars: styles.bars,
 };
 
