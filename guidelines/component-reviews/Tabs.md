@@ -20,8 +20,9 @@ where the request left the API open, and listed so they can be reversed cheaply.
   a bar under the selected tab, on a hairline the length of the list. A raised-chip "segmented" treatment was considered and left out (see Gaps).
 - **One `icon` prop, not `leadingIcon`/`trailingIcon`.** A trigger has one icon slot, and `05-component-api-conventions.md` §5 keeps the plain name
   for a component with one. Anything else (a count, a status) is composed into the label; the Docs show a `Badge`.
-- **Root settings travel by context, not by descendant CSS.** `variant`, `size`, `fullWidth` and the resolved `orientation` are read from a small
-  context in each part, so a `Tabs` inside another's panel is styled by its own root. A `.root.solid .trigger` selector would restyle the inner one
+- **Root settings travel by context, not by descendant CSS.** `variant`, `size`, `fullWidth`, `rounded` and the resolved `orientation` are read from a small
+  context in each part, so a `Tabs` inside another's panel is styled by its own root. `align` is the one exception — it belongs to `Tabs.List` alone (see the
+  align/overflow follow-up below), so it never needed to travel through this context in the first place. A `.root.solid .trigger` selector would restyle the inner one
   too. Tested (a solid outer set with a subtle inner one).
 - **`orientation` accepts a breakpoint map**, resolved with the shared `useResolvedResponsiveValue` (the `Popover` `side` precedent). A vertical list
   beside its panel is the usual wide-screen layout and a horizontal strip the usual phone one; "responsive is not optional" makes that a component
@@ -228,6 +229,83 @@ A survey of every component's variant values found `outline` on `Tag`, `Indicato
 one spelling; the rule is in `05-component-api-conventions.md` §2. `Tabs` needed no work beyond the rename back — its two pseudo-class selectors (`.outlined:focus-visible`,
 `.outlined:not(:disabled):hover`) were the only ones a first pass missed (the pattern that protected CSS `outline:` properties also skipped a class followed by `:`); the browser tests caught both.
 
+## Follow-up (2026-09-22, at explicit direction) — `align`, and overflow fades/buttons
+
+Three of the four ideas named in the review's own "Gaps named, not built" section were asked for; the fourth (auto-selecting the first tab) was
+recommended against and left as it was — see the standalone review this follow-up records, not repeated here. `Tabs` is still not Finalized, so
+all of it was built freely.
+
+- **New `Tabs.List` prop `align`: `"start"` (default) | `"center"` | `"end"`.** Sets `justify-content` on the list; visible only while the list has
+  room to spare. It lives on `Tabs.List`, not the root — unlike `variant`/`size`/`rounded`, it says nothing about how a tab looks, only where the row
+  sits, the same reasoning `loop` (also list-only) already follows.
+- **The "centring cuts off the start" risk, resolved with CSS, not a restriction.** `justify-content: safe center` / `safe flex-end` on the horizontal
+  list: browsers that support the `safe` keyword fall back to start-alignment the moment the row can't fully fit, so the first tab is never pushed
+  out of the scrollable range — confirmed live (`scrollLeft` reads `0` at rest on a centred, overflowing row, with the first tab already fully
+  visible, no scrolling needed) and by a hidden real-browser story. An unsupporting browser doesn't apply a broken partial value either: an invalid
+  `justify-content` declaration is dropped whole, leaving the plain (pre-`safe`) `.alignCenter`/`.alignEnd` rule in effect underneath — centred
+  without the safety net, not broken.
+- **Overflow: a fade and a button at whichever edge has more**, closing two of the three ideas named under "Better overflow handling" (the third,
+  a "More" menu, is still a gap — see below). Both are built fresh, hand-rolled rather than reusing an atom:
+  - **The fade** is a `linear-gradient` on the list wrapper's own `::before`/`::after`, opaque `bg.surface` at the edge fading to transparent, shown
+    only while that edge has more tabs (`data-overflow-start`/`data-overflow-end` on the wrapper, driving CSS opacity — no extra DOM node). The
+    gradient's own direction is physical, so it needs the same `:dir(rtl)` flip `Pagination`'s own arrows use.
+  - **The button** scrolls a page (the list's own `clientWidth`) at a time, smoothly unless the reader prefers less motion. Hand-rolled rather than
+    `IconButton`, which has no way to flip its icon for direction — `Pagination`'s own reason for the same choice. The icon is the same `CaretLeft`/
+    `CaretRightIcon` pair `Pagination` uses, with the identical local `:dir(rtl)` flip class (`Icon`'s own `mirrored` is unconditional, not
+    direction-aware, so it can't do this alone).
+  - **Detecting overflow**: a new hook, `useTabsOverflow.ts`, modelled directly on `Table`'s own `useScrollableRegion` (`guidelines/adr/0019`'s
+    named standing pattern) but answering a different question — not just "does this scroll" but "which edge" — so it compares each end tab's own
+    bounding rectangle against the list's, the same direction-agnostic technique `revealTab` already uses, rather than reading `scrollLeft` (whose
+    sign convention in a right-to-left list differs across browsers). `useSyncExternalStore`, correct on the first frame; re-checks on `scroll`
+    (position changes, no `ResizeObserver` would ever fire from these), the list's own `ResizeObserver` (size changes), and a `MutationObserver`
+    watching for tabs added or removed (a `ResizeObserver` on the list alone would miss this — the list's own box doesn't change, only its
+    `scrollWidth`).
+  - **A button that just ran out of anything to scroll to stays, inert, while it still has keyboard focus** — the same rule `Pagination`'s own
+    arrows follow (`06-engineering-standards.md` §9's "a responsive or measured collapse never removes the control that has keyboard focus"),
+    applied here to a control that disappears from the reader's own scrolling rather than from a responsive resize. `aria-disabled`, never native
+    `disabled`: confirmed live, breaking it on purpose, that a *natively* disabled button really is dropped from the page (and focus with it) the
+    instant it becomes disabled, in a real browser — this is not a theoretical risk. Released on blur, mirroring `Pagination`'s own `keyboardFocus`
+    test helper (jsdom's own `:focus-visible` is order-dependent, so it is stubbed explicitly rather than trusted, the same reasoning).
+
+**Real findings while building it, none in the shipped component:**
+
+- **Three of my own hidden tests assumed the wrong thing, each caught by actually running them, not by reasoning about the code.** A `userEvent.click()`
+  in this real-Chromium test environment apparently does satisfy `:focus-visible` on the clicked element (unlike an ordinary mouse click in a real
+  browser, which normally doesn't) — a test that clicked a scroll button repeatedly expecting it to eventually vanish instead found it correctly held,
+  inert, because the click itself had focused it. Fixed by testing what each story is actually *for* — click-to-scroll functionality, not the
+  hold/release behaviour, which already has its own dedicated story — rather than asserting an unmount that depended on this environment's own click
+  semantics. Separately, an `align="center"` overflow test assumed a "start" button would need clicking to reach the first tab — wrong: "safe"
+  centring already starts the row at `scrollLeft: 0`, so there is nothing to scroll to reach it, which is a stronger proof of the fix than the
+  assumption it replaced. And a focus-release test used `Tab` to move focus away, which lands **inside** the (still scrollable) tablist itself,
+  where the browser's own native scroll-into-view for a newly focused element could re-move `scrollLeft` and reintroduce overflow, confounding the
+  assertion — fixed by releasing focus onto the panel instead, outside the scrollable region entirely.
+- **The class-selector guard that keeps `outline:` (the CSS property) untouched while renaming the variant also skipped two real class selectors**
+  the FIRST time the very same protective pattern was used for the `outline`→`outlined` rename (see that follow-up) — not a finding from this pass,
+  restated here only because this pass is what finally exercised both of the renamed selectors' own hover/focus rules and would have caught it again
+  had it recurred; it did not.
+
+**Tests:** 15 new unit tests (`align` defaults and each value, including a vertical list; overflow button presence in all four start/end
+combinations, a vertical list showing none regardless; scroll direction and amount in each direction; a button that is inert never scrolling; the
+hold-while-focused and release-on-blur behaviour; a mouse-produced (non-keyboard) focus never holding; the hook's own cleanup on unmount) and 3 new
+hidden real-browser stories (button presence/click/right-to-left mirroring including the fade's own gradient direction; the focus-hold-and-release
+sequence; `align`'s own centred/end-aligned layout and the safe-centring proof), plus the existing "Too many tabs" story now also confirms a
+button appears and the opposite one doesn't. Every new CSS/behavioural guard was checked by breaking it on purpose: the `align` class mapping
+swapped, the `safe` keyword removed, the RTL gradient override removed, the RTL icon flip removed, `aria-disabled` swapped for native `disabled`
+(caught only by the real-browser suite, not the unit one — confirming the finding above), the rounding-slack constant zeroed, and overflow
+detection disabled outright — each failed the test built to catch it. Full package after: lint and both `tsc` passes clean; unit 68 files / 2,663
+tests (`Tabs`: 94); Storybook browser 92 files / 613 tests; `pnpm test:storybook` and `pnpm test` both green.
+
+**Docs:** `align` added to `Tabs.List`'s own Properties table and a new "Align" gallery entry; the "Too many tabs for the width" entry's own text
+now mentions the fade and button; the Accessibility section states the scroll buttons' own tab order and hold-while-focused behaviour and the
+native-vs-`aria`-`disabled` finding; new token rows (`bg.surface`, `bg.neutral-subtle`, `space.10`, `z-index.dropdown`, `z-index.sticky`) and an
+extended `icon.default` row (now also the scroll buttons' own icon colour). No new dependency, no new component-level token — every value traces to
+an existing primitive or semantic token.
+
+**Recorded as standing conventions, not just this component's own choices:** `05-component-api-conventions.md` §2 (variant names come from one
+shared vocabulary — the rule the earlier `outline`→`outlined` follow-up established, unaffected by this pass) needed no change here; the "control
+that has keyboard focus" checklist item in `06-engineering-standards.md` §9 now cites `Tabs` as a second confirmed instance, generalised slightly to
+cover a control removed by the reader's own scrolling, not only by a responsive resize.
+
 ## Gaps named, not built
 
 Left out deliberately; each can be added without breaking the current API:
@@ -235,12 +313,16 @@ Left out deliberately; each can be added without breaking the current API:
 - **`tone`** (a colour accent other than brand). Tabs are rarely tone-coded; each tone would need its own contrast pairings measured.
 - **A raised-chip "segmented" variant.** In dark mode the selected chip would have to be *lighter* than its track to read as raised, and the existing
   surface tokens run the other way (`bg.surface` is darker than `bg.neutral-subtle` there). Needs a token decision first.
-- **Selecting the first enabled tab when nothing is selected** (see Decisions).
+- **Auto-selecting the first tab** when nothing is selected, instead of the current no-selection-plus-warning (see Decisions). Recommended against
+  when asked (2026-09-22) — it would be the first component in this system to guess an initial selection rather than require one, and needs every
+  trigger to register with the root and a re-render before paint, with a server render that would then differ from the first client render.
 - **Closable, reorderable or addable tabs** (dynamic tabs, as in an editor). A separate, larger interaction model.
-- **An overflow menu ("More") or scroll buttons/edge fades** for a strip that doesn't fit. The strip scrolls and reveals the selected tab; a menu is a
-  bigger design choice.
-- **`rounded` and `align`** on the list, as `Button`/`Pagination` have. `align` needs care: centring a scrolling flex row cuts off its start.
-- **A sliding indicator** (see Decisions).
+- **An overflow menu ("More")** listing every tab that doesn't fit, for a strip long enough that scrolling through it a page at a time is itself
+  tedious. Scroll buttons and edge fades are built (2026-09-22, see the follow-up above); a menu needs a real menu component, and `Menu` isn't built
+  yet (organism tier) — reach for it once `Menu` exists, rather than hand-rolling a second one here.
+- **A sliding underline** that animates *between* tabs, rather than growing out from the middle of the newly-selected one (see Decisions). Needs
+  measuring the previous and next tab's position in JavaScript, has no correct answer on the very first render, and needs its own right-to-left handling
+  — the current `scaleX` approach avoids all three for free.
 
 ## Not verified
 
