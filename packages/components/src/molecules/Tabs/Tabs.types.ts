@@ -37,6 +37,16 @@ export type TabsOrientation = "horizontal" | "vertical";
  */
 export type TabsActivationMode = "automatic" | "manual";
 
+/**
+ * Where the tabs sit within their list, along the direction they run — the
+ * leading edge, the middle, or the trailing edge. Only visible while the list
+ * is wider (or, vertical, taller) than its tabs need; a list with more tabs
+ * than room already fills the space by scrolling, and `"center"`/`"end"`
+ * stay safe then — the leading tab is never pushed out of reach, even though
+ * it would be for an ordinary (non-scrolling) centered or end-aligned row.
+ */
+export type TabsAlign = "start" | "center" | "end";
+
 export interface TabsProps
   extends Omit<
     ComponentPropsWithoutRef<"div">,
@@ -127,6 +137,12 @@ export interface TabsListProps extends Omit<ComponentPropsWithoutRef<"div">, "ch
    * @default true
    */
   loop?: boolean;
+  /**
+   * Where the tabs sit within the list when they don't fill it: the leading edge,
+   * the middle, or the trailing edge.
+   * @default 'start'
+   */
+  align?: TabsAlign;
   /**
    * The list's accessible name, announced with the `tablist` role. Name it when the
    * page holds more than one set of tabs, or when the surrounding heading does

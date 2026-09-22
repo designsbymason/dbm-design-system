@@ -1,10 +1,13 @@
 import { cx, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { createContext, forwardRef, useContext, useEffect, useMemo, useRef } from "react";
+import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import styles from "./Tabs.module.css";
+import { useTabsOverflow } from "./useTabsOverflow";
 import type {
+  TabsAlign,
   TabsContentProps,
   TabsListProps,
   TabsOrientation,
@@ -74,6 +77,19 @@ const listVariantClass: Record<TabsVariant, string | undefined> = {
   solid: styles.listFilled,
 };
 
+const alignClass: Record<TabsAlign, string | undefined> = {
+  start: styles.alignStart,
+  center: styles.alignCenter,
+  end: styles.alignEnd,
+};
+
+/** Instantly for the very first look (a tab selected off-screen from the start shouldn't be seen
+ * sliding into place, and nobody asked for animation on page load), smoothly afterwards, and not at
+ * all smoothly for a reader who asked for less motion. */
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+}
+
 /**
  * Scrolls a horizontally scrolling list just far enough to show a tab in full.
  * Measured from bounding rectangles and applied with `scrollBy`, so it is the
@@ -88,6 +104,20 @@ function revealTab(list: HTMLElement, tab: HTMLElement, behavior: ScrollBehavior
   if (tabRect.left < listRect.left) delta = tabRect.left - listRect.left;
   else if (tabRect.right > listRect.right) delta = tabRect.right - listRect.right;
   if (delta !== 0) list.scrollBy({ left: delta, behavior });
+}
+
+/**
+ * Whether an element currently has real keyboard focus, not a mouse-produced one — a plain
+ * `:focus-visible` match already draws this distinction. What a scroll button that has run out of
+ * anything to scroll to is held back for, mirroring `Pagination`'s own `keyboardIsOnPageNumber`: a
+ * browser that can't answer treats it as keyboard focus, the safe side, rather than dropping focus.
+ */
+function hasKeyboardFocus(element: Element): boolean {
+  try {
+    return element.matches(":focus-visible");
+  } catch {
+    return true;
+  }
 }
 
 /**
@@ -196,36 +226,51 @@ TabsRoot.displayName = "Tabs";
  * The row (or column) of `Tabs.Trigger`s — the `tablist`. Roving focus:
  * `Tab` enters it once, on the selected tab, and the arrow keys move between
  * tabs from there. When horizontal and wider than its container it scrolls
- * sideways, and it keeps the selected tab in view as the selection changes.
+ * sideways, keeps the selected tab in view as the selection changes, and
+ * shows a fade and a button at whichever edge currently has more tabs beyond
+ * it. `ref` forwards to the `tablist` element itself, not to the wrapper the
+ * fades and buttons are positioned against.
  */
 const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
-  ({ loop = true, className, children, ...props }, ref) => {
-    const { variant, orientation } = useContext(TabsContext);
+  ({ loop = true, align = "start", className, children, ...props }, ref) => {
+    const { variant, size, orientation } = useContext(TabsContext);
     const listRef = useRef<HTMLDivElement>(null);
+    const isHorizontal = orientation === "horizontal";
+    const { overflowStart, overflowEnd } = useTabsOverflow(listRef);
+
+    // A scroll button that has just run out of anything to scroll to stays in the page, inert,
+    // while it still has real keyboard focus — the same reasoning `Pagination`'s own arrows apply
+    // to their own edge case (removing it would drop focus to the top of the document). Mouse-
+    // produced focus doesn't hold it: `hasKeyboardFocus` only sets these from a `:focus-visible` match.
+    const [startHeld, setStartHeld] = useState(false);
+    const [endHeld, setEndHeld] = useState(false);
+    const showStartButton = overflowStart || startHeld;
+    const showEndButton = overflowEnd || endHeld;
 
     useEffect(() => {
       const list = listRef.current;
-      if (!list || orientation !== "horizontal") return undefined;
+      if (!list || !isHorizontal) return undefined;
 
       const activeTab = () => list.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
-      // Instantly on the first look (a tab selected off-screen from the start
-      // shouldn't be seen sliding into place), smoothly afterwards, and not at
-      // all smoothly for a reader who asked for less motion.
-      const prefersReducedMotion =
-        typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       const first = activeTab();
       if (first) revealTab(list, first, "auto");
 
       if (typeof MutationObserver === "undefined") return undefined;
       const observer = new MutationObserver(() => {
         const tab = activeTab();
-        if (tab) revealTab(list, tab, prefersReducedMotion ? "auto" : "smooth");
+        if (tab) revealTab(list, tab, prefersReducedMotion() ? "auto" : "smooth");
       });
       observer.observe(list, { attributes: true, attributeFilter: ["data-state"], subtree: true });
       return () => observer.disconnect();
-    }, [orientation]);
+    }, [isHorizontal]);
 
-    return (
+    const scroll = useCallback((direction: 1 | -1) => {
+      const list = listRef.current;
+      if (!list) return;
+      list.scrollBy({ left: list.clientWidth * direction, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    }, []);
+
+    const tabsList = (
       <TabsPrimitive.List
         {...props}
         ref={mergeRefs(ref, listRef)}
@@ -235,10 +280,55 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
         // stays the resolved value even as a breakpoint map changes it.
         aria-orientation={orientation}
         data-orientation={orientation}
-        className={cx(styles.list, listVariantClass[variant], className)}
+        className={cx(styles.list, listVariantClass[variant], alignClass[align], className)}
       >
         {children}
       </TabsPrimitive.List>
+    );
+
+    // A vertical list never scrolls (there is no vertical equivalent of the horizontal scroll
+    // strip here), so it has nothing to fade or scroll — rendered exactly as before, with no
+    // wrapper, so this case carries none of the risk of the horizontal restructuring below.
+    if (!isHorizontal) return tabsList;
+
+    return (
+      <div className={styles.listWrapper} data-overflow-start={overflowStart} data-overflow-end={overflowEnd}>
+        {showStartButton && (
+          <button
+            type="button"
+            aria-label="Scroll tabs to the start"
+            aria-disabled={overflowStart ? undefined : true}
+            className={cx(styles.scrollButton, styles.scrollButtonStart, !overflowStart && styles.scrollButtonInert)}
+            onFocus={(event) => {
+              if (hasKeyboardFocus(event.currentTarget)) setStartHeld(true);
+            }}
+            onBlur={() => setStartHeld(false)}
+            onClick={() => {
+              if (overflowStart) scroll(-1);
+            }}
+          >
+            <Icon icon={CaretLeftIcon} size={iconSizeForTabsSize[size]} className={styles.scrollIcon} />
+          </button>
+        )}
+        {tabsList}
+        {showEndButton && (
+          <button
+            type="button"
+            aria-label="Scroll tabs to the end"
+            aria-disabled={overflowEnd ? undefined : true}
+            className={cx(styles.scrollButton, styles.scrollButtonEnd, !overflowEnd && styles.scrollButtonInert)}
+            onFocus={(event) => {
+              if (hasKeyboardFocus(event.currentTarget)) setEndHeld(true);
+            }}
+            onBlur={() => setEndHeld(false)}
+            onClick={() => {
+              if (overflowEnd) scroll(1);
+            }}
+          >
+            <Icon icon={CaretRightIcon} size={iconSizeForTabsSize[size]} className={styles.scrollIcon} />
+          </button>
+        )}
+      </div>
     );
   },
 );

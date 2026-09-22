@@ -261,6 +261,32 @@ export const Rounded: Story = {
   },
 };
 
+export const Align: Story = {
+  name: "Align",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tabsSnippets.align } } },
+  render: () => (
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      {(["start", "center", "end"] as const).map((align) => (
+        <div key={align}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-2)" }}>
+            align=&quot;{align}&quot;
+          </Text>
+          <Tabs defaultValue="overview">
+            <Tabs.List aria-label={`Project (${align})`} align={align}>
+              <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+              <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="overview">
+              <Text size="sm">A summary of the project.</Text>
+            </Tabs.Content>
+          </Tabs>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 export const Vertical: Story = {
   name: "Vertical orientation",
   argTypes: noControls,
@@ -446,6 +472,9 @@ export const Scrolling: Story = {
       expect(tabRect.left).toBeGreaterThanOrEqual(listRect.left - 1);
       expect(tabRect.right).toBeLessThanOrEqual(listRect.right + 1);
     });
+    // Scrolled to the last tab: more lies before it, nothing lies after.
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Scroll tabs to the start" })).toBeVisible());
+    await expect(canvas.queryByRole("button", { name: "Scroll tabs to the end" })).toBeNull();
   },
 };
 
@@ -904,5 +933,217 @@ export const PanelFocusRingInteraction: Story = {
       const gap = vertical ? box.left - list.right : box.top - list.bottom;
       await expect(gap).toBeGreaterThanOrEqual(ring);
     }
+  },
+};
+
+export const OverflowInteraction: Story = {
+  ...FullWidth,
+  name: "Overflow — buttons appear at the right edge, click to scroll, mirror in right-to-left",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      <div data-testid="short" style={{ inlineSize: "22rem" }}>
+        <DemoTabs listLabel="Project (short)" />
+      </div>
+      <div data-testid="long-ltr" style={{ inlineSize: "22rem" }}>
+        <Tabs defaultValue="overview">
+          <Tabs.List aria-label="Workspace (ltr)">
+            {workspaceTabs.map((label) => (
+              <Tabs.Trigger key={label} value={label.toLowerCase()}>
+                {label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+          <Tabs.Content value="overview">
+            <Text size="sm">A summary of the project.</Text>
+          </Tabs.Content>
+        </Tabs>
+      </div>
+      <div data-testid="long-rtl" style={{ inlineSize: "22rem" }}>
+        <Tabs defaultValue="overview" dir="rtl">
+          <Tabs.List aria-label="Workspace (rtl)">
+            {workspaceTabs.map((label) => (
+              <Tabs.Trigger key={label} value={label.toLowerCase()}>
+                {label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+          <Tabs.Content value="overview">
+            <Text size="sm">A summary of the project.</Text>
+          </Tabs.Content>
+        </Tabs>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // A list that fits gets no scroll buttons at all.
+    const short = within(canvas.getByTestId("short"));
+    await expect(short.queryByRole("button", { name: /Scroll tabs/ })).toBeNull();
+
+    // A list that overflows, starting on its first tab: a button at the end, none at the start.
+    const ltr = within(canvas.getByTestId("long-ltr"));
+    await waitFor(() => expect(ltr.getByRole("button", { name: "Scroll tabs to the end" })).toBeVisible());
+    await expect(ltr.queryByRole("button", { name: "Scroll tabs to the start" })).toBeNull();
+    const ltrList = ltr.getByRole("tablist");
+    const startingScroll = ltrList.scrollLeft;
+
+    // Clicking it scrolls toward the end — and, having scrolled at all, the first tab is now
+    // off-screen too, so a "start" button joins it (the exact release behaviour, not just presence,
+    // is its own test — `OverflowFocusHoldInteraction`).
+    await userEvent.click(ltr.getByRole("button", { name: "Scroll tabs to the end" }));
+    await waitFor(() => expect(ltrList.scrollLeft).toBeGreaterThan(startingScroll));
+    await waitFor(() => expect(ltr.getByRole("button", { name: "Scroll tabs to the start" })).toBeVisible());
+
+    // Clicking "start" scrolls back the other way.
+    const scrolledAway = ltrList.scrollLeft;
+    await userEvent.click(ltr.getByRole("button", { name: "Scroll tabs to the start" }));
+    await waitFor(() => expect(ltrList.scrollLeft).toBeLessThan(scrolledAway));
+
+    // Right-to-left: the same "scroll to the start" button now sits at the physical right of its own
+    // list, not the left — position mirrors even though the accessible name doesn't need to.
+    const rtl = within(canvas.getByTestId("long-rtl"));
+    await waitFor(() => expect(rtl.getByRole("button", { name: "Scroll tabs to the end" })).toBeVisible());
+    const rtlList = rtl.getByRole("tablist");
+    const rtlEndButton = rtl.getByRole("button", { name: "Scroll tabs to the end" });
+    const listRect = rtlList.getBoundingClientRect();
+    const buttonRect = rtlEndButton.getBoundingClientRect();
+    // "End" is the trailing edge — physically the LEFT edge under right-to-left text.
+    await expect(buttonRect.left).toBeLessThanOrEqual(listRect.left + listRect.width / 2);
+    // Its icon is mirrored under right-to-left (the same `:dir(rtl)` technique Pagination's own arrows use).
+    const icon = rtlEndButton.querySelector("svg");
+    await expect(icon).not.toBeNull();
+    await expect(getComputedStyle(icon!).transform).not.toBe("none");
+    // The fade's own gradient also flips: it must still point FROM the pinned edge INTO the content,
+    // which is the opposite physical direction once the edge itself has mirrored.
+    const rtlWrapper = rtlList.parentElement!;
+    const endFade = getComputedStyle(rtlWrapper, "::after");
+    await expect(endFade.backgroundImage).toContain("to right");
+  },
+};
+
+export const OverflowFocusHoldInteraction: Story = {
+  ...FullWidth,
+  name: "Overflow — a scroll button holds focus instead of vanishing under it",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ inlineSize: "22rem" }}>
+      <Tabs defaultValue="security">
+        <Tabs.List aria-label="Workspace">
+          {workspaceTabs.map((label) => (
+            <Tabs.Trigger key={label} value={label === "Security" ? "security" : label.toLowerCase()}>
+              {label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+        <Tabs.Content value="security">
+          <Text size="sm">Two-factor and session settings.</Text>
+        </Tabs.Content>
+      </Tabs>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Starts on the last tab: a "start" button, no "end" button.
+    const startButton = await waitFor(() => canvas.getByRole("button", { name: "Scroll tabs to the start" }));
+    startButton.focus();
+    await expect(startButton).toHaveFocus();
+
+    // Click it until there is nothing left to scroll to.
+    let guard = 0;
+    while (startButton.getAttribute("aria-disabled") !== "true" && guard++ < 10) {
+      await userEvent.click(startButton);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    // Still in the page, still focused, now inert — not silently dropped from under the keyboard.
+    await expect(canvas.getByRole("button", { name: "Scroll tabs to the start" })).toBe(startButton);
+    await expect(startButton).toHaveFocus();
+    await expect(startButton).toHaveAttribute("aria-disabled", "true");
+
+    // Moving focus away releases it: it leaves the page once nothing needs it kept there. Away from
+    // the tablist entirely (its own panel), not into it — a Tab into a scrollable list can itself move
+    // `scrollLeft` (the browser's own native scroll-into-view for a newly focused element), which would
+    // confound this specific assertion about the button's own release.
+    await userEvent.click(canvas.getByRole("tabpanel"));
+    await waitFor(() => expect(canvas.queryByRole("button", { name: "Scroll tabs to the start" })).toBeNull());
+  },
+};
+
+export const AlignInteraction: Story = {
+  ...Align,
+  name: "Align — centered and end-aligned when they fit, safe when they don't",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      <div data-testid="center" style={{ inlineSize: "26rem" }}>
+        <Tabs defaultValue="overview">
+          <Tabs.List aria-label="Center" align="center">
+            <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+            <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="overview">A</Tabs.Content>
+        </Tabs>
+      </div>
+      <div data-testid="end" style={{ inlineSize: "26rem" }}>
+        <Tabs defaultValue="overview">
+          <Tabs.List aria-label="End" align="end">
+            <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+            <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="overview">A</Tabs.Content>
+        </Tabs>
+      </div>
+      {/* Deliberately narrower than the tabs themselves need — proves `align="center"` does not make
+          the first tab unreachable once the row also has to scroll. */}
+      <div data-testid="center-overflow" style={{ inlineSize: "16rem" }}>
+        <Tabs defaultValue="overview">
+          <Tabs.List aria-label="Center, overflowing" align="center">
+            {workspaceTabs.map((label) => (
+              <Tabs.Trigger key={label} value={label.toLowerCase()}>
+                {label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+          <Tabs.Content value="overview">A</Tabs.Content>
+        </Tabs>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // A list that fits: centered and end-aligned read as such against their own container.
+    const center = within(canvas.getByTestId("center"));
+    const centerList = center.getByRole("tablist");
+    const centerFirst = center.getByRole("tab", { name: "Overview" });
+    const centerLast = center.getByRole("tab", { name: "Activity" });
+    const centerListRect = centerList.getBoundingClientRect();
+    const centerLeadingGap = centerFirst.getBoundingClientRect().left - centerListRect.left;
+    const centerTrailingGap = centerListRect.right - centerLast.getBoundingClientRect().right;
+    await expect(Math.abs(centerLeadingGap - centerTrailingGap)).toBeLessThan(2);
+    await expect(centerLeadingGap).toBeGreaterThan(2);
+
+    const end = within(canvas.getByTestId("end"));
+    const endList = end.getByRole("tablist");
+    const endLast = end.getByRole("tab", { name: "Activity" });
+    await expect(endList.getBoundingClientRect().right - endLast.getBoundingClientRect().right).toBeLessThan(2);
+
+    // A centered row that also overflows: the first tab is fully visible without scrolling at all —
+    // the very thing "safe centering" exists to guarantee. Plain `center` would instead start the row
+    // scrolled to keep it visually centered, pushing the first tab out of view (found live, before the
+    // fix: `scrollLeft` started well above 0, with the first tab already cut off on page load) — "safe"
+    // falls back to start-alignment once the content can't all fit, so there is nothing to scroll back
+    // to reach it, confirmed by the reported `overflowStart` itself, not only the tab's own position.
+    const overflowing = within(canvas.getByTestId("center-overflow"));
+    const overflowList = overflowing.getByRole("tablist");
+    await expect(overflowList.scrollWidth).toBeGreaterThan(overflowList.clientWidth);
+    await expect(overflowing.queryByRole("button", { name: "Scroll tabs to the start" })).toBeNull();
+    await expect(overflowList.scrollLeft).toBe(0);
+    const overview = overflowing.getByRole("tab", { name: "Overview" });
+    const listRect = overflowList.getBoundingClientRect();
+    const overviewRect = overview.getBoundingClientRect();
+    await expect(overviewRect.left).toBeGreaterThanOrEqual(listRect.left - 1);
+    await expect(overviewRect.right).toBeLessThanOrEqual(listRect.right + 1);
   },
 };

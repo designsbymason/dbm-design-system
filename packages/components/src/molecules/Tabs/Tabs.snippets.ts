@@ -34,6 +34,9 @@ ${tabs('defaultValue="overview" size="sm"')}`,
     It does nothing to underline. */}
 ${tabs('defaultValue="overview" variant="outlined" rounded')}`,
 
+  align: `{/* align: "start" (default) | "center" | "end" — where the tabs sit within the list */}
+${tabs('defaultValue="overview"', list('align="center"'))}`,
+
   vertical: `{/* orientation="vertical" puts the list beside its panel; Up and Down move between tabs */}
 ${tabs('defaultValue="overview" orientation="vertical"')}`,
 
@@ -86,7 +89,8 @@ ${tabs('defaultValue="overview" activationMode="manual"')}`,
   controlled: `{/* You own the selection: const [value, setValue] = useState("overview"); */}
 ${tabs('value={value} onValueChange={setValue}')}`,
 
-  scrolling: `{/* A horizontal list wider than its container scrolls sideways, and keeps the selected tab in view. */}
+  scrolling: `{/* A horizontal list wider than its container scrolls sideways, keeps the selected tab in view,
+    and shows a fade and a button wherever there are more tabs that way. */}
 <Tabs defaultValue="reports">
   <Tabs.List aria-label="Workspace">
     <Tabs.Trigger value="overview">Overview</Tabs.Trigger>

@@ -19,6 +19,12 @@ const meta: Meta<typeof Tabs.List> = {
       description:
         "Whether arrow-key navigation wraps around — End past the last tab lands on the first, and the reverse.",
     },
+    align: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description:
+        "Where the tabs sit within the list when they don't fill it: the leading edge, the middle, or the trailing edge.",
+    },
     "aria-label": {
       control: "text",
       description:
@@ -50,6 +56,7 @@ const meta: Meta<typeof Tabs.List> = {
   },
   args: {
     loop: true,
+    align: "start",
     "aria-label": "Project",
   },
 };

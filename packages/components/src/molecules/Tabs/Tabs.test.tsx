@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
@@ -836,6 +836,177 @@ describe("Tabs — keeping the selected tab in view", () => {
   });
 
   it("stops watching once unmounted", () => {
+    const disconnect = vi.fn();
+    class ObserverSpy {
+      observe() {}
+
+      disconnect = disconnect;
+    }
+    vi.stubGlobal("MutationObserver", ObserverSpy);
+    const { unmount } = render(<Basic />);
+    unmount();
+    expect(disconnect).toHaveBeenCalled();
+  });
+});
+
+describe("Tabs — align", () => {
+  it("defaults to start", () => {
+    render(<Basic />);
+    expect(screen.getByRole("tablist")).toHaveClass(styles.alignStart!);
+  });
+
+  it.each([
+    ["start", "alignStart"],
+    ["center", "alignCenter"],
+    ["end", "alignEnd"],
+  ] as const)("applies align=\"%s\"", (align, className) => {
+    render(
+      <Tabs defaultValue="a">
+        <Tabs.List aria-label="Project" align={align}>
+          <Tabs.Trigger value="a">A</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="a">A</Tabs.Content>
+      </Tabs>,
+    );
+    expect(screen.getByRole("tablist")).toHaveClass(styles[className]!);
+  });
+
+  it("still applies its default to a vertical list", () => {
+    render(<Basic orientation="vertical" />);
+    expect(screen.getByRole("tablist")).toHaveClass(styles.alignStart!);
+  });
+});
+
+describe("Tabs — overflow", () => {
+  // jsdom performs no layout, so rectangles are stubbed: the list is 100px wide (left 0 to 100).
+  // `Basic`'s own three triggers are "Overview", "Activity", "Settings", by text.
+  const stubOverflow = (opts: { startVisible: boolean; endVisible: boolean }) =>
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute("role") !== "tablist" && this.getAttribute("role") !== "tab") return rect(0, 0);
+      if (this.getAttribute("role") === "tablist") return rect(0, 100);
+      if (this.textContent === "Overview") return opts.startVisible ? rect(0, 40) : rect(-40, 0);
+      if (this.textContent === "Settings") return opts.endVisible ? rect(60, 100) : rect(120, 180);
+      return rect(40, 60);
+    });
+
+  // jsdom's `:focus-visible` depends on which tests ran before it, so it is stubbed explicitly here,
+  // the same pattern `Pagination`'s own tests use for its identical "held back while focused" case.
+  let focusVisible: ReturnType<typeof vi.spyOn> | undefined;
+  const keyboardFocus = (visible: boolean) => {
+    const matches = Element.prototype.matches;
+    focusVisible = vi.spyOn(Element.prototype, "matches").mockImplementation(function (this: Element, selector: string) {
+      return selector === ":focus-visible" ? visible && document.activeElement === this : matches.call(this, selector);
+    });
+  };
+  afterEach(() => focusVisible?.mockRestore());
+
+  it("shows no scroll button when both ends are visible", () => {
+    stubOverflow({ startVisible: true, endVisible: true });
+    render(<Basic />);
+    expect(screen.queryByRole("button", { name: /Scroll tabs/ })).not.toBeInTheDocument();
+  });
+
+  it("shows only the end button when the first tab is visible but the last is not", () => {
+    stubOverflow({ startVisible: true, endVisible: false });
+    const { container } = render(<Basic />);
+    expect(screen.getByRole("button", { name: "Scroll tabs to the end" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Scroll tabs to the start" })).not.toBeInTheDocument();
+    const wrapper = container.querySelector("[data-overflow-start]");
+    expect(wrapper).toHaveAttribute("data-overflow-start", "false");
+    expect(wrapper).toHaveAttribute("data-overflow-end", "true");
+  });
+
+  it("shows only the start button when the last tab is visible but the first is not", () => {
+    stubOverflow({ startVisible: false, endVisible: true });
+    render(<Basic />);
+    expect(screen.getByRole("button", { name: "Scroll tabs to the start" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Scroll tabs to the end" })).not.toBeInTheDocument();
+  });
+
+  it("shows both buttons when neither end is visible", () => {
+    stubOverflow({ startVisible: false, endVisible: false });
+    render(<Basic />);
+    expect(screen.getByRole("button", { name: "Scroll tabs to the start" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Scroll tabs to the end" })).toBeInTheDocument();
+  });
+
+  it("renders no scroll buttons for a vertical list, however the rects stub it", () => {
+    stubOverflow({ startVisible: false, endVisible: false });
+    render(<Basic orientation="vertical" />);
+    expect(screen.queryByRole("button", { name: /Scroll tabs/ })).not.toBeInTheDocument();
+  });
+
+  it("scrolls forward by the list's own width when the end button is clicked", async () => {
+    const user = userEvent.setup();
+    const scrollBy = installScrollBy();
+    stubOverflow({ startVisible: true, endVisible: false });
+    render(<Basic />);
+    Object.defineProperty(screen.getByRole("tablist"), "clientWidth", { configurable: true, value: 120 });
+    await user.click(screen.getByRole("button", { name: "Scroll tabs to the end" }));
+    expect(scrollBy).toHaveBeenCalledWith({ left: 120, behavior: "smooth" });
+  });
+
+  it("scrolls backward by the list's own width when the start button is clicked", async () => {
+    const user = userEvent.setup();
+    const scrollBy = installScrollBy();
+    stubOverflow({ startVisible: false, endVisible: true });
+    render(<Basic />);
+    Object.defineProperty(screen.getByRole("tablist"), "clientWidth", { configurable: true, value: 120 });
+    await user.click(screen.getByRole("button", { name: "Scroll tabs to the start" }));
+    expect(scrollBy).toHaveBeenCalledWith({ left: -120, behavior: "smooth" });
+  });
+
+  it("does not scroll a button that is already inert", async () => {
+    const user = userEvent.setup();
+    const scrollBy = installScrollBy();
+    stubOverflow({ startVisible: true, endVisible: false });
+    render(<Basic />);
+    const button = screen.getByRole("button", { name: "Scroll tabs to the end" });
+    // Focus it (held), then let the underlying overflow go away — inert, but still in the page.
+    keyboardFocus(true);
+    act(() => button.focus());
+    fireEvent.focus(button);
+    stubOverflow({ startVisible: true, endVisible: true });
+    fireEvent.scroll(screen.getByRole("tablist"));
+    await vi.waitFor(() => expect(button).toHaveAttribute("aria-disabled", "true"));
+    await user.click(button);
+    expect(scrollBy).not.toHaveBeenCalled();
+  });
+
+  it("keeps a scroll button in the page, inert, while it still has keyboard focus once nothing is left to scroll to", async () => {
+    stubOverflow({ startVisible: true, endVisible: false });
+    render(<Basic />);
+    const button = screen.getByRole("button", { name: "Scroll tabs to the end" });
+    keyboardFocus(true);
+    act(() => button.focus());
+    fireEvent.focus(button);
+    expect(button).not.toHaveAttribute("aria-disabled");
+
+    // The underlying overflow is gone, but the button is still focused — it stays, inert.
+    stubOverflow({ startVisible: true, endVisible: true });
+    fireEvent.scroll(screen.getByRole("tablist"));
+    await vi.waitFor(() => expect(button).toHaveAttribute("aria-disabled", "true"));
+    expect(screen.getByRole("button", { name: "Scroll tabs to the end" })).toBe(button);
+    expect(button).toHaveFocus();
+
+    // Moving focus away releases it.
+    fireEvent.blur(button);
+    expect(screen.queryByRole("button", { name: "Scroll tabs to the end" })).not.toBeInTheDocument();
+  });
+
+  it("does not hold a button that lost overflow from a mouse-produced (not keyboard) focus", async () => {
+    stubOverflow({ startVisible: true, endVisible: false });
+    render(<Basic />);
+    const button = screen.getByRole("button", { name: "Scroll tabs to the end" });
+    keyboardFocus(false);
+    fireEvent.focus(button);
+    stubOverflow({ startVisible: true, endVisible: true });
+    fireEvent.scroll(screen.getByRole("tablist"));
+    await vi.waitFor(() => expect(screen.queryByRole("button", { name: "Scroll tabs to the end" })).not.toBeInTheDocument());
+  });
+
+  it("stops watching for overflow once unmounted", () => {
+    stubOverflow({ startVisible: true, endVisible: false });
     const disconnect = vi.fn();
     class ObserverSpy {
       observe() {}

@@ -47,6 +47,37 @@
   flex-direction: column;
 }
 
+/* `align`: where the tabs sit when they don't fill the list. Plain values for
+   a list that never scrolls (vertical, or a horizontal one that fits). */
+.alignStart {
+  justify-content: flex-start;
+}
+
+.alignCenter {
+  justify-content: center;
+}
+
+.alignEnd {
+  justify-content: flex-end;
+}
+
+/* A horizontal list can also overflow and scroll — plain `center`/`flex-end`
+   would then push the leading tab out of the scrollable range where nothing
+   could ever bring it back (confirmed live: a fully centered overflowing row
+   makes its own start unreachable, even by scrolling all the way). The `safe`
+   keyword falls back to start-alignment exactly when that would happen,
+   keeping every tab reachable either way. An unsupported browser drops this
+   whole (invalid) declaration rather than applying it partially, leaving the
+   plain `.alignCenter`/`.alignEnd` rule above in effect — center/end-aligned
+   without the safety net, not broken. */
+.list[data-orientation="horizontal"].alignCenter {
+  justify-content: safe center;
+}
+
+.list[data-orientation="horizontal"].alignEnd {
+  justify-content: safe flex-end;
+}
+
 /* `underline`: a hairline the length of the list, which the selected tab's bar
    sits on top of. Horizontal: an inset shadow, because it is painted inside the
    list's own padding box, so the scrolling clip can't cut it or the bar, and
@@ -64,6 +95,133 @@
    as distinct shapes. */
 .listFilled {
   gap: var(--dbm-space-1);
+}
+
+/* --- Overflow: the wrapper around a horizontal list, and its edge fades ---
+   Only rendered for a horizontal list (`Tabs.tsx`) — a vertical one never
+   scrolls, so it renders the bare list with no wrapper, unchanged. `position:
+   relative` makes it the positioning parent for the fades and the scroll
+   buttons below, which must sit OUTSIDE the scrolling element itself: inside
+   it, they would themselves scroll away and add to what has to be scrolled
+   past. Sized like the list used to be sized directly (no `flex`/`display` of
+   its own beyond what a plain block needs), so wrapping it changes nothing
+   about the row's own layout. */
+.listWrapper {
+  min-inline-size: 0;
+  position: relative;
+}
+
+/* A gradient from the list's own assumed background (this component has no
+   background of its own to read back, so — like Select's own scroll buttons —
+   it assumes the common case, `bg.surface`; a Tabs placed on a differently
+   coloured surface won't match) fading to transparent, over the last bit of
+   whichever tab is cut off — the same information a plain scrollbar would
+   give, shown only while there is truly more that way. `::before`/`::after`
+   rather than real elements: nothing here is interactive or has content, so
+   there's nothing for `aria-hidden` to do that a pseudo-element (already
+   outside the accessibility tree) doesn't do for free. */
+.listWrapper::before,
+.listWrapper::after {
+  block-size: 100%;
+  content: "";
+  inline-size: var(--dbm-space-10);
+  inset-block: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-dropdown);
+}
+
+.listWrapper::before {
+  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+  inset-inline-start: 0;
+}
+
+.listWrapper::after {
+  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+  inset-inline-end: 0;
+}
+
+/* The gradient's own direction is physical (`linear-gradient` has no logical
+   keyword), so it needs its own flip — `:dir(rtl)` (not a `[dir]` attribute
+   selector), the same mechanism `Pagination`'s own arrows use, so it follows
+   the real, inherited direction rather than only an element carrying the
+   attribute itself. Position (`inset-inline-*` above) already mirrors on its
+   own; only the gradient's two colour stops need swapping. */
+.listWrapper:dir(rtl)::before {
+  background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
+}
+
+.listWrapper:dir(rtl)::after {
+  background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+}
+
+.listWrapper[data-overflow-start="true"]::before,
+.listWrapper[data-overflow-end="true"]::after {
+  opacity: 1;
+}
+
+/* A scroll button sits on its own fade's solid portion (nearest the edge),
+   which already covers the cut-off tab underneath — the button itself needs
+   no background of its own for that, just a higher `z-index` than the fade so
+   its icon isn't the thing painted over. Colour follows the same "neutral,
+   belongs to the row" convention already used for an icon inside a form
+   control's own box (`05-component-api-conventions.md` §6) — the closest
+   real precedent for an auxiliary, non-brand-tinted affordance living in a
+   control's own chrome, even though this isn't literally a form control. */
+.scrollButton {
+  align-items: center;
+  background: none;
+  border: none;
+  block-size: 100%;
+  color: var(--dbm-icon-default);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--dbm-space-1);
+  position: absolute;
+  z-index: var(--dbm-z-index-sticky);
+}
+
+.scrollButton:not(:disabled):hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.scrollButton:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.scrollButtonStart {
+  inset-block: 0;
+  inset-inline-start: 0;
+}
+
+.scrollButtonEnd {
+  inset-block: 0;
+  inset-inline-end: 0;
+}
+
+/* Rendered only while it still has keyboard focus but there is nothing left to
+   scroll to (`Tabs.tsx`) — kept in the page rather than dropping focus to the
+   top of the document, the same reasoning `Pagination`'s own arrows apply to
+   their own edge case. `aria-disabled`, not the native attribute: a natively
+   disabled button drops out of the tab order and, worse here, a *focused*
+   one loses focus the instant it becomes disabled. */
+.scrollButtonInert {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* Both buttons' icons point along the reading direction, so they flip under
+   right-to-left text — the same `:dir(rtl)` (not a `[dir]` attribute
+   selector) technique `Pagination`'s own arrows use, applied to whichever of
+   the two caret icons is rendered. `Icon`'s own `mirrored` prop is
+   unconditional (always flips), so it can't do this on its own. */
+.scrollIcon:dir(rtl) {
+  transform: scaleX(-1);
 }
 
 /* --- A trigger --- */
