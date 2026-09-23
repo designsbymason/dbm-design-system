@@ -1,9 +1,9 @@
 # Tabs — Storybook/component review findings
 
 **Navigation:** Tabs — built 2026-09-20, item 14 in the itemized molecule-tier build order (`04-component-inventory.md`). Adds one dependency
-(`@radix-ui/react-tabs`, the same approved Radix category as `react-popover`/`react-slider`/`react-accordion`) and no token. **Not Finalized** —
-the full `06-engineering-standards.md` §9 pass below is complete and every finding is actioned, but "Finalized" is a status the user declares, not
-one a review pass asserts on its own; awaiting that.
+(`@radix-ui/react-tabs`, the same approved Radix category as `react-popover`/`react-slider`/`react-accordion`) and no token. **Finalized
+2026-09-22** — the full `06-engineering-standards.md` §9 pass, five follow-ups, and a final pre-Finalize review are all complete; see "Final
+review before Finalizing" below for what that last pass checked and fixed.
 
 A compound component wrapping Radix Tabs end to end: `Tabs` (root) with `Tabs.List`, `Tabs.Trigger` and `Tabs.Content`. Each sub-part's own props get
 a `### Tabs.{Part} properties` subsection on the Docs page via a hidden, docs-only stories file per
@@ -341,6 +341,54 @@ passes clean; unit 68 files / 2,666 tests (up from 2,663 — three new `storySni
 shared vocabulary — the rule the earlier `outline`→`outlined` follow-up established, unaffected by this pass) needed no change here; the "control
 that has keyboard focus" checklist item in `06-engineering-standards.md` §9 now cites `Tabs` as a second confirmed instance, generalised slightly to
 cover a control removed by the reader's own scrolling, not only by a responsive resize.
+
+## Final review before Finalizing (2026-09-22)
+
+A last full pass before the user's own Finalized declaration — the automated suite re-run fresh rather than trusted from earlier logged
+numbers, plus a live, cross-theme, consolidated look now that all five follow-ups above (hover fills/`outlined`/`rounded`, the panel ring fix,
+the two naming sweeps, `align`/overflow) have landed together, since each was verified individually but never all at once in one final check.
+
+**Full self-verification, re-run clean:** `eslint` and both `tsc --noEmit` passes; unit 68 files / 2,666 tests; the real-Chromium Storybook
+project 92 files / 613 tests; `tsup` build; `pnpm build-storybook` plus its bundle-size check (13.4MB / 20MB budget); the per-component bundle-size
+check (`Tabs`: 3.05KB JS / 1.65KB CSS gzipped, within budget); the Foundations token-coverage check; `pnpm audit` (no known vulnerabilities).
+
+**Live, consolidated across all four variants in Purple/Light and Emerald/Dark** (`All variants`, `Rounded`): no regression from any of the five
+follow-ups landing together — the `solid` variant's light-fill-dark-text pattern, the `outlined` borders, and the rounded pill treatment all read
+correctly in both checked themes.
+
+**Composed tab order through the scroll buttons, verified live for the first time as one sequence** (the individual pieces were tested before —
+the hold-while-focused behaviour, the button's own presence — but not the full linear order together): focusing the selected tab and pressing
+Shift+Tab lands on the start scroll button when it's shown; from the selected tab, Tab reaches the panel directly. Confirmed via real keyboard
+events and `document.activeElement` in the live iframe, not inferred from the DOM order alone.
+
+**A real defect found and fixed: every Properties table's Default column was empty, system-wide across all four of Tabs' tables, even for props
+with an unambiguous, documented `@default`** (`variant`, `size`, `rounded`, `orientation`, `activationMode`, `fullWidth` on the root; `loop`,
+`align` on `Tabs.List`; `asChild` on `Tabs.Trigger` — 9 rows total). Root-caused, not just patched: Storybook's docgen only auto-populates a
+prop's Default column when a table's `component:` meta field resolves to something it can trace back to the real function source. Two distinct
+failure modes, both confirmed live:
+- **The root table has no `component:` at all** — `Tabs.stories.tsx`'s meta is typed against a synthetic `PlaygroundArgs` interface (it also
+  carries the `align` passthrough, §*align* follow-up above), never a real component reference, so nothing was ever auto-extracted for any root
+  prop.
+- **Every sub-part table's `component: Tabs.List` / `Tabs.Trigger` / `Tabs.Content`** — a property access on the compound `Tabs` export, not a
+  directly-exported identifier — never resolves far enough for docgen to find the real default, even though the same mechanism *does* extract
+  correct prop names, types, and descriptions (those come from the separately-exported `*Props` TypeScript interface, a different code path).
+
+**This is not a Tabs-only gap.** Checked directly: `Select.Option`'s table (the original ADR-0013 precedent) has the identical empty-Default
+symptom. A repo-wide check of every molecule's `component:` field confirms the same shape everywhere a compound root exists — `Accordion`,
+`Card`, `EmptyState`, `Popover`, `Table` all have no `component:` on their own root meta, and every one of their sub-part files (`Accordion.Item`
+et al., `Card.Body` et al., `EmptyState.Actions` et al., `Popover.Content` et al., `Table.Row` et al.) uses the identical `component: Parent.Sub`
+pattern that fails the same way. `Accordion`'s own root table was spot-checked live and confirmed affected (all rows empty). **Not fixed here,
+and deliberately not touched**: several of those components are already Finalized, and touching a Finalized component's files needs explicit
+authorization first even for a confirmed defect fix (`06-engineering-standards.md` §9) — this is flagged for a separate pass, not folded into
+Tabs' own.
+
+**Fixed for `Tabs`'s own four tables** (unrestricted — not yet Finalized): explicit `table: { defaultValue: { summary: "..." } }` added to each
+of the 9 affected argTypes, matching the exact string already in each prop's own JSDoc `@default` tag — the same established remediation pattern
+this project already uses when docgen drops a description (`07-storybook-and-documentation-standards.md` §5), applied to a default-value dropout
+instead. `Tabs.Content` needed no change — none of its props carry a `@default` tag, so its all-empty Default column was already correct.
+Verified live, all 4 tables, before and after. Full package re-verified clean after the fix (see the numbers above, already current).
+
+**Outcome:** `Tabs`'s own checklist is clean — nothing else found in this pass. **Declared Finalized by the user, 2026-09-22.**
 
 ## Gaps named, not built
 
