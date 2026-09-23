@@ -112,6 +112,7 @@ Wayfinding and app structure.
 | Navbar / TopNav | organism | 🟢 | App header shell |
 | Sidebar / SideNav | organism | 🟢 | Collapsible, nested items — enterprise-critical |
 | Tabs | molecule | 🟢 | Wraps Radix Tabs — compound (`Tabs.List`/`Trigger`/`Content`); `underline`/`subtle`/`outlined`/`solid` variants, `size` on the shared scale, `rounded`, `align` on the list, `orientation` (a breakpoint map turns a vertical list into a horizontal strip on a phone), `activationMode`, `fullWidth`, an `icon` per tab, `asChild` and `forceMount`; a list that is too wide scrolls, keeps the selected tab in view, and shows a fade and a button at whichever edge has more |
+| EditorTabs | organism | ⚪ | Data-driven, closable/reorderable/addable tab strip (open files, records, or user-created views) — wraps `Tabs` for the underlying keyboard/ARIA mechanics; distinct from `Tabs`' fixed, author-defined set. Named as a gap during `Tabs`' own review, 2026-09-22 |
 | Breadcrumb | molecule | 🟢 | |
 | Menu (dropdown) | organism | 🟢 | Wraps Radix DropdownMenu |
 | Stepper | organism | 🟡 | Multi-step flow indicator (wizards, onboarding) |
@@ -191,10 +192,10 @@ Not individual components, but composed patterns — worth planning for since a 
 |---|---|
 | 🟢 v1 (core) | 68 |
 | 🟡 v1.5 (comprehensive) | 26 |
-| ⚪ v2/deferred | 13 |
-| **Total planned** | **107** |
+| ⚪ v2/deferred | 14 |
+| **Total planned** | **108** |
 
-Counted directly from the nine category tables above, deduplicated by component name — `Pagination` is deliberately cross-listed under both Data Display and Navigation, so the tables hold 108 rows but 107 distinct components. By tier: 48 atoms, 36 molecules, 23 organisms. Templates (below) are composed patterns, not components, and aren't counted here. **When adding or re-prioritizing a component, recount from the tables rather than adjusting these figures by increments** — they drifted from the tables that way before (see the correction note below).
+Counted directly from the nine category tables above, deduplicated by component name — `Pagination` is deliberately cross-listed under both Data Display and Navigation, so the tables hold 109 rows but 108 distinct components. By tier: 48 atoms, 36 molecules, 24 organisms. Templates (below) are composed patterns, not components, and aren't counted here. **When adding or re-prioritizing a component, recount from the tables rather than adjusting these figures by increments** — they drifted from the tables that way before (see the correction note below).
 
 **Updated 2026-09-10** — added `Toolbar`, `Splitter`, `FieldGroup` (all ⚪, molecule-tier) following a molecule-tier feature-completeness gap-check run before the molecule review phase began; ⚪ count 14→17, total 104→107. A fourth candidate (a typeable tags/token input) was considered and deliberately deferred rather than added — it may already be covered by `MultiSelect`'s "tag-based" rendering, not yet confirmed since `MultiSelect` isn't built; revisit once `MultiSelect` exists.
 
@@ -202,7 +203,9 @@ Counted directly from the nine category tables above, deduplicated by component 
 
 **Corrected 2026-09-18** — the summary table above previously read ~65 / ~26 / ~17 / ~108, kept current by incremental adjustments (the 2026-09-10 and 2026-09-14 notes above) rather than recounts, and had drifted from the actual tables: 🟢 was really 68 and ⚪ 13, and the "108" was the raw row count including `Pagination`'s duplicate listing rather than distinct components. The 2026-09-10/09-14 notes above describe those incremental changes as they were recorded and are left as written; the figures in the table are now the authoritative ones.
 
-This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all 107 at once.
+**Updated 2026-09-22** — added `EditorTabs` (⚪, organism-tier, Navigation category), a data-driven closable/reorderable/addable tab strip named as a real gap during `Tabs`' own review (see [Tabs.md](component-reviews/Tabs.md)'s "Gaps named, not built" section) but not needed for v1 — wraps `Tabs` rather than duplicating its keyboard/ARIA handling. ⚪ count 13→14, organism tier 23→24, total 107→108. Not yet sequenced within the organism tier: organisms haven't started (Phase 6, `01-vision-and-goals.md` §13) and have no itemized build order the way molecules do, so "lowest priority, build last" is expressed entirely by the ⚪ tier itself rather than a position in a list.
+
+This puts v1 alone in "real, comprehensive design system" territory (not a 15-component starter kit), with a clear, sequenced path to full coverage rather than trying to build all 108 at once.
 
 ## Sequencing recommendation for actual build order
 Not alphabetical, not category-by-category — build in **dependency order**, since many components above are explicitly built on top of others. Steps 1–3 (every atom-tier row in this doc, Grid/GridItem excepted — see the note on step 1) are done as of Phase 4.75 (`01-vision-and-goals.md` §13) — **48 atoms total, none left unbuilt** (47, plus `Radio` from the 2026-09-14 split; count the atom-tier rows across all 9 categories above and it's 48. Earlier versions of this doc and its siblings said "49," a miscount corrected 2026-08-12):

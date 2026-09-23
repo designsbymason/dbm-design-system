@@ -41,8 +41,15 @@ where the request left the API open, and listed so they can be reversed cheaply.
   a development warning. Selecting the first enabled tab would be friendlier, but it needs every trigger to register with the root and a re-render
   before paint (and server output that differs from the first client render); the failure it prevents is loud and one line to fix. Listed under Gaps.
 - **A horizontal list scrolls sideways, with no scrollbar, and keeps the selected tab in view.** See "Real defects found" — the scrollbar was tried first.
-- **Not exposed from Radix Tabs:** `asChild` on `Root`/`List`/`Content` (nothing here needs a different element there), and `List`'s roving-focus
-  internals (`Tabs.List` itself only forwards `loop`). `Tabs.List`'s `loop` and `Tabs.Root`'s `activationMode`/`dir` are exposed.
+- **Two different reasons nothing else from Radix Tabs is exposed.** `List`'s `RovingFocusGroup` internals (`currentTabStopId`, `onEntryFocus`,
+  …) aren't a choice — Radix's own `TabsList` doesn't forward them to any consumer at all, so there's nothing here to expose. `asChild` on
+  `Root`/`List`/`Content` is a real, available Radix option, left off deliberately: `asChild`/Radix `Slot` (`05-component-api-conventions.md` §3,
+  ADR-0007) fits a component whose rendered content genuinely *is* its children — a single interactive element the wrapper's behaviour attaches
+  to (`Button`'s label, `Link`'s text) — and none of these three wrap a single child (`Root` holds a `List` plus one-or-more `Content` panels,
+  `List` holds multiple `Trigger`s, `Content` often holds more than one element). If a real need for a different wrapper element ever comes up
+  (e.g. `Root` as `<section>` instead of `<div>`), the fitting mechanism is the polymorphic `as` prop — the one `Stack`/`Container`/`Box` already
+  use for exactly that — not `asChild`, which wouldn't cleanly apply regardless. `Tabs.List`'s `loop` and `Tabs.Root`'s `activationMode`/`dir` are
+  exposed.
 
 ## Radix-primitive prop audit (the whole inheritance chain)
 
@@ -301,6 +308,35 @@ native-vs-`aria`-`disabled` finding; new token rows (`bg.surface`, `bg.neutral-s
 extended `icon.default` row (now also the scroll buttons' own icon colour). No new dependency, no new component-level token — every value traces to
 an existing primitive or semantic token.
 
+**A real gap, found the same day it landed: `align` was documented (its own Properties row) but not live — the Docs page's Playground had no
+control for it, since it is genuinely `Tabs.List`'s own prop, not the root's, and the Playground is typed and driven off the root `Tabs`' own args.**
+Fixed by adding it as a Playground-story-scoped arg rather than a root one: `align`'s `argTypes`/`args` entry sits on the `Playground` story object
+itself (`Tabs.stories.tsx`), not on `meta`, so it drives the one demo that already renders a real `Tabs.List` underneath without also appearing a
+second time in the root Properties table (whose `<PropertiesTable of={TabsStories}>` reads `meta`-level argTypes only) — the sub-part's real
+documentation stays solely under "Tabs.List properties" (ADR-0013), never duplicated. `DemoTabs` (the shared gallery-story component) now accepts
+and forwards `align` to its own `<Tabs.List>`; every other story that uses `DemoTabs` leaves it `undefined`, which `Tabs.List`'s own `align = "start"`
+default already covers, so nothing else changed. Positioned in `rootPropOrder` (shared by the root Properties table and the Playground panel) right
+after `fullWidth` — the other prop governing how the tabs occupy the list's own width — and before `dir`; default `"start"`, matching the real
+component default. `tabsPlaygroundSnippet` (the "Show code" builder) now also writes `align` onto the `<Tabs.List>` tag, not the root `<Tabs>` tag,
+only when it differs from `"start"`.
+
+Note, not a defect: Storybook's *native* per-story Controls tab (as opposed to the Docs page's own custom `PlaygroundControls` block) still lists
+`align` last regardless of `rootPropOrder` — confirmed live. That panel's row order isn't governed by our `order` prop at all; per the standing
+finding in `07-storybook-and-documentation-standards.md` §4.1, it comes from react-docgen's extraction of a real component's own `*Props` interface
+position, which a Playground-story-only synthetic arg was never going to have. The Docs page's own Playground panel — the one `06-engineering-standards.md`
+§9 and `07` §5's ordering checklist items are actually about — is correctly ordered; verified live.
+
+**Asked and left as-is (2026-09-22):** a fix exists — move `align` into `meta.argTypes` itself (positioned correctly, with `table: { disable: true }`
+to keep it out of the root Properties table) and add `align: { control: false }` to `noControls` so the other fixed-render gallery stories don't
+pick up a live-but-inert control for it — but it touches several more places across the file for a cosmetic mismatch confined to a panel this
+project's own checklist doesn't govern. Declined; not revisited unless a future pass decides otherwise.
+
+Verified live: the control shows a `select` with `start`/`center`/`end`, defaults to `start`; choosing `center` visibly re-centers the tab row and
+the Canvas and "Show code" both update (checked after the ~3s settle, per `07-storybook-and-documentation-standards.md` §4.2); "Reset to defaults"
+returns it to `start`. `storySnippets.test.ts` extended with two more Tabs Playground cases (`align` alone, `align` combined with another prop) and
+one more explicit assertion (`align` written onto `Tabs.List`, omitted at its default, never onto the root). Full package: lint and both `tsc`
+passes clean; unit 68 files / 2,666 tests (up from 2,663 — three new `storySnippets.test.ts` cases).
+
 **Recorded as standing conventions, not just this component's own choices:** `05-component-api-conventions.md` §2 (variant names come from one
 shared vocabulary — the rule the earlier `outline`→`outlined` follow-up established, unaffected by this pass) needed no change here; the "control
 that has keyboard focus" checklist item in `06-engineering-standards.md` §9 now cites `Tabs` as a second confirmed instance, generalised slightly to
@@ -316,13 +352,66 @@ Left out deliberately; each can be added without breaking the current API:
 - **Auto-selecting the first tab** when nothing is selected, instead of the current no-selection-plus-warning (see Decisions). Recommended against
   when asked (2026-09-22) — it would be the first component in this system to guess an initial selection rather than require one, and needs every
   trigger to register with the root and a re-render before paint, with a server render that would then differ from the first client render.
-- **Closable, reorderable or addable tabs** (dynamic tabs, as in an editor). A separate, larger interaction model.
+- **Closable, reorderable or addable tabs** (dynamic tabs, as in an editor). A separate, larger interaction model — scoped out as its own organism, `EditorTabs`; see the section below rather than this one-line note.
 - **An overflow menu ("More")** listing every tab that doesn't fit, for a strip long enough that scrolling through it a page at a time is itself
   tedious. Scroll buttons and edge fades are built (2026-09-22, see the follow-up above); a menu needs a real menu component, and `Menu` isn't built
   yet (organism tier) — reach for it once `Menu` exists, rather than hand-rolling a second one here.
 - **A sliding underline** that animates *between* tabs, rather than growing out from the middle of the newly-selected one (see Decisions). Needs
   measuring the previous and next tab's position in JavaScript, has no correct answer on the very first render, and needs its own right-to-left handling
   — the current `scaleX` approach avoids all three for free.
+
+## EditorTabs — scoped out as a separate organism (2026-09-22)
+
+The "closable, reorderable, addable tabs" gap above was discussed in full and turned into a real inventory entry rather than left as a bare
+bullet. Recorded here since the reasoning — not just the outcome — is what a future session would otherwise have to re-derive.
+
+**Not a `Tabs` retrofit.** `Tabs` is declarative: the consumer hand-writes `Tabs.List`/`Tabs.Trigger`/`Tabs.Content` children. Closable,
+reorderable and addable tabs need an array-driven API instead (a `tabs` array plus `onClose`/`onReorder`/`onAdd` callbacks), since the consumer
+has to mutate an ordered list — reimplementing that in userland on top of static JSX children would defeat the point. Mirrors the `Table` →
+`DataTable` relationship already in this system: a plain compositional molecule, and a separate, richer organism for the harder job. Scoped as a
+new organism, `EditorTabs`, that wraps `Tabs` internally for the keyboard/ARIA mechanics rather than reimplementing them.
+
+**Naming considered:** `EditorTabs` (chosen, at explicit direction — matches the gap's own "as in an editor" framing, reads concretely, mirrors
+how this system already prefers role-based names over generic ones) versus `DynamicTabs` (more neutral, doesn't tie the name to one scenario).
+
+**Where it would be useful**, named specifically rather than left abstract: multi-record workspaces (a CRM/support-desk/admin tool pinning an
+open record per tab — the same enterprise-tooling niche `DataTable`/`Sidebar` already serve), editor-style apps (multiple open files),
+user-created views (a saved query or filter per tab in a BI/dashboard tool), comparison workflows (several items open side by side, closed once
+done), and browser-style app shells. The common thread: the tab *set itself* is part of the user's own working state, not an author-defined,
+fixed navigation structure — the line that separates it from the base `Tabs`.
+
+**Open technical question, not resolved yet: hand-rolled reorder vs. a new dependency.** Nothing in this codebase has solved "drag one item among
+flex/grid siblings and reflow the row" — `Slider`'s pointer-drag moves one thumb along a track (a value mapping), and `Tabs`' own
+`revealTab`/`useTabsOverflow` do direction-agnostic rect math but never move a sibling — so this is genuinely unproven territory, not a repeat of
+an established pattern. Decided: don't commit to an approach on paper — build a small, throwaway spike isolating just the reorder/drag mechanism
+before choosing, matching this project's own "verified, not assumed" practice. A spike would need to clear:
+- Live reflow of neighbouring tabs during drag (extending the rect-comparison technique `revealTab` already uses; a smooth reflow needs the FLIP
+  technique).
+- The touch-gesture conflict between drag-to-reorder and the tab list's own existing drag-to-scroll — needs a real device/touch-emulated check,
+  not reasoning.
+- Auto-scroll while dragging past the edge of an already-scrolling strip.
+- RTL correctness, with the same care already taken for `revealTab`/overflow detection.
+- A currently-correct accessible live-reordering pattern (`aria-grabbed`/`aria-dropeffect` are deprecated; current WAI-ARIA APG guidance needs
+  checking directly, not assumed from memory).
+
+If the spike clears those, hand-roll — no new dependency, keeping the "no/limited dependencies" principle intact. If it visibly struggles on one,
+that is the trigger to evaluate a real DnD dependency instead, a genuine exception needing the same justification weight as the original
+Radix/Motion decisions, not something added quietly. Whichever way this resolves, it is a real fork-in-the-road decision once `EditorTabs` is
+actually built, and gets its own ADR then — this note is the pre-build reasoning, not the decision itself.
+
+**Keyboard reordering has no equivalent open question.** A modifier+arrow-key convention moving the focused tab is just an array splice and a
+focus move, with a direct analogue in WAI-ARIA APG's reorderable-list guidance — the primary *accessible* path regardless of what the drag spike
+finds, not a fallback bolted on afterward once drag ships.
+
+**Other decisions still open, to ask rather than assume once this is scheduled:** whether closing a tab auto-selects an adjacent one (likely yes,
+matching common editor/browser convention, but a real decision, not to be assumed the way auto-selecting the first tab on the base `Tabs` was
+rejected above) or leaves selection to the consumer; whether a newly added tab takes focus/selection automatically; whether drag-to-reorder ships
+in a first pass at all or keyboard-only ships first with drag following later.
+
+**Outcome:** added to `04-component-inventory.md`'s Navigation category as `EditorTabs`, organism-tier, ⚪ (real, not blocking v1) — see that
+doc's own 2026-09-22 update note. Not yet sequenced within the organism tier itself: organisms haven't started (Phase 6,
+`01-vision-and-goals.md` §13) and have no itemized build order yet the way molecules do, so the ⚪ tier alone is what currently expresses "lowest
+priority, build last."
 
 ## Not verified
 
