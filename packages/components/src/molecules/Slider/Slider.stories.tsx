@@ -81,12 +81,14 @@ const meta: Meta<typeof Slider> = {
     disabled: {
       control: "boolean",
       description: "Disables the slider natively.",
+      table: { defaultValue: { summary: "false" } },
     },
     // `control: false` — autoFocus only takes effect on mount, so toggling
     // it live in the Controls panel has no visible feedback to demo.
     autoFocus: {
       control: false,
       description: "Focuses the slider's thumb automatically on mount. Use sparingly.",
+      table: { defaultValue: { summary: "false" } },
     },
     name: {
       control: "text",

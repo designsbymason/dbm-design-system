@@ -49,11 +49,13 @@ const meta: Meta<PlaygroundArgs> = {
     defaultOpen: {
       control: "boolean",
       description: "The initial open state when uncontrolled.",
+      table: { defaultValue: { summary: "false" } },
     },
     modal: {
       control: "boolean",
       description:
         "Traps focus inside the content and blocks interaction with the rest of the page while open. Doesn't block dismissal — outside click/Escape still close it either way, unlike Dialog's own modal (Popover has no Overlay/scrim to swallow that click).",
+      table: { defaultValue: { summary: "false" } },
     },
     onOpenChange: {
       control: false,
@@ -70,40 +72,49 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["top", "right", "bottom", "left"],
       description:
         "Which side of the trigger the content renders on — a single value (shown here) or a mobile-first responsive map keyed by breakpoint (e.g. { base: 'bottom', lg: 'right' }) to switch axes deliberately at a chosen breakpoint.",
+      table: { defaultValue: { summary: '"bottom"' } },
     },
     align: {
       control: "select",
       options: ["start", "center", "end"],
       description: "Alignment along the chosen side.",
+      table: { defaultValue: { summary: '"center"' } },
     },
     sideOffset: {
       control: "number",
       description: "Pixel gap between the trigger and the content along side.",
+      table: { defaultValue: { summary: "8" } },
     },
     alignOffset: {
       control: "number",
       description: "Pixel offset along align's own axis.",
+      table: { defaultValue: { summary: "0" } },
     },
     avoidCollisions: {
       control: "boolean",
       description: "Repositions the content to stay within the viewport.",
+      table: { defaultValue: { summary: "true" } },
     },
     collisionPadding: {
       control: "number",
       description: "Minimum distance kept from the viewport edge while repositioning.",
+      table: { defaultValue: { summary: "8" } },
     },
     hideWhenDetached: {
       control: "boolean",
       description:
         "Hides the content entirely when its trigger is fully scrolled out of view, instead of leaving it floating in a now-meaningless position — relevant for a trigger inside a scrollable list/table/panel.",
+      table: { defaultValue: { summary: "false" } },
     },
     hideArrow: {
       control: "boolean",
       description: "Hides the small pointer arrow connecting the content to its trigger.",
+      table: { defaultValue: { summary: "false" } },
     },
     showCloseButton: {
       control: "boolean",
       description: "Shows a CloseButton in the content's own top-end corner.",
+      table: { defaultValue: { summary: "false" } },
     },
     onOpenAutoFocus: {
       control: false,

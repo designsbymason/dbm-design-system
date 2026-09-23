@@ -19,6 +19,7 @@ const meta: Meta<typeof Popover.Trigger> = {
       control: "boolean",
       description:
         "Renders as a single provided child element (Radix Slot) instead of the built-in, unstyled native <button> — for using one of this system's own interactive components (Button, IconButton) as the visible trigger.",
+      table: { defaultValue: { summary: "false" } },
     },
     children: {
       control: "text",

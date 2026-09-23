@@ -22,48 +22,58 @@ const meta: Meta<typeof Popover.Content> = {
       options: ["top", "right", "bottom", "left"],
       description:
         "Which side of the trigger the content renders on — a single value, or a mobile-first responsive map keyed by breakpoint (e.g. { base: 'bottom', lg: 'right' }). Radix repositions it automatically to stay within the viewport, but only within the same axis; a responsive map lets you switch axes deliberately at a chosen breakpoint.",
+      table: { defaultValue: { summary: '"bottom"' } },
     },
     align: {
       control: "select",
       options: ["start", "center", "end"],
       description: "Alignment along the chosen side.",
+      table: { defaultValue: { summary: '"center"' } },
     },
     sideOffset: {
       control: "number",
       description: "Pixel gap between the trigger and the content along side.",
+      table: { defaultValue: { summary: "8" } },
     },
     alignOffset: {
       control: "number",
       description: "Pixel offset along align's own axis.",
+      table: { defaultValue: { summary: "0" } },
     },
     avoidCollisions: {
       control: "boolean",
       description:
         "Whether the content repositions itself to stay within the viewport instead of overflowing it.",
+      table: { defaultValue: { summary: "true" } },
     },
     collisionPadding: {
       control: "number",
       description:
         "Minimum distance, in pixels, kept between the content and the edge of the viewport while repositioning to avoid a collision.",
+      table: { defaultValue: { summary: "8" } },
     },
     collisionBoundary: {
       control: false,
       description:
         "Element(s) to use as the collision boundary instead of the viewport — e.g. a scrollable container the popover should stay within.",
+      table: { defaultValue: { summary: "[]" } },
     },
     hideWhenDetached: {
       control: "boolean",
       description:
         "Hides the content entirely when its trigger is fully scrolled out of view, instead of leaving it floating in a now-meaningless position.",
+      table: { defaultValue: { summary: "false" } },
     },
     hideArrow: {
       control: "boolean",
       description: "Hides the small pointer arrow connecting the content to its trigger.",
+      table: { defaultValue: { summary: "false" } },
     },
     showCloseButton: {
       control: "boolean",
       description:
         "Shows a CloseButton in the content's own top-end corner, in addition to the default outside-click/Escape dismissal.",
+      table: { defaultValue: { summary: "false" } },
     },
     container: {
       control: false,

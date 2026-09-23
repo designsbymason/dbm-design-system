@@ -35,16 +35,23 @@ const meta: Meta<typeof RadioGroup> = {
       description: "The initial selected value when uncontrolled.",
     },
     onValueChange: {
+      control: false,
       description: "Called with the newly selected value whenever the selection changes.",
     },
     hasError: {
+      control: "boolean",
       description: "Marks the group as invalid, via aria-invalid on the group itself.",
+      table: { defaultValue: { summary: "false" } },
     },
     disabled: {
+      control: "boolean",
       description: "Disables every Radio in the group at once.",
+      table: { defaultValue: { summary: "false" } },
     },
     required: {
+      control: "boolean",
       description: "Marks the group as required for real HTML5 form validation, and sets aria-required.",
+      table: { defaultValue: { summary: "false" } },
     },
     name: {
       control: "text",
@@ -67,7 +74,9 @@ const meta: Meta<typeof RadioGroup> = {
         "Text direction, passed through to Radix RadioGroup. When omitted, defers to the nearest Radix DirectionProvider ancestor if the app has one (a React context, not the actual browser document/html[dir] attribute), else falls back to ltr.",
     },
     loop: {
+      control: "boolean",
       description: "Whether roving focus wraps from the last option back to the first.",
+      table: { defaultValue: { summary: "true" } },
     },
     "aria-label": {
       control: "text",

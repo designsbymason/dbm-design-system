@@ -29,6 +29,7 @@ const meta: Meta<typeof PasswordInput> = {
     hasError: {
       control: "boolean",
       description: "Marks the input as invalid, visually and via aria-invalid.",
+      table: { defaultValue: { summary: "false" } },
     },
     // `control: false` — driving `value` from Controls without a real
     // `onChange` wired back into `args` would freeze the input, same
@@ -50,22 +51,26 @@ const meta: Meta<typeof PasswordInput> = {
     disabled: {
       control: "boolean",
       description: "Disables the input (and its show/hide toggle) natively.",
+      table: { defaultValue: { summary: "false" } },
     },
     required: {
       control: "boolean",
       description:
         "Marks the input as required for HTML5 form validation. Pair with a FieldLabel whose own required shows the matching visual asterisk.",
+      table: { defaultValue: { summary: "false" } },
     },
     readOnly: {
       control: "boolean",
       description:
         "Prevents editing without disabling the input — the show/hide toggle still works while read-only.",
+      table: { defaultValue: { summary: "false" } },
     },
     // `control: false` — autoFocus only takes effect on mount, so toggling
     // it live in the Controls panel has no visible feedback to demo.
     autoFocus: {
       control: false,
       description: "Focuses the input automatically on mount. Use sparingly.",
+      table: { defaultValue: { summary: "false" } },
     },
     // `control: false` — has no visible effect inside an isolated
     // Storybook iframe (real browser autofill/password-manager UI doesn't
@@ -82,6 +87,7 @@ const meta: Meta<typeof PasswordInput> = {
       control: "boolean",
       description:
         "Shows a live current/max character count inline, before the show/hide toggle. Only renders when maxLength is also set.",
+      table: { defaultValue: { summary: "false" } },
     },
     formatNumber: {
       control: false,

@@ -18,6 +18,7 @@ const meta: Meta<typeof Accordion.Trigger> = {
       control: false,
       description:
         "The disclosure indicator icon, rotated 180° when this item is open. Pass a different Phosphor icon reference to replace the default caret.",
+      table: { defaultValue: { summary: "CaretDownIcon" } },
     },
     hideIcon: {
       control: "boolean",
@@ -27,6 +28,7 @@ const meta: Meta<typeof Accordion.Trigger> = {
       control: false,
       description:
         "Renders as a single provided child element instead of the built-in label+icon row — the child is responsible for its own disclosure indicator in this mode.",
+      table: { defaultValue: { summary: "false" } },
     },
     id: {
       control: false,

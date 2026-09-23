@@ -236,6 +236,7 @@ const meta: Meta<typeof Grid> = {
     as: {
       control: false,
       description: "The HTML element (or component) to render as.",
+      table: { defaultValue: { summary: '"div"' } },
     },
     columns: {
       control: "number",
@@ -272,6 +273,7 @@ const meta: Meta<typeof Grid> = {
       options: ["row", "column", "row dense", "column dense"],
       description:
         "Controls grid-auto-flow — how implicitly-placed items are auto-arranged.",
+      table: { defaultValue: { summary: '"row"' } },
     },
     autoRows: {
       control: "text",

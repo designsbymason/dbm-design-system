@@ -43,6 +43,7 @@ const meta: Meta<typeof Select.Option> = {
       control: "boolean",
       description:
         "Renders as a single provided child element (Radix Slot) instead of the built-in <div> — for a custom option row (e.g. with a leading icon or a secondary description line) that still needs Radix's own selection/typeahead/highlight behavior.",
+      table: { defaultValue: { summary: "false" } },
     },
     id: {
       control: false,

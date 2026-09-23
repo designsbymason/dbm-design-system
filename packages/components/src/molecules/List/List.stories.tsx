@@ -70,6 +70,7 @@ const meta: Meta<typeof List> = {
       control: "select",
       options: ["ul", "ol"],
       description: "The list element to render.",
+      table: { defaultValue: { summary: '"ul"' } },
     },
     marker: {
       control: "select",

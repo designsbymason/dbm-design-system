@@ -12,6 +12,7 @@ const meta: Meta<typeof Popover.Close> = {
       control: "boolean",
       description:
         "Renders as a single provided child element (Radix Slot) instead of the built-in, unstyled native <button> — for a custom dismiss control (e.g. a Button reading \"Done\") that should still close the popover on click.",
+      table: { defaultValue: { summary: "false" } },
     },
     children: {
       control: "text",

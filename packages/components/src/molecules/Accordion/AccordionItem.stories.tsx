@@ -26,6 +26,7 @@ const meta: Meta<typeof Accordion.Item> = {
       control: false,
       description:
         "Renders the item's own root behavior onto a single provided child instead of wrapping it in its own <div>.",
+      table: { defaultValue: { summary: "false" } },
     },
     children: {
       control: false,

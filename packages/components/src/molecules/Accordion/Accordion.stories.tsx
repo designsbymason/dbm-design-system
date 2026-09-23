@@ -81,6 +81,7 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["single", "multiple"],
       description:
         "At most one item open at a time (\"single\", the default), or any number open independently (\"multiple\"). Switching this also changes defaultValue's own shape — the Playground wraps it into a one-element array under \"multiple\"; see the dedicated Multiple story for the real multi-open case.",
+      table: { defaultValue: { summary: '"single"' } },
     },
     defaultValue: {
       // `labels` overrides just the empty-string option's own displayed
@@ -103,16 +104,19 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["bordered", "ghost"],
       description:
         "The group's own visual treatment — a self-contained bordered group, or a borderless treatment for embedding inside an already-bordered container (e.g. a Card).",
+      table: { defaultValue: { summary: '"bordered"' } },
     },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "Trigger padding/typography and the disclosure icon's own size.",
+      table: { defaultValue: { summary: '"md"' } },
     },
     collapsible: {
       control: "boolean",
       description:
         "Whether the open item can be closed by activating its own trigger again, leaving every item closed at once. Only applies to type=\"single\" (the default) — has no effect at all under type=\"multiple\".",
+      table: { defaultValue: { summary: "true" } },
     },
     disabled: {
       control: "boolean",
@@ -123,12 +127,14 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["vertical", "horizontal"],
       description:
         "Which arrow-key pair moves roving focus between triggers. Purely a keyboard/data-orientation concern — doesn't lay items out side by side on its own.",
+      table: { defaultValue: { summary: '"vertical"' } },
     },
     headingLevel: {
       control: "select",
       options: [1, 2, 3, 4, 5, 6],
       description:
         "The heading level every Accordion.Trigger in this accordion renders as, matching this accordion's real position in the page's own heading outline.",
+      table: { defaultValue: { summary: "3" } },
     },
     dir: {
       control: false,

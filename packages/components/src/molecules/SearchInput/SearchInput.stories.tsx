@@ -30,6 +30,7 @@ const meta: Meta<typeof SearchInput> = {
     hasError: {
       control: "boolean",
       description: "Marks the input as invalid, visually and via aria-invalid.",
+      table: { defaultValue: { summary: "false" } },
     },
     isLoading: {
       control: "boolean",
@@ -68,21 +69,25 @@ const meta: Meta<typeof SearchInput> = {
     disabled: {
       control: "boolean",
       description: "Disables the input and its clear button natively.",
+      table: { defaultValue: { summary: "false" } },
     },
     required: {
       control: "boolean",
       description:
         "Marks the input as required for HTML5 form validation. Pair with a FieldLabel whose own required shows the matching visual asterisk.",
+      table: { defaultValue: { summary: "false" } },
     },
     readOnly: {
       control: "boolean",
       description: "Prevents editing without disabling the input — the clear button is disabled too while read-only.",
+      table: { defaultValue: { summary: "false" } },
     },
     // `control: false` — autoFocus only takes effect on mount, so toggling
     // it live in the Controls panel has no visible feedback to demo.
     autoFocus: {
       control: false,
       description: "Focuses the input automatically on mount. Use sparingly.",
+      table: { defaultValue: { summary: "false" } },
     },
     // `control: false` — has no visible effect inside an isolated
     // Storybook iframe.
