@@ -18,12 +18,14 @@ const meta: Meta<typeof Tabs.List> = {
       control: "boolean",
       description:
         "Whether arrow-key navigation wraps around — End past the last tab lands on the first, and the reverse.",
+      table: { defaultValue: { summary: "true" } },
     },
     align: {
       control: "select",
       options: ["start", "center", "end"],
       description:
         "Where the tabs sit within the list when they don't fill it: the leading edge, the middle, or the trailing edge.",
+      table: { defaultValue: { summary: '"start"' } },
     },
     "aria-label": {
       control: "text",

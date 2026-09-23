@@ -96,32 +96,38 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["underline", "subtle", "outlined", "solid"],
       description:
         "How the selected tab is marked: an underline bar, a soft brand tint, a tint with a border on every tab, or a solid brand fill.",
+      table: { defaultValue: { summary: '"underline"' } },
     },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "Trigger height, padding and type size, and the panel's own spacing.",
+      table: { defaultValue: { summary: '"md"' } },
     },
     rounded: {
       control: "boolean",
       description:
         "Fully rounds the ends of every tab, in the subtle, outlined and solid variants. It has no effect on underline, whose tabs have no shape to round.",
+      table: { defaultValue: { summary: "false" } },
     },
     orientation: {
       control: "select",
       options: ["horizontal", "vertical"],
       description:
         "The direction the tabs run, and which arrow-key pair moves between them. Also accepts a breakpoint map, which this control can't express — see the responsive story.",
+      table: { defaultValue: { summary: '"horizontal"' } },
     },
     activationMode: {
       control: "select",
       options: ["automatic", "manual"],
       description:
         "Whether focusing a tab selects it (automatic), or only Enter or Space does (manual).",
+      table: { defaultValue: { summary: '"automatic"' } },
     },
     fullWidth: {
       control: "boolean",
       description: "Stretches the triggers to fill the width of a horizontal list.",
+      table: { defaultValue: { summary: "false" } },
     },
     dir: {
       control: "select",
