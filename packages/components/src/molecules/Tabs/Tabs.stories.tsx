@@ -8,7 +8,7 @@ import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";
 import { Tabs } from "./Tabs";
 import { tabsPlaygroundSnippet, tabsSnippets } from "./Tabs.snippets";
-import type { TabsActivationMode, TabsOrientation, TabsProps, TabsSize, TabsVariant } from "./Tabs.types";
+import type { TabsActivationMode, TabsAlign, TabsOrientation, TabsProps, TabsSize, TabsVariant } from "./Tabs.types";
 
 // `Tabs.List`, `Tabs.Trigger` and `Tabs.Content` each get their own Properties
 // table via a hidden docs-only stories file (guidelines/adr/0013), where their
@@ -22,6 +22,12 @@ interface PlaygroundArgs {
   orientation: TabsOrientation;
   activationMode: TabsActivationMode;
   fullWidth: boolean;
+  // Tabs.List's own prop, not the root's — set only on the Playground story
+  // itself (not meta), so it stays out of the root Properties table (its
+  // real documentation lives in Tabs.List's own, per ADR-0013) while still
+  // being a live control in the one demo that already renders a real
+  // Tabs.List underneath.
+  align: TabsAlign;
   dir: "ltr" | "rtl";
   value: string;
   id: string;
@@ -32,12 +38,12 @@ interface PlaygroundArgs {
 
 const demoContainerStyle = { maxWidth: "40rem", marginInline: "auto" } as const;
 
-type DemoTabsProps = Omit<TabsProps, "children"> & { listLabel?: string };
+type DemoTabsProps = Omit<TabsProps, "children"> & { listLabel?: string; align?: TabsAlign };
 
 /** A small, real set of tabs the gallery stories vary. */
-const DemoTabs = ({ listLabel = "Project", ...props }: DemoTabsProps) => (
+const DemoTabs = ({ listLabel = "Project", align, ...props }: DemoTabsProps) => (
   <Tabs {...(props.value === undefined ? { defaultValue: "overview" } : {})} {...props}>
-    <Tabs.List aria-label={listLabel}>
+    <Tabs.List aria-label={listLabel} align={align}>
       <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
       <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
       <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
@@ -165,6 +171,7 @@ const meta: Meta<PlaygroundArgs> = {
         orientation={args.orientation}
         activationMode={args.activationMode}
         fullWidth={args.fullWidth}
+        align={args.align}
         dir={args.dir}
       />
     </div>
@@ -177,6 +184,20 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
+  // Tabs.List's own align, not the root's (see PlaygroundArgs above) — scoped to
+  // this story alone so it never leaks into the fixed-render gallery stories below,
+  // which don't consume it and would otherwise pick up an unintended live control.
+  argTypes: {
+    align: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description:
+        "Tabs.List's own align: where the tabs sit within the list when they don't fill it — the leading edge, the middle, or the trailing edge.",
+    },
+  },
+  args: {
+    align: "start",
+  },
   parameters: {
     docs: {
       source: {

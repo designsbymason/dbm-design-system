@@ -7,7 +7,7 @@
 // `storySnippets.test.ts` checks that stays true. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { TabsActivationMode, TabsOrientation, TabsSize, TabsVariant } from "./Tabs.types";
+import type { TabsActivationMode, TabsAlign, TabsOrientation, TabsSize, TabsVariant } from "./Tabs.types";
 
 const list = (attributes = "", triggers = defaultTriggers) =>
   `  <Tabs.List aria-label="Project"${attributes ? ` ${attributes}` : ""}>\n${triggers}\n  </Tabs.List>`;
@@ -145,6 +145,9 @@ export interface TabsPlaygroundSnippetArgs {
   orientation?: TabsOrientation;
   activationMode?: TabsActivationMode;
   fullWidth?: boolean;
+  // Tabs.List's own prop, not the root's — written onto the <Tabs.List> tag below,
+  // not the <Tabs> tag the other attributes here go on.
+  align?: TabsAlign;
   dir?: "ltr" | "rtl";
 }
 
@@ -162,5 +165,6 @@ export function tabsPlaygroundSnippet(args: TabsPlaygroundSnippetArgs): string {
   if (args.activationMode && args.activationMode !== "automatic") attributes.push(`activationMode="${args.activationMode}"`);
   if (args.fullWidth) attributes.push("fullWidth");
   if (args.dir === "rtl") attributes.push('dir="rtl"');
-  return tabs(attributes.join(" "));
+  const listAttributes = args.align && args.align !== "start" ? `align="${args.align}"` : "";
+  return tabs(attributes.join(" "), list(listAttributes));
 }

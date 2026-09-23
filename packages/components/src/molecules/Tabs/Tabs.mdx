@@ -19,6 +19,7 @@ export const rootPropOrder = [
   "orientation",
   "activationMode",
   "fullWidth",
+  "align",
   "dir",
   "id",
   "className",
@@ -75,6 +76,10 @@ import { Tabs } from "@dbm-design-system/components";
 
 </div>
 <PlaygroundControls of={TabsStories.Playground} order={rootPropOrder} exclude={["value", "onValueChange", "id", "className", "style", "data-testid"]} />
+
+`align` above is `Tabs.List`'s own prop, not the root's — included here as a live control because
+this Playground already renders a real `Tabs.List`, but documented under its own heading below, not
+in the root Properties table.
 
 ## Properties
 

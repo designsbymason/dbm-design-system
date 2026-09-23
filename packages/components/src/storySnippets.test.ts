@@ -1254,6 +1254,8 @@ describe("Playground snippets for Tabs", () => {
     { defaultValue: "settings", variant: "solid", size: "xl", orientation: "vertical", activationMode: "manual" },
     { fullWidth: true, dir: "rtl" },
     { variant: "outlined", rounded: true, size: "lg" },
+    { align: "center" },
+    { align: "end", fullWidth: true },
   ] as const;
 
   it.each(tabsArgs)("Tabs %j is a real snippet", (args) => {
@@ -1281,6 +1283,14 @@ describe("Playground snippets for Tabs", () => {
     expect(tabsPlaygroundSnippet({ rounded: false })).toMatch(/^<Tabs defaultValue="overview">\n/);
     expect(tabsPlaygroundSnippet({ orientation: "vertical", activationMode: "manual", fullWidth: true, dir: "rtl" })).toMatch(
       /^<Tabs defaultValue="overview" orientation="vertical" activationMode="manual" fullWidth dir="rtl">\n/,
+    );
+  });
+
+  it("Tabs writes align onto Tabs.List, not the root, and only when it isn't the default", () => {
+    expect(tabsPlaygroundSnippet({ align: "start" })).toMatch(/<Tabs\.List aria-label="Project">\n/);
+    expect(tabsPlaygroundSnippet({ align: "center" })).toMatch(/<Tabs\.List aria-label="Project" align="center">\n/);
+    expect(tabsPlaygroundSnippet({ align: "end", variant: "subtle" })).toMatch(
+      /^<Tabs defaultValue="overview" variant="subtle">\n {2}<Tabs\.List aria-label="Project" align="end">\n/,
     );
   });
 });
