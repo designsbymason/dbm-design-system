@@ -374,13 +374,15 @@ failure modes, both confirmed live:
   correct prop names, types, and descriptions (those come from the separately-exported `*Props` TypeScript interface, a different code path).
 
 **This is not a Tabs-only gap.** Checked directly: `Select.Option`'s table (the original ADR-0013 precedent) has the identical empty-Default
-symptom. A repo-wide check of every molecule's `component:` field confirms the same shape everywhere a compound root exists — `Accordion`,
-`Card`, `EmptyState`, `Popover`, `Table` all have no `component:` on their own root meta, and every one of their sub-part files (`Accordion.Item`
-et al., `Card.Body` et al., `EmptyState.Actions` et al., `Popover.Content` et al., `Table.Row` et al.) uses the identical `component: Parent.Sub`
-pattern that fails the same way. `Accordion`'s own root table was spot-checked live and confirmed affected (all rows empty). **Not fixed here,
-and deliberately not touched**: several of those components are already Finalized, and touching a Finalized component's files needs explicit
-authorization first even for a confirmed defect fix (`06-engineering-standards.md` §9) — this is flagged for a separate pass, not folded into
-Tabs' own.
+symptom. **Corrected 2026-09-22, the same day, once the sitewide pass actually ran:** this entry originally inferred the same failure across
+`Accordion`, `Card`, `EmptyState`, `Popover`, and `Table` from the `component:`-field pattern alone (no `component:` on the compound root, a
+property-accessed `component: Parent.Sub` on every sub-part) — checked live at the time only for `Accordion` and `Select.Option`, both confirmed
+affected. Checking the rest individually, live, found the inference didn't hold: `Card`, `EmptyState`, and `Table` were already fully correct —
+each author had already hand-annotated every `table.defaultValue.summary`, something the `component:`-field grep alone couldn't see. Only
+`Accordion` and `Popover` (plus `Select.Option`) were genuinely affected. The lesson, not just the correction: a shared root cause across several
+components doesn't mean every component sharing that code shape is actually broken by it — verify each one live rather than extending a confirmed
+finding by pattern-match. Fixed the same day; see `07-storybook-and-documentation-standards.md` §4.1 for the consolidated write-up (one entry,
+not repeated per component, matching how the Icon default-weight change was logged).
 
 **Fixed for `Tabs`'s own four tables** (unrestricted — not yet Finalized): explicit `table: { defaultValue: { summary: "..." } }` added to each
 of the 9 affected argTypes, matching the exact string already in each prop's own JSDoc `@default` tag — the same established remediation pattern
