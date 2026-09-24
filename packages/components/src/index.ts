@@ -69,7 +69,12 @@ export * from "./molecules/Slider";
 export * from "./molecules/Table";
 export * from "./molecules/Tabs";
 
-// A hook from `@dbm-design-system/primitives`, re-exported so a consumer who installs only this package can use it
-// (ADR-0023): pair it with `Alert`'s controlled `open` to remember a dismissal across visits.
+// What a consumer is meant to use from `@dbm-design-system/primitives`, re-exported so that installing only this package
+// is enough (ADR-0023, `02-tech-stack-and-structure.md` §2) — never the helpers only components use.
+//
+// A hook: pair it with `Alert`'s controlled `open` to remember a dismissal across visits.
 export { usePersistentDismiss } from "@dbm-design-system/primitives";
 export type { PersistentDismiss, PersistentDismissStorage, UsePersistentDismissOptions } from "@dbm-design-system/primitives";
+// The types in thirteen components' public props (`Stack`'s `gap`, `Tabs`' `orientation`, `Grid`'s `columns`…), for a
+// consumer writing a typed wrapper around one.
+export type { Breakpoint, Responsive, SpaceValue } from "@dbm-design-system/primitives";
