@@ -1,6 +1,6 @@
 # Breadcrumb
 
-**Tier:** molecule · **Category:** Navigation · **Status:** built 2026-09-23; **not Finalized** — awaiting the user's own review pass and declaration.
+**Tier:** molecule · **Category:** Navigation · **Status:** built 2026-09-23; **Finalized 2026-09-23**, after the final review pass recorded below.
 
 ## What was built
 
@@ -79,6 +79,10 @@ The full `06-engineering-standards.md` §9 checklist, run against the code as pu
 Checked and found sound (no change): every value in the CSS is a token, the one literal being the `640px` media query (documented, as in `Pagination`); `{...props}` is spread before every computed attribute (`ref`, `role`, `aria-current`, `aria-label`, `title`, `className`) on all four parts; roles and names (`nav`, `list`/`listitem` stated for Safari, `aria-current`, hidden separators, a named "…" button); contrast, re-measured for every tone; the compact form's back arrow and item order under `dir="rtl"` (read live: mirrored arrow, first item at the right); every visible story has a hand-written snippet, resolved through Storybook's own store (19 of 19; the seven hidden interaction stories have none, as intended); the Playground's new controls (`compact`, `tone`, `underline`, `maxItems`, `truncate`) each drive the canvas (read live through the story URL args); the Properties tables show every default; the Docs page has the full template in order; tests pass under `StrictMode`; SSR-safe (`window` is only touched in `useIsomorphicLayoutEffect`, an event handler and `keyboardIsOn`); Emerald dark read live earlier.
 
 **Not verified in this pass:** a screenshot of the Docs page and of every story (the browser pane could not composite one during the review, so appearance was read from computed styles and the DOM rather than seen), and the Docs page's "Show code" panels opened one by one on the page itself (lazy rendering needs a visible pane) — their contents were read through the story store instead.
+
+## Finalized, 2026-09-23
+
+Declared by the user after the final review above and the two Properties-table corrections that followed it (`maxItems`' value options and its Default cell). At Finalization: lint, both typechecks and build clean; 2,739 unit tests and 642 real-browser tests passing; CI green on the pushed build commits.
 
 ## Gaps named, not built
 
