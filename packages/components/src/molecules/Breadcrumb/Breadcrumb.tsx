@@ -15,16 +15,24 @@ import type {
   BreadcrumbProps,
   BreadcrumbSeparator,
   BreadcrumbSize,
+  BreadcrumbTone,
 } from "./Breadcrumb.types";
 
 interface BreadcrumbContextValue {
   size: BreadcrumbSize;
   separator: BreadcrumbSeparator;
+  tone: BreadcrumbTone;
+  underline: boolean;
 }
 
 // Every part reads the root's settings from here rather than each taking them as a prop, so one `size` on
 // `Breadcrumb` styles the whole trail.
-const BreadcrumbContext = createContext<BreadcrumbContextValue>({ size: "md", separator: "chevron" });
+const BreadcrumbContext = createContext<BreadcrumbContextValue>({
+  size: "md",
+  separator: "chevron",
+  tone: "info",
+  underline: false,
+});
 
 /** Whether the item is the last one drawn, which is the only one with no separator after it. */
 const ItemPositionContext = createContext({ isLast: true });
@@ -35,6 +43,12 @@ const sizeClass: Record<BreadcrumbSize, string | undefined> = {
   md: styles.sizeMd,
   lg: styles.sizeLg,
   xl: styles.sizeXl,
+};
+
+const toneClass: Record<BreadcrumbTone, string | undefined> = {
+  neutral: styles.toneNeutral,
+  brand: styles.toneBrand,
+  info: styles.toneInfo,
 };
 
 // One step down from the text's own size at the small end, the mapping `Button` and `Tabs` use.
@@ -87,12 +101,12 @@ function Separator({ separator, size }: { separator: BreadcrumbSeparator; size: 
 /**
  * A link to a page above the current one. Renders the `Link` atom — so it takes an `href`, opens an external
  * one in a new tab with the usual affordances, supports `disabled`, and takes `asChild` to render a router's
- * own link — restyled to sit quietly in a trail: the underline shows on hover only, since a link in a
- * navigation list isn't running through body text to be told apart from it.
+ * own link — coloured by the trail's `tone`. The underline shows on hover only unless the trail sets
+ * `underline`, since a link in a navigation list isn't running through body text to be told apart from it.
  */
 const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
   ({ icon, className, children, asChild = false, ...props }, ref) => {
-    const { size } = useContext(BreadcrumbContext);
+    const { size, tone, underline } = useContext(BreadcrumbContext);
     useEffect(() => {
       if (process.env.NODE_ENV !== "production" && asChild && icon) {
         console.warn(
@@ -101,7 +115,13 @@ const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
       }
     }, [asChild, icon]);
     return (
-      <Link {...props} ref={ref} asChild={asChild} underline="hover" className={cx(styles.link, className)}>
+      <Link
+        {...props}
+        ref={ref}
+        asChild={asChild}
+        underline={underline ? "always" : "hover"}
+        className={cx(styles.link, toneClass[tone], className)}
+      >
         {asChild ? (
           children
         ) : (
@@ -165,6 +185,8 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
       children,
       size = "md",
       separator = "chevron",
+      tone = "info",
+      underline = false,
       maxItems,
       itemsBeforeCollapse = 1,
       itemsAfterCollapse = 2,
@@ -247,7 +269,7 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
     });
 
     return (
-      <BreadcrumbContext.Provider value={{ size, separator }}>
+      <BreadcrumbContext.Provider value={{ size, separator, tone, underline }}>
         <nav
           {...props}
           ref={ref}

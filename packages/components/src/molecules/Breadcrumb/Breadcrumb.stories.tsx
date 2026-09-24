@@ -5,13 +5,15 @@ import { HouseIcon, KeyboardIcon } from "@dbm-design-system/icons";
 import { Text } from "../../atoms/Text";
 import { Breadcrumb } from "./Breadcrumb";
 import { breadcrumbPlaygroundSnippet, breadcrumbSnippets } from "./Breadcrumb.snippets";
-import type { BreadcrumbProps, BreadcrumbSeparator, BreadcrumbSize } from "./Breadcrumb.types";
+import type { BreadcrumbProps, BreadcrumbSeparator, BreadcrumbSize, BreadcrumbTone } from "./Breadcrumb.types";
 
 // `Breadcrumb.Item`, `Breadcrumb.Link` and `Breadcrumb.Page` each get their own
 // Properties table via a hidden docs-only stories file (guidelines/adr/0013),
 // where their argTypes are auto-resolved from real docgen.
 interface PlaygroundArgs {
   size: BreadcrumbSize;
+  tone: BreadcrumbTone;
+  underline: boolean;
   separator: string;
   // A text control: "" means "not set" (the trail never collapses).
   maxItems: number | "";
@@ -60,6 +62,8 @@ const DemoTrail = ({ count = 4, ...props }: DemoTrailProps) => (
 // turned off (07-storybook-and-documentation-standards.md §5).
 const noControls = {
   size: { control: false },
+  tone: { control: false },
+  underline: { control: false },
   separator: { control: false },
   maxItems: { control: false },
   itemsBeforeCollapse: { control: false },
@@ -82,6 +86,19 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "The size of the text, icons and gaps.",
       table: { defaultValue: { summary: '"md"' } },
+    },
+    tone: {
+      control: "select",
+      options: ["neutral", "brand", "info"],
+      description:
+        "The colour of the links: info (the standard link colour, text.link), brand (the brand theme's accent text) or neutral (quiet secondary text that darkens on hover). The current page is always primary text. Place info and brand links on a surface, not on the canvas.",
+      table: { defaultValue: { summary: '"info"' } },
+    },
+    underline: {
+      control: "boolean",
+      description:
+        "Underlines every link all the time. Left false, a link is underlined only while hovered — in the link's own colour either way.",
+      table: { defaultValue: { summary: "false" } },
     },
     separator: {
       control: "select",
@@ -146,6 +163,8 @@ const meta: Meta<PlaygroundArgs> = {
   },
   args: {
     size: "md",
+    tone: "info",
+    underline: false,
     separator: "chevron",
     maxItems: "",
     itemsBeforeCollapse: 1,
@@ -163,6 +182,8 @@ const meta: Meta<PlaygroundArgs> = {
           key={`${String(collapsing)}-${String(maxItems)}-${args.itemsBeforeCollapse}-${args.itemsAfterCollapse}`}
           count={collapsing ? 6 : 4}
           size={args.size}
+          tone={args.tone}
+          underline={args.underline}
           separator={args.separator as BreadcrumbSeparator}
           maxItems={collapsing ? maxItems : undefined}
           itemsBeforeCollapse={args.itemsBeforeCollapse}
@@ -207,6 +228,84 @@ export const Sizes: Story = {
       ))}
     </div>
   ),
+};
+
+export const Tones: Story = {
+  name: "Tones",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: breadcrumbSnippets.tones } } },
+  render: () => (
+    <div
+      data-testid="tones"
+      style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}
+    >
+      {(["info", "brand", "neutral"] as const).map((tone) => (
+        <div key={tone}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-1)" }}>
+            tone=&quot;{tone}&quot;{tone === "info" ? " (default)" : ""}
+          </Text>
+          <DemoTrail tone={tone} aria-label={`Breadcrumb (${tone})`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Measures only — the demo never changes. Each tone's links resolve to that tone's own token.
+    const resolve = (token: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(${token})`;
+      canvasElement.append(probe);
+      const colour = getComputedStyle(probe).color;
+      probe.remove();
+      return colour;
+    };
+    const expected = {
+      info: resolve("--dbm-text-link"),
+      brand: resolve("--dbm-text-brand"),
+      neutral: resolve("--dbm-text-secondary"),
+    } as const;
+    const primary = resolve("--dbm-text-primary");
+    for (const tone of ["info", "brand", "neutral"] as const) {
+      const nav = within(canvasElement).getByRole("navigation", { name: `Breadcrumb (${tone})` });
+      const link = within(nav).getByRole("link", { name: "Home" });
+      await expect(getComputedStyle(link).color).toBe(expected[tone]);
+      // The current page is primary text, whatever the tone.
+      await expect(getComputedStyle(within(nav).getByText("Mechanical")).color).toBe(primary);
+    }
+    await expect(new Set(Object.values(expected)).size).toBe(3);
+  },
+};
+
+export const Underline: Story = {
+  name: "Underlined links",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: breadcrumbSnippets.underline } } },
+  render: () => (
+    <div
+      data-testid="underline"
+      style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}
+    >
+      {[false, true].map((underline) => (
+        <div key={String(underline)}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-1)" }}>
+            underline={String(underline)}
+            {underline ? "" : " (default)"}
+          </Text>
+          <DemoTrail underline={underline} aria-label={`Breadcrumb (underline ${String(underline)})`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const link = (name: string) =>
+      within(within(canvasElement).getByRole("navigation", { name })).getByRole("link", { name: "Home" });
+    const resting = link("Breadcrumb (underline false)");
+    const always = link("Breadcrumb (underline true)");
+    // Off, the underline is invisible until hover; on, it is drawn in the link's own colour.
+    await expect(getComputedStyle(resting).textDecorationColor).toBe("rgba(0, 0, 0, 0)");
+    await expect(getComputedStyle(always).textDecorationColor).toBe(getComputedStyle(always).color);
+    await expect(getComputedStyle(always).textDecorationLine).toBe("underline");
+  },
 };
 
 export const Separators: Story = {
@@ -493,7 +592,7 @@ export const ColourInteraction: Story = {
     const canvas = within(canvasElement);
     const link = canvas.getByRole("link", { name: "Home" });
     const page = canvas.getByText("Mechanical");
-    // Links are quiet by default, not the default link blue; the current page is the strongest text.
+    // Links take the tone's colour (info by default), so they differ from the current page, which is primary text.
     await expect(getComputedStyle(link).color).not.toBe(getComputedStyle(page).color);
     await expect(getComputedStyle(link).textDecorationColor).toBe("rgba(0, 0, 0, 0)");
     // (The hover colour isn't asserted: Storybook's userEvent sends synthetic events, which never

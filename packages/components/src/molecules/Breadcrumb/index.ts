@@ -7,4 +7,5 @@ export type {
   BreadcrumbProps,
   BreadcrumbSeparator,
   BreadcrumbSize,
+  BreadcrumbTone,
 } from "./Breadcrumb.types";

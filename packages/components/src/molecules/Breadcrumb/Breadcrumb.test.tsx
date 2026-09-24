@@ -145,6 +145,45 @@ describe("Breadcrumb — props", () => {
     expect(screen.getByRole("navigation").className).toMatch(/sizeXl/);
   });
 
+  it("colours links by tone, defaulting to info", () => {
+    const { rerender } = render(<Basic />);
+    expect(screen.getByRole("link", { name: "Home" }).className).toMatch(/toneInfo/);
+    rerender(<Basic tone="brand" />);
+    expect(screen.getByRole("link", { name: "Home" }).className).toMatch(/toneBrand/);
+    rerender(<Basic tone="neutral" />);
+    expect(screen.getByRole("link", { name: "Home" }).className).toMatch(/toneNeutral/);
+  });
+
+  it("leaves the current page's colour alone whatever the tone", () => {
+    render(<Basic tone="brand" />);
+    expect(screen.getByText("Keyboards").className).not.toMatch(/tone/);
+  });
+
+  it("underlines links only on hover by default, and always with underline", () => {
+    const { rerender } = render(<Basic />);
+    expect(screen.getByRole("link", { name: "Home" }).className).toMatch(/underlineHover/);
+    rerender(<Basic underline />);
+    expect(screen.getByRole("link", { name: "Home" }).className).toMatch(/underlineAlways/);
+    rerender(<Basic underline={false} />);
+    expect(screen.getByRole("link", { name: "Home" }).className).toMatch(/underlineHover/);
+  });
+
+  it("applies tone and underline to an asChild link too", () => {
+    render(
+      <Breadcrumb tone="neutral" underline>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link asChild href="/x">
+            <a data-testid="routed" href="/x">
+              Routed
+            </a>
+          </Breadcrumb.Link>
+        </Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(screen.getByTestId("routed").className).toMatch(/toneNeutral/);
+    expect(screen.getByTestId("routed").className).toMatch(/underlineAlways/);
+  });
+
   it("keeps its own aria-current on the page whatever the caller passes", () => {
     render(
       <Breadcrumb>
@@ -308,6 +347,8 @@ describe("Breadcrumb — accessibility", () => {
     ["a collapsed trail", <Basic key="b" count={5} maxItems={3} />],
     ["a slash separator", <Basic key="c" separator="slash" />],
     ["a named nav", <Basic key="d" aria-label="Path" size="xs" />],
+    ["the brand tone, underlined", <Basic key="e" tone="brand" underline />],
+    ["the neutral tone", <Basic key="f" tone="neutral" />],
   ];
   it.each(cases)("has no axe violations: %s", async (_name, ui) => {
     const { container } = render(<>{ui}</>);

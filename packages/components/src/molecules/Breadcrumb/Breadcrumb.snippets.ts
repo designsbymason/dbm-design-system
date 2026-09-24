@@ -8,7 +8,7 @@
 // `07-storybook-and-documentation-standards.md` §4.2.
 
 import { quote, truncateValue } from "../../snippetHelpers";
-import type { BreadcrumbSize } from "./Breadcrumb.types";
+import type { BreadcrumbSize, BreadcrumbTone } from "./Breadcrumb.types";
 
 const link = (label: string, href: string, attributes = "") =>
   `  <Breadcrumb.Item>\n    <Breadcrumb.Link href="${href}"${attributes ? ` ${attributes}` : ""}>${label}</Breadcrumb.Link>\n  </Breadcrumb.Item>`;
@@ -37,6 +37,14 @@ const trail = (attributes = "", items = defaultItems) =>
 export const breadcrumbSnippets = {
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — text, icons and gaps */}
 ${trail('size="sm"')}`,
+
+  tones: `{/* tone: "info" (default, the standard link colour) | "brand" | "neutral". The current page is
+    always primary text. Put info and brand links on a surface, not on the canvas. */}
+${trail('tone="brand"')}`,
+
+  underline: `{/* underline keeps every link underlined; without it a link is underlined only on hover,
+    in the link's own colour either way */}
+${trail("underline")}`,
 
   separators: `{/* separator: "chevron" (default) | "slash" | any string or element you like.
     It is drawn by the component and hidden from screen readers. */}
@@ -116,6 +124,8 @@ ${trail('dir="rtl"')}`,
 /** The Playground's live controls, as far as the snippet cares. */
 export interface BreadcrumbPlaygroundSnippetArgs {
   size?: BreadcrumbSize;
+  tone?: BreadcrumbTone;
+  underline?: boolean;
   separator?: unknown;
   maxItems?: unknown;
   itemsBeforeCollapse?: number;
@@ -132,6 +142,8 @@ export interface BreadcrumbPlaygroundSnippetArgs {
 export function breadcrumbPlaygroundSnippet(args: BreadcrumbPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.tone && args.tone !== "info") attributes.push(`tone="${args.tone}"`);
+  if (args.underline) attributes.push("underline");
   if (typeof args.separator === "string" && args.separator !== "chevron" && args.separator !== "") {
     attributes.push(`separator=${quote(args.separator)}`);
   }

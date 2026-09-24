@@ -9,6 +9,20 @@ import type { LinkProps } from "../../atoms/Link";
 export type BreadcrumbSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
+ * The colour of the trail's links, on the tone scale (`05-component-api-conventions.md` §2) — the three that
+ * make sense for a link.
+ *
+ * - `"info"` (the default) — the standard link colour (`text.link`), the same blue as a `Link` everywhere else.
+ * - `"brand"` — the active brand theme's accent text colour (`text.brand`).
+ * - `"neutral"` — quiet secondary text (`text.secondary`) that darkens to the primary text colour on hover.
+ *
+ * The current page is always primary text, whatever the tone. Place `"info"` and `"brand"` links on
+ * `bg.surface` (or another background they were measured against), not on `bg.canvas`, where they fall under the
+ * 4.5:1 text contrast floor; a `"neutral"` trail is safe on either.
+ */
+export type BreadcrumbTone = "neutral" | "brand" | "info";
+
+/**
  * What sits between two items. `"chevron"` (the default) is a small arrow
  * pointing along the reading direction (it flips under right-to-left text);
  * `"slash"` is a `/`. Anything else is drawn as given — a short string
@@ -48,6 +62,18 @@ export interface BreadcrumbProps
    * @default 'md'
    */
   size?: BreadcrumbSize;
+  /**
+   * The colour of the links — see {@link BreadcrumbTone}. Set once here, so every link in the trail matches.
+   * @default 'info'
+   */
+  tone?: BreadcrumbTone;
+  /**
+   * Underlines every link all the time. Left `false`, a link is underlined only while hovered — either way
+   * the underline is in the link's own colour. Turn it on where a link's colour alone is a weak cue, such as
+   * a trail set next to body text.
+   * @default false
+   */
+  underline?: boolean;
   /**
    * What sits between two items — see {@link BreadcrumbSeparator}.
    * @default 'chevron'

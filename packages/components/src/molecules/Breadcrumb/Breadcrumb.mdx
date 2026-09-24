@@ -12,6 +12,8 @@ import * as BreadcrumbPageStories from "./BreadcrumbPage.stories";
 export const rootPropOrder = [
   "children",
   "size",
+  "tone",
+  "underline",
   "separator",
   "maxItems",
   "itemsBeforeCollapse",
@@ -57,7 +59,8 @@ page a reader is on, as a row of links ending in the page itself. A compound com
 one, `Breadcrumb.Page`). It renders a `<nav>` around an ordered list, and draws the separators
 between items itself.
 
-Choose how big the trail is with `size`, and what sits between items with `separator`. A trail that
+Choose how big the trail is with `size`, the colour of its links with `tone`, whether they are
+underlined all the time with `underline`, and what sits between items with `separator`. A trail that
 is too wide for its container wraps onto more lines; with `maxItems`, its middle collapses into a
 "…" button that shows the rest when used. `Breadcrumb.Link` is the `Link` atom underneath, so it
 handles external addresses and `disabled`, and takes `asChild` to render a router's own link.
@@ -121,6 +124,23 @@ current page. Also accepts any other native `<span>` attribute beyond what's lis
 ### All sizes
 
 <Canvas of={BreadcrumbStories.Sizes} />
+
+### Tones
+
+`tone` sets the colour of every link in the trail: `"info"` (the default) is the standard link
+colour, `"brand"` follows the active brand theme, and `"neutral"` is quiet secondary text. The current
+page is always primary text. On hover, a `"brand"` or `"info"` link keeps its colour and gains an
+underline in that same colour; a `"neutral"` link darkens to the primary text colour, and gains one.
+
+<Canvas of={BreadcrumbStories.Tones} />
+
+### Underlined links
+
+By default a link is underlined only while hovered. `underline` keeps every link underlined at rest
+too, in the link's own colour — worth turning on where colour alone is a weak cue, such as a trail set
+right next to body text.
+
+<Canvas of={BreadcrumbStories.Underline} />
 
 ### Separators
 
@@ -193,6 +213,8 @@ Drag the bottom-right corner of the box to change how much room the trail has.
 - Give each item the same name the page has in the navigation and as its own heading.
 - Use `maxItems` on a deep hierarchy, so the trail keeps to a line or two on a narrow screen.
 - Name the navigation with `aria-label` when a page holds more than one breadcrumb.
+- Put `"info"` and `"brand"` trails on `bg.surface`. Use `"neutral"` when a trail has to sit on
+  `bg.canvas` (or on any background their colours haven't been measured against).
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -219,6 +241,9 @@ Drag the bottom-right corner of the box to change how much room the trail has.
   its own item, which is fine, but a trail of long labels reads better collapsed.
 - `maxItems` counts every item, including the first and the current page. It only collapses when
   at least two items would be hidden — replacing a single item with a button would help nobody.
+- The default `"info"` tone is the same blue as a `Link` elsewhere, so a trail reads as navigation
+  without a second colour to learn. Choose `"brand"` where the surrounding design already leans on the
+  accent colour, and `"neutral"` where a trail should stay out of the way.
 - Every piece of text the component writes itself is in `labels`, so a translated site replaces the
   whole set in one place. The "…" button's name is a function of the number of hidden items.
 
@@ -245,14 +270,19 @@ Using the "…" button removes it from the page, so keyboard focus moves to the 
 revealed rather than dropping to the top of the document. A disabled link stays in the tab order,
 marked `aria-disabled`, matching WAI-ARIA guidance.
 
-**Contrast**, measured in light and dark (the colours are the same in Purple and Emerald). A link is
-`text.secondary`: 6.88:1 (light) and 10.47:1 (dark) on the surface, and 6.05:1 and 5.10:1 on the
-canvas. A hovered link and the current page are `text.primary`: 14.11:1 and 13.53:1 on the surface,
-12.41:1 and 6.59:1 on the canvas. The separators are `icon.default`: 4.70:1 and 8.21:1 on the
-surface, and 4.13:1 (light) and 2.96:1 (dark) on the canvas — a hair under the 3:1 a graphic would
-need in dark mode on the canvas, which the separators are exempt from since they are decorative and
-repeat what the list structure and the spacing already show. A link isn't running through a paragraph, so the hover-only underline is
-enough to mark it as a link; the current page is set apart by weight as well as colour.
+**Contrast**, measured in light and dark. On `bg.surface`, an `"info"` link (`text.link`) is 4.71:1 in
+light and 8.20:1 in dark, and a `"brand"` link (`text.brand`) is 7.37:1 (Purple) or 6.08:1 (Emerald) in
+light and 7.45:1 or 6.49:1 in dark. A `"neutral"` link (`text.secondary`) is 6.88:1 and 10.47:1, and
+the current page and a hovered neutral link (`text.primary`) are 14.11:1 and 13.53:1. **Place `"info"`
+and `"brand"` trails on `bg.surface`, not `bg.canvas`**, where they fall under the 4.5:1 text floor
+(`"info"` is 4.15:1 in light and 4.00:1 in dark there; `"brand"` is 3.63:1 and 3.16:1 in dark). A
+`"neutral"` trail is 6.05:1 and 5.10:1 on the canvas, so it is the one to use there. The separators
+are `icon.default`: 4.70:1 and 8.21:1 on the surface, and 4.13:1 (light) and 2.96:1 (dark) on the
+canvas — a hair under 3:1 in dark mode on the canvas, which the separators are exempt from since
+they are decorative and repeat what the list structure and the spacing already show.
+
+A coloured link with no underline at rest is told apart from the current page by its colour and by
+the current page's heavier weight; `underline` adds a cue that doesn't depend on colour at all.
 
 </Callout>
 
@@ -284,6 +314,11 @@ enough to mark it as a link; the current page is set apart by weight as well as 
   ))}
 </Breadcrumb>
 
+{/* Brand-coloured links, underlined all the time */}
+<Breadcrumb tone="brand" underline>
+  {/* ... */}
+</Breadcrumb>
+
 {/* A deep trail that collapses its middle */}
 <Breadcrumb maxItems={4} itemsBeforeCollapse={1} itemsAfterCollapse={2}>
   {/* ... */}
@@ -308,8 +343,10 @@ enough to mark it as a link; the current page is set apart by weight as well as 
 
 ## Design tokens used
 
-<TokenRow token="text.secondary" usage="a link, and the trail's text" />
-<TokenRow token="text.primary" usage="a hovered link; the current page" />
+<TokenRow token="text.link" usage="a link in the default info tone" />
+<TokenRow token="text.brand" usage="a link in the brand tone" />
+<TokenRow token="text.secondary" usage="a link in the neutral tone" />
+<TokenRow token="text.primary" usage="a hovered neutral link; the current page" />
 <TokenRow token="icon.default" usage="the separators; the “…” button's icon" />
 <TokenRow token="border.focus" usage="the focus ring on a link and on the “…” button" />
 <TokenRow token="font-family.primary" usage="the trail's typography" />
