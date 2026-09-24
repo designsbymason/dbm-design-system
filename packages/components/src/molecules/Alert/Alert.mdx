@@ -59,8 +59,7 @@ the top as the page scrolls. `dismissible` adds a button that closes it, and the
 ### Import
 
 ```tsx
-import { Alert } from "@dbm-design-system/components";
-import { usePersistentDismiss } from "@dbm-design-system/primitives";
+import { Alert, usePersistentDismiss } from "@dbm-design-system/components";
 ```
 
 ## Playground
@@ -106,7 +105,8 @@ here (e.g. `onClick`, `title`) — passed straight through to the underlying ele
 
 ### usePersistentDismiss
 
-A hook in `@dbm-design-system/primitives`, for remembering that a message was dismissed.
+A hook for remembering that a message was dismissed — implemented in `@dbm-design-system/primitives`
+and exported from `@dbm-design-system/components` too, so one install covers it.
 `usePersistentDismiss(key, options?)` returns `{ ready, dismissed, dismiss, reset }`.
 
 | Name | Type | Description |

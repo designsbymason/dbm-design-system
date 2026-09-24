@@ -68,3 +68,8 @@ export * from "./molecules/Select";
 export * from "./molecules/Slider";
 export * from "./molecules/Table";
 export * from "./molecules/Tabs";
+
+// A hook from `@dbm-design-system/primitives`, re-exported so a consumer who installs only this package can use it
+// (ADR-0023): pair it with `Alert`'s controlled `open` to remember a dismissal across visits.
+export { usePersistentDismiss } from "@dbm-design-system/primitives";
+export type { PersistentDismiss, PersistentDismissStorage, UsePersistentDismissOptions } from "@dbm-design-system/primitives";
