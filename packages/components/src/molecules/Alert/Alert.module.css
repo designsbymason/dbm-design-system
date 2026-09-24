@@ -149,7 +149,7 @@
 }
 
 /* Going away: the row it takes up collapses to nothing (so what is below moves up smoothly rather than jumping) while it
-   fades. Only closing animates — an alert already in the page when it loads shouldn't animate in. `Presence` keeps it
+   fades. Going out animates always; coming in is below, and only for an alert that appears after the page has loaded. `Presence` keeps it
    mounted until the animation ends, and unmounts it at once when there is none (reduced motion). */
 .wrapper {
   display: grid;
@@ -158,6 +158,28 @@
 
 .inner {
   min-block-size: 0;
+}
+
+/* Coming in: the reverse of going out, for an alert that appears after the page has loaded (`data-enter`, set for the length of
+   the animation only, so it never clips a focus ring once it is in). */
+.wrapper[data-enter] {
+  animation: alertIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
+}
+
+.wrapper[data-enter] .inner {
+  overflow: hidden;
+}
+
+@keyframes alertIn {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
 }
 
 .wrapper[data-state="closed"] {
@@ -182,8 +204,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .wrapper[data-enter],
   .wrapper[data-state="closed"] {
     animation: none;
+  }
+
+  /* No animation to end, so nothing would ever clear `data-enter`: it must not clip in the meantime. */
+  .wrapper[data-enter] .inner {
+    overflow: visible;
   }
 }
 
@@ -217,9 +245,22 @@
   flex-shrink: 0;
 }
 
+/* The message and the actions. A row that wraps: the message takes the whole row and the actions drop below it — or, with
+   `actionsPlacement="inline"`, the message keeps to a minimum width (`--dbm-alert-inline-text-min-width`) and the actions sit
+   beside it, wrapping below only when the two don't fit. So it adapts to the alert's own width, not the page's. */
 .body {
+  align-items: center;
+  column-gap: var(--alert-gap);
   display: flex;
   flex: 1;
+  flex-wrap: wrap;
+  min-inline-size: 0;
+  row-gap: var(--dbm-space-2);
+}
+
+.text {
+  display: flex;
+  flex: 1 1 100%;
   flex-direction: column;
   gap: var(--dbm-space-1);
   min-inline-size: 0;
@@ -239,15 +280,61 @@
 }
 
 /* Plain text straight inside the alert reads at the message's own size. */
-.body > :not(.title, .description, .actions) {
+.text > :not(.title, .description) {
   font-size: var(--alert-text-font);
 }
 
 .actions {
   display: flex;
+  flex: 1 1 100%;
   flex-wrap: wrap;
   gap: var(--dbm-space-2) var(--dbm-space-3);
-  margin-block-start: var(--dbm-space-2);
+}
+
+/* Beside the message: it keeps its own width, and the message gets whatever is left, down to its minimum. */
+.actionsInline .text {
+  flex: 1 1 var(--dbm-alert-inline-text-min-width);
+}
+
+.actionsInline .actions {
+  flex: 0 0 auto;
+}
+
+/* Centred: the icon and the message (and inline actions) are one group in the middle of the row, the text centred too. The
+   dismiss button leaves the row and sits at the end, and the row takes the space it needs on both sides, so the group
+   stays centred whether or not there is one. */
+.alignCenter {
+  justify-content: center;
+  position: relative;
+}
+
+.alignCenter .body {
+  flex: 0 1 auto;
+  justify-content: center;
+}
+
+.alignCenter .text {
+  flex-basis: 100%;
+  text-align: center;
+}
+
+.alignCenter.actionsInline .text {
+  flex: 0 1 auto;
+}
+
+.alignCenter .actions {
+  justify-content: center;
+}
+
+.alignCenter.hasDismiss {
+  padding-inline: calc(var(--alert-pad-inline) + var(--dbm-icon-size-md) + var(--dbm-space-3));
+}
+
+.alignCenter .dismiss {
+  inset-block-start: calc(var(--alert-pad-block) - var(--dbm-space-1));
+  inset-inline-end: var(--alert-pad-inline);
+  margin: 0;
+  position: absolute;
 }
 
 /* Locally built, not the shared `CloseButton`: this must take the tone's own colour. A neutral padding around the glyph

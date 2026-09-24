@@ -18,6 +18,8 @@ export const rootPropOrder = [
   "size",
   "icon",
   "banner",
+  "actionsPlacement",
+  "align",
   "sticky",
   "stickyOffset",
   "scrollContainerRef",
@@ -73,8 +75,9 @@ plain text for the shortest one. It is not a `Toast`, which floats over the page
 own; an alert sits where you put it and stays until the situation changes or the reader dismisses it.
 
 Choose what it is about with `tone`, how it is drawn with `variant`, and how big it is with `size`.
-`banner` makes it edge to edge, for a message about a whole page or section, and `sticky` keeps it at
-the top as the page scrolls. `dismissible` adds a button that closes it, and the companion
+`banner` makes it edge to edge, for a message about a whole page or section, `actionsPlacement="inline"`
+puts its actions beside the message, `align="center"` centres it for an announcement, and `sticky` keeps
+it at the top as the page scrolls. `dismissible` adds a button that closes it, and the companion
 `usePersistentDismiss` hook remembers the dismissal across visits.
 
 ### Import
@@ -121,7 +124,9 @@ The message itself. Also accepts any other native `<div>` attribute beyond what'
 
 ### Alert.Actions properties
 
-What the reader can do about it — the row that holds the alert's actions. It holds anything (an
+What the reader can do about it — the row that holds the alert's actions. It has to be a direct child of
+the alert, which sets it apart from the message so that it can sit beside it (`actionsPlacement`); one
+wrapped in another element is treated as part of the message. It holds anything (an
 `Alert.Action`, a `Link`, your own control), but only an `Alert.Action` takes the alert's colours. Also
 accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed
 straight through to the underlying element.
@@ -211,6 +216,32 @@ stands in for the page.
 
 <Canvas of={AlertStories.Banner} />
 
+### Actions beside the message
+
+`actionsPlacement="inline"` puts `Alert.Actions` beside the message, at the end of the row — the usual
+layout for a banner, where stacking the actions makes it needlessly tall. It doesn't depend on the
+page's width: the actions drop below the message on their own when the alert's own width can't fit both,
+so an alert in a narrow column stacks by itself. Drag the corner of the second box to see it.
+
+<Canvas of={AlertStories.InlineActions} />
+
+### Centred content
+
+`align="center"` centres the icon, the message and (with inline actions) the actions as one group, with
+the text centred too — for an announcement. The dismiss button stays at the end of the row, and the
+group stays centred whether or not there is one; in a narrow alert the text stops short of the button.
+
+<Canvas of={AlertStories.Centered} />
+
+### Appearing after the page loads
+
+An alert that appears after the page has loaded — an error after a submit, a message after a route change,
+one reopened through `open` — fades and slides in, and the space it takes opens smoothly so what is below
+moves down rather than jumping. One that is already in the page when it loads is simply there: it doesn't
+animate. There is nothing to set. Press the button to add one.
+
+<Canvas of={AlertStories.Appearing} />
+
 ### Sticky
 
 `sticky` keeps the alert at the top of the page as the reader scrolls, and lifts it with a shadow
@@ -276,6 +307,8 @@ Drag the bottom-right corner of the box to change its width.
   as an `Alert.Action`, so it reads against the alert's tone and variant.
 - Use `banner` for a message about a whole page or section, and `sticky` only for one the reader must
   not lose sight of. Make a sticky alert dismissible.
+- Put a banner's actions beside its message (`actionsPlacement="inline"`), and centre a one-line
+  announcement (`align="center"`); leave a longer message start-aligned, which reads better.
 - Use `role="none"` for a message that is already on the page when it loads.
 - Remember a dismissal with `usePersistentDismiss` for a message that would otherwise return on every
   visit — and change the key when the message changes.
@@ -361,8 +394,10 @@ colours the browser draws — every tone, variant and action — in light, dark 
 action is hovered the label stays at 4.51:1 or more in light and 6.59:1 or more in dark. The focus ring
 on an action is the on-fill colour on `"solid"` and `border.focus` on the rest.
 
-**Motion**: only dismissing animates — the alert fades and collapses away, and it does not animate in
-when it loads. With `prefers-reduced-motion` it is removed at once.
+**Motion**: dismissing fades the alert and collapses its row away. An alert that appears after the page has
+loaded fades and slides in; one already in the page when it loads does not animate. With
+`prefers-reduced-motion` both are instant. A live region announces a message when it is inserted, so the
+entrance changes nothing for a screen reader.
 
 </Callout>
 
@@ -389,6 +424,14 @@ function Announcement() {
 
 {/* Controlled */}
 <Alert dismissible open={open} onOpenChange={setOpen}>{/* ... */}</Alert>
+
+{/* A banner: actions beside the message, and an announcement centred */}
+<Alert banner align="center" actionsPlacement="inline" dismissible>
+  <Alert.Description>Summer sale: 20% off everything until Sunday.</Alert.Description>
+  <Alert.Actions>
+    <Alert.Action>Shop now</Alert.Action>
+  </Alert.Actions>
+</Alert>
 
 {/* Actions: a Button that takes the alert's colours and size */}
 <Alert tone="warning" variant="solid">
@@ -432,6 +475,7 @@ function Announcement() {
 <TokenRow token="font-weight.semibold" usage="the title" />
 <TokenRow token="line-height.normal" usage="the alert's line height" />
 <TokenRow token="space.1–space.6" usage="padding, the gap between the icon and the text, and between the parts" />
+<TokenRow token="alert.inline-text-min-width" usage="the narrowest the message gets before inline actions drop below it" />
 <TokenRow token="radius.md" usage="the alert's corners (none for a banner)" />
 <TokenRow token="radius.full" usage="the dismiss button" />
 <TokenRow token="border-width.1" usage="the alert's border" />

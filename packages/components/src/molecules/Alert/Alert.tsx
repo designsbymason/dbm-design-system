@@ -10,17 +10,30 @@ import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import { cx, mergeRefs } from "@dbm-design-system/primitives";
 import { Presence } from "@radix-ui/react-presence";
 import { Slot } from "@radix-ui/react-slot";
-import { createContext, forwardRef, useContext, useEffect, useRef, useState } from "react";
-import type { FocusEvent } from "react";
+import {
+  Children,
+  createContext,
+  forwardRef,
+  isValidElement,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import type { AnimationEvent, FocusEvent } from "react";
 import { Affix } from "../../atoms/Affix";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize, IconTone } from "../../atoms/Icon";
 import styles from "./Alert.module.css";
+import { hasPageSettled } from "./pageSettled";
 import type {
   AlertActionProps,
   AlertActionVariant,
+  AlertActionsPlacement,
   AlertActionsProps,
+  AlertAlign,
   AlertDescriptionProps,
   AlertLabels,
   AlertProps,
@@ -101,6 +114,10 @@ const actionVariantClass: Record<AlertActionVariant, string | undefined> = {
   secondary: styles.actionSecondary,
   tertiary: styles.actionTertiary,
 };
+
+// `useLayoutEffect` on the client, `useEffect` on the server — avoids React's "does nothing on the server" warning, the same
+// as `Pagination` and `Breadcrumb`.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const defaultLabels: AlertLabels = { dismiss: "Dismiss" };
 
@@ -219,6 +236,8 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
       size = "md",
       icon,
       banner = false,
+      actionsPlacement = "below" as AlertActionsPlacement,
+      align = "start" as AlertAlign,
       sticky = false,
       stickyOffset = 0,
       scrollContainerRef,
@@ -241,8 +260,24 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const focusWithin = useRef(false);
     const focusTarget = useRef<HTMLElement | null>(null);
+    // Whether it is animating in. Decided before the first paint (so there is no flash of the finished alert first), and only
+    // for an alert that *appears*: one that mounts after the page has settled, or that is reopened. One already in the page
+    // when it loads just is; and the server renders it not entering, so hydration matches.
+    const [entering, setEntering] = useState(false);
+    const previousOpen = useRef<boolean | null>(null);
+    useIsomorphicLayoutEffect(() => {
+      const first = previousOpen.current === null;
+      if (open && (first ? hasPageSettled() : previousOpen.current === false)) setEntering(true);
+      if (!open) setEntering(false);
+      previousOpen.current = open;
+    }, [open]);
 
     const labels: AlertLabels = { ...defaultLabels, ...labelOverrides };
+    // `Alert.Actions` is set apart from the message, so it can sit beside it or below it.
+    const parts = Children.toArray(children);
+    const isActions = (child: unknown) => isValidElement(child) && child.type === AlertActions;
+    const actionChildren = parts.filter(isActions);
+    const textChildren = parts.filter((child) => !isActions(child));
     const resolvedRole = role ?? defaultRole[tone];
     const glyph = icon === false ? undefined : (icon ?? toneIcon[tone]);
 
@@ -287,7 +322,15 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
     };
 
     const alert = (
-      <div className={styles.wrapper} data-state={open ? "open" : "closed"}>
+      <div
+        className={styles.wrapper}
+        data-state={open ? "open" : "closed"}
+        data-enter={entering && open ? "" : undefined}
+        onAnimationEnd={(event: AnimationEvent<HTMLDivElement>) => {
+          // The entrance ending (not an animation of something inside it): the wrapper stops clipping.
+          if (event.target === event.currentTarget) setEntering(false);
+        }}
+      >
         <div className={styles.inner}>
           <div
             {...props}
@@ -302,6 +345,9 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
               variantClass[variant],
               sizeClass[size],
               banner && styles.banner,
+              actionsPlacement === "inline" && styles.actionsInline,
+              align === "center" && styles.alignCenter,
+              dismissible && styles.hasDismiss,
               className,
             )}
           >
@@ -315,7 +361,10 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
               </span>
             )}
             <div className={styles.body}>
-              <AlertContext.Provider value={{ variant, size }}>{children}</AlertContext.Provider>
+              <AlertContext.Provider value={{ variant, size }}>
+                {textChildren.length > 0 && <div className={styles.text}>{textChildren}</div>}
+                {actionChildren}
+              </AlertContext.Provider>
             </div>
             {dismissible && (
               <button type="button" className={styles.dismiss} aria-label={labels.dismiss} onClick={dismiss}>

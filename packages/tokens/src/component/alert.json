@@ -1,0 +1,9 @@
+{
+  "alert": {
+    "inline-text-min-width": {
+      "$type": "dimension",
+      "$value": "20rem",
+      "$description": "The narrowest an alert's message may get before its actions, placed on the same row (actionsPlacement=\"inline\"), drop below it. A content-measure constraint with no home on any existing primitive scale (the spacing scale tops out at 8rem), so it is a component token, like tooltip.max-width."
+    }
+  }
+}

@@ -27,6 +27,26 @@ export type AlertVariant = "subtle" | "outlined" | "solid";
 export type AlertSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
+ * Where `Alert.Actions` sits.
+ *
+ * - `"below"` (the default) — under the message, on its own row.
+ * - `"inline"` — beside the message, at the end of the row, for a banner or any alert where a single line reads better.
+ *   It goes below the message on its own when there isn't room for both, however wide the page: the room is the alert's
+ *   own width, so an alert in a narrow column stacks by itself.
+ */
+export type AlertActionsPlacement = "below" | "inline";
+
+/**
+ * Where the content sits along the row.
+ *
+ * - `"start"` (the default) — at the start, the way a message reads in a column.
+ * - `"center"` — centred: the icon, the message and (with `actionsPlacement="inline"`) the actions as one group, the text
+ *   itself centred too. For an announcement banner. The dismiss button stays at the end of the row, and the group stays
+ *   centred whether or not there is one.
+ */
+export type AlertAlign = "start" | "center";
+
+/**
  * How the alert is announced to assistive technology.
  *
  * - `"alert"` — a live region that interrupts: announced at once, even mid-sentence. For something that needs
@@ -51,7 +71,9 @@ export interface AlertLabels {
 export interface AlertProps extends Omit<ComponentPropsWithoutRef<"div">, "className" | "style" | "id" | "role"> {
   /**
    * The message: `Alert.Title`, `Alert.Description` and `Alert.Actions` in any order, any of them optional — or
-   * plain text, for the shortest alert.
+   * plain text, for the shortest alert. `Alert.Actions` has to be a direct child: the alert sets it apart from the
+   * message so that it can sit beside it (`actionsPlacement="inline"`), and one wrapped in another element is
+   * treated as part of the message.
    */
   children: ReactNode;
   /**
@@ -75,6 +97,16 @@ export interface AlertProps extends Omit<ComponentPropsWithoutRef<"div">, "class
    * none. Decorative: the tone is not conveyed by the icon alone, so put what matters in the text.
    */
   icon?: PhosphorIcon | false;
+  /**
+   * Where `Alert.Actions` sits — see {@link AlertActionsPlacement}.
+   * @default 'below'
+   */
+  actionsPlacement?: AlertActionsPlacement;
+  /**
+   * Where the content sits along the row — see {@link AlertAlign}.
+   * @default 'start'
+   */
+  align?: AlertAlign;
   /**
    * Draws it as a banner: edge to edge, with square corners and no side borders, for a message that spans the whole
    * page or a whole section rather than sitting inside its content.

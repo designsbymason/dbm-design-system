@@ -8,7 +8,15 @@ import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { Alert } from "./Alert";
 import { alertPlaygroundSnippet, alertSnippets } from "./Alert.snippets";
-import type { AlertProps, AlertRole, AlertSize, AlertTone, AlertVariant } from "./Alert.types";
+import type {
+  AlertActionsPlacement,
+  AlertAlign,
+  AlertProps,
+  AlertRole,
+  AlertSize,
+  AlertTone,
+  AlertVariant,
+} from "./Alert.types";
 
 // `Alert.Title`, `Alert.Description` and `Alert.Actions` each get their own Properties table via a hidden docs-only
 // stories file (guidelines/adr/0013), where their argTypes are auto-resolved from real docgen.
@@ -19,6 +27,8 @@ interface PlaygroundArgs {
   // "Default" is the tone's own icon, "None" is `false`, "Star" is a custom one.
   icon: AlertProps["icon"];
   banner: boolean;
+  actionsPlacement: AlertActionsPlacement;
+  align: AlertAlign;
   sticky: boolean;
   stickyOffset: AlertProps["stickyOffset"];
   dismissible: boolean;
@@ -69,6 +79,8 @@ const noControls = {
   size: { control: false },
   icon: { control: false },
   banner: { control: false },
+  actionsPlacement: { control: false },
+  align: { control: false },
   sticky: { control: false },
   stickyOffset: { control: false },
   dismissible: { control: false },
@@ -118,6 +130,20 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Draws it edge to edge, with square corners and no side borders — for a message that spans a whole page or section.",
       table: { defaultValue: { summary: "false" } },
+    },
+    actionsPlacement: {
+      control: "select",
+      options: ["below", "inline"],
+      description:
+        "Where Alert.Actions sits: below the message (the default), or beside it at the end of the row. Inline actions drop below on their own when the alert's own width can't fit both, so an alert in a narrow column stacks by itself.",
+      table: { defaultValue: { summary: '"below"' } },
+    },
+    align: {
+      control: "select",
+      options: ["start", "center"],
+      description:
+        "Where the content sits along the row: at the start (the default), or centred — the icon, the message and inline actions as one group, for an announcement banner. The dismiss button stays at the end of the row.",
+      table: { defaultValue: { summary: '"start"' } },
     },
     sticky: {
       control: "boolean",
@@ -189,6 +215,8 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     icon: undefined,
     banner: false,
+    actionsPlacement: "below",
+    align: "start",
     sticky: false,
     stickyOffset: 0,
     dismissible: false,
@@ -221,6 +249,8 @@ function PlaygroundAlert(args: PlaygroundArgs) {
           size={args.size}
           icon={args.icon}
           banner={args.banner}
+          actionsPlacement={args.actionsPlacement}
+          align={args.align}
           sticky={args.sticky}
           stickyOffset={args.stickyOffset}
           dismissible={args.dismissible}
@@ -380,6 +410,79 @@ export const ActionsEverywhere: Story = {
     </div>
   ),
 };
+
+export const InlineActions: Story = {
+  name: "Actions beside the message",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: alertSnippets.inlineActions } } },
+  render: () => (
+    <div style={{ ...stack, gap: "var(--dbm-space-6)" }}>
+      <PageFrame>
+        <Alert banner actionsPlacement="inline" tone="warning" role="none">
+          <Alert.Title>Payment failed</Alert.Title>
+          <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
+          <Alert.Actions>
+            <Alert.Action>Update card</Alert.Action>
+            <Alert.Action variant="tertiary">Remind me later</Alert.Action>
+          </Alert.Actions>
+        </Alert>
+      </PageFrame>
+      <div style={{ maxWidth: "48rem", resize: "horizontal", overflow: "auto" }}>
+        <Alert actionsPlacement="inline" role="none">
+          <Alert.Description>Drag the corner of this box: the actions drop below when there is no room beside.</Alert.Description>
+          <Alert.Actions>
+            <Alert.Action>Got it</Alert.Action>
+          </Alert.Actions>
+        </Alert>
+      </div>
+    </div>
+  ),
+};
+
+export const Centered: Story = {
+  name: "Centred content",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: alertSnippets.centered } } },
+  render: () => (
+    <div style={{ ...stack, gap: "var(--dbm-space-6)" }}>
+      {(["subtle", "solid"] as const).map((variant) => (
+        <PageFrame key={variant}>
+          <Alert banner align="center" actionsPlacement="inline" dismissible variant={variant} tone="info" role="none" data-testid={`centered-${variant}`}>
+            <Alert.Description>Summer sale: 20% off everything until Sunday.</Alert.Description>
+            <Alert.Actions>
+              <Alert.Action>Shop now</Alert.Action>
+            </Alert.Actions>
+          </Alert>
+        </PageFrame>
+      ))}
+    </div>
+  ),
+};
+
+export const Appearing: Story = {
+  name: "Appearing after the page loads",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: alertSnippets.appearing } } },
+  render: () => <AppearingDemo />,
+};
+
+function AppearingDemo() {
+  const [count, setCount] = useState(0);
+  return (
+    <div style={{ ...demoContainerStyle, ...stack }}>
+      <Button size="sm" variant="secondary" onClick={() => setCount((value) => value + 1)}>
+        {count === 0 ? "Show a message" : "Show it again"}
+      </Button>
+      {count > 0 && (
+        // Keyed, so each press mounts a new alert, the way an error appearing after a submit does.
+        <Alert key={count} tone="danger" dismissible data-testid="appearing">
+          <Alert.Title>Payment failed</Alert.Title>
+          <Alert.Description>It fades and slides in, then stays put.</Alert.Description>
+        </Alert>
+      )}
+    </div>
+  );
+}
 
 export const TitleOnly: Story = {
   name: "Title only",
@@ -874,5 +977,112 @@ export const ActionSizeInteraction: Story = {
     const heights = ["xs", "md", "xl"].map((size) => within(canvas.getByTestId(`size-${size}`)).getByRole("button").getBoundingClientRect().height);
     await expect(heights[0]!).toBeLessThan(heights[1]!);
     await expect(heights[1]!).toBeLessThan(heights[2]!);
+  },
+};
+
+export const InlineInteraction: Story = {
+  name: "Actions beside the message — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={stack}>
+      {["60rem", "16rem"].map((width) => (
+        <div key={width} data-testid={`box-${width}`} style={{ width }}>
+          <Alert actionsPlacement="inline" role="none">
+            <Alert.Title>Payment failed</Alert.Title>
+            <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
+            <Alert.Actions>
+              <Alert.Action>Update card</Alert.Action>
+            </Alert.Actions>
+          </Alert>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const parts = (width: string) => {
+      const box = canvas.getByTestId(`box-${width}`);
+      const text = within(box).getByText("Payment failed").closest("div[class*='text']")!.getBoundingClientRect();
+      const actions = within(box).getByRole("button", { name: "Update card" }).closest("div[class*='actions']")!.getBoundingClientRect();
+      return { text, actions };
+    };
+    // Wide: the actions are beside the message, at the end of the row — to the right of it, level with it.
+    const wide = parts("60rem");
+    await expect(wide.actions.left).toBeGreaterThanOrEqual(wide.text.right - 1);
+    await expect(wide.actions.top).toBeLessThan(wide.text.bottom);
+    // Narrow (the alert's own width, whatever the page's): they drop below the message.
+    const narrow = parts("16rem");
+    await expect(narrow.actions.top).toBeGreaterThanOrEqual(narrow.text.bottom - 1);
+  },
+};
+
+export const CenterInteraction: Story = {
+  name: "Centred content — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={{ ...stack, gap: "var(--dbm-space-4)" }}>
+      {[false, true].map((dismissible) => (
+        <div key={String(dismissible)} data-testid={`frame-${dismissible}`} style={{ width: "100%" }}>
+          <Alert banner align="center" actionsPlacement="inline" dismissible={dismissible} role="none" data-testid={`centered-${dismissible}`}>
+            <Alert.Description>Summer sale: 20% off everything until Sunday.</Alert.Description>
+            <Alert.Actions>
+              <Alert.Action>Shop now</Alert.Action>
+            </Alert.Actions>
+          </Alert>
+        </div>
+      ))}
+      <div data-testid="narrow" style={{ width: "18rem" }}>
+        <Alert banner align="center" dismissible role="none">
+          <Alert.Description>A long announcement that has to wrap onto several lines in a narrow place.</Alert.Description>
+        </Alert>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const dismissible of [false, true]) {
+      const frame = canvas.getByTestId(`frame-${dismissible}`).getBoundingClientRect();
+      const alert = canvas.getByTestId(`centered-${dismissible}`);
+      const icon = alert.querySelector("svg")!.getBoundingClientRect();
+      const actions = within(alert).getByRole("button", { name: "Shop now" }).getBoundingClientRect();
+      // The group — from the icon to the end of the actions — is centred in the frame, with or without a dismiss button.
+      const groupCentre = (icon.left + actions.right) / 2;
+      await expect(Math.abs(groupCentre - (frame.left + frame.right) / 2)).toBeLessThanOrEqual(2);
+      await expect(getComputedStyle(within(alert).getByText("Summer sale: 20% off everything until Sunday.").closest("div[class*='text']")!).textAlign).toBe("center");
+      if (dismissible) {
+        // The dismiss button sits at the end of the row.
+        const dismiss = within(alert).getByRole("button", { name: "Dismiss" }).getBoundingClientRect();
+        await expect(frame.right - dismiss.right).toBeLessThan(frame.width / 10);
+        await expect(dismiss.left).toBeGreaterThan(actions.right);
+      }
+    }
+    // In a narrow alert the text wraps, and must stop short of the dismiss button rather than run under it.
+    const narrow = canvas.getByTestId("narrow");
+    const text = within(narrow).getByText("A long announcement that has to wrap onto several lines in a narrow place.").getBoundingClientRect();
+    const dismiss = within(narrow).getByRole("button", { name: "Dismiss" }).getBoundingClientRect();
+    await expect(text.right).toBeLessThanOrEqual(dismiss.left);
+  },
+};
+
+export const EnterInteraction: Story = {
+  name: "Appearing — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <AppearingDemo />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Show a message" }));
+    const alert = await canvas.findByTestId("appearing");
+    const wrapper = alert.parentElement!.parentElement!;
+    // It animates in, and the flag is cleared when the animation ends, so nothing keeps clipping it.
+    await expect(wrapper).toHaveAttribute("data-enter");
+    await waitFor(() => expect(wrapper).not.toHaveAttribute("data-enter"), { timeout: 3000 });
+    await expect(getComputedStyle(alert.parentElement!).overflow).toBe("visible");
+    await expect(getComputedStyle(wrapper).opacity).toBe("1");
+    // A second one, mounted the same way, animates too.
+    await userEvent.click(canvas.getByRole("button", { name: "Show it again" }));
+    await waitFor(() => expect(canvas.getByTestId("appearing").parentElement!.parentElement!).toHaveAttribute("data-enter"));
   },
 };

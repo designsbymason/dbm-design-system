@@ -6,7 +6,7 @@
 // checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
 import { quote } from "../../snippetHelpers";
-import type { AlertRole, AlertSize, AlertTone, AlertVariant } from "./Alert.types";
+import type { AlertActionsPlacement, AlertAlign, AlertRole, AlertSize, AlertTone, AlertVariant } from "./Alert.types";
 
 const body = (
   title = "Payment failed",
@@ -47,6 +47,28 @@ ${alert('tone="warning"', withActions)}`,
     <Alert.Action variant="tertiary">Remind me later</Alert.Action>
   </Alert.Actions>
 </Alert>`,
+
+  inlineActions: `{/* actionsPlacement="inline" puts the actions beside the message, at the end of the row. It drops them below
+    on its own when the alert's own width can't fit both, so an alert in a narrow column stacks by itself. */}
+${alert('banner actionsPlacement="inline"', withActions)}`,
+
+  centered: `{/* align="center" centres the icon, the message and (with inline actions) the actions as one group, for an
+    announcement. The dismiss button stays at the end of the row. */}
+<Alert banner align="center" actionsPlacement="inline" dismissible>
+  <Alert.Description>Summer sale: 20% off everything until Sunday.</Alert.Description>
+  <Alert.Actions>
+    <Alert.Action>Shop now</Alert.Action>
+  </Alert.Actions>
+</Alert>`,
+
+  appearing: `{/* An alert that appears after the page has loaded — an error after a submit, say — fades and slides in. One that is
+    already in the page when it loads is simply there. Nothing to set. */}
+{error && (
+  <Alert tone="danger">
+    <Alert.Title>Payment failed</Alert.Title>
+    <Alert.Description>{error}</Alert.Description>
+  </Alert>
+)}`,
 
   titleOnly: `{/* Every part is optional */}
 <Alert tone="success">
@@ -114,6 +136,8 @@ export interface AlertPlaygroundSnippetArgs {
   size?: AlertSize;
   icon?: unknown;
   banner?: boolean;
+  actionsPlacement?: AlertActionsPlacement;
+  align?: AlertAlign;
   sticky?: boolean;
   dismissible?: boolean;
   role?: AlertRole | "Default";
@@ -134,6 +158,8 @@ export function alertPlaygroundSnippet(args: AlertPlaygroundSnippetArgs): string
     attributes.push("icon={StarIcon}");
   }
   if (args.banner) attributes.push("banner");
+  if (args.actionsPlacement === "inline") attributes.push('actionsPlacement="inline"');
+  if (args.align === "center") attributes.push('align="center"');
   if (args.sticky) attributes.push("sticky");
   if (args.dismissible) attributes.push("dismissible");
   if (args.role && args.role !== "Default") attributes.push(`role=${quote(args.role)}`);

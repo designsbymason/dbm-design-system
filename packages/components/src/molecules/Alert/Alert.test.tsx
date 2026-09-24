@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
@@ -7,6 +7,17 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { StarIcon } from "@dbm-design-system/icons";
 import { Alert } from "./Alert";
 import type { AlertProps } from "./Alert.types";
+
+// Stands in for the helper that says whether the page has finished loading, so a test can be on either side of it.
+const page = vi.hoisted(() => ({ settled: false }));
+vi.mock("./pageSettled", () => ({ hasPageSettled: () => page.settled }));
+
+// jsdom has no `AnimationEvent`, so React listens for the prefixed `webkitAnimationEnd` there (real browsers, and the Storybook
+// tests, use `animationend`).
+const animationEnd = (element: Element) => fireEvent(element, new Event("webkitAnimationEnd", { bubbles: true }));
+
+/** The element that carries `data-state` and `data-enter`: the alert's outermost element. */
+const wrapperOf = (alert: HTMLElement) => alert.parentElement!.parentElement!;
 
 function Basic(props: Partial<AlertProps>) {
   return (
@@ -22,6 +33,7 @@ function Basic(props: Partial<AlertProps>) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  page.settled = false;
 });
 
 describe("Alert — structure", () => {
@@ -200,6 +212,136 @@ describe("Alert.Action", () => {
       </>,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Alert — where the actions sit", () => {
+  it("keeps the actions apart from the message, as a direct child of the row", () => {
+    render(<Basic data-testid="a" />);
+    const body = screen.getByText("Payment failed").closest("div[class*='text']")!.parentElement!;
+    const text = body.firstElementChild!;
+    expect(text.className).toMatch(/text/);
+    expect(text).toContainElement(screen.getByText("Payment failed"));
+    expect(text).toContainElement(screen.getByText("Your card was declined."));
+    // The actions are the message's sibling, not inside it.
+    expect(text).not.toContainElement(screen.getByRole("button", { name: "Update card" }));
+    expect(body).toContainElement(screen.getByRole("button", { name: "Update card" }));
+  });
+
+  it("puts the actions below the message by default, and beside it with actionsPlacement='inline'", () => {
+    const { rerender } = render(<Basic data-testid="a" />);
+    expect(screen.getByTestId("a").className).not.toMatch(/actionsInline/);
+    rerender(<Basic data-testid="a" actionsPlacement="inline" />);
+    expect(screen.getByTestId("a").className).toMatch(/actionsInline/);
+  });
+
+  it("treats Alert.Actions inside another element as part of the message", () => {
+    render(
+      <Alert data-testid="a">
+        <Alert.Description>Message</Alert.Description>
+        <div data-testid="wrapped">
+          <Alert.Actions>
+            <Alert.Action>Go</Alert.Action>
+          </Alert.Actions>
+        </div>
+      </Alert>,
+    );
+    expect(screen.getByTestId("wrapped").closest("div[class*='text']")).not.toBeNull();
+  });
+
+  it("renders an alert of only actions, or only a message, without an empty message group", () => {
+    const { container, rerender } = render(
+      <Alert>
+        <Alert.Actions>
+          <Alert.Action>Go</Alert.Action>
+        </Alert.Actions>
+      </Alert>,
+    );
+    expect(container.querySelector("div[class*='text']")).toBeNull();
+    rerender(<Alert>Only text</Alert>);
+    expect(container.querySelector("div[class*='text']")).not.toBeNull();
+  });
+});
+
+describe("Alert — alignment", () => {
+  it("is aligned to the start by default, and centres with align='center'", () => {
+    const { rerender } = render(<Alert data-testid="a">x</Alert>);
+    expect(screen.getByTestId("a").className).not.toMatch(/alignCenter/);
+    rerender(<Alert data-testid="a" align="center">x</Alert>);
+    expect(screen.getByTestId("a").className).toMatch(/alignCenter/);
+  });
+
+  it("marks a dismissible alert, so a centred one leaves room for the button on both sides", () => {
+    const { rerender } = render(<Alert data-testid="a" align="center">x</Alert>);
+    expect(screen.getByTestId("a").className).not.toMatch(/hasDismiss/);
+    rerender(<Alert data-testid="a" align="center" dismissible>x</Alert>);
+    expect(screen.getByTestId("a").className).toMatch(/hasDismiss/);
+  });
+});
+
+describe("Alert — coming in", () => {
+  it("does not animate an alert that was in the page when it loaded", () => {
+    page.settled = false;
+    render(<Alert data-testid="a">x</Alert>);
+    expect(wrapperOf(screen.getByTestId("a"))).not.toHaveAttribute("data-enter");
+  });
+
+  it("animates an alert that appears after the page has loaded, and stops when the animation ends", () => {
+    page.settled = true;
+    render(<Alert data-testid="a">x</Alert>);
+    const wrapper = wrapperOf(screen.getByTestId("a"));
+    expect(wrapper).toHaveAttribute("data-enter");
+    // The wrapper's own animation ending clears it (so it never clips a focus ring once the alert is in).
+    animationEnd(wrapper);
+    expect(wrapper).not.toHaveAttribute("data-enter");
+  });
+
+  it("ignores an animation ending on something inside it", () => {
+    page.settled = true;
+    render(<Alert data-testid="a">x</Alert>);
+    animationEnd(screen.getByTestId("a"));
+    expect(wrapperOf(screen.getByTestId("a"))).toHaveAttribute("data-enter");
+  });
+
+  it("animates when it is reopened, even on a page that had not settled", () => {
+    page.settled = false;
+    const { rerender } = render(<Alert open>x</Alert>);
+    expect(document.querySelector("[data-enter]")).toBeNull();
+    rerender(<Alert open={false}>x</Alert>);
+    rerender(
+      <Alert open data-testid="a">
+        x
+      </Alert>,
+    );
+    expect(wrapperOf(screen.getByTestId("a"))).toHaveAttribute("data-enter");
+  });
+
+  it("does not animate it in on load under StrictMode, which mounts everything twice", () => {
+    page.settled = false;
+    render(
+      <StrictMode>
+        <Alert data-testid="a">x</Alert>
+      </StrictMode>,
+    );
+    expect(wrapperOf(screen.getByTestId("a"))).not.toHaveAttribute("data-enter");
+  });
+
+  it("animates in under StrictMode when it appears after the page has loaded", () => {
+    page.settled = true;
+    render(
+      <StrictMode>
+        <Alert data-testid="a">x</Alert>
+      </StrictMode>,
+    );
+    expect(wrapperOf(screen.getByTestId("a"))).toHaveAttribute("data-enter");
+  });
+
+  it("stops entering as soon as it is closed", () => {
+    page.settled = true;
+    const { rerender } = render(<Alert open data-testid="a">x</Alert>);
+    expect(document.querySelector("[data-enter]")).not.toBeNull();
+    rerender(<Alert open={false}>x</Alert>);
+    expect(document.querySelector("[data-enter]")).toBeNull();
   });
 });
 
