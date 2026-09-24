@@ -1035,6 +1035,7 @@ export const CenterInteraction: Story = {
       ))}
       <div data-testid="stacked-frame" style={{ width: "100%" }}>
         <Alert banner align="center" role="none" data-testid="stacked">
+          <Alert.Title>Payment failed</Alert.Title>
           <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
           <Alert.Actions>
             <Alert.Action>Update card</Alert.Action>
@@ -1066,19 +1067,30 @@ export const CenterInteraction: Story = {
         await expect(dismiss.left).toBeGreaterThan(actions.right);
       }
     }
-    // With the actions below the message (the default placement), the icon, the text and the actions are still one group in the
-    // middle: the icon sits right against the text block, not at the far edge of a full-width one.
+    // With a title, a description and actions below (the default placement), the icon is at the start of the first line —
+    // right beside the title's words — and that line, the description and the actions are each centred in the alert. Measured
+    // on the words themselves: an element's box stretches across its row wherever its text is.
     const stacked = canvas.getByTestId("stacked");
     const stackedFrame = canvas.getByTestId("stacked-frame").getBoundingClientRect();
+    const frameCentre = (stackedFrame.left + stackedFrame.right) / 2;
+    const wordsOf = (text: string) => {
+      // The text node itself: the element around it also holds the icon, which would widen the range.
+      const node = Array.from(within(stacked).getByText(text).childNodes).find((child) => child.nodeType === Node.TEXT_NODE)!;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return range.getBoundingClientRect();
+    };
     const stackedIcon = stacked.querySelector("svg")!.getBoundingClientRect();
-    // Where the words actually are — the description's box stretches across its row, so measure the text itself.
-    const words = document.createRange();
-    words.selectNodeContents(within(stacked).getByText("Your card was declined. Update it to keep your plan."));
-    const stackedText = words.getBoundingClientRect();
+    const title = wordsOf("Payment failed");
+    const description = wordsOf("Your card was declined. Update it to keep your plan.");
     const stackedActions = within(stacked).getByRole("button", { name: "Update card" }).getBoundingClientRect();
-    const groupRight = Math.max(stackedText.right, stackedActions.right);
-    await expect(Math.abs((stackedIcon.left + groupRight) / 2 - (stackedFrame.left + stackedFrame.right) / 2)).toBeLessThanOrEqual(2);
-    await expect(stackedText.left - stackedIcon.right).toBeLessThanOrEqual(32);
+    // The icon is right against the title, not stranded beside the widest line.
+    await expect(title.left - stackedIcon.right).toBeLessThanOrEqual(12);
+    await expect(title.left).toBeGreaterThanOrEqual(stackedIcon.right);
+    // The first line — icon and title — is centred, and so are the description and the actions.
+    await expect(Math.abs((stackedIcon.left + title.right) / 2 - frameCentre)).toBeLessThanOrEqual(2);
+    await expect(Math.abs((description.left + description.right) / 2 - frameCentre)).toBeLessThanOrEqual(2);
+    await expect(Math.abs((stackedActions.left + stackedActions.right) / 2 - frameCentre)).toBeLessThanOrEqual(2);
     // In a narrow alert the text wraps, and must stop short of the dismiss button rather than run under it.
     const narrow = canvas.getByTestId("narrow");
     const text = within(narrow).getByText("A long announcement that has to wrap onto several lines in a narrow place.").getBoundingClientRect();

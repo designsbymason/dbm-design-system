@@ -40,9 +40,11 @@ export type AlertActionsPlacement = "below" | "inline";
  * Where the content sits along the row.
  *
  * - `"start"` (the default) — at the start, the way a message reads in a column.
- * - `"center"` — centred: the icon, the message and (with `actionsPlacement="inline"`) the actions as one group, the text
- *   itself centred too. For an announcement banner. The dismiss button stays at the end of the row, and the group stays
- *   centred whether or not there is one.
+ * - `"center"` — centred: the message, its actions, and the icon — which sits inline at the start of the first line (the
+ *   title, or the description when there is no title), so it centres with those words. For an announcement banner. The
+ *   dismiss button stays at the end of the row, and the content stays centred whether or not there is one. (If the first
+ *   thing in the alert is plain text, or a title drawn onto your own element, the icon can't sit in that line and stays
+ *   before the whole message.)
  */
 export type AlertAlign = "start" | "center";
 

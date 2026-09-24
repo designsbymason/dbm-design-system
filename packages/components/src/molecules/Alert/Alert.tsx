@@ -21,7 +21,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AnimationEvent, FocusEvent } from "react";
+import type { AnimationEvent, FocusEvent, ReactNode } from "react";
 import { Affix } from "../../atoms/Affix";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
@@ -109,6 +109,10 @@ interface AlertContextValue {
 }
 const AlertContext = createContext<AlertContextValue>({ variant: "subtle", size: "md" });
 
+// The icon, handed to the first line of the message when the content is centred, so it sits inline at the start of that line
+// (and so centres, and wraps, together with its words) instead of stranded beside the widest line of the whole message.
+const LeadingIconContext = createContext<ReactNode>(null);
+
 const actionVariantClass: Record<AlertActionVariant, string | undefined> = {
   primary: styles.actionPrimary,
   secondary: styles.actionSecondary,
@@ -144,9 +148,19 @@ function findNextFocusable(root: HTMLElement | null): HTMLElement | null {
 const AlertTitle = forwardRef<HTMLParagraphElement, AlertTitleProps>(
   ({ asChild = false, className, children, ...props }, ref) => {
     const Component = asChild ? Slot : "p";
+    const leadingIcon = useContext(LeadingIconContext);
     return (
       <Component {...props} ref={ref} className={cx(styles.title, className)}>
-        {children}
+        {asChild ? (
+          // `Slot` takes exactly one child, so nothing can be put beside it: the alert keeps the icon out of a title like this.
+          children
+        ) : (
+          <>
+            {/* The alert's icon, when it is centred and this is the first line: inline, before the words. */}
+            {leadingIcon && <span className={styles.inlineIcon}>{leadingIcon}</span>}
+            {children}
+          </>
+        )}
       </Component>
     );
   },
@@ -154,11 +168,15 @@ const AlertTitle = forwardRef<HTMLParagraphElement, AlertTitleProps>(
 AlertTitle.displayName = "Alert.Title";
 
 /** The message itself — text, or anything a message can hold, such as a link. */
-const AlertDescription = forwardRef<HTMLDivElement, AlertDescriptionProps>(({ className, children, ...props }, ref) => (
-  <div {...props} ref={ref} className={cx(styles.description, className)}>
-    {children}
-  </div>
-));
+const AlertDescription = forwardRef<HTMLDivElement, AlertDescriptionProps>(({ className, children, ...props }, ref) => {
+  const leadingIcon = useContext(LeadingIconContext);
+  return (
+    <div {...props} ref={ref} className={cx(styles.description, className)}>
+      {leadingIcon && <span className={styles.inlineIcon}>{leadingIcon}</span>}
+      {children}
+    </div>
+  );
+});
 AlertDescription.displayName = "Alert.Description";
 
 /** What the reader can do about it — usually one or two buttons or links, wrapping onto more lines when short of room. */
@@ -278,6 +296,14 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
     const isActions = (child: unknown) => isValidElement(child) && child.type === AlertActions;
     const actionChildren = parts.filter(isActions);
     const textChildren = parts.filter((child) => !isActions(child));
+    // When centred, the icon belongs at the start of the first line of the message — a title, or a description — where it
+    // centres with that line's words; anything else that comes first (plain text, a title drawn onto your own element) can't
+    // hold it, and the icon then sits before the whole message as it does when the content is at the start.
+    const firstText = textChildren[0];
+    const iconGoesInLine =
+      align === "center" &&
+      isValidElement<{ asChild?: boolean }>(firstText) &&
+      ((firstText.type === AlertTitle && !firstText.props.asChild) || firstText.type === AlertDescription);
     const resolvedRole = role ?? defaultRole[tone];
     const glyph = icon === false ? undefined : (icon ?? toneIcon[tone]);
 
@@ -321,6 +347,10 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
       onOpenChange?.(false);
     };
 
+    const iconElement = glyph ? (
+      <Icon icon={glyph} size={iconSizeForSize[size]} tone={variant === "solid" ? solidIconTone[tone] : iconTone[tone]} />
+    ) : null;
+
     const alert = (
       <div
         className={styles.wrapper}
@@ -351,18 +381,22 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
               className,
             )}
           >
-            {glyph && (
-              <span className={styles.icon}>
-                <Icon
-                  icon={glyph}
-                  size={iconSizeForSize[size]}
-                  tone={variant === "solid" ? solidIconTone[tone] : iconTone[tone]}
-                />
-              </span>
-            )}
+            {glyph && !iconGoesInLine && <span className={styles.icon}>{iconElement}</span>}
             <div className={styles.body}>
               <AlertContext.Provider value={{ variant, size }}>
-                {textChildren.length > 0 && <div className={styles.text}>{textChildren}</div>}
+                {textChildren.length > 0 && (
+                  <div className={styles.text}>
+                    {iconGoesInLine && glyph ? (
+                      <>
+                        <LeadingIconContext.Provider value={iconElement}>{firstText}</LeadingIconContext.Provider>
+                        <LeadingIconContext.Provider value={null}>{textChildren.slice(1)}</LeadingIconContext.Provider>
+                      </>
+                    ) : (
+                      // Reset, so an alert nested inside another's first line doesn't inherit that alert's icon.
+                      <LeadingIconContext.Provider value={null}>{textChildren}</LeadingIconContext.Provider>
+                    )}
+                  </div>
+                )}
                 {actionChildren}
               </AlertContext.Provider>
             </div>

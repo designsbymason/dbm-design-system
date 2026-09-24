@@ -227,9 +227,12 @@ so an alert in a narrow column stacks by itself. Drag the corner of the second b
 
 ### Centred content
 
-`align="center"` centres the icon, the message and (with inline actions) the actions as one group, with
-the text centred too — for an announcement. The dismiss button stays at the end of the row, and the
-group stays centred whether or not there is one; in a narrow alert the text stops short of the button.
+`align="center"` centres the message and its actions, with the text centred too — for an announcement.
+The icon sits inline at the start of the first line (the title, or the description when there is no
+title), so it centres with those words instead of standing apart from them. The dismiss button stays at
+the end of the row, and the content stays centred whether or not there is one; in a narrow alert the text
+stops short of the button. If the first thing in the alert is plain text, or a title drawn onto your own
+element (`asChild`), the icon can't sit in that line and stays before the whole message.
 
 <Canvas of={AlertStories.Centered} />
 

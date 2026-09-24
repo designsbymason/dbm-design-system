@@ -279,6 +279,71 @@ describe("Alert — alignment", () => {
   });
 });
 
+describe("Alert — the icon when the content is centred", () => {
+  it("sits at the start of the title, inline with its words, and not before the whole message", () => {
+    const { container } = render(<Basic align="center" data-testid="a" />);
+    const title = screen.getByText("Payment failed").closest("p")!;
+    expect(title.querySelector("svg")).not.toBeNull();
+    // The old, out-of-line icon box isn't drawn as well.
+    expect(container.querySelectorAll("svg[aria-hidden='true']").length).toBe(1);
+  });
+
+  it("goes in the description when there is no title", () => {
+    render(
+      <Alert align="center">
+        <Alert.Description>Only a description</Alert.Description>
+      </Alert>,
+    );
+    expect(screen.getByText("Only a description").closest("div[class*='description']")!.querySelector("svg")).not.toBeNull();
+  });
+
+  it("stays before the message when the content is at the start", () => {
+    const { container } = render(<Basic data-testid="a" />);
+    expect(screen.getByText("Payment failed").closest("p")!.querySelector("svg")).toBeNull();
+    expect(container.querySelectorAll("svg").length).toBe(1);
+  });
+
+  it("stays before the message when the first thing can't hold it: plain text, or a title on your own element", () => {
+    const { container, rerender } = render(<Alert align="center">Plain text</Alert>);
+    expect(container.querySelectorAll("svg").length).toBe(1);
+    expect(container.querySelector("div[class*='text']")!.querySelector("svg")).toBeNull();
+    rerender(
+      <Alert align="center">
+        <Alert.Title asChild>
+          <h2>Heading</h2>
+        </Alert.Title>
+      </Alert>,
+    );
+    expect(screen.getByRole("heading").querySelector("svg")).toBeNull();
+    expect(container.querySelectorAll("svg").length).toBe(1);
+  });
+
+  it("is drawn once, only in the first line, when there are several parts", () => {
+    const { container } = render(<Basic align="center" />);
+    expect(container.querySelectorAll("svg[aria-hidden='true']").length).toBe(1);
+    expect(screen.getByText("Your card was declined.").closest("div[class*='description']")!.querySelector("svg")).toBeNull();
+  });
+
+  it("draws no icon at all with icon={false}", () => {
+    const { container } = render(<Basic align="center" icon={false} />);
+    expect(container.querySelector("svg")).toBeNull();
+  });
+
+  it("does not leak into an alert nested in the first line", () => {
+    render(
+      <Alert align="center" data-testid="outer">
+        <Alert.Description>
+          <Alert data-testid="inner">
+            <Alert.Title>Inner</Alert.Title>
+          </Alert>
+        </Alert.Description>
+      </Alert>,
+    );
+    // The inner alert is at the start, so it draws its own icon before its message: one icon each, not two in the inner one.
+    expect(screen.getByTestId("inner").querySelectorAll("svg").length).toBe(1);
+  });
+});
+
 describe("Alert — coming in", () => {
   it("does not animate an alert that was in the page when it loaded", () => {
     page.settled = false;

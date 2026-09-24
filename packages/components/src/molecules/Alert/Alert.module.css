@@ -318,6 +318,15 @@
   text-align: center;
 }
 
+/* The icon, drawn inline at the start of the message's first line when the content is centred, so it centres and wraps with the
+   words rather than sitting apart from them. `--alert-icon` is the tone's icon colour, set on the alert. */
+.inlineIcon {
+  color: var(--alert-icon);
+  display: inline-flex;
+  margin-inline-end: var(--dbm-space-2);
+  vertical-align: text-bottom;
+}
+
 .alignCenter.actionsInline .text {
   flex: 0 1 auto;
 }
