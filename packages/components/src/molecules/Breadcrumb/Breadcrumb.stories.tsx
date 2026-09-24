@@ -124,7 +124,6 @@ const meta: Meta<PlaygroundArgs> = {
       options: [3, 4, 5, "container"],
       description:
         'Collapses a long trail: the middle is replaced by a "…" button that shows them all when used. A number collapses once there are more items than that; "container" collapses only as many as it takes to fit the trail\'s own width, measured in the browser. Left out, the trail never collapses and wraps instead.',
-      table: { defaultValue: { summary: "undefined" } },
     },
     compact: {
       control: "select",
