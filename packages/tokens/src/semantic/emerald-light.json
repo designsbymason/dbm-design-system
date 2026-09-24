@@ -65,6 +65,11 @@
       "$value": "{color.red.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses danger-subtle's own pre-2026-07-27 value (red.100), same pattern as bg.brand-subtle-hover. text.danger (red.700 at the time) on red.100 = 6.43:1, comfortably passes AA. Shared across both brand themes, matching danger-subtle's own brand-independence. Not part of the 2026-08-20 danger token consolidation."
     },
+    "on-danger": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the fill of a control drawn on a solid bg.danger surface (the primary action inside a solid danger Alert), an inverted fill. Same value as text.on-danger (white light / red.900 dark), but its own token so a component never uses a text token as a fill (the same pattern as bg.brand and text.brand). The control's label is text.danger: 5.10:1 light / 8.22:1 dark. The fill against bg.danger itself is 5.10:1 light / 8.22:1 dark, above the 3:1 non-text floor."
+    },
     "warning": {
       "$type": "color",
       "$value": "{color.amber.600}",
@@ -84,6 +89,11 @@
       "$type": "color",
       "$value": "{color.amber.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses warning-subtle's own pre-2026-07-27 value (amber.100), same pattern as bg.brand-subtle-hover. text.warning (amber.800 at the time) on amber.100 = 8.90:1, comfortably passes AA. Shared across both brand themes, matching warning-subtle's own brand-independence. Not part of the 2026-08-20 warning token consolidation."
+    },
+    "on-warning": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the fill of a control drawn on a solid bg.warning surface (the primary action inside a solid warning Alert), an inverted fill. Same value as text.on-warning (white light / amber.900 dark), but its own token so a component never uses a text token as a fill (the same pattern as bg.brand and text.brand). The control's label is text.warning: 4.78:1 light / 8.19:1 dark. The fill against bg.warning itself is 4.78:1 light / 8.19:1 dark, above the 3:1 non-text floor."
     },
     "success": {
       "$type": "color",
@@ -105,6 +115,11 @@
       "$value": "{color.green.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses success-subtle's own pre-2026-07-27 value (green.100), same pattern as bg.brand-subtle-hover. text.success (green.800 at the time) on green.100 = 8.42:1, comfortably passes AA. Shared across both brand themes, matching success-subtle's own brand-independence. Not part of the 2026-08-20 success token consolidation."
     },
+    "on-success": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the fill of a control drawn on a solid bg.success surface (the primary action inside a solid success Alert), an inverted fill. Same value as text.on-success (white light / green.900 dark), but its own token so a component never uses a text token as a fill (the same pattern as bg.brand and text.brand). The control's label is text.success: 6.50:1 light / 8.19:1 dark. The fill against bg.success itself is 6.50:1 light / 8.19:1 dark, above the 3:1 non-text floor."
+    },
     "info": {
       "$type": "color",
       "$value": "{color.blue.600}",
@@ -125,6 +140,11 @@
       "$value": "{color.blue.100}",
       "$description": "New token (2026-08-15), added for Avatar's hover state — reuses info-subtle's own pre-2026-07-27 value (blue.100), same pattern as bg.brand-subtle-hover. text.info (blue.700 at the time) on blue.100 = 6.10:1, comfortably passes AA. Shared across both brand themes, matching info-subtle's own brand-independence. Not part of the 2026-08-20 info token consolidation."
     },
+    "on-info": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the fill of a control drawn on a solid bg.info surface (the primary action inside a solid info Alert), an inverted fill. Same value as text.on-info (white light / blue.900 dark), but its own token so a component never uses a text token as a fill (the same pattern as bg.brand and text.brand). The control's label is text.info: 4.71:1 light / 8.20:1 dark. The fill against bg.info itself is 4.71:1 light / 8.20:1 dark, above the 3:1 non-text floor."
+    },
     "neutral": {
       "$type": "color",
       "$value": "{color.gray.600}",
@@ -144,6 +164,11 @@
       "$type": "color",
       "$value": "{color.gray.100}",
       "$description": "Renamed from bg.subtle-hover (2026-08-20), grouped with the other neutral tokens here — no value change. Originally added 2026-08-17, found adding Tag's whole-tag clickable/selectable mode — bg.neutral-subtle's own hover step, one primitive scale step further in the same direction bg.brand-subtle-hover/etc. already use (darken in light mode, lighten in dark mode). text.secondary (Tag/Badge subtleNeutral's own paired text) on gray.100 = 6.05:1, comfortably passes AA."
+    },
+    "on-neutral": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the fill of a control drawn on a solid bg.neutral surface (the primary action inside a solid neutral Alert), an inverted fill. Same value as text.on-neutral (white light / gray.900 dark), but its own token so a component never uses a text token as a fill (the same pattern as bg.brand and text.brand). The control's label is text.secondary: 6.88:1 light / 10.47:1 dark. The fill against bg.neutral itself is 4.70:1 light / 8.21:1 dark, above the 3:1 non-text floor."
     },
     "track": {
       "$type": "color",
@@ -260,6 +285,11 @@
       "$value": "{color.gray.600}",
       "$description": "Renamed from border.neutral (2026-08-21), part of a border.* identifier rotation (border.subtle→border.neutral-subtle, border.strong→border.neutral, border.neutral→border.neutral-strong, border.neutral-strong→border.strong) — no values changed anywhere in this rotation, only names; see guidelines/03-token-system-spec.md for the full rationale. Originally added (2026-08-20) to complete the border.danger/warning/success/info/brand state-identifying family for the neutral tone — the token now named border.neutral (gray.400), the only existing generic gray border at the time, was measured rather than assumed and fails outright as a real state-identifying border (2.32:1 against bg.surface, under the 3:1 WCAG 1.4.11 floor; that token is documented as hover-state/default border emphasis, not state-identification). gray.600 vs bg.surface (white) = 4.70:1, a comfortable margin. Not currently consumed — Tag's outline variant uses the token now named border.strong (gray.700, formerly this token's own sibling border.neutral-strong) for its own default border instead."
     },
+    "on-neutral": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the outline of a control drawn on a solid bg.neutral surface (the secondary action inside a solid neutral Alert). Same value as text.on-neutral (white light / gray.900 dark), but its own token so a component never uses a text token as a border. Against bg.neutral: 4.70:1 light / 8.21:1 dark, above the 3:1 non-text floor (WCAG 1.4.11)."
+    },
     "strong": {
       "$type": "color",
       "$value": "{color.gray.700}",
@@ -290,6 +320,11 @@
       "$value": "{color.red.100}",
       "$description": "Family-matched decorative-accent border, same family.100-light/family.900-dark scale step as border.brand-subtle — not a reuse of border.danger (red.600, the stronger state-identifying border used for e.g. Input validation, where WCAG 1.4.11 actually applies). Pairs with bg.danger-subtle (red.50) for any component drawing a subtle danger-tinted ring, not limited to one specific component — first used by Avatar's `colorful` danger variant (2026-08-16), but not scoped to it. red.100 on red.50 is 1.10:1, intentionally as subtle as border.brand-subtle's 1.09:1 purple pairing. Brand-agnostic — identical value in every brand theme, same as bg.danger-subtle. Not part of the 2026-08-20 danger token consolidation — this tier stays its own dedicated decorative step."
     },
+    "on-danger": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the outline of a control drawn on a solid bg.danger surface (the secondary action inside a solid danger Alert). Same value as text.on-danger (white light / red.900 dark), but its own token so a component never uses a text token as a border. Against bg.danger: 5.10:1 light / 8.22:1 dark, above the 3:1 non-text floor (WCAG 1.4.11)."
+    },
     "warning": {
       "$type": "color",
       "$value": "{color.amber.600}",
@@ -299,6 +334,11 @@
       "$type": "color",
       "$value": "{color.amber.100}",
       "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.warning-subtle (amber.50) for any component's warning-tinted ring, not limited to one specific component. amber.100 on amber.50 is 1.09:1. Brand-agnostic. Not part of the 2026-08-20 warning token consolidation — this tier stays its own dedicated decorative step."
+    },
+    "on-warning": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the outline of a control drawn on a solid bg.warning surface (the secondary action inside a solid warning Alert). Same value as text.on-warning (white light / amber.900 dark), but its own token so a component never uses a text token as a border. Against bg.warning: 4.78:1 light / 8.19:1 dark, above the 3:1 non-text floor (WCAG 1.4.11)."
     },
     "success": {
       "$type": "color",
@@ -310,6 +350,11 @@
       "$value": "{color.green.100}",
       "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.success-subtle (green.50) for any component's success-tinted ring, not limited to one specific component. green.100 on green.50 is 1.09:1. Brand-agnostic. Not part of the 2026-08-20 success token consolidation — this tier stays its own dedicated decorative step."
     },
+    "on-success": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the outline of a control drawn on a solid bg.success surface (the secondary action inside a solid success Alert). Same value as text.on-success (white light / green.900 dark), but its own token so a component never uses a text token as a border. Against bg.success: 6.50:1 light / 8.19:1 dark, above the 3:1 non-text floor (WCAG 1.4.11)."
+    },
     "info": {
       "$type": "color",
       "$value": "{color.blue.600}",
@@ -319,6 +364,11 @@
       "$type": "color",
       "$value": "{color.blue.100}",
       "$description": "Family-matched decorative-accent border, same rationale as border.danger-subtle above — pairs with bg.info-subtle (blue.50) for any component's info-tinted ring, not limited to one specific component. blue.100 on blue.50 is 1.09:1. Brand-agnostic. Not part of the 2026-08-20 info token consolidation — this tier stays its own dedicated decorative step."
+    },
+    "on-info": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "New token (2026-09-24), added for Alert's actions: the outline of a control drawn on a solid bg.info surface (the secondary action inside a solid info Alert). Same value as text.on-info (white light / blue.900 dark), but its own token so a component never uses a text token as a border. Against bg.info: 4.71:1 light / 8.20:1 dark, above the 3:1 non-text floor (WCAG 1.4.11)."
     },
     "code": {
       "$type": "color",
