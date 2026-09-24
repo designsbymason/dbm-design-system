@@ -9,6 +9,19 @@ import type { LinkProps } from "../../atoms/Link";
 export type BreadcrumbSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
+ * Whether the trail collapses to a single "back to the parent page" link — the item just above the current
+ * page, with a back arrow before it.
+ *
+ * - `"never"` (the default) — the full trail at every width.
+ * - `"auto"` — the full trail from the `sm` breakpoint up, and the single link on a phone-width screen.
+ * - `"always"` — the single link at every width.
+ *
+ * A trail of one item has no parent, so it always shows in full. The compact form takes the place of every
+ * other item, `maxItems` included.
+ */
+export type BreadcrumbCompact = "never" | "auto" | "always";
+
+/**
  * The colour of the trail's links, on the tone scale (`05-component-api-conventions.md` §2) — the three that
  * make sense for a link.
  *
@@ -80,12 +93,28 @@ export interface BreadcrumbProps
    */
   separator?: BreadcrumbSeparator;
   /**
-   * Collapses a long trail: when there are more items than this, the ones in
-   * the middle are replaced by a "…" button that shows them all when used. Left
-   * out, the trail never collapses and simply wraps onto more lines when it is
-   * too wide.
+   * Collapses a long trail: the items in the middle are replaced by a "…" button that shows them all
+   * when used. A number collapses once there are more items than that; `"container"` collapses only as
+   * many as it takes for the trail to fit its own width, measured in the browser (so a server-rendered
+   * page shows the full trail until it loads), and again whenever that width changes. Left out, the trail
+   * never collapses and simply wraps onto more lines when it is too wide.
    */
-  maxItems?: number;
+  maxItems?: number | "container";
+  /**
+   * Whether the trail collapses to a single "back to the parent page" link — see
+   * {@link BreadcrumbCompact}.
+   * @default 'never'
+   */
+  compact?: BreadcrumbCompact;
+  /**
+   * Keeps the trail on one line and cuts a label that doesn't fit short with an ellipsis, the longest
+   * labels first. The full text stays in the page for screen readers, and as a tooltip (`title`) when the
+   * label is plain text. With `maxItems="container"`, items collapse first and labels are cut short only
+   * once the trail can collapse no further. Off, a long trail wraps onto more lines, which shows every
+   * word and is the easier one to read — use `truncate` where a trail must stay on one line.
+   * @default false
+   */
+  truncate?: boolean;
   /**
    * How many items stay visible at the start of a collapsed trail, before the
    * "…" button. Has no effect without `maxItems`.

@@ -75,6 +75,10 @@
   align-items: center;
   display: inline-flex;
   gap: var(--dbm-space-1);
+}
+
+/* The label wraps at any character, so an unbroken string (a long slug, a URL) can't push the trail wider. */
+.label {
   overflow-wrap: anywhere;
 }
 
@@ -120,4 +124,92 @@ a.toneNeutral:hover {
 /* The "…" button reads as a neutral part of the trail, not a brand-tinted action. */
 .expand {
   color: var(--dbm-icon-default);
+}
+
+/* --- Compact: only the item above the current page, with a back arrow. --- */
+
+.back {
+  display: none;
+}
+
+.compactAlways .item:not(.parent),
+.compactAuto .item:not(.parent) {
+  display: none;
+}
+
+.compactAlways .parent .separator,
+.compactAuto .parent .separator {
+  display: none;
+}
+
+.compactAlways .back,
+.compactAuto .back {
+  color: var(--dbm-icon-default);
+  display: inline-flex;
+}
+
+/* The threshold is the literal value of the breakpoint.sm primitive token — custom properties can't be used in an
+   @media condition (the same limitation `Pagination`, `Card`, `EmptyState`, `Stack`, and `Grid` note), so if that
+   token changes this must be updated by hand. */
+@media (min-width: 640px) {
+  .compactAuto .item:not(.parent) {
+    display: inline-flex;
+  }
+
+  .compactAuto .parent .separator {
+    display: inline-flex;
+  }
+
+  .compactAuto .back {
+    display: none;
+  }
+}
+
+/* --- One line: measuring (`maxItems="container"`) and truncating. --- */
+
+/* While the trail is measured against its own width, nothing may wrap or shrink, so the list's own width is the width
+   it needs. */
+.measuring .list {
+  flex-wrap: nowrap;
+}
+
+.measuring .item {
+  flex-shrink: 0;
+}
+
+/* Truncating: one line, and a label that doesn't fit is cut short with an ellipsis. An item shrinks (the longest
+   labels the most, since a flex item shrinks in proportion to its size); the separator, the back arrow and the
+   "…" button never do. */
+.truncating .list {
+  flex-wrap: nowrap;
+}
+
+.truncating .item {
+  flex: 0 1 auto;
+}
+
+.truncating .separator,
+.truncating .back,
+.truncating .expand {
+  flex-shrink: 0;
+}
+
+.truncating .link,
+.truncating .page {
+  min-inline-size: 0;
+}
+
+.truncating .label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A slotted link (`asChild`) has no label element of ours to cut short, so the element itself does. */
+.truncating .slotted {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

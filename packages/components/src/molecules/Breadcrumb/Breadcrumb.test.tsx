@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
@@ -14,6 +14,7 @@ const trail: Array<[string, string]> = [
   ["Keyboards", "/products/keyboards"],
   ["Mechanical", "/products/keyboards/mechanical"],
   ["Switches", "/products/keyboards/mechanical/switches"],
+  ["Linear", "/products/keyboards/mechanical/switches/linear"],
 ];
 
 /** A trail of `count` items: links, then the current page last. */
@@ -33,6 +34,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/** The current page's own element: its text sits in an inner label element, so climb out of it. */
+const currentPage = (text: string) => screen.getByText(text).closest("span[aria-current]") as HTMLElement;
+
 describe("Breadcrumb — structure", () => {
   it("renders a named nav around an ordered list", () => {
     render(<Basic />);
@@ -43,7 +47,7 @@ describe("Breadcrumb — structure", () => {
 
   it("marks the current page and leaves the others as links", () => {
     render(<Basic />);
-    expect(screen.getByText("Keyboards")).toHaveAttribute("aria-current", "page");
+    expect(currentPage("Keyboards")).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
     expect(screen.getAllByRole("link")).toHaveLength(2);
   });
@@ -87,7 +91,7 @@ describe("Breadcrumb — structure", () => {
       </Breadcrumb>,
     );
     expect(screen.getByRole("link", { name: "Home" }).querySelector("svg")).toBeInTheDocument();
-    expect(screen.getByText("Here").querySelector("svg")).toBeInTheDocument();
+    expect(currentPage("Here").querySelector("svg")).toBeInTheDocument();
     expect(container.querySelectorAll("svg[aria-hidden='true']").length).toBeGreaterThanOrEqual(2);
   });
 
@@ -156,7 +160,7 @@ describe("Breadcrumb — props", () => {
 
   it("leaves the current page's colour alone whatever the tone", () => {
     render(<Basic tone="brand" />);
-    expect(screen.getByText("Keyboards").className).not.toMatch(/tone/);
+    expect(currentPage("Keyboards").className).not.toMatch(/tone/);
   });
 
   it("underlines links only on hover by default, and always with underline", () => {
@@ -192,7 +196,7 @@ describe("Breadcrumb — props", () => {
         </Breadcrumb.Item>
       </Breadcrumb>,
     );
-    expect(screen.getByText("Here")).toHaveAttribute("aria-current", "page");
+    expect(currentPage("Here")).toHaveAttribute("aria-current", "page");
   });
 });
 
@@ -288,7 +292,7 @@ describe("Breadcrumb — collapsing", () => {
 
   it("always keeps the current page, even with itemsAfterCollapse of 0", () => {
     render(collapsed({ itemsAfterCollapse: 0 }));
-    expect(screen.getByText("Switches")).toHaveAttribute("aria-current", "page");
+    expect(currentPage("Switches")).toHaveAttribute("aria-current", "page");
   });
 
   it("does not hide a single item behind a button", () => {
@@ -325,6 +329,222 @@ describe("Breadcrumb — collapsing", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(<Basic count={5} maxItems={3} itemsBeforeCollapse={2} itemsAfterCollapse={2} />);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("nothing left to collapse"));
+  });
+});
+
+describe("Breadcrumb — compact", () => {
+  it("adds no compact class by default, and one for auto and for always", () => {
+    const { rerender } = render(<Basic />);
+    expect(screen.getByRole("navigation").className).not.toMatch(/compact/);
+    rerender(<Basic compact="auto" />);
+    expect(screen.getByRole("navigation").className).toMatch(/compactAuto/);
+    rerender(<Basic compact="always" />);
+    expect(screen.getByRole("navigation").className).toMatch(/compactAlways/);
+  });
+
+  it("marks the item above the current page as the parent, and gives only it a back arrow", () => {
+    render(<Basic count={4} compact="always" />);
+    // `hidden`: the compact form's CSS really does hide the other items, which the role queries respect.
+    const items = screen.getAllByRole("listitem", { hidden: true });
+    expect(items.map((item) => item.className.includes("parent"))).toEqual([false, false, true, false]);
+    expect(items.map((item) => item.querySelector("svg[class*='back']") !== null)).toEqual([false, false, true, false]);
+  });
+
+  it("renders no back arrow when the trail isn't compact", () => {
+    render(<Basic count={4} />);
+    // The parent is still marked, but the arrow is only for the compact form.
+    expect(screen.getAllByRole("listitem")[2]!.querySelector("svg[class*='back']")).not.toBeNull();
+    expect(screen.getByRole("navigation").className).not.toMatch(/compact/);
+  });
+
+  it("does nothing to a trail with no parent", () => {
+    render(
+      <Breadcrumb compact="always">
+        <Breadcrumb.Item>
+          <Breadcrumb.Page>Only</Breadcrumb.Page>
+        </Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(screen.getByRole("navigation").className).not.toMatch(/compact/);
+  });
+
+  it("keeps the parent in a collapsed trail, so the compact form has something to show", () => {
+    render(<Basic count={5} maxItems={3} compact="auto" itemsAfterCollapse={1} />);
+    expect(screen.getByRole("link", { name: "Mechanical" })).toBeInTheDocument();
+  });
+});
+
+describe("Breadcrumb — truncate", () => {
+  it("adds the truncating class and a title carrying the full text of a plain-text label", () => {
+    render(<Basic truncate />);
+    expect(screen.getByRole("navigation").className).toMatch(/truncating/);
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("title", "Home");
+    expect(currentPage("Keyboards")).toHaveAttribute("title", "Keyboards");
+  });
+
+  it("adds no title without truncate, and leaves a caller's own title alone", () => {
+    const { rerender } = render(<Basic />);
+    expect(screen.getByRole("link", { name: "Home" })).not.toHaveAttribute("title");
+    rerender(
+      <Breadcrumb truncate>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href="/" title="Back to the start">
+            Home
+          </Breadcrumb.Link>
+        </Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("title", "Back to the start");
+  });
+
+  it("gives no title to a label that is more than plain text", () => {
+    render(
+      <Breadcrumb truncate>
+        <Breadcrumb.Item>
+          <Breadcrumb.Page>
+            <em>Rich</em> label
+          </Breadcrumb.Page>
+        </Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(screen.getByText("Rich").closest("span[aria-current]")).not.toHaveAttribute("title");
+  });
+
+  it("puts each label in its own element, which the ellipsis is drawn on", () => {
+    render(<Basic truncate />);
+    expect(screen.getByText("Home").className).toMatch(/label/);
+  });
+});
+
+describe("Breadcrumb — maxItems=\"container\"", () => {
+  const originals: Array<() => void> = [];
+  const observers: Array<() => void> = [];
+  let navWidth = 1000;
+
+  /** jsdom has no layout: every list entry is 100px wide, and the nav is `navWidth` wide. */
+  function stubLayout() {
+    const scroll = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollWidth");
+    const client = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth");
+    Object.defineProperty(HTMLElement.prototype, "scrollWidth", {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.tagName === "OL" ? this.children.length * 100 : 0;
+      },
+    });
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.tagName === "NAV" ? navWidth : 0;
+      },
+    });
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: () => void) {
+          observers.push(callback);
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    originals.push(() => {
+      if (scroll) Object.defineProperty(HTMLElement.prototype, "scrollWidth", scroll);
+      else Reflect.deleteProperty(HTMLElement.prototype, "scrollWidth");
+      if (client) Object.defineProperty(HTMLElement.prototype, "clientWidth", client);
+      else Reflect.deleteProperty(HTMLElement.prototype, "clientWidth");
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    while (originals.length) originals.pop()!();
+    observers.length = 0;
+    navWidth = 1000;
+  });
+
+  it("shows the full trail when it fits", () => {
+    stubLayout();
+    navWidth = 700;
+    render(<Basic count={6} maxItems="container" />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(6);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("hides just as many items as it takes to fit — starting with two", () => {
+    stubLayout();
+    navWidth = 550;
+    render(<Basic count={6} maxItems="container" />);
+    // 6 items are 600px; hiding two gives Home, "…", and the last three = 5 entries = 500px.
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.getByRole("button", { name: "Show 2 hidden pages" })).toBeInTheDocument();
+  });
+
+  it("hides another item when two aren't enough", () => {
+    stubLayout();
+    navWidth = 450;
+    render(<Basic count={6} maxItems="container" />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    expect(screen.getByRole("button", { name: "Show 3 hidden pages" })).toBeInTheDocument();
+    // What stays is the first item, the "…", and the last two (with the current page).
+    expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
+    expect(currentPage("Linear")).toBeInTheDocument();
+  });
+
+  it("stops at what itemsBeforeCollapse and itemsAfterCollapse keep, and marks the trail as settled", () => {
+    stubLayout();
+    navWidth = 100;
+    render(<Basic count={6} maxItems="container" truncate />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    // Fully collapsed and still too wide: the truncation the caller asked for takes over.
+    expect(screen.getByRole("navigation").className).toMatch(/truncating/);
+    expect(screen.getByRole("navigation").className).not.toMatch(/measuring/);
+  });
+
+  it("does not truncate while it can still collapse", () => {
+    stubLayout();
+    navWidth = 550;
+    render(<Basic count={6} maxItems="container" truncate />);
+    expect(screen.getByRole("navigation").className).not.toMatch(/truncating/);
+  });
+
+  it("measures again when the width changes", () => {
+    stubLayout();
+    navWidth = 450;
+    render(<Basic count={6} maxItems="container" />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    // The first callback only records the width; a changed width starts the measurement over.
+    act(() => observers.forEach((callback) => callback()));
+    navWidth = 700;
+    act(() => observers.forEach((callback) => callback()));
+    expect(screen.getAllByRole("listitem")).toHaveLength(6);
+    navWidth = 350;
+    act(() => observers.forEach((callback) => callback()));
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+  });
+
+  it("shows every item, wrapping, once the '…' button has been used", async () => {
+    const user = userEvent.setup();
+    stubLayout();
+    navWidth = 350;
+    render(<Basic count={6} maxItems="container" />);
+    await user.click(screen.getByRole("button", { name: /hidden pages/ }));
+    expect(screen.getAllByRole("listitem")).toHaveLength(6);
+    expect(screen.getByRole("navigation").className).not.toMatch(/measuring/);
+    expect(screen.getByRole("link", { name: "Products" })).toHaveFocus();
+  });
+
+  it("never collapses a trail with too few items to hide two", () => {
+    stubLayout();
+    navWidth = 100;
+    render(<Basic count={3} maxItems="container" />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("leaves a numeric maxItems alone", () => {
+    render(<Basic count={5} maxItems={3} />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
   });
 });
 

@@ -5,7 +5,13 @@ import { HouseIcon, KeyboardIcon } from "@dbm-design-system/icons";
 import { Text } from "../../atoms/Text";
 import { Breadcrumb } from "./Breadcrumb";
 import { breadcrumbPlaygroundSnippet, breadcrumbSnippets } from "./Breadcrumb.snippets";
-import type { BreadcrumbProps, BreadcrumbSeparator, BreadcrumbSize, BreadcrumbTone } from "./Breadcrumb.types";
+import type {
+  BreadcrumbCompact,
+  BreadcrumbProps,
+  BreadcrumbSeparator,
+  BreadcrumbSize,
+  BreadcrumbTone,
+} from "./Breadcrumb.types";
 
 // `Breadcrumb.Item`, `Breadcrumb.Link` and `Breadcrumb.Page` each get their own
 // Properties table via a hidden docs-only stories file (guidelines/adr/0013),
@@ -15,8 +21,11 @@ interface PlaygroundArgs {
   tone: BreadcrumbTone;
   underline: boolean;
   separator: string;
-  // A text control: "" means "not set" (the trail never collapses).
-  maxItems: number | "";
+  // A select: "off" leaves `maxItems` out (the trail never collapses), a number collapses past that many items,
+  // and "container" collapses to fit the width.
+  maxItems: string;
+  compact: BreadcrumbCompact;
+  truncate: boolean;
   itemsBeforeCollapse: number;
   itemsAfterCollapse: number;
   "aria-label": string;
@@ -66,6 +75,8 @@ const noControls = {
   underline: { control: false },
   separator: { control: false },
   maxItems: { control: false },
+  compact: { control: false },
+  truncate: { control: false },
   itemsBeforeCollapse: { control: false },
   itemsAfterCollapse: { control: false },
   "aria-label": { control: false },
@@ -108,10 +119,23 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: '"chevron"' } },
     },
     maxItems: {
-      control: "number",
-      placeholder: "off",
+      control: "select",
+      options: ["off", "3", "4", "5", "container"],
       description:
-        'Collapses a long trail: with more items than this, the middle is replaced by a "…" button that shows them all when used. Left out, the trail never collapses and wraps instead.',
+        'Collapses a long trail: the middle is replaced by a "…" button that shows them all when used. A number collapses once there are more items than that; "container" collapses only as many as it takes to fit the trail\'s own width, measured in the browser. Left out ("off" here), the trail never collapses and wraps instead.',
+    },
+    compact: {
+      control: "select",
+      options: ["never", "auto", "always"],
+      description:
+        'Collapses the trail to a single "back to the parent page" link — the item above the current page, with a back arrow: never (the default), auto (on a phone-width screen) or always.',
+      table: { defaultValue: { summary: '"never"' } },
+    },
+    truncate: {
+      control: "boolean",
+      description:
+        "Keeps the trail on one line and cuts a label that doesn't fit short with an ellipsis, the longest first. The full text stays in the page for screen readers, and as a tooltip for plain-text labels. Off, a long trail wraps.",
+      table: { defaultValue: { summary: "false" } },
     },
     itemsBeforeCollapse: {
       control: "number",
@@ -166,17 +190,20 @@ const meta: Meta<PlaygroundArgs> = {
     tone: "info",
     underline: false,
     separator: "chevron",
-    maxItems: "",
+    maxItems: "off",
+    compact: "never",
+    truncate: false,
     itemsBeforeCollapse: 1,
     itemsAfterCollapse: 2,
     "aria-label": "Breadcrumb",
     dir: "ltr",
   },
   render: (args) => {
-    const maxItems = args.maxItems === "" ? undefined : Number(args.maxItems);
-    const collapsing = maxItems !== undefined && maxItems > 0;
+    const maxItems = args.maxItems === "off" ? undefined : args.maxItems === "container" ? "container" : Number(args.maxItems);
+    const collapsing = maxItems !== undefined;
     return (
-      <div style={demoContainerStyle}>
+      // Resizable, so `maxItems="container"` and `truncate` can be watched as the width changes.
+      <div style={{ ...demoContainerStyle, resize: "horizontal", overflow: "auto" }}>
         <DemoTrail
           // Keyed by what changes the collapse, so a trail the reader expanded starts over when a control changes.
           key={`${String(collapsing)}-${String(maxItems)}-${args.itemsBeforeCollapse}-${args.itemsAfterCollapse}`}
@@ -185,7 +212,9 @@ const meta: Meta<PlaygroundArgs> = {
           tone={args.tone}
           underline={args.underline}
           separator={args.separator as BreadcrumbSeparator}
-          maxItems={collapsing ? maxItems : undefined}
+          maxItems={maxItems}
+          compact={args.compact}
+          truncate={args.truncate}
           itemsBeforeCollapse={args.itemsBeforeCollapse}
           itemsAfterCollapse={args.itemsAfterCollapse}
           aria-label={args["aria-label"]}
@@ -370,6 +399,17 @@ export const Collapsed: Story = {
   ),
 };
 
+export const ContainerCollapse: Story = {
+  name: "Collapsing to fit the width",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: breadcrumbSnippets.container } } },
+  render: () => (
+    <div data-testid="container-box" style={{ ...demoContainerStyle, resize: "horizontal", overflow: "auto" }}>
+      <DemoTrail count={6} maxItems="container" />
+    </div>
+  ),
+};
+
 export const CollapseWindow: Story = {
   name: "Choosing what stays visible",
   argTypes: noControls,
@@ -377,6 +417,79 @@ export const CollapseWindow: Story = {
   render: () => (
     <div style={demoContainerStyle}>
       <DemoTrail count={6} maxItems={4} itemsBeforeCollapse={2} itemsAfterCollapse={1} />
+    </div>
+  ),
+};
+
+export const Compact: Story = {
+  name: "Compact — back to the parent",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: breadcrumbSnippets.compact } } },
+  render: () => (
+    <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+      {(["always", "auto", "never"] as const).map((compact) => (
+        <div key={compact}>
+          <Text size="sm" weight="semibold" style={{ marginBlockEnd: "var(--dbm-space-1)" }}>
+            compact=&quot;{compact}&quot;{compact === "never" ? " (default)" : ""}
+          </Text>
+          <DemoTrail count={5} compact={compact} aria-label={`Breadcrumb (compact ${compact})`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Measures only — the demo never changes. At a wide viewport `always` is one link, `auto` and `never` the whole trail.
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(640);
+    const links = (name: string) =>
+      within(within(canvasElement).getByRole("navigation", { name })).queryAllByRole("link");
+    await expect(links("Breadcrumb (compact always)").map((link) => link.textContent)).toEqual(["Mechanical"]);
+    await expect(links("Breadcrumb (compact auto)")).toHaveLength(4);
+    await expect(links("Breadcrumb (compact never)")).toHaveLength(4);
+  },
+};
+
+export const CompactOnAPhone: Story = {
+  name: "Compact on a phone",
+  argTypes: noControls,
+  // Opened on its own, this story is shown at a phone's width (and it is in the test run); on the Docs page it
+  // sits in the wide page like every other story.
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  parameters: { docs: { source: { code: breadcrumbSnippets.compact } } },
+  render: () => (
+    <div data-testid="phone" style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+      {(["auto", "never"] as const).map((compact) => (
+        <DemoTrail key={compact} count={5} compact={compact} aria-label={`Breadcrumb (compact ${compact})`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // The story really is at a phone's width (fails loudly if the viewport didn't apply).
+    await expect(window.innerWidth).toBeLessThan(640);
+    const visibleLinks = (name: string) =>
+      within(within(canvasElement).getByRole("navigation", { name })).queryAllByRole("link");
+    // `auto` shows only the parent; `never` still shows the whole trail.
+    await expect(visibleLinks("Breadcrumb (compact auto)").map((link) => link.textContent)).toEqual(["Mechanical"]);
+    await expect(visibleLinks("Breadcrumb (compact never)")).toHaveLength(4);
+  },
+};
+
+export const Truncated: Story = {
+  name: "Truncated labels",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: breadcrumbSnippets.truncate } } },
+  render: () => (
+    <div data-testid="truncated-box" style={{ maxWidth: "36rem", resize: "horizontal", overflow: "auto" }}>
+      <Breadcrumb truncate>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href="/">Home</Breadcrumb.Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href="/licensing">Enterprise software licensing and procurement</Breadcrumb.Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>
+          <Breadcrumb.Page>Renewal terms and conditions for the current financial year</Breadcrumb.Page>
+        </Breadcrumb.Item>
+      </Breadcrumb>
     </div>
   ),
 };
@@ -599,5 +712,112 @@ export const ColourInteraction: Story = {
     // match `:hover`.)
     await expect(getComputedStyle(link).textDecorationLine).toBe("underline");
     await expect(Number(getComputedStyle(page).fontWeight)).toBeGreaterThan(Number(getComputedStyle(link).fontWeight));
+  },
+};
+
+export const TruncateInteraction: Story = {
+  name: "Truncating — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div data-testid="narrow" style={{ width: "24rem" }}>
+      <Breadcrumb truncate>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href="/">Home</Breadcrumb.Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href="/licensing">Enterprise software licensing and procurement</Breadcrumb.Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>
+          <Breadcrumb.Page>Renewal terms and conditions for the current financial year</Breadcrumb.Page>
+        </Breadcrumb.Item>
+      </Breadcrumb>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByTestId("narrow");
+    const nav = within(box).getByRole("navigation");
+    // One line, inside its box.
+    const tops = new Set(within(box).getAllByRole("listitem").map((item) => Math.round(item.getBoundingClientRect().top)));
+    await expect(tops.size).toBe(1);
+    await expect(nav.scrollWidth).toBeLessThanOrEqual(box.clientWidth);
+    // The long labels are cut short with an ellipsis, and the full text is still in the page.
+    const long = within(box).getByText("Enterprise software licensing and procurement");
+    const page = within(box).getByText("Renewal terms and conditions for the current financial year");
+    for (const label of [long, page]) {
+      await expect(label.scrollWidth).toBeGreaterThan(label.clientWidth);
+      await expect(getComputedStyle(label).textOverflow).toBe("ellipsis");
+    }
+    await expect(within(box).getByRole("link", { name: "Home" })).toHaveAttribute("title", "Home");
+    await expect(page.closest("[aria-current]")).toHaveAttribute("title", "Renewal terms and conditions for the current financial year");
+  },
+};
+
+export const ContainerInteraction: Story = {
+  name: "Collapsing to fit — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  // One trail per width, each measured when it mounts — real layout, without depending on a resize observation.
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+      {["60rem", "34rem", "26rem", "20rem", "14rem"].map((width) => (
+        <div key={width} data-testid={`box-${width}`} style={{ width }}>
+          <DemoTrail count={6} maxItems="container" aria-label={`Breadcrumb ${width}`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const measure = (width: string) => {
+      const box = canvas.getByTestId(`box-${width}`);
+      const nav = within(box).getByRole("navigation");
+      return { items: within(box).getAllByRole("listitem").length, fits: nav.scrollWidth <= box.clientWidth, nav };
+    };
+    const widths = ["60rem", "34rem", "26rem", "20rem", "14rem"];
+    await waitFor(() => expect(measure("20rem").fits).toBe(true));
+    const results = widths.map(measure);
+    // Wide: the whole trail. Each narrower box hides at least as many items, never more than it takes.
+    await expect(results[0]!.items).toBe(6);
+    for (let index = 1; index < results.length; index++) {
+      await expect(results[index]!.items).toBeLessThanOrEqual(results[index - 1]!.items);
+    }
+    await expect(results[2]!.items).toBeLessThan(6);
+    // Everything that could collapse enough to fit does, and none is wider than its box.
+    for (const width of ["60rem", "34rem", "26rem", "20rem"]) await expect(measure(width).fits).toBe(true);
+    // The narrowest can't get below the first item, the "…" and the last two: past that it wraps rather than overflowing.
+    await expect(results[4]!.items).toBe(4);
+    await expect(results[4]!.fits).toBe(true);
+    await expect(results[4]!.nav.className).not.toMatch(/measuring/);
+  },
+};
+
+export const ContainerFocusInteraction: Story = {
+  name: "Collapsing to fit — keyboard focus is not dropped",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div data-testid="box" style={{ width: "60rem" }}>
+      <DemoTrail count={6} maxItems="container" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByTestId("box");
+    const links = () => within(box).queryAllByRole("link");
+    await userEvent.tab(); // Home
+    await userEvent.tab(); // Products — a middle item, which narrowing the box would hide
+    const products = within(box).getByRole("link", { name: "Products" });
+    await expect(products).toHaveFocus();
+    box.style.width = "20rem";
+    // Held back: the focused link stays in the page, with focus, however narrow the box gets.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(within(box).getByRole("link", { name: "Products" })).toBe(products);
+    await expect(products).toHaveFocus();
+    // Once focus has moved on (to a link that stays), the trail collapses.
+    await userEvent.tab(); // Keyboards — also a middle item; keep going until the focus is on a link that stays
+    await userEvent.tab();
+    await userEvent.tab();
+    await waitFor(() => expect(links().length).toBeLessThan(5));
+    await expect(document.activeElement).not.toBe(document.body);
   },
 };

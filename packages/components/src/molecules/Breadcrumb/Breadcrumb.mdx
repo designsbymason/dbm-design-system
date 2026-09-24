@@ -18,6 +18,8 @@ export const rootPropOrder = [
   "maxItems",
   "itemsBeforeCollapse",
   "itemsAfterCollapse",
+  "compact",
+  "truncate",
   "labels",
   "aria-label",
   "aria-labelledby",
@@ -62,7 +64,9 @@ between items itself.
 Choose how big the trail is with `size`, the colour of its links with `tone`, whether they are
 underlined all the time with `underline`, and what sits between items with `separator`. A trail that
 is too wide for its container wraps onto more lines; with `maxItems`, its middle collapses into a
-"…" button that shows the rest when used. `Breadcrumb.Link` is the `Link` atom underneath, so it
+"…" button that shows the rest when used — a fixed number of items, or, with `"container"`, only as
+many as it takes to fit. `compact` swaps the whole trail for a single "back to the parent page" link
+(on a phone, or always), and `truncate` keeps the trail on one line and cuts long labels short. `Breadcrumb.Link` is the `Link` atom underneath, so it
 handles external addresses and `disabled`, and takes `asChild` to render a router's own link.
 
 ### Import
@@ -81,7 +85,8 @@ import { Breadcrumb } from "@dbm-design-system/components";
 <PlaygroundControls of={BreadcrumbStories.Playground} order={rootPropOrder} exclude={["children", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
 
 Set `maxItems` to see the collapse: the Playground then shows a six-item trail so there is something
-to collapse.
+to collapse. Drag the bottom-right corner of the canvas to change its width — `"container"` and
+`truncate` follow it.
 
 ## Properties
 
@@ -164,12 +169,51 @@ first item it revealed.
 
 <Canvas of={BreadcrumbStories.Collapsed} />
 
+### Collapsing to fit the width
+
+`maxItems="container"` collapses only as many items as it takes for the trail to fit its own width,
+and measures again whenever that width changes. Drag the bottom-right corner of the box: items give
+way one at a time, and come back as it widens. It is measured in the browser, so a server-rendered
+page shows the full trail until the page loads. The first item, the "…" button and the last two
+items always stay; once the trail can collapse no further it wraps (or, with `truncate`, cuts labels
+short). A collapse is held back while keyboard focus is on an item it would hide, so focus is never
+dropped — the trail catches up as soon as focus moves.
+
+<Canvas of={BreadcrumbStories.ContainerCollapse} />
+
 ### Choosing what stays visible
 
 `itemsBeforeCollapse` and `itemsAfterCollapse` set how many items stay on each side of the button.
 The last item, the current page, always stays.
 
 <Canvas of={BreadcrumbStories.CollapseWindow} />
+
+### Compact — back to the parent
+
+`compact` swaps the trail for one link: the item just above the current page, with a back arrow
+before it. `"auto"` does it on a phone-width screen (below the `sm` breakpoint) and shows the full
+trail from there up; `"always"` does it at every width. A trail of one item has no parent, so it always
+shows in full. The compact form replaces everything else — `maxItems` included — and the parent is
+never collapsed away.
+
+<Canvas of={BreadcrumbStories.Compact} />
+
+### Compact on a phone
+
+Opened on its own, this story is shown at a phone's width. On this page it sits in the wide page like
+every other story, so pick a phone size in the viewport toolbar to see `"auto"` switch.
+
+<Canvas of={BreadcrumbStories.CompactOnAPhone} />
+
+### Truncated labels
+
+`truncate` keeps the trail on one line and cuts a label that doesn't fit short with an ellipsis; labels
+give up space in proportion to their length, so the longest lose the most. Drag the bottom-right
+corner of the box to change the width. The full text stays in the page for screen readers, and a
+plain-text label also carries it as a tooltip (`title`). With `maxItems="container"`, items collapse
+first and labels are cut short only when the trail can't collapse any further.
+
+<Canvas of={BreadcrumbStories.Truncated} />
 
 ### With a router's link (asChild)
 
@@ -211,7 +255,9 @@ Drag the bottom-right corner of the box to change how much room the trail has.
 - Put the trail near the top of the page, above the page's heading, on every page it applies to.
 - End it with the current page as `Breadcrumb.Page`, so the reader can see where they are.
 - Give each item the same name the page has in the navigation and as its own heading.
-- Use `maxItems` on a deep hierarchy, so the trail keeps to a line or two on a narrow screen.
+- Use `maxItems` on a deep hierarchy, so the trail keeps to a line or two on a narrow screen —
+  `"container"` when the width isn't known in advance.
+- Use `compact="auto"` where a phone-width screen can't spare even a line or two for the trail.
 - Name the navigation with `aria-label` when a page holds more than one breadcrumb.
 - Put `"info"` and `"brand"` trails on `bg.surface`. Use `"neutral"` when a trail has to sit on
   `bg.canvas` (or on any background their colours haven't been measured against).
@@ -224,8 +270,10 @@ Drag the bottom-right corner of the box to change how much room the trail has.
 - Don't make the current page a link to itself; `Breadcrumb.Page` is deliberately not one.
 - Don't put a breadcrumb on a top-level page with nothing above it.
 - Don't add controls to an item other than the link — an item is one destination.
-- Don't hide the trail on small screens; collapse it with `maxItems` instead, so the reader still has
-  a way back up.
+- Don't hide the trail on small screens; use `compact="auto"` or `maxItems` instead, so the reader still
+  has a way back up.
+- Don't rely on `truncate` for labels a reader needs to read whole — a cut-off word can't be read, and a
+  tooltip only reaches people with a mouse. Wrapping shows every word.
 - Don't use a separator that reads as content, such as a word.
 
 </Callout>
@@ -239,8 +287,14 @@ Drag the bottom-right corner of the box to change how much room the trail has.
   navigation doesn't reload the page.
 - Keep labels short. A label that is much longer than its neighbours wraps onto a second line inside
   its own item, which is fine, but a trail of long labels reads better collapsed.
-- `maxItems` counts every item, including the first and the current page. It only collapses when
-  at least two items would be hidden — replacing a single item with a button would help nobody.
+- A numeric `maxItems` counts every item, including the first and the current page. Neither form
+  collapses unless at least two items would be hidden — replacing a single item with a button would
+  help nobody.
+- `compact` and `maxItems="container"` answer different questions: `compact` decides *what* a phone
+  shows (one link), `"container"` decides *how many* of the trail fit. Combine them freely — the
+  compact form simply takes over where it applies.
+- `truncate` is for a trail that must stay on one line, such as a page header with a fixed height.
+  Anywhere else, letting it wrap is the more readable choice.
 - The default `"info"` tone is the same blue as a `Link` elsewhere, so a trail reads as navigation
   without a second colour to learn. Choose `"brand"` where the surrounding design already leans on the
   accent colour, and `"neutral"` where a trail should stay out of the way.
@@ -266,9 +320,16 @@ already says everything they would.
 | `Enter` | Follows the focused link, or reveals the collapsed items from the "…" button |
 | `Space` | Reveals the collapsed items from the "…" button |
 
+The compact form hides every item but the parent with `display: none`, so a screen reader hears one
+link, not a list of levels; use `"auto"` (or `"never"`) where a phone reader should hear the whole
+path. The link's accessible name is its own text — the back arrow is decorative. With `truncate`, the
+ellipsis is only visual: a screen reader reads the full label.
+
 Using the "…" button removes it from the page, so keyboard focus moves to the first item it
-revealed rather than dropping to the top of the document. A disabled link stays in the tab order,
-marked `aria-disabled`, matching WAI-ARIA guidance.
+revealed rather than dropping to the top of the document. With `maxItems="container"`, a collapse
+that would hide the link that has keyboard focus waits until focus has moved on. (The compact form
+is a plain media query, so resizing across the `sm` breakpoint with focus on a hidden link can't hold
+it back.) A disabled link stays in the tab order, marked `aria-disabled`, matching WAI-ARIA guidance.
 
 **Contrast**, measured in light and dark. On `bg.surface`, an `"info"` link (`text.link`) is 4.71:1 in
 light and 8.20:1 in dark, and a `"brand"` link (`text.brand`) is 7.37:1 (Purple) or 6.08:1 (Emerald) in
@@ -319,6 +380,16 @@ the current page's heavier weight; `underline` adds a cue that doesn't depend on
   {/* ... */}
 </Breadcrumb>
 
+{/* Collapse only as many items as it takes to fit, and show one link back on a phone */}
+<Breadcrumb maxItems="container" compact="auto">
+  {/* ... */}
+</Breadcrumb>
+
+{/* One line, long labels cut short */}
+<Breadcrumb truncate>
+  {/* ... */}
+</Breadcrumb>
+
 {/* A deep trail that collapses its middle */}
 <Breadcrumb maxItems={4} itemsBeforeCollapse={1} itemsAfterCollapse={2}>
   {/* ... */}
@@ -347,7 +418,7 @@ the current page's heavier weight; `underline` adds a cue that doesn't depend on
 <TokenRow token="text.brand" usage="a link in the brand tone" />
 <TokenRow token="text.secondary" usage="a link in the neutral tone" />
 <TokenRow token="text.primary" usage="a hovered neutral link; the current page" />
-<TokenRow token="icon.default" usage="the separators; the “…” button's icon" />
+<TokenRow token="icon.default" usage="the separators; the “…” button's icon; the compact form's back arrow" />
 <TokenRow token="border.focus" usage="the focus ring on a link and on the “…” button" />
 <TokenRow token="font-family.primary" usage="the trail's typography" />
 <TokenRow token="font-size.xs–font-size.lg" usage="the text size across the five size steps" />

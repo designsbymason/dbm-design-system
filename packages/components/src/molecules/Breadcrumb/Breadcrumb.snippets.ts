@@ -8,7 +8,7 @@
 // `07-storybook-and-documentation-standards.md` §4.2.
 
 import { quote, truncateValue } from "../../snippetHelpers";
-import type { BreadcrumbSize, BreadcrumbTone } from "./Breadcrumb.types";
+import type { BreadcrumbCompact, BreadcrumbSize, BreadcrumbTone } from "./Breadcrumb.types";
 
 const link = (label: string, href: string, attributes = "") =>
   `  <Breadcrumb.Item>\n    <Breadcrumb.Link href="${href}"${attributes ? ` ${attributes}` : ""}>${label}</Breadcrumb.Link>\n  </Breadcrumb.Item>`;
@@ -65,6 +65,25 @@ ${trail(
   collapsed: `{/* maxItems: with more items than this, the middle collapses into a "…" button that
     shows them all when used. The first item and the last two stay visible. */}
 ${trail("maxItems={4}", longItems)}`,
+
+  container: `{/* maxItems="container" collapses only as many items as it takes to fit the trail's own
+    width, measured in the browser — and measures again when the width changes. */}
+${trail('maxItems="container"', longItems)}`,
+
+  compact: `{/* compact: "never" (default) | "auto" | "always". The compact form is one link back to the
+    item above the current page. "auto" is for phone-width screens; wider ones get the full trail. */}
+${trail('compact="auto"')}`,
+
+  truncate: `{/* truncate keeps the trail on one line and cuts a label that doesn't fit short with an
+    ellipsis. A plain-text label also carries its full text as a tooltip. */}
+${trail(
+  "truncate",
+  [
+    link("Home", "/"),
+    link("Enterprise software licensing and procurement", "/licensing"),
+    page("Renewal terms and conditions for the current financial year"),
+  ].join("\n"),
+)}`,
 
   collapseWindow: `{/* itemsBeforeCollapse and itemsAfterCollapse choose how many stay visible on each
     side of the "…" button. The last item, the current page, always stays. */}
@@ -128,6 +147,8 @@ export interface BreadcrumbPlaygroundSnippetArgs {
   underline?: boolean;
   separator?: unknown;
   maxItems?: unknown;
+  compact?: BreadcrumbCompact;
+  truncate?: boolean;
   itemsBeforeCollapse?: number;
   itemsAfterCollapse?: number;
   "aria-label"?: string;
@@ -147,9 +168,12 @@ export function breadcrumbPlaygroundSnippet(args: BreadcrumbPlaygroundSnippetArg
   if (typeof args.separator === "string" && args.separator !== "chevron" && args.separator !== "") {
     attributes.push(`separator=${quote(args.separator)}`);
   }
-  const maxItems = truncateValue(args.maxItems);
+  // The Playground's `maxItems` is a select: "off", a number as text, or "container".
+  const maxItems = args.maxItems === "container" ? "container" : truncateValue(args.maxItems);
+  if (args.compact && args.compact !== "never") attributes.push(`compact="${args.compact}"`);
+  if (args.truncate) attributes.push("truncate");
   if (maxItems !== undefined) {
-    attributes.push(`maxItems={${maxItems}}`);
+    attributes.push(maxItems === "container" ? 'maxItems="container"' : `maxItems={${maxItems}}`);
     if (args.itemsBeforeCollapse !== undefined && args.itemsBeforeCollapse !== 1) {
       attributes.push(`itemsBeforeCollapse={${args.itemsBeforeCollapse}}`);
     }

@@ -1,6 +1,16 @@
-import { CaretRightIcon, DotsThreeIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
-import { Children, createContext, forwardRef, isValidElement, useContext, useEffect, useRef, useState } from "react";
+import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@dbm-design-system/icons";
+import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import {
+  Children,
+  createContext,
+  forwardRef,
+  isValidElement,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { ReactElement, ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
@@ -8,6 +18,7 @@ import { IconButton } from "../../atoms/IconButton";
 import { Link } from "../../atoms/Link";
 import styles from "./Breadcrumb.module.css";
 import type {
+  BreadcrumbCompact,
   BreadcrumbItemProps,
   BreadcrumbLabels,
   BreadcrumbLinkProps,
@@ -23,6 +34,8 @@ interface BreadcrumbContextValue {
   separator: BreadcrumbSeparator;
   tone: BreadcrumbTone;
   underline: boolean;
+  /** Labels may be cut short, so a plain-text one carries its full text as a tooltip. */
+  truncate: boolean;
 }
 
 // Every part reads the root's settings from here rather than each taking them as a prop, so one `size` on
@@ -32,10 +45,18 @@ const BreadcrumbContext = createContext<BreadcrumbContextValue>({
   separator: "chevron",
   tone: "info",
   underline: false,
+  truncate: false,
 });
 
-/** Whether the item is the last one drawn, which is the only one with no separator after it. */
-const ItemPositionContext = createContext({ isLast: true });
+/**
+ * Where an item sits. `isLast` — the last one drawn, the only one with no separator after it. `isParent` — the item
+ * just above the current page, the one the compact form shows on its own.
+ */
+const ItemPositionContext = createContext({ isLast: true, isParent: false });
+
+// `useLayoutEffect` on the client, `useEffect` on the server — avoids React's "does nothing on the server" warning,
+// the same as `Pagination`.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const sizeClass: Record<BreadcrumbSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -43,6 +64,12 @@ const sizeClass: Record<BreadcrumbSize, string | undefined> = {
   md: styles.sizeMd,
   lg: styles.sizeLg,
   xl: styles.sizeXl,
+};
+
+const compactClass: Record<BreadcrumbCompact, string | undefined> = {
+  never: undefined,
+  auto: styles.compactAuto,
+  always: styles.compactAlways,
 };
 
 const toneClass: Record<BreadcrumbTone, string | undefined> = {
@@ -73,10 +100,12 @@ const nonNegative = (count: number): number => Math.max(Math.trunc(count) || 0, 
  */
 const BreadcrumbItem = forwardRef<HTMLLIElement, BreadcrumbItemProps>(({ className, children, ...props }, ref) => {
   const { size, separator } = useContext(BreadcrumbContext);
-  const { isLast } = useContext(ItemPositionContext);
+  const { isLast, isParent } = useContext(ItemPositionContext);
   return (
     // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
-    <li {...props} ref={ref} role="listitem" className={cx(styles.item, className)}>
+    <li {...props} ref={ref} role="listitem" className={cx(styles.item, isParent && styles.parent, className)}>
+      {/* The compact form's back arrow — hidden by CSS unless the trail is compact. */}
+      {isParent && <Icon icon={CaretLeftIcon} size={iconSizeForSize[size]} className={cx(styles.back, styles.flip)} />}
       {children}
       {!isLast && <Separator separator={separator} size={size} />}
     </li>
@@ -106,7 +135,7 @@ function Separator({ separator, size }: { separator: BreadcrumbSeparator; size: 
  */
 const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
   ({ icon, className, children, asChild = false, ...props }, ref) => {
-    const { size, tone, underline } = useContext(BreadcrumbContext);
+    const { size, tone, underline, truncate } = useContext(BreadcrumbContext);
     useEffect(() => {
       if (process.env.NODE_ENV !== "production" && asChild && icon) {
         console.warn(
@@ -120,14 +149,16 @@ const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
         ref={ref}
         asChild={asChild}
         underline={underline ? "always" : "hover"}
-        className={cx(styles.link, toneClass[tone], className)}
+        className={cx(styles.link, toneClass[tone], asChild && styles.slotted, className)}
+        // The whole label as a tooltip when it can be cut short — only for plain text, which is all a title holds.
+        title={props.title ?? (truncate && typeof children === "string" ? children : undefined)}
       >
         {asChild ? (
           children
         ) : (
           <>
             {icon && <Icon icon={icon} size={iconSizeForSize[size]} />}
-            {children}
+            <span className={styles.label}>{children}</span>
           </>
         )}
       </Link>
@@ -139,22 +170,36 @@ BreadcrumbLink.displayName = "Breadcrumb.Link";
 /** The current page: plain text, marked `aria-current="page"` so a screen reader announces it as the current page. */
 const BreadcrumbPage = forwardRef<HTMLSpanElement, BreadcrumbPageProps>(
   ({ icon, className, children, ...props }, ref) => {
-    const { size } = useContext(BreadcrumbContext);
+    const { size, truncate } = useContext(BreadcrumbContext);
     return (
       <span
         {...props}
+        title={props.title ?? (truncate && typeof children === "string" ? children : undefined)}
         // After `...props`, so a caller's own `aria-current` can't replace it.
         ref={ref}
         aria-current="page"
         className={cx(styles.page, className)}
       >
         {icon && <Icon icon={icon} size={iconSizeForSize[size]} />}
-        {children}
+        <span className={styles.label}>{children}</span>
       </span>
     );
   },
 );
 BreadcrumbPage.displayName = "Breadcrumb.Page";
+
+/**
+ * Whether an element has real keyboard focus, not a mouse-produced one — a plain `:focus-visible` match already
+ * draws this distinction. A browser that can't answer is treated as having keyboard focus, the safe side, the same
+ * as `Pagination` and `Tabs`.
+ */
+function keyboardIsOn(element: Element): boolean {
+  try {
+    return element.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
 
 /** Where in the trail keyboard focus goes once the "…" button that held it has gone. */
 const FOCUSABLE = "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])";
@@ -188,6 +233,8 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
       tone = "info",
       underline = false,
       maxItems,
+      compact = "never",
+      truncate = false,
       itemsBeforeCollapse = 1,
       itemsAfterCollapse = 2,
       labels: labelOverrides,
@@ -199,19 +246,39 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
     ref,
   ) => {
     const [expanded, setExpanded] = useState(false);
+    // `maxItems="container"`: how many items are hidden right now, and whether the trail is fully collapsed and
+    // still doesn't fit (so wrapping, or `truncate`, has to take over).
+    const [measuredHidden, setMeasuredHidden] = useState(0);
+    const [settled, setSettled] = useState(false);
+    // Bumped whenever the width changes, so the measurement runs again even when nothing else changed (a trail that
+    // showed in full and now has to collapse has the same state as before).
+    const [widthChanges, setWidthChanges] = useState(0);
+    const navRef = useRef<HTMLElement>(null);
     const listRef = useRef<HTMLOListElement>(null);
     const focusRevealed = useRef(false);
+    const measuredWidth = useRef<number | undefined>(undefined);
 
     const labels: BreadcrumbLabels = { ...defaultLabels, ...labelOverrides };
     const all = Children.toArray(children);
     const items = all.filter((child): child is ReactElement => isValidElement(child));
 
+    const containerMode = maxItems === "container";
     const before = nonNegative(itemsBeforeCollapse);
-    // The last item is the current page, so it is never the one that collapses.
-    const after = Math.max(nonNegative(itemsAfterCollapse), 1);
-    const hiddenCount = items.length - before - after;
-    // Hiding a single item would swap it for a button of the same size, which helps nobody.
-    const collapsed = !expanded && maxItems !== undefined && items.length > maxItems && hiddenCount >= 2;
+    // The last item is the current page, so it is never the one that collapses. The compact form shows the item
+    // above it, so that one is kept too whenever the compact form can appear.
+    const after = Math.max(nonNegative(itemsAfterCollapse), compact === "never" ? 1 : 2);
+    const maxHidden = Math.max(items.length - before - after, 0);
+    const hasParent = items.length >= 2;
+    const parent = hasParent ? items[items.length - 2] : undefined;
+
+    // How many items the middle of the trail is hiding right now. A number `maxItems` hides all it can, or nothing;
+    // `"container"` hides as many as the measurement has found it takes — never a lone item, which a button of the
+    // same size would replace for no gain.
+    let hidden = 0;
+    if (!expanded && maxHidden >= 2) {
+      if (typeof maxItems === "number") hidden = items.length > maxItems ? maxHidden : 0;
+      else if (containerMode) hidden = Math.min(measuredHidden, maxHidden);
+    }
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
@@ -220,12 +287,84 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
       }
     }, [all.length, items.length]);
     useEffect(() => {
-      if (process.env.NODE_ENV !== "production" && maxItems !== undefined && before + after >= maxItems) {
+      if (process.env.NODE_ENV !== "production" && typeof maxItems === "number" && before + after >= maxItems) {
         console.warn(
           `Breadcrumb: \`itemsBeforeCollapse\` (${before}) and \`itemsAfterCollapse\` (${after}) together fill \`maxItems\` (${maxItems}), so there is nothing left to collapse into the "…" button.`,
         );
       }
     }, [before, after, maxItems]);
+
+    // `maxItems="container"` measures the trail against its own width, before the browser paints, hiding one more
+    // item (two, the first time) while it is too wide — so the trail settles on the fewest hidden items that fit,
+    // and there is no flash of the wrong one. It is measured again whenever the width changes. A collapse is held
+    // back while keyboard focus is on an item that would be hidden: taking the focused link out of the page would
+    // drop focus to the top of the document, so the trail stays as it is until focus has moved on (`focusout`).
+    // While it is being measured the list can't wrap or shrink (`.measuring`), so its own width is the width it needs.
+    const itemCount = items.length;
+    useIsomorphicLayoutEffect(() => {
+      if (!containerMode || expanded) return;
+      const nav = navRef.current;
+      const list = listRef.current;
+      if (!nav || !list) return;
+      const measure = () => {
+        if (settled) return;
+        if (list.scrollWidth <= nav.clientWidth) return;
+        if (maxHidden < 2 || measuredHidden >= maxHidden) {
+          setSettled(true);
+          return;
+        }
+        const next = Math.min(Math.max(measuredHidden + 1, 2), maxHidden);
+        const active = document.activeElement;
+        if (active && list.contains(active) && keyboardIsOn(active)) {
+          // Which item of the trail holds focus: the entries drawn are the leading items, then (when some are
+          // hidden) the "…" button, then the rest — so past the button the position has to be mapped back.
+          const position = Array.from(list.children).findIndex((entry) => entry.contains(active));
+          const onEllipsis = hidden > 0 && position === before;
+          const itemIndex = hidden > 0 && position > before ? position - 1 + hidden : position;
+          if (!onEllipsis && itemIndex >= before && itemIndex < before + next) return;
+        }
+        setMeasuredHidden(next);
+      };
+      // The width this measurement is for, recorded now rather than left to the observer's first callback, which
+      // can arrive after the width has already changed again.
+      measuredWidth.current ??= nav.clientWidth;
+      measure();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const onFocusOut = () => {
+        clearTimeout(timer);
+        timer = setTimeout(measure, 0);
+      };
+      nav.addEventListener("focusout", onFocusOut);
+      const observer =
+        typeof ResizeObserver === "undefined"
+          ? undefined
+          : new ResizeObserver(() => {
+              const width = nav.clientWidth;
+              const previous = measuredWidth.current;
+              measuredWidth.current = width;
+              if (previous === width) return;
+              // A new width: start again from the full trail.
+              setMeasuredHidden(0);
+              setSettled(false);
+              setWidthChanges((count) => count + 1);
+            });
+      observer?.observe(nav);
+      return () => {
+        clearTimeout(timer);
+        nav.removeEventListener("focusout", onFocusOut);
+        observer?.disconnect();
+      };
+    }, [containerMode, expanded, settled, measuredHidden, hidden, maxHidden, before, itemCount, size, truncate, compact, widthChanges]);
+
+    // The item count changing (a route change) is a different trail, so measure it afresh.
+    const measuredCount = useRef(itemCount);
+    useIsomorphicLayoutEffect(() => {
+      // Not on mount, which would undo the measurement that has just started.
+      if (measuredCount.current === itemCount) return;
+      measuredCount.current = itemCount;
+      setMeasuredHidden(0);
+      setSettled(false);
+    }, [itemCount]);
 
     // The "…" button is what has keyboard focus when it is used, and expanding removes it — so focus moves on to
     // the first item it revealed instead of dropping to the top of the document.
@@ -241,48 +380,55 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
       setExpanded(true);
     };
 
-    type Entry = { key: string; node: ReactNode; isLast: boolean };
-    const visible: Array<ReactElement | "ellipsis"> = collapsed
-      ? [...items.slice(0, before), "ellipsis", ...items.slice(items.length - after)]
-      : items;
-    const entries: Entry[] = visible.map((entry, index) => {
+    const visible: Array<ReactElement | "ellipsis"> =
+      hidden > 0 ? [...items.slice(0, before), "ellipsis", ...items.slice(before + hidden)] : items;
+    const entries = visible.map((entry, index) => {
       const isLast = index === visible.length - 1;
-      if (entry === "ellipsis") {
-        return {
-          key: "ellipsis",
-          isLast,
-          node: (
-            <BreadcrumbItem>
-              <IconButton
-                icon={DotsThreeIcon}
-                variant="tertiary"
-                size={expandSizeForSize[size]}
-                aria-label={labels.expand(hiddenCount)}
-                onClick={expand}
-                className={styles.expand}
-              />
-            </BreadcrumbItem>
-          ),
-        };
-      }
-      return { key: String(entry.key ?? index), isLast, node: entry };
+      if (entry === "ellipsis") return { key: "ellipsis", isLast, isParent: false, node: null as ReactNode };
+      return { key: String(entry.key ?? index), isLast, isParent: entry === parent, node: entry as ReactNode };
     });
 
+    // Measuring: one line, nothing shrinks. Once settled (fully collapsed and still too wide), or when the trail was
+    // expanded, the truncation the caller asked for applies; otherwise it always does.
+    const measuring = containerMode && !expanded && !settled;
+    const truncating = truncate && (!containerMode || settled || expanded);
+    const compactActive = compact !== "never" && hasParent;
+
+    const mergedRef = mergeRefs(ref, navRef);
+
     return (
-      <BreadcrumbContext.Provider value={{ size, separator, tone, underline }}>
+      <BreadcrumbContext.Provider value={{ size, separator, tone, underline, truncate: truncating }}>
         <nav
           {...props}
-          ref={ref}
+          ref={mergedRef}
           aria-label={ariaLabelledBy ? undefined : (ariaLabel ?? labels.navigation)}
           aria-labelledby={ariaLabelledBy}
-          className={cx(styles.root, sizeClass[size], className)}
+          className={cx(
+            styles.root,
+            sizeClass[size],
+            compactActive && compactClass[compact],
+            measuring && styles.measuring,
+            truncating && styles.truncating,
+            className,
+          )}
         >
           {/* The `list` role is stated outright, for the reason given at `BreadcrumbItem`. */}
           {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see `BreadcrumbItem`. */}
           <ol ref={listRef} role="list" className={styles.list}>
-            {entries.map(({ key, node, isLast }) => (
-              <ItemPositionContext.Provider key={key} value={{ isLast }}>
-                {node}
+            {entries.map(({ key, node, isLast, isParent }) => (
+              <ItemPositionContext.Provider key={key} value={{ isLast, isParent }}>
+                {node ?? (
+                  <BreadcrumbItem>
+                    <IconButton
+                      icon={DotsThreeIcon}
+                      variant="tertiary"
+                      size={expandSizeForSize[size]}
+                      aria-label={labels.expand(hidden)}
+                      onClick={expand}
+                      className={styles.expand}
+                    />
+                  </BreadcrumbItem>
+                )}
               </ItemPositionContext.Provider>
             ))}
           </ol>
