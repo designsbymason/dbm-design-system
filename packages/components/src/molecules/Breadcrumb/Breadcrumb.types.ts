@@ -98,6 +98,7 @@ export interface BreadcrumbProps
    * many as it takes for the trail to fit its own width, measured in the browser (so a server-rendered
    * page shows the full trail until it loads), and again whenever that width changes. Left out, the trail
    * never collapses and simply wraps onto more lines when it is too wide.
+   * @default undefined
    */
   maxItems?: number | "container";
   /**

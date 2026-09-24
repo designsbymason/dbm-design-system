@@ -120,9 +120,11 @@ const meta: Meta<PlaygroundArgs> = {
     },
     maxItems: {
       control: "select",
-      options: ["off", "3", "4", "5", "container"],
+      // The values a real caller can pass: a number of items, or "container". (Leaving the prop out is the default.)
+      options: [3, 4, 5, "container"],
       description:
-        'Collapses a long trail: the middle is replaced by a "…" button that shows them all when used. A number collapses once there are more items than that; "container" collapses only as many as it takes to fit the trail\'s own width, measured in the browser. Left out ("off" here), the trail never collapses and wraps instead.',
+        'Collapses a long trail: the middle is replaced by a "…" button that shows them all when used. A number collapses once there are more items than that; "container" collapses only as many as it takes to fit the trail\'s own width, measured in the browser. Left out, the trail never collapses and wraps instead.',
+      table: { defaultValue: { summary: "undefined" } },
     },
     compact: {
       control: "select",
@@ -231,6 +233,16 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
+  // The Playground's own control adds "off", the way to leave `maxItems` out — not a value the prop takes, so it stays
+  // out of the meta-level argType the Properties table reads.
+  argTypes: {
+    maxItems: {
+      control: "select",
+      options: ["off", "3", "4", "5", "container"],
+      description:
+        'Collapses a long trail: the middle is replaced by a "…" button that shows them all when used. A number collapses once there are more items than that; "container" collapses only as many as it takes to fit the trail\'s own width. "off" leaves the prop out, so the trail never collapses and wraps instead.',
+    },
+  },
   parameters: {
     docs: {
       source: {
