@@ -11,6 +11,9 @@
   --t-on-icon: var(--dbm-icon-on-info);
   --t-line: var(--dbm-border-info);
   --t-icon: var(--dbm-icon-info);
+  --t-fill: var(--dbm-bg-on-info);
+  --t-fill-line: var(--dbm-border-on-info);
+  --t-fill-label: var(--dbm-text-info);
 }
 
 .toneSuccess {
@@ -23,6 +26,9 @@
   --t-on-icon: var(--dbm-icon-on-success);
   --t-line: var(--dbm-border-success);
   --t-icon: var(--dbm-icon-success);
+  --t-fill: var(--dbm-bg-on-success);
+  --t-fill-line: var(--dbm-border-on-success);
+  --t-fill-label: var(--dbm-text-success);
 }
 
 .toneWarning {
@@ -35,6 +41,9 @@
   --t-on-icon: var(--dbm-icon-on-warning);
   --t-line: var(--dbm-border-warning);
   --t-icon: var(--dbm-icon-warning);
+  --t-fill: var(--dbm-bg-on-warning);
+  --t-fill-line: var(--dbm-border-on-warning);
+  --t-fill-label: var(--dbm-text-warning);
 }
 
 .toneDanger {
@@ -47,6 +56,9 @@
   --t-on-icon: var(--dbm-icon-on-danger);
   --t-line: var(--dbm-border-danger);
   --t-icon: var(--dbm-icon-danger);
+  --t-fill: var(--dbm-bg-on-danger);
+  --t-fill-line: var(--dbm-border-on-danger);
+  --t-fill-label: var(--dbm-text-danger);
 }
 
 .toneNeutral {
@@ -59,6 +71,9 @@
   --t-on-icon: var(--dbm-icon-on-neutral);
   --t-line: var(--dbm-border-neutral-strong);
   --t-icon: var(--dbm-icon-default);
+  --t-fill: var(--dbm-bg-on-neutral);
+  --t-fill-line: var(--dbm-border-on-neutral);
+  --t-fill-label: var(--dbm-text-secondary);
 }
 
 /* What each variant draws with. `--alert-hover` is the dismiss button's fill while hovered; `--alert-ring` the focus
@@ -270,4 +285,84 @@
 
 [data-theme$="-dark"] .wrapper[data-stuck] .root {
   box-shadow: var(--dbm-shadow-dark-md);
+}
+
+/* --- Alert.Action: a `Button` that takes its colours from the alert. ---
+   `Button`'s own rules are one class deep (its hover rules are five selectors deep), so these are written one selector
+   deeper and win whichever stylesheet loads last. An `Alert.Action`'s own size is the alert's, set on the `Button`. The
+   colours are, per alert variant:
+     solid:            primary — an inverted fill (`--t-fill`) with the tone's own colour as the label; secondary —
+                       outlined in the on-fill colour; tertiary — plain on-fill text.
+     subtle / outlined: primary — the tone's solid fill; secondary — the tone's border with a neutral label; tertiary —
+                       a neutral label. */
+
+/* Icons inside the button take the label's colour, not the tone `Button` locks to its own variant. */
+.action svg {
+  color: inherit;
+}
+
+/* Solid alert. */
+.variantSolid .actionPrimary {
+  background-color: var(--t-fill);
+  color: var(--t-fill-label);
+}
+
+.variantSolid .actionPrimary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-subtle-bg);
+}
+
+.variantSolid .actionSecondary {
+  background-color: transparent;
+  border-color: var(--t-fill-line);
+  color: var(--t-on);
+}
+
+.variantSolid .actionTertiary {
+  background-color: transparent;
+  color: var(--t-on);
+}
+
+.variantSolid .actionSecondary:not(:disabled):not(.disabled):hover,
+.variantSolid .actionTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-solid-hover);
+}
+
+/* Where `border.focus` would be unreadable (on the tone's own solid fill), the ring is the on-fill colour. */
+.variantSolid .action:focus-visible {
+  outline-color: var(--t-on-icon);
+}
+
+/* Subtle and outlined alerts. */
+.variantSubtle .actionPrimary,
+.variantOutlined .actionPrimary {
+  background-color: var(--t-solid-bg);
+  color: var(--t-on);
+}
+
+.variantSubtle .actionPrimary:not(:disabled):not(.disabled):hover,
+.variantOutlined .actionPrimary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-solid-hover);
+}
+
+.variantSubtle .actionSecondary,
+.variantOutlined .actionSecondary {
+  background-color: transparent;
+  border-color: var(--t-line);
+  color: var(--dbm-text-primary);
+}
+
+.variantSubtle .actionTertiary,
+.variantOutlined .actionTertiary {
+  background-color: transparent;
+  color: var(--dbm-text-primary);
+}
+
+.variantSubtle .actionSecondary:not(:disabled):not(.disabled):hover,
+.variantSubtle .actionTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-subtle-hover);
+}
+
+.variantOutlined .actionSecondary:not(:disabled):not(.disabled):hover,
+.variantOutlined .actionTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-subtle-bg);
 }

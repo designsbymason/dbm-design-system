@@ -9,6 +9,7 @@ import * as AlertStories from "./Alert.stories";
 import * as AlertTitleStories from "./AlertTitle.stories";
 import * as AlertDescriptionStories from "./AlertDescription.stories";
 import * as AlertActionsStories from "./AlertActions.stories";
+import * as AlertActionStories from "./AlertAction.stories";
 
 export const rootPropOrder = [
   "children",
@@ -38,6 +39,26 @@ export const rootPropOrder = [
 export const titlePropOrder = ["children", "asChild", "id", "className", "style", "data-testid"];
 export const descriptionPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const actionsPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const actionPropOrder = [
+  "children",
+  "variant",
+  "leadingIcon",
+  "trailingIcon",
+  "isLoading",
+  "loadingText",
+  "rounded",
+  "fullWidth",
+  "asChild",
+  "type",
+  "disabled",
+  "onClick",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
 
 <Meta of={AlertStories} />
 
@@ -98,10 +119,23 @@ The message itself. Also accepts any other native `<div>` attribute beyond what'
 
 ### Alert.Actions properties
 
-What the reader can do about it. Also accepts any other native `<div>` attribute beyond what's listed
-here (e.g. `onClick`, `title`) — passed straight through to the underlying element.
+What the reader can do about it — the row that holds the alert's actions. It holds anything (an
+`Alert.Action`, a `Link`, your own control), but only an `Alert.Action` takes the alert's colours. Also
+accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed
+straight through to the underlying element.
 
 <PropertiesTable of={AlertActionsStories} order={actionsPropOrder} />
+
+### Alert.Action properties
+
+One thing the reader can do about the message: a `Button` that takes the colours and the size of the
+alert around it, so it reads against every tone and variant — including a solid one, where a
+brand-coloured button would be nearly invisible. It takes everything `Button` takes, except `variant`
+(here, `"primary"`, `"secondary"` or `"tertiary"`) and `size` (always the alert's). Also accepts any
+other native `<button>` attribute beyond what's listed here (e.g. `onFocus`, `title`) — passed
+straight through.
+
+<PropertiesTable of={AlertActionStories} order={actionPropOrder} />
 
 ### usePersistentDismiss
 
@@ -138,7 +172,20 @@ interrupt a screen reader (`role="alert"`), the rest wait for a pause (`role="st
 
 ### With actions
 
+`Alert.Action` is a `Button` that takes the alert's colours and its size. Choose how prominent it is
+with `variant`: a filled `"primary"` (the default), an outlined `"secondary"`, or a text-only
+`"tertiary"`.
+
 <Canvas of={AlertStories.WithActions} />
+
+### Actions on every tone and variant
+
+How each action looks depends on the alert it is in. On a `"solid"` alert the primary is inverted (a
+light fill with the tone's colour as its label), the secondary is outlined in the on-fill colour, and
+the tertiary is plain on-fill text. On a `"subtle"` or `"outlined"` alert the primary is filled in the
+alert's own tone, and the secondary and tertiary have a neutral label.
+
+<Canvas of={AlertStories.ActionsEverywhere} />
 
 ### Title only
 
@@ -223,7 +270,8 @@ Drag the bottom-right corner of the box to change its width.
 - Use an alert for something the reader needs to notice or act on, placed near what it is about.
 - Choose the tone for what the message means, not for the colour you'd like: `danger` for a failure,
   `warning` for something that needs attention, `success` for a confirmation, `info` for news.
-- Say what happened and what to do in the title and description; put the action in `Alert.Actions`.
+- Say what happened and what to do in the title and description; put each action in `Alert.Actions`
+  as an `Alert.Action`, so it reads against the alert's tone and variant.
 - Use `banner` for a message about a whole page or section, and `sticky` only for one the reader must
   not lose sight of. Make a sticky alert dismissible.
 - Use `role="none"` for a message that is already on the page when it loads.
@@ -252,8 +300,12 @@ Drag the bottom-right corner of the box to change its width.
 - The default `role` follows the tone. Use `role="alert"` deliberately for an urgent message that
   isn't `danger` or `warning`, and `role="none"` for anything already on the page at load — a live
   region that is present when the page loads can be announced before the reader has asked for it.
-- Buttons inside an alert sit on its background, so choose a `Button` variant that reads against it —
-  on `"solid"`, a filled button can match the alert's own fill. Check any pairing you introduce.
+- Use `Alert.Action` for the alert's actions, not a plain `Button`. A `Button` keeps the brand colours,
+  which are nearly invisible on a `"solid"` alert (1.0–1.6:1) and clash with a tone on the others;
+  `Alert.Action` takes its colours from the alert, and its size follows the alert's `size`. Anything
+  else in `Alert.Actions` (a `Link`, your own control) keeps its own colours, so check that it reads.
+- Make one action `"primary"`, and the rest `"secondary"` or `"tertiary"`; a single action is usually
+  `"primary"`.
 - `Alert.Title` is a paragraph so that an alert doesn't add a heading to the page's outline. When it
   does belong in the outline, use `asChild` with the right heading level.
 - With `banner`, put the alert as a direct child of the page or section container, so it can reach the
@@ -295,6 +347,18 @@ tone's state-identifying border colour (4.70:1 or more against the surface). The
 `border.focus` on the first two variants (3.56–8.44:1 against the tints across both brands and both
 modes), and the on-fill icon colour on `"solid"` (4.70–8.22:1), where `border.focus` would be unreadable.
 
+**The actions** are chosen so that each reads against the alert around it. On a `"solid"` alert: the
+primary's label on its fill is 4.71–6.88:1 in light and 8.19–10.47:1 in dark, its edge against the
+alert 4.70–6.50:1 and 8.19–8.22:1; the secondary's outline and label, and the tertiary's label, are
+4.70–6.50:1 and 8.19–8.22:1. On a `"subtle"` alert: the primary's label is 4.70–6.50:1 and 8.19–8.22:1
+and its edge against the tint 4.51–6.22:1 and 5.86–10.68:1; the secondary's border is 4.51:1 or more in
+light and 4.34:1 or more in dark, and its neutral label (and the tertiary's) 13.46:1 and 9.66:1 or more. On an
+`"outlined"` alert: the primary's edge is 4.70–6.50:1 and 7.94–8.42:1, the secondary's border 4.70:1 or
+more and 6.08:1 or more, and the labels 14.11:1 and 13.53:1. A test measures every combination from the
+colours the browser draws — every tone, variant and action — in light, dark and Emerald. While an
+action is hovered the label stays at 4.51:1 or more in light and 6.59:1 or more in dark. The focus ring
+on an action is the on-fill colour on `"solid"` and `border.focus` on the rest.
+
 **Motion**: only dismissing animates — the alert fades and collapses away, and it does not animate in
 when it loads. With `prefers-reduced-motion` it is removed at once.
 
@@ -324,6 +388,15 @@ function Announcement() {
 {/* Controlled */}
 <Alert dismissible open={open} onOpenChange={setOpen}>{/* ... */}</Alert>
 
+{/* Actions: a Button that takes the alert's colours and size */}
+<Alert tone="warning" variant="solid">
+  <Alert.Description>Your trial ends in three days.</Alert.Description>
+  <Alert.Actions>
+    <Alert.Action>Add a payment method</Alert.Action>
+    <Alert.Action variant="tertiary" asChild><a href="/pricing">See plans</a></Alert.Action>
+  </Alert.Actions>
+</Alert>
+
 {/* A heading as the title, and no announcement for a message already on the page */}
 <Alert tone="warning" role="none">
   <Alert.Title asChild><h2>Your trial ends soon</h2></Alert.Title>
@@ -345,7 +418,10 @@ function Announcement() {
 <TokenRow token="text.secondary" usage="the message on the subtle and outlined variants" />
 <TokenRow token="icon.info" usage="the icon on the subtle and outlined variants (icon.default for neutral)" />
 <TokenRow token="icon.on-info" usage="the icon on the solid variant; the focus ring on it" />
-<TokenRow token="bg.info-subtle-hover" usage="the dismiss button while hovered, on the subtle variant" />
+<TokenRow token="bg.info-subtle-hover" usage="the dismiss button while hovered, on the subtle variant; a secondary or tertiary action while hovered, on a subtle alert" />
+<TokenRow token="bg.on-info" usage="the primary action's fill on a solid alert" />
+<TokenRow token="border.on-info" usage="the secondary action's outline on a solid alert" />
+<TokenRow token="text.info" usage="the primary action's label on a solid alert (text.secondary for neutral)" />
 <TokenRow token="bg.info-hover" usage="the dismiss button while hovered, on the solid variant" />
 <TokenRow token="bg.neutral-subtle" usage="the dismiss button while hovered, on the outlined variant" />
 <TokenRow token="border.focus" usage="the dismiss button's focus ring on the subtle and outlined variants" />

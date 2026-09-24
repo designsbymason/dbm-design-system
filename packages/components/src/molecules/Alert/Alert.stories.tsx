@@ -219,10 +219,8 @@ function PlaygroundAlert(args: PlaygroundArgs) {
         <Alert.Title>Payment failed</Alert.Title>
         <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
         <Alert.Actions>
-          <Button size="sm">Update card</Button>
-          <Button size="sm" variant="tertiary">
-            Remind me later
-          </Button>
+          <Alert.Action>Update card</Alert.Action>
+          <Alert.Action variant="tertiary">Remind me later</Alert.Action>
         </Alert.Actions>
       </Alert>
       {!open && (
@@ -330,12 +328,37 @@ export const WithActions: Story = {
         <Alert.Title>Payment failed</Alert.Title>
         <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
         <Alert.Actions>
-          <Button size="sm">Update card</Button>
-          <Button size="sm" variant="tertiary">
-            Remind me later
-          </Button>
+          <Alert.Action>Update card</Alert.Action>
+          <Alert.Action variant="tertiary">Remind me later</Alert.Action>
         </Alert.Actions>
       </Alert>
+    </div>
+  ),
+};
+
+export const ActionsEverywhere: Story = {
+  name: "Actions on every tone and variant",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: alertSnippets.actionVariants } } },
+  render: () => (
+    <div style={{ ...demoContainerStyle, ...stack, gap: "var(--dbm-space-8)" }}>
+      {(["subtle", "outlined", "solid"] as const).map((variant) => (
+        <div key={variant} style={stack}>
+          <Text size="sm" weight="semibold">
+            variant=&quot;{variant}&quot;
+          </Text>
+          {(["info", "success", "warning", "danger", "neutral"] as const).map((tone) => (
+            <Alert key={tone} tone={tone} variant={variant} size="sm" role="none">
+              <Alert.Description>A {tone} message.</Alert.Description>
+              <Alert.Actions>
+                <Alert.Action>Primary</Alert.Action>
+                <Alert.Action variant="secondary">Secondary</Alert.Action>
+                <Alert.Action variant="tertiary">Tertiary</Alert.Action>
+              </Alert.Actions>
+            </Alert>
+          ))}
+        </div>
+      ))}
     </div>
   ),
 };
@@ -715,5 +738,123 @@ export const RightToLeftInteraction: Story = {
     // In left-to-right text the icon is at the left and the dismiss button at the right; right-to-left swaps them.
     await expect(sides("ltr")).toEqual({ iconOnStart: true, dismissOnEnd: true });
     await expect(sides("rtl")).toEqual({ iconOnStart: false, dismissOnEnd: false });
+  },
+};
+
+/** The WCAG contrast ratio of two opaque `rgb(...)` colours, from their computed values. */
+function contrast(a: string, b: string): number {
+  const luminance = (colour: string) => {
+    const [r = 0, g = 0, bl = 0] = (colour.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+    const linear = (channel: number) => {
+      const value = channel / 255;
+      return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(bl);
+  };
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (light + 0.05) / (dark + 0.05);
+}
+
+function ActionMatrix() {
+  return (
+    <div style={{ ...demoContainerStyle, ...stack, gap: "var(--dbm-space-3)" }}>
+      {(["subtle", "outlined", "solid"] as const).flatMap((variant) =>
+        (["info", "success", "warning", "danger", "neutral"] as const).map((tone) => (
+          <Alert key={`${tone}-${variant}`} tone={tone} variant={variant} size="sm" role="none" data-testid={`${tone}-${variant}`}>
+            <Alert.Actions>
+              <Alert.Action data-action="primary">Primary</Alert.Action>
+              <Alert.Action variant="secondary" data-action="secondary">
+                Secondary
+              </Alert.Action>
+              <Alert.Action variant="tertiary" data-action="tertiary">
+                Tertiary
+              </Alert.Action>
+            </Alert.Actions>
+          </Alert>
+        )),
+      )}
+    </div>
+  );
+}
+
+/**
+ * Every action on every tone and variant, with the contrast measured from the colours the browser actually drew — text at
+ * 4.5:1, and the edge of a filled or outlined button against the alert at 3:1 (WCAG 1.4.3 and 1.4.11).
+ */
+const checkActionContrast = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  for (const variant of ["subtle", "outlined", "solid"] as const) {
+    for (const tone of ["info", "success", "warning", "danger", "neutral"] as const) {
+      const alert = canvas.getByTestId(`${tone}-${variant}`);
+      const alertBackground = getComputedStyle(alert).backgroundColor;
+      const where = `${tone}/${variant}`;
+      const primary = getComputedStyle(within(alert).getByText("Primary"));
+      const secondary = getComputedStyle(within(alert).getByText("Secondary"));
+      const tertiary = getComputedStyle(within(alert).getByText("Tertiary"));
+      // Filled: the label on its fill, and the fill's edge against the alert.
+      await expect(contrast(primary.color, primary.backgroundColor), `${where} primary label`).toBeGreaterThanOrEqual(4.5);
+      await expect(contrast(primary.backgroundColor, alertBackground), `${where} primary edge`).toBeGreaterThanOrEqual(3);
+      // Outlined and plain: the label on the alert, and the outline against it.
+      await expect(contrast(secondary.color, alertBackground), `${where} secondary label`).toBeGreaterThanOrEqual(4.5);
+      await expect(contrast(secondary.borderTopColor, alertBackground), `${where} secondary border`).toBeGreaterThanOrEqual(3);
+      await expect(contrast(tertiary.color, alertBackground), `${where} tertiary label`).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+};
+
+export const ActionContrastInteraction: Story = {
+  name: "Action contrast — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <ActionMatrix />,
+  play: async ({ canvasElement }) => checkActionContrast(canvasElement),
+};
+
+export const ActionContrastDarkInteraction: Story = {
+  name: "Action contrast, dark — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  globals: { mode: "dark" },
+  render: () => <ActionMatrix />,
+  play: async ({ canvasElement }) => {
+    // The story really is in dark mode (fails loudly if the global didn't apply).
+    await expect(document.documentElement.dataset.theme).toMatch(/-dark$/);
+    await checkActionContrast(canvasElement);
+  },
+};
+
+export const ActionContrastEmeraldInteraction: Story = {
+  name: "Action contrast, Emerald — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  globals: { brand: "emerald" },
+  render: () => <ActionMatrix />,
+  play: async ({ canvasElement }) => {
+    await expect(document.documentElement.dataset.theme).toMatch(/^emerald-/);
+    await checkActionContrast(canvasElement);
+  },
+};
+
+export const ActionSizeInteraction: Story = {
+  name: "Action size — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={stack}>
+      {(["xs", "md", "xl"] as const).map((size) => (
+        <Alert key={size} size={size} role="none" data-testid={`size-${size}`}>
+          <Alert.Actions>
+            <Alert.Action>Go</Alert.Action>
+          </Alert.Actions>
+        </Alert>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // An action is exactly as tall as a `Button` of the alert's own size: the size follows the alert.
+    const canvas = within(canvasElement);
+    const heights = ["xs", "md", "xl"].map((size) => within(canvas.getByTestId(`size-${size}`)).getByRole("button").getBoundingClientRect().height);
+    await expect(heights[0]!).toBeLessThan(heights[1]!);
+    await expect(heights[1]!).toBeLessThan(heights[2]!);
   },
 };

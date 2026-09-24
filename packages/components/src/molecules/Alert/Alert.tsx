@@ -10,13 +10,16 @@ import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import { cx, mergeRefs } from "@dbm-design-system/primitives";
 import { Presence } from "@radix-ui/react-presence";
 import { Slot } from "@radix-ui/react-slot";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { createContext, forwardRef, useContext, useEffect, useRef, useState } from "react";
 import type { FocusEvent } from "react";
 import { Affix } from "../../atoms/Affix";
+import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize, IconTone } from "../../atoms/Icon";
 import styles from "./Alert.module.css";
 import type {
+  AlertActionProps,
+  AlertActionVariant,
   AlertActionsProps,
   AlertDescriptionProps,
   AlertLabels,
@@ -86,6 +89,19 @@ const defaultRole: Record<AlertTone, AlertRole> = {
   neutral: "status",
 };
 
+// What an `Alert.Action` needs from the alert around it: the colours it draws with, and the size it takes.
+interface AlertContextValue {
+  variant: AlertVariant;
+  size: AlertSize;
+}
+const AlertContext = createContext<AlertContextValue>({ variant: "subtle", size: "md" });
+
+const actionVariantClass: Record<AlertActionVariant, string | undefined> = {
+  primary: styles.actionPrimary,
+  secondary: styles.actionSecondary,
+  tertiary: styles.actionTertiary,
+};
+
 const defaultLabels: AlertLabels = { dismiss: "Dismiss" };
 
 const FOCUSABLE =
@@ -137,9 +153,43 @@ const AlertActions = forwardRef<HTMLDivElement, AlertActionsProps>(({ className,
 AlertActions.displayName = "Alert.Actions";
 
 /**
+ * One thing the reader can do about the message — a `Button` that takes its colours (and its size) from the alert around it,
+ * so it reads against any tone and variant, including a solid one where a brand-coloured button would disappear. Takes
+ * everything `Button` takes (`asChild` for a link, `onClick`, `disabled`, `isLoading`, icons…) except its own `variant` and
+ * `size`. `variant` is how prominent it is: `"primary"` (the default), `"secondary"` or `"tertiary"`.
+ */
+const AlertAction = forwardRef<HTMLButtonElement, AlertActionProps>(
+  ({ variant = "primary", className, ...props }, ref) => {
+    const { size } = useContext(AlertContext);
+    // Only these three are drawn to read against the alert; anything else (a `Button` variant, say) is not one of them.
+    const known = variant in actionVariantClass;
+    const resolved: AlertActionVariant = known ? variant : "primary";
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && !known) {
+        console.warn(
+          `Alert.Action: \`variant\` must be "primary", "secondary" or "tertiary", but got ${JSON.stringify(variant)} — it is treated as "primary".`,
+        );
+      }
+    }, [known, variant]);
+    return (
+      <Button
+        {...props}
+        ref={ref}
+        // After `...props`: the size is the alert's, and the variant is one of ours, whatever a caller passes.
+        variant={resolved}
+        size={size}
+        className={cx(styles.action, actionVariantClass[resolved], className)}
+      />
+    );
+  },
+);
+AlertAction.displayName = "Alert.Action";
+
+/**
  * A message that stays in the page: something the reader should know, or do something about — a saved form, a failed
  * upload, a plan about to expire. A compound component: put `Alert.Title`, `Alert.Description` and `Alert.Actions` inside
- * it in any order, or just plain text for the shortest alert.
+ * it in any order, or just plain text for the shortest alert. Put `Alert.Action`s in `Alert.Actions`: they take the alert's
+ * colours and size, so they read against every tone and variant.
  *
  * Five `tone`s (each with its own icon), three `variant`s, five `size`s. `banner` makes it edge to edge for a whole page
  * or section, and `sticky` keeps it at the top as the page scrolls (built on `Affix`). `dismissible` adds a button that
@@ -156,7 +206,7 @@ AlertActions.displayName = "Alert.Actions";
  * <Alert tone="danger" dismissible>
  *   <Alert.Title>Payment failed</Alert.Title>
  *   <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
- *   <Alert.Actions><Button size="sm">Update card</Button></Alert.Actions>
+ *   <Alert.Actions><Alert.Action>Update card</Alert.Action></Alert.Actions>
  * </Alert>
  * ```
  */
@@ -264,7 +314,9 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
                 />
               </span>
             )}
-            <div className={styles.body}>{children}</div>
+            <div className={styles.body}>
+              <AlertContext.Provider value={{ variant, size }}>{children}</AlertContext.Provider>
+            </div>
             {dismissible && (
               <button type="button" className={styles.dismiss} aria-label={labels.dismiss} onClick={dismiss}>
                 <Icon icon={XIcon} size={dismissIconSizeForSize[size]} />
@@ -297,10 +349,12 @@ type AlertComponent = typeof AlertRoot & {
   Title: typeof AlertTitle;
   Description: typeof AlertDescription;
   Actions: typeof AlertActions;
+  Action: typeof AlertAction;
 };
 
 export const Alert: AlertComponent = Object.assign(AlertRoot, {
   Title: AlertTitle,
   Description: AlertDescription,
   Actions: AlertActions,
+  Action: AlertAction,
 });

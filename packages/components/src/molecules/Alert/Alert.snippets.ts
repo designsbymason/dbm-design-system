@@ -18,8 +18,8 @@ const alert = (attributes = "", inner = body()) =>
 
 const withActions = `${body()}
   <Alert.Actions>
-    <Button size="sm">Update card</Button>
-    <Button size="sm" variant="tertiary">Remind me later</Button>
+    <Alert.Action>Update card</Alert.Action>
+    <Alert.Action variant="tertiary">Remind me later</Alert.Action>
   </Alert.Actions>`;
 
 export const alertSnippets = {
@@ -33,8 +33,20 @@ ${alert('tone="success" variant="outlined"', body("Saved", "Your changes are liv
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — padding and type size */}
 ${alert('size="sm"')}`,
 
-  actions: `{/* Alert.Actions holds what the reader can do about it, and wraps when short of room */}
+  actions: `{/* Alert.Actions holds what the reader can do about it, and wraps when short of room. Alert.Action is a
+    Button that takes the alert's colours and size, so it reads against every tone and variant. */}
 ${alert('tone="warning"', withActions)}`,
+
+  actionVariants: `{/* Alert.Action variant: "primary" (default) | "secondary" | "tertiary". How each looks depends on the
+    alert's tone and variant, and its size follows the alert's. */}
+<Alert tone="danger" variant="solid">
+  <Alert.Description>Your card was declined.</Alert.Description>
+  <Alert.Actions>
+    <Alert.Action>Update card</Alert.Action>
+    <Alert.Action variant="secondary">Try again</Alert.Action>
+    <Alert.Action variant="tertiary">Remind me later</Alert.Action>
+  </Alert.Actions>
+</Alert>`,
 
   titleOnly: `{/* Every part is optional */}
 <Alert tone="success">

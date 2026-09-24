@@ -1,6 +1,7 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { SpaceValue } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
+import type { ButtonProps } from "../../atoms/Button";
 
 /**
  * What the message is about, on the standard tone scale (`05-component-api-conventions.md` §2). `"info"` (the
@@ -173,8 +174,32 @@ export interface AlertDescriptionProps extends Omit<ComponentPropsWithoutRef<"di
   "data-testid"?: string;
 }
 
+/**
+ * How prominent an action is, using the names `Button` uses for the same three treatments. How each one looks depends on
+ * the alert it sits in — its tone and its variant — so that it always reads against it.
+ *
+ * - `"primary"` (the default) — the one to choose: a filled button (on a solid alert, an inverted one).
+ * - `"secondary"` — an outlined button.
+ * - `"tertiary"` — text only.
+ */
+export type AlertActionVariant = "primary" | "secondary" | "tertiary";
+
+export interface AlertActionProps extends Omit<ButtonProps, "variant" | "size"> {
+  /** The action's label (or, with `asChild`, the element it is drawn onto). */
+  children?: ButtonProps["children"];
+  /**
+   * How prominent it is — see {@link AlertActionVariant}.
+   * @default 'primary'
+   */
+  variant?: AlertActionVariant;
+}
+
 export interface AlertActionsProps extends Omit<ComponentPropsWithoutRef<"div">, "className" | "style" | "id"> {
-  /** What the reader can do about it — usually one or two `Button`s or `Link`s. They wrap onto more lines when there is no room. */
+  /**
+   * What the reader can do about it — usually one or two `Alert.Action`s, which take their colours from the alert. Anything
+   * else works too (a `Link`, your own control), but a control that isn't an `Alert.Action` keeps its own colours, so check
+   * that it reads against the alert. They wrap onto more lines when there is no room.
+   */
   children?: ReactNode;
   /** Standard DOM id. */
   id?: string;

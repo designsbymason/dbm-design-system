@@ -5,7 +5,6 @@ import { createRef, StrictMode, useState } from "react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StarIcon } from "@dbm-design-system/icons";
-import { Button } from "../../atoms/Button";
 import { Alert } from "./Alert";
 import type { AlertProps } from "./Alert.types";
 
@@ -15,7 +14,7 @@ function Basic(props: Partial<AlertProps>) {
       <Alert.Title>Payment failed</Alert.Title>
       <Alert.Description>Your card was declined.</Alert.Description>
       <Alert.Actions>
-        <Button size="sm">Update card</Button>
+        <Alert.Action>Update card</Alert.Action>
       </Alert.Actions>
     </Alert>
   );
@@ -100,6 +99,107 @@ describe("Alert — structure", () => {
     expect(title.current?.tagName).toBe("P");
     expect(description.current?.tagName).toBe("DIV");
     expect(actions.current?.tagName).toBe("DIV");
+  });
+});
+
+describe("Alert.Action", () => {
+  it("is a Button, and follows the size of the alert around it", () => {
+    const sizes = (["xs", "sm", "md", "lg", "xl"] as const).map((size) => {
+      const { unmount } = render(
+        <Alert size={size}>
+          <Alert.Actions>
+            <Alert.Action>Go</Alert.Action>
+          </Alert.Actions>
+        </Alert>,
+      );
+      const { className } = screen.getByRole("button", { name: "Go" });
+      unmount();
+      return className;
+    });
+    ["sizeXs", "sizeSm", "sizeMd", "sizeLg", "sizeXl"].forEach((size, index) => expect(sizes[index]).toMatch(new RegExp(size)));
+  });
+
+  it("is primary by default, and takes secondary and tertiary", () => {
+    render(
+      <Alert>
+        <Alert.Action>One</Alert.Action>
+        <Alert.Action variant="secondary">Two</Alert.Action>
+        <Alert.Action variant="tertiary">Three</Alert.Action>
+      </Alert>,
+    );
+    const [one, two, three] = ["One", "Two", "Three"].map((name) => screen.getByRole("button", { name }).className);
+    expect(one).toMatch(/actionPrimary/);
+    expect(two).toMatch(/actionSecondary/);
+    expect(three).toMatch(/actionTertiary/);
+    // The Button underneath is drawn as the same treatment, so its layout and states are Button's own.
+    expect(one).toMatch(/variantPrimary/);
+    expect(two).toMatch(/variantSecondary/);
+    expect(three).toMatch(/variantTertiary/);
+  });
+
+  it("does not let a caller pick another size or variant than the alert's", () => {
+    // `size` is not a prop of Alert.Action (TypeScript stops it); a stray one at runtime still can't win.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const props = { size: "xl", variant: "ghost" } as unknown as { variant?: "primary" };
+    render(
+      <Alert size="xs">
+        <Alert.Action {...props}>Go</Alert.Action>
+      </Alert>,
+    );
+    const { className } = screen.getByRole("button", { name: "Go" });
+    expect(className).toMatch(/sizeXs/);
+    expect(className).not.toMatch(/sizeXl/);
+    expect(className).not.toMatch(/variantGhost/);
+    expect(className).toMatch(/actionPrimary/);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('`variant` must be "primary", "secondary" or "tertiary"'));
+  });
+
+  it("passes everything else to Button: onClick, disabled, type, ref, className, icons and asChild", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    const ref = createRef<HTMLButtonElement>();
+    render(
+      <Alert>
+        <Alert.Action ref={ref} onClick={onClick} className="mine" data-testid="a" leadingIcon={StarIcon}>
+          Go
+        </Alert.Action>
+        <Alert.Action disabled>Off</Alert.Action>
+        <Alert.Action asChild>
+          <a href="/next">Next</a>
+        </Alert.Action>
+      </Alert>,
+    );
+    await user.click(screen.getByRole("button", { name: "Go" }));
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(ref.current).toBe(screen.getByTestId("a"));
+    expect(screen.getByTestId("a")).toHaveClass("mine");
+    expect(screen.getByTestId("a").querySelector("svg")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Off" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute("href", "/next");
+    expect(screen.getByRole("link", { name: "Next" }).className).toMatch(/actionPrimary/);
+  });
+
+  it("works outside an alert, at the default size", () => {
+    render(<Alert.Action>Alone</Alert.Action>);
+    expect(screen.getByRole("button", { name: "Alone" }).className).toMatch(/sizeMd/);
+  });
+
+  it("has no axe violations in every alert variant and action variant", async () => {
+    const { container } = render(
+      <>
+        {(["subtle", "outlined", "solid"] as const).map((variant) => (
+          <Alert key={variant} variant={variant} tone="danger">
+            <Alert.Description>x</Alert.Description>
+            <Alert.Actions>
+              <Alert.Action>One</Alert.Action>
+              <Alert.Action variant="secondary">Two</Alert.Action>
+              <Alert.Action variant="tertiary">Three</Alert.Action>
+            </Alert.Actions>
+          </Alert>
+        ))}
+      </>,
+    );
+    expect(await axe(container)).toHaveNoViolations();
   });
 });
 
@@ -262,7 +362,7 @@ describe("Alert — focus when it goes away", () => {
         <Page>
           <Alert open={open}>
             <Alert.Actions>
-              <Button onClick={() => setOpen(false)}>Got it</Button>
+              <Alert.Action onClick={() => setOpen(false)}>Got it</Alert.Action>
             </Alert.Actions>
           </Alert>
         </Page>
