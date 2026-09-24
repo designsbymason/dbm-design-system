@@ -1,7 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { StarIcon } from "@dbm-design-system/icons";
 import { usePersistentDismiss } from "@dbm-design-system/primitives";
 import { Button } from "../../atoms/Button";
@@ -41,6 +41,16 @@ interface PlaygroundArgs {
 
 const demoContainerStyle = { maxWidth: "40rem" } as const;
 
+/**
+ * A stand-in for the page, for a banner: it spans the whole width of the canvas and has a border, so the banner's square,
+ * borderless sides meet the edges of something instead of floating, cropped, in the middle of a narrow box.
+ */
+const PageFrame = ({ children, ...props }: { children: ReactNode; "data-testid"?: string }) => (
+  <div style={{ width: "100%", border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)" }} {...props}>
+    {children}
+  </div>
+);
+
 /** A small, real alert the gallery stories vary. */
 const DemoAlert = (props: Partial<AlertProps>) => (
   <Alert {...props}>
@@ -66,6 +76,7 @@ const noControls = {
   defaultOpen: { control: false },
   role: { control: false },
   dir: { control: false },
+  "aria-label": { control: false },
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
@@ -199,30 +210,34 @@ type Story = StoryObj<PlaygroundArgs>;
  */
 function PlaygroundAlert(args: PlaygroundArgs) {
   const [open, setOpen] = useState(true);
+  // A banner spans the page, so it is shown across the whole canvas in a page frame; anything else in a readable column.
+  const Wrapper = args.banner ? PageFrame : "div";
   return (
-    <div style={demoContainerStyle}>
-      <Alert
-        tone={args.tone}
-        variant={args.variant}
-        size={args.size}
-        icon={args.icon}
-        banner={args.banner}
-        sticky={args.sticky}
-        stickyOffset={args.stickyOffset}
-        dismissible={args.dismissible}
-        open={open}
-        onOpenChange={setOpen}
-        role={args.role === "Default" ? undefined : args.role}
-        dir={args.dir}
-        aria-label={args["aria-label"] || undefined}
-      >
-        <Alert.Title>Payment failed</Alert.Title>
-        <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
-        <Alert.Actions>
-          <Alert.Action>Update card</Alert.Action>
-          <Alert.Action variant="tertiary">Remind me later</Alert.Action>
-        </Alert.Actions>
-      </Alert>
+    <div style={args.banner ? undefined : demoContainerStyle}>
+      <Wrapper>
+        <Alert
+          tone={args.tone}
+          variant={args.variant}
+          size={args.size}
+          icon={args.icon}
+          banner={args.banner}
+          sticky={args.sticky}
+          stickyOffset={args.stickyOffset}
+          dismissible={args.dismissible}
+          open={open}
+          onOpenChange={setOpen}
+          role={args.role === "Default" ? undefined : args.role}
+          dir={args.dir}
+          aria-label={args["aria-label"] || undefined}
+        >
+          <Alert.Title>Payment failed</Alert.Title>
+          <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
+          <Alert.Actions>
+            <Alert.Action>Update card</Alert.Action>
+            <Alert.Action variant="tertiary">Remind me later</Alert.Action>
+          </Alert.Actions>
+        </Alert>
+      </Wrapper>
       {!open && (
         <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
           Show it again
@@ -237,6 +252,9 @@ export const Playground: Story = {
   // The Playground's own controls add a way to leave `icon` and `role` out ("Default") and a custom icon to try — not
   // values the props take, so they stay out of the meta-level argTypes the Properties table reads.
   argTypes: {
+    // The Playground holds its own open state (so a dismissed alert can be shown again), so these two would do nothing.
+    open: { control: false },
+    defaultOpen: { control: false },
     icon: {
       control: "select",
       options: ["Default", "None", "Star"],
@@ -408,12 +426,12 @@ export const Banner: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: alertSnippets.banner } } },
   render: () => (
-    <div data-testid="banner-frame" style={{ ...demoContainerStyle, border: "var(--dbm-border-width-1) dashed var(--dbm-border-default)" }}>
+    <PageFrame data-testid="banner-frame">
       <Alert banner tone="warning" role="none">
         <Alert.Title>Scheduled maintenance</Alert.Title>
         <Alert.Description>The dashboard will be read-only on Sunday from 02:00 to 04:00 UTC.</Alert.Description>
       </Alert>
-    </div>
+    </PageFrame>
   ),
   play: async ({ canvasElement }) => {
     // Measures only. A banner has square corners and no side borders, so it meets its container's edges.
