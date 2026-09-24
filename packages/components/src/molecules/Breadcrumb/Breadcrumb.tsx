@@ -213,6 +213,12 @@ const FOCUSABLE = "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1
  * separator between items is drawn by the component, hidden from assistive technology. A long trail wraps onto
  * more lines, or — with `maxItems` — collapses its middle into a "…" button that reveals the rest.
  *
+ * `size`, `tone` and `underline` set how every link looks. `compact` swaps the trail for a single link back to the
+ * parent page (on a phone, or always). `truncate` keeps it on one line and cuts long labels short with an ellipsis.
+ * `maxItems` collapses the middle into a "…" button — past a number of items, or with `"container"` only as many
+ * as fit the trail's own width. Give each `Breadcrumb.Item` a `key` (its `href` will do), so that a different page's
+ * trail starts over instead of inheriting the last one's expansion.
+ *
  * `ref` forwards to the `<nav>`.
  *
  * @example
@@ -357,14 +363,20 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
     }, [containerMode, expanded, settled, measuredHidden, hidden, maxHidden, before, itemCount, size, truncate, compact, widthChanges]);
 
     // The item count changing (a route change) is a different trail, so measure it afresh.
-    const measuredCount = useRef(itemCount);
+    // Which trail this is: the items' keys, in order. A different trail (a route change, in a layout that keeps the
+    // breadcrumb mounted) starts over — collapsed again if it is long, and measured afresh — instead of inheriting the
+    // last page's expansion. Items with no `key` of their own are told apart by position only, so they can't tell one
+    // page's trail from another's of the same length: give each item a `key` (its `href` will do).
+    const trailKey = items.map((item) => String(item.key)).join("/");
+    const measuredTrail = useRef(trailKey);
     useIsomorphicLayoutEffect(() => {
       // Not on mount, which would undo the measurement that has just started.
-      if (measuredCount.current === itemCount) return;
-      measuredCount.current = itemCount;
+      if (measuredTrail.current === trailKey) return;
+      measuredTrail.current = trailKey;
+      setExpanded(false);
       setMeasuredHidden(0);
       setSettled(false);
-    }, [itemCount]);
+    }, [trailKey]);
 
     // The "…" button is what has keyboard focus when it is used, and expanding removes it — so focus moves on to
     // the first item it revealed instead of dropping to the top of the document.

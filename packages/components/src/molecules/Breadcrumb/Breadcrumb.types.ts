@@ -137,6 +137,11 @@ export interface BreadcrumbProps
   "aria-label"?: string;
   /** The id of a visible element that names the `<nav>`, in place of `aria-label`. */
   "aria-labelledby"?: string;
+  /**
+   * Text direction, a native attribute: `"rtl"` mirrors the trail — the first item sits at the right, and the
+   * chevron and the compact form's back arrow point the other way. Inherited from the page when left out.
+   */
+  dir?: "ltr" | "rtl" | "auto";
   /** Standard DOM id, on the `<nav>`. */
   id?: string;
   /** Additional CSS classes for customization. */

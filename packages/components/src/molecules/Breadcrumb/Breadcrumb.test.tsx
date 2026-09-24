@@ -548,6 +548,40 @@ describe("Breadcrumb — maxItems=\"container\"", () => {
   });
 });
 
+describe("Breadcrumb — a different trail", () => {
+  const Trail = ({ names, ...props }: { names: string[] } & Partial<BreadcrumbProps>) => (
+    <Breadcrumb maxItems={3} {...props}>
+      {names.map((name, index) => (
+        <Breadcrumb.Item key={name}>
+          {index === names.length - 1 ? (
+            <Breadcrumb.Page>{name}</Breadcrumb.Page>
+          ) : (
+            <Breadcrumb.Link href={`/${name}`}>{name}</Breadcrumb.Link>
+          )}
+        </Breadcrumb.Item>
+      ))}
+    </Breadcrumb>
+  );
+
+  it("starts over when the items change — collapsed again if the new trail is long", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<Trail names={["a", "b", "c", "d", "e"]} />);
+    await user.click(screen.getByRole("button"));
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    rerender(<Trail names={["a", "x", "y", "z", "w", "v"]} />);
+    expect(screen.getByRole("button", { name: "Show 3 hidden pages" })).toBeInTheDocument();
+  });
+
+  it("keeps the expansion while the same trail re-renders", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<Trail names={["a", "b", "c", "d", "e"]} />);
+    await user.click(screen.getByRole("button"));
+    rerender(<Trail names={["a", "b", "c", "d", "e"]} size="sm" />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+});
+
 describe("Breadcrumb — StrictMode", () => {
   it("still moves focus after expanding when mounted twice", async () => {
     const user = userEvent.setup();

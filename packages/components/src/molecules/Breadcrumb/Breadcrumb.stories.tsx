@@ -749,6 +749,10 @@ export const TruncateInteraction: Story = {
       await expect(getComputedStyle(label).textOverflow).toBe("ellipsis");
     }
     await expect(within(box).getByRole("link", { name: "Home" })).toHaveAttribute("title", "Home");
+    // A keyboard reader still gets a focus ring on a link in a truncated trail.
+    await userEvent.tab();
+    await expect(within(box).getByRole("link", { name: "Home" })).toHaveFocus();
+    await expect(getComputedStyle(within(box).getByRole("link", { name: "Home" })).outlineStyle).toBe("solid");
     await expect(page.closest("[aria-current]")).toHaveAttribute("title", "Renewal terms and conditions for the current financial year");
   },
 };

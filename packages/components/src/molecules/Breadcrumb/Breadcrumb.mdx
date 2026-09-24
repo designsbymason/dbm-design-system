@@ -92,13 +92,16 @@ to collapse. Drag the bottom-right corner of the canvas to change its width — 
 
 Every part reads `size` and `separator` from `Breadcrumb`, so they are set once, on the root. `ref`
 forwards to the `<nav>`. Also accepts any other native `<nav>` attribute beyond what's listed here
-(e.g. `dir`, `onFocus`) — passed straight through to the root element.
+(e.g. `onFocus`, `title`) — passed straight through to the root element.
 
 <PropertiesTable of={BreadcrumbStories} order={rootPropOrder} />
 
 Only `Breadcrumb.Item` elements are rendered: a fragment, or plain text, placed among the children is
 ignored (with a warning in development), so build the list from items directly rather than wrapping
-several in a fragment.
+several in a fragment. Give each item a `key` — its `href` will do. When the items change (a route
+change, in a layout that keeps the breadcrumb mounted), the trail starts over: collapsed again if it
+is long, instead of staying expanded from the last page. Items with no `key` of their own can only be
+told apart by position.
 
 ### Breadcrumb.Item properties
 
@@ -175,7 +178,7 @@ first item it revealed.
 and measures again whenever that width changes. Drag the bottom-right corner of the box: items give
 way one at a time, and come back as it widens. It is measured in the browser, so a server-rendered
 page shows the full trail until the page loads. The first item, the "…" button and the last two
-items always stay; once the trail can collapse no further it wraps (or, with `truncate`, cuts labels
+items stay (by default — `itemsBeforeCollapse` and `itemsAfterCollapse` choose); once the trail can collapse no further it wraps (or, with `truncate`, cuts labels
 short). A collapse is held back while keyboard focus is on an item it would hide, so focus is never
 dropped — the trail catches up as soon as focus moves.
 
