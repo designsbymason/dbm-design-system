@@ -69,6 +69,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0020](./0020-show-code-uses-hand-written-snippets-over-storybook-generated-source.md) | "Show code" shows hand-written snippets, not Storybook's own or generated source | Accepted |
 | [0021](./0021-labels-object-and-optional-formatnumber-over-an-implicit-intl-default.md) | Text a component supplies is a `labels` object, and displayed numbers go through an optional `formatNumber` that defaults to plain output, over an implicit `Intl` default | Accepted |
 | [0022](./0022-dependency-updates-are-a-manual-refresh-pass-not-dependabot-version-prs.md) | Dependency updates are a manual refresh pass, not Dependabot version-update PRs | Accepted |
+| [0023](./0023-one-alert-with-banner-and-sticky-options-and-a-separate-persistence-hook.md) | One `Alert` with `banner` and `sticky` options and a separate `usePersistentDismiss` hook, over a separate `Banner` or built-in persistence | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

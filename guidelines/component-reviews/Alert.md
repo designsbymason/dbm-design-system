@@ -1,0 +1,39 @@
+# Alert
+
+**Tier:** molecule · **Category:** Feedback · **Status:** built 2026-09-23; **not Finalized** — awaiting the user's own review pass and declaration.
+
+## What was built
+
+A compound component: `Alert` (root), `Alert.Title`, `Alert.Description`, `Alert.Actions`, plus a companion hook, `usePersistentDismiss`, in `packages/primitives`. One component covers an inline message and a page-level banner — the decision and its alternatives are [ADR-0023](../adr/0023-one-alert-with-banner-and-sticky-options-and-a-separate-persistence-hook.md). No new dependency (`Presence` was already a direct one) and no new token. Files: the standard set plus three hidden docs-only stories files for the sub-parts ([ADR-0013](../adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md)).
+
+Props on the root: `tone` (`info` default / `success` / `warning` / `danger` / `neutral`), `variant` (`subtle` default / `outlined` / `solid`), `size` (shared 5-step scale), `icon` (a component, or `false`; each tone has its own default), `banner`, `sticky` + `stickyOffset` + `scrollContainerRef`, `dismissible`, `open` / `defaultOpen` / `onOpenChange`, `role` (`alert` / `status` / `none`), `labels` (`dismiss`), `aria-label` / `aria-labelledby` / `aria-describedby`, and the usual `className` / `style` / `id` / `data-testid`.
+
+## Decisions taken while building
+
+- **The controlled/uncontrolled trio, not ADR-0010's plain `open`:** the alert has its own internal trigger (the dismiss button), which is the case ADR-0010 leaves to the trio. It only ever calls `onOpenChange(false)`, since nothing inside can reopen it.
+- **The dismiss button is built locally** (ADR-0008): it takes the tone's own colour. It is a plain `<button>` around an `Icon`, its name `labels.dismiss` ("Dismiss"). There is no `formatNumber`: nothing the component writes contains a number.
+- **Role follows the tone** — `alert` (interrupts) for `danger` and `warning`, `status` (waits) for the rest — and `role` overrides either, including `"none"` for a message already on the page at load. The role is computed after `{...props}`, so a stray attribute can't replace it.
+- **Exit only, no enter animation:** an alert already in the page when it loads shouldn't animate in. Closing fades it while its row collapses (`grid-template-rows: 1fr → 0fr`), so what is below moves up smoothly instead of jumping; clipping (`overflow: hidden`) applies only to the closing state, so a focus ring on an action is never cut off while it is showing. `Presence` keeps it mounted until the animation ends and unmounts at once under reduced motion.
+- **Sticky is `Affix` with `asChild` on the alert's own outermost element,** and `Presence` wraps that. A wrapper anywhere around a `position: sticky` element becomes the box it sticks within, and it would never stick; a unit test asserts the sticky element is a direct child of the container. `Affix`'s `data-stuck` (set on that same element) drives a shadow while stuck, swapped per theme as `Card` does. The `Affix` sentinel is a 1px sibling; accepted.
+- **Focus moves on when the alert leaves with focus inside it** (the dismiss button, or an action that closes it — `06` §9's never-remove-the-focused-control item): the nearest focusable element outside it, the next in the page or else the previous, is worked out on `focus`, while the alert still exists to measure from, and used when `open` becomes false. Focus somewhere else is left alone.
+- **`usePersistentDismiss`** is `useSyncExternalStore` over `localStorage` (or `sessionStorage`): the server snapshot is `"unknown"`, so `ready` is `false` on the server and while hydrating, and a consumer renders nothing until it is `true` (`open={ready && !dismissed}`) instead of flashing a message already dismissed. It syncs across tabs through the `storage` event and across uses in the same tab through its own listener set, falls back to a module-level in-memory map when storage is blocked or full (only then — a copy kept next to a working storage would outlive another tab's `reset`), and stores only a timestamp (`0` for "never expires") under `dbm-dismissed:<key>`. The Docs page says that whether storing even that needs consent is the consumer's call.
+- **`banner` is a boolean on `Alert`,** not a `fullWidth`: an alert is already as wide as its container, so "full width" would mislead; what changes is the edge-to-edge treatment.
+
+## Findings from the build
+
+- **Contrast was measured, not recalled** — every pairing this component introduces, in light and dark. Text in `subtle`: `text.primary` 13.46–13.56:1 light / 9.66–17.59:1 dark, `text.secondary` 6.56–6.61:1 light / 7.47–13.61:1 dark. Icon on the tint: 4.51–6.22:1 light / 5.86–10.68:1 dark, and at least 4.0:1 under the dismiss hover fill. `solid`: text on the fill 4.70–6.50:1 light / 8.19–8.22:1 dark, and 6.88–9.56:1 / 10.32–10.68:1 hovered. The focus ring is `border.focus` on `subtle`/`outlined` (3.56–8.44:1 against the tints across both brands and both modes) and the on-fill icon colour on `solid`, where `border.focus` would be unreadable (`05` §6). The subtle title deliberately uses `text.primary`, not `text.{tone}`: `text.info` on `bg.info-subtle` is 4.5068:1 in light, the tightest margin in the system.
+- **The Properties table's "Value options" column listed values the props don't take** (`Default` for `icon` and `role`, which are Playground choices for "leave it out") — the same trap `Breadcrumb`'s `maxItems` had. Fixed at once the same way: the meta-level argTypes list only real values, the extra Playground choices (and the `mapping`) are set on the Playground story alone.
+- **Two mutations proved the focus and sticky tests bite:** disabling the focus handoff fails four unit tests and the real-browser dismiss story; removing the `Affix` composition fails two unit tests and the real-browser sticking story.
+
+## Verification (2026-09-23)
+
+`pnpm lint` (eslint + both typechecks) and `pnpm build` clean; unit tests (`Alert`: structure, ref, roles and the role that can't be replaced, tone/variant/size classes, `asChild` title, banner, sticky on the outermost element, controlled and uncontrolled dismissal, warnings, focus handoff by mouse and keyboard and from an action, StrictMode, jest-axe on every tone and variant and on banner/sticky/no-role/no-icon/heading title; `usePersistentDismiss`: 15 tests including the server snapshot, expiry with fake timers, `sessionStorage`, cross-tab and cross-instance sync, blocked and full storage, StrictMode); real-browser stories for tone roles, banner corners and borders, sticking and shadow in a scroller, colours per tone × variant against the tokens they should resolve to, long content in a narrow box, RTL icon and dismiss sides, and dismiss-by-keyboard with the focus ring and the focus handoff; every "Show code" snippet typechecked (a planted bad `tone` was caught). Checked live in Storybook: the Docs page's Properties tables and their value options and defaults.
+
+**Not done** (the user's own pass): a full `06` §9 review on top of this build, a screenshot and Brand/Mode look at every story (the browser pane could not composite one during the build), the sticky `Affix` sentinel's 1px in a real page, and the Finalize declaration.
+
+## Gaps named, not built
+
+- A `Toast` (separate organism) will want `Alert`'s tones, icons and dismiss styling; sharing them is that component's decision.
+- A reduced-motion variant that still eases the collapse (today it is removed at once).
+- A `Banner` as its own component, only if it gains behaviour an inline alert shouldn't have (ADR-0023).
+- Re-export of `usePersistentDismiss` from `@dbm-design-system/components`, so consumers needn't install `primitives` separately — undecided.
