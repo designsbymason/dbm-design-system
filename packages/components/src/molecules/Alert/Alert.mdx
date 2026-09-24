@@ -1,0 +1,395 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../../atoms/Badge";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Card } from "../Card";
+import { EmptyState } from "../EmptyState";
+import { Alert } from "./Alert";
+import * as AlertStories from "./Alert.stories";
+import * as AlertTitleStories from "./AlertTitle.stories";
+import * as AlertDescriptionStories from "./AlertDescription.stories";
+import * as AlertActionsStories from "./AlertActions.stories";
+
+export const rootPropOrder = [
+  "children",
+  "tone",
+  "variant",
+  "size",
+  "icon",
+  "banner",
+  "sticky",
+  "stickyOffset",
+  "scrollContainerRef",
+  "dismissible",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "role",
+  "labels",
+  "dir",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const titlePropOrder = ["children", "asChild", "id", "className", "style", "data-testid"];
+export const descriptionPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const actionsPropOrder = ["children", "id", "className", "style", "data-testid"];
+
+<Meta of={AlertStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Alert" tier="Molecule" />
+
+An alert is a message that stays in the page: something the reader should know, or do something about
+— a saved form, a failed upload, a plan about to expire. A compound component: put `Alert.Title`,
+`Alert.Description` and `Alert.Actions` inside `Alert`, in any order and any of them optional, or just
+plain text for the shortest one. It is not a `Toast`, which floats over the page and goes away on its
+own; an alert sits where you put it and stays until the situation changes or the reader dismisses it.
+
+Choose what it is about with `tone`, how it is drawn with `variant`, and how big it is with `size`.
+`banner` makes it edge to edge, for a message about a whole page or section, and `sticky` keeps it at
+the top as the page scrolls. `dismissible` adds a button that closes it, and the companion
+`usePersistentDismiss` hook remembers the dismissal across visits.
+
+### Import
+
+```tsx
+import { Alert } from "@dbm-design-system/components";
+import { usePersistentDismiss } from "@dbm-design-system/primitives";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={AlertStories.Playground} />
+
+</div>
+<PlaygroundControls of={AlertStories.Playground} order={rootPropOrder} exclude={["children", "open", "defaultOpen", "onOpenChange", "labels", "scrollContainerRef", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]} />
+
+The Playground's alert is controlled, with a "Show it again" button under it once it has been
+dismissed. `sticky` has nothing to stick within here — see the sticky example below.
+
+## Properties
+
+`ref` forwards to the element that carries the role (the alert itself). Also accepts any other native
+`<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed straight through to that
+element.
+
+<PropertiesTable of={AlertStories} order={rootPropOrder} />
+
+### Alert.Title properties
+
+The headline — a `<p>`, or with `asChild` your own element. Also accepts any other native `<p>`
+attribute beyond what's listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={AlertTitleStories} order={titlePropOrder} />
+
+### Alert.Description properties
+
+The message itself. Also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onClick`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={AlertDescriptionStories} order={descriptionPropOrder} />
+
+### Alert.Actions properties
+
+What the reader can do about it. Also accepts any other native `<div>` attribute beyond what's listed
+here (e.g. `onClick`, `title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={AlertActionsStories} order={actionsPropOrder} />
+
+### usePersistentDismiss
+
+A hook in `@dbm-design-system/primitives`, for remembering that a message was dismissed.
+`usePersistentDismiss(key, options?)` returns `{ ready, dismissed, dismiss, reset }`.
+
+| Name | Type | Description |
+|---|---|---|
+| `key` | `string` | Names the message. Change it (`"summer-sale-2027"`) to show a new message to people who dismissed the last one. Stored as `dbm-dismissed:<key>` |
+| `options.storage` | `"local" \| "session"` | Where to remember it: across visits (`"local"`, the default) or for this tab only |
+| `options.expiresAfter` | `number` | How long a dismissal lasts, in milliseconds. Left out, it lasts until `reset` or until the browser's storage is cleared |
+| `ready` | `boolean` | `false` on the server and on the first render while a server-rendered page hydrates; `true` once the browser has been asked |
+| `dismissed` | `boolean` | Whether it has been dismissed, in this tab or (with `"local"`) another. `false` until `ready` |
+| `dismiss()` | `() => void` | Remembers the dismissal |
+| `reset()` | `() => void` | Forgets it, so the message shows again |
+
+## Variants
+
+### All tones
+
+`tone` sets the colours, the default icon, and how the alert is announced: `"danger"` and `"warning"`
+interrupt a screen reader (`role="alert"`), the rest wait for a pause (`role="status"`).
+
+<Canvas of={AlertStories.Tones} />
+
+### All variants
+
+<Canvas of={AlertStories.Variants} />
+
+### All sizes
+
+<Canvas of={AlertStories.Sizes} />
+
+### With actions
+
+<Canvas of={AlertStories.WithActions} />
+
+### Title only
+
+<Canvas of={AlertStories.TitleOnly} />
+
+### Plain text
+
+<Canvas of={AlertStories.PlainText} />
+
+### Icons
+
+Each tone has its own icon. `icon` replaces it with any icon from `@dbm-design-system/icons`, or
+`false` removes it. The icon is decorative — what matters goes in the text.
+
+<Canvas of={AlertStories.Icons} />
+
+### Banner
+
+`banner` draws the alert edge to edge, with square corners and no side borders. The dashed frame here
+stands in for the page.
+
+<Canvas of={AlertStories.Banner} />
+
+### Sticky
+
+`sticky` keeps the alert at the top of the page as the reader scrolls, and lifts it with a shadow
+while it is stuck. It is built on `Affix`. Scroll the box below; in a scrolling panel of your own, pass
+that panel as `scrollContainerRef`, and use `stickyOffset` to leave room for a sticky header. The
+sticky element is the alert's own outermost element, so put the alert directly inside the container it
+should stick within — anything that wraps it becomes the box it sticks within, and it won't stick.
+
+<Canvas of={AlertStories.Sticky} />
+
+### Dismissible
+
+`dismissible` adds a button. Uncontrolled, it closes the alert and reports it through
+`onOpenChange(false)`; the alert then collapses away rather than vanishing, so what is below moves up
+smoothly (not at all with reduced motion). Nothing inside it can reopen it, so `onOpenChange` is only
+ever called with `false`.
+
+<Canvas of={AlertStories.Dismissible} />
+
+### Controlled
+
+<Canvas of={AlertStories.Controlled} />
+
+### Remembering a dismissal
+
+Pair a controlled alert with `usePersistentDismiss`. Show it only once `ready` is `true`, so a message
+the reader already dismissed never flashes on a server-rendered page. Dismiss this one and reload the
+page: it stays away until the tab is closed (here the hook uses `storage: "session"`).
+
+<Canvas of={AlertStories.Persistent} />
+
+### A heading as the title
+
+<Canvas of={AlertStories.HeadingTitle} />
+
+### How it is announced
+
+<Canvas of={AlertStories.Roles} />
+
+### Long content wraps
+
+Drag the bottom-right corner of the box to change its width.
+
+<Canvas of={AlertStories.LongContent} />
+
+### Translated text
+
+<Canvas of={AlertStories.Translated} />
+
+### Right-to-left
+
+<Canvas of={AlertStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use an alert for something the reader needs to notice or act on, placed near what it is about.
+- Choose the tone for what the message means, not for the colour you'd like: `danger` for a failure,
+  `warning` for something that needs attention, `success` for a confirmation, `info` for news.
+- Say what happened and what to do in the title and description; put the action in `Alert.Actions`.
+- Use `banner` for a message about a whole page or section, and `sticky` only for one the reader must
+  not lose sight of. Make a sticky alert dismissible.
+- Use `role="none"` for a message that is already on the page when it loads.
+- Remember a dismissal with `usePersistentDismiss` for a message that would otherwise return on every
+  visit — and change the key when the message changes.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use an alert for feedback that should disappear on its own ("Saved") — that is a `Toast`.
+- Don't stack several alerts; combine them, or show the most important one.
+- Don't rely on the icon or the colour alone to carry the meaning. The text must say it too.
+- Don't put a persistent dismissal on a `danger` message the reader must see each time, such as a
+  failed payment.
+- Don't wrap a sticky alert in another element: it would stick within that wrapper instead of the page.
+- Don't put a sticky banner on a page that is already short of vertical room, such as a phone in
+  landscape, unless it is dismissible.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Every part is optional. A one-line message is best as plain text or a lone `Alert.Title`; add a
+  description when there is more to say than a phrase.
+- The default `role` follows the tone. Use `role="alert"` deliberately for an urgent message that
+  isn't `danger` or `warning`, and `role="none"` for anything already on the page at load — a live
+  region that is present when the page loads can be announced before the reader has asked for it.
+- Buttons inside an alert sit on its background, so choose a `Button` variant that reads against it —
+  on `"solid"`, a filled button can match the alert's own fill. Check any pairing you introduce.
+- `Alert.Title` is a paragraph so that an alert doesn't add a heading to the page's outline. When it
+  does belong in the outline, use `asChild` with the right heading level.
+- With `banner`, put the alert as a direct child of the page or section container, so it can reach the
+  edges. Stack `sticky` alongside a sticky site header by giving it `stickyOffset` equal to the header's
+  height.
+- When the alert goes away with keyboard focus inside it (the dismiss button, or an action that closes
+  it), focus moves to the next focusable element in the page, or the previous one if there is none,
+  rather than dropping to the top of the document.
+- The hook stores only a timestamp, under `dbm-dismissed:<key>`, in the browser's own storage. Whether
+  that needs a reader's consent depends on where your readers are; decide that for your own site.
+
+## Accessibility
+
+<Callout tone="info" title="A live region that follows the tone, with a dismiss button that keeps focus in the page">
+
+The alert carries `role="alert"` for `danger` and `warning`, which interrupts a screen reader, and
+`role="status"` for `info`, `success` and `neutral`, which waits for a pause; `role` overrides either,
+including `"none"` for a plain, unannounced block. An alert that is already on the page when it loads
+should be `"none"`, since it isn't news. The icon is hidden from assistive technology, so the message
+must be in the text. `aria-label`, `aria-labelledby` and `aria-describedby` are passed through for an
+alert that needs a name of its own.
+
+The dismiss button is a real `<button>` named by `labels.dismiss` ("Dismiss"). Removing a focused
+control drops focus to the top of the document, so when the alert leaves with focus inside it, focus
+moves to the nearest focusable element outside it (the next, else the previous).
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves through the alert's own actions and its dismiss button, in reading order |
+| `Enter` / `Space` | Activates the focused button or link, including the dismiss button |
+
+**Contrast**, measured in light and dark. Text in the `"subtle"` variant sits on the tone's tint:
+`text.primary` is 13.46–13.56:1 in light and 9.66–17.59:1 in dark, and the description's
+`text.secondary` is 6.56–6.61:1 in light and 7.47–13.61:1 in dark. The tone's icon on the tint is
+4.51–6.22:1 in light and 5.86–10.68:1 in dark, and at least 4.0:1 under the dismiss button's hover
+fill. In `"solid"`, the text on the fill is 4.70–6.50:1 in light and 8.19–8.22:1 in dark, and
+6.88–9.56:1 and 10.32–10.68:1 while the dismiss button is hovered. In `"outlined"`, the border is the
+tone's state-identifying border colour (4.70:1 or more against the surface). The focus ring is
+`border.focus` on the first two variants (3.56–8.44:1 against the tints across both brands and both
+modes), and the on-fill icon colour on `"solid"` (4.70–8.22:1), where `border.focus` would be unreadable.
+
+**Motion**: only dismissing animates — the alert fades and collapses away, and it does not animate in
+when it loads. With `prefers-reduced-motion` it is removed at once.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Alert tone="danger" dismissible>
+  <Alert.Title>Payment failed</Alert.Title>
+  <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
+  <Alert.Actions>
+    <Button size="sm">Update card</Button>
+  </Alert.Actions>
+</Alert>
+
+{/* A whole-page announcement that stays at the top, and stays dismissed */}
+function Announcement() {
+  const { ready, dismissed, dismiss } = usePersistentDismiss("summer-sale-2027", { expiresAfter: 7 * 24 * 60 * 60 * 1000 });
+  return (
+    <Alert banner sticky dismissible open={ready && !dismissed} onOpenChange={(open) => !open && dismiss()}>
+      <Alert.Description>Summer sale ends Sunday.</Alert.Description>
+    </Alert>
+  );
+}
+
+{/* Controlled */}
+<Alert dismissible open={open} onOpenChange={setOpen}>{/* ... */}</Alert>
+
+{/* A heading as the title, and no announcement for a message already on the page */}
+<Alert tone="warning" role="none">
+  <Alert.Title asChild><h2>Your trial ends soon</h2></Alert.Title>
+</Alert>
+
+{/* A native <div> attribute on Alert, passed straight through */}
+<Alert onClick={() => track("alert-click")}>Your session will expire soon.</Alert>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.info-subtle" usage="the subtle variant's fill (and the same for success, warning, danger and neutral)" />
+<TokenRow token="border.info-subtle" usage="the subtle variant's border (border.default for neutral)" />
+<TokenRow token="bg.surface" usage="the outlined variant's fill" />
+<TokenRow token="border.info" usage="the outlined variant's border (border.neutral-strong for neutral)" />
+<TokenRow token="bg.info" usage="the solid variant's fill" />
+<TokenRow token="text.on-info" usage="the solid variant's text" />
+<TokenRow token="text.primary" usage="the title on the subtle and outlined variants" />
+<TokenRow token="text.secondary" usage="the message on the subtle and outlined variants" />
+<TokenRow token="icon.info" usage="the icon on the subtle and outlined variants (icon.default for neutral)" />
+<TokenRow token="icon.on-info" usage="the icon on the solid variant; the focus ring on it" />
+<TokenRow token="bg.info-subtle-hover" usage="the dismiss button while hovered, on the subtle variant" />
+<TokenRow token="bg.info-hover" usage="the dismiss button while hovered, on the solid variant" />
+<TokenRow token="bg.neutral-subtle" usage="the dismiss button while hovered, on the outlined variant" />
+<TokenRow token="border.focus" usage="the dismiss button's focus ring on the subtle and outlined variants" />
+<TokenRow token="font-family.primary" usage="the alert's typography" />
+<TokenRow token="font-size.xs–font-size.lg" usage="the title and message across the five size steps" />
+<TokenRow token="font-weight.semibold" usage="the title" />
+<TokenRow token="line-height.normal" usage="the alert's line height" />
+<TokenRow token="space.1–space.6" usage="padding, the gap between the icon and the text, and between the parts" />
+<TokenRow token="radius.md" usage="the alert's corners (none for a banner)" />
+<TokenRow token="radius.full" usage="the dismiss button" />
+<TokenRow token="border-width.1" usage="the alert's border" />
+<TokenRow token="border-width.2" usage="the dismiss button's focus ring" />
+<TokenRow token="shadow.light.md" usage="the lift while a sticky alert is stuck, in light mode" />
+<TokenRow token="shadow.dark.md" usage="the lift while a sticky alert is stuck, in dark mode" />
+<TokenRow token="z-index.sticky" usage="a sticky alert, above the content it scrolls over" />
+<TokenRow token="motion.duration.base" usage="dismissing" />
+<TokenRow token="motion.duration.fast" usage="the dismiss button's hover fill" />
+<TokenRow token="motion.easing.accelerate" usage="dismissing" />
+<TokenRow token="motion.easing.standard" usage="the dismiss button's hover fill" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Card"
+  description="A bordered surface for content that isn't a message"
+  href="/?path=/docs/molecules-data-display-card--docs"
+>
+  <Card size="xs"><Card.Body>Content</Card.Body></Card>
+</RelatedCard>
+<RelatedCard
+  name="EmptyState"
+  description="What to show where there is nothing yet, rather than a message about something that happened"
+  href="/?path=/docs/molecules-data-display-emptystate--docs"
+>
+  <EmptyState size="xs" variant="ghost">
+    <EmptyState.Title>Nothing here</EmptyState.Title>
+  </EmptyState>
+</RelatedCard>
+<RelatedCard
+  name="Badge"
+  description="A small status marker beside something, not a message of its own"
+  href="/?path=/docs/atoms-data-display-badge--docs"
+>
+  <Badge tone="danger">3</Badge>
+</RelatedCard>
+</div>

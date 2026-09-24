@@ -1,0 +1,273 @@
+/* The message. Every value is a token. A tone class (`.toneInfo`…) names that tone's colours as `--t-*`, a variant class
+   (`.variantSubtle`…) picks from them as `--alert-*`, and a size class sets the padding and type. */
+
+.toneInfo {
+  --t-subtle-bg: var(--dbm-bg-info-subtle);
+  --t-subtle-border: var(--dbm-border-info-subtle);
+  --t-subtle-hover: var(--dbm-bg-info-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-info);
+  --t-solid-hover: var(--dbm-bg-info-hover);
+  --t-on: var(--dbm-text-on-info);
+  --t-on-icon: var(--dbm-icon-on-info);
+  --t-line: var(--dbm-border-info);
+  --t-icon: var(--dbm-icon-info);
+}
+
+.toneSuccess {
+  --t-subtle-bg: var(--dbm-bg-success-subtle);
+  --t-subtle-border: var(--dbm-border-success-subtle);
+  --t-subtle-hover: var(--dbm-bg-success-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-success);
+  --t-solid-hover: var(--dbm-bg-success-hover);
+  --t-on: var(--dbm-text-on-success);
+  --t-on-icon: var(--dbm-icon-on-success);
+  --t-line: var(--dbm-border-success);
+  --t-icon: var(--dbm-icon-success);
+}
+
+.toneWarning {
+  --t-subtle-bg: var(--dbm-bg-warning-subtle);
+  --t-subtle-border: var(--dbm-border-warning-subtle);
+  --t-subtle-hover: var(--dbm-bg-warning-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-warning);
+  --t-solid-hover: var(--dbm-bg-warning-hover);
+  --t-on: var(--dbm-text-on-warning);
+  --t-on-icon: var(--dbm-icon-on-warning);
+  --t-line: var(--dbm-border-warning);
+  --t-icon: var(--dbm-icon-warning);
+}
+
+.toneDanger {
+  --t-subtle-bg: var(--dbm-bg-danger-subtle);
+  --t-subtle-border: var(--dbm-border-danger-subtle);
+  --t-subtle-hover: var(--dbm-bg-danger-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-danger);
+  --t-solid-hover: var(--dbm-bg-danger-hover);
+  --t-on: var(--dbm-text-on-danger);
+  --t-on-icon: var(--dbm-icon-on-danger);
+  --t-line: var(--dbm-border-danger);
+  --t-icon: var(--dbm-icon-danger);
+}
+
+.toneNeutral {
+  --t-subtle-bg: var(--dbm-bg-neutral-subtle);
+  --t-subtle-border: var(--dbm-border-default);
+  --t-subtle-hover: var(--dbm-bg-neutral-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-neutral);
+  --t-solid-hover: var(--dbm-bg-neutral-hover);
+  --t-on: var(--dbm-text-on-neutral);
+  --t-on-icon: var(--dbm-icon-on-neutral);
+  --t-line: var(--dbm-border-neutral-strong);
+  --t-icon: var(--dbm-icon-default);
+}
+
+/* What each variant draws with. `--alert-hover` is the dismiss button's fill while hovered; `--alert-ring` the focus
+   ring, which on a solid fill has to be a colour that contrasts with it (`border.focus` is unreadable there). */
+.variantSubtle {
+  --alert-bg: var(--t-subtle-bg);
+  --alert-border: var(--t-subtle-border);
+  --alert-title: var(--dbm-text-primary);
+  --alert-text: var(--dbm-text-secondary);
+  --alert-icon: var(--t-icon);
+  --alert-hover: var(--t-subtle-hover);
+  --alert-ring: var(--dbm-border-focus);
+}
+
+.variantOutlined {
+  --alert-bg: var(--dbm-bg-surface);
+  --alert-border: var(--t-line);
+  --alert-title: var(--dbm-text-primary);
+  --alert-text: var(--dbm-text-secondary);
+  --alert-icon: var(--t-icon);
+  --alert-hover: var(--dbm-bg-neutral-subtle);
+  --alert-ring: var(--dbm-border-focus);
+}
+
+.variantSolid {
+  --alert-bg: var(--t-solid-bg);
+  --alert-border: var(--t-solid-bg);
+  --alert-title: var(--t-on);
+  --alert-text: var(--t-on);
+  --alert-icon: var(--t-on-icon);
+  --alert-hover: var(--t-solid-hover);
+  --alert-ring: var(--t-on-icon);
+}
+
+.sizeXs {
+  --alert-pad-block: var(--dbm-space-2);
+  --alert-pad-inline: var(--dbm-space-3);
+  --alert-gap: var(--dbm-space-2);
+  --alert-title-font: var(--dbm-font-size-xs);
+  --alert-text-font: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  --alert-pad-block: var(--dbm-space-3);
+  --alert-pad-inline: var(--dbm-space-3);
+  --alert-gap: var(--dbm-space-2);
+  --alert-title-font: var(--dbm-font-size-sm);
+  --alert-text-font: var(--dbm-font-size-xs);
+}
+
+.sizeMd {
+  --alert-pad-block: var(--dbm-space-3);
+  --alert-pad-inline: var(--dbm-space-4);
+  --alert-gap: var(--dbm-space-3);
+  --alert-title-font: var(--dbm-font-size-base);
+  --alert-text-font: var(--dbm-font-size-sm);
+}
+
+.sizeLg {
+  --alert-pad-block: var(--dbm-space-4);
+  --alert-pad-inline: var(--dbm-space-5);
+  --alert-gap: var(--dbm-space-3);
+  --alert-title-font: var(--dbm-font-size-md);
+  --alert-text-font: var(--dbm-font-size-base);
+}
+
+.sizeXl {
+  --alert-pad-block: var(--dbm-space-5);
+  --alert-pad-inline: var(--dbm-space-6);
+  --alert-gap: var(--dbm-space-4);
+  --alert-title-font: var(--dbm-font-size-lg);
+  --alert-text-font: var(--dbm-font-size-md);
+}
+
+/* Going away: the row it takes up collapses to nothing (so what is below moves up smoothly rather than jumping) while it
+   fades. Only closing animates — an alert already in the page when it loads shouldn't animate in. `Presence` keeps it
+   mounted until the animation ends, and unmounts it at once when there is none (reduced motion). */
+.wrapper {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.inner {
+  min-block-size: 0;
+}
+
+.wrapper[data-state="closed"] {
+  animation: alertOut var(--dbm-motion-duration-base) var(--dbm-motion-easing-accelerate) forwards;
+}
+
+/* Clipping is only for the collapse; while it is showing, a focus ring around an action must not be cut off. */
+.wrapper[data-state="closed"] .inner {
+  overflow: hidden;
+}
+
+@keyframes alertOut {
+  from {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper[data-state="closed"] {
+    animation: none;
+  }
+}
+
+.root {
+  align-items: flex-start;
+  background-color: var(--alert-bg);
+  border: var(--dbm-border-width-1) solid var(--alert-border);
+  border-radius: var(--dbm-radius-md);
+  box-sizing: border-box;
+  color: var(--alert-text);
+  display: flex;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--alert-title-font);
+  gap: var(--alert-gap);
+  line-height: var(--dbm-line-height-normal);
+  padding: var(--alert-pad-block) var(--alert-pad-inline);
+}
+
+/* A banner spans the whole page or section, so it has no side borders and no rounded corners. */
+.banner {
+  border-inline: 0;
+  border-radius: 0;
+}
+
+/* The icon sits in a box one line of the title tall, so it centres on the first line however tall the rest is. */
+.icon {
+  align-items: center;
+  block-size: 1lh;
+  color: var(--alert-icon);
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  min-inline-size: 0;
+}
+
+.title {
+  color: var(--alert-title);
+  font-weight: var(--dbm-font-weight-semibold);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  color: var(--alert-text);
+  font-size: var(--alert-text-font);
+  overflow-wrap: anywhere;
+}
+
+/* Plain text straight inside the alert reads at the message's own size. */
+.body > :not(.title, .description, .actions) {
+  font-size: var(--alert-text-font);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2) var(--dbm-space-3);
+  margin-block-start: var(--dbm-space-2);
+}
+
+/* Locally built, not the shared `CloseButton`: this must take the tone's own colour. A neutral padding around the glyph
+   makes a comfortable target, pulled back with a negative margin so the glyph lines up with the text's edge. */
+.dismiss {
+  align-items: center;
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--dbm-radius-full);
+  color: var(--alert-icon);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  margin-block: calc(var(--dbm-space-1) * -1);
+  margin-inline: 0 calc(var(--dbm-space-1) * -1);
+  padding: var(--dbm-space-1);
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.dismiss:hover {
+  background-color: var(--alert-hover);
+}
+
+.dismiss:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--alert-ring);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* A sticky alert (`Affix` puts `data-stuck` on the wrapper) lifts with a shadow while it is stuck. Shadows aren't a
+   reactive semantic token, so the light/dark pair is swapped per theme, as `Card` does. */
+.wrapper[data-stuck] .root {
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .wrapper[data-stuck] .root {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
