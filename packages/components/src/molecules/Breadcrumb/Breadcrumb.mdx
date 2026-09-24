@@ -1,0 +1,355 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Link } from "../../atoms/Link";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Pagination } from "../Pagination";
+import { Tabs } from "../Tabs";
+import * as BreadcrumbStories from "./Breadcrumb.stories";
+import * as BreadcrumbItemStories from "./BreadcrumbItem.stories";
+import * as BreadcrumbLinkStories from "./BreadcrumbLink.stories";
+import * as BreadcrumbPageStories from "./BreadcrumbPage.stories";
+
+export const rootPropOrder = [
+  "children",
+  "size",
+  "separator",
+  "maxItems",
+  "itemsBeforeCollapse",
+  "itemsAfterCollapse",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "dir",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const itemPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const linkPropOrder = [
+  "href",
+  "children",
+  "icon",
+  "external",
+  "disabled",
+  "asChild",
+  "target",
+  "rel",
+  "download",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const pagePropOrder = ["children", "icon", "id", "className", "style", "data-testid"];
+
+<Meta of={BreadcrumbStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Breadcrumb" tier="Molecule" />
+
+A breadcrumb trail shows where the current page sits in a site — the path from the top down to the
+page a reader is on, as a row of links ending in the page itself. A compound component: put one
+`Breadcrumb.Item` per level inside `Breadcrumb`, each holding a `Breadcrumb.Link` (or, for the last
+one, `Breadcrumb.Page`). It renders a `<nav>` around an ordered list, and draws the separators
+between items itself.
+
+Choose how big the trail is with `size`, and what sits between items with `separator`. A trail that
+is too wide for its container wraps onto more lines; with `maxItems`, its middle collapses into a
+"…" button that shows the rest when used. `Breadcrumb.Link` is the `Link` atom underneath, so it
+handles external addresses and `disabled`, and takes `asChild` to render a router's own link.
+
+### Import
+
+```tsx
+import { Breadcrumb } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={BreadcrumbStories.Playground} />
+
+</div>
+<PlaygroundControls of={BreadcrumbStories.Playground} order={rootPropOrder} exclude={["children", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+Set `maxItems` to see the collapse: the Playground then shows a six-item trail so there is something
+to collapse.
+
+## Properties
+
+Every part reads `size` and `separator` from `Breadcrumb`, so they are set once, on the root. `ref`
+forwards to the `<nav>`. Also accepts any other native `<nav>` attribute beyond what's listed here
+(e.g. `dir`, `onFocus`) — passed straight through to the root element.
+
+<PropertiesTable of={BreadcrumbStories} order={rootPropOrder} />
+
+Only `Breadcrumb.Item` elements are rendered: a fragment, or plain text, placed among the children is
+ignored (with a warning in development), so build the list from items directly rather than wrapping
+several in a fragment.
+
+### Breadcrumb.Item properties
+
+One level of the trail — the `<li>`. It draws the separator after its content, except when it is the
+last item. Also accepts any other native `<li>` attribute beyond what's listed here (e.g. `title`) —
+passed straight through to the underlying element.
+
+<PropertiesTable of={BreadcrumbItemStories} order={itemPropOrder} />
+
+### Breadcrumb.Link properties
+
+A link to a page above the current one. It is the `Link` atom, so it also takes `external`,
+`disabled`, `asChild` and the native anchor props. Also accepts any other native `<a>` attribute
+beyond what's listed here (e.g. `onClick`, `title`) — passed straight through.
+
+<PropertiesTable of={BreadcrumbLinkStories} order={linkPropOrder} />
+
+### Breadcrumb.Page properties
+
+The current page: plain text marked `aria-current="page"`, so a screen reader announces it as the
+current page. Also accepts any other native `<span>` attribute beyond what's listed here (e.g.
+`title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={BreadcrumbPageStories} order={pagePropOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={BreadcrumbStories.Sizes} />
+
+### Separators
+
+`"chevron"` is the default and points along the reading direction, so it flips under right-to-left
+text. Anything other than the two named values — a short string, or an element — is drawn as given.
+
+<Canvas of={BreadcrumbStories.Separators} />
+
+### With icons
+
+An icon before the text of a link, or of the current page. It is decorative, so the item keeps its
+text.
+
+<Canvas of={BreadcrumbStories.WithIcons} />
+
+### Collapsed with maxItems
+
+With more items than `maxItems`, the middle ones are replaced by a "…" button. By default the first
+item and the last two stay visible. Use the button to reveal the rest — keyboard focus moves to the
+first item it revealed.
+
+<Canvas of={BreadcrumbStories.Collapsed} />
+
+### Choosing what stays visible
+
+`itemsBeforeCollapse` and `itemsAfterCollapse` set how many items stay on each side of the button.
+The last item, the current page, always stays.
+
+<Canvas of={BreadcrumbStories.CollapseWindow} />
+
+### With a router's link (asChild)
+
+<Canvas of={BreadcrumbStories.AsRouterLink} />
+
+### A disabled link
+
+<Canvas of={BreadcrumbStories.DisabledLink} />
+
+### An external link
+
+<Canvas of={BreadcrumbStories.ExternalLink} />
+
+### Long labels wrap
+
+Drag the bottom-right corner of the box to change how much room the trail has.
+
+<Canvas of={BreadcrumbStories.LongLabels} />
+
+### Naming the navigation
+
+<Canvas of={BreadcrumbStories.NamedNav} />
+
+### Translated text
+
+<Canvas of={BreadcrumbStories.Translated} />
+
+### Right-to-left
+
+<Canvas of={BreadcrumbStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a breadcrumb on a site or app with more than two levels of pages, so a reader can jump back up
+  the hierarchy in one click.
+- Put the trail near the top of the page, above the page's heading, on every page it applies to.
+- End it with the current page as `Breadcrumb.Page`, so the reader can see where they are.
+- Give each item the same name the page has in the navigation and as its own heading.
+- Use `maxItems` on a deep hierarchy, so the trail keeps to a line or two on a narrow screen.
+- Name the navigation with `aria-label` when a page holds more than one breadcrumb.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a breadcrumb as the main navigation, or to show the steps a reader has taken. It shows
+  the site's structure, not their history — use `Tabs` or a stepper for sequences.
+- Don't make the current page a link to itself; `Breadcrumb.Page` is deliberately not one.
+- Don't put a breadcrumb on a top-level page with nothing above it.
+- Don't add controls to an item other than the link — an item is one destination.
+- Don't hide the trail on small screens; collapse it with `maxItems` instead, so the reader still has
+  a way back up.
+- Don't use a separator that reads as content, such as a word.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The first item is usually the home page. An icon alone is enough for it when the link has an
+  `aria-label` — `<Breadcrumb.Link href="/" icon={HouseIcon} aria-label="Home" />`.
+- With a client-side router, use `asChild` on `Breadcrumb.Link` to render the router's own link, so
+  navigation doesn't reload the page.
+- Keep labels short. A label that is much longer than its neighbours wraps onto a second line inside
+  its own item, which is fine, but a trail of long labels reads better collapsed.
+- `maxItems` counts every item, including the first and the current page. It only collapses when
+  at least two items would be hidden — replacing a single item with a button would help nobody.
+- Every piece of text the component writes itself is in `labels`, so a translated site replaces the
+  whole set in one place. The "…" button's name is a function of the number of hidden items.
+
+## Accessibility
+
+<Callout tone="info" title="A named navigation landmark holding an ordered list, with the current page marked">
+
+The trail is a `<nav>` — a navigation landmark, named "Breadcrumb" (or your own name, through
+`labels.navigation` or `aria-label`) so a reader who lists a page's landmarks can find it. Inside is
+an ordered list, so a screen reader announces how many levels there are and which one it is on. The
+list and its items state their `list` and `listitem` roles outright, because Safari with VoiceOver
+otherwise stops treating a list with its markers removed as one. The current page carries
+`aria-current="page"`. The separators are hidden from assistive technology: the list structure
+already says everything they would.
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves to the next link — each link, and the "…" button when there is one, is one stop |
+| `Shift+Tab` | Moves to the previous one |
+| `Enter` | Follows the focused link, or reveals the collapsed items from the "…" button |
+| `Space` | Reveals the collapsed items from the "…" button |
+
+Using the "…" button removes it from the page, so keyboard focus moves to the first item it
+revealed rather than dropping to the top of the document. A disabled link stays in the tab order,
+marked `aria-disabled`, matching WAI-ARIA guidance.
+
+**Contrast**, measured in light and dark (the colours are the same in Purple and Emerald). A link is
+`text.secondary`: 6.88:1 (light) and 10.47:1 (dark) on the surface, and 6.05:1 and 5.10:1 on the
+canvas. A hovered link and the current page are `text.primary`: 14.11:1 and 13.53:1 on the surface,
+12.41:1 and 6.59:1 on the canvas. The separators are `icon.default`: 4.70:1 and 8.21:1 on the
+surface, and 4.13:1 (light) and 2.96:1 (dark) on the canvas — a hair under the 3:1 a graphic would
+need in dark mode on the canvas, which the separators are exempt from since they are decorative and
+repeat what the list structure and the spacing already show. A link isn't running through a paragraph, so the hover-only underline is
+enough to mark it as a link; the current page is set apart by weight as well as colour.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Breadcrumb>
+  <Breadcrumb.Item>
+    <Breadcrumb.Link href="/" icon={HouseIcon}>Home</Breadcrumb.Link>
+  </Breadcrumb.Item>
+  <Breadcrumb.Item>
+    <Breadcrumb.Link href="/products">Products</Breadcrumb.Link>
+  </Breadcrumb.Item>
+  <Breadcrumb.Item>
+    <Breadcrumb.Page>Keyboards</Breadcrumb.Page>
+  </Breadcrumb.Item>
+</Breadcrumb>
+
+{/* Built from your own data */}
+<Breadcrumb>
+  {trail.map((crumb, index) => (
+    <Breadcrumb.Item key={crumb.href}>
+      {index === trail.length - 1 ? (
+        <Breadcrumb.Page>{crumb.label}</Breadcrumb.Page>
+      ) : (
+        <Breadcrumb.Link href={crumb.href}>{crumb.label}</Breadcrumb.Link>
+      )}
+    </Breadcrumb.Item>
+  ))}
+</Breadcrumb>
+
+{/* A deep trail that collapses its middle */}
+<Breadcrumb maxItems={4} itemsBeforeCollapse={1} itemsAfterCollapse={2}>
+  {/* ... */}
+</Breadcrumb>
+
+{/* With a router: the router's own link carries the navigation */}
+<Breadcrumb.Link asChild href="/products">
+  <RouterLink to="/products">Products</RouterLink>
+</Breadcrumb.Link>
+
+{/* Translated */}
+<Breadcrumb
+  labels={{ navigation: "Fil d'Ariane", expand: (count) => `Afficher ${count} pages masquées` }}
+  maxItems={4}
+>
+  {/* ... */}
+</Breadcrumb>
+
+{/* A native <a> attribute on Breadcrumb.Link, passed straight through */}
+<Breadcrumb.Link href="/products" onClick={() => track("breadcrumb-products")}>Products</Breadcrumb.Link>
+```
+
+## Design tokens used
+
+<TokenRow token="text.secondary" usage="a link, and the trail's text" />
+<TokenRow token="text.primary" usage="a hovered link; the current page" />
+<TokenRow token="icon.default" usage="the separators; the “…” button's icon" />
+<TokenRow token="border.focus" usage="the focus ring on a link and on the “…” button" />
+<TokenRow token="font-family.primary" usage="the trail's typography" />
+<TokenRow token="font-size.xs–font-size.lg" usage="the text size across the five size steps" />
+<TokenRow token="font-weight.semibold" usage="the current page" />
+<TokenRow token="line-height.normal" usage="the trail's line height" />
+<TokenRow token="space.1–space.3" usage="the gap around a separator and between an icon and its text, across the sizes" />
+<TokenRow token="space.1" usage="the space between wrapped lines; between an icon and its text" />
+<TokenRow token="border-width.2" usage="the focus ring" />
+<TokenRow token="opacity.40" usage="a disabled link" />
+<TokenRow token="motion.duration.fast" usage="the underline appearing on hover" />
+<TokenRow token="motion.easing.standard" usage="the underline appearing on hover" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Link"
+  description="The anchor Breadcrumb.Link is built on, for a link anywhere else"
+  href="/?path=/docs/atoms-typography-link--docs"
+>
+  <Link href="/docs">Docs</Link>
+</RelatedCard>
+<RelatedCard
+  name="Tabs"
+  description="Switches between peer views in place, instead of showing where a page sits"
+  href="/?path=/docs/molecules-navigation-tabs--docs"
+>
+  <Tabs defaultValue="a">
+    <Tabs.List aria-label="Example">
+      <Tabs.Trigger value="a">One</Tabs.Trigger>
+      <Tabs.Trigger value="b">Two</Tabs.Trigger>
+    </Tabs.List>
+  </Tabs>
+</RelatedCard>
+<RelatedCard
+  name="Pagination"
+  description="Moves through numbered pages of one list, rather than up a hierarchy"
+  href="/?path=/docs/molecules-data-display-pagination--docs"
+>
+  <Pagination pageCount={5} defaultValue={2} size="xs" aria-label="Example" />
+</RelatedCard>
+</div>

@@ -1,0 +1,111 @@
+/* The trail. Every value is a token. `--breadcrumb-font` is the text's size, `--breadcrumb-gap` the space
+   around a separator and between an icon and its text. */
+.root {
+  --breadcrumb-font: var(--dbm-font-size-base);
+  --breadcrumb-gap: var(--dbm-space-2);
+
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--breadcrumb-font);
+  line-height: var(--dbm-line-height-normal);
+  min-inline-size: 0;
+}
+
+.sizeXs {
+  --breadcrumb-font: var(--dbm-font-size-xs);
+  --breadcrumb-gap: var(--dbm-space-1);
+}
+
+.sizeSm {
+  --breadcrumb-font: var(--dbm-font-size-sm);
+  --breadcrumb-gap: var(--dbm-space-1);
+}
+
+.sizeMd {
+  --breadcrumb-font: var(--dbm-font-size-base);
+  --breadcrumb-gap: var(--dbm-space-2);
+}
+
+.sizeLg {
+  --breadcrumb-font: var(--dbm-font-size-md);
+  --breadcrumb-gap: var(--dbm-space-2);
+}
+
+.sizeXl {
+  --breadcrumb-font: var(--dbm-font-size-lg);
+  --breadcrumb-gap: var(--dbm-space-3);
+}
+
+/* A long trail wraps onto more lines instead of overflowing. */
+.list {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-1) var(--breadcrumb-gap);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Top-aligned, so when a label wraps onto a second line the separator stays beside its first line (the
+   separator is one line high, `1lh`, and centres itself within that). */
+.item {
+  align-items: flex-start;
+  display: inline-flex;
+  gap: var(--breadcrumb-gap);
+  min-inline-size: 0;
+}
+
+.separator {
+  align-items: center;
+  block-size: 1lh;
+  color: var(--dbm-icon-default);
+  display: inline-flex;
+  user-select: none;
+}
+
+/* The chevron points along the reading direction, so it flips under right-to-left text. `:dir(rtl)` (not a
+   `[dir]` attribute selector) so it follows the real, inherited direction of the element. */
+.flip:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+.link,
+.page {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-1);
+  overflow-wrap: anywhere;
+}
+
+/* Quiet by default, darker on hover. `a.link` (element-qualified) so this wins over `Link`'s own colour rules,
+   including its `:visited` one, whichever stylesheet comes last. The underline on hover is `Link`'s own
+   `underline="hover"`. */
+a.link,
+a.link:visited {
+  color: var(--dbm-text-secondary);
+}
+
+a.link:hover {
+  color: var(--dbm-text-primary);
+}
+
+/* The current page isn't a link, so it is set apart by weight and the strongest text colour. */
+.page {
+  color: var(--dbm-text-primary);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+/* The "…" button is taller than a line of text, so its item centres both instead. */
+.item:has(.expand) {
+  align-items: center;
+}
+
+.item:has(.expand) .separator {
+  block-size: auto;
+}
+
+/* The "…" button reads as a neutral part of the trail, not a brand-tinted action. */
+.expand {
+  color: var(--dbm-icon-default);
+}
