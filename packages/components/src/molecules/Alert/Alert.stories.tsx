@@ -1033,6 +1033,14 @@ export const CenterInteraction: Story = {
           </Alert>
         </div>
       ))}
+      <div data-testid="stacked-frame" style={{ width: "100%" }}>
+        <Alert banner align="center" role="none" data-testid="stacked">
+          <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
+          <Alert.Actions>
+            <Alert.Action>Update card</Alert.Action>
+          </Alert.Actions>
+        </Alert>
+      </div>
       <div data-testid="narrow" style={{ width: "18rem" }}>
         <Alert banner align="center" dismissible role="none">
           <Alert.Description>A long announcement that has to wrap onto several lines in a narrow place.</Alert.Description>
@@ -1058,6 +1066,19 @@ export const CenterInteraction: Story = {
         await expect(dismiss.left).toBeGreaterThan(actions.right);
       }
     }
+    // With the actions below the message (the default placement), the icon, the text and the actions are still one group in the
+    // middle: the icon sits right against the text block, not at the far edge of a full-width one.
+    const stacked = canvas.getByTestId("stacked");
+    const stackedFrame = canvas.getByTestId("stacked-frame").getBoundingClientRect();
+    const stackedIcon = stacked.querySelector("svg")!.getBoundingClientRect();
+    // Where the words actually are — the description's box stretches across its row, so measure the text itself.
+    const words = document.createRange();
+    words.selectNodeContents(within(stacked).getByText("Your card was declined. Update it to keep your plan."));
+    const stackedText = words.getBoundingClientRect();
+    const stackedActions = within(stacked).getByRole("button", { name: "Update card" }).getBoundingClientRect();
+    const groupRight = Math.max(stackedText.right, stackedActions.right);
+    await expect(Math.abs((stackedIcon.left + groupRight) / 2 - (stackedFrame.left + stackedFrame.right) / 2)).toBeLessThanOrEqual(2);
+    await expect(stackedText.left - stackedIcon.right).toBeLessThanOrEqual(32);
     // In a narrow alert the text wraps, and must stop short of the dismiss button rather than run under it.
     const narrow = canvas.getByTestId("narrow");
     const text = within(narrow).getByText("A long announcement that has to wrap onto several lines in a narrow place.").getBoundingClientRect();

@@ -322,6 +322,19 @@
   flex: 0 1 auto;
 }
 
+/* Actions below: the message and the actions are a column exactly as wide as its widest part — not a full-width wrapping row,
+   which would leave the icon at the far edge with only the text centred — so the whole group is what sits in the middle. */
+.alignCenter:not(.actionsInline) .body {
+  align-items: center;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.alignCenter:not(.actionsInline) .text,
+.alignCenter:not(.actionsInline) .actions {
+  flex: 0 1 auto;
+}
+
 .alignCenter .actions {
   justify-content: center;
 }
