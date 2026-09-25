@@ -41,8 +41,11 @@ packages/
   tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
   primitives/        Small framework-agnostic utils (classname merging, ref merging,
                      responsive style helpers, the `useAnnouncement` live-region hook,
-                     token types) — components import Radix UI Primitives directly,
-                     not through this package
+                     the `usePersistentDismiss` hook, token types) — components import
+                     Radix UI Primitives directly, not through this package. What a
+                     consumer is meant to call (`usePersistentDismiss`, the `Responsive`/
+                     `SpaceValue`/`Breakpoint` types) is re-exported from the
+                     components package, so one install covers it
   icons/             Phosphor Icons wrapper
   components/        The actual DBM component library (published npm package) — also
                      holds its own .storybook/ config and src/foundations/ (Storybook-only

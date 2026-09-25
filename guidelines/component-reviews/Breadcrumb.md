@@ -30,7 +30,7 @@ Props on the root: `size` (shared 5-step scale), `tone` (`info` default / `brand
 
 `pnpm lint` (eslint + both typechecks) clean; `pnpm build` clean; unit project 2,708 tests passing (30 of them Breadcrumb's: structure, roles, separators, icons, `labels`, collapsing, focus after expanding, `StrictMode`, jest-axe on plain / collapsed / expanded / slash / named-nav trails); Storybook (real Chromium) project 633 tests passing (Breadcrumb's four hidden interaction stories: collapse and focus, RTL order and chevron mirroring, wrapping in a narrow box, resting colours); component bundle-size and Foundations token-coverage checks pass. Every "Show code" snippet typechecked against the real components in a throwaway file (a planted bad prop was caught). Checked live in a running Storybook: the Docs page and its Properties tables (every default present), sizes, separators, icons, collapsed and expanded trails, RTL, dark mode, and a 375px viewport.
 
-**Not yet done** (deliberately — the user runs the final pass): a full `06` §9 review pass on top of this build, Emerald spot-check (every token used is brand-agnostic; only the focus ring is brand-coloured), and the Finalize declaration.
+**Not done at build time** (deliberately; since done in the final review, and Finalized — see the sections below): a full `06` §9 review pass on top of this build, Emerald spot-check (every token used is brand-agnostic; only the focus ring is brand-coloured), and the Finalize declaration.
 
 ## Follow-up, 2026-09-23 (before Finalize): `tone` and `underline`
 
