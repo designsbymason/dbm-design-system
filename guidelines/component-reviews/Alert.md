@@ -1,6 +1,6 @@
 # Alert
 
-**Tier:** molecule · **Category:** Feedback · **Status:** built 2026-09-23; **not Finalized** — awaiting the user's own review pass and declaration.
+**Tier:** molecule · **Category:** Feedback · **Status:** built 2026-09-23; **Finalized 2026-09-25**, after the final review pass recorded below.
 
 ## What was built
 
@@ -89,6 +89,10 @@ Found by the user in the running Storybook, all fixed:
 `pnpm lint` (eslint + both typechecks) and `pnpm build` clean; unit tests (`Alert`: structure, ref, roles and the role that can't be replaced, tone/variant/size classes, `asChild` title, banner, sticky on the outermost element, controlled and uncontrolled dismissal, warnings, focus handoff by mouse and keyboard and from an action, StrictMode, jest-axe on every tone and variant and on banner/sticky/no-role/no-icon/heading title; `usePersistentDismiss`: 15 tests including the server snapshot, expiry with fake timers, `sessionStorage`, cross-tab and cross-instance sync, blocked and full storage, StrictMode); real-browser stories for tone roles, banner corners and borders, sticking and shadow in a scroller, colours per tone × variant against the tokens they should resolve to, long content in a narrow box, RTL icon and dismiss sides, and dismiss-by-keyboard with the focus ring and the focus handoff; every "Show code" snippet typechecked (a planted bad `tone` was caught). Checked live in Storybook: the Docs page's Properties tables and their value options and defaults.
 
 **Not done** (the user's own pass): a full `06` §9 review on top of this build, a screenshot and Brand/Mode look at every story (the browser pane could not composite one during the build), the sticky `Affix` sentinel's 1px in a real page, and the Finalize declaration.
+
+## Finalized, 2026-09-25
+
+Declared by the user after the final review above. At Finalization: lint, both typechecks and build clean; 2,840 unit tests and 685 real-browser tests passing; the bundle-size and token-coverage checks passing.
 
 ## Gaps named, not built
 
