@@ -161,6 +161,12 @@
   grid-template-rows: 1fr;
 }
 
+/* `Affix` puts a 1px marker in front of a sticky element (to tell when it is stuck), which would leave a hairline of page above the
+   alert; pulling the alert up by the marker's height cancels it. */
+.sticky {
+  margin-block-start: calc(var(--dbm-space-px) * -1);
+}
+
 .inner {
   min-block-size: 0;
 }
@@ -303,7 +309,11 @@
 }
 
 .actionsInline .actions {
-  flex: 0 0 auto;
+  /* Its own width is that of its buttons side by side, but it may shrink to the room there is, so its buttons wrap inside the alert
+     instead of running out of it. */
+  flex: 0 1 auto;
+  max-inline-size: 100%;
+  min-inline-size: 0;
 }
 
 /* Centred: the icon and the message (and inline actions) are one group in the middle of the row, the text centred too. The
@@ -379,6 +389,9 @@
   justify-content: center;
   margin-block: calc(var(--dbm-space-1) * -1);
   margin-inline: 0 calc(var(--dbm-space-1) * -1);
+  /* At least 24 × 24 at every size (WCAG 2.5.8): the two smallest sizes' glyph plus padding is only 20. */
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
   padding: var(--dbm-space-1);
   transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }

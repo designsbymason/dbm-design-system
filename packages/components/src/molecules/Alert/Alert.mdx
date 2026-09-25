@@ -367,7 +367,8 @@ should be `"none"`, since it isn't news. The icon is hidden from assistive techn
 must be in the text. `aria-label`, `aria-labelledby` and `aria-describedby` are passed through for an
 alert that needs a name of its own.
 
-The dismiss button is a real `<button>` named by `labels.dismiss` ("Dismiss"). Removing a focused
+The dismiss button is a real `<button>` named by `labels.dismiss` ("Dismiss"), and is at least 24 × 24
+CSS pixels at every size. Removing a focused
 control drops focus to the top of the document, so when the alert leaves with focus inside it, focus
 moves to the nearest focusable element outside it (the next, else the previous).
 

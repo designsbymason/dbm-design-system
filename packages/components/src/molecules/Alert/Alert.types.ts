@@ -157,6 +157,11 @@ export interface AlertProps extends Omit<ComponentPropsWithoutRef<"div">, "class
   role?: AlertRole;
   /** The text the component supplies itself, each part replaceable. See {@link AlertLabels}. */
   labels?: Partial<AlertLabels>;
+  /**
+   * Text direction, a native attribute: `"rtl"` mirrors the layout — the icon and the dismiss button swap sides, and centred
+   * content, inline actions and the dismiss button all follow. Inherited from the page when left out.
+   */
+  dir?: "ltr" | "rtl" | "auto";
   /** The alert's accessible name, when it needs one of its own. */
   "aria-label"?: string;
   /** The id of an element that names the alert. */

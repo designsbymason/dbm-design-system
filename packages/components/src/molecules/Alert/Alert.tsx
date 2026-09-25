@@ -18,6 +18,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -347,13 +348,14 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
       onOpenChange?.(false);
     };
 
+    const contextValue = useMemo(() => ({ variant, size }), [variant, size]);
     const iconElement = glyph ? (
       <Icon icon={glyph} size={iconSizeForSize[size]} tone={variant === "solid" ? solidIconTone[tone] : iconTone[tone]} />
     ) : null;
 
     const alert = (
       <div
-        className={styles.wrapper}
+        className={cx(styles.wrapper, sticky && styles.sticky)}
         data-state={open ? "open" : "closed"}
         data-enter={entering && open ? "" : undefined}
         onAnimationEnd={(event: AnimationEvent<HTMLDivElement>) => {
@@ -383,7 +385,7 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
           >
             {glyph && !iconGoesInLine && <span className={styles.icon}>{iconElement}</span>}
             <div className={styles.body}>
-              <AlertContext.Provider value={{ variant, size }}>
+              <AlertContext.Provider value={contextValue}>
                 {textChildren.length > 0 && (
                   <div className={styles.text}>
                     {iconGoesInLine && glyph ? (

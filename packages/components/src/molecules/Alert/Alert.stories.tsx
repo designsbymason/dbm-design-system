@@ -763,8 +763,11 @@ export const StickyInteraction: Story = {
     const alert = within(scroller).getByTestId("sticky-alert");
     const wrapper = alert.parentElement!.parentElement!;
     const top = () => Math.round(alert.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
-    // At rest it sits at the top, and isn't stuck.
+    // At rest it sits at the top, and isn't stuck — flush against the top, with no hairline of page above it (the 1px marker
+    // `Affix` puts before it must not take up room).
     await expect(wrapper.hasAttribute("data-stuck")).toBe(false);
+    const scrollerBox = scroller.getBoundingClientRect();
+    await expect(Math.abs(alert.getBoundingClientRect().top - (scrollerBox.top + parseFloat(getComputedStyle(scroller).borderTopWidth)))).toBeLessThan(0.5);
     scroller.scrollTop = 300;
     // Scrolled: it is still at the top of the scroller, and is stuck (lifted with a shadow).
     await waitFor(() => expect(wrapper.hasAttribute("data-stuck")).toBe(true));
@@ -775,43 +778,71 @@ export const StickyInteraction: Story = {
   },
 };
 
+const ColourMatrix = () => (
+  <div style={{ ...demoContainerStyle, ...stack }}>
+    {(["info", "success", "warning", "danger", "neutral"] as const).flatMap((tone) =>
+      (["subtle", "outlined", "solid"] as const).map((variant) => (
+        <Alert key={`${tone}-${variant}`} tone={tone} variant={variant} role="none" data-testid={`${tone}-${variant}`}>
+          <Alert.Description>x</Alert.Description>
+        </Alert>
+      )),
+    )}
+  </div>
+);
+
+/** Every tone × variant draws with the tokens it should, in whichever theme the story is in. */
+const checkColours = async (canvasElement: HTMLElement) => {
+  const resolve = (token: string) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${token})`;
+    canvasElement.append(probe);
+    const colour = getComputedStyle(probe).color;
+    probe.remove();
+    return colour;
+  };
+  const canvas = within(canvasElement);
+  for (const tone of ["info", "success", "warning", "danger", "neutral"] as const) {
+    const subtle = getComputedStyle(canvas.getByTestId(`${tone}-subtle`));
+    const outlined = getComputedStyle(canvas.getByTestId(`${tone}-outlined`));
+    const solid = getComputedStyle(canvas.getByTestId(`${tone}-solid`));
+    // Each variant draws with its own tone's tokens.
+    await expect(subtle.backgroundColor, `${tone} subtle fill`).toBe(resolve(`--dbm-bg-${tone}-subtle`));
+    await expect(outlined.backgroundColor, `${tone} outlined fill`).toBe(resolve("--dbm-bg-surface"));
+    await expect(outlined.borderTopColor, `${tone} outlined border`).toBe(resolve(tone === "neutral" ? "--dbm-border-neutral-strong" : `--dbm-border-${tone}`));
+    await expect(solid.backgroundColor, `${tone} solid fill`).toBe(resolve(`--dbm-bg-${tone}`));
+    await expect(solid.color, `${tone} solid text`).toBe(resolve(`--dbm-text-on-${tone}`));
+  }
+};
+
 export const ColourInteraction: Story = {
   name: "Colours — interaction test",
   tags: ["!dev"],
   argTypes: noControls,
-  render: () => (
-    <div style={{ ...demoContainerStyle, ...stack }}>
-      {(["info", "success", "warning", "danger", "neutral"] as const).flatMap((tone) =>
-        (["subtle", "outlined", "solid"] as const).map((variant) => (
-          <Alert key={`${tone}-${variant}`} tone={tone} variant={variant} role="none" data-testid={`${tone}-${variant}`}>
-            <Alert.Description>x</Alert.Description>
-          </Alert>
-        )),
-      )}
-    </div>
-  ),
+  render: () => <ColourMatrix />,
+  play: async ({ canvasElement }) => checkColours(canvasElement),
+};
+
+export const ColourDarkInteraction: Story = {
+  name: "Colours, dark — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  globals: { mode: "dark" },
+  render: () => <ColourMatrix />,
   play: async ({ canvasElement }) => {
-    const resolve = (token: string) => {
-      const probe = document.createElement("span");
-      probe.style.color = `var(${token})`;
-      canvasElement.append(probe);
-      const colour = getComputedStyle(probe).color;
-      probe.remove();
-      return colour;
-    };
-    const canvas = within(canvasElement);
-    const solidBg = { info: "info", success: "success", warning: "warning", danger: "danger", neutral: "neutral" } as const;
-    for (const tone of Object.keys(solidBg) as Array<keyof typeof solidBg>) {
-      const subtle = getComputedStyle(canvas.getByTestId(`${tone}-subtle`));
-      const outlined = getComputedStyle(canvas.getByTestId(`${tone}-outlined`));
-      const solid = getComputedStyle(canvas.getByTestId(`${tone}-solid`));
-      // Each variant draws with its own tone's tokens.
-      await expect(subtle.backgroundColor).toBe(resolve(`--dbm-bg-${tone}-subtle`));
-      await expect(outlined.backgroundColor).toBe(resolve("--dbm-bg-surface"));
-      await expect(outlined.borderTopColor).toBe(resolve(tone === "neutral" ? "--dbm-border-neutral-strong" : `--dbm-border-${tone}`));
-      await expect(solid.backgroundColor).toBe(resolve(`--dbm-bg-${tone}`));
-      await expect(solid.color).toBe(resolve(`--dbm-text-on-${tone}`));
-    }
+    await expect(document.documentElement.dataset.theme).toMatch(/-dark$/);
+    await checkColours(canvasElement);
+  },
+};
+
+export const ColourEmeraldInteraction: Story = {
+  name: "Colours, Emerald — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  globals: { brand: "emerald" },
+  render: () => <ColourMatrix />,
+  play: async ({ canvasElement }) => {
+    await expect(document.documentElement.dataset.theme).toMatch(/^emerald-/);
+    await checkColours(canvasElement);
   },
 };
 
@@ -1164,5 +1195,72 @@ export const ActionsSpacingInteraction: Story = {
     });
     // The space between the message and its actions is `space-2` … `space-5` (8, 12, 16, 16, 20px), growing with the alert's size.
     await expect(gaps).toEqual([8, 12, 16, 16, 20]);
+  },
+};
+
+export const DismissTargetInteraction: Story = {
+  name: "Dismiss button size — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={stack}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <Alert key={size} size={size} dismissible role="none" data-testid={`dismiss-${size}`}>
+          <Alert.Description>Message</Alert.Description>
+        </Alert>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // WCAG 2.5.8 (Target Size, Minimum): the dismiss button is at least 24 × 24 CSS pixels at every size.
+    const canvas = within(canvasElement);
+    for (const size of ["xs", "sm", "md", "lg", "xl"]) {
+      const box = within(canvas.getByTestId(`dismiss-${size}`)).getByRole("button", { name: "Dismiss" }).getBoundingClientRect();
+      await expect(box.width, `${size} width`).toBeGreaterThanOrEqual(24);
+      await expect(box.height, `${size} height`).toBeGreaterThanOrEqual(24);
+    }
+  },
+};
+
+export const InlineOverflowInteraction: Story = {
+  name: "Inline actions in a narrow alert — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={stack}>
+      {(
+        [
+          ["md", "18rem", false],
+          ["xl", "24rem", false],
+          ["xl", "24rem", true],
+        ] as const
+      ).map(([size, width, center]) => (
+        <div key={`${size}-${center}`} data-testid={`narrow-${size}-${center}`} style={{ width }}>
+          <Alert size={size} actionsPlacement="inline" align={center ? "center" : "start"} dismissible role="none">
+            <Alert.Title>Payment failed</Alert.Title>
+            <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
+            <Alert.Actions>
+              <Alert.Action>Update card</Alert.Action>
+              <Alert.Action variant="tertiary">Remind me later</Alert.Action>
+            </Alert.Actions>
+          </Alert>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // However narrow the alert, its actions wrap inside it rather than running out of the side.
+    const canvas = within(canvasElement);
+    for (const id of ["narrow-md-false", "narrow-xl-false", "narrow-xl-true"]) {
+      const box = canvas.getByTestId(id);
+      const alert = box.firstElementChild!.firstElementChild!.firstElementChild as HTMLElement;
+      const edge = alert.getBoundingClientRect();
+      await expect(alert.scrollWidth, `${id} alert overflows`).toBeLessThanOrEqual(alert.clientWidth);
+      for (const button of within(alert).getAllByRole("button")) {
+        const rect = button.getBoundingClientRect();
+        await expect(rect.right, `${id} ${button.textContent} right`).toBeLessThanOrEqual(edge.right + 0.5);
+        await expect(rect.left, `${id} ${button.textContent} left`).toBeGreaterThanOrEqual(edge.left - 0.5);
+      }
+    }
   },
 };
