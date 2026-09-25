@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Short, immutable records of *why* a real architectural or API decision was made — not a changelog, not a debugging log, not a place to narrate how a bug was found and fixed. The numbered docs in `guidelines/` (`01`–`07`) are the current-state reference (what's true right now); an ADR is the "why" behind a specific fork-in-the-road decision, kept separate so the numbered docs can stay short and scannable instead of carrying the full reasoning inline.
+Short, effectively immutable records of *why* a real architectural or API decision was made — not a changelog, not a debugging log, not a place to narrate how a bug was found and fixed. The numbered docs in `guidelines/` (`01`–`07`) are the current-state reference (what's true right now); an ADR is the "why" behind a specific fork-in-the-road decision, kept separate so the numbered docs can stay short and scannable instead of carrying the full reasoning inline.
 
 See `CLAUDE.md`'s own note on this split before adding either kind of entry.
 
@@ -17,6 +17,13 @@ A real fork in the road — a choice between genuine alternatives where the reas
 ## Immutability
 
 Once written, an ADR's Context/Decision/Alternatives/Consequences don't get rewritten in place. If a decision later changes, write a **new** ADR that supersedes the old one — update only the old one's `Status` line to point at the new one. This is the whole point of the format: history stays as a sequence of clean, dated files instead of one file accumulating "note (superseded ...): this reasoning no longer applies" corrections stacked on corrections.
+
+**One narrow exception: a small correction to a *detail* of an accepted ADR, when the decision itself hasn't changed.** Say a treatment, a value or an example the ADR spells out turns out to need adjusting, but the choice it records (the fork in the road, and why) still stands. A new superseding ADR would suggest the decision was reversed, which it wasn't, so instead edit the ADR in place **and mark the amendment**:
+
+- add `· **Amended YYYY-MM-DD** — <what was amended>; the decision itself is unchanged` to the `Status` line, and
+- put the original wording next to the new in the text, in a short italic note (`*(Amended YYYY-MM-DD: this originally said …, because …)*`), so nobody reading it later mistakes the current text for the original.
+
+Anything that changes *what was decided*, or the reasoning under it, is still a new ADR that supersedes the old one. An amendment is for the detail, never the decision; if you're unsure which it is, write the new ADR. (First used on [ADR-0024](./0024-alert-action-reads-the-alerts-colours-over-tone-props-on-button-or-unrestricted-children.md).) A record that has not been pushed yet can simply be corrected, since nobody has relied on it.
 
 ## Template
 
