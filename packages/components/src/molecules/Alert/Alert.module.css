@@ -114,6 +114,7 @@
   --alert-gap: var(--dbm-space-2);
   --alert-title-font: var(--dbm-font-size-xs);
   --alert-text-font: var(--dbm-font-size-xs);
+  --alert-actions-space: var(--dbm-space-2);
 }
 
 .sizeSm {
@@ -122,6 +123,7 @@
   --alert-gap: var(--dbm-space-2);
   --alert-title-font: var(--dbm-font-size-sm);
   --alert-text-font: var(--dbm-font-size-xs);
+  --alert-actions-space: var(--dbm-space-3);
 }
 
 .sizeMd {
@@ -130,6 +132,7 @@
   --alert-gap: var(--dbm-space-3);
   --alert-title-font: var(--dbm-font-size-base);
   --alert-text-font: var(--dbm-font-size-sm);
+  --alert-actions-space: var(--dbm-space-4);
 }
 
 .sizeLg {
@@ -138,6 +141,7 @@
   --alert-gap: var(--dbm-space-3);
   --alert-title-font: var(--dbm-font-size-md);
   --alert-text-font: var(--dbm-font-size-base);
+  --alert-actions-space: var(--dbm-space-4);
 }
 
 .sizeXl {
@@ -146,6 +150,7 @@
   --alert-gap: var(--dbm-space-4);
   --alert-title-font: var(--dbm-font-size-lg);
   --alert-text-font: var(--dbm-font-size-md);
+  --alert-actions-space: var(--dbm-space-5);
 }
 
 /* Going away: the row it takes up collapses to nothing (so what is below moves up smoothly rather than jumping) while it
@@ -245,7 +250,8 @@
   flex-shrink: 0;
 }
 
-/* The message and the actions. A row that wraps: the message takes the whole row and the actions drop below it — or, with
+/* The message and the actions. `--alert-actions-space` (per size) is the room between them when the actions are below — enough that
+   they read as a separate row, not a continuation of the text. A row that wraps: the message takes the whole row and the actions drop below it — or, with
    `actionsPlacement="inline"`, the message keeps to a minimum width (`--dbm-alert-inline-text-min-width`) and the actions sit
    beside it, wrapping below only when the two don't fit. So it adapts to the alert's own width, not the page's. */
 .body {
@@ -255,7 +261,7 @@
   flex: 1;
   flex-wrap: wrap;
   min-inline-size: 0;
-  row-gap: var(--dbm-space-2);
+  row-gap: var(--alert-actions-space);
 }
 
 .text {

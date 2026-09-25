@@ -1119,3 +1119,32 @@ export const EnterInteraction: Story = {
     await waitFor(() => expect(canvas.getByTestId("appearing").parentElement!.parentElement!).toHaveAttribute("data-enter"));
   },
 };
+
+export const ActionsSpacingInteraction: Story = {
+  name: "Space above the actions — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={stack}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <Alert key={size} size={size} role="none" data-testid={`spacing-${size}`}>
+          <Alert.Description>Your card was declined. Update it to keep your plan.</Alert.Description>
+          <Alert.Actions>
+            <Alert.Action>Update card</Alert.Action>
+          </Alert.Actions>
+        </Alert>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const gaps = ["xs", "sm", "md", "lg", "xl"].map((size) => {
+      const alert = canvas.getByTestId(`spacing-${size}`);
+      const description = within(alert).getByText("Your card was declined. Update it to keep your plan.").getBoundingClientRect();
+      const actions = within(alert).getByRole("button").closest("div[class*='actions']")!.getBoundingClientRect();
+      return Math.round(actions.top - description.bottom);
+    });
+    // The space between the message and its actions is `space-2` … `space-5` (8, 12, 16, 16, 20px), growing with the alert's size.
+    await expect(gaps).toEqual([8, 12, 16, 16, 20]);
+  },
+};
