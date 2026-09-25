@@ -13,7 +13,7 @@
   --t-icon: var(--dbm-icon-info);
   --t-fill: var(--dbm-bg-on-info);
   --t-fill-line: var(--dbm-border-on-info);
-  --t-fill-label: var(--dbm-text-info);
+  --t-label: var(--dbm-text-info);
 }
 
 .toneSuccess {
@@ -28,7 +28,7 @@
   --t-icon: var(--dbm-icon-success);
   --t-fill: var(--dbm-bg-on-success);
   --t-fill-line: var(--dbm-border-on-success);
-  --t-fill-label: var(--dbm-text-success);
+  --t-label: var(--dbm-text-success);
 }
 
 .toneWarning {
@@ -43,7 +43,7 @@
   --t-icon: var(--dbm-icon-warning);
   --t-fill: var(--dbm-bg-on-warning);
   --t-fill-line: var(--dbm-border-on-warning);
-  --t-fill-label: var(--dbm-text-warning);
+  --t-label: var(--dbm-text-warning);
 }
 
 .toneDanger {
@@ -58,7 +58,7 @@
   --t-icon: var(--dbm-icon-danger);
   --t-fill: var(--dbm-bg-on-danger);
   --t-fill-line: var(--dbm-border-on-danger);
-  --t-fill-label: var(--dbm-text-danger);
+  --t-label: var(--dbm-text-danger);
 }
 
 .toneNeutral {
@@ -73,7 +73,7 @@
   --t-icon: var(--dbm-icon-default);
   --t-fill: var(--dbm-bg-on-neutral);
   --t-fill-line: var(--dbm-border-on-neutral);
-  --t-fill-label: var(--dbm-text-secondary);
+  --t-label: var(--dbm-text-secondary);
 }
 
 /* What each variant draws with. `--alert-hover` is the dismiss button's fill while hovered; `--alert-ring` the focus
@@ -408,8 +408,10 @@
    colours are, per alert variant:
      solid:            primary — an inverted fill (`--t-fill`) with the tone's own colour as the label; secondary —
                        outlined in the on-fill colour; tertiary — plain on-fill text.
-     subtle / outlined: primary — the tone's solid fill; secondary — the tone's border with a neutral label; tertiary —
-                       a neutral label. */
+     subtle / outlined: primary — the tone's solid fill; secondary — the tone's border with the tone's own label colour;
+                       tertiary — the tone's own label colour (neutral: secondary text). On a subtle alert the hover fill is the
+                       page surface, not the tone's subtle-hover tint: a tone label on that tint falls under 4.5:1 for info,
+                       warning and danger in light mode, and on the surface it is 4.71:1 or more. */
 
 /* Icons inside the button take the label's colour, not the tone `Button` locks to its own variant. */
 .action svg {
@@ -419,7 +421,7 @@
 /* Solid alert. */
 .variantSolid .actionPrimary {
   background-color: var(--t-fill);
-  color: var(--t-fill-label);
+  color: var(--t-label);
 }
 
 .variantSolid .actionPrimary:not(:disabled):not(.disabled):hover {
@@ -463,18 +465,18 @@
 .variantOutlined .actionSecondary {
   background-color: transparent;
   border-color: var(--t-line);
-  color: var(--dbm-text-primary);
+  color: var(--t-label);
 }
 
 .variantSubtle .actionTertiary,
 .variantOutlined .actionTertiary {
   background-color: transparent;
-  color: var(--dbm-text-primary);
+  color: var(--t-label);
 }
 
 .variantSubtle .actionSecondary:not(:disabled):not(.disabled):hover,
 .variantSubtle .actionTertiary:not(:disabled):not(.disabled):hover {
-  background-color: var(--t-subtle-hover);
+  background-color: var(--dbm-bg-surface);
 }
 
 .variantOutlined .actionSecondary:not(:disabled):not(.disabled):hover,

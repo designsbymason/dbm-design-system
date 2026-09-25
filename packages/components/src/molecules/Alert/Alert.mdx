@@ -190,7 +190,8 @@ with `variant`: a filled `"primary"` (the default), an outlined `"secondary"`, o
 How each action looks depends on the alert it is in. On a `"solid"` alert the primary is inverted (a
 light fill with the tone's colour as its label), the secondary is outlined in the on-fill colour, and
 the tertiary is plain on-fill text. On a `"subtle"` or `"outlined"` alert the primary is filled in the
-alert's own tone, and the secondary and tertiary have a neutral label.
+alert's own tone, and the secondary and tertiary take the tone's own text colour for their label (for
+`"neutral"`, secondary text), so an `info` alert's secondary action reads in info blue.
 
 <Canvas of={AlertStories.ActionsEverywhere} />
 
@@ -390,11 +391,14 @@ primary's label on its fill is 4.71–6.88:1 in light and 8.19–10.47:1 in dark
 alert 4.70–6.50:1 and 8.19–8.22:1; the secondary's outline and label, and the tertiary's label, are
 4.70–6.50:1 and 8.19–8.22:1. On a `"subtle"` alert: the primary's label is 4.70–6.50:1 and 8.19–8.22:1
 and its edge against the tint 4.51–6.22:1 and 5.86–10.68:1; the secondary's border is 4.51:1 or more in
-light and 4.34:1 or more in dark, and its neutral label (and the tertiary's) 13.46:1 and 9.66:1 or more. On an
-`"outlined"` alert: the primary's edge is 4.70–6.50:1 and 7.94–8.42:1, the secondary's border 4.70:1 or
-more and 6.08:1 or more, and the labels 14.11:1 and 13.53:1. A test measures every combination from the
+light and 4.34:1 or more in dark, and the secondary's and tertiary's tone-coloured label is 4.51–6.59:1 in
+light and 7.47–10.68:1 in dark (the `info` label on the `info` tint is 4.5068:1, the tightest margin in the
+system). On an `"outlined"` alert: the primary's edge is 4.70–6.50:1 and 7.94–8.42:1, the secondary's
+border 4.70:1 or more and 6.08:1 or more, and the labels 4.71–6.88:1 and 7.94–10.47:1. A test measures every combination from the
 colours the browser draws — every tone, variant and action — in light, dark and Emerald. While an
-action is hovered the label stays at 4.51:1 or more in light and 6.59:1 or more in dark. The focus ring
+action is hovered the label stays at 4.51:1 or more in light and 7.47:1 or more in dark; on a subtle
+alert the secondary and tertiary hover fill is the page surface rather than the tone's hover tint, since a
+tone label on that tint falls to 4.15:1 for `info` in light mode. The focus ring
 on an action is the on-fill colour on `"solid"` and `border.focus` on the rest.
 
 **Motion**: dismissing fades the alert and collapses its row away. An alert that appears after the page has
@@ -456,9 +460,9 @@ function Announcement() {
 
 ## Design tokens used
 
-<TokenRow token="bg.info-subtle" usage="the subtle variant's fill (and the same for success, warning, danger and neutral)" />
+<TokenRow token="bg.info-subtle" usage="the subtle variant's fill (and the same for success, warning, danger and neutral); the fill of a secondary or tertiary action while hovered, on an outlined alert; the fill of the primary action while hovered, on a solid one" />
 <TokenRow token="border.info-subtle" usage="the subtle variant's border (border.default for neutral)" />
-<TokenRow token="bg.surface" usage="the outlined variant's fill" />
+<TokenRow token="bg.surface" usage="the outlined variant's fill; a secondary or tertiary action while hovered, on a subtle alert" />
 <TokenRow token="border.info" usage="the outlined variant's border (border.neutral-strong for neutral)" />
 <TokenRow token="bg.info" usage="the solid variant's fill" />
 <TokenRow token="text.on-info" usage="the solid variant's text" />
@@ -466,10 +470,10 @@ function Announcement() {
 <TokenRow token="text.secondary" usage="the message on the subtle and outlined variants" />
 <TokenRow token="icon.info" usage="the icon on the subtle and outlined variants (icon.default for neutral)" />
 <TokenRow token="icon.on-info" usage="the icon on the solid variant; the focus ring on it" />
-<TokenRow token="bg.info-subtle-hover" usage="the dismiss button while hovered, on the subtle variant; a secondary or tertiary action while hovered, on a subtle alert" />
+<TokenRow token="bg.info-subtle-hover" usage="the dismiss button while hovered, on the subtle variant" />
 <TokenRow token="bg.on-info" usage="the primary action's fill on a solid alert" />
 <TokenRow token="border.on-info" usage="the secondary action's outline on a solid alert" />
-<TokenRow token="text.info" usage="the primary action's label on a solid alert (text.secondary for neutral)" />
+<TokenRow token="text.info" usage="the primary action's label on a solid alert, and the secondary and tertiary actions' label on a subtle or outlined one (text.secondary for neutral)" />
 <TokenRow token="bg.info-hover" usage="the dismiss button while hovered, on the solid variant" />
 <TokenRow token="bg.neutral-subtle" usage="the dismiss button while hovered, on the outlined variant" />
 <TokenRow token="border.focus" usage="the dismiss button's focus ring on the subtle and outlined variants" />

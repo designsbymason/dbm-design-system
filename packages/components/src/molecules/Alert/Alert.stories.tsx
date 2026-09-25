@@ -904,6 +904,14 @@ function ActionMatrix() {
  */
 const checkActionContrast = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
+  const resolve = (token: string) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${token})`;
+    canvasElement.append(probe);
+    const colour = getComputedStyle(probe).color;
+    probe.remove();
+    return colour;
+  };
   for (const variant of ["subtle", "outlined", "solid"] as const) {
     for (const tone of ["info", "success", "warning", "danger", "neutral"] as const) {
       const alert = canvas.getByTestId(`${tone}-${variant}`);
@@ -919,6 +927,16 @@ const checkActionContrast = async (canvasElement: HTMLElement) => {
       await expect(contrast(secondary.color, alertBackground), `${where} secondary label`).toBeGreaterThanOrEqual(4.5);
       await expect(contrast(secondary.borderTopColor, alertBackground), `${where} secondary border`).toBeGreaterThanOrEqual(3);
       await expect(contrast(tertiary.color, alertBackground), `${where} tertiary label`).toBeGreaterThanOrEqual(4.5);
+      if (variant !== "solid") {
+        // On a subtle or outlined alert the secondary and tertiary labels are the tone's own colour (neutral: secondary text).
+        const label = resolve(tone === "neutral" ? "--dbm-text-secondary" : `--dbm-text-${tone}`);
+        await expect(secondary.color, `${where} secondary label colour`).toBe(label);
+        await expect(tertiary.color, `${where} tertiary label colour`).toBe(label);
+        // The hover fills, worked out from the tokens (a synthetic pointer can't trigger :hover): the page surface on a subtle
+        // alert, the tone's subtle tint on an outlined one — the label must still read on it.
+        const hoverFill = resolve(variant === "subtle" ? "--dbm-bg-surface" : `--dbm-bg-${tone}-subtle`);
+        await expect(contrast(label, hoverFill), `${where} label on its hover fill`).toBeGreaterThanOrEqual(4.5);
+      }
     }
   }
 };
