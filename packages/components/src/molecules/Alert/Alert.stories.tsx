@@ -61,6 +61,39 @@ const PageFrame = ({ children, ...props }: { children: ReactNode; "data-testid"?
   </div>
 );
 
+/**
+ * A box whose width can be dragged, for watching a component respond to the room it has. `resize` only works on a box whose
+ * `overflow` isn't `visible`, and such a box clips anything drawn outside it — including a focus ring, which reaches 6px beyond a
+ * control (a 4px offset and a 2px line). So the box has padding to hold a ring at its edge.
+ */
+const ResizeBox = ({ children, maxWidth, ...props }: { children: ReactNode; maxWidth: string; "data-testid"?: string }) => (
+  <div style={{ maxWidth, resize: "horizontal", overflow: "auto", padding: "var(--dbm-space-2)" }} {...props}>
+    {children}
+  </div>
+);
+
+/**
+ * That the focus ring of `control` (which must have keyboard focus) is not cut off: it fits inside every ancestor that clips its
+ * overflow. Measured from the ring's real width and offset, not assumed.
+ */
+const expectRingUnclipped = async (control: HTMLElement) => {
+  const style = getComputedStyle(control);
+  await expect(style.outlineStyle, "the control shows a focus ring").toBe("solid");
+  const reach = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+  const box = control.getBoundingClientRect();
+  for (let element = control.parentElement; element && element !== document.documentElement; element = element.parentElement) {
+    const { overflowX, overflowY } = getComputedStyle(element);
+    if (overflowX === "visible" && overflowY === "visible") continue;
+    const rect = element.getBoundingClientRect();
+    const left = rect.left + element.clientLeft;
+    const top = rect.top + element.clientTop;
+    await expect(box.left - reach, `${element.tagName} clips the ring on the left`).toBeGreaterThanOrEqual(left - 0.5);
+    await expect(box.top - reach, `${element.tagName} clips the ring on the top`).toBeGreaterThanOrEqual(top - 0.5);
+    await expect(box.right + reach, `${element.tagName} clips the ring on the right`).toBeLessThanOrEqual(left + element.clientWidth + 0.5);
+    await expect(box.bottom + reach, `${element.tagName} clips the ring at the bottom`).toBeLessThanOrEqual(top + element.clientHeight + 0.5);
+  }
+};
+
 /** A small, real alert the gallery stories vary. */
 const DemoAlert = (props: Partial<AlertProps>) => (
   <Alert {...props}>
@@ -427,14 +460,14 @@ export const InlineActions: Story = {
           </Alert.Actions>
         </Alert>
       </PageFrame>
-      <div style={{ maxWidth: "48rem", resize: "horizontal", overflow: "auto" }}>
+      <ResizeBox maxWidth="48rem">
         <Alert actionsPlacement="inline" role="none">
           <Alert.Description>Drag the corner of this box: the actions drop below when there is no room beside.</Alert.Description>
           <Alert.Actions>
             <Alert.Action>Got it</Alert.Action>
           </Alert.Actions>
         </Alert>
-      </div>
+      </ResizeBox>
     </div>
   ),
 };
@@ -686,14 +719,14 @@ export const LongContent: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: alertSnippets.longContent } } },
   render: () => (
-    <div data-testid="long" style={{ maxWidth: "22rem", resize: "horizontal", overflow: "auto" }}>
+    <ResizeBox maxWidth="22rem" data-testid="long">
       <Alert dismissible role="none">
         <Alert.Title>A title that is long enough to run onto a second line in a narrow place</Alert.Title>
         <Alert.Description>
           A message with a very long unbroken address: https://example.com/a/very/long/path/that/has/no/break/points
         </Alert.Description>
       </Alert>
-    </div>
+    </ResizeBox>
   ),
 };
 
@@ -1261,6 +1294,33 @@ export const InlineOverflowInteraction: Story = {
         await expect(rect.right, `${id} ${button.textContent} right`).toBeLessThanOrEqual(edge.right + 0.5);
         await expect(rect.left, `${id} ${button.textContent} left`).toBeGreaterThanOrEqual(edge.left - 0.5);
       }
+    }
+  },
+};
+
+export const FocusRingInteraction: Story = {
+  name: "Focus rings in a resizable box — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  // The wrapper the resizable stories use: its `overflow` must not cut the ring of a control inside the alert.
+  render: () => (
+    <ResizeBox maxWidth="48rem">
+      <Alert dismissible actionsPlacement="inline" role="none">
+        <Alert.Description>Drag the corner of this box.</Alert.Description>
+        <Alert.Actions>
+          <Alert.Action>Got it</Alert.Action>
+          <Alert.Action variant="tertiary">Later</Alert.Action>
+        </Alert.Actions>
+      </Alert>
+    </ResizeBox>
+  ),
+  play: async ({ canvasElement }) => {
+    // Let the alert finish coming in first: its wrapper clips (by design) for the length of that animation.
+    await waitFor(() => expect(canvasElement.querySelector("[data-enter]")).toBeNull(), { timeout: 3000 });
+    for (const control of within(canvasElement).getAllByRole("button")) {
+      await userEvent.tab();
+      await expect(control).toHaveFocus();
+      await expectRingUnclipped(control);
     }
   },
 };

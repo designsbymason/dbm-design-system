@@ -84,6 +84,10 @@ Checked and found sound (no change): every value in the CSS is a token, the one 
 
 Declared by the user after the final review above and the two Properties-table corrections that followed it (`maxItems`' value options and its Default cell). At Finalization: lint, both typechecks and build clean; 2,739 unit tests and 642 real-browser tests passing; CI green on the pushed build commits.
 
+## Post-Finalize story fix, 2026-09-25 (docs-only; stays Finalized)
+
+**Found by the user:** tabbing through the Playground's links showed only two vertical bars instead of the whole focus ring. **Not a component defect** — reproduced with a real Tab press in Chromium: the ring is drawn correctly (2px, 4px offset), and in a story with no wrapper the whole ring shows. The cause was the *demo*: the Playground and three other stories wrap the trail in a `resize: horizontal; overflow: auto` box (so `maxItems="container"` and `truncate` can be watched as the width changes), which was exactly as tall as one line of links, and an `overflow` box clips anything drawn outside it — a ring reaches 6px beyond a control. The four resizable stories (Playground, "Collapsing to fit the width", "Truncated labels", "Long labels wrap") now share one `ResizeBox` with `space-2` (8px) of padding, and a hidden story tabs through every link and asserts the real ring fits inside every ancestor that clips overflow — measured from the ring's own width and offset. It fails, "clips the ring on the left", with the old unpadded wrapper (checked). `ResizeBox` and the test are stories-only; the component is untouched, so under `06` §9's three-question test this is a doc-only change and `Breadcrumb` stays Finalized.
+
 ## Gaps named, not built
 
 - Truncation weighted so that only the longest labels give up space (see above).

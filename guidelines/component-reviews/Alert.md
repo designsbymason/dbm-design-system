@@ -94,6 +94,10 @@ Found by the user in the running Storybook, all fixed:
 
 Declared by the user after the final review above. At Finalization: lint, both typechecks and build clean; 2,840 unit tests and 685 real-browser tests passing; the bundle-size and token-coverage checks passing.
 
+## Post-Finalize story fix, 2026-09-25 (docs-only; stays Finalized)
+
+Prompted by a report on `Breadcrumb` (see its review file): a story's `resize: horizontal; overflow: auto` demo box clips a focus ring at its edge. `Alert`'s two resizable stories ("Actions beside the message", "Long content wraps") were not visibly affected, since their controls sit inside the alert's own padding, but at the user's direction they now use the same padded `ResizeBox`, with a hidden story that tabs through the actions and the dismiss button and asserts each ring fits inside every overflow ancestor (it waits for the entrance animation first, since the alert's wrapper clips by design while it animates in). Here that test is a regression guard — it passes on the old wrapper too. Stories only; `Alert` stays Finalized.
+
 ## Gaps named, not built
 
 - A `Toast` (separate organism) will want `Alert`'s tones, icons and dismiss styling; sharing them is that component's decision.

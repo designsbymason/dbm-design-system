@@ -1,6 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { HouseIcon, KeyboardIcon } from "@dbm-design-system/icons";
 import { Text } from "../../atoms/Text";
 import { Breadcrumb } from "./Breadcrumb";
@@ -51,6 +51,39 @@ const trailItems = [
 ] as const;
 
 type DemoTrailProps = Omit<BreadcrumbProps, "children"> & { count?: number };
+
+/**
+ * A box whose width can be dragged, for watching a component respond to the room it has. `resize` only works on a box whose
+ * `overflow` isn't `visible`, and such a box clips anything drawn outside it — including a focus ring, which reaches 6px beyond a
+ * control (a 4px offset and a 2px line). So the box has padding to hold a ring at its edge.
+ */
+const ResizeBox = ({ children, maxWidth, ...props }: { children: ReactNode; maxWidth: string; "data-testid"?: string }) => (
+  <div style={{ maxWidth, resize: "horizontal", overflow: "auto", padding: "var(--dbm-space-2)" }} {...props}>
+    {children}
+  </div>
+);
+
+/**
+ * That the focus ring of `control` (which must have keyboard focus) is not cut off: it fits inside every ancestor that clips its
+ * overflow. Measured from the ring's real width and offset, not assumed.
+ */
+const expectRingUnclipped = async (control: HTMLElement) => {
+  const style = getComputedStyle(control);
+  await expect(style.outlineStyle, "the control shows a focus ring").toBe("solid");
+  const reach = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+  const box = control.getBoundingClientRect();
+  for (let element = control.parentElement; element && element !== document.documentElement; element = element.parentElement) {
+    const { overflowX, overflowY } = getComputedStyle(element);
+    if (overflowX === "visible" && overflowY === "visible") continue;
+    const rect = element.getBoundingClientRect();
+    const left = rect.left + element.clientLeft;
+    const top = rect.top + element.clientTop;
+    await expect(box.left - reach, `${element.tagName} clips the ring on the left`).toBeGreaterThanOrEqual(left - 0.5);
+    await expect(box.top - reach, `${element.tagName} clips the ring on the top`).toBeGreaterThanOrEqual(top - 0.5);
+    await expect(box.right + reach, `${element.tagName} clips the ring on the right`).toBeLessThanOrEqual(left + element.clientWidth + 0.5);
+    await expect(box.bottom + reach, `${element.tagName} clips the ring at the bottom`).toBeLessThanOrEqual(top + element.clientHeight + 0.5);
+  }
+};
 
 /** A small, real trail the gallery stories vary: links, then the current page last. */
 const DemoTrail = ({ count = 4, ...props }: DemoTrailProps) => (
@@ -204,7 +237,7 @@ const meta: Meta<PlaygroundArgs> = {
     const collapsing = maxItems !== undefined;
     return (
       // Resizable, so `maxItems="container"` and `truncate` can be watched as the width changes.
-      <div style={{ ...demoContainerStyle, resize: "horizontal", overflow: "auto" }}>
+      <ResizeBox maxWidth="48rem">
         <DemoTrail
           // Keyed by what changes the collapse, so a trail the reader expanded starts over when a control changes.
           key={`${String(collapsing)}-${String(maxItems)}-${args.itemsBeforeCollapse}-${args.itemsAfterCollapse}`}
@@ -221,7 +254,7 @@ const meta: Meta<PlaygroundArgs> = {
           aria-label={args["aria-label"]}
           dir={args.dir}
         />
-      </div>
+      </ResizeBox>
     );
   },
 };
@@ -415,9 +448,9 @@ export const ContainerCollapse: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: breadcrumbSnippets.container } } },
   render: () => (
-    <div data-testid="container-box" style={{ ...demoContainerStyle, resize: "horizontal", overflow: "auto" }}>
+    <ResizeBox maxWidth="48rem" data-testid="container-box">
       <DemoTrail count={6} maxItems="container" />
-    </div>
+    </ResizeBox>
   ),
 };
 
@@ -489,7 +522,7 @@ export const Truncated: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: breadcrumbSnippets.truncate } } },
   render: () => (
-    <div data-testid="truncated-box" style={{ maxWidth: "36rem", resize: "horizontal", overflow: "auto" }}>
+    <ResizeBox maxWidth="36rem" data-testid="truncated-box">
       <Breadcrumb truncate>
         <Breadcrumb.Item>
           <Breadcrumb.Link href="/">Home</Breadcrumb.Link>
@@ -501,7 +534,7 @@ export const Truncated: Story = {
           <Breadcrumb.Page>Renewal terms and conditions for the current financial year</Breadcrumb.Page>
         </Breadcrumb.Item>
       </Breadcrumb>
-    </div>
+    </ResizeBox>
   ),
 };
 
@@ -574,7 +607,7 @@ export const LongLabels: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: breadcrumbSnippets.longLabels } } },
   render: () => (
-    <div data-testid="long-labels" style={{ maxWidth: "24rem", resize: "horizontal", overflow: "auto" }}>
+    <ResizeBox maxWidth="24rem" data-testid="long-labels">
       <Breadcrumb>
         <Breadcrumb.Item>
           <Breadcrumb.Link href="/">Home</Breadcrumb.Link>
@@ -591,7 +624,7 @@ export const LongLabels: Story = {
           <Breadcrumb.Page>Renewal terms and conditions for the current financial year</Breadcrumb.Page>
         </Breadcrumb.Item>
       </Breadcrumb>
-    </div>
+    </ResizeBox>
   ),
 };
 
@@ -834,5 +867,25 @@ export const ContainerFocusInteraction: Story = {
     await userEvent.tab();
     await waitFor(() => expect(links().length).toBeLessThan(5));
     await expect(document.activeElement).not.toBe(document.body);
+  },
+};
+
+export const FocusRingInteraction: Story = {
+  name: "Focus ring in a resizable box — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  // The wrapper the Playground and the other resizable stories use: its `overflow` must not cut a link's focus ring short.
+  render: () => (
+    <ResizeBox maxWidth="48rem">
+      <DemoTrail count={4} />
+    </ResizeBox>
+  ),
+  play: async ({ canvasElement }) => {
+    const links = within(canvasElement).getAllByRole("link");
+    for (const link of links) {
+      await userEvent.tab();
+      await expect(link).toHaveFocus();
+      await expectRingUnclipped(link);
+    }
   },
 };
