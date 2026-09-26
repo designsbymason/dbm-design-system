@@ -1,0 +1,53 @@
+# CodeBlock
+
+**Tier:** molecule · **Category:** Typography · **Status:** built 2026-09-26; **awaiting its final review and sign-off** (only the user declares a component Finalized).
+
+## What was built
+
+A single component (not compound), item 21 in the itemized molecule build order (`04-component-inventory.md`): syntax-highlighted code in a `<figure>` around a scrollable `<pre><code>`. No new dependency and no component token; twelve semantic tokens in existing categories.
+
+Props: `code` (required; the text, never HTML), `language`, `title`, `showLineNumbers`, `startLine`, `highlightLines` (`[2, "4-6"]`), `wrap`, `maxHeight`, `collapsible` with `collapsedLines` and `expanded` / `defaultExpanded` / `onExpandedChange`, `copyable`, `copiedDuration`, `onCopied`, `labels` (`copy`, `copied`, `copyFailed`, `expand`, `collapse`, `region`), and `aria-label` / `-labelledby` / `-describedby`, `id`, `className`, `style`, `data-testid`.
+
+Files: the component and its stylesheet, `tokenize.ts` (the highlighter, plain data in and out), `useCodeScroll.ts`, `copyToClipboard.ts`, `highlightLines.ts`.
+
+## Decisions taken while building
+
+- **Highlighting is a small built-in tokenizer** — the fork in the road, put to the user (built-in, over a highlighting dependency or bring-your-own) and chosen as recommended: [ADR-0026](../adr/0026-codeblock-highlights-with-a-small-built-in-tokenizer-over-a-highlighting-dependency-or-bring-your-own.md). The user also chose all four extras (line numbers and highlighted lines, a title, wrapping, collapsing).
+- **`code` is a prop, not `children`.** A JSX string child loses or mangles whitespace and needs a template literal anyway; an explicit `code` string is exact, agent-friendly, and is precisely what the copy button copies. Its native `onCopy` (a selection was copied) is a different event, so the callback for the button is `onCopied`.
+- **Syntax colours are semantic tokens in the existing `text` category** (`text.syntax-keyword` … `-deleted`), shared across both brands like `text.link`, plus two surfaces: `bg.code-block` and `bg.code-highlight`. Every colour was measured against both surfaces in all four themes (4.5:1 or more; `03-token-system-spec.md` has the numbers). The highlighter's ten kinds are the whole palette.
+- **A highlighted line is a band and an edge accent**, not colour alone (4px in `border.focus`, transparent on every other line so nothing shifts). Line numbers are drawn by CSS (`attr(data-line)`), so they are never selected, copied or read as code; a wrapped line is indented past the number by padding and a negative first-line indent, so it continues under its own text.
+- **Everything stays in the page when collapsed.** A collapsed block clips its own height (`overflow-y: hidden`, exactly N lines and no part of the next), with a fade. Find-in-page and the copy button use all of it, and the expand button is a real button with `aria-expanded` and `aria-controls`, saying how many lines it will reveal.
+- **The scrolling area is a named tab stop only while it overflows** — [ADR-0019](../adr/0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md)'s pattern, with its own small hook (`useCodeScroll`) rather than `Table`'s: a collapsed block clips its height on purpose, which is not something a keyboard can scroll to, so vertical overflow doesn't count while collapsed. Reusing `Table`'s hook would have made a collapsed block a tab stop with nothing to scroll. Sharing one hook is recorded as a gap, since it means changing Finalized `Table`.
+- **Copying falls back.** The Clipboard API where the page may use it; otherwise a hidden, selected `<textarea>` and the older `copy` command (still the only route on an insecure page), restoring focus afterwards; and a failure is announced, not silent. `useAnnouncement` gives the timing; the live region is already in the page.
+- **The header is always a `<figcaption>`** holding the title and language on one side and the copy button on the other (logical, so it mirrors); without either it holds only the button. One layout, not two. A long title is cut short with an ellipsis and never pushes the button out.
+- **Code stays left to right** in a right-to-left page (`direction: ltr` on the scroll frame); the header follows the page.
+- **Text past 30,000 characters is drawn plain**, so a huge input can't stall the page.
+
+## Findings from the build
+
+- **The first dark-mode highlight read backwards.** With `bg.code` (gray.800) as the block, the only highlight band that keeps every syntax colour AA is *darker* (gray.900; a lighter one falls to 3.6–4.1:1), so the highlighted lines were darker than the rest and the un-highlighted lines looked emphasised. Every test passed; a screenshot of dark Emerald showed it. Fixed by giving the block its own background, `bg.code-block` (light: blue.50, the same as `bg.code`; dark: gray.900, a step darker than the inline pill), so the band, `bg.code-highlight` (dark: gray.800), is the lighter one; all colours re-measured.
+- **A collapsed block showed 70% of the next line** under the fade, because the frame's bottom padding was inside its height. Also seen only in a screenshot. The height is now the top padding plus exactly N lines, asserted in the browser (the sixth line starts at or below the frame's bottom edge).
+- **TypeScript's built-in type names (`number`, `string`, …) weren't coloured** beside a coloured `Array`; ts and tsx now colour them, JavaScript doesn't.
+- **The tokenizer's tests found real gaps:** JSX text between tags was coloured as code (`Save` as a type) and `</Button` wasn't a tag (fixed with a small state machine: text mode, expression depth, open-tag depth); selectors inside an `@media` block weren't recognised (a stack of blocks, rules versus declarations); a command after `then` or `do` wasn't a command.
+- **A test that measured the thing against itself.** The full-width-band assertion compared a line's width with its parent's, which are equal whether or not the band spans the scrolled content; it now compares with the frame's `scrollWidth`.
+- **Mutation checks found seven weak spots** in the first round of mutations: `highlightLines.ts` had no direct tests; a JSX end-of-element counter and quotes in HTML text were untested; the focus restore after the fallback copy was never exercised (a mock of `select()` now moves focus, as a browser may); the right-to-left mirror of the header padding was unchecked; the band-width test above; and one guard (a digit inside a name) turned out to be dead code, since identifiers are consumed whole, and was removed. All closed; 38 mutations now, each seen to fail.
+- **Two smaller catches:** the native `onCopy` collided with the callback's first name (a type error); `Range.getClientRects` returns a rect per character, which made a wrapped-line alignment test wrong, not the CSS.
+
+## Verification (2026-09-26)
+
+- **Unit** (205 in `CodeBlock/`): the tokenizer (157: lossless for every language on twelve samples, on 60 rounds of awkward random text, and on unterminated input; the size limit; a linear-time check on large unterminated input; each grammar's tokens, spans across lines, JSX text, expressions, fragments, generics versus tags, CSS blocks, shell command position, diffs); `highlightLines`; the component (text not markup, naming by title / aria-label / aria-labelledby, ref and props, numbering and `startLine`, highlighted lines counted from `startLine`, copy success, announcement, failure, the fallback, restart of the "copied" timer, `StrictMode`, no copy button, collapsing controlled and not, the tab stop and its name with layout mocked, labels one at a time including `undefined`); jest-axe across six layouts and a scrolling one.
+- **Real browser** (`storybook` project, 28 stories, 12 of them hidden `!dev` checks): every syntax colour and the line numbers 4.5:1 or more against the block and against a highlighted line, in all four themes; a wrapped line's rows all start at the same x, past the number, and the numbers are `user-select: none` and absent from a real selection's text; the highlight band is the full scrolled width, the token colour, with a 4px accent, and shifts nothing; a collapsed block is exactly N lines, fades, clips rather than removes, and is not a tab stop; a long line makes the code a named tab stop reached by real Tab, its ring inside the block; code left to right in a right-to-left page and the header mirrored, padding included; a long title ellipsised without moving the button; buttons 24 × 24px or more; a phone-width viewport stays inside the page. **Broken on purpose, each seen to fail (38 mutations):** across the tokenizer, the component and the stylesheet.
+- **Snippets:** all 15 hand-written snippets and the Playground's typecheck against the real component (a planted unknown prop fails each time).
+- **Live, in the running Storybook:** the Docs page with no console errors, 24 Properties rows with the right defaults, 16 canvases, hand-written "Show code" panels; every language, the highlighted and collapsed blocks in light and in dark Emerald.
+- **Whole pipeline:** `pnpm lint`, `pnpm build`, all 3,371 unit tests, all 813 real-browser tests, the Playwright visual suite (8/8; it has no `CodeBlock` baseline), the component size check (`CodeBlock` 6.93KB JS, 1.93KB CSS gzipped, including the atoms it composes), token coverage (101 semantic tokens documented), the static Storybook build and its size check, and `pnpm audit`.
+
+**Not verified:** a real screen reader (the figure name, the region, the announcements); the real Clipboard API against a permission prompt (the unit tests mock it, and the fallback is tested with a mocked `execCommand`); a forced-colours mode (the band and syntax colours are dropped there, the accent border remains); very long single tokens against the 30,000-character limit in a slow browser.
+
+## Gaps named, not built
+
+- **A hook for another highlighter** (tokens in, so a consumer can bring a fuller grammar). See ADR-0026.
+- **A `size` prop** on the shared scale (the font size follows `font-size.sm` today).
+- **One scroll-frame hook shared with `Table`** — needs `Table` (Finalized) to change; the two differ only in the clipped-height rule.
+- **Embedded languages** (`<script>` and `<style>` inside HTML, template literals' `${}` contents).
+- **Several languages in tabs** (compose with `Tabs`) and **an interactive wrap toggle button**.
+- **Per-line links or copying**, and **a side-by-side diff**.
