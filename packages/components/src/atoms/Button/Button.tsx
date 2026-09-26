@@ -82,6 +82,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       type = "button",
       onClick,
+      onClickCapture,
       ...props
     },
     ref,
@@ -134,13 +135,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       }
     }
 
-    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    // Capture-phase, not `onClick`: this has to run before any bubble-phase handler, including the slotted
+    // child's own. Radix `Slot` runs the child's own `onClick` first and this component's second, so a
+    // bubble-phase guard blocked only this component's own handler and let a link's own (a router's
+    // navigation, say) run on a disabled or loading button. Same fix as `Link`'s
+    // (05-component-api-conventions.md §3). `onClickCapture` from the caller still runs when not blocked.
+    const handleClickCapture = (event: MouseEvent<HTMLButtonElement>) => {
       if (slottedDisabled) {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
-      onClick?.(event);
+      onClickCapture?.(event);
     };
 
     return (
@@ -162,7 +168,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={isLoading || undefined}
         // Lets a `ButtonGroup`'s stylesheet draw the right separator for this variant; absent outside a group.
         data-variant={group ? variant : undefined}
-        onClick={handleClick}
+        onClick={onClick}
+        onClickCapture={handleClickCapture}
         className={cx(
           styles.root,
           variantClass[variant],

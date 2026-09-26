@@ -163,10 +163,10 @@ import { Tooltip } from "@dbm-design-system/components";
 ```tsx
 {/* Multiple tooltips sharing one hover-delay/skip-delay timing. */}
 <TooltipProvider>
-  <Toolbar>
-    <Tooltip content="Bold"><IconButton icon={BoldIcon} aria-label="Bold" /></Tooltip>
-    <Tooltip content="Italic"><IconButton icon={ItalicIcon} aria-label="Italic" /></Tooltip>
-  </Toolbar>
+  <ButtonGroup aria-label="Text style" variant="secondary">
+    <Tooltip content="Bold"><IconButton icon={TextBIcon} aria-label="Bold" /></Tooltip>
+    <Tooltip content="Italic"><IconButton icon={TextItalicIcon} aria-label="Italic" /></Tooltip>
+  </ButtonGroup>
 </TooltipProvider>
 ```
 

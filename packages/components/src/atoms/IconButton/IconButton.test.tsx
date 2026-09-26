@@ -455,6 +455,53 @@ describe("IconButton", () => {
   });
 
   describe("asChild disabled/isLoading", () => {
+    it("blocks the slotted child's own click handler when disabled — the one a router's link carries (it runs before IconButton's own in the bubble phase)", () => {
+      const childClick = vi.fn();
+      const onClick = vi.fn();
+      render(
+        <IconButton icon={TrashIcon} aria-label="Delete" asChild disabled onClick={onClick}>
+          <a href="/next" onClick={childClick}>×</a>
+        </IconButton>,
+      );
+      fireEvent.click(screen.getByRole("link", { name: "Delete" }));
+      expect(childClick).not.toHaveBeenCalled();
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("blocks the slotted child's own click handler while loading, and does not follow the link", () => {
+      const childClick = vi.fn();
+      render(
+        <IconButton icon={TrashIcon} aria-label="Delete" asChild isLoading>
+          <a href="/next" onClick={childClick}>×</a>
+        </IconButton>,
+      );
+      const notPrevented = fireEvent.click(screen.getByRole("link", { name: "Delete" }));
+      expect(childClick).not.toHaveBeenCalled();
+      expect(notPrevented).toBe(false);
+    });
+
+    it("runs the slotted child's own handler, IconButton's onClick and a caller's onClickCapture when it is not disabled", () => {
+      const calls: string[] = [];
+      render(
+        <IconButton icon={TrashIcon} aria-label="Delete" asChild onClick={() => calls.push("button")} onClickCapture={() => calls.push("capture")}>
+          <a href="/next" onClick={() => calls.push("child")}>×</a>
+        </IconButton>,
+      );
+      fireEvent.click(screen.getByRole("link", { name: "Delete" }));
+      expect(calls).toEqual(["capture", "child", "button"]);
+    });
+
+    it("does not run a caller's onClickCapture on a blocked click", () => {
+      const onClickCapture = vi.fn();
+      render(
+        <IconButton icon={TrashIcon} aria-label="Delete" asChild disabled onClickCapture={onClickCapture}>
+          <a href="/next">×</a>
+        </IconButton>,
+      );
+      fireEvent.click(screen.getByRole("link", { name: "Delete" }));
+      expect(onClickCapture).not.toHaveBeenCalled();
+    });
+
     it("applies aria-disabled and blocks the click handler on the slotted element", () => {
       const onClick = vi.fn();
       render(

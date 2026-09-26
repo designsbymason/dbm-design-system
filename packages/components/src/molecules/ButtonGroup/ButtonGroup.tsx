@@ -1,6 +1,6 @@
 import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import { forwardRef, useMemo, useRef } from "react";
-import { ButtonGroupProvider } from "../../atoms/Button/buttonGroupContext";
+import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import styles from "./ButtonGroup.module.css";
 import type { ButtonGroupOrientation, ButtonGroupProps } from "./ButtonGroup.types";
 
@@ -8,7 +8,8 @@ import type { ButtonGroupOrientation, ButtonGroupProps } from "./ButtonGroup.typ
  * A set of related buttons laid out as one: fused into a segmented control (`attached`, the default) or
  * spaced apart, in a row or a column. It is a `role="group"` with a name, and it hands its `variant`, `size`,
  * `rounded` and `disabled` to the `Button`s and `IconButton`s inside it as defaults — a button's own prop
- * still wins — so a group of five needs them said once.
+ * still wins — so a group of five needs them said once. A group inside another keeps the outer one's settings
+ * for whatever it leaves out.
  *
  * Every button stays an ordinary button: each is a tab stop and takes Enter and Space. A group is not a
  * selection control (no button is "chosen" — a toggle pressed state is each button's own) and does not
@@ -58,9 +59,22 @@ export const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
       }
     }
 
+    // A group inside another (a bar of several groups) keeps what the outer one set: its own settings win, what
+    // it leaves out comes from the outer group, and a disabled outer group disables the inner buttons too.
+    // Without this the inner context would replace the outer and silently drop all four.
+    const parent = useButtonGroup();
+    const parentVariant = parent?.variant;
+    const parentSize = parent?.size;
+    const parentRounded = parent?.rounded;
+    const parentDisabled = parent?.disabled;
     const settings = useMemo(
-      () => ({ variant, size, rounded, disabled }),
-      [variant, size, rounded, disabled],
+      () => ({
+        variant: variant ?? parentVariant,
+        size: size ?? parentSize,
+        rounded: rounded ?? parentRounded,
+        disabled: disabled || parentDisabled,
+      }),
+      [variant, size, rounded, disabled, parentVariant, parentSize, parentRounded, parentDisabled],
     );
 
     return (

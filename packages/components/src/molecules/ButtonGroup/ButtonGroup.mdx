@@ -120,7 +120,8 @@ level.
 ### Stacked on a phone, in a row from md up
 
 `orientation` also takes a mobile-first map keyed by breakpoint. A fused row can't wrap onto a second line
-without breaking the shape, so stack it on a narrow screen instead — or use `attached={false}`, which does wrap.
+without breaking the shape, so stack it on a narrow screen instead — or use `attached={false}`, which does wrap. An attached
+row that is wider than its container overflows it as one box: its buttons don't shrink, since their labels don't wrap.
 
 <Canvas of={ButtonGroupStories.ResponsiveOrientation} />
 
@@ -168,6 +169,8 @@ separators mirror with it. Set `dir="rtl"` on the group's container, or on the p
 - Don't mix unrelated sizes or variants without a reason — a fused group reads as one control, so a
   stray `xl` or `ghost` button looks like a mistake.
 - Don't expect a group to move focus with the arrow keys. Every button is a tab stop, in order.
+- Don't rely on a group nested inside another to start over: it keeps the outer group's `variant`, `size`, `rounded`
+  and `disabled` for whatever it doesn't set itself, and a disabled outer group disables the inner buttons too.
 
 </Callout>
 </div>
@@ -199,8 +202,9 @@ separators mirror with it. Set `dir="rtl"` on the group's container, or on the p
 - A group's shared settings reach a button wherever it sits in the group, including one wrapped in a `Tooltip`
   or a menu trigger, and a link rendered with `asChild`.
 - The focused button is drawn over its neighbours, so its focus ring is never cut off by the next button.
-- Buttons in a group are at least 24 × 24px (WCAG 2.5.8) like any `Button`, and the separators are decoration:
-  each button is identified by its label and its own fill or border, not by the line between them.
+- Buttons in a group are at least 24 × 24px (WCAG 2.5.8) like any `Button`, at every size and in both orientations. The
+  separators are decoration: each button is identified by its label (and its own fill or border where it has one), not by the
+  line between them — the rule between `tertiary` buttons is a very faint accent by design.
 - The corners and separators are logical, so a right-to-left page mirrors them without any prop.
 
 </Callout>
@@ -215,8 +219,8 @@ separators mirror with it. Set `dir="rtl"` on the group's container, or on the p
 </ButtonGroup>
 
 <ButtonGroup aria-label="Text style" variant="secondary" size="sm">
-  <IconButton icon={BoldIcon} aria-label="Bold" />
-  <IconButton icon={ItalicIcon} aria-label="Italic" />
+  <IconButton icon={TextBIcon} aria-label="Bold" />
+  <IconButton icon={TextItalicIcon} aria-label="Italic" />
 </ButtonGroup>
 
 <ButtonGroup aria-label="Actions" attached={false} variant="secondary">

@@ -306,6 +306,53 @@ describe("Button", () => {
   });
 
   describe("asChild disabled/isLoading", () => {
+    it("blocks the slotted child's own click handler when disabled — the one a router's link carries (it runs before Button's own in the bubble phase)", () => {
+      const childClick = vi.fn();
+      const onClick = vi.fn();
+      render(
+        <Button asChild disabled onClick={onClick}>
+          <a href="/next" onClick={childClick}>Continue</a>
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("link", { name: "Continue" }));
+      expect(childClick).not.toHaveBeenCalled();
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("blocks the slotted child's own click handler while loading, and does not follow the link", () => {
+      const childClick = vi.fn();
+      render(
+        <Button asChild isLoading>
+          <a href="/next" onClick={childClick}>Continue</a>
+        </Button>,
+      );
+      const notPrevented = fireEvent.click(screen.getByRole("link", { name: "Continue" }));
+      expect(childClick).not.toHaveBeenCalled();
+      expect(notPrevented).toBe(false);
+    });
+
+    it("runs the slotted child's own handler, Button's onClick and a caller's onClickCapture when it is not disabled", () => {
+      const calls: string[] = [];
+      render(
+        <Button asChild onClick={() => calls.push("button")} onClickCapture={() => calls.push("capture")}>
+          <a href="/next" onClick={() => calls.push("child")}>Continue</a>
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("link", { name: "Continue" }));
+      expect(calls).toEqual(["capture", "child", "button"]);
+    });
+
+    it("does not run a caller's onClickCapture on a blocked click", () => {
+      const onClickCapture = vi.fn();
+      render(
+        <Button asChild disabled onClickCapture={onClickCapture}>
+          <a href="/next">Continue</a>
+        </Button>,
+      );
+      fireEvent.click(screen.getByRole("link", { name: "Continue" }));
+      expect(onClickCapture).not.toHaveBeenCalled();
+    });
+
     it("applies aria-disabled and blocks the click handler on the slotted element", () => {
       const onClick = vi.fn();
       render(

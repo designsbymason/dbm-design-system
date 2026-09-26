@@ -6,7 +6,7 @@ import {
   TextUnderlineIcon,
 } from "@dbm-design-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { Text } from "../../atoms/Text";
@@ -642,9 +642,14 @@ export const SpacedInteraction: Story = {
     await expect(tops.size).toBeGreaterThan(1);
     for (const button of tight) await expect(rect(button).right).toBeLessThanOrEqual(rect(canvas.getByTestId("tight")).right + 0.5);
 
-    // An attached row never wraps — a fused shape broken over two lines is no longer one shape.
-    const attachedTops = new Set(buttonsOf("tight-attached").map((button) => Math.round(rect(button).top)));
+    // An attached row never wraps — a fused shape broken over two lines is no longer one shape. Too wide for its
+    // container it overflows as one box: the group is as wide as its buttons, never narrower with them spilling out.
+    const attachedButtons = buttonsOf("tight-attached");
+    const attachedTops = new Set(attachedButtons.map((button) => Math.round(rect(button).top)));
     await expect(attachedTops.size).toBe(1);
+    const attachedGroup = canvas.getByTestId("tight-attached").firstElementChild as HTMLElement;
+    await expect(Math.max(...attachedButtons.map((button) => rect(button).right))).toBeLessThanOrEqual(rect(attachedGroup).right + 0.5);
+    await expect(rect(attachedGroup).width).toBeGreaterThan(rect(canvas.getByTestId("tight-attached")).width);
   },
 };
 
@@ -662,14 +667,19 @@ export const FocusInteraction: Story = {
   play: async ({ canvasElement }) => {
     const buttons = within(canvasElement).getAllByRole("button");
     // The ring is drawn outside the button, over the next one, so the focused button has to be above it. Outlines
-    // are not hit-testable, so this checks the stacking that puts it there.
+    // are not hit-testable, so this checks the stacking that puts it there: positioned (which paints above the
+    // static siblings around it) on the base layer, while the others stay static. A focused button also keeps
+    // its squared meeting corners — the ring's radius rule must not round them.
     for (const [index, button] of buttons.entries()) {
       await userEvent.tab();
       await expect(button).toHaveFocus();
       const style = getComputedStyle(button);
       await expect(style.position).toBe("relative");
-      await expect(style.zIndex).toBe("1");
-      for (const other of buttons.filter((_, i) => i !== index)) await expect(getComputedStyle(other).zIndex).toBe("auto");
+      await expect(style.zIndex).toBe("0");
+      for (const other of buttons.filter((_, i) => i !== index)) await expect(getComputedStyle(other).position).toBe("static");
+      const [topLeft, topRight, bottomRight, bottomLeft] = [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].map(Number.parseFloat);
+      if (index > 0) await expect([topLeft, bottomLeft]).toEqual([0, 0]);
+      if (index < buttons.length - 1) await expect([topRight, bottomRight]).toEqual([0, 0]);
     }
   },
 };
@@ -718,4 +728,88 @@ export const LabelledBy: Story = {
       </ButtonGroup>
     </div>
   ),
+};
+
+export const TargetSizeInteraction: Story = {
+  ...Playground,
+  name: "Interaction: every button is at least 24 by 24px, at every size",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "flex-start" }}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).flatMap((size) => [
+        <div key={`h-${size}`} data-testid={`horizontal-${size}`}>
+          <ButtonGroup aria-label={`Horizontal ${size}`} variant="secondary" size={size}>
+            <Button>A</Button>
+            <IconButton icon={TextBIcon} aria-label="Bold" />
+          </ButtonGroup>
+        </div>,
+        <div key={`v-${size}`} data-testid={`vertical-${size}`}>
+          <ButtonGroup aria-label={`Vertical ${size}`} variant="secondary" size={size} orientation="vertical">
+            <Button>A</Button>
+            <IconButton icon={TextBIcon} aria-label="Bold" />
+          </ButtonGroup>
+        </div>,
+      ])}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // WCAG 2.5.8: a target is at least 24 x 24 CSS pixels. The shortest possible label and an icon-only button are
+    // the smallest things a group can hold, at every size and in both orientations, attached and stretched.
+    for (const orientation of ["horizontal", "vertical"] as const) {
+      for (const size of ["xs", "sm", "md", "lg", "xl"] as const) {
+        for (const button of within(canvas.getByTestId(`${orientation}-${size}`)).getAllByRole("button")) {
+          await expect(rect(button).width).toBeGreaterThanOrEqual(24);
+          await expect(rect(button).height).toBeGreaterThanOrEqual(24);
+        }
+      }
+    }
+  },
+};
+
+// A link rendered `asChild` carries its own click handler (a router's navigation). In a disabled group it must not
+// run — checked in a real browser, where the event really is dispatched through the capture and bubble phases.
+export const DisabledLinkInteraction: Story = {
+  ...Playground,
+  name: "Interaction: a link in a disabled group does not run its own click handler",
+  tags: ["!dev"],
+  args: { disabled: true },
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", alignItems: "flex-start" }}>
+      <div data-testid="disabled">
+        <ButtonGroup aria-label="Disabled" variant="secondary" disabled>
+          <Button asChild>
+            <a href="#disabled" data-testid="disabled-link">Disabled link</a>
+          </Button>
+        </ButtonGroup>
+      </div>
+      <div data-testid="enabled">
+        <ButtonGroup aria-label="Enabled" variant="secondary">
+          <Button asChild>
+            <a href="#enabled" data-testid="enabled-link">Enabled link</a>
+          </Button>
+        </ButtonGroup>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const onClick = fn();
+    const disabledLink = canvas.getByTestId("disabled-link");
+    const enabledLink = canvas.getByTestId("enabled-link");
+    disabledLink.addEventListener("click", onClick);
+    // The enabled link really would navigate (a hash change in the test page); its listener cancels that. The
+    // disabled link's does not, so a click that leaked through would still show as a call and a navigation.
+    enabledLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      onClick();
+    });
+    await expect(disabledLink).toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(disabledLink);
+    // A native listener on the link itself sees the click only if it was not stopped in the capture phase.
+    await expect(onClick).not.toHaveBeenCalled();
+    await expect(window.location.hash).not.toBe("#disabled");
+    await userEvent.click(enabledLink);
+    await expect(onClick).toHaveBeenCalledTimes(1);
+  },
 };

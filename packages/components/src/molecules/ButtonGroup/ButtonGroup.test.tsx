@@ -1,5 +1,5 @@
 import { CopyIcon, TrashIcon } from "@dbm-design-system/icons";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
@@ -184,6 +184,30 @@ describe("ButtonGroup", () => {
       expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute("data-variant", "tertiary");
     });
 
+    it("does not run a linked child's own click handler when the group is disabled, and does when it is not", () => {
+      const childClick = vi.fn();
+      const { rerender } = render(
+        <ButtonGroup aria-label="Actions" disabled>
+          <Button asChild>
+            <a href="/next" onClick={childClick}>Next</a>
+          </Button>
+        </ButtonGroup>,
+      );
+      const link = screen.getByRole("link", { name: "Next" });
+      expect(link).toHaveAttribute("aria-disabled", "true");
+      fireEvent.click(link);
+      expect(childClick).not.toHaveBeenCalled();
+      rerender(
+        <ButtonGroup aria-label="Actions">
+          <Button asChild>
+            <a href="/next" onClick={childClick}>Next</a>
+          </Button>
+        </ButtonGroup>,
+      );
+      fireEvent.click(screen.getByRole("link", { name: "Next" }));
+      expect(childClick).toHaveBeenCalledTimes(1);
+    });
+
     it("marks each button with its variant so the separators suit it, only inside a group", () => {
       render(
         <>
@@ -211,6 +235,59 @@ describe("ButtonGroup", () => {
       const outside = screen.getByRole("button", { name: "Outside" });
       expect(outside).toBeEnabled();
       expect(outside).toHaveClass(buttonStyles.variantPrimary as string);
+    });
+  });
+
+  describe("a group inside a group", () => {
+    it("keeps what the outer group set, for whatever the inner one leaves out", () => {
+      render(
+        <ButtonGroup aria-label="Outer" variant="secondary" size="sm" rounded>
+          <ButtonGroup aria-label="Inner">
+            <Button>Nested</Button>
+          </ButtonGroup>
+        </ButtonGroup>,
+      );
+      const button = screen.getByRole("button", { name: "Nested" });
+      expect(button).toHaveClass(buttonStyles.variantSecondary as string);
+      expect(button).toHaveClass(buttonStyles.sizeSm as string);
+      expect(button).toHaveClass(buttonStyles.rounded as string);
+    });
+
+    it("lets the inner group's own settings win over the outer's", () => {
+      render(
+        <ButtonGroup aria-label="Outer" variant="secondary" size="sm">
+          <ButtonGroup aria-label="Inner" variant="ghost">
+            <Button>Nested</Button>
+          </ButtonGroup>
+        </ButtonGroup>,
+      );
+      const button = screen.getByRole("button", { name: "Nested" });
+      expect(button).toHaveClass(buttonStyles.variantGhost as string);
+      expect(button).toHaveClass(buttonStyles.sizeSm as string);
+    });
+
+    it("is disabled by a disabled outer group, and an inner disabled={false} does not undo it", () => {
+      render(
+        <ButtonGroup aria-label="Outer" disabled>
+          <ButtonGroup aria-label="Inner" disabled={false}>
+            <Button>Nested</Button>
+          </ButtonGroup>
+        </ButtonGroup>,
+      );
+      expect(screen.getByRole("button", { name: "Nested" })).toBeDisabled();
+    });
+
+    it("disables only the inner group's buttons when the inner one is disabled", () => {
+      render(
+        <ButtonGroup aria-label="Outer">
+          <Button>Outside</Button>
+          <ButtonGroup aria-label="Inner" disabled>
+            <Button>Nested</Button>
+          </ButtonGroup>
+        </ButtonGroup>,
+      );
+      expect(screen.getByRole("button", { name: "Outside" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Nested" })).toBeDisabled();
     });
   });
 

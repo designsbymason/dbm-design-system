@@ -40,11 +40,11 @@ export const buttonGroupSnippets = {
   <Button>Month</Button>
 </ButtonGroup>`,
 
-  icons: `{/* Icons come from @dbm-design-system/icons: BoldIcon, ItalicIcon, UnderlineIcon */}
+  icons: `{/* Icons come from @dbm-design-system/icons: TextBIcon, TextItalicIcon, TextUnderlineIcon */}
 <ButtonGroup aria-label="Text style" variant="secondary" size="sm">
-  <IconButton icon={BoldIcon} aria-label="Bold" />
-  <IconButton icon={ItalicIcon} aria-label="Italic" />
-  <IconButton icon={UnderlineIcon} aria-label="Underline" />
+  <IconButton icon={TextBIcon} aria-label="Bold" />
+  <IconButton icon={TextItalicIcon} aria-label="Italic" />
+  <IconButton icon={TextUnderlineIcon} aria-label="Underline" />
 </ButtonGroup>
 
 <ButtonGroup aria-label="Editing" variant="secondary">

@@ -41,7 +41,8 @@ export interface ButtonGroupProps
   /**
    * Fuses the buttons into one segmented control: square corners where they meet, one separator between
    * them, no gap. `false` keeps them apart, spaced by a gap, and lets a horizontal group wrap onto more
-   * lines when it doesn't fit.
+   * lines when it doesn't fit. An attached row that is wider than its container overflows it as one box —
+   * stack it with an `orientation` map instead.
    * @default true
    */
   attached?: boolean;

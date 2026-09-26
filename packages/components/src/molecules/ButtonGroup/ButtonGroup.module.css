@@ -1,7 +1,9 @@
+/* No `max-width`: a fused row that is wider than its container overflows it as one box — its buttons don't
+   shrink, since their labels don't wrap — rather than the box shrinking while the buttons spill out of it.
+   Stack such a row with an `orientation` map, or use `attached={false}`, which wraps. */
 .root {
   align-items: stretch;
   display: inline-flex;
-  max-width: 100%;
 }
 
 .root[data-orientation="vertical"] {
@@ -68,10 +70,11 @@
   border-end-start-radius: 0;
 }
 
-/* The focused button's ring is drawn over its neighbours, not under them. */
+/* The focused button's ring is drawn over its neighbours, not under them. A positioned element paints above
+   the static siblings around it whatever its order in the row, so the base layer is all it needs. */
 .attached > :focus-visible {
   position: relative;
-  z-index: 1;
+  z-index: var(--dbm-z-index-base);
 }
 
 /* Separators, drawn on every button after the first, to suit its variant (a `Button` or `IconButton` in a
