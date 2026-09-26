@@ -2,9 +2,9 @@
 
 **Inputs & Forms:** Slider — initial build + full `06-engineering-standards.md` §9 review checklist
 worked through (2026-09-15), item 7 in the itemized molecule-tier build order
-(`04-component-inventory.md`). **Not yet Finalized** — per the standing rule that only the user
-declares a component's review pass done, this file records what was built/checked/found, not a
-self-declared Finalized status.
+(`04-component-inventory.md`). **Finalized 2026-09-15**, declared by the user; value-label alignment
+revised 2026-09-25 (re-verified: design quality, responsiveness, functional verification). This file
+records what was built, checked and found, oldest first; the entries after the Finalize are dated.
 
 **New dependency: `@radix-ui/react-slider` (^1.4.7).** The first molecule in this system wrapping a
 genuinely compound Radix primitive with no prior atom precedent (`Switch`/`Checkbox` wrap a single
@@ -160,7 +160,7 @@ fork affecting the documented build-order plan, not just this component's own su
 2. **Hover/drag value tooltip — add, reusing the `Tooltip` atom.** New `showValueTooltip` prop.
 3. **Step tick marks — add now** (the other option offered was deferring). New `showTicks` +
    `tickInterval` props.
-4. **Two-thumb range mode — keep separate.** Confirmed: stays the future `RangeSlider` component
+4. **Two-thumb range mode — keep separate.** Confirmed: stays the future `RangeSlider` component (built 2026-09-25, see [RangeSlider.md](RangeSlider.md))
    already planned in `04-component-inventory.md` (item 17, "extends Slider"), not folded into
    `Slider` itself via a variant prop. No change made to this component or the inventory as a
    result — this only rules out an alternative, it doesn't require any action now.
