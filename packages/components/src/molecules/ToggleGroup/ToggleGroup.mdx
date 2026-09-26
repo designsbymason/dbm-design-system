@@ -7,6 +7,21 @@ import { ButtonGroup } from "../ButtonGroup";
 import { RadioGroup } from "../RadioGroup";
 import { Tabs } from "../Tabs";
 import * as ToggleGroupStories from "./ToggleGroup.stories";
+import * as ToggleGroupItemStories from "./ToggleGroupItem.stories";
+
+export const itemPropOrder = [
+  "value",
+  "children",
+  "icon",
+  "disabled",
+  "asChild",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
 
 export const propOrder = [
   "children",
@@ -87,20 +102,13 @@ overridden.
 
 <PropertiesTable of={ToggleGroupStories} order={propOrder} />
 
-### ToggleGroup.Item
+### ToggleGroup.Item properties
 
-An item takes the group's `variant` and `size`; it has no say in either.
+One choice in the group — a real `<button>`. It takes the group's `variant` and `size`; it has no say in either. Also
+accepts any other native `<button>` attribute beyond what's listed here (e.g. `onFocus`, `title`) — passed straight
+through. `role` and the checked or pressed state are the item's own and can't be overridden.
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | — | This item's value: what the group's `value` holds while it is chosen. Required, and unique within the group. |
-| `children` | `ReactNode` | — | The item's label. Left out, the item is icon-only and needs an `aria-label`. |
-| `icon` | `PhosphorIcon` | — | An icon before the label, sized to the group's `size`. Not for `asChild`. |
-| `disabled` | `boolean` | `false` | Disables this item. The group's `disabled` disables every item either way. |
-| `asChild` | `boolean` | `false` | Renders the item as its only child, for a wrapper such as a `Tooltip` trigger. |
-| `aria-label` | `string` | — | Names an icon-only item. |
-| `aria-labelledby` | `string` | — | The id of an element that names the item. |
-| `id`, `className`, `style`, `data-testid` | — | — | Standard attributes, on the item's element. |
+<PropertiesTable of={ToggleGroupItemStories} order={itemPropOrder} />
 
 ## Variants
 
