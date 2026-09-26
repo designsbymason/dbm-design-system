@@ -1,6 +1,6 @@
 # CodeBlock
 
-**Tier:** molecule · **Category:** Typography · **Status:** built 2026-09-26; **awaiting its final review and sign-off** (only the user declares a component Finalized).
+**Tier:** molecule · **Category:** Typography · **Status:** built 2026-09-26; **Finalized 2026-09-26**, declared by the user after the final review pass recorded below, with the not-verified items left as they are (see "Finalized" at the end).
 
 ## What was built
 
@@ -74,3 +74,7 @@ A full `06-engineering-standards.md` §9 pass against the code and the running c
 - **Embedded languages** (`<script>` and `<style>` inside HTML, template literals' `${}` contents).
 - **Several languages in tabs** (compose with `Tabs`) and **an interactive wrap toggle button**.
 - **Per-line links or copying**, and **a side-by-side diff**.
+
+## Finalized, 2026-09-26
+
+Declared Finalized by the user after the final review above. Left open, as recorded there: no real-screen-reader check, the real Clipboard API against a permission prompt, forced-colours mode, and the gaps named above.
