@@ -43,6 +43,10 @@ Props mirror `Slider`'s, with the value a pair: `value` / `defaultValue` / `onVa
 
 - **The `showValue` label resized the track** as either number gained digits (horizontal), or shifted a vertical slider sideways: user-reported, reproduced, fixed in the shared layout for both components and recorded in [Slider.md](Slider.md). `RangeSlider` reserves the width of the widest range it can show; a real-browser story (`StableTrackInteraction`) measures the track through `[5, 50]`, `[0, 80]`, `[0, 100]` and `[0, 99]`, horizontal and vertical, and fails without the fix.
 
+- **Value label alignment** (at explicit direction): start-aligned beside a horizontal track, centred under a vertical one; recorded in [Slider.md](Slider.md).
+
+- **Properties table wider than every other component's** (877px against `Slider`'s 705px, at the same page width): the `labels` default (`{ minimum: 'Minimum', maximum: 'Maximum' }`) stretched the Default column to 373px, and the 21-character name `minStepsBetweenThumbs` the Name column to 204px. `labels` now shows "—" and lists its defaults in its description, like `Pagination`'s; the long name wraps at its camelCase joins (a shared `PropertiesTable` change, recorded in `07` §4.1). Name, Value options and Default now measure the same as `Slider`'s (164.4 / 116.2 / 228.5px); Description flexes with its prose.
+
 ## Open item for a decision
 - **Neither slider mirrors under right-to-left.** Radix takes its direction from a `dir` prop or a `DirectionProvider`, defaulting to left-to-right, and `Slider`/`RangeSlider` remove `dir` from their props and place the thumbs with a physical `left`. Whether they should is a per-component judgement ([ADR-0009](../adr/0009-rtl-mirroring-is-a-per-component-judgment-call.md)); nothing decided.
 - `Slider`'s type doc and its Docs page still say "the future `RangeSlider`" / have no link to it. Wording only.
