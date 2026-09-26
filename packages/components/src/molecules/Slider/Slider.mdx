@@ -6,6 +6,7 @@ import { FieldLabel } from "../../atoms/FieldLabel";
 import { Tooltip } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { NumberInput } from "../NumberInput";
+import { RangeSlider } from "../RangeSlider";
 import { Slider } from "./Slider";
 import * as SliderStories from "./Slider.stories";
 
@@ -51,7 +52,7 @@ export const propOrder = [
 A single-value slider built on Radix UI's Slider primitive, with a token-driven track, filled
 range, and thumb. Accepts both controlled (`value`/`onValueChange`) and uncontrolled
 (`defaultValue`) usage — as a plain number, not the array the underlying primitive uses internally
-(that shape only matters once a slider has more than one thumb). `onValueCommit` fires once, on
+(that shape only matters once a slider has more than one thumb; for a range, use [`RangeSlider`](/docs/molecules-inputs-rangeslider--docs)). `onValueCommit` fires once, on
 release, distinct from `onValueChange`'s continuous firing while dragging or stepping.
 
 ### Import
@@ -166,6 +167,8 @@ announces, unless you pass an `aria-valuetext` of your own, which wins everywher
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
+- Use `Slider` to choose one value, and `RangeSlider` to choose a range between two — a price band, a
+  date span — rather than two sliders that can cross each other.
 - Reach for `onValueCommit` for anything expensive that should only run once the user settles on a
   value (a network request, an expensive filter) — `onValueChange` fires continuously while
   dragging and is the wrong hook for that.
@@ -300,6 +303,13 @@ announces, unless you pass an `aria-valuetext` of your own, which wins everywher
 ## Related components
 
 <div className="dbm-card-grid">
+<RelatedCard
+  name="RangeSlider"
+  description="The two-thumb version, for choosing a range between two values"
+  href="/?path=/docs/molecules-inputs-rangeslider--docs"
+>
+  <RangeSlider aria-label="Price" defaultValue={[20, 80]} />
+</RelatedCard>
 <RelatedCard
   name="NumberInput"
   description="A precise, typed-value alternative for the same kind of numeric input"

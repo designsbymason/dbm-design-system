@@ -18,7 +18,7 @@ export interface SliderProps
   /**
    * The controlled value, as a real number — not the array Radix's own
    * underlying primitive uses internally (that shape only matters once a
-   * slider has more than one thumb, e.g. the future `RangeSlider`).
+   * slider has more than one thumb, as on `RangeSlider`, which takes a `[minimum, maximum]` pair).
    * Passing this switches the slider into controlled mode; pair with
    * `onValueChange` to update it, or the value will appear frozen.
    */
