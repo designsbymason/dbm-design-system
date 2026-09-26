@@ -1,6 +1,6 @@
 # RangeSlider
 
-**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-25; **not yet Finalized** — only the user declares that, and the open items at the bottom need a decision first.
+**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-25; **Finalized 2026-09-25**, declared by the user after the final review pass recorded below.
 
 ## What was built
 
@@ -27,7 +27,7 @@ Props mirror `Slider`'s, with the value a pair: `value` / `defaultValue` / `onVa
 
 ## Verification (2026-09-25)
 
-- **Unit** (`RangeSlider.test.tsx`, 55): both thumbs, `defaultValue` and its default, arrow / Page / Home / End per thumb, `minStepsBetweenThumbs`, fractional steps, `onValueChange` / `onValueCommit` shape and count, controlled, disabled, names for `aria-label` / `aria-labelledby` / `labels`, ids, `aria-describedby` on both, dev warning (once), `aria-invalid`, `autoFocus`, tab order, size and error classes, vertical, ref and `data-testid`, hidden inputs under `name[]`, `showValue`, min/max labels, the shared grid placement, ticks, the tooltip per thumb (press, release, keyboard), `formatNumber` (shown, announced, plain in callbacks and the form), `StrictMode`, jest-axe across seven states plus a visible-label composition.
+- **Unit** (`RangeSlider.test.tsx`, 55 at build time, 66 after the final review below): both thumbs, `defaultValue` and its default, arrow / Page / Home / End per thumb, `minStepsBetweenThumbs`, fractional steps, `onValueChange` / `onValueCommit` shape and count, controlled, disabled, names for `aria-label` / `aria-labelledby` / `labels`, ids, `aria-describedby` on both, dev warning (once), `aria-invalid`, `autoFocus`, tab order, size and error classes, vertical, ref and `data-testid`, hidden inputs under `name[]`, `showValue`, min/max labels, the shared grid placement, ticks, the tooltip per thumb (press, release, keyboard), `formatNumber` (shown, announced, plain in callbacks and the form), `StrictMode`, jest-axe across seven states plus a visible-label composition.
 - **Real browser** (`storybook` project, 22 stories, all pass): keyboard per thumb; disabled; the filled range between the thumbs in horizontal, inverted and vertical; the range text's order with Arabic digits, each thumb's 24px target at every size, and the track holding still as the range gains digits. **Broken on purpose once each and seen to fail:** without the per-thumb Home/End handler (3 unit tests and the keyboard story fail); without the range fill (the layout story fails); without the isolates (the order story fails: 1162 is not less than 1134).
 - **Live, in the running Storybook:** Docs page renders with no console errors; the Properties table has all 30 rows, none with an empty description, defaults present (checked row by row); 16 canvases, every "Show code" opened and read after the 3-second settle shows hand-written code; TOC matches the template; Playground controls complete with no stray rows. A real mouse drag moved the upper thumb to 57 and the label followed; a click on the bare track moved the *nearest* thumb (to 7) and it took focus; two tooltips appear briefly while focus moves between thumbs, settling to one. Keyboard focus draws the standard 2px ring, 4px offset. Theming: `bg.brand` / `border.brand` / `bg.track` / thumb fill resolve correctly in purple-light (`#5548A4`), purple-dark, emerald-light and emerald-dark (read with transitions off). At 375px there is no horizontal overflow.
 - **Whole pipeline:** `pnpm lint` (eslint, `tsc`, `.storybook` typecheck), `pnpm build`, all 2,911 unit tests, all 711 real-browser tests (re-run after the two `Slider` fixes and the value-label fix), the component bundle-size check (`RangeSlider` 3.36KB JS, 1.47KB CSS gzipped), the Foundations token-coverage check and `pnpm audit` pass.
@@ -59,7 +59,30 @@ Props mirror `Slider`'s, with the value a pair: `value` / `defaultValue` / `onVa
 
 **Not verified:** a right-to-left *language* with real Arabic or Hebrew text in the labels beyond the digits story; real screen reader behaviour.
 
+## Final review before Finalizing, 2026-09-25
+
+A full `06-engineering-standards.md` §9 pass, checked against the code and the running component rather than the build-time notes. **Two findings, both fixed; nothing else needed action.**
+
+1. **A malformed value was silent.** `value` / `defaultValue` as an unsorted pair (`[80, 20]`) or outside the track (`[-50, 500]`) rendered as given — a "Minimum" thumb above the "Maximum" one, and `aria-valuenow` outside `aria-valuemin`/`aria-valuemax` (confirmed with a probe) — with no warning, against §3's "invalid combinations fail loud in development". Now one development-only `console.warn` per instance for each case (stripped in production; Radix doesn't clamp, and a value the parent owns can't be repaired here). Three unit tests, the two warning ones fail without the warning (checked).
+2. **Never tested: composing with `FormField`.** The component is documented inside one (`{(fieldProps) => <RangeSlider {...fieldProps} />}`) and `06` §9's cross-part wiring item applies to what consumes `FormField`'s render-prop, but nothing exercised it. Probed, then covered by three unit tests: each thumb is named "Price Minimum" / "Price Maximum" from the field's label, both are described by the helper text or error, `aria-invalid` and `disabled` arrive on both, and jest-axe is clean. They fail with the `aria-labelledby` composition removed (checked). Also added: jest-axe in right-to-left with everything shown.
+
+**Checked, no action needed:**
+- **Baseline:** no `any`, suppression or hardcoded value in the source (the component has no CSS of its own); every Radix `Root` prop is exposed or deliberately not (`asChild` is not needed, `name` reaches the hidden inputs as `name[]`); `{...props}` precedes every computed attribute, and `aria-invalid` is last on each thumb; JSDoc on every prop; no console output but the two development warnings and the no-name one, all once and stripped in production; SSR-safe (no `window` or `document`); `StrictMode` tested.
+- **Snippets, never typechecked at build time:** all 9 (six static, three generated from the Playground builder across a spread of controls) typecheck against the real component; a planted unknown prop, a three-number `defaultValue` and `dir="sideways"` each fail, so the check bites.
+- **Real pointer behaviour:** with both thumbs on the same value at either end the pair can still be separated by dragging (Radix moves the nearer thumb: 100/100 dragged left gave 48/100; 0/0 dragged right gave 0/48), so the overlapping-thumbs trap that two-thumb sliders often have is absent; a mouse drag commits once on release with the final pair, equal to the live value (20–52 in the Controlled story).
+- **Responsiveness:** no page overflow at a 320px viewport with everything on at size `xl`, in containers from 100% down to 5rem; the track gives up space first, and the range text wraps below about 130px. The same layout as `Slider`.
+- **Theming:** the error state resolves to the danger colours in dark Emerald with `aria-invalid` set; the four theme combinations were read earlier.
+- **Docs and Storybook:** Properties table 31 rows, none with an empty description, defaults present; the Docs page has every template section; every visible story has hand-written "Show code"; interaction stories are hidden (`!dev`); the Playground's args match the real defaults except the two Storybook-only start values and `tickInterval`, each explained; nothing in reader-facing text cites an internal document, a date, review history or another library.
+
+**Not verified:** a real screen reader; real Arabic or Hebrew text beyond digits.
+
+**Test totals now:** 66 unit tests for `RangeSlider` (2,927 in the package), 22 real-browser stories.
+
 ## Gaps named, not built
 
 - **A `RangeSlider` with more than two thumbs** — Radix supports it; nothing here asks for it.
 - **Two typed inputs kept in step with the thumbs** — a common pairing (`NumberInput` ×2); a pattern for a page or a future `FormField` group, not this component.
+
+## Finalized, 2026-09-25
+
+Declared by the user after the final review: the two findings were fixed and the right-to-left decision built. Everything in this file is the record up to that point; later changes get a dated entry here, and a fix to it goes through `06-engineering-standards.md` §9's Finalized rules (ask first, then the three-question test).

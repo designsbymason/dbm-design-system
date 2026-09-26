@@ -208,8 +208,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and 19 of the 20 molecules built so far have a Docs page, a completed review pass, and are Finalized** — full atom-tier coverage, and
-every molecule built to date except `RangeSlider`, which has a Docs page and a full build-time verification but is not yet Finalized. `Radio` joined the atom tier on 2026-09-14 (split out of the
+**All 48 atoms and all 20 molecules built so far have a Docs page, a completed review pass, and are Finalized** — full atom-tier coverage, and
+every molecule built to date. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
 built and Finalized the same day), which is why the atom count is 48, not the 47 several docs carried
@@ -285,16 +285,17 @@ quoted in prose elsewhere.
 | Tabs | Molecule | Navigation | ✅ | ✅ 2026-09-22 | [Tabs.md](component-reviews/Tabs.md) |
 | Breadcrumb | Molecule | Navigation | ✅ | ✅ 2026-09-23 | [Breadcrumb.md](component-reviews/Breadcrumb.md) |
 | Alert | Molecule | Feedback | ✅ | ✅ 2026-09-25 | [Alert.md](component-reviews/Alert.md) |
-| RangeSlider | Molecule | Inputs & Forms | ✅ | — built 2026-09-25, awaiting sign-off | [RangeSlider.md](component-reviews/RangeSlider.md) |
+| RangeSlider | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-25 | [RangeSlider.md](component-reviews/RangeSlider.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-09-25):** every atom and the first 19 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-09-25):** every atom and the first 20 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
-`Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`) are reviewed and Finalized — see the table above; `RangeSlider` is built and awaiting sign-off (its open items are in its review file). The queue continues
+`Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
+`RangeSlider`) are reviewed and Finalized — see the table above. The queue continues
 through the remaining 16 of the 36 molecules, one at a time, in the
 dependency order itemized in `04-component-inventory.md` (`ButtonGroup` is next), each with the same full `06-engineering-standards.md` §9 process.
 
