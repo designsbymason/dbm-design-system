@@ -60,6 +60,7 @@ import { paginationPlaygroundSnippet } from "./molecules/Pagination/Pagination.s
 import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/PasswordInput.snippets";
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
+import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlider.snippets";
 import { searchInputPlaygroundSnippet } from "./molecules/SearchInput/SearchInput.snippets";
 import { selectPlaygroundSnippet } from "./molecules/Select/Select.snippets";
 import { sliderPlaygroundSnippet } from "./molecules/Slider/Slider.snippets";
@@ -537,6 +538,43 @@ describe("Playground snippets for the eight input molecules", () => {
 
   it("Slider puts a vertical slider in a container with a height", () => {
     const snippet = sliderPlaygroundSnippet({ orientation: "vertical" });
+    expect(snippet).toContain('orientation="vertical"');
+    expect(snippet).toContain('<div style={{ height: "12rem" }}>');
+  });
+});
+
+describe("RangeSlider's Playground snippet", () => {
+  it.each([
+    {},
+    { lowerStart: 10, upperStart: 60, min: 0, max: 200, step: 5, minStepsBetweenThumbs: 2 },
+    { size: "xl", hasError: true, disabled: true, name: "price", "aria-label": "Budget" },
+    { showValue: true, showValueTooltip: true, showMinMaxLabels: true, showTicks: true, tickInterval: 25, inverted: true },
+    { orientation: "vertical", showMinMaxLabels: true },
+  ])("%j is a real snippet", (args) => {
+    expect(problemsIn(rangeSliderPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("writes only what differs, and defaultValue only when the start is not the whole track", () => {
+    expect(rangeSliderPlaygroundSnippet({ size: "md", min: 0, max: 100, step: 1, lowerStart: 0, upperStart: 100, "aria-label": "" })).toBe(
+      '<RangeSlider aria-label="Price" />',
+    );
+    expect(rangeSliderPlaygroundSnippet({ lowerStart: 20, upperStart: 80 })).toBe('<RangeSlider aria-label="Price" defaultValue={[20, 80]} />');
+    // The whole track of a custom range is still the default.
+    expect(rangeSliderPlaygroundSnippet({ min: 10, max: 50, lowerStart: 10, upperStart: 50 })).toBe(
+      '<RangeSlider aria-label="Price" min={10} max={50} />',
+    );
+    expect(rangeSliderPlaygroundSnippet({ minStepsBetweenThumbs: 0 })).toBe('<RangeSlider aria-label="Price" />');
+    expect(rangeSliderPlaygroundSnippet({ minStepsBetweenThumbs: 3 })).toBe('<RangeSlider aria-label="Price" minStepsBetweenThumbs={3} />');
+  });
+
+  it("writes tickInterval only when ticks are on and it differs from step", () => {
+    expect(rangeSliderPlaygroundSnippet({ showTicks: true, tickInterval: 10 })).toBe('<RangeSlider aria-label="Price" showTicks tickInterval={10} />');
+    expect(rangeSliderPlaygroundSnippet({ showTicks: true, tickInterval: 1, step: 1 })).toBe('<RangeSlider aria-label="Price" showTicks />');
+    expect(rangeSliderPlaygroundSnippet({ showTicks: false, tickInterval: 10 })).toBe('<RangeSlider aria-label="Price" />');
+  });
+
+  it("puts a vertical slider in a container with a height", () => {
+    const snippet = rangeSliderPlaygroundSnippet({ orientation: "vertical" });
     expect(snippet).toContain('orientation="vertical"');
     expect(snippet).toContain('<div style={{ height: "12rem" }}>');
   });

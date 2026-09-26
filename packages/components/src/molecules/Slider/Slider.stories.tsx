@@ -512,3 +512,42 @@ export const DisabledInteraction: Story = {
     await pause(800);
   },
 };
+
+// The thumb is drawn 12, 16 and 20px at xs, sm and md, but its pointer and touch target must be at least 24 x 24px
+// (WCAG 2.5.8). jsdom does no hit-testing, so this is measured in a real browser: a point 11px from the thumb's
+// centre, in each direction, must land on the thumb — at every size, both orientations.
+export const TargetSizeInteraction: Story = {
+  name: "Interaction: the thumb's target is at least 24px at every size",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)", width: "16rem" }}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <div key={size} data-testid={`horizontal-${size}`}>
+          <Slider aria-label={`Horizontal ${size}`} size={size} defaultValue={50} />
+        </div>
+      ))}
+      <div style={{ display: "flex", gap: "var(--dbm-space-8)", height: "8rem" }}>
+        {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+          <div key={size} data-testid={`vertical-${size}`} style={{ height: "100%" }}>
+            <Slider aria-label={`Vertical ${size}`} size={size} orientation="vertical" defaultValue={50} style={{ height: "100%" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const orientation of ["horizontal", "vertical"] as const) {
+      for (const size of ["xs", "sm", "md", "lg", "xl"] as const) {
+        const thumb = within(canvas.getByTestId(`${orientation}-${size}`)).getByRole("slider");
+        const rect = thumb.getBoundingClientRect();
+        const centreX = rect.left + rect.width / 2;
+        const centreY = rect.top + rect.height / 2;
+        for (const [dx, dy] of [[-11, 0], [11, 0], [0, -11], [0, 11]] as const) {
+          const hit = document.elementFromPoint(centreX + dx, centreY + dy);
+          await expect(hit).toBe(thumb);
+        }
+      }
+    }
+  },
+};

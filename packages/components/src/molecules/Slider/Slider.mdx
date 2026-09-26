@@ -222,6 +222,7 @@ announces, unless you pass an `aria-valuetext` of your own, which wins everywher
   (`bg.track`) deliberately doesn't clear the 3:1 non-text floor — an accepted exception, since the
   thumb and filled range already carry the boundary/state information a user needs (see
   `03-token-system-spec.md`'s "Notable exceptions" and ADR-0016) — not an oversight.
+- The thumb's pointer and touch target is at least 24 × 24px at every size (an invisible area around the smaller thumbs, so they are drawn at 12, 16 and 20px but grabbed like a 24px one), meeting WCAG 2.5.8.
 - `showTicks`' tick marks, `showMinMaxLabels`' end labels, and `showValueTooltip`'s bubble are all
   purely visual — ticks are `aria-hidden`, and none of the three change what's announced to
   assistive tech, which already gets the real state via `aria-valuenow`/`aria-valuemin`/
@@ -276,6 +277,7 @@ announces, unless you pass an `aria-valuetext` of your own, which wins everywher
 <TokenRow token="space.1" usage="gap between the track and the min/max label row, horizontal orientation" />
 <TokenRow token="space.2" usage="gap between the slider and its value label when showValue is set" />
 <TokenRow token="space.8" usage="clearance between the value label and the min-label overlay, vertical, when showMinMaxLabels is also set" />
+<TokenRow token="space.6" usage="the 24px floor of the thumb's invisible pointer and touch target, so a small thumb is still easy to grab" />
 <TokenRow token="space.32" usage='minimum height floor for orientation="vertical" when no explicit height is set' />
 <TokenRow token="shadow.light.sm / shadow.dark.sm" usage="thumb elevation at rest" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="thumb elevation on hover" />

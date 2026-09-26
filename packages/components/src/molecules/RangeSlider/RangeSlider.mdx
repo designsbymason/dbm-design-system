@@ -1,0 +1,349 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldHelperText } from "../../atoms/FieldHelperText";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Tooltip } from "../../atoms/Tooltip";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { NumberInput } from "../NumberInput";
+import { Slider } from "../Slider";
+import { RangeSlider } from "./RangeSlider";
+import * as RangeSliderStories from "./RangeSlider.stories";
+
+export const propOrder = [
+  "size",
+  "hasError",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "onValueCommit",
+  "min",
+  "max",
+  "step",
+  "minStepsBetweenThumbs",
+  "orientation",
+  "inverted",
+  "showValue",
+  "showValueTooltip",
+  "showMinMaxLabels",
+  "formatNumber",
+  "showTicks",
+  "tickInterval",
+  "disabled",
+  "autoFocus",
+  "name",
+  "form",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={RangeSliderStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="RangeSlider" tier="Molecule" />
+
+A slider with two thumbs, for choosing a range of values — a price band, a date span, a volume
+window. It is built on Radix UI's Slider primitive and drawn exactly like `Slider`: the same track,
+thumb, sizes and labels, with the stretch between the two thumbs filled. The value is a
+`[minimum, maximum]` pair, lower first, in both controlled (`value`/`onValueChange`) and
+uncontrolled (`defaultValue`) use, and a thumb can never pass the other. `onValueCommit` fires once,
+on release, distinct from `onValueChange`'s continuous firing while dragging or stepping.
+
+### Import
+
+```tsx
+import { RangeSlider } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={RangeSliderStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={RangeSliderStories.Playground}
+  exclude={[
+    "value",
+    "defaultValue",
+    "formatNumber",
+    "onValueChange",
+    "onValueCommit",
+    "autoFocus",
+    "form",
+    "labels",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={["size", "hasError", "lowerStart", "upperStart", ...propOrder]}
+/>
+
+## Properties
+
+`RangeSlider` also accepts any other native `<span>` attribute beyond what's listed here (e.g.
+`onFocus`, `onKeyDown`) — passed straight through to the underlying root element.
+
+<PropertiesTable of={RangeSliderStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={RangeSliderStories.AllSizes} />
+
+### Vertical
+
+<Canvas of={RangeSliderStories.Vertical} />
+
+### With the live range shown
+
+<Canvas of={RangeSliderStories.WithValue} />
+
+### With a value tooltip on each thumb
+
+<Canvas of={RangeSliderStories.WithValueTooltip} />
+
+### With min/max labels
+
+<Canvas of={RangeSliderStories.WithMinMaxLabels} />
+
+### With tick marks
+
+<Canvas of={RangeSliderStories.WithTicks} />
+
+### Keeping the thumbs apart
+
+`minStepsBetweenThumbs` sets how many steps must always separate the two thumbs. At its default of `0`
+they can meet on the same value; here they stay at least ten apart (five steps of two), so neither can
+hide the other.
+
+<Canvas of={RangeSliderStories.KeepingThumbsApart} />
+
+### Every decoration combined
+
+<Canvas of={RangeSliderStories.FullyDecorated} />
+
+### Vertical, with the range and min/max labels
+
+<Canvas of={RangeSliderStories.VerticalWithMinMaxLabels} />
+
+### Numbers with a unit or in your own locale
+
+`formatNumber` writes each number the slider shows — the range, a thumb's tooltip, and the min and max
+labels — with a unit (`$300`) or the way a language or region does (Arabic-Indic digits). It also becomes
+what assistive tech announces on each thumb.
+
+<Canvas of={RangeSliderStories.PriceRange} />
+
+### With a visible label and helper text
+
+A visible label names the slider through `aria-labelledby`; each thumb adds its own word to it, so a screen
+reader hears "Price From" and "Price To" here. `labels` renames those two words.
+
+<Canvas of={RangeSliderStories.WithVisibleLabel} />
+
+### Error state
+
+<Canvas of={RangeSliderStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={RangeSliderStories.Disabled} />
+
+### Controlled, with onValueCommit for an expensive operation
+
+<Canvas of={RangeSliderStories.Controlled} />
+
+### In a form
+
+<Canvas of={RangeSliderStories.InAForm} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `RangeSlider` when the question is "between what and what" — a price band, a date span, a
+  volume window. For a single value, use `Slider`.
+- Reach for `onValueCommit` for anything expensive that should only run once the user settles on a
+  range (a search, a filtered query) — `onValueChange` fires continuously while dragging.
+- Pass `aria-label` (or `aria-labelledby`) — each thumb's name is built from it, so without one the
+  thumbs are only "Minimum" and "Maximum".
+- Set `minStepsBetweenThumbs` to at least `1` when the two ends of the range must stay distinct, so a
+  thumb is never hidden underneath the other.
+- Set an explicit `height` via `style` whenever `orientation="vertical"` — a vertical slider has no
+  intrinsic height.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass `value` with the two numbers the wrong way round — the lower value comes first, always.
+- Don't drive `value` from a live control without a real `onValueChange` wired back — the thumbs
+  would appear frozen.
+- Don't use `RangeSlider` to pick two unrelated values (a width and a height): it draws them as one
+  filled stretch, which reads as a single range.
+- Don't treat `showValueTooltip` as a substitute for `formatNumber` — the tooltip is a visual aid,
+  while `formatNumber` also changes what assistive tech announces.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `size` to the surrounding layout's density, same as `Slider` and `Input`.
+- Keep `step` a "round" value relative to the value's own natural granularity, and set `min` and `max`
+  so the whole track is a meaningful range (a price from 0 to 500, not 0 to 487).
+- Show the range as text with `showValue` when no other element reflects it, and add `formatNumber`
+  for a unit — "$100 – $300" says more than "100 – 300".
+- Reach for `showValueTooltip` instead of `showValue` when the numbers only matter *while*
+  interacting; it appears on hover, drag or focus and otherwise gets out of the way.
+- Pair with `FieldHelperText` to state the valid range in plain language, and with `FieldError` and
+  `hasError` to say why a range failed validation.
+- Keep `labels.minimum` and `labels.maximum` short — they are spoken after the slider's own name on
+  each thumb.
+
+## Accessibility
+
+<Callout tone="info" title="Two sliders in one control, each named and reachable on its own">
+
+- Each thumb is its own `role="slider"`: `Tab` moves from the lower thumb to the upper one, and each
+  takes the arrow keys, Page Up/Down, Home and End, per the WAI-ARIA slider pattern.
+- Each thumb's name is the slider's own (`aria-label`, or the visible label named by
+  `aria-labelledby`) followed by "Minimum" or "Maximum" — "Price Minimum", "Price Maximum" — so a
+  screen reader user always knows which end they are moving. `labels` changes those two words. A
+  dev-mode console warning fires once when there is no name at all.
+- `aria-valuenow`, `aria-valuemin` and `aria-valuemax` reflect the real state of each thumb. A thumb
+  can never pass the other, and `aria-valuemin`/`aria-valuemax` are the track's ends, not the other
+  thumb's value.
+- **Home and End move the focused thumb to its own limit**: the lower thumb goes to `min` (or, with
+  End, as far as the upper thumb allows), and the upper thumb the reverse. The underlying primitive
+  would instead move the first thumb on Home and the last on End whichever one has focus; this
+  component handles the two keys itself so the thumb you are on is the thumb that moves.
+- `aria-invalid="true"` is set on both thumbs while `hasError`, in addition to the visual danger
+  colours.
+- `aria-describedby` is set on both thumbs, so a helper or error message is announced with either.
+- With `formatNumber`, each thumb's `aria-valuetext` becomes its formatted number, so what a sighted
+  user reads and what a screen reader announces agree; `aria-valuenow` stays the plain number.
+- A `disabled` slider is skipped by `Tab` entirely and ignores pointer and keyboard input.
+- `id` is applied to the lower thumb, the first focusable part, and the upper thumb gets the same id
+  with `-maximum` added. `autoFocus` focuses the lower thumb on mount.
+- Each thumb's pointer and touch target is at least 24 × 24px at every size (an invisible area around the smaller thumbs), meeting WCAG 2.5.8. Where two thumbs sit close together the areas overlap and the upper one is on top.
+- Tick marks, the min/max labels and the tooltip are all purely visual; none changes what is
+  announced.
+- The filled range (`bg.brand`) is checked against real WCAG contrast ratios. The unfilled track
+  (`bg.track`) deliberately doesn't clear the 3:1 non-text floor, an accepted exception since the
+  thumbs and the filled range already carry the boundary and state information.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<RangeSlider aria-label="Price" defaultValue={[20, 80]} />
+<RangeSlider aria-label="Price" value={range} onValueChange={setRange} min={0} max={500} step={10} />
+<RangeSlider aria-label="Price" onValueCommit={runSearch} showValue />
+<RangeSlider aria-label="Volume" orientation="vertical" style={{ height: "12rem" }} />
+<RangeSlider aria-label="Age" minStepsBetweenThumbs={5} showValueTooltip />
+<RangeSlider aria-label="Price" defaultValue={[100, 300]} max={500} showValue showMinMaxLabels formatNumber={(n) => `$${n}`} />
+<RangeSlider aria-label="Zoom" min={0} max={200} step={10} showTicks tickInterval={50} />
+<RangeSlider aria-label="Preis" labels={{ minimum: "von", maximum: "bis" }} />
+<RangeSlider aria-label="Price" onFocus={() => trackFieldFocus("price")} />
+
+{/* Inside a <form>, two values are submitted under price[] — the lower, then the upper */}
+<form>
+  <RangeSlider aria-label="Price" name="price" defaultValue={[20, 80]} />
+</form>
+
+{/* Composed inside a FormField for the label/helper-text wiring — see that
+    component's own Docs page for the full pattern. */}
+<FormField label="Price" helperText="Between 0 and 100">
+  {(fieldProps) => <RangeSlider {...fieldProps} />}
+</FormField>
+```
+
+## Design tokens used
+
+`RangeSlider` draws with the same styles as `Slider`, so it reads the same tokens.
+
+<TokenRow token="bg.track" usage="unfilled track background — a deliberate sub-3:1 exception, since the thumbs and filled range already carry the boundary/state information" />
+<TokenRow token="bg.brand" usage="filled range background, between the two thumbs" />
+<TokenRow token="bg.danger" usage="filled range background while hasError" />
+<TokenRow token="bg.surface" usage="thumb fill; tick mark fill" />
+<TokenRow token="border.brand" usage="thumb border at rest" />
+<TokenRow token="border.danger" usage="thumb border while hasError" />
+<TokenRow token="border.focus" usage="thumb focus-visible outline" />
+<TokenRow token="border-width.2" usage="thumb border width; focus-visible outline width" />
+<TokenRow token="radius.full" usage="track, range, and thumb corner radius (fully round)" />
+<TokenRow token="icon-size.xs–icon-size.xl" usage="per-size thumb diameter" />
+<TokenRow token="space.1–space.4" usage="per-size track thickness, matching ProgressBar's own height scale" />
+<TokenRow token="space.1" usage="focus-visible outline offset; gap between the track and the min/max label row" />
+<TokenRow token="space.2" usage="gap between the slider and its value label when showValue is set" />
+<TokenRow token="space.5" usage="min/max label offset from the track, vertical orientation" />
+<TokenRow token="space.8" usage="clearance between the value label and the min-label overlay, vertical, when showMinMaxLabels is also set" />
+<TokenRow token="space.6" usage="the 24px floor of the thumb's invisible pointer and touch target, so a small thumb is still easy to grab" />
+<TokenRow token="space.32" usage='minimum height floor for orientation="vertical" when no explicit height is set' />
+<TokenRow token="shadow.light.sm / shadow.dark.sm" usage="thumb elevation at rest" />
+<TokenRow token="shadow.light.md / shadow.dark.md" usage="thumb elevation on hover" />
+<TokenRow token="motion.duration.fast" usage="range background, thumb border-color, and thumb shadow transitions" />
+<TokenRow token="motion.easing.standard" usage="range background, thumb border-color, and thumb shadow transitions" />
+<TokenRow token="opacity.40" usage="disabled state" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Slider"
+  description="The single-thumb version, for choosing one value"
+  href="/?path=/docs/molecules-inputs-slider--docs"
+>
+  <Slider aria-label="Volume" defaultValue={50} />
+</RelatedCard>
+<RelatedCard
+  name="NumberInput"
+  description="A precise, typed-value alternative for entering the two ends of a range exactly"
+  href="/?path=/docs/molecules-inputs-numberinput--docs"
+>
+  <NumberInput aria-label="Quantity" defaultValue={5} min={0} max={10} />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="A standalone label atom for pairing with form controls that need one"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Price</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="Pairs below the field to state the valid range before it's ever queried"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>Between 0 and 100</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this control with a label and helper/error text, with the id/aria wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <RangeSlider aria-label="Price" defaultValue={[20, 80]} />
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="What showValueTooltip reuses internally to show each thumb's value above it"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="50">
+    <button type="button">Hover me</button>
+  </Tooltip>
+</RelatedCard>
+</div>

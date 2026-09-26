@@ -438,6 +438,17 @@ describe("Slider", () => {
     expect(hiddenInput).toBeInTheDocument();
   });
 
+  it("focuses the thumb on mount with autoFocus (React's own autoFocus never focuses a span)", () => {
+    // eslint-disable-next-line jsx-a11y/no-autofocus -- exercising the component's own opt-in prop
+    render(<Slider aria-label="Volume" autoFocus />);
+    expect(screen.getByRole("slider")).toHaveFocus();
+  });
+
+  it("focuses nothing on mount without autoFocus", () => {
+    render(<Slider aria-label="Volume" />);
+    expect(document.body).toHaveFocus();
+  });
+
   it("forwards ref to the slider's own root element", () => {
     const ref = createRef<HTMLSpanElement>();
     render(<Slider aria-label="Volume" ref={ref} />);

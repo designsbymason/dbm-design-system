@@ -105,6 +105,26 @@
   box-shadow: var(--dbm-shadow-dark-sm);
 }
 
+/* The thumb's pointer and touch target is at least 24 x 24px (WCAG 2.5.8),
+   however small it is drawn: the thumb is 12, 16 and 20px at xs, sm and md,
+   so an invisible box centred on it grows the area that grabs it without
+   changing what is drawn. `space.6` is that 24px floor; `100%` keeps a
+   thumb that is already larger (xl) at its own size. Two thumbs that sit
+   close together overlap here, and the later one in the DOM is on top. */
+.thumb {
+  position: relative;
+}
+
+.thumb::before {
+  content: "";
+  height: max(100%, var(--dbm-space-6));
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: max(100%, var(--dbm-space-6));
+}
+
 .thumb:hover:not([data-disabled]) {
   box-shadow: var(--dbm-shadow-light-md);
 }
