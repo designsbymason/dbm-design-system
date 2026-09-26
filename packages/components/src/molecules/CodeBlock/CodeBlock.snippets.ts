@@ -1,3 +1,5 @@
+import { optInExportFor } from "./optInLanguages";
+
 // The code shown under each story's "Show code" button on CodeBlock's Docs page.
 //
 // Hand-written rather than generated from the rendered story: the generated code would spell out every default
@@ -137,27 +139,6 @@ export interface CodeBlockPlaygroundSnippetArgs {
 
 const sourceComment = "{/* source: the code to show, as a string */}";
 
-/** The exports that turn on the languages that ship outside the core, by every name they answer to. */
-const optInLanguages: Record<string, string> = {
-  python: "pythonLanguage",
-  py: "pythonLanguage",
-  python3: "pythonLanguage",
-  yaml: "yamlLanguage",
-  yml: "yamlLanguage",
-  sql: "sqlLanguage",
-  postgresql: "sqlLanguage",
-  postgres: "sqlLanguage",
-  pgsql: "sqlLanguage",
-  mysql: "sqlLanguage",
-  sqlite: "sqlLanguage",
-  markdown: "markdownLanguage",
-  md: "markdownLanguage",
-  go: "goLanguage",
-  golang: "goLanguage",
-  rust: "rustLanguage",
-  rs: "rustLanguage",
-  java: "javaLanguage",
-};
 
 /** Turns what a reader types (`"2, 4-6"`) into the `highlightLines` array literal, or `undefined` for none. */
 export function highlightLinesLiteral(typed: string | undefined): string | undefined {
@@ -202,8 +183,7 @@ export function codeBlockPlaygroundSnippet(args: CodeBlockPlaygroundSnippetArgs)
   }
   attributes.push("code={source}");
   const element = attributes.length > 3 ? `<CodeBlock\n  ${attributes.join("\n  ")}\n/>` : `<CodeBlock ${attributes.join(" ")} />`;
-  const languageName = (args.language ?? "").trim().toLowerCase();
-  const optIn = Object.hasOwn(optInLanguages, languageName) ? optInLanguages[languageName] : undefined;
+  const optIn = optInExportFor(args.language);
   // A language outside the core draws plain until the app registers it, so a snippet that uses one says how.
   const register = optIn ? `{/* ${optIn}: register it once, when the app starts, with registerCodeLanguage(${optIn}) */}\n` : "";
   return `${register}${sourceComment}\n${element}`;

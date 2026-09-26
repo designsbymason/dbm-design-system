@@ -410,6 +410,10 @@ describe("resolveLanguage", () => {
     expect(resolveLanguage("cobol")).toBeUndefined();
     expect(resolveLanguage(undefined)).toBeUndefined();
   });
+
+  it("does not take a name every object has (constructor, toString, __proto__) for a language", () => {
+    for (const name of ["constructor", "toString", "__proto__", "hasOwnProperty", "valueOf"]) expect(resolveLanguage(name)).toBeUndefined();
+  });
 });
 
 describe("JavaScript and TypeScript", () => {

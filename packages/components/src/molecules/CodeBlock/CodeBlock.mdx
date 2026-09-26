@@ -107,7 +107,7 @@ stands for, and the languages example writes its code inline.
 Python, YAML, SQL, Markdown, Go, Rust and Java, with the usual aliases (`py`, `yml`, `postgres`, `md`, `golang`,
 `rs`). They are opt-in: call `registerCodeLanguage` once, when the app starts, with each one you use
 (`pythonLanguage`, `yamlLanguage`, `sqlLanguage`, `markdownLanguage`, `goLanguage`, `rustLanguage`,
-`javaLanguage`), and every block can use it. Until you do, a block in that language is drawn as plain text. A
+`javaLanguage`), and every block can use it. Until you do, a block in that language is drawn as plain text, and in development the console says which call is missing. A
 bundler drops the ones you don't import. A Markdown block draws the lines of a fenced code block as they are, so a
 snippet of another language inside it is never mistaken for Markdown.
 

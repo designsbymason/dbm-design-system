@@ -10,6 +10,7 @@
  */
 
 import { scan, toLines } from "./engine";
+import { optInExportFor } from "./optInLanguages";
 import { findRegisteredLanguage } from "./registry";
 import { MAX_HIGHLIGHT_LENGTH, notAfterWord, wordSet } from "./tokenizeTypes";
 import type { CodeLanguage, Highlighter, HighlightLanguage, Rule, State, TokenLine } from "./tokenizeTypes";
@@ -47,7 +48,10 @@ const aliases: Record<string, HighlightLanguage> = {
 /** The built-in grammar a `language` string names, or `undefined` if it has none. */
 export function resolveLanguage(language: string | undefined): HighlightLanguage | undefined {
   // A `language` that isn't a string (a JavaScript caller, a missing value) has no grammar rather than a crash.
-  return typeof language === "string" ? aliases[language.trim().toLowerCase()] : undefined;
+  if (typeof language !== "string") return undefined;
+  const name = language.trim().toLowerCase();
+  // Own names only: `constructor` and `toString` are on every object, and are not languages.
+  return Object.hasOwn(aliases, name) ? aliases[name] : undefined;
 }
 
 
@@ -379,7 +383,16 @@ export function tokenize(
     return lines ?? plainLines(source);
   }
   const resolved = resolveLanguage(language);
-  if (!resolved || source.length > MAX_HIGHLIGHT_LENGTH) return plainLines(source);
+  if (!resolved) {
+    // Nothing draws this language. If it is one that ships outside the core, the likely reason is that the app
+    // hasn't registered it, and plain text with no explanation looks like a bug in the component.
+    const optIn = optInExportFor(language);
+    if (optIn) {
+      warnOnce(`CodeBlock: language "${String(language).trim()}" is opt-in, so it is drawn as plain text until the app calls registerCodeLanguage(${optIn}), once, when it starts.`);
+    }
+    return plainLines(source);
+  }
+  if (source.length > MAX_HIGHLIGHT_LENGTH) return plainLines(source);
   if (resolved === "diff") return diffLines(source);
   let rules = rulesCache.get(resolved);
   if (!rules) {

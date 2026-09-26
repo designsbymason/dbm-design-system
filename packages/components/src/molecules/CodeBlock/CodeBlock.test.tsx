@@ -459,6 +459,7 @@ describe("CodeBlock: choosing who highlights", () => {
   });
 
   it("draws a registered language, and redraws a block already on the page when one is registered or removed", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined); // it says the language is opt-in (see registry.test.ts)
     render(<CodeBlock code="def f(): pass" language="python" />);
     // Not registered: plain.
     expect(codeElement().querySelectorAll("span[data-line] > span")).toHaveLength(0);

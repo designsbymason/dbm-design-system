@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { goLanguage, javaLanguage, markdownLanguage, pythonLanguage, rustLanguage, sqlLanguage, yamlLanguage } from "./grammars";
+import { optInLanguageExports } from "./optInLanguages";
 import { findRegisteredLanguage, registerCodeLanguage, subscribeToCodeLanguages } from "./registry";
 import { MAX_HIGHLIGHT_LENGTH, tokenize } from "./tokenize";
 import type { CodeLanguage, Highlighter, TokenLine } from "./tokenizeTypes";
@@ -33,6 +34,7 @@ afterEach(() => {
 
 describe("the languages that ship outside the core", () => {
   it("are plain text until an app registers them, and coloured after", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
     expect(typed(pythonCode, "python")).toEqual([]);
     expect(tokenize(pythonCode, "python")).toEqual(plain(pythonCode));
     const unregister = register(pythonLanguage);
@@ -268,5 +270,56 @@ describe("cost", () => {
     const start = performance.now();
     tokenize(large, "x", (code) => code.split("\n").map((text) => (text ? [{ text }] : [])));
     expect(performance.now() - start).toBeLessThan(500);
+  });
+});
+
+describe("an opt-in language nobody registered", () => {
+  const shipped = { pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage };
+
+  // Spellings in capitals: a warning is said once per message, and the tests above use the lower-case ones.
+  it.each(Object.entries(optInLanguageExports))("says, in development, how to turn on %s", (name, exportName) => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const spelled = ` ${name.toUpperCase()} `;
+    expect(tokenize("code", spelled)).toEqual(plain("code"));
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn.mock.calls[0]?.[0]).toContain(`language "${spelled.trim()}"`);
+    expect(warn.mock.calls[0]?.[0]).toContain(`registerCodeLanguage(${exportName})`);
+  });
+
+  it("says nothing once it is registered, or when the block highlights itself", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    register(pythonLanguage);
+    tokenize("x = 1", "PyThOn3");
+    tokenize("x = 1", "Rs", () => [[{ text: "x = 1" }]]);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("says nothing for a built-in language, an unknown one, or a value that is not a string", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    for (const language of ["tsx", "bash", "cobol", "constructor", "__proto__", "toString", "", undefined, 7, {}]) {
+      tokenize("x", language as never);
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("says nothing in production", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    vi.stubEnv("NODE_ENV", "production");
+    tokenize("x", "SQLITE");
+    vi.unstubAllEnvs();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("still draws the code, whole", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    expect(tokenize("a\nb", "MYSQL")).toEqual(plain("a\nb"));
+  });
+
+  it("is held to the languages that ship: every name they answer to, and no other", () => {
+    const fromGrammars: Record<string, string> = {};
+    for (const [exportName, language] of Object.entries(shipped)) {
+      for (const name of [language.name, ...(language.aliases ?? [])]) fromGrammars[name] = exportName;
+    }
+    expect(optInLanguageExports).toEqual(fromGrammars);
   });
 });
