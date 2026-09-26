@@ -1,6 +1,6 @@
 # ToggleGroup
 
-**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-26; final review pass run 2026-09-26 (below); **awaiting the user's decisions on the open items and sign-off** (only the user declares a component Finalized).
+**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-26; **Finalized 2026-09-26**, declared by the user after the final review pass recorded below, with one known item left as it is (see "Finalized" at the end).
 
 ## What was built
 
@@ -44,7 +44,7 @@ A full `06-engineering-standards.md` §9 pass, checked against the code and the 
 - `border.neutral` on the surface is 2.3:1 in light mode (3.0:1 dark): the accepted decorative border (`03-token-system-spec.md`), the chosen item being marked by more than that border.
 - No hardcoded value, no `any`, JSDoc on every prop, no `window`/`document` at render, `StrictMode` tested, one tab stop, targets at least 24 × 24px, screenshots clean in every look, size, theme and at 320px.
 
-**Left for a decision** (one fixed since, one still open)
+**Left for a decision** (one fixed since, one left as it is)
 
 - **A single group is a `radiogroup`, but the arrow keys moved focus without choosing.** Fixed at explicit direction the same day: see "Fixed after the pass" below.
 - **The `subtle` look marks the chosen item faintly.** Its fill is `bg.brand-subtle` (about 1.1:1 against the surface in dark mode) and its text changes from `text.secondary` to `text.brand`, both readable; the state is exposed as `aria-checked` either way. `Tabs`' subtle look is the same, and `outlined` and `solid` mark it with a border or fill.
@@ -66,3 +66,13 @@ A full `06-engineering-standards.md` §9 pass, checked against the code and the 
 At explicit direction. Radix's toggle group moves focus with the arrow keys, `Home` and `End` and leaves the choice to `Space` or `Enter`; a single group announces itself as a `radiogroup`, where the arrows also choose. A single group now does: the root notes (in its capture-phase key handler) that a navigation key went down, and the item that then takes focus chooses itself through the group's context. Only a key does it, so tabbing into a group with nothing chosen, or clicking, chooses nothing extra; the flag can't be cleared on key-up because Radix moves focus in a later task, so it is cleared by the item that takes focus, or when focus leaves the group (a key that moved nowhere, at the end of a group with `loop` off). A modifier key (Alt, Ctrl, Meta) doesn't count. `type="multiple"` is untouched (its arrows only move focus). `dir="rtl"` and a vertical group follow, since they follow the keys Radix already maps. The consumer's own `onKeyDownCapture`, `onBlur` and item `onFocus` still run.
 
 Unit tests (57, from 53): the arrows, `Home` and `End` choose and `onValueChange` reports each step; tabbing in with nothing chosen chooses nothing; a key that moved nowhere leaves nothing pending (fails without the blur reset, checked); a multiple group's arrows call nothing (fails without the `type` guard, checked); the flag guard (fails without it, checked); consumer handlers still run. The real-browser keyboard story asserts the choice in left-to-right and right-to-left. All 3,070 unit and 761 real-browser tests pass.
+
+## Finalized, 2026-09-26
+
+Declared by the user after the final review: its one defect was fixed, and the single group's arrow-key choice was added at explicit direction. **One item from the review was left as it is and is a known limitation of the Finalized component, not an open question:**
+
+- **The `subtle` look marks the chosen item faintly.** Its fill is `bg.brand-subtle` and its text changes from `text.secondary` to `text.brand`, both readable; the state is also exposed as `aria-checked` / `aria-pressed`. `Tabs`' subtle look is the same. `outlined` and `solid` mark it with a border or a fill.
+
+The gaps and limitations listed in the final review are accepted as they stand.
+
+Later changes get a dated entry here, and go through `06-engineering-standards.md` §9's Finalized rules (ask first, then the three-question test).
