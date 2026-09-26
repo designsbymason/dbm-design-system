@@ -1,6 +1,6 @@
 # ButtonGroup
 
-**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-26; **not yet Finalized** — only the user declares that.
+**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-26; **Finalized 2026-09-26**, declared by the user after the final review pass recorded below, with two known items left as they are (see "Finalized" at the end).
 
 ## What was built
 
@@ -76,3 +76,12 @@ A full `06-engineering-standards.md` §9 pass, checked against the code and the 
 - **`ToggleGroup`** (item 19, next): the selection version, single or multiple, with a pressed state and its own keyboard model. It can reuse the context from ADR-0025.
 - **A split button** (a primary action with a menu caret): a composition of a `Button` and a menu trigger inside a group, once `Menu` exists.
 - **Reading the group's `dir` from a prop**: it follows the page today, like `Breadcrumb`.
+
+## Finalized, 2026-09-26
+
+Declared by the user after the final review: its five defects were fixed, and the two atom and docs items were fixed at explicit direction. **Two items from the review were left as they are and are known limitations of the Finalized component, not open questions:**
+
+- **The focus ring's side over a neighbouring solid fill** (an attached group of `primary` or `destructive` buttons): 1.1–1.6:1 against `bg.brand` / `bg.danger` across the four themes, under the 3:1 non-text floor; the other three sides sit on the surface at 4.2–6.5:1, and the focused button is drawn on top so the ring is never cut off. Recorded as a second deliberate exception beside `Tabs`' `solid` variant (`05-component-api-conventions.md` §6). If it is ever addressed, the remedy `05` §6 names is a ring drawn inside the button in a colour that contrasts with the fill (`icon.on-brand` / `icon.on-danger`), for the solid variants in an attached group only.
+- **The `tertiary` separator is very faint:** `border.brand-subtle` is 1.08–1.24:1 against the surface, so in dark themes a `tertiary` group reads as separated words with almost no visible rule. The colour chosen at explicit direction, the same decorative accent used elsewhere; each button is still identified by its label.
+
+Later changes get a dated entry here, and go through `06-engineering-standards.md` §9's Finalized rules (ask first, then the three-question test).

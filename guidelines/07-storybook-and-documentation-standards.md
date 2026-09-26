@@ -157,7 +157,7 @@ Every `<Canvas>` on a Docs page has a "Show code" button, and what it shows is m
 - **Where a story's demo and its snippet would otherwise diverge, change the demo.** Table's Ghost story used to fake a card out of a styled `div` because `Card` didn't exist; it now uses the real `Card`, so the story, its snippet, and the Docs prose all show the same composition.
 
 - **Playgrounds also serve the "args-only" stories.** A story that only changes an arg (Popover's "With the arrow hidden", "With an explicit close button", "Modal") shows just `{ name, args: {…} }` by default — no code at all. Give it the same `transform` as the Playground, which builds the snippet from that story's merged args.
-- **Snippets can't hold state, so say so.** A controlled example (`Accordion`'s "Controlled", `Popover`'s "With interactive form content", `List`'s "Composed with ListItem's…") needs `useState`; write it as a comment above the JSX (`{/* const [value, setValue] = useState("shipping"); */}`) rather than as a statement — a snippet is JSX only. The same goes for icons: name where they come from in a comment (`{/* GearIcon comes from @dbm-design-system/icons */}`), since snippets carry no imports. When typechecking, declare those identifiers in the throwaway file.
+- **Snippets can't hold state, so say so.** A controlled example (`Accordion`'s "Controlled", `Popover`'s "With interactive form content", `List`'s "Composed with ListItem's…") needs `useState`; write it as a comment above the JSX (`{/* const [value, setValue] = useState("shipping"); */}`) rather than as a statement — a snippet is JSX only. The same goes for icons: name where they come from in a comment (`{/* GearIcon comes from @dbm-design-system/icons */}`), since snippets carry no imports. **When typechecking, import the icons the snippet uses from `@dbm-design-system/icons` in the throwaway file — don't declare them** (declared, a name that doesn't exist compiles fine: `ButtonGroup`'s snippet named `BoldIcon`, `ItalicIcon` and `UnderlineIcon`, none of which exist, and so did `Tooltip.mdx`'s example, 2026-09-26; the package has `TextBIcon`, `TextItalicIcon`, `TextUnderlineIcon`). Declare only state and handlers. A quick repo-wide check: list every `…Icon` name used as an `icon` / `leadingIcon` / `trailingIcon` prop or import in a `*.snippets.ts` or `.mdx` and confirm the icons package exports it (and that no snippet uses a component that isn't built yet, such as `<Toolbar>` before it exists).
 - **A Docs-page pitfall found along the way (2026-09-19, via `Popover`):** two stories that open a popover on mount (`defaultOpen`) on the *same* Docs page race each other's mount-time auto-focus, and Storybook's patched `focus()` then calls React's `act()` mid-commit, so the second story's block renders `Error: Should not already be working` instead of a canvas — and, having no canvas, has no "Show code" button. The story is fine standalone and in the browser test run, so only the Docs page shows it. Fix: for any demo popover that opens on mount, pass `onOpenAutoFocus={(event) => event.preventDefault()}` — a static demo shouldn't take focus on page load anyway.
 
 - **An icon prop can't appear in the generated snippet at all.** Storybook serializes an icon component as `{ $$typeof: Symbol(react.forward_ref), render: () => {} }` — `Badge`'s anchor stories and `Tag`'s icon stories showed exactly that. Write the icon by name (`leadingIcon={TagIcon}`) and say where it comes from in a comment (`{/* TagIcon comes from @dbm-design-system/icons */}`). A Playground *builder* can still write it: the control hands it the icon component, which it compares against the icons it knows and writes back as a name (`Tag`).
@@ -208,8 +208,8 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and 20 of the 21 molecules built so far have a Docs page, a completed review pass, and are Finalized** — full atom-tier coverage, and
-every molecule built to date except `ButtonGroup`, which has a Docs page and a full build-time verification but is not yet Finalized. `Radio` joined the atom tier on 2026-09-14 (split out of the
+**All 48 atoms and all 21 molecules built so far have a Docs page, a completed review pass, and are Finalized** — full atom-tier coverage, and
+every molecule built to date. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
 built and Finalized the same day), which is why the atom count is 48, not the 47 several docs carried
@@ -286,17 +286,17 @@ quoted in prose elsewhere.
 | Breadcrumb | Molecule | Navigation | ✅ | ✅ 2026-09-23 | [Breadcrumb.md](component-reviews/Breadcrumb.md) |
 | Alert | Molecule | Feedback | ✅ | ✅ 2026-09-25 | [Alert.md](component-reviews/Alert.md) |
 | RangeSlider | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-25 | [RangeSlider.md](component-reviews/RangeSlider.md) |
-| ButtonGroup | Molecule | Inputs & Forms | ✅ | — built 2026-09-26, awaiting sign-off | [ButtonGroup.md](component-reviews/ButtonGroup.md) |
+| ButtonGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-26 | [ButtonGroup.md](component-reviews/ButtonGroup.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-09-26):** every atom and the first 20 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-09-26):** every atom and the first 21 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
-`RangeSlider`) are reviewed and Finalized — see the table above; `ButtonGroup` is built and awaiting sign-off (its open findings are in its review file). The queue continues
+`RangeSlider`, `ButtonGroup`) are reviewed and Finalized — see the table above. The queue continues
 through the remaining 15 of the 36 molecules, one at a time, in the
 dependency order itemized in `04-component-inventory.md` (`ToggleGroup` is next), each with the same full `06-engineering-standards.md` §9 process.
 
