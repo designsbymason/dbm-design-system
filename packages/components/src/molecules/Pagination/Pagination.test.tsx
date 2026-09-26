@@ -1350,3 +1350,22 @@ describe("Pagination", () => {
     });
   });
 });
+
+describe("Pagination labels that are undefined", () => {
+  // `labels={{ previous: t?.previous }}` puts an explicit `undefined` there when a translation is missing; each
+  // label keeps its default rather than blanking a name or crashing the render.
+  it("keeps every default", () => {
+    const missing = Object.fromEntries(
+      ["navigation", "previous", "previousText", "next", "nextText", "first", "last", "page", "summary", "jump", "jumpSubmit"].map((key) => [key, undefined]),
+    );
+    render(<Pagination pageCount={20} defaultValue={5} showFirstLast showLabel showJump labels={missing} />);
+    expect(screen.getByRole("navigation", { name: "Pagination" })).toBeInTheDocument();
+    for (const name of ["First page", "Previous page", "Next page", "Last page"]) {
+      expect(screen.getByRole("button", { name })).toBeInTheDocument();
+    }
+    // The page controls and the compact summary are both built from `page` and `summary`, so either one shows a default.
+    expect(screen.getAllByText(/^(Page \d+ of \d+|\d+)$/).length).toBeGreaterThan(0);
+    expect(document.body.innerHTML).not.toContain("undefined");
+    expect(screen.getByRole("button", { name: "Go" })).toBeInTheDocument();
+  });
+});

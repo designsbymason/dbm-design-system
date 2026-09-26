@@ -1,6 +1,6 @@
 import { CaretDoubleLeftIcon, CaretDoubleRightIcon, CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
 import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, FormEvent, MouseEvent, ReactNode, SyntheticEvent } from "react";
 import { Button } from "../../atoms/Button";
@@ -203,7 +203,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>((paginationPr
   const siblingCount = nonNegative(rawSiblingCount);
   const boundaryCount = nonNegative(rawBoundaryCount);
   const current = Math.min(Math.max(Math.trunc(value ?? uncontrolledPage) || 1, 1), Math.max(pageCount, 1));
-  const labels: PaginationLabels = { ...defaultLabels(formatNumber), ...labelOverrides };
+  const labels: PaginationLabels = mergeDefined(defaultLabels(formatNumber), labelOverrides);
   const items = getPaginationRange({ page: current, pageCount, siblingCount, boundaryCount });
   const rowKey = items.join(",");
 

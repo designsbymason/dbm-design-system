@@ -647,3 +647,14 @@ describe("Alert — accessibility", () => {
     expect(dismiss).toHaveAttribute("type", "button");
   });
 });
+
+describe("Alert labels that are undefined", () => {
+  it("keeps the default dismiss name", () => {
+    render(
+      <Alert dismissible labels={{ dismiss: undefined }}>
+        Saved
+      </Alert>,
+    );
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeInTheDocument();
+  });
+});

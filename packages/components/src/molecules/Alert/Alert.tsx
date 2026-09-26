@@ -7,7 +7,7 @@ import {
   XIcon,
 } from "@dbm-design-system/icons";
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import { Presence } from "@radix-ui/react-presence";
 import { Slot } from "@radix-ui/react-slot";
 import {
@@ -291,7 +291,7 @@ const AlertRoot = forwardRef<HTMLDivElement, AlertProps>(
       previousOpen.current = open;
     }, [open]);
 
-    const labels: AlertLabels = { ...defaultLabels, ...labelOverrides };
+    const labels: AlertLabels = mergeDefined(defaultLabels, labelOverrides);
     // `Alert.Actions` is set apart from the message, so it can sit beside it or below it.
     const parts = Children.toArray(children);
     const isActions = (child: unknown) => isValidElement(child) && child.type === AlertActions;

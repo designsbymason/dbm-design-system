@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx, mergeDefined } from "@dbm-design-system/primitives";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { forwardRef, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";
@@ -260,7 +260,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
       format(candidate).length > format(widest).length ? candidate : widest,
     );
 
-    const labels = { ...defaultLabels, ...labelOverrides };
+    const labels = mergeDefined(defaultLabels, labelOverrides);
     const verticalNeedsWrapper = needsVerticalWrapper(
       isVertical,
       showValue,

@@ -620,3 +620,11 @@ describe("RangeSlider", () => {
     });
   });
 });
+
+describe("RangeSlider labels that are undefined", () => {
+  it("keeps the default thumb names", () => {
+    render(<RangeSlider aria-label="Price" defaultValue={[20, 80]} labels={{ minimum: undefined, maximum: undefined }} />);
+    expect(screen.getByRole("slider", { name: "Price Minimum" })).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "Price Maximum" })).toBeInTheDocument();
+  });
+});

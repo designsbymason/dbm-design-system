@@ -616,3 +616,22 @@ describe("Breadcrumb — accessibility", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe("Breadcrumb labels that are undefined", () => {
+  it("keeps the default names", () => {
+    render(
+      <Breadcrumb maxItems={3} labels={{ navigation: undefined, expand: undefined }}>
+        {["A", "B", "C", "D"].map((name) => (
+          <Breadcrumb.Item key={name}>
+            <Breadcrumb.Link href={`/${name}`}>{name}</Breadcrumb.Link>
+          </Breadcrumb.Item>
+        ))}
+        <Breadcrumb.Item>
+          <Breadcrumb.Page>E</Breadcrumb.Page>
+        </Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show 2 hidden pages" })).toBeInTheDocument();
+  });
+});

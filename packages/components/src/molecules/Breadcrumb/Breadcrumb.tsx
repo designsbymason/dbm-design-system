@@ -1,5 +1,5 @@
 import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import {
   Children,
   createContext,
@@ -264,7 +264,7 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbProps>(
     const focusRevealed = useRef(false);
     const measuredWidth = useRef<number | undefined>(undefined);
 
-    const labels: BreadcrumbLabels = { ...defaultLabels, ...labelOverrides };
+    const labels: BreadcrumbLabels = mergeDefined(defaultLabels, labelOverrides);
     const all = Children.toArray(children);
     const items = all.filter((child): child is ReactElement => isValidElement(child));
 

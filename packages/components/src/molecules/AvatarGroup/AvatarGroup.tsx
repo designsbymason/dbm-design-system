@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx, mergeDefined } from "@dbm-design-system/primitives";
 import { Children, forwardRef, isValidElement, useEffect, useMemo } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import { Avatar } from "../../atoms/Avatar";
@@ -119,11 +119,7 @@ export const AvatarGroup = forwardRef<HTMLUListElement, AvatarGroupProps>(
       }
     }, [totalIsTooSmall, knownTotal, avatars.length]);
 
-    // A label given as `undefined` (an optional translation that isn't there) keeps its default.
-    const words = {
-      overflow: labels?.overflow ?? defaultLabels.overflow,
-      overflowButton: labels?.overflowButton ?? defaultLabels.overflowButton,
-    };
+    const words = mergeDefined(defaultLabels, labels);
     const shown = avatars.slice(0, knownMax ?? avatars.length);
     const hiddenCount =
       knownTotal === undefined ? avatars.length - shown.length : Math.max(0, knownTotal - shown.length);
