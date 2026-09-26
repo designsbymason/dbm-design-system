@@ -551,3 +551,54 @@ export const TargetSizeInteraction: Story = {
     }
   },
 };
+
+// The value label reserves the width of the widest value it can show, so the track never changes size — or, in a
+// vertical slider, shifts sideways — as the value goes from one digit to three. Only a real browser lays text out,
+// so this measures the track at 5, 0, 100 and 99 and asserts it did not move or resize.
+const trackBox = (root: HTMLElement) => {
+  const rect = (root.querySelector("[class*='track']") as HTMLElement).getBoundingClientRect();
+  return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+};
+
+export const StableTrackInteraction: Story = {
+  name: "Interaction: the track does not resize or shift as the value gains digits",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)", width: "16rem" }}>
+      <div data-testid="horizontal-value">
+        <Slider aria-label="Horizontal, value" defaultValue={5} showValue />
+      </div>
+      <div data-testid="horizontal-both">
+        <Slider aria-label="Horizontal, value and labels" defaultValue={5} showValue showMinMaxLabels />
+      </div>
+      <div style={{ display: "flex", gap: "var(--dbm-space-16)", height: "10rem", paddingBlockEnd: "var(--dbm-space-16)" }}>
+        <div data-testid="vertical-value" style={{ height: "100%" }}>
+          <Slider aria-label="Vertical, value" orientation="vertical" defaultValue={5} showValue style={{ height: "100%" }} />
+        </div>
+        <div data-testid="vertical-both" style={{ height: "100%" }}>
+          <Slider aria-label="Vertical, value and labels" orientation="vertical" defaultValue={5} showValue showMinMaxLabels style={{ height: "100%" }} />
+        </div>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const id of ["horizontal-value", "horizontal-both", "vertical-value", "vertical-both"]) {
+      const root = canvas.getByTestId(id);
+      const thumb = within(root).getByRole("slider");
+      const before = trackBox(root);
+      thumb.focus();
+      for (const key of ["{Home}", "{End}", "{ArrowLeft}"]) {
+        await userEvent.keyboard(key);
+        const after = trackBox(root);
+        // Sub-pixel rounding only: one digit more used to cost the track 8px, or shift a vertical one by 4.
+        await expect(Math.abs(after.width - before.width)).toBeLessThan(0.5);
+        await expect(Math.abs(after.height - before.height)).toBeLessThan(0.5);
+        await expect(Math.abs(after.left - before.left)).toBeLessThan(0.5);
+        await expect(Math.abs(after.top - before.top)).toBeLessThan(0.5);
+      }
+      // End then one step back really did take the value through 100 to 99, not just leave it alone.
+      await expect(thumb).toHaveAttribute("aria-valuenow", "99");
+    }
+  },
+};

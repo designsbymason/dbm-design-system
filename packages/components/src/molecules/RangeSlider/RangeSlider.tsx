@@ -11,6 +11,7 @@ import {
   SliderTicks,
   useThumbTooltip,
   visibleTickValues,
+  widestValueCandidates,
 } from "../Slider/sliderShared";
 import type {
   RangeSliderLabels,
@@ -229,6 +230,17 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
       return thumb;
     };
 
+    // The range text at its widest: the widest number at both ends, and each
+    // end alone, so the label is as wide as any range can make it and never
+    // resizes as the thumbs move.
+    const writeRange = (low: number, high: number) =>
+      labelOverrides?.range
+        ? labelOverrides.range(low, high)
+        : `${isolate(format(low))} – ${isolate(format(high))}`;
+    const widestNumber = widestValueCandidates(min, max, step).reduce((widest, candidate) =>
+      format(candidate).length > format(widest).length ? candidate : widest,
+    );
+
     const labels = { ...defaultLabels, ...labelOverrides };
     const verticalNeedsWrapper = needsVerticalWrapper(
       isVertical,
@@ -286,6 +298,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
         showValue={showValue}
         showMinMaxLabels={showMinMaxLabels}
         valueText={rangeText}
+        valueSizer={[rangeText, writeRange(widestNumber, widestNumber), writeRange(min, max)]}
         minText={format(min)}
         maxText={format(max)}
         style={style}

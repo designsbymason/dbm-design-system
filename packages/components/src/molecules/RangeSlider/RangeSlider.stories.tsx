@@ -586,3 +586,62 @@ export const TargetSizeInteraction: Story = {
     }
   },
 };
+
+// The range text reserves the width of the widest range it can show, so the track never changes size — or, in a
+// vertical slider, shifts sideways — as either thumb goes from one digit to three. Only a real browser lays text
+// out, so this measures the track with the thumbs at [20, 80], [0, 80], [0, 100] and [0, 99] and asserts it did not
+// move or resize.
+const trackBoxOf = (root: HTMLElement) => {
+  const rect = (root.querySelector("[class*='track']") as HTMLElement).getBoundingClientRect();
+  return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+};
+
+export const StableTrackInteraction: Story = {
+  ...Playground,
+  name: "Interaction: the track does not resize or shift as the range gains digits",
+  tags: ["!dev"],
+  args: { lowerStart: 5, upperStart: 50 },
+  render: ({ lowerStart, upperStart, ...args }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)", width: "20rem" }}>
+      <div data-testid="horizontal-value">
+        <RangeSlider {...args} showValue aria-label="Horizontal, value" defaultValue={[lowerStart, upperStart]} />
+      </div>
+      <div data-testid="horizontal-both">
+        <RangeSlider {...args} showValue showMinMaxLabels aria-label="Horizontal, value and labels" defaultValue={[lowerStart, upperStart]} />
+      </div>
+      <div style={{ display: "flex", gap: "var(--dbm-space-16)", height: "10rem", paddingBlockEnd: "var(--dbm-space-16)" }}>
+        <div data-testid="vertical-value" style={{ height: "100%" }}>
+          <RangeSlider {...args} orientation="vertical" showValue aria-label="Vertical, value" defaultValue={[lowerStart, upperStart]} style={{ height: "100%" }} />
+        </div>
+        <div data-testid="vertical-both" style={{ height: "100%" }}>
+          <RangeSlider {...args} orientation="vertical" showValue showMinMaxLabels aria-label="Vertical, value and labels" defaultValue={[lowerStart, upperStart]} style={{ height: "100%" }} />
+        </div>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const id of ["horizontal-value", "horizontal-both", "vertical-value", "vertical-both"]) {
+      const root = canvas.getByTestId(id);
+      const before = trackBoxOf(root);
+      const measure = async () => {
+        const after = trackBoxOf(root);
+        // Sub-pixel rounding only: an extra digit used to cost the track 8px or more, or shift a vertical one.
+        await expect(Math.abs(after.width - before.width)).toBeLessThan(0.5);
+        await expect(Math.abs(after.height - before.height)).toBeLessThan(0.5);
+        await expect(Math.abs(after.left - before.left)).toBeLessThan(0.5);
+        await expect(Math.abs(after.top - before.top)).toBeLessThan(0.5);
+      };
+      const [lower, upper] = within(root).getAllByRole("slider") as [HTMLElement, HTMLElement];
+      lower.focus();
+      await userEvent.keyboard("{Home}");
+      await measure();
+      upper.focus();
+      await userEvent.keyboard("{End}");
+      await measure();
+      await userEvent.keyboard("{ArrowLeft}");
+      await expect(upper).toHaveAttribute("aria-valuenow", "99");
+      await measure();
+    }
+  },
+};

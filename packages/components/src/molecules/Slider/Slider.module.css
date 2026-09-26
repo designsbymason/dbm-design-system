@@ -297,6 +297,24 @@
   text-align: end;
 }
 
+/* Reserves the width of the widest text the label can show, so the label —
+   and with it the track beside it (horizontal) or the column it is centred
+   in (vertical) — never changes size as the value goes from one digit to
+   three. `data-sizer` holds every candidate, one per line (Slider.tsx and
+   RangeSlider.tsx work them out); the pseudo-element lays them out
+   invisibly and takes no height, so the label is as wide as the widest and
+   no wider than its own text is tall. Generated content, not markup, so it
+   adds no text for a screen reader or a test to find. */
+.value::before {
+  content: attr(data-sizer);
+  display: block;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  white-space: pre;
+}
+
 /* Clears `showMinMaxLabels`' own "min" overlay (vertical), which hangs
    below `Root`'s real box without consuming any normal-flow space of its
    own — `.wrapperVertical`'s ordinary `gap` has no way to know it needs

@@ -105,7 +105,9 @@ export interface RangeSliderProps
    * Shows the current range as live text next to the slider (below it when
    * `orientation="vertical"`), as "20 – 80" unless `labels.range` says
    * otherwise. Off by default since the values are already exposed to
-   * assistive tech on each thumb — a purely visual convenience.
+   * assistive tech on each thumb — a purely visual convenience. The label
+   * reserves the width of the widest range it can show, so the track doesn't
+   * resize or shift as either thumb gains or loses digits.
    * @default false
    */
   showValue?: boolean;

@@ -87,7 +87,11 @@ export interface SliderProps
    * exposed to assistive tech via `aria-valuenow`/`aria-valuetext`
    * regardless — this is a purely visual convenience for sighted users when
    * no other on-screen element already shows it (e.g. a paired
-   * `FieldHelperText` reflecting the value some other way).
+   * `FieldHelperText` reflecting the value some other way). The label reserves
+   * the width of the widest value it can show (the ends, and one step in from
+   * each), so the track doesn't resize or shift as the value gains or loses
+   * digits; a custom `aria-valuetext` of varying length can't be known ahead
+   * of time, so the label takes the width of the longest text it has shown.
    * @default false
    */
   showValue?: boolean;

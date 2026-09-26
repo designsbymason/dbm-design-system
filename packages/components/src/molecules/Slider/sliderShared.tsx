@@ -173,6 +173,17 @@ export function needsVerticalWrapper(
   return isVertical && (showValue || showMinMaxLabels);
 }
 
+/**
+ * The numbers a slider's value can be widest at: the two ends, and one step in
+ * from each (a step of 0.01 makes 0.99 wider than the end 1). The `showValue`
+ * label reserves the width of the widest once they are written.
+ */
+export function widestValueCandidates(min: number, max: number, step: number): number[] {
+  const decimals = (String(step).split(".")[1] ?? "").length;
+  const round = (n: number) => Number(n.toFixed(decimals));
+  return [min, max, round(Math.min(max, min + step)), round(Math.max(min, max - step))];
+}
+
 interface SliderLayoutProps {
   /** The Radix `Root` element (with its track, range and thumb(s)). */
   control: ReactNode;
@@ -182,6 +193,12 @@ interface SliderLayoutProps {
   showMinMaxLabels: boolean;
   /** The text of the `showValue` label. */
   valueText: string;
+  /**
+   * Every text the `showValue` label can show, or the widest of them: the label
+   * reserves the width of the widest, so it never changes size as the value
+   * does (see `valueSizer`).
+   */
+  valueSizer: string[];
   minText: string;
   maxText: string;
   /** The caller's `style`, applied to the true outermost element when wrapping vertically. */
@@ -200,11 +217,18 @@ export function SliderLayout({
   showValue,
   showMinMaxLabels,
   valueText,
+  valueSizer,
   minText,
   maxText,
   style,
 }: SliderLayoutProps) {
   let result = control;
+  // Read by `.value::before` in the stylesheet, which lays the lines out
+  // invisibly so the label is always as wide as the widest of them. Without
+  // it the label is as wide as its text, so a value going from 99 to 100 gives
+  // the track 8px less (horizontal), or shifts the whole column sideways as
+  // the wider label re-centres it (vertical).
+  const sizer = valueSizer.join("\n");
 
   if (isVertical) {
     // `showMinMaxLabels`'s own wrapper is pure absolutely-positioned
@@ -240,6 +264,7 @@ export function SliderLayout({
           <Text
             size={valueTextSize[size]}
             color="secondary"
+            data-sizer={sizer}
             // `showMinMaxLabels`'s own "min" overlay hangs below `Root`'s
             // real box (it consumes no normal-flow space of its own — see
             // above), so this row's ordinary `gap` alone doesn't know to
@@ -272,6 +297,7 @@ export function SliderLayout({
         <Text
           size={valueTextSize[size]}
           color="secondary"
+          data-sizer={sizer}
           className={cx(styles.value, styles.combinedValue)}
         >
           {valueText}
@@ -290,7 +316,7 @@ export function SliderLayout({
     result = (
       <span className={styles.wrapper}>
         {result}
-        <Text size={valueTextSize[size]} color="secondary" className={styles.value}>
+        <Text size={valueTextSize[size]} color="secondary" data-sizer={sizer} className={styles.value}>
           {valueText}
         </Text>
       </span>

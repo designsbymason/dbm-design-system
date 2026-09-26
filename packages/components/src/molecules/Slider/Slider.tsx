@@ -11,6 +11,7 @@ import {
   SliderTicks,
   useThumbTooltip,
   visibleTickValues,
+  widestValueCandidates,
 } from "./sliderShared";
 
 /**
@@ -238,6 +239,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
         showValue={showValue}
         showMinMaxLabels={showMinMaxLabels}
         valueText={displayValue}
+        valueSizer={[displayValue, ...new Set(widestValueCandidates(min, max, step).map(format))]}
         minText={format(min)}
         maxText={format(max)}
         style={style}
