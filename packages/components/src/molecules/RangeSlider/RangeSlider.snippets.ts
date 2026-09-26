@@ -89,6 +89,7 @@ export interface RangeSliderPlaygroundSnippetArgs {
   minStepsBetweenThumbs?: number;
   orientation?: "horizontal" | "vertical";
   inverted?: boolean;
+  dir?: "ltr" | "rtl";
   showValue?: boolean;
   showValueTooltip?: boolean;
   showMinMaxLabels?: boolean;
@@ -124,6 +125,7 @@ export function rangeSliderPlaygroundSnippet(args: RangeSliderPlaygroundSnippetA
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (vertical) attributes.push('orientation="vertical"');
   if (args.inverted) attributes.push("inverted");
+  if (args.dir === "rtl") attributes.push('dir="rtl"');
   if (args.showValue) attributes.push("showValue");
   if (args.showValueTooltip) attributes.push("showValueTooltip");
   if (args.showMinMaxLabels) attributes.push("showMinMaxLabels");

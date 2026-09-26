@@ -87,6 +87,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
       showTicks = false,
       tickInterval = step,
       disabled,
+      dir = "ltr",
       autoFocus,
       name,
       form,
@@ -258,6 +259,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
         minStepsBetweenThumbs={minStepsBetweenThumbs}
         orientation={orientation}
         inverted={inverted}
+        dir={dir}
         disabled={disabled}
         name={name}
         form={form}
@@ -302,6 +304,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
         minText={format(min)}
         maxText={format(max)}
         style={style}
+        dir={dir}
       />
     );
   },

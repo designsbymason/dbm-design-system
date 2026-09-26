@@ -470,6 +470,53 @@ describe("RangeSlider", () => {
     });
   });
 
+  describe("dir", () => {
+    it("is left-to-right by default", () => {
+      const { container } = render(<RangeSlider aria-label="Price" showValue showMinMaxLabels />);
+      expect(container.firstElementChild).toHaveAttribute("dir", "ltr");
+    });
+
+    it("stays left-to-right inside a right-to-left page when dir is left out", async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <div dir="rtl">
+          <RangeSlider aria-label="Price" defaultValue={[20, 80]} showMinMaxLabels />
+        </div>,
+      );
+      expect(container.querySelector(`.${styles.minMaxWrapper}`)).toHaveAttribute("dir", "ltr");
+      lower().focus();
+      await user.keyboard("{ArrowRight}");
+      expect(lower()).toHaveAttribute("aria-valuenow", "21");
+    });
+
+    it("mirrors with dir=\"rtl\": every wrapper gets it, and ArrowLeft raises a thumb", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<RangeSlider aria-label="Price" dir="rtl" defaultValue={[20, 80]} showValue showMinMaxLabels />);
+      for (const element of container.querySelectorAll(`.${styles.combinedWrapper}, .${styles.combinedSlider}, .${styles.combinedMinMaxRow}, .${styles.root}`)) {
+        expect(element).toHaveAttribute("dir", "rtl");
+      }
+      lower().focus();
+      await user.keyboard("{ArrowLeft}");
+      expect(lower()).toHaveAttribute("aria-valuenow", "21");
+      upper().focus();
+      await user.keyboard("{ArrowRight}");
+      expect(upper()).toHaveAttribute("aria-valuenow", "79");
+    });
+
+    it("still sends each thumb to its own limit on Home and End in right-to-left", async () => {
+      const user = userEvent.setup();
+      render(<RangeSlider aria-label="Price" dir="rtl" defaultValue={[20, 80]} />);
+      lower().focus();
+      await user.keyboard("{Home}");
+      expect(lower()).toHaveAttribute("aria-valuenow", "0");
+      expect(upper()).toHaveAttribute("aria-valuenow", "80");
+      upper().focus();
+      await user.keyboard("{End}");
+      expect(upper()).toHaveAttribute("aria-valuenow", "100");
+      expect(lower()).toHaveAttribute("aria-valuenow", "0");
+    });
+  });
+
   it("survives React StrictMode", async () => {
     const user = userEvent.setup();
     render(

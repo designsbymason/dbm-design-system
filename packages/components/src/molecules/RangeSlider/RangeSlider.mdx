@@ -22,6 +22,7 @@ export const propOrder = [
   "minStepsBetweenThumbs",
   "orientation",
   "inverted",
+  "dir",
   "showValue",
   "showValueTooltip",
   "showMinMaxLabels",
@@ -105,6 +106,16 @@ import { RangeSlider } from "@dbm-design-system/components";
 ### Vertical
 
 <Canvas of={RangeSliderStories.Vertical} />
+
+### Right to left
+
+`dir="rtl"` mirrors the slider for right-to-left languages: the minimum sits at the right, the filled range and
+both thumbs run from there, the arrow keys move the other way (`ArrowLeft` raises a thumb), and the range text and
+the min/max labels swap sides with them. It is passed through to the underlying Radix slider, as on `Tabs`,
+`Accordion` and `RadioGroup`, and it is not read from the page: with `dir` left out the slider stays
+left-to-right even in a right-to-left page, its labels included, so its parts always agree.
+
+<Canvas of={RangeSliderStories.RightToLeft} />
 
 ### With the live range shown
 
@@ -230,6 +241,7 @@ reader hears "Price From" and "Price To" here. `labels` renames those two words.
   End, as far as the upper thumb allows), and the upper thumb the reverse. The underlying primitive
   would instead move the first thumb on Home and the last on End whichever one has focus; this
   component handles the two keys itself so the thumb you are on is the thumb that moves.
+- `dir="rtl"` flips which arrow key moves which way (`ArrowLeft` raises a thumb) along with the layout; Home and End still send the focused thumb to its own limit.
 - `aria-invalid="true"` is set on both thumbs while `hasError`, in addition to the visual danger
   colours.
 - `aria-describedby` is set on both thumbs, so a helper or error message is announced with either.

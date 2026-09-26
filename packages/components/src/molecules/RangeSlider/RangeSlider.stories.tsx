@@ -91,6 +91,13 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Reverses which end of the track is the minimum.",
       table: { defaultValue: { summary: "false" } },
     },
+    dir: {
+      control: "select",
+      options: ["ltr", "rtl"],
+      description:
+        "Text direction: rtl mirrors the slider for right-to-left languages — the minimum at the right, the filled range, thumbs and ticks running from there, ArrowLeft raising the value, and the value and min/max labels on the mirrored sides. Passed through to Radix Slider. Not inherited from the page: left out, the slider stays left-to-right, labels included.",
+      table: { defaultValue: { summary: "ltr" } },
+    },
     showValue: {
       control: "boolean",
       description: "Shows the current range as live text next to the slider, as \"20 – 80\".",
@@ -180,6 +187,7 @@ const meta: Meta<PlaygroundArgs> = {
     minStepsBetweenThumbs: 0,
     orientation: "horizontal",
     inverted: false,
+    dir: "ltr",
     showValue: false,
     showValueTooltip: false,
     showMinMaxLabels: false,
@@ -366,6 +374,19 @@ export const WithVisibleLabel: Story = {
       <FieldHelperText id="price-help">Between 0 and 100</FieldHelperText>
     </div>
   ),
+};
+
+export const RightToLeft: Story = {
+  name: "Right to left",
+  parameters: playgroundSource,
+  args: { dir: "rtl", showValue: true, showMinMaxLabels: true, showTicks: true, tickInterval: 25 },
+  argTypes: {
+    dir: noControls,
+    showValue: noControls,
+    showMinMaxLabels: noControls,
+    showTicks: noControls,
+    tickInterval: noControls,
+  },
 };
 
 export const ErrorState: Story = {
@@ -654,6 +675,95 @@ export const StableTrackInteraction: Story = {
       } else {
         await expect(Math.abs(text.left + text.width / 2 - (box.left + box.width / 2))).toBeLessThan(1);
       }
+    }
+  },
+};
+
+// Right to left is measured in a real browser: the layout is inline positions and translates, which jsdom lays out
+// none of. `dir="rtl"` must mirror the whole slider — the minimum at the right, so the lower thumb is the
+// right-hand one, with the filled range between the thumbs, the ticks and labels on the mirrored sides and each
+// thumb's invisible target still centred on it — and, left out inside a right-to-left page, the slider and its
+// labels must stay left-to-right and agree with each other.
+const centreOfX = (element: Element) => {
+  const rect = element.getBoundingClientRect();
+  return rect.left + rect.width / 2;
+};
+
+export const RightToLeftInteraction: Story = {
+  ...Playground,
+  name: "Interaction: dir=rtl mirrors the slider, and left out it stays left-to-right",
+  tags: ["!dev"],
+  args: { lowerStart: 20, upperStart: 80 },
+  render: ({ lowerStart, upperStart, ...args }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)", width: "20rem" }}>
+      <div data-testid="rtl-horizontal">
+        <RangeSlider {...args} dir="rtl" showValue showMinMaxLabels showTicks tickInterval={25} aria-label="RTL" defaultValue={[lowerStart, upperStart]} />
+      </div>
+      <div data-testid="ltr-horizontal">
+        <RangeSlider {...args} showMinMaxLabels showTicks tickInterval={25} aria-label="LTR" defaultValue={[lowerStart, upperStart]} />
+      </div>
+      <div dir="rtl" data-testid="ltr-in-rtl-page">
+        <RangeSlider {...args} showMinMaxLabels showTicks tickInterval={25} aria-label="LTR in an RTL page" defaultValue={[lowerStart, upperStart]} />
+      </div>
+      <div style={{ display: "flex", gap: "var(--dbm-space-16)", height: "10rem", paddingBlockEnd: "var(--dbm-space-16)" }}>
+        <div data-testid="rtl-vertical" style={{ height: "100%" }}>
+          <RangeSlider {...args} dir="rtl" orientation="vertical" showMinMaxLabels showTicks tickInterval={25} aria-label="RTL vertical" defaultValue={[lowerStart, upperStart]} style={{ height: "100%" }} />
+        </div>
+        <div data-testid="ltr-vertical" style={{ height: "100%" }}>
+          <RangeSlider {...args} orientation="vertical" showMinMaxLabels showTicks tickInterval={25} aria-label="LTR vertical" defaultValue={[lowerStart, upperStart]} style={{ height: "100%" }} />
+        </div>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const parts = (id: string) => {
+      const root = canvas.getByTestId(id);
+      const [lower, upper] = within(root).getAllByRole("slider") as [HTMLElement, HTMLElement];
+      return {
+        root,
+        track: root.querySelector("[class*='track']") as HTMLElement,
+        lower,
+        upper,
+        minLabel: within(root).getByText("0"),
+        maxLabel: within(root).getByText("100"),
+        ticks: Array.from(root.querySelectorAll("[class*='tick']")),
+      };
+    };
+
+    // Mirrored: the lower thumb (20) is the right-hand one, "0" is right of "100", and the ticks (25, 50, 75) run
+    // right to left with the middle one on the track's centre; the fill still runs between the thumbs.
+    const rtl = parts("rtl-horizontal");
+    await expect(centreOfX(rtl.lower)).toBeGreaterThan(centreOfX(rtl.upper));
+    await expect(centreOfX(rtl.minLabel)).toBeGreaterThan(centreOfX(rtl.maxLabel));
+    await expect(centreOfX(rtl.ticks[0] as Element)).toBeGreaterThan(centreOfX(rtl.ticks[1] as Element));
+    await expect(Math.abs(centreOfX(rtl.ticks[1] as Element) - centreOfX(rtl.track))).toBeLessThan(1.5);
+    await expectFillBetweenThumbs(rtl.root, "x");
+    const valueLabel = rtl.root.querySelector("[data-sizer]") as HTMLElement;
+    await expect(valueLabel.getBoundingClientRect().right).toBeLessThanOrEqual(rtl.track.getBoundingClientRect().left + 1);
+    for (const thumb of [rtl.lower, rtl.upper]) {
+      const rect = thumb.getBoundingClientRect();
+      for (const [dx, dy] of [[-11, 0], [11, 0], [0, -11], [0, 11]] as const) {
+        await expect(document.elementFromPoint(rect.left + rect.width / 2 + dx, rect.top + rect.height / 2 + dy)).toBe(thumb);
+      }
+    }
+
+    // Left-to-right, and left out inside a right-to-left page: the same left-to-right layout in both.
+    for (const id of ["ltr-horizontal", "ltr-in-rtl-page"]) {
+      const ltr = parts(id);
+      await expect(centreOfX(ltr.lower)).toBeLessThan(centreOfX(ltr.upper));
+      await expect(centreOfX(ltr.minLabel)).toBeLessThan(centreOfX(ltr.maxLabel));
+      await expect(centreOfX(ltr.ticks[0] as Element)).toBeLessThan(centreOfX(ltr.ticks[1] as Element));
+      await expect(Math.abs(centreOfX(ltr.ticks[1] as Element) - centreOfX(ltr.track))).toBeLessThan(1.5);
+    }
+
+    // Vertical, both directions: the labels and the ticks are centred over the track, not half their width off.
+    for (const id of ["rtl-vertical", "ltr-vertical"]) {
+      const vertical = parts(id);
+      const trackCentre = centreOfX(vertical.track);
+      await expect(Math.abs(centreOfX(vertical.minLabel) - trackCentre)).toBeLessThan(1.5);
+      await expect(Math.abs(centreOfX(vertical.maxLabel) - trackCentre)).toBeLessThan(1.5);
+      for (const tick of vertical.ticks) await expect(Math.abs(centreOfX(tick) - trackCentre)).toBeLessThan(1.5);
     }
   },
 };

@@ -150,6 +150,17 @@ export interface RangeSliderProps
    */
   tickInterval?: number;
   /**
+   * Text direction: `"rtl"` mirrors the slider for right-to-left languages — the minimum sits at
+   * the right, the filled range, thumbs and tick marks run from there, the arrow keys move the other
+   * way (`ArrowLeft` raises the value), and the value label and min/max labels swap sides with
+   * them. Passed through to Radix Slider, as `Tabs`, `Accordion` and `RadioGroup` do. It is not
+   * inherited from the page: left out, the slider stays left-to-right even in a right-to-left
+   * page, labels included, so its parts always agree. A vertical slider runs bottom to top either
+   * way; only its labels and value sit differently.
+   * @default 'ltr'
+   */
+  dir?: "ltr" | "rtl";
+  /**
    * Disables both thumbs natively.
    * @default false
    */

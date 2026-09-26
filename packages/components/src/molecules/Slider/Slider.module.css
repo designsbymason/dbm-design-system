@@ -362,3 +362,25 @@
   grid-column: 1;
   grid-row: 2;
 }
+
+/* Right-to-left (`dir="rtl"`, set on the slider and every wrapper). Four things centre themselves on
+   a logical inset with a `translate(-50%)`: in a right-to-left context the inset is measured from the
+   right, so the shift has to go the other way or they sit half their own width off-centre. A
+   `:dir(rtl)` override negates the same distance — the arrangement `Switch`'s thumb already uses — not
+   a renamed property, since `translate` has no logical form. */
+.thumb:dir(rtl)::before {
+  transform: translate(50%, -50%);
+}
+
+.track[data-orientation="horizontal"] .tick:dir(rtl) {
+  transform: translate(50%, -50%);
+}
+
+.track[data-orientation="vertical"] .tick:dir(rtl) {
+  transform: translate(50%, 50%);
+}
+
+.minMaxLabelTop:dir(rtl),
+.minMaxLabelBottom:dir(rtl) {
+  transform: translateX(50%);
+}

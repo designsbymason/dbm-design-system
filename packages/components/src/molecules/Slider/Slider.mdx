@@ -21,6 +21,7 @@ export const propOrder = [
   "step",
   "orientation",
   "inverted",
+  "dir",
   "showValue",
   "showValueTooltip",
   "showMinMaxLabels",
@@ -101,6 +102,16 @@ import { Slider } from "@dbm-design-system/components";
 ### Vertical
 
 <Canvas of={SliderStories.Vertical} />
+
+### Right to left
+
+`dir="rtl"` mirrors the slider for right-to-left languages: the minimum sits at the right, the filled range,
+thumb and tick marks run from there, the arrow keys move the other way (`ArrowLeft` raises the value), and the
+value and the min/max labels swap sides with them. It is passed through to the underlying Radix slider, as on
+`Tabs`, `Accordion` and `RadioGroup`, and it is not read from the page: with `dir` left out the slider stays
+left-to-right even in a right-to-left page, its labels included, so its parts always agree.
+
+<Canvas of={SliderStories.RightToLeft} />
 
 ### With the live value shown
 
@@ -208,6 +219,7 @@ announces, unless you pass an `aria-valuetext` of your own, which wins everywher
 - `aria-valuenow`/`aria-valuemin`/`aria-valuemax` reflect the real state directly, kept in sync with
   the visible thumb position automatically. `aria-valuetext`, when set, is announced instead of the
   raw number.
+- `dir="rtl"` flips which arrow key moves which way (`ArrowLeft` raises the value) along with the layout, so the key that points toward the thumb's travel is always the one that moves it; Home and End still go to the minimum and maximum.
 - `aria-invalid="true"` is set automatically while `hasError`, in addition to the visual danger
   ring and thumb outline — the two can't drift out of sync.
 - A dev-mode console warning fires once if a `Slider` has no `aria-label` or `aria-labelledby` — a

@@ -449,6 +449,53 @@ describe("Slider", () => {
     expect(document.body).toHaveFocus();
   });
 
+  describe("dir", () => {
+    it("is left-to-right by default, on the slider and on every wrapper", () => {
+      const { container } = render(<Slider aria-label="Volume" showValue showMinMaxLabels />);
+      expect(container.querySelector('[role="slider"]')?.closest('[dir]')).toHaveAttribute("dir", "ltr");
+      for (const wrapper of container.querySelectorAll(`.${styles.combinedWrapper}, .${styles.combinedSlider}, .${styles.combinedMinMaxRow}`)) {
+        expect(wrapper).toHaveAttribute("dir", "ltr");
+      }
+    });
+
+    it("stays left-to-right inside a right-to-left page when dir is left out, so the labels agree with the slider", () => {
+      const { container } = render(
+        <div dir="rtl">
+          <Slider aria-label="Volume" showMinMaxLabels defaultValue={50} />
+        </div>,
+      );
+      expect(container.querySelector(`.${styles.minMaxWrapper}`)).toHaveAttribute("dir", "ltr");
+      expect(container.querySelector(`.${styles.minMaxRow}`)?.closest("[dir]")).toHaveAttribute("dir", "ltr");
+    });
+
+    it("mirrors with dir=\"rtl\": Radix and every wrapper get it, and ArrowLeft raises the value", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<Slider aria-label="Volume" dir="rtl" defaultValue={50} showValue showMinMaxLabels />);
+      for (const element of container.querySelectorAll(`.${styles.combinedWrapper}, .${styles.combinedSlider}, .${styles.combinedMinMaxRow}, .${styles.root}`)) {
+        expect(element).toHaveAttribute("dir", "rtl");
+      }
+      const thumb = screen.getByRole("slider");
+      thumb.focus();
+      await user.keyboard("{ArrowLeft}");
+      expect(thumb).toHaveAttribute("aria-valuenow", "51");
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(thumb).toHaveAttribute("aria-valuenow", "49");
+    });
+
+    it("keeps ArrowRight raising the value in left-to-right", async () => {
+      const user = userEvent.setup();
+      render(<Slider aria-label="Volume" defaultValue={50} />);
+      screen.getByRole("slider").focus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("slider")).toHaveAttribute("aria-valuenow", "51");
+    });
+
+    it("puts dir on the outermost wrapper of a vertical slider too", () => {
+      const { container } = render(<Slider aria-label="Volume" dir="rtl" orientation="vertical" showValue style={{ height: "10rem" }} />);
+      expect(container.firstElementChild).toHaveAttribute("dir", "rtl");
+    });
+  });
+
   it("forwards ref to the slider's own root element", () => {
     const ref = createRef<HTMLSpanElement>();
     render(<Slider aria-label="Volume" ref={ref} />);

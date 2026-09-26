@@ -65,6 +65,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
       showTicks = false,
       tickInterval = step,
       disabled,
+      dir = "ltr",
       name,
       form,
       autoFocus,
@@ -195,6 +196,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
         step={step}
         orientation={orientation}
         inverted={inverted}
+        dir={dir}
         disabled={disabled}
         name={name}
         form={form}
@@ -243,6 +245,7 @@ export const Slider = forwardRef<HTMLSpanElement, SliderProps>(
         minText={format(min)}
         maxText={format(max)}
         style={style}
+        dir={dir}
       />
     );
   },

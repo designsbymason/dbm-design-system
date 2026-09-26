@@ -203,6 +203,12 @@ interface SliderLayoutProps {
   maxText: string;
   /** The caller's `style`, applied to the true outermost element when wrapping vertically. */
   style: CSSProperties | undefined;
+  /**
+   * Set on every wrapper, so the labels and the value label sit on the sides the slider's own
+   * direction puts them: Radix sets `dir` on its `Root` alone, and a label outside it would
+   * otherwise follow the page — a "0" under the maximum end of a right-to-left page.
+   */
+  dir: "ltr" | "rtl";
 }
 
 /**
@@ -221,6 +227,7 @@ export function SliderLayout({
   minText,
   maxText,
   style,
+  dir,
 }: SliderLayoutProps) {
   let result = control;
   // Read by `.value::before` in the stylesheet, which lays the lines out
@@ -238,7 +245,7 @@ export function SliderLayout({
     // height, min/max overlays or not.
     if (showMinMaxLabels) {
       result = (
-        <span className={styles.minMaxWrapperVertical}>
+        <span dir={dir} className={styles.minMaxWrapperVertical}>
           {result}
           <Text
             size="xs"
@@ -259,7 +266,7 @@ export function SliderLayout({
     }
     if (showValue) {
       result = (
-        <span className={cx(styles.wrapper, styles.wrapperVertical)}>
+        <span dir={dir} className={cx(styles.wrapper, styles.wrapperVertical)}>
           {result}
           <Text
             size={valueTextSize[size]}
@@ -292,8 +299,8 @@ export function SliderLayout({
     // column — sized to the slider alone — independent of however wide
     // the value label in the adjacent column happens to be.
     result = (
-      <span className={styles.combinedWrapper}>
-        <span className={styles.combinedSlider}>{result}</span>
+      <span dir={dir} className={styles.combinedWrapper}>
+        <span dir={dir} className={styles.combinedSlider}>{result}</span>
         <Text
           size={valueTextSize[size]}
           color="secondary"
@@ -302,7 +309,7 @@ export function SliderLayout({
         >
           {valueText}
         </Text>
-        <span className={cx(styles.minMaxRow, styles.combinedMinMaxRow)}>
+        <span dir={dir} className={cx(styles.minMaxRow, styles.combinedMinMaxRow)}>
           <Text size="xs" color="tertiary" className={styles.minMaxLabel}>
             {minText}
           </Text>
@@ -314,7 +321,7 @@ export function SliderLayout({
     );
   } else if (showValue) {
     result = (
-      <span className={styles.wrapper}>
+      <span dir={dir} className={styles.wrapper}>
         {result}
         <Text size={valueTextSize[size]} color="secondary" data-sizer={sizer} className={styles.value}>
           {valueText}
@@ -323,9 +330,9 @@ export function SliderLayout({
     );
   } else if (showMinMaxLabels) {
     result = (
-      <span className={styles.minMaxWrapper}>
+      <span dir={dir} className={styles.minMaxWrapper}>
         {result}
-        <span className={styles.minMaxRow}>
+        <span dir={dir} className={styles.minMaxRow}>
           <Text size="xs" color="tertiary" className={styles.minMaxLabel}>
             {minText}
           </Text>
@@ -341,7 +348,7 @@ export function SliderLayout({
     // The true outermost element (built above, however many layers deep)
     // gets the caller's real `style`.
     return (
-      <span className={styles.verticalStyleHost} style={style}>
+      <span dir={dir} className={styles.verticalStyleHost} style={style}>
         {result}
       </span>
     );
