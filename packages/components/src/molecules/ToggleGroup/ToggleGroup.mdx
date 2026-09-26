@@ -1,0 +1,337 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { Radio } from "../../atoms/Radio";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { ButtonGroup } from "../ButtonGroup";
+import { RadioGroup } from "../RadioGroup";
+import { Tabs } from "../Tabs";
+import * as ToggleGroupStories from "./ToggleGroup.stories";
+
+export const propOrder = [
+  "children",
+  "type",
+  "variant",
+  "size",
+  "rounded",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "deselectable",
+  "attached",
+  "orientation",
+  "fullWidth",
+  "disabled",
+  "loop",
+  "dir",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ToggleGroupStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ToggleGroup" tier="Molecule" />
+
+A set of options where the choice is shown: a segmented control. In a `single` group one item is chosen at a
+time — a view (Day / Week / Month), an alignment; in a `multiple` group each item is its own on/off toggle — bold,
+italic, underline. The items are fused into one control by default, or spaced apart with `attached={false}`, in a row
+or a column, and the chosen one is marked in one of three looks (`subtle`, `outlined`, `solid`).
+
+The group is one tab stop; the arrow keys move between its items (roving focus), and `Space` or `Enter` chooses
+the focused one. A single group is a `radiogroup` of `radio` items, a multiple group a `toolbar` of toggle buttons.
+
+### Import
+
+```tsx
+import { ToggleGroup } from "@dbm-design-system/components";
+```
+
+Its items are `ToggleGroup.Item`s.
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ToggleGroupStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ToggleGroupStories.Playground}
+  exclude={[
+    "children",
+    "value",
+    "defaultValue",
+    "onValueChange",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={["count", "chosen", ...propOrder]}
+/>
+
+## Properties
+
+`ToggleGroup` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`,
+`title`) — passed straight through to the underlying element. `role` and `data-orientation` are the group's own and can't be
+overridden.
+
+<PropertiesTable of={ToggleGroupStories} order={propOrder} />
+
+### ToggleGroup.Item
+
+An item takes the group's `variant` and `size`; it has no say in either.
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | — | This item's value: what the group's `value` holds while it is chosen. Required, and unique within the group. |
+| `children` | `ReactNode` | — | The item's label. Left out, the item is icon-only and needs an `aria-label`. |
+| `icon` | `PhosphorIcon` | — | An icon before the label, sized to the group's `size`. Not for `asChild`. |
+| `disabled` | `boolean` | `false` | Disables this item. The group's `disabled` disables every item either way. |
+| `asChild` | `boolean` | `false` | Renders the item as its only child, for a wrapper such as a `Tooltip` trigger. |
+| `aria-label` | `string` | — | Names an icon-only item. |
+| `aria-labelledby` | `string` | — | The id of an element that names the item. |
+| `id`, `className`, `style`, `data-testid` | — | — | Standard attributes, on the item's element. |
+
+## Variants
+
+### Every look
+
+`outlined` (the default) gives every item a border and marks the chosen one with the brand colour, so nothing moves
+when the choice changes. `subtle` has no borders and tints the chosen item. `solid` keeps the borders and fills the
+chosen item with the brand colour.
+
+<Canvas of={ToggleGroupStories.Variants} />
+
+### All sizes
+
+<Canvas of={ToggleGroupStories.AllSizes} />
+
+### Multiple choice
+
+`type="multiple"` makes each item an independent toggle, and `value` an array.
+
+<Canvas of={ToggleGroupStories.Multiple} />
+
+### With icons
+
+An icon-only item is a square the size of an `IconButton` at that step, and the same height as a labelled item beside
+it. Give it an `aria-label`.
+
+<Canvas of={ToggleGroupStories.WithIcons} />
+
+### Spaced, not attached
+
+<Canvas of={ToggleGroupStories.Spaced} />
+
+### Vertical
+
+<Canvas of={ToggleGroupStories.Vertical} />
+
+### Rounded
+
+<Canvas of={ToggleGroupStories.Rounded} />
+
+### Full width
+
+<Canvas of={ToggleGroupStories.FullWidth} />
+
+### Stacked on a phone, in a row from md up
+
+`orientation` also takes a mobile-first map keyed by breakpoint. A fused row can't wrap onto a second line, so stack it on a
+narrow screen — or use `attached={false}`, which does wrap.
+
+<Canvas of={ToggleGroupStories.ResponsiveOrientation} />
+
+## Behaviour
+
+### Deselectable
+
+A single group keeps one item chosen once it has one: clicking the chosen item does nothing, as with radio buttons.
+`deselectable` lets that click clear it, so the group can have no choice (a filter that can be off).
+
+<Canvas of={ToggleGroupStories.Deselectable} />
+
+### Controlled
+
+<Canvas of={ToggleGroupStories.Controlled} />
+
+### Disabled
+
+<Canvas of={ToggleGroupStories.Disabled} />
+
+### Wrapped in a tooltip
+
+<Canvas of={ToggleGroupStories.Wrapped} />
+
+### Named by a visible label
+
+<Canvas of={ToggleGroupStories.LabelledBy} />
+
+### Right to left
+
+Set `dir="rtl"` on the group: the first item is at the right, the outer corners mirror with it, and the arrow keys
+follow the reading direction. It is not read from the page — left out, the group stays left-to-right.
+
+<Canvas of={ToggleGroupStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a `single` group for a few mutually exclusive options that switch a view or a setting at once, and a `multiple`
+  group for independent on/off options.
+- Give the group a name (`aria-label`, or `aria-labelledby` pointing at a visible label).
+- Keep labels short and parallel ("Day", "Week", "Month"); use icon-only items only for familiar icons, each with an
+  `aria-label`, and a `Tooltip` where the icon alone is not enough.
+- Use `deselectable` when "none chosen" is a valid state, such as a filter.
+- Stack a long group on a phone with an `orientation` map rather than letting it overflow.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it to run actions. A set of buttons that each do something is a `ButtonGroup`.
+- Don't use it to move between views of a page: that is `Tabs`, which owns the panels and their announcement.
+- Don't put more than a handful of items in an attached row: it can't wrap. Stack it, or space it.
+- Don't use it for a long list of options, or one that grows: a `Select` or a `RadioGroup` scales better.
+- Don't rely on colour alone to show the choice in your own styling: the group's looks also change border or fill, and
+  the state is exposed to assistive tech as `aria-checked` or `aria-pressed`.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer `outlined` when layout stability matters: every item already has a border, so choosing one changes colour only.
+- Keep to two to five items. Past that, a `Select` reads better.
+- In a full-width group every item gets the same width, so one long label squeezes the rest.
+- Reach for `rounded` when the surrounding controls are pills too; leave it off when they are square-cornered.
+- Pick `single` when exactly one option applies, even if it may be cleared, and `multiple` when any combination
+  makes sense.
+
+## Accessibility
+
+<Callout tone="info" title="A radiogroup, or a toolbar of toggles">
+
+- A `single` group renders `role="radiogroup"` with `role="radio"` items (`aria-checked`); a `multiple` group renders
+  `role="toolbar"` with toggle buttons (`aria-pressed`). Either is named by `aria-label` or `aria-labelledby`; a
+  dev-mode console warning fires once if it has neither, and once per icon-only item without a name.
+- The group is one tab stop. `Tab` enters it on the chosen item (or the first), and the arrow keys, `Home` and `End`
+  move focus between the items without choosing; `Space` or `Enter` chooses. The arrows follow the reading direction,
+  so `dir="rtl"` swaps them, and `loop` decides whether they wrap.
+- A disabled item is skipped by the arrows and announced as unavailable.
+- The chosen item is marked by more than colour where the look allows it: a brand border on `outlined`, a fill on
+  `solid`, and the exposed state on all three.
+- Items are at least 24 × 24px (WCAG 2.5.8) at every size and in both orientations, including icon-only ones.
+- When attached, the focus ring is drawn inside the item so the next item never hides it, in a colour that reads on a
+  filled item.
+- The corners and shared borders are logical, so `dir="rtl"` mirrors them without any other change.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<ToggleGroup aria-label="View" defaultValue="week">
+  <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
+  <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
+  <ToggleGroup.Item value="month">Month</ToggleGroup.Item>
+</ToggleGroup>
+
+<ToggleGroup aria-label="Text style" type="multiple" size="sm">
+  <ToggleGroup.Item value="bold" icon={TextBIcon} aria-label="Bold" />
+  <ToggleGroup.Item value="italic" icon={TextItalicIcon} aria-label="Italic" />
+</ToggleGroup>
+
+// Controlled
+const [view, setView] = useState("week");
+<ToggleGroup aria-label="View" value={view} onValueChange={setView}>…</ToggleGroup>
+
+<ToggleGroup aria-label="Filter" deselectable>…</ToggleGroup>
+<ToggleGroup aria-label="View" variant="solid" rounded fullWidth>…</ToggleGroup>
+<ToggleGroup aria-label="Filter" attached={false} type="multiple">…</ToggleGroup>
+<ToggleGroup
+  aria-label="View"
+  orientation={{ base: "vertical", md: "horizontal" }}
+>
+  …
+</ToggleGroup>
+<ToggleGroup aria-label="Alignment" dir="rtl">…</ToggleGroup>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand" usage="the chosen item's fill in the solid variant" />
+<TokenRow token="bg.brand-hover" usage="the solid variant's chosen item while hovered" />
+<TokenRow token="bg.brand-subtle" usage="the subtle and outlined variants' chosen item" />
+<TokenRow token="bg.brand-subtle-hover" usage="the subtle and outlined variants' chosen item while hovered" />
+<TokenRow token="bg.neutral-subtle" usage="any unchosen item while hovered" />
+<TokenRow token="text.primary" usage="an unchosen item's label" />
+<TokenRow token="text.secondary" usage="a subtle item's label at rest" />
+<TokenRow token="text.brand" usage="the chosen item's label in the subtle and outlined variants" />
+<TokenRow token="text.on-brand" usage="the chosen item's label in the solid variant" />
+<TokenRow token="icon.default" usage="an unchosen item's icon" />
+<TokenRow token="icon.brand" usage="the chosen item's icon in the subtle and outlined variants" />
+<TokenRow token="icon.on-brand" usage="the chosen solid item's icon, and the focus ring drawn on it" />
+<TokenRow token="border.neutral" usage="the outlined and solid variants' item borders" />
+<TokenRow token="border.brand" usage="the outlined variant's chosen item's border" />
+<TokenRow token="border.focus" usage="the focus ring" />
+<TokenRow token="border-width.1" usage="an item's border, and how far attached items overlap so their borders are one line" />
+<TokenRow token="border-width.2" usage="the focus ring's width, and how far it is drawn inside an attached item" />
+<TokenRow token="radius.md" usage="the group's outer corners" />
+<TokenRow token="radius.full" usage="the ends of a rounded group" />
+<TokenRow token="radius.sm" usage="the focus ring's corners, per the standardized focus-ring convention" />
+<TokenRow token="opacity.40" usage="a disabled item" />
+<TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="an item's minimum height, and an icon-only item's width, matching a Button of the same size" />
+<TokenRow token="font-size.xs–font-size.lg" usage="the label size across the five size steps" />
+<TokenRow token="space.1–space.6" usage="an item's padding, the gap when attached={false}, and the focus ring's offset" />
+<TokenRow token="z-index.base" usage="the chosen item, drawn above its neighbours so its border isn't hidden" />
+<TokenRow token="motion.duration.fast" usage="colour changes on hover and choosing" />
+<TokenRow token="motion.easing.standard" usage="the same colour changes" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="ButtonGroup"
+  description="The same fused layout for actions rather than choices: no item is ever chosen"
+  href="/?path=/docs/molecules-inputs-buttongroup--docs"
+>
+  <ButtonGroup aria-label="Zoom" variant="secondary" size="sm">
+    <Button>Out</Button>
+    <Button>In</Button>
+  </ButtonGroup>
+</RelatedCard>
+<RelatedCard
+  name="Tabs"
+  description="For moving between views of a page: it owns the panels and their announcement"
+  href="/?path=/docs/molecules-navigation-tabs--docs"
+>
+  <Tabs defaultValue="a" size="sm">
+    <Tabs.List aria-label="Sections">
+      <Tabs.Trigger value="a">One</Tabs.Trigger>
+      <Tabs.Trigger value="b">Two</Tabs.Trigger>
+    </Tabs.List>
+  </Tabs>
+</RelatedCard>
+<RelatedCard
+  name="RadioGroup"
+  description="A labelled list of radio inputs: better for a form field, or for more options"
+  href="/?path=/docs/molecules-inputs-radiogroup--docs"
+>
+  <RadioGroup aria-label="Plan" defaultValue="a">
+    <Radio value="a">Free</Radio>
+    <Radio value="b">Team</Radio>
+  </RadioGroup>
+</RelatedCard>
+</div>

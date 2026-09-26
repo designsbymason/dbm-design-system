@@ -1,0 +1,264 @@
+.root {
+  align-items: stretch;
+  display: inline-flex;
+}
+
+.root[data-orientation="vertical"] {
+  flex-direction: column;
+}
+
+/* `fullWidth`: the group fills its container. A horizontal group gives every item an equal share (`min-width: 0`
+   lets a long label shrink instead of forcing the row wider); a vertical group's items already stretch. */
+.fullWidth {
+  display: flex;
+  width: 100%;
+}
+
+.fullWidth[data-orientation="horizontal"] > * {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+/* Spaced: the items stay separate. A horizontal row wraps onto more lines when it doesn't fit — an attached group
+   can't, because a fused shape broken across lines is no longer one shape. */
+.spaced {
+  gap: var(--dbm-space-2);
+}
+
+.spaced[data-orientation="horizontal"] {
+  flex-wrap: wrap;
+}
+
+/* --- One item --- */
+
+.item {
+  align-items: center;
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-weight: var(--dbm-font-weight-medium);
+  justify-content: center;
+  line-height: var(--dbm-line-height-tight);
+  margin: 0;
+  /* A native <button> never underlines, but the `asChild` anchor case does. */
+  text-decoration: none;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  white-space: nowrap;
+}
+
+.rounded .item {
+  border-radius: var(--dbm-radius-full);
+}
+
+/* The standardized focus-ring radius, and the ring outside the item (`05-component-api-conventions.md` §6). */
+.item:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.rounded .item:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
+.item:disabled,
+.item[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* The chosen item sits above its neighbours, so its border isn't covered by the shared edge of the next one. A
+   positioned element paints above the static siblings around it, whatever its order. */
+.item[data-state="on"] {
+  position: relative;
+  z-index: var(--dbm-z-index-base);
+}
+
+/* Height, padding, type and icon gap per size step. `min-block-size` is `IconButton`'s size token for the same
+   step, which is `Button`'s real height there, so a group lines up beside either. */
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-icon-button-size-xs);
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-icon-button-size-sm);
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-icon-button-size-md);
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
+  gap: var(--dbm-space-3);
+  min-block-size: var(--dbm-icon-button-size-lg);
+  padding-inline: var(--dbm-space-5);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+  gap: var(--dbm-space-3);
+  min-block-size: var(--dbm-icon-button-size-xl);
+  padding-inline: var(--dbm-space-6);
+}
+
+/* An icon-only item is a square, the same size as an `IconButton` at that step. */
+.iconOnly.sizeXs {
+  min-inline-size: var(--dbm-icon-button-size-xs);
+  padding-inline: 0;
+}
+
+.iconOnly.sizeSm {
+  min-inline-size: var(--dbm-icon-button-size-sm);
+  padding-inline: 0;
+}
+
+.iconOnly.sizeMd {
+  min-inline-size: var(--dbm-icon-button-size-md);
+  padding-inline: 0;
+}
+
+.iconOnly.sizeLg {
+  min-inline-size: var(--dbm-icon-button-size-lg);
+  padding-inline: 0;
+}
+
+.iconOnly.sizeXl {
+  min-inline-size: var(--dbm-icon-button-size-xl);
+  padding-inline: 0;
+}
+
+.itemLabel {
+  min-inline-size: 0;
+}
+
+/* An icon's colour comes from the `icon.*` tokens, never `text.*`, even where the two happen to match today. */
+.itemIcon {
+  color: var(--dbm-icon-default);
+  flex-shrink: 0;
+  transition: color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* Hover, for an item that is not chosen: a neutral tint, distinct from the chosen item's brand tint. */
+.item:not([data-state="on"]):not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-text-primary);
+}
+
+/* --- Variant: subtle --- no borders; the chosen item takes a soft brand tint. */
+
+.variantSubtle[data-state="on"] {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
+}
+
+.variantSubtle[data-state="on"]:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.variantSubtle[data-state="on"] .itemIcon {
+  color: var(--dbm-icon-brand);
+}
+
+/* --- Variant: outlined --- every item has the border in every state, so nothing moves when the choice does. */
+
+.variantOutlined {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+}
+
+.variantOutlined[data-state="on"] {
+  background-color: var(--dbm-bg-brand-subtle);
+  border-color: var(--dbm-border-brand);
+  color: var(--dbm-text-brand);
+}
+
+.variantOutlined[data-state="on"]:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+.variantOutlined[data-state="on"] .itemIcon {
+  color: var(--dbm-icon-brand);
+}
+
+/* --- Variant: solid --- the borders stay, so the group reads as one control; the chosen item is filled. */
+
+.variantSolid {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-neutral);
+}
+
+.variantSolid[data-state="on"] {
+  background-color: var(--dbm-bg-brand);
+  border-color: var(--dbm-border-brand);
+  color: var(--dbm-text-on-brand);
+}
+
+.variantSolid[data-state="on"]:not(:disabled):not([data-disabled]):hover {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+.variantSolid[data-state="on"] .itemIcon {
+  color: var(--dbm-icon-on-brand);
+}
+
+/* --- Attached: one segmented control ---
+   Only the corners where two items meet are squared — the outer corners keep whatever the item already has
+   (`radius-md`, or `radius-full` when `rounded`), so the group needs no radius of its own. Logical corners, so a
+   right-to-left group mirrors. These selectors are more specific than an item's own `:focus-visible` radius rule, so
+   the meeting corners stay square while one is focused. */
+.attached[data-orientation="horizontal"] > :not(:first-child) {
+  border-end-start-radius: 0;
+  border-start-start-radius: 0;
+}
+
+.attached[data-orientation="horizontal"] > :not(:last-child) {
+  border-end-end-radius: 0;
+  border-start-end-radius: 0;
+}
+
+.attached[data-orientation="vertical"] > :not(:first-child) {
+  border-start-end-radius: 0;
+  border-start-start-radius: 0;
+}
+
+.attached[data-orientation="vertical"] > :not(:last-child) {
+  border-end-end-radius: 0;
+  border-end-start-radius: 0;
+}
+
+/* Bordered items overlap by one border width, so two neighbouring borders are one shared line. */
+.attached[data-orientation="horizontal"] > :is(.variantOutlined, .variantSolid):not(:first-child) {
+  margin-inline-start: calc(-1 * var(--dbm-border-width-1));
+}
+
+.attached[data-orientation="vertical"] > :is(.variantOutlined, .variantSolid):not(:first-child) {
+  margin-block-start: calc(-1 * var(--dbm-border-width-1));
+}
+
+/* The focus ring is drawn inside the item when attached, so it never lies across a neighbour — over a solid fill it
+   could not be read (1.1–1.6:1), and the chosen solid item is exactly that. On the filled item the ring takes the
+   colour that contrasts with the fill (`05-component-api-conventions.md` §6). */
+.attached .item:focus-visible {
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.attached .variantSolid[data-state="on"]:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+}

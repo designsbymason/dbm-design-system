@@ -70,6 +70,7 @@ export * from "./molecules/Select";
 export * from "./molecules/Slider";
 export * from "./molecules/Table";
 export * from "./molecules/Tabs";
+export * from "./molecules/ToggleGroup";
 
 // What a consumer is meant to use from `@dbm-design-system/primitives`, re-exported so that installing only this package
 // is enough (ADR-0023, `02-tech-stack-and-structure.md` §2) — never the helpers only components use.

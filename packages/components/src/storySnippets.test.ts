@@ -67,6 +67,7 @@ import { selectPlaygroundSnippet } from "./molecules/Select/Select.snippets";
 import { sliderPlaygroundSnippet } from "./molecules/Slider/Slider.snippets";
 import { tablePlaygroundSnippet } from "./molecules/Table/Table.snippets";
 import { tabsPlaygroundSnippet } from "./molecules/Tabs/Tabs.snippets";
+import { toggleGroupPlaygroundSnippet } from "./molecules/ToggleGroup/ToggleGroup.snippets";
 
 // Guards the code shown under "Show code" on Docs pages
 // (`07-storybook-and-documentation-standards.md` §4.2). A story's own source is
@@ -610,6 +611,49 @@ describe("ButtonGroup's Playground snippet", () => {
   it("keeps the number of buttons between one and six", () => {
     expect(buttonGroupPlaygroundSnippet({ count: 0 }).match(/<Button>/g)).toHaveLength(1);
     expect(buttonGroupPlaygroundSnippet({ count: 99 }).match(/<Button>/g)).toHaveLength(6);
+  });
+});
+
+describe("ToggleGroup's Playground snippet", () => {
+  it.each([
+    {},
+    { type: "multiple", variant: "solid", size: "sm", rounded: true, disabled: true, attached: false, orientation: "vertical", fullWidth: true, loop: false, dir: "rtl", count: 5, chosen: "day", "aria-label": "Range" },
+    { type: "single", deselectable: true, chosen: "week" },
+    { count: 1 },
+    { count: 6 },
+  ])("%j is a real snippet", (args) => {
+    expect(problemsIn(toggleGroupPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("writes only what differs from the defaults", () => {
+    expect(
+      toggleGroupPlaygroundSnippet({ type: "single", variant: "outlined", size: "md", rounded: false, attached: true, orientation: "horizontal", fullWidth: false, disabled: false, loop: true, dir: "ltr", deselectable: false, chosen: "none", count: 2 }),
+    ).toBe('<ToggleGroup aria-label="View">\n  <ToggleGroup.Item value="day">Day</ToggleGroup.Item>\n  <ToggleGroup.Item value="week">Week</ToggleGroup.Item>\n</ToggleGroup>');
+    expect(toggleGroupPlaygroundSnippet({ variant: "solid", size: "lg", count: 1 })).toContain('variant="solid" size="lg"');
+    expect(toggleGroupPlaygroundSnippet({ rounded: true, count: 1 })).toContain("rounded");
+    expect(toggleGroupPlaygroundSnippet({ attached: false, count: 1 })).toContain("attached={false}");
+    expect(toggleGroupPlaygroundSnippet({ orientation: "vertical", count: 1 })).toContain('orientation="vertical"');
+    expect(toggleGroupPlaygroundSnippet({ loop: false, count: 1 })).toContain("loop={false}");
+    expect(toggleGroupPlaygroundSnippet({ dir: "rtl", count: 1 })).toContain('dir="rtl"');
+  });
+
+  it("writes the starting choice in the shape the type takes", () => {
+    expect(toggleGroupPlaygroundSnippet({ chosen: "week" })).toContain('defaultValue="week"');
+    expect(toggleGroupPlaygroundSnippet({ type: "multiple", chosen: "week" })).toContain('type="multiple" defaultValue={["week"]}');
+    expect(toggleGroupPlaygroundSnippet({ chosen: "none" })).not.toContain("defaultValue");
+    // An item the demo doesn't show can't be the starting choice.
+    expect(toggleGroupPlaygroundSnippet({ chosen: "year", count: 2 })).not.toContain("defaultValue");
+  });
+
+  it("writes deselectable only for a single group", () => {
+    expect(toggleGroupPlaygroundSnippet({ deselectable: true })).toContain("deselectable");
+    expect(toggleGroupPlaygroundSnippet({ type: "multiple", deselectable: true })).not.toContain("deselectable");
+  });
+
+  it("ignores a variant or size that is not a real value, and keeps the item count between one and six", () => {
+    expect(toggleGroupPlaygroundSnippet({ variant: "bogus", size: "huge", count: 1 })).not.toMatch(/variant|size/);
+    expect(toggleGroupPlaygroundSnippet({ count: 0 }).match(/ToggleGroup\.Item value/g)).toHaveLength(1);
+    expect(toggleGroupPlaygroundSnippet({ count: 99 }).match(/ToggleGroup\.Item value/g)).toHaveLength(6);
   });
 });
 
