@@ -86,6 +86,38 @@ describe("tokenize", () => {
   });
 });
 
+describe("tokenize speed", () => {
+  // A long unbroken word (a `data:` URI, a hash, a minified name) must cost time in proportion to its length. A
+  // lookahead written into a word's pattern retries from every letter and goes quadratic: 29,000 characters took
+  // 0.7 seconds in CSS, 1.6 inside a rule, and stalled the page.
+  const word = "a".repeat(MAX_HIGHLIGHT_LENGTH - 1000);
+  const budget = 250;
+  it.each([
+    ["css", word],
+    ["css", `a{${word}`],
+    ["css", "-".repeat(MAX_HIGHLIGHT_LENGTH - 1000)],
+    ["css", `.a{background:url(data:image/png;base64,${word})}`],
+    ["tsx", `<A ${word}`],
+    ["html", `<a ${word}`],
+    ["bash", word],
+    ["json", word],
+    ["ts", word],
+  ])("finishes a long word promptly in %s", (language, code) => {
+    const start = performance.now();
+    tokenize(code, language);
+    expect(performance.now() - start).toBeLessThan(budget);
+  });
+});
+
+describe("tokenize with values that are not text", () => {
+  it("draws a language that is not a string as plain text, and a missing code as empty", () => {
+    expect(tokenize("const a = 1", 5 as never)).toEqual([[{ text: "const a = 1" }]]);
+    expect(tokenize(undefined as never, "ts")).toEqual([[]]);
+    expect(tokenize(null as never, "ts")).toEqual([[]]);
+    expect(resolveLanguage({} as never)).toBeUndefined();
+  });
+});
+
 describe("resolveLanguage", () => {
   it("knows the aliases, in any case", () => {
     expect(resolveLanguage("TypeScript")).toBe("ts");

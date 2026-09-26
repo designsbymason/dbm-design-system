@@ -90,7 +90,7 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    */
   collapsible?: boolean;
   /**
-   * How many lines a collapsed block shows.
+   * How many lines a collapsed block shows. A line that wraps still counts as one, however many rows it takes.
    * @default 10
    */
   collapsedLines?: number;

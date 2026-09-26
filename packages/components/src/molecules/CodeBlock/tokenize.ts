@@ -93,7 +93,8 @@ const aliases: Record<string, HighlightLanguage> = {
 
 /** The grammar a `language` string names, or `undefined` if it has none (it is then drawn as plain text). */
 export function resolveLanguage(language: string | undefined): HighlightLanguage | undefined {
-  return language ? aliases[language.trim().toLowerCase()] : undefined;
+  // A `language` that isn't a string (a JavaScript caller, a missing value) has no grammar rather than a crash.
+  return typeof language === "string" ? aliases[language.trim().toLowerCase()] : undefined;
 }
 
 const isWordChar = (char: string | undefined) => char !== undefined && /[\w$]/.test(char);
@@ -247,8 +248,16 @@ const cssRules: Rule[] = [
     },
   },
   { re: /;/y, after: (_text, state, _code, end) => void (state.statementStart = end) },
-  { re: /--?[A-Za-z][\w-]*(?=\s*:)/y, type: "property", when: (_code, _position, state) => inDeclarations(state) },
-  { re: /[A-Za-z][\w-]*(?=\s*:)/y, type: "property", when: (_code, _position, state) => inDeclarations(state) },
+  {
+    // A whole word at once, decided afterwards by what follows it — a call, or (inside a declaration block) a
+    // property before its colon. A lookahead written into the pattern would retry from every letter of a long
+    // word and go quadratic on one (a `data:` URI in a `url()`).
+    re: /-{0,2}[A-Za-z_][\w-]*/y,
+    classify: (_text, code, end, state) => {
+      if (code[end] === "(") return "function";
+      return inDeclarations(state) && /^\s{0,80}:/.test(code.slice(end, end + 81)) ? "property" : undefined;
+    },
+  },
   { re: /#[\da-fA-F]{3,8}\b/y, type: "number", when: (_code, _position, state) => inDeclarations(state) },
   { re: /[.#][A-Za-z_-][\w-]*/y, type: "type", when: (_code, _position, state) => !inDeclarations(state) },
   {
@@ -256,7 +265,6 @@ const cssRules: Rule[] = [
     type: "number",
     when: (code, position) => !/[\w-]/.test(code[position - 1] ?? ""),
   },
-  { re: /[A-Za-z-][\w-]*(?=\()/y, type: "function" },
 ];
 
 // --- HTML / XML ---------------------------------------------------------------------------------------------
@@ -403,7 +411,7 @@ function diffLines(code: string): TokenLine[] {
  * token's text with `\n` between lines returns the input.
  */
 export function tokenize(code: string, language: string | undefined): TokenLine[] {
-  const source = code.replace(/\r\n?/g, "\n").replace(/\n$/, "");
+  const source = String(code ?? "").replace(/\r\n?/g, "\n").replace(/\n$/, "");
   const resolved = resolveLanguage(language);
   if (!resolved || source.length > MAX_HIGHLIGHT_LENGTH) return plainLines(source);
   if (resolved === "diff") return diffLines(source);

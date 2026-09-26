@@ -129,7 +129,7 @@ const meta: Meta<PlaygroundArgs> = {
     },
     collapsedLines: {
       control: { type: "number", min: 1, max: 40 },
-      description: "How many lines a collapsed block shows.",
+      description: "How many lines a collapsed block shows. A line that wraps still counts as one, however many rows it takes.",
       table: { defaultValue: { summary: "10" } },
     },
     expanded: {
@@ -585,6 +585,41 @@ export const CollapseInteraction: Story = {
     await expect(rect(frame).height).toBeGreaterThan(15 * lineHeight);
     await expect(block.querySelector("[aria-hidden='true']:empty")).toBeNull();
     await expect(Math.abs(rect(lines[19]!).bottom - (rect(frame).bottom - padding))).toBeLessThan(1.5);
+  },
+};
+
+export const CollapseWrapInteraction: Story = {
+  ...Playground,
+  name: "Interaction: a wrapped, collapsed block shows N whole lines, however many rows they wrap to",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ maxWidth: "22rem" }} data-testid="narrow">
+      <CodeBlock code={Array.from({ length: 6 }, (_, index) => `${index + 1}: ${samples.longLine}`).join("\n")} language="text" wrap collapsible collapsedLines={2} aria-label="Wrapped and collapsed" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const block = within(canvasElement).getByTestId("narrow");
+    const frame = block.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+    const lines = linesOf(block);
+    const lineHeight = px(getComputedStyle(lines[0]!).lineHeight);
+    // Each line wraps onto several rows, so two lines are far more than two rows tall.
+    await expect(rect(lines[0]!).height).toBeGreaterThan(2 * lineHeight);
+    // Two whole lines are shown: the second ends inside the frame, and the third starts at or below its edge.
+    await expect(rect(lines[1]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1);
+    await expect(rect(lines[2]!).top).toBeGreaterThanOrEqual(rect(frame).bottom - 1);
+    await expect(within(block).getByRole("button", { name: "Show 4 more lines" })).toBeInTheDocument();
+    // Expanding shows them all, and collapsing again goes back to two.
+    await userEvent.click(within(block).getByRole("button", { name: "Show 4 more lines" }));
+    await expect(rect(lines[5]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1);
+    await userEvent.click(within(block).getByRole("button", { name: "Show less" }));
+    await expect(rect(lines[2]!).top).toBeGreaterThanOrEqual(rect(frame).bottom - 1);
+    // A different width wraps the lines differently, and the cut follows: still two whole lines, and shorter.
+    const before = rect(frame).height;
+    block.style.maxWidth = "60rem";
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(rect(frame).height).toBeLessThan(before);
+    await expect(rect(lines[1]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1);
+    await expect(rect(lines[2]!).top).toBeGreaterThanOrEqual(rect(frame).bottom - 1);
   },
 };
 

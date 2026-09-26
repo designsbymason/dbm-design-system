@@ -12,6 +12,7 @@ import { parseHighlightLines } from "./highlightLines";
 import { tokenize } from "./tokenize";
 import type { TokenType } from "./tokenize";
 import { useCodeScroll } from "./useCodeScroll";
+import { useCollapsedHeight } from "./useCollapsedHeight";
 
 const defaultLabels: CodeBlockLabels = {
   copy: "Copy code",
@@ -88,7 +89,10 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     const titleId = useId();
     const frameId = useId();
 
-    const lines = useMemo(() => tokenize(code, language), [code, language]);
+    // `code` is required, but it is often data on its way (`code={snippet?.text}`): anything that is not a string is
+    // drawn as an empty block, with a development warning, rather than crashing the page around it.
+    const text = typeof code === "string" ? code : "";
+    const lines = useMemo(() => tokenize(text, language), [text, language]);
     const highlighted = useMemo(() => parseHighlightLines(highlightLines), [highlightLines]);
     const firstLine = Number.isFinite(startLine) ? Math.trunc(startLine) : 1;
     const gutterDigits = String(Math.max(Math.abs(firstLine), Math.abs(firstLine + lines.length - 1))).length + (firstLine < 0 ? 1 : 0);
@@ -107,6 +111,8 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     // --- Scrolling: a named tab stop only while the code overflows.
     const frameRef = useRef<HTMLDivElement>(null);
     const scrollable = useCodeScroll(frameRef, collapsed);
+    // A wrapped line is one line however many rows it takes, so a wrapped block is cut where its Nth line ends.
+    const collapsedHeight = useCollapsedHeight(frameRef, collapsed && wrap, visibleLines);
     const regionName = ariaLabel
       ? { "aria-label": ariaLabel }
       : ariaLabelledBy
@@ -124,16 +130,23 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       return () => window.clearTimeout(timer);
     }, [copy, copiedDuration]);
     const handleCopy = async () => {
-      const copied = await copyToClipboard(code);
+      const copied = await copyToClipboard(text);
       setCopy((current) => ({ status: copied ? "copied" : "failed", count: current.count + 1 }));
       announce(copied ? labels.copied : labels.copyFailed);
-      if (copied) onCopied?.(code);
+      if (copied) onCopied?.(text);
     };
+
+    const codeIsNotText = typeof code !== "string";
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && codeIsNotText) {
+        console.warn("CodeBlock: `code` should be a string — it is drawn as an empty block until it is one.");
+      }
+    }, [codeIsNotText]);
 
     const hasHeader = Boolean(title || language) || copyable;
     const frameStyle = {
       "--code-block-collapsed-lines": collapsed ? visibleLines : undefined,
-      maxHeight: collapsed ? undefined : maxHeight,
+      maxHeight: collapsed ? collapsedHeight || undefined : maxHeight,
     } as CSSProperties;
 
     return (

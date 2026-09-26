@@ -57,6 +57,31 @@ describe("CodeBlock", () => {
     expect(codeElement().textContent).toContain("<img src=x");
   });
 
+  it("draws code that is not a string as an empty block, warning once, instead of crashing", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { rerender } = render(<CodeBlock code={undefined as never} language="ts" aria-label="Loading" />);
+    expect(screen.getByRole("figure", { name: "Loading" })).toBeInTheDocument();
+    expect(codeElement().querySelectorAll("span[data-line]")).toHaveLength(1);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("`code` should be a string"));
+    // Once the text arrives it is drawn, and no further warning.
+    rerender(<CodeBlock code="const a = 1;" language="ts" aria-label="Loading" />);
+    expect(screen.getByText("const")).toBeInTheDocument();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("copies an empty string, not undefined, while code is not text", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<CodeBlock code={null as never} />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(""));
+  });
+
+  it("draws a language that is not a string as plain text", () => {
+    render(<CodeBlock code="const a = 1" language={5 as never} />);
+    expect(codeElement().querySelectorAll("span[data-line] > span")).toHaveLength(0);
+  });
+
   it("drops one trailing newline and keeps blank lines", () => {
     render(<CodeBlock code={"a\n\nb\n"} language="text" />);
     expect(codeElement().querySelectorAll("span[data-line]")).toHaveLength(3);

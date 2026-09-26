@@ -47,6 +47,25 @@ Files: the component and its stylesheet, `tokenize.ts` (the highlighter, plain d
 
 A reader asked why the Variants snippets showed `code={source}`. It is a placeholder for the reader's own string (the demo text is long and would swamp the props each variant shows), but nothing in the snippet said so, and some snippets used real inline strings while others didn't — so they weren't pasteable and looked inconsistent. At explicit direction, every snippet that passes a placeholder (`source`, `excerpt`, `command`, `config`, `output`) now defines it in its leading comment, the Playground's snippet starts with `{/* source: the code to show, as a string */}`, and the Docs page states the convention once above the variants. A unit test asserts that every `code={name}` in every CodeBlock snippet, and in the Playground's, is explained in a comment; it fails with one explanation removed (checked). The rule for any component's snippets is now in `07-storybook-and-documentation-standards.md` §4.2.
 
+## Final review before Finalizing, 2026-09-26
+
+A full `06-engineering-standards.md` §9 pass against the code and the running component. **Fixed (three defects), and the checks that found them are now tests.**
+
+**Fixed**
+
+1. **A CSS word made the tokenizer quadratic.** The three CSS rules for a property, a property and a function each wrote a lookahead into the pattern (`[A-Za-z-][\w-]*(?=\()`), which retries from every letter of a long word: 29,000 characters took 0.7 seconds, 1.6 seconds inside a rule (a `data:` URI in a `url()` is exactly such a word), stalling the page. They are one rule now that takes the whole word and decides afterwards by what follows it, so cost is proportional to length. Nine long-word tests (CSS four ways, tsx and html in a tag, bash, json, ts) under a 250ms budget fail with the old rules (checked: the old ones were 700–1,600ms). Found by timing hostile input, not by reading; the earlier "large unterminated input" test had used inputs that don't trigger it.
+2. **`code={undefined}`, `null` or a non-string crashed the render** (`code.replace is not a function`), and so did a non-string `language`. `code` is routinely data on its way (`code={snippet?.text}`), and one that hasn't arrived shouldn't take down the page around it. A `code` that isn't a string is now an empty block, with a development warning once, and the copy button copies `""`; a `language` that isn't a string is plain text. Tests for the tokenizer and the component, each failing with its guard removed (checked).
+3. **`wrap` and `collapsible` together cut a line in half.** `collapsedLines` counts lines, but the collapsed height was that many *rows*, so a line that wraps onto five rows was sliced after two, and "Show N more lines" said the wrong number (measured: the second line's bottom at 361px against a frame ending at 135px). A wrapped block is now cut where its Nth line ends, measured (`useCollapsedHeight`, on `useSyncExternalStore` like `useCodeScroll`, so it is right on the first frame and re-read when the width changes); an unwrapped block keeps the exact stylesheet height. A real-browser story covers two whole lines, the button's count, expanding, collapsing, and narrowing then widening the container; three mutations fail it (no measuring, no re-read on resize, measuring without `wrap`).
+
+**Checked, no action needed**
+- **Baseline:** no `any`, suppression or raw value (every number in the stylesheet is a unitless reset, and `tab-size` is documented as a content format); JSDoc on every prop with the defaults; `{...props}` precedes the name; no `dangerouslySetInnerHTML`, `innerHTML`, `eval` or `Function` anywhere; SSR-safe (a timer only in an effect, `useId`); `StrictMode` tested.
+- **Storybook:** all 16 visible stories checked in the running Storybook for inert controls ("Set string" and the like): none; the Playground's controls drive the canvas (title, start line, numbers, wrap, collapse with its button's count, copy button, language, and highlight counted from the start line).
+- **Composition:** tab order is the copy button, then the scrolling code (only while it overflows), then the expand button; `IconButton`, `Button`, `VisuallyHidden`, `useAnnouncement` and `mergeDefined` are reused rather than reimplemented.
+- **All 39 mutations re-run after the fixes; none survives** (three older ones needed their target text updated after a rename).
+- **Feature completeness, considered and not added:** what is already named below; a language auto-detect (a wrong guess is worse than plain text); copying with the line numbers (never wanted).
+
+**Not verified:** a real screen reader; the real Clipboard API against a permission prompt; forced-colours mode.
+
 ## Gaps named, not built
 
 - **A hook for another highlighter** (tokens in, so a consumer can bring a fuller grammar). See ADR-0026.
