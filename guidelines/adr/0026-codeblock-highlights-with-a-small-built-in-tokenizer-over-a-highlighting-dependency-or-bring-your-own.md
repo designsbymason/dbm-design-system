@@ -1,6 +1,6 @@
 # 0026 — `CodeBlock` highlights with a small built-in tokenizer, over a highlighting dependency or bring-your-own
 
-**Status:** Accepted · **Date:** 2026-09-26
+**Status:** Accepted · **Date:** 2026-09-26 · **Amended 2026-09-26** — the set of languages grew from nine to sixteen; the decision itself is unchanged
 
 ## Context
 `CodeBlock` is documented as "multi-line, syntax-highlighted, copy button". Nothing in the repository highlights code, so the first build had to decide where the colouring comes from. This is a dependency decision as much as a component one: `CLAUDE.md` allows almost no dependencies (Radix and an optional Motion), and a highlighter is the kind of package that brings real weight (a grammar per language, often megabytes of them) and its own upkeep. It is also a security decision: `CLAUDE.md` names `CodeBlock` when it bans `dangerouslySetInnerHTML` without sanitising, and many highlighters work by returning an HTML string.
@@ -8,7 +8,7 @@
 ## Decision
 `CodeBlock` ships **its own small tokenizer** (`molecules/CodeBlock/tokenize.ts`), with no dependency:
 
-- **A lexer, not a parser:** an ordered list of sticky regular expressions per language, and a few counters of state where meaning depends on what came before (inside a tag, in JSX text, in a CSS block). It covers `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and `diff`, with aliases; any other language is drawn as plain text. It is approximate by design and says so in its docs.
+- **A lexer, not a parser:** an ordered list of sticky regular expressions per language, and a few counters of state where meaning depends on what came before (inside a tag, in JSX text, in a CSS block). It covers `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and `diff`, with aliases; any other language is drawn as plain text. *(Amended 2026-09-26: this originally listed only those nine. `python`, `yaml`, `sql`, `markdown`, `go`, `rust` and `java` were added the same day, exactly as the last consequence below describes — a rule list and its tests, in `grammars.ts` — so the decision stands; the current set is in `component-reviews/CodeBlock.md`.)* It is approximate by design and says so in its docs.
 - **It returns data, never HTML.** The result is lines of `{ type, text }` tokens, and the component renders each as a React element, so `code` is always drawn as text and no `dangerouslySetInnerHTML` exists anywhere in the component.
 - **One hard guarantee, enforced by tests:** joining the tokens' text gives back the input exactly, for every language and any input (a deterministic stream of awkward characters is part of the suite), so highlighting can never lose or alter code, and it always finishes (each step consumes at least one character; text past 30,000 characters is drawn plain).
 - **Ten token kinds, each a semantic token:** `text.syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-property`, `-tag`, `-comment`, `-inserted`, `-deleted`, under the existing `text` category, plus `bg.code-block` and `bg.code-highlight` for the surfaces. Every colour is measured against both surfaces in all four themes (4.5:1 or more), so highlighting is theme-aware and AA like everything else.

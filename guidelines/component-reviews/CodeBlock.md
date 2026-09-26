@@ -6,9 +6,9 @@
 
 A single component (not compound), item 21 in the itemized molecule build order (`04-component-inventory.md`): syntax-highlighted code in a `<figure>` around a scrollable `<pre><code>`. No new dependency and no component token; twelve semantic tokens in existing categories.
 
-Props: `code` (required; the text, never HTML), `language`, `title`, `showLineNumbers`, `startLine`, `highlightLines` (`[2, "4-6"]`), `wrap`, `maxHeight`, `collapsible` with `collapsedLines` and `expanded` / `defaultExpanded` / `onExpandedChange`, `copyable`, `copiedDuration`, `onCopied`, `labels` (`copy`, `copied`, `copyFailed`, `expand`, `collapse`, `region`), and `aria-label` / `-labelledby` / `-describedby`, `id`, `className`, `style`, `data-testid`.
+Props: `code` (required; the text, never HTML), `language`, `title`, `showLineNumbers`, `startLine`, `highlightLines` (`[2, "4-6"]`), `wrap`, `maxHeight`, `collapsible` with `collapsedLines` and `expanded` / `defaultExpanded` / `onExpandedChange`, `copyable`, `stripPrompt`, `copiedDuration`, `onCopied`, `labels` (`copy`, `copied`, `copyFailed`, `expand`, `collapse`, `highlighted`, `region`), and `aria-label` / `-labelledby` / `-describedby`, `id`, `className`, `style`, `data-testid`.
 
-Files: the component and its stylesheet, `tokenize.ts` (the highlighter, plain data in and out), `useCodeScroll.ts`, `copyToClipboard.ts`, `highlightLines.ts`.
+Files: the component and its stylesheet; the highlighter, as plain data in and out (`tokenize.ts` is the engine and the first nine grammars, `grammars.ts` the seven added later, `tokenizeTypes.ts` what they share); `useCodeScroll.ts` and `useCollapsedHeight.ts` (the scroll frame and a wrapped collapsed block's height), `copyToClipboard.ts` and `textToCopy.ts` (the clipboard, and what a shell block puts on it), `highlightLines.ts`; and `browserProtocol.js` with its `.d.ts`, which only the hidden real-browser stories use. Props and files as of the post-Finalization passes at the end of this file; the sections between record how they got there.
 
 ## Decisions taken while building
 
