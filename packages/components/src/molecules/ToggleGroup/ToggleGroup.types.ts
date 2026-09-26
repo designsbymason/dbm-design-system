@@ -142,7 +142,7 @@ export type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps
 export interface ToggleGroupItemProps
   extends Omit<
     ComponentPropsWithoutRef<"button">,
-    "value" | "children" | "className" | "style" | "id" | "type" | "disabled" | "onChange"
+    "value" | "children" | "className" | "style" | "id" | "type" | "disabled" | "onChange" | "role" | "aria-checked" | "aria-pressed"
   > {
   /** This item's value: what the group's `value` holds while it is chosen. Unique within the group. */
   value: string;

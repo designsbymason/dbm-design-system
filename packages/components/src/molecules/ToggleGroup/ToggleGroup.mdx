@@ -275,6 +275,9 @@ const [view, setView] = useState("week");
   …
 </ToggleGroup>
 <ToggleGroup aria-label="Alignment" dir="rtl">…</ToggleGroup>
+
+// A native <div> attribute, passed straight through
+<ToggleGroup aria-label="View" onFocus={() => trackFocus("view")}>…</ToggleGroup>
 ```
 
 ## Design tokens used

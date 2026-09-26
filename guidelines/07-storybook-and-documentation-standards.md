@@ -209,7 +209,7 @@ Applied to every component, in this order:
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
 **All 48 atoms and the first 21 molecules have a Docs page, a completed review pass, and are Finalized** — full atom-tier coverage, and
-every molecule but the newest (`ToggleGroup`, the 22nd, is built and awaiting its final review). `Radio` joined the atom tier on 2026-09-14 (split out of the
+every molecule but the newest (`ToggleGroup`, the 22nd, is built and final-reviewed, awaiting sign-off). `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
 built and Finalized the same day), which is why the atom count is 48, not the 47 several docs carried
@@ -287,7 +287,7 @@ quoted in prose elsewhere.
 | Alert | Molecule | Feedback | ✅ | ✅ 2026-09-25 | [Alert.md](component-reviews/Alert.md) |
 | RangeSlider | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-25 | [RangeSlider.md](component-reviews/RangeSlider.md) |
 | ButtonGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-26 | [ButtonGroup.md](component-reviews/ButtonGroup.md) |
-| ToggleGroup | Molecule | Inputs & Forms | ✅ | ⏳ built 2026-09-26, awaiting final review and sign-off | [ToggleGroup.md](component-reviews/ToggleGroup.md) |
+| ToggleGroup | Molecule | Inputs & Forms | ✅ | ⏳ built and final-reviewed 2026-09-26, awaiting decisions and sign-off | [ToggleGroup.md](component-reviews/ToggleGroup.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
@@ -299,7 +299,7 @@ and `List` are molecules) has a completed review pass and is Finalized. Per-comp
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`) are reviewed and Finalized — see the table above. The queue continues
 through the remaining 15 of the 36 molecules, one at a time, in the
-dependency order itemized in `04-component-inventory.md` (`ToggleGroup` is built and awaiting its final review and sign-off; `AvatarGroup` follows), each with the same full `06-engineering-standards.md` §9 process.
+dependency order itemized in `04-component-inventory.md` (`ToggleGroup` is built and final-reviewed, awaiting decisions and sign-off; `AvatarGroup` follows), each with the same full `06-engineering-standards.md` §9 process.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full
 `06-engineering-standards.md` §9 review pass, not a separate sweep, run one component at a time. The atom

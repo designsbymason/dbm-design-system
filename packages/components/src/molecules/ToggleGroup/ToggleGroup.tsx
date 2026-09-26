@@ -165,7 +165,10 @@ ToggleGroupRoot.displayName = "ToggleGroup";
  * `data-state="on"` while chosen. An icon-only item (no children) needs an `aria-label`.
  */
 const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((itemProps, ref) => {
-  const { value, icon, asChild = false, className, children, ...props } = itemProps;
+  // `role` and the chosen state are the item's own: Radix sets them from the group's `type`, and a consumer prop of the
+  // same name would replace them (05-component-api-conventions.md §3), so they are dropped here, not just untyped.
+  const { value, icon, asChild = false, className, children, role: _role, "aria-checked": _checked, "aria-pressed": _pressed, ...props } =
+    itemProps as ToggleGroupItemProps & { role?: string; "aria-checked"?: unknown; "aria-pressed"?: unknown };
   const { variant, size } = useContext(ToggleGroupContext);
 
   const hasWarnedIconRef = useRef(false);

@@ -1,6 +1,6 @@
 # ToggleGroup
 
-**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-26; **awaiting the final review pass and the user's sign-off** (only the user declares a component Finalized).
+**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-26; final review pass run 2026-09-26 (below); **awaiting the user's decisions on the open items and sign-off** (only the user declares a component Finalized).
 
 ## What was built
 
@@ -27,4 +27,36 @@ Both were chosen by the user before the build.
 - **Whole pipeline:** `pnpm lint`, `pnpm build`, all 3,065 unit tests, all 760 real-browser tests, the Playwright visual suite (8/8), the static Storybook build and its size check, the component size check, token coverage, and `pnpm audit`.
 - **Live:** the Docs page renders with no errors, 22 Properties rows with the right defaults and value options, and the `ToggleGroup.Item` table.
 
-**Not yet verified:** the Docs page and the group visually (the browser pane was not displayed while building, so no screenshots were taken), dark mode and Emerald, the hover states, a 320px viewport, and a real screen reader. These belong to the final review pass.
+**Not verified at build time** (done in the final review below): the group visually, dark mode and Emerald, hover, a 320px viewport, and contrast. Still not verified: a real screen reader.
+
+## Final review, 2026-09-26
+
+A full `06-engineering-standards.md` §9 pass, checked against the code and the running component (screenshots of every look in Purple light, Purple dark and Emerald dark, every size, hover and focus, right-to-left, and a 320px viewport; contrast measured from the resolved tokens in all four themes).
+
+**Fixed in the pass (one)**
+
+1. **An item's `role` and `aria-checked` / `aria-pressed` could be replaced by a same-named prop.** The group's own `role` was already guarded, but the item was not: `<ToggleGroup.Item role="tab">` turned a radio into a tab (found with a probe). The item now drops the three props before spreading and the type omits them. One unit test covers single and multiple groups; it fails without the fix (checked). The Docs page's own claim about the group's `role` is unchanged.
+
+**Verified, nothing to change**
+
+- Text contrast passes AA in all four themes: `text.secondary` on the surface 6.9–10.5:1, `text.brand` on `bg.brand-subtle` 5.8–8.3:1 (4.6:1 on its hover fill, Emerald dark), `text.on-brand` on `bg.brand` 6.1–8.5:1.
+- **The focus ring on a chosen solid item, left open in the ButtonGroup review and in the build's own notes, is fine:** `icon.on-brand` on `bg.brand` is 6.1–8.5:1, and an unchosen item's `border.focus` ring is 4.2–6.5:1 on the surface and 4.0–7.2:1 on `bg.brand-subtle`. Because it is drawn inside the item, it never crosses a neighbour's fill.
+- `border.neutral` on the surface is 2.3:1 in light mode (3.0:1 dark): the accepted decorative border (`03-token-system-spec.md`), the chosen item being marked by more than that border.
+- No hardcoded value, no `any`, JSDoc on every prop, no `window`/`document` at render, `StrictMode` tested, one tab stop, targets at least 24 × 24px, screenshots clean in every look, size, theme and at 320px.
+
+**Left for a decision** (each is a real limit, none is a bug)
+
+- **A single group is a `radiogroup`, but the arrow keys move focus without choosing.** Native radios (and the ARIA radio-group pattern) choose as focus moves; Radix's toggle group, which this wraps, does not, and a screen-reader user who hears "radio button" may expect it to. The docs say the arrows move and `Space` or `Enter` chooses. Choosing on focus would be a behaviour change for the single type only.
+- **The `subtle` look marks the chosen item faintly.** Its fill is `bg.brand-subtle` (about 1.1:1 against the surface in dark mode) and its text changes from `text.secondary` to `text.brand`, both readable; the state is exposed as `aria-checked` either way. `Tabs`' subtle look is the same, and `outlined` and `solid` mark it with a border or fill.
+
+**Gaps and limitations, recorded and accepted** (none blocks; each is named so nobody re-derives it)
+
+- **Items follow the group's `variant` and `size`;** an item can't be a different look, and has no trailing icon, badge, count or second line.
+- **No form participation.** Neither type renders a hidden input, so a group doesn't submit a value the way `RadioGroup` does; wire it through `onValueChange`. Values are strings.
+- **A single group can start with nothing chosen** (no `defaultValue`); `deselectable={false}` only stops clearing it.
+- **Duplicate item `value`s are not detected:** two items sharing one both show as chosen (probe). No dev warning.
+- **Radix's `rovingFocus` switch is not exposed,** so the items can't be made individual tab stops.
+- **No sliding indicator between items:** the choice changes colour only.
+- **An attached row can't wrap** and overflows a narrow container as one box (stack it with an `orientation` map, or space it). `dir` is a prop, not read from the page.
+
+**Whole pipeline after the pass:** `pnpm lint`, `pnpm build`, all 3,066 unit tests, all 761 real-browser tests, the visual suite (8/8), the component size check (`ToggleGroup` 1.79KB JS, 1.13KB CSS gzipped), `pnpm audit` unchanged. Not verified: a real screen reader.

@@ -97,6 +97,28 @@ describe("ToggleGroup", () => {
       warnSpy.mockRestore();
     });
 
+    it("an item's role and chosen state cannot be replaced by a same-named prop", () => {
+      const props = { role: "tab", "aria-checked": false, "aria-pressed": true } as object;
+      const { unmount } = render(
+        <ToggleGroup aria-label="View" defaultValue="a">
+          <ToggleGroup.Item value="a" {...props}>A</ToggleGroup.Item>
+          <ToggleGroup.Item value="b" {...props}>B</ToggleGroup.Item>
+        </ToggleGroup>,
+      );
+      expect(screen.getAllByRole("radio")).toHaveLength(2);
+      expect(screen.getByRole("radio", { name: "A" })).toHaveAttribute("aria-checked", "true");
+      expect(screen.getByRole("radio", { name: "B" })).toHaveAttribute("aria-checked", "false");
+      unmount();
+      render(
+        <ToggleGroup aria-label="Style" type="multiple" defaultValue={["a"]}>
+          <ToggleGroup.Item value="a" {...props}>A</ToggleGroup.Item>
+          <ToggleGroup.Item value="b" {...props}>B</ToggleGroup.Item>
+        </ToggleGroup>,
+      );
+      expect(screen.getByRole("button", { name: "A" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "B" })).toHaveAttribute("aria-pressed", "false");
+    });
+
     it("forwards ref, className, style, id and data-testid to the group, and a same-named role cannot replace the role", () => {
       const ref = createRef<HTMLDivElement>();
       render(
