@@ -39,7 +39,7 @@ dbm-design-system/
 │   ├── components/                # The actual DBM component library (this is the npm package)
 │   │   ├── src/
 │   │   │   ├── atoms/            # Built: Avatar, Badge, Button, GridItem, Icon, Input... (48 shipped so far, including Radio — see ADR-0012 for GridItem/ListItem's own tier history and ADR-0014 for Radio's)
-│   │   │   ├── molecules/        # Built so far (22): Accordion, Alert, Breadcrumb, ButtonGroup, Card, CheckboxGroup, EmptyState, FormField, Grid, List, NumberInput, Pagination, PasswordInput, Popover, RadioGroup, RangeSlider, SearchInput, Select, Slider, Table, Tabs, ToggleGroup — the rest still open
+│   │   │   ├── molecules/        # Built so far (23): Accordion, Alert, AvatarGroup, Breadcrumb, ButtonGroup, Card, CheckboxGroup, EmptyState, FormField, Grid, List, NumberInput, Pagination, PasswordInput, Popover, RadioGroup, RangeSlider, SearchInput, Select, Slider, Table, Tabs, ToggleGroup — the rest still open
 │   │   │   ├── organisms/        # Not started yet — DataTable, Modal, Navbar, CommandPalette, Form...
 │   │   │   ├── templates/        # Not started yet — page-level layout scaffolds (optional, later)
 │   │   │   ├── foundations/      # Storybook-only Foundations pages (*.mdx) — not shipped in the package
