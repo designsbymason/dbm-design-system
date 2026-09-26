@@ -49,6 +49,7 @@ import { skeletonPlaygroundSnippet } from "./atoms/Skeleton/Skeleton.snippets";
 import { spinnerPlaygroundSnippet } from "./atoms/Spinner/Spinner.snippets";
 import { tagPlaygroundSnippet } from "./atoms/Tag/Tag.snippets";
 import { accordionPlaygroundSnippet } from "./molecules/Accordion/Accordion.snippets";
+import { avatarGroupPlaygroundSnippet } from "./molecules/AvatarGroup/AvatarGroup.snippets";
 import { buttonGroupPlaygroundSnippet } from "./molecules/ButtonGroup/ButtonGroup.snippets";
 import { cardPlaygroundSnippet } from "./molecules/Card/Card.snippets";
 import { checkboxGroupPlaygroundSnippet } from "./molecules/CheckboxGroup/CheckboxGroup.snippets";
@@ -579,6 +580,45 @@ describe("RangeSlider's Playground snippet", () => {
     const snippet = rangeSliderPlaygroundSnippet({ orientation: "vertical" });
     expect(snippet).toContain('orientation="vertical"');
     expect(snippet).toContain('<div style={{ height: "12rem" }}>');
+  });
+});
+
+describe("AvatarGroup's Playground snippet", () => {
+  it.each([
+    {},
+    { size: "sm", shape: "square", colorful: true, max: 3, total: 24, stacked: false, overflowButton: true, count: 8, "aria-label": "Reviewers" },
+    { size: "md", shape: "circle", colorful: false, stacked: true },
+    { count: 1 },
+    { count: 8, max: 0 },
+  ])("%j is a real snippet", (args) => {
+    expect(problemsIn(avatarGroupPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("writes only what differs: size, shape, colorful and stacked stay out at their defaults", () => {
+    expect(avatarGroupPlaygroundSnippet({ size: "md", shape: "circle", colorful: false, stacked: true, total: 0, overflowButton: false, count: 2 })).toBe(
+      '<AvatarGroup aria-label="Project members">\n  <Avatar name="Jane Doe" />\n  <Avatar name="John Smith" />\n</AvatarGroup>',
+    );
+    expect(avatarGroupPlaygroundSnippet({ size: "lg", count: 1 })).toContain('size="lg"');
+    expect(avatarGroupPlaygroundSnippet({ shape: "square", count: 1 })).toContain('shape="square"');
+    expect(avatarGroupPlaygroundSnippet({ colorful: true, count: 1 })).toContain("colorful");
+    expect(avatarGroupPlaygroundSnippet({ stacked: false, count: 1 })).toContain("stacked={false}");
+    expect(avatarGroupPlaygroundSnippet({ overflowButton: true, count: 1 })).toContain("onOverflowClick");
+  });
+
+  it("writes max, including 0, and total only when it is above 0", () => {
+    expect(avatarGroupPlaygroundSnippet({ max: 4, count: 1 })).toContain("max={4}");
+    expect(avatarGroupPlaygroundSnippet({ max: 0, count: 1 })).toContain("max={0}");
+    expect(avatarGroupPlaygroundSnippet({ total: 12, count: 1 })).toContain("total={12}");
+    expect(avatarGroupPlaygroundSnippet({ total: 0, count: 1 })).not.toContain("total");
+  });
+
+  it("ignores a size that is not a real value", () => {
+    expect(avatarGroupPlaygroundSnippet({ size: "huge", count: 1 })).not.toContain("size");
+  });
+
+  it("keeps the number of avatars between one and eight", () => {
+    expect(avatarGroupPlaygroundSnippet({ count: 0 }).match(/<Avatar /g)).toHaveLength(1);
+    expect(avatarGroupPlaygroundSnippet({ count: 99 }).match(/<Avatar /g)).toHaveLength(8);
   });
 });
 

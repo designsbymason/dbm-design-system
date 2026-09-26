@@ -1,0 +1,300 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Avatar } from "../../atoms/Avatar";
+import { Badge } from "../../atoms/Badge";
+import { Tooltip } from "../../atoms/Tooltip";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { AvatarGroup } from "./AvatarGroup";
+import * as AvatarGroupStories from "./AvatarGroup.stories";
+
+export const propOrder = [
+  "children",
+  "size",
+  "shape",
+  "colorful",
+  "stacked",
+  "max",
+  "total",
+  "onOverflowClick",
+  "formatNumber",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={AvatarGroupStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="AvatarGroup" tier="Molecule" />
+
+A row of `Avatar`s that overlap into a stack, with a ring between them so each still reads on its own. Past
+`max`, the rest collapse into one "+N" tile — a plain avatar, or, with `onOverflowClick`, a button that opens
+whatever lists the rest. It hands its `size`, `shape` and `colorful` to the avatars inside it as defaults, so a
+group of five says them once. An avatar's own props still win.
+
+Use it to show who is on a project, a thread or a review at a glance. It is a list of people, not a way to
+choose between them.
+
+### Import
+
+```tsx
+import { AvatarGroup } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={AvatarGroupStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={AvatarGroupStories.Playground}
+  exclude={[
+    "children",
+    "onOverflowClick",
+    "formatNumber",
+    "labels",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={["count", "overflowButton", ...propOrder]}
+/>
+
+## Properties
+
+`AvatarGroup` also accepts any other native `<ul>` attribute beyond what's listed here (e.g. `onFocus`,
+`title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={AvatarGroupStories} order={propOrder} />
+
+## Variants
+
+### Overflow: a +N tile
+
+`max` is the most avatars drawn; the rest become one tile after them, named "2 more" to assistive tech.
+
+<Canvas of={AvatarGroupStories.Overflow} />
+
+### Overflow: the real total
+
+When the group holds only the people loaded so far — a list fetched a page at a time — pass `total`, the real
+number. The tile reads `total` minus the avatars drawn, even when every child fits under `max`. A count over 99
+is drawn as "99+" so it fits the avatar; the accessible name keeps the real count.
+
+<Canvas of={AvatarGroupStories.Total} />
+
+### Overflow: the tile as a button
+
+Pass `onOverflowClick` and the tile becomes a button, named "Show 2 more". Open whatever lists the rest — a
+dialog, a drawer, or a list you reveal, as here.
+
+<Canvas of={AvatarGroupStories.OverflowButton} />
+
+### All sizes
+
+<Canvas of={AvatarGroupStories.AllSizes} />
+
+### Responsive size
+
+`size` also takes a mobile-first map keyed by breakpoint, and reaches every avatar, the "+N" tile included.
+
+<Canvas of={AvatarGroupStories.ResponsiveSize} />
+
+### Square shape
+
+For teams, bots and organisations rather than people. The ring between avatars follows the shape.
+
+<Canvas of={AvatarGroupStories.Square} />
+
+### Colorful
+
+<Canvas of={AvatarGroupStories.Colorful} />
+
+### Spaced, not stacked
+
+`stacked={false}` keeps the avatars apart, with a gap, and lets a row wrap onto more lines. A stack can't wrap
+without breaking its shape, so one that is wider than its container overflows it as one box — set `max` to keep
+it short.
+
+<Canvas of={AvatarGroupStories.Spaced} />
+
+### Images and status
+
+The first avatar is on top, so a presence dot at an avatar's corner is never covered by the next one.
+
+<Canvas of={AvatarGroupStories.ImagesAndStatus} />
+
+### Buttons, with tooltips
+
+An avatar can be a button, or wrapped in a `Tooltip`, and still takes the group's settings. The one that has
+keyboard focus is lifted above its neighbours so its focus ring is never cut off.
+
+<Canvas of={AvatarGroupStories.Interactive} />
+
+### An avatar's own props win
+
+<Canvas of={AvatarGroupStories.OwnPropsWin} />
+
+### Translated words and digits
+
+<Canvas of={AvatarGroupStories.Translated} />
+
+### Named by a visible label
+
+<Canvas of={AvatarGroupStories.LabelledBy} />
+
+### Right to left
+
+The group follows the page's text direction: the first avatar is at the right, and the overlap mirrors with it.
+Set `dir="rtl"` on the group's container, or on the page.
+
+<Canvas of={AvatarGroupStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Show a handful of people and let `max` collapse the rest into a "+N" tile — three to five is usually enough
+  to read as "a team".
+- Give the group a name (`aria-label`, or `aria-labelledby` pointing at a visible label) and every avatar an
+  `alt` or a `name`, so a screen reader can say who is in it.
+- Set `size` once on the group, not on each avatar, so they all match.
+- Pass `total` when the list is loaded a page at a time, so the tile shows the real count.
+- Make the tile a button (`onOverflowClick`) whenever the rest of the people are worth seeing, and put them
+  somewhere a keyboard can reach.
+- Set `--avatar-group-ring-color` in `style` when the group sits on a tinted or dark card, so the ring matches
+  what is behind it.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a group to choose between people. It has no selected state; an avatar that must be pressed is an
+  `Avatar as="button"`, and picking one of several is a selection control.
+- Don't put tens of avatars in a stack. It can't wrap, so it overflows a narrow container; cap it with `max`.
+- Don't mix sizes inside one stack without a reason — every avatar overlaps its neighbour by the same step, so a
+  stray large one reads as a mistake.
+- Don't leave the tile as a plain avatar when the hidden people matter: a "+12" nobody can open is a dead end.
+- Don't wrap an avatar in another element and set its `shape` there — the group can't see it. Set `shape` on the
+  group instead.
+
+</Callout>
+</div>
+
+## Best practices
+
+- A stack of five or six reads at a glance; more than that reads as a smudge. Prefer `max={4}` and a button
+  tile over drawing everyone.
+- Each avatar tucks under the one before it by a fixed step, so the edge of a two-letter initials avatar can be
+  touched by its neighbour at the largest size. Images and single letters are unaffected.
+- Use `colorful` when avatars have no photos, so initials alone don't all look the same. Its colours are picked
+  from the person's name, so a person keeps theirs across the app.
+- Use `stacked={false}` for a member list where each person should be clickable and clearly separate, such as a
+  row in a table.
+- Pair each interactive avatar with a `Tooltip` naming the person; the accessible name is already there, the
+  tooltip is for sighted mouse users.
+- Translate the tile with `labels` and `formatNumber` in a localised app, so the announced name and the drawn
+  digits use the reader's language.
+
+## Accessibility
+
+<Callout tone="info" title="A named list of people">
+
+- Renders a `<ul role="list">` with one `<li role="listitem">` per avatar, named by `aria-label` or
+  `aria-labelledby`, so a screen reader says "Project members, list, 5 items" and reads each avatar's own name.
+  A dev-mode console warning fires once if the group has no name.
+- Each avatar keeps its own semantics: an image or initials avatar is an image named by its `alt` or `name`
+  (with its status, "Jane Doe, Online"), and one made with `as="button"` is a button. The group adds none.
+- The "+N" tile is named for what it stands for — "3 more" — or, with `onOverflowClick`, is a real `<button>`
+  named "Show 3 more". The visible "+3" is hidden from assistive tech so it isn't read twice. Both names are
+  translatable through `labels`.
+- Only interactive avatars are tab stops, reached in order with `Tab`. The group adds no arrow-key handling: it
+  is not a `toolbar`. An avatar with keyboard focus is lifted above its neighbours, so its focus ring is drawn
+  over them, never under.
+- Overlap is decoration: the ring is not a border anyone relies on to tell avatars apart — each is identified by
+  its name — and the first avatar sits on top, so a presence dot is never covered.
+- A button avatar or the tile is at least 24 × 24px (WCAG 2.5.8) at every size, and the overlap never shrinks its
+  box.
+- The overlap and ring use logical properties, so a right-to-left page mirrors them without any prop.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<AvatarGroup aria-label="Project members" max={3}>
+  <Avatar name="Jane Doe" src="/jane.jpg" />
+  <Avatar name="John Smith" />
+  <Avatar name="Alex Kim" />
+  <Avatar name="Maria Garcia" />
+</AvatarGroup>
+
+{/* A list loaded a page at a time: the tile counts the ones not loaded, too */}
+<AvatarGroup aria-label="Reviewers" total={24} max={3}>…</AvatarGroup>
+
+{/* The tile as a button, opening a dialog that lists everyone */}
+<AvatarGroup aria-label="Project members" max={3} onOverflowClick={() => setOpen(true)}>…</AvatarGroup>
+
+<AvatarGroup aria-label="Project members" size={{ base: "sm", md: "lg" }} colorful>…</AvatarGroup>
+<AvatarGroup aria-label="Teams" shape="square">…</AvatarGroup>
+<AvatarGroup aria-label="Project members" stacked={false} max={4}>…</AvatarGroup>
+
+{/* On a canvas-coloured area, so the ring matches what is behind it */}
+<AvatarGroup aria-label="Project members" style={{ "--avatar-group-ring-color": "var(--dbm-bg-canvas)" }}>…</AvatarGroup>
+
+<AvatarGroup aria-label="Project members" onFocus={() => trackFocus("members")}>…</AvatarGroup>
+
+{/* A visible label names the group */}
+<span id="members-label">Members</span>
+<AvatarGroup aria-labelledby="members-label">…</AvatarGroup>
+```
+
+## Design tokens used
+
+`AvatarGroup` draws only the ring and the spacing between avatars; every fill, colour and size is the
+`Avatar`'s own.
+
+<TokenRow token="bg.surface" usage="the ring around every avatar in a stack, so an overlap reads as a gap (override with --avatar-group-ring-color)" />
+<TokenRow token="border-width.2" usage="the ring's width" />
+<TokenRow token="radius.full" usage="the ring's shape around a circular avatar" />
+<TokenRow token="radius.md" usage="the ring's shape around a square avatar" />
+<TokenRow token="space.2" usage="how far each avatar tucks under the one before it when stacked, and the gap between avatars when stacked={false}" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Avatar"
+  description="What a group holds: the avatars take their size, shape and colour from it, and any can be a button"
+  href="/?path=/docs/atoms-data-display-avatar--docs"
+>
+  <Avatar name="Jane Doe" />
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="Wrap an avatar in one to name the person on hover; it still takes the group's settings"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="Jane Doe" open side="left">
+    <Avatar as="button" name="Jane Doe" />
+  </Tooltip>
+</RelatedCard>
+<RelatedCard
+  name="Badge"
+  description="A count or status beside content, when the people themselves aren't the point"
+  href="/?path=/docs/atoms-data-display-badge--docs"
+>
+  <Badge>12</Badge>
+</RelatedCard>
+</div>

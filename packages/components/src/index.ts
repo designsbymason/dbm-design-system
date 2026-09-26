@@ -51,6 +51,7 @@ export * from "./atoms/VisuallyHidden";
 
 export * from "./molecules/Accordion";
 export * from "./molecules/Alert";
+export * from "./molecules/AvatarGroup";
 export * from "./molecules/Breadcrumb";
 export * from "./molecules/ButtonGroup";
 export * from "./molecules/Card";

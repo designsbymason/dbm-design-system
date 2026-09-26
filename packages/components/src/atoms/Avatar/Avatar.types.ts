@@ -64,7 +64,8 @@ export type AvatarProps<E extends ElementType = "span"> = {
    * Derives a deterministic background/text color from the avatar's
    * identity (`name`, or `alt`/`initials` if `name` isn't set) instead of
    * the fixed brand color, so different people render in visibly
-   * different — but still AA-contrast-verified — colors. Has no visible
+   * different — but still AA-contrast-verified — colors. Inside an
+   * `AvatarGroup` the group's `colorful` is the default; this prop wins. Has no visible
    * effect once a real image is showing, since it only recolors the
    * initials/icon fallback's own background.
    * @default false
@@ -79,13 +80,15 @@ export type AvatarProps<E extends ElementType = "span"> = {
    * responsive props. The generic icon fallback (no `src`/`initials`)
    * isn't itself responsive — `Icon` has no `Responsive<T>` size of its
    * own — so it's sized off whichever step resolves at the `base`
-   * breakpoint (or `md` if `size` has no `base` entry).
+   * breakpoint (or `md` if `size` has no `base` entry). Inside an
+   * `AvatarGroup` the group's `size` is the default; this prop wins.
    * @default 'md'
    */
   size?: Responsive<AvatarSize>;
   /**
    * `circle` (the default) suits people; `square` (rounded corners, not a
    * hard edge) reads better for non-person entities like teams or bots.
+   * Inside an `AvatarGroup` the group's `shape` is the default; this prop wins.
    * @default 'circle'
    */
   shape?: AvatarShape;

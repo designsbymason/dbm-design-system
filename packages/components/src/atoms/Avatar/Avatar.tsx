@@ -11,6 +11,7 @@ import { Icon } from "../Icon";
 import type { IconSize } from "../Icon";
 import styles from "./Avatar.module.css";
 import type { AvatarProps, AvatarSize, AvatarStatus } from "./Avatar.types";
+import { useAvatarGroup } from "./avatarGroupContext";
 
 type AvatarComponent = {
   <E extends ElementType = "span">(
@@ -125,9 +126,9 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
       loading,
       initials,
       name,
-      colorful = false,
-      size = "md",
-      shape = "circle",
+      colorful: colorfulProp,
+      size: sizeProp,
+      shape: shapeProp,
       status,
       disabled = false,
       className,
@@ -139,6 +140,12 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
     ref,
   ) {
     const Component = as ?? "span";
+    // Inside an `AvatarGroup` these three are the group's defaults; an avatar's own prop still wins. Outside
+    // one `group` is `null` and nothing here changes.
+    const group = useAvatarGroup();
+    const colorful = colorfulProp ?? group?.colorful ?? false;
+    const size = sizeProp ?? group?.size ?? "md";
+    const shape = shapeProp ?? group?.shape ?? "circle";
     // Same `any`-widening quirk as `resolvedStatus` below — re-typed
     // explicitly rather than indexed/called directly off the raw
     // destructured value.

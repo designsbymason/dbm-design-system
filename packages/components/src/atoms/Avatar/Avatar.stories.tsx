@@ -87,18 +87,21 @@ const meta: Meta<typeof Avatar> = {
       control: "boolean",
       description:
         "Derives a deterministic background/text color from the avatar's identity instead of the fixed brand color, so different people render in different (but still AA-verified) colors.",
+      table: { defaultValue: { summary: "false" } },
     },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
       description:
         "Controls the avatar's width/height (and proportionally its font size and status dot) — a single value, or a mobile-first responsive map keyed by breakpoint.",
+      table: { defaultValue: { summary: "md" } },
     },
     shape: {
       control: "select",
       options: ["circle", "square"],
       description:
         "`circle` (the default) suits people; `square` reads better for non-person entities like teams or bots.",
+      table: { defaultValue: { summary: "circle" } },
     },
     status: {
       control: "select",

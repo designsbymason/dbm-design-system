@@ -1,0 +1,49 @@
+/* The list: no markers (its roles are stated in the markup, for Safari), one row of items. `isolation` keeps the
+   items' layers, which only order them against one another, inside the group instead of against the page. */
+.root {
+  align-items: center;
+  display: inline-flex;
+  isolation: isolate;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Each item is the box of one avatar. Its layer is set by the markup (the first avatar highest), so a status dot
+   at an avatar's corner is never covered by the next one; whichever has focus is lifted above every layer, so
+   its focus ring is drawn over its neighbours, not under them. */
+.item {
+  display: flex;
+  position: relative;
+  z-index: var(--avatar-group-layer);
+}
+
+.item:focus-within {
+  z-index: calc(var(--avatar-group-count) + 1);
+}
+
+/* Spaced: the avatars stay separate and wrap onto more lines when they don't fit. */
+.spaced {
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+}
+
+/* Stacked: each item after the first tucks under the one before it, by one spacing step at every size (a
+   logical margin, so a right-to-left page mirrors it). A proportional overlap would clip the initials of a
+   two-letter avatar from md up; one step keeps them legible and still reads as a stack. A ring in the surface
+   colour around every item reads as a gap where two overlap. The ring is a shadow spread, which follows the
+   item's radius; the item's radius is the avatar's own shape. A stacked group never wraps — a stack broken
+   over two lines is no longer one shape — so one that is wider than its container overflows it as one box;
+   `max` keeps it short. */
+.stacked > .item {
+  border-radius: var(--dbm-radius-full);
+  box-shadow: 0 0 0 var(--dbm-border-width-2) var(--avatar-group-ring-color, var(--dbm-bg-surface));
+}
+
+.stacked > .item[data-shape="square"] {
+  border-radius: var(--dbm-radius-md);
+}
+
+.stacked > .item:not(:first-child) {
+  margin-inline-start: calc(-1 * var(--dbm-space-2));
+}
