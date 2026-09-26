@@ -1,6 +1,6 @@
 # AvatarGroup
 
-**Tier:** molecule · **Category:** Data Display · **Status:** built 2026-09-26; **awaiting its final review and sign-off** (only the user declares a component Finalized).
+**Tier:** molecule · **Category:** Data Display · **Status:** built 2026-09-26; **Finalized 2026-09-26**, declared by the user after the final review pass recorded below, with the not-verified items and the `labels` bug class in four other components left as they are (see "Finalized" at the end).
 
 ## What was built
 
@@ -61,3 +61,7 @@ A full `06-engineering-standards.md` §9 pass against the code and the running c
 - **A tooltip per avatar built in.** Composed with `Tooltip` instead (the docs show it); a group-wide "name on hover" would have to know each child's name.
 - **A per-size overlap.** Tried and dropped for the reason in the first finding; revisit only if the avatars' own initials layout changes.
 - **`CodeBlock`** (item 21) is next.
+
+## Finalized, 2026-09-26
+
+Declared Finalized by the user after the final review above. Left open, as recorded there: no real-screen-reader check, the forced-colours ring, and the `labels` spread in `Pagination`, `Alert`, `RangeSlider` and `Breadcrumb` (Finalized components, untouched pending a decision).
