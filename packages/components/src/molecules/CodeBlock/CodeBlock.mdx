@@ -1,0 +1,315 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Blockquote } from "../../atoms/Blockquote";
+import { Code } from "../../atoms/Code";
+import { Kbd } from "../../atoms/Kbd";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { CodeBlock } from "./CodeBlock";
+import * as CodeBlockStories from "./CodeBlock.stories";
+
+export const propOrder = [
+  "code",
+  "language",
+  "title",
+  "showLineNumbers",
+  "startLine",
+  "highlightLines",
+  "wrap",
+  "maxHeight",
+  "collapsible",
+  "collapsedLines",
+  "expanded",
+  "defaultExpanded",
+  "onExpandedChange",
+  "copyable",
+  "copiedDuration",
+  "onCopied",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={CodeBlockStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="CodeBlock" tier="Molecule" />
+
+A block of source code: syntax-highlighted, with an optional title, line numbers, highlighted lines, a copy
+button, and a way to collapse a long one. It is a `<figure>` around a scrollable `<pre><code>`, and it draws
+the code as text, never as HTML.
+
+Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and
+`diff`, with no dependency; any other language is drawn as plain text. It is a lexer, not a full grammar — it
+reads well, and it will not catch every corner of a language.
+
+### Import
+
+```tsx
+import { CodeBlock } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CodeBlockStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={CodeBlockStories.Playground}
+  exclude={[
+    "highlightLines",
+    "expanded",
+    "onExpandedChange",
+    "onCopied",
+    "labels",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={["highlight", ...propOrder]}
+/>
+
+## Properties
+
+`CodeBlock` also accepts any other native `<figure>` attribute beyond what's listed here (e.g. `onFocus`,
+`title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={CodeBlockStories} order={propOrder} />
+
+## Variants
+
+### Languages
+
+<Canvas of={CodeBlockStories.Languages} />
+
+### With a title
+
+A file name in the header, which also names the block for assistive tech.
+
+<Canvas of={CodeBlockStories.WithTitle} />
+
+### Line numbers
+
+The numbers are drawn by CSS, so selecting the code, or copying it, never picks them up.
+
+<Canvas of={CodeBlockStories.LineNumbers} />
+
+### Highlighted lines
+
+`highlightLines` takes line numbers and ranges (`[2, "4-6"]`), by the numbers shown. A highlighted line has a
+band across the full width and an accent on its edge, so it does not rely on colour alone.
+
+<Canvas of={CodeBlockStories.HighlightedLines} />
+
+### An excerpt, from line 42
+
+<Canvas of={CodeBlockStories.Excerpt} />
+
+### Wrapped long lines
+
+A wrapped line continues under its own text, not under its line number.
+
+<Canvas of={CodeBlockStories.Wrapped} />
+
+### Long lines that scroll
+
+Without `wrap` a long line scrolls sideways. While the code overflows, the scrolling area is a tab stop with a
+name, so a keyboard can reach it; a snippet that fits adds no tab stop.
+
+<Canvas of={CodeBlockStories.Scrolling} />
+
+### Collapsible
+
+`collapsible` shows the first `collapsedLines` lines with a button for the rest. Nothing is removed: the hidden
+lines are still in the page for find-in-page, and the copy button copies all of it.
+
+<Canvas of={CodeBlockStories.Collapsible} />
+
+### Collapsible, controlled
+
+<Canvas of={CodeBlockStories.Controlled} />
+
+### A tallest height
+
+<Canvas of={CodeBlockStories.MaxHeight} />
+
+### The copy button
+
+It copies exactly `code`, shows a check mark for a moment, and announces "Copied" — or "Copy failed" if the
+browser refused clipboard access — to screen readers.
+
+<Canvas of={CodeBlockStories.CopyButton} />
+
+### Plain text
+
+<Canvas of={CodeBlockStories.PlainText} />
+
+### Translated words
+
+<Canvas of={CodeBlockStories.Translated} />
+
+### Named by a visible label
+
+<Canvas of={CodeBlockStories.LabelledBy} />
+
+### Right to left
+
+Code always reads left to right. The header mirrors with the page, so the title is at the right and the copy
+button at the left.
+
+<Canvas of={CodeBlockStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give a snippet a `language` so it is coloured, and a `title` when it is a file.
+- Use `highlightLines` and `startLine` to point at the lines a paragraph is about, in an excerpt.
+- Use `collapsible` for a long listing, so the page keeps its shape and the whole text is still a click away.
+- Use `wrap` for a command that people will read, and let code that is meant to be compared with an editor
+  scroll.
+- Show output, logs and errors as plain text (no `language`), so nothing in them is mistaken for syntax.
+- Set `maxHeight` on a block that could be very long, so it scrolls instead of pushing everything down.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a word or two inside a sentence. That is `Code`.
+- Don't rely on `highlightLines` alone to say something important; say it in the text around the block too.
+- Don't expect a full parse: an odd construct may be coloured a little wrong. It is for reading, not for a
+  build.
+- Don't pass HTML you have built into `code` expecting it to render. It is shown as text, on purpose.
+- Don't hide the copy button on a command that people are meant to paste.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep a block short enough to read at a glance. Ten to twenty lines shows an idea; more belongs in a file
+  people can open, or behind `collapsible`.
+- Name blocks that are compared with each other ("Before" and "After") with `title`, and colour a change with
+  the `diff` language rather than by hand.
+- A very long or unusual input is drawn as plain text past 30,000 characters, rather than stalling the page.
+- Give a block without a `title` an `aria-label` that says what it is ("Install command").
+
+## Accessibility
+
+<Callout tone="info" title="A named figure holding real text">
+
+- The block is a `<figure>` named by its `title`, `aria-label` or `aria-labelledby`. The code is real text in a
+  `<pre><code>`, so it can be selected, searched, translated and read by a screen reader as written.
+- The scrolling area is a **tab stop, with a name, only while the code overflows**, so it can be scrolled with
+  the arrow keys; a snippet that fits adds no tab stop. A collapsed block clips its height on purpose and is
+  not a tab stop for that; only sideways overflow makes it one.
+- The copy button is an ordinary button named "Copy code". Pressing it announces "Copied" or "Copy failed"
+  in a live region that was already in the page. The result is not carried by the icon alone.
+- The expand button is a real button with `aria-expanded` and `aria-controls`, and says how many lines it will
+  reveal.
+- Line numbers are drawn by CSS, so a screen reader does not read them as part of the code and selecting the
+  code does not select them.
+- A highlighted line has a band and a 4px edge accent, in addition to its colour. The band's colour and every
+  syntax colour is measured against `bg.code-block` and `bg.code-highlight` in all four themes, as are the line
+  numbers and title (`text.secondary`): 4.5:1 or more (AA) everywhere.
+- The copy and expand buttons are at least 24 × 24px (WCAG 2.5.8).
+- Code stays left to right in a right-to-left page; the header follows the page, and its logical properties
+  mirror without a prop.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<CodeBlock language="tsx" title="SaveButton.tsx" showLineNumbers highlightLines={[2, "4-6"]} code={source} />
+
+<CodeBlock language="bash" code="pnpm add @dbm-design-system/components" />
+
+{/* An excerpt from further down a file */}
+<CodeBlock language="ts" showLineNumbers startLine={42} highlightLines={[44]} code={excerpt} />
+
+{/* Long: show ten lines, and the rest behind a button */}
+<CodeBlock language="json" collapsible code={config} />
+<CodeBlock language="json" maxHeight="16rem" code={config} />
+
+<CodeBlock language="bash" wrap code={command} />
+<CodeBlock language="ts" copyable={false} code={snippet} />
+<CodeBlock language="bash" code={command} onCopied={() => track("install-copied")} />
+
+{/* Translated */}
+<CodeBlock
+  code={config}
+  collapsible
+  labels={{ copy: "Copier le code", expand: (count) => `Afficher ${count} lignes de plus` }}
+/>
+
+<CodeBlock language="ts" code={source} onFocus={() => trackFocus("example")} />
+
+{/* A visible label names the block */}
+<span id="install-label">Install</span>
+<CodeBlock aria-labelledby="install-label" language="bash" code={command} />
+```
+
+## Design tokens used
+
+`CodeBlock` shares the inline `Code` atom's border and adds its own background, the highlight band and the syntax colours.
+
+<TokenRow token="bg.code-block" usage="the block's background" />
+<TokenRow token="border.code" usage="the block's border, and the rules under the header and above the footer" />
+<TokenRow token="bg.code-highlight" usage="the band behind a highlighted line" />
+<TokenRow token="border.focus" usage="the edge accent on a highlighted line, and the focus ring of the scrolling area" />
+<TokenRow token="text.primary" usage="uncoloured code" />
+<TokenRow token="text.secondary" usage="the title, the language label and the line numbers" />
+<TokenRow token="text.syntax-keyword" usage="keywords and at-rules" />
+<TokenRow token="text.syntax-string" usage="string literals" />
+<TokenRow token="text.syntax-number" usage="numbers, units, true, false and null" />
+<TokenRow token="text.syntax-function" usage="function and command names at a call" />
+<TokenRow token="text.syntax-type" usage="type and class names" />
+<TokenRow token="text.syntax-property" usage="object keys, CSS properties, attribute names" />
+<TokenRow token="text.syntax-tag" usage="HTML and JSX tag names" />
+<TokenRow token="text.syntax-comment" usage="comments" />
+<TokenRow token="text.syntax-inserted" usage="an added line in a diff" />
+<TokenRow token="text.syntax-deleted" usage="a removed line in a diff" />
+<TokenRow token="font.family.mono" usage="all the code" />
+<TokenRow token="radius.md" usage="the block's corners" />
+<TokenRow token="space.1" usage="the header and footer's vertical padding" />
+<TokenRow token="space.4" usage="the code's padding, and the gap after a line number" />
+<TokenRow token="border-width.1" usage="the border and rules" />
+<TokenRow token="border-width.2" usage="the focus ring" />
+<TokenRow token="border-width.4" usage="the highlighted line's edge accent" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Code"
+  description="For a word or two of code inside a sentence; it shares this block's surface colours"
+  href="/?path=/docs/atoms-typography-code--docs"
+>
+  <Code>pnpm install</Code>
+</RelatedCard>
+<RelatedCard
+  name="Kbd"
+  description="For a key or a shortcut, when what you're showing is something to press, not source"
+  href="/?path=/docs/atoms-typography-kbd--docs"
+>
+  <Kbd>⌘</Kbd>
+</RelatedCard>
+<RelatedCard
+  name="Blockquote"
+  description="The other block-level text container, for a quotation rather than code"
+  href="/?path=/docs/atoms-typography-blockquote--docs"
+>
+  <Blockquote>Small, clear examples teach best.</Blockquote>
+</RelatedCard>
+</div>

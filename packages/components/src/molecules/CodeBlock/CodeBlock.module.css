@@ -1,0 +1,194 @@
+/* The block: a bordered surface that clips its own corners, holding a header, the code, and a footer. */
+.root {
+  background-color: var(--dbm-bg-code-block);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-code);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* The header: the title and language on one side, the copy button on the other (logical, so it mirrors). */
+.header {
+  align-items: center;
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-code);
+  display: flex;
+  gap: var(--dbm-space-3);
+  justify-content: space-between;
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-4) var(--dbm-space-2);
+}
+
+.meta {
+  align-items: baseline;
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--dbm-space-3);
+  min-width: 0;
+}
+
+.title {
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.language {
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-xs);
+  text-transform: uppercase;
+}
+
+/* The copy button sits at the end whichever side that is, and never shrinks. */
+.header > button {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
+.body {
+  position: relative;
+}
+
+/* The scroll frame (its own font, so `1lh` below is one line of code). Code reads left to right in any page. */
+.frame {
+  direction: ltr;
+  font-family: var(--dbm-font-family-mono);
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-relaxed);
+  overflow: auto;
+  tab-size: 2; /* a content format, not a design value: two columns per tab, the way code is written here */
+  text-align: start;
+}
+
+/* Inside the block, so the ring isn't clipped by the block's rounded, overflow-hidden edge. */
+.frame:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.pre {
+  margin: 0;
+  padding-block: var(--dbm-space-4);
+}
+
+/* As wide as its longest line, so a highlighted line's band runs the full width when scrolled sideways. */
+.code {
+  display: block;
+  font: inherit;
+  min-width: max-content;
+}
+
+/* One line. The edge accent is always there, transparent, so a highlighted line doesn't shift its text. */
+.line {
+  border-inline-start: var(--dbm-border-width-4) solid transparent;
+  display: block;
+  min-height: 1lh;
+  padding-inline: calc(var(--dbm-space-4) - var(--dbm-border-width-4)) var(--dbm-space-4);
+}
+
+.line[data-highlighted="true"] {
+  background-color: var(--dbm-bg-code-highlight);
+  border-inline-start-color: var(--dbm-border-focus);
+}
+
+/* Line numbers: drawn by CSS, so they are never selected, copied or read out as part of the code. A wrapped
+   line continues under its own text: the block is indented past the number, and the first line pulled back. */
+.numbered .line {
+  padding-inline-start: calc(var(--code-block-gutter) + var(--dbm-space-4) + var(--dbm-space-4) - var(--dbm-border-width-4));
+  text-indent: calc(-1 * (var(--code-block-gutter) + var(--dbm-space-4)));
+}
+
+.numbered .line::before {
+  color: var(--dbm-text-secondary);
+  content: attr(data-line);
+  display: inline-block;
+  inline-size: var(--code-block-gutter);
+  margin-inline-end: var(--dbm-space-4);
+  text-align: end;
+  text-indent: 0;
+  user-select: none;
+}
+
+/* Wrapping: the code is only as wide as the block, and long lines break where they must. */
+.wrap .code {
+  min-width: 0;
+}
+
+.wrap .line {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Collapsed: exactly the first N lines (the top padding, then N lines — the bottom padding is left out, so no
+   part of the next line shows), and a fade to say there is more. The frame clips its height, and stays
+   scrollable sideways. */
+.collapsed .frame {
+  max-height: calc(var(--code-block-collapsed-lines) * 1lh + var(--dbm-space-4));
+  overflow-y: hidden;
+}
+
+.fade {
+  background-image: linear-gradient(to bottom, transparent, var(--dbm-bg-code-block));
+  block-size: var(--dbm-space-8);
+  inset-block-end: 0;
+  inset-inline: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.footer {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-code);
+  display: flex;
+  justify-content: center;
+  padding-block: var(--dbm-space-1);
+}
+
+/* Syntax colours. Each is measured against `bg.code-block` and `bg.code-highlight` in every theme. */
+.keyword {
+  color: var(--dbm-text-syntax-keyword);
+}
+
+.string {
+  color: var(--dbm-text-syntax-string);
+}
+
+.number {
+  color: var(--dbm-text-syntax-number);
+}
+
+.function {
+  color: var(--dbm-text-syntax-function);
+}
+
+.type {
+  color: var(--dbm-text-syntax-type);
+}
+
+.property {
+  color: var(--dbm-text-syntax-property);
+}
+
+.tag {
+  color: var(--dbm-text-syntax-tag);
+}
+
+.comment {
+  color: var(--dbm-text-syntax-comment);
+  font-style: italic;
+}
+
+.inserted {
+  color: var(--dbm-text-syntax-inserted);
+}
+
+.deleted {
+  color: var(--dbm-text-syntax-deleted);
+}

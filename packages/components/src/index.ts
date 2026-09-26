@@ -56,6 +56,7 @@ export * from "./molecules/Breadcrumb";
 export * from "./molecules/ButtonGroup";
 export * from "./molecules/Card";
 export * from "./molecules/CheckboxGroup";
+export * from "./molecules/CodeBlock";
 export * from "./molecules/EmptyState";
 export * from "./molecules/FormField";
 export * from "./molecules/Grid";

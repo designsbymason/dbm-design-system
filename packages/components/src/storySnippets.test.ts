@@ -53,6 +53,7 @@ import { avatarGroupPlaygroundSnippet } from "./molecules/AvatarGroup/AvatarGrou
 import { buttonGroupPlaygroundSnippet } from "./molecules/ButtonGroup/ButtonGroup.snippets";
 import { cardPlaygroundSnippet } from "./molecules/Card/Card.snippets";
 import { checkboxGroupPlaygroundSnippet } from "./molecules/CheckboxGroup/CheckboxGroup.snippets";
+import { codeBlockPlaygroundSnippet, highlightLinesFromText, highlightLinesLiteral } from "./molecules/CodeBlock/CodeBlock.snippets";
 import { emptyStatePlaygroundSnippet } from "./molecules/EmptyState/EmptyState.snippets";
 import { formFieldPlaygroundSnippet } from "./molecules/FormField/FormField.snippets";
 import { gridPlaygroundSnippet } from "./molecules/Grid/Grid.snippets";
@@ -619,6 +620,48 @@ describe("AvatarGroup's Playground snippet", () => {
   it("keeps the number of avatars between one and eight", () => {
     expect(avatarGroupPlaygroundSnippet({ count: 0 }).match(/<Avatar /g)).toHaveLength(1);
     expect(avatarGroupPlaygroundSnippet({ count: 99 }).match(/<Avatar /g)).toHaveLength(8);
+  });
+});
+
+describe("CodeBlock's Playground snippet", () => {
+  it.each([
+    {},
+    { language: "tsx", title: "SaveButton.tsx", showLineNumbers: true, startLine: 42, highlight: "2, 4-6", wrap: true, maxHeight: "12rem", collapsible: true, collapsedLines: 6, copyable: false },
+    { language: "bash", copiedDuration: 500 },
+    { title: 'say "hi".ts' },
+    { collapsible: true, collapsedLines: 10 },
+  ])("%j is a real snippet", (args) => {
+    expect(problemsIn(codeBlockPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("writes only what differs from the defaults, and always the source", () => {
+    expect(codeBlockPlaygroundSnippet({ language: "tsx", showLineNumbers: false, startLine: 1, wrap: false, collapsible: false, copyable: true, copiedDuration: 2000, highlight: "", title: "", maxHeight: "" })).toBe(
+      '<CodeBlock language="tsx" code={source} />',
+    );
+    expect(codeBlockPlaygroundSnippet({})).toBe("<CodeBlock code={source} />");
+  });
+
+  it("writes startLine only with line numbers, collapsedLines only when collapsible, and copiedDuration only with a copy button", () => {
+    expect(codeBlockPlaygroundSnippet({ startLine: 5 })).not.toContain("startLine");
+    expect(codeBlockPlaygroundSnippet({ showLineNumbers: true, startLine: 5 })).toContain("startLine={5}");
+    expect(codeBlockPlaygroundSnippet({ collapsedLines: 4 })).not.toContain("collapsedLines");
+    expect(codeBlockPlaygroundSnippet({ collapsible: true, collapsedLines: 4 })).toContain("collapsedLines={4}");
+    expect(codeBlockPlaygroundSnippet({ copyable: false, copiedDuration: 500 })).not.toContain("copiedDuration");
+    expect(codeBlockPlaygroundSnippet({ copiedDuration: 500 })).toContain("copiedDuration={500}");
+    expect(codeBlockPlaygroundSnippet({ copyable: false })).toContain("copyable={false}");
+  });
+
+  it("turns typed highlights into an array, ignoring what is not a line or a range", () => {
+    expect(highlightLinesLiteral("2, 4-6, x, 9 - 10")).toBe('[2, "4-6", "9-10"]');
+    expect(highlightLinesLiteral("nothing")).toBeUndefined();
+    expect(highlightLinesLiteral("")).toBeUndefined();
+    expect(highlightLinesFromText("2, 4-6")).toEqual([2, "4-6"]);
+    expect(highlightLinesFromText(undefined)).toBeUndefined();
+  });
+
+  it("escapes a quote in the title and drops one from maxHeight", () => {
+    expect(codeBlockPlaygroundSnippet({ title: 'a"b' })).toContain('title="a&quot;b"');
+    expect(codeBlockPlaygroundSnippet({ maxHeight: '10"rem' })).toContain('maxHeight="10rem"');
   });
 });
 

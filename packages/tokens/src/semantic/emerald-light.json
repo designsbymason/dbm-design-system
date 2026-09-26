@@ -184,6 +184,16 @@
       "$type": "color",
       "$value": "{color.blue.50}",
       "$description": "New token (2026-08-08) for inline code/token-reference pills in Storybook documentation (docs.css's inline-code and token-table pill rules) — mirrors bg.info-subtle's exact blue.50/blue.950 lightness-curve values, but under a name that doesn't imply status/info meaning, since a plain code reference isn't a status. Retired 2026-08-20 in favor of bg.info-subtle directly; restored the same day, reversing that retirement — every former bg.info-subtle-standing-in-for-bg.code consumer (docs.css's two inline-code pill rules) uses this token again. Adopted by the real Code.tsx atom (2026-09-06, at explicit direction, during its own review pass) — previously that component used bg.neutral-subtle instead; the shipped atom and the Storybook-docs inline-code pill now share the identical bg.code/border.code/text.secondary treatment rather than looking like two different things."
+    },
+    "code-highlight": {
+      "$type": "color",
+      "$value": "{color.blue.100}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s highlighted lines. blue.100, a step deeper than `bg.code` (blue.50). Every `text.syntax-*` colour clears 4.5:1 on it (5.3:1 or more); `text.secondary`, which the line numbers use, clears it too."
+    },
+    "code-block": {
+      "$type": "color",
+      "$value": "{color.blue.50}",
+      "$description": "New token (2026-09-26), the background of `CodeBlock`. Same value as `bg.code` (blue.50) in light mode, so a block and an inline `Code` match. Every `text.syntax-*` colour and `text.secondary` (line numbers, the title) is measured against it."
     }
   },
   "text": {
@@ -263,6 +273,56 @@
       "$type": "color",
       "$value": "{color.blue.600}",
       "$description": "Token consolidation (2026-08-20) — moved from blue.700 to blue.600, so text.info now shares the same primitive step as bg.info/border.info/icon.info in light mode. blue.600 vs bg.surface (white) = 4.71:1, still comfortably passes AA (was 6.93:1). Against bg.info-subtle specifically, this measures only 4.5068:1 — the tightest margin found across this whole family of consolidations; see bg.info-subtle's own description for the full note. See guidelines/03-token-system-spec.md's token-consolidation phase for the full rationale and contrast table."
+    },
+    "syntax-keyword": {
+      "$type": "color",
+      "$value": "{color.purple.700}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — keywords and at-rules (`const`, `if`, `@media`). purple.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 9.4:1 — AA."
+    },
+    "syntax-string": {
+      "$type": "color",
+      "$value": "{color.green.800}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — string literals. green.800 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 8.4:1 — AA."
+    },
+    "syntax-number": {
+      "$type": "color",
+      "$value": "{color.amber.700}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — numbers, units and the literals `true`, `false`, `null`. amber.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 6.1:1 — AA."
+    },
+    "syntax-function": {
+      "$type": "color",
+      "$value": "{color.blue.700}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — function and command names at a call. blue.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 6.1:1 — AA."
+    },
+    "syntax-type": {
+      "$type": "color",
+      "$value": "{color.emerald.700}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — type and class names (`Promise`, `Button`). emerald.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 5.3:1 — AA."
+    },
+    "syntax-property": {
+      "$type": "color",
+      "$value": "{color.blue.800}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — object keys, CSS properties and HTML/JSX attribute names. blue.800 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 8.9:1 — AA."
+    },
+    "syntax-tag": {
+      "$type": "color",
+      "$value": "{color.red.700}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — HTML/JSX tag names. red.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 6.5:1 — AA."
+    },
+    "syntax-comment": {
+      "$type": "color",
+      "$value": "{color.gray.700}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — comments — muted by hue, not by contrast, so it still clears AA. gray.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 6.1:1 — AA."
+    },
+    "syntax-inserted": {
+      "$type": "color",
+      "$value": "{color.green.800}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — an added line in a diff. green.800 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 8.4:1 — AA."
+    },
+    "syntax-deleted": {
+      "$type": "color",
+      "$value": "{color.red.700}",
+      "$description": "New token (2026-09-26), for `CodeBlock`'s syntax highlighting — a removed line in a diff. red.700 in this theme, shared across both brands (code colours are not brand-tinted, like `text.link`). Measured against the two backgrounds it is drawn on, `bg.code-block` and the highlighted-line band `bg.code-highlight`, and the lower ratio is 6.5:1 — AA."
     }
   },
   "border": {

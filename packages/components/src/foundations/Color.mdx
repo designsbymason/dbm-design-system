@@ -95,6 +95,8 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "bg.track", usage: "Unfilled or resting-state track fill for a bar-, ring-, or toggle-style control" },
   { token: "bg.track-strong", usage: "Higher-contrast track or fill for a control's inactive state that needs more visual weight" },
   { token: "bg.code", usage: "Background for inline code and token references" },
+  { token: "bg.code-block", usage: "Background of a code block (the same as bg.code in light mode, darker in dark mode so a highlighted line is the lighter band)" },
+  { token: "bg.code-highlight", usage: "The band behind a highlighted line of a code block (a step deeper than the block in both modes)" },
 ]} />
 
 ### Text (`text.*`)
@@ -116,6 +118,16 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "text.on-info", usage: "Text on a solid bg.info fill" },
   { token: "text.on-neutral", usage: "Text on a solid bg.neutral fill" },
   { token: "text.link", usage: "Inline link text" },
+  { token: "text.syntax-keyword", usage: "Code block: keywords and at-rules" },
+  { token: "text.syntax-string", usage: "Code block: string literals" },
+  { token: "text.syntax-number", usage: "Code block: numbers, units and true/false/null" },
+  { token: "text.syntax-function", usage: "Code block: function and command names at a call" },
+  { token: "text.syntax-type", usage: "Code block: type and class names" },
+  { token: "text.syntax-property", usage: "Code block: object keys, CSS properties, attribute names" },
+  { token: "text.syntax-tag", usage: "Code block: HTML and JSX tag names" },
+  { token: "text.syntax-comment", usage: "Code block: comments" },
+  { token: "text.syntax-inserted", usage: "Code block: an added line in a diff" },
+  { token: "text.syntax-deleted", usage: "Code block: a removed line in a diff" },
 ]} />
 
 ### Border (`border.*`)
