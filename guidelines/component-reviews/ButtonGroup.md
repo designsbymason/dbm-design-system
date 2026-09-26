@@ -1,0 +1,41 @@
+# ButtonGroup
+
+**Tier:** molecule · **Category:** Inputs & Forms · **Status:** built 2026-09-26; **not yet Finalized** — only the user declares that.
+
+## What was built
+
+A single component (not compound), item 18 in the itemized molecule build order (`04-component-inventory.md`): a named `role="group"` around related `Button`s and `IconButton`s, laid out as one segmented control or spaced apart. No new dependency, no new token, no component token.
+
+Props: `variant`, `size`, `rounded` (defaults for every button inside; a button's own prop wins), `disabled` (disables every button; a button disabled itself stays disabled), `attached` (default `true`: corners squared where buttons meet, one separator, no gap; `false`: spaced by `space.2`, and a horizontal row wraps), `orientation` (a row or a column, or a mobile-first breakpoint map through `useResolvedResponsiveValue`, as `Tabs` does), `fullWidth` (a row shares the width equally; a column's buttons match the group's width), and `aria-label` / `-labelledby` / `-describedby`, `id`, `className`, `style`, `data-testid`, `children`. It is not a selection control and adds no arrow-key handling: every button is an ordinary tab stop (`Toolbar`, item 27, is the component that roves).
+
+## Decisions taken while building
+
+- **Settings reach the buttons through an internal context that `Button` and `IconButton` read** — the fork in the road, chosen by the user from three options, recorded as [ADR-0025](../adr/0025-buttongroup-shares-settings-through-a-context-read-by-button-and-iconbutton.md). Inside a group a button also emits `data-variant`, which the group's stylesheet reads to draw the separator that suits it. Both atoms were changed additively (see their own files).
+- **Only the corners where two buttons meet are squared.** The group never sets a radius: it zeroes the inner corners with logical properties (`border-start-start-radius` and its three siblings), so a button's outer corners stay whatever they were (`radius-md`, or `radius-full` for a `rounded` one) and a right-to-left page mirrors it with no prop. The selectors are more specific than a button's own `:focus-visible` radius rule, so the meeting corners stay square while one is focused.
+- **Separators, per variant:** solid fills (`primary`, `destructive`) get a one-pixel hairline in `bg.surface`, so two fills read as separated by a gap; `secondary` buttons overlap by one border width so their two borders are one shared line; `tertiary` and `ghost` get a faint `border.default` rule, since neither has a solid fill or border to mark where one ends. A bg token draws a border on purpose: the surface is what shows through a gap, and no `border.*` token names that. The first build put `ghost` with the solid fills; the screenshot showed its white hairline on a pale tint nearly invisible, so it moved to the rule.
+- **Every button takes the row's height (or the column's width).** An `IconButton` is a fixed box and a `Button` with a leading icon is about 2.4px taller, so a fused row showed a step (measured in a real browser: 2.39px at `md`, 1.8px at `lg`). The group sets `height: auto` (row) or `width: auto` (column) on its children, and `IconButton` gained `min-height` / `min-width` equal to its size, so it stretches to the row but a row of only icon buttons cannot collapse. Standalone the new properties change nothing.
+- **The focused button sits above its neighbours** (`position: relative; z-index: 1`), so its ring, drawn 4–6px outside the box, isn't cut off by the next button.
+- **A spaced row wraps; an attached one never does** — a fused shape broken over two lines is no longer one shape. The docs say to stack a long attached row with an `orientation` map instead.
+- **`disabled` is the one setting that is OR-ed, not defaulted:** a disabled group can't be undone by a button that says `disabled={false}`.
+
+## Findings from the build
+
+- **`Button` and `IconButton` lost their Properties-table defaults.** Moving `variant`, `size` and `rounded` off destructuring defaults (they can't tell an explicit `"primary"` from an absent prop once a group can supply one) left the Default column showing "—" on both Docs pages — found by looking at them, not by any test. Each now states its default in its stories' argTypes (`07` §4.1).
+- **A control with a `mapping` hands the snippet builder its option key** — again (`07` §4.2). The Playground's `rounded` control has an "each button's own" choice, the key is a truthy string, and the first snippet read `rounded` when nothing was set. Found on the live Docs page; the builder now checks `=== true`, with a test.
+- **Real-browser assertions that were wrong, not the component:** a `secondary` group overlaps by one border width, so "the next button starts below the previous one's bottom" is off by one; an `IconButton` at `lg` differs from a fluid `Button`, which the stretch above now makes moot.
+
+## Verification (2026-09-26)
+
+- **Unit** (`ButtonGroup.test.tsx`, 28): a named group of ordinary buttons, naming by label or `aria-labelledby`, the once-only no-name warning, a same-named `role` can't win, ref / className / style / id / test id; the group's variant and size reaching `Button` and `IconButton`, a button's own props winning, no leak outside the group, `rounded`, `disabled` (including a button that says `disabled={false}`, and one disabled itself in an enabled group), a `Tooltip`-wrapped button and an `asChild` link, `data-variant` only inside a group; attached / spaced / vertical / a breakpoint map that follows the viewport / `fullWidth`; tab order and Enter/Space; `StrictMode`; jest-axe across five layouts and a labelled one.
+- **Real browser** (`storybook` project, 20 stories, all pass): corner radii per button in a row, a column, right-to-left, a pill, a group of one and a spaced group; each variant's separator (width, colour resolved from its token, and no gap or overlap between attached buttons, horizontal and vertical); one height per row (`Button`, `IconButton` and a button with an icon, at `md` and `lg`), equal shares with `fullWidth`, one width per column; the spaced gap equal to `space.2` and wrapping when too wide while an attached row does not; the focused button stacked above its neighbours; a breakpoint map stacking on a phone-width viewport. **Broken on purpose, each seen to fail:** no inner-corner rules, no separators, no focus stacking, no stretch, no wrap; and in the atoms, the context ignored by `Button`, by `IconButton`, `disabled` not OR-ed, no `data-variant`, and the group overriding a button's own props.
+- **Live, in the running Storybook:** Docs page with no errors, 15 Properties rows all described with the right defaults, 14 canvases and 14 hand-written "Show code" panels; screenshots of the variants, a pill, mixed icons and right-to-left; the `Button` and `IconButton` Docs pages show a live `ButtonGroup` related card and their restored Default column.
+- **Whole pipeline:** `pnpm lint`, `pnpm build`, all 2,976 unit tests, all 735 real-browser tests, the Playwright visual suite (8/8: every `Button` and `IconButton` baseline unchanged), the static Storybook build and its size check, the component size check (`ButtonGroup` 0.61KB JS, 0.44KB CSS gzipped), token coverage, and `pnpm audit`.
+
+**Not verified:** a real screen reader (the group role and name); the group in dark mode and Emerald beyond reading the separators' tokens; hover states of the overlapped `secondary` borders.
+
+## Gaps named, not built
+
+- **`Toolbar`** (item 27): roving tabindex and arrow-key movement, for a bar of many controls.
+- **`ToggleGroup`** (item 19, next): the selection version, single or multiple, with a pressed state and its own keyboard model. It can reuse the context from ADR-0025.
+- **A split button** (a primary action with a menu caret): a composition of a `Button` and a menu trigger inside a group, once `Menu` exists.
+- **Reading the group's `dir` from a prop**: it follows the page today, like `Breadcrumb`.

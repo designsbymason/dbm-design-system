@@ -78,6 +78,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0022](./0022-dependency-updates-are-a-manual-refresh-pass-not-dependabot-version-prs.md) | Dependency updates are a manual refresh pass, not Dependabot version-update PRs | Accepted |
 | [0023](./0023-one-alert-with-banner-and-sticky-options-and-a-separate-persistence-hook.md) | One `Alert` with `banner` and `sticky` options and a separate `usePersistentDismiss` hook, over a separate `Banner` or built-in persistence | Accepted |
 | [0024](./0024-alert-action-reads-the-alerts-colours-over-tone-props-on-button-or-unrestricted-children.md) | `Alert.Action`, a `Button` that reads the alert's colours, over tone and surface props on `Button` or unrestricted children | Accepted |
+| [0025](./0025-buttongroup-shares-settings-through-a-context-read-by-button-and-iconbutton.md) | `ButtonGroup` hands its settings to the buttons through an internal context that `Button` and `IconButton` read, over layout-only grouping or `cloneElement` | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 
