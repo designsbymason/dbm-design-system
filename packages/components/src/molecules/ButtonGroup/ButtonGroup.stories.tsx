@@ -43,17 +43,20 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
       description:
-        "The visual style every button in the group uses unless it sets its own variant. Left out, each button keeps its own (primary by default). An attached group draws the separator between buttons to suit each one's variant.",
+        "The visual style every button in the group uses unless it sets its own variant. Left out, each button keeps its own, which is primary unless it says otherwise. An attached group draws the separator between buttons to suit each one's variant.",
+      table: { defaultValue: { summary: "primary" } },
     },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
-      description: "The size every button in the group uses unless it sets its own size. Left out, each button keeps its own (md by default).",
+      description: "The size every button in the group uses unless it sets its own size. Left out, each button keeps its own, which is md unless it says otherwise.",
+      table: { defaultValue: { summary: "md" } },
     },
     rounded: {
       control: "boolean",
       description:
         "Fully rounded ends, a pill: the outer corners of the first and last button are circular, and, attached, the corners where buttons meet stay square. Also the default for each button's own rounded.",
+      table: { defaultValue: { summary: "false" } },
     },
     disabled: {
       control: "boolean",
@@ -107,9 +110,13 @@ const meta: Meta<PlaygroundArgs> = {
     style: { ...noControls, description: "Inline styles, merged onto the component's own internal styles." },
     "data-testid": { ...noControls, description: "Test identifier for automated testing, on the group's element." },
   },
-  // Every controllable prop gets an explicit value here, matching its real default. `variant`, `size` and `rounded`
-  // have no default of their own (each button keeps its own), so the Playground offers "each button's own" for them.
+  // Every controllable prop gets an explicit value here, matching its real default. A group that sets no variant,
+  // size or rounded leaves each button its own defaults, which are the same three values, so the group's own
+  // controls start there.
   args: {
+    variant: "primary",
+    size: "md",
+    rounded: false,
     disabled: false,
     attached: true,
     orientation: "horizontal",
@@ -140,27 +147,6 @@ const playgroundSource = {
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
   parameters: playgroundSource,
-  // "Each button's own" is a choice for the demo, not a value the prop takes, so it lives here and not in the
-  // Properties table (07 §4.1); `mapping` turns it into "leave the prop out".
-  argTypes: {
-    variant: {
-      control: "select",
-      options: ["Each button's own", "primary", "secondary", "tertiary", "ghost", "destructive"],
-      mapping: { "Each button's own": undefined },
-    },
-    size: {
-      control: "select",
-      options: ["Each button's own", "xs", "sm", "md", "lg", "xl"],
-      mapping: { "Each button's own": undefined },
-    },
-    rounded: {
-      control: "select",
-      options: ["Each button's own", true, false],
-      labels: undefined,
-      mapping: { "Each button's own": undefined },
-    },
-  },
-  args: { variant: "Each button's own" as never, size: "Each button's own" as never, rounded: "Each button's own" as never },
 };
 
 export const Variants: Story = {
@@ -474,7 +460,7 @@ export const SeparatorsInteraction: Story = {
           </ButtonGroup>
         </div>
       ))}
-      {(["primary", "secondary", "tertiary"] as const).map((variant) => (
+      {(["primary", "secondary", "tertiary", "ghost"] as const).map((variant) => (
         <div key={variant} data-testid={`v-${variant}`}>
           <ButtonGroup aria-label={`v ${variant}`} variant={variant} orientation="vertical">
             <Button>One</Button>
@@ -488,7 +474,8 @@ export const SeparatorsInteraction: Story = {
     const canvas = within(canvasElement);
     const buttonsOf = (id: string) => within(canvas.getByTestId(id)).getAllByRole("button");
     const surface = resolveColor("--dbm-bg-surface");
-    const rule = resolveColor("--dbm-border-default");
+    const tertiaryRule = resolveColor("--dbm-border-brand-subtle");
+    const ghostRule = resolveColor("--dbm-border-focus");
     const brand = resolveColor("--dbm-border-brand");
     const one = px(getComputedStyle(document.documentElement).getPropertyValue("--dbm-border-width-1")) || 1;
 
@@ -512,14 +499,16 @@ export const SeparatorsInteraction: Story = {
     await expect(Math.abs(rect(sSecond).right - rect(sThird).left - one)).toBeLessThan(0.5);
     await expect(getComputedStyle(sSecond).borderLeftColor).toBe(brand);
 
-    // Tertiary and ghost have no solid fill or border, so they get a faint rule instead, with no gap either.
-    for (const variant of ["tertiary", "ghost"] as const) {
+    // Tertiary and ghost have no solid fill or border, so each gets a rule instead — the brand's faint accent for
+    // tertiary, the focus colour for ghost — with no gap either. The two must not be the same colour.
+    for (const [variant, colour] of [["tertiary", tertiaryRule], ["ghost", ghostRule]] as const) {
       const [tFirst, tSecond] = buttonsOf(`h-${variant}`) as unknown as [Element, Element];
       await expect(px(getComputedStyle(tFirst).borderLeftWidth)).toBe(0);
-      await expect(getComputedStyle(tSecond).borderLeftColor).toBe(rule);
+      await expect(getComputedStyle(tSecond).borderLeftColor).toBe(colour);
       await expect(px(getComputedStyle(tSecond).borderLeftWidth)).toBe(one);
       await expect(Math.abs(rect(tSecond).left - rect(tFirst).right)).toBeLessThan(0.5);
     }
+    await expect(tertiaryRule).not.toBe(ghostRule);
 
     // Vertical: the same, drawn on the top edge.
     const [pFirst, pSecond] = buttonsOf("v-primary") as unknown as [Element, Element];
@@ -530,7 +519,9 @@ export const SeparatorsInteraction: Story = {
     const [vsFirst, vsSecond] = buttonsOf("v-secondary") as unknown as [Element, Element];
     await expect(Math.abs(rect(vsFirst).bottom - rect(vsSecond).top - one)).toBeLessThan(0.5);
     const [, vtSecond] = buttonsOf("v-tertiary") as unknown as [Element, Element];
-    await expect(getComputedStyle(vtSecond).borderTopColor).toBe(rule);
+    await expect(getComputedStyle(vtSecond).borderTopColor).toBe(tertiaryRule);
+    const [, vgSecond] = buttonsOf("v-ghost") as unknown as [Element, Element];
+    await expect(getComputedStyle(vgSecond).borderTopColor).toBe(ghostRule);
   },
 };
 

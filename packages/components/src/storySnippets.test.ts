@@ -585,28 +585,26 @@ describe("ButtonGroup's Playground snippet", () => {
   it.each([
     {},
     { variant: "secondary", size: "sm", rounded: true, disabled: true, attached: false, orientation: "vertical", fullWidth: true, count: 5, "aria-label": "View" },
-    { variant: "Each button's own", size: "Each button's own", rounded: false },
+    { variant: "primary", size: "md", rounded: false },
     { count: 1 },
     { count: 6 },
   ])("%j is a real snippet", (args) => {
     expect(problemsIn(buttonGroupPlaygroundSnippet(args as never))).toEqual([]);
   });
 
-  it("writes only what differs, and leaves out \"each button's own\" for variant and size", () => {
-    expect(buttonGroupPlaygroundSnippet({ attached: true, disabled: false, fullWidth: false, orientation: "horizontal", count: 2 })).toBe(
-      '<ButtonGroup aria-label="Clipboard">\n  <Button>Copy</Button>\n  <Button>Paste</Button>\n</ButtonGroup>',
-    );
-    expect(buttonGroupPlaygroundSnippet({ variant: "Each button's own", size: "Each button's own", count: 1 })).toBe(
-      '<ButtonGroup aria-label="Clipboard">\n  <Button>Copy</Button>\n</ButtonGroup>',
-    );
+  it("writes only what differs: variant, size and rounded stay out at their defaults", () => {
+    expect(
+      buttonGroupPlaygroundSnippet({ variant: "primary", size: "md", rounded: false, attached: true, disabled: false, fullWidth: false, orientation: "horizontal", count: 2 }),
+    ).toBe('<ButtonGroup aria-label="Clipboard">\n  <Button>Copy</Button>\n  <Button>Paste</Button>\n</ButtonGroup>');
     expect(buttonGroupPlaygroundSnippet({ variant: "ghost", size: "lg", count: 1 })).toContain('variant="ghost" size="lg"');
+    expect(buttonGroupPlaygroundSnippet({ rounded: true, count: 1 })).toContain("rounded");
     expect(buttonGroupPlaygroundSnippet({ attached: false, count: 1 })).toContain("attached={false}");
+    expect(buttonGroupPlaygroundSnippet({ orientation: "vertical", count: 1 })).toContain('orientation="vertical"');
   });
 
-  it("treats rounded's \"each button's own\" choice, which arrives as a truthy option key, as not set", () => {
-    expect(buttonGroupPlaygroundSnippet({ rounded: "Each button's own", count: 1 })).not.toContain("rounded");
-    expect(buttonGroupPlaygroundSnippet({ rounded: false, count: 1 })).not.toContain("rounded");
-    expect(buttonGroupPlaygroundSnippet({ rounded: true, count: 1 })).toContain("rounded");
+  it("ignores a variant or size that is not a real value", () => {
+    expect(buttonGroupPlaygroundSnippet({ variant: "bogus", size: "huge", count: 1 })).not.toContain("variant");
+    expect(buttonGroupPlaygroundSnippet({ variant: "bogus", size: "huge", count: 1 })).not.toContain("size");
   });
 
   it("keeps the number of buttons between one and six", () => {

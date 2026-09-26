@@ -15,18 +15,22 @@ export interface ButtonGroupProps
    * The visual style every button in the group uses unless it sets its own `variant`. Left out, each
    * button keeps its own (`primary` by default). An attached group draws the separator between buttons
    * to suit each button's variant: a hairline of the surface between solid ones (`primary`, `destructive`), a
-   * shared border between `secondary` ones, a faint rule between `tertiary` and `ghost` ones.
+   * shared border between `secondary` ones, a brand-tinted rule between `tertiary` ones, and a focus-coloured
+   * one between `ghost` ones.
+   * @default 'primary'
    */
   variant?: ButtonVariant;
   /**
    * The size every button in the group uses unless it sets its own `size`. Left out, each button keeps
    * its own (`md` by default).
+   * @default 'md'
    */
   size?: ButtonSize;
   /**
    * Gives the group fully rounded ends, a pill: the outer corners of the first and last button are
    * circular, and, attached, the corners where buttons meet stay square. Also the default for each
    * button's own `rounded`. Left out, each button keeps its own.
+   * @default false
    */
   rounded?: boolean;
   /**

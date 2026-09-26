@@ -80,8 +80,10 @@
      surface is what shows through a gap, so its background token is the right colour even though the line
      is drawn as a border.
    - secondary: the buttons overlap by one border width, so their two borders are one shared line.
-   - tertiary and ghost: a faint rule. Neither has a solid fill or a border to mark where one button ends
-     (ghost's pale tint is too close to the surface for a surface-coloured hairline to show). */
+   - tertiary: a rule in the brand's faint accent (`border.brand-subtle`), since it has no fill or border of
+     its own to mark where one button ends.
+   - ghost: a rule in the focus colour (`border.focus`). Its pale tint is too close to the surface for a
+     surface-coloured hairline to show, and a brand-subtle rule would vanish against the tint. */
 .attached[data-orientation="horizontal"] > :is([data-variant="primary"], [data-variant="destructive"]):not(:first-child) {
   border-inline-start: var(--dbm-border-width-1) solid var(--dbm-bg-surface);
 }
@@ -98,10 +100,18 @@
   margin-block-start: calc(-1 * var(--dbm-border-width-1));
 }
 
-.attached[data-orientation="horizontal"] > :is([data-variant="tertiary"], [data-variant="ghost"]):not(:first-child) {
-  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+.attached[data-orientation="horizontal"] > [data-variant="tertiary"]:not(:first-child) {
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-brand-subtle);
 }
 
-.attached[data-orientation="vertical"] > :is([data-variant="tertiary"], [data-variant="ghost"]):not(:first-child) {
-  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+.attached[data-orientation="vertical"] > [data-variant="tertiary"]:not(:first-child) {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-brand-subtle);
+}
+
+.attached[data-orientation="horizontal"] > [data-variant="ghost"]:not(:first-child) {
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-focus);
+}
+
+.attached[data-orientation="vertical"] > [data-variant="ghost"]:not(:first-child) {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-focus);
 }

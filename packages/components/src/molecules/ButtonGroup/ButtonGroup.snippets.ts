@@ -122,8 +122,7 @@ export const buttonGroupSnippets = {
 export interface ButtonGroupPlaygroundSnippetArgs {
   variant?: string;
   size?: string;
-  /** `true`, `false`, or the control's "each button's own" choice, which is not a value. */
-  rounded?: boolean | string;
+  rounded?: boolean;
   disabled?: boolean;
   attached?: boolean;
   orientation?: "horizontal" | "vertical";
@@ -139,15 +138,14 @@ const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 
 /**
  * The Playground's snippet, built from its current controls: only the props that differ from their defaults,
- * around as many buttons as the demo shows. Also serves the stories that just change a few args. The group's
- * `variant`, `size` and `rounded` controls have an "each button's own" choice that isn't a value (and a control
- * with a `mapping` hands this builder its option key), so anything that isn't a real value is left out.
+ * around as many buttons as the demo shows. Also serves the stories that just change a few args. A group that
+ * sets no variant, size or rounded leaves each button its own defaults, which are `primary`, `md` and not
+ * rounded, so those three are written only when they differ.
  */
 export function buttonGroupPlaygroundSnippet(args: ButtonGroupPlaygroundSnippetArgs): string {
   const attributes: string[] = [`aria-label="${args["aria-label"] || "Clipboard"}"`];
-  if (args.variant && (variants as readonly string[]).includes(args.variant)) attributes.push(`variant="${args.variant}"`);
-  if (args.size && (sizes as readonly string[]).includes(args.size)) attributes.push(`size="${args.size}"`);
-  // Only a real `true`: the control's "each button's own" choice reaches this as its (truthy) option key.
+  if (args.variant && args.variant !== "primary" && (variants as readonly string[]).includes(args.variant)) attributes.push(`variant="${args.variant}"`);
+  if (args.size && args.size !== "md" && (sizes as readonly string[]).includes(args.size)) attributes.push(`size="${args.size}"`);
   if (args.rounded === true) attributes.push("rounded");
   if (args.disabled) attributes.push("disabled");
   if (args.attached === false) attributes.push("attached={false}");

@@ -81,7 +81,8 @@ import { ButtonGroup } from "@dbm-design-system/components";
 
 The group's `variant` is every button's default; each variant gets the separator that suits it — a hairline of
 the surface between solid buttons (`primary`, `destructive`), one shared border between `secondary` ones, and a
-faint rule between `tertiary` and `ghost` ones, which have no solid fill or border to mark where one ends.
+rule between `tertiary` ones (the brand's faint accent) and `ghost` ones (the focus colour), which have no solid
+fill or border to mark where one ends.
 
 <Canvas of={ButtonGroupStories.Variants} />
 
@@ -248,7 +249,8 @@ separators mirror with it. Set `dir="rtl"` on the group's container, or on the p
 following.
 
 <TokenRow token="bg.surface" usage="the hairline between attached solid buttons (primary, destructive) — the surface showing through a gap" />
-<TokenRow token="border.default" usage="the faint rule between attached tertiary and ghost buttons" />
+<TokenRow token="border.brand-subtle" usage="the rule between attached tertiary buttons" />
+<TokenRow token="border.focus" usage="the rule between attached ghost buttons" />
 <TokenRow token="border-width.1" usage="the separator's width, and how far a secondary button overlaps its neighbour so their borders are one line" />
 <TokenRow token="space.2" usage="the gap between buttons when attached={false}" />
 
@@ -267,18 +269,15 @@ following.
   description="The compact choice for a toolbar of familiar actions — the same height as a Button beside it"
   href="/?path=/docs/atoms-inputs-iconbutton--docs"
 >
-  <ButtonGroup aria-label="Example" variant="secondary" size="sm">
-    <IconButton icon={PlusIcon} aria-label="Add" />
-    <IconButton icon={PlusIcon} aria-label="Add another" />
-  </ButtonGroup>
+  <IconButton icon={PlusIcon} aria-label="Add" variant="secondary" size="sm" />
 </RelatedCard>
 <RelatedCard
   name="Tooltip"
   description="Wrap a button in one to explain an icon, and it still takes the group's settings"
   href="/?path=/docs/atoms-overlay-tooltip--docs"
 >
-  <Tooltip content="Copy">
-    <Button variant="secondary" size="sm">Hover me</Button>
+  <Tooltip content="Copy the link" open side="top">
+    <span aria-hidden="true" style={{ display: "block", height: 1, width: 1 }} />
   </Tooltip>
 </RelatedCard>
 </div>
