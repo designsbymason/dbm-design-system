@@ -18,10 +18,22 @@ export function useCollapsedHeight(frameRef: RefObject<HTMLDivElement | null>, e
     (onChange: () => void) => {
       const frame = frameRef.current;
       if (!enabled || !frame || typeof ResizeObserver === "undefined") return noop;
-      const observer = new ResizeObserver(onChange);
-      observer.observe(frame);
-      if (frame.firstElementChild) observer.observe(frame.firstElementChild);
-      return () => observer.disconnect();
+      // Only the code is observed, not the frame it sits in, and a change is applied on the next animation frame,
+      // not inside the observer's own callback. Applying it there would set the frame's height — an ancestor of the
+      // code being observed — during delivery, which the browser reports as a "ResizeObserver loop" error that an
+      // app's error tracking would log. (The first read, when the block mounts, is still synchronous.)
+      const code = frame.firstElementChild;
+      if (!code) return noop;
+      let pending = 0;
+      const observer = new ResizeObserver(() => {
+        window.cancelAnimationFrame(pending);
+        pending = window.requestAnimationFrame(onChange);
+      });
+      observer.observe(code);
+      return () => {
+        window.cancelAnimationFrame(pending);
+        observer.disconnect();
+      };
     },
     [frameRef, enabled],
   );

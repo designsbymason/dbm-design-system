@@ -641,6 +641,15 @@ describe("CodeBlock's Playground snippet", () => {
     expect(codeBlockPlaygroundSnippet({})).toBe("{/* source: the code to show, as a string */}\n<CodeBlock code={source} />");
   });
 
+  it("writes stripPrompt={false} only for shell code with a copy button", () => {
+    expect(codeBlockPlaygroundSnippet({ language: "bash", stripPrompt: false })).toContain("stripPrompt={false}");
+    expect(codeBlockPlaygroundSnippet({ language: "sh", stripPrompt: false })).toContain("stripPrompt={false}");
+    expect(codeBlockPlaygroundSnippet({ language: "bash", stripPrompt: true })).not.toContain("stripPrompt");
+    expect(codeBlockPlaygroundSnippet({ language: "ts", stripPrompt: false })).not.toContain("stripPrompt");
+    expect(codeBlockPlaygroundSnippet({ language: "bash", stripPrompt: false, copyable: false })).not.toContain("stripPrompt");
+    expect(problemsIn(codeBlockPlaygroundSnippet({ language: "bash", stripPrompt: false }))).toEqual([]);
+  });
+
   it("writes startLine only with line numbers, collapsedLines only when collapsible, and copiedDuration only with a copy button", () => {
     expect(codeBlockPlaygroundSnippet({ startLine: 5 })).not.toContain("startLine");
     expect(codeBlockPlaygroundSnippet({ showLineNumbers: true, startLine: 5 })).toContain("startLine={5}");

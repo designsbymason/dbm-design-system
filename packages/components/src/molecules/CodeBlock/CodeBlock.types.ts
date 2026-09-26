@@ -31,6 +31,13 @@ export interface CodeBlockLabels {
    */
   collapse: string;
   /**
+   * Said in front of a highlighted line, or of the first of several in a row, for people who can't see the
+   * band. Given how many lines the highlight covers: "Highlighted line:", "3 highlighted lines:". It is not
+   * part of the code, so it is never selected or copied.
+   * @default (count) => count === 1 ? "Highlighted line:" : `${count} highlighted lines:`
+   */
+  highlighted: (count: number) => string;
+  /**
    * The name of the scrollable code region, used only when the block has no `title`, `aria-label` or
    * `aria-labelledby` to name it.
    * @default 'Code'
@@ -40,9 +47,9 @@ export interface CodeBlockLabels {
 
 export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">, "children" | "title"> {
   /**
-   * The source text to show. Line endings are normalised, and one trailing newline is dropped (a template
-   * literal's last character is not a line). It is drawn as text, never as HTML, and it is exactly what the
-   * copy button copies.
+   * The source text to show. Line endings are normalised in what is drawn, and one trailing newline is dropped
+   * (a template literal's last character is not a line). It is drawn as text, never as HTML, and it is what
+   * the copy button copies, except that a shell prompt is taken off (see `stripPrompt`).
    */
   code: string;
   /**
@@ -110,12 +117,20 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    */
   copyable?: boolean;
   /**
+   * For shell code (`bash`, `sh`, `shell`, `zsh`, `console`), takes a leading `$ ` prompt off each line that
+   * has one when the code is copied, so a command shown as `$ pnpm add x` pastes as `pnpm add x`. The prompt is
+   * still drawn. Only `$` followed by a space counts, and lines without a prompt (a comment, output) are copied
+   * as they are, so keep a command's output in a block of its own. `false` copies the code exactly as written.
+   * @default true
+   */
+  stripPrompt?: boolean;
+  /**
    * How long, in milliseconds, the copy button shows its check mark (or its warning, if copying failed)
    * before going back.
    * @default 2000
    */
   copiedDuration?: number;
-  /** Called after the copy button has copied the code, with the code. Not called if the copy failed. (The native `onCopy` is a different thing: it fires when the reader copies a selection.) */
+  /** Called after the copy button has copied the code, with the text that was copied. Not called if the copy failed. (The native `onCopy` is a different thing: it fires when the reader copies a selection.) */
   onCopied?: (code: string) => void;
   /** The words the block writes itself; translate them here. Give only the ones you change. */
   labels?: Partial<CodeBlockLabels>;

@@ -78,6 +78,10 @@ export const codeBlockSnippets = {
   code={config}
 />`,
 
+  prompt: `{/* stripPrompt (on by default, for shell code): a leading "$ " is drawn but not copied, so the command pastes
+    and runs. Pass stripPrompt={false} to copy the code exactly as written. */}
+<CodeBlock language="bash" code={"$ pnpm add @dbm-design-system/components\\n$ pnpm test"} />`,
+
   rtl: `{/* The code stays left to right in a right-to-left page; the header mirrors */}
 <div dir="rtl">
   <CodeBlock language="ts" title="مثال.ts" code={"const total = 1 + 2;"} />
@@ -101,6 +105,7 @@ export interface CodeBlockPlaygroundSnippetArgs {
   collapsible?: boolean;
   collapsedLines?: number;
   copyable?: boolean;
+  stripPrompt?: boolean;
   copiedDuration?: number;
 }
 
@@ -143,6 +148,7 @@ export function codeBlockPlaygroundSnippet(args: CodeBlockPlaygroundSnippetArgs)
     if (typeof args.collapsedLines === "number" && args.collapsedLines !== 10) attributes.push(`collapsedLines={${Math.trunc(args.collapsedLines)}}`);
   }
   if (args.copyable === false) attributes.push("copyable={false}");
+  if (args.copyable !== false && args.stripPrompt === false && (args.language === "bash" || args.language === "sh" || args.language === "shell")) attributes.push("stripPrompt={false}");
   if (args.copyable !== false && typeof args.copiedDuration === "number" && args.copiedDuration !== 2000) {
     attributes.push(`copiedDuration={${Math.trunc(args.copiedDuration)}}`);
   }

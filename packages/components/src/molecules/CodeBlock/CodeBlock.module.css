@@ -108,7 +108,11 @@
 
 .numbered .line::before {
   color: var(--dbm-text-secondary);
+  /* Generated content is exposed to assistive technology unless it says otherwise: the empty alternative text
+     after the slash marks each number as decoration, so it is not read out as part of the code. The first
+     declaration is for a browser that doesn't know the second (it ignores it and keeps the numbers). */
   content: attr(data-line);
+  content: attr(data-line) / "";
   display: inline-block;
   inline-size: var(--code-block-gutter);
   margin-inline-end: var(--dbm-space-4);
@@ -151,6 +155,11 @@
   padding-block: var(--dbm-space-1);
 }
 
+/* Said in front of a highlighted run, for a screen reader; never drawn, and never selected or copied. */
+.cue {
+  user-select: none;
+}
+
 /* Syntax colours. Each is measured against `bg.code-block` and `bg.code-highlight` in every theme. */
 .keyword {
   color: var(--dbm-text-syntax-keyword);
@@ -191,4 +200,22 @@
 
 .deleted {
   color: var(--dbm-text-syntax-deleted);
+}
+
+/* Forced colours (Windows high contrast) replace every author colour, and a transparent border is drawn as a solid
+   one — so every line would show the edge accent, and the highlight (whose band is dropped as well) would look like
+   all the rest. System colour keywords, which forced colours keeps, make the accent invisible on plain lines and
+   visible on highlighted ones; the fade over a collapsed block is a colour gradient and has no meaning there. */
+@media (forced-colors: active) {
+  .line {
+    border-inline-start-color: Canvas;
+  }
+
+  .line[data-highlighted="true"] {
+    border-inline-start-color: Highlight;
+  }
+
+  .fade {
+    display: none;
+  }
 }

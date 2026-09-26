@@ -151,6 +151,42 @@ describe("CodeBlock", () => {
     expect(screen.getByTestId("cb")).toHaveClass(styles.wrap as string);
   });
 
+  describe("highlighted lines, for a screen reader", () => {
+    it("says how many lines a highlight covers, in front of its first line only", () => {
+      render(<CodeBlock code={"a\nb\nc\nd\ne\nf"} language="text" highlightLines={[2, 3, 6]} />);
+      const cues = [...codeElement().querySelectorAll("span[data-line]")].map((line) => line.textContent?.match(/^(Highlighted line:|\d+ highlighted lines:)/)?.[0] ?? null);
+      expect(cues).toEqual([null, "2 highlighted lines:", null, null, null, "Highlighted line:"]);
+    });
+
+    it("says nothing without a highlight", () => {
+      render(<CodeBlock code={"a\nb"} language="text" />);
+      expect(codeElement().textContent).toBe("ab");
+    });
+
+    it("counts a run that reaches the last line, and one from startLine", () => {
+      render(<CodeBlock code={"a\nb\nc"} language="text" startLine={5} highlightLines={["6-7"]} />);
+      expect(codeElement().textContent).toBe("a2 highlighted lines:bc");
+    });
+
+    it("translates the words, and keeps the default whose translation is undefined", () => {
+      const { rerender } = render(<CodeBlock code={"a\nb"} language="text" highlightLines={[1, 2]} labels={{ highlighted: (count) => `${count} lignes surlignées :` }} />);
+      expect(codeElement().textContent).toBe("2 lignes surlignées :ab");
+      rerender(<CodeBlock code={"a\nb"} language="text" highlightLines={[1]} labels={{ highlighted: undefined }} />);
+      expect(codeElement().textContent).toBe("Highlighted line:ab");
+    });
+
+    it("is not part of what is copied", async () => {
+      render(<CodeBlock code={"a\nb"} language="text" highlightLines={[1, 2]} />);
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith("a\nb"));
+    });
+
+    it("is not selectable", () => {
+      render(<CodeBlock code="a" language="text" highlightLines={[1]} />);
+      expect(screen.getByText("Highlighted line:")).toHaveClass(styles.cue as string);
+    });
+  });
+
   describe("copying", () => {
     it("copies exactly the code and calls onCopied", async () => {
       const onCopied = vi.fn();
@@ -159,6 +195,25 @@ describe("CodeBlock", () => {
       await waitFor(() => expect(writeText).toHaveBeenCalledWith(source));
       await waitFor(() => expect(onCopied).toHaveBeenCalledWith(source));
       expect(screen.getByRole("button", { name: "Copy code" })).toHaveAttribute("data-copy-state", "copied");
+    });
+
+    it("takes a shell prompt off what it copies, and gives onCopied what was copied", async () => {
+      const onCopied = vi.fn();
+      render(<CodeBlock code={"$ pnpm add x\n$ pnpm test"} language="bash" onCopied={onCopied} />);
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith("pnpm add x\npnpm test"));
+      expect(onCopied).toHaveBeenCalledWith("pnpm add x\npnpm test");
+      // What is drawn still has the prompt.
+      expect(codeElement().textContent).toContain("$ pnpm add x");
+    });
+
+    it("copies the prompt too with stripPrompt={false}, and never strips outside a shell", async () => {
+      const { rerender } = render(<CodeBlock code="$ pnpm add x" language="bash" stripPrompt={false} />);
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+      await waitFor(() => expect(writeText).toHaveBeenLastCalledWith("$ pnpm add x"));
+      rerender(<CodeBlock code="$ x = 1" language="ts" />);
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+      await waitFor(() => expect(writeText).toHaveBeenLastCalledWith("$ x = 1"));
     });
 
     it("announces Copied, in a live region that is already in the page", async () => {

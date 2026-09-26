@@ -22,6 +22,7 @@ export const propOrder = [
   "defaultExpanded",
   "onExpandedChange",
   "copyable",
+  "stripPrompt",
   "copiedDuration",
   "onCopied",
   "labels",
@@ -154,6 +155,15 @@ browser refused clipboard access — to screen readers.
 
 <Canvas of={CodeBlockStories.CopyButton} />
 
+### Shell commands: the prompt is not copied
+
+In shell code (`bash`, `sh`, `shell`, `zsh`, `console`), a leading `$ ` is drawn as written but taken off when the
+code is copied, so a command pastes and runs. Only `$` followed by a space counts, indentation is kept, and a line
+without a prompt (a comment, output) is copied as it is — so keep a command's output in a block of its own. Pass
+`stripPrompt={false}` to copy the code exactly as written.
+
+<Canvas of={CodeBlockStories.ShellPrompt} />
+
 ### Plain text
 
 <Canvas of={CodeBlockStories.PlainText} />
@@ -190,7 +200,8 @@ button at the left.
 <Callout tone="danger" title="Don't">
 
 - Don't use it for a word or two inside a sentence. That is `Code`.
-- Don't rely on `highlightLines` alone to say something important; say it in the text around the block too.
+- Don't rely on `highlightLines` alone to say something important. It is announced as well as drawn, but the
+  text around the block is where the reason belongs.
 - Don't expect a full parse: an odd construct may be coloured a little wrong. It is for reading, not for a
   build.
 - Don't pass HTML you have built into `code` expecting it to render. It is shown as text, on purpose.
@@ -201,6 +212,8 @@ button at the left.
 
 ## Best practices
 
+- Write a shell command as `$ pnpm add x` when it sits in prose with its output, and leave the `$` out when the
+  block is only there to be copied; either way the prompt is never copied.
 - Keep a block short enough to read at a glance. Ten to twenty lines shows an idea; more belongs in a file
   people can open, or behind `collapsible`.
 - Name blocks that are compared with each other ("Before" and "After") with `title`, and colour a change with
@@ -221,8 +234,15 @@ button at the left.
   in a live region that was already in the page. The result is not carried by the icon alone.
 - The expand button is a real button with `aria-expanded` and `aria-controls`, and says how many lines it will
   reveal.
-- Line numbers are drawn by CSS, so a screen reader does not read them as part of the code and selecting the
-  code does not select them.
+- Line numbers are drawn by CSS and marked as decoration (CSS alternative text), so a screen reader does not read
+  them as part of the code, and selecting the code does not select them. Both are checked in the browser's own
+  accessibility tree and against a real selection, not assumed: generated content is read out by default.
+- A highlight is also *said*: the first line of each highlighted run is preceded by "Highlighted line:" or "3
+  highlighted lines:" for people who can't see the band. The words are `labels.highlighted`, and, like a line
+  number, they are never selected or copied.
+- In forced colours (Windows high contrast) the band and syntax colours give way to the system's, and the edge
+  accent stays as the highlight's visible cue; plain lines show no accent, and the fade over a collapsed block is
+  removed.
 - A highlighted line has a band and a 4px edge accent, in addition to its colour. The band's colour and every
   syntax colour is measured against `bg.code-block` and `bg.code-highlight` in all four themes, as are the line
   numbers and title (`text.secondary`): 4.5:1 or more (AA) everywhere.
@@ -247,6 +267,8 @@ button at the left.
 <CodeBlock language="json" maxHeight="16rem" code={config} />
 
 <CodeBlock language="bash" wrap code={command} />
+<CodeBlock language="bash" code={"$ pnpm add x"} />              {/* copies "pnpm add x" */}
+<CodeBlock language="bash" stripPrompt={false} code={"$ pnpm add x"} />  {/* copies "$ pnpm add x" */}
 <CodeBlock language="ts" copyable={false} code={snippet} />
 <CodeBlock language="bash" code={command} onCopied={() => track("install-copied")} />
 

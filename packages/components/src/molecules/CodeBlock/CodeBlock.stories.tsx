@@ -1,6 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, within } from "storybook/test";
+import { send } from "./browserProtocol";
 import { Text } from "../../atoms/Text";
 import { CodeBlock } from "./CodeBlock";
 import { codeBlockPlaygroundSnippet, codeBlockSnippets, highlightLinesFromText } from "./CodeBlock.snippets";
@@ -150,6 +151,12 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Shows a button that copies the code to the clipboard, and announces the result to screen readers.",
       table: { defaultValue: { summary: "true" } },
     },
+    stripPrompt: {
+      control: "boolean",
+      description:
+        "For shell code, takes a leading \"$ \" prompt off each line that has one when the code is copied, so a command shown as \"$ pnpm add x\" pastes as \"pnpm add x\". The prompt is still drawn. Lines without a prompt are copied as they are. false copies the code exactly as written.",
+      table: { defaultValue: { summary: "true" } },
+    },
     copiedDuration: {
       control: { type: "number", min: 0, max: 10000, step: 500 },
       description: "How long, in milliseconds, the copy button shows its check mark (or its warning, if copying failed) before going back.",
@@ -162,7 +169,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       ...noControls,
       description:
-        "The words the block writes itself; translate them here. Give only the ones you change: copy (\"Copy code\"), copied, copyFailed, expand (a function of the number of hidden lines), collapse (\"Show less\") and region (\"Code\").",
+        "The words the block writes itself; translate them here. Give only the ones you change: copy (\"Copy code\"), copied, copyFailed, expand (a function of the number of hidden lines), collapse (\"Show less\"), highlighted (a function of how many lines a highlight covers, said in front of it for screen readers) and region (\"Code\").",
     },
     "aria-label": {
       control: "text",
@@ -193,6 +200,7 @@ const meta: Meta<PlaygroundArgs> = {
     collapsedLines: 10,
     defaultExpanded: false,
     copyable: true,
+    stripPrompt: true,
     copiedDuration: 2000,
     "aria-label": "Example code",
   },
@@ -327,6 +335,14 @@ export const CopyButton: Story = {
       <DemoBlock {...args} copyable={false} aria-label="Without a copy button" />
     </div>
   ),
+};
+
+export const ShellPrompt: Story = {
+  name: "Shell commands: the prompt is not copied",
+  parameters: { docs: { source: { code: codeBlockSnippets.prompt } } },
+  args: { code: "$ pnpm add @dbm-design-system/components\n$ pnpm test", language: "bash" },
+  argTypes: { code: noControls, language: noControls, "aria-label": noControls },
+  render: (args) => <DemoBlock {...args} aria-label="Install and test" />,
 };
 
 export const PlainText: Story = {
@@ -509,8 +525,8 @@ export const LineNumbersInteraction: Story = {
     await expect(Math.abs(shortRange.getBoundingClientRect().left - boxes[0]!.left)).toBeLessThan(1);
     // The numbers are drawn by CSS and not selectable, so selecting the code gives only the code.
     await expect(getComputedStyle(short, "::before").userSelect).toBe("none");
-    await expect(getComputedStyle(short, "::before").content).toBe('"9"');
-    await expect(getComputedStyle(last, "::before").content).toBe('"11"');
+    await expect(getComputedStyle(short, "::before").content).toContain('"9"');
+    await expect(getComputedStyle(last, "::before").content).toContain('"11"');
     const selection = window.getSelection() as Selection;
     selection.selectAllChildren(block.querySelector("code") as Node);
     const copied = selection.toString().split("\n").filter(Boolean);
@@ -544,9 +560,11 @@ export const HighlightInteraction: Story = {
     await expect(getComputedStyle(second).borderInlineStartColor).toBe(resolveColor("--dbm-border-focus"));
     await expect(getComputedStyle(first).borderInlineStartColor).toBe("rgba(0, 0, 0, 0)");
     // Highlighting changes no line's own text position.
+    // Where the code starts: its first node, not the hidden cue a highlighted line begins with.
     const rangeOf = (line: HTMLElement) => {
+      const start = [...line.childNodes].find((node) => !(node instanceof HTMLElement && node.className.includes("cue"))) as Node;
       const range = document.createRange();
-      range.selectNodeContents(line);
+      range.selectNodeContents(start);
       return range.getBoundingClientRect().left;
     };
     await expect(Math.abs(rangeOf(first) - rangeOf(second))).toBeLessThan(0.5);
@@ -614,12 +632,101 @@ export const CollapseWrapInteraction: Story = {
     await userEvent.click(within(block).getByRole("button", { name: "Show less" }));
     await expect(rect(lines[2]!).top).toBeGreaterThanOrEqual(rect(frame).bottom - 1);
     // A different width wraps the lines differently, and the cut follows: still two whole lines, and shorter.
+    // Re-measuring must not make the browser report a "ResizeObserver loop" error, which an app's error tracking
+    // would log for every block that resizes.
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => {
+      errors.push(event.message);
+      event.preventDefault();
+    };
+    window.addEventListener("error", onError);
     const before = rect(frame).height;
     block.style.maxWidth = "60rem";
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    window.removeEventListener("error", onError);
+    await expect(errors.filter((message) => message.includes("ResizeObserver"))).toEqual([]);
     await expect(rect(frame).height).toBeLessThan(before);
     await expect(rect(lines[1]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1);
     await expect(rect(lines[2]!).top).toBeGreaterThanOrEqual(rect(frame).bottom - 1);
+  },
+};
+
+// --- Things only the browser's own accessibility tree and forced-colours emulation can show, both through the
+// Chrome DevTools Protocol the test browser already speaks.
+
+type AccessibilityNodes = { nodes: Array<{ role?: { value: string }; name?: { value: string }; ignored?: boolean }> };
+
+/** The text nodes a screen reader can reach on this page, from the browser's accessibility tree. */
+async function readableText(): Promise<string[]> {
+  await send("Accessibility.enable");
+  await send("Page.enable");
+  const { frameTree } = (await send("Page.getFrameTree")) as { frameTree: { frame: { id: string; url: string }; childFrames?: Array<{ frame: { id: string; url: string } }> } };
+  const frames = [frameTree.frame, ...(frameTree.childFrames ?? []).map((child) => child.frame)];
+  const frame = frames.find((candidate) => candidate.url === window.location.href) ?? frames[frames.length - 1]!;
+  const tree = (await send("Accessibility.getFullAXTree", { frameId: frame.id })) as AccessibilityNodes;
+  return tree.nodes.filter((node) => !node.ignored && node.role?.value === "StaticText" && node.name?.value).map((node) => node.name!.value);
+}
+
+export const ReadableTextInteraction: Story = {
+  ...Playground,
+  name: "Interaction: a screen reader reads the code and a highlight's cue, not the line numbers, and the cue is not selected",
+  tags: ["!dev"],
+  render: () => (
+    <div data-testid="block">
+      <CodeBlock code={"alpha\nbeta\ngamma\ndelta"} language="text" showLineNumbers highlightLines={[2, 3]} aria-label="Reading" copyable={false} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const heard = await readableText();
+    // The code, and one cue for the two-line highlight, in front of its first line.
+    for (const word of ["alpha", "beta", "gamma", "delta"]) await expect(heard).toContain(word);
+    await expect(heard.filter((text) => text === "2 highlighted lines:")).toHaveLength(1);
+    // The numbers are drawn, but decoration: none of them is in what a screen reader reaches.
+    await expect(heard.filter((text) => /^\d+$/.test(text))).toEqual([]);
+    await expect(getComputedStyle(linesOf(canvasElement)[0]!, "::before").content).toContain('"1"');
+    // Selecting the code gives the code alone: neither the cue nor a number.
+    const selection = window.getSelection() as Selection;
+    selection.selectAllChildren(canvasElement.querySelector("code") as Node);
+    await expect(selection.toString().split("\n").filter(Boolean)).toEqual(["alpha", "beta", "gamma", "delta"]);
+    selection.removeAllRanges();
+  },
+};
+
+export const ForcedColorsInteraction: Story = {
+  ...Playground,
+  name: "Interaction: in forced colours only a highlighted line has an edge accent, and the fade is gone",
+  tags: ["!dev"],
+  render: () => (
+    <div data-testid="block">
+      <CodeBlock code={Array.from({ length: 12 }, (_, index) => `line ${index + 1}`).join("\n")} language="text" highlightLines={[2]} collapsible collapsedLines={4} aria-label="Forced colours" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = canvasElement.querySelector("figure") as HTMLElement;
+    const lines = linesOf(canvasElement);
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
+      const canvas = getComputedStyle(root).backgroundColor;
+      // A plain line's accent is the page's own colour, so it is invisible; without this every line shows a bar.
+      for (const line of lines.filter((candidate) => candidate.dataset.highlighted !== "true")) {
+        await expect(getComputedStyle(line).borderInlineStartColor).toBe(canvas);
+      }
+      // The highlighted line's is a system colour that shows, still 4px wide: the only cue left.
+      const accent = getComputedStyle(lines[1]!);
+      await expect(accent.borderInlineStartColor).not.toBe(canvas);
+      await expect(px(accent.borderInlineStartWidth)).toBe(resolveLength("--dbm-border-width-4"));
+      // The fade is a colour gradient with no meaning here.
+      await expect(root.querySelector("[aria-hidden='true']:empty")).not.toBeNull();
+      await expect(getComputedStyle(root.querySelector("[aria-hidden='true']:empty") as Element).display).toBe("none");
+    } finally {
+      await emulate("none");
+    }
+    // Back to normal colours, the accent is the token again.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(getComputedStyle(lines[1]!).borderInlineStartColor).toBe(resolveColor("--dbm-border-focus"));
   },
 };
 

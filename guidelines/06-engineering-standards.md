@@ -145,7 +145,7 @@ Beyond the initial "definition of done" (`05-component-api-conventions.md` §8, 
 - [ ] Every other story's effective `args` (Playground defaults plus that story's own overrides, or its `render`'s hardcoded values if intentionally non-interactive) accurately reflect what the canvas actually shows — a control claiming one value while the canvas visibly shows another is the same underlying bug as the render-ignoring-args issue above, just easier to spot once you're looking for it.
 - [ ] Prop order in every Controls panel (the Playground's and every individual variant story's) reads sensibly — same sequence principle as the Properties table above.
 - [ ] Sidebar `title` matches the taxonomy in `07-storybook-and-documentation-standards.md` §3.
-- [ ] Docs page visually verified in a running Storybook instance — `tsc --noEmit` passing only proves the MDX compiles, it does not prove the page renders correctly (`07-storybook-and-documentation-standards.md` §4.1).
+- [ ] Docs page visually verified in a running Storybook instance, **again after any change to a stories file's imports** — a module that throws outside the test runner (`vitest/browser`) passes every test and takes the Docs page and every story down; found by opening the page (`CodeBlock`, 2026-09-26) — `tsc --noEmit` passing only proves the MDX compiles, it does not prove the page renders correctly (`07-storybook-and-documentation-standards.md` §4.1).
 
 **Functional verification**
 - [ ] Component functions correctly end to end — exercised live, not just read.

@@ -9,6 +9,7 @@ import styles from "./CodeBlock.module.css";
 import type { CodeBlockLabels, CodeBlockProps } from "./CodeBlock.types";
 import { copyToClipboard } from "./copyToClipboard";
 import { parseHighlightLines } from "./highlightLines";
+import { textToCopy } from "./textToCopy";
 import { tokenize } from "./tokenize";
 import type { TokenType } from "./tokenize";
 import { useCodeScroll } from "./useCodeScroll";
@@ -20,6 +21,7 @@ const defaultLabels: CodeBlockLabels = {
   copyFailed: "Copy failed",
   expand: (hiddenLines) => `Show ${hiddenLines} more lines`,
   collapse: "Show less",
+  highlighted: (count) => (count === 1 ? "Highlighted line:" : `${count} highlighted lines:`),
   region: "Code",
 };
 
@@ -74,6 +76,7 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       defaultExpanded = false,
       onExpandedChange,
       copyable = true,
+      stripPrompt = true,
       copiedDuration = 2000,
       onCopied,
       labels: labelOverrides,
@@ -96,6 +99,20 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     const highlighted = useMemo(() => parseHighlightLines(highlightLines), [highlightLines]);
     const firstLine = Number.isFinite(startLine) ? Math.trunc(startLine) : 1;
     const gutterDigits = String(Math.max(Math.abs(firstLine), Math.abs(firstLine + lines.length - 1))).length + (firstLine < 0 ? 1 : 0);
+
+    // A screen reader has no way to see the band, so the first line of each highlighted run says how many lines
+    // it covers (never selected or copied).
+    const highlightRuns = useMemo(() => {
+      const runs = new Map<number, number>();
+      const isHighlighted = (index: number) => highlighted.has(firstLine + index);
+      for (let index = 0; index < lines.length; index++) {
+        if (!isHighlighted(index) || (index > 0 && isHighlighted(index - 1))) continue;
+        let length = 1;
+        while (index + length < lines.length && isHighlighted(index + length)) length++;
+        runs.set(index, length);
+      }
+      return runs;
+    }, [highlighted, firstLine, lines.length]);
 
     // --- Collapsing: controlled with `expanded`, or uncontrolled from `defaultExpanded`.
     const [uncontrolledExpanded, setUncontrolledExpanded] = useState(defaultExpanded);
@@ -130,10 +147,11 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       return () => window.clearTimeout(timer);
     }, [copy, copiedDuration]);
     const handleCopy = async () => {
-      const copied = await copyToClipboard(text);
+      const toCopy = textToCopy(text, language, stripPrompt);
+      const copied = await copyToClipboard(toCopy);
       setCopy((current) => ({ status: copied ? "copied" : "failed", count: current.count + 1 }));
       announce(copied ? labels.copied : labels.copyFailed);
-      if (copied) onCopied?.(text);
+      if (copied) onCopied?.(toCopy);
     };
 
     const codeIsNotText = typeof code !== "string";
@@ -199,6 +217,9 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
                   const number = firstLine + index;
                   return (
                     <span key={index} className={styles.line} data-line={number} data-highlighted={highlighted.has(number) ? "true" : undefined}>
+                      {highlightRuns.has(index) && (
+                        <VisuallyHidden className={styles.cue}>{labels.highlighted(highlightRuns.get(index) as number)}</VisuallyHidden>
+                      )}
                       {line.map((token, tokenIndex) =>
                         token.type ? (
                           <span key={tokenIndex} className={tokenClass[token.type]}>
