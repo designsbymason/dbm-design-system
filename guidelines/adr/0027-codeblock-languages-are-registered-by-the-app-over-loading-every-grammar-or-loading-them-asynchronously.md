@@ -1,0 +1,30 @@
+# 0027 — `CodeBlock` languages beyond the core are registered by the app, over loading every grammar with the component or loading them asynchronously
+
+**Status:** Accepted · **Date:** 2026-09-26
+
+## Context
+[ADR-0026](0026-codeblock-highlights-with-a-small-built-in-tokenizer-over-a-highlighting-dependency-or-bring-your-own.md) chose a built-in tokenizer over a dependency, and recorded two open ends: an app that wants a fuller grammar has no hook for one, and a language is added by adding a rule list, so the component only grows. By the time sixteen languages were in, `CodeBlock` was 9.68KB of JavaScript gzipped, the largest component by a wide margin and 0.3KB under the per-component budget (10KB), whichever language a page used. No further language could be added without raising the budget. The two open ends are one problem: a language needs a way to be provided that is not "compiled into the component".
+
+## Decision
+- **A language is a small, public shape**: `CodeLanguage`, `{ name, aliases?, maxLength?, tokenize(code): TokenLine[] }`, lines of `{ type?, text }` tokens. The engine's rule and state types stay private, so the tokenizer's internals aren't frozen. A shipped grammar is one, and so is an app's wrapper around any other highlighter.
+- **Nine languages stay in the core** (`ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`), so the common web languages highlight with no setup, as ADR-0026 wanted. **The other seven** (Python, YAML, SQL, Markdown, Go, Rust, Java) become `pythonLanguage` and so on: named exports from the same package entry, each one marked-pure call whose rules are built on first use, so a bundler drops the ones an app doesn't import. No subpath exports, no build change.
+- **The app registers them**: `registerCodeLanguage(pythonLanguage)` once, at start, returning a function that undoes it. A registered language is chosen by name or alias (any case) and wins over a built-in one of the same name, which is how a fuller grammar replaces the approximate one. The registry is subscribable, and a block redraws when it changes, so a grammar loaded later (`import()` then register) colours blocks that were drawn plain: lazy loading is available to the app, and the library itself never renders a block empty or flashes.
+- **One block can bring its own**: a `highlighter(code, language)` prop, tried before the registry and the built-ins, returning tokens or `undefined` to pass.
+- **Whatever isn't ours is checked before it is drawn**: the result must be an array of lines of `{ type?, text }`, no newline inside a token, and joining them with a newline between the lines must give back the code exactly; a result that isn't, or a throw, falls back to plain text with a development warning. The tokens are copied and an unknown `type` dropped, so nothing returned reaches a class name unchecked. Highlighting stays lossless whoever does it, and never HTML (ADR-0026's rule, kept).
+- **The 30,000-character limit belongs to the language.** Every language the library ships sets `maxLength`; an app's own leaves it out and has no limit (its cost is its own), and a block's `highlighter` has none.
+
+## Alternatives considered
+**Load a grammar with `import()` when its language is first used** — rejected, for the reason ADR-0026 rejected a dependency that renders asynchronously: the block draws plain first and then flashes colour, and server rendering has nothing to show. The registry doesn't rule it out for an app that wants it.
+**Keep all sixteen built in and add only the hook** — rejected: it leaves the size problem, so each further language pushes the component past its budget.
+**No language built in (only the engine)** — rejected: the smallest core, but every first example, including `tsx`, is plain text until the app registers something, which undoes ADR-0026's "highlighting works out of the box".
+**A `highlighter`/`languages` prop only, no registry** — rejected as the main path: it repeats on every block of a page (or needs a wrapper component in every app). The prop stays as the escape hatch for one block.
+**Subpath entry points per language** (`…/components/python`) — rejected: the single entry with `sideEffects: false` and marked-pure exports already tree-shakes, and subpaths add `exports`, build and type-resolution surface to a package with one entry.
+
+## Consequences
+- `CodeBlock` drops to 8.21KB of JavaScript gzipped, with the seven languages together another 3.13KB an app pays for only if it imports them (the check measures them as `CodeBlock/languages`). The core carries about 1KB of registry and checking. Further languages (gaps list item 20) cost the ones that use them and nobody else.
+- **A behaviour change while the package is unpublished (version 0.0.0):** `language="python"` and the other six draw plain until registered. Storybook's `preview.tsx` registers them all, the Docs page says so, and every snippet that uses one shows the registration.
+- **Constrains what follows:** a new language ships as a `CodeLanguage` with a size limit, and is opt-in unless it is one of the nine; any later thing that colours code takes the same shape and the same checks. Nothing that isn't the component's own highlighter may write HTML.
+- **Module-level state**, for the registry: an app registers at start, on both server and client; a test that registers should undo it (the function returned).
+
+## Related
+[ADR-0026](0026-codeblock-highlights-with-a-small-built-in-tokenizer-over-a-highlighting-dependency-or-bring-your-own.md), `component-reviews/CodeBlock.md` (gaps 5 and 19), `06-engineering-standards.md` §9 (linear-time text handling; the three-question test), `packages/components/scripts/check-component-bundle-size.mjs`.
