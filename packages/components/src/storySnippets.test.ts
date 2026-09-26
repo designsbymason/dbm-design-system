@@ -53,7 +53,7 @@ import { avatarGroupPlaygroundSnippet } from "./molecules/AvatarGroup/AvatarGrou
 import { buttonGroupPlaygroundSnippet } from "./molecules/ButtonGroup/ButtonGroup.snippets";
 import { cardPlaygroundSnippet } from "./molecules/Card/Card.snippets";
 import { checkboxGroupPlaygroundSnippet } from "./molecules/CheckboxGroup/CheckboxGroup.snippets";
-import { codeBlockPlaygroundSnippet, highlightLinesFromText, highlightLinesLiteral } from "./molecules/CodeBlock/CodeBlock.snippets";
+import { codeBlockPlaygroundSnippet, codeBlockSnippets, highlightLinesFromText, highlightLinesLiteral } from "./molecules/CodeBlock/CodeBlock.snippets";
 import { emptyStatePlaygroundSnippet } from "./molecules/EmptyState/EmptyState.snippets";
 import { formFieldPlaygroundSnippet } from "./molecules/FormField/FormField.snippets";
 import { gridPlaygroundSnippet } from "./molecules/Grid/Grid.snippets";
@@ -636,9 +636,9 @@ describe("CodeBlock's Playground snippet", () => {
 
   it("writes only what differs from the defaults, and always the source", () => {
     expect(codeBlockPlaygroundSnippet({ language: "tsx", showLineNumbers: false, startLine: 1, wrap: false, collapsible: false, copyable: true, copiedDuration: 2000, highlight: "", title: "", maxHeight: "" })).toBe(
-      '<CodeBlock language="tsx" code={source} />',
+      "{/* source: the code to show, as a string */}\n<CodeBlock language=\"tsx\" code={source} />",
     );
-    expect(codeBlockPlaygroundSnippet({})).toBe("<CodeBlock code={source} />");
+    expect(codeBlockPlaygroundSnippet({})).toBe("{/* source: the code to show, as a string */}\n<CodeBlock code={source} />");
   });
 
   it("writes startLine only with line numbers, collapsedLines only when collapsible, and copiedDuration only with a copy button", () => {
@@ -649,6 +649,19 @@ describe("CodeBlock's Playground snippet", () => {
     expect(codeBlockPlaygroundSnippet({ copyable: false, copiedDuration: 500 })).not.toContain("copiedDuration");
     expect(codeBlockPlaygroundSnippet({ copiedDuration: 500 })).toContain("copiedDuration={500}");
     expect(codeBlockPlaygroundSnippet({ copyable: false })).toContain("copyable={false}");
+  });
+
+  it("explains every placeholder it passes as code, in a comment, in every CodeBlock snippet", () => {
+    // `code={source}` stands for the reader's own string; a snippet has to say so, or it isn't pasteable.
+    const explained = (snippet: string, name: string) => new RegExp(`\\{/\\*[^]*?\\b${name}:[^]*?\\*/\\}`).test(snippet);
+    const snippets = [...Object.values(codeBlockSnippets), codeBlockPlaygroundSnippet({}), codeBlockPlaygroundSnippet({ language: "tsx", collapsible: true, highlight: "2" })];
+    for (const snippet of snippets) {
+      for (const [, name] of snippet.matchAll(/\bcode=\{([A-Za-z_]\w*)\}/g)) {
+        expect(explained(snippet, name as string), `${name} is not explained in:\n${snippet}`).toBe(true);
+      }
+    }
+    expect(explained("<CodeBlock code={source} />", "source")).toBe(false);
+    expect(explained("{/* source: the code, as a string */}\n<CodeBlock code={source} />", "source")).toBe(true);
   });
 
   it("turns typed highlights into an array, ignoring what is not a line or a range", () => {

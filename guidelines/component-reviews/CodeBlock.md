@@ -43,6 +43,10 @@ Files: the component and its stylesheet, `tokenize.ts` (the highlighter, plain d
 
 **Not verified:** a real screen reader (the figure name, the region, the announcements); the real Clipboard API against a permission prompt (the unit tests mock it, and the fallback is tested with a mocked `execCommand`); a forced-colours mode (the band and syntax colours are dropped there, the accent border remains); very long single tokens against the 30,000-character limit in a slow browser.
 
+## Follow-up, 2026-09-26 (before Finalize): snippets define their placeholders
+
+A reader asked why the Variants snippets showed `code={source}`. It is a placeholder for the reader's own string (the demo text is long and would swamp the props each variant shows), but nothing in the snippet said so, and some snippets used real inline strings while others didn't — so they weren't pasteable and looked inconsistent. At explicit direction, every snippet that passes a placeholder (`source`, `excerpt`, `command`, `config`, `output`) now defines it in its leading comment, the Playground's snippet starts with `{/* source: the code to show, as a string */}`, and the Docs page states the convention once above the variants. A unit test asserts that every `code={name}` in every CodeBlock snippet, and in the Playground's, is explained in a comment; it fails with one explanation removed (checked). The rule for any component's snippets is now in `07-storybook-and-documentation-standards.md` §4.2.
+
 ## Gaps named, not built
 
 - **A hook for another highlighter** (tokens in, so a consumer can bring a fuller grammar). See ADR-0026.
