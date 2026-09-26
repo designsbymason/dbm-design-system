@@ -292,12 +292,23 @@
   padding-inline: 0;
 }
 
-/* A `CodeBlock` (a `<figure>` around a `<pre><code>`) sets its own font size, per its `size` prop, on the frame the
-   code sits in. The inline-code rule above forces `font-size` on every `code` (and `!important`, so a plain
-   inherit loses), which would draw every size of a block at the same size on a Docs page while the component is
-   right everywhere else. Scoped to the figure so Storybook's own source panels keep their look. */
+/* A `CodeBlock` (a `<figure>` around a `<pre><code>`) is not the inline code the rule above styles, but its `code`
+   matches it, and that rule's `!important` declarations beat the plain `pre code` reset just above. On a Docs page
+   that drew a pill inside the block (a border, a tinted background and padding around the code), collapsed the
+   indentation (`white-space: normal`), turned the plain text grey and medium-weight, and forced one font size on
+   every `size`, while the component in a standalone story was right. Undone here for the figure only, so
+   Storybook's own source panels keep their look; `inherit` hands each property back to the block's own styles. */
 .sbdocs-content figure pre code {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: inherit !important;
   font-size: inherit !important;
+  font-weight: inherit;
+  max-width: none;
+  overflow-wrap: normal;
+  padding: 0 !important;
+  white-space: inherit !important;
 }
 
 /* The live-preview boxes (Canvas blocks). `!important` confirmed

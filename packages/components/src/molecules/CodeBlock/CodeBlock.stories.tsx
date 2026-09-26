@@ -1326,3 +1326,36 @@ export const HeaderlessPhoneInteraction: Story = {
   },
 };
 
+export const DocsPageInteraction: Story = {
+  ...Playground,
+  name: "Interaction: on a Docs page (inside .sbdocs-content) the code is not restyled as inline code",
+  tags: ["!dev"],
+  // The Docs page's stylesheet styles every `code` inside `.sbdocs-content` as an inline pill, and its `!important`
+  // declarations beat a plain reset: a standalone story has no such ancestor, so only this wrapper can see it.
+  render: () => (
+    <div className="sbdocs-content" data-testid="docs">
+      <CodeBlock code={"function f() {\n  return 1;\n}"} language="ts" size="lg" showLineNumbers aria-label="On a Docs page" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const block = within(canvasElement).getByTestId("docs");
+    const code = block.querySelector("code") as HTMLElement;
+    const frame = code.closest("pre")!.parentElement as HTMLElement;
+    const style = getComputedStyle(code);
+    // No pill: no border, no background of its own, no padding of its own.
+    await expect(style.borderTopWidth).toBe("0px");
+    await expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    await expect(style.paddingLeft).toBe("0px");
+    await expect(style.borderRadius).toBe("0px");
+    // Indentation is kept, the size is the block's own, and plain text is the block's own colour and weight.
+    await expect(style.whiteSpace).toBe("pre");
+    await expect(style.fontSize).toBe(getComputedStyle(frame).fontSize);
+    await expect(style.color).toBe(getComputedStyle(frame).color);
+    await expect(style.fontWeight).toBe(getComputedStyle(frame).fontWeight);
+    // The second line's `return` starts further in than the first line's `function`, by its two spaces of indentation.
+    const keywords = [...block.querySelectorAll<HTMLElement>("code span[data-line] > span")].filter((token) => ["function", "return"].includes(token.textContent ?? ""));
+    await expect(keywords.map((token) => token.textContent)).toEqual(["function", "return"]);
+    await expect(rect(keywords[1]!).left).toBeGreaterThan(rect(keywords[0]!).left + 4);
+  },
+};
+
