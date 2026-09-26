@@ -5,6 +5,7 @@ import { CloseButton } from "../CloseButton";
 import { IconButton } from "../IconButton";
 import { Link } from "../Link";
 import { VisuallyHidden } from "../VisuallyHidden";
+import { ButtonGroup } from "../../molecules/ButtonGroup";
 import { Button } from "./Button";
 import * as ButtonStories from "./Button.stories";
 
@@ -149,6 +150,9 @@ element `asChild`'s slotted child renders).
   button scannable at a glance and legible to a screen reader user tabbing through a form.
 - `isLoading` always makes the button non-interactive (`isDisabled = disabled || isLoading`),
   even if `disabled` is explicitly `false` — you don't need to pass both.
+- For a set of related buttons, put them in a `ButtonGroup` rather than styling each: it fuses or spaces them
+  and hands its `variant`, `size`, `rounded` and `disabled` down as defaults. A button's own props still win,
+  and a disabled group disables every button in it, even one that says `disabled={false}`.
 
 ## Accessibility
 
@@ -220,6 +224,16 @@ element `asChild`'s slotted child renders).
   href="/?path=/docs/atoms-inputs-iconbutton--docs"
 >
   <IconButton icon={TrashIcon} aria-label="Delete" variant="secondary" />
+</RelatedCard>
+<RelatedCard
+  name="ButtonGroup"
+  description="Fuses or spaces a set of related buttons, and sets their variant and size once"
+  href="/?path=/docs/molecules-inputs-buttongroup--docs"
+>
+  <ButtonGroup aria-label="Example" variant="secondary" size="sm">
+    <Button>One</Button>
+    <Button>Two</Button>
+  </ButtonGroup>
 </RelatedCard>
 <RelatedCard
   name="CloseButton"

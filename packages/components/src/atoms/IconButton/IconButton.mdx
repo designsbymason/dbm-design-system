@@ -5,6 +5,7 @@ import { Button } from "../Button";
 import { CloseButton } from "../CloseButton";
 import { Icon } from "../Icon";
 import { VisuallyHidden } from "../VisuallyHidden";
+import { ButtonGroup } from "../../molecules/ButtonGroup";
 import { IconButton } from "./IconButton";
 import * as IconButtonStories from "./IconButton.stories";
 
@@ -155,6 +156,9 @@ element `asChild`'s slotted child renders).
 - `IconButton`'s box size (all 5 steps, square and circular alike) is deliberately matched to
   `Button`'s own real rendered height at the equivalent size — the two read as visually aligned
   when placed side by side, e.g. an `IconButton` next to a `Button` in the same toolbar row.
+- For a row of related icon actions, use a `ButtonGroup`: it fuses or spaces them and sets `variant`, `size`
+  and `disabled` once. In a group an `IconButton` stretches to the row's height if a `Button` beside it is
+  taller, and never shrinks below its own size.
 
 ## Accessibility
 
@@ -250,6 +254,16 @@ element `asChild`'s slotted child renders).
   href="/?path=/docs/atoms-inputs-button--docs"
 >
   <Button size="sm" leadingIcon={HeartIcon} variant="secondary">Favorite</Button>
+</RelatedCard>
+<RelatedCard
+  name="ButtonGroup"
+  description="Fuses or spaces a set of related buttons, and sets their variant and size once"
+  href="/?path=/docs/molecules-inputs-buttongroup--docs"
+>
+  <ButtonGroup aria-label="Example" variant="secondary" size="sm">
+    <IconButton icon={PlusIcon} aria-label="Add" />
+    <IconButton icon={HeartIcon} aria-label="Favorite" />
+  </ButtonGroup>
 </RelatedCard>
 <RelatedCard
   name="CloseButton"

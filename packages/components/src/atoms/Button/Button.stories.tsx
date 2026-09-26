@@ -70,15 +70,19 @@ const meta: Meta<typeof Button> = {
     // guidelines/07-storybook-and-documentation-standards.md §5), so they
     // get one explicitly here too.
     children: { description: "The button's visible label content." },
+    // The defaults are resolved in the component (a `ButtonGroup` around it can supply them), not written as
+    // destructuring defaults, so docgen can't read them and each is stated here.
     variant: {
       control: "select",
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
+      table: { defaultValue: { summary: "primary" } },
     },
-    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
+    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"], table: { defaultValue: { summary: "md" } } },
     rounded: {
       control: "boolean",
       description:
         "Renders with fully rounded ends — a pill, or a circle when the button is as wide as it is tall — instead of the standard rounded-corner shape.",
+      table: { defaultValue: { summary: "false" } },
     },
     leadingIcon: {
       ...iconControl,

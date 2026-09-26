@@ -6,6 +6,7 @@ import { Icon } from "../Icon";
 import type { IconTone } from "../Icon";
 import styles from "./Button.module.css";
 import type { ButtonProps, ButtonSize, ButtonVariant } from "./Button.types";
+import { useButtonGroup } from "./buttonGroupContext";
 
 const variantClass: Record<ButtonVariant, string | undefined> = {
   primary: styles.variantPrimary,
@@ -67,9 +68,9 @@ const iconSizeForButtonSize: Record<ButtonSize, "xs" | "sm" | "md"> = {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      variant = "primary",
-      size = "md",
-      rounded = false,
+      variant: variantProp,
+      size: sizeProp,
+      rounded: roundedProp,
       leadingIcon,
       trailingIcon,
       isLoading = false,
@@ -86,12 +87,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const Component = asChild ? Slot : "button";
+    // Inside a `ButtonGroup` its variant, size and rounded are defaults for this button (its own props win), and
+    // a disabled group disables it. Outside one `group` is `null` and nothing here changes.
+    const group = useButtonGroup();
+    const variant = variantProp ?? group?.variant ?? "primary";
+    const size = sizeProp ?? group?.size ?? "md";
+    const rounded = roundedProp ?? group?.rounded ?? false;
     const iconSize = iconSizeForButtonSize[size];
     const iconTone = iconToneForVariant[variant];
     // `||`, not `??` — `isLoading` must disable the button even when a
     // consumer explicitly passes `disabled={false}`; `??` would let that
     // explicit `false` win and leave a "loading" button fully clickable.
-    const isDisabled = disabled || isLoading;
+    const isDisabled = disabled || group?.disabled || isLoading;
     // `Slot` can't take a native `disabled` attribute (the child might be
     // an <a> or any other element) — `aria-disabled` plus this handler
     // conveys and enforces the same state instead.
@@ -153,6 +160,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={asChild ? undefined : isDisabled}
         aria-disabled={slottedDisabled || undefined}
         aria-busy={isLoading || undefined}
+        // Lets a `ButtonGroup`'s stylesheet draw the right separator for this variant; absent outside a group.
+        data-variant={group ? variant : undefined}
         onClick={handleClick}
         className={cx(
           styles.root,

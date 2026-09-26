@@ -49,6 +49,7 @@ import { skeletonPlaygroundSnippet } from "./atoms/Skeleton/Skeleton.snippets";
 import { spinnerPlaygroundSnippet } from "./atoms/Spinner/Spinner.snippets";
 import { tagPlaygroundSnippet } from "./atoms/Tag/Tag.snippets";
 import { accordionPlaygroundSnippet } from "./molecules/Accordion/Accordion.snippets";
+import { buttonGroupPlaygroundSnippet } from "./molecules/ButtonGroup/ButtonGroup.snippets";
 import { cardPlaygroundSnippet } from "./molecules/Card/Card.snippets";
 import { checkboxGroupPlaygroundSnippet } from "./molecules/CheckboxGroup/CheckboxGroup.snippets";
 import { emptyStatePlaygroundSnippet } from "./molecules/EmptyState/EmptyState.snippets";
@@ -577,6 +578,40 @@ describe("RangeSlider's Playground snippet", () => {
     const snippet = rangeSliderPlaygroundSnippet({ orientation: "vertical" });
     expect(snippet).toContain('orientation="vertical"');
     expect(snippet).toContain('<div style={{ height: "12rem" }}>');
+  });
+});
+
+describe("ButtonGroup's Playground snippet", () => {
+  it.each([
+    {},
+    { variant: "secondary", size: "sm", rounded: true, disabled: true, attached: false, orientation: "vertical", fullWidth: true, count: 5, "aria-label": "View" },
+    { variant: "Each button's own", size: "Each button's own", rounded: false },
+    { count: 1 },
+    { count: 6 },
+  ])("%j is a real snippet", (args) => {
+    expect(problemsIn(buttonGroupPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("writes only what differs, and leaves out \"each button's own\" for variant and size", () => {
+    expect(buttonGroupPlaygroundSnippet({ attached: true, disabled: false, fullWidth: false, orientation: "horizontal", count: 2 })).toBe(
+      '<ButtonGroup aria-label="Clipboard">\n  <Button>Copy</Button>\n  <Button>Paste</Button>\n</ButtonGroup>',
+    );
+    expect(buttonGroupPlaygroundSnippet({ variant: "Each button's own", size: "Each button's own", count: 1 })).toBe(
+      '<ButtonGroup aria-label="Clipboard">\n  <Button>Copy</Button>\n</ButtonGroup>',
+    );
+    expect(buttonGroupPlaygroundSnippet({ variant: "ghost", size: "lg", count: 1 })).toContain('variant="ghost" size="lg"');
+    expect(buttonGroupPlaygroundSnippet({ attached: false, count: 1 })).toContain("attached={false}");
+  });
+
+  it("treats rounded's \"each button's own\" choice, which arrives as a truthy option key, as not set", () => {
+    expect(buttonGroupPlaygroundSnippet({ rounded: "Each button's own", count: 1 })).not.toContain("rounded");
+    expect(buttonGroupPlaygroundSnippet({ rounded: false, count: 1 })).not.toContain("rounded");
+    expect(buttonGroupPlaygroundSnippet({ rounded: true, count: 1 })).toContain("rounded");
+  });
+
+  it("keeps the number of buttons between one and six", () => {
+    expect(buttonGroupPlaygroundSnippet({ count: 0 }).match(/<Button>/g)).toHaveLength(1);
+    expect(buttonGroupPlaygroundSnippet({ count: 99 }).match(/<Button>/g)).toHaveLength(6);
   });
 });
 

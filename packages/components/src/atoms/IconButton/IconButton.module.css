@@ -65,30 +65,43 @@
    `component/icon-button.json` for the real measured numbers. The icon
    itself is centered via `.root`'s own `align-items`/`justify-content`,
    not padding — this is a fixed box, not padding accumulating around
-   content. */
+   content. `min-height`/`min-width` repeat the same size so that a
+   `ButtonGroup` can let it stretch to its row or column (`height`/`width:
+   auto` there) without ever being smaller than this box; on its own they
+   change nothing. */
 
 .sizeXs {
   height: var(--dbm-icon-button-size-xs);
+  min-height: var(--dbm-icon-button-size-xs);
+  min-width: var(--dbm-icon-button-size-xs);
   width: var(--dbm-icon-button-size-xs);
 }
 
 .sizeSm {
   height: var(--dbm-icon-button-size-sm);
+  min-height: var(--dbm-icon-button-size-sm);
+  min-width: var(--dbm-icon-button-size-sm);
   width: var(--dbm-icon-button-size-sm);
 }
 
 .sizeMd {
   height: var(--dbm-icon-button-size-md);
+  min-height: var(--dbm-icon-button-size-md);
+  min-width: var(--dbm-icon-button-size-md);
   width: var(--dbm-icon-button-size-md);
 }
 
 .sizeLg {
   height: var(--dbm-icon-button-size-lg);
+  min-height: var(--dbm-icon-button-size-lg);
+  min-width: var(--dbm-icon-button-size-lg);
   width: var(--dbm-icon-button-size-lg);
 }
 
 .sizeXl {
   height: var(--dbm-icon-button-size-xl);
+  min-height: var(--dbm-icon-button-size-xl);
+  min-width: var(--dbm-icon-button-size-xl);
   width: var(--dbm-icon-button-size-xl);
 }
 

@@ -38,11 +38,14 @@ const meta: Meta<typeof IconButton> = {
       ...iconControl,
       description: "The icon to render — a component reference, not a string name.",
     },
+    // The defaults are resolved in the component (a `ButtonGroup` around it can supply them), not written as
+    // destructuring defaults, so docgen can't read them and each is stated here.
     variant: {
       control: "select",
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
+      table: { defaultValue: { summary: "primary" } },
     },
-    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
+    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"], table: { defaultValue: { summary: "md" } } },
     isLoading: {
       control: "boolean",
       description:
@@ -62,6 +65,7 @@ const meta: Meta<typeof IconButton> = {
       control: "boolean",
       description:
         "Renders as a circle instead of the standard rounded-corner shape.",
+      table: { defaultValue: { summary: "false" } },
     },
     // `pressed`/`defaultPressed`/`onPressedChange` don't each get their own
     // Controls-panel widget: `pressed` alone would freeze the button (a

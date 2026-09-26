@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { forwardRef, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import type { ButtonSize, ButtonVariant } from "../Button/Button.types";
+import { useButtonGroup } from "../Button/buttonGroupContext";
 import { Icon } from "../Icon";
 import styles from "./IconButton.module.css";
 import type { IconButtonProps } from "./IconButton.types";
@@ -40,11 +41,11 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   (
     {
       icon,
-      variant = "primary",
-      size = "md",
+      variant: variantProp,
+      size: sizeProp,
       isLoading = false,
       loadingLabel,
-      rounded = false,
+      rounded: roundedProp,
       pressed,
       defaultPressed,
       onPressedChange,
@@ -60,6 +61,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     ref,
   ) => {
     const Component = asChild ? Slot : "button";
+    // Inside a `ButtonGroup` its variant, size and rounded are defaults for this button (its own props win), and
+    // a disabled group disables it. Outside one `group` is `null` and nothing here changes.
+    const group = useButtonGroup();
+    const variant = variantProp ?? group?.variant ?? "primary";
+    const size = sizeProp ?? group?.size ?? "md";
+    const rounded = roundedProp ?? group?.rounded ?? false;
     // Naming/shape mirrors Radix `Toggle`'s own `pressed`/`defaultPressed`/
     // `onPressedChange` (this system's established convention for
     // controlled/uncontrolled state, `05-component-api-conventions.md`
@@ -78,7 +85,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     // consumer explicitly passes `disabled={false}`; `??` would let that
     // explicit `false` win and leave a "loading" button fully clickable.
     // Same fix as Button's identical bug.
-    const isDisabled = disabled || isLoading;
+    const isDisabled = disabled || group?.disabled || isLoading;
     // `Slot` can't take a native `disabled` attribute (the child might be
     // an <a> or any other element) — `aria-disabled` plus this handler
     // conveys and enforces the same state instead. Same rationale as
@@ -154,6 +161,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         disabled={asChild ? undefined : isDisabled}
         aria-disabled={slottedDisabled || undefined}
         aria-busy={isLoading || undefined}
+        // Lets a `ButtonGroup`'s stylesheet draw the right separator for this variant; absent outside a group.
+        data-variant={group ? variant : undefined}
         // Not applied in `asChild` mode — see the dev-mode warning above:
         // `aria-pressed` is only valid on roles that support it, and `Slot`
         // can render onto an element (e.g. a native `<a>`) that doesn't.

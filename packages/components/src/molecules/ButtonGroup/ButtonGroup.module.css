@@ -1,0 +1,107 @@
+.root {
+  align-items: stretch;
+  display: inline-flex;
+  max-width: 100%;
+}
+
+.root[data-orientation="vertical"] {
+  flex-direction: column;
+}
+
+/* A button in a group takes the row's height (or the column's width), not its own: an `IconButton` has a fixed
+   box, so beside a `Button` with a leading icon — a couple of pixels taller — it would leave a step in a fused
+   row. `IconButton` keeps its token size as a minimum (`min-height`/`min-width`), so a row of only icon buttons
+   doesn't collapse to the icon. */
+.root[data-orientation="horizontal"] > * {
+  height: auto;
+}
+
+.root[data-orientation="vertical"] > * {
+  width: auto;
+}
+
+/* `fullWidth`: the group fills its container. A horizontal group gives every button an equal share
+   (`min-width: 0` lets a long label shrink instead of forcing the row wider); a vertical group's buttons
+   already stretch to the group's own width. */
+.fullWidth {
+  display: flex;
+  width: 100%;
+}
+
+.fullWidth[data-orientation="horizontal"] > * {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+/* Spaced: the buttons stay separate. A horizontal row wraps onto more lines when it doesn't fit — an
+   attached group can't, because a fused shape broken across lines is no longer one shape. */
+.spaced {
+  gap: var(--dbm-space-2);
+}
+
+.spaced[data-orientation="horizontal"] {
+  flex-wrap: wrap;
+}
+
+/* Attached: one segmented control. Only the corners where two buttons meet are squared — the outer corners
+   keep whatever the button already has (`radius-md`, or `radius-full` for a `rounded` one), so the group's
+   shape needs no radius of its own. Logical corners (`start`/`end`), so a right-to-left page mirrors it.
+   These selectors are more specific than a button's own `:focus-visible` radius rule, so the meeting
+   corners stay square while one is focused. */
+.attached[data-orientation="horizontal"] > :not(:first-child) {
+  border-end-start-radius: 0;
+  border-start-start-radius: 0;
+}
+
+.attached[data-orientation="horizontal"] > :not(:last-child) {
+  border-end-end-radius: 0;
+  border-start-end-radius: 0;
+}
+
+.attached[data-orientation="vertical"] > :not(:first-child) {
+  border-start-end-radius: 0;
+  border-start-start-radius: 0;
+}
+
+.attached[data-orientation="vertical"] > :not(:last-child) {
+  border-end-end-radius: 0;
+  border-end-start-radius: 0;
+}
+
+/* The focused button's ring is drawn over its neighbours, not under them. */
+.attached > :focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+/* Separators, drawn on every button after the first, to suit its variant (a `Button` or `IconButton` in a
+   group carries `data-variant`):
+   - solid fills (primary, destructive): a hairline of the surface, so the two fills read as a gap. The
+     surface is what shows through a gap, so its background token is the right colour even though the line
+     is drawn as a border.
+   - secondary: the buttons overlap by one border width, so their two borders are one shared line.
+   - tertiary and ghost: a faint rule. Neither has a solid fill or a border to mark where one button ends
+     (ghost's pale tint is too close to the surface for a surface-coloured hairline to show). */
+.attached[data-orientation="horizontal"] > :is([data-variant="primary"], [data-variant="destructive"]):not(:first-child) {
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-bg-surface);
+}
+
+.attached[data-orientation="vertical"] > :is([data-variant="primary"], [data-variant="destructive"]):not(:first-child) {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-bg-surface);
+}
+
+.attached[data-orientation="horizontal"] > [data-variant="secondary"]:not(:first-child) {
+  margin-inline-start: calc(-1 * var(--dbm-border-width-1));
+}
+
+.attached[data-orientation="vertical"] > [data-variant="secondary"]:not(:first-child) {
+  margin-block-start: calc(-1 * var(--dbm-border-width-1));
+}
+
+.attached[data-orientation="horizontal"] > :is([data-variant="tertiary"], [data-variant="ghost"]):not(:first-child) {
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.attached[data-orientation="vertical"] > :is([data-variant="tertiary"], [data-variant="ghost"]):not(:first-child) {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}

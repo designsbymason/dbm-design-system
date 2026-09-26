@@ -1,0 +1,284 @@
+import { PlusIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { IconButton } from "../../atoms/IconButton";
+import { Tooltip } from "../../atoms/Tooltip";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { ButtonGroup } from "./ButtonGroup";
+import * as ButtonGroupStories from "./ButtonGroup.stories";
+
+export const propOrder = [
+  "children",
+  "variant",
+  "size",
+  "rounded",
+  "disabled",
+  "attached",
+  "orientation",
+  "fullWidth",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ButtonGroupStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ButtonGroup" tier="Molecule" />
+
+A set of related buttons laid out as one. By default the buttons are fused into a single segmented control —
+square corners where they meet, one separator between them — or, with `attached={false}`, spaced apart; in a
+row or a column. It is a named `role="group"`, and it hands its `variant`, `size`, `rounded` and `disabled` to
+the `Button`s and `IconButton`s inside it as defaults, so a group of five says them once. A button's own props
+still win.
+
+A group is for actions that belong together (text style, zoom, view options). It is not a selection control —
+no button is "chosen" and the arrow keys don't move focus between them; each button is an ordinary tab stop.
+
+### Import
+
+```tsx
+import { ButtonGroup } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ButtonGroupStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ButtonGroupStories.Playground}
+  exclude={[
+    "children",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={["count", ...propOrder]}
+/>
+
+## Properties
+
+`ButtonGroup` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`,
+`title`) — passed straight through to the underlying element.
+
+<PropertiesTable of={ButtonGroupStories} order={propOrder} />
+
+## Variants
+
+### Every variant
+
+The group's `variant` is every button's default; each variant gets the separator that suits it — a hairline of
+the surface between solid buttons (`primary`, `destructive`), one shared border between `secondary` ones, and a
+faint rule between `tertiary` and `ghost` ones, which have no solid fill or border to mark where one ends.
+
+<Canvas of={ButtonGroupStories.Variants} />
+
+### All sizes
+
+<Canvas of={ButtonGroupStories.AllSizes} />
+
+### Spaced, not attached
+
+<Canvas of={ButtonGroupStories.Spaced} />
+
+### Vertical
+
+<Canvas of={ButtonGroupStories.Vertical} />
+
+### Rounded
+
+<Canvas of={ButtonGroupStories.Rounded} />
+
+### With icons
+
+An `IconButton` beside a `Button` is the same height, including one with a leading icon, so a mixed row stays
+level.
+
+<Canvas of={ButtonGroupStories.WithIcons} />
+
+### A button's own props win
+
+<Canvas of={ButtonGroupStories.OwnPropsWin} />
+
+### Full width
+
+<Canvas of={ButtonGroupStories.FullWidth} />
+
+### Stacked on a phone, in a row from md up
+
+`orientation` also takes a mobile-first map keyed by breakpoint. A fused row can't wrap onto a second line
+without breaking the shape, so stack it on a narrow screen instead — or use `attached={false}`, which does wrap.
+
+<Canvas of={ButtonGroupStories.ResponsiveOrientation} />
+
+### Disabled
+
+<Canvas of={ButtonGroupStories.Disabled} />
+
+### Wrapped in a tooltip, or a link
+
+<Canvas of={ButtonGroupStories.Wrapped} />
+
+### Named by a visible label
+
+<Canvas of={ButtonGroupStories.LabelledBy} />
+
+### Right to left
+
+The group follows the page's text direction: the first button is at the right, and the outer corners and
+separators mirror with it. Set `dir="rtl"` on the group's container, or on the page.
+
+<Canvas of={ButtonGroupStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Group actions that belong together and act on the same thing — text style, zoom, view options, a
+  primary action with its alternatives.
+- Give the group a name (`aria-label`, or `aria-labelledby` pointing at a visible label), so a screen
+  reader can say what the buttons are for.
+- Set `variant` and `size` once on the group when every button shares them, and override only the odd one
+  out (a destructive last button, say).
+- Use `attached={false}` when the buttons are separate actions that happen to sit together (Cancel and
+  Save), and the default fused form when they read as one control.
+- Stack a long group on a phone with an `orientation` map rather than letting it overflow.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a group to show which option is chosen. A group has no selected state; a set of options where
+  one is on is a selection control, which also handles the arrow keys and the announcement.
+- Don't put more than a handful of buttons in an attached row: it can't wrap, so it overflows a narrow
+  screen. Stack it, or space it and let it wrap.
+- Don't mix unrelated sizes or variants without a reason — a fused group reads as one control, so a
+  stray `xl` or `ghost` button looks like a mistake.
+- Don't expect a group to move focus with the arrow keys. Every button is a tab stop, in order.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer `secondary` or `tertiary` for a fused group of peers, and keep `primary` for the one action the
+  group exists for. Five `primary` buttons in a row all shout at once.
+- Keep labels short and parallel ("Day", "Week", "Month"). In a full-width group every button gets the same
+  width, so one long label squeezes the rest.
+- Use `IconButton`s for a compact toolbar of familiar actions, and give each an `aria-label`; add a `Tooltip`
+  where the icon alone is not enough.
+- Reach for `rounded` when the surrounding controls are pills too (search fields, tags); leave it off when
+  they are square-cornered.
+- Put the destructive action last, and separate it from the safe ones with `attached={false}` or its own group
+  when it must not be hit by accident.
+
+## Accessibility
+
+<Callout tone="info" title="A named group of ordinary buttons">
+
+- Renders `role="group"`, named by `aria-label` or `aria-labelledby`, so assistive tech announces the name when
+  focus enters the group. A dev-mode console warning fires once if it has neither.
+- Every button is a real `<button>` and a tab stop, reached in order with `Tab` and pressed with `Enter` or
+  `Space`. The group adds no arrow-key handling and no roving focus: it is not a `toolbar`, and does not claim
+  to be one.
+- `disabled` on the group disables every button natively, so they leave the tab order and are announced as
+  unavailable; a button that is disabled itself stays disabled.
+- A group's shared settings reach a button wherever it sits in the group, including one wrapped in a `Tooltip`
+  or a menu trigger, and a link rendered with `asChild`.
+- The focused button is drawn over its neighbours, so its focus ring is never cut off by the next button.
+- Buttons in a group are at least 24 × 24px (WCAG 2.5.8) like any `Button`, and the separators are decoration:
+  each button is identified by its label and its own fill or border, not by the line between them.
+- The corners and separators are logical, so a right-to-left page mirrors them without any prop.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<ButtonGroup aria-label="Text alignment" variant="secondary">
+  <Button>Left</Button>
+  <Button>Centre</Button>
+  <Button>Right</Button>
+</ButtonGroup>
+
+<ButtonGroup aria-label="Text style" variant="secondary" size="sm">
+  <IconButton icon={BoldIcon} aria-label="Bold" />
+  <IconButton icon={ItalicIcon} aria-label="Italic" />
+</ButtonGroup>
+
+<ButtonGroup aria-label="Actions" attached={false} variant="secondary">
+  <Button>Cancel</Button>
+  <Button variant="primary">Save</Button>
+</ButtonGroup>
+
+<ButtonGroup aria-label="View" orientation="vertical" variant="secondary">…</ButtonGroup>
+<ButtonGroup aria-label="View" rounded fullWidth variant="secondary">…</ButtonGroup>
+<ButtonGroup
+  aria-label="Actions"
+  orientation={{ base: "vertical", md: "horizontal" }}
+  fullWidth
+  variant="secondary"
+>
+  …
+</ButtonGroup>
+
+<ButtonGroup aria-label="Document" disabled variant="secondary">…</ButtonGroup>
+<ButtonGroup aria-label="Document" onFocus={() => trackFocus("document")}>…</ButtonGroup>
+
+{/* A visible label names the group */}
+<span id="align-label">Alignment</span>
+<ButtonGroup aria-labelledby="align-label">…</ButtonGroup>
+```
+
+## Design tokens used
+
+`ButtonGroup` draws almost nothing itself: every fill, border and label is the button's own. It adds only the
+following.
+
+<TokenRow token="bg.surface" usage="the hairline between attached solid buttons (primary, destructive) — the surface showing through a gap" />
+<TokenRow token="border.default" usage="the faint rule between attached tertiary and ghost buttons" />
+<TokenRow token="border-width.1" usage="the separator's width, and how far a secondary button overlaps its neighbour so their borders are one line" />
+<TokenRow token="space.2" usage="the gap between buttons when attached={false}" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Button"
+  description="What a group holds: the buttons take their variant, size and disabled state from it"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button variant="secondary" size="sm">Save</Button>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="The compact choice for a toolbar of familiar actions — the same height as a Button beside it"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <ButtonGroup aria-label="Example" variant="secondary" size="sm">
+    <IconButton icon={PlusIcon} aria-label="Add" />
+    <IconButton icon={PlusIcon} aria-label="Add another" />
+  </ButtonGroup>
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="Wrap a button in one to explain an icon, and it still takes the group's settings"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="Copy">
+    <Button variant="secondary" size="sm">Hover me</Button>
+  </Tooltip>
+</RelatedCard>
+</div>
