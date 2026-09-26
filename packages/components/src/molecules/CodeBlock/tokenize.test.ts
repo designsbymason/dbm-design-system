@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { goLanguage, javaLanguage, markdownLanguage, pythonLanguage, rustLanguage, sqlLanguage, yamlLanguage } from "./grammars";
+import { registerCodeLanguage } from "./registry";
 import { MAX_HIGHLIGHT_LENGTH, resolveLanguage, tokenize } from "./tokenize";
+
+// The seven languages that ship outside the core are opt-in; this suite exercises their grammars through `tokenize`,
+// as an app that registers them would. (`registry.test.ts` covers what registering does, and not doing it.)
+for (const language of [pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage]) {
+  registerCodeLanguage(language);
+}
 
 /** Every token of the first line, as `[type, text]`, leaving out plain text so a test says only what it means. */
 const typed = (code: string, language: string) =>

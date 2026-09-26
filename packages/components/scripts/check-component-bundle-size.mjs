@@ -49,21 +49,33 @@ const OUT_DIR = join(PACKAGE_ROOT, "dist/.bundle-size-check");
 const PER_COMPONENT_JS_BUDGET_KB = 10;
 const PER_COMPONENT_CSS_BUDGET_KB = 5;
 
-/** Parses `export * from "./atoms/Badge";`-style lines out of src/index.ts. */
+// Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
+// ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component
+// import one, its bundle grows for every app whatever language it uses, and this says so before the byte budget
+// (which it could still fit inside) does.
+const MUST_NOT_CONTAIN = {
+  CodeBlock: { nonlocal: "the Python grammar", fallthrough: "the Go grammar", strictfp: "the Java grammar" },
+};
+
+/**
+ * Parses `export * from "./atoms/Badge";`-style lines out of src/index.ts. A third segment
+ * (`"./molecules/CodeBlock/languages"`) names a file beside the component's own `index.ts`: an optional extra a
+ * consumer opts into, measured on its own so the component's number doesn't include it.
+ */
 function listComponentEntries() {
   const source = readFileSync(SRC_INDEX, "utf8");
-  const matches = [...source.matchAll(/^export \* from "\.\/(\w+)\/(\w+)";$/gm)];
+  const matches = [...source.matchAll(/^export \* from "\.\/(\w+)\/(\w+)(?:\/(\w+))?";$/gm)];
   if (matches.length === 0) {
     throw new Error(`No 'export * from "./tier/Name";' lines found in ${SRC_INDEX}.`);
   }
-  return matches.map(([, tier, name]) => ({
-    name,
+  return matches.map(([, tier, name, extra]) => ({
+    name: extra ? `${name}/${extra}` : name,
     // One name could theoretically collide across tiers (none do today,
     // atoms/molecules/organisms are disjoint) — tsup's `entry` keys must
     // be unique regardless, so this fails loudly via a duplicate-key
     // build error rather than silently overwriting one component's output
     // with another's if that ever changes.
-    entryPath: join(PACKAGE_ROOT, "src", tier, name, "index.ts"),
+    entryPath: join(PACKAGE_ROOT, "src", tier, name, extra ? `${extra}.ts` : "index.ts"),
   }));
 }
 
@@ -141,6 +153,13 @@ async function main() {
       failures.push(
         `${name}: CSS ${formatKb(cssGzipKb)} exceeds per-component budget ${formatKb(PER_COMPONENT_CSS_BUDGET_KB)}.`,
       );
+    }
+  }
+
+  for (const [name, markers] of Object.entries(MUST_NOT_CONTAIN)) {
+    const js = readFileSync(join(OUT_DIR, `${name}.js`), "utf8");
+    for (const [marker, what] of Object.entries(markers)) {
+      if (js.includes(marker)) failures.push(`${name}: its bundle contains ${what}, which is meant to be opt-in.`);
     }
   }
 

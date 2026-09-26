@@ -660,6 +660,22 @@ describe("CodeBlock's Playground snippet", () => {
     expect(codeBlockPlaygroundSnippet({ copyable: false })).toContain("copyable={false}");
   });
 
+  it("says how to turn on a language that ships outside the core, whatever name it is given by", () => {
+    const names: Array<[string, string]> = [
+      ["python", "pythonLanguage"], ["py", "pythonLanguage"], ["yml", "yamlLanguage"], ["postgres", "sqlLanguage"],
+      ["md", "markdownLanguage"], ["golang", "goLanguage"], ["rs", "rustLanguage"], ["java", "javaLanguage"], [" Python ", "pythonLanguage"],
+    ];
+    for (const [language, exportName] of names) {
+      const snippet = codeBlockPlaygroundSnippet({ language });
+      expect(snippet).toContain(`registerCodeLanguage(${exportName})`);
+      expect(problemsIn(snippet)).toEqual([]);
+    }
+    // A built-in language, an unknown one and a name that is a property of every object need nothing.
+    for (const language of ["tsx", "bash", "cobol", "constructor", "__proto__", "", undefined]) {
+      expect(codeBlockPlaygroundSnippet({ language })).not.toContain("registerCodeLanguage");
+    }
+  });
+
   it("explains every placeholder it passes as code, in a comment, in every CodeBlock snippet", () => {
     // `code={source}` stands for the reader's own string; a snippet has to say so, or it isn't pasteable.
     const explained = (snippet: string, name: string) => new RegExp(`\\{/\\*[^]*?\\b${name}:[^]*?\\*/\\}`).test(snippet);

@@ -1,6 +1,6 @@
 import { CheckIcon, CopyIcon, WarningIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, useAnnouncement } from "@dbm-design-system/primitives";
-import { forwardRef, useEffect, useId, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
@@ -9,6 +9,7 @@ import styles from "./CodeBlock.module.css";
 import type { CodeBlockLabels, CodeBlockProps } from "./CodeBlock.types";
 import { copyToClipboard } from "./copyToClipboard";
 import { parseHighlightLines } from "./highlightLines";
+import { findRegisteredLanguage, subscribeToCodeLanguages } from "./registry";
 import { textToCopy } from "./textToCopy";
 import { tokenize } from "./tokenize";
 import type { TokenType } from "./tokenize";
@@ -44,10 +45,12 @@ type CopyState = { status: "idle" | "copied" | "failed"; count: number };
  * A block of source code, with syntax highlighting, an optional title, line numbers, highlighted lines, a copy
  * button, and a way to collapse a long one. It is a `<figure>` around a scrollable `<pre><code>`.
  *
- * Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`,
- * `python`, `yaml`, `sql`, `markdown`, `go`, `rust` and `java` (any other language is drawn as plain text). It builds React elements from plain data and never
- * sets HTML, so the code is always shown as text; it is approximate, not a full grammar. Code stays
- * left-to-right in a right-to-left page.
+ * Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and
+ * `diff`. Other languages are opt-in: `registerCodeLanguage(pythonLanguage)` once at start (there are also
+ * `yamlLanguage`, `sqlLanguage`, `markdownLanguage`, `goLanguage`, `rustLanguage` and `javaLanguage`), or an
+ * app's own grammar, or a `highlighter` for a single block; any other language is drawn as plain text. It builds
+ * React elements from plain data and never sets HTML, so the code is always shown as text; it is approximate,
+ * not a full grammar. Code stays left-to-right in a right-to-left page.
  *
  * The scrolling region is a tab stop, and named, only while the code overflows. The copy button copies exactly
  * `code`, whatever is collapsed, and announces "Copied" or "Copy failed".
@@ -64,6 +67,7 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     {
       code,
       language,
+      highlighter,
       title,
       showLineNumbers = false,
       startLine = 1,
@@ -95,7 +99,11 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     // `code` is required, but it is often data on its way (`code={snippet?.text}`): anything that is not a string is
     // drawn as an empty block, with a development warning, rather than crashing the page around it.
     const text = typeof code === "string" ? code : "";
-    const lines = useMemo(() => tokenize(text, language), [text, language]);
+    // The language the app has registered under this block's name, if any. Read from the store, so a language
+    // registered (or removed) after the block was drawn, such as a grammar that loaded later, redraws it.
+    const getRegistered = () => findRegisteredLanguage(language);
+    const registered = useSyncExternalStore(subscribeToCodeLanguages, getRegistered, getRegistered);
+    const lines = useMemo(() => tokenize(text, language, highlighter, registered), [text, language, highlighter, registered]);
     const highlighted = useMemo(() => parseHighlightLines(highlightLines), [highlightLines]);
     const firstLine = Number.isFinite(startLine) ? Math.trunc(startLine) : 1;
     const gutterDigits = String(Math.max(Math.abs(firstLine), Math.abs(firstLine + lines.length - 1))).length + (firstLine < 0 ? 1 : 0);

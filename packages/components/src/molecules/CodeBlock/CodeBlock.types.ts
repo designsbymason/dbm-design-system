@@ -1,4 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { Highlighter } from "./tokenizeTypes";
 
 /**
  * The words `CodeBlock` writes itself, so they can be translated. The two that mention a count are functions
@@ -53,12 +54,22 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    */
   code: string;
   /**
-   * The language to highlight it as: `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`, `python`,
-   * `yaml`, `sql`, `markdown`, `go`, `rust` or `java`, plus aliases (`typescript`, `javascript`, `sh`, `shell`,
-   * `svg`, `xml`, `scss`, `patch`, `py`, `yml`, `postgres`, `md`, `golang`, `rs`). Any other value, or none,
-   * draws the code as plain text. Shown as a label in the header, as written.
+   * The language to highlight it as. Built in: `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and `diff`,
+   * plus aliases (`typescript`, `javascript`, `sh`, `shell`, `svg`, `xml`, `scss`, `patch`). `python`, `yaml`,
+   * `sql`, `markdown`, `go`, `rust` and `java` (with `py`, `yml`, `postgres`, `md`, `golang`, `rs`…) are
+   * languages an app turns on with `registerCodeLanguage`, and so is any grammar of its own. Any other value, or
+   * none, draws the code as plain text. Shown as a label in the header, as written.
    */
   language?: string;
+  /**
+   * Highlights this block itself, ahead of any registered or built-in language: given the text as it is drawn and
+   * the `language` prop, it returns lines of `{ type?, text }` tokens (never HTML), or `undefined` to leave the
+   * block to the registered and built-in languages. What it returns must join back to the code exactly (no
+   * newline inside a token) or the block is drawn plain, and so it is if it throws. The size limit that protects
+   * the built-in languages does not apply, so a large block's cost is the highlighter's. Give it a stable
+   * function (define it outside the component, or memoise it): a new one on every render highlights again.
+   */
+  highlighter?: Highlighter;
   /**
    * A heading for the block, usually a file name (`Button.tsx`). Shown in the header and used as the block's
    * accessible name.

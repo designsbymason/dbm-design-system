@@ -13,7 +13,12 @@ export const codeBlockSnippets = {
 <CodeBlock language="bash" code={"pnpm add @dbm-design-system/components"} />
 <CodeBlock language="diff" code={"- const size = 'md';\\n+ const size = 'lg';"} />`,
 
-  moreLanguages: `{/* Python, YAML, SQL, Markdown, Go, Rust and Java too. Aliases: "py", "yml", "postgres", "md", "golang", "rs" */}
+  moreLanguages: `{/* Python, YAML, SQL, Markdown, Go, Rust and Java are opt-in: register the ones you use once, when the app
+    starts, and every block can use them (aliases: "py", "yml", "postgres", "md", "golang", "rs").
+    import { pythonLanguage, yamlLanguage, registerCodeLanguage } from "@dbm-design-system/components";
+    registerCodeLanguage(pythonLanguage);
+    registerCodeLanguage(yamlLanguage);
+    The others are sqlLanguage, markdownLanguage, goLanguage, rustLanguage and javaLanguage. */}
 <CodeBlock language="python" code={"def total(items):\\n    return sum(i.price for i in items)"} />
 <CodeBlock language="yaml" code={"name: build\\non:\\n  push:\\n    branches: [main]"} />
 <CodeBlock language="sql" code={"SELECT id, COUNT(*) FROM users GROUP BY id;"} />
@@ -21,6 +26,18 @@ export const codeBlockSnippets = {
 <CodeBlock language="go" code={"func main() {\\n\\tfmt.Println(\\"hi\\")\\n}"} />
 <CodeBlock language="rust" code={"fn main() {\\n    println!(\\"hi\\");\\n}"} />
 <CodeBlock language="java" code={"public class Main {\\n  void run() {}\\n}"} />`,
+
+  ownLanguage: `{/* A language of your own: a name and a function from the code to lines of { type?, text } tokens (never HTML).
+    Register it once, when the app starts, and it wins over a built-in language of the same name:
+    registerCodeLanguage({ name: "ini", tokenize: (code) => code.split("\\n").map(iniLine) });
+    A block can also highlight itself: return the lines, or undefined to leave it to the registered and built-in
+    languages. Whatever comes back must join back to the code, or the block is drawn plain.
+    const logHighlighter: CodeHighlighter = (code, language) => language === "log" ? tokensFor(code) : undefined;
+    Define it outside the component, so it isn't a new function on every render.
+    settings: the ini text to show, as a string
+    output: the log text to show, as a string */}
+<CodeBlock language="ini" title="settings.ini" code={settings} />
+<CodeBlock language="log" title="server.log" highlighter={logHighlighter} code={output} />`,
 
   title: `{/* title: a file name, shown in the header and used as the block's accessible name
     source: the code to show, as a string */}
@@ -120,6 +137,28 @@ export interface CodeBlockPlaygroundSnippetArgs {
 
 const sourceComment = "{/* source: the code to show, as a string */}";
 
+/** The exports that turn on the languages that ship outside the core, by every name they answer to. */
+const optInLanguages: Record<string, string> = {
+  python: "pythonLanguage",
+  py: "pythonLanguage",
+  python3: "pythonLanguage",
+  yaml: "yamlLanguage",
+  yml: "yamlLanguage",
+  sql: "sqlLanguage",
+  postgresql: "sqlLanguage",
+  postgres: "sqlLanguage",
+  pgsql: "sqlLanguage",
+  mysql: "sqlLanguage",
+  sqlite: "sqlLanguage",
+  markdown: "markdownLanguage",
+  md: "markdownLanguage",
+  go: "goLanguage",
+  golang: "goLanguage",
+  rust: "rustLanguage",
+  rs: "rustLanguage",
+  java: "javaLanguage",
+};
+
 /** Turns what a reader types (`"2, 4-6"`) into the `highlightLines` array literal, or `undefined` for none. */
 export function highlightLinesLiteral(typed: string | undefined): string | undefined {
   const entries = (typed ?? "")
@@ -163,5 +202,9 @@ export function codeBlockPlaygroundSnippet(args: CodeBlockPlaygroundSnippetArgs)
   }
   attributes.push("code={source}");
   const element = attributes.length > 3 ? `<CodeBlock\n  ${attributes.join("\n  ")}\n/>` : `<CodeBlock ${attributes.join(" ")} />`;
-  return `${sourceComment}\n${element}`;
+  const languageName = (args.language ?? "").trim().toLowerCase();
+  const optIn = Object.hasOwn(optInLanguages, languageName) ? optInLanguages[languageName] : undefined;
+  // A language outside the core draws plain until the app registers it, so a snippet that uses one says how.
+  const register = optIn ? `{/* ${optIn}: register it once, when the app starts, with registerCodeLanguage(${optIn}) */}\n` : "";
+  return `${register}${sourceComment}\n${element}`;
 }

@@ -9,14 +9,13 @@
  * has one hard guarantee: joining every token's text gives back the input exactly, whatever the input is.
  */
 
-import { rulesForMore } from "./grammars";
-import { notAfterWord, wordSet } from "./tokenizeTypes";
-import type { HighlightLanguage, Rule, State, Token, TokenLine } from "./tokenizeTypes";
+import { scan, toLines } from "./engine";
+import { findRegisteredLanguage } from "./registry";
+import { MAX_HIGHLIGHT_LENGTH, notAfterWord, wordSet } from "./tokenizeTypes";
+import type { CodeLanguage, Highlighter, HighlightLanguage, Rule, State, TokenLine } from "./tokenizeTypes";
 
-export type { HighlightLanguage, Token, TokenLine, TokenType } from "./tokenizeTypes";
-
-/** Past this many characters the text is drawn plain: highlighting is a courtesy, never worth a stalled page. */
-export const MAX_HIGHLIGHT_LENGTH = 30_000;
+export { MAX_HIGHLIGHT_LENGTH } from "./tokenizeTypes";
+export type { CodeLanguage, Highlighter, HighlightLanguage, Token, TokenLine, TokenType } from "./tokenizeTypes";
 
 const aliases: Record<string, HighlightLanguage> = {
   js: "js",
@@ -43,27 +42,9 @@ const aliases: Record<string, HighlightLanguage> = {
   console: "bash",
   diff: "diff",
   patch: "diff",
-  python: "python",
-  py: "python",
-  python3: "python",
-  yaml: "yaml",
-  yml: "yaml",
-  sql: "sql",
-  postgresql: "sql",
-  postgres: "sql",
-  pgsql: "sql",
-  mysql: "sql",
-  sqlite: "sql",
-  markdown: "markdown",
-  md: "markdown",
-  go: "go",
-  golang: "go",
-  rust: "rust",
-  rs: "rust",
-  java: "java",
 };
 
-/** The grammar a `language` string names, or `undefined` if it has none (it is then drawn as plain text). */
+/** The built-in grammar a `language` string names, or `undefined` if it has none. */
 export function resolveLanguage(language: string | undefined): HighlightLanguage | undefined {
   // A `language` that isn't a string (a JavaScript caller, a missing value) has no grammar rather than a crash.
   return typeof language === "string" ? aliases[language.trim().toLowerCase()] : undefined;
@@ -300,67 +281,13 @@ const rulesFor = (language: HighlightLanguage): Rule[] => {
     case "diff":
       return [];
     default:
-      return rulesForMore(language) ?? [];
+      return [];
   }
 };
 
 // --- The engine ---------------------------------------------------------------------------------------------
 
 const rulesCache = new Map<HighlightLanguage, Rule[]>();
-
-/** Runs the rules over the text once, from the start, returning a flat list of tokens covering all of it. */
-function scan(code: string, rules: Rule[]): Token[] {
-  const tokens: Token[] = [];
-  const state: State = { inTag: false, inText: false, expression: 0, openTags: 0, closingTag: false, blocks: [], statementStart: 0, lineStart: true, fence: false };
-  let plain = "";
-  const flushPlain = () => {
-    if (plain) tokens.push({ text: plain });
-    plain = "";
-  };
-  let position = 0;
-  while (position < code.length) {
-    let matched = false;
-    for (const rule of rules) {
-      if (rule.when && !rule.when(code, position, state)) continue;
-      rule.re.lastIndex = position;
-      const match = rule.re.exec(code);
-      if (!match || match[0].length === 0) continue;
-      const text = match[0];
-      const end = position + text.length;
-      const type = rule.classify ? rule.classify(text, code, end, state) : rule.type;
-      rule.after?.(text, state, code, end);
-      if (type) {
-        flushPlain();
-        tokens.push({ type, text });
-      } else {
-        plain += text;
-      }
-      position = end;
-      matched = true;
-      break;
-    }
-    if (!matched) {
-      plain += code[position];
-      position += 1;
-      state.lineStart = false;
-    }
-  }
-  flushPlain();
-  return tokens;
-}
-
-/** Splits a flat token list at its newlines, so every token belongs to exactly one line. */
-function toLines(tokens: Token[]): TokenLine[] {
-  const lines: TokenLine[] = [[]];
-  for (const token of tokens) {
-    const parts = token.text.split("\n");
-    parts.forEach((part, index) => {
-      if (index > 0) lines.push([]);
-      if (part) lines[lines.length - 1]?.push(token.type ? { type: token.type, text: part } : { text: part });
-    });
-  }
-  return lines;
-}
 
 const plainLines = (code: string): TokenLine[] => code.split("\n").map((text) => (text ? [{ text }] : []));
 
@@ -376,14 +303,81 @@ function diffLines(code: string): TokenLine[] {
   });
 }
 
+const TOKEN_TYPES = new Set(["keyword", "string", "number", "function", "type", "property", "tag", "comment", "inserted", "deleted"]);
+
+const warned = new Set<string>();
+/** A development-only warning, once per message. */
+function warnOnce(message: string) {
+  if (process.env.NODE_ENV === "production" || warned.has(message)) return;
+  warned.add(message);
+  console.warn(message);
+}
+
 /**
- * Tokenizes `code` for `language` into lines of tokens. A language with no grammar of its own, and any text
- * longer than {@link MAX_HIGHLIGHT_LENGTH}, come back as plain lines. Line endings are normalised to `\n`, and
- * one trailing newline is dropped (a template literal's usual last character is not a line). Joining every
- * token's text with `\n` between lines returns the input.
+ * Runs a language or highlighter that isn't ours over the text and checks what comes back before anything draws it:
+ * an array of lines of `{ type?, text }`, no newline inside a token, and joining the tokens with a newline between
+ * the lines giving back the text exactly. Anything else (or a throw) is `undefined`, so a faulty highlighter
+ * can't lose, change or crash on the code it was given: the caller falls back to plain text. The result is a copy
+ * with unknown token types dropped, so nothing the highlighter returns reaches a class name unchecked.
  */
-export function tokenize(code: string, language: string | undefined): TokenLine[] {
+function runChecked(source: string, name: string, run: () => TokenLine[] | undefined): TokenLine[] | undefined {
+  let result: unknown;
+  try {
+    result = run();
+  } catch (error) {
+    warnOnce(`CodeBlock: ${name} threw (${error instanceof Error ? error.message : String(error)}) — the code is drawn plain.`);
+    return undefined;
+  }
+  if (result === undefined) return undefined;
+  const lines: TokenLine[] = [];
+  if (Array.isArray(result)) {
+    for (const line of result) {
+      if (!Array.isArray(line)) return reject(name);
+      const tokens: TokenLine = [];
+      for (const token of line) {
+        const text: unknown = token?.text;
+        if (typeof text !== "string" || text.includes("\n")) return reject(name);
+        if (text === "") continue;
+        const type: unknown = token.type;
+        tokens.push(typeof type === "string" && TOKEN_TYPES.has(type) ? { type: type as never, text } : { text });
+      }
+      lines.push(tokens);
+    }
+  }
+  if (lines.length === 0 || lines.map((line) => line.map((token) => token.text).join("")).join("\n") !== source) return reject(name);
+  return lines;
+}
+
+function reject(name: string): undefined {
+  warnOnce(`CodeBlock: ${name} didn't return lines of { type?, text } tokens that join back to the code — the code is drawn plain.`);
+  return undefined;
+}
+
+/**
+ * Tokenizes `code` into lines of tokens. Line endings are normalised to `\n`, and one trailing newline is dropped
+ * (a template literal's usual last character is not a line). Joining every token's text with `\n` between lines
+ * returns the input, whichever way it was highlighted.
+ *
+ * Who highlights it, in order: the block's own `highlighter`; a language registered with `registerCodeLanguage`;
+ * a built-in one. Text past a language's `maxLength` (30,000 for the built-in and shipped ones, none for an
+ * app's own) and any language nobody knows come back as plain lines.
+ */
+export function tokenize(
+  code: string,
+  language: string | undefined,
+  highlighter?: Highlighter,
+  registered: CodeLanguage | undefined = findRegisteredLanguage(language),
+): TokenLine[] {
   const source = String(code ?? "").replace(/\r\n?/g, "\n").replace(/\n$/, "");
+  if (typeof highlighter === "function") {
+    const own = runChecked(source, "the `highlighter` prop", () => highlighter(source, language));
+    if (own) return own;
+  }
+  if (registered) {
+    if (registered.maxLength !== undefined && source.length > registered.maxLength) return plainLines(source);
+    const lines = runChecked(source, `the registered language "${registered.name}"`, () => registered.tokenize(source));
+    return lines ?? plainLines(source);
+  }
   const resolved = resolveLanguage(language);
   if (!resolved || source.length > MAX_HIGHLIGHT_LENGTH) return plainLines(source);
   if (resolved === "diff") return diffLines(source);

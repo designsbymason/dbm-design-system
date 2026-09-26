@@ -10,6 +10,7 @@ import * as CodeBlockStories from "./CodeBlock.stories";
 export const propOrder = [
   "code",
   "language",
+  "highlighter",
   "title",
   "showLineNumbers",
   "startLine",
@@ -45,15 +46,18 @@ A block of source code: syntax-highlighted, with an optional title, line numbers
 button, and a way to collapse a long one. It is a `<figure>` around a scrollable `<pre><code>`, and it draws
 the code as text, never as HTML.
 
-Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`,
-`python`, `yaml`, `sql`, `markdown`, `go`, `rust` and `java`, with no dependency; any other language is drawn as
-plain text. It is a lexer, not a full grammar — it
-reads well, and it will not catch every corner of a language.
+Highlighting is a small built-in tokenizer with no dependency. `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`,
+`bash` and `diff` work as they are; `python`, `yaml`, `sql`, `markdown`, `go`, `rust` and `java` are one line each
+to turn on, so an app that doesn't use them doesn't ship them; and a grammar of your own, or another highlighter,
+plugs in the same way. Any other language is drawn as plain text. It is a lexer, not a full grammar — it reads
+well, and it will not catch every corner of a language.
 
 ### Import
 
 ```tsx
 import { CodeBlock } from "@dbm-design-system/components";
+// Only for a language outside the core (python, yaml, sql, markdown, go, rust, java) or one of your own:
+import { pythonLanguage, registerCodeLanguage } from "@dbm-design-system/components";
 ```
 
 ## Playground
@@ -101,10 +105,31 @@ stands for, and the languages example writes its code inline.
 ### More languages
 
 Python, YAML, SQL, Markdown, Go, Rust and Java, with the usual aliases (`py`, `yml`, `postgres`, `md`, `golang`,
-`rs`). A Markdown block draws the lines of a fenced code block as they are, so a snippet of another language inside
-it is never mistaken for Markdown.
+`rs`). They are opt-in: call `registerCodeLanguage` once, when the app starts, with each one you use
+(`pythonLanguage`, `yamlLanguage`, `sqlLanguage`, `markdownLanguage`, `goLanguage`, `rustLanguage`,
+`javaLanguage`), and every block can use it. Until you do, a block in that language is drawn as plain text. A
+bundler drops the ones you don't import. A Markdown block draws the lines of a fenced code block as they are, so a
+snippet of another language inside it is never mistaken for Markdown.
 
 <Canvas of={CodeBlockStories.MoreLanguages} />
+
+### Your own language or highlighter
+
+A language is a name and a function from the code to lines of `{ type?, text }` tokens, with `type` one of
+`keyword`, `string`, `number`, `function`, `type`, `property`, `tag`, `comment`, `inserted` or `deleted`. Register
+it with `registerCodeLanguage`, and it wins over a built-in language of the same name, which is how a fuller
+grammar replaces the approximate one; that call returns a function that undoes it. Blocks already on the page
+redraw when one is registered, so a grammar loaded later (`import()`, then register) colours the blocks that were
+drawn plain. To highlight a single block, pass `highlighter` instead: it is tried first, and returns tokens, or
+`undefined` to leave the block to the registered and built-in languages.
+
+Whatever your code returns is checked before it is drawn: it must be lines of tokens with no newline inside one,
+and joining them must give back the code exactly. Anything else, or an error, draws the block as plain text with a
+warning in development, so a faulty highlighter can never lose or change the code. It is data, never HTML, so
+there is nothing to sanitise. The 30,000-character limit that protects the built-in languages does not apply to
+yours: a large block costs what your highlighter costs.
+
+<Canvas of={CodeBlockStories.OwnLanguage} />
 
 ### With a title
 
@@ -227,7 +252,8 @@ button at the left.
   people can open, or behind `collapsible`.
 - Name blocks that are compared with each other ("Before" and "After") with `title`, and colour a change with
   the `diff` language rather than by hand.
-- A very long or unusual input is drawn as plain text past 30,000 characters, rather than stalling the page.
+- A very long or unusual input is drawn as plain text past 30,000 characters in the built-in and shipped languages, rather than stalling the page. A grammar you bring has no such limit, so keep its cost proportional to the code's length.
+- Register a language once, when the app starts (on the server too, if you render there), not in a component: registering is app-wide, and a component that registers on every render does the work again.
 - Give a block without a `title` an `aria-label` that says what it is ("Install command").
 
 ## Accessibility
@@ -276,6 +302,7 @@ button at the left.
 <CodeBlock language="json" maxHeight="16rem" code={config} />
 
 <CodeBlock language="bash" wrap code={command} />
+{/* yaml is opt-in: registerCodeLanguage(yamlLanguage), once, when the app starts */}
 <CodeBlock language="yaml" code={workflow} />
 <CodeBlock language="bash" code={"$ pnpm add x"} />              {/* copies "pnpm add x" */}
 <CodeBlock language="bash" stripPrompt={false} code={"$ pnpm add x"} />  {/* copies "$ pnpm add x" */}

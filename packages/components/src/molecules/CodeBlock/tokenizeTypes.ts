@@ -20,24 +20,41 @@ export interface Token {
 
 export type TokenLine = Token[];
 
-/** The languages with a grammar of their own. Anything else is drawn as plain text. */
-export type HighlightLanguage =
-  | "js"
-  | "jsx"
-  | "ts"
-  | "tsx"
-  | "json"
-  | "css"
-  | "html"
-  | "bash"
-  | "diff"
-  | "python"
-  | "yaml"
-  | "sql"
-  | "markdown"
-  | "go"
-  | "rust"
-  | "java";
+/** The languages built into the component. Any other is drawn as plain text unless it is registered. */
+export type HighlightLanguage = "js" | "jsx" | "ts" | "tsx" | "json" | "css" | "html" | "bash" | "diff";
+
+/** Past this many characters the text is drawn plain: highlighting is a courtesy, never worth a stalled page. */
+export const MAX_HIGHLIGHT_LENGTH = 30_000;
+
+/**
+ * A language the highlighter can be taught: a name and a function from source text to lines of tokens. It is how
+ * the languages that ship outside the core are provided, and how an app brings a fuller grammar of its own.
+ */
+export interface CodeLanguage {
+  /** What `language="…"` says to select it (matched without regard to case). */
+  name: string;
+  /** Other names for it, such as `py` for `python`. */
+  aliases?: readonly string[];
+  /**
+   * The longest text, in characters, this language should be given: longer text is drawn as plain lines instead.
+   * The languages that ship with the library set it (30,000, so a huge input can't stall a page); leave it out
+   * and there is no limit, which makes the cost of a large block yours.
+   */
+  maxLength?: number;
+  /**
+   * Turns source text into lines of tokens. The text has its line endings normalised to `\n` and has lost one
+   * trailing newline. Each element of the result is one line, each token `{ type?, text }` with no `\n` in its
+   * `text`, and joining the tokens with `\n` between lines must give back the text exactly: a result that
+   * doesn't is discarded and the block is drawn plain. Return data, never HTML.
+   */
+  tokenize: (code: string) => TokenLine[];
+}
+
+/**
+ * Highlights one block itself. Given the text as it is drawn and the block's `language` prop, returns its lines of
+ * tokens, or `undefined` to leave it to the registered and built-in languages.
+ */
+export type Highlighter = (code: string, language: string | undefined) => TokenLine[] | undefined;
 
 export interface State {
   /** Between a tag's `<name` and its `>`, where a bare word is an attribute. */

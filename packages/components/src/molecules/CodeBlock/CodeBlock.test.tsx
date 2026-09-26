@@ -1,9 +1,13 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CodeBlock } from "./CodeBlock";
 import styles from "./CodeBlock.module.css";
+import { pythonLanguage } from "./grammars";
+import { registerCodeLanguage } from "./registry";
+import type { Highlighter } from "./tokenizeTypes";
 
 const source = ["const greeting = 'hello';", "", "function greet(name: string) {", "  return `${greeting}, ${name}`;", "}"].join("\n");
 const longSource = Array.from({ length: 30 }, (_, index) => `line ${index + 1}`).join("\n");
@@ -409,5 +413,81 @@ describe("CodeBlock", () => {
       const { container } = render(<CodeBlock code={source} title="greet.ts" />);
       expect(await axe(container)).toHaveNoViolations();
     });
+  });
+});
+
+describe("CodeBlock: choosing who highlights", () => {
+  const cleanup: Array<() => void> = [];
+  afterEach(() => {
+    while (cleanup.length) cleanup.pop()?.();
+  });
+  const upper: Highlighter = (code) => code.split("\n").map((text) => (text ? [{ type: "type" as const, text }] : []));
+
+  it("draws a block with the highlighter it is given, as elements, never as markup", () => {
+    render(<CodeBlock code={"<b>x</b>\nline two"} language="cobol" highlighter={upper} />);
+    expect(screen.getByText("line two")).toHaveClass(styles.type as string);
+    expect(document.querySelector("b")).toBeNull();
+    expect(codeElement().textContent).toBe("<b>x</b>line two");
+  });
+
+  it("draws again when the highlighter changes", () => {
+    const { rerender } = render(<CodeBlock code="a" highlighter={upper} />);
+    expect(screen.getByText("a")).toHaveClass(styles.type as string);
+    rerender(<CodeBlock code="a" highlighter={(code) => [[{ type: "string", text: code }]]} />);
+    expect(screen.getByText("a")).toHaveClass(styles.string as string);
+  });
+
+  it("draws plain, with the code intact and no crash, when the highlighter is faulty", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<CodeBlock code={"keep\nall of it"} highlighter={() => [[{ text: "lost" }]]} />);
+    expect(codeElement().textContent).toBe("keepall of it");
+    render(
+      <CodeBlock
+        code="still here"
+        highlighter={() => {
+          throw new Error("boom");
+        }}
+      />,
+    );
+    expect(screen.getByText("still here")).toBeInTheDocument();
+  });
+
+  it("copies the code, whatever the highlighter drew", async () => {
+    render(<CodeBlock code="real code" highlighter={() => [[{ type: "string", text: "real code" }]]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith("real code"));
+  });
+
+  it("draws a registered language, and redraws a block already on the page when one is registered or removed", () => {
+    render(<CodeBlock code="def f(): pass" language="python" />);
+    // Not registered: plain.
+    expect(codeElement().querySelectorAll("span[data-line] > span")).toHaveLength(0);
+    let unregister = () => undefined as void;
+    act(() => {
+      unregister = registerCodeLanguage(pythonLanguage);
+      cleanup.push(unregister);
+    });
+    expect(screen.getByText("def")).toHaveClass(styles.keyword as string);
+    act(() => unregister());
+    expect(codeElement().querySelectorAll("span[data-line] > span")).toHaveLength(0);
+    expect(codeElement()).toHaveTextContent("def f(): pass");
+  });
+
+  it("prefers the block's own highlighter to a registered language", () => {
+    cleanup.push(registerCodeLanguage(pythonLanguage));
+    render(<CodeBlock code="def f(): pass" language="py" highlighter={upper} />);
+    expect(screen.getByText("def f(): pass")).toHaveClass(styles.type as string);
+  });
+
+  it("draws a registered language on the server, so the first frame is already coloured", () => {
+    cleanup.push(registerCodeLanguage(pythonLanguage));
+    const html = renderToString(<CodeBlock code="def f(): pass" language="python" />);
+    expect(html).toContain(`class="${styles.keyword}"`);
+    expect(html).toContain("def");
+  });
+
+  it("has no accessibility violations with a highlighter", async () => {
+    const { container } = render(<CodeBlock code="a\nb" title="x.txt" highlighter={upper} />);
+    expect(await axe(container)).toHaveNoViolations();
   });
 });

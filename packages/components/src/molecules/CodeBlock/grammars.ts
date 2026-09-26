@@ -1,14 +1,16 @@
 /**
- * The grammars of `CodeBlock`'s tokenizer beyond its first nine languages: Python, YAML, SQL, Markdown, Go, Rust and
- * Java. Same engine, same rules of the road (see `tokenize.ts`): sticky expressions in an order, a little state, and
+ * The languages `CodeBlock` ships beyond its built-in nine — Python, YAML, SQL, Markdown, Go, Rust and Java — as
+ * `CodeLanguage`s an app opts into with `registerCodeLanguage`, so an app that doesn't use one doesn't pay for it.
+ * Same engine, same rules of the road (see `tokenize.ts`): sticky expressions in an order, a little state, and
  * two guarantees — every character comes back, and the cost is proportional to the text's length. That second one is
  * why a word is always taken whole and then classified by what follows it, never matched with a lookahead written
  * into its pattern (which retries from every letter of a long word), and why a string or comment that is never closed
  * runs to the end of the text as one match instead of failing and being tried again from the next quote.
  */
 
-import { notAfterWord, wordSet } from "./tokenizeTypes";
-import type { HighlightLanguage, Rule, State } from "./tokenizeTypes";
+import { scan, toLines } from "./engine";
+import { MAX_HIGHLIGHT_LENGTH, notAfterWord, wordSet } from "./tokenizeTypes";
+import type { CodeLanguage, Rule, State } from "./tokenizeTypes";
 
 interface WordOptions {
   keywords: Set<string>;
@@ -52,7 +54,7 @@ const startsLine = (code: string, position: number) => /(?:^|\n)[ \t]*$/.test(co
 
 // --- Python -------------------------------------------------------------------------------------------------
 
-const pythonRules: Rule[] = [
+const pythonRules = (): Rule[] => [
   { re: /#[^\n]*/y, type: "comment" },
   // A decorator: an `@` that starts a statement (an `@` in the middle of one is matrix multiplication).
   { re: /@[A-Za-z_][\w.]*/y, type: "function", when: startsLine },
@@ -81,7 +83,7 @@ const leaveLineStart = (_text: string, state: State) => void (state.lineStart = 
 const yamlAfterNewline = (_text: string, state: State) => void (state.lineStart = true);
 const atLineStart = (_code: string, _position: number, state: State) => state.lineStart;
 
-const yamlRules: Rule[] = [
+const yamlRules = (): Rule[] => [
   { re: /\n/y, after: yamlAfterNewline },
   // Indentation and a list dash leave the line's start open, so `  - key: value` still finds its key.
   { re: /[ \t]+/y },
@@ -105,11 +107,11 @@ const yamlRules: Rule[] = [
     after: leaveLineStart,
   },
 ];
-const yamlLiterals = wordSet("true false null yes no on off True False Null Yes No On Off TRUE FALSE NULL ~");
+const yamlLiterals = /* @__PURE__ */ wordSet("true false null yes no on off True False Null Yes No On Off TRUE FALSE NULL ~");
 
 // --- SQL ----------------------------------------------------------------------------------------------------
 
-const sqlRules: Rule[] = [
+const sqlRules = (): Rule[] => [
   { re: /--[^\n]*/y, type: "comment" },
   { re: /\/\*[\s\S]*?(?:\*\/|$)/y, type: "comment" },
   { re: /'(?:[^']|'')*'?/y, type: "string" },
@@ -145,7 +147,7 @@ const inFence = (_code: string, _position: number, state: State) => state.fence;
 const outsideFence = (_code: string, _position: number, state: State) => !state.fence;
 const markdownLineStart = (_code: string, _position: number, state: State) => state.lineStart && !state.fence;
 
-const markdownRules: Rule[] = [
+const markdownRules = (): Rule[] => [
   { re: /\n/y, after: yamlAfterNewline },
   // A fence's marker line opens or closes the block; the lines between are drawn as they are, so nothing in a
   // snippet of another language is mistaken for Markdown.
@@ -173,7 +175,7 @@ const markdownRules: Rule[] = [
 
 // --- Go -----------------------------------------------------------------------------------------------------
 
-const goRules: Rule[] = [
+const goRules = (): Rule[] => [
   { re: /\/\/[^\n]*/y, type: "comment" },
   { re: /\/\*[\s\S]*?(?:\*\/|$)/y, type: "comment" },
   // A raw string runs across lines.
@@ -200,7 +202,7 @@ const goRules: Rule[] = [
 
 // --- Rust ---------------------------------------------------------------------------------------------------
 
-const rustRules: Rule[] = [
+const rustRules = (): Rule[] => [
   { re: /\/\/[^\n]*/y, type: "comment" },
   { re: /\/\*[\s\S]*?(?:\*\/|$)/y, type: "comment" },
   // A raw string ends at a quote and as many `#` as it opened with; one never closed runs to the end.
@@ -231,7 +233,7 @@ const rustRules: Rule[] = [
 
 // --- Java ---------------------------------------------------------------------------------------------------
 
-const javaRules: Rule[] = [
+const javaRules = (): Rule[] => [
   { re: /\/\/[^\n]*/y, type: "comment" },
   { re: /\/\*[\s\S]*?(?:\*\/|$)/y, type: "comment" },
   { re: /"""[\s\S]*?(?:"""|$)/y, type: "string" },
@@ -252,18 +254,29 @@ const javaRules: Rule[] = [
   ),
 ];
 
-const grammars: Partial<Record<HighlightLanguage, Rule[]>> = {
-  python: pythonRules,
-  yaml: yamlRules,
-  sql: sqlRules,
-  markdown: markdownRules,
-  go: goRules,
-  rust: rustRules,
-  java: javaRules,
+const language = (name: string, aliases: string[], rules: () => Rule[]): CodeLanguage => {
+  let built: Rule[] | undefined;
+  return {
+    name,
+    aliases,
+    maxLength: MAX_HIGHLIGHT_LENGTH,
+    // The rules are built on first use, so importing a language costs nothing until a block draws it.
+    tokenize: (code) => toLines(scan(code, (built ??= rules()))),
+  };
 };
 
-/** The rules for one of the languages in this file, or `undefined` for any other. */
-export function rulesForMore(language: HighlightLanguage): Rule[] | undefined {
-  return grammars[language];
-}
-
+// Each is a single, marked-pure call, so a bundler drops the ones an app doesn't import.
+/** Python, for `registerCodeLanguage`. Also `py` and `python3`. */
+export const pythonLanguage: CodeLanguage = /* @__PURE__ */ language("python", ["py", "python3"], pythonRules);
+/** YAML, for `registerCodeLanguage`. Also `yml`. */
+export const yamlLanguage: CodeLanguage = /* @__PURE__ */ language("yaml", ["yml"], yamlRules);
+/** SQL, for `registerCodeLanguage`. Also `postgresql`, `postgres`, `pgsql`, `mysql` and `sqlite`. */
+export const sqlLanguage: CodeLanguage = /* @__PURE__ */ language("sql", ["postgresql", "postgres", "pgsql", "mysql", "sqlite"], sqlRules);
+/** Markdown, for `registerCodeLanguage`. Also `md`. */
+export const markdownLanguage: CodeLanguage = /* @__PURE__ */ language("markdown", ["md"], markdownRules);
+/** Go, for `registerCodeLanguage`. Also `golang`. */
+export const goLanguage: CodeLanguage = /* @__PURE__ */ language("go", ["golang"], goRules);
+/** Rust, for `registerCodeLanguage`. Also `rs`. */
+export const rustLanguage: CodeLanguage = /* @__PURE__ */ language("rust", ["rs"], rustRules);
+/** Java, for `registerCodeLanguage`. */
+export const javaLanguage: CodeLanguage = /* @__PURE__ */ language("java", [], javaRules);

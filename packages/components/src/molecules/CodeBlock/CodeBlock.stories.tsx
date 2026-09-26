@@ -1,11 +1,41 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "./browserProtocol";
 import { Text } from "../../atoms/Text";
 import { CodeBlock } from "./CodeBlock";
 import { codeBlockPlaygroundSnippet, codeBlockSnippets, highlightLinesFromText } from "./CodeBlock.snippets";
 import type { CodeBlockProps } from "./CodeBlock.types";
+import { goLanguage, javaLanguage, markdownLanguage, pythonLanguage, rustLanguage, sqlLanguage, yamlLanguage } from "./languages";
+import { registerCodeLanguage } from "./registry";
+import type { CodeLanguage, Highlighter, Token, TokenLine } from "./tokenizeTypes";
+
+// What an app does once, when it starts: turn on the languages it uses. Storybook is one app for every story, so it
+// turns on all seven that ship outside the core, and one of its own (`ini`, below).
+for (const language of [pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage]) {
+  registerCodeLanguage(language);
+}
+
+/** A grammar of an app's own, as `registerCodeLanguage` takes it: a name and a function from code to lines of tokens. */
+function iniLine(line: string): TokenLine {
+  if (/^\s*[;#]/.test(line)) return [{ type: "comment", text: line }];
+  if (/^\s*\[/.test(line)) return [{ type: "tag", text: line }];
+  const equals = line.indexOf("=");
+  if (equals < 1) return line ? [{ text: line }] : [];
+  const key = line.slice(0, equals).trimEnd();
+  const tokens: Token[] = [{ type: "property", text: key }, { text: line.slice(key.length, equals + 1) }];
+  const value = line.slice(equals + 1);
+  if (value) tokens.push(/^\s*$/.test(value) ? { text: value } : { type: "string", text: value });
+  return tokens;
+}
+const iniLanguage: CodeLanguage = { name: "ini", aliases: ["conf"], tokenize: (code) => code.split("\n").map(iniLine) };
+registerCodeLanguage(iniLanguage);
+
+/** A highlighter for one block: log lines coloured by their level. `undefined` for any other language. */
+const logHighlighter: Highlighter = (code, language) =>
+  language === "log"
+    ? code.split("\n").map((line) => (line ? [{ type: /\bERROR\b/.test(line) ? "deleted" : /\bWARN\b/.test(line) ? "keyword" : undefined, text: line }] : []))
+    : undefined;
 
 /** Demo source text for the stories; not part of the component. */
 const samples = {
@@ -125,6 +155,14 @@ public class Greeter {
   }
 }`,
   longLine: `curl --request POST --url https://api.example.com/v1/projects/12345/members --header 'Authorization: Bearer <token>' --header 'Content-Type: application/json' --data '{"role":"editor","notify":true}'`,
+  ini: `; Server settings
+[server]
+port = 3000
+host = "0.0.0.0"
+
+# Limits
+[limits]
+timeout = 30`,
   log: `2026-09-26 10:14:02 INFO  server listening on :3000
 2026-09-26 10:14:09 WARN  slow request GET /reports (2.4s)
 2026-09-26 10:14:11 ERROR connection reset by peer`,
@@ -160,7 +198,12 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["ts", "tsx", "js", "jsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "text"],
       description:
-        "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash, diff, python, yaml, sql, markdown, go, rust and java have a grammar, with aliases such as py, yml, md, golang and rs; any other value, or none, draws plain text. Shown as a label in the header.",
+        "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash and diff are built in, with aliases such as typescript, sh and svg. python, yaml, sql, markdown, go, rust and java (and py, yml, md, golang, rs…) are turned on with registerCodeLanguage, and so is a grammar of your own; any other value, or none, draws plain text. Shown as a label in the header.",
+    },
+    highlighter: {
+      ...noControls,
+      description:
+        "Highlights this block itself, ahead of any registered or built-in language: given the code and the language, it returns lines of { type?, text } tokens (never HTML), or undefined to leave the block to the others. What it returns must join back to the code exactly or the block is drawn plain, and so it is if it throws. The size limit that protects the built-in languages does not apply. Give it a stable function.",
     },
     title: {
       control: "text",
@@ -319,6 +362,19 @@ export const MoreLanguages: Story = {
       {(["python", "yaml", "sql", "markdown", "go", "rust", "java"] as const).map((language) => (
         <DemoBlock key={language} {...args} code={samples[language]} language={language} title="" aria-label={`${language} example`} />
       ))}
+    </div>
+  ),
+};
+
+export const OwnLanguage: Story = {
+  name: "Your own language or highlighter",
+  parameters: { docs: { source: { code: codeBlockSnippets.ownLanguage } } },
+  args: {},
+  argTypes: { code: noControls, language: noControls, title: noControls, highlighter: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={stack}>
+      <DemoBlock {...args} code={samples.ini} language="ini" title="settings.ini" aria-label="A registered language" />
+      <DemoBlock {...args} code={samples.log} language="log" highlighter={logHighlighter} title="server.log" aria-label="A block's own highlighter" />
     </div>
   ),
 };
@@ -523,7 +579,7 @@ const contrast = (a: string, b: string) => {
 };
 
 // Every language with a grammar, so every colour it uses is measured.
-const contrastLanguages = ["tsx", "ts", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java"] as const;
+const contrastLanguages = ["tsx", "ts", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "ini"] as const;
 
 export const TokenContrastInteraction: Story = {
   ...Playground,
@@ -943,5 +999,32 @@ export const PhoneInteraction: Story = {
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     const region = within(block).getByRole("region", { name: "request.sh" });
     await expect(region.scrollWidth).toBeGreaterThan(region.clientWidth);
+  },
+};
+
+export const LateRegistrationInteraction: Story = {
+  ...Playground,
+  name: "Interaction: a language registered after the block is drawn colours it in the real browser, and undoing it draws plain again",
+  tags: ["!dev"],
+  render: () => (
+    <div data-testid="late">
+      <CodeBlock code="alpha beta" language="late-demo" aria-label="Registered later" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const block = within(canvasElement).getByTestId("late");
+    const coloured = () => block.querySelectorAll<HTMLElement>("span[data-line] > span");
+    // Nobody has taught this language yet: the line holds its text directly.
+    await expect(coloured()).toHaveLength(0);
+    const unregister = registerCodeLanguage({ name: "late-demo", tokenize: (code) => code.split("\n").map((text) => [{ type: "keyword" as const, text }]) });
+    try {
+      await waitFor(() => expect(coloured()).toHaveLength(1));
+      await expect(getComputedStyle(coloured()[0]!).color).toBe(resolveColor("--dbm-text-syntax-keyword"));
+      await expect(block.querySelector("code")!.textContent).toBe("alpha beta");
+    } finally {
+      unregister();
+    }
+    await waitFor(() => expect(coloured()).toHaveLength(0));
+    await expect(block.querySelector("code")!.textContent).toBe("alpha beta");
   },
 };
