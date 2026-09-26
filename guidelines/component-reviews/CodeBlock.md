@@ -66,18 +66,48 @@ A full `06-engineering-standards.md` §9 pass against the code and the running c
 
 **Not verified:** a real screen reader; the real Clipboard API against a permission prompt; forced-colours mode (all three were later closed or narrowed, see the post-Finalization pass below).
 
-## Gaps named, not built
+## Prioritized gaps (updated 2026-09-26)
 
-- **A hook for another highlighter** (tokens in, so a consumer can bring a fuller grammar). See ADR-0026.
-- **A `size` prop** on the shared scale (the font size follows `font-size.sm` today).
-- **One scroll-frame hook shared with `Table`** — needs `Table` (Finalized) to change; the two differ only in the clipped-height rule.
-- **Embedded languages** (`<script>` and `<style>` inside HTML, template literals' `${}` contents).
-- **Several languages in tabs** (compose with `Tabs`) and **an interactive wrap toggle button**.
-- **Per-line links or copying**, and **a side-by-side diff**.
+The numbered list the user works from: items are built one pass at a time, **only when the user names them**. Every item needs the user's go-ahead first (CodeBlock is Finalized), and the post-Finalization passes above show the process: build, unit tests, real-browser tests where layout or the accessibility tree matters, a mutation pass (break each guard once and see it fail), a live look in Storybook (Docs page and the story, in light and dark), the whole pipeline, then this file and the guidelines. An additive change stays Finalized; a defect fix stays Finalized under the three-question test in `06-engineering-standards.md` §9.
+
+**Priority 1: accessibility and correctness**
+1. ✅ **Highlighted lines are visual-only.** Done: a spoken cue per highlighted run (`labels.highlighted`).
+2. ✅ **Forced-colours mode.** Done: plain lines hide the accent, highlighted ones show it, the fade is removed.
+3. ✅ **Copying a shell prompt.** Done: `stripPrompt` (default `true`).
+
+**Priority 2: high-value features**
+4. ✅ **More languages.** Done for Python, YAML, SQL, Markdown, Go, Rust and Java. Further languages: see 20.
+5. **A hook for another highlighter.** Tokens in, so a consumer can bring a fuller grammar. [ADR-0026](../adr/0026-codeblock-highlights-with-a-small-built-in-tokenizer-over-a-highlighting-dependency-or-bring-your-own.md) says to build it if a real need appears; it takes tokens (`{ type, text }` lines), never an HTML string.
+6. **A `size` prop** on the shared scale. The font size is `font-size.sm` today.
+7. **Diff line numbers.** Old and new gutters for the `diff` language, which colours whole lines only.
+
+**Priority 3: moderate value**
+8. **Embedded languages.** `<script>` and `<style>` inside HTML, and `${…}` contents in template literals.
+9. **An interactive wrap toggle button.** `wrap` is prop-only today.
+10. **Several languages in tabs.** Composes with `Tabs`; mostly a docs example.
+11. **A friendlier language label** ("TypeScript" rather than "TSX").
+12. **Hide the language label, or the whole header**, for a minimal look.
+
+**Priority 4: nice to have**
+13. **Per-line links or click-to-select** (click a line number to select or link to that line).
+14. **Folding regions** inside a block, as opposed to the current "first N lines" collapse.
+15. **Search-term highlighting** inside a block, using the `Highlight` atom.
+16. **A side-by-side diff view.**
+17. **Print styles.**
+
+**Priority 5: structural, blocked on approval**
+18. **One scroll-frame hook shared with `Table`.** Removes a small duplicate (`useCodeScroll`), but means changing Finalized `Table`; the two differ only in the clipped-height rule.
+
+**Found later, not yet ranked**
+19. **Load a grammar only when its language is used.** All sixteen load with the component (9.68KB JS gzipped, 2.2KB of it the seven added grammars).
+20. **Further languages** (C, C++, C#, Ruby, PHP, Kotlin, Swift, TOML), each a rule list plus tests, added when there is a need.
+21. **Verification, not features:** a real screen reader (the accessibility tree is verified, not a person's experience), the real Clipboard API against a permission prompt, and forced colours on actual Windows (verified by emulation).
+
+Notes for whoever builds these: the tokenizer must stay lossless and linear-time (`06` §9: a lookahead written into a word's pattern goes quadratic; a never-closed string runs to the end as one match); a stories file must not import `vitest/browser` at load time (use `browserProtocol.js`); generated CSS `content` is exposed to assistive technology unless it has alternative text, and a transparent border is drawn in forced colours (`05` §6).
 
 ## Finalized, 2026-09-26
 
-Declared Finalized by the user after the final review above. Left open, as recorded there: no real-screen-reader check, the real Clipboard API against a permission prompt, forced-colours mode, and the gaps named above.
+Declared Finalized by the user after the final review above. Left open, as recorded there: no real-screen-reader check, the real Clipboard API against a permission prompt, forced-colours mode, and the gaps in the prioritized list above.
 
 ## Post-Finalization pass, 2026-09-26 (at explicit direction): items 1–3 of the gaps list
 
