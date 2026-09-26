@@ -13,6 +13,15 @@ export const codeBlockSnippets = {
 <CodeBlock language="bash" code={"pnpm add @dbm-design-system/components"} />
 <CodeBlock language="diff" code={"- const size = 'md';\\n+ const size = 'lg';"} />`,
 
+  moreLanguages: `{/* Python, YAML, SQL, Markdown, Go, Rust and Java too. Aliases: "py", "yml", "postgres", "md", "golang", "rs" */}
+<CodeBlock language="python" code={"def total(items):\\n    return sum(i.price for i in items)"} />
+<CodeBlock language="yaml" code={"name: build\\non:\\n  push:\\n    branches: [main]"} />
+<CodeBlock language="sql" code={"SELECT id, COUNT(*) FROM users GROUP BY id;"} />
+<CodeBlock language="markdown" code={"# Title\\n\\n- one **bold** item"} />
+<CodeBlock language="go" code={"func main() {\\n\\tfmt.Println(\\"hi\\")\\n}"} />
+<CodeBlock language="rust" code={"fn main() {\\n    println!(\\"hi\\");\\n}"} />
+<CodeBlock language="java" code={"public class Main {\\n  void run() {}\\n}"} />`,
+
   title: `{/* title: a file name, shown in the header and used as the block's accessible name
     source: the code to show, as a string */}
 <CodeBlock language="tsx" title="SaveButton.tsx" code={source} />`,

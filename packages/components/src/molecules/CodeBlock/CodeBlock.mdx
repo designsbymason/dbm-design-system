@@ -45,8 +45,9 @@ A block of source code: syntax-highlighted, with an optional title, line numbers
 button, and a way to collapse a long one. It is a `<figure>` around a scrollable `<pre><code>`, and it draws
 the code as text, never as HTML.
 
-Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and
-`diff`, with no dependency; any other language is drawn as plain text. It is a lexer, not a full grammar — it
+Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`,
+`python`, `yaml`, `sql`, `markdown`, `go`, `rust` and `java`, with no dependency; any other language is drawn as
+plain text. It is a lexer, not a full grammar — it
 reads well, and it will not catch every corner of a language.
 
 ### Import
@@ -96,6 +97,14 @@ stands for, and the languages example writes its code inline.
 ### Languages
 
 <Canvas of={CodeBlockStories.Languages} />
+
+### More languages
+
+Python, YAML, SQL, Markdown, Go, Rust and Java, with the usual aliases (`py`, `yml`, `postgres`, `md`, `golang`,
+`rs`). A Markdown block draws the lines of a fenced code block as they are, so a snippet of another language inside
+it is never mistaken for Markdown.
+
+<Canvas of={CodeBlockStories.MoreLanguages} />
 
 ### With a title
 
@@ -267,6 +276,7 @@ button at the left.
 <CodeBlock language="json" maxHeight="16rem" code={config} />
 
 <CodeBlock language="bash" wrap code={command} />
+<CodeBlock language="yaml" code={workflow} />
 <CodeBlock language="bash" code={"$ pnpm add x"} />              {/* copies "pnpm add x" */}
 <CodeBlock language="bash" stripPrompt={false} code={"$ pnpm add x"} />  {/* copies "$ pnpm add x" */}
 <CodeBlock language="ts" copyable={false} code={snippet} />

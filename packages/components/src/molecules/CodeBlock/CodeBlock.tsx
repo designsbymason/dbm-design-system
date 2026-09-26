@@ -44,8 +44,8 @@ type CopyState = { status: "idle" | "copied" | "failed"; count: number };
  * A block of source code, with syntax highlighting, an optional title, line numbers, highlighted lines, a copy
  * button, and a way to collapse a long one. It is a `<figure>` around a scrollable `<pre><code>`.
  *
- * Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and
- * `diff` (any other language is drawn as plain text). It builds React elements from plain data and never
+ * Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`,
+ * `python`, `yaml`, `sql`, `markdown`, `go`, `rust` and `java` (any other language is drawn as plain text). It builds React elements from plain data and never
  * sets HTML, so the code is always shown as text; it is approximate, not a full grammar. Code stays
  * left-to-right in a right-to-left page.
  *

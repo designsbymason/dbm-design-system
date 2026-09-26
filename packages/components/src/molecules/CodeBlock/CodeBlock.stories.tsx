@@ -54,6 +54,76 @@ if [ -f "$HOME/.npmrc" ]; then echo "found ${"$"}{HOME}"; fi`,
 -const size = 'md';
 +const size = 'lg';
  export { size };`,
+  python: `import json
+
+@cache
+class Cart:
+    """A shopping cart."""
+
+    def total(self, items: list[dict]) -> float:
+        # Add up every price.
+        return sum(float(i["price"]) for i in items if i is not None)`,
+  yaml: `name: build
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          pnpm install
+          pnpm test  # all of it
+    env: { CI: true, RETRIES: 3 }`,
+  sql: `-- Orders per customer this year
+SELECT c.name, COUNT(*) AS orders
+FROM customers c
+JOIN orders o ON o.customer_id = c.id
+WHERE o.created_at >= '2026-01-01' AND c.name NOT LIKE 'O''%'
+GROUP BY c.name
+ORDER BY orders DESC
+LIMIT 10;`,
+  markdown: `# Getting started
+
+Install the **components** package with \`pnpm add\`, then read [the docs](https://example.com).
+
+- one
+- two
+
+> A note.
+
+\`\`\`bash
+pnpm add @dbm-design-system/components
+\`\`\``,
+  go: `package main
+
+import "fmt"
+
+type Server struct{ Port int }
+
+// Start listens and blocks.
+func (s *Server) Start() error {
+	fmt.Println("listening on", s.Port, \`raw\`, nil)
+	return nil
+}`,
+  rust: `#[derive(Debug)]
+struct Config<'a> {
+    name: &'a str,
+}
+
+fn main() {
+    let c = Config { name: "dbm" }; // a comment
+    let n: u32 = 1_000;
+    println!("{:?} {}", c, n);
+}`,
+  java: `@Service
+public class Greeter {
+  private final String name = "dbm";
+
+  public String greet(int times) {
+    return name.repeat(times); // done
+  }
+}`,
   longLine: `curl --request POST --url https://api.example.com/v1/projects/12345/members --header 'Authorization: Bearer <token>' --header 'Content-Type: application/json' --data '{"role":"editor","notify":true}'`,
   log: `2026-09-26 10:14:02 INFO  server listening on :3000
 2026-09-26 10:14:09 WARN  slow request GET /reports (2.4s)
@@ -88,8 +158,9 @@ const meta: Meta<PlaygroundArgs> = {
     },
     language: {
       control: "select",
-      options: ["ts", "tsx", "js", "jsx", "json", "css", "html", "bash", "diff", "text"],
-      description: "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash and diff have a grammar; any other value, or none, draws plain text. Shown as a label in the header.",
+      options: ["ts", "tsx", "js", "jsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "text"],
+      description:
+        "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash, diff, python, yaml, sql, markdown, go, rust and java have a grammar, with aliases such as py, yml, md, golang and rs; any other value, or none, draws plain text. Shown as a label in the header.",
     },
     title: {
       control: "text",
@@ -232,6 +303,20 @@ export const Languages: Story = {
   render: (args) => (
     <div style={stack}>
       {(["ts", "tsx", "json", "css", "html", "bash", "diff"] as const).map((language) => (
+        <DemoBlock key={language} {...args} code={samples[language]} language={language} title="" aria-label={`${language} example`} />
+      ))}
+    </div>
+  ),
+};
+
+export const MoreLanguages: Story = {
+  name: "More languages",
+  parameters: { docs: { source: { code: codeBlockSnippets.moreLanguages } } },
+  args: {},
+  argTypes: { code: noControls, language: noControls, title: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={stack}>
+      {(["python", "yaml", "sql", "markdown", "go", "rust", "java"] as const).map((language) => (
         <DemoBlock key={language} {...args} code={samples[language]} language={language} title="" aria-label={`${language} example`} />
       ))}
     </div>
@@ -437,13 +522,16 @@ const contrast = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
+// Every language with a grammar, so every colour it uses is measured.
+const contrastLanguages = ["tsx", "ts", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java"] as const;
+
 export const TokenContrastInteraction: Story = {
   ...Playground,
   name: "Interaction: every syntax colour is AA on the block and on a highlighted line (this theme)",
   tags: ["!dev"],
   render: () => (
     <div style={stack}>
-      {(["tsx", "ts", "json", "css", "html", "bash", "diff"] as const).map((language) => (
+      {contrastLanguages.map((language) => (
         <div key={language} data-testid={language}>
           <CodeBlock code={samples[language]} language={language} aria-label={language} highlightLines={[2, "4-5"]} showLineNumbers />
         </div>
@@ -452,7 +540,7 @@ export const TokenContrastInteraction: Story = {
   ),
   play: async ({ canvasElement }) => {
     const seen = new Set<string>();
-    for (const language of ["tsx", "ts", "json", "css", "html", "bash", "diff"]) {
+    for (const language of contrastLanguages) {
       const block = within(canvasElement).getByTestId(language);
       const root = block.firstElementChild as HTMLElement;
       const background = getComputedStyle(root).backgroundColor;

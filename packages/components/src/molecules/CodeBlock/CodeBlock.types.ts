@@ -53,9 +53,10 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    */
   code: string;
   /**
-   * The language to highlight it as: `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` (also `sh`,
-   * `shell`) or `diff`, plus a few aliases (`typescript`, `javascript`, `svg`, `xml`, `scss`, `patch`).
-   * Any other value, or none, draws the code as plain text. Shown as a label in the header, as written.
+   * The language to highlight it as: `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`, `python`,
+   * `yaml`, `sql`, `markdown`, `go`, `rust` or `java`, plus aliases (`typescript`, `javascript`, `sh`, `shell`,
+   * `svg`, `xml`, `scss`, `patch`, `py`, `yml`, `postgres`, `md`, `golang`, `rs`). Any other value, or none,
+   * draws the code as plain text. Shown as a label in the header, as written.
    */
   language?: string;
   /**

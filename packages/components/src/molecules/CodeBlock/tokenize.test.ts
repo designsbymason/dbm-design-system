@@ -13,7 +13,7 @@ const rejoin = (code: string, language: string) =>
     .map((line) => line.map((token) => token.text).join(""))
     .join("\n");
 
-const languages = ["js", "jsx", "ts", "tsx", "json", "css", "html", "bash", "diff", "text", undefined];
+const languages = ["js", "jsx", "ts", "tsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "text", undefined];
 
 const samples = [
   "",
@@ -28,6 +28,13 @@ const samples = [
   "unterminated 'string\nand /* comment\nand `template\nand <tag attr=\"open",
   "\r\nwindows\r\nline endings\r\n",
   "émoji 😀 and   separators \t tabs",
+  '@app.route("/x")\nclass Foo(Base):\n    """Doc\n    string."""\n    def bar(self, n: int = 3) -> str:\n        return f"hi {n}"',
+  "name: build\non:\n  push:\n    branches: [main]\n  - run: |\n      echo hi\n\"quoted\": &a yes\n",
+  "-- comment\nSELECT a, COUNT(*) FROM \"T\" WHERE n LIKE 'O''B' AND d::date > $1;",
+  "# Title\n\n- item **bold** `code` [l](u)\n\n```ts\nconst a = 1;\n```\n> q\n---\n<b>x</b>",
+  "package main\nfunc (s *S) Run() error { return `raw\nstr` }",
+  "#[derive(Debug)]\nstruct P<'a> { x: &'a str }\nlet r = r#\"raw \"q\" \"#; let c = 'x'; println!(\"{}\", 1u8);",
+  "@Override\npublic class A { String s = \"\"\"\n  t\"\"\"; int n = 0x1F; }",
 ];
 
 describe("tokenize", () => {
@@ -86,6 +93,225 @@ describe("tokenize", () => {
   });
 });
 
+describe("Python", () => {
+  it("colours keywords, literals, numbers, decorators, definitions, types and comments", () => {
+    expect(typed('@app.route("/x")\nclass Foo(Base):\n    def bar(self, n: int = 3) -> str:\n        return None  # end', "python").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "function:@app.route",
+      'string:"/x"',
+      "keyword:class",
+      "type:Foo",
+      "type:Base",
+      "keyword:def",
+      "function:bar",
+      "keyword:self",
+      "type:int",
+      "number:3",
+      "type:str",
+      "keyword:return",
+      "number:None",
+      "comment:# end",
+    ]);
+  });
+
+  it("draws a triple-quoted string across lines, and reads a string prefix", () => {
+    expect(tokenize('x = """one\ntwo"""', "py").map((line) => line.map((token) => token.type))).toEqual([[undefined, "string"], ["string"]]);
+    expect(typed("a = f'{x}'; b = rb\"\\d\"; c = \"x\"", "python").filter(([type]) => type === "string").map(([, text]) => text)).toEqual(["f'{x}'", 'rb"\\d"', '"x"']);
+  });
+
+  it("does not take an @ in the middle of a statement for a decorator", () => {
+    expect(typed("c = a @ b\nd = a@b", "python").filter(([type]) => type === "function")).toEqual([]);
+  });
+
+  it("runs a triple-quoted string that is never closed to the end of the text", () => {
+    expect(tokenize('x = """never closed\nmore', "python").map((line) => line.map((token) => token.type))).toEqual([[undefined, "string"], ["string"]]);
+  });
+
+  it("does not take a digit inside a name for a number", () => {
+    expect(typed("x1 = y2 + 3", "python")).toEqual([["number", "3"]]);
+  });
+});
+
+describe("YAML", () => {
+  it("finds a key at the start of a line, after indentation and a list dash", () => {
+    expect(typed("name: build\non:\n  push:\n    - uses: actions/checkout@v4\n    - run: x", "yaml").filter(([type]) => type === "property").map(([, text]) => text)).toEqual(["name", "on", "push", "uses", "run"]);
+  });
+
+  it("does not take a value, or a colon in one, for a key", () => {
+    expect(typed("url: http://x.y/z\ntime: 12:30\n- plain text here", "yaml").filter(([type]) => type === "property").map(([, text]) => text)).toEqual(["url", "time"]);
+  });
+
+  it("does not take a word before a colon inside a value for a key", () => {
+    expect(typed("title: Note: read this\n- item: a: b", "yaml").filter(([type]) => type === "property").map(([, text]) => text)).toEqual(["title", "item"]);
+  });
+
+  it("colours quoted keys and strings, anchors, aliases, tags, block scalars, literals, numbers and comments", () => {
+    expect(typed('"quoted key": &a yes\nref: *a\nn: 1.5\ns: \'x\' # note\nt: !!str 5\nd: |\n  text', "yaml").map(([type, text]) => `${type}:${text}`)).toEqual([
+      'property:"quoted key"',
+      "type:&a",
+      "number:yes",
+      "property:ref",
+      "type:*a",
+      "property:n",
+      "number:1.5",
+      "property:s",
+      "string:'x'",
+      "comment:# note",
+      "property:t",
+      "keyword:!!str",
+      "number:5",
+      "property:d",
+      "keyword:|",
+    ]);
+  });
+
+  it("colours the document markers, and does not take a # inside a word for a comment", () => {
+    expect(typed("---\na: b#c\n...", "yml").map(([type, text]) => `${type}:${text}`)).toEqual(["keyword:---", "property:a", "keyword:..."]);
+  });
+});
+
+describe("SQL", () => {
+  it("colours keywords in any case, types, functions, literals, numbers, comments and parameters", () => {
+    expect(typed("select count(*) from t where a >= 18 and b is null and c::date > $1 -- hi", "sql").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "keyword:select",
+      "function:count",
+      "keyword:from",
+      "keyword:where",
+      "number:18",
+      "keyword:and",
+      "keyword:is",
+      "number:null",
+      "keyword:and",
+      "type:date",
+      "property:$1",
+      "comment:-- hi",
+    ]);
+  });
+
+  it("reads a doubled quote inside a string, and a quoted identifier as a name", () => {
+    expect(typed("SELECT 'O''Brien', \"Users\".`id` FROM x", "sql").filter(([type]) => type === "string" || type === "property").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "string:'O''Brien'",
+      'property:"Users"',
+      "property:`id`",
+    ]);
+  });
+
+  it("draws a block comment across lines", () => {
+    expect(tokenize("/* a\nb */ SELECT", "postgres").map((line) => line.map((token) => token.type))).toEqual([["comment"], ["comment", undefined, "keyword"]]);
+  });
+});
+
+describe("Markdown", () => {
+  it("colours headings, lists, quotes, rules, inline code, links, bold and HTML", () => {
+    expect(typed("# Title\n\n- one **bold** `code` [a](u)\n1. two\n> quote\n---\n<b>x</b>", "md").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "keyword:# Title",
+      "keyword:-",
+      "type:**bold**",
+      "string:`code`",
+      "function:[a](u)",
+      "keyword:1.",
+      "comment:> quote",
+      "comment:---",
+      "tag:<b>",
+      "tag:</b>",
+    ]);
+  });
+
+  it("draws a fenced block's lines as they are, and finds Markdown again after it", () => {
+    expect(typed("```ts\n# not a heading\n- not a list\n```\n# Heading", "markdown").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "tag:```ts",
+      "string:# not a heading",
+      "string:- not a list",
+      "tag:```",
+      "keyword:# Heading",
+    ]);
+  });
+
+  it("runs an unclosed fence to the end of the text", () => {
+    expect(typed("text\n```\n# a\nb", "markdown").filter(([type]) => type === "string").map(([, text]) => text)).toEqual(["# a", "b"]);
+  });
+
+  it("does not take a # that isn't followed by a space for a heading, or a mid-line one at all", () => {
+    expect(typed("#hashtag and a # mid-line", "markdown")).toEqual([]);
+  });
+});
+
+describe("Go", () => {
+  it("colours keywords, types, definitions, calls, strings, runes, numbers and nil", () => {
+    expect(typed('func (s *Server) Start() error {\n\tfmt.Println("hi", \'x\', 3.5, nil)\n}', "go").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "keyword:func",
+      "type:Server",
+      "function:Start",
+      "type:error",
+      "function:Println",
+      'string:"hi"',
+      "string:'x'",
+      "number:3.5",
+      "number:nil",
+    ]);
+  });
+
+  it("names a generic function, whose name is followed by a bracket and not a call", () => {
+    expect(typed("func Map[T any](x T) T { return x }", "go").filter(([type]) => type === "function").map(([, text]) => text)).toEqual(["Map"]);
+  });
+
+  it("draws a raw string across lines", () => {
+    expect(tokenize("x := `a\nb`", "golang").map((line) => line.map((token) => token.type))).toEqual([[undefined, "string"], ["string"]]);
+  });
+});
+
+describe("Rust", () => {
+  it("tells a character from a lifetime, and colours attributes, macros, definitions and numbers", () => {
+    expect(typed("#[derive(Debug)]\nfn f<'a>(x: &'a str) { let c = 'x'; println!(\"{}\", 1_000u32); }", "rust").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "tag:#[derive(Debug)]",
+      "keyword:fn",
+      "function:f",
+      "type:'a",
+      "type:'a",
+      "type:str",
+      "keyword:let",
+      "string:'x'",
+      "function:println!",
+      'string:"{}"',
+      "number:1_000u32",
+    ]);
+  });
+
+  it("ends a raw string at a quote and as many # as it opened with", () => {
+    expect(typed('let r = r#"a "q" b"#; let n = 1;', "rs").filter(([type]) => type === "string").map(([, text]) => text)).toEqual(['r#"a "q" b"#']);
+  });
+
+  it("runs a raw string that is never closed to the end of the text", () => {
+    expect(typed('let r = r#"never closed\nmore', "rust").filter(([type]) => type === "string").map(([, text]) => text)).toEqual(['r#"never closed', "more"]);
+  });
+
+  it("does not take a != for a macro", () => {
+    expect(typed("if a != b { }", "rust").filter(([type]) => type === "function")).toEqual([]);
+  });
+});
+
+describe("Java", () => {
+  it("colours annotations, keywords, types, calls, numbers and text blocks", () => {
+    expect(typed('@Override\npublic class Foo { private final int n = 0x1F; String s = """\n  t"""; void go() { System.out.println("x"); } }', "java").map(([type, text]) => `${type}:${text}`)).toEqual([
+      "function:@Override",
+      "keyword:public",
+      "keyword:class",
+      "type:Foo",
+      "keyword:private",
+      "keyword:final",
+      "type:int",
+      "number:0x1F",
+      "type:String",
+      'string:"""',
+      'string:  t"""',
+      "keyword:void",
+      "function:go",
+      "type:System",
+      "function:println",
+      'string:"x"',
+    ]);
+  });
+});
+
 describe("tokenize speed", () => {
   // A long unbroken word (a `data:` URI, a hash, a minified name) must cost time in proportion to its length. A
   // lookahead written into a word's pattern retries from every letter and goes quadratic: 29,000 characters took
@@ -102,10 +328,59 @@ describe("tokenize speed", () => {
     ["bash", word],
     ["json", word],
     ["ts", word],
+    ["python", word],
+    ["python", `"${word}`],
+    ["python", `"""${word}`],
+    ["yaml", word],
+    ["yaml", `${word}: x`],
+    ["yaml", `a: ${word}`],
+    ["yaml", `- ${word}`],
+    ["sql", word],
+    ["sql", `'${word}`],
+    ["sql", `/* ${word}`],
+    ["markdown", word],
+    ["markdown", `# ${word}`],
+    ["markdown", "-".repeat(MAX_HIGHLIGHT_LENGTH - 1000)],
+    ["markdown", `\`\`\`\n${word}`],
+    ["markdown", `[${word}`],
+    ["go", word],
+    ["go", `\`${word}`],
+    ["rust", word],
+    ["rust", `r#"${word}`],
+    ["rust", `'${word}`],
+    ["java", word],
+    ["java", `"""${word}`],
   ])("finishes a long word promptly in %s", (language, code) => {
     const start = performance.now();
     tokenize(code, language);
     expect(performance.now() - start).toBeLessThan(budget);
+  });
+});
+
+describe("tokenize on input built to make a match repeat", () => {
+  // Each of these makes a pattern that fails, and is tried again, at every start: an opener with no closer, over and
+  // over. A never-closed string or comment must run to the end once, not be rescanned from every opener.
+  const size = MAX_HIGHLIGHT_LENGTH - 1000;
+  it.each([
+    ["rust", 'r#"'.repeat(size / 3)],
+    ["rust", 'r"'.repeat(size / 2)],
+    ["rust", "'a ".repeat(size / 3)],
+    ["python", '"""'.repeat(size / 3)],
+    ["python", "f'".repeat(size / 2)],
+    ["java", '"""'.repeat(size / 3)],
+    ["sql", "'".repeat(size)],
+    ["sql", "/*".repeat(size / 2)],
+    ["markdown", "```\n".repeat(size / 4)],
+    ["markdown", "[a](".repeat(size / 4)],
+    ["markdown", "<!--".repeat(size / 4)],
+    ["yaml", "a:\n".repeat(size / 3)],
+    ["yaml", "- ".repeat(size / 2)],
+    ["yaml", '"'.repeat(size)],
+    ["go", "`".repeat(size)],
+  ])("finishes promptly in %s", (language, code) => {
+    const start = performance.now();
+    tokenize(code, language);
+    expect(performance.now() - start).toBeLessThan(250);
   });
 });
 
