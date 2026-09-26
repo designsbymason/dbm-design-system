@@ -30,7 +30,7 @@ dbm-design-system/
 │   ├── primitives/               # Small framework-agnostic utils, not a Radix wrapper (see note below)
 │   │   └── src/
 │   │       ├── hooks/            # useResolvedResponsiveValue, useAnnouncement, usePersistentDismiss
-│   │       ├── utils/            # cx (classname merging), mergeRefs, responsiveStyle
+│   │       ├── utils/            # cx (classname merging), mergeDefined (per-key defaults for a `labels` prop), mergeRefs, responsiveStyle
 │   │       └── types/            # shared token types
 │   │
 │   ├── icons/                    # Phosphor wrapper — curated re-export + typed icon prop

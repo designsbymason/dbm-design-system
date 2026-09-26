@@ -94,3 +94,8 @@ Declared by the user after the final review above and the two Properties-table c
 - `BreadcrumbList` structured data (JSON-LD) for search engines — the consumer's concern, but an agent-usage note may belong in the eventual consumer guide.
 - A menu of the hidden items (instead of expanding in place) once `Menu` exists.
 - Holding a compact collapse back while a soon-to-be-hidden link has keyboard focus (the media query can't).
+
+
+## Post-Finalization fix (2026-09-26, at explicit direction) — a `labels` entry that is `undefined` keeps its default
+
+Found on `AvatarGroup`'s final review: `labels` was merged as `{ ...defaultLabels, ...labelOverrides }`, so `labels={{ x: t?.x }}` (a missing translation) replaced the default with `undefined`. Probed on this component: `expand` crashed the render, and `navigation` left the `<nav>` without a name. Now merged with `mergeDefined` (a new helper in `packages/primitives`, which skips an override that is `undefined`), so each label falls back to its own default. **Finalized status unchanged** — it corrects a genuine defect (`06-engineering-standards.md` §9, question 2), and nothing that rendered correctly changes. A new test fails on the old spread (checked).

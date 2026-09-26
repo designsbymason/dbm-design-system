@@ -86,3 +86,8 @@ A full `06-engineering-standards.md` §9 pass, checked against the code and the 
 ## Finalized, 2026-09-25
 
 Declared by the user after the final review: the two findings were fixed and the right-to-left decision built. Everything in this file is the record up to that point; later changes get a dated entry here, and a fix to it goes through `06-engineering-standards.md` §9's Finalized rules (ask first, then the three-question test).
+
+
+## Post-Finalization fix (2026-09-26, at explicit direction) — a `labels` entry that is `undefined` keeps its default
+
+Found on `AvatarGroup`'s final review: `labels` was merged as `{ ...defaultLabels, ...labelOverrides }`, so `labels={{ x: t?.x }}` (a missing translation) replaced the default with `undefined`. Probed on this component: `minimum` and `maximum` left both thumbs without an accessible name (`range` was already guarded). Now merged with `mergeDefined` (a new helper in `packages/primitives`, which skips an override that is `undefined`), so each label falls back to its own default. **Finalized status unchanged** — it corrects a genuine defect (`06-engineering-standards.md` §9, question 2), and nothing that rendered correctly changes. A new test fails on the old spread (checked).

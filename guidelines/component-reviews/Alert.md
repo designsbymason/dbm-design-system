@@ -103,3 +103,8 @@ Prompted by a report on `Breadcrumb` (see its review file): a story's `resize: h
 - A `Toast` (separate organism) will want `Alert`'s tones, icons and dismiss styling; sharing them is that component's decision.
 - A reduced-motion variant that still eases the collapse (today it is removed at once).
 - A `Banner` as its own component, only if it gains behaviour an inline alert shouldn't have (ADR-0023).
+
+
+## Post-Finalization fix (2026-09-26, at explicit direction) — a `labels` entry that is `undefined` keeps its default
+
+Found on `AvatarGroup`'s final review: `labels` was merged as `{ ...defaultLabels, ...labelOverrides }`, so `labels={{ x: t?.x }}` (a missing translation) replaced the default with `undefined`. Probed on this component: `dismiss` left the dismiss button without an accessible name. Now merged with `mergeDefined` (a new helper in `packages/primitives`, which skips an override that is `undefined`), so each label falls back to its own default. **Finalized status unchanged** — it corrects a genuine defect (`06-engineering-standards.md` §9, question 2), and nothing that rendered correctly changes. A new test fails on the old spread (checked).
