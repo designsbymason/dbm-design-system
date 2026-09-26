@@ -75,7 +75,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | FileUpload / Dropzone | organism | 🟢 | Drag-drop, progress, multi-file |
 | ColorPicker | organism | ⚪ | Given token-driven theming, likely low-usage but completes the set |
 | RatingInput | molecule | ⚪ | Star/scale rating |
-| ToggleGroup | molecule | 🟡 | Segmented control (single/multi select) |
+| ToggleGroup | molecule | 🟡 | Segmented control over Radix `ToggleGroup` (`ToggleGroup` + `ToggleGroup.Item`): `type` `single` (a `radiogroup`; one item stays chosen once chosen unless `deselectable`) or `multiple` (a `toolbar` of toggles); its own `subtle` / `outlined` / `solid` looks, sizes matched to `Button`'s heights, `attached` or spaced, `orientation` (or a breakpoint map), `fullWidth`, `rounded`, `dir`; one tab stop with roving arrow keys. Built 2026-09-26, awaiting final review and sign-off — see [ToggleGroup.md](component-reviews/ToggleGroup.md) |
 | Form | organism | 🟢 | Context provider + validation wiring |
 | FormField | molecule | 🟢 | Label + control + helper/error text composition |
 | FieldGroup | molecule | ⚪ | Groups multiple `FormField`s under a shared legend/heading with fieldset-equivalent semantic grouping for assistive tech — distinct from `Form`'s context/validation role and `FormField`'s single-field scope. Added 2026-09-10 following a molecule feature-completeness gap-check |
