@@ -128,6 +128,24 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
       }
     }
 
+    // Radix renders whatever it is given: an unsorted pair puts the "Minimum" thumb above the "Maximum" one, and
+    // a value outside the track leaves `aria-valuenow` outside `aria-valuemin`/`aria-valuemax`. Nothing here
+    // can repair a wrong value the parent owns, so say so once, in development.
+    const hasWarnedInvalidValueRef = useRef(false);
+    if (process.env.NODE_ENV !== "production" && !hasWarnedInvalidValueRef.current) {
+      if (lowValue > highValue) {
+        hasWarnedInvalidValueRef.current = true;
+        console.warn(
+          `RangeSlider: the value must be [minimum, maximum], lower first — got [${lowValue}, ${highValue}]. The thumbs are named and limited by their position, so an unsorted pair reads as a "Minimum" thumb above the "Maximum" one.`,
+        );
+      } else if (lowValue < min || highValue > max) {
+        hasWarnedInvalidValueRef.current = true;
+        console.warn(
+          `RangeSlider: the value [${lowValue}, ${highValue}] is outside the track [${min}, ${max}], so \`aria-valuenow\` falls outside \`aria-valuemin\`/\`aria-valuemax\`. Keep both numbers between \`min\` and \`max\`.`,
+        );
+      }
+    }
+
     const minimumTooltip = useThumbTooltip(showValueTooltip);
     const maximumTooltip = useThumbTooltip(showValueTooltip);
 

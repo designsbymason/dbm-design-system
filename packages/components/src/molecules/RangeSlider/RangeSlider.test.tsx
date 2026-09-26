@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import styles from "../Slider/Slider.module.css";
+import { FormField } from "../FormField";
 import { RangeSlider } from "./RangeSlider";
 import type { RangeSliderValue } from "./RangeSlider.types";
 
@@ -517,6 +518,69 @@ describe("RangeSlider", () => {
     });
   });
 
+  describe("an invalid value", () => {
+    it("warns once in development for an unsorted pair", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { rerender } = render(<RangeSlider aria-label="Price" value={[80, 20]} />);
+      rerender(<RangeSlider aria-label="Price" value={[90, 20]} />);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("lower first"));
+      warnSpy.mockRestore();
+    });
+
+    it("warns for a value outside the track, from defaultValue as well", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(<RangeSlider aria-label="Price" defaultValue={[-50, 500]} />);
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("outside the track"));
+      warnSpy.mockRestore();
+    });
+
+    it("does not warn for a valid pair, including one thumb on each end and both on the same value", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { rerender } = render(<RangeSlider aria-label="Price" value={[0, 100]} />);
+      rerender(<RangeSlider aria-label="Price" value={[50, 50]} />);
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+  });
+
+  describe("inside a FormField", () => {
+    // `FormField` hands back id, aria-labelledby, aria-describedby, hasError, disabled and required to spread
+    // onto its control; the slider has to turn those into named, described thumbs.
+    it("names each thumb from the field's label and describes both with its helper text", () => {
+      render(
+        <FormField label="Price" helperText="Between 0 and 100">
+          {(fieldProps) => <RangeSlider {...fieldProps} defaultValue={[20, 80]} />}
+        </FormField>,
+      );
+      expect(screen.getByRole("slider", { name: "Price Minimum" })).toBeInTheDocument();
+      expect(screen.getByRole("slider", { name: "Price Maximum" })).toBeInTheDocument();
+      for (const thumb of thumbs()) expect(thumb).toHaveAccessibleDescription("Between 0 and 100");
+    });
+
+    it("carries the field's error state and disabled state to both thumbs", () => {
+      render(
+        <FormField label="Price" error="Pick a range" disabled>
+          {(fieldProps) => <RangeSlider {...fieldProps} defaultValue={[20, 80]} />}
+        </FormField>,
+      );
+      for (const thumb of thumbs()) {
+        expect(thumb).toHaveAttribute("aria-invalid", "true");
+        expect(thumb).toHaveAccessibleDescription("Pick a range");
+        expect(thumb).toHaveAttribute("data-disabled");
+      }
+    });
+
+    it("has no accessibility violations", async () => {
+      const { container } = render(
+        <FormField label="Price" helperText="Between 0 and 100" required>
+          {(fieldProps) => <RangeSlider {...fieldProps} defaultValue={[20, 80]} />}
+        </FormField>,
+      );
+      expect((await axe(container)).violations).toHaveLength(0);
+    });
+  });
+
   it("survives React StrictMode", async () => {
     const user = userEvent.setup();
     render(
@@ -538,6 +602,7 @@ describe("RangeSlider", () => {
       ["vertical, with everything shown", { orientation: "vertical" as const, showValue: true, showMinMaxLabels: true }],
       ["with a tooltip, min and max labels, and ticks", { showValueTooltip: true, showMinMaxLabels: true, showTicks: true, tickInterval: 25 }],
       ["with a formatter", { showValue: true, formatNumber: tagged }],
+      ["right to left, with everything shown", { dir: "rtl" as const, showValue: true, showMinMaxLabels: true, showTicks: true, tickInterval: 25 }],
     ])("has no violations, %s", async (_name, extra) => {
       const { container } = render(<RangeSlider aria-label="Price" defaultValue={[20, 80]} {...extra} />);
       expect((await axe(container)).violations).toHaveLength(0);
