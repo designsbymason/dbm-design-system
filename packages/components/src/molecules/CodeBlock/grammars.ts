@@ -168,9 +168,13 @@ const markdownRules = (): Rule[] => [
   { re: /(?:[-*+]|\d{1,9}[.)])(?=[ \t])/y, type: "keyword", when: markdownLineStart, after: leaveLineStart },
   { re: /<!--[\s\S]*?(?:-->|$)/y, type: "comment", after: leaveLineStart },
   { re: /`[^`\n]+`/y, type: "string", after: leaveLineStart },
-  { re: /!?\[[^\]\n]*\]\([^)\n]*\)/y, type: "function", after: leaveLineStart },
+  // A link or image. Neither part may contain the character that opens the next attempt (`[` in the label, `(` in the
+  // address), so an opener that is never closed fails at the next one instead of reading to the end of the line from
+  // every opener: `[a](` repeated would otherwise cost the square of its length.
+  { re: /!?\[[^[\]\n]*\]\([^()\n]*\)/y, type: "function", after: leaveLineStart },
   { re: /\*\*[^*\n]+\*\*|__[^_\n]+__/y, type: "type", after: leaveLineStart },
-  { re: /<\/?[A-Za-z][^>\n]*>/y, type: "tag", after: leaveLineStart },
+  // A tag stops at the next `<` too, for the same reason: `<a` repeated must not read to the line's end every time.
+  { re: /<\/?[A-Za-z][^<>\n]*>/y, type: "tag", after: leaveLineStart },
 ];
 
 // --- Go -----------------------------------------------------------------------------------------------------
@@ -211,7 +215,8 @@ const rustRules = (): Rule[] => [
   // A character (`'a'`, `'\\n'`) or, failing that, a lifetime (`'a`, `'static`).
   { re: /b?'(?:\\(?:x[\da-fA-F]{2}|u\{[\da-fA-F_]{1,6}\}|.)|[^'\\\n])'/y, type: "string", when: notAfterWord },
   { re: /'[A-Za-z_]\w*/y, type: "type" },
-  { re: /#!?\[[^\]\n]*\]/y, type: "tag" },
+  // An attribute stops at the next `[`, so `#[` repeated and never closed is not read to the line's end every time.
+  { re: /#!?\[[^[\]\n]*\]/y, type: "tag" },
   {
     re: /0x[\da-fA-F_]+|0o[0-7_]+|0b[01_]+|\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?(?:[iu](?:8|16|32|64|128|size)|f32|f64)?/y,
     type: "number",

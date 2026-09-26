@@ -392,6 +392,41 @@ describe("tokenize on input built to make a match repeat", () => {
   });
 });
 
+describe("tokenize: cost grows in proportion to length", () => {
+  // A fixed budget at one size can't tell linear from quadratic (a quadratic input took 80ms here and 380ms on a slow
+  // CI machine, and a 250ms budget passed it on the first and failed the second), so this measures how the cost
+  // scales: four times the text must cost about four times as much, not sixteen. Best of three, so a slow moment on
+  // the machine doesn't decide it; the floor keeps a cost too small to measure from producing a ratio.
+  const best = (language: string, code: string) => {
+    let fastest = Number.POSITIVE_INFINITY;
+    for (let run = 0; run < 3; run++) {
+      const start = performance.now();
+      tokenize(code, language);
+      fastest = Math.min(fastest, performance.now() - start);
+    }
+    return fastest;
+  };
+  const small = 6_000;
+  const large = 24_000;
+  const repeated = (unit: string, length: number) => unit.repeat(Math.ceil(length / unit.length));
+
+  it.each([
+    // An opener with no closer, over and over, in every grammar with a rule that could read to the line's end.
+    ["markdown", "["], ["markdown", "[a"], ["markdown", "!["], ["markdown", "[a]("], ["markdown", "<a"], ["markdown", "</a"], ["markdown", "[["],
+    ["markdown", "`"], ["markdown", "**"], ["markdown", "```\n"], ["markdown", "<!--"],
+    ["rust", "#["], ["rust", "#[a"], ["rust", "#!["], ["rust", 'r#"'], ["rust", "'a "],
+    ["python", '"""'], ["python", "f'"], ["java", '"""'], ["sql", "'"], ["sql", "/*"], ["go", "`"],
+    ["yaml", "a:\n"], ["yaml", "- "], ["yaml", '"'],
+    ["ts", "`"], ["ts", "/*"], ["ts", "'"], ["tsx", "<a"], ["tsx", "<a b={"], ["tsx", "{`"], ["jsx", "</"],
+    ["css", "/*"], ["css", "url("], ["css", "a{"], ["css", "@media "], ["html", "<a"], ["html", "<!--"], ["html", '<a b="'],
+    ["bash", "'"], ["bash", '"'], ["bash", "$("], ["bash", "${"], ["json", '"'], ["json", "["],
+  ])("of a repeated opener in %s: %j", (language, unit) => {
+    const ratio = best(language, repeated(unit, large)) / Math.max(best(language, repeated(unit, small)), 2);
+    // Linear is 4, quadratic 16.
+    expect(ratio).toBeLessThan(9);
+  });
+});
+
 describe("tokenize with values that are not text", () => {
   it("draws a language that is not a string as plain text, and a missing code as empty", () => {
     expect(tokenize("const a = 1", 5 as never)).toEqual([[{ text: "const a = 1" }]]);
