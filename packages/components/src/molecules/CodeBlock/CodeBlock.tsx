@@ -1,4 +1,4 @@
-import { CheckIcon, CopyIcon, WarningIcon } from "@dbm-design-system/icons";
+import { ArrowBendDownLeftIcon, CheckIcon, CopyIcon, WarningIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, useAnnouncement } from "@dbm-design-system/primitives";
 import { forwardRef, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
@@ -6,7 +6,7 @@ import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./CodeBlock.module.css";
-import type { CodeBlockLabels, CodeBlockProps } from "./CodeBlock.types";
+import type { CodeBlockLabels, CodeBlockProps, CodeBlockSize } from "./CodeBlock.types";
 import { copyToClipboard } from "./copyToClipboard";
 import { parseHighlightLines } from "./highlightLines";
 import { findRegisteredLanguage, subscribeToCodeLanguages } from "./registry";
@@ -17,6 +17,7 @@ import { useCodeScroll } from "./useCodeScroll";
 import { useCollapsedHeight } from "./useCollapsedHeight";
 
 const defaultLabels: CodeBlockLabels = {
+  wrap: "Wrap lines",
   copy: "Copy code",
   copied: "Copied",
   copyFailed: "Copy failed",
@@ -38,6 +39,17 @@ const tokenClass: Record<TokenType, string | undefined> = {
   inserted: styles.inserted,
   deleted: styles.deleted,
 };
+
+const sizeClass: Record<CodeBlockSize, string | undefined> = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+  xl: styles.sizeXl,
+};
+
+/** The header buttons' size for each `size`: the smaller steps stay above the 24px target-size floor. */
+const buttonSize: Record<CodeBlockSize, "xs" | "sm" | "md"> = { xs: "xs", sm: "xs", md: "sm", lg: "sm", xl: "md" };
 
 type CopyState = { status: "idle" | "copied" | "failed"; count: number };
 
@@ -69,10 +81,16 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       language,
       highlighter,
       title,
+      size = "md",
+      showHeader = true,
+      showLanguage = true,
       showLineNumbers = false,
       startLine = 1,
       highlightLines,
-      wrap = false,
+      wrap: wrapProp,
+      defaultWrap = false,
+      onWrapChange,
+      wrapToggle = false,
       maxHeight,
       collapsible = false,
       collapsedLines = 10,
@@ -122,6 +140,14 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       return runs;
     }, [highlighted, firstLine, lines.length]);
 
+    // --- Wrapping: controlled with `wrap`, or uncontrolled from `defaultWrap` and changed by the toggle button.
+    const [uncontrolledWrap, setUncontrolledWrap] = useState(defaultWrap);
+    const wrap = wrapProp ?? uncontrolledWrap;
+    const changeWrap = (next: boolean) => {
+      if (wrapProp === undefined) setUncontrolledWrap(next);
+      onWrapChange?.(next);
+    };
+
     // --- Collapsing: controlled with `expanded`, or uncontrolled from `defaultExpanded`.
     const [uncontrolledExpanded, setUncontrolledExpanded] = useState(defaultExpanded);
     const expanded = expandedProp ?? uncontrolledExpanded;
@@ -138,13 +164,15 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     const scrollable = useCodeScroll(frameRef, collapsed);
     // A wrapped line is one line however many rows it takes, so a wrapped block is cut where its Nth line ends.
     const collapsedHeight = useCollapsedHeight(frameRef, collapsed && wrap, visibleLines);
+    // A title that isn't drawn (no header) can't be pointed at, so it names the block as text instead.
+    const titleIsDrawn = Boolean(title) && showHeader;
     const regionName = ariaLabel
       ? { "aria-label": ariaLabel }
       : ariaLabelledBy
         ? { "aria-labelledby": ariaLabelledBy }
-        : title
+        : titleIsDrawn
           ? { "aria-labelledby": titleId }
-          : { "aria-label": labels.region };
+          : { "aria-label": title || labels.region };
 
     // --- Copying.
     const [copy, setCopy] = useState<CopyState>({ status: "idle", count: 0 });
@@ -169,7 +197,34 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       }
     }, [codeIsNotText]);
 
-    const hasHeader = Boolean(title || language) || copyable;
+    const hasControls = copyable || wrapToggle;
+    const languageIsDrawn = Boolean(language) && showLanguage;
+    const hasHeader = showHeader && (titleIsDrawn || languageIsDrawn || hasControls);
+    const floatingControls = !showHeader && hasControls;
+    const controls = hasControls && (
+      <span className={cx(styles.controls, floatingControls && styles.floating)}>
+        {wrapToggle && (
+          <IconButton
+            icon={ArrowBendDownLeftIcon}
+            aria-label={labels.wrap}
+            variant="ghost"
+            size={buttonSize[size]}
+            pressed={wrap}
+            onPressedChange={changeWrap}
+          />
+        )}
+        {copyable && (
+          <IconButton
+            icon={copy.status === "copied" ? CheckIcon : copy.status === "failed" ? WarningIcon : CopyIcon}
+            aria-label={labels.copy}
+            variant="ghost"
+            size={buttonSize[size]}
+            data-copy-state={copy.status}
+            onClick={handleCopy}
+          />
+        )}
+      </span>
+    );
     const frameStyle = {
       "--code-block-collapsed-lines": collapsed ? visibleLines : undefined,
       maxHeight: collapsed ? collapsedHeight || undefined : maxHeight,
@@ -181,35 +236,35 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
         {...props}
         // Applied after `{...props}` so a same-named consumer prop can never replace them
         // (05-component-api-conventions.md §3).
-        aria-label={ariaLabel}
-        aria-labelledby={ariaLabel ? undefined : (ariaLabelledBy ?? (title ? titleId : undefined))}
+        aria-label={ariaLabel ?? (title && !titleIsDrawn && !ariaLabelledBy ? title : undefined)}
+        aria-labelledby={ariaLabel ? undefined : (ariaLabelledBy ?? (titleIsDrawn ? titleId : undefined))}
         style={{ "--code-block-gutter": `${gutterDigits}ch`, ...style } as CSSProperties}
-        className={cx(styles.root, showLineNumbers && styles.numbered, wrap && styles.wrap, collapsed && styles.collapsed, className)}
+        className={cx(
+          styles.root,
+          sizeClass[size],
+          showLineNumbers && styles.numbered,
+          wrap && styles.wrap,
+          collapsed && styles.collapsed,
+          floatingControls && styles.hasFloating,
+          className,
+        )}
         data-language={language || undefined}
       >
         {hasHeader && (
           <figcaption className={styles.header}>
             <span className={styles.meta}>
-              {title && (
+              {titleIsDrawn && (
                 <span id={titleId} className={styles.title}>
                   {title}
                 </span>
               )}
-              {language && <span className={styles.language}>{language}</span>}
+              {languageIsDrawn && <span className={styles.language}>{language}</span>}
             </span>
-            {copyable && (
-              <IconButton
-                icon={copy.status === "copied" ? CheckIcon : copy.status === "failed" ? WarningIcon : CopyIcon}
-                aria-label={labels.copy}
-                variant="ghost"
-                size="sm"
-                data-copy-state={copy.status}
-                onClick={handleCopy}
-              />
-            )}
+            {controls}
           </figcaption>
         )}
         <div className={styles.body}>
+          {floatingControls && controls}
           <div
             id={frameId}
             ref={frameRef}

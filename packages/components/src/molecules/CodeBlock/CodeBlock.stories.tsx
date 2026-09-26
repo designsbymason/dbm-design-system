@@ -177,9 +177,22 @@ interface PlaygroundArgs extends CodeBlockProps {
 const noControls = { control: false } as const;
 
 /** The block under test: the args, with the typed highlight list turned into `highlightLines`. */
-const DemoBlock = ({ highlight, maxHeight, highlightLines, ...args }: PlaygroundArgs) => (
-  <CodeBlock {...args} maxHeight={maxHeight || undefined} highlightLines={highlightLinesFromText(highlight) ?? highlightLines} />
-);
+const DemoBlock = ({ highlight, maxHeight, highlightLines, wrap: wrapArg, ...args }: PlaygroundArgs) => {
+  // The Playground's Wrap control sets the block's wrapping, and the block's own toggle button changes it too
+  // (a plain `wrap` would be fixed by the control and leave the button inert), so the wrapping is kept here.
+  const [state, setState] = useState({ arg: wrapArg, wrap: wrapArg });
+  // A change to the control replaces what the button last set (adjusting state while rendering, not in an effect).
+  if (state.arg !== wrapArg) setState({ arg: wrapArg, wrap: wrapArg });
+  return (
+    <CodeBlock
+      {...args}
+      wrap={state.wrap}
+      onWrapChange={(next) => setState({ arg: wrapArg, wrap: next })}
+      maxHeight={maxHeight || undefined}
+      highlightLines={highlightLinesFromText(highlight) ?? highlightLines}
+    />
+  );
+};
 
 const stack = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-5)" } as const;
 
@@ -209,6 +222,24 @@ const meta: Meta<PlaygroundArgs> = {
       control: "text",
       description: "A heading for the block, usually a file name. Shown in the header and used as the block's accessible name.",
     },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description:
+        "How large the code is, on the shared scale: the code's font size, the space around it, and the size of the header buttons. md, the default, is the size the block has always had; xs and sm share the smallest font size and differ in the space around the code.",
+      table: { defaultValue: { summary: "md" } },
+    },
+    showHeader: {
+      control: "boolean",
+      description:
+        "Shows the header: the title and language on one side, the buttons on the other. false is the minimal look: no strip, and the block is named by aria-label or, failing that, the title (which is then not drawn). The copy button and the wrap toggle stay, in the top corner of the code, always visible; turn them off with copyable={false} and no wrapToggle for nothing but the code.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    showLanguage: {
+      control: "boolean",
+      description: "Shows the language label in the header. false leaves the title and the buttons, and a block with nothing else to show has no header at all.",
+      table: { defaultValue: { summary: "true" } },
+    },
     showLineNumbers: {
       control: "boolean",
       description: "Numbers the lines, in a gutter that is not selected or copied.",
@@ -230,7 +261,23 @@ const meta: Meta<PlaygroundArgs> = {
     },
     wrap: {
       control: "boolean",
-      description: "Wraps long lines instead of scrolling sideways. A wrapped line continues under its own text, not under its line number.",
+      description:
+        "Wraps long lines instead of scrolling sideways. A wrapped line continues under its own text, not under its line number. Controlled with onWrapChange (or on its own, to fix it); use defaultWrap to start wrapped and let wrapToggle change it.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    defaultWrap: {
+      ...noControls,
+      description: "Whether wrapping starts on, when it is not controlled with wrap.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onWrapChange: {
+      ...noControls,
+      description: "Called when the wrap button is pressed, with the new state.",
+    },
+    wrapToggle: {
+      control: "boolean",
+      description:
+        "Shows a button in the header that turns line wrapping on and off. It is a toggle: its pressed state says which. Without a header (showHeader={false}) it sits in the corner of the code beside the copy button.",
       table: { defaultValue: { summary: "false" } },
     },
     maxHeight: {
@@ -283,7 +330,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       ...noControls,
       description:
-        "The words the block writes itself; translate them here. Give only the ones you change: copy (\"Copy code\"), copied, copyFailed, expand (a function of the number of hidden lines), collapse (\"Show less\"), highlighted (a function of how many lines a highlight covers, said in front of it for screen readers) and region (\"Code\").",
+        "The words the block writes itself; translate them here. Give only the ones you change: wrap (\"Wrap lines\"), copy (\"Copy code\"), copied, copyFailed, expand (a function of the number of hidden lines), collapse (\"Show less\"), highlighted (a function of how many lines a highlight covers, said in front of it for screen readers) and region (\"Code\").",
     },
     "aria-label": {
       control: "text",
@@ -317,6 +364,10 @@ const meta: Meta<PlaygroundArgs> = {
     stripPrompt: true,
     copiedDuration: 2000,
     "aria-label": "Example code",
+    size: "md",
+    showHeader: true,
+    showLanguage: true,
+    wrapToggle: false,
   },
   render: (args) => <DemoBlock {...args} />,
 };
@@ -416,6 +467,45 @@ export const Wrapped: Story = {
   render: (args) => (
     <div style={{ maxWidth: "32rem" }}>
       <DemoBlock {...args} />
+    </div>
+  ),
+};
+
+export const Sizes: Story = {
+  parameters: { docs: { source: { code: codeBlockSnippets.size } } },
+  args: {},
+  argTypes: { code: noControls, language: noControls, size: noControls, title: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={stack}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <DemoBlock key={size} {...args} code={samples.ts} language="ts" size={size} title={`size="${size}"`} aria-label={`${size} size`} />
+      ))}
+    </div>
+  ),
+};
+
+export const WrapToggle: Story = {
+  name: "A wrap button",
+  parameters: { docs: { source: { code: codeBlockSnippets.wrapToggle } } },
+  args: { code: samples.longLine, language: "bash", wrapToggle: true, showLineNumbers: true, title: "request.sh" },
+  argTypes: { code: noControls, language: noControls, wrapToggle: noControls, showLineNumbers: noControls, title: noControls, wrap: noControls },
+  render: (args) => (
+    <div style={{ maxWidth: "32rem" }}>
+      <DemoBlock {...args} />
+    </div>
+  ),
+};
+
+export const MinimalHeader: Story = {
+  name: "Minimal: less header",
+  parameters: { docs: { source: { code: codeBlockSnippets.header } } },
+  args: {},
+  argTypes: { code: noControls, language: noControls, title: noControls, showHeader: noControls, showLanguage: noControls, copyable: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={stack}>
+      <DemoBlock {...args} code={samples.ts} language="ts" title="total.ts" showLanguage={false} aria-label="No language label" />
+      <DemoBlock {...args} code={samples.ts} language="ts" title="total.ts" showHeader={false} aria-label="No header" />
+      <DemoBlock {...args} code="pnpm add @dbm-design-system/components" language="bash" showHeader={false} copyable={false} aria-label="Nothing but the code" />
     </div>
   ),
 };
@@ -1028,3 +1118,211 @@ export const LateRegistrationInteraction: Story = {
     await expect(block.querySelector("code")!.textContent).toBe("alpha beta");
   },
 };
+
+export const SizeInteraction: Story = {
+  ...Playground,
+  name: "Interaction: each size sets the code's font size and the space around it, and keeps its buttons 24 by 24px",
+  tags: ["!dev"],
+  render: () => (
+    <div style={stack}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <div key={size} data-testid={`size-${size}`}>
+          <CodeBlock code={samples.ts} language="ts" size={size} wrapToggle aria-label={size} />
+        </div>
+      ))}
+      <div style={{ maxWidth: "24rem" }} data-testid="wrapped-xl">
+        <CodeBlock code={`short\n${samples.longLine}`} language="text" size="xl" showLineNumbers wrap aria-label="Wrapped, xl" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const fontToken = { xs: "xs", sm: "xs", md: "sm", lg: "base", xl: "md" } as const;
+    const spaceToken = { xs: "2", sm: "3", md: "4", lg: "5", xl: "6" } as const;
+    let previousHeight = 0;
+    for (const size of ["xs", "sm", "md", "lg", "xl"] as const) {
+      const block = within(canvasElement).getByTestId(`size-${size}`);
+      const root = block.firstElementChild as HTMLElement;
+      const frame = block.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+      // The code's font size and its padding, from the tokens: md is what the block has always been.
+      await expect(Math.abs(px(getComputedStyle(frame).fontSize) - resolveLength(`--dbm-font-size-${fontToken[size]}`))).toBeLessThan(0.1);
+      const pre = block.querySelector("pre") as HTMLElement;
+      await expect(px(getComputedStyle(pre).paddingTop)).toBeCloseTo(resolveLength(`--dbm-space-${spaceToken[size]}`), 0);
+      await expect(px(getComputedStyle(pre).paddingBottom)).toBeCloseTo(resolveLength(`--dbm-space-${spaceToken[size]}`), 0);
+      const line = linesOf(block)[0] as HTMLElement;
+      await expect(px(getComputedStyle(line).paddingRight)).toBeCloseTo(resolveLength(`--dbm-space-${size === "xs" || size === "sm" ? "3" : spaceToken[size]}`), 0);
+      // The same code takes more room at each step.
+      await expect(rect(root).height).toBeGreaterThan(previousHeight);
+      previousHeight = rect(root).height;
+      // Every button is a real target, at every size.
+      for (const button of within(block).getAllByRole("button")) {
+        await expect(rect(button).width).toBeGreaterThanOrEqual(24);
+        await expect(rect(button).height).toBeGreaterThanOrEqual(24);
+      }
+    }
+    await expect(px(getComputedStyle(within(canvasElement).getByTestId("size-md").querySelector("pre")!.parentElement as HTMLElement).fontSize)).toBeCloseTo(resolveLength("--dbm-font-size-sm"), 1);
+    // A wrapped, numbered line still continues under its own text when the space around the code is larger: the
+    // continuation starts where the text does, past the number, two of the (xl) spaces in from the line.
+    const wrapped = within(canvasElement).getByTestId("wrapped-xl");
+    const long = linesOf(wrapped)[1] as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(long);
+    const rowStarts = new Map<number, number>();
+    for (const box of range.getClientRects()) {
+      if (box.width === 0) continue;
+      const row = Math.round(box.top);
+      rowStarts.set(row, Math.min(rowStarts.get(row) ?? Number.POSITIVE_INFINITY, box.left));
+    }
+    await expect(rowStarts.size).toBeGreaterThan(2);
+    const firstX = [...rowStarts.values()][0] as number;
+    for (const start of rowStarts.values()) await expect(Math.abs(start - firstX)).toBeLessThan(0.5);
+    const gutter = px(getComputedStyle(long, "::before").width);
+    await expect(Math.abs(firstX - (rect(long).left + 2 * resolveLength("--dbm-space-6") + gutter))).toBeLessThan(1);
+  },
+};
+
+export const WrapToggleInteraction: Story = {
+  ...Playground,
+  name: "Interaction: the wrap button wraps the code, and a collapsed block still shows whole lines either way",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ maxWidth: "22rem" }} data-testid="narrow">
+      <CodeBlock
+        code={Array.from({ length: 6 }, (_, index) => `${index + 1}: ${samples.longLine}`).join("\n")}
+        language="text"
+        wrapToggle
+        collapsible
+        collapsedLines={2}
+        aria-label="Wrap toggle"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const block = within(canvasElement).getByTestId("narrow");
+    const frame = block.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+    const lines = linesOf(block);
+    const lineHeight = px(getComputedStyle(lines[0]!).lineHeight);
+    const toggle = within(block).getByRole("button", { name: "Wrap lines" });
+    const wholeLines = async () => {
+      await expect(rect(lines[1]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1);
+      await expect(rect(lines[2]!).top).toBeGreaterThanOrEqual(rect(frame).bottom - 1);
+    };
+    // Not wrapped: each line is one row, and the frame holds two of them.
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await expect(rect(lines[0]!).height).toBeLessThan(1.5 * lineHeight);
+    await wholeLines();
+    const unwrappedFrame = rect(frame).height;
+    // Wrapped: each line takes many rows, the frame grows to hold two whole ones, and the button's count is unchanged.
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await waitFor(() => expect(rect(lines[0]!).height).toBeGreaterThan(2 * lineHeight));
+    await waitFor(() => expect(rect(frame).height).toBeGreaterThan(unwrappedFrame));
+    await wholeLines();
+    await expect(within(block).getByRole("button", { name: "Show 4 more lines" })).toBeInTheDocument();
+    // And back: the cut follows.
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await waitFor(() => expect(rect(frame).height).toBeCloseTo(unwrappedFrame, 0));
+    await wholeLines();
+    // Expanded, wrapping still switches, with everything showing.
+    await userEvent.click(within(block).getByRole("button", { name: "Show 4 more lines" }));
+    await userEvent.click(toggle);
+    await waitFor(() => expect(rect(lines[5]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1));
+  },
+};
+
+export const HeaderlessInteraction: Story = {
+  ...Playground,
+  name: "Interaction: with no header the buttons sit in the corner of the code, never over it, and it still collapses to whole lines",
+  tags: ["!dev"],
+  render: () => (
+    <div style={stack}>
+      <div data-testid="plain">
+        <CodeBlock code={samples.ts} language="ts" title="total.ts" showHeader={false} wrapToggle aria-label="No header" />
+      </div>
+      <div dir="rtl" data-testid="rtl">
+        <CodeBlock code={samples.ts} language="ts" showHeader={false} aria-label="No header, rtl" />
+      </div>
+      <div data-testid="collapsed">
+        <CodeBlock code={Array.from({ length: 12 }, (_, index) => `line ${index + 1}`).join("\n")} language="text" showHeader={false} collapsible collapsedLines={3} aria-label="No header, collapsed" />
+      </div>
+      <div data-testid="bare">
+        <CodeBlock code={samples.ts} language="ts" showHeader={false} copyable={false} aria-label="Nothing but the code" />
+      </div>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <div key={size} data-testid={`sized-${size}`}>
+          <CodeBlock code={samples.ts} language="ts" size={size} showHeader={false} wrapToggle aria-label={`No header, ${size}`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const border = resolveLength("--dbm-border-width-1");
+    const inset = resolveLength("--dbm-space-1");
+    const cornerOf = (block: HTMLElement) => within(block).getAllByRole("button")[0]!.parentElement as HTMLElement;
+    // No strip: no caption, no title, no language label.
+    const plain = within(canvasElement).getByTestId("plain");
+    await expect(plain.querySelector("figcaption")).toBeNull();
+    await expect(within(plain).queryByText("total.ts")).toBeNull();
+    await expect(within(plain).queryByText("ts")).toBeNull();
+    // The buttons are in the top corner at the end of the block, inside it, and the first line starts below them.
+    const root = plain.firstElementChild as HTMLElement;
+    const corner = cornerOf(plain);
+    await expect(Math.abs(rect(corner).right - (rect(root).right - border - inset))).toBeLessThan(1);
+    await expect(Math.abs(rect(corner).top - (rect(root).top + border + inset))).toBeLessThan(1);
+    const first = linesOf(plain)[0] as HTMLElement;
+    const firstText = document.createRange();
+    firstText.selectNodeContents(first);
+    await expect(firstText.getBoundingClientRect().top).toBeGreaterThanOrEqual(rect(corner).bottom - 1);
+    for (const button of within(plain).getAllByRole("button")) {
+      await expect(rect(button).width).toBeGreaterThanOrEqual(24);
+      await expect(rect(button).height).toBeGreaterThanOrEqual(24);
+    }
+    // The buttons never cover the first line at any size, whatever height their step gives them.
+    for (const size of ["xs", "sm", "md", "lg", "xl"] as const) {
+      const sized = within(canvasElement).getByTestId(`sized-${size}`);
+      const text = document.createRange();
+      text.selectNodeContents(linesOf(sized)[0] as HTMLElement);
+      await expect(text.getBoundingClientRect().top).toBeGreaterThanOrEqual(rect(cornerOf(sized)).bottom - 1);
+    }
+    // A right-to-left page: the buttons are at the left, the code still left to right.
+    const rtl = within(canvasElement).getByTestId("rtl");
+    const rtlRoot = rtl.firstElementChild as HTMLElement;
+    await expect(Math.abs(rect(cornerOf(rtl)).left - (rect(rtlRoot).left + border + inset))).toBeLessThan(1);
+    await expect(getComputedStyle(rtl.querySelector("pre")!.parentElement as HTMLElement).direction).toBe("ltr");
+    // Collapsed: exactly three whole lines below the buttons' room, and the fourth starts at the frame's edge.
+    const collapsed = within(canvasElement).getByTestId("collapsed");
+    const frame = collapsed.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+    const lines = linesOf(collapsed);
+    await expect(rect(lines[2]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1);
+    await expect(rect(lines[3]!).top).toBeGreaterThanOrEqual(rect(frame).bottom - 1);
+    await expect(rect(lines[2]!).bottom).toBeGreaterThan(rect(frame).bottom - px(getComputedStyle(lines[0]!).lineHeight));
+    // With no buttons either, no room is kept for them: the code starts where it does in a block with a header of nothing.
+    const bare = within(canvasElement).getByTestId("bare");
+    await expect(bare.querySelector("button")).toBeNull();
+    await expect(px(getComputedStyle(bare.querySelector("pre") as HTMLElement).paddingTop)).toBeCloseTo(resolveLength("--dbm-space-4"), 0);
+    await expect(px(getComputedStyle(plain.querySelector("pre") as HTMLElement).paddingTop)).toBeGreaterThan(resolveLength("--dbm-space-4"));
+  },
+};
+
+export const HeaderlessPhoneInteraction: Story = {
+  ...Playground,
+  name: "Interaction: on a phone a block with no header keeps its buttons inside it",
+  tags: ["!dev"],
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <div data-testid="block">
+      <CodeBlock code={samples.longLine} language="bash" showHeader={false} wrapToggle showLineNumbers aria-label="Phone" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(640);
+    const block = within(canvasElement).getByTestId("block");
+    const root = block.firstElementChild as HTMLElement;
+    for (const button of within(block).getAllByRole("button")) {
+      await expect(rect(button).right).toBeLessThanOrEqual(rect(root).right);
+      await expect(rect(button).left).toBeGreaterThanOrEqual(rect(root).left);
+    }
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+

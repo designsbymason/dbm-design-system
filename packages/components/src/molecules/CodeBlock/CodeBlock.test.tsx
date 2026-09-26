@@ -5,6 +5,7 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CodeBlock } from "./CodeBlock";
 import styles from "./CodeBlock.module.css";
+import iconButtonStyles from "../../atoms/IconButton/IconButton.module.css";
 import { pythonLanguage } from "./grammars";
 import { registerCodeLanguage } from "./registry";
 import type { Highlighter } from "./tokenizeTypes";
@@ -490,5 +491,227 @@ describe("CodeBlock: choosing who highlights", () => {
   it("has no accessibility violations with a highlighter", async () => {
     const { container } = render(<CodeBlock code="a\nb" title="x.txt" highlighter={upper} />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("CodeBlock: size", () => {
+  const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
+  const rootClass = { xs: styles.sizeXs, sm: styles.sizeSm, md: styles.sizeMd, lg: styles.sizeLg, xl: styles.sizeXl };
+  const buttonClass = { xs: iconButtonStyles.sizeXs, sm: iconButtonStyles.sizeXs, md: iconButtonStyles.sizeSm, lg: iconButtonStyles.sizeSm, xl: iconButtonStyles.sizeMd };
+
+  it("is md, the size the block has always had, unless it is told otherwise", () => {
+    render(<CodeBlock code="a" />);
+    expect(screen.getByRole("figure")).toHaveClass(styles.sizeMd as string);
+    for (const other of ["sizeXs", "sizeSm", "sizeLg", "sizeXl"] as const) expect(screen.getByRole("figure")).not.toHaveClass(styles[other] as string);
+  });
+
+  it.each(sizes)("puts the %s class on the block, and sizes the header buttons to match", (size) => {
+    render(<CodeBlock code="a" size={size} wrapToggle />);
+    expect(screen.getByRole("figure")).toHaveClass(rootClass[size] as string);
+    for (const name of ["Wrap lines", "Copy code"]) expect(screen.getByRole("button", { name })).toHaveClass(buttonClass[size] as string);
+  });
+
+  it("draws an unknown size as the default look, without crashing", () => {
+    render(<CodeBlock code="a" size={"huge" as never} />);
+    expect(screen.getByRole("figure")).toBeInTheDocument();
+    expect(codeElement()).toHaveTextContent("a");
+  });
+
+  it("has no accessibility violations at any size", async () => {
+    for (const size of sizes) {
+      const { container, unmount } = render(<CodeBlock code="a" size={size} title="x.ts" wrapToggle />);
+      expect(await axe(container)).toHaveNoViolations();
+      unmount();
+    }
+  });
+});
+
+describe("CodeBlock: the wrap toggle", () => {
+  const long = "a very long line ".repeat(10);
+
+  it("is not there unless asked for", () => {
+    render(<CodeBlock code={long} />);
+    expect(screen.queryByRole("button", { name: "Wrap lines" })).not.toBeInTheDocument();
+  });
+
+  it("is a toggle button that turns wrapping on and off, saying which by its pressed state", () => {
+    render(<CodeBlock code={long} wrapToggle />);
+    const toggle = screen.getByRole("button", { name: "Wrap lines" });
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.wrap as string);
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("figure")).toHaveClass(styles.wrap as string);
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.wrap as string);
+  });
+
+  it("starts on with defaultWrap, and still turns off", () => {
+    render(<CodeBlock code={long} wrapToggle defaultWrap />);
+    const toggle = screen.getByRole("button", { name: "Wrap lines" });
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("figure")).toHaveClass(styles.wrap as string);
+    fireEvent.click(toggle);
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.wrap as string);
+  });
+
+  it("wraps without a button when wrap is set, exactly as before", () => {
+    render(<CodeBlock code={long} wrap />);
+    expect(screen.getByRole("figure")).toHaveClass(styles.wrap as string);
+  });
+
+  it("is controlled by wrap: it asks with onWrapChange and changes only when the prop does", () => {
+    const onWrapChange = vi.fn();
+    const { rerender } = render(<CodeBlock code={long} wrapToggle wrap={false} onWrapChange={onWrapChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+    expect(onWrapChange).toHaveBeenCalledWith(true);
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.wrap as string);
+    expect(screen.getByRole("button", { name: "Wrap lines" })).toHaveAttribute("aria-pressed", "false");
+    rerender(<CodeBlock code={long} wrapToggle wrap onWrapChange={onWrapChange} />);
+    expect(screen.getByRole("figure")).toHaveClass(styles.wrap as string);
+    expect(screen.getByRole("button", { name: "Wrap lines" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+    expect(onWrapChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("tells onWrapChange the new state when it is not controlled too", () => {
+    const onWrapChange = vi.fn();
+    render(<CodeBlock code={long} wrapToggle onWrapChange={onWrapChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+    expect(onWrapChange.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it("is in the header, before the copy button, and gives a block with no title a header", () => {
+    const { container } = render(<CodeBlock code={long} wrapToggle />);
+    const buttons = [...container.querySelectorAll("figcaption button")].map((button) => button.getAttribute("aria-label"));
+    expect(buttons).toEqual(["Wrap lines", "Copy code"]);
+    const alone = render(<CodeBlock code={long} wrapToggle copyable={false} />);
+    expect(alone.container.querySelector("figcaption")?.querySelectorAll("button")).toHaveLength(1);
+  });
+
+  it("is named in the language the labels give, one label at a time", () => {
+    const { rerender } = render(<CodeBlock code={long} wrapToggle labels={{ wrap: "Renvoyer à la ligne" }} />);
+    expect(screen.getByRole("button", { name: "Renvoyer à la ligne" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy code" })).toBeInTheDocument();
+    rerender(<CodeBlock code={long} wrapToggle labels={{ wrap: undefined }} />);
+    expect(screen.getByRole("button", { name: "Wrap lines" })).toBeInTheDocument();
+  });
+
+  it("keeps every character when it is switched", () => {
+    render(<CodeBlock code={long} wrapToggle />);
+    fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+    expect(codeElement().textContent).toBe(long);
+  });
+});
+
+describe("CodeBlock: showHeader and showLanguage", () => {
+  const scrolling = () => overflow({ scrollWidth: 500, clientWidth: 200, scrollHeight: 100, clientHeight: 100 });
+
+  it("shows the title, the language and the buttons by default", () => {
+    const { container } = render(<CodeBlock code="a" title="x.ts" language="ts" />);
+    const header = container.querySelector("figcaption") as HTMLElement;
+    expect(within(header).getByText("x.ts")).toBeInTheDocument();
+    expect(within(header).getByText("ts")).toBeInTheDocument();
+    expect(within(header).getByRole("button", { name: "Copy code" })).toBeInTheDocument();
+  });
+
+  describe("showLanguage", () => {
+    it("leaves the language out of the header, and keeps the title and the buttons", () => {
+      const { container } = render(<CodeBlock code="a" title="x.ts" language="ts" showLanguage={false} />);
+      const header = container.querySelector("figcaption") as HTMLElement;
+      expect(within(header).queryByText("ts")).not.toBeInTheDocument();
+      expect(within(header).getByText("x.ts")).toBeInTheDocument();
+      expect(within(header).getByRole("button", { name: "Copy code" })).toBeInTheDocument();
+    });
+
+    it("still highlights, and still says the language in data-language", () => {
+      render(<CodeBlock code="const a = 1;" language="ts" showLanguage={false} />);
+      expect(screen.getByText("const")).toHaveClass(styles.keyword as string);
+      expect(screen.getByRole("figure")).toHaveAttribute("data-language", "ts");
+    });
+
+    it("leaves a block with only a language to show, and no buttons, with no header at all", () => {
+      const { container } = render(<CodeBlock code="a" language="ts" copyable={false} showLanguage={false} />);
+      expect(container.querySelector("figcaption")).toBeNull();
+    });
+  });
+
+  describe("showHeader={false}", () => {
+    it("draws no header: no title, no language, no caption", () => {
+      const { container } = render(<CodeBlock code="a" title="x.ts" language="ts" showHeader={false} />);
+      expect(container.querySelector("figcaption")).toBeNull();
+      expect(screen.queryByText("x.ts")).not.toBeInTheDocument();
+      expect(screen.queryByText("ts")).not.toBeInTheDocument();
+    });
+
+    it("keeps the copy button and the wrap toggle in the corner of the code, ahead of it in the tab order", () => {
+      const { container } = render(<CodeBlock code="a" showHeader={false} wrapToggle />);
+      const controls = screen.getByRole("button", { name: "Copy code" }).parentElement as HTMLElement;
+      expect(controls).toHaveClass(styles.floating as string);
+      expect(controls.closest(`.${styles.body}`)).not.toBeNull();
+      expect(screen.getByRole("figure")).toHaveClass(styles.hasFloating as string);
+      expect([...controls.querySelectorAll("button")].map((button) => button.getAttribute("aria-label"))).toEqual(["Wrap lines", "Copy code"]);
+      // The buttons come before the code in the document, so a keyboard reaches them first, as it does in a header.
+      expect(controls.compareDocumentPosition(container.querySelector("pre") as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("has nothing but the code without them, and reserves no room for them", () => {
+      const { container } = render(<CodeBlock code="a" showHeader={false} copyable={false} />);
+      expect(container.querySelector("button")).toBeNull();
+      expect(container.querySelector(`.${styles.floating}`)).toBeNull();
+      expect(screen.getByRole("figure")).not.toHaveClass(styles.hasFloating as string);
+    });
+
+    it("still copies, and still toggles wrapping", async () => {
+      render(<CodeBlock code="real code" showHeader={false} wrapToggle />);
+      fireEvent.click(screen.getByRole("button", { name: "Wrap lines" }));
+      expect(screen.getByRole("figure")).toHaveClass(styles.wrap as string);
+      fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith("real code"));
+    });
+
+    it("names the block by its title, as text, since the title is not drawn", () => {
+      render(<CodeBlock code="a" title="greet.ts" showHeader={false} />);
+      const figure = screen.getByRole("figure", { name: "greet.ts" });
+      expect(figure).not.toHaveAttribute("aria-labelledby");
+    });
+
+    it("names the block by aria-label or aria-labelledby ahead of the title, as with a header", () => {
+      const { rerender } = render(<CodeBlock code="a" title="greet.ts" aria-label="Greeting" showHeader={false} />);
+      expect(screen.getByRole("figure", { name: "Greeting" })).toBeInTheDocument();
+      rerender(
+        <>
+          <span id="label">Own name</span>
+          <CodeBlock code="a" title="greet.ts" aria-labelledby="label" showHeader={false} />
+        </>,
+      );
+      expect(screen.getByRole("figure", { name: "Own name" })).toBeInTheDocument();
+      // The hidden title is a name of last resort: it is not also set when something else names the block.
+      expect(screen.getByRole("figure")).not.toHaveAttribute("aria-label");
+    });
+
+    it("names the scrolling region by the title too, and by a default with no title", () => {
+      scrolling();
+      const { rerender } = render(<CodeBlock code={source} title="greet.ts" showHeader={false} />);
+      expect(screen.getByRole("region", { name: "greet.ts" })).toBeInTheDocument();
+      rerender(<CodeBlock code={source} showHeader={false} />);
+      expect(screen.getByRole("region", { name: "Code" })).toBeInTheDocument();
+    });
+
+    it("collapses to the first lines below the space the buttons take, not through it", () => {
+      render(<CodeBlock code={longSource} showHeader={false} collapsible collapsedLines={3} />);
+      expect(screen.getByRole("button", { name: "Show 27 more lines" })).toBeInTheDocument();
+      expect(document.querySelectorAll("span[data-line]")).toHaveLength(30);
+    });
+
+    it("has no accessibility violations, with the buttons or without", async () => {
+      for (const props of [{ wrapToggle: true }, { copyable: false }, { title: "x.ts" }]) {
+        const { container, unmount } = render(<CodeBlock code="a" showHeader={false} {...props} />);
+        expect(await axe(container)).toHaveNoViolations();
+        unmount();
+      }
+    });
   });
 });

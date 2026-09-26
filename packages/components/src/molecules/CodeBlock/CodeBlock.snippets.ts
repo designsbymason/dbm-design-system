@@ -57,6 +57,26 @@ export const codeBlockSnippets = {
     excerpt: the excerpt to show, as a string */}
 <CodeBlock language="ts" showLineNumbers startLine={42} highlightLines={[44]} code={excerpt} />`,
 
+  size: `{/* size: xs | sm | md | lg | xl. md, the default, is the size the block has always had; xs and sm share the
+    smallest font and differ in the space around the code. It also sets the size of the header buttons.
+    source: the code to show, as a string */}
+<CodeBlock language="ts" size="sm" code={source} />
+<CodeBlock language="ts" size="lg" code={source} />`,
+
+  wrapToggle: `{/* wrapToggle: a button in the header that turns wrapping on and off (a toggle: its pressed state says which).
+    defaultWrap starts it on; wrap and onWrapChange let you own the state, like expanded on a collapsible block.
+    command: the command to show, as a string */}
+<CodeBlock language="bash" wrapToggle code={command} />
+<CodeBlock language="bash" wrapToggle defaultWrap code={command} />`,
+
+  header: `{/* showLanguage={false}: the title and the buttons, without the language label.
+    showHeader={false}: no strip at all, and the copy button (and the wrap toggle, if it is on) sit in the top corner
+    of the code. Set copyable={false} too for nothing but the code. A title still names the block, but is not drawn.
+    source: the code to show, as a string */}
+<CodeBlock language="ts" title="total.ts" showLanguage={false} code={source} />
+<CodeBlock language="ts" title="total.ts" showHeader={false} code={source} />
+<CodeBlock language="bash" showHeader={false} copyable={false} aria-label="Install command" code={"pnpm add @dbm-design-system/components"} />`,
+
   wrap: `{/* wrap: long lines break instead of scrolling sideways; a wrapped line continues under its own text
     command: the command to show, as a string */}
 <CodeBlock language="bash" wrap showLineNumbers code={command} />`,
@@ -128,7 +148,11 @@ export interface CodeBlockPlaygroundSnippetArgs {
   startLine?: number;
   /** Storybook only: the highlighted lines as typed, `"2, 4-6"`. */
   highlight?: string;
+  size?: string;
+  showHeader?: boolean;
+  showLanguage?: boolean;
   wrap?: boolean;
+  wrapToggle?: boolean;
   maxHeight?: string;
   collapsible?: boolean;
   collapsedLines?: number;
@@ -170,7 +194,12 @@ export function codeBlockPlaygroundSnippet(args: CodeBlockPlaygroundSnippetArgs)
   }
   const highlight = highlightLinesLiteral(args.highlight);
   if (highlight) attributes.push(`highlightLines={${highlight}}`);
-  if (args.wrap) attributes.push("wrap");
+  if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.showHeader === false) attributes.push("showHeader={false}");
+  if (args.showHeader !== false && args.showLanguage === false && args.language) attributes.push("showLanguage={false}");
+  // With a toggle the block owns its wrapping, so a wrap that is on is where it starts, not a fixed setting.
+  if (args.wrapToggle) attributes.push(args.wrap ? "wrapToggle defaultWrap" : "wrapToggle");
+  else if (args.wrap) attributes.push("wrap");
   if (args.maxHeight?.trim()) attributes.push(`maxHeight="${args.maxHeight.trim().replace(/"/g, "")}"`);
   if (args.collapsible) {
     attributes.push("collapsible");

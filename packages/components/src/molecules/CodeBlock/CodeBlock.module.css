@@ -1,3 +1,42 @@
+/* `size`: the code's font size, the space around it (`--code-block-inset` sideways, `--code-block-pad` above and
+   below) and the header buttons (`--code-block-button`, the height of the `IconButton` step the component picks for
+   each size, which is how much room the corner buttons need). `md` is what the block has always been. xs and sm share the
+   smallest font in the system and differ in the space. */
+.sizeXs {
+  --code-block-button: var(--dbm-icon-button-size-xs);
+  --code-block-font-size: var(--dbm-font-size-xs);
+  --code-block-inset: var(--dbm-space-3);
+  --code-block-pad: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --code-block-button: var(--dbm-icon-button-size-xs);
+  --code-block-font-size: var(--dbm-font-size-xs);
+  --code-block-inset: var(--dbm-space-3);
+  --code-block-pad: var(--dbm-space-3);
+}
+
+.sizeMd {
+  --code-block-button: var(--dbm-icon-button-size-sm);
+  --code-block-font-size: var(--dbm-font-size-sm);
+  --code-block-inset: var(--dbm-space-4);
+  --code-block-pad: var(--dbm-space-4);
+}
+
+.sizeLg {
+  --code-block-button: var(--dbm-icon-button-size-sm);
+  --code-block-font-size: var(--dbm-font-size-base);
+  --code-block-inset: var(--dbm-space-5);
+  --code-block-pad: var(--dbm-space-5);
+}
+
+.sizeXl {
+  --code-block-button: var(--dbm-icon-button-size-md);
+  --code-block-font-size: var(--dbm-font-size-md);
+  --code-block-inset: var(--dbm-space-6);
+  --code-block-pad: var(--dbm-space-6);
+}
+
 /* The block: a bordered surface that clips its own corners, holding a header, the code, and a footer. */
 .root {
   background-color: var(--dbm-bg-code-block);
@@ -19,7 +58,7 @@
   gap: var(--dbm-space-3);
   justify-content: space-between;
   padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-4) var(--dbm-space-2);
+  padding-inline: var(--code-block-inset) var(--dbm-space-2);
 }
 
 .meta {
@@ -33,7 +72,7 @@
 .title {
   color: var(--dbm-text-secondary);
   font-family: var(--dbm-font-family-mono);
-  font-size: var(--dbm-font-size-sm);
+  font-size: var(--code-block-font-size);
   font-weight: var(--dbm-font-weight-medium);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -47,10 +86,26 @@
   text-transform: uppercase;
 }
 
-/* The copy button sits at the end whichever side that is, and never shrinks. */
-.header > button {
+/* The buttons sit at the end whichever side that is, and never shrink. */
+.controls {
+  align-items: center;
+  display: flex;
   flex: 0 0 auto;
+  gap: var(--dbm-space-1);
   margin-inline-start: auto;
+}
+
+/* With no header, the same buttons sit in the top corner of the code, always shown (a reader on a phone or a keyboard can't hover for them). The first line starts below
+   them, so they never cover code; that space is the code's top padding, and the collapsed height uses it. */
+.floating {
+  inset-block-start: var(--dbm-space-1);
+  inset-inline-end: var(--dbm-space-1);
+  position: absolute;
+  z-index: 1;
+}
+
+.hasFloating .body {
+  --code-block-top: calc(var(--code-block-button) + var(--dbm-space-2));
 }
 
 .body {
@@ -61,7 +116,7 @@
 .frame {
   direction: ltr;
   font-family: var(--dbm-font-family-mono);
-  font-size: var(--dbm-font-size-sm);
+  font-size: var(--code-block-font-size);
   line-height: var(--dbm-line-height-relaxed);
   overflow: auto;
   tab-size: 2; /* a content format, not a design value: two columns per tab, the way code is written here */
@@ -76,7 +131,7 @@
 
 .pre {
   margin: 0;
-  padding-block: var(--dbm-space-4);
+  padding-block: var(--code-block-top, var(--code-block-pad)) var(--code-block-pad);
 }
 
 /* As wide as its longest line, so a highlighted line's band runs the full width when scrolled sideways. */
@@ -91,7 +146,7 @@
   border-inline-start: var(--dbm-border-width-4) solid transparent;
   display: block;
   min-height: 1lh;
-  padding-inline: calc(var(--dbm-space-4) - var(--dbm-border-width-4)) var(--dbm-space-4);
+  padding-inline: calc(var(--code-block-inset) - var(--dbm-border-width-4)) var(--code-block-inset);
 }
 
 .line[data-highlighted="true"] {
@@ -102,8 +157,8 @@
 /* Line numbers: drawn by CSS, so they are never selected, copied or read out as part of the code. A wrapped
    line continues under its own text: the block is indented past the number, and the first line pulled back. */
 .numbered .line {
-  padding-inline-start: calc(var(--code-block-gutter) + var(--dbm-space-4) + var(--dbm-space-4) - var(--dbm-border-width-4));
-  text-indent: calc(-1 * (var(--code-block-gutter) + var(--dbm-space-4)));
+  padding-inline-start: calc(var(--code-block-gutter) + var(--code-block-inset) + var(--code-block-inset) - var(--dbm-border-width-4));
+  text-indent: calc(-1 * (var(--code-block-gutter) + var(--code-block-inset)));
 }
 
 .numbered .line::before {
@@ -115,7 +170,7 @@
   content: attr(data-line) / "";
   display: inline-block;
   inline-size: var(--code-block-gutter);
-  margin-inline-end: var(--dbm-space-4);
+  margin-inline-end: var(--code-block-inset);
   text-align: end;
   text-indent: 0;
   user-select: none;
@@ -135,7 +190,7 @@
    part of the next line shows), and a fade to say there is more. The frame clips its height, and stays
    scrollable sideways. */
 .collapsed .frame {
-  max-height: calc(var(--code-block-collapsed-lines) * 1lh + var(--dbm-space-4));
+  max-height: calc(var(--code-block-collapsed-lines) * 1lh + var(--code-block-top, var(--code-block-pad)));
   overflow-y: hidden;
 }
 

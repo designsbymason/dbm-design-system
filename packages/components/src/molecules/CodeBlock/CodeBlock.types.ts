@@ -7,6 +7,12 @@ import type { Highlighter } from "./tokenizeTypes";
  */
 export interface CodeBlockLabels {
   /**
+   * The accessible name of the button that turns line wrapping on and off (`wrapToggle`). It stays the same
+   * whichever way the block is set: whether it is on is said by the button's pressed state.
+   * @default 'Wrap lines'
+   */
+  wrap: string;
+  /**
    * The accessible name of the copy button.
    * @default 'Copy code'
    */
@@ -46,6 +52,9 @@ export interface CodeBlockLabels {
   region: string;
 }
 
+/** The steps of `CodeBlock`'s `size`, on the shared scale. */
+export type CodeBlockSize = "xs" | "sm" | "md" | "lg" | "xl";
+
 export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">, "children" | "title"> {
   /**
    * The source text to show. Line endings are normalised in what is drawn, and one trailing newline is dropped
@@ -76,6 +85,20 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    */
   title?: string;
   /**
+   * Shows the header: the title and language on one side, the buttons on the other. `false` is the minimal look:
+   * no strip, and the block is named by `aria-label` or, failing that, the `title` (which is then not drawn).
+   * The copy button and the wrap toggle, if they are on, stay, in the top corner of the code, always visible;
+   * turn them off with `copyable={false}` and no `wrapToggle` for nothing but the code.
+   * @default true
+   */
+  showHeader?: boolean;
+  /**
+   * Shows the language label in the header. `false` leaves the title and the buttons, and a block with nothing
+   * else to show has no header at all.
+   * @default true
+   */
+  showLanguage?: boolean;
+  /**
    * Numbers the lines, in a gutter that is not selected or copied.
    * @default false
    */
@@ -92,11 +115,33 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    */
   highlightLines?: Array<number | string>;
   /**
+   * How large the code is, on the shared scale. It sets the code's font size and the space around it, and the
+   * size of the header's buttons. `md`, the default, is the size the block has always had. `xs` and `sm` share
+   * the smallest font size the system has and differ in the space around the code.
+   * @default 'md'
+   */
+  size?: CodeBlockSize;
+  /**
    * Wraps long lines instead of scrolling sideways. A wrapped line continues under its own text, not under
-   * its line number.
+   * its line number. Controlled with `onWrapChange` (or on its own, to fix it); use `defaultWrap` to start
+   * wrapped and let `wrapToggle` change it.
    * @default false
    */
   wrap?: boolean;
+  /**
+   * Whether wrapping starts on, when it is not controlled with `wrap`.
+   * @default false
+   */
+  defaultWrap?: boolean;
+  /** Called when the wrap button is pressed, with the new state. */
+  onWrapChange?: (wrap: boolean) => void;
+  /**
+   * Shows a button in the header that turns line wrapping on and off, for readers who would rather scroll or
+   * rather wrap. It is a toggle: its pressed state says which. Without a header (`showHeader={false}`) it sits
+   * in the corner of the code beside the copy button.
+   * @default false
+   */
+  wrapToggle?: boolean;
   /**
    * The tallest the code may grow before it scrolls (`"24rem"`). Only meaningful for a long block; a
    * collapsible one uses it once expanded.

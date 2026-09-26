@@ -12,10 +12,16 @@ export const propOrder = [
   "language",
   "highlighter",
   "title",
+  "size",
+  "showHeader",
+  "showLanguage",
   "showLineNumbers",
   "startLine",
   "highlightLines",
   "wrap",
+  "defaultWrap",
+  "onWrapChange",
+  "wrapToggle",
   "maxHeight",
   "collapsible",
   "collapsedLines",
@@ -131,6 +137,25 @@ yours: a large block costs what your highlighter costs.
 
 <Canvas of={CodeBlockStories.OwnLanguage} />
 
+### Sizes
+
+`size` is on the shared scale. It sets the code's font size, the space around it and the size of the header
+buttons. `md`, the default, is the size the block has always had; `xs` and `sm` share the smallest font in the
+system and differ in the space around the code. Pick the size for the surface it sits on: a dense side panel
+takes `sm`, a tutorial that is read as prose takes `lg`.
+
+<Canvas of={CodeBlockStories.Sizes} />
+
+### Minimal: less header
+
+`showLanguage={false}` drops the language label and keeps the title and the buttons. `showHeader={false}` drops
+the whole strip: no title, no language, and the copy button (and the wrap toggle, if it is on) move to the top
+corner of the code, always visible, with the first line starting below them so they never cover code. A title is
+then not drawn, but still names the block. Add `copyable={false}` for nothing but the code, and give it an
+`aria-label` when it has no title.
+
+<Canvas of={CodeBlockStories.MinimalHeader} />
+
 ### With a title
 
 A file name in the header, which also names the block for assistive tech.
@@ -159,6 +184,15 @@ band across the full width and an accent on its edge, so it does not rely on col
 A wrapped line continues under its own text, not under its line number.
 
 <Canvas of={CodeBlockStories.Wrapped} />
+
+### A wrap button
+
+`wrapToggle` puts a button in the header that turns wrapping on and off, for readers who would rather scroll or
+rather wrap. It is a toggle button: its pressed state says which, and its name stays "Wrap lines". `defaultWrap`
+starts it on. To own the state, pass `wrap` and `onWrapChange`, as `expanded` works on a collapsible block. A
+collapsed block still shows exactly its first lines when it is switched.
+
+<Canvas of={CodeBlockStories.WrapToggle} />
 
 ### Long lines that scroll
 
@@ -226,7 +260,7 @@ button at the left.
 - Use `highlightLines` and `startLine` to point at the lines a paragraph is about, in an excerpt.
 - Use `collapsible` for a long listing, so the page keeps its shape and the whole text is still a click away.
 - Use `wrap` for a command that people will read, and let code that is meant to be compared with an editor
-  scroll.
+  scroll. Add `wrapToggle` when readers differ.
 - Show output, logs and errors as plain text (no `language`), so nothing in them is mistaken for syntax.
 - Set `maxHeight` on a block that could be very long, so it scrolls instead of pushing everything down.
 
@@ -239,7 +273,8 @@ button at the left.
 - Don't expect a full parse: an odd construct may be coloured a little wrong. It is for reading, not for a
   build.
 - Don't pass HTML you have built into `code` expecting it to render. It is shown as text, on purpose.
-- Don't hide the copy button on a command that people are meant to paste.
+- Don't hide the copy button on a command that people are meant to paste, and don't set `showHeader={false}`
+  on a block with no `title` without an `aria-label` to name it.
 
 </Callout>
 </div>
@@ -267,6 +302,12 @@ button at the left.
   not a tab stop for that; only sideways overflow makes it one.
 - The copy button is an ordinary button named "Copy code". Pressing it announces "Copied" or "Copy failed"
   in a live region that was already in the page. The result is not carried by the icon alone.
+- The wrap button is a toggle button: `aria-pressed` says whether wrapping is on, and its name, "Wrap lines" (`labels.wrap`),
+  does not change with it. It comes before the copy button, and both come before the code, so a keyboard reaches
+  them first, with or without a header.
+- With `showHeader={false}` the title is not drawn, so it names the block as text instead (an `aria-label` or
+  `aria-labelledby` still takes precedence), and the scrolling area is named by it too. The buttons move to the top
+  corner of the code and are always visible.
 - The expand button is a real button with `aria-expanded` and `aria-controls`, and says how many lines it will
   reveal.
 - Line numbers are drawn by CSS and marked as decoration (CSS alternative text), so a screen reader does not read
@@ -281,7 +322,7 @@ button at the left.
 - A highlighted line has a band and a 4px edge accent, in addition to its colour. The band's colour and every
   syntax colour is measured against `bg.code-block` and `bg.code-highlight` in all four themes, as are the line
   numbers and title (`text.secondary`): 4.5:1 or more (AA) everywhere.
-- The copy and expand buttons are at least 24 × 24px (WCAG 2.5.8).
+- The copy, wrap and expand buttons are at least 24 × 24px (WCAG 2.5.8) at every `size`.
 - Code stays left to right in a right-to-left page; the header follows the page, and its logical properties
   mirror without a prop.
 
@@ -302,6 +343,10 @@ button at the left.
 <CodeBlock language="json" maxHeight="16rem" code={config} />
 
 <CodeBlock language="bash" wrap code={command} />
+<CodeBlock language="bash" wrapToggle defaultWrap code={command} />   {/* a button that turns wrapping on and off */}
+<CodeBlock language="ts" size="sm" code={source} />                    {/* xs | sm | md (default) | lg | xl */}
+<CodeBlock language="ts" title="total.ts" showLanguage={false} code={source} />
+<CodeBlock language="ts" showHeader={false} aria-label="total.ts" code={source} />  {/* buttons in the corner of the code */}
 {/* yaml is opt-in: registerCodeLanguage(yamlLanguage), once, when the app starts */}
 <CodeBlock language="yaml" code={workflow} />
 <CodeBlock language="bash" code={"$ pnpm add x"} />              {/* copies "pnpm add x" */}
@@ -345,8 +390,16 @@ button at the left.
 <TokenRow token="text.syntax-deleted" usage="a removed line in a diff" />
 <TokenRow token="font.family.mono" usage="all the code" />
 <TokenRow token="radius.md" usage="the block's corners" />
-<TokenRow token="space.1" usage="the header and footer's vertical padding" />
-<TokenRow token="space.4" usage="the code's padding, and the gap after a line number" />
+<TokenRow token="font-size.xs" usage="the code at size xs and sm, and the language label" />
+<TokenRow token="font-size.sm" usage="the code at size md (the default)" />
+<TokenRow token="font-size.base" usage="the code at size lg" />
+<TokenRow token="font-size.md" usage="the code at size xl" />
+<TokenRow token="space.1" usage="the header and footer's vertical padding, and the gap between header buttons" />
+<TokenRow token="space.2" usage="the code's vertical padding at size xs" />
+<TokenRow token="space.3" usage="the code's padding at size sm, and at size xs sideways" />
+<TokenRow token="space.4" usage="the code's padding at size md, and the gap after a line number" />
+<TokenRow token="space.5" usage="the code's padding at size lg" />
+<TokenRow token="space.6" usage="the code's padding at size xl" />
 <TokenRow token="border-width.1" usage="the border and rules" />
 <TokenRow token="border-width.2" usage="the focus ring" />
 <TokenRow token="border-width.4" usage="the highlighted line's edge accent" />
