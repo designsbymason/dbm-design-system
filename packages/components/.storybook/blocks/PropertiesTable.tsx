@@ -1,5 +1,6 @@
 import { useOf } from "@storybook/addon-docs/blocks";
 import type { Of } from "@storybook/addon-docs/blocks";
+import { Fragment } from "react";
 import type { ReactNode } from "react";
 import { sortEntriesByOrder } from "./sortEntriesByOrder";
 
@@ -22,6 +23,33 @@ interface ArgTypeLike {
     defaultValue?: { summary?: string };
   };
   type?: { name?: string; required?: boolean };
+}
+
+/**
+ * The longest prop name the Name column (a fixed 10.75rem, shared by every Properties table) holds on one
+ * line: `indeterminateIcon`, 17 characters in the table's monospace size.
+ */
+const NAME_COLUMN_CHARACTERS = 17;
+
+/**
+ * A prop name for the Name column. One that fits is plain text and never wraps, exactly as before. One
+ * that is longer (`minStepsBetweenThumbs`, 21 characters, the longest in the library) gets a line-break
+ * opportunity before each capital (`minSteps<wbr>Between<wbr>Thumbs`) and the class that lets it wrap
+ * there, so it takes two lines instead of stretching its table's Name column past every other
+ * component's. Wrapping every name instead lets the table's auto layout shrink the whole column and wrap
+ * names that fit, so the break is offered to the long one alone.
+ */
+function propName(name: string): { content: ReactNode; className: string } {
+  if (name.length <= NAME_COLUMN_CHARACTERS) return { content: name, className: "" };
+  return {
+    className: "dbm-proptable-name-wraps",
+    content: name.split(/(?=[A-Z])/).map((part, index) => (
+      <Fragment key={index}>
+        {index > 0 && <wbr />}
+        {part}
+      </Fragment>
+    )),
+  };
 }
 
 /** Splits `` `code` `` spans out of a plain-text JSDoc description into `<code>`. */
@@ -103,10 +131,11 @@ export function PropertiesTable({ of, order }: { of: Of; order?: string[] }) {
           {rows.map(([name, argType]) => {
             const at = argType as ArgTypeLike;
             const defaultSummary = at.table?.defaultValue?.summary;
+            const shownName = propName(name);
             return (
               <tr key={name}>
                 <td>
-                  <code>{name}</code>
+                  <code className={shownName.className || undefined}>{shownName.content}</code>
                   {at.type?.required && (
                     <span className="dbm-proptable-required" title="Required">
                       *

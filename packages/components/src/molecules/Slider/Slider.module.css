@@ -294,7 +294,14 @@
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   min-width: 2ch;
-  text-align: end;
+  text-align: start;
+}
+
+/* Below a vertical track the label is centred under it, so the track stays
+   over the middle of the number whatever its width. Beside a horizontal track
+   (above) it starts where the reserved width starts, next to the track. */
+.wrapperVertical .value {
+  text-align: center;
 }
 
 /* Reserves the width of the widest text the label can show, so the label —

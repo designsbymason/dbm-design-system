@@ -92,6 +92,8 @@ export interface SliderProps
    * each), so the track doesn't resize or shift as the value gains or loses
    * digits; a custom `aria-valuetext` of varying length can't be known ahead
    * of time, so the label takes the width of the longest text it has shown.
+   * The text starts at the label's start edge beside a horizontal slider, and is
+   * centred under a vertical one.
    * @default false
    */
   showValue?: boolean;

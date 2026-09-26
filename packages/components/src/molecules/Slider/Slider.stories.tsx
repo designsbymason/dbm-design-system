@@ -597,6 +597,20 @@ export const StableTrackInteraction: Story = {
         await expect(Math.abs(after.left - before.left)).toBeLessThan(0.5);
         await expect(Math.abs(after.top - before.top)).toBeLessThan(0.5);
       }
+
+      // The label's text starts at the label's own start edge beside a horizontal track, and is centred under a
+      // vertical one — however much wider the reserved width is than the text.
+      const valueLabel = root.querySelector<HTMLElement>("[data-sizer]") as HTMLElement;
+      const textNode = valueLabel.firstChild as Text;
+      const textRange = document.createRange();
+      textRange.selectNodeContents(textNode);
+      const text = textRange.getBoundingClientRect();
+      const box = valueLabel.getBoundingClientRect();
+      if (id.startsWith("horizontal")) {
+        await expect(Math.abs(text.left - box.left)).toBeLessThan(1);
+      } else {
+        await expect(Math.abs(text.left + text.width / 2 - (box.left + box.width / 2))).toBeLessThan(1);
+      }
       // End then one step back really did take the value through 100 to 99, not just leave it alone.
       await expect(thumb).toHaveAttribute("aria-valuenow", "99");
     }

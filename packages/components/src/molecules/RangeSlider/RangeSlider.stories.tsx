@@ -143,8 +143,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       ...noControls,
       description:
-        "The text the component supplies itself, each part replaceable: minimum and maximum (what the two thumbs are called, added to the slider's own name) and range (the text of the showValue label, given the plain numbers).",
-      table: { defaultValue: { summary: "{ minimum: 'Minimum', maximum: 'Maximum' }" } },
+        "The text the component supplies itself; any you leave out keeps its English default. Keys: minimum (what the lower thumb is called, added to the slider's own name; default \"Minimum\"), maximum (the upper thumb; default \"Maximum\") and range (the text of the showValue label, given the plain lower and upper values; default \"20 – 80\" style, written with formatNumber).",
     },
     "aria-label": {
       control: "text",
@@ -642,6 +641,19 @@ export const StableTrackInteraction: Story = {
       await userEvent.keyboard("{ArrowLeft}");
       await expect(upper).toHaveAttribute("aria-valuenow", "99");
       await measure();
+      // The label's text starts at the label's own start edge beside a horizontal track, and is centred under a
+      // vertical one — however much wider the reserved width is than the text.
+      const valueLabel = root.querySelector<HTMLElement>("[data-sizer]") as HTMLElement;
+      const textNode = valueLabel.firstChild as Text;
+      const textRange = document.createRange();
+      textRange.selectNodeContents(textNode);
+      const text = textRange.getBoundingClientRect();
+      const box = valueLabel.getBoundingClientRect();
+      if (id.startsWith("horizontal")) {
+        await expect(Math.abs(text.left - box.left)).toBeLessThan(1);
+      } else {
+        await expect(Math.abs(text.left + text.width / 2 - (box.left + box.width / 2))).toBeLessThan(1);
+      }
     }
   },
 };

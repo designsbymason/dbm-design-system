@@ -629,6 +629,17 @@
   white-space: nowrap !important;
 }
 
+/* A prop name longer than the Name column's shared width (10.75rem, above) may wrap, but only at the
+   `<wbr>` before a capital that `PropertiesTable` puts in — and only that name gets this class. The
+   longest name in the library, `minStepsBetweenThumbs`, then takes two lines instead of stretching its
+   table's Name column 40px wider than every other component's. It is not applied to every name: with
+   wrapping allowed everywhere, `table-layout: auto` shrinks the whole column toward its smaller
+   minimum width and wraps names that fit (found live: `defaultValue`, `aria-labelledby`). `overflow-wrap`
+   stays `normal`, so a name is never cut mid-word. */
+.dbm-proptable code.dbm-proptable-name-wraps {
+  white-space: normal !important;
+}
+
 .dbm-proptable-options {
   display: flex;
   flex-wrap: wrap;

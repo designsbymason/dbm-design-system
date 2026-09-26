@@ -107,7 +107,9 @@ export interface RangeSliderProps
    * otherwise. Off by default since the values are already exposed to
    * assistive tech on each thumb — a purely visual convenience. The label
    * reserves the width of the widest range it can show, so the track doesn't
-   * resize or shift as either thumb gains or loses digits.
+   * resize or shift as either thumb gains or loses digits. The text starts at
+   * the label's start edge beside a horizontal slider, and is centred under a
+   * vertical one.
    * @default false
    */
   showValue?: boolean;
