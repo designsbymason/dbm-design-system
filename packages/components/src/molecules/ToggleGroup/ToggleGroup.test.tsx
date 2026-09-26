@@ -274,23 +274,92 @@ describe("ToggleGroup", () => {
       expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
     });
 
-    it("moves focus with the arrow keys, wraps with loop, and jumps with Home and End — without choosing", async () => {
+    it("moves focus with the arrow keys, wraps with loop, and jumps with Home and End — and chooses where it lands", async () => {
       const user = userEvent.setup();
       const onValueChange = vi.fn();
       render(<Alignment defaultValue="left" onValueChange={onValueChange} />);
       await user.tab();
       expect(on("Left")).toHaveFocus();
+      expect(onValueChange).not.toHaveBeenCalled();
       await user.keyboard("{ArrowRight}");
       expect(on("Centre")).toHaveFocus();
+      expect(isOn(on("Centre"))).toBe(true);
       await user.keyboard("{End}");
       expect(on("Right")).toHaveFocus();
+      expect(isOn(on("Right"))).toBe(true);
       await user.keyboard("{ArrowRight}");
       expect(on("Left")).toHaveFocus();
+      expect(isOn(on("Left"))).toBe(true);
       await user.keyboard("{ArrowLeft}");
       expect(on("Right")).toHaveFocus();
       await user.keyboard("{Home}");
       expect(on("Left")).toHaveFocus();
+      expect(isOn(on("Left"))).toBe(true);
+      expect(onValueChange.mock.calls.map(([value]) => value)).toEqual(["center", "right", "left", "right", "left"]);
+    });
+
+    it("tabbing into a group with nothing chosen, or clicking away and back, chooses nothing", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <>
+          <button type="button">Before</button>
+          <Alignment onValueChange={onValueChange} />
+        </>,
+      );
+      await user.tab();
+      await user.tab();
+      expect(on("Left")).toHaveFocus();
+      expect(isOn(on("Left"))).toBe(false);
       expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("a key that moved nowhere leaves nothing pending for when focus returns", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <Alignment loop={false} />
+          <button type="button">After</button>
+        </>,
+      );
+      await user.tab();
+      expect(on("Left")).toHaveFocus();
+      await user.keyboard("{ArrowLeft}");
+      expect(on("Left")).toHaveFocus();
+      await user.tab();
+      await user.tab({ shift: true });
+      expect(on("Left")).toHaveFocus();
+      expect(isOn(on("Left"))).toBe(false);
+    });
+
+    it("a multiple group's arrow keys still only move focus", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(<Styles onValueChange={onValueChange} />);
+      await user.tab();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Italic" })).toHaveAttribute("aria-pressed", "false");
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("leaves a consumer's own key and focus handlers working", async () => {
+      const user = userEvent.setup();
+      const onKeyDownCapture = vi.fn();
+      const onBlur = vi.fn();
+      const onFocus = vi.fn();
+      render(
+        <ToggleGroup aria-label="A" defaultValue="a" onKeyDownCapture={onKeyDownCapture} onBlur={onBlur}>
+          <ToggleGroup.Item value="a" onFocus={onFocus}>A</ToggleGroup.Item>
+          <ToggleGroup.Item value="b">B</ToggleGroup.Item>
+        </ToggleGroup>,
+      );
+      await user.tab();
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      await user.keyboard("{ArrowRight}");
+      expect(onKeyDownCapture).toHaveBeenCalled();
+      await user.tab();
+      expect(onBlur).toHaveBeenCalled();
     });
 
     it("does not wrap when loop is off", async () => {

@@ -1,6 +1,7 @@
 import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
-import { createContext, forwardRef, useContext, useMemo, useRef, useState } from "react";
+import { createContext, forwardRef, useContext, useRef, useState } from "react";
+import type { FocusEvent, KeyboardEvent } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import styles from "./ToggleGroup.module.css";
@@ -37,16 +38,22 @@ const iconSizeForSize: Record<ToggleGroupSize, IconSize> = {
 
 interface ToggleGroupContextValue {
   variant: ToggleGroupVariant;
+  /** Called by an item that just took focus; a single group chooses it when a navigation key moved focus there. */
+  onItemFocus?: (value: string) => void;
   size: ToggleGroupSize;
 }
 
 const ToggleGroupContext = createContext<ToggleGroupContextValue>({ variant: "outlined", size: "md" });
 
+// The keys Radix's roving focus moves focus with. In a single group each one also chooses the item it lands on, as the
+// arrow keys do in a native radio group and the ARIA radio-group pattern.
+const navigationKeys = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]);
+
 /**
  * A set of toggle buttons where the chosen ones are marked: a segmented control (`type="single"`, the default: at most
  * one item is chosen, and once there is one it stays, unless `deselectable`) or a set of independent toggles
  * (`type="multiple"`). Built on Radix ToggleGroup, so the group is a single tab stop and the arrow keys move between
- * its items (`Home` and `End` jump to the ends; `loop` wraps them), and `Space` or `Enter` chooses one. A single group is
+ * its items (`Home` and `End` jump to the ends; `loop` wraps them). In a single group an arrow key also chooses the item it lands on, as in a native radio group; in a multiple group it only moves focus, and `Space` or `Enter` chooses (in either). A single group is
  * a named `role="radiogroup"` of `role="radio"` items (`aria-checked`); a multiple one is a named `role="toolbar"` of
  * buttons (`aria-pressed`) — Radix's own choices, each the pattern that matches its behaviour.
  *
@@ -87,6 +94,8 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupProps>((props, ref
     children,
     "aria-label": ariaLabel,
     "aria-labelledby": ariaLabelledBy,
+    onKeyDownCapture,
+    onBlur,
     ...rest
   } = props;
 
@@ -114,7 +123,18 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupProps>((props, ref
     (onValueChange as ((next: string) => void) | undefined)?.(next);
   };
 
-  const context = useMemo(() => ({ variant, size }), [variant, size]);
+  // In a single group a navigation key both moves focus (Radix's roving focus) and chooses where it lands, so the
+  // group behaves as the `radiogroup` it announces itself as. Only a key does this: tabbing in, or a click, does not
+  // choose anything a click wouldn't. The flag is set as the key goes down (Radix moves focus in a later task, so it can't
+  // be cleared on key-up) and cleared by the item that takes focus, or when focus leaves the group (a key that moved
+  // nowhere, at the end of a group that doesn't loop).
+  const navigatedByKeyRef = useRef(false);
+  const chooseOnKeyFocus = (next: string) => {
+    if (type === "multiple" || !navigatedByKeyRef.current) return;
+    navigatedByKeyRef.current = false;
+    if (next !== currentSingle) handleSingleChange(next);
+  };
+  const context = { variant, size, onItemFocus: chooseOnKeyFocus };
 
   const shared = {
     ...rest,
@@ -129,6 +149,14 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupProps>((props, ref
     "data-orientation": resolvedOrientation,
     "aria-label": ariaLabel,
     "aria-labelledby": ariaLabelledBy,
+    onKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => {
+      onKeyDownCapture?.(event);
+      if (navigationKeys.has(event.key) && !event.altKey && !event.ctrlKey && !event.metaKey) navigatedByKeyRef.current = true;
+    },
+    onBlur: (event: FocusEvent<HTMLDivElement>) => {
+      onBlur?.(event);
+      if (!event.currentTarget.contains(event.relatedTarget)) navigatedByKeyRef.current = false;
+    },
     className: cx(
       styles.root,
       attached ? styles.attached : styles.spaced,
@@ -169,7 +197,7 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((ite
   // same name would replace them (05-component-api-conventions.md §3), so they are dropped here, not just untyped.
   const { value, icon, asChild = false, className, children, role: _role, "aria-checked": _checked, "aria-pressed": _pressed, ...props } =
     itemProps as ToggleGroupItemProps & { role?: string; "aria-checked"?: unknown; "aria-pressed"?: unknown };
-  const { variant, size } = useContext(ToggleGroupContext);
+  const { variant, size, onItemFocus } = useContext(ToggleGroupContext);
 
   const hasWarnedIconRef = useRef(false);
   const hasWarnedNameRef = useRef(false);
@@ -195,6 +223,10 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((ite
       ref={ref}
       value={value}
       asChild={asChild}
+      onFocus={(event: FocusEvent<HTMLButtonElement>) => {
+        props.onFocus?.(event);
+        onItemFocus?.(value);
+      }}
       className={cx(
         styles.item,
         sizeClass[size],

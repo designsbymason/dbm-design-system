@@ -59,8 +59,8 @@ time — a view (Day / Week / Month), an alignment; in a `multiple` group each i
 italic, underline. The items are fused into one control by default, or spaced apart with `attached={false}`, in a row
 or a column, and the chosen one is marked in one of three looks (`subtle`, `outlined`, `solid`).
 
-The group is one tab stop; the arrow keys move between its items (roving focus), and `Space` or `Enter` chooses
-the focused one. A single group is a `radiogroup` of `radio` items, a multiple group a `toolbar` of toggle buttons.
+The group is one tab stop; the arrow keys move between its items (roving focus). In a single group they also choose the item they land on,
+as in a native radio group; in a multiple group they only move focus, and `Space` or `Enter` chooses the focused one. A single group is a `radiogroup` of `radio` items, a multiple group a `toolbar` of toggle buttons.
 
 ### Import
 
@@ -235,7 +235,9 @@ follow the reading direction. It is not read from the page — left out, the gro
   `role="toolbar"` with toggle buttons (`aria-pressed`). Either is named by `aria-label` or `aria-labelledby`; a
   dev-mode console warning fires once if it has neither, and once per icon-only item without a name.
 - The group is one tab stop. `Tab` enters it on the chosen item (or the first), and the arrow keys, `Home` and `End`
-  move focus between the items without choosing; `Space` or `Enter` chooses. The arrows follow the reading direction,
+  move focus between the items. In a single group focus and choice move together, as in a native radio group (so
+  tabbing in, or clicking away and back, chooses nothing); in a multiple group they only move focus, and `Space`
+  or `Enter` chooses. The arrows follow the reading direction,
   so `dir="rtl"` swaps them, and `loop` decides whether they wrap.
 - A disabled item is skipped by the arrows and announced as unavailable.
 - The chosen item is marked by more than colour where the look allows it: a brand border on `outlined`, a fill on

@@ -769,7 +769,7 @@ export const ResponsiveInteraction: Story = {
 
 export const KeyboardInteraction: Story = {
   ...Playground,
-  name: "Interaction: the group is one tab stop, and the arrow keys move between items in reading order",
+  name: "Interaction: the group is one tab stop, and the arrow keys move between items in reading order and choose",
   tags: ["!dev"],
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "flex-start" }}>
@@ -786,14 +786,12 @@ export const KeyboardInteraction: Story = {
     await userEvent.tab();
     const ltr = trio(canvasElement, "ltr");
     await expect(ltr[1]).toHaveFocus();
-    // Reading order on screen: ArrowRight goes to the item on the right.
+    // Reading order on screen: ArrowRight goes to the item on the right, and chooses it, as in a native radio group.
     await userEvent.keyboard("{ArrowRight}");
     await expect(ltr[2]).toHaveFocus();
     await expect(rect(ltr[2]).left).toBeGreaterThan(rect(ltr[1]).left);
-    // Space chooses the focused item, and nothing was chosen by moving.
-    await expect(ltr[1]).toHaveAttribute("aria-checked", "true");
-    await userEvent.keyboard(" ");
     await expect(ltr[2]).toHaveAttribute("aria-checked", "true");
+    await expect(ltr[1]).toHaveAttribute("aria-checked", "false");
     await userEvent.tab();
     await expect(ltr[2]).not.toHaveFocus();
     // Right to left: the first item is at the right, and ArrowLeft goes to the item on the left, which is the next.
@@ -802,5 +800,6 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard("{ArrowLeft}");
     await expect(rtl[2]).toHaveFocus();
     await expect(rect(rtl[2]).left).toBeLessThan(rect(rtl[1]).left);
+    await expect(rtl[2]).toHaveAttribute("aria-checked", "true");
   },
 };
