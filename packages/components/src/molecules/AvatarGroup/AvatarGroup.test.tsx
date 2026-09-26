@@ -146,6 +146,34 @@ describe("AvatarGroup", () => {
       expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
     });
 
+    it("treats a max or total that is NaN as not given", () => {
+      render(
+        <AvatarGroup aria-label="Members" max={Number.NaN} total={Number.NaN}>
+          {avatars(3)}
+        </AvatarGroup>,
+      );
+      expect(screen.getAllByRole("listitem")).toHaveLength(3);
+      expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
+    });
+
+    it("counts the tile from the children when total is NaN", () => {
+      render(
+        <AvatarGroup aria-label="Members" max={1} total={Number.NaN}>
+          {avatars(3)}
+        </AvatarGroup>,
+      );
+      expect(screen.getByText("+2")).toBeInTheDocument();
+    });
+
+    it("keeps a default label whose translation is undefined", () => {
+      render(
+        <AvatarGroup aria-label="Members" max={1} labels={{ overflow: undefined, overflowButton: undefined }}>
+          {avatars(3)}
+        </AvatarGroup>,
+      );
+      expect(screen.getByRole("img", { name: "2 more" })).toBeInTheDocument();
+    });
+
     it("says 99+ for a count that would not fit, keeping the real count in the name", () => {
       render(<AvatarGroup aria-label="Members" total={250}>{avatars(1)}</AvatarGroup>);
       expect(screen.getByText("99+")).toBeInTheDocument();

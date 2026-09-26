@@ -98,7 +98,10 @@ export const AvatarGroup = forwardRef<HTMLUListElement, AvatarGroupProps>(
     const avatars = Children.toArray(children);
     // Development-only misuse warnings, from an effect so they run once per change rather than on every render.
     const hasNoName = !ariaLabel && !ariaLabelledBy;
-    const totalIsTooSmall = total !== undefined && total < avatars.length;
+    // A number that isn't one (`NaN`, from a failed parse) counts as not given, rather than hiding every avatar.
+    const knownMax = max === undefined || Number.isNaN(max) ? undefined : Math.max(0, Math.floor(max));
+    const knownTotal = total === undefined || Number.isNaN(total) ? undefined : Math.floor(total);
+    const totalIsTooSmall = knownTotal !== undefined && knownTotal < avatars.length;
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
       if (hasNoName) {
@@ -111,16 +114,19 @@ export const AvatarGroup = forwardRef<HTMLUListElement, AvatarGroupProps>(
       if (process.env.NODE_ENV === "production") return;
       if (totalIsTooSmall) {
         console.warn(
-          `AvatarGroup: \`total\` (${total}) is smaller than the number of avatars given (${avatars.length}), so it is ignored for the ones already drawn — it should be the real number of people, not fewer than the children.`,
+          `AvatarGroup: \`total\` (${knownTotal}) is smaller than the number of avatars given (${avatars.length}), so it is ignored for the ones already drawn — it should be the real number of people, not fewer than the children.`,
         );
       }
-    }, [totalIsTooSmall, total, avatars.length]);
+    }, [totalIsTooSmall, knownTotal, avatars.length]);
 
-    const words = { ...defaultLabels, ...labels };
-    const shownLimit = max === undefined ? avatars.length : Math.max(0, Math.floor(max));
-    const shown = avatars.slice(0, shownLimit);
+    // A label given as `undefined` (an optional translation that isn't there) keeps its default.
+    const words = {
+      overflow: labels?.overflow ?? defaultLabels.overflow,
+      overflowButton: labels?.overflowButton ?? defaultLabels.overflowButton,
+    };
+    const shown = avatars.slice(0, knownMax ?? avatars.length);
     const hiddenCount =
-      total === undefined ? avatars.length - shown.length : Math.max(0, Math.floor(total) - shown.length);
+      knownTotal === undefined ? avatars.length - shown.length : Math.max(0, knownTotal - shown.length);
     const layerCount = shown.length + (hiddenCount > 0 ? 1 : 0);
 
     const overflowText =

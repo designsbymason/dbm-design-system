@@ -34,6 +34,26 @@ Props: `children` (the `Avatar`s, one each), `size` (also a mobile-first breakpo
 
 **Not verified:** a real screen reader (the list, item and tile names); the ring against a background that is not `bg.surface` other than by the custom property's assertion; the tile's hover fill (`Avatar`'s own, unchanged).
 
+## Final review before Finalizing, 2026-09-26
+
+A full `06-engineering-standards.md` §9 pass against the code and the running component. **Fixed (three), one test strengthened, and one item left for a decision.**
+
+**Fixed**
+
+1. **`max={NaN}` hid every avatar** (a failed parse becomes `NaN`, `slice(0, NaN)` is empty) and drew a tile counting all of them; **`total={NaN}` was silently mishandled**. A `NaN` for either now counts as not given. Found by probing odd inputs, not by any earlier test.
+2. **A `labels` object with an explicit `undefined` crashed the render** (`words.overflow is not a function`), and would have blanked a string: the object spread over the defaults replaces a default with `undefined`, and `Partial<AvatarGroupLabels>` allows it (`labels={{ overflow: t?.overflow }}`). Each label now falls back to its default individually. Three tests (NaN `max`, NaN `total` alongside a `max`, undefined labels), each failing with its guard removed (checked; the first NaN-`total` test passed with the guard removed because both values being `NaN` looked the same either way, and was rewritten until it failed).
+3. **The 24 × 24px target test measured boxes, not what a pointer can hit.** A tucked-under avatar's hit area is its box less the overlap. The story now hit-tests along each button's middle line at every size and asserts 24px or more unobscured (the smallest is 28px at `xs`); it fails with a 24px overlap (checked).
+
+**Left for a decision — not this component.** Finding 2 is a bug class: `Pagination`, `Alert`, `RangeSlider` and `Breadcrumb` (all Finalized) build their `labels` as `{ ...defaultLabels, ...labelOverrides }`, so an explicit `undefined` in the override replaces a default. In `Pagination` and `Breadcrumb` that would blank a button's name or crash a call; not confirmed for each. Untouched, since they are Finalized; a standing check is added to `06` §9.
+
+**Checked, no action needed**
+- **Baseline:** no `any` or hex; every value in the stylesheet is a token; JSDoc on every prop; `{...props}` precedes `role`, the name and `style`; SSR-safe (no browser API in render); `StrictMode` tested; the context value is memoised; a string, a `null`/`false` and a fragment among the children behave as documented (a fragment is one avatar).
+- **Composition:** `Avatar` is the only avatar there is (the tile is one); `Tooltip`-wrapped and `as="button"` avatars take the group's settings; nested groups merge; only a direct child's own `shape` is seen, as the docs say.
+- **Accessibility:** list, item and tile names read in the accessibility tree (also right to left, with Arabic labels); tab order is the tile and button avatars only; jest-axe passes for a non-default `as`; the tile's focus ring is drawn over the avatar before it.
+- **Feature completeness, considered and not added:** a container-measured `max` and a vertical stack (both already named below); an `onOverflowClick` argument for the hidden count (the consumer already knows `max` and the total).
+
+**Not verified:** a real screen reader; the ring in a forced-colours mode (`box-shadow` is dropped there, so overlapping avatars lose their separator; `Avatar` itself has no border either, so this is the atom's limit as much as the group's); the ring against a background other than `bg.surface` beyond the custom property.
+
 ## Gaps named, not built
 
 - **A `max` measured against the group's own width** (as `Breadcrumb`'s `maxItems="container"` does), so a group fits whatever room it's given. Today `max` is a count and a stack that is too wide overflows as one box.

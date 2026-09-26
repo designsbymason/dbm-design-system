@@ -612,16 +612,17 @@ export const FocusInteraction: Story = {
 
 export const TargetSizeInteraction: Story = {
   ...Playground,
-  name: "Interaction: the +N button and avatar buttons are at least 24 by 24px, at every size",
+  name: "Interaction: every button avatar and the +N button is at least 24 by 24px, unobscured, at every size",
   tags: ["!dev"],
   render: () => (
     <div style={stack}>
       {sizes.map((size) => (
         <div key={size} data-testid={`size-${size}`}>
-          <AvatarGroup aria-label={size} size={size} max={1} onOverflowClick={() => {}}>
+          <AvatarGroup aria-label={size} size={size} max={2} onOverflowClick={() => {}}>
             <Avatar as="button" name="Jane Doe" />
             <Avatar as="button" name="John Smith" />
             <Avatar as="button" name="Alex Kim" />
+            <Avatar as="button" name="Maria Garcia" />
           </AvatarGroup>
         </div>
       ))}
@@ -629,13 +630,20 @@ export const TargetSizeInteraction: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // WCAG 2.5.8: a target is at least 24 x 24 CSS pixels. The overlap must not shrink a button's box either.
+    // WCAG 2.5.8: a target is at least 24 x 24 CSS pixels, and the part another element covers doesn't count. The
+    // second avatar is tucked under the first, so its width is measured by hit-testing along its middle line.
     for (const size of sizes) {
       const buttons = within(canvas.getByTestId(`size-${size}`)).getAllByRole("button");
-      await expect(buttons).toHaveLength(2);
+      await expect(buttons).toHaveLength(3);
       for (const button of buttons) {
         await expect(rect(button).width).toBeGreaterThanOrEqual(24);
         await expect(rect(button).height).toBeGreaterThanOrEqual(24);
+        const box = rect(button);
+        let unobscured = 0;
+        for (let x = box.left + 0.25; x < box.right; x += 0.5) {
+          if (button.contains(document.elementFromPoint(x, box.top + box.height / 2))) unobscured += 0.5;
+        }
+        await expect(unobscured).toBeGreaterThanOrEqual(24);
       }
     }
   },
