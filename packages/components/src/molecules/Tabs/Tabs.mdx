@@ -58,9 +58,11 @@ whole list is a single stop in the tab order).
 Choose how the selected tab is marked with `variant` (an underline, a soft tint, a tint with a border
 on every tab, or a solid fill), how big everything is with `size`, whether the tabs have fully round
 ends with `rounded`, and whether the tabs run across or down with `orientation`. `Tabs.List`'s own
-`align` places the tabs at the start, the middle, or the end when they don't fill the list. A
-horizontal list that is too wide for its container scrolls sideways, keeps the selected tab in
-view, and shows a fade and a button wherever there are more tabs that way.
+`align` places the tabs at the start, the middle, or the end when they don't fill the list. A list
+that outgrows its container — too wide for it, horizontal, or too tall for it, vertical — scrolls
+along its own axis, keeps the selected tab in view, and shows a fade and a button wherever there
+are more tabs that way. Nothing bounds a vertical list's height on its own; give `Tabs.List` one
+directly (in an absolute unit, not a percentage) for it to actually engage.
 
 ### Import
 
@@ -186,6 +188,15 @@ that scrolls a page at a time, appear at whichever edge currently hides more tab
 
 <Canvas of={TabsStories.Scrolling} />
 
+### Too many tabs for the height
+
+A vertical list works the same way, along the block axis instead — but nothing bounds its height
+on its own the way the page's own width naturally bounds a horizontal list, so `Tabs.List` needs
+one set directly, in an absolute unit (a percentage has nothing definite above it to resolve
+against).
+
+<Canvas of={TabsStories.VerticalScrolling} />
+
 ### Keeping a panel mounted
 
 Type something into the field, switch to the other tab and back.
@@ -276,11 +287,11 @@ read or reached (with `forceMount` it stays, hidden from view and from assistive
 | `Enter` / `Space` | Selects the focused tab (needed only in manual mode) |
 
 Arrow keys wrap from the last tab to the first unless `loop={false}`, and skip a disabled tab. A
-horizontal list's own scroll buttons — "Scroll tabs to the start"/"Scroll tabs to the end" — are
-plain buttons outside the tab list itself, reached in normal tab order rather than by the arrow
-keys; they appear only while there is something that way to scroll to, except that one briefly
-stays, inert, if it still has keyboard focus the moment it would otherwise disappear — so focus is
-never dropped to the top of the page.
+list's own scroll buttons — "Scroll tabs to the start"/"Scroll tabs to the end" — are plain
+buttons outside the tab list itself, reached in normal tab order rather than by the arrow keys;
+they appear only while there is something that way to scroll to, except that one briefly stays,
+inert, if it still has keyboard focus the moment it would otherwise disappear — so focus is never
+dropped to the top of the page.
 
 **Contrast**, measured for every pairing in Purple and Emerald, light and dark: an unselected label
 on the surface is 6.88–10.47:1, and 13.46–15.05:1 once hovered (on `bg.brand-subtle`); a selected
@@ -290,7 +301,7 @@ the page; icons are at least 3.67:1. The unselected tabs' borders in the outline
 faint decorative tint (1.08–1.24:1), so the selected tab's border and every label carry the state,
 not those.
 
-**The focus ring** is drawn inside the tab, so a list that scrolls sideways can't clip it. On the
+**The focus ring** is drawn inside the tab, so a list that scrolls, along either axis, can't clip it. On the
 underline and subtle variants it is `border.focus` (4.16–6.49:1 against the page). On the outlined
 variant it is `bg.brand-hover` (8.64–11.74:1 against the tab's fill and the page), drawn just inside
 the border so it doesn't sit on top of it. On the selected tab of the **solid** variant it is also
@@ -376,11 +387,11 @@ function Example() {
 <TokenRow token="font-weight.medium" usage="tab label weight" />
 <TokenRow token="line-height.tight" usage="tab label line height" />
 <TokenRow token="icon-button.size.xs–icon-button.size.xl" usage="a tab's minimum height, matching a Button of the same size" />
-<TokenRow token="space.1" usage="the gap between tabs in the subtle, outlined and solid variants; a scroll button's own inline padding" />
+<TokenRow token="space.1" usage="the gap between tabs in the subtle, outlined and solid variants; a scroll button's own padding (inline on a horizontal list, block on a vertical one)" />
 <TokenRow token="space.2–space.3" usage="the gap between a tab's icon and its label" />
 <TokenRow token="space.3–space.6" usage="a tab's inline padding across the five size steps" />
 <TokenRow token="space.3–space.8" usage="the space between the list and its panel across the five size steps" />
-<TokenRow token="space.10" usage="the width of an edge fade" />
+<TokenRow token="space.10" usage="the size of an edge fade — its width on a horizontal list, its height on a vertical one" />
 <TokenRow token="motion.duration.fast" usage="colour changes on hover; a panel fading in" />
 <TokenRow token="motion.duration.base" usage="the underline bar growing under the selected tab" />
 <TokenRow token="motion.easing.standard" usage="colour changes and the underline bar" />

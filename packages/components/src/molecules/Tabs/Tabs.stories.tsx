@@ -505,6 +505,48 @@ export const Scrolling: Story = {
   },
 };
 
+export const VerticalScrolling: Story = {
+  name: "Too many tabs for the height",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tabsSnippets.verticalScrolling } } },
+  render: () => (
+    <div style={demoContainerStyle}>
+      {/* Nothing bounds a vertical list's height on its own — set it directly on Tabs.List, in an
+          absolute unit (not a percentage: nothing above it stretches to give a percentage
+          something definite to resolve against). The selected tab is the last one, and the list
+          has already scrolled to show it. */}
+      <Tabs defaultValue="security" orientation="vertical">
+        <Tabs.List aria-label="Workspace" style={{ maxBlockSize: "10rem" }}>
+          {workspaceTabs.map((label) => (
+            <Tabs.Trigger key={label} value={label === "Security" ? "security" : label.toLowerCase()}>
+              {label}
+            </Tabs.Trigger>
+          ))}
+        </Tabs.List>
+        <Tabs.Content value="security">
+          <Text size="sm">Two-factor and session settings.</Text>
+        </Tabs.Content>
+      </Tabs>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Measures only — the demo never changes.
+    const canvas = within(canvasElement);
+    const list = canvas.getByRole("tablist");
+    await expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+    const selected = canvas.getByRole("tab", { name: "Security" });
+    await waitFor(() => {
+      const listRect = list.getBoundingClientRect();
+      const tabRect = selected.getBoundingClientRect();
+      expect(tabRect.top).toBeGreaterThanOrEqual(listRect.top - 1);
+      expect(tabRect.bottom).toBeLessThanOrEqual(listRect.bottom + 1);
+    });
+    // Scrolled to the last tab: more lies before it, nothing lies after.
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Scroll tabs to the start" })).toBeVisible());
+    await expect(canvas.queryByRole("button", { name: "Scroll tabs to the end" })).toBeNull();
+  },
+};
+
 export const KeepMounted: Story = {
   name: "Keeping a panel mounted",
   argTypes: noControls,
@@ -752,6 +794,42 @@ export const ScrollingInteraction: Story = {
     await waitFor(() => expect(isInView(last)).toBe(true));
     // Nothing made the page itself scroll sideways.
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
+  },
+};
+
+export const VerticalScrollingInteraction: Story = {
+  ...VerticalScrolling,
+  name: "Vertical scrolling — buttons, click-to-scroll, and the selected tab kept in view",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const list = canvas.getByRole("tablist");
+    const isInView = (tab: HTMLElement) => {
+      const listRect = list.getBoundingClientRect();
+      const tabRect = tab.getBoundingClientRect();
+      return tabRect.top >= listRect.top - 1 && tabRect.bottom <= listRect.bottom + 1;
+    };
+
+    // Starts on the last tab: a "start" button, no "end" button (the story's own `play` on
+    // `VerticalScrolling` already confirms this render's own geometry).
+    const startButton = await waitFor(() => canvas.getByRole("button", { name: "Scroll tabs to the start" }));
+    const startingScroll = list.scrollTop;
+    await userEvent.click(startButton);
+    // Clicking "start" scrolls up (toward the top) — `scrollTop` decreases.
+    await waitFor(() => expect(list.scrollTop).toBeLessThan(startingScroll));
+    // Having scrolled away from the end, an "end" button now joins it.
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Scroll tabs to the end" })).toBeVisible());
+
+    // Go back to the first tab: the list scrolls back up to it.
+    await userEvent.click(canvas.getByRole("tab", { name: "Overview" }));
+    const overview = canvas.getByRole("tab", { name: "Overview" });
+    await waitFor(() => expect(isInView(overview)).toBe(true));
+    // Keyboard End lands on the last tab, and the list follows back down.
+    overview.focus();
+    await userEvent.keyboard("{End}");
+    const last = canvas.getByRole("tab", { name: "Security" });
+    await expect(last).toHaveFocus();
+    await waitFor(() => expect(isInView(last)).toBe(true));
   },
 };
 

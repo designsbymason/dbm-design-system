@@ -1,5 +1,5 @@
 import { cx, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
-import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-design-system/icons";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../atoms/Icon";
@@ -91,16 +91,27 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * Scrolls a horizontally scrolling list just far enough to show a tab in full.
- * Measured from bounding rectangles and applied with `scrollBy`, so it is the
- * same in a right-to-left list (where `scrollLeft` counts the other way) and
- * never scrolls the page itself, which `scrollIntoView` would.
+ * Scrolls a scrolling list just far enough to show a tab in full. Measured
+ * from bounding rectangles and applied with `scrollBy`, so it is the same in
+ * a right-to-left horizontal list (where `scrollLeft` counts the other way)
+ * and never scrolls the page itself, which `scrollIntoView` would.
  */
-function revealTab(list: HTMLElement, tab: HTMLElement, behavior: ScrollBehavior): void {
+function revealTab(
+  list: HTMLElement,
+  tab: HTMLElement,
+  behavior: ScrollBehavior,
+  orientation: "horizontal" | "vertical",
+): void {
   if (typeof list.scrollBy !== "function") return;
   const listRect = list.getBoundingClientRect();
   const tabRect = tab.getBoundingClientRect();
   let delta = 0;
+  if (orientation === "vertical") {
+    if (tabRect.top < listRect.top) delta = tabRect.top - listRect.top;
+    else if (tabRect.bottom > listRect.bottom) delta = tabRect.bottom - listRect.bottom;
+    if (delta !== 0) list.scrollBy({ top: delta, behavior });
+    return;
+  }
   if (tabRect.left < listRect.left) delta = tabRect.left - listRect.left;
   else if (tabRect.right > listRect.right) delta = tabRect.right - listRect.right;
   if (delta !== 0) list.scrollBy({ left: delta, behavior });
@@ -132,9 +143,9 @@ function hasKeyboardFocus(element: Element): boolean {
  * panel shows. `variant`, `size`, `rounded`, `orientation` and `fullWidth` are set once
  * here and apply to every part. `rounded` fully rounds the tabs of every variant
  * but `underline`. `orientation` accepts a breakpoint map for a
- * vertical list that becomes a horizontal one on a phone. A horizontal list
- * that is wider than its container scrolls sideways, and keeps the selected tab
- * in view.
+ * vertical list that becomes a horizontal one on a phone. A list that outgrows
+ * its container — wider than it, horizontal, or taller than it, vertical —
+ * scrolls along its own axis and keeps the selected tab in view.
  *
  * `ref` forwards to the root `<div>`.
  *
@@ -225,18 +236,19 @@ TabsRoot.displayName = "Tabs";
 /**
  * The row (or column) of `Tabs.Trigger`s — the `tablist`. Roving focus:
  * `Tab` enters it once, on the selected tab, and the arrow keys move between
- * tabs from there. When horizontal and wider than its container it scrolls
- * sideways, keeps the selected tab in view as the selection changes, and
- * shows a fade and a button at whichever edge currently has more tabs beyond
- * it. `ref` forwards to the `tablist` element itself, not to the wrapper the
- * fades and buttons are positioned against.
+ * tabs from there. When it outgrows its container along the direction it
+ * runs — wider than it, horizontal; taller than it, vertical — it scrolls
+ * along that axis, keeps the selected tab in view as the selection changes,
+ * and shows a fade and a button at whichever edge currently has more tabs
+ * beyond it. `ref` forwards to the `tablist` element itself, not to the
+ * wrapper the fades and buttons are positioned against.
  */
 const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
   ({ loop = true, align = "start", className, children, ...props }, ref) => {
     const { variant, size, orientation } = useContext(TabsContext);
     const listRef = useRef<HTMLDivElement>(null);
     const isHorizontal = orientation === "horizontal";
-    const { overflowStart, overflowEnd } = useTabsOverflow(listRef);
+    const { overflowStart, overflowEnd } = useTabsOverflow(listRef, orientation);
 
     // A scroll button that has just run out of anything to scroll to stays in the page, inert,
     // while it still has real keyboard focus — the same reasoning `Pagination`'s own arrows apply
@@ -249,26 +261,31 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 
     useEffect(() => {
       const list = listRef.current;
-      if (!list || !isHorizontal) return undefined;
+      if (!list) return undefined;
 
       const activeTab = () => list.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
       const first = activeTab();
-      if (first) revealTab(list, first, "auto");
+      if (first) revealTab(list, first, "auto", orientation);
 
       if (typeof MutationObserver === "undefined") return undefined;
       const observer = new MutationObserver(() => {
         const tab = activeTab();
-        if (tab) revealTab(list, tab, prefersReducedMotion() ? "auto" : "smooth");
+        if (tab) revealTab(list, tab, prefersReducedMotion() ? "auto" : "smooth", orientation);
       });
       observer.observe(list, { attributes: true, attributeFilter: ["data-state"], subtree: true });
       return () => observer.disconnect();
-    }, [isHorizontal]);
+    }, [orientation]);
 
-    const scroll = useCallback((direction: 1 | -1) => {
-      const list = listRef.current;
-      if (!list) return;
-      list.scrollBy({ left: list.clientWidth * direction, behavior: prefersReducedMotion() ? "auto" : "smooth" });
-    }, []);
+    const scroll = useCallback(
+      (direction: 1 | -1) => {
+        const list = listRef.current;
+        if (!list) return;
+        const behavior = prefersReducedMotion() ? "auto" : "smooth";
+        if (isHorizontal) list.scrollBy({ left: list.clientWidth * direction, behavior });
+        else list.scrollBy({ top: list.clientHeight * direction, behavior });
+      },
+      [isHorizontal],
+    );
 
     const tabsList = (
       <TabsPrimitive.List
@@ -286,13 +303,16 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
       </TabsPrimitive.List>
     );
 
-    // A vertical list never scrolls (there is no vertical equivalent of the horizontal scroll
-    // strip here), so it has nothing to fade or scroll — rendered exactly as before, with no
-    // wrapper, so this case carries none of the risk of the horizontal restructuring below.
-    if (!isHorizontal) return tabsList;
+    const StartIcon = isHorizontal ? CaretLeftIcon : CaretUpIcon;
+    const EndIcon = isHorizontal ? CaretRightIcon : CaretDownIcon;
 
     return (
-      <div className={styles.listWrapper} data-overflow-start={overflowStart} data-overflow-end={overflowEnd}>
+      <div
+        className={styles.listWrapper}
+        data-orientation={orientation}
+        data-overflow-start={overflowStart}
+        data-overflow-end={overflowEnd}
+      >
         {showStartButton && (
           <button
             type="button"
@@ -307,7 +327,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
               if (overflowStart) scroll(-1);
             }}
           >
-            <Icon icon={CaretLeftIcon} size={iconSizeForTabsSize[size]} className={styles.scrollIcon} />
+            <Icon icon={StartIcon} size={iconSizeForTabsSize[size]} className={styles.scrollIcon} />
           </button>
         )}
         {tabsList}
@@ -325,7 +345,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
               if (overflowEnd) scroll(1);
             }}
           >
-            <Icon icon={CaretRightIcon} size={iconSizeForTabsSize[size]} className={styles.scrollIcon} />
+            <Icon icon={EndIcon} size={iconSizeForTabsSize[size]} className={styles.scrollIcon} />
           </button>
         )}
       </div>

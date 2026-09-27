@@ -463,7 +463,59 @@ doc's own 2026-09-22 update note. Not yet sequenced within the organism tier its
 `01-vision-and-goals.md` §13) and have no itemized build order yet the way molecules do, so the ⚪ tier alone is what currently expresses "lowest
 priority, build last."
 
+## Follow-up (2026-09-27, at explicit direction) — vertical gets the same overflow treatment as horizontal
+
+A user question about whether the fade and the scroll button are two separate elements (they are — a `::before`/`::after` pseudo-element for the
+fade, a real `<button>` for the scroll control, layered on `z-index`) led to a second question: does the same fade-and-button overflow handling
+apply to a vertical list? It did not — `.list[data-orientation="vertical"]` had no `overflow-y` at all (`flex: 0 0 auto`, unbounded), a real gap
+this file never named as a deliberate scope decision (`useTabsOverflow`'s own 2026-09-22 follow-up entry frames the whole feature only in
+horizontal terms, and the unit tests of the day assert the *absence* of buttons for vertical as expected, not as a decision on record). Asked
+directly whether vertical should get full parity (scroll + fade + buttons), lighter (scroll only), or stay as-is: **full parity, at explicit
+direction.**
+
+**What full parity actually required, found by building it, not assumed:** a horizontal list's width is bounded "for free" by ordinary block
+layout (an element's width defaults to filling its container, which a real page always eventually bounds) — nothing analogous exists for height,
+where the CSS default is "grow to fit content," so a vertical list needs its height bounded by something explicit before `overflow-y: auto` does
+anything at all. The first real-browser attempt gave the height as a **percentage** on an ancestor and on `Tabs.List` itself (`maxBlockSize:
+"100%"`) — the Storybook browser-mode test failed immediately (`expected 336 to be greater than 336`: the list never actually overflowed) because
+`.root[data-orientation="vertical"]`'s `align-items: flex-start` (deliberately not `stretch`, so the list and panel keep independent natural
+heights rather than being forced equal) means nothing in the chain ever gives a percentage height something definite to resolve against. Changing
+`align-items` to `stretch` would have fixed it but was rejected without asking first: it would visibly change the *rendered height* of the shorter
+of {list, panel} in every existing vertical `Tabs` usage, even ones that never overflow, by stretching it to match the taller one — a real,
+unauthorized visual change to already-Finalized behavior, not the additive fix this was supposed to be. **The actual fix needs no root-level
+change at all**: an absolute unit (`maxBlockSize: "10rem"`, not a percentage) set directly on `Tabs.List` bounds that element's own height
+regardless of what its ancestors do, which is exactly the pattern the Docs page and both new stories now show and the one a consumer must use —
+documented explicitly, since it is the one part of this feature a developer cannot discover by analogy with the horizontal case (nothing needs
+setting there at all).
+
+**Built, mirroring the existing horizontal implementation exactly, generalized by axis rather than duplicated:**
+- `useTabsOverflow` takes `orientation` and reads `top`/`bottom` (vertical) instead of `left`/`right` (horizontal) against the same rect-comparison
+  logic, unchanged otherwise.
+- `revealTab` and the scroll-button's own `scroll()` callback branch the same way — `scrollBy({ top })`/`clientHeight` for vertical, `{ left
+  }`/`clientWidth` for horizontal — and the mount/selection-change reveal effect, previously gated `!isHorizontal`, now runs for both.
+- The fade pseudo-elements and the scroll buttons' CSS are split into `[data-orientation="horizontal"]`/`[data-orientation="vertical"]` variants:
+  a top/bottom gradient band spanning the full width, and top/bottom-pinned buttons spanning the full width, mirroring the left/right treatment
+  rotated onto the other axis. `Icon` swaps to `CaretUpIcon`/`CaretDownIcon`. Neither the fade's gradient direction nor the icon needs the
+  `:dir(rtl)` flip the horizontal case needs — both scoped out of the vertical rule — since the block axis is unaffected by inline text direction.
+- `.listWrapper` gained `min-block-size: 0` alongside its existing `min-inline-size: 0` (harmless on the axis that doesn't apply, needed on the one
+  that does, same reasoning as the existing rule).
+- `align`'s `safe center`/`safe flex-end` centering-overflow guard (`06-engineering-standards.md` §9's "responsive/measured collapse" family of
+  findings) now applies to vertical too, for the same reason it applies to horizontal.
+
+**Three-question test (`06-engineering-standards.md` §9's closing section) — stays Finalized:** nothing about existing rendered output changes
+for any consumer who never gives `Tabs.List` an explicit height, vertical or horizontal — the new `overflow-y: auto` does nothing until a height
+is actually imposed, which no existing usage does. Purely additive. The new surface got its own scoped pass rather than a full re-run: two new
+stories (`VerticalScrolling`, a visible "Too many tabs for the height" gallery entry mirroring `Scrolling`, plus a hidden `!dev`
+`VerticalScrollingInteraction` twin exercising click-to-scroll and keep-selected-in-view — the same split every other interactive story in this
+file uses), a new snippet, updated JSDoc on `Tabs`/`TabsList`/`revealTab`, a `guidelines/component-reviews/Tabs.md` entry (this one) and an
+`07-storybook-and-documentation-standards.md` §6 status-table note aren't needed since the row already just points here, unit tests for the
+button-presence/scroll-axis logic mirroring the existing horizontal ones, and a real-browser Storybook re-run of the whole file (36/36 passed)
+plus a live check in both light and dark mode (the fade's `bg.surface` resolves correctly in dark: confirmed via computed style, not just by
+reading the CSS). Full package `tsc`/`eslint`/`vitest` (4438 unit tests)/`build`/bundle-size check all re-run clean.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; roles, names and states are checked through the accessibility tree and axe. The
-scrolling strip was checked with overlay scrollbars only; a platform with permanent scrollbars now shows none, by design.
+scrolling strip was checked with overlay scrollbars only; a platform with permanent scrollbars now shows none, by design. **Vertical overflow
+(2026-09-27):** not checked with a real screen reader either, and the touch/trackpad scroll gesture on a vertical list was not separately
+verified (mouse wheel and the buttons were).

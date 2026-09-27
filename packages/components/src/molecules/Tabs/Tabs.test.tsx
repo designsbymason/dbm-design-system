@@ -59,6 +59,19 @@ const rect = (left: number, right: number): DOMRect => ({
   toJSON: () => ({}),
 });
 
+/** The vertical-axis equivalent of `rect` — a top/bottom pair, left/right left at 0. */
+const rectV = (top: number, bottom: number): DOMRect => ({
+  left: 0,
+  right: 0,
+  top,
+  bottom,
+  width: 0,
+  height: bottom - top,
+  x: 0,
+  y: top,
+  toJSON: () => ({}),
+});
+
 describe("Tabs — structure and roles", () => {
   it("renders a tablist of tabs, and only the selected tab's panel", () => {
     render(<Basic />);
@@ -815,15 +828,15 @@ describe("Tabs — keeping the selected tab in view", () => {
     await vi.waitFor(() => expect(scrollBy).toHaveBeenCalledWith({ left: 40, behavior: "auto" }));
   });
 
-  it("does nothing for a vertical list, which never scrolls sideways", async () => {
+  it("reveals a vertically selected tab along the block axis, not the inline one", async () => {
     const user = userEvent.setup();
     const scrollBy = installScrollBy();
     render(<Basic orientation="vertical" />);
-    stubRect(screen.getByRole("tablist"), 0, 100);
-    stubRect(screen.getByRole("tab", { name: "Activity" }), 60, 140);
+    vi.spyOn(screen.getByRole("tablist"), "getBoundingClientRect").mockReturnValue(rectV(0, 100));
+    vi.spyOn(screen.getByRole("tab", { name: "Activity" }), "getBoundingClientRect").mockReturnValue(rectV(60, 140));
     await user.click(screen.getByRole("tab", { name: "Activity" }));
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(scrollBy).not.toHaveBeenCalled();
+    // The tab overhangs the list's bottom by 40px, so the list scrolls 40px down — `top`, not `left`.
+    await vi.waitFor(() => expect(scrollBy).toHaveBeenCalledWith({ top: 40, behavior: "smooth" }));
   });
 
   it("does not throw where scrollBy does not exist", async () => {
@@ -930,8 +943,29 @@ describe("Tabs — overflow", () => {
     expect(screen.getByRole("button", { name: "Scroll tabs to the end" })).toBeInTheDocument();
   });
 
-  it("renders no scroll buttons for a vertical list, however the rects stub it", () => {
-    stubOverflow({ startVisible: false, endVisible: false });
+  // The vertical-axis equivalent of `stubOverflow`, above — same shape, top/bottom instead of left/right.
+  const stubOverflowV = (opts: { startVisible: boolean; endVisible: boolean }) =>
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute("role") !== "tablist" && this.getAttribute("role") !== "tab") return rectV(0, 0);
+      if (this.getAttribute("role") === "tablist") return rectV(0, 100);
+      if (this.textContent === "Overview") return opts.startVisible ? rectV(0, 40) : rectV(-40, 0);
+      if (this.textContent === "Settings") return opts.endVisible ? rectV(60, 100) : rectV(120, 180);
+      return rectV(40, 60);
+    });
+
+  it("shows scroll buttons for a vertical list along the same block-axis rule", () => {
+    stubOverflowV({ startVisible: false, endVisible: false });
+    render(<Basic orientation="vertical" />);
+    const start = screen.getByRole("button", { name: "Scroll tabs to the start" });
+    const end = screen.getByRole("button", { name: "Scroll tabs to the end" });
+    expect(start).toBeInTheDocument();
+    expect(end).toBeInTheDocument();
+    expect(start.querySelector("svg")).not.toBeNull();
+    expect(end.querySelector("svg")).not.toBeNull();
+  });
+
+  it("renders no scroll buttons for a vertical list whose ends are both visible", () => {
+    stubOverflowV({ startVisible: true, endVisible: true });
     render(<Basic orientation="vertical" />);
     expect(screen.queryByRole("button", { name: /Scroll tabs/ })).not.toBeInTheDocument();
   });
@@ -954,6 +988,26 @@ describe("Tabs — overflow", () => {
     Object.defineProperty(screen.getByRole("tablist"), "clientWidth", { configurable: true, value: 120 });
     await user.click(screen.getByRole("button", { name: "Scroll tabs to the start" }));
     expect(scrollBy).toHaveBeenCalledWith({ left: -120, behavior: "smooth" });
+  });
+
+  it("scrolls forward by the list's own height when a vertical end button is clicked", async () => {
+    const user = userEvent.setup();
+    const scrollBy = installScrollBy();
+    stubOverflowV({ startVisible: true, endVisible: false });
+    render(<Basic orientation="vertical" />);
+    Object.defineProperty(screen.getByRole("tablist"), "clientHeight", { configurable: true, value: 120 });
+    await user.click(screen.getByRole("button", { name: "Scroll tabs to the end" }));
+    expect(scrollBy).toHaveBeenCalledWith({ top: 120, behavior: "smooth" });
+  });
+
+  it("scrolls backward by the list's own height when a vertical start button is clicked", async () => {
+    const user = userEvent.setup();
+    const scrollBy = installScrollBy();
+    stubOverflowV({ startVisible: false, endVisible: true });
+    render(<Basic orientation="vertical" />);
+    Object.defineProperty(screen.getByRole("tablist"), "clientHeight", { configurable: true, value: 120 });
+    await user.click(screen.getByRole("button", { name: "Scroll tabs to the start" }));
+    expect(scrollBy).toHaveBeenCalledWith({ top: -120, behavior: "smooth" });
   });
 
   it("does not scroll a button that is already inert", async () => {

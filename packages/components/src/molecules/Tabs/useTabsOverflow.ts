@@ -9,28 +9,35 @@ const noop = () => {};
 const EPSILON = 1;
 
 /**
- * Whether the first (or last) tab in a horizontal list is not fully inside the
- * list's own box — direction-agnostic, so it works the same in a right-to-left
- * list without reading `scrollLeft`, whose sign convention differs across
- * browsers in that case (the same reason `revealTab` in `Tabs.tsx` compares
- * bounding rectangles instead).
+ * Whether the first (or last) tab in a scrolling list is not fully inside the
+ * list's own box — direction-agnostic within its own axis, so it works the
+ * same in a right-to-left horizontal list without reading `scrollLeft`, whose
+ * sign convention differs across browsers in that case (the same reason
+ * `revealTab` in `Tabs.tsx` compares bounding rectangles instead). `axis`
+ * picks which pair of edges matters: `"inline"` (left/right) for a horizontal
+ * list, `"block"` (top/bottom) for a vertical one.
  */
-function readOverflow(list: HTMLElement | null, edge: "first" | "last"): boolean {
+function readOverflow(list: HTMLElement | null, edge: "first" | "last", axis: "inline" | "block"): boolean {
   if (!list) return false;
   const tabs = list.querySelectorAll<HTMLElement>('[role="tab"]');
   const tab = edge === "first" ? tabs[0] : tabs[tabs.length - 1];
   if (!tab) return false;
   const listRect = list.getBoundingClientRect();
   const tabRect = tab.getBoundingClientRect();
+  if (axis === "block") {
+    return tabRect.top < listRect.top - EPSILON || tabRect.bottom > listRect.bottom + EPSILON;
+  }
   return tabRect.left < listRect.left - EPSILON || tabRect.right > listRect.right + EPSILON;
 }
 
 /**
- * Tracks whether the first and/or last tab of a horizontal, scrolling list is
- * currently out of view — what drives the edge fades and the scroll buttons,
- * which need to know *which* edge, not just whether the list scrolls at all
- * (unlike `Table`'s own `useScrollableRegion`, the question this hook is
- * otherwise modelled on).
+ * Tracks whether the first and/or last tab of a scrolling list is currently
+ * out of view — what drives the edge fades and the scroll buttons, which need
+ * to know *which* edge, not just whether the list scrolls at all (unlike
+ * `Table`'s own `useScrollableRegion`, the question this hook is otherwise
+ * modelled on). `orientation` picks the axis that matters: a horizontal
+ * list's start/end are its left/right edges, a vertical one's are its
+ * top/bottom.
  *
  * Built on `useSyncExternalStore`, the same standing pattern
  * (`guidelines/adr/0019`): correct on the very first frame a fade or button
@@ -40,12 +47,16 @@ function readOverflow(list: HTMLElement | null, edge: "first" | "last"): boolean
  * changing (`ResizeObserver`), and on tabs being added or removed
  * (`MutationObserver`, since a `ResizeObserver` on the list only reports the
  * list's *own* box, not its scrollable content — adding a tab changes
- * `scrollWidth` without changing the list's own rendered size).
+ * `scrollWidth`/`scrollHeight` without changing the list's own rendered size).
  */
-export function useTabsOverflow(listRef: RefObject<HTMLDivElement | null>): {
+export function useTabsOverflow(
+  listRef: RefObject<HTMLDivElement | null>,
+  orientation: "horizontal" | "vertical",
+): {
   overflowStart: boolean;
   overflowEnd: boolean;
 } {
+  const axis = orientation === "vertical" ? "block" : "inline";
   const subscribe = useCallback(
     (onChange: () => void) => {
       const list = listRef.current;
@@ -78,12 +89,12 @@ export function useTabsOverflow(listRef: RefObject<HTMLDivElement | null>): {
   // `scrollable` and `captionId` as two separate calls rather than one).
   const overflowStart = useSyncExternalStore(
     subscribe,
-    () => readOverflow(listRef.current, "first"),
+    () => readOverflow(listRef.current, "first", axis),
     () => false,
   );
   const overflowEnd = useSyncExternalStore(
     subscribe,
-    () => readOverflow(listRef.current, "last"),
+    () => readOverflow(listRef.current, "last", axis),
     () => false,
   );
 

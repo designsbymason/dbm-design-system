@@ -103,6 +103,23 @@ ${tabs('value={value} onValueChange={setValue}')}`,
   <Tabs.Content value="reports">Scheduled and saved reports.</Tabs.Content>
 </Tabs>`,
 
+  verticalScrolling: `{/* A vertical list taller than the height it's given scrolls inside itself, keeps the
+    selected tab in view, and shows a fade and a button wherever there are more tabs that way.
+    Nothing bounds the height on its own — set it directly on Tabs.List, in an absolute unit
+    (not a percentage: nothing above it stretches to give a percentage something definite to
+    resolve against). */}
+<Tabs defaultValue="reports" orientation="vertical">
+  <Tabs.List aria-label="Workspace" style={{ maxBlockSize: "10rem" }}>
+    <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+    <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+    <Tabs.Trigger value="members">Members</Tabs.Trigger>
+    <Tabs.Trigger value="billing">Billing</Tabs.Trigger>
+    <Tabs.Trigger value="integrations">Integrations</Tabs.Trigger>
+    <Tabs.Trigger value="reports">Reports</Tabs.Trigger>
+  </Tabs.List>
+  <Tabs.Content value="reports">Scheduled and saved reports.</Tabs.Content>
+</Tabs>`,
+
   keepMounted: `{/* forceMount keeps the panel in the page while its tab is not selected (hidden), so what
     you typed into it is still there when you come back. */}
 <Tabs defaultValue="details">

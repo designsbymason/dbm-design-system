@@ -42,13 +42,24 @@
   display: none;
 }
 
+/* Taller than the height it's given (set directly on `Tabs.List`, e.g. `style={{ maxBlockSize:
+   "20rem" }}` — nothing here bounds it on its own, the same way nothing bounds a horizontal
+   list's width beyond whatever its own ambient container gives it): scrolls inside itself rather
+   than growing past it. Same scrollbar-hiding treatment as horizontal, for the same reason. */
 .list[data-orientation="vertical"] {
   flex: 0 0 auto;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.list[data-orientation="vertical"]::-webkit-scrollbar {
+  display: none;
 }
 
 /* `align`: where the tabs sit when they don't fill the list. Plain values for
-   a list that never scrolls (vertical, or a horizontal one that fits). */
+   a list that never scrolls (either orientation, while it fits). */
 .alignStart {
   justify-content: flex-start;
 }
@@ -61,7 +72,7 @@
   justify-content: flex-end;
 }
 
-/* A horizontal list can also overflow and scroll — plain `center`/`flex-end`
+/* A list can also outgrow its container and scroll — plain `center`/`flex-end`
    would then push the leading tab out of the scrollable range where nothing
    could ever bring it back (confirmed live: a fully centered overflowing row
    makes its own start unreachable, even by scrolling all the way). The `safe`
@@ -70,11 +81,13 @@
    whole (invalid) declaration rather than applying it partially, leaving the
    plain `.alignCenter`/`.alignEnd` rule above in effect — center/end-aligned
    without the safety net, not broken. */
-.list[data-orientation="horizontal"].alignCenter {
+.list[data-orientation="horizontal"].alignCenter,
+.list[data-orientation="vertical"].alignCenter {
   justify-content: safe center;
 }
 
-.list[data-orientation="horizontal"].alignEnd {
+.list[data-orientation="horizontal"].alignEnd,
+.list[data-orientation="vertical"].alignEnd {
   justify-content: safe flex-end;
 }
 
@@ -82,7 +95,8 @@
    sits on top of. Horizontal: an inset shadow, because it is painted inside the
    list's own padding box, so the scrolling clip can't cut it or the bar, and
    it stays put as the tabs scroll. Vertical: a real border on the side that
-   faces the panel — nothing scrolls there, so nothing clips the bar. */
+   faces the panel — a border paints on the element's own border box, not its
+   scrollable content, so it stays put the same way if the list scrolls too. */
 .listUnderline[data-orientation="horizontal"] {
   box-shadow: inset 0 calc(-1 * var(--dbm-border-width-1)) 0 0 var(--dbm-border-default);
 }
@@ -97,16 +111,21 @@
   gap: var(--dbm-space-1);
 }
 
-/* --- Overflow: the wrapper around a horizontal list, and its edge fades ---
-   Only rendered for a horizontal list (`Tabs.tsx`) — a vertical one never
-   scrolls, so it renders the bare list with no wrapper, unchanged. `position:
-   relative` makes it the positioning parent for the fades and the scroll
-   buttons below, which must sit OUTSIDE the scrolling element itself: inside
-   it, they would themselves scroll away and add to what has to be scrolled
-   past. Sized like the list used to be sized directly (no `flex`/`display` of
-   its own beyond what a plain block needs), so wrapping it changes nothing
-   about the row's own layout. */
+/* --- Overflow: the wrapper around the list, and its edge fades ---
+   Rendered for both orientations (`Tabs.tsx`) — a horizontal list scrolls when
+   wider than its container, a vertical one when taller than the height it's
+   given. `position: relative` makes it the positioning parent for the fades
+   and the scroll buttons below, which must sit OUTSIDE the scrolling element
+   itself: inside it, they would themselves scroll away and add to what has to
+   be scrolled past. Sized like the list used to be sized directly (no
+   `flex`/`display` of its own beyond what a plain block needs), so wrapping
+   it changes nothing about the row's (or column's) own layout. `min-*-size:
+   0` on both axes: harmless on whichever axis doesn't apply to a given
+   orientation, and lets the wrapper shrink below its content's size on the
+   one that does, the same reason a flex item needs it anywhere else in this
+   system. */
 .listWrapper {
+  min-block-size: 0;
   min-inline-size: 0;
   position: relative;
 }
@@ -119,13 +138,11 @@
    give, shown only while there is truly more that way. `::before`/`::after`
    rather than real elements: nothing here is interactive or has content, so
    there's nothing for `aria-hidden` to do that a pseudo-element (already
-   outside the accessibility tree) doesn't do for free. */
+   outside the accessibility tree) doesn't do for free. Shared, orientation-
+   agnostic properties only — size/position/background differ by axis below. */
 .listWrapper::before,
 .listWrapper::after {
-  block-size: 100%;
   content: "";
-  inline-size: var(--dbm-space-10);
-  inset-block: 0;
   opacity: 0;
   pointer-events: none;
   position: absolute;
@@ -133,12 +150,19 @@
   z-index: var(--dbm-z-index-dropdown);
 }
 
-.listWrapper::before {
+.listWrapper[data-orientation="horizontal"]::before,
+.listWrapper[data-orientation="horizontal"]::after {
+  block-size: 100%;
+  inline-size: var(--dbm-space-10);
+  inset-block: 0;
+}
+
+.listWrapper[data-orientation="horizontal"]::before {
   background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
   inset-inline-start: 0;
 }
 
-.listWrapper::after {
+.listWrapper[data-orientation="horizontal"]::after {
   background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
   inset-inline-end: 0;
 }
@@ -148,13 +172,33 @@
    selector), the same mechanism `Pagination`'s own arrows use, so it follows
    the real, inherited direction rather than only an element carrying the
    attribute itself. Position (`inset-inline-*` above) already mirrors on its
-   own; only the gradient's two colour stops need swapping. */
-.listWrapper:dir(rtl)::before {
+   own; only the gradient's two colour stops need swapping. Block-axis only:
+   a vertical list's top/bottom fade below is unaffected by inline direction. */
+.listWrapper[data-orientation="horizontal"]:dir(rtl)::before {
   background: linear-gradient(to left, var(--dbm-bg-surface), transparent);
 }
 
-.listWrapper:dir(rtl)::after {
+.listWrapper[data-orientation="horizontal"]:dir(rtl)::after {
   background: linear-gradient(to right, var(--dbm-bg-surface), transparent);
+}
+
+/* Vertical's own fade band: full width, fixed height, pinned to the top/bottom
+   edge instead of the left/right one — otherwise the identical idea. */
+.listWrapper[data-orientation="vertical"]::before,
+.listWrapper[data-orientation="vertical"]::after {
+  block-size: var(--dbm-space-10);
+  inline-size: 100%;
+  inset-inline: 0;
+}
+
+.listWrapper[data-orientation="vertical"]::before {
+  background: linear-gradient(to bottom, var(--dbm-bg-surface), transparent);
+  inset-block-start: 0;
+}
+
+.listWrapper[data-orientation="vertical"]::after {
+  background: linear-gradient(to top, var(--dbm-bg-surface), transparent);
+  inset-block-end: 0;
 }
 
 .listWrapper[data-overflow-start="true"]::before,
@@ -174,14 +218,25 @@
   align-items: center;
   background: none;
   border: none;
-  block-size: 100%;
   color: var(--dbm-icon-default);
   cursor: pointer;
   display: flex;
   justify-content: center;
-  padding-inline: var(--dbm-space-1);
   position: absolute;
   z-index: var(--dbm-z-index-sticky);
+}
+
+/* Horizontal: a button as tall as the strip, sitting flush against the left/right
+   edge. Vertical: as wide as the column, sitting flush against the top/bottom edge —
+   the same idea, rotated onto the other axis. */
+.listWrapper[data-orientation="horizontal"] .scrollButton {
+  block-size: 100%;
+  padding-inline: var(--dbm-space-1);
+}
+
+.listWrapper[data-orientation="vertical"] .scrollButton {
+  inline-size: 100%;
+  padding-block: var(--dbm-space-1);
 }
 
 .scrollButton:not(:disabled):hover {
@@ -194,14 +249,24 @@
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
-.scrollButtonStart {
+.listWrapper[data-orientation="horizontal"] .scrollButtonStart {
   inset-block: 0;
   inset-inline-start: 0;
 }
 
-.scrollButtonEnd {
+.listWrapper[data-orientation="horizontal"] .scrollButtonEnd {
   inset-block: 0;
   inset-inline-end: 0;
+}
+
+.listWrapper[data-orientation="vertical"] .scrollButtonStart {
+  inset-block-start: 0;
+  inset-inline: 0;
+}
+
+.listWrapper[data-orientation="vertical"] .scrollButtonEnd {
+  inset-block-end: 0;
+  inset-inline: 0;
 }
 
 /* Rendered only while it still has keyboard focus but there is nothing left to
@@ -215,12 +280,14 @@
   opacity: var(--dbm-opacity-40);
 }
 
-/* Both buttons' icons point along the reading direction, so they flip under
+/* Both horizontal buttons' icons point along the reading direction, so they flip under
    right-to-left text — the same `:dir(rtl)` (not a `[dir]` attribute
    selector) technique `Pagination`'s own arrows use, applied to whichever of
    the two caret icons is rendered. `Icon`'s own `mirrored` prop is
-   unconditional (always flips), so it can't do this on its own. */
-.scrollIcon:dir(rtl) {
+   unconditional (always flips), so it can't do this on its own. Scoped to
+   horizontal only: a vertical list's up/down carets point along the block
+   axis, which inline text direction doesn't affect. */
+.listWrapper[data-orientation="horizontal"] .scrollIcon:dir(rtl) {
   transform: scaleX(-1);
 }
 
