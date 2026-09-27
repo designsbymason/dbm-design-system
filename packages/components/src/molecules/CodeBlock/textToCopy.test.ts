@@ -31,3 +31,29 @@ describe("textToCopy", () => {
     for (const language of ["bash", "sh", "shell", "zsh", "console", "BASH"]) expect(textToCopy("$ x", language, true)).toBe("x");
   });
 });
+
+describe("textToCopy costs time in proportion to the code", () => {
+  // Four times the code must cost about four times as much, not sixteen (`06-engineering-standards.md` §9).
+  const best = (code: string) => {
+    let fastest = Number.POSITIVE_INFINITY;
+    for (let run = 0; run < 3; run++) {
+      const start = performance.now();
+      textToCopy(code, "bash", true);
+      fastest = Math.min(fastest, performance.now() - start);
+    }
+    return fastest;
+  };
+
+  it.each([
+    ["blanks, then something else", (n: number) => `${" ".repeat(n)}x`],
+    ["blanks and tabs, then a dollar", (n: number) => `${" \t".repeat(n / 2)}$`],
+    ["prompts with nothing after them", (n: number) => "  $ \n".repeat(n / 5)],
+    ["dollars", (n: number) => "$".repeat(n)],
+    ["one long line with a prompt at its start", (n: number) => `$ ${"a ".repeat(n / 2)}`],
+  ])("for %s", (_name, make) => {
+    const ratio = best(make(24_000)) / Math.max(best(make(6_000)), 2);
+    // Linear is 4, quadratic 16.
+    expect(ratio).toBeLessThan(9);
+  });
+});
+
