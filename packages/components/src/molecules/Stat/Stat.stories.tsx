@@ -74,14 +74,14 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["ghost", "outlined", "filled"],
       description:
-        "The surface treatment: ghost (no border or fill — for a container that already draws a boundary, such as a Card), outlined (a solid border, a self-contained stat card), or filled (a subtle neutral fill).",
+        "The surface treatment: ghost (no border or fill — for a container that already draws a boundary, such as a Card), outlined (a solid border, a self-contained stat card), or filled (a subtle fill — plain neutral by default, or tone's own tint when tone is set).",
       table: { defaultValue: { summary: "'ghost'" } },
     },
     tone: {
       control: "select",
       options: ["neutral", "brand", "info", "success", "warning", "danger"],
       description:
-        "A colour accent for Stat.Icon's badge. neutral (the default) is uncoloured; brand follows the active Purple/Emerald theme; success, warning, danger, and info are fixed status colours. Decorative reinforcement only. Unrelated to Stat.Trend's own colour, which comes from whether the change is an improvement, not from this.",
+        "A colour accent for Stat.Icon and Stat.Label together (and, on outlined, the border, and on filled, the whole stat's own fill). neutral (the default) is uncoloured; brand follows the active Purple/Emerald theme; success, warning, danger, and info are fixed status colours. Decorative reinforcement only. Unrelated to Stat.Trend's own colour, which comes from whether the change is an improvement, not from this.",
       table: { defaultValue: { summary: "'neutral'" } },
     },
     size: {
@@ -94,7 +94,8 @@ const meta: Meta<PlaygroundArgs> = {
     orientation: {
       control: "radio",
       options: ["vertical", "horizontal"],
-      description: "Whether Stat.Icon sits above the label and value (the default) or beside them.",
+      description:
+        "Whether Stat.Icon stacks above Stat.Label (the default) or the two are paired into one row instead, the icon before the label — found and moved together wherever they appear among the other children. Everything else stays stacked either way.",
       table: { defaultValue: { summary: "'vertical'" } },
     },
     trend: {

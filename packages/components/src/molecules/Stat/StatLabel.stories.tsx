@@ -24,7 +24,8 @@ const meta: Meta<typeof Stat.Label> = {
     },
     style: {
       control: false,
-      description: "Inline styles, merged onto the component's own internal styles.",
+      description:
+        "Inline styles, merged onto the component's own internal styles. Size, weight, and uppercase are all CSS class defaults, not separate props — pass { fontWeight, textTransform } (or any other value) here to override any of them, since an inline style always wins over a class regardless of order.",
     },
     "data-testid": {
       control: false,
