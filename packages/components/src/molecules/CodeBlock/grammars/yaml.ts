@@ -29,4 +29,4 @@ const yamlRules = (): Rule[] => [
 const yamlLiterals = /* @__PURE__ */ wordSet("true false null yes no on off True False Null Yes No On Off TRUE FALSE NULL ~");
 
 /** YAML, for `registerCodeLanguage`. Also `yml`. */
-export const yamlLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("yaml", ["yml"], yamlRules);
+export const yamlLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("yaml", "YAML", ["yml"], yamlRules);

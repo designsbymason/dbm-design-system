@@ -26,7 +26,7 @@ function iniLine(line: string): TokenLine {
   if (value) tokens.push(/^\s*$/.test(value) ? { text: value } : { type: "string", text: value });
   return tokens;
 }
-const iniLanguage: CodeLanguage = { name: "ini", aliases: ["conf"], tokenize: (code) => code.split("\n").map(iniLine) };
+const iniLanguage: CodeLanguage = { name: "ini", label: "INI", aliases: ["conf"], tokenize: (code) => code.split("\n").map(iniLine) };
 registerCodeLanguage(iniLanguage);
 
 /** A highlighter for one block: log lines coloured by their level. `undefined` for any other language. */
@@ -314,7 +314,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["ts", "tsx", "js", "jsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "c", "cpp", "csharp", "kotlin", "swift", "ruby", "php", "toml", "text"],
       description:
-        "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash and diff are built in, with aliases such as typescript, sh and svg. python, yaml, sql, markdown, go, rust, java, c, cpp, csharp, kotlin, swift, ruby, php and toml (and py, yml, md, golang, rs, cs, kt, rb…) are turned on with registerCodeLanguage, and so is a grammar of your own; any other value, or none, draws plain text. Shown as a label in the header.",
+        "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash and diff are built in, with aliases such as typescript, sh and svg. python, yaml, sql, markdown, go, rust, java, c, cpp, csharp, kotlin, swift, ruby, php and toml (and py, yml, md, golang, rs, cs, kt, rb…) are turned on with registerCodeLanguage, and so is a grammar of your own; any other value, or none, draws plain text. The header names it as its owners write it (TypeScript, C#, Shell) when it is known, and otherwise as written, in capitals.",
     },
     highlighter: {
       ...noControls,
@@ -1509,7 +1509,7 @@ export const DiffNumbersInteraction: Story = {
         <CodeBlock code={samples.diffWithHunks} language="diff" showLineNumbers aria-label="Diff" copyable={false} />
       </div>
       <div style={{ maxWidth: "24rem" }} data-testid="wrapped">
-        <CodeBlock code={`@@ -1,2 +1,2 @@\n short\n+${samples.longLine}`} language="diff" showLineNumbers wrap aria-label="Wrapped diff" copyable={false} />
+        <CodeBlock code={`@@ -9,3 +9,4 @@\n short\n-old\n+new\n+${samples.longLine}`} language="diff" showLineNumbers wrap aria-label="Wrapped diff" copyable={false} />
       </div>
       <div data-testid="handwritten">
         <CodeBlock code={"- const size = 'md';\n+ const size = 'lg';"} language="diff" showLineNumbers aria-label="Hand-written diff" copyable={false} />
@@ -1552,7 +1552,13 @@ export const DiffNumbersInteraction: Story = {
     selection.removeAllRanges();
     // A wrapped row continues under its own text, past both columns.
     const wrapped = within(canvasElement).getByTestId("wrapped");
-    const long = linesOf(wrapped)[2] as HTMLElement;
+    const wrappedRows = linesOf(wrapped);
+    const long = wrappedRows[4] as HTMLElement;
+    // Only the long row takes more than one row: a short one with a two-digit number in the new column alone must not
+    // fold its gutter onto a second line (a padded gutter that wrapped doubled that row's height).
+    const rowHeight = px(getComputedStyle(wrappedRows[0]!).lineHeight);
+    for (const row of wrappedRows.slice(0, 4)) await expect(rect(row).height).toBeLessThan(1.5 * rowHeight);
+    await expect(rect(long).height).toBeGreaterThan(2 * rowHeight);
     const range = document.createRange();
     range.selectNodeContents(long);
     const rowStarts = new Map<number, number>();
@@ -1570,4 +1576,146 @@ export const DiffNumbersInteraction: Story = {
     for (const row of linesOf(within(canvasElement).getByTestId("handwritten"))) await expect(["none", "normal"]).toContain(getComputedStyle(row, "::before").content);
   },
 };
+
+export const LanguageLabelInteraction: Story = {
+  ...Playground,
+  name: "Interaction: a known language is named as its owners write it, an unknown one is set in capitals as written",
+  tags: ["!dev"],
+  render: () => (
+    <div style={stack}>
+      {(["ts", "tsx", "csharp", "cpp", "cobol"] as const).map((language) => (
+        <div key={language} data-testid={language}>
+          <CodeBlock code="a" language={language} aria-label={language} copyable={false} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const labelOf = (testId: string) => canvasElement.querySelector(`[data-testid="${testId}"] figcaption span span`) as HTMLElement;
+    // Named: the name as it is written, in its own case (a capitalised style would turn "TypeScript" into "TYPESCRIPT").
+    for (const [testId, name] of [["ts", "TypeScript"], ["tsx", "TSX"], ["csharp", "C#"], ["cpp", "C++"]] as const) {
+      await expect(labelOf(testId).textContent).toBe(name);
+      await expect(getComputedStyle(labelOf(testId)).textTransform).toBe("none");
+    }
+    // Not known: what was written, set in capitals as a code, which is how every language label used to look.
+    await expect(labelOf("cobol").textContent).toBe("cobol");
+    await expect(getComputedStyle(labelOf("cobol")).textTransform).toBe("uppercase");
+  },
+};
+
+export const PrintInteraction: Story = {
+  ...Playground,
+  name: "Interaction: printed, a block is whole and legible in any theme: nothing clipped, no buttons, black on white with emphasis",
+  tags: ["!dev"],
+  render: () => (
+    <div style={stack}>
+      <div data-testid="collapsed">
+        <CodeBlock code={Array.from({ length: 12 }, (_, index) => `const line${index + 1} = ${index + 1}; // note`).join("\n")} language="ts" showLineNumbers highlightLines={[2]} collapsible collapsedLines={4} wrapToggle title="a.ts" aria-label="Collapsed" />
+      </div>
+      <div data-testid="tall">
+        <CodeBlock code={Array.from({ length: 12 }, (_, index) => `line ${index + 1}`).join("\n")} language="text" maxHeight="4rem" aria-label="Tall" />
+      </div>
+      <div style={{ maxWidth: "20rem" }} data-testid="long">
+        <CodeBlock code={samples.longLine} language="bash" showLineNumbers aria-label="Long line" />
+      </div>
+      <div data-testid="floating">
+        <CodeBlock code="export const a = 1;" language="ts" showHeader={false} wrapToggle aria-label="No header" />
+      </div>
+      <div data-testid="buttons-only">
+        <CodeBlock code="export const a = 1;" language="ts" showLanguage={false} aria-label="Buttons only" />
+      </div>
+      <div data-testid="diff">
+        <CodeBlock code={"@@ -9,2 +9,3 @@\n a\n-b\n+c\n+d"} language="diff" showLineNumbers aria-label="Diff" copyable={false} />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const emulate = (media: "print" | "") => send("Emulation.setEmulatedMedia", { media });
+    const colour = (value: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = value;
+      document.body.appendChild(probe);
+      const resolved = getComputedStyle(probe).color;
+      probe.remove();
+      return resolved;
+    };
+    const block = (testId: string) => within(canvasElement).getByTestId(testId);
+    // Drawn at all: an element inside a hidden parent keeps its own `display`, but has no box.
+    const visible = (element: Element) => element.getClientRects().length > 0;
+    // A dark theme on screen: its syntax colours are pale, which is what would print as faint text on white paper.
+    const theme = document.documentElement.dataset.theme;
+    document.documentElement.dataset.theme = "purple-dark";
+    await emulate("print");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await expect(window.matchMedia("print").matches).toBe(true);
+      const black = colour("CanvasText");
+      const white = colour("Canvas");
+      // Black on white, in every token, whatever the screen theme; keywords and added lines heavier.
+      const collapsed = block("collapsed");
+      const root = collapsed.firstElementChild as HTMLElement;
+      await expect(getComputedStyle(root).backgroundColor).toBe(white);
+      await expect(getComputedStyle(root).color).toBe(black);
+      for (const token of collapsed.querySelectorAll<HTMLElement>("code span[data-line] > span")) await expect(getComputedStyle(token).color).toBe(black);
+      const keyword = [...collapsed.querySelectorAll<HTMLElement>("code span[data-line] > span")].find((token) => token.textContent === "const") as HTMLElement;
+      await expect(Number(getComputedStyle(keyword).fontWeight)).toBeGreaterThanOrEqual(600);
+      const comment = [...collapsed.querySelectorAll<HTMLElement>("code span[data-line] > span")].find((token) => token.textContent?.startsWith("// note")) as HTMLElement;
+      await expect(getComputedStyle(comment).fontStyle).toBe("italic");
+      // In a diff the added line is heavier and the removed one is not, so they differ without colour.
+      const added = diffLine(block("diff"), 4).firstElementChild as HTMLElement;
+      const removed = diffLine(block("diff"), 3).firstElementChild as HTMLElement;
+      // And nothing wraps that should not: every row of the printed diff, a padded two-digit gutter included, is one row.
+      const diffRows = linesOf(block("diff"));
+      for (const row of diffRows) await expect(rect(row).height).toBeLessThan(1.5 * px(getComputedStyle(row).lineHeight));
+      await expect(Number(getComputedStyle(added).fontWeight)).toBeGreaterThanOrEqual(600);
+      await expect(Number(getComputedStyle(removed).fontWeight)).toBeLessThan(600);
+      // Not clipped: a collapsed block prints all twelve lines, its buttons and fade are gone, and a highlight is a solid edge.
+      const frame = collapsed.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+      const lines = linesOf(collapsed);
+      await expect(getComputedStyle(frame).maxHeight).toBe("none");
+      // Not a scroll frame on paper, either way.
+      await expect(getComputedStyle(frame).overflowY).toBe("visible");
+      await expect(getComputedStyle(frame).overflowX).toBe("visible");
+      await expect(rect(lines[11]!).bottom).toBeLessThanOrEqual(rect(frame).bottom + 1);
+      await expect(frame.scrollHeight).toBeLessThanOrEqual(frame.clientHeight + 1);
+      for (const button of collapsed.querySelectorAll("button")) await expect(visible(button)).toBe(false);
+      await expect(visible(collapsed.querySelector("[aria-hidden='true']:empty") as Element)).toBe(false);
+      const highlighted = getComputedStyle(lines[1]!);
+      await expect(highlighted.borderInlineStartColor).toBe(black);
+      await expect(highlighted.borderInlineStartStyle).toBe("solid");
+      await expect(px(highlighted.borderInlineStartWidth)).toBe(resolveLength("--dbm-border-width-4"));
+      await expect(highlighted.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+      await expect(getComputedStyle(lines[0]!, "::before").color).toBe(colour("GrayText"));
+      // A `maxHeight` block prints in full too.
+      const tall = block("tall");
+      const tallFrame = tall.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+      await expect(rect(tallFrame).height).toBeGreaterThan(resolveLength("--dbm-space-8") * 2);
+      await expect(tallFrame.scrollHeight).toBeLessThanOrEqual(tallFrame.clientHeight + 1);
+      await expect(getComputedStyle(tallFrame).overflowY).toBe("visible");
+      // A long line wraps within the page instead of running off the edge of its scroll frame, under its own text.
+      const long = block("long");
+      const longFrame = long.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+      await expect(longFrame.scrollWidth).toBeLessThanOrEqual(longFrame.clientWidth + 1);
+      await expect(rect(linesOf(long)[0]!).height).toBeGreaterThan(2 * px(getComputedStyle(linesOf(long)[0]!).lineHeight));
+      // No room is kept for corner buttons that are not printed; a header that would hold only buttons is not drawn.
+      const floating = block("floating");
+      await expect(px(getComputedStyle(floating.querySelector("pre") as HTMLElement).paddingTop)).toBeCloseTo(resolveLength("--dbm-space-4"), 0);
+      for (const button of floating.querySelectorAll("button")) await expect(visible(button)).toBe(false);
+      await expect(visible(block("buttons-only").querySelector("figcaption") as Element)).toBe(false);
+    } finally {
+      await emulate("");
+      if (theme) document.documentElement.dataset.theme = theme;
+    }
+    // Back on screen: the buttons and the token colours return.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(window.matchMedia("print").matches).toBe(false);
+    await expect(visible(block("collapsed").querySelector("button") as Element)).toBe(true);
+    await expect(getComputedStyle(block("collapsed").querySelector("code span[data-line] > span") as Element).color).not.toBe("rgb(0, 0, 0)");
+  },
+};
+
+/** One row of a block, by its position. */
+function diffLine(block: HTMLElement, number: number): HTMLElement {
+  return block.querySelector<HTMLElement>(`span[data-line="${number}"]`) as HTMLElement;
+}
 

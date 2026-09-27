@@ -61,10 +61,11 @@ export const atLineStart = (_code: string, _position: number, state: State) => s
  * A `CodeLanguage` from a list of rules. The rules are built on first use, so importing a language costs nothing until a
  * block draws it, and it is a single call marked as pure, so a bundler drops one nobody imports.
  */
-export const defineLanguage = (name: string, aliases: string[], rules: () => Rule[]): CodeLanguage => {
+export const defineLanguage = (name: string, label: string, aliases: string[], rules: () => Rule[]): CodeLanguage => {
   let built: Rule[] | undefined;
   return {
     name,
+    label,
     aliases,
     maxLength: MAX_HIGHLIGHT_LENGTH,
     tokenize: (code) => toLines(scan(code, (built ??= rules()))),

@@ -31,4 +31,4 @@ const swiftRules = (): Rule[] =>
   });
 
 /** Swift, for `registerCodeLanguage`. */
-export const swiftLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("swift", [], swiftRules);
+export const swiftLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("swift", "Swift", [], swiftRules);

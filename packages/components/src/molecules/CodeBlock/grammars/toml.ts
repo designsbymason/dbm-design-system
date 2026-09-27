@@ -33,4 +33,4 @@ const tomlRules = (): Rule[] => [
 ];
 
 /** TOML, for `registerCodeLanguage`. */
-export const tomlLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("toml", [], tomlRules);
+export const tomlLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("toml", "TOML", [], tomlRules);

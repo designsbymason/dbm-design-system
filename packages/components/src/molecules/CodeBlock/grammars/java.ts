@@ -24,4 +24,4 @@ const javaRules = (): Rule[] => [
 ];
 
 /** Java, for `registerCodeLanguage`. */
-export const javaLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("java", [], javaRules);
+export const javaLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("java", "Java", [], javaRules);

@@ -36,4 +36,4 @@ const markdownRules = (): Rule[] => [
 ];
 
 /** Markdown, for `registerCodeLanguage`. Also `md`. */
-export const markdownLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("markdown", ["md"], markdownRules);
+export const markdownLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("markdown", "Markdown", ["md"], markdownRules);

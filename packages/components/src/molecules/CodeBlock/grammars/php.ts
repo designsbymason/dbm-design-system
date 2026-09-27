@@ -33,4 +33,4 @@ const phpRules = (): Rule[] => [
 ];
 
 /** PHP, for `registerCodeLanguage`. */
-export const phpLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("php", [], phpRules);
+export const phpLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("php", "PHP", [], phpRules);

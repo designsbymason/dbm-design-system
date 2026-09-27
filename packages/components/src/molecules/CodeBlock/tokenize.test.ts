@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as shipped from "./languages";
 import { registerCodeLanguage } from "./registry";
-import { MAX_HIGHLIGHT_LENGTH, resolveLanguage, tokenize } from "./tokenize";
+import { builtinLabel, MAX_HIGHLIGHT_LENGTH, resolveLanguage, tokenize } from "./tokenize";
 
 // The seven languages that ship outside the core are opt-in; this suite exercises their grammars through `tokenize`,
 // as an app that registers them would. (`registry.test.ts` covers what registering does, and not doing it.)
@@ -673,3 +673,41 @@ describe("diff", () => {
     ]);
   });
 });
+
+describe("builtinLabel", () => {
+  it("names every built-in language and its aliases, in any case and with spaces around", () => {
+    expect(builtinLabel("ts")).toBe("TypeScript");
+    expect(builtinLabel(" TypeScript ")).toBe("TypeScript");
+    expect(builtinLabel("mjs")).toBe("JavaScript");
+    expect(builtinLabel("jsonc")).toBe("JSONC");
+    expect(builtinLabel("zsh")).toBe("Zsh");
+    expect(builtinLabel("patch")).toBe("Diff");
+  });
+
+  it("names an alias by what was written, not by the language it resolves to", () => {
+    expect(builtinLabel("svg")).toBe("SVG");
+    expect(builtinLabel("xml")).toBe("XML");
+    expect(builtinLabel("scss")).toBe("SCSS");
+    expect(builtinLabel("sh")).toBe("Shell");
+  });
+
+  it("has no name for a language it does not know, a value that is not text, or a name every object has", () => {
+    for (const value of ["cobol", "", "python", undefined, null, 5, {}, "constructor", "toString", "__proto__", "hasOwnProperty"]) {
+      expect(builtinLabel(value), String(value)).toBeUndefined();
+    }
+  });
+
+  it("does not name a value that only reads like a language once it is turned into text", () => {
+    expect(builtinLabel(["ts"])).toBeUndefined();
+    expect(builtinLabel({ toString: () => "ts" })).toBeUndefined();
+    expect(builtinLabel(new String("ts"))).toBeUndefined();
+  });
+
+  it("names every language that resolves to a grammar", () => {
+    for (const name of ["js", "javascript", "mjs", "cjs", "jsx", "ts", "typescript", "mts", "cts", "tsx", "json", "jsonc", "css", "scss", "html", "xml", "svg", "bash", "sh", "shell", "zsh", "console", "diff", "patch"]) {
+      expect(resolveLanguage(name), name).toBeDefined();
+      expect(builtinLabel(name), name).toBeDefined();
+    }
+  });
+});
+

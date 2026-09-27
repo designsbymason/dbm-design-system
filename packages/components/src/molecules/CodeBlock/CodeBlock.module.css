@@ -83,6 +83,10 @@
   color: var(--dbm-text-secondary);
   font-family: var(--dbm-font-family-mono);
   font-size: var(--dbm-font-size-xs);
+}
+
+/* A language with no friendly name is shown as it was written, in capitals, as a code: TS, COBOL. */
+.languageRaw {
   text-transform: uppercase;
 }
 
@@ -179,11 +183,14 @@
 }
 
 /* A diff with hunk headers: an old and a new number in the one gutter, as a single string padded with spaces to two equal
-   columns (they line up because the code is monospaced, and the spaces are kept because the line is inside a `pre`).
-   Everything else about the numbers is the same as above: drawn by CSS, decoration only, never selected, copied or read. */
+   columns (they line up because the code is monospaced). The string must not wrap: a wrapped or printed line breaks at a
+   space and anywhere, and a gutter that is a hair wider than its box would fold its last number onto a second row and
+   double that row's height. Everything else about the numbers is the same as above: drawn by CSS, decoration only,
+   never selected, copied or read. */
 .diffNumbered .line::before {
   content: attr(data-numbers);
   content: attr(data-numbers) / "";
+  white-space: pre;
 }
 
 /* Wrapping: the code is only as wide as the block, and long lines break where they must. */
@@ -284,3 +291,93 @@
     display: none;
   }
 }
+
+/* Print. A printed page gets a block that is all there and legible, whatever the theme on screen:
+   - nothing is clipped or hidden away: a collapsed block and a `maxHeight` block print in full (the inline height is
+     overridden, which is why it needs `!important`), and a long line wraps under its own text instead of running off
+     the edge of a scroll frame;
+   - the buttons, the collapse fade and a header that would hold only buttons are left out, and so is the room kept
+     for the corner buttons;
+   - backgrounds are not printed unless the reader asks, and the syntax colours are chosen for a screen (pale ones
+     in a dark theme), so the block prints as the page's own text colour on its own background (the system colours,
+     `CanvasText` on `Canvas`), with the emphasis a colour carried: keywords and added lines heavier, comments
+     italic (already), a grey gutter, and a solid edge for a highlighted line (its band is a background);
+   - a block that fits on a page is not split across two, and a line never is. */
+@media print {
+  .root {
+    background-color: Canvas;
+    border-color: GrayText;
+    break-inside: avoid;
+    color: CanvasText;
+    overflow: visible;
+  }
+
+  .header {
+    border-block-end-color: GrayText;
+    break-after: avoid;
+  }
+
+  .headerControlsOnly,
+  .controls,
+  .footer,
+  .fade {
+    display: none;
+  }
+
+  .title {
+    color: CanvasText;
+  }
+
+  .language {
+    color: GrayText;
+  }
+
+  .hasFloating .body {
+    --code-block-top: var(--code-block-pad);
+  }
+
+  .frame,
+  .collapsed .frame {
+    color: CanvasText;
+    max-height: none !important;
+    overflow: visible;
+  }
+
+  .code {
+    min-width: 0;
+  }
+
+  .line {
+    break-inside: avoid;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .line[data-highlighted="true"] {
+    background-color: transparent;
+    border-inline-start-color: CanvasText;
+  }
+
+  .numbered .line::before {
+    color: GrayText;
+  }
+
+  .keyword,
+  .string,
+  .number,
+  .function,
+  .type,
+  .property,
+  .tag,
+  .comment,
+  .inserted,
+  .deleted {
+    color: inherit;
+  }
+
+  .keyword,
+  .inserted {
+    font-weight: var(--dbm-font-weight-semibold);
+  }
+}
+

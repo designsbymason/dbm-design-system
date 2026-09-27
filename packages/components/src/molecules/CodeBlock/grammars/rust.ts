@@ -33,4 +33,4 @@ const rustRules = (): Rule[] => [
 ];
 
 /** Rust, for `registerCodeLanguage`. Also `rs`. */
-export const rustLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("rust", ["rs"], rustRules);
+export const rustLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("rust", "Rust", ["rs"], rustRules);

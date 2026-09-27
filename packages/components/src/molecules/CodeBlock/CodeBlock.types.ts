@@ -68,7 +68,8 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    * `markdown`, `go`, `rust`, `java`, `c`, `cpp`, `csharp`, `kotlin`, `swift`, `ruby`, `php` and `toml` (with `py`,
    * `yml`, `postgres`, `md`, `golang`, `rs`, `h`, `c++`, `cs`, `kt`, `rb`…) are languages an app turns on with
    * `registerCodeLanguage`, and so is any grammar of its own. Any other value, or none, draws the code as plain
-   * text. Shown as a label in the header, as written.
+   * text. The header names it as its owners write it (`TypeScript`, `C#`, `Shell`) when the language is known, and
+   * otherwise as written, in capitals.
    */
   language?: string;
   /**

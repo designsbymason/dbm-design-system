@@ -20,7 +20,7 @@ import { findRegisteredLanguage } from "./registry";
 import { MAX_HIGHLIGHT_LENGTH } from "./tokenizeTypes";
 import type { CodeLanguage, Highlighter, TokenLine } from "./tokenizeTypes";
 
-export { resolveLanguage } from "./builtinGrammars";
+export { builtinLabel, resolveLanguage } from "./builtinGrammars";
 export { MAX_HIGHLIGHT_LENGTH } from "./tokenizeTypes";
 export type { CodeLanguage, Highlighter, HighlightLanguage, Token, TokenLine, TokenType } from "./tokenizeTypes";
 

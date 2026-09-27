@@ -21,4 +21,4 @@ const cRules = (): Rule[] =>
   });
 
 /** C, for `registerCodeLanguage`. Also `h`. */
-export const cLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("c", ["h"], cRules);
+export const cLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("c", "C", ["h"], cRules);

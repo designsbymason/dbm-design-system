@@ -26,4 +26,4 @@ const pythonRules = (): Rule[] => [
 ];
 
 /** Python, for `registerCodeLanguage`. Also `py` and `python3`. */
-export const pythonLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("python", ["py", "python3"], pythonRules);
+export const pythonLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("python", "Python", ["py", "python3"], pythonRules);

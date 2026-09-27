@@ -35,4 +35,4 @@ const csharpRules = (): Rule[] =>
   });
 
 /** C#, for `registerCodeLanguage`. Also `cs` and `csharp`. */
-export const csharpLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("csharp", ["cs", "c#"], csharpRules);
+export const csharpLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("csharp", "C#", ["cs", "c#"], csharpRules);

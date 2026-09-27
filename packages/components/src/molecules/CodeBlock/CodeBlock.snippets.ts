@@ -45,7 +45,8 @@ export const codeBlockSnippets = {
 
   ownLanguage: `{/* A language of your own: a name and a function from the code to lines of { type?, text } tokens (never HTML).
     Register it once, when the app starts, and it wins over a built-in language of the same name:
-    registerCodeLanguage({ name: "ini", tokenize: (code) => code.split("\\n").map(iniLine) });
+    registerCodeLanguage({ name: "ini", label: "INI", tokenize: (code) => code.split("\\n").map(iniLine) });
+    (label is the name the header shows for it; leave it out and the header shows "ini", as written, in capitals)
     A block can also highlight itself: return the lines, or undefined to leave it to the registered and built-in
     languages. Whatever comes back must join back to the code, or the block is drawn plain.
     const logHighlighter: CodeHighlighter = (code, language) => language === "log" ? tokensFor(code) : undefined;

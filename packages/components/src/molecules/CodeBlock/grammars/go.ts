@@ -28,4 +28,4 @@ const goRules = (): Rule[] => [
 ];
 
 /** Go, for `registerCodeLanguage`. Also `golang`. */
-export const goLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("go", ["golang"], goRules);
+export const goLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("go", "Go", ["golang"], goRules);

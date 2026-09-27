@@ -41,4 +41,4 @@ const rubyRules = (): Rule[] => {
 };
 
 /** Ruby, for `registerCodeLanguage`. Also `rb`. */
-export const rubyLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("ruby", ["rb"], rubyRules);
+export const rubyLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("ruby", "Ruby", ["rb"], rubyRules);

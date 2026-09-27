@@ -36,6 +36,11 @@ export interface CodeLanguage {
   /** Other names for it, such as `py` for `python`. */
   aliases?: readonly string[];
   /**
+   * The name shown for it in a block's header, as its owners write it (`TypeScript`, `C#`). Leave it out and the
+   * header shows the `language` as it was written. It is a proper name, so it is not translated.
+   */
+  label?: string;
+  /**
    * The longest text, in characters, this language should be given: longer text is drawn as plain lines instead.
    * The languages that ship with the library set it (30,000, so a huge input can't stall a page); leave it out
    * and there is no limit, which makes the cost of a large block yours.

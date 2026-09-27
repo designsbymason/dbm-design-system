@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CodeBlock } from "./CodeBlock";
 import styles from "./CodeBlock.module.css";
 import iconButtonStyles from "../../atoms/IconButton/IconButton.module.css";
-import { pythonLanguage } from "./grammars";
+import { csharpLanguage, pythonLanguage } from "./grammars";
 import { registerCodeLanguage } from "./registry";
 import type { Highlighter } from "./tokenizeTypes";
 
@@ -96,7 +96,7 @@ describe("CodeBlock", () => {
     it("is named by its title, and shows it with the language", () => {
       render(<CodeBlock code={source} language="ts" title="greet.ts" />);
       expect(screen.getByRole("figure", { name: "greet.ts" })).toBeInTheDocument();
-      expect(screen.getByText("ts")).toBeInTheDocument();
+      expect(screen.getByText("TypeScript")).toBeInTheDocument();
     });
 
     it("prefers aria-label, then aria-labelledby, to the title", () => {
@@ -613,7 +613,7 @@ describe("CodeBlock: showHeader and showLanguage", () => {
     const { container } = render(<CodeBlock code="a" title="x.ts" language="ts" />);
     const header = container.querySelector("figcaption") as HTMLElement;
     expect(within(header).getByText("x.ts")).toBeInTheDocument();
-    expect(within(header).getByText("ts")).toBeInTheDocument();
+    expect(within(header).getByText("TypeScript")).toBeInTheDocument();
     expect(within(header).getByRole("button", { name: "Copy code" })).toBeInTheDocument();
   });
 
@@ -621,7 +621,7 @@ describe("CodeBlock: showHeader and showLanguage", () => {
     it("leaves the language out of the header, and keeps the title and the buttons", () => {
       const { container } = render(<CodeBlock code="a" title="x.ts" language="ts" showLanguage={false} />);
       const header = container.querySelector("figcaption") as HTMLElement;
-      expect(within(header).queryByText("ts")).not.toBeInTheDocument();
+      expect(within(header).queryByText("TypeScript")).not.toBeInTheDocument();
       expect(within(header).getByText("x.ts")).toBeInTheDocument();
       expect(within(header).getByRole("button", { name: "Copy code" })).toBeInTheDocument();
     });
@@ -643,7 +643,7 @@ describe("CodeBlock: showHeader and showLanguage", () => {
       const { container } = render(<CodeBlock code="a" title="x.ts" language="ts" showHeader={false} />);
       expect(container.querySelector("figcaption")).toBeNull();
       expect(screen.queryByText("x.ts")).not.toBeInTheDocument();
-      expect(screen.queryByText("ts")).not.toBeInTheDocument();
+      expect(screen.queryByText("TypeScript")).not.toBeInTheDocument();
     });
 
     it("keeps the copy button and the wrap toggle in the corner of the code, ahead of it in the tab order", () => {
@@ -810,6 +810,71 @@ describe("CodeBlock: diff line numbers", () => {
   it("has no accessibility violations", async () => {
     const { container } = render(<CodeBlock code={diff} language="diff" showLineNumbers title="total.diff" />);
     expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("CodeBlock: the language label", () => {
+  const cleanup: Array<() => void> = [];
+  afterEach(() => {
+    while (cleanup.length) cleanup.pop()?.();
+  });
+  const label = (name: string) => screen.getByText(name);
+
+  it("shows a built-in language by its name, as the name is written", () => {
+    const cases: Array<[string, string]> = [
+      ["ts", "TypeScript"], ["typescript", "TypeScript"], ["tsx", "TSX"], ["js", "JavaScript"], ["jsx", "JSX"], ["json", "JSON"],
+      ["css", "CSS"], ["html", "HTML"], ["svg", "SVG"], ["xml", "XML"], ["scss", "SCSS"], ["bash", "Bash"], ["sh", "Shell"], ["diff", "Diff"], ["patch", "Diff"],
+    ];
+    for (const [language, name] of cases) {
+      const { unmount } = render(<CodeBlock code="a" language={language} />);
+      expect(label(name), language).not.toHaveClass(styles.languageRaw as string);
+      unmount();
+    }
+  });
+
+  it("shows a name it does not know as it was written, in the raw style, and keeps data-language as written", () => {
+    render(<CodeBlock code="a" language="cobol" />);
+    expect(label("cobol")).toHaveClass(styles.languageRaw as string);
+    expect(screen.getByRole("figure")).toHaveAttribute("data-language", "cobol");
+  });
+
+  it("keeps data-language as written when it shows a friendly name", () => {
+    render(<CodeBlock code="a" language="TS" />);
+    expect(label("TypeScript")).toBeInTheDocument();
+    expect(screen.getByRole("figure")).toHaveAttribute("data-language", "TS");
+  });
+
+  it("shows an opt-in language as it was written until it is registered, and by its name after", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<CodeBlock code="a" language="cs" />);
+    expect(label("cs")).toHaveClass(styles.languageRaw as string);
+    act(() => void cleanup.push(registerCodeLanguage(csharpLanguage)));
+    expect(label("C#")).not.toHaveClass(styles.languageRaw as string);
+  });
+
+  it("takes an app's own language's label, ahead of a built-in name, and trims it", () => {
+    cleanup.push(registerCodeLanguage({ name: "ts", label: "  Typed JS ", tokenize: (code) => [[{ text: code }]] }));
+    render(<CodeBlock code="a" language="ts" />);
+    expect(label("Typed JS")).toBeInTheDocument();
+  });
+
+  it("falls back to the built-in name, then to what was written, when a registered language has no usable label", () => {
+    cleanup.push(registerCodeLanguage({ name: "ts", tokenize: (code) => [[{ text: code }]] }));
+    cleanup.push(registerCodeLanguage({ name: "mine", label: 5 as never, tokenize: (code) => [[{ text: code }]] }));
+    cleanup.push(registerCodeLanguage({ name: "blank", label: "   ", tokenize: (code) => [[{ text: code }]] }));
+    const { rerender } = render(<CodeBlock code="a" language="ts" />);
+    expect(label("TypeScript")).toBeInTheDocument();
+    rerender(<CodeBlock code="a" language="mine" />);
+    expect(label("mine")).toHaveClass(styles.languageRaw as string);
+    rerender(<CodeBlock code="a" language="blank" />);
+    expect(label("blank")).toHaveClass(styles.languageRaw as string);
+  });
+
+  it("says nothing when the language is hidden, and has no label for a value that is not a string", () => {
+    const { rerender } = render(<CodeBlock code="a" language="ts" showLanguage={false} />);
+    expect(screen.queryByText("TypeScript")).not.toBeInTheDocument();
+    rerender(<CodeBlock code="a" language={5 as never} title="x" />);
+    expect(document.querySelector("figcaption")).toBeInTheDocument();
   });
 });
 

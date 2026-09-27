@@ -12,7 +12,7 @@ import { diffGutter, parseDiffNumbers } from "./diffNumbers";
 import { parseHighlightLines } from "./highlightLines";
 import { findRegisteredLanguage, subscribeToCodeLanguages } from "./registry";
 import { textToCopy } from "./textToCopy";
-import { resolveLanguage, tokenize } from "./tokenize";
+import { builtinLabel, resolveLanguage, tokenize } from "./tokenize";
 import type { TokenType } from "./tokenize";
 import { useCodeScroll } from "./useCodeScroll";
 import { useCollapsedHeight } from "./useCollapsedHeight";
@@ -218,6 +218,10 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       }
     }, [codeIsNotText]);
 
+    // What the header calls the language: an app's own name for it (a registered language's `label`), else the built-in
+    // one, else what was written, which is set in capitals as a code. A label that isn't a string is ignored.
+    const registeredLabel = typeof registered?.label === "string" ? registered.label.trim() : "";
+    const friendlyLanguage = registeredLabel || builtinLabel(language);
     const hasControls = copyable || wrapToggle;
     const languageIsDrawn = Boolean(language) && showLanguage;
     const hasHeader = showHeader && (titleIsDrawn || languageIsDrawn || hasControls);
@@ -273,14 +277,16 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
         data-language={language || undefined}
       >
         {hasHeader && (
-          <figcaption className={styles.header}>
+          <figcaption className={cx(styles.header, !(titleIsDrawn || languageIsDrawn) && styles.headerControlsOnly)}>
             <span className={styles.meta}>
               {titleIsDrawn && (
                 <span id={titleId} className={styles.title}>
                   {title}
                 </span>
               )}
-              {languageIsDrawn && <span className={styles.language}>{language}</span>}
+              {languageIsDrawn && (
+                <span className={cx(styles.language, !friendlyLanguage && styles.languageRaw)}>{friendlyLanguage || language}</span>
+              )}
             </span>
             {controls}
           </figcaption>

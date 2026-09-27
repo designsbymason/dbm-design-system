@@ -33,4 +33,4 @@ const sqlRules = (): Rule[] => [
 ];
 
 /** SQL, for `registerCodeLanguage`. Also `postgresql`, `postgres`, `pgsql`, `mysql` and `sqlite`. */
-export const sqlLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("sql", ["postgresql", "postgres", "pgsql", "mysql", "sqlite"], sqlRules);
+export const sqlLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("sql", "SQL", ["postgresql", "postgres", "pgsql", "mysql", "sqlite"], sqlRules);

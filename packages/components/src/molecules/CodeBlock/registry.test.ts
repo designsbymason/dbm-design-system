@@ -331,3 +331,15 @@ describe("an opt-in language nobody registered", () => {
     expect(optInLanguageExports).toEqual(fromGrammars);
   });
 });
+
+describe("the languages' names", () => {
+  const all = { pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage, cLanguage, cppLanguage, csharpLanguage, kotlinLanguage, swiftLanguage, rubyLanguage, phpLanguage, tomlLanguage };
+
+  it("gives every shipped language a name of its own, as its owners write it", () => {
+    const labels = Object.values(all).map((language) => language.label);
+    for (const label of labels) expect(typeof label === "string" && label.trim() !== "").toBe(true);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels).toEqual(expect.arrayContaining(["C#", "C++", "PHP", "TOML", "YAML", "SQL", "Kotlin"]));
+  });
+});
+

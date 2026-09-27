@@ -30,4 +30,4 @@ const cppRules = (): Rule[] =>
   });
 
 /** C++, for `registerCodeLanguage`. Also `c++`, `cc`, `cxx`, `hpp` and `hh`. */
-export const cppLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("cpp", ["c++", "cc", "cxx", "hpp", "hh"], cppRules);
+export const cppLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("cpp", "C++", ["c++", "cc", "cxx", "hpp", "hh"], cppRules);

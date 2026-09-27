@@ -35,6 +35,43 @@ const aliases: Record<string, HighlightLanguage> = {
   patch: "diff",
 };
 
+// The name shown in the header for what is written as `language`, by the name as written (so `svg` reads "SVG" and
+// not "HTML"). A name that is not here is shown as it was written.
+const labels: Record<string, string> = {
+  ts: "TypeScript",
+  typescript: "TypeScript",
+  mts: "TypeScript",
+  cts: "TypeScript",
+  tsx: "TSX",
+  js: "JavaScript",
+  javascript: "JavaScript",
+  mjs: "JavaScript",
+  cjs: "JavaScript",
+  jsx: "JSX",
+  json: "JSON",
+  jsonc: "JSONC",
+  css: "CSS",
+  scss: "SCSS",
+  html: "HTML",
+  xml: "XML",
+  svg: "SVG",
+  bash: "Bash",
+  sh: "Shell",
+  shell: "Shell",
+  zsh: "Zsh",
+  console: "Console",
+  diff: "Diff",
+  patch: "Diff",
+};
+
+/** The friendly name of a built-in language as written in `language`, or `undefined` if it has none. */
+export function builtinLabel(language: unknown): string | undefined {
+  if (typeof language !== "string") return undefined;
+  const name = language.trim().toLowerCase();
+  // Own names only: `constructor` and `toString` are on every object, and are not languages.
+  return Object.hasOwn(labels, name) ? labels[name] : undefined;
+}
+
 /** The built-in grammar a `language` string names, or `undefined` if it has none. */
 export function resolveLanguage(language: string | undefined): HighlightLanguage | undefined {
   // A `language` that isn't a string (a JavaScript caller, a missing value) has no grammar rather than a crash.

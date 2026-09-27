@@ -25,4 +25,4 @@ const kotlinRules = (): Rule[] =>
   });
 
 /** Kotlin, for `registerCodeLanguage`. Also `kt` and `kts`. */
-export const kotlinLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("kotlin", ["kt", "kts"], kotlinRules);
+export const kotlinLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("kotlin", "Kotlin", ["kt", "kts"], kotlinRules);
