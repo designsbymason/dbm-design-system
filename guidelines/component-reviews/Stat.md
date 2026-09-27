@@ -362,6 +362,19 @@ orientation restructured, every variant made tone-aware), not just re-reading th
 **Outcome:** two real gaps found and fixed (both documentation-accuracy defects, not behavioral ones — nothing about what `Stat` actually does
 changed in this pass). Everything else on the checklist re-verified and still holds. Awaiting the user's own Finalized declaration.
 
+**Correction, same day: fixing finding 2 above (the `tone` JSDoc) didn't actually fix what the Docs page renders — a third, distinct copy of
+the same stale text, caught only because the user asked to verify it live rather than trust the source edit.** `Stat.types.ts`'s JSDoc feeds
+future tooling (the manifest generator), but the root Properties table itself renders `Stat.stories.tsx`'s own hand-written
+`argTypes.tone.description` — a separate, manually-duplicated string, because the Playground meta has no traceable `component:` field for
+docgen to extract from (the same reason Default-value extraction fails on a synthetic meta, established via `Tabs`). That copy still read "for
+`Stat.Icon`'s badge" untouched. Checking the whole block while there found a second stale one already present: `orientation`'s description
+still said "beside them," the pre-follow-up two-column-grid wording. Both fixed, and `StatLabel.stories.tsx`'s own `style` description (missing
+the size/weight/uppercase-override note this session's other follow-ups added) — every other sub-part story file's descriptions checked and
+were already accurate. **The lesson:** every root-level prop description lives in two places for this component (the type's JSDoc and the
+Playground meta's hand-written `argTypes`), and only reading the rendered table — not the source file that was actually edited — proves a
+docs fix landed. Re-verified live in the rendered DOM this time (not assumed from the diff): `tsc`, `eslint`, `Stat`'s own unit (126) and
+real-browser (7) suites.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; `Stat.Trend`'s `role="img"` announcement and `announce`'s own status region
