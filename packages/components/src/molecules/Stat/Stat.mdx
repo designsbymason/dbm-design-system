@@ -1,0 +1,368 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Badge } from "../../atoms/Badge";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Card } from "../Card";
+import * as StatStories from "./Stat.stories";
+import * as StatIconStories from "./StatIcon.stories";
+import * as StatLabelStories from "./StatLabel.stories";
+import * as StatValueStories from "./StatValue.stories";
+import * as StatTrendStories from "./StatTrend.stories";
+import * as StatDescriptionStories from "./StatDescription.stories";
+
+export const rootPropOrder = [
+  "variant",
+  "tone",
+  "size",
+  "orientation",
+  "announce",
+  "role",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+// The Playground also has one Storybook-only control, which sits last: `trend`
+// (whether the demo shows a `Stat.Trend` inside `Stat.Value`).
+export const playgroundPropOrder = ["variant", "tone", "size", "orientation", "announce", "trend"];
+export const iconPropOrder = ["icon", "label", "id", "className", "style", "data-testid"];
+export const labelPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const valuePropOrder = ["children", "id", "className", "style", "data-testid"];
+export const trendPropOrder = ["value", "goodDirection", "formatNumber", "labels", "id", "className", "style", "data-testid"];
+export const descriptionPropOrder = ["children", "id", "className", "style", "data-testid"];
+
+<Meta of={StatStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Stat" tier="Molecule" />
+
+A single metric — a label, a value, and optionally a trend and supporting text. It's a compound component,
+meaning it's made of named sub-parts you compose together rather than one component with a long list of props:
+put any of `Stat.Icon` (an icon in a tinted badge), `Stat.Label`, `Stat.Value` (usually holding a `Stat.Trend`
+beside it), and `Stat.Description` inside `Stat`, in the order they should be read — every one is optional.
+
+`size` sets the padding, the spacing, and the size of the icon and text — small for a dense dashboard grid,
+large for a stat that is a card's main content. A `variant` picks the surface (none, a solid border, or a
+fill), a `tone` tints the icon badge, and `orientation` puts the icon above the content or beside it.
+`Stat.Trend` colours and points its icon from a plain signed number — an increase or a decrease, and whether
+that particular direction is an improvement or a regression for this metric. `announce` tells a screen reader
+about a value that changes after this stat is already on the page — a live dashboard.
+
+### Import
+
+```tsx
+import { Stat } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={StatStories.Playground} />
+
+</div>
+<PlaygroundControls of={StatStories.Playground} order={playgroundPropOrder} exclude={["role", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the root `<div>`. Also accepts any other native `<div>` attribute beyond what's listed here
+(e.g. `onMouseEnter`, `title`) — passed straight through to the root element.
+
+<PropertiesTable of={StatStories} order={rootPropOrder} />
+
+### Stat.Icon properties
+
+The icon, in a badge tinted by the stat's `tone`, sized by its `size`. Decorative unless given a `label`. Also
+accepts any other native `<div>` attribute beyond what's listed here (e.g. `onClick`, `title`) — passed
+straight through to the badge.
+
+<PropertiesTable of={StatIconStories} order={iconPropOrder} />
+
+### Stat.Label properties
+
+What the metric is, in the tertiary text colour, sized to the stat's `size`. Also accepts any other native
+`<p>` attribute beyond what's listed here (e.g. `onClick`, `lang`) — passed straight through.
+
+<PropertiesTable of={StatLabelStories} order={labelPropOrder} />
+
+### Stat.Value properties
+
+The metric itself, bold and large, sized to the stat's `size`. Lays out a following `Stat.Trend` beside it on
+the same line. Also accepts any other native `<p>` attribute beyond what's listed here (e.g. `onClick`, `lang`)
+— passed straight through.
+
+<PropertiesTable of={StatValueStories} order={valuePropOrder} />
+
+### Stat.Trend properties
+
+The change since whatever this is being compared to — an icon and a coloured number, from a plain signed
+value. Also accepts any other native `<span>` attribute beyond what's listed here (e.g. `onClick`, `title`) —
+passed straight through.
+
+<PropertiesTable of={StatTrendStories} order={trendPropOrder} />
+
+### Stat.Description properties
+
+The supporting text, in the secondary text colour, sized to the stat's `size`. Also accepts any other native
+`<p>` attribute beyond what's listed here (e.g. `onClick`, `lang`) — passed straight through.
+
+<PropertiesTable of={StatDescriptionStories} order={descriptionPropOrder} />
+
+## Variants
+
+### All variants
+
+<Canvas of={StatStories.Variants} />
+
+### All tones
+
+<Canvas of={StatStories.Tones} />
+
+### All sizes
+
+<Canvas of={StatStories.Sizes} />
+
+### Orientation
+
+<Canvas of={StatStories.Orientation} />
+
+### Trend — increase, decrease, and no change
+
+<Canvas of={StatStories.TrendDirections} />
+
+### Trend — goodDirection for a metric where less is better
+
+<Canvas of={StatStories.TrendGoodDirection} />
+
+### Every part is optional
+
+<Canvas of={StatStories.PartsOptional} />
+
+### Composition — inside a card
+
+<Canvas of={StatStories.InACard} />
+
+### Several, side by side
+
+<Canvas of={StatStories.Grid} />
+
+### A value that updates in place
+
+`announce` tells a screen reader when the value (and trend) change after this stat is already on the page —
+the very first value shown is never announced, only a later change. Click the button to see (and hear) it.
+
+<Canvas of={StatStories.LiveUpdate} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Stat` for a single, prominent metric — a dashboard tile, a card's headline number, a summary figure at
+  the top of a report.
+- Write `Stat.Label` as a short, plain name for the metric ("Active users", "Total revenue"), and format
+  `Stat.Value` however the metric is normally shown (with thousands separators, a currency symbol, a `%` — this
+  component doesn't reformat it).
+- Set `Stat.Trend`'s `goodDirection` whenever a decrease is the improvement — support tickets, error rate, cost,
+  churn — not just for metrics where more is better.
+- Put `Stat.Trend` inside `Stat.Value` (as its last child) so the two sit on the same line, aligned to the
+  number's own baseline.
+- Use `variant="ghost"` (the default) inside a container that already draws a boundary — a `Card`, a dashboard
+  grid cell — so the two borders don't double up. Use `outlined` or `filled` for a self-contained "stat card"
+  with no wrapping `Card`.
+- Match `size` to the room: `xs` or `sm` for a dense grid of many stats; `lg` or `xl` for one stat that is a
+  card's whole content.
+- Set `announce` on a stat whose value a live process updates in place, so a screen-reader user is told about a
+  later change without needing to keep re-visiting it.
+- Use `Stat.Description` for what the number is being compared to ("vs. last month", "as of today") rather than
+  repeating it in the label.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use `tone` to say whether a change is good or bad — that's `Stat.Trend`'s own `goodDirection` and sign,
+  not the icon badge's colour. `tone` only tints `Stat.Icon`, decoratively.
+- Don't put more than one `Stat.Trend` in a single `Stat.Value` — one metric, one change.
+- Don't rely on `Stat.Trend`'s colour alone to say increase or decrease — it always shows an icon (an upward or
+  downward trend, or a dash) too, and the accessible name always states the direction in words.
+- Don't set `announce` on a stat that never changes after mounting — the first value is never announced anyway,
+  so there is nothing for it to do.
+- Don't write `Stat.Label` as a full sentence or `Stat.Description` as a paragraph. Both are meant to be read at
+  a glance alongside a large number.
+- Don't assume `Stat.Trend`'s default (`goodDirection="increase"`) fits every metric — check whether more or
+  less is actually the improvement for this one.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Reserve `Stat` for the headline number, not a general key/value list — for several label/value pairs together,
+  reach for `DescriptionList` instead once it exists.
+- `Stat.Value`'s digits use `tabular-nums`, so a value that changes in place (a live dashboard) doesn't shift
+  layout next to it as it gains or loses digits.
+- Pick the icon for the metric's subject (a person for users, a coin for revenue, a ticket for support), not for
+  decoration — it's hidden from assistive technology by default because `Stat.Label` already says what it
+  shows.
+- `Stat.Trend`'s `formatNumber` writes both the visible text and the accessible name ("Increased by 12%"), so
+  write the sign, unit, and locale numerals your data actually needs — the default just adds a `+` for a
+  positive value and nothing else.
+- In a dense grid of several stats, keep every one the same `size` and `variant` so the grid reads as one set.
+- `orientation="horizontal"` suits a stat that is one row among several (a settings-style list); the default
+  `vertical` suits a card or a grid cell.
+
+## Accessibility
+
+<Callout tone="info" title="Static content by default — with a real accessible name for the trend">
+
+- A `Stat` renders a plain `<div>`: it adds no role and is not focusable, so it never adds a tab stop or changes
+  how a screen reader reads its content. The parts read in the order they are written.
+- `Stat.Trend` renders `role="img"` on its own wrapping `<span>` so its `aria-label` is valid ARIA (a plain
+  `<span>` has no role that permits one) — the same technique `Avatar` uses to flatten a composite visual into
+  one named unit. The accessible name states the direction in words ("Increased by 4.2"), and always contains
+  the same formatted text shown on screen (WCAG 2.5.3), even when you supply your own `formatNumber` or
+  `labels`. Its icon and visible number are both hidden from assistive technology individually, since the whole
+  thing is already named.
+- `Stat.Icon` is decorative by default and hidden from assistive technology (`aria-hidden`), because
+  `Stat.Label` already says what it shows. Give it a `label` only when the icon conveys something the label
+  doesn't.
+- `tone` is decorative: it tints the icon badge only, unrelated to whether a change is good or bad. The icon
+  against its tinted badge measures at least 3:1 in every theme (the standard for meaningful graphics).
+- `Stat.Trend`'s colour is never the only signal: an upward or downward trend icon (or a dash, for no change)
+  always accompanies it, and the accessible name always states the direction in words.
+- `announce` renders a visually hidden `role="status"` region that starts empty and fills a moment after
+  `Stat.Value` (and `Stat.Trend`)'s own text actually changes — never on the very first value shown, since that
+  isn't a change from anything a reader already knew. It's announced politely, without moving focus.
+- To make the stat a named region, give it `role="region"` and `aria-labelledby` pointing at `Stat.Label`'s
+  `id` (or an `aria-label`).
+
+</Callout>
+
+## Code examples
+
+```tsx
+import { UsersIcon, CurrencyDollarIcon, TicketIcon } from "@dbm-design-system/icons";
+
+<Stat>
+  <Stat.Icon icon={UsersIcon} />
+  <Stat.Label>Active users</Stat.Label>
+  <Stat.Value>
+    12,480
+    <Stat.Trend value={4.2} />
+  </Stat.Value>
+  <Stat.Description>vs. last month</Stat.Description>
+</Stat>
+
+{/* A metric where less is better: a decrease is the improvement, coloured success */}
+<Stat variant="outlined" tone="danger">
+  <Stat.Icon icon={TicketIcon} />
+  <Stat.Label>Open tickets</Stat.Label>
+  <Stat.Value>
+    58
+    <Stat.Trend value={-12} goodDirection="decrease" />
+  </Stat.Value>
+</Stat>
+
+{/* formatNumber writes the sign, unit, and locale numerals — both on screen and in the accessible name */}
+<Stat>
+  <Stat.Label>Conversion rate</Stat.Label>
+  <Stat.Value>
+    3.2%
+    <Stat.Trend value={0.4} formatNumber={(n) => `${n > 0 ? "+" : ""}${n}pp`} />
+  </Stat.Value>
+</Stat>
+
+{/* A self-contained stat card, no wrapping Card needed */}
+<Stat variant="outlined" tone="success" size="lg">
+  <Stat.Icon icon={CurrencyDollarIcon} />
+  <Stat.Label>Revenue</Stat.Label>
+  <Stat.Value>
+    $84.2K
+    <Stat.Trend value={1.8} />
+  </Stat.Value>
+  <Stat.Description>vs. last quarter</Stat.Description>
+</Stat>
+
+{/* A live value: the first render is never announced, only a later change */}
+<Stat announce>
+  <Stat.Label>Active users</Stat.Label>
+  <Stat.Value>
+    {count}
+    <Stat.Trend value={change} />
+  </Stat.Value>
+</Stat>
+
+{/* Named as a region by its own label */}
+<Stat role="region" aria-labelledby="revenue-label">
+  <Stat.Label id="revenue-label">Revenue</Stat.Label>
+  <Stat.Value>$84.2K</Stat.Value>
+</Stat>
+
+{/* A native <div> attribute, passed straight through to the root */}
+<Stat title="Active users this month" onMouseEnter={() => prefetch()}>
+  <Stat.Label>Active users</Stat.Label>
+  <Stat.Value>12,480</Stat.Value>
+</Stat>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.neutral-subtle" usage="the neutral icon badge's tint, and the filled variant's fill" />
+<TokenRow token="bg.surface" usage="the icon badge's tint on the filled variant" />
+<TokenRow token="icon.default" usage="the neutral icon's colour" />
+<TokenRow token="text.primary" usage="the stat's own text colour" />
+<TokenRow token="text.tertiary" usage="Stat.Label's colour" />
+<TokenRow token="text.secondary" usage="Stat.Description's colour, and Stat.Trend's colour when flat" />
+<TokenRow token="icon.secondary" usage="Stat.Trend's icon colour when flat" />
+<TokenRow token="text.success" usage="Stat.Trend's colour for a positive change" />
+<TokenRow token="icon.success" usage="Stat.Trend's icon colour for a positive change, and tone=success: the icon badge's colour" />
+<TokenRow token="text.danger" usage="Stat.Trend's colour for a negative change" />
+<TokenRow token="icon.danger" usage="Stat.Trend's icon colour for a negative change, and tone=danger: the icon badge's colour" />
+<TokenRow token="border.default" usage="the outlined variant's border" />
+<TokenRow token="bg.brand-subtle" usage="tone=brand: the icon badge's tint" />
+<TokenRow token="icon.brand" usage="tone=brand: the icon's colour" />
+<TokenRow token="bg.info-subtle" usage="tone=info: the icon badge's tint" />
+<TokenRow token="icon.info" usage="tone=info: the icon's colour" />
+<TokenRow token="bg.success-subtle" usage="tone=success: the icon badge's tint" />
+<TokenRow token="bg.warning-subtle" usage="tone=warning: the icon badge's tint" />
+<TokenRow token="icon.warning" usage="tone=warning: the icon's colour" />
+<TokenRow token="bg.danger-subtle" usage="tone=danger: the icon badge's tint" />
+<TokenRow token="border-width.1" usage="the border's width (transparent on the variants without one, so every variant is the same size)" />
+<TokenRow token="radius.lg" usage="the stat's corners" />
+<TokenRow token="radius.full" usage="the icon badge" />
+<TokenRow token="font-family.primary" usage="stat typography" />
+<TokenRow token="line-height.tight" usage="Stat.Value's line height" />
+<TokenRow token="space.3–space.8" usage="padding across the five size steps" />
+<TokenRow token="space.1–space.3" usage="the gap between parts across the five size steps" />
+<TokenRow token="space.2–space.4" usage="the gap between the icon badge and the content, across the five size steps" />
+<TokenRow token="space.8–space.20" usage="the icon badge's diameter across the five size steps" />
+<TokenRow token="space.1" usage="the gap between Stat.Trend's icon and its number" />
+<TokenRow token="space.2" usage="the gap between Stat.Value's own text and a following Stat.Trend" />
+<TokenRow token="icon-size.sm–icon-size.2xl" usage="Stat.Icon's size across the five size steps" />
+<TokenRow token="icon-size.xs–icon-size.md" usage="Stat.Trend's icon size across the five size steps" />
+<TokenRow token="font-size.xs–font-size.6xl" usage="Stat.Value's size across the five size steps" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Card"
+  description="A ghost stat sits inside a card's body without doubling up the border"
+  href="/?path=/docs/molecules-data-display-card--docs"
+>
+  <Card size="xs">
+    <Card.Body>Card body</Card.Body>
+  </Card>
+</RelatedCard>
+<RelatedCard
+  name="Badge"
+  description="A count or status marker, for a smaller signal than a whole Stat"
+  href="/?path=/docs/atoms-data-display-badge--docs"
+>
+  <Badge>12</Badge>
+</RelatedCard>
+</div>

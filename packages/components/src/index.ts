@@ -72,6 +72,7 @@ export * from "./molecules/RangeSlider";
 export * from "./molecules/SearchInput";
 export * from "./molecules/Select";
 export * from "./molecules/Slider";
+export * from "./molecules/Stat";
 export * from "./molecules/Table";
 export * from "./molecules/Tabs";
 export * from "./molecules/ToggleGroup";

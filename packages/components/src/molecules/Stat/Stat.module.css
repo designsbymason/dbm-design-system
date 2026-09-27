@@ -1,0 +1,202 @@
+/* The stat's layout and surface, driven by a handful of local custom
+   properties so each size, variant, and tone only *sets values* rather than
+   repeating the whole rule — the same pattern `EmptyState` uses.
+
+   The root lays its parts out start-aligned (unlike `EmptyState`, a stat
+   tile is read left-to-right down a column, not centred). In the default
+   `vertical` orientation it's a plain flex column: the icon badge and every
+   other part just stack, in DOM order. `horizontal` needs the icon badge to
+   sit beside *all* of the other parts stacked together, not just the next
+   one — a plain flex row can't do that without an extra wrapper `<div>` this
+   component doesn't render, so that orientation is a two-column grid
+   instead: the badge spans every row of the second column, whatever ends up
+   in it. */
+.root {
+  --stat-pad: var(--dbm-space-5);
+  --stat-gap: var(--dbm-space-2);
+  --stat-icon-gap: var(--dbm-space-3);
+  --stat-badge: var(--dbm-space-12);
+  --stat-bg: transparent;
+  --stat-border: transparent;
+  --stat-badge-bg: var(--dbm-bg-neutral-subtle);
+  --stat-badge-color: var(--dbm-icon-default);
+
+  background-color: var(--stat-bg);
+  border: var(--dbm-border-width-1) solid var(--stat-border);
+  border-radius: var(--dbm-radius-lg);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  min-inline-size: 0;
+  padding: var(--stat-pad);
+}
+
+.root[data-orientation="vertical"] {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stat-gap);
+}
+
+.root[data-orientation="horizontal"] {
+  align-items: start;
+  column-gap: var(--stat-icon-gap);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  row-gap: var(--stat-gap);
+}
+
+.root[data-orientation="horizontal"] .iconBadge {
+  grid-column: 1;
+  /* Spans however many other parts there are — one row, or several. */
+  grid-row: 1 / -1;
+}
+
+.root[data-orientation="horizontal"] > :not(.iconBadge) {
+  grid-column: 2;
+}
+
+/* --- Size: padding, the gap between parts, and the icon badge. (The icon and
+   the label/value/description type sizes step with `size` too, but those are
+   props of the atoms they render, set in Stat.tsx.) --- */
+
+.sizeXs {
+  --stat-pad: var(--dbm-space-3);
+  --stat-gap: var(--dbm-space-1);
+  --stat-icon-gap: var(--dbm-space-2);
+  --stat-badge: var(--dbm-space-8);
+}
+
+.sizeSm {
+  --stat-pad: var(--dbm-space-4);
+  --stat-gap: var(--dbm-space-1);
+  --stat-icon-gap: var(--dbm-space-2);
+  --stat-badge: var(--dbm-space-10);
+}
+
+.sizeMd {
+  --stat-pad: var(--dbm-space-5);
+  --stat-gap: var(--dbm-space-2);
+  --stat-icon-gap: var(--dbm-space-3);
+  --stat-badge: var(--dbm-space-12);
+}
+
+.sizeLg {
+  --stat-pad: var(--dbm-space-6);
+  --stat-gap: var(--dbm-space-2);
+  --stat-icon-gap: var(--dbm-space-4);
+  --stat-badge: var(--dbm-space-16);
+}
+
+.sizeXl {
+  --stat-pad: var(--dbm-space-8);
+  --stat-gap: var(--dbm-space-3);
+  --stat-icon-gap: var(--dbm-space-4);
+  --stat-badge: var(--dbm-space-20);
+}
+
+/* --- Variants. `ghost` is the base above and needs no class. The border
+   stays (transparent) on every variant so they all have the same box size. --- */
+
+.outlined {
+  --stat-border: var(--dbm-border-default);
+}
+
+/* The neutral badge would otherwise share the fill's own colour and vanish,
+   so it sits on the surface colour instead. A toned badge overrides this
+   below. */
+.filled {
+  --stat-bg: var(--dbm-bg-neutral-subtle);
+  --stat-badge-bg: var(--dbm-bg-surface);
+}
+
+/* --- Tone: only the icon badge. `neutral` has no class. Declared after the
+   variants, so a tone's badge wins over the filled variant's. --- */
+
+.toneBrand {
+  --stat-badge-bg: var(--dbm-bg-brand-subtle);
+  --stat-badge-color: var(--dbm-icon-brand);
+}
+
+.toneInfo {
+  --stat-badge-bg: var(--dbm-bg-info-subtle);
+  --stat-badge-color: var(--dbm-icon-info);
+}
+
+.toneSuccess {
+  --stat-badge-bg: var(--dbm-bg-success-subtle);
+  --stat-badge-color: var(--dbm-icon-success);
+}
+
+.toneWarning {
+  --stat-badge-bg: var(--dbm-bg-warning-subtle);
+  --stat-badge-color: var(--dbm-icon-warning);
+}
+
+.toneDanger {
+  --stat-badge-bg: var(--dbm-bg-danger-subtle);
+  --stat-badge-color: var(--dbm-icon-danger);
+}
+
+/* --- Parts. --- */
+
+.iconBadge {
+  align-items: center;
+  background-color: var(--stat-badge-bg);
+  block-size: var(--stat-badge);
+  border-radius: var(--dbm-radius-full);
+  /* The icon takes its colour from this — an `icon.*` token, never a `text.*` one. */
+  color: var(--stat-badge-color);
+  display: flex;
+  flex-shrink: 0;
+  inline-size: var(--stat-badge);
+  justify-content: center;
+}
+
+.label,
+.value,
+.description {
+  margin: 0;
+  min-inline-size: 0;
+}
+
+/* A long word in a label or description breaks rather than overflowing a
+   narrow container. Not applied to `.value` (below) — a metric is normally
+   one short run of digits, and breaking arbitrarily inside it (found live:
+   "12,480" split across two lines as "12,48"/"0" in a narrow grid column)
+   reads as broken, not wrapped. */
+.label,
+.description {
+  overflow-wrap: anywhere;
+}
+
+/* The value and a following trend sit on the same line, aligned to the
+   number's own baseline rather than its box (a taller trend icon would
+   otherwise push the number down to its own middle). Digits keep a fixed
+   width per character, so a value that changes in place (a live dashboard)
+   doesn't shift the layout next to it as it gains or loses digits. Doesn't
+   wrap or break: a metric that doesn't fit its container overflows rather
+   than splitting mid-number — give it enough room instead. */
+.value {
+  align-items: baseline;
+  column-gap: var(--dbm-space-2);
+  display: inline-flex;
+  flex-wrap: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--dbm-line-height-tight);
+  white-space: nowrap;
+}
+
+.trend {
+  align-items: baseline;
+  display: inline-flex;
+  gap: var(--dbm-space-1);
+}
+
+/* The icon is decorative (the accessible name is on `.trend` itself, via
+   `aria-label`) — aligned against the text baseline beside it, not stretched
+   to the text's own line height. */
+.trendIcon {
+  flex-shrink: 0;
+  transform: translateY(0.05em);
+}

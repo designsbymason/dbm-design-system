@@ -67,6 +67,7 @@ import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlide
 import { searchInputPlaygroundSnippet } from "./molecules/SearchInput/SearchInput.snippets";
 import { selectPlaygroundSnippet } from "./molecules/Select/Select.snippets";
 import { sliderPlaygroundSnippet } from "./molecules/Slider/Slider.snippets";
+import { statPlaygroundSnippet } from "./molecules/Stat/Stat.snippets";
 import { tablePlaygroundSnippet } from "./molecules/Table/Table.snippets";
 import { tabsPlaygroundSnippet } from "./molecules/Tabs/Tabs.snippets";
 import { toggleGroupPlaygroundSnippet } from "./molecules/ToggleGroup/ToggleGroup.snippets";
@@ -1540,5 +1541,35 @@ describe("Playground snippets for Tabs", () => {
     expect(tabsPlaygroundSnippet({ align: "center", showScrollButtons: false })).toMatch(
       /<Tabs\.List aria-label="Project" align="center" showScrollButtons={false}>\n/,
     );
+  });
+});
+
+describe("Playground snippets for Stat", () => {
+  const statArgs = [
+    {},
+    { variant: "outlined", tone: "brand", size: "md", orientation: "vertical" },
+    { variant: "filled", size: "lg", orientation: "horizontal" },
+    { tone: "danger", announce: true },
+    { trend: false },
+  ] as const;
+
+  it.each(statArgs)("Stat %j is a real snippet", (args) => {
+    expect(problemsIn(statPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Stat writes only what differs from the defaults", () => {
+    expect(
+      statPlaygroundSnippet({ variant: "ghost", tone: "neutral", size: "md", orientation: "vertical" }),
+    ).toMatch(/^\{\/\* UsersIcon comes from @dbm-design-system\/icons \*\/\}\n<Stat>\n/);
+    expect(statPlaygroundSnippet({ variant: "outlined", size: "sm" })).toMatch(
+      /^\{\/\* UsersIcon comes from @dbm-design-system\/icons \*\/\}\n<Stat variant="outlined" size="sm">\n/,
+    );
+    expect(statPlaygroundSnippet({ orientation: "horizontal" })).toMatch(/<Stat orientation="horizontal">\n/);
+    expect(statPlaygroundSnippet({ announce: true })).toMatch(/<Stat announce>\n/);
+  });
+
+  it("Stat shows Stat.Trend inside Stat.Value by default, and omits it when the demo-trend control is off", () => {
+    expect(statPlaygroundSnippet({})).toContain("<Stat.Trend value={4.2} />");
+    expect(statPlaygroundSnippet({ trend: false })).not.toContain("Stat.Trend");
   });
 });
