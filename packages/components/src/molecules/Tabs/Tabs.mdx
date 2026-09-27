@@ -61,8 +61,9 @@ ends with `rounded`, and whether the tabs run across or down with `orientation`.
 `align` places the tabs at the start, the middle, or the end when they don't fill the list. A list
 that outgrows its container — too wide for it, horizontal, or too tall for it, vertical — scrolls
 along its own axis, keeps the selected tab in view, and shows a fade and a button wherever there
-are more tabs that way. Nothing bounds a vertical list's height on its own; give `Tabs.List` one
-directly (in an absolute unit, not a percentage) for it to actually engage.
+are more tabs that way. Nothing bounds a vertical list's height on its own; give `Tabs.List` a
+height to respond to — wrapping it in a `display: flex` box works, a plain percentage on its own
+doesn't — for the overflow handling to actually engage.
 
 ### Import
 
@@ -190,10 +191,11 @@ that scrolls a page at a time, appear at whichever edge currently hides more tab
 
 ### Too many tabs for the height
 
-A vertical list works the same way, along the block axis instead — but nothing bounds its height
-on its own the way the page's own width naturally bounds a horizontal list, so `Tabs.List` needs
-one set directly, in an absolute unit (a percentage has nothing definite above it to resolve
-against).
+A vertical list works the same way, along the block axis instead. Drag the bottom-right corner of
+the box to change how much room the tabs have. Nothing bounds a vertical list's height on its own
+the way the page's own width naturally bounds a horizontal list, so `Tabs.List` needs a height of
+its own to respond to — wrap it in a box that stretches it, such as a `display: flex` container,
+rather than a plain percentage (which has nothing definite above it to resolve against).
 
 <Canvas of={TabsStories.VerticalScrolling} />
 

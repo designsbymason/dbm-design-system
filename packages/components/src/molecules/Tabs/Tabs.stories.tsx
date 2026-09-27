@@ -511,18 +511,25 @@ export const VerticalScrolling: Story = {
   parameters: { docs: { source: { code: tabsSnippets.verticalScrolling } } },
   render: () => (
     <div style={demoContainerStyle}>
-      {/* Nothing bounds a vertical list's height on its own — set it directly on Tabs.List, in an
-          absolute unit (not a percentage: nothing above it stretches to give a percentage
-          something definite to resolve against). The selected tab is the last one, and the list
-          has already scrolled to show it. */}
       <Tabs defaultValue="security" orientation="vertical">
-        <Tabs.List aria-label="Workspace" style={{ maxBlockSize: "10rem" }}>
-          {workspaceTabs.map((label) => (
-            <Tabs.Trigger key={label} value={label === "Security" ? "security" : label.toLowerCase()}>
-              {label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
+        {/* Nothing bounds a vertical list's height on its own the way the page's own width bounds a
+            horizontal one — Tabs.List needs a height of its own to respond to. A percentage alone
+            doesn't do it (nothing above stretches to give it something definite to resolve against),
+            so this box is a flex container: that stretches Tabs.List to its own height, which the drag
+            handle then changes. The selected tab is the last one, and the list has already scrolled
+            to show it. */}
+        <div
+          data-testid="vertical-scroll-box"
+          style={{ display: "flex", blockSize: "10rem", maxBlockSize: "100%", overflow: "hidden", resize: "vertical" }}
+        >
+          <Tabs.List aria-label="Workspace" style={{ blockSize: "100%" }}>
+            {workspaceTabs.map((label) => (
+              <Tabs.Trigger key={label} value={label === "Security" ? "security" : label.toLowerCase()}>
+                {label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+        </div>
         <Tabs.Content value="security">
           <Text size="sm">Two-factor and session settings.</Text>
         </Tabs.Content>

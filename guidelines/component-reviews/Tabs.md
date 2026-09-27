@@ -525,6 +525,25 @@ guideline requirement (ADR-0020's own "hand-written, pasteable, typechecked agai
 under) — stays Finalized per the three-question test's step 2, no broader re-check needed. Re-verified: `tsc`, `eslint`, both Tabs test files
 (133 unit + 36 real-browser), and a live "Show code" check on the Docs page for both sections.
 
+**Follow-up, same day, user-reported:** the horizontal demo lets a reader drag the box's corner to resize it; the vertical one didn't — it used a
+fixed `maxBlockSize` directly on `Tabs.List` (the earlier fix for the percentage-height bug above) with no resizable box at all, and the user
+found that resizing a wrapping box around it did nothing either. Root cause, confirmed live rather than assumed: setting a box's own height and
+giving `Tabs.List` a *percentage* height inside it hits the exact same problem the percentage fix above already found — `.root`'s
+`align-items: flex-start` (kept deliberately, not `stretch`, so the list and panel don't get forced to equal heights) means nothing stretches a
+percentage on `Tabs.List` to something definite, so `overflow-y: auto` never engages and the outer box's own `overflow: hidden` just clips the
+list's unbounded natural height instead of letting it scroll — exactly what "the height doesn't respond" looks like. Fix, verified by resizing a
+real `Tabs.List` in the browser both via script and via an actual mouse drag on the resize handle before writing any of this down: wrap
+`Tabs.List` alone — not the whole `Tabs` — in a `display: flex` box with the resizable height. A flex container's default `align-items: stretch`
+stretches `Tabs.List` (already `min-block-size: 0`, so it can shrink to fit) to the box's own definite height, which `blockSize: "100%"` on
+`Tabs.List` then resolves against correctly — confirmed `list.clientHeight` tracks the box's height 1:1 at three sizes (160px, 320px, 400px),
+buttons/fade appear and disappear correctly at each, and a real `left_click_drag` on the resize handle reproduces it without any script. Wrapping
+the *whole* `Tabs` instead doesn't work: `Tabs` root would inherit a stretched height from its own new flex parent, but root's own
+`align-items: flex-start` still blocks that height from reaching `Tabs.List` one level down — the same boundary the percentage fix already
+respected, not crossed here either. `VerticalScrolling`'s story, its snippet, and the Docs page prose all updated to the wrapping-`div`
+technique; `VerticalScrollingInteraction` needed no change (finds the same `role="tablist"` regardless of the extra wrapper). Re-verified: `tsc`,
+`eslint`, both Tabs test files (133 unit + 36 real-browser, unchanged pass counts), a live mouse-driven resize in both directions, and the
+Docs-page "Show code" panel.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; roles, names and states are checked through the accessibility tree and axe. The

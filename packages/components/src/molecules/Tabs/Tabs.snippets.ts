@@ -107,20 +107,23 @@ ${tabs('value={value} onValueChange={setValue}')}`,
 
   verticalScrolling: `{/* A vertical list taller than the height it's given scrolls inside itself, keeps the
     selected tab in view, and shows a fade and a button wherever there are more tabs that way.
-    Nothing bounds the height on its own — set it directly on Tabs.List, in an absolute unit
-    (not a percentage: nothing above it stretches to give a percentage something definite to
-    resolve against). */}
+    Nothing bounds the height on its own the way the page's own width bounds a horizontal list, so
+    Tabs.List needs a height of its own to respond to. A percentage alone doesn't do it (nothing
+    above stretches to give it something definite to resolve against) — wrap it in a flex box
+    instead, which does. */}
 <Tabs defaultValue="security" orientation="vertical">
-  <Tabs.List aria-label="Workspace" style={{ maxBlockSize: "10rem" }}>
-    <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
-    <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
-    <Tabs.Trigger value="members">Members</Tabs.Trigger>
-    <Tabs.Trigger value="billing">Billing</Tabs.Trigger>
-    <Tabs.Trigger value="integrations">Integrations</Tabs.Trigger>
-    <Tabs.Trigger value="reports">Reports</Tabs.Trigger>
-    <Tabs.Trigger value="audit log">Audit log</Tabs.Trigger>
-    <Tabs.Trigger value="security">Security</Tabs.Trigger>
-  </Tabs.List>
+  <div style={{ display: "flex", blockSize: "10rem", overflow: "hidden", resize: "vertical" }}>
+    <Tabs.List aria-label="Workspace" style={{ blockSize: "100%" }}>
+      <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+      <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
+      <Tabs.Trigger value="members">Members</Tabs.Trigger>
+      <Tabs.Trigger value="billing">Billing</Tabs.Trigger>
+      <Tabs.Trigger value="integrations">Integrations</Tabs.Trigger>
+      <Tabs.Trigger value="reports">Reports</Tabs.Trigger>
+      <Tabs.Trigger value="audit log">Audit log</Tabs.Trigger>
+      <Tabs.Trigger value="security">Security</Tabs.Trigger>
+    </Tabs.List>
+  </div>
   <Tabs.Content value="security">Two-factor and session settings.</Tabs.Content>
 </Tabs>`,
 
