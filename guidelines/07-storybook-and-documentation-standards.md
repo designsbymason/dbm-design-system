@@ -292,20 +292,19 @@ quoted in prose elsewhere.
 | ToggleGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-26 | [ToggleGroup.md](component-reviews/ToggleGroup.md) |
 | AvatarGroup | Molecule | Data Display | ✅ | ✅ 2026-09-26 | [AvatarGroup.md](component-reviews/AvatarGroup.md) |
 | CodeBlock | Molecule | Typography | ✅ | ✅ 2026-09-26 | [CodeBlock.md](component-reviews/CodeBlock.md) |
-| Stat | Molecule | Data Display | ✅ | Reviewed 2026-09-27, awaiting the user's Finalized declaration | [Stat.md](component-reviews/Stat.md) |
+| Stat | Molecule | Data Display | ✅ | ✅ 2026-09-27 | [Stat.md](component-reviews/Stat.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-09-27):** every atom and the first 24 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-09-27):** every atom and the first 25 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
-`RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`) are reviewed and Finalized — see the table above. `Stat` (item 22) has
-completed its own review pass and is awaiting the user's Finalized declaration (only the user declares a component Finalized,
-`06-engineering-standards.md` §9). The queue then continues through the remaining 11 of the 36 molecules, one at a time, in the
-dependency order itemized in `04-component-inventory.md`, starting with `DescriptionList`, each with the same full `06-engineering-standards.md` §9 process.
+`RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`) are reviewed and Finalized — see the table above. The queue
+then continues through the remaining 11 of the 36 molecules, one at a time, in the dependency order itemized in
+`04-component-inventory.md`, starting with `DescriptionList`, each with the same full `06-engineering-standards.md` §9 process.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full
 `06-engineering-standards.md` §9 review pass, not a separate sweep, run one component at a time. The atom

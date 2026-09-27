@@ -3,9 +3,9 @@
 **Data Display:** Stat — built 2026-09-27, item 22 in the itemized molecule-tier build order (`04-component-inventory.md`), where the row is
 listed as `Stat / KPI` — the two names refer to the same component; it ships as `Stat`, the same convention `Tag / Chip` already set (the first
 name in a dual-named row is what gets built). Adds no dependency and no component token, reusing existing status tokens for `Stat.Trend`'s
-colour. **Not yet Finalized** — built directly against the full `06-engineering-standards.md` §9 checklist, three same-day feature follow-ups,
-and a final pre-Finalize review are all complete; see "Final review before Finalizing" below for what that last pass checked and fixed.
-Awaiting the user's own Finalized declaration.
+colour. **Finalized 2026-09-27** — the full `06-engineering-standards.md` §9 checklist, three same-day feature follow-ups, a final pre-Finalize
+review, and a same-day correction to that review are all complete; see "Final review before Finalizing" below for what that last pass checked
+and fixed, and the "Correction" entry right after it for what a live re-check of the review's own fix caught.
 
 A compound component: `Stat` (root) with `Stat.Icon`, `Stat.Label`, `Stat.Value` (usually holding a `Stat.Trend`), and `Stat.Description`, every
 one optional, in reading order.
@@ -360,7 +360,7 @@ orientation restructured, every variant made tone-aware), not just re-reading th
   build; the per-component bundle-size check (`Stat`: 2.82KB JS / 1.38KB CSS, within budget).
 
 **Outcome:** two real gaps found and fixed (both documentation-accuracy defects, not behavioral ones — nothing about what `Stat` actually does
-changed in this pass). Everything else on the checklist re-verified and still holds. Awaiting the user's own Finalized declaration.
+changed in this pass). Everything else on the checklist re-verified and still holds.
 
 **Correction, same day: fixing finding 2 above (the `tone` JSDoc) didn't actually fix what the Docs page renders — a third, distinct copy of
 the same stale text, caught only because the user asked to verify it live rather than trust the source edit.** `Stat.types.ts`'s JSDoc feeds
@@ -374,6 +374,8 @@ were already accurate. **The lesson:** every root-level prop description lives i
 Playground meta's hand-written `argTypes`), and only reading the rendered table — not the source file that was actually edited — proves a
 docs fix landed. Re-verified live in the rendered DOM this time (not assumed from the diff): `tsc`, `eslint`, `Stat`'s own unit (126) and
 real-browser (7) suites.
+
+**Declared Finalized by the user, 2026-09-27.**
 
 ## Not verified
 
