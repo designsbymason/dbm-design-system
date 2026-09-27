@@ -100,19 +100,22 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
    */
   showLanguage?: boolean;
   /**
-   * Numbers the lines, in a gutter that is not selected or copied.
+   * Numbers the lines, in a gutter that is not selected or copied. On a `diff` with hunk headers
+   * (`@@ -12,4 +12,5 @@`) the gutter has two columns, the line's number in the old file and in the new one (a removed
+   * line has an old number only, an added line a new one only); a `diff` with no hunk headers, such as a hand-written
+   * `-`/`+` snippet, has no line numbers to show and is drawn without a gutter.
    * @default false
    */
   showLineNumbers?: boolean;
   /**
    * The number shown on the first line, when the block is an excerpt from further down a file.
-   * `highlightLines` counts from it too.
+   * `highlightLines` counts from it too. Ignored by a numbered `diff`, whose numbers come from its hunk headers.
    * @default 1
    */
   startLine?: number;
   /**
    * Lines to draw attention to, by the numbers shown: single lines and ranges, `[2, "4-6"]`. Drawn with a band
-   * and an edge accent, both in addition to colour. Numbers outside the code are ignored.
+   * and an edge accent, both in addition to colour. Numbers outside the code are ignored. In a numbered `diff` they count the rows, from 1.
    */
   highlightLines?: Array<number | string>;
   /**

@@ -176,6 +176,14 @@
   user-select: none;
 }
 
+/* A diff with hunk headers: an old and a new number in the one gutter, as a single string padded with spaces to two equal
+   columns (they line up because the code is monospaced, and the spaces are kept because the line is inside a `pre`).
+   Everything else about the numbers is the same as above: drawn by CSS, decoration only, never selected, copied or read. */
+.diffNumbered .line::before {
+  content: attr(data-numbers);
+  content: attr(data-numbers) / "";
+}
+
 /* Wrapping: the code is only as wide as the block, and long lines break where they must. */
 .wrap .code {
   min-width: 0;

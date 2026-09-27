@@ -55,6 +55,13 @@ export const codeBlockSnippets = {
 <CodeBlock language="ini" title="settings.ini" code={settings} />
 <CodeBlock language="log" title="server.log" highlighter={logHighlighter} code={output} />`,
 
+  diffNumbers: `{/* showLineNumbers on a diff with hunk headers (@@ -12,4 +12,5 @@) draws two columns, the line's number in the old
+    file and in the new one: a removed line has an old number only, an added line a new one only. A diff with no
+    hunk headers, such as a hand-written -/+ snippet, has no line numbers to show and gets no gutter.
+    In a numbered diff highlightLines counts the rows from 1, and startLine is not used.
+    patch: the diff text to show, as a string (for example the output of git diff) */}
+<CodeBlock language="diff" showLineNumbers title="greet.diff" code={patch} />`,
+
   title: `{/* title: a file name, shown in the header and used as the block's accessible name
     source: the code to show, as a string */}
 <CodeBlock language="tsx" title="SaveButton.tsx" code={source} />`,

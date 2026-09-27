@@ -249,6 +249,15 @@ started = 2026-09-26T10:00:00Z
 [[routes]]
 path = "/"
 methods = ["GET", "HEAD"]`,
+  diffWithHunks: `diff --git a/greet.ts b/greet.ts
+--- a/greet.ts
++++ b/greet.ts
+@@ -8,3 +8,4 @@ export function greet() {
+   const name = "world";
+-  return name;
++  const shout = name.toUpperCase();
++  return shout;
+ }`,
   ini: `; Server settings
 [server]
 port = 3000
@@ -521,6 +530,19 @@ export const FurtherLanguages: Story = {
       {(["c", "cpp", "csharp", "kotlin", "swift", "ruby", "php", "toml"] as const).map((language) => (
         <DemoBlock key={language} {...args} code={samples[language]} language={language} title="" aria-label={`${language} example`} />
       ))}
+    </div>
+  ),
+};
+
+export const DiffLineNumbers: Story = {
+  name: "A diff with line numbers",
+  parameters: { docs: { source: { code: codeBlockSnippets.diffNumbers } } },
+  args: {},
+  argTypes: { code: noControls, language: noControls, showLineNumbers: noControls, title: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={stack}>
+      <DemoBlock {...args} code={samples.diffWithHunks} language="diff" showLineNumbers title="greet.diff" aria-label="A numbered diff" />
+      <DemoBlock {...args} code={"- const size = 'md';\n+ const size = 'lg';"} language="diff" showLineNumbers title="No hunk header" aria-label="A diff with no line numbers" />
     </div>
   ),
 };
@@ -1464,6 +1486,78 @@ export const DocsPageInteraction: Story = {
     const keywords = [...block.querySelectorAll<HTMLElement>("code span[data-line] > span")].filter((token) => ["function", "return"].includes(token.textContent ?? ""));
     await expect(keywords.map((token) => token.textContent)).toEqual(["function", "return"]);
     await expect(rect(keywords[1]!).left).toBeGreaterThan(rect(keywords[0]!).left + 4);
+  },
+};
+
+export const DiffNumbersInteraction: Story = {
+  ...Playground,
+  name: "Interaction: a diff's old and new columns are aligned, decoration only, and a wrapped line continues under its text",
+  tags: ["!dev"],
+  render: () => (
+    <div style={stack}>
+      <div data-testid="diff">
+        <CodeBlock code={samples.diffWithHunks} language="diff" showLineNumbers aria-label="Diff" copyable={false} />
+      </div>
+      <div style={{ maxWidth: "24rem" }} data-testid="wrapped">
+        <CodeBlock code={`@@ -1,2 +1,2 @@\n short\n+${samples.longLine}`} language="diff" showLineNumbers wrap aria-label="Wrapped diff" copyable={false} />
+      </div>
+      <div data-testid="handwritten">
+        <CodeBlock code={"- const size = 'md';\n+ const size = 'lg';"} language="diff" showLineNumbers aria-label="Hand-written diff" copyable={false} />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const diff = within(canvasElement).getByTestId("diff");
+    const rows = linesOf(diff);
+    // Each row's gutter holds its numbers, an old column and a new one, or blank columns where it has none.
+    const gutterText = (row: HTMLElement) => getComputedStyle(row, "::before").content;
+    await expect(gutterText(rows[3]!)).toContain('"      "');
+    await expect(gutterText(rows[4]!)).toContain('" 8   8"');
+    await expect(gutterText(rows[5]!)).toContain('" 9    "');
+    await expect(gutterText(rows[6]!)).toContain('"     9"');
+    await expect(gutterText(rows[8]!)).toContain('"10  11"');
+    // The two columns are one string padded with spaces, which only line up if the spaces are kept.
+    await expect(getComputedStyle(rows[4]!, "::before").whiteSpace).toBe("pre");
+    // The gutter is six characters wide on every row, numbered or not, so the code stays aligned.
+    const frame = diff.querySelector<HTMLElement>("pre")!.parentElement as HTMLElement;
+    const probe = document.createElement("span");
+    probe.style.cssText = "position:absolute;visibility:hidden;width:6ch;font:inherit";
+    frame.appendChild(probe);
+    const sixChars = rect(probe).width;
+    probe.remove();
+    for (const row of rows) await expect(Math.abs(px(getComputedStyle(row, "::before").width) - sixChars)).toBeLessThan(0.5);
+    const starts = rows.map((row) => {
+      const range = document.createRange();
+      range.selectNodeContents(row);
+      return range.getBoundingClientRect().left;
+    });
+    for (const start of starts) await expect(Math.abs(start - (starts[0] as number))).toBeLessThan(0.5);
+    // A reader hears the code, not the numbers, and selecting it gives the code alone.
+    const heard = await readableText();
+    await expect(heard.filter((text) => /^[\d\s]+$/.test(text))).toEqual([]);
+    await expect(getComputedStyle(rows[0]!, "::before").userSelect).toBe("none");
+    const selection = window.getSelection() as Selection;
+    selection.selectAllChildren(diff.querySelector("code") as Node);
+    await expect(selection.toString().split("\n")).toEqual(samples.diffWithHunks.split("\n"));
+    selection.removeAllRanges();
+    // A wrapped row continues under its own text, past both columns.
+    const wrapped = within(canvasElement).getByTestId("wrapped");
+    const long = linesOf(wrapped)[2] as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(long);
+    const rowStarts = new Map<number, number>();
+    for (const box of range.getClientRects()) {
+      if (box.width === 0) continue;
+      const row = Math.round(box.top);
+      rowStarts.set(row, Math.min(rowStarts.get(row) ?? Number.POSITIVE_INFINITY, box.left));
+    }
+    await expect(rowStarts.size).toBeGreaterThan(2);
+    const firstX = [...rowStarts.values()][0] as number;
+    for (const start of rowStarts.values()) await expect(Math.abs(start - firstX)).toBeLessThan(0.5);
+    const gutter = px(getComputedStyle(long, "::before").width);
+    await expect(Math.abs(firstX - (rect(long).left + 2 * resolveLength("--dbm-space-4") + gutter))).toBeLessThan(1);
+    // A diff with no hunk header has no gutter at all.
+    for (const row of linesOf(within(canvasElement).getByTestId("handwritten"))) await expect(["none", "normal"]).toContain(getComputedStyle(row, "::before").content);
   },
 };
 

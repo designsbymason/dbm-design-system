@@ -715,3 +715,101 @@ describe("CodeBlock: showHeader and showLanguage", () => {
     });
   });
 });
+
+describe("CodeBlock: diff line numbers", () => {
+  const diff = [
+    "diff --git a/total.ts b/total.ts",
+    "--- a/total.ts",
+    "+++ b/total.ts",
+    "@@ -8,3 +8,4 @@ export function total() {",
+    "   const a = 1;",
+    "-  return a;",
+    "+  const b = 2;",
+    "+  return a + b;",
+    " }",
+  ].join("\n");
+  const handWritten = "- const size = 'md';\n+ const size = 'lg';";
+  const lineNumbers = () => [...document.querySelectorAll("span[data-line]")].map((line) => line.getAttribute("data-numbers"));
+
+  it("numbers a diff with hunk headers in an old and a new column, from the headers", () => {
+    render(<CodeBlock code={diff} language="diff" showLineNumbers />);
+    expect(screen.getByRole("figure")).toHaveClass(styles.numbered as string, styles.diffNumbered as string);
+    // Two digits a column (the largest number is 11), two spaces between: six characters a row.
+    expect(lineNumbers()).toEqual([
+      "      ", // diff --git
+      "      ", // ---
+      "      ", // +++
+      "      ", // @@ -8,3 +8,4 @@
+      " 8   8", // context: old 8, new 8
+      " 9    ", // removed: old 9
+      "     9", // added: new 9
+      "    10", // added: new 10
+      "10  11", // context: old 10, new 11
+    ]);
+  });
+
+  it("sizes the gutter for two columns and the space between them", () => {
+    render(<CodeBlock code={diff} language="diff" showLineNumbers />);
+    // Two digits a column: 2 + 2 + 2.
+    expect(screen.getByRole("figure").style.getPropertyValue("--code-block-gutter")).toBe("6ch");
+  });
+
+  it("keeps the numbers out of the text, and the copy button copies the code as written", async () => {
+    render(<CodeBlock code={diff} language="diff" showLineNumbers />);
+    expect(codeElement().textContent).toBe(diff.replace(/\n/g, ""));
+    fireEvent.click(screen.getByRole("button", { name: "Copy code" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(diff));
+  });
+
+  it("counts rows from 1 for highlightLines and ignores startLine in a numbered diff", () => {
+    render(<CodeBlock code={diff} language="diff" showLineNumbers startLine={50} highlightLines={[6, "8-9"]} />);
+    const lines = [...document.querySelectorAll("span[data-line]")];
+    expect(lines.map((line) => line.getAttribute("data-line"))).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    expect(lines.filter((line) => line.getAttribute("data-highlighted") === "true").map((line) => line.getAttribute("data-line"))).toEqual(["6", "8", "9"]);
+    expect(screen.getByText("Highlighted line:")).toBeInTheDocument();
+    expect(screen.getByText("2 highlighted lines:")).toBeInTheDocument();
+  });
+
+  it("draws a diff with no hunk headers without a gutter, whatever showLineNumbers says", () => {
+    render(<CodeBlock code={handWritten} language="diff" showLineNumbers />);
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.numbered as string);
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.diffNumbered as string);
+    expect(lineNumbers()).toEqual([null, null]);
+  });
+
+  it("leaves startLine and highlightLines alone on a diff it does not number", () => {
+    render(<CodeBlock code={handWritten} language="diff" showLineNumbers startLine={5} highlightLines={[5]} />);
+    const lines = [...document.querySelectorAll("span[data-line]")];
+    expect(lines.map((line) => line.getAttribute("data-line"))).toEqual(["5", "6"]);
+    expect(lines[0]).toHaveAttribute("data-highlighted", "true");
+  });
+
+  it("draws no numbers unless showLineNumbers is on", () => {
+    render(<CodeBlock code={diff} language="diff" />);
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.numbered as string);
+    expect(lineNumbers().every((value) => value === null)).toBe(true);
+  });
+
+  it("numbers a diff written under another name for it, and leaves other languages counting their rows", () => {
+    const { rerender } = render(<CodeBlock code={diff} language="patch" showLineNumbers />);
+    expect(screen.getByRole("figure")).toHaveClass(styles.diffNumbered as string);
+    rerender(<CodeBlock code={diff} language="ts" showLineNumbers />);
+    expect(screen.getByRole("figure")).toHaveClass(styles.numbered as string);
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.diffNumbered as string);
+    expect(lineNumbers().every((value) => value === null)).toBe(true);
+    expect(document.querySelectorAll("span[data-line]")[0]).toHaveAttribute("data-line", "1");
+  });
+
+  it("numbers again from the new code when it changes", () => {
+    const { rerender } = render(<CodeBlock code={handWritten} language="diff" showLineNumbers />);
+    expect(screen.getByRole("figure")).not.toHaveClass(styles.diffNumbered as string);
+    rerender(<CodeBlock code={diff} language="diff" showLineNumbers />);
+    expect(screen.getByRole("figure")).toHaveClass(styles.diffNumbered as string);
+  });
+
+  it("has no accessibility violations", async () => {
+    const { container } = render(<CodeBlock code={diff} language="diff" showLineNumbers title="total.diff" />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+

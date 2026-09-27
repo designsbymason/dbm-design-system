@@ -186,6 +186,17 @@ band across the full width and an accent on its edge, so it does not rely on col
 
 <Canvas of={CodeBlockStories.HighlightedLines} />
 
+### A diff with line numbers
+
+`showLineNumbers` on a `diff` gives the gutter two columns, the line's number in the old file and in the new one,
+read from the diff's `@@ -12,4 +12,5 @@` hunk headers (the output of `git diff` has them). A removed line has an old
+number only, an added line a new one only, and a context line both; the header lines have none. A diff with no
+hunk headers, such as a hand-written `-`/`+` snippet, has no file positions to show, so it is drawn without a
+gutter. As with every gutter, the numbers are decoration: not selected, not copied, not read out. In a numbered
+diff `highlightLines` counts the rows, from 1, and `startLine` is not used.
+
+<Canvas of={CodeBlockStories.DiffLineNumbers} />
+
 ### An excerpt, from line 42
 
 <Canvas of={CodeBlockStories.Excerpt} />

@@ -8,10 +8,11 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./CodeBlock.module.css";
 import type { CodeBlockLabels, CodeBlockProps, CodeBlockSize } from "./CodeBlock.types";
 import { copyToClipboard } from "./copyToClipboard";
+import { diffGutter, parseDiffNumbers } from "./diffNumbers";
 import { parseHighlightLines } from "./highlightLines";
 import { findRegisteredLanguage, subscribeToCodeLanguages } from "./registry";
 import { textToCopy } from "./textToCopy";
-import { tokenize } from "./tokenize";
+import { resolveLanguage, tokenize } from "./tokenize";
 import type { TokenType } from "./tokenize";
 import { useCodeScroll } from "./useCodeScroll";
 import { useCollapsedHeight } from "./useCollapsedHeight";
@@ -124,8 +125,20 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     const registered = useSyncExternalStore(subscribeToCodeLanguages, getRegistered, getRegistered);
     const lines = useMemo(() => tokenize(text, language, highlighter, registered), [text, language, highlighter, registered]);
     const highlighted = useMemo(() => parseHighlightLines(highlightLines), [highlightLines]);
-    const firstLine = Number.isFinite(startLine) ? Math.trunc(startLine) : 1;
-    const gutterDigits = String(Math.max(Math.abs(firstLine), Math.abs(firstLine + lines.length - 1))).length + (firstLine < 0 ? 1 : 0);
+    // A diff with hunk headers is numbered from them, an old and a new column, instead of counting its rows; one with
+    // none (a hand-written snippet) has no line numbers to show, so it is drawn without a gutter.
+    const isDiff = resolveLanguage(language) === "diff";
+    const diffGutterOf = useMemo(() => {
+      if (!showLineNumbers || !isDiff) return undefined;
+      const numbers = parseDiffNumbers(lines.map((line) => line.map((token) => token.text).join("")));
+      return numbers && diffGutter(numbers);
+    }, [showLineNumbers, isDiff, lines]);
+    const numbered = showLineNumbers && (!isDiff || diffGutterOf !== undefined);
+    // In a numbered diff `highlightLines` counts the rows, from 1 (`startLine` has nothing to say there).
+    const firstLine = diffGutterOf ? 1 : Number.isFinite(startLine) ? Math.trunc(startLine) : 1;
+    const gutterDigits = diffGutterOf
+      ? 2 * diffGutterOf.digits + 2
+      : String(Math.max(Math.abs(firstLine), Math.abs(firstLine + lines.length - 1))).length + (firstLine < 0 ? 1 : 0);
 
     // A screen reader has no way to see the band, so the first line of each highlighted run says how many lines
     // it covers (never selected or copied).
@@ -243,7 +256,8 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
         className={cx(
           styles.root,
           sizeClass[size],
-          showLineNumbers && styles.numbered,
+          numbered && styles.numbered,
+          diffGutterOf && styles.diffNumbered,
           wrap && styles.wrap,
           collapsed && styles.collapsed,
           floatingControls && styles.hasFloating,
@@ -280,7 +294,10 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
                 {lines.map((line, index) => {
                   const number = firstLine + index;
                   return (
-                    <span key={index} className={styles.line} data-line={number} data-highlighted={highlighted.has(number) ? "true" : undefined}>
+                    <span key={index} className={styles.line} data-line={number}
+                      data-numbers={diffGutterOf?.text[index]}
+                      data-highlighted={highlighted.has(number) ? "true" : undefined}
+                    >
                       {highlightRuns.has(index) && (
                         <VisuallyHidden className={styles.cue}>{labels.highlighted(highlightRuns.get(index) as number)}</VisuallyHidden>
                       )}
