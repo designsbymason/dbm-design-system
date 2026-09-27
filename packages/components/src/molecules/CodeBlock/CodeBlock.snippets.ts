@@ -29,6 +29,20 @@ export const codeBlockSnippets = {
 <CodeBlock language="rust" code={"fn main() {\\n    println!(\\"hi\\");\\n}"} />
 <CodeBlock language="java" code={"public class Main {\\n  void run() {}\\n}"} />`,
 
+  furtherLanguages: `{/* C, C++, C#, Kotlin, Swift, Ruby, PHP and TOML are opt-in too: register each one you use once, when the app starts.
+    import { cLanguage, cppLanguage, csharpLanguage, kotlinLanguage, swiftLanguage, rubyLanguage, phpLanguage, tomlLanguage,
+      registerCodeLanguage } from "@dbm-design-system/components";
+    registerCodeLanguage(csharpLanguage);
+    Aliases: "h", "c++", "cc", "hpp", "cs", "kt", "kts", "rb". */}
+<CodeBlock language="c" code={"#include <stdio.h>\\nint main(void) { return 0; }"} />
+<CodeBlock language="cpp" code={"template <typename T>\\nclass Box final { T value; };"} />
+<CodeBlock language="csharp" code={"public class Greeter {\\n  public string Name { get; set; }\\n}"} />
+<CodeBlock language="kotlin" code={"fun greet(name: String) = println(\\"Hi $name\\")"} />
+<CodeBlock language="swift" code={"func greet(_ name: String) -> String {\\n  return \\"Hi \\\\(name)\\"\\n}"} />
+<CodeBlock language="ruby" code={"class Greeter\\n  def greet = :hello\\nend"} />
+<CodeBlock language="php" code={"<?php\\nfunction greet(string $name): string { return \\"Hi $name\\"; }"} />
+<CodeBlock language="toml" code={"[server]\\nport = 8080"} />`,
+
   ownLanguage: `{/* A language of your own: a name and a function from the code to lines of { type?, text } tokens (never HTML).
     Register it once, when the app starts, and it wins over a built-in language of the same name:
     registerCodeLanguage({ name: "ini", tokenize: (code) => code.split("\\n").map(iniLine) });

@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { goLanguage, javaLanguage, markdownLanguage, pythonLanguage, rustLanguage, sqlLanguage, yamlLanguage } from "./grammars";
+import * as shipped from "./languages";
 import { registerCodeLanguage } from "./registry";
 import { MAX_HIGHLIGHT_LENGTH, resolveLanguage, tokenize } from "./tokenize";
 
 // The seven languages that ship outside the core are opt-in; this suite exercises their grammars through `tokenize`,
 // as an app that registers them would. (`registry.test.ts` covers what registering does, and not doing it.)
-for (const language of [pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage]) {
-  registerCodeLanguage(language);
-}
+for (const language of Object.values(shipped)) registerCodeLanguage(language);
 
 /** Every token of the first line, as `[type, text]`, leaving out plain text so a test says only what it means. */
 const typed = (code: string, language: string) =>
@@ -21,7 +19,7 @@ const rejoin = (code: string, language: string) =>
     .map((line) => line.map((token) => token.text).join(""))
     .join("\n");
 
-const languages = ["js", "jsx", "ts", "tsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "text", undefined];
+const languages = ["js", "jsx", "ts", "tsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "c", "cpp", "csharp", "kotlin", "swift", "ruby", "php", "toml", "text", undefined];
 
 const samples = [
   "",
@@ -43,6 +41,12 @@ const samples = [
   "package main\nfunc (s *S) Run() error { return `raw\nstr` }",
   "#[derive(Debug)]\nstruct P<'a> { x: &'a str }\nlet r = r#\"raw \"q\" \"#; let c = 'x'; println!(\"{}\", 1u8);",
   "@Override\npublic class A { String s = \"\"\"\n  t\"\"\"; int n = 0x1F; }",
+  '#include <stdio.h>\n#define N 1\nint main(void) { auto s = R"x(a"b)x"; int n = 1\'000; return 0; } // done',
+  'using System;\n[Serializable]\nclass A { string s = $"hi {n}" + @"C:\\x""y" + """raw"""; }\n#region r',
+  '@Composable\nfun f(a: Int = 1): Unit { val s = """t\n"""; println("$a ${a + 1}") }\n@State var n = 0\n#if DEBUG\n#endif',
+  '# c\nclass A < B\n  def x?(a, k: 1) = @v ? :y : :"z"\n  t = <<~EOS\n    body\n  EOS\nend\n=begin\nx\n=end',
+  '<?php\n#[Route("/x")]\n$a = "hi {$n}" . <<<EOT\n  t\n  EOT;\n// c\n?>\n<p>x</p>',
+  '# c\ntitle = "x"\na.b = 1979-05-27T07:32:00Z\n[t.u]\n[[v]]\nm = """\nl\n"""\nn = [ 1, 2 ]',
 ];
 
 describe("tokenize", () => {
@@ -358,6 +362,12 @@ describe("tokenize speed", () => {
     ["rust", `'${word}`],
     ["java", word],
     ["java", `"""${word}`],
+    ["c", word], ["c", `"${word}`], ["c", `/* ${word}`], ["cpp", word], ["cpp", `R"(${word}`], ["cpp", `R"x(${word}`], ["cpp", `'${word}`],
+    ["csharp", word], ["csharp", `@"${word}`], ["csharp", `$"${word}`], ["csharp", `"""${word}`], ["csharp", `[${word}`],
+    ["kotlin", word], ["kotlin", `"""${word}`], ["kotlin", `@${word}`], ["swift", word], ["swift", `"""${word}`], ["swift", `#"""${word}`], ["swift", `#${word}`],
+    ["ruby", word], ["ruby", `<<~${"A".repeat(3)}\n${word}`], ["ruby", `=begin\n${word}`], ["ruby", `:${word}`], ["ruby", `"${word}`], ["ruby", `@${word}`], ["ruby", `${word}:`],
+    ["php", word], ["php", `<<<A\n${word}`], ["php", `$${word}`], ["php", `"${word}`], ["php", `#[${word}`], ["php", `/* ${word}`],
+    ["toml", word], ["toml", `${word} = 1`], ["toml", `a.${word} = 1`], ["toml", `[${word}`], ["toml", `"""${word}`], ["toml", `a = "${word}`],
   ])("finishes a long word promptly in %s", (language, code) => {
     const start = performance.now();
     tokenize(code, language);
@@ -417,6 +427,12 @@ describe("tokenize: cost grows in proportion to length", () => {
     ["rust", "#["], ["rust", "#[a"], ["rust", "#!["], ["rust", 'r#"'], ["rust", "'a "],
     ["python", '"""'], ["python", "f'"], ["java", '"""'], ["sql", "'"], ["sql", "/*"], ["go", "`"],
     ["yaml", "a:\n"], ["yaml", "- "], ["yaml", '"'],
+    ["c", "/*"], ["c", '"'], ["c", "<"], ["c", "#"], ["cpp", 'R"('], ["cpp", 'R"x('], ["cpp", "'"], ["cpp", "R"],
+    ["csharp", "@\""], ["csharp", '$"'], ["csharp", '"""'], ["csharp", "$"], ["csharp", "$$"], ["csharp", "[A("], ["csharp", "[A"],
+    ["kotlin", '"""'], ["kotlin", '"'], ["kotlin", "@"], ["swift", '"""'], ["swift", '#"""'], ["swift", "#"], ["swift", "##"], ["swift", "@"],
+    ["ruby", "<<A\n"], ["ruby", "<<~A\n"], ["ruby", "=begin\n"], ["ruby", ':"'], ["ruby", '"'], ["ruby", "'"], ["ruby", "`"], ["ruby", "@"], ["ruby", ":"],
+    ["php", "<<<A\n"], ["php", "<?"], ["php", '"'], ["php", "#["], ["php", "/*"], ["php", "$"], ["php", "$$"],
+    ["toml", "["], ["toml", "[["], ["toml", '"""'], ["toml", "a="], ["toml", "a."], ["toml", '"'], ["toml", "a = ["], ["toml", "0000-00-00T"],
     ["ts", "`"], ["ts", "/*"], ["ts", "'"], ["tsx", "<a"], ["tsx", "<a b={"], ["tsx", "{`"], ["jsx", "</"],
     ["css", "/*"], ["css", "url("], ["css", "a{"], ["css", "@media "], ["html", "<a"], ["html", "<!--"], ["html", '<a b="'],
     ["bash", "'"], ["bash", '"'], ["bash", "$("], ["bash", "${"], ["json", '"'], ["json", "["],

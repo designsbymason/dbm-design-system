@@ -386,7 +386,8 @@ export function tokenize(
   if (!resolved) {
     // Nothing draws this language. If it is one that ships outside the core, the likely reason is that the app
     // hasn't registered it, and plain text with no explanation looks like a bug in the component.
-    const optIn = optInExportFor(language);
+    // Development only, so a production build drops the name list along with the warning.
+    const optIn = process.env.NODE_ENV === "production" ? undefined : optInExportFor(language);
     if (optIn) {
       warnOnce(`CodeBlock: language "${String(language).trim()}" is opt-in, so it is drawn as plain text until the app calls registerCodeLanguage(${optIn}), once, when it starts.`);
     }

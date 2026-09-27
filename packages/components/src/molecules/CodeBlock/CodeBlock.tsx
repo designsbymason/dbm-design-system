@@ -59,7 +59,8 @@ type CopyState = { status: "idle" | "copied" | "failed"; count: number };
  *
  * Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and
  * `diff`. Other languages are opt-in: `registerCodeLanguage(pythonLanguage)` once at start (there are also
- * `yamlLanguage`, `sqlLanguage`, `markdownLanguage`, `goLanguage`, `rustLanguage` and `javaLanguage`), or an
+ * `yamlLanguage`, `sqlLanguage`, `markdownLanguage`, `goLanguage`, `rustLanguage`, `javaLanguage`, `cLanguage`,
+ * `cppLanguage`, `csharpLanguage`, `kotlinLanguage`, `swiftLanguage`, `rubyLanguage`, `phpLanguage` and `tomlLanguage`), or an
  * app's own grammar, or a `highlighter` for a single block; any other language is drawn as plain text. It builds
  * React elements from plain data and never sets HTML, so the code is always shown as text; it is approximate,
  * not a full grammar. Code stays left-to-right in a right-to-left page.

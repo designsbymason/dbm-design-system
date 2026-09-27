@@ -53,8 +53,8 @@ button, and a way to collapse a long one. It is a `<figure>` around a scrollable
 the code as text, never as HTML.
 
 Highlighting is a small built-in tokenizer with no dependency. `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`,
-`bash` and `diff` work as they are; `python`, `yaml`, `sql`, `markdown`, `go`, `rust` and `java` are one line each
-to turn on, so an app that doesn't use them doesn't ship them; and a grammar of your own, or another highlighter,
+`bash` and `diff` work as they are; `python`, `yaml`, `sql`, `markdown`, `go`, `rust`, `java`, `c`, `cpp`, `csharp`,
+`kotlin`, `swift`, `ruby`, `php` and `toml` are one line each to turn on, so an app that doesn't use them doesn't ship them; and a grammar of your own, or another highlighter,
 plugs in the same way. Any other language is drawn as plain text. It is a lexer, not a full grammar — it reads
 well, and it will not catch every corner of a language.
 
@@ -118,6 +118,17 @@ bundler drops the ones you don't import. A Markdown block draws the lines of a f
 snippet of another language inside it is never mistaken for Markdown.
 
 <Canvas of={CodeBlockStories.MoreLanguages} />
+
+### Further languages
+
+C, C++, C#, Kotlin, Swift, Ruby, PHP and TOML (aliases `h`, `c++`, `cc`, `hpp`, `cs`, `kt`, `kts`, `rb`), opt-in
+in the same way (`cLanguage`, `cppLanguage`, `csharpLanguage`, `kotlinLanguage`, `swiftLanguage`, `rubyLanguage`,
+`phpLanguage`, `tomlLanguage`). Each is approximate, and says where: nested block comments in Kotlin and Swift are
+read as one level, an interpolated string (`$"…"`, `"…$name…"`, `"…#{x}…"`) is one colour throughout, Ruby's `/`
+is always a division (never a regex), and a PHP file's text outside `<?php … ?>` is drawn as it is written, not told
+apart from code.
+
+<Canvas of={CodeBlockStories.FurtherLanguages} />
 
 ### Your own language or highlighter
 

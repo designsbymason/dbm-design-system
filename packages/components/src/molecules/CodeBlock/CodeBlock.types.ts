@@ -64,10 +64,11 @@ export interface CodeBlockProps extends Omit<ComponentPropsWithoutRef<"figure">,
   code: string;
   /**
    * The language to highlight it as. Built in: `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and `diff`,
-   * plus aliases (`typescript`, `javascript`, `sh`, `shell`, `svg`, `xml`, `scss`, `patch`). `python`, `yaml`,
-   * `sql`, `markdown`, `go`, `rust` and `java` (with `py`, `yml`, `postgres`, `md`, `golang`, `rs`…) are
-   * languages an app turns on with `registerCodeLanguage`, and so is any grammar of its own. Any other value, or
-   * none, draws the code as plain text. Shown as a label in the header, as written.
+   * plus aliases (`typescript`, `javascript`, `sh`, `shell`, `svg`, `xml`, `scss`, `patch`). `python`, `yaml`, `sql`,
+   * `markdown`, `go`, `rust`, `java`, `c`, `cpp`, `csharp`, `kotlin`, `swift`, `ruby`, `php` and `toml` (with `py`,
+   * `yml`, `postgres`, `md`, `golang`, `rs`, `h`, `c++`, `cs`, `kt`, `rb`…) are languages an app turns on with
+   * `registerCodeLanguage`, and so is any grammar of its own. Any other value, or none, draws the code as plain
+   * text. Shown as a label in the header, as written.
    */
   language?: string;
   /**

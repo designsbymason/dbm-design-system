@@ -6,15 +6,13 @@ import { Text } from "../../atoms/Text";
 import { CodeBlock } from "./CodeBlock";
 import { codeBlockPlaygroundSnippet, codeBlockSnippets, highlightLinesFromText } from "./CodeBlock.snippets";
 import type { CodeBlockProps } from "./CodeBlock.types";
-import { goLanguage, javaLanguage, markdownLanguage, pythonLanguage, rustLanguage, sqlLanguage, yamlLanguage } from "./languages";
+import * as shippedLanguages from "./languages";
 import { registerCodeLanguage } from "./registry";
 import type { CodeLanguage, Highlighter, Token, TokenLine } from "./tokenizeTypes";
 
 // What an app does once, when it starts: turn on the languages it uses. Storybook is one app for every story, so it
-// turns on all seven that ship outside the core, and one of its own (`ini`, below).
-for (const language of [pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage]) {
-  registerCodeLanguage(language);
-}
+// turns on all fifteen that ship outside the core, and one of its own (`ini`, below).
+for (const language of Object.values(shippedLanguages)) registerCodeLanguage(language);
 
 /** A grammar of an app's own, as `registerCodeLanguage` takes it: a name and a function from code to lines of tokens. */
 function iniLine(line: string): TokenLine {
@@ -155,6 +153,102 @@ public class Greeter {
   }
 }`,
   longLine: `curl --request POST --url https://api.example.com/v1/projects/12345/members --header 'Authorization: Bearer <token>' --header 'Content-Type: application/json' --data '{"role":"editor","notify":true}'`,
+  c: `#include <stdio.h>
+#define MAX 3
+
+/* Prints a greeting. */
+int main(int argc, char **argv) {
+  for (int i = 0; i < MAX; i++) {
+    printf("hello %d\\n", i); // once per line
+  }
+  return 0;
+}`,
+  cpp: `#include <vector>
+#include <string>
+
+template <typename T>
+class Box final {
+public:
+  auto raw = R"json({"a": 1})json";
+  constexpr int limit = 1'000;
+  void add(const T& value) { items.push_back(value); }
+private:
+  std::vector<T> items;
+};`,
+  csharp: `using System;
+
+[Serializable]
+public class Greeter {
+  public string Name { get; set; }
+
+  public async Task<int> RunAsync(int times) {
+    var text = $"Hello, {Name}!";
+    Console.WriteLine(text); // done
+    return times * 2;
+  }
+}`,
+  kotlin: `@Composable
+fun Greeting(name: String = "world"): Unit {
+  val text = """
+    Hello, $name!
+  """.trimIndent()
+  println(text) // done
+  val big = 0xFFL + 1_000
+}
+
+data class User(val id: Int, val name: String?)`,
+  swift: `import SwiftUI
+
+struct Greeting: View {
+  @State private var count = 0
+
+  var body: some View {
+    Text("Tapped \\(count) times")
+  }
+}
+
+func greet(_ name: String) -> String {
+  guard let first = name.first else { return "" } // empty
+  return "Hello, \\(first)"
+}`,
+  ruby: `# A greeting.
+class Greeter < Base
+  attr_reader :name
+
+  def initialize(name, loud: false)
+    @name = name
+    @loud = loud
+  end
+
+  def greet
+    text = <<~TEXT
+      Hello, #{@name}!
+    TEXT
+    @loud ? text.upcase : text
+  end
+end`,
+  php: `<?php
+namespace App;
+
+#[Route("/hello")]
+final class Greeter extends Base {
+  public function greet(string $name): string {
+    // Says hello.
+    return "Hello, {$name}!" . ($this->loud ?? null);
+  }
+}
+?>`,
+  toml: `# Server settings
+title = "Example"
+
+[server]
+host = "0.0.0.0"
+port = 8080
+started = 2026-09-26T10:00:00Z
+
+[[routes]]
+path = "/"
+methods = ["GET", "HEAD"]`,
   ini: `; Server settings
 [server]
 port = 3000
@@ -209,9 +303,9 @@ const meta: Meta<PlaygroundArgs> = {
     },
     language: {
       control: "select",
-      options: ["ts", "tsx", "js", "jsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "text"],
+      options: ["ts", "tsx", "js", "jsx", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "c", "cpp", "csharp", "kotlin", "swift", "ruby", "php", "toml", "text"],
       description:
-        "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash and diff are built in, with aliases such as typescript, sh and svg. python, yaml, sql, markdown, go, rust and java (and py, yml, md, golang, rs…) are turned on with registerCodeLanguage, and so is a grammar of your own; any other value, or none, draws plain text. Shown as a label in the header.",
+        "The language to highlight it as. ts, tsx, js, jsx, json, css, html, bash and diff are built in, with aliases such as typescript, sh and svg. python, yaml, sql, markdown, go, rust, java, c, cpp, csharp, kotlin, swift, ruby, php and toml (and py, yml, md, golang, rs, cs, kt, rb…) are turned on with registerCodeLanguage, and so is a grammar of your own; any other value, or none, draws plain text. Shown as a label in the header.",
     },
     highlighter: {
       ...noControls,
@@ -411,6 +505,20 @@ export const MoreLanguages: Story = {
   render: (args) => (
     <div style={stack}>
       {(["python", "yaml", "sql", "markdown", "go", "rust", "java"] as const).map((language) => (
+        <DemoBlock key={language} {...args} code={samples[language]} language={language} title="" aria-label={`${language} example`} />
+      ))}
+    </div>
+  ),
+};
+
+export const FurtherLanguages: Story = {
+  name: "Further languages",
+  parameters: { docs: { source: { code: codeBlockSnippets.furtherLanguages } } },
+  args: {},
+  argTypes: { code: noControls, language: noControls, title: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={stack}>
+      {(["c", "cpp", "csharp", "kotlin", "swift", "ruby", "php", "toml"] as const).map((language) => (
         <DemoBlock key={language} {...args} code={samples[language]} language={language} title="" aria-label={`${language} example`} />
       ))}
     </div>
@@ -669,7 +777,7 @@ const contrast = (a: string, b: string) => {
 };
 
 // Every language with a grammar, so every colour it uses is measured.
-const contrastLanguages = ["tsx", "ts", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "ini"] as const;
+const contrastLanguages = ["tsx", "ts", "json", "css", "html", "bash", "diff", "python", "yaml", "sql", "markdown", "go", "rust", "java", "c", "cpp", "csharp", "kotlin", "swift", "ruby", "php", "toml", "ini"] as const;
 
 export const TokenContrastInteraction: Story = {
   ...Playground,

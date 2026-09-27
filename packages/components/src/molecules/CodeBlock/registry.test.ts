@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { goLanguage, javaLanguage, markdownLanguage, pythonLanguage, rustLanguage, sqlLanguage, yamlLanguage } from "./grammars";
+import { cLanguage, cppLanguage, csharpLanguage, goLanguage, javaLanguage, kotlinLanguage, markdownLanguage, phpLanguage, pythonLanguage, rubyLanguage, rustLanguage, sqlLanguage, swiftLanguage, tomlLanguage, yamlLanguage } from "./grammars";
 import { optInLanguageExports } from "./optInLanguages";
 import { findRegisteredLanguage, registerCodeLanguage, subscribeToCodeLanguages } from "./registry";
 import { MAX_HIGHLIGHT_LENGTH, tokenize } from "./tokenize";
@@ -52,6 +52,14 @@ describe("the languages that ship outside the core", () => {
       [goLanguage, ["go", "golang"]],
       [rustLanguage, ["rust", "rs"]],
       [javaLanguage, ["java"]],
+      [cLanguage, ["c", "h"]],
+      [cppLanguage, ["cpp", "c++", "cc", "cxx", "hpp", "hh"]],
+      [csharpLanguage, ["csharp", "cs", "c#"]],
+      [kotlinLanguage, ["kotlin", "kt", "kts"]],
+      [swiftLanguage, ["swift"]],
+      [rubyLanguage, ["ruby", "rb"]],
+      [phpLanguage, ["php"]],
+      [tomlLanguage, ["toml"]],
     ];
     for (const [language] of aliases) register(language);
     for (const [language, names] of aliases) {
@@ -274,7 +282,7 @@ describe("cost", () => {
 });
 
 describe("an opt-in language nobody registered", () => {
-  const shipped = { pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage };
+  const shipped = { pythonLanguage, yamlLanguage, sqlLanguage, markdownLanguage, goLanguage, rustLanguage, javaLanguage, cLanguage, cppLanguage, csharpLanguage, kotlinLanguage, swiftLanguage, rubyLanguage, phpLanguage, tomlLanguage };
 
   // Spellings in capitals: a warning is said once per message, and the tests above use the lower-case ones.
   it.each(Object.entries(optInLanguageExports))("says, in development, how to turn on %s", (name, exportName) => {

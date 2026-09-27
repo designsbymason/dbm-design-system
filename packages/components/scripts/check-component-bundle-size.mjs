@@ -39,6 +39,7 @@ const PACKAGE_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SRC_INDEX = join(PACKAGE_ROOT, "src/index.ts");
 const OUT_DIR = join(PACKAGE_ROOT, "dist/.bundle-size-check");
 
+// (Sizes are for a production build: see `define` below, and 06-engineering-standards.md.)
 // Deliberately generous headroom over the real baseline measured
 // 2026-08-16 (50 components; largest gzipped was Avatar at 1.88KB JS /
 // 1.04KB CSS, median well under 1KB for both) — a tripwire for one
@@ -54,7 +55,13 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 // import one, its bundle grows for every app whatever language it uses, and this says so before the byte budget
 // (which it could still fit inside) does.
 const MUST_NOT_CONTAIN = {
-  CodeBlock: { nonlocal: "the Python grammar", fallthrough: "the Go grammar", strictfp: "the Java grammar" },
+  CodeBlock: {
+    nonlocal: "the Python grammar",
+    fallthrough: "the Go grammar",
+    strictfp: "the Java grammar",
+    // A name only the development-only opt-in list holds: it must be gone from a production build.
+    pgsql: "the opt-in language name list (development only)",
+  },
 };
 
 /**
@@ -108,6 +115,9 @@ async function buildAllEntries(components) {
     splitting: false,
     external: ["react", "react-dom"],
     loader: { ".css": "local-css" },
+    // Measured as an app's production build ships it: development-only code (warnings, the opt-in language
+    // names behind them) is dropped there, and counting it would overstate what a consumer pays for.
+    define: { "process.env.NODE_ENV": '"production"' },
     silent: true,
   });
 }
@@ -159,7 +169,7 @@ async function main() {
   for (const [name, markers] of Object.entries(MUST_NOT_CONTAIN)) {
     const js = readFileSync(join(OUT_DIR, `${name}.js`), "utf8");
     for (const [marker, what] of Object.entries(markers)) {
-      if (js.includes(marker)) failures.push(`${name}: its bundle contains ${what}, which is meant to be opt-in.`);
+      if (js.includes(marker)) failures.push(`${name}: its bundle contains ${what}, which should not be in it.`);
     }
   }
 
