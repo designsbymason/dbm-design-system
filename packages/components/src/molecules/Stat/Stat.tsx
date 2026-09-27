@@ -59,11 +59,11 @@ const iconSize: Record<StatSize, IconSize> = {
 };
 
 const labelSize: Record<StatSize, TextSize> = {
-  xs: "base",
-  sm: "md",
-  md: "md",
-  lg: "lg",
-  xl: "lg",
+  xs: "sm",
+  sm: "base",
+  md: "base",
+  lg: "md",
+  xl: "md",
 };
 
 // `Stat.Description` keeps the smaller steps `Stat.Label` used before its own size increased —
@@ -293,16 +293,20 @@ const StatIcon = forwardRef<HTMLDivElement, StatIconProps>(({ icon, label, class
 StatIcon.displayName = "Stat.Icon";
 
 /**
- * What the metric is, sized to the stat's `size` and uppercase by default (a CSS class default,
- * not a separate prop — pass `style={{ textTransform: "none" }}` to opt out, since an inline
- * style always wins over a class). Coloured by `tone` (`--stat-label-color` in
- * `Stat.module.css`, not this component's own `color` prop, which `Text` would apply as a
- * same-specificity class no more or less "correct" than the stylesheet's own — the stylesheet
- * wins deliberately, by a higher-specificity selector, not by accident of file order).
+ * What the metric is, sized to the stat's `size`, medium weight, and uppercase — all three CSS
+ * class defaults, not separate props. Override any of them with `style` (e.g.
+ * `style={{ fontWeight: "var(--dbm-font-weight-regular)", textTransform: "none" }}`), since an
+ * inline style always wins over a class regardless of order. Coloured by `tone`
+ * (`--stat-label-color` in `Stat.module.css`, not this component's own `color` prop, which
+ * `Text` would apply as a same-specificity class no more or less "correct" than the stylesheet's
+ * own — the stylesheet wins deliberately, by a higher-specificity selector, not by accident of
+ * file order).
  */
 const StatLabel = forwardRef<HTMLParagraphElement, StatLabelProps>(({ className, ...props }, ref) => {
   const size = useContext(StatSizeContext);
-  return <Text {...props} ref={ref} size={labelSize[size]} className={cx(styles.label, className)} />;
+  return (
+    <Text {...props} ref={ref} size={labelSize[size]} weight="medium" className={cx(styles.label, className)} />
+  );
 });
 StatLabel.displayName = "Stat.Label";
 

@@ -291,6 +291,24 @@ whole package's real-browser suite (855 passing, unchanged — no new interactio
 `ToneAcrossVariantsInteraction` computed-style assertions don't pin an exact label font size), a production `build`, and a live check of the
 Orientation, Tone-across-variants and Docs pages in both light and dark mode.
 
+## Follow-up (2026-09-27, at explicit direction, third same-day round) — label size down again, medium weight
+
+Two more small changes, on top of both follow-ups above:
+
+1. **`Stat.Label` pulled back down one more size step.** `xs→sm, sm→base, md→base, lg→md, xl→md` (was `xs→base, sm→md, md→md, lg→lg, xl→lg`
+   — one step up from `Stat.Description`'s table now, not two). Same table both orientations read, so the icon in
+   `orientation="horizontal"` shrinks with it automatically, same as the previous size follow-up.
+2. **`Stat.Label` is medium weight by default**, up from `Text`'s own `regular` default (`Stat.Label` previously left `weight` unset
+   entirely). A `weight="medium"` prop passed to the underlying `Text`, not a CSS override like uppercase — `Stat.module.css` has no
+   font-weight rule for `.label`, so there's no specificity concern here the way there is for colour and `text-transform`. Overridable the
+   same way as uppercase: `Stat.Label`'s own `style` prop (e.g. `style={{ fontWeight: "var(--dbm-font-weight-regular)" }}`), which as an
+   inline style still wins over `Text`'s own weight class regardless of order — `weight` itself isn't a `Stat.Label` prop (`StatLabelProps`
+   only extends native `<p>` attributes, not `Text`'s own props), so `style` is the one override path for both together.
+
+Re-verified: `tsc`, `eslint`, the whole package's unit suite (4537 passing, +1 new: the medium-weight-by-default assertion), the whole
+package's real-browser suite (855 passing, unchanged), a production `build`, and a live check of the Orientation and Tone-across-variants
+stories in light mode.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; `Stat.Trend`'s `role="img"` announcement and `announce`'s own status region

@@ -195,9 +195,10 @@ export interface StatLabelProps
   /** Additional CSS classes for customization. */
   className?: string;
   /**
-   * Inline styles, merged onto the component's own internal styles. Uppercase is the default
-   * (a CSS class, not a separate prop) — pass `{ textTransform: "none" }` (or any other value)
-   * here to override it, since an inline style always wins over a class regardless of order.
+   * Inline styles, merged onto the component's own internal styles. Size, weight, and uppercase
+   * are all CSS class defaults, not separate props — pass `{ fontWeight, textTransform }` (or
+   * any other value) here to override any of them, since an inline style always wins over a
+   * class regardless of order.
    */
   style?: CSSProperties;
   /**

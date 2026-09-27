@@ -88,7 +88,7 @@ describe("Stat", () => {
     it("gives a part rendered outside any Stat the md defaults", () => {
       render(<Stat.Label data-testid="label">Alone</Stat.Label>);
       // md's own label size class, from the Text atom.
-      expect(screen.getByTestId("label")).toHaveClass(textStyles.sizeMd!);
+      expect(screen.getByTestId("label")).toHaveClass(textStyles.sizeBase!);
     });
 
     it("keeps a nested stat's size to itself", () => {
@@ -99,7 +99,7 @@ describe("Stat", () => {
           </Stat>
         </Stat>,
       );
-      expect(screen.getByTestId("inner-label")).toHaveClass(textStyles.sizeBase!);
+      expect(screen.getByTestId("inner-label")).toHaveClass(textStyles.sizeSm!);
     });
   });
 
@@ -107,6 +107,11 @@ describe("Stat", () => {
     it("is uppercase by default", () => {
       renderStat();
       expect(getComputedStyle(screen.getByTestId("label")).textTransform).toBe("uppercase");
+    });
+
+    it("is medium weight by default", () => {
+      renderStat();
+      expect(screen.getByTestId("label")).toHaveClass(textStyles.weightMedium!);
     });
 
     it("can be overridden with a style prop, which wins over the default", () => {
@@ -239,8 +244,8 @@ describe("Stat", () => {
         </Stat>,
       );
       const row = document.querySelector(`.${styles.iconLabelRow}`) as HTMLElement;
-      // size="lg" maps Stat.Label to the "lg" text-size step (see labelSize in Stat.tsx).
-      expect(row.style.fontSize).toBe("var(--dbm-font-size-lg)");
+      // size="lg" maps Stat.Label to the "md" text-size step (see labelSize in Stat.tsx).
+      expect(row.style.fontSize).toBe("var(--dbm-font-size-md)");
     });
   });
 

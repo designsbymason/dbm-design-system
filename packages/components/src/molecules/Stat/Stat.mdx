@@ -85,10 +85,11 @@ straight through to the badge.
 
 ### Stat.Label properties
 
-What the metric is, uppercase and sized to the stat's `size`, in the tertiary text colour by default or the
-stat's `tone` colour otherwise. Uppercase is a class default, not a separate prop — pass
-`style={{ textTransform: "none" }}` to opt out. Also accepts any other native `<p>` attribute beyond what's
-listed here (e.g. `onClick`, `lang`) — passed straight through.
+What the metric is: uppercase, medium weight, and sized to the stat's `size`, in the tertiary text colour by
+default or the stat's `tone` colour otherwise. Uppercase and weight are class defaults, not separate props —
+override either with `style` (e.g. `{ textTransform: "none", fontWeight: "var(--dbm-font-weight-regular)" }`).
+Also accepts any other native `<p>` attribute beyond what's listed here (e.g. `onClick`, `lang`) — passed
+straight through.
 
 <PropertiesTable of={StatLabelStories} order={labelPropOrder} />
 
