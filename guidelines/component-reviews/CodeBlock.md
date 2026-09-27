@@ -1,6 +1,15 @@
 # CodeBlock
 
-**Tier:** molecule · **Category:** Typography · **Status:** built 2026-09-26; **Finalized 2026-09-26**, declared by the user after the final review pass recorded below, with the not-verified items left as they are (see "Finalized" at the end). Languages beyond the core made opt-in 2026-09-26, at explicit direction: partial re-check, still Finalized (see the last pass).
+**Tier:** molecule · **Category:** Typography · **Status:** built 2026-09-26; **Finalized 2026-09-26**, declared by the user after the final review pass recorded below, with the not-verified items left as they are (see "Finalized" at the end). Every change since has been at explicit direction and, by the three-question test in `06-engineering-standards.md` §9, left it Finalized (languages beyond the core made opt-in was the one that needed a partial re-check); a second full review ran on 2026-09-26 and its findings were actioned. The dated entries from "Post-Finalization pass" on record each change, and "Current state" below is what is true now.
+
+## Current state (2026-09-27)
+
+- **Status:** Finalized (declared 2026-09-26); nothing since has changed that, and no new declaration has been made after the second review.
+- **Shape:** one component, a `<figure>` around a scrollable `<pre><code>`, 32 props, no dependency, no component token. Highlighting is built in for nine languages (`ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash`, `diff`); fifteen more are opt-in `CodeLanguage`s an app registers ([ADR-0027](../adr/0027-codeblock-languages-are-registered-by-the-app-over-loading-every-grammar-or-loading-them-asynchronously.md)), and an app's own grammar or a block's own `highlighter` plug in the same way, checked before it is drawn. Features: title and language header (friendly language names), copy button, wrap toggle, `size`, line numbers (an old and a new column for a `diff` with hunk headers), highlighted lines, collapsing, a minimal header, and print styles.
+- **Size** (an app's production build, gzipped): the core 8.21KB of JS and 2.34KB of CSS; the opt-in entry 5.60KB for all fifteen languages, 0.5 to 1.0KB for one imported alone.
+- **Tests:** 1,226 unit tests in `CodeBlock/` (4,404 across the package) and 48 real-browser tests in `CodeBlock/` (833 across the package), the tokenizer held to lossless output and to cost proportional to length (a scaling test over about a hundred repeated openers), and 100+ mutations across the passes, each seen to fail.
+- **Open:** gaps 8 (embedded languages), 10 (tabs), 13 to 16 (line links, folding, search highlight, a side-by-side diff) and 18 (a scroll hook shared with `Table`), all only when named; and the checks no automated test can make: a real screen reader, the real Clipboard API against a permission prompt, forced colours on actual Windows, and print pagination.
+- **Watch item:** 32 props. If gaps 13 to 16 are built, consider a compound form.
 
 ## What was built
 
@@ -8,7 +17,7 @@ A single component (not compound), item 21 in the itemized molecule build order 
 
 Props: `code` (required; the text, never HTML), `language`, `highlighter`, `title`, `size`, `showHeader`, `showLanguage`, `showLineNumbers`, `startLine`, `highlightLines` (`[2, "4-6"]`), `wrap` with `defaultWrap` / `onWrapChange` and `wrapToggle`, `maxHeight`, `collapsible` with `collapsedLines` and `expanded` / `defaultExpanded` / `onExpandedChange`, `copyable`, `stripPrompt`, `copiedDuration`, `onCopied`, `labels` (`wrap`, `copy`, `copied`, `copyFailed`, `expand`, `collapse`, `highlighted`, `region`), and `aria-label` / `-labelledby` / `-describedby`, `id`, `className`, `style`, `data-testid`.
 
-Files: the component and its stylesheet; the highlighter, as plain data in and out (`tokenize.ts` the choice of who highlights, `builtinGrammars.ts` the nine built-in grammars, `checkedTokens.ts` the checks on what an app supplies, `engine.ts` the scan and plain lines they share, `grammars/` the opt-in languages as `CodeLanguage`s (a shared `kit.ts` and a file per language), `languages.ts` their public entry, `registry.ts` what an app has registered, `tokenizeTypes.ts` the shared types); `useCodeScroll.ts` and `useCollapsedHeight.ts` (the scroll frame and a wrapped collapsed block's height), `copyToClipboard.ts` and `textToCopy.ts` (the clipboard, and what a shell block puts on it), `highlightLines.ts`, `diffNumbers.ts` (the hunk-header parser); and `browserProtocol.js` with its `.d.ts`, which only the hidden real-browser stories use. Props and files as of the post-Finalization passes at the end of this file; the sections between record how they got there.
+Files: the component and its stylesheet; the highlighter, as plain data in and out (`tokenize.ts` the choice of who highlights, `builtinGrammars.ts` the nine built-in grammars, `checkedTokens.ts` the checks on what an app supplies, `engine.ts` the scan and plain lines they share, `grammars/` the opt-in languages as `CodeLanguage`s (a shared `kit.ts` and a file per language), `languages.ts` their public entry, `registry.ts` what an app has registered, `tokenizeTypes.ts` the shared types); `useCodeScroll.ts` and `useCollapsedHeight.ts` (the scroll frame and a wrapped collapsed block's height), `copyToClipboard.ts` and `textToCopy.ts` (the clipboard, and what a shell block puts on it), `highlightLines.ts`, `diffNumbers.ts` (the hunk-header parser); the hooks `useCopyButton`, `useLineNumbers` and `useControllableFlag`, and `languageLabel.ts` (the header's name for a language), `optInLanguages.ts` (the development warning's list of opt-in names); and `browserProtocol.js` with its `.d.ts`, which only the hidden real-browser checks use. The stories are `CodeBlock.stories.tsx` (the documented ones) and `CodeBlock.checks.stories.tsx` (the hidden real-browser checks, in a hidden group), sharing `CodeBlockStoryKit.tsx`; the language tests are in `tokenize.test.ts` (the built-in languages and the invariants) and `tokenize.optIn.test.ts` (the opt-in ones), and `CodeBlock.docs.test.ts` holds the Docs page's token table to the stylesheet. Props and files as of the post-Finalization passes at the end of this file; the sections between record how they got there.
 
 ## Decisions taken while building
 
@@ -66,7 +75,7 @@ A full `06-engineering-standards.md` §9 pass against the code and the running c
 
 **Not verified:** a real screen reader; the real Clipboard API against a permission prompt; forced-colours mode (all three were later closed or narrowed, see the post-Finalization pass below).
 
-## Prioritized gaps (updated 2026-09-26)
+## Prioritized gaps (updated 2026-09-27)
 
 The numbered list the user works from: items are built one pass at a time, **only when the user names them**. Every item needs the user's go-ahead first (CodeBlock is Finalized), and the post-Finalization passes above show the process: build, unit tests, real-browser tests where layout or the accessibility tree matters, a mutation pass (break each guard once and see it fail), a live look in Storybook (Docs page and the story, in light and dark), the whole pipeline, then this file and the guidelines. An additive change stays Finalized; a defect fix stays Finalized under the three-question test in `06-engineering-standards.md` §9.
 
@@ -98,8 +107,8 @@ The numbered list the user works from: items are built one pass at a time, **onl
 **Priority 5: structural, blocked on approval**
 18. **One scroll-frame hook shared with `Table`.** Removes a small duplicate (`useCodeScroll`), but means changing Finalized `Table`; the two differ only in the clipped-height rule.
 
-**Found later, not yet ranked**
-19. ✅ **Load a grammar only when its language is used.** Done with 5: the seven added grammars are opt-in exports an app registers, so an app pays only for what it imports (`CodeBlock` 9.68KB → 8.21KB JS gzipped; the seven together 3.13KB more, Python alone 0.68KB). Not loaded asynchronously, on purpose: that brings back the flash ADR-0026 rejected; an app that wants it can `import()` and register.
+**Found later**
+19. ✅ **Load a grammar only when its language is used.** Done with 5: the seven added grammars are opt-in exports an app registers, so an app pays only for what it imports (`CodeBlock` 9.68KB → 8.21KB JS gzipped, both as development builds; the size check now measures a production build, see the notes below; the seven together 3.13KB more, Python alone 0.68KB). Not loaded asynchronously, on purpose: that brings back the flash ADR-0026 rejected; an app that wants it can `import()` and register.
 20. ✅ **Further languages.** Done for C, C++, C#, Kotlin, Swift, Ruby, PHP and TOML, as opt-in `CodeLanguage`s (see the last pass). More can follow the same way.
 21. **Verification, not features:** a real screen reader (the accessibility tree is verified, not a person's experience), the real Clipboard API against a permission prompt, and forced colours on actual Windows (verified by emulation).
 
