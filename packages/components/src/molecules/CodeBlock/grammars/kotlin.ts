@@ -1,5 +1,5 @@
-import { cFamilyRules, defineLanguage, wordSet } from "./kit";
-import { notAfterWord } from "../tokenizeTypes";
+import { cFamilyRules, defineLanguage } from "./kit";
+import { notAfterWord, wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
 const kotlinRules = (): Rule[] =>

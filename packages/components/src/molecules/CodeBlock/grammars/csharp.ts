@@ -1,4 +1,5 @@
-import { cFamilyRules, defineLanguage, directive, startsLine, wordSet } from "./kit";
+import { cFamilyRules, defineLanguage, directive, startsLine } from "./kit";
+import { wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
 const csharpRules = (): Rule[] =>

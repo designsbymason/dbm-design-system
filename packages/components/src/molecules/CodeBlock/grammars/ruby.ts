@@ -1,5 +1,5 @@
-import { defineLanguage, wordClassifier, wordSet } from "./kit";
-import { notAfterWord } from "../tokenizeTypes";
+import { defineLanguage, wordClassifier } from "./kit";
+import { notAfterWord, wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
 const rubyRules = (): Rule[] => {

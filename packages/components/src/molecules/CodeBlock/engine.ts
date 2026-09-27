@@ -1,4 +1,4 @@
-// The scan `tokenize.ts` and `grammars.ts` share: an ordered list of sticky rules run over the text once, from the
+// The scan the built-in languages (`builtinGrammars.ts`) and the opt-in ones (`grammars/`) share: an ordered list of sticky rules run over the text once, from the
 // start, and the split of the result into lines.
 
 import type { Rule, State, Token, TokenLine } from "./tokenizeTypes";
@@ -56,3 +56,6 @@ export function toLines(tokens: Token[]): TokenLine[] {
   }
   return lines;
 }
+
+/** Text with no highlighting: one line per line of the text, each a single plain token (an empty line has none). */
+export const plainLines = (code: string): TokenLine[] => code.split("\n").map((text) => (text ? [{ text }] : []));

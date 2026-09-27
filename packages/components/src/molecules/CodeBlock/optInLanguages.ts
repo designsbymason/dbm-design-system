@@ -2,7 +2,7 @@
  * The languages that ship outside the core, by every name they answer to, and the export that turns each on. It
  * lets `CodeBlock` say, in development, that a block asked for one nobody registered (it would otherwise draw
  * plain text without a word), and lets the Playground's snippet say how to register. A test holds it to
- * `grammars.ts`, so the two can't drift apart.
+ * the grammars in `grammars/`, so the two can't drift apart.
  */
 export const optInLanguageExports: Readonly<Record<string, string>> = {
   python: "pythonLanguage",

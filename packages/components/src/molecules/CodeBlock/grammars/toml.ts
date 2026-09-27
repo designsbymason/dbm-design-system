@@ -1,5 +1,5 @@
-import { atLineStart, defineLanguage, leaveLineStart, startLineAfterNewline, wordSet } from "./kit";
-import { notAfterWord } from "../tokenizeTypes";
+import { atLineStart, defineLanguage, leaveLineStart, startLineAfterNewline } from "./kit";
+import { notAfterWord, wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
 const tomlLiterals = /* @__PURE__ */ wordSet("true false inf nan");

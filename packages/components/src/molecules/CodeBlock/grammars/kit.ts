@@ -9,7 +9,7 @@
  */
 
 import { scan, toLines } from "../engine";
-import { MAX_HIGHLIGHT_LENGTH, wordSet } from "../tokenizeTypes";
+import { MAX_HIGHLIGHT_LENGTH } from "../tokenizeTypes";
 import type { CodeLanguage, Rule, State } from "../tokenizeTypes";
 
 export interface WordOptions {
@@ -71,7 +71,6 @@ export const defineLanguage = (name: string, aliases: string[], rules: () => Rul
   };
 };
 
-export { wordSet };
 
 // --- The C family -------------------------------------------------------------------------------------------
 

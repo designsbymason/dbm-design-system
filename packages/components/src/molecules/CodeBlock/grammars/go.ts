@@ -1,4 +1,5 @@
-import { defineLanguage, word, wordClassifier, wordSet } from "./kit";
+import { defineLanguage, word, wordClassifier } from "./kit";
+import { wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
 const goRules = (): Rule[] => [

@@ -1,4 +1,5 @@
-import { cFamilyRules, defineLanguage, directive, includeHeader, wordSet } from "./kit";
+import { cFamilyRules, defineLanguage, directive, includeHeader } from "./kit";
+import { wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
 const cRules = (): Rule[] =>

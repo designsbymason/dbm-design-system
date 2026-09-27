@@ -1,5 +1,5 @@
-import { defineLanguage, word, wordClassifier, wordSet } from "./kit";
-import { notAfterWord } from "../tokenizeTypes";
+import { defineLanguage, word, wordClassifier } from "./kit";
+import { notAfterWord, wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
 const phpRules = (): Rule[] => [
