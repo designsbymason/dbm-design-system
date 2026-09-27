@@ -3,8 +3,8 @@
 **Data Display:** Stat — built 2026-09-27, item 22 in the itemized molecule-tier build order (`04-component-inventory.md`), where the row is
 listed as `Stat / KPI` — the two names refer to the same component; it ships as `Stat`, the same convention `Tag / Chip` already set (the first
 name in a dual-named row is what gets built). Adds no dependency and no component token, reusing existing status tokens for `Stat.Trend`'s
-colour. **Finalized 2026-09-27** — built directly against the full `06-engineering-standards.md` §9 checklist in one session, including a final
-review pass; see below for what that found and fixed.
+colour. **Not yet Finalized** — built directly against the full `06-engineering-standards.md` §9 checklist in one session, including a final
+review pass (see below for what that found and fixed), and awaiting the user's own Finalized declaration.
 
 A compound component: `Stat` (root) with `Stat.Icon`, `Stat.Label`, `Stat.Value` (usually holding a `Stat.Trend`), and `Stat.Description`, every
 one optional, in reading order.
