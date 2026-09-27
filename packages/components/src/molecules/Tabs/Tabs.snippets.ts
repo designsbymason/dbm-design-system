@@ -110,9 +110,10 @@ ${tabs('value={value} onValueChange={setValue}')}`,
     Nothing bounds the height on its own the way the page's own width bounds a horizontal list, so
     Tabs.List needs a height of its own to respond to. A percentage alone doesn't do it (nothing
     above stretches to give it something definite to resolve against) — wrap it in a flex box
-    instead, which does. */}
+    instead, which does; a vh unit caps it against the actual viewport height, the vertical
+    equivalent of the horizontal example's maxInlineSize: "100%". */}
 <Tabs defaultValue="security" orientation="vertical">
-  <div style={{ display: "flex", blockSize: "10rem", overflow: "hidden", resize: "vertical" }}>
+  <div style={{ display: "flex", blockSize: "10rem", maxBlockSize: "40vh", overflow: "hidden", resize: "vertical" }}>
     <Tabs.List aria-label="Workspace" style={{ blockSize: "100%" }}>
       <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
       <Tabs.Trigger value="activity">Activity</Tabs.Trigger>

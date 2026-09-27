@@ -192,10 +192,13 @@ that scrolls a page at a time, appear at whichever edge currently hides more tab
 ### Too many tabs for the height
 
 A vertical list works the same way, along the block axis instead. Drag the bottom-right corner of
-the box to change how much room the tabs have. Nothing bounds a vertical list's height on its own
-the way the page's own width naturally bounds a horizontal list, so `Tabs.List` needs a height of
-its own to respond to — wrap it in a box that stretches it, such as a `display: flex` container,
-rather than a plain percentage (which has nothing definite above it to resolve against).
+the box to change how much room the tabs have, or shrink the canvas itself — the box's own height
+tracks it the same way the width example's box tracks the canvas's width. Nothing bounds a
+vertical list's height on its own the way the page's own width naturally bounds a horizontal one,
+so `Tabs.List` needs a height of its own to respond to: wrap it in a box that stretches it, such as
+a `display: flex` container, rather than a plain percentage (which has nothing definite above it
+to resolve against — a page's height, unlike its width, was never bounded by the viewport in the
+first place); cap that box's own height in `vh` rather than `%`, for the same reason.
 
 <Canvas of={TabsStories.VerticalScrolling} />
 

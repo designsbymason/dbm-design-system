@@ -544,6 +544,24 @@ technique; `VerticalScrollingInteraction` needed no change (finds the same `role
 `eslint`, both Tabs test files (133 unit + 36 real-browser, unchanged pass counts), a live mouse-driven resize in both directions, and the
 Docs-page "Show code" panel.
 
+**Follow-up, same day, user-reported:** the horizontal box automatically shrinks when the canvas/viewport itself is narrower than its own 22rem
+(`maxInlineSize: "100%"`); the vertical one didn't shrink when the canvas got shorter, only when dragged by hand. Root cause, confirmed by
+reading the actual computed height at each level rather than assumed: `#storybook-root` genuinely has a definite height (768px, tracking the real
+viewport) — the chain isn't broken *there* — but `<Tabs>` root's own computed height was only 160px, hugging its own child's height instead of
+inheriting anything from its ancestors, because ordinary block layout never makes a `height: auto` element fill its parent the way `width: auto`
+does; the percentage cap (`maxBlockSize: "100%"`) on the wrapping `<div>` was resolving against that 160px auto-height parent — effectively a
+no-op, not a real cap. **This is not the same bug as the earlier percentage-height one** (that was about `Tabs.List`'s own height inside the
+wrapping `div`, already fixed by the `display: flex` wrapper) — this one is about the wrapping `div` itself having nothing above *it* to resolve
+a percentage against, one level further up, and no flex wrapper fixes that, since flex stretch only propagates a *parent's own* definite height,
+and nothing in this chain has one tracking the viewport except the viewport itself. Fix: `maxBlockSize: "40vh"` instead of `"100%"` on the
+wrapping `div` — a `vh` unit resolves directly against the real viewport dimensions regardless of any ancestor's own height, closing the gap a
+percentage chain never could here. Confirmed live by actually changing the browser viewport height (not the box's own style) via
+`resize_window`, at 768px (no shrink; 40vh exceeds the base 10rem) and at 300px (40vh = 120px, correctly shrinks, and both scroll buttons appear
+as expected once shorter) — not just reasoned from the arithmetic. The horizontal box has no equivalent test of its own shrink-on-narrow-canvas
+behavior either, so none was added here for parity. `VerticalScrolling`'s story, its snippet, and the Docs prose all updated with the `vh` cap
+and why it's needed over a percentage. Re-verified: `tsc`, `eslint`, both Tabs test files, a real viewport resize in the browser, and the
+Docs-page "Show code" panel.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; roles, names and states are checked through the accessibility tree and axe. The

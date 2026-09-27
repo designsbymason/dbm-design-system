@@ -520,7 +520,7 @@ export const VerticalScrolling: Story = {
             to show it. */}
         <div
           data-testid="vertical-scroll-box"
-          style={{ display: "flex", blockSize: "10rem", maxBlockSize: "100%", overflow: "hidden", resize: "vertical" }}
+          style={{ display: "flex", blockSize: "10rem", maxBlockSize: "40vh", overflow: "hidden", resize: "vertical" }}
         >
           <Tabs.List aria-label="Workspace" style={{ blockSize: "100%" }}>
             {workspaceTabs.map((label) => (
