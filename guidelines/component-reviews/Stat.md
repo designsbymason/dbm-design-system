@@ -214,6 +214,56 @@ Left out deliberately; each can be added without breaking the current API:
 - **A loading/skeleton state.** `Skeleton` already exists as its own atom and composes naturally in `Stat.Value`'s place while data is
   loading; a dedicated `loading` prop on `Stat` itself would just be a thin, unnecessary wrapper around that composition.
 
+## Follow-up (2026-09-27, at explicit direction) — label size, orientation restructured, tone-aware variants
+
+Four requested changes, asked about first where the request left real ambiguity (`AskUserQuestion`, twice — once for four API-shape questions,
+once more for what happens to the icon badge specifically once its own visual treatment was clearly going to change), then built:
+
+1. **`Stat.Label` three size steps larger.** `xs→md, sm→lg, md→lg, lg→xl, xl→xl` (was `xs→xs, sm→sm, md→sm, lg→base, xl→base`). Split into its
+   own `labelSize` table, separate from a new `descriptionSize` table holding the *old* values — `Stat.Description` was never asked to change,
+   and the two had only ever coincidentally shared one table, not a reason to move together.
+2. **`orientation` no longer means "the icon sits beside everything."** It now means "the icon and `Stat.Label` are paired into one row instead
+   of stacking" — nothing else about the layout changes. This replaces the two-column CSS grid the original build used (icon spanning every row
+   of a second column) entirely; `Stat`'s root is now a single flex column in both orientations. `Stat.tsx` finds `Stat.Icon`/`Stat.Label`
+   among `children` (`Children.toArray` + `isValidElement` + a type check — the same pattern `Stack` already uses for inserting a divider
+   between items) and moves the pair, icon first, ahead of everything else, regardless of the order they were written in or what sits between
+   them — asked and confirmed, rather than assumed, including that this needed no new prop or sub-component for the caller to write.
+3. **The icon matches `Stat.Label`'s own font size in the paired row, dropping its circular badge entirely.** Asked and confirmed
+   specifically: keeping a badge and just shrinking it (a small tinted dot) was the explicit alternative rejected. The row's own `font-size` is
+   set inline from the exact value driving `Stat.Label`'s size (`var(--dbm-font-size-${labelSize[size]})`) — not a second, parallel table in
+   CSS that could drift from the one in `Stat.tsx` — and the icon (and its now-transparent, unpadded badge box) is sized `1em` against it in
+   `Stat.module.css`, so the two can never disagree. The icon's own colour there is deliberately `--stat-icon-subtle-color` (the same value a
+   plain ghost/outlined badge already uses), not whatever `--stat-badge-color` happens to be — `filled`'s own solid-fill treatment doesn't
+   apply once there's no fill left to read against.
+4. **Every variant now colours `Stat.Icon` and `Stat.Label` by `tone`, not just the icon badge.** `ghost`/`outlined` tint the badge and colour
+   the label the same way they already tinted the badge; `outlined` additionally tints its border (`border.{tone}-subtle`, a decorative accent
+   like every other `*-subtle` border in this system, not bound by the 3:1 floor); `filled` tints the *whole stat* (`bg.{tone}-subtle`, in
+   place of the previous unconditional `bg.neutral-subtle`) and turns the badge into a *solid* fill (`bg.{tone}`) read against with the matching
+   `icon.on-{tone}` token, rather than the light one the other two variants use — the same solid/on-tone pairing `Alert.Action` already
+   established. `neutral` (no tone class rendered) keeps every one of today's existing defaults exactly — checked, not assumed, since it's the
+   only tone with no dedicated CSS class to layer these onto. No new token: every value reused is already contrast-verified in
+   `03-token-system-spec.md`.
+
+**A real defect, caught only by measuring computed style live, not by any of the new unit tests:** the first version of `filled`'s own
+per-tone rule set the badge's solid fill and its `icon.on-{tone}` colour, but never the *whole stat's* own light fill — `--stat-bg` stayed
+`bg.neutral-subtle` regardless of `tone`. `filled`+`tone="danger"` read `rgb(250, 250, 251)` (`bg.neutral-subtle`, a near-white grey) where
+`bg.danger-subtle` (a visibly pink tint) was expected — invisible in a screenshot at normal viewing size, caught by reading the actual computed
+`backgroundColor` in the browser and comparing it against the intended token, the same way the announce-text duplication defect was caught in
+the original build. Fixed by adding the missing `--stat-bg` line to each of the five `.filled.toneX` rules; a new real-browser regression test
+(`ToneAcrossVariantsInteraction`) now asserts every one of the nine colour values this follow-up touches (badge fill/colour, label colour,
+border colour, and the whole stat's own fill, across `ghost`/`outlined`/`filled`) against the literal token it should resolve to, not just that
+a CSS class was applied — confirmed to actually fail without the fix before confirming it passes with it.
+
+**`Stat.Label`'s own colour no longer comes from `Text`'s `color` prop at all** (previously hardcoded to `"tertiary"`) — a same-specificity
+class from `Text`'s own default would otherwise win or lose against this file's own override depending on build/file order alone, the exact
+fragile case `05-component-api-conventions.md`'s "spread props before computed attributes" rule warns about one level up the stack from. Fixed
+with `p.label { color: var(--stat-label-color) }` — the extra element-type selector gives it reliably higher specificity than any single
+`Text`-applied colour class, regardless of order.
+
+Re-verified: `tsc`, `eslint`, the whole package's unit suite (4534 passing, +9 new/updated) and real-browser suite (855 passing, +1 new), a
+production `build`, the bundle-size check (`Stat`: 2.82KB JS / 1.36KB CSS), and a live check of every gallery story (Playground, Orientation,
+Tones, the new Tone-across-variants gallery) in both light and dark mode.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; `Stat.Trend`'s `role="img"` announcement and `announce`'s own status region

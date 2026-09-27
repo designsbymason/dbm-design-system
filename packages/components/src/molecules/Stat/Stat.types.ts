@@ -2,26 +2,36 @@ import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /**
- * The stat's surface treatment.
+ * The stat's surface treatment. `tone` colours `Stat.Icon` and `Stat.Label`
+ * the same way regardless of which of these is chosen; each variant only
+ * changes what (if anything) sits *behind* them.
  *
  * - `"ghost"` (the default) — no border or fill: just the metric, for a stat
  *   that sits inside a container that already provides its own boundary (a
- *   `Card`, a dashboard grid cell).
- * - `"outlined"` — a solid border around the stat, for a self-contained "stat
- *   card" with no wrapping `Card`.
- * - `"filled"` — a subtle neutral fill and no border, a quiet block on a
- *   plain page.
+ *   `Card`, a dashboard grid cell). `Stat.Icon`'s badge is a light,
+ *   `tone`-tinted fill.
+ * - `"outlined"` — a border around the stat, for a self-contained "stat
+ *   card" with no wrapping `Card` — also `tone`-tinted, a decorative accent
+ *   rather than a stronger, state-identifying one. The icon badge is the
+ *   same light fill `ghost` uses.
+ * - `"filled"` — a light, `tone`-tinted fill across the whole stat (plain
+ *   neutral when `tone` is left at its default), and `Stat.Icon`'s own badge
+ *   becomes a solid, saturated fill of that same tone instead of the light
+ *   one the other two variants use.
  */
 export type StatVariant = "ghost" | "outlined" | "filled";
 
 /**
  * A colour accent on the standard tone scale (`05-component-api-conventions.md`
- * §2), applied to `Stat.Icon`'s badge. `"neutral"` (the default) is
- * uncoloured. `"brand"` follows the active brand theme; `"success"`,
- * `"warning"`, `"danger"`, and `"info"` are fixed status colours. Decorative
- * reinforcement only — the metric's own meaning belongs in the label, not the
- * colour. Unrelated to `Stat.Trend`'s own colour, which comes from whether
- * the change is an improvement, not from this tone.
+ * §2), applied to `Stat.Icon` and `Stat.Label` together — and, on `outlined`,
+ * the border, and on `filled`, the whole stat's own fill — so a metric can
+ * read as "this one's about revenue" or "this one needs attention" at a
+ * glance. `"neutral"` (the default) is uncoloured. `"brand"` follows the
+ * active brand theme; `"success"`, `"warning"`, `"danger"`, and `"info"` are
+ * fixed status colours. Decorative reinforcement only — the metric's own
+ * meaning belongs in the label's own words, not the colour alone. Unrelated
+ * to `Stat.Trend`'s own colour, which comes from whether the change is an
+ * improvement, not from this tone.
  */
 export type StatTone = "brand" | "neutral" | "info" | "success" | "warning" | "danger";
 
@@ -34,8 +44,11 @@ export type StatTone = "brand" | "neutral" | "info" | "success" | "warning" | "d
 export type StatSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
- * Whether `Stat.Icon` sits above the label and value (`"vertical"`, the
- * default) or beside them (`"horizontal"`), in a column of its own.
+ * Whether `Stat.Icon` stacks above `Stat.Label` (`"vertical"`, the default)
+ * or the two are paired into one row instead, the icon before the label,
+ * both the same size (`"horizontal"`). Found and moved together
+ * automatically, wherever they appear among `Stat`'s other children —
+ * everything else about the layout is unaffected.
  */
 export type StatOrientation = "vertical" | "horizontal";
 
@@ -87,7 +100,8 @@ export interface StatProps
    */
   size?: StatSize;
   /**
-   * Whether `Stat.Icon` sits above the content or beside it.
+   * Whether `Stat.Icon` stacks above `Stat.Label`, or the two are paired
+   * into one row instead.
    * @default 'vertical'
    */
   orientation?: StatOrientation;

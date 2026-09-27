@@ -122,6 +122,15 @@ The supporting text, in the secondary text colour, sized to the stat's `size`. A
 
 <Canvas of={StatStories.Tones} />
 
+### Tone across variants
+
+Each variant colours the icon and label the same way — only what sits behind them differs: `ghost`
+has no fill at all, `outlined` adds a tone-tinted border, and `filled`'s own icon badge becomes a
+solid tone fill (read against with a matching `icon.on-{tone}` token) instead of the light one
+`ghost`/`outlined` use.
+
+<Canvas of={StatStories.ToneAcrossVariants} />
+
 ### All sizes
 
 <Canvas of={StatStories.Sizes} />

@@ -88,7 +88,7 @@ describe("Stat", () => {
     it("gives a part rendered outside any Stat the md defaults", () => {
       render(<Stat.Label data-testid="label">Alone</Stat.Label>);
       // md's own label size class, from the Text atom.
-      expect(screen.getByTestId("label")).toHaveClass(textStyles.sizeSm!);
+      expect(screen.getByTestId("label")).toHaveClass(textStyles.sizeLg!);
     });
 
     it("keeps a nested stat's size to itself", () => {
@@ -99,7 +99,7 @@ describe("Stat", () => {
           </Stat>
         </Stat>,
       );
-      expect(screen.getByTestId("inner-label")).toHaveClass(textStyles.sizeXs!);
+      expect(screen.getByTestId("inner-label")).toHaveClass(textStyles.sizeMd!);
     });
   });
 
@@ -122,6 +122,16 @@ describe("Stat", () => {
       renderStat({ tone: "danger" });
       expect(screen.getByTestId("stat")).toHaveAccessibleName("");
     });
+
+    it.each(["outlined", "filled"] as StatVariant[])(
+      "keeps both the %s and the tone class together, for the stylesheet's own compound selectors",
+      (variant) => {
+        renderStat({ variant, tone: "danger" });
+        const stat = screen.getByTestId("stat");
+        expect(stat).toHaveClass(styles[variant]!);
+        expect(stat).toHaveClass(styles.toneDanger!);
+      },
+    );
   });
 
   describe("orientation", () => {
@@ -133,6 +143,88 @@ describe("Stat", () => {
     it("applies horizontal", () => {
       renderStat({ orientation: "horizontal" });
       expect(screen.getByTestId("stat")).toHaveAttribute("data-orientation", "horizontal");
+    });
+
+    it("does not wrap Icon and Label together when vertical", () => {
+      const { container } = renderStat();
+      expect(container.querySelector(`.${styles.iconLabelRow}`)).toBeNull();
+      const stat = screen.getByTestId("stat");
+      // Both are still direct children of the root, not nested inside anything else.
+      expect(screen.getByTestId("icon").parentElement).toBe(stat);
+      expect(screen.getByTestId("label").parentElement).toBe(stat);
+    });
+
+    it("wraps Icon and Label together, icon first, when horizontal — regardless of the order they were written in", () => {
+      render(
+        <Stat orientation="horizontal" data-testid="stat">
+          {/* Label written before Icon in the JSX. */}
+          <Stat.Label data-testid="label">Active users</Stat.Label>
+          <Stat.Icon icon={UsersIcon} data-testid="icon" />
+          <Stat.Value data-testid="value">12,480</Stat.Value>
+        </Stat>,
+      );
+      const row = document.querySelector(`.${styles.iconLabelRow}`);
+      expect(row).not.toBeNull();
+      const rowChildren = [...row!.children];
+      expect(rowChildren[0]).toBe(screen.getByTestId("icon"));
+      expect(rowChildren[1]).toBe(screen.getByTestId("label"));
+      // Value stays outside the row, after it, as its own sibling of the stat root.
+      const stat = screen.getByTestId("stat");
+      expect(screen.getByTestId("value").parentElement).toBe(stat);
+      expect([...stat.children].indexOf(row as Element)).toBeLessThan(
+        [...stat.children].indexOf(screen.getByTestId("value")),
+      );
+    });
+
+    it("keeps every other child (Value, Description, anything else) in its own original relative order after the row", () => {
+      render(
+        <Stat orientation="horizontal" data-testid="stat">
+          <Stat.Icon icon={UsersIcon} />
+          <Stat.Label>Active users</Stat.Label>
+          <Stat.Description data-testid="description">vs. last month</Stat.Description>
+          <Stat.Value data-testid="value">12,480</Stat.Value>
+        </Stat>,
+      );
+      const stat = screen.getByTestId("stat");
+      const indexOf = (el: Element) => [...stat.children].indexOf(el);
+      expect(indexOf(screen.getByTestId("description"))).toBeLessThan(indexOf(screen.getByTestId("value")));
+    });
+
+    it("still wraps when only one of Icon or Label is present", () => {
+      const { container: onlyIcon } = render(
+        <Stat orientation="horizontal">
+          <Stat.Icon icon={UsersIcon} data-testid="icon" />
+        </Stat>,
+      );
+      expect(onlyIcon.querySelector(`.${styles.iconLabelRow}`)).not.toBeNull();
+
+      const { container: onlyLabel } = render(
+        <Stat orientation="horizontal">
+          <Stat.Label data-testid="label">Active users</Stat.Label>
+        </Stat>,
+      );
+      expect(onlyLabel.querySelector(`.${styles.iconLabelRow}`)).not.toBeNull();
+    });
+
+    it("renders no wrapper at all when horizontal but neither Icon nor Label is present", () => {
+      const { container } = render(
+        <Stat orientation="horizontal">
+          <Stat.Value>12,480</Stat.Value>
+        </Stat>,
+      );
+      expect(container.querySelector(`.${styles.iconLabelRow}`)).toBeNull();
+    });
+
+    it("sets the row's own font-size from the exact value driving Label's size, per Stat size", () => {
+      render(
+        <Stat orientation="horizontal" size="lg">
+          <Stat.Icon icon={UsersIcon} />
+          <Stat.Label>Active users</Stat.Label>
+        </Stat>,
+      );
+      const row = document.querySelector(`.${styles.iconLabelRow}`) as HTMLElement;
+      // size="lg" maps Stat.Label to the "xl" text-size step (see labelSize in Stat.tsx).
+      expect(row.style.fontSize).toBe("var(--dbm-font-size-xl)");
     });
   });
 

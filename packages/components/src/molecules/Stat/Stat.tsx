@@ -1,6 +1,7 @@
 import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
 import { MinusIcon, TrendDownIcon, TrendUpIcon } from "@dbm-design-system/icons";
-import { createContext, forwardRef, useContext, useEffect, useMemo, useRef } from "react";
+import { Children, createContext, forwardRef, isValidElement, useContext, useEffect, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize, IconTone } from "../../atoms/Icon/Icon.types";
 import { Text } from "../../atoms/Text";
@@ -58,6 +59,16 @@ const iconSize: Record<StatSize, IconSize> = {
 };
 
 const labelSize: Record<StatSize, TextSize> = {
+  xs: "md",
+  sm: "lg",
+  md: "lg",
+  lg: "xl",
+  xl: "xl",
+};
+
+// `Stat.Description` keeps the smaller steps `Stat.Label` used before its own size increased —
+// the two never shared a rationale for moving together, only a coincidentally identical table.
+const descriptionSize: Record<StatSize, TextSize> = {
   xs: "xs",
   sm: "sm",
   md: "sm",
@@ -102,15 +113,19 @@ function defaultFormatTrend(value: number): string {
 /**
  * A single metric — a label, a value, and optionally a trend and supporting
  * text. A compound component, meaning it's made of named sub-parts you
- * compose together: `Stat.Icon` (an icon in a tinted badge), `Stat.Label`,
+ * compose together: `Stat.Icon` (an icon, tinted by `tone`), `Stat.Label`,
  * `Stat.Value` (usually holding a `Stat.Trend` beside it), and
  * `Stat.Description`, in reading order, any of them optional.
  *
  * `size` sets the padding, the spacing, and the size of the icon and text on
  * the standard xs–xl scale — small for a dense dashboard grid, large for a
  * stat that is a card's main content. `variant` picks the surface (`ghost`
- * for none, `outlined`, `filled`), `tone` tints `Stat.Icon`'s badge, and
- * `orientation` puts the icon above the content or beside it.
+ * for none, `outlined`, `filled`) and, together with `tone`, colours
+ * `Stat.Icon` and `Stat.Label`. `orientation` sets how the icon and the label
+ * relate to each other — stacked (`Stat.Icon` above `Stat.Label`, the
+ * default) or paired into one row (the icon before the label, both the same
+ * size) — found and moved together automatically wherever they appear among
+ * the other children; nothing else about the layout changes.
  *
  * A stat is static content and adds no role. When its value updates after
  * this stat is already on the page — a live dashboard — set `announce` so a
@@ -213,6 +228,35 @@ const StatRoot = forwardRef<HTMLDivElement, StatProps>((statProps, ref) => {
     [],
   );
 
+  // Horizontal orientation pairs `Stat.Icon` and `Stat.Label` into one row — the icon before the
+  // label, aligned together — rather than each stacking as its own separate part. This finds
+  // them (in whichever order they were written) and moves the pair to the front, ahead of
+  // whatever else the caller wrote (usually `Stat.Value` and `Stat.Description`), which stay
+  // stacked exactly as they already are in vertical orientation. Nothing to do (or to detect)
+  // when neither part is present.
+  let content: ReactNode = children;
+  if (orientation === "horizontal") {
+    const items = Children.toArray(children);
+    const icon = items.find((item) => isValidElement(item) && item.type === StatIcon);
+    const label = items.find((item) => isValidElement(item) && item.type === StatLabel);
+    if (icon || label) {
+      // Named to avoid shadowing the outer `rest` (the native props spread onto the root below).
+      const otherChildren = items.filter((item) => item !== icon && item !== label);
+      content = (
+        <>
+          {/* The row's own font-size is what the icon's `1em` sizing (Stat.module.css) resolves
+              against — set from the exact value driving Stat.Label's own size, so an icon in this
+              row can never drift out of sync with the label beside it. */}
+          <div className={styles.iconLabelRow} style={{ fontSize: `var(--dbm-font-size-${labelSize[size]})` }}>
+            {icon}
+            {label}
+          </div>
+          {otherChildren}
+        </>
+      );
+    }
+  }
+
   return (
     <StatSizeContext.Provider value={size}>
       <div
@@ -224,7 +268,7 @@ const StatRoot = forwardRef<HTMLDivElement, StatProps>((statProps, ref) => {
         data-orientation={orientation}
         className={cx(styles.root, variantClass[variant], sizeClass[size], toneClass[tone], className)}
       >
-        {children}
+        {content}
         {announce && <VisuallyHidden role="status">{announcement}</VisuallyHidden>}
       </div>
     </StatSizeContext.Provider>
@@ -232,7 +276,12 @@ const StatRoot = forwardRef<HTMLDivElement, StatProps>((statProps, ref) => {
 });
 StatRoot.displayName = "Stat";
 
-/** The icon, in a badge tinted by the stat's `tone`. Decorative unless given a `label`. */
+/**
+ * The icon, tinted by the stat's `tone`. In a badge — a light fill (`ghost`/`outlined`) or a
+ * solid one (`filled`) — when stacked above `Stat.Label`; a plain glyph, no badge, the same size
+ * as the label beside it, when the two are paired into a row (`orientation="horizontal"`).
+ * Decorative unless given a `label`.
+ */
 const StatIcon = forwardRef<HTMLDivElement, StatIconProps>(({ icon, label, className, ...props }, ref) => {
   const size = useContext(StatSizeContext);
   return (
@@ -243,10 +292,15 @@ const StatIcon = forwardRef<HTMLDivElement, StatIconProps>(({ icon, label, class
 });
 StatIcon.displayName = "Stat.Icon";
 
-/** What the metric is, in the tertiary text colour, sized to the stat's `size`. */
+/**
+ * What the metric is, sized to the stat's `size`. Coloured by `tone` (`--stat-label-color` in
+ * `Stat.module.css`, not this component's own `color` prop, which `Text` would apply as a
+ * same-specificity class no more or less "correct" than the stylesheet's own — the stylesheet
+ * wins deliberately, by a higher-specificity selector, not by accident of file order).
+ */
 const StatLabel = forwardRef<HTMLParagraphElement, StatLabelProps>(({ className, ...props }, ref) => {
   const size = useContext(StatSizeContext);
-  return <Text {...props} ref={ref} size={labelSize[size]} color="tertiary" className={cx(styles.label, className)} />;
+  return <Text {...props} ref={ref} size={labelSize[size]} className={cx(styles.label, className)} />;
 });
 StatLabel.displayName = "Stat.Label";
 
@@ -304,7 +358,7 @@ const StatDescription = forwardRef<HTMLParagraphElement, StatDescriptionProps>((
     <Text
       {...props}
       ref={ref}
-      size={labelSize[size]}
+      size={descriptionSize[size]}
       color="secondary"
       className={cx(styles.description, className)}
     />

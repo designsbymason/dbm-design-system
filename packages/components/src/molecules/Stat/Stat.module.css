@@ -3,14 +3,11 @@
    repeating the whole rule — the same pattern `EmptyState` uses.
 
    The root lays its parts out start-aligned (unlike `EmptyState`, a stat
-   tile is read left-to-right down a column, not centred). In the default
-   `vertical` orientation it's a plain flex column: the icon badge and every
-   other part just stack, in DOM order. `horizontal` needs the icon badge to
-   sit beside *all* of the other parts stacked together, not just the next
-   one — a plain flex row can't do that without an extra wrapper `<div>` this
-   component doesn't render, so that orientation is a two-column grid
-   instead: the badge spans every row of the second column, whatever ends up
-   in it. */
+   tile is read left-to-right down a column, not centred) in a single flex
+   column, in both orientations — `orientation` only changes how `Stat.Icon`
+   and `Stat.Label` relate to *each other* (stacked, or paired into one row
+   by `Stat.tsx`'s own `.iconLabelRow` wrapper), not how the stat's parts as
+   a whole are laid out. */
 .root {
   --stat-pad: var(--dbm-space-5);
   --stat-gap: var(--dbm-space-2);
@@ -19,41 +16,26 @@
   --stat-bg: transparent;
   --stat-border: transparent;
   --stat-badge-bg: var(--dbm-bg-neutral-subtle);
-  --stat-badge-color: var(--dbm-icon-default);
+  /* The icon's colour on a *light or absent* background — a plain badge (ghost/outlined) or the
+     icon+label row, which never has a fill behind it regardless of variant. `--stat-badge-color`
+     (below) starts equal to this and only diverges under `.filled`, whose badge has a solid fill
+     to read against instead. */
+  --stat-icon-subtle-color: var(--dbm-icon-default);
+  --stat-badge-color: var(--stat-icon-subtle-color);
+  --stat-label-color: var(--dbm-text-tertiary);
 
+  align-items: flex-start;
   background-color: var(--stat-bg);
   border: var(--dbm-border-width-1) solid var(--stat-border);
   border-radius: var(--dbm-radius-lg);
   box-sizing: border-box;
   color: var(--dbm-text-primary);
-  font-family: var(--dbm-font-family-primary);
-  min-inline-size: 0;
-  padding: var(--stat-pad);
-}
-
-.root[data-orientation="vertical"] {
-  align-items: flex-start;
   display: flex;
   flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
   gap: var(--stat-gap);
-}
-
-.root[data-orientation="horizontal"] {
-  align-items: start;
-  column-gap: var(--stat-icon-gap);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  row-gap: var(--stat-gap);
-}
-
-.root[data-orientation="horizontal"] .iconBadge {
-  grid-column: 1;
-  /* Spans however many other parts there are — one row, or several. */
-  grid-row: 1 / -1;
-}
-
-.root[data-orientation="horizontal"] > :not(.iconBadge) {
-  grid-column: 2;
+  min-inline-size: 0;
+  padding: var(--stat-pad);
 }
 
 /* --- Size: padding, the gap between parts, and the icon badge. (The icon and
@@ -96,46 +78,117 @@
 }
 
 /* --- Variants. `ghost` is the base above and needs no class. The border
-   stays (transparent) on every variant so they all have the same box size. --- */
+   stays (transparent) on ghost/filled so every variant keeps the same box
+   size. `outlined`'s border follows `tone` too (below) — `neutral` (no tone
+   class) keeps the plain default border set here. --- */
 
 .outlined {
   --stat-border: var(--dbm-border-default);
 }
 
-/* The neutral badge would otherwise share the fill's own colour and vanish,
-   so it sits on the surface colour instead. A toned badge overrides this
-   below. */
+/* The neutral badge is a solid fill (`icon.on-neutral` reads against it, not
+   `icon.default`) so it doesn't just repeat the whole stat's own subtle
+   fill — a toned variant overrides both below the same way. */
 .filled {
   --stat-bg: var(--dbm-bg-neutral-subtle);
-  --stat-badge-bg: var(--dbm-bg-surface);
+  --stat-badge-bg: var(--dbm-bg-neutral);
+  --stat-badge-color: var(--dbm-icon-on-neutral);
 }
 
-/* --- Tone: only the icon badge. `neutral` has no class. Declared after the
-   variants, so a tone's badge wins over the filled variant's. --- */
+/* --- Tone. Colours the icon (`--stat-icon-subtle-color`, and through it the
+   plain badge/ghost/outlined case), the label, and — only for the badge
+   itself — its light fill. `neutral` has no class, so it keeps the root's
+   own plain defaults above. Declared after the variants, so a tone's own
+   values win over `.filled`'s plain ones where they overlap. --- */
 
 .toneBrand {
   --stat-badge-bg: var(--dbm-bg-brand-subtle);
-  --stat-badge-color: var(--dbm-icon-brand);
+  --stat-icon-subtle-color: var(--dbm-icon-brand);
+  --stat-label-color: var(--dbm-text-brand);
 }
 
 .toneInfo {
   --stat-badge-bg: var(--dbm-bg-info-subtle);
-  --stat-badge-color: var(--dbm-icon-info);
+  --stat-icon-subtle-color: var(--dbm-icon-info);
+  --stat-label-color: var(--dbm-text-info);
 }
 
 .toneSuccess {
   --stat-badge-bg: var(--dbm-bg-success-subtle);
-  --stat-badge-color: var(--dbm-icon-success);
+  --stat-icon-subtle-color: var(--dbm-icon-success);
+  --stat-label-color: var(--dbm-text-success);
 }
 
 .toneWarning {
   --stat-badge-bg: var(--dbm-bg-warning-subtle);
-  --stat-badge-color: var(--dbm-icon-warning);
+  --stat-icon-subtle-color: var(--dbm-icon-warning);
+  --stat-label-color: var(--dbm-text-warning);
 }
 
 .toneDanger {
   --stat-badge-bg: var(--dbm-bg-danger-subtle);
-  --stat-badge-color: var(--dbm-icon-danger);
+  --stat-icon-subtle-color: var(--dbm-icon-danger);
+  --stat-label-color: var(--dbm-text-danger);
+}
+
+/* --- `outlined`'s own border, per tone — a decorative accent (like every
+   other `*-subtle` border in this system), not a state-identifying one, so
+   it isn't bound by the 3:1 non-text floor. --- */
+
+.outlined.toneBrand {
+  --stat-border: var(--dbm-border-brand-subtle);
+}
+
+.outlined.toneInfo {
+  --stat-border: var(--dbm-border-info-subtle);
+}
+
+.outlined.toneSuccess {
+  --stat-border: var(--dbm-border-success-subtle);
+}
+
+.outlined.toneWarning {
+  --stat-border: var(--dbm-border-warning-subtle);
+}
+
+.outlined.toneDanger {
+  --stat-border: var(--dbm-border-danger-subtle);
+}
+
+/* --- `filled`'s own fill and badge, per tone: the whole stat gets the tone's
+   light fill (in place of the plain neutral one above), and the badge itself
+   a *solid* fill (not the light one every other variant's badge gets), read
+   against with the matching `icon.on-*` token — the same pairing
+   `Alert.Action`'s own solid fill already establishes for each tone. --- */
+
+.filled.toneBrand {
+  --stat-bg: var(--dbm-bg-brand-subtle);
+  --stat-badge-bg: var(--dbm-bg-brand);
+  --stat-badge-color: var(--dbm-icon-on-brand);
+}
+
+.filled.toneInfo {
+  --stat-bg: var(--dbm-bg-info-subtle);
+  --stat-badge-bg: var(--dbm-bg-info);
+  --stat-badge-color: var(--dbm-icon-on-info);
+}
+
+.filled.toneSuccess {
+  --stat-bg: var(--dbm-bg-success-subtle);
+  --stat-badge-bg: var(--dbm-bg-success);
+  --stat-badge-color: var(--dbm-icon-on-success);
+}
+
+.filled.toneWarning {
+  --stat-bg: var(--dbm-bg-warning-subtle);
+  --stat-badge-bg: var(--dbm-bg-warning);
+  --stat-badge-color: var(--dbm-icon-on-warning);
+}
+
+.filled.toneDanger {
+  --stat-bg: var(--dbm-bg-danger-subtle);
+  --stat-badge-bg: var(--dbm-bg-danger);
+  --stat-badge-color: var(--dbm-icon-on-danger);
 }
 
 /* --- Parts. --- */
@@ -153,6 +206,37 @@
   justify-content: center;
 }
 
+/* The icon+label row `Stat.tsx` builds in horizontal orientation — the icon
+   sits before the label, both the same size (below), aligned to a shared
+   centre line. Its own `font-size` (set inline, from the exact value driving
+   `Stat.Label`'s own size, so the two can't drift apart) is what the icon's
+   `1em` sizing resolves against. */
+.iconLabelRow {
+  align-items: center;
+  display: flex;
+  gap: var(--stat-icon-gap);
+}
+
+/* In this row the icon is a plain glyph, not a badge: no fill (regardless of
+   variant — `.filled`'s own solid badge fill doesn't belong here, since
+   nothing needs a background to read against once there's no badge shape at
+   all), sized to the row's own font-size instead of the usual `--stat-badge`
+   diameter. Its colour still follows `tone` — `--stat-icon-subtle-color`,
+   the same value a plain (ghost/outlined) badge already uses, deliberately
+   *not* `--stat-badge-color`, which `.filled` may have overridden to a
+   colour meant to read against a fill this row doesn't have. */
+.iconLabelRow .iconBadge {
+  background-color: transparent;
+  block-size: 1em;
+  color: var(--stat-icon-subtle-color);
+  inline-size: 1em;
+}
+
+.iconLabelRow .iconBadge svg {
+  block-size: 1em;
+  inline-size: 1em;
+}
+
 .label,
 .value,
 .description {
@@ -168,6 +252,15 @@
 .label,
 .description {
   overflow-wrap: anywhere;
+}
+
+/* `p.label`, not just `.label`: `Text`'s own colour prop (whatever it
+   defaults to) applies a same-specificity class on the identical element, so
+   a plain single class here would win or lose depending on file/build order
+   alone — confirmed the fragile way once, not repeated. The extra element
+   selector makes this reliably win regardless. */
+p.label {
+  color: var(--stat-label-color);
 }
 
 /* The value and a following trend sit on the same line, aligned to the

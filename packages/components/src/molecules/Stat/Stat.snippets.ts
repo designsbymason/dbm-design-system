@@ -28,15 +28,27 @@ export const statSnippets = {
 {/* variant: "ghost" (default) | "outlined" | "filled" */}
 ${stat('variant="outlined"', usersParts)}`,
 
-  tones: `{/* tone tints Stat.Icon's badge: "neutral" (default) | "brand" | "info" | "success" | "warning" | "danger" */}
+  tones: `{/* tone colours Stat.Icon and Stat.Label together: "neutral" (default) | "brand" | "info" | "success" | "warning" | "danger" */}
 ${stat('tone="brand"', usersParts)}`,
+
+  toneAcrossVariants: `{/* Each variant colours the icon and label the same way — only what sits behind them differs:
+    ghost has no fill at all, outlined adds a tone-tinted border, and filled's own icon badge
+    becomes a solid tone fill (read against with a matching icon.on-{tone} token) instead of the
+    light one ghost/outlined use. TicketIcon comes from @dbm-design-system/icons */}
+<Stat variant="filled" tone="danger" size="sm">
+  <Stat.Icon icon={TicketIcon} />
+  <Stat.Label>Open tickets</Stat.Label>
+  <Stat.Value>58</Stat.Value>
+</Stat>`,
 
   sizes: `${iconNote}
 {/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — padding, spacing, and the icon and text size */}
 ${stat('size="lg"', usersParts)}`,
 
   orientation: `${iconNote}
-{/* orientation: "vertical" (default, icon above) | "horizontal" (icon beside the content) */}
+{/* orientation: "vertical" (default) stacks Stat.Icon above Stat.Label; "horizontal" pairs them
+    into one row instead — the icon before the label, both the same size, found and moved
+    together automatically wherever they appear. Everything else stays stacked below either way. */}
 ${stat('orientation="horizontal"', usersParts)}`,
 
   trendIncrease: `{/* A positive value is an increase — an upward icon, coloured text.success by default. */}

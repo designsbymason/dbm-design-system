@@ -296,6 +296,28 @@ export const Orientation: Story = {
   ),
 };
 
+export const ToneAcrossVariants: Story = {
+  name: "Tone across variants",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: statSnippets.toneAcrossVariants } } },
+  render: () => (
+    <div style={{ ...gridStyle(3), maxWidth: "48rem" }}>
+      {(["ghost", "outlined", "filled"] as StatVariant[]).map((variant) => (
+        <div key={variant} style={labelledColumn}>
+          <Text size="sm" weight="semibold">
+            variant=&quot;{variant}&quot;
+          </Text>
+          <Stat variant={variant} tone="danger" size="sm" data-testid={`stat-${variant}`}>
+            <Stat.Icon icon={TicketIcon} data-testid={`icon-${variant}`} />
+            <Stat.Label data-testid={`label-${variant}`}>Open tickets</Stat.Label>
+            <Stat.Value>58</Stat.Value>
+          </Stat>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 export const TrendDirections: Story = {
   name: "Trend — increase, decrease, and no change",
   argTypes: noControls,
@@ -479,5 +501,54 @@ export const LiveUpdateInteraction: Story = {
     await expect(region).toHaveTextContent("");
     await userEvent.click(canvas.getByRole("button", { name: "Simulate an update" }));
     await waitFor(() => expect(region).toHaveTextContent(/Increased by \+1\.9/));
+  },
+};
+
+export const ToneAcrossVariantsInteraction: Story = {
+  ...ToneAcrossVariants,
+  name: "Tone across variants — real computed colours, not just classes",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const colour = (token: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(--dbm-${token})`;
+      canvasElement.appendChild(probe);
+      const value = getComputedStyle(probe).color;
+      probe.remove();
+      return value;
+    };
+    // `Stat.Icon`'s own `data-testid` lands on the badge `<div>` itself (its outermost element),
+    // not a wrapper around it — its own computed `color`/`backgroundColor` are what to check.
+    const badgeOf = (variant: string) => canvas.getByTestId(`icon-${variant}`);
+
+    // ghost and outlined: the same light badge fill and icon colour — the light danger tokens,
+    // never the solid ones filled uses. Both also colour the label to match.
+    for (const variant of ["ghost", "outlined"]) {
+      const stat = getComputedStyle(canvas.getByTestId(`stat-${variant}`));
+      const badge = getComputedStyle(badgeOf(variant));
+      const label = getComputedStyle(canvas.getByTestId(`label-${variant}`));
+      await expect(badge.backgroundColor).toBe(colour("bg-danger-subtle"));
+      await expect(badge.color).toBe(colour("icon-danger"));
+      await expect(label.color).toBe(colour("text-danger"));
+      // Neither variant tints the whole stat's own background.
+      await expect(stat.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    }
+
+    // outlined alone also colours the border — a light, decorative accent, not the plain default.
+    const outlinedBorder = getComputedStyle(canvas.getByTestId("stat-outlined")).borderColor;
+    await expect(outlinedBorder).toBe(colour("border-danger-subtle"));
+    await expect(outlinedBorder).not.toBe(colour("border-default"));
+
+    // filled: the whole stat gets the light tone fill (found missing live once already — this is
+    // the regression test for that), and the badge becomes the *solid* fill with an on-tone icon.
+    const filledStat = getComputedStyle(canvas.getByTestId("stat-filled"));
+    const filledBadge = getComputedStyle(badgeOf("filled"));
+    const filledLabel = getComputedStyle(canvas.getByTestId("label-filled"));
+    await expect(filledStat.backgroundColor).toBe(colour("bg-danger-subtle"));
+    await expect(filledBadge.backgroundColor).toBe(colour("bg-danger"));
+    await expect(filledBadge.color).toBe(colour("icon-on-danger"));
+    // The label still reads the same as ghost/outlined — tone doesn't change by variant.
+    await expect(filledLabel.color).toBe(colour("text-danger"));
   },
 };
