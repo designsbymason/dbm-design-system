@@ -1,6 +1,6 @@
 # 0027 — `CodeBlock` languages beyond the core are registered by the app, over loading every grammar with the component or loading them asynchronously
 
-**Status:** Accepted · **Date:** 2026-09-26
+**Status:** Accepted · **Date:** 2026-09-26 · **Amended 2026-09-26** — the sizes below were measured as a development build, and eight more languages ship the same way; the decision itself is unchanged
 
 ## Context
 [ADR-0026](0026-codeblock-highlights-with-a-small-built-in-tokenizer-over-a-highlighting-dependency-or-bring-your-own.md) chose a built-in tokenizer over a dependency, and recorded two open ends: an app that wants a fuller grammar has no hook for one, and a language is added by adding a rule list, so the component only grows. By the time sixteen languages were in, `CodeBlock` was 9.68KB of JavaScript gzipped, the largest component by a wide margin and 0.3KB under the per-component budget (10KB), whichever language a page used. No further language could be added without raising the budget. The two open ends are one problem: a language needs a way to be provided that is not "compiled into the component".
@@ -21,7 +21,7 @@
 **Subpath entry points per language** (`…/components/python`) — rejected: the single entry with `sideEffects: false` and marked-pure exports already tree-shakes, and subpaths add `exports`, build and type-resolution surface to a package with one entry.
 
 ## Consequences
-- `CodeBlock` drops to 8.21KB of JavaScript gzipped, with the seven languages together another 3.13KB an app pays for only if it imports them (the check measures them as `CodeBlock/languages`). The core carries about 1KB of registry and checking. Further languages (gaps list item 20) cost the ones that use them and nobody else.
+- `CodeBlock` drops to 8.21KB of JavaScript gzipped, with the seven languages together another 3.13KB an app pays for only if it imports them (the check measures them as `CodeBlock/languages`). The core carries about 1KB of registry and checking. *(Amended 2026-09-26: those figures were a development build. As an app's production build ships it, the core is 7.52KB, and with eight further languages (C, C++, C#, Kotlin, Swift, Ruby, PHP, TOML) `CodeBlock/languages` is 5.55KB for all fifteen; one language imported alone costs 0.5 to 1.0KB. The size check now measures a production build.)* Further languages (gaps list item 20) cost the ones that use them and nobody else.
 - **A behaviour change while the package is unpublished (version 0.0.0):** `language="python"` and the other six draw plain until registered. Storybook's `preview.tsx` registers them all, the Docs page says so, and every snippet that uses one shows the registration.
 - **Constrains what follows:** a new language ships as a `CodeLanguage` with a size limit, and is opt-in unless it is one of the nine; any later thing that colours code takes the same shape and the same checks. Nothing that isn't the component's own highlighter may write HTML.
 - **Module-level state**, for the registry: an app registers at start, on both server and client; a test that registers should undo it (the function returned).
