@@ -1378,6 +1378,9 @@ export const HeaderlessInteraction: Story = {
       <div data-testid="bare">
         <CodeBlock code={samples.ts} language="ts" showHeader={false} copyable={false} aria-label="Nothing but the code" />
       </div>
+      <div data-testid="one-line">
+        <CodeBlock code={samples.ts} language="ts" showHeader={false} collapsible collapsedLines={1} aria-label="No header, one line" />
+      </div>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <div key={size} data-testid={`sized-${size}`}>
           <CodeBlock code={samples.ts} language="ts" size={size} showHeader={false} wrapToggle aria-label={`No header, ${size}`} />
@@ -1407,6 +1410,13 @@ export const HeaderlessInteraction: Story = {
       await expect(rect(button).width).toBeGreaterThanOrEqual(24);
       await expect(rect(button).height).toBeGreaterThanOrEqual(24);
     }
+    // A block collapsed to one line is short enough for the fade to reach the buttons: the buttons are a layer above it
+    // (the fade is drawn later, so without a layer of their own it would paint over them).
+    const oneLine = within(canvasElement).getByTestId("one-line");
+    const fade = oneLine.querySelector<HTMLElement>("[aria-hidden='true']:not(svg)") as HTMLElement;
+    await expect(rect(cornerOf(oneLine)).bottom).toBeGreaterThan(rect(fade).top);
+    await expect(getComputedStyle(cornerOf(oneLine)).zIndex).toBe("1");
+    await expect(getComputedStyle(fade).zIndex).toBe("auto");
     // The buttons never cover the first line at any size, whatever height their step gives them.
     for (const size of ["xs", "sm", "md", "lg", "xl"] as const) {
       const sized = within(canvasElement).getByTestId(`sized-${size}`);

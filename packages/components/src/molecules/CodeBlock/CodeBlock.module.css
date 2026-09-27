@@ -101,7 +101,9 @@
   inset-block-start: var(--dbm-space-1);
   inset-inline-end: var(--dbm-space-1);
   position: absolute;
-  z-index: 1;
+  /* One layer above the collapse fade, which is drawn later and would otherwise paint over the buttons of a block
+     collapsed to a line or two. Derived from the scale's base layer rather than written as a number. */
+  z-index: calc(var(--dbm-z-index-base) + 1);
 }
 
 .hasFloating .body {

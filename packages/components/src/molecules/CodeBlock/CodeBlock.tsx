@@ -59,12 +59,17 @@ type CopyState = { status: "idle" | "copied" | "failed"; count: number };
  * button, and a way to collapse a long one. It is a `<figure>` around a scrollable `<pre><code>`.
  *
  * Highlighting is a small built-in tokenizer for `ts`, `tsx`, `js`, `jsx`, `json`, `css`, `html`, `bash` and
- * `diff`. Other languages are opt-in: `registerCodeLanguage(pythonLanguage)` once at start (there are also
- * `yamlLanguage`, `sqlLanguage`, `markdownLanguage`, `goLanguage`, `rustLanguage`, `javaLanguage`, `cLanguage`,
- * `cppLanguage`, `csharpLanguage`, `kotlinLanguage`, `swiftLanguage`, `rubyLanguage`, `phpLanguage` and `tomlLanguage`), or an
- * app's own grammar, or a `highlighter` for a single block; any other language is drawn as plain text. It builds
- * React elements from plain data and never sets HTML, so the code is always shown as text; it is approximate,
- * not a full grammar. Code stays left-to-right in a right-to-left page.
+ * `diff`. Fifteen more languages (Python, YAML, SQL, Markdown, Go, Rust, Java, C, C++, C#, Kotlin, Swift, Ruby, PHP
+ * and TOML) are opt-in: `registerCodeLanguage(pythonLanguage)` once, when the app starts. An app's own grammar
+ * registers the same way, and a `highlighter` handles a single block; any other language is drawn as plain text.
+ * It builds React elements from plain data and never sets HTML, so the code is always shown as text; it is
+ * approximate, not a full grammar. Code stays left-to-right in a right-to-left page.
+ *
+ * `size` (`xs` to `xl`) scales the code, the space around it and the header buttons. The header holds the title,
+ * the language and the buttons: a copy button, and with `wrapToggle` a button that turns line wrapping on and off
+ * (`wrap` / `defaultWrap` / `onWrapChange` own the state). `showLanguage={false}` drops the language label, and
+ * `showHeader={false}` drops the whole strip, leaving the buttons in the corner of the code. `showLineNumbers`
+ * numbers the lines; on a `diff` with `@@` hunk headers it draws an old and a new column instead.
  *
  * The scrolling region is a tab stop, and named, only while the code overflows. The copy button copies exactly
  * `code`, whatever is collapsed, and announces "Copied" or "Copy failed".
@@ -74,6 +79,8 @@ type CopyState = { status: "idle" | "copied" | "failed"; count: number };
  * <CodeBlock language="tsx" title="Greeting.tsx" showLineNumbers highlightLines={["2-3"]} code={source} />
  * <CodeBlock language="bash" code="pnpm add @dbm-design-system/components" />
  * <CodeBlock language="json" collapsible collapsedLines={6} code={longJson} />
+ * <CodeBlock language="ts" size="sm" wrapToggle showLanguage={false} code={source} />
+ * <CodeBlock language="diff" showLineNumbers code={gitDiffOutput} />
  * ```
  */
 export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
