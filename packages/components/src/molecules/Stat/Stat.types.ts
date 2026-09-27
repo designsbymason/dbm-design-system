@@ -90,7 +90,8 @@ export interface StatProps
    */
   variant?: StatVariant;
   /**
-   * A colour accent for `Stat.Icon`'s badge.
+   * A colour accent for `Stat.Icon` and `Stat.Label` together (and, on
+   * `outlined`, the border, and on `filled`, the whole stat's own fill).
    * @default 'neutral'
    */
   tone?: StatTone;

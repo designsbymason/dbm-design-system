@@ -3,8 +3,9 @@
 **Data Display:** Stat — built 2026-09-27, item 22 in the itemized molecule-tier build order (`04-component-inventory.md`), where the row is
 listed as `Stat / KPI` — the two names refer to the same component; it ships as `Stat`, the same convention `Tag / Chip` already set (the first
 name in a dual-named row is what gets built). Adds no dependency and no component token, reusing existing status tokens for `Stat.Trend`'s
-colour. **Not yet Finalized** — built directly against the full `06-engineering-standards.md` §9 checklist in one session, including a final
-review pass (see below for what that found and fixed), and awaiting the user's own Finalized declaration.
+colour. **Not yet Finalized** — built directly against the full `06-engineering-standards.md` §9 checklist, three same-day feature follow-ups,
+and a final pre-Finalize review are all complete; see "Final review before Finalizing" below for what that last pass checked and fixed.
+Awaiting the user's own Finalized declaration.
 
 A compound component: `Stat` (root) with `Stat.Icon`, `Stat.Label`, `Stat.Value` (usually holding a `Stat.Trend`), and `Stat.Description`, every
 one optional, in reading order.
@@ -308,6 +309,58 @@ Two more small changes, on top of both follow-ups above:
 Re-verified: `tsc`, `eslint`, the whole package's unit suite (4537 passing, +1 new: the medium-weight-by-default assertion), the whole
 package's real-browser suite (855 passing, unchanged), a production `build`, and a live check of the Orientation and Tone-across-variants
 stories in light mode.
+
+## Final review before Finalizing (2026-09-27)
+
+A last full pass across the whole `06-engineering-standards.md` §9 checklist before the user's own Finalized declaration — re-verifying the
+original build's findings still hold after all three same-day follow-ups above (label size moved three times net, weight, uppercase,
+orientation restructured, every variant made tone-aware), not just re-reading the original checklist as still true by assumption.
+
+**Two real findings, both fixed:**
+
+1. **The Docs page's "Design tokens used" table was significantly out of date with the stylesheet — the exact gap the original build review
+   flagged as "a fair candidate for backfill, not done here."** The tone-aware-variants follow-up added roughly a dozen tokens to
+   `Stat.module.css` (the five `bg.{tone}` solid fills and `icon.on-{tone}` pairs for `filled`, five `border.{tone}-subtle` borders for
+   `outlined`, `text.brand`/`text.info`/`text.warning` for the label) without updating the table, and one row (`bg.surface`) named a token the
+   stylesheet has never actually referenced. Also missing: `font-weight.medium`/`font-weight.bold` (applied via `Stat.Label`/`Value`/`Trend`'s
+   own `weight` prop, not a CSS custom property, but still a real token this component's rendered output depends on — the sitewide convention,
+   confirmed against `Text.mdx`/`Heading.mdx`/six other components, is to list these even when set through a prop rather than CSS). **Fixed:**
+   every token the stylesheet declares now has a row, `bg.surface`'s bogus row is gone, and the `space.*`/`font-size.*` ranges were split into
+   individual per-step rows (matching `CodeBlock.mdx`'s own convention) so each one is checkable. **Closed the gap for good, not just this once:**
+   added `Stat.docs.test.ts`, the same drift guard `CodeBlock.docs.test.ts` established (2026-09-26) — it reads `Stat.module.css` and `Stat.mdx`
+   and fails per-token if the stylesheet ever references a `--dbm-*` custom property with no matching `<TokenRow>`. It can't see the
+   prop-driven font-size/icon-size/font-weight tokens (nothing in the CSS file names them), so those stay hand-verified, same as before.
+2. **`StatProps.tone`'s own inline JSDoc was stale, contradicting the accurate type-level `StatTone` doc two lines above it and the component's
+   actual current behaviour.** It still read "A colour accent for `Stat.Icon`'s badge" — true when originally written, wrong since the
+   tone-aware-variants follow-up made `tone` colour `Stat.Label` (and the border/fill per variant) too. Docgen pulls a prop's description from
+   its own inline comment, not the type's, so this was the version an agent reading the generated Properties table would actually see. Fixed to
+   match the type-level doc.
+
+**Everything else re-verified, nothing else changed:**
+
+- **Properties tables' Default column** — checked live (not inferred from the `component:`-field shape alone, the exact lesson `Tabs`' own
+  final review taught, 2026-09-22): `Stat.Trend`'s `goodDirection` correctly shows `'increase'` (an explicit `table.defaultValue.summary` was
+  already set on all five sub-part story files when `Stat` was built, after that lesson was already recorded — the build didn't repeat the
+  defect). `Stat.Icon`/`Label`/`Value`/`Description` have no props with a `@default` tag, so their all-empty Default columns are correct as-is,
+  not a symptom of the same bug.
+- **Contrast** — no new pairing to check. `text.{tone}` on `bg.{tone}-subtle}` (the label on `filled`'s own fill) and `icon.on-{tone}` on solid
+  `bg.{tone}` (the badge on `filled`) are both pre-verified, existing pairings (`03-token-system-spec.md`'s own per-token contrast rows;
+  `icon.on-{tone}`'s own `$description` in the token source), not new work this component introduces.
+- **Theming** — reconfirmed live in Purple/Light, Purple/Dark, and Emerald/Dark (`Tone across variants`, `Orientation`, `All sizes`,
+  `Playground`): the smaller, medium-weight, uppercase label and the matching horizontal-orientation icon read correctly across all three.
+- **Responsiveness** — reconfirmed at a 375px viewport: `Stat` still has no breakpoint-specific behaviour of its own (the original conclusion
+  holds); `Stat.Label`'s own `overflow-wrap: anywhere` wraps "OPEN TICKETS" onto several lines in an artificially narrow demo column, which is
+  the label's own designed prose-wrap behaviour (unlike `Stat.Value`, which deliberately never wraps), not a defect.
+- **Design quality** — every step of the size scale (`xs`–`xl`) screenshotted fresh: the label reads clearly at its own new, smaller size next
+  to the value at every step, proportional throughout, no cramping.
+- **Playground controls** — `orientation`'s radio confirmed live to actually drive the canvas (icon moves from above the label to beside it),
+  not just present in the Controls panel.
+- **Full re-verification, run clean:** `eslint` and both `tsc --noEmit` passes; unit 89 files / 4,581 tests (+55, all from the new
+  `Stat.docs.test.ts`); the real-Chromium Storybook project 114 files / 855 tests (unchanged — no interaction test needed new coverage); `tsup`
+  build; the per-component bundle-size check (`Stat`: 2.82KB JS / 1.38KB CSS, within budget).
+
+**Outcome:** two real gaps found and fixed (both documentation-accuracy defects, not behavioral ones — nothing about what `Stat` actually does
+changed in this pass). Everything else on the checklist re-verified and still holds. Awaiting the user's own Finalized declaration.
 
 ## Not verified
 

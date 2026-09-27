@@ -326,40 +326,74 @@ import { UsersIcon, CurrencyDollarIcon, TicketIcon } from "@dbm-design-system/ic
 
 ## Design tokens used
 
-<TokenRow token="bg.neutral-subtle" usage="the neutral icon badge's tint, and the filled variant's fill" />
-<TokenRow token="bg.surface" usage="the icon badge's tint on the filled variant" />
+<TokenRow token="bg.neutral-subtle" usage="the neutral (no tone class) badge's tint, and the whole stat's fill on filled+neutral" />
+<TokenRow token="bg.neutral" usage="filled+neutral: the icon badge's solid fill" />
 <TokenRow token="icon.default" usage="the neutral icon's colour" />
+<TokenRow token="icon.on-neutral" usage="filled+neutral: the icon badge's own icon colour" />
 <TokenRow token="text.primary" usage="the stat's own text colour" />
-<TokenRow token="text.tertiary" usage="Stat.Label's colour" />
+<TokenRow token="text.tertiary" usage="Stat.Label's colour (no tone class, i.e. tone=neutral)" />
 <TokenRow token="text.secondary" usage="Stat.Description's colour, and Stat.Trend's colour when flat" />
 <TokenRow token="icon.secondary" usage="Stat.Trend's icon colour when flat" />
-<TokenRow token="text.success" usage="Stat.Trend's colour for a positive change" />
-<TokenRow token="icon.success" usage="Stat.Trend's icon colour for a positive change, and tone=success: the icon badge's colour" />
-<TokenRow token="text.danger" usage="Stat.Trend's colour for a negative change" />
-<TokenRow token="icon.danger" usage="Stat.Trend's icon colour for a negative change, and tone=danger: the icon badge's colour" />
-<TokenRow token="border.default" usage="the outlined variant's border" />
-<TokenRow token="bg.brand-subtle" usage="tone=brand: the icon badge's tint" />
-<TokenRow token="icon.brand" usage="tone=brand: the icon's colour" />
-<TokenRow token="bg.info-subtle" usage="tone=info: the icon badge's tint" />
-<TokenRow token="icon.info" usage="tone=info: the icon's colour" />
-<TokenRow token="bg.success-subtle" usage="tone=success: the icon badge's tint" />
-<TokenRow token="bg.warning-subtle" usage="tone=warning: the icon badge's tint" />
-<TokenRow token="icon.warning" usage="tone=warning: the icon's colour" />
-<TokenRow token="bg.danger-subtle" usage="tone=danger: the icon badge's tint" />
+<TokenRow token="text.success" usage="Stat.Trend's colour for a positive change, and tone=success: Stat.Label's colour" />
+<TokenRow token="icon.success" usage="Stat.Trend's icon colour for a positive change, and tone=success: the icon's colour on ghost/outlined" />
+<TokenRow token="text.danger" usage="Stat.Trend's colour for a negative change, and tone=danger: Stat.Label's colour" />
+<TokenRow token="icon.danger" usage="Stat.Trend's icon colour for a negative change, and tone=danger: the icon's colour on ghost/outlined" />
+<TokenRow token="text.brand" usage="tone=brand: Stat.Label's colour" />
+<TokenRow token="text.info" usage="tone=info: Stat.Label's colour" />
+<TokenRow token="text.warning" usage="tone=warning: Stat.Label's colour" />
+<TokenRow token="border.default" usage="the outlined variant's border (no tone class, i.e. tone=neutral)" />
+<TokenRow token="border.brand-subtle" usage="outlined+brand: the border" />
+<TokenRow token="border.info-subtle" usage="outlined+info: the border" />
+<TokenRow token="border.success-subtle" usage="outlined+success: the border" />
+<TokenRow token="border.warning-subtle" usage="outlined+warning: the border" />
+<TokenRow token="border.danger-subtle" usage="outlined+danger: the border" />
+<TokenRow token="bg.brand-subtle" usage="tone=brand: the icon's tint on ghost/outlined, and the whole stat's fill on filled" />
+<TokenRow token="icon.brand" usage="tone=brand: the icon's colour on ghost/outlined" />
+<TokenRow token="bg.brand" usage="filled+brand: the icon badge's solid fill" />
+<TokenRow token="icon.on-brand" usage="filled+brand: the icon badge's own icon colour" />
+<TokenRow token="bg.info-subtle" usage="tone=info: the icon's tint on ghost/outlined, and the whole stat's fill on filled" />
+<TokenRow token="icon.info" usage="tone=info: the icon's colour on ghost/outlined" />
+<TokenRow token="bg.info" usage="filled+info: the icon badge's solid fill" />
+<TokenRow token="icon.on-info" usage="filled+info: the icon badge's own icon colour" />
+<TokenRow token="bg.success-subtle" usage="tone=success: the icon's tint on ghost/outlined, and the whole stat's fill on filled" />
+<TokenRow token="bg.success" usage="filled+success: the icon badge's solid fill" />
+<TokenRow token="icon.on-success" usage="filled+success: the icon badge's own icon colour" />
+<TokenRow token="bg.warning-subtle" usage="tone=warning: the icon's tint on ghost/outlined, and the whole stat's fill on filled" />
+<TokenRow token="icon.warning" usage="tone=warning: the icon's colour on ghost/outlined" />
+<TokenRow token="bg.warning" usage="filled+warning: the icon badge's solid fill" />
+<TokenRow token="icon.on-warning" usage="filled+warning: the icon badge's own icon colour" />
+<TokenRow token="bg.danger-subtle" usage="tone=danger: the icon's tint on ghost/outlined, and the whole stat's fill on filled" />
+<TokenRow token="bg.danger" usage="filled+danger: the icon badge's solid fill" />
+<TokenRow token="icon.on-danger" usage="filled+danger: the icon badge's own icon colour" />
 <TokenRow token="border-width.1" usage="the border's width (transparent on the variants without one, so every variant is the same size)" />
 <TokenRow token="radius.lg" usage="the stat's corners" />
 <TokenRow token="radius.full" usage="the icon badge" />
 <TokenRow token="font-family.primary" usage="stat typography" />
+<TokenRow token="font-weight.medium" usage="Stat.Label's default weight, and Stat.Trend's number" />
+<TokenRow token="font-weight.bold" usage="Stat.Value's weight" />
 <TokenRow token="line-height.tight" usage="Stat.Value's line height" />
-<TokenRow token="space.3–space.8" usage="padding across the five size steps" />
-<TokenRow token="space.1–space.3" usage="the gap between parts across the five size steps" />
-<TokenRow token="space.2–space.4" usage="the gap between the icon badge and the content, across the five size steps" />
-<TokenRow token="space.8–space.20" usage="the icon badge's diameter across the five size steps" />
-<TokenRow token="space.1" usage="the gap between Stat.Trend's icon and its number" />
-<TokenRow token="space.2" usage="the gap between Stat.Value's own text and a following Stat.Trend" />
+<TokenRow token="space.1" usage="the gap between parts at size xs/sm, and between Stat.Trend's icon and its own number" />
+<TokenRow token="space.2" usage="the gap between parts at size md, the gap between the icon badge and the content at xs/sm, and between Stat.Value's own text and a following Stat.Trend" />
+<TokenRow token="space.3" usage="the padding at size xs, the gap between parts at size xl, and the gap between the icon badge and the content at size md" />
+<TokenRow token="space.4" usage="the padding at size sm, and the gap between the icon badge and the content at size lg/xl" />
+<TokenRow token="space.5" usage="the padding at size md" />
+<TokenRow token="space.6" usage="the padding at size lg" />
+<TokenRow token="space.8" usage="the padding at size xl, and the icon badge's diameter at size xs" />
+<TokenRow token="space.10" usage="the icon badge's diameter at size sm" />
+<TokenRow token="space.12" usage="the icon badge's diameter at size md" />
+<TokenRow token="space.16" usage="the icon badge's diameter at size lg" />
+<TokenRow token="space.20" usage="the icon badge's diameter at size xl" />
 <TokenRow token="icon-size.sm–icon-size.2xl" usage="Stat.Icon's size across the five size steps" />
 <TokenRow token="icon-size.xs–icon-size.md" usage="Stat.Trend's icon size across the five size steps" />
-<TokenRow token="font-size.xs–font-size.6xl" usage="Stat.Value's size across the five size steps" />
+<TokenRow token="font-size.xs" usage="Stat.Description at size xs, and Stat.Trend's number at size xs" />
+<TokenRow token="font-size.sm" usage="Stat.Label at size sm, Stat.Description at size sm/md, and Stat.Trend's number at size sm/md" />
+<TokenRow token="font-size.base" usage="Stat.Label at size md, Stat.Description at size lg/xl, and Stat.Trend's number at size lg" />
+<TokenRow token="font-size.md" usage="Stat.Label at size lg/xl, and Stat.Trend's number at size xl" />
+<TokenRow token="font-size.2xl" usage="Stat.Value at size xs" />
+<TokenRow token="font-size.3xl" usage="Stat.Value at size sm" />
+<TokenRow token="font-size.4xl" usage="Stat.Value at size md" />
+<TokenRow token="font-size.5xl" usage="Stat.Value at size lg" />
+<TokenRow token="font-size.6xl" usage="Stat.Value at size xl" />
 
 ## Related components
 
