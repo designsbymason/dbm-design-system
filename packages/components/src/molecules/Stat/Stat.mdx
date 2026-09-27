@@ -47,7 +47,8 @@ beside it), and `Stat.Description` inside `Stat`, in the order they should be re
 
 `size` sets the padding, the spacing, and the size of the icon and text — small for a dense dashboard grid,
 large for a stat that is a card's main content. A `variant` picks the surface (none, a solid border, or a
-fill), a `tone` tints the icon badge, and `orientation` puts the icon above the content or beside it.
+fill), a `tone` colours `Stat.Icon` and `Stat.Label` together (plus the border on `outlined` and the whole
+surface on `filled`), and `orientation` puts the icon above the content or beside it.
 `Stat.Trend` colours and points its icon from a plain signed number — an increase or a decrease, and whether
 that particular direction is an improvement or a regression for this metric. `announce` tells a screen reader
 about a value that changes after this stat is already on the page — a live dashboard.
@@ -84,8 +85,10 @@ straight through to the badge.
 
 ### Stat.Label properties
 
-What the metric is, in the tertiary text colour, sized to the stat's `size`. Also accepts any other native
-`<p>` attribute beyond what's listed here (e.g. `onClick`, `lang`) — passed straight through.
+What the metric is, uppercase and sized to the stat's `size`, in the tertiary text colour by default or the
+stat's `tone` colour otherwise. Uppercase is a class default, not a separate prop — pass
+`style={{ textTransform: "none" }}` to opt out. Also accepts any other native `<p>` attribute beyond what's
+listed here (e.g. `onClick`, `lang`) — passed straight through.
 
 <PropertiesTable of={StatLabelStories} order={labelPropOrder} />
 
@@ -194,7 +197,8 @@ the very first value shown is never announced, only a later change. Click the bu
 <Callout tone="danger" title="Don't">
 
 - Don't use `tone` to say whether a change is good or bad — that's `Stat.Trend`'s own `goodDirection` and sign,
-  not the icon badge's colour. `tone` only tints `Stat.Icon`, decoratively.
+  not `tone`. `tone` colours `Stat.Icon` and `Stat.Label` (and, on `outlined`/`filled`, the border or surface),
+  decoratively, unrelated to `Stat.Trend`'s own colour.
 - Don't put more than one `Stat.Trend` in a single `Stat.Value` — one metric, one change.
 - Don't rely on `Stat.Trend`'s colour alone to say increase or decrease — it always shows an icon (an upward or
   downward trend, or a dash) too, and the accessible name always states the direction in words.
@@ -239,8 +243,9 @@ the very first value shown is never announced, only a later change. Click the bu
 - `Stat.Icon` is decorative by default and hidden from assistive technology (`aria-hidden`), because
   `Stat.Label` already says what it shows. Give it a `label` only when the icon conveys something the label
   doesn't.
-- `tone` is decorative: it tints the icon badge only, unrelated to whether a change is good or bad. The icon
-  against its tinted badge measures at least 3:1 in every theme (the standard for meaningful graphics).
+- `tone` is decorative: it colours `Stat.Icon` and `Stat.Label` together, unrelated to whether a change is good
+  or bad. The icon against its badge (or fill, on `filled`) measures at least 3:1 in every theme (the standard
+  for meaningful graphics).
 - `Stat.Trend`'s colour is never the only signal: an upward or downward trend icon (or a dash, for no change)
   always accompanies it, and the accessible name always states the direction in words.
 - `announce` renders a visually hidden `role="status"` region that starts empty and fills a moment after

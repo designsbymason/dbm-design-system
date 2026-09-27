@@ -258,9 +258,12 @@
    defaults to) applies a same-specificity class on the identical element, so
    a plain single class here would win or lose depending on file/build order
    alone — confirmed the fragile way once, not repeated. The extra element
-   selector makes this reliably win regardless. */
+   selector makes this reliably win regardless. Uppercase is a class-level
+   default too, so a caller's own `style` prop (inline, always wins over any
+   class) is enough to opt back out — no separate prop needed for that. */
 p.label {
   color: var(--stat-label-color);
+  text-transform: uppercase;
 }
 
 /* The value and a following trend sit on the same line, aligned to the

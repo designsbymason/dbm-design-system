@@ -264,6 +264,33 @@ Re-verified: `tsc`, `eslint`, the whole package's unit suite (4534 passing, +9 n
 production `build`, the bundle-size check (`Stat`: 2.82KB JS / 1.36KB CSS), and a live check of every gallery story (Playground, Orientation,
 Tones, the new Tone-across-variants gallery) in both light and dark mode.
 
+## Follow-up (2026-09-27, at explicit direction, same day) — label size pulled back down, uppercase by default
+
+Two more requested changes, on top of the follow-up above:
+
+1. **`Stat.Label` pulled back down one size step.** `xs→base, sm→md, md→md, lg→lg, xl→lg` (was `xs→md, sm→lg, md→lg, lg→xl, xl→xl` from
+   the follow-up above — net two steps up from `Stat.Description`'s table now, not three). Applies identically in both orientations, since
+   `labelSize` is the one table both read from. The icon in `orientation="horizontal"` needed no separate change: it was already sized `1em`
+   against the row's own inline `font-size`, itself set from this same `labelSize` lookup, so it shrinks with the label automatically —
+   confirmed live rather than assumed, since "the icon should follow" was the explicit ask.
+2. **`Stat.Label` is uppercase by default.** A CSS default (`text-transform: uppercase` on `p.label` in `Stat.module.css`), not a new prop —
+   asked for specifically ("developers can override the style if they want using style prop"), so the override path is `Stat.Label`'s
+   existing `style` prop (e.g. `style={{ textTransform: "none" }}`), which as an inline style always wins over a class regardless of order,
+   the same reasoning already applied to `p.label`'s own colour rule above. No new prop, no new token.
+
+While touching this area, corrected several sentences in `Stat.mdx` left stale by the *first* 2026-09-27 follow-up above (tone colouring
+`Stat.Label` too, not just `Stat.Icon`) — the intro copy, `Stat.Label`'s own properties-table description, and two Accessibility-tab bullets
+still said `tone` "only tints the icon badge," contradicting the "All tones"/"Tone across variants" sections a few screens below in the same
+file. Left the token-row list (`## Tokens`) as found — it's missing rows for `text.{tone}`, `border.{tone}-subtle`, the solid `bg.{tone}`/
+`icon.on-{tone}` pair, and `bg.neutral`, all real tokens this component uses since the tone-aware-variants follow-up — a real gap, but a
+separate, larger audit (verifying each one measured in all four themes, this system's own bar for a token row) than this two-item request
+justified opening up; flagged here rather than fixed inline or silently left unmentioned.
+
+Re-verified: `tsc`, `eslint`, the whole package's unit suite (4536 passing, +2 new: the uppercase default and its `style`-prop override), the
+whole package's real-browser suite (855 passing, unchanged — no new interaction test was needed, since the existing
+`ToneAcrossVariantsInteraction` computed-style assertions don't pin an exact label font size), a production `build`, and a live check of the
+Orientation, Tone-across-variants and Docs pages in both light and dark mode.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; `Stat.Trend`'s `role="img"` announcement and `announce`'s own status region
