@@ -513,6 +513,18 @@ button-presence/scroll-axis logic mirroring the existing horizontal ones, and a 
 plus a live check in both light and dark mode (the fade's `bg.surface` resolves correctly in dark: confirmed via computed style, not just by
 reading the CSS). Full package `tsc`/`eslint`/`vitest` (4438 unit tests)/`build`/bundle-size check all re-run clean.
 
+**Pre-existing defect found and fixed the same day, user-reported:** the new `verticalScrolling` snippet was written by copying the shape of the
+existing `scrolling` one, which turned out to already be wrong — both showed a `defaultValue`/`Tabs.Content` of `"reports"`, an abbreviated
+six-tab list, while the story each one sits under (`Scrolling`, `VerticalScrolling`) actually renders the full eight-tab `workspaceTabs` list with
+`defaultValue="security"`, deliberately the *last* tab, so the demo shows the list already scrolled to reveal it. The Docs page canvas showed
+"Security" selected while its own "Show code" panel showed a `Tabs.Content value="reports"` that was never even in the rendered list — a real,
+pre-existing mismatch between what a hand-written snippet claims and what the story above it actually renders, not something this session's own
+vertical work introduced. Fixed in both `scrolling` and `verticalScrolling`: each snippet's tab list, `defaultValue` and `Tabs.Content` now match
+its own story exactly (`defaultValue="security"`, all eight tabs, "Two-factor and session settings."). A defect fix under an unchanged existing
+guideline requirement (ADR-0020's own "hand-written, pasteable, typechecked against the real components" bar implies matching the canvas it sits
+under) — stays Finalized per the three-question test's step 2, no broader re-check needed. Re-verified: `tsc`, `eslint`, both Tabs test files
+(133 unit + 36 real-browser), and a live "Show code" check on the Docs page for both sections.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; roles, names and states are checked through the accessibility tree and axe. The

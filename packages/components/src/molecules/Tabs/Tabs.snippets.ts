@@ -91,7 +91,7 @@ ${tabs('value={value} onValueChange={setValue}')}`,
 
   scrolling: `{/* A horizontal list wider than its container scrolls sideways, keeps the selected tab in view,
     and shows a fade and a button wherever there are more tabs that way. */}
-<Tabs defaultValue="reports">
+<Tabs defaultValue="security">
   <Tabs.List aria-label="Workspace">
     <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
     <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
@@ -99,8 +99,10 @@ ${tabs('value={value} onValueChange={setValue}')}`,
     <Tabs.Trigger value="billing">Billing</Tabs.Trigger>
     <Tabs.Trigger value="integrations">Integrations</Tabs.Trigger>
     <Tabs.Trigger value="reports">Reports</Tabs.Trigger>
+    <Tabs.Trigger value="audit log">Audit log</Tabs.Trigger>
+    <Tabs.Trigger value="security">Security</Tabs.Trigger>
   </Tabs.List>
-  <Tabs.Content value="reports">Scheduled and saved reports.</Tabs.Content>
+  <Tabs.Content value="security">Two-factor and session settings.</Tabs.Content>
 </Tabs>`,
 
   verticalScrolling: `{/* A vertical list taller than the height it's given scrolls inside itself, keeps the
@@ -108,7 +110,7 @@ ${tabs('value={value} onValueChange={setValue}')}`,
     Nothing bounds the height on its own — set it directly on Tabs.List, in an absolute unit
     (not a percentage: nothing above it stretches to give a percentage something definite to
     resolve against). */}
-<Tabs defaultValue="reports" orientation="vertical">
+<Tabs defaultValue="security" orientation="vertical">
   <Tabs.List aria-label="Workspace" style={{ maxBlockSize: "10rem" }}>
     <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
     <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
@@ -116,8 +118,10 @@ ${tabs('value={value} onValueChange={setValue}')}`,
     <Tabs.Trigger value="billing">Billing</Tabs.Trigger>
     <Tabs.Trigger value="integrations">Integrations</Tabs.Trigger>
     <Tabs.Trigger value="reports">Reports</Tabs.Trigger>
+    <Tabs.Trigger value="audit log">Audit log</Tabs.Trigger>
+    <Tabs.Trigger value="security">Security</Tabs.Trigger>
   </Tabs.List>
-  <Tabs.Content value="reports">Scheduled and saved reports.</Tabs.Content>
+  <Tabs.Content value="security">Two-factor and session settings.</Tabs.Content>
 </Tabs>`,
 
   keepMounted: `{/* forceMount keeps the panel in the page while its tab is not selected (hidden), so what
