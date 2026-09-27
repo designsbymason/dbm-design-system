@@ -9,5 +9,10 @@ describe("CodeBlock's stories module", () => {
     const stories = await import("./CodeBlock.stories");
     expect(stories.default.title).toBe("Molecules/Typography/CodeBlock");
     expect(stories.Playground).toBeDefined();
+    // The checks are the file that uses the protocol, so it is the one that must not evaluate it at load.
+    const checks = await import("./CodeBlock.checks.stories");
+    expect(checks.default.title).toBe("Molecules/Typography/CodeBlock/Checks");
+    expect(checks.default.tags).toContain("!dev");
+    expect(checks.PrintInteraction).toBeDefined();
   });
 });

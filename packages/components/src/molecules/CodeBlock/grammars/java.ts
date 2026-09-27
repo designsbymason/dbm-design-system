@@ -1,17 +1,17 @@
-import { defineLanguage, word, wordClassifier } from "./kit";
+import { cFamilyRules, defineLanguage } from "./kit";
 import { notAfterWord, wordSet } from "../tokenizeTypes";
 import type { CodeLanguage, Rule } from "../tokenizeTypes";
 
-const javaRules = (): Rule[] => [
-  { re: /\/\/[^\n]*/y, type: "comment" },
-  { re: /\/\*[\s\S]*?(?:\*\/|$)/y, type: "comment" },
-  { re: /"""[\s\S]*?(?:"""|$)/y, type: "string" },
-  { re: /"(?:[^"\\\n]|\\.)*"?/y, type: "string" },
-  { re: /'(?:[^'\\\n]|\\.)*'?/y, type: "string" },
-  { re: /@[A-Za-z_][\w.]*/y, type: "function", when: notAfterWord },
-  { re: /0[xX][\da-fA-F_]+[lL]?|0[bB][01_]+[lL]?|\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?[lLfFdD]?/y, type: "number" },
-  word(
-    wordClassifier({
+const javaRules = (): Rule[] =>
+  cFamilyRules({
+    strings: [
+      { re: /"""[\s\S]*?(?:"""|$)/y, type: "string" },
+      { re: /"(?:[^"\\\n]|\\.)*"?/y, type: "string" },
+      { re: /'(?:[^'\\\n]|\\.)*'?/y, type: "string" },
+    ],
+    extra: [{ re: /@[A-Za-z_][\w.]*/y, type: "function", when: notAfterWord }],
+    number: /0[xX][\da-fA-F_]+[lL]?|0[bB][01_]+[lL]?|\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?[lLfFdD]?/y,
+    word: {
       keywords: wordSet(
         "abstract assert break case catch class const continue default do else enum extends final finally for goto if " +
           "implements import instanceof interface native new package private protected public return static strictfp " +
@@ -19,9 +19,8 @@ const javaRules = (): Rule[] => [
       ),
       literals: wordSet("true false null"),
       types: wordSet("boolean byte char double float int long short"),
-    }),
-  ),
-];
+    },
+  });
 
 /** Java, for `registerCodeLanguage`. */
 export const javaLanguage: CodeLanguage = /* @__PURE__ */ defineLanguage("java", "Java", [], javaRules);

@@ -1,21 +1,22 @@
 import { ArrowBendDownLeftIcon, CheckIcon, CopyIcon, WarningIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, useAnnouncement } from "@dbm-design-system/primitives";
-import { forwardRef, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { forwardRef, useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./CodeBlock.module.css";
 import type { CodeBlockLabels, CodeBlockProps, CodeBlockSize } from "./CodeBlock.types";
-import { copyToClipboard } from "./copyToClipboard";
-import { diffGutter, parseDiffNumbers } from "./diffNumbers";
 import { parseHighlightLines } from "./highlightLines";
+import { languageLabel } from "./languageLabel";
 import { findRegisteredLanguage, subscribeToCodeLanguages } from "./registry";
-import { textToCopy } from "./textToCopy";
-import { builtinLabel, resolveLanguage, tokenize } from "./tokenize";
+import { tokenize } from "./tokenize";
 import type { TokenType } from "./tokenize";
 import { useCodeScroll } from "./useCodeScroll";
 import { useCollapsedHeight } from "./useCollapsedHeight";
+import { useControllableFlag } from "./useControllableFlag";
+import { useCopyButton } from "./useCopyButton";
+import { useLineNumbers } from "./useLineNumbers";
 
 const defaultLabels: CodeBlockLabels = {
   wrap: "Wrap lines",
@@ -51,8 +52,6 @@ const sizeClass: Record<CodeBlockSize, string | undefined> = {
 
 /** The header buttons' size for each `size`: the smaller steps stay above the 24px target-size floor. */
 const buttonSize: Record<CodeBlockSize, "xs" | "sm" | "md"> = { xs: "xs", sm: "xs", md: "sm", lg: "sm", xl: "md" };
-
-type CopyState = { status: "idle" | "copied" | "failed"; count: number };
 
 /**
  * A block of source code, with syntax highlighting, an optional title, line numbers, highlighted lines, a copy
@@ -132,20 +131,7 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     const registered = useSyncExternalStore(subscribeToCodeLanguages, getRegistered, getRegistered);
     const lines = useMemo(() => tokenize(text, language, highlighter, registered), [text, language, highlighter, registered]);
     const highlighted = useMemo(() => parseHighlightLines(highlightLines), [highlightLines]);
-    // A diff with hunk headers is numbered from them, an old and a new column, instead of counting its rows; one with
-    // none (a hand-written snippet) has no line numbers to show, so it is drawn without a gutter.
-    const isDiff = resolveLanguage(language) === "diff";
-    const diffGutterOf = useMemo(() => {
-      if (!showLineNumbers || !isDiff) return undefined;
-      const numbers = parseDiffNumbers(lines.map((line) => line.map((token) => token.text).join("")));
-      return numbers && diffGutter(numbers);
-    }, [showLineNumbers, isDiff, lines]);
-    const numbered = showLineNumbers && (!isDiff || diffGutterOf !== undefined);
-    // In a numbered diff `highlightLines` counts the rows, from 1 (`startLine` has nothing to say there).
-    const firstLine = diffGutterOf ? 1 : Number.isFinite(startLine) ? Math.trunc(startLine) : 1;
-    const gutterDigits = diffGutterOf
-      ? 2 * diffGutterOf.digits + 2
-      : String(Math.max(Math.abs(firstLine), Math.abs(firstLine + lines.length - 1))).length + (firstLine < 0 ? 1 : 0);
+    const { numbered, diff: diffGutterOf, firstLine, gutterDigits } = useLineNumbers(showLineNumbers, startLine, language, lines);
 
     // A screen reader has no way to see the band, so the first line of each highlighted run says how many lines
     // it covers (never selected or copied).
@@ -162,23 +148,13 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
     }, [highlighted, firstLine, lines.length]);
 
     // --- Wrapping: controlled with `wrap`, or uncontrolled from `defaultWrap` and changed by the toggle button.
-    const [uncontrolledWrap, setUncontrolledWrap] = useState(defaultWrap);
-    const wrap = wrapProp ?? uncontrolledWrap;
-    const changeWrap = (next: boolean) => {
-      if (wrapProp === undefined) setUncontrolledWrap(next);
-      onWrapChange?.(next);
-    };
+    const [wrap, changeWrap] = useControllableFlag(wrapProp, defaultWrap, onWrapChange);
 
     // --- Collapsing: controlled with `expanded`, or uncontrolled from `defaultExpanded`.
-    const [uncontrolledExpanded, setUncontrolledExpanded] = useState(defaultExpanded);
-    const expanded = expandedProp ?? uncontrolledExpanded;
+    const [expanded, changeExpanded] = useControllableFlag(expandedProp, defaultExpanded, onExpandedChange);
     const visibleLines = Math.max(1, Math.trunc(collapsedLines) || 1);
     const canCollapse = collapsible && lines.length > visibleLines;
     const collapsed = canCollapse && !expanded;
-    const toggleExpanded = () => {
-      if (expandedProp === undefined) setUncontrolledExpanded(!expanded);
-      onExpandedChange?.(!expanded);
-    };
 
     // --- Scrolling: a named tab stop only while the code overflows.
     const frameRef = useRef<HTMLDivElement>(null);
@@ -196,20 +172,7 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
           : { "aria-label": title || labels.region };
 
     // --- Copying.
-    const [copy, setCopy] = useState<CopyState>({ status: "idle", count: 0 });
-    const { message, announce } = useAnnouncement();
-    useEffect(() => {
-      if (copy.status === "idle") return;
-      const timer = window.setTimeout(() => setCopy((current) => ({ ...current, status: "idle" })), copiedDuration);
-      return () => window.clearTimeout(timer);
-    }, [copy, copiedDuration]);
-    const handleCopy = async () => {
-      const toCopy = textToCopy(text, language, stripPrompt);
-      const copied = await copyToClipboard(toCopy);
-      setCopy((current) => ({ status: copied ? "copied" : "failed", count: current.count + 1 }));
-      announce(copied ? labels.copied : labels.copyFailed);
-      if (copied) onCopied?.(toCopy);
-    };
+    const copy = useCopyButton({ text, language, stripPrompt, duration: copiedDuration, copied: labels.copied, copyFailed: labels.copyFailed, onCopied });
 
     const codeIsNotText = typeof code !== "string";
     useEffect(() => {
@@ -218,10 +181,7 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
       }
     }, [codeIsNotText]);
 
-    // What the header calls the language: an app's own name for it (a registered language's `label`), else the built-in
-    // one, else what was written, which is set in capitals as a code. A label that isn't a string is ignored.
-    const registeredLabel = typeof registered?.label === "string" ? registered.label.trim() : "";
-    const friendlyLanguage = registeredLabel || builtinLabel(language);
+    const friendlyLanguage = languageLabel(registered, language);
     const hasControls = copyable || wrapToggle;
     const languageIsDrawn = Boolean(language) && showLanguage;
     const hasHeader = showHeader && (titleIsDrawn || languageIsDrawn || hasControls);
@@ -245,7 +205,7 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
             variant="ghost"
             size={buttonSize[size]}
             data-copy-state={copy.status}
-            onClick={handleCopy}
+            onClick={copy.copy}
           />
         )}
       </span>
@@ -333,12 +293,12 @@ export const CodeBlock = forwardRef<HTMLElement, CodeBlockProps>(
         </div>
         {canCollapse && (
           <div className={styles.footer}>
-            <Button variant="ghost" size="sm" aria-expanded={expanded} aria-controls={frameId} onClick={toggleExpanded}>
+            <Button variant="ghost" size="sm" aria-expanded={expanded} aria-controls={frameId} onClick={() => changeExpanded(!expanded)}>
               {expanded ? labels.collapse : labels.expand(lines.length - visibleLines)}
             </Button>
           </div>
         )}
-        <VisuallyHidden role="status">{message}</VisuallyHidden>
+        <VisuallyHidden role="status">{copy.message}</VisuallyHidden>
       </figure>
     );
   },
