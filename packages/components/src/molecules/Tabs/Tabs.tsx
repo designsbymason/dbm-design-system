@@ -238,13 +238,15 @@ TabsRoot.displayName = "Tabs";
  * `Tab` enters it once, on the selected tab, and the arrow keys move between
  * tabs from there. When it outgrows its container along the direction it
  * runs — wider than it, horizontal; taller than it, vertical — it scrolls
- * along that axis, keeps the selected tab in view as the selection changes,
- * and shows a fade and a button at whichever edge currently has more tabs
- * beyond it. `ref` forwards to the `tablist` element itself, not to the
- * wrapper the fades and buttons are positioned against.
+ * along that axis (arrow keys, and a touch or trackpad swipe, always scroll
+ * it), keeps the selected tab in view as the selection changes, and shows a
+ * fade at whichever edge currently has more tabs beyond it, plus a button
+ * there too unless `showScrollButtons` is `false`. `ref` forwards to the
+ * `tablist` element itself, not to the wrapper the fade and button are
+ * positioned against.
  */
 const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
-  ({ loop = true, align = "start", className, children, ...props }, ref) => {
+  ({ loop = true, align = "start", showScrollButtons = true, className, children, ...props }, ref) => {
     const { variant, size, orientation } = useContext(TabsContext);
     const listRef = useRef<HTMLDivElement>(null);
     const isHorizontal = orientation === "horizontal";
@@ -254,10 +256,12 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
     // while it still has real keyboard focus — the same reasoning `Pagination`'s own arrows apply
     // to their own edge case (removing it would drop focus to the top of the document). Mouse-
     // produced focus doesn't hold it: `hasKeyboardFocus` only sets these from a `:focus-visible` match.
+    // Neither state ever turns true while `showScrollButtons` is false, since nothing renders to
+    // focus in the first place — gating the buttons on it below needs no change here.
     const [startHeld, setStartHeld] = useState(false);
     const [endHeld, setEndHeld] = useState(false);
-    const showStartButton = overflowStart || startHeld;
-    const showEndButton = overflowEnd || endHeld;
+    const showStartButton = showScrollButtons && (overflowStart || startHeld);
+    const showEndButton = showScrollButtons && (overflowEnd || endHeld);
 
     useEffect(() => {
       const list = listRef.current;

@@ -1492,6 +1492,8 @@ describe("Playground snippets for Tabs", () => {
     { variant: "outlined", rounded: true, size: "lg" },
     { align: "center" },
     { align: "end", fullWidth: true },
+    { showScrollButtons: false },
+    { align: "center", showScrollButtons: false },
   ] as const;
 
   it.each(tabsArgs)("Tabs %j is a real snippet", (args) => {
@@ -1527,6 +1529,16 @@ describe("Playground snippets for Tabs", () => {
     expect(tabsPlaygroundSnippet({ align: "center" })).toMatch(/<Tabs\.List aria-label="Project" align="center">\n/);
     expect(tabsPlaygroundSnippet({ align: "end", variant: "subtle" })).toMatch(
       /^<Tabs defaultValue="overview" variant="subtle">\n {2}<Tabs\.List aria-label="Project" align="end">\n/,
+    );
+  });
+
+  it("Tabs writes showScrollButtons onto Tabs.List, not the root, and only when it's false", () => {
+    expect(tabsPlaygroundSnippet({ showScrollButtons: true })).toMatch(/<Tabs\.List aria-label="Project">\n/);
+    expect(tabsPlaygroundSnippet({ showScrollButtons: false })).toMatch(
+      /<Tabs\.List aria-label="Project" showScrollButtons={false}>\n/,
+    );
+    expect(tabsPlaygroundSnippet({ align: "center", showScrollButtons: false })).toMatch(
+      /<Tabs\.List aria-label="Project" align="center" showScrollButtons={false}>\n/,
     );
   });
 });

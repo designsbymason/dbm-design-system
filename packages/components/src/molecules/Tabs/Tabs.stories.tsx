@@ -28,6 +28,8 @@ interface PlaygroundArgs {
   // being a live control in the one demo that already renders a real
   // Tabs.List underneath.
   align: TabsAlign;
+  // Also Tabs.List's own prop, not the root's — same reasoning and scoping as `align` above.
+  showScrollButtons: boolean;
   dir: "ltr" | "rtl";
   value: string;
   id: string;
@@ -38,12 +40,16 @@ interface PlaygroundArgs {
 
 const demoContainerStyle = { maxWidth: "40rem", marginInline: "auto" } as const;
 
-type DemoTabsProps = Omit<TabsProps, "children"> & { listLabel?: string; align?: TabsAlign };
+type DemoTabsProps = Omit<TabsProps, "children"> & {
+  listLabel?: string;
+  align?: TabsAlign;
+  showScrollButtons?: boolean;
+};
 
 /** A small, real set of tabs the gallery stories vary. */
-const DemoTabs = ({ listLabel = "Project", align, ...props }: DemoTabsProps) => (
+const DemoTabs = ({ listLabel = "Project", align, showScrollButtons, ...props }: DemoTabsProps) => (
   <Tabs {...(props.value === undefined ? { defaultValue: "overview" } : {})} {...props}>
-    <Tabs.List aria-label={listLabel} align={align}>
+    <Tabs.List aria-label={listLabel} align={align} showScrollButtons={showScrollButtons}>
       <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
       <Tabs.Trigger value="activity">Activity</Tabs.Trigger>
       <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
@@ -178,6 +184,7 @@ const meta: Meta<PlaygroundArgs> = {
         activationMode={args.activationMode}
         fullWidth={args.fullWidth}
         align={args.align}
+        showScrollButtons={args.showScrollButtons}
         dir={args.dir}
       />
     </div>
@@ -200,9 +207,15 @@ export const Playground: Story = {
       description:
         "Tabs.List's own align: where the tabs sit within the list when they don't fill it — the leading edge, the middle, or the trailing edge.",
     },
+    showScrollButtons: {
+      control: "boolean",
+      description:
+        "Tabs.List's own showScrollButtons: whether the scroll buttons appear at whichever edge currently has more tabs beyond it, while the list is scrollable. The edge fade is unaffected either way.",
+    },
   },
   args: {
     align: "start",
+    showScrollButtons: true,
   },
   parameters: {
     docs: {
@@ -1179,6 +1192,88 @@ export const OverflowFocusHoldInteraction: Story = {
     // confound this specific assertion about the button's own release.
     await userEvent.click(canvas.getByRole("tabpanel"));
     await waitFor(() => expect(canvas.queryByRole("button", { name: "Scroll tabs to the start" })).toBeNull());
+  },
+};
+
+export const ShowScrollButtonsFalseInteraction: Story = {
+  ...FullWidth,
+  name: "showScrollButtons — hides the buttons, keeps the fade, keyboard and touch scrolling still work",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      <div data-testid="horizontal" style={{ inlineSize: "22rem" }}>
+        <Tabs defaultValue="security">
+          <Tabs.List aria-label="Workspace" showScrollButtons={false}>
+            {workspaceTabs.map((label) => (
+              <Tabs.Trigger key={label} value={label === "Security" ? "security" : label.toLowerCase()}>
+                {label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+          <Tabs.Content value="security">
+            <Text size="sm">Two-factor and session settings.</Text>
+          </Tabs.Content>
+        </Tabs>
+      </div>
+      <div data-testid="vertical">
+        <Tabs defaultValue="security" orientation="vertical">
+          <div style={{ display: "flex", blockSize: "10rem", overflow: "hidden" }}>
+            <Tabs.List aria-label="Workspace" showScrollButtons={false} style={{ blockSize: "100%" }}>
+              {workspaceTabs.map((label) => (
+                <Tabs.Trigger key={label} value={label === "Security" ? "security" : label.toLowerCase()}>
+                  {label}
+                </Tabs.Trigger>
+              ))}
+            </Tabs.List>
+          </div>
+          <Tabs.Content value="security">
+            <Text size="sm">Two-factor and session settings.</Text>
+          </Tabs.Content>
+        </Tabs>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const testId of ["horizontal", "vertical"] as const) {
+      const scoped = within(canvas.getByTestId(testId));
+      const list = scoped.getByRole("tablist");
+
+      // Genuinely overflowing (the same real-layout check every other overflow story makes) —
+      // otherwise "no buttons" would be true for the trivial reason nothing needs one.
+      await waitFor(() => {
+        if (testId === "horizontal") expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+        else expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+      });
+
+      // No buttons, in either direction, no matter how the list is scrolled.
+      expect(scoped.queryByRole("button", { name: /Scroll tabs/ })).toBeNull();
+      list.scrollBy(testId === "horizontal" ? { left: 9999 } : { top: 9999 });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(scoped.queryByRole("button", { name: /Scroll tabs/ })).toBeNull();
+
+      // The fade is untouched: `data-overflow-start`/`data-overflow-end` still flip with the real
+      // scroll position, exactly as they do when the buttons are shown.
+      const wrapper = list.parentElement!;
+      await waitFor(() => expect(wrapper).toHaveAttribute("data-overflow-start", "true"));
+      list.scrollBy(testId === "horizontal" ? { left: -9999 } : { top: -9999 });
+      await waitFor(() => expect(wrapper).toHaveAttribute("data-overflow-start", "false"));
+
+      // Keyboard scrolling still works with no button in the page to click: End moves the roving
+      // tab focus to the last tab, and the (still real, still overflow-y/x: auto) list follows it
+      // into view without ever needing a button.
+      const first = scoped.getByRole("tab", { name: "Overview" });
+      first.focus();
+      await userEvent.keyboard("{End}");
+      const last = scoped.getByRole("tab", { name: "Security" });
+      await expect(last).toHaveFocus();
+      await waitFor(() => {
+        const listRect = list.getBoundingClientRect();
+        const tabRect = last.getBoundingClientRect();
+        if (testId === "horizontal") expect(tabRect.right).toBeLessThanOrEqual(listRect.right + 1);
+        else expect(tabRect.bottom).toBeLessThanOrEqual(listRect.bottom + 1);
+      });
+    }
   },
 };
 

@@ -562,6 +562,32 @@ behavior either, so none was added here for parity. `VerticalScrolling`'s story,
 and why it's needed over a percentage. Re-verified: `tsc`, `eslint`, both Tabs test files, a real viewport resize in the browser, and the
 Docs-page "Show code" panel.
 
+**Follow-up (2026-09-27, at explicit direction) — `showScrollButtons`.** The user asked to keep the scroll buttons' own functionality (they still
+appear whenever the list overflows) but make their *display* optional, with the edge fade left untouched either way. New `Tabs.List` prop,
+`showScrollButtons?: boolean` (`@default true`), gating only `showStartButton`/`showEndButton` (`showScrollButtons && (overflowStart ||
+startHeld)`), not `overflowStart`/`overflowEnd` themselves or the `data-overflow-start`/`data-overflow-end` attributes the fade reads — the two
+signals were already independent (the fade is CSS driven off the wrapper's own attributes, the buttons off a separate boolean in `Tabs.tsx`), so
+this only needed to gate the one already-separate signal, not to separate anything that was coupled before. `startHeld`/`endHeld` (the
+hold-while-focused behaviour) needs no change: neither can ever become `true` while `showScrollButtons` is `false`, since there is no button in
+the page for either state's own `onFocus` to fire from. Scoped to `Tabs.List` (not the root), the same precedent `align` already set for a prop
+that only makes sense on the list. Wired into the Playground the same way `align` is (a story-local `argTypes`/`args` addition, kept out of the
+shared `meta.argTypes` so it doesn't leak into the fixed-render gallery stories) and into the Playground snippet builder
+(`showScrollButtons={false}` written only when it isn't the default, alongside `align` on the same `Tabs.List` tag). A real defect, caught by the
+new browser test itself rather than assumed: the first version of the accompanying real-browser story wrapped the *whole* `Tabs` in the vertical
+case's flex box again — the exact mistake the two follow-ups above already diagnosed and fixed elsewhere — reproducing the same "never actually
+overflows" failure until the test caught it and the story was corrected to wrap `Tabs.List` alone. New tests: four unit tests (both orientations
+hidden while overflowing, confirming the fade attributes stay `"true"`/`"true"` regardless; the default still shows both buttons) plus a dedicated
+Playground-snippet test pair; a new hidden `!dev` story exercising both orientations for real — genuinely overflowing (measured, not assumed), no
+buttons present however far the list is scrolled by script, the fade's own `data-overflow-*` attributes still flipping correctly with real scroll
+position, and keyboard (`End`) still reaching and revealing the last tab with no button anywhere in the page. Missed initially and caught only by
+running that story, not by review: `listPropOrder` in `Tabs.mdx` didn't list the new prop, so it rendered at the *end* of the `Tabs.List`
+Properties table instead of `PropertiesTable`'s row simply going missing (the block's own `order` prop is a sort hint, not a whitelist — "anything
+omitted falls through... at the end," confirmed by reading `PropertiesTable.tsx` itself rather than assumed) — fixed by adding it to
+`listPropOrder` right after `align`. Purely additive (a new, `true`-by-default prop changes nothing for any consumer not passing it) — stays
+Finalized per the three-question test's step 1. Re-verified: `tsc`, `eslint`, the whole package's unit suite (4444) and real-browser Storybook
+suite (836), a production `build`, the bundle-size check, and a live check of the `Tabs.List` Properties table showing the new row in the right
+place with the right default.
+
 ## Not verified
 
 No real screen reader (VoiceOver, NVDA, JAWS) was run against it; roles, names and states are checked through the accessibility tree and axe. The

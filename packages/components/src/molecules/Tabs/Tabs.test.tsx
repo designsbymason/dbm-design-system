@@ -970,6 +970,48 @@ describe("Tabs — overflow", () => {
     expect(screen.queryByRole("button", { name: /Scroll tabs/ })).not.toBeInTheDocument();
   });
 
+  it("hides both scroll buttons when showScrollButtons is false, even while overflowing", () => {
+    stubOverflow({ startVisible: false, endVisible: false });
+    const { container } = render(
+      <Tabs defaultValue="overview">
+        <Tabs.List aria-label="Project" showScrollButtons={false}>
+          <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+          <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="overview">A</Tabs.Content>
+      </Tabs>,
+    );
+    expect(screen.queryByRole("button", { name: /Scroll tabs/ })).not.toBeInTheDocument();
+    // The fade is unaffected — driven by the same overflow signal, not by the buttons' own presence.
+    const wrapper = container.querySelector("[data-overflow-start]");
+    expect(wrapper).toHaveAttribute("data-overflow-start", "true");
+    expect(wrapper).toHaveAttribute("data-overflow-end", "true");
+  });
+
+  it("hides both scroll buttons for a vertical list too when showScrollButtons is false", () => {
+    stubOverflowV({ startVisible: false, endVisible: false });
+    const { container } = render(
+      <Tabs defaultValue="overview" orientation="vertical">
+        <Tabs.List aria-label="Project" showScrollButtons={false}>
+          <Tabs.Trigger value="overview">Overview</Tabs.Trigger>
+          <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="overview">A</Tabs.Content>
+      </Tabs>,
+    );
+    expect(screen.queryByRole("button", { name: /Scroll tabs/ })).not.toBeInTheDocument();
+    const wrapper = container.querySelector("[data-overflow-start]");
+    expect(wrapper).toHaveAttribute("data-overflow-start", "true");
+    expect(wrapper).toHaveAttribute("data-overflow-end", "true");
+  });
+
+  it("does not hide the scroll buttons by default", () => {
+    stubOverflow({ startVisible: false, endVisible: false });
+    render(<Basic />);
+    expect(screen.getByRole("button", { name: "Scroll tabs to the start" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Scroll tabs to the end" })).toBeInTheDocument();
+  });
+
   it("scrolls forward by the list's own width when the end button is clicked", async () => {
     const user = userEvent.setup();
     const scrollBy = installScrollBy();

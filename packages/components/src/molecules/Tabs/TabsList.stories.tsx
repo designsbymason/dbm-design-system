@@ -27,6 +27,12 @@ const meta: Meta<typeof Tabs.List> = {
         "Where the tabs sit within the list when they don't fill it: the leading edge, the middle, or the trailing edge.",
       table: { defaultValue: { summary: '"start"' } },
     },
+    showScrollButtons: {
+      control: "boolean",
+      description:
+        "Whether the scroll buttons appear at whichever edge currently has more tabs beyond it, while the list is scrollable. The edge fade is unaffected either way — arrow keys, and a touch or trackpad swipe, still scroll the list when this is false; only the pointer-only buttons are hidden.",
+      table: { defaultValue: { summary: "true" } },
+    },
     "aria-label": {
       control: "text",
       description:
@@ -59,6 +65,7 @@ const meta: Meta<typeof Tabs.List> = {
   args: {
     loop: true,
     align: "start",
+    showScrollButtons: true,
     "aria-label": "Project",
   },
 };

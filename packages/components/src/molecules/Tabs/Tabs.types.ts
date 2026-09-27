@@ -144,6 +144,14 @@ export interface TabsListProps extends Omit<ComponentPropsWithoutRef<"div">, "ch
    */
   align?: TabsAlign;
   /**
+   * Whether the scroll buttons appear at whichever edge currently has more tabs beyond it, while
+   * the list is scrollable. The edge fade is unaffected either way — arrow keys, and a touch or
+   * trackpad swipe, still scroll the list when this is `false`; only the pointer-only buttons are
+   * hidden.
+   * @default true
+   */
+  showScrollButtons?: boolean;
+  /**
    * The list's accessible name, announced with the `tablist` role. Name it when the
    * page holds more than one set of tabs, or when the surrounding heading does
    * not already say what they switch between.

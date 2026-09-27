@@ -26,7 +26,18 @@ export const rootPropOrder = [
   "style",
   "data-testid",
 ];
-export const listPropOrder = ["children", "loop", "align", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const listPropOrder = [
+  "children",
+  "loop",
+  "align",
+  "showScrollButtons",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
 export const triggerPropOrder = [
   "value",
   "children",
@@ -296,7 +307,9 @@ list's own scroll buttons — "Scroll tabs to the start"/"Scroll tabs to the end
 buttons outside the tab list itself, reached in normal tab order rather than by the arrow keys;
 they appear only while there is something that way to scroll to, except that one briefly stays,
 inert, if it still has keyboard focus the moment it would otherwise disappear — so focus is never
-dropped to the top of the page.
+dropped to the top of the page. `Tabs.List`'s `showScrollButtons={false}` hides them outright; the
+list still scrolls the same way underneath — the fade, the arrow keys, and a touch or trackpad
+swipe are all unaffected — only the pointer-only buttons themselves are gone.
 
 **Contrast**, measured for every pairing in Purple and Emerald, light and dark: an unselected label
 on the surface is 6.88–10.47:1, and 13.46–15.05:1 once hovered (on `bg.brand-subtle`); a selected

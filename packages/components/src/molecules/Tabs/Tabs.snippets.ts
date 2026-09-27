@@ -173,6 +173,8 @@ export interface TabsPlaygroundSnippetArgs {
   // Tabs.List's own prop, not the root's — written onto the <Tabs.List> tag below,
   // not the <Tabs> tag the other attributes here go on.
   align?: TabsAlign;
+  // Also Tabs.List's own prop, not the root's — same reasoning as `align` above.
+  showScrollButtons?: boolean;
   dir?: "ltr" | "rtl";
 }
 
@@ -190,6 +192,11 @@ export function tabsPlaygroundSnippet(args: TabsPlaygroundSnippetArgs): string {
   if (args.activationMode && args.activationMode !== "automatic") attributes.push(`activationMode="${args.activationMode}"`);
   if (args.fullWidth) attributes.push("fullWidth");
   if (args.dir === "rtl") attributes.push('dir="rtl"');
-  const listAttributes = args.align && args.align !== "start" ? `align="${args.align}"` : "";
+  const listAttributes = [
+    args.align && args.align !== "start" ? `align="${args.align}"` : "",
+    args.showScrollButtons === false ? "showScrollButtons={false}" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return tabs(attributes.join(" "), list(listAttributes));
 }
