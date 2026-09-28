@@ -106,9 +106,76 @@
    at its default of 1 (`DescriptionListProps.columns`'s own doc explains
    why). `:not(:first-child)` rather than "every item but the last" means no
    knowledge of where the list ends is needed, and nothing doubles against
-   the outer border. */
+   the outer border. Moot once `.itemContents` applies (a `display: contents`
+   element renders no border of its own) — the `.dividers.alignedTerms`
+   rule below draws the equivalent divider on the term/details themselves. */
 .dividers > .item:not(:first-child) {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* `alignedTerms` (default on): every term joins one shared grid column
+   instead of sizing to its own content, so every details value starts at
+   the same position. Only reachable while the list is a genuine single
+   column (`DescriptionListProps.alignedTerms`'s own doc explains why) — the
+   item itself becomes `display: contents` (`.itemContents` below) so its
+   `<dt>`/`<dd>` become direct grid children of `.root` here, sharing one
+   real 2-column grid the browser sizes from every row's own widest term,
+   the same "join one shared grid" trick used to align two independent
+   flex/grid items — no JS measurement, no flicker, and it re-flows on
+   resize for free since it never leaves plain CSS.
+
+   `fit-content(40%)`, not `minmax(auto, 40%)` — found live, user-reported:
+   a plain percentage as a track's growth *limit* is a definite length once
+   the grid's own size is known, and CSS Grid's track-sizing algorithm
+   (the "Maximize Tracks" step) actively grows a track toward its growth
+   limit using the grid's free space, not just when content needs it — so
+   `minmax(auto, 40%)` grew the term column toward 40% of the whole list
+   regardless of how short the terms actually were (confirmed: a 448px-wide
+   list measured a 178px term column, exactly 40% of 448, for term text
+   under 100px). `fit-content(40%)` is the mechanism CSS Grid actually
+   defines for this "hug content, but cap it" case — it sizes to the
+   column's own max-content and only reaches for 40% once content genuinely
+   needs that much, and never grows past its content to soak up free space.
+
+   `column-gap: 0`, not a token value — the visual space between a term and
+   its details now lives inside `.term`'s own trailing padding (below)
+   instead of true grid gutter, so `.term`'s and `.details`' boxes are
+   directly adjacent with nothing drawn between them. This is what the
+   divider rule below needs: a *real* grid `column-gap` leaves a gap no
+   border can be drawn into, breaking the divider into two visibly
+   separate segments (found live, user-reported, from the first attempt at
+   this feature) — moving the same space into padding keeps the identical
+   visual gap between the *text*, while the *boxes* (and therefore their
+   borders) now touch, reading as one unbroken line. */
+.alignedTerms {
+  align-items: baseline;
+  column-gap: 0;
+  grid-template-columns: fit-content(40%) minmax(0, 1fr);
+  row-gap: var(--dbm-space-1);
+}
+
+/* The item contributes no box once it's `display: contents` — the
+   between-item divider (and its own vertical rhythm) moves onto its own
+   `<dt>`/`<dd>` instead, both getting the top border so the line reads as
+   one continuous rule across the row (with `.alignedTerms`'s own
+   `column-gap: 0` above, the two segments touch and read as unbroken).
+   `.item:not(:first-child)` still correctly means "every item but the
+   first" here: `display: contents` removes an element from the box tree,
+   not from the DOM, so its position among `.root`'s real children (and
+   therefore this selector) is unaffected. */
+.dividers.alignedTerms > .item:not(:first-child) > .term,
+.dividers.alignedTerms > .item:not(:first-child) > .details {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* `.itemContents` replaces `.item`'s own flex/padding box entirely — its
+   children join `.root`'s grid directly, so the padding that used to live
+   on the item moves onto the term/details themselves (below), split
+   inline-start/inline-end so the two together add up to the same visual
+   padding the non-aligned layout has, with `.term`'s own trailing padding
+   (below) providing the space between them instead of a grid gap. */
+.itemContents {
+  display: contents;
 }
 
 .orientationHorizontal {
@@ -124,6 +191,24 @@
 .orientationHorizontal > .details {
   flex: 1 1 12rem;
   min-inline-size: 0;
+}
+
+/* In aligned mode the grid track itself (`.alignedTerms`, above) is what
+   caps how wide the term column may grow — `.orientationHorizontal >
+   .term`'s own `max-inline-size: 40%` above is a leftover from the flex
+   layout, and `.term` still carries that class in aligned mode too
+   (harmless for `flex`, which the grid context ignores, but not for a
+   plain sizing property like this one). Evaluated on a grid item, that 40%
+   resolves against the *track's* own width, not the item's — since the
+   track already sized itself to the term's content, this then shrank the
+   term to 40% of its own already-tight column, opening a large gap before
+   the details and breaking the divider line into two disconnected
+   segments (found live, both from a single screenshot). Reset it and
+   stretch the term to its track's full width instead, so its divider
+   border reaches the column's own edge. */
+.root.alignedTerms .term {
+  inline-size: 100%;
+  max-inline-size: none;
 }
 
 .orientationVertical {
@@ -199,4 +284,62 @@
 .termSizeXl,
 .detailsSizeXl {
   font-size: var(--dbm-font-size-lg);
+}
+
+/* `alignedTerms`' own padding: the same block value as the matching
+   `.itemSize*` step above. The term carries the list's own inline-start
+   edge *and* a fixed `space.4` trailing edge — the same fixed gap
+   `.item`'s own `column-gap` used before `alignedTerms` existed, now living
+   inside the term's own box (not a real grid gap) so its border reaches
+   the details' border with nothing undrawn in between (`.alignedTerms`'s
+   own doc, above, explains why). The details carries only the list's
+   inline-end edge, unchanged. */
+.alignedTerms .termSizeXs {
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-2) var(--dbm-space-4);
+}
+
+.alignedTerms .detailsSizeXs {
+  padding-block: var(--dbm-space-1);
+  padding-inline: 0 var(--dbm-space-2);
+}
+
+.alignedTerms .termSizeSm {
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3) var(--dbm-space-4);
+}
+
+.alignedTerms .detailsSizeSm {
+  padding-block: var(--dbm-space-2);
+  padding-inline: 0 var(--dbm-space-3);
+}
+
+.alignedTerms .termSizeMd {
+  padding-block: var(--dbm-space-3);
+  padding-inline: var(--dbm-space-4) var(--dbm-space-4);
+}
+
+.alignedTerms .detailsSizeMd {
+  padding-block: var(--dbm-space-3);
+  padding-inline: 0 var(--dbm-space-4);
+}
+
+.alignedTerms .termSizeLg {
+  padding-block: var(--dbm-space-4);
+  padding-inline: var(--dbm-space-5) var(--dbm-space-4);
+}
+
+.alignedTerms .detailsSizeLg {
+  padding-block: var(--dbm-space-4);
+  padding-inline: 0 var(--dbm-space-5);
+}
+
+.alignedTerms .termSizeXl {
+  padding-block: var(--dbm-space-5);
+  padding-inline: var(--dbm-space-6) var(--dbm-space-4);
+}
+
+.alignedTerms .detailsSizeXl {
+  padding-block: var(--dbm-space-5);
+  padding-inline: 0 var(--dbm-space-6);
 }

@@ -15,6 +15,7 @@ interface DescriptionListContextValue {
   size: DescriptionListSize;
   orientation: DescriptionListOrientation;
   columns: Responsive<number>;
+  alignTerms: boolean;
 }
 
 // Each `DescriptionList` provides its own value, so a list nested inside a
@@ -28,6 +29,7 @@ const DescriptionListContext = createContext<DescriptionListContextValue>({
   size: "md",
   orientation: "horizontal",
   columns: 1,
+  alignTerms: false,
 });
 
 const itemSizeClass: Record<DescriptionListSize, string | undefined> = {
@@ -90,6 +92,7 @@ const DescriptionListRoot = forwardRef<HTMLDListElement, DescriptionListProps>(
       size = "md",
       orientation = "horizontal",
       columns = 1,
+      alignedTerms = true,
       className,
       style,
       id,
@@ -103,10 +106,17 @@ const DescriptionListRoot = forwardRef<HTMLDListElement, DescriptionListProps>(
     // The automatic between-item divider only reads correctly for a genuine
     // single column — see `DescriptionListProps.columns`'s own doc for why a
     // multi-column grid drops it rather than drawing a misleading partial line.
-    const dividers = columns === 1;
+    const singleColumn = columns === 1;
+    const dividers = singleColumn;
+
+    // Aligning every term to one shared width means every term/details pair
+    // must join a single 2-column grid — only unambiguous for a genuine
+    // single column, and only meaningful when a term sits beside its details
+    // in the first place (see `DescriptionListProps.alignedTerms`'s own doc).
+    const alignTerms = alignedTerms && orientation === "horizontal" && singleColumn;
 
     return (
-      <DescriptionListContext.Provider value={{ size, orientation, columns }}>
+      <DescriptionListContext.Provider value={{ size, orientation, columns, alignTerms }}>
         <dl
           {...rest}
           ref={ref}
@@ -119,6 +129,7 @@ const DescriptionListRoot = forwardRef<HTMLDListElement, DescriptionListProps>(
             styles.root,
             variant === "bordered" && styles.bordered,
             dividers && styles.dividers,
+            alignTerms && styles.alignedTerms,
             className,
           )}
           style={{
@@ -148,7 +159,7 @@ function hasNonPositiveSpan(span: number | undefined) {
  */
 const DescriptionListItem = forwardRef<HTMLDivElement, DescriptionListItemProps>(
   ({ span = 1, className, style, ...props }, ref) => {
-    const { size, orientation, columns } = useContext(DescriptionListContext);
+    const { size, orientation, columns, alignTerms } = useContext(DescriptionListContext);
 
     const hasWarnedNonPositiveSpanRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
@@ -175,7 +186,13 @@ const DescriptionListItem = forwardRef<HTMLDivElement, DescriptionListItemProps>
       <div
         {...props}
         ref={ref}
-        className={cx(styles.item, itemSizeClass[size], orientationClass[orientation], className)}
+        className={cx(
+          styles.item,
+          itemSizeClass[size],
+          orientationClass[orientation],
+          alignTerms && styles.itemContents,
+          className,
+        )}
         style={{
           ...(effectiveSpan !== 1 ? { gridColumn: `span ${effectiveSpan}` } : {}),
           ...style,

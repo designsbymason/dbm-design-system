@@ -14,6 +14,7 @@ export const propOrder = [
   "size",
   "orientation",
   "columns",
+  "alignedTerms",
   "id",
   "className",
   "style",
@@ -74,6 +75,10 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 
 <Canvas of={DescriptionListStories.Orientation} />
 
+### Aligned vs. per-item term widths
+
+<Canvas of={DescriptionListStories.AlignedTerms} />
+
 ### All sizes
 
 <Canvas of={DescriptionListStories.Sizes} />
@@ -98,13 +103,16 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
   one long vertical list for that shape of data.
 - Give a wide value (notes, a long address, anything one column can't comfortably hold) its own
   `DescriptionList.Item` with `span` set to the full column count, rather than truncating it.
+- Leave `alignedTerms` at its default of `true` for most single-column lists — a real aligned label
+  column reads as more deliberate and premium than several independently-sized terms, and costs
+  nothing to opt into.
 
 </Callout>
 <Callout tone="danger" title="Don't">
 
-- Don't reach for `columns` greater than `1` and expect the automatic between-item divider — a
-  wrapping multi-column grid drops it (see `columns`'s own prop doc for why); give the list its own
-  visual separation instead (`variant="bordered"`, or embed it in a `Card`).
+- Don't reach for `columns` greater than `1` and expect the automatic between-item divider, or
+  `alignedTerms` — a wrapping multi-column grid drops both (see `columns`'s own prop doc for why);
+  give the list its own visual separation instead (`variant="bordered"`, or embed it in a `Card`).
 - Don't use `DescriptionList` for anything the reader needs to edit — it renders plain text, with no
   input, validation, or focus handling. Use `Form`/`FormField` for an editable set of fields instead.
 - Don't reach for `Table` instead of a `columns`-only `DescriptionList` just because the data has more
@@ -125,6 +133,9 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 - A list this small rarely needs `Table`'s sorting, striping, or scroll handling — reach for
   `DescriptionList` first for a details panel, and only move to `Table` once the data genuinely grows
   into many uniform rows.
+- Set `alignedTerms={false}` when a list's terms are so mismatched in length (one word next to a full
+  sentence) that a shared column would leave a lot of empty space next to the short ones — letting each
+  term hug its own content instead can read cleaner for that specific shape of data.
 
 ## Accessibility
 
@@ -140,15 +151,21 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 - Give the list an accessible name with `aria-label`/`aria-labelledby` when it isn't already named by
   a visible heading right above it (e.g. inside a `Card` with its own `Card.Header`, the heading
   already serves that purpose and neither is needed).
-- The details' wrap-below-the-term response to a narrow container (`orientation="horizontal"`) is
-  pure CSS `flex-wrap` — verified in a real browser, since layout wrapping isn't something a jsdom
-  test can evaluate; see `DescriptionList.stories.tsx`'s hidden `ResponsiveLayoutChecks` story.
+- The details' wrap-below-the-term response to a narrow container (`orientation="horizontal"`,
+  `alignedTerms={false}`) is pure CSS `flex-wrap` — verified in a real browser, since layout wrapping
+  isn't something a jsdom test can evaluate; see `DescriptionList.stories.tsx`'s hidden
+  `ResponsiveLayoutChecks` story.
+- `alignedTerms` (the default) makes each `DescriptionList.Item` `display: contents`, so its
+  `<dt>`/`<dd>` join the list's own grid directly — this changes nothing in the accessibility tree
+  (the term/details are still real `<dt>`/`<dd>` elements, just no longer boxed by their own `<div>`),
+  confirmed live rather than assumed; see the hidden `AlignedTermsChecks` story.
 
 </Callout>
 
 ## Code examples
 
 ```tsx
+{/* alignedTerms defaults to true — both terms already share one aligned column */}
 <DescriptionList>
   <DescriptionList.Item>
     <DescriptionList.Term>Customer</DescriptionList.Term>
@@ -157,6 +174,18 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
   <DescriptionList.Item>
     <DescriptionList.Term>Status</DescriptionList.Term>
     <DescriptionList.Details>Paid</DescriptionList.Details>
+  </DescriptionList.Item>
+</DescriptionList>
+
+{/* Mismatched term lengths — opt out so each hugs its own content */}
+<DescriptionList alignedTerms={false}>
+  <DescriptionList.Item>
+    <DescriptionList.Term>ID</DescriptionList.Term>
+    <DescriptionList.Details>1024</DescriptionList.Details>
+  </DescriptionList.Item>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Estimated delivery window</DescriptionList.Term>
+    <DescriptionList.Details>Tuesday, Oct 6</DescriptionList.Details>
   </DescriptionList.Item>
 </DescriptionList>
 

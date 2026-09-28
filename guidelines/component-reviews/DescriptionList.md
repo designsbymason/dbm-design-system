@@ -32,10 +32,93 @@ A compact key/value display block: real `<dl>` semantics. `DescriptionList` is t
 - One MDX authoring bug caught and fixed the same way `07-storybook-and-documentation-standards.md` already documents: backslash-escaped quotes inside a `<TokenRow usage="...">` attribute (`size=\"xs\"`) broke the whole MDX parse — switched to single quotes (`size='xs'`) per the established convention.
 - Multi-column responsive collapse verified live at a real 320px and ~1100px iframe width (not just reasoned about) — this is what caught the span-clamping defect above.
 
-## Not yet done (this is a build session, not a full review pass)
+## Feature added post-build: `alignedTerms` (2026-09-28, at the user's request)
 
-- The full `06-engineering-standards.md` §9 checklist has not been run end to end (jest-axe covers automated a11y, but manual keyboard-nav verification, an RTL/`dir` pass, a forced-colors check, and the real-browser `@storybook/addon-vitest` Chromium project run were not completed this session — the ordinary unit-test project and manual browser-pane checks were used instead).
-- No `DescriptionList.docs.test.ts` CSS-vs-mdx token drift guard yet (the `CodeBlock`/`Stat` pattern) — the token table was written and cross-checked by hand against the stylesheet's actual `--dbm-*` usages, not yet enforced by a test.
-- `04-component-inventory.md`'s molecule build-order list and `07-storybook-and-documentation-standards.md` §6's status table have not yet been updated to reflect this build (pending — see this session's own follow-up).
-- Other Finalized components' Docs pages (`Table.mdx`, `Card.mdx`, `EmptyState.mdx`) do not yet cross-link back to `DescriptionList` via `RelatedCard` — not touched, since editing an already-Finalized component's files needs the user's go-ahead first.
+An optional boolean, **default `true`**, that sizes every term in the list to the width of the widest
+one, so every details value starts at the same position — a real aligned label column, not several
+independently-sized terms. Named `alignedTerms` rather than the user's own suggestion
+(`equalWidthTerms`) to match this codebase's established adjective-form boolean convention (`striped`,
+`hoverable`, `divided`, `stacked`, `colorful`), offered as a recommendation and adopted.
+
+**The real constraint this ran into:** aligning every term to one shared width needs every
+term/details pair to join a single 2-column CSS Grid — flex children sized independently per item (the
+original design) can't share a track. The standard way to do that without JS measurement or layout
+flicker is `display: contents` on `DescriptionList.Item`, so its `<dt>`/`<dd>` become direct grid
+children of the list. That would normally conflict with `Item`'s own `span` (a `display: contents`
+element has no box to apply `grid-column: span N` to) — resolved by noticing `span` already only has
+an effect once `columns` is greater than `1`, and **term alignment only has one unambiguous shape at
+the default `columns={1}`** (the same reasoning already used for the between-item divider) — so
+`alignedTerms` is scoped to exactly that case (`orientation="horizontal"` and a genuine single column)
+and the conflict with `span` never actually arises. Past `columns={1}`, or under `orientation="vertical"`
+(no side-by-side term/details relationship to align in the first place), the prop has no effect and
+each term still hugs its own content — documented plainly in the prop's own JSDoc and the MDX Usage
+guidelines, not a silent gap.
+
+**Implementation:** `.root.alignedTerms` becomes a fixed 2-column grid (`minmax(auto, 40%) minmax(0,
+1fr)`); `.item` gets `display: contents` (`.itemContents`) so its `<dt>`/`<dd>` auto-flow directly into
+that grid, one term/details pair per row — the browser's own grid track-sizing algorithm does the
+actual alignment (sizing column 1 to the widest term across every row), no JS measurement involved.
+Padding moved from the (now boxless) item onto the term/details themselves, split inline-start/
+inline-end so the two together match the original visual padding, with the grid's own `column-gap`
+providing the space between them. The between-item divider moved from `.item` (invisible once it has
+no box) onto the term/details directly (`.dividers.alignedTerms > .item:not(:first-child) > .term/
+.details`), using the same `:not(:first-child)` technique as before — still correct, since `display:
+contents` removes an element from the box tree, not the DOM, so its position among the real children
+is unaffected.
+
+**Verified, not assumed:**
+- A dedicated hidden real-browser story (`AlignedTermsChecks`) measures actual rendered widths —
+  confirms a short and a long term really do share one width when `alignedTerms` is on, that the
+  resulting details values start at the same inline position, that the opt-out (`false`) genuinely
+  gives each term its own narrower/wider box, and that the term/details still resolve to real `<dt>`/
+  `<dd>` elements (not dropped from the accessibility tree by `display: contents`).
+- The pre-existing `ResponsiveLayoutChecks` story's "narrow container wraps the details below the
+  term" case had to be given an explicit `alignedTerms={false}` — it was specifically testing the
+  flex-wrap degrade, which the new default would otherwise have silently swapped out from under it.
+  Caught by re-running the story, not assumed safe.
+- jest-axe: zero violations in the Storybook Accessibility panel, both light and dark, for the default
+  (`alignedTerms` on) case.
+- Added 4 new unit tests (scoping to `columns===1`/`orientation==="horizontal"`, the `false` opt-out,
+  the divider-moves-to-term/details behavior) — 20 total, all passing. Ran the real-browser
+  `@storybook/addon-vitest` Chromium project against this component's stories directly
+  (`vitest run --project storybook src/molecules/DescriptionList/DescriptionList.stories.tsx`) — 9/9
+  pass, including both hidden check stories' `play` assertions. This also closes the "real
+  addon-vitest run" item that was previously left outstanding below.
+- Full package regression: `tsc --noEmit` clean, `eslint --max-warnings 0` clean, `storySnippets.test.ts`
+  clean, full `vitest run --project unit` — 91 files / 4628 tests, all passing.
+- Docs page re-verified live (Playground toggle, generated "Show code" reflecting `alignedTerms={false}`,
+  Properties table default, new gallery story) in Purple/Light and Purple/Dark.
+
+## Real defect found in `alignedTerms`, fixed the same session (user-reported, with a screenshot)
+
+**A leftover flex-layout rule still matched in the new grid layout, resolving against the wrong reference box.** `.orientationHorizontal > .term { max-inline-size: 40%; }` was written for the original per-item flex layout, where `.term` is a flex child of `.item` and `40%` resolves against the item's own width. `.term` still carries the `orientationHorizontal` class in aligned mode, but its actual layout context there is `.root`'s grid — so the same `40%` instead resolved against the *grid track's* own width (which had already auto-sized to the term's content), capping the term to 40% of its own already-tight column. Confirmed live via `getBoundingClientRect`: a 126.8px track held a 50.7px term (exactly 40% of the track), opening a ~92px gap before the details and splitting the between-item divider into two visibly disconnected segments — both symptoms the user reported from a single screenshot, plus the term column itself reading as far narrower than its own visual column.
+
+**Fix:** `.root.alignedTerms .term { inline-size: 100%; max-inline-size: none; }` — the grid track's own `minmax(auto, 40%)` (on `.alignedTerms` already) is the correct, sufficient place for that 40% cap (bounding the *column*, not the individual term box); resetting removes the stale, wrongly-scoped duplicate and lets the term stretch to fill its real track, so its divider border reaches the column's own edge. Verified via `getBoundingClientRect` before/after (term width now equals its track's full width) and visually in both light and dark mode. A regression-guard assertion was added to the hidden `AlignedTermsChecks` story (`gap < 24px`, generous headroom over the real `space-4`/16px column-gap) so this exact class of bug fails loudly if it recurs.
+
+**This first fix was incomplete — the user re-reported the same symptoms with a second screenshot,** and pushed back specifically on the "small known gap" framing above and the CSS Grid approach generally ("Maybe grid approach is not the best method... do it properly and carefully"). Re-investigating rather than defending the first fix found the actual, different root cause:
+
+**Root cause #1 (the real one): a plain percentage as a grid track's growth *limit* is a definite length, and CSS Grid's "Maximize Tracks" algorithm step actively grows a track toward its growth limit using the grid's own free space — not only when content needs it.** `minmax(auto, 40%)` on the term column therefore grew toward 40% of the *list's own width* regardless of how short the actual terms were: a 448px-wide list measured a 178px term column for "Customer"/"Email"/"Status" text under 100px — 40% of 448, coincidentally exactly matching what the first fix's own live check had measured and misread as "the fix worked" (it only confirmed the term's box now filled its own track; it never checked whether the *track itself* was sized correctly). Confirmed by recomputing: the CSS Grid spec's Maximize Tracks step distributes positive free space to all tracks up to their growth limits, and a percentage growth limit resolves to a concrete pixel value the moment the grid's own size is known — unlike `max-content`, which stays tied to actual content regardless of free space.
+
+**Fix:** `fit-content(40%)` in place of `minmax(auto, 40%)` — the CSS Grid function purpose-built for "hug content, but cap it": sized to the column's own max-content, reaching for 40% only once content genuinely needs that much (verified: a 768px-wide list with the same three short terms now measures a 102px term column, not ~307px).
+
+**Root cause #2: a real grid `column-gap` leaves a literal gap no border can be drawn into**, so the between-item divider (drawn as a border on the term and the details separately) could never look continuous no matter how correctly each segment was sized — this was true even after root cause #1's fix, and is what the user's second screenshot was actually showing. **Fix:** `column-gap: 0` on the shared grid, with the same visual spacing moved into the term's own trailing `padding-inline-end` (a fixed `space.4`, matching what the column-gap used to be) instead of true grid gutter — the term's and details' boxes are now directly adjacent, so their divider borders touch and read as one unbroken line, while the *text* keeps the identical visual gap it had before (verified: `dd.left` now exactly equals `dt.right`, a 0px true gap, confirmed live).
+
+**Both fixes verified with real margin, not just a passing screenshot:** a dedicated real-browser scenario (short terms in a 768px-wide container — the exact shape that exposed root cause #1) measures the term column at 102px against a 200px regression-guard ceiling (the old bug's value would have been ~307px); the zero-gap assertion checks for an *exact* pixel match, not "small enough." Re-verified live in Purple/Light and Purple/Dark.
+
+## Not yet done
+
+**Closed in the 2026-09-28 follow-up session:** `DescriptionList.docs.test.ts` (the CSS-vs-mdx token
+drift guard, `CodeBlock`/`Stat`'s own pattern — all 19 stylesheet tokens confirmed listed);
+`04-component-inventory.md`'s molecule build-order list and
+`07-storybook-and-documentation-standards.md` §6's status table updated to record the build; and (in
+this same session, adding `alignedTerms`) a real run of the `@storybook/addon-vitest` Chromium project
+against this component specifically. Committed and pushed (`5525979`).
+
+**Still outstanding:**
+- The full `06-engineering-standards.md` §9 checklist has not been run end to end — jest-axe and the
+  Chromium `addon-vitest` project both now cover this component, but manual keyboard-nav verification,
+  an RTL/`dir` pass, and a forced-colors (Windows high-contrast) check are still open.
+- Other Finalized components' Docs pages (`Table.mdx`, `Card.mdx`, `EmptyState.mdx`) do not yet
+  cross-link back to `DescriptionList` via `RelatedCard` — not touched, since editing an already-Finalized
+  component's files needs the user's go-ahead first.
 - Not marked Finalized — that is the user's call to make, not something this session asserts.

@@ -32,6 +32,31 @@ export const descriptionListSnippets = {
   </DescriptionList.Item>
 </DescriptionList>`,
 
+  alignedTerms: `{/* alignedTerms (default true) sizes every term to the widest one, so every
+    details value starts at the same position. Set false for each term to hug
+    its own content instead. */}
+<DescriptionList alignedTerms>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Customer</DescriptionList.Term>
+    <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+  </DescriptionList.Item>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Shipping address</DescriptionList.Term>
+    <DescriptionList.Details>4140 Parker Rd, Allentown, New Mexico 31134</DescriptionList.Details>
+  </DescriptionList.Item>
+</DescriptionList>
+
+<DescriptionList alignedTerms={false}>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Customer</DescriptionList.Term>
+    <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+  </DescriptionList.Item>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Shipping address</DescriptionList.Term>
+    <DescriptionList.Details>4140 Parker Rd, Allentown, New Mexico 31134</DescriptionList.Details>
+  </DescriptionList.Item>
+</DescriptionList>`,
+
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <DescriptionList size="sm">
   <DescriptionList.Item>
@@ -101,6 +126,7 @@ export interface DescriptionListPlaygroundSnippetArgs {
   size?: string;
   orientation?: string;
   columns?: number;
+  alignedTerms?: boolean;
 }
 
 /**
@@ -115,6 +141,7 @@ export function descriptionListPlaygroundSnippet(args: DescriptionListPlayground
     attributes.push(`orientation="${args.orientation}"`);
   }
   if (args.columns && args.columns !== 1) attributes.push(`columns={${args.columns}}`);
+  if (args.alignedTerms === false) attributes.push("alignedTerms={false}");
   const opening = attributes.length > 0 ? `<DescriptionList ${attributes.join(" ")}>` : "<DescriptionList>";
   return `${opening}
   <DescriptionList.Item>

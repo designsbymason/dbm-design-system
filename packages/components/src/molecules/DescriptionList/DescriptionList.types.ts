@@ -69,6 +69,22 @@ export interface DescriptionListProps
    * @default 1
    */
   columns?: Responsive<number>;
+  /**
+   * Sizes every term to the width of the widest term in the list, so every
+   * details value starts at the same position — a real aligned label
+   * column, not just several independently-sized ones. Set `false` to let
+   * each term hug its own content instead (the original, per-item width).
+   *
+   * Only has an effect for `orientation="horizontal"` (a stacked term has no
+   * side-by-side width to align) and while `columns` is left at its default
+   * of `1` — the same scoping as the automatic between-item divider, and for
+   * the same reason: aligning terms needs every term/details pair to join
+   * one shared 2-column grid, which only has one unambiguous shape when the
+   * list is a single column. A multi-column list (or an `Item` with `span`
+   * set) keeps each term sized to its own content regardless of this prop.
+   * @default true
+   */
+  alignedTerms?: boolean;
   /** Additional CSS classes for the `<dl>` element. */
   className?: string;
   /** Inline styles for the `<dl>` element, merged onto the component's own internal styles. */
