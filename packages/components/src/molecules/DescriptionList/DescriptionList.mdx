@@ -1,0 +1,246 @@
+import { TrayIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Card } from "../Card";
+import { Table } from "../Table";
+import { EmptyState } from "../EmptyState";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { DescriptionList } from "./DescriptionList";
+import * as DescriptionListStories from "./DescriptionList.stories";
+
+export const propOrder = [
+  "children",
+  "variant",
+  "size",
+  "orientation",
+  "columns",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+];
+
+<Meta of={DescriptionListStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="DescriptionList" tier="Molecule" />
+
+A compact key/value display block — real `<dl>` semantics (the native HTML element for a list of
+terms and their descriptions), not a repurposed table or a stack of styled `<div>`s. Compose one or
+more `DescriptionList.Item`s, each pairing a `DescriptionList.Term` (a field name) with its
+`DescriptionList.Details` (the value) — an order summary, an account's details, a resource's
+metadata, anything shaped like a short list of facts. Deliberately non-interactive and read-only:
+for an editable set of fields, reach for `Form`/`FormField` instead.
+
+### Import
+
+```tsx
+import { DescriptionList } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DescriptionListStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={DescriptionListStories.Playground}
+  exclude={["children", "id", "className", "style", "data-testid", "aria-labelledby", "aria-describedby"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`DescriptionList` also accepts any other native `<dl>` attribute beyond what's listed here (e.g.
+`onClick`, `title`) — passed straight through to the underlying element. `DescriptionList.Item`
+accepts any other native `<div>` attribute, and `DescriptionList.Term`/`DescriptionList.Details`
+accept any other native `<dt>`/`<dd>` attribute, in the same way.
+
+<PropertiesTable of={DescriptionListStories} order={propOrder} />
+
+## Variants
+
+### Bordered vs. ghost
+
+<Canvas of={DescriptionListStories.Variants} />
+
+### Horizontal vs. vertical orientation
+
+<Canvas of={DescriptionListStories.Orientation} />
+
+### All sizes
+
+<Canvas of={DescriptionListStories.Sizes} />
+
+### Multi-column layout, with a spanning item
+
+<Canvas of={DescriptionListStories.Columns} />
+
+### Embedded in a Card (ghost variant)
+
+<Canvas of={DescriptionListStories.InACard} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `variant="ghost"` whenever a `DescriptionList` sits inside a container that already draws its
+  own boundary — a `Card.Body`, an `EmptyState` — so the two borders don't nest.
+- Reach for `columns` when a list is really several short, independent facts (a status, a total, a
+  reference number) rather than a handful of longer ones — a 2- or 3-column layout reads faster than
+  one long vertical list for that shape of data.
+- Give a wide value (notes, a long address, anything one column can't comfortably hold) its own
+  `DescriptionList.Item` with `span` set to the full column count, rather than truncating it.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't reach for `columns` greater than `1` and expect the automatic between-item divider — a
+  wrapping multi-column grid drops it (see `columns`'s own prop doc for why); give the list its own
+  visual separation instead (`variant="bordered"`, or embed it in a `Card`).
+- Don't use `DescriptionList` for anything the reader needs to edit — it renders plain text, with no
+  input, validation, or focus handling. Use `Form`/`FormField` for an editable set of fields instead.
+- Don't reach for `Table` instead of a `columns`-only `DescriptionList` just because the data has more
+  than one row of facts — `Table` is for column-labeled, many-row tabular data; `DescriptionList` is
+  for a short, self-describing list of individual facts, each with its own label right beside it.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep terms short and consistent in phrasing across items in the same list ("Customer", "Status",
+  "Total") — a `DescriptionList` reads best as a scannable set of short labels, not full sentences.
+- Prefer `orientation="horizontal"` (the default) for most lists — it reads like a familiar label/value
+  row. Reach for `"vertical"` when values are long enough that a side-by-side label would crowd them
+  (a full address, a multi-line note), or when the whole list sits somewhere narrow to begin with (a
+  sidebar panel).
+- A list this small rarely needs `Table`'s sorting, striping, or scroll handling — reach for
+  `DescriptionList` first for a details panel, and only move to `Table` once the data genuinely grows
+  into many uniform rows.
+
+## Accessibility
+
+<Callout tone="info" title="Native list semantics carry the structure — no ARIA role needed">
+
+- `DescriptionList` renders a real `<dl>`; `DescriptionList.Item` wraps one `DescriptionList.Term`
+  (`<dt>`)/`DescriptionList.Details` (`<dd>`) pair in its own `<div>` — an HTML5-valid grouping
+  assistive technology already understands, so no `role`/`aria-*` is added to establish the
+  term/details relationship itself.
+- Unlike a `<ul>`/`<ol>` with `list-style: none` removed, a `<dl>`'s list semantics don't depend on
+  CSS list-marker styling, so the Safari/VoiceOver dropped-list-semantics issue that `List`/`Table`
+  guard against doesn't apply here.
+- Give the list an accessible name with `aria-label`/`aria-labelledby` when it isn't already named by
+  a visible heading right above it (e.g. inside a `Card` with its own `Card.Header`, the heading
+  already serves that purpose and neither is needed).
+- The details' wrap-below-the-term response to a narrow container (`orientation="horizontal"`) is
+  pure CSS `flex-wrap` — verified in a real browser, since layout wrapping isn't something a jsdom
+  test can evaluate; see `DescriptionList.stories.tsx`'s hidden `ResponsiveLayoutChecks` story.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<DescriptionList>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Customer</DescriptionList.Term>
+    <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+  </DescriptionList.Item>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Status</DescriptionList.Term>
+    <DescriptionList.Details>Paid</DescriptionList.Details>
+  </DescriptionList.Item>
+</DescriptionList>
+
+{/* A compact, responsive facts panel */}
+<DescriptionList columns={{ base: 1, md: 3 }}>
+  <DescriptionList.Item>
+    <DescriptionList.Term>Total</DescriptionList.Term>
+    <DescriptionList.Details numeric>$1,234.00</DescriptionList.Details>
+  </DescriptionList.Item>
+  <DescriptionList.Item span={3}>
+    <DescriptionList.Term>Notes</DescriptionList.Term>
+    <DescriptionList.Details>Leave the package with the front desk.</DescriptionList.Details>
+  </DescriptionList.Item>
+</DescriptionList>
+
+{/* Embedded in a Card, borderless so it doesn't double up */}
+<Card>
+  <Card.Body>
+    <DescriptionList variant="ghost">
+      <DescriptionList.Item>
+        <DescriptionList.Term>Customer</DescriptionList.Term>
+        <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+      </DescriptionList.Item>
+    </DescriptionList>
+  </Card.Body>
+</Card>
+```
+
+## Design tokens used
+
+<TokenRow token="text.primary" usage="the details' own text colour" />
+<TokenRow token="text.secondary" usage="the term's own text colour" />
+<TokenRow token="border.default" usage="the outer border (variant='bordered') and the hairline divider between items" />
+<TokenRow token="border-width.1" usage="the outer border and the between-item divider" />
+<TokenRow token="radius.md" usage="the outer border's corner radius (variant='bordered')" />
+<TokenRow token="font-family.primary" usage="the whole list's own typeface" />
+<TokenRow token="font-weight.medium" usage="the term's own font weight" />
+<TokenRow token="font-weight.regular" usage="the details' own font weight" />
+<TokenRow token="font-size.xs" usage="term/details type size at size='xs'" />
+<TokenRow token="font-size.sm" usage="term/details type size at size='sm'" />
+<TokenRow token="font-size.base" usage="term/details type size at size='md' (the default)" />
+<TokenRow token="font-size.md" usage="term/details type size at size='lg'" />
+<TokenRow token="font-size.lg" usage="term/details type size at size='xl'" />
+<TokenRow token="space.1" usage="item padding at size='xs'; the row gap between a wrapped term and details" />
+<TokenRow token="space.2" usage="item padding at size='sm' (block) and size='xs' (inline)" />
+<TokenRow token="space.3" usage="item padding at size='md' (block) and size='sm' (inline)" />
+<TokenRow token="space.4" usage="item padding at size='lg' (block) and size='md' (inline); the column gap between term and details" />
+<TokenRow token="space.5" usage="item padding at size='xl' (block) and size='lg' (inline)" />
+<TokenRow token="space.6" usage="item padding at size='xl' (inline); the column gap between items in a multi-column layout" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Table"
+  description="For column-labeled, many-row tabular data — reach for this once a list of facts grows into real rows and columns"
+  href="/?path=/docs/molecules-data-display-table--docs"
+>
+  <Table size="xs" variant="ghost" aria-label="Example">
+    <Table.Body>
+      <Table.Row>
+        <Table.Cell>Cell</Table.Cell>
+        <Table.Cell>Cell</Table.Cell>
+      </Table.Row>
+    </Table.Body>
+  </Table>
+</RelatedCard>
+<RelatedCard
+  name="Card"
+  description="The most common container a ghost-variant DescriptionList embeds inside"
+  href="/?path=/docs/molecules-data-display-card--docs"
+>
+  <Card size="xs" style={{ width: 96 }}>
+    <Card.Body>Body</Card.Body>
+  </Card>
+</RelatedCard>
+<RelatedCard
+  name="EmptyState"
+  description="What to show instead of an empty DescriptionList, when there's nothing to describe yet"
+  href="/?path=/docs/molecules-data-display-emptystate--docs"
+>
+  <EmptyState size="xs" style={{ padding: 0 }}>
+    <EmptyState.Icon icon={TrayIcon} />
+    <EmptyState.Title level={4}>No items</EmptyState.Title>
+  </EmptyState>
+</RelatedCard>
+</div>

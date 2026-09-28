@@ -1,0 +1,202 @@
+/* The `<dl>` itself. `margin: 0` resets the browser default indent/margin —
+   this component owns its own spacing entirely through tokens. Column count
+   is a CSS custom property so a responsive `columns` map is just several
+   values, cascading mobile-first (below), matching `Grid`'s identical
+   mechanism for the same reason (`grid-template-columns` can't read a custom
+   property directly inside an `@media` condition). */
+.root {
+  color: var(--dbm-text-primary);
+  display: grid;
+  font-family: var(--dbm-font-family-primary);
+  grid-template-columns: repeat(var(--dl-cols-base, 1), minmax(0, 1fr));
+  margin: 0;
+  column-gap: var(--dbm-space-6);
+  row-gap: var(--dbm-space-1);
+}
+
+/*
+ * CSS custom properties cannot be referenced inside an @media condition (a
+ * CSS spec limitation, not a choice here) — these thresholds are the literal
+ * values of the breakpoint.sm/md/lg/xl/2xl/3xl primitive tokens
+ * (packages/tokens/src/primitive/breakpoint.json). If those values ever
+ * change, these six blocks must be updated by hand to match. Mirrors
+ * Grid's/GridItem's/Card's identical responsive-prop mechanism.
+ */
+@media (min-width: 640px) {
+  .root {
+    grid-template-columns: repeat(var(--dl-cols-sm, var(--dl-cols-base, 1)), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .root {
+    grid-template-columns: repeat(
+      var(--dl-cols-md, var(--dl-cols-sm, var(--dl-cols-base, 1))),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1024px) {
+  .root {
+    grid-template-columns: repeat(
+      var(--dl-cols-lg, var(--dl-cols-md, var(--dl-cols-sm, var(--dl-cols-base, 1)))),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    grid-template-columns: repeat(
+      var(--dl-cols-xl, var(--dl-cols-lg, var(--dl-cols-md, var(--dl-cols-sm, var(--dl-cols-base, 1))))),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1536px) {
+  .root {
+    grid-template-columns: repeat(
+      var(
+        --dl-cols-2xl,
+        var(--dl-cols-xl, var(--dl-cols-lg, var(--dl-cols-md, var(--dl-cols-sm, var(--dl-cols-base, 1)))))
+      ),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (min-width: 1920px) {
+  .root {
+    grid-template-columns: repeat(
+      var(
+        --dl-cols-3xl,
+        var(
+          --dl-cols-2xl,
+          var(--dl-cols-xl, var(--dl-cols-lg, var(--dl-cols-md, var(--dl-cols-sm, var(--dl-cols-base, 1)))))
+        )
+      ),
+      minmax(0, 1fr)
+    );
+  }
+}
+
+.bordered {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+}
+
+/* An item's own padding (below) sits flush against the outer border either
+   way — a bordered list needs no extra padding of its own. */
+
+/* Each item is its own grid cell (`columns`), and internally a flex row/
+   column of its term and details (`orientationHorizontal`/`orientationVertical`
+   below). `flex-wrap` on the horizontal variant is what lets the details wrap
+   onto its own line once the item narrows too far for both side by side —
+   genuinely container-responsive, not tied to a viewport breakpoint. */
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--dbm-space-4);
+  row-gap: var(--dbm-space-1);
+}
+
+/* The divider between items — only applied when the list's `columns` is left
+   at its default of 1 (`DescriptionListProps.columns`'s own doc explains
+   why). `:not(:first-child)` rather than "every item but the last" means no
+   knowledge of where the list ends is needed, and nothing doubles against
+   the outer border. */
+.dividers > .item:not(:first-child) {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.orientationHorizontal {
+  align-items: baseline;
+  flex-direction: row;
+}
+
+.orientationHorizontal > .term {
+  flex: 0 1 auto;
+  max-inline-size: 40%;
+}
+
+.orientationHorizontal > .details {
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+}
+
+.orientationVertical {
+  flex-direction: column;
+}
+
+.orientationVertical > .term,
+.orientationVertical > .details {
+  inline-size: 100%;
+}
+
+.term {
+  color: var(--dbm-text-secondary);
+  font-weight: var(--dbm-font-weight-medium);
+  margin: 0;
+}
+
+.details {
+  color: var(--dbm-text-primary);
+  font-weight: var(--dbm-font-weight-regular);
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Item padding + both term's and details' font-size, on the standard 5-step
+   scale — the same values `Table` uses for its own cell size scale, so a
+   `DescriptionList` embedded next to a `Table` (e.g. both inside a `Card`)
+   reads at a matching density. */
+.itemSizeXs {
+  padding: var(--dbm-space-1) var(--dbm-space-2);
+}
+
+.itemSizeSm {
+  padding: var(--dbm-space-2) var(--dbm-space-3);
+}
+
+.itemSizeMd {
+  padding: var(--dbm-space-3) var(--dbm-space-4);
+}
+
+.itemSizeLg {
+  padding: var(--dbm-space-4) var(--dbm-space-5);
+}
+
+.itemSizeXl {
+  padding: var(--dbm-space-5) var(--dbm-space-6);
+}
+
+.termSizeXs,
+.detailsSizeXs {
+  font-size: var(--dbm-font-size-xs);
+}
+
+.termSizeSm,
+.detailsSizeSm {
+  font-size: var(--dbm-font-size-sm);
+}
+
+.termSizeMd,
+.detailsSizeMd {
+  font-size: var(--dbm-font-size-base);
+}
+
+.termSizeLg,
+.detailsSizeLg {
+  font-size: var(--dbm-font-size-md);
+}
+
+.termSizeXl,
+.detailsSizeXl {
+  font-size: var(--dbm-font-size-lg);
+}
