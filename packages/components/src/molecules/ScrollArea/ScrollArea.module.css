@@ -1,0 +1,125 @@
+/* `display: flex; flex-direction: column` — not an arbitrary layout choice: a plain block box's
+   `max-block-size` never gives its children a *definite* height to resolve a percentage height
+   against (CSS percentage-height resolution requires a real `height`, not a `max-height` clamp —
+   confirmed live: `.viewport { height: 100% }` against a block `.root` sized only by `maxHeight`
+   silently fell back to the viewport's own content height, so nothing ever actually scrolled).
+   A flex container's stretch/grow sizing has no such restriction, so `.viewport`'s `flex: 1` below
+   correctly fills whatever height `.root` actually renders at, `maxHeight`-clamped or not. Radix's
+   own `Scrollbar`/`Corner` are absolutely positioned (set inline by the primitive itself), so they
+   take no part in this flex layout — `.viewport` is the only real flex item. */
+.root {
+  border-radius: var(--dbm-radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* `variant="bordered"` (the default) — a self-contained panel. Matches
+   Table's own bordered/ghost vocabulary and default. */
+.bordered {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* `variant="ghost"` — for embedding inside an already-bordered container
+   (a Card, a Popover). */
+.ghost {
+  border: none;
+  border-radius: 0;
+}
+
+/* `flex: 1 1 auto`, not the `flex: 1` shorthand (`flex-basis: 0%`) — confirmed live: a `0%` basis
+   with no explicit `height` on `.root` gives the flex algorithm nothing to grow *from*, collapsing
+   the whole region to near-zero instead of sizing to content. `flex-basis: auto` restores
+   content-based sizing as the starting point (a short list stays exactly as tall as its content,
+   no wasted empty space) — `flex-shrink` then still clamps it back down to whatever height `.root`
+   actually resolves to once `maxHeight` engages, which is what makes it scroll. `min-height: 0`/
+   `min-width: 0` override flexbox's own default `min-size: auto`, which would otherwise stop
+   `flex-shrink` from ever actually clamping it below the content's own natural size — the "min-
+   content floor" gotcha, confirmed live the same way as the `height: 100%` issue above. */
+.viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Drawn inside the region (a negative offset), not outside — an outline
+   with a positive offset is clipped by `.root`'s own `overflow: hidden`,
+   the same rule established for Tabs' own scrolling strip
+   (05-component-api-conventions.md §6). */
+.viewport:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.scrollbar {
+  display: flex;
+  touch-action: none;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  user-select: none;
+}
+
+.scrollbar[data-state="hidden"] {
+  opacity: 0;
+}
+
+.scrollbar[data-orientation="vertical"] {
+  flex-direction: column;
+  width: var(--scroll-area-thickness);
+}
+
+.scrollbar[data-orientation="horizontal"] {
+  flex-direction: row;
+  height: var(--scroll-area-thickness);
+}
+
+/* No enlarged invisible hit target here, unlike `Slider`'s thumb: a
+   scrollbar thumb is a secondary affordance (wheel/trackpad/keyboard are the
+   primary ways to scroll, unlike a slider, where dragging the thumb *is*
+   the primary interaction), and the scrollbar sits flush against the
+   scrolled content with no buffer the way a slider's isolated thumb has —
+   enlarging the hit target here risks stealing pointer events from content
+   right at the edge. A thin, unpadded overlay thumb is the broadly
+   established convention for this exact control. */
+.thumb {
+  background-color: var(--dbm-bg-neutral);
+  border-radius: var(--dbm-radius-full);
+  flex: 1;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.thumb:hover {
+  background-color: var(--dbm-bg-neutral-hover);
+}
+
+/* Decorative filler where both scrollbars meet — not text, not
+   state-identifying, so WCAG 1.4.11 doesn't bind it (same reasoning as the
+   other decorative-accent tokens in 03-token-system-spec.md's "Notable
+   exceptions"). Radix shows it only when both scrollbars are simultaneously
+   visible. */
+.corner {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* Sizes — scrollbar thickness reuses the existing 4px-step spacing scale
+   directly (4/8/12/16/20px); no dedicated component-layer token was needed. */
+.sizeXs {
+  --scroll-area-thickness: var(--dbm-space-1);
+}
+
+.sizeSm {
+  --scroll-area-thickness: var(--dbm-space-2);
+}
+
+.sizeMd {
+  --scroll-area-thickness: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --scroll-area-thickness: var(--dbm-space-4);
+}
+
+.sizeXl {
+  --scroll-area-thickness: var(--dbm-space-5);
+}

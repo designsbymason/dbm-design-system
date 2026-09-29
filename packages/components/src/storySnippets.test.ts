@@ -64,6 +64,7 @@ import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/Passwo
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
 import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlider.snippets";
+import { scrollAreaPlaygroundSnippet } from "./molecules/ScrollArea/ScrollArea.snippets";
 import { searchInputPlaygroundSnippet } from "./molecules/SearchInput/SearchInput.snippets";
 import { selectPlaygroundSnippet } from "./molecules/Select/Select.snippets";
 import { sliderPlaygroundSnippet } from "./molecules/Slider/Slider.snippets";
@@ -733,6 +734,46 @@ describe("ButtonGroup's Playground snippet", () => {
   it("keeps the number of buttons between one and six", () => {
     expect(buttonGroupPlaygroundSnippet({ count: 0 }).match(/<Button>/g)).toHaveLength(1);
     expect(buttonGroupPlaygroundSnippet({ count: 99 }).match(/<Button>/g)).toHaveLength(6);
+  });
+});
+
+describe("ScrollArea's Playground snippet", () => {
+  it.each([
+    {},
+    { variant: "ghost", size: "lg", scrollbars: "both", scrollbarVisibility: "always", scrollHideDelay: 300, maxHeight: "10rem", dir: "rtl", "aria-label": "Recent activity" },
+    { scrollbars: "horizontal", maxHeight: "8rem" },
+    { size: "xs" },
+  ])("%j is a real snippet", (args) => {
+    expect(problemsIn(scrollAreaPlaygroundSnippet(args as never))).toEqual([]);
+  });
+
+  it("writes only what differs: variant, size, scrollbars, scrollbarVisibility, scrollHideDelay and dir stay out at their defaults", () => {
+    expect(
+      scrollAreaPlaygroundSnippet({
+        variant: "bordered",
+        size: "md",
+        scrollbars: "vertical",
+        scrollbarVisibility: "hover",
+        scrollHideDelay: 600,
+        dir: "ltr",
+      }),
+    ).toBe("<ScrollArea>\n  <p>First item</p>\n  <p>Second item</p>\n  <p>Third item</p>\n</ScrollArea>");
+    expect(scrollAreaPlaygroundSnippet({ variant: "ghost" })).toContain('variant="ghost"');
+    expect(scrollAreaPlaygroundSnippet({ size: "lg" })).toContain('size="lg"');
+    expect(scrollAreaPlaygroundSnippet({ scrollbars: "horizontal" })).toContain('scrollbars="horizontal"');
+    expect(scrollAreaPlaygroundSnippet({ scrollbarVisibility: "always" })).toContain('scrollbarVisibility="always"');
+    expect(scrollAreaPlaygroundSnippet({ scrollHideDelay: 200 })).toContain("scrollHideDelay={200}");
+    expect(scrollAreaPlaygroundSnippet({ dir: "rtl" })).toContain('dir="rtl"');
+  });
+
+  it("always shows maxHeight once set, since it has no built-in default", () => {
+    expect(scrollAreaPlaygroundSnippet({ maxHeight: "12rem" })).toContain('maxHeight: "12rem"');
+    expect(scrollAreaPlaygroundSnippet({})).not.toContain("maxHeight");
+  });
+
+  it("switches the demo content for scrollbars='both'", () => {
+    expect(scrollAreaPlaygroundSnippet({ scrollbars: "both" })).toContain("Wide, tall content");
+    expect(scrollAreaPlaygroundSnippet({ scrollbars: "vertical" })).not.toContain("Wide, tall content");
   });
 });
 

@@ -1,0 +1,253 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Card } from "../Card";
+import { Table } from "../Table";
+import { ScrollArea } from "./ScrollArea";
+import * as ScrollAreaStories from "./ScrollArea.stories";
+
+export const propOrder = [
+  "children",
+  "variant",
+  "size",
+  "scrollbars",
+  "scrollbarVisibility",
+  "scrollHideDelay",
+  "maxHeight",
+  "dir",
+  "onScroll",
+  "viewportRef",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ScrollAreaStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ScrollArea" tier="Molecule" />
+
+A custom-styled scrollable region, built on Radix ScrollArea — token-driven overlay scrollbars in
+place of the browser's own, for any content that overflows a bounded box. It has no intrinsic
+height of its own: give it one via `style`/`className` or the `maxHeight` shortcut, or it simply
+grows to fit its content and never scrolls. While its content actually overflows, the region
+becomes keyboard-reachable, and, once given `aria-label`/`aria-labelledby`, an announced landmark
+region.
+
+### Import
+
+```tsx
+import { ScrollArea } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ScrollAreaStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ScrollAreaStories.Playground}
+  exclude={[
+    "children",
+    "onScroll",
+    "viewportRef",
+    "aria-labelledby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`ScrollArea` also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onWheel`, `role`) — passed straight through to the region's own outer frame, not the internal
+scrolling viewport (see `onScroll`'s own row below for why that one's different).
+
+<PropertiesTable of={ScrollAreaStories} order={propOrder} />
+
+## Variants
+
+### Vertical (default)
+
+<Canvas of={ScrollAreaStories.Vertical} />
+
+### Horizontal
+
+<Canvas of={ScrollAreaStories.Horizontal} />
+
+### Both axes
+
+<Canvas of={ScrollAreaStories.Both} />
+
+### Ghost variant, embedded in a Card
+
+<Canvas of={ScrollAreaStories.Ghost} />
+
+### Sizes
+
+<Canvas of={ScrollAreaStories.Sizes} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give the region a bounded size — `style={{ maxHeight: "20rem" }}`, `className`, or the
+  `maxHeight` shortcut — or it simply grows to fit its content and never scrolls.
+- Choose `scrollbars="both"` when content can genuinely overflow in either direction (a wide, tall
+  grid or code block) — the default, `"vertical"`, clips horizontal overflow instead of scrolling it.
+- Use `variant="ghost"` when embedding inside a container that already provides its own boundary
+  (a `Card`, a `Popover`) — the default, `"bordered"`, draws its own outer frame.
+- Set `aria-label` (or `aria-labelledby`) when the scrolled content has no heading or other
+  self-describing structure of its own — it becomes the region's accessible name once the content
+  actually overflows.
+- Reach for `viewportRef` when you need to scroll the region imperatively (jump to the bottom of a
+  log, restore a saved scroll position) — `ref` forwards to the outer frame, which never scrolls
+  itself.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't expect `onClick`/`onWheel`/other native props passed the usual way to observe scroll
+  position — only `onScroll` is specially routed to the actual scrolling element; everything else
+  lands on the outer frame, which never scrolls.
+- Don't rely on a direct child's `height: "100%"` — children render inside Radix's own internal
+  content-measuring wrapper (`display: table`), which has no definite height of its own to resolve
+  a percentage against. Give that child an explicit height instead.
+- Don't set `aria-label` expecting it to always be announced — it (and the `role="region"` it
+  enables) only apply once the region is actually scrollable; an unlabeled or non-overflowing
+  region is neither a tab stop nor a landmark, matching `Table`'s own scroll container.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Prefer `variant="bordered"` (the default) for a self-contained scroll panel that stands on its
+  own, and `variant="ghost"` the moment it sits inside something that already has a visible
+  boundary — a doubled border reads as a mistake, not a design choice.
+- Keep `scrollbars` scoped to the axis (or axes) the content genuinely needs — offering
+  `"horizontal"` scrolling nobody uses just adds a second, unnecessary scrollbar to reason about.
+- `scrollbarVisibility="hover"` (the default) suits most content; reach for `"always"` when the
+  region's own scrollability needs to be obvious without a hover (e.g. a touch-primary layout,
+  or a static screenshot/reference), and `"auto"` for a scrollbar that's always visible but only
+  where content genuinely overflows.
+- A region without a visible heading of its own should get `aria-label` — most scrolled content
+  (a list of already-labeled items, a form) is self-describing enough not to need one.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard-reachable only while it genuinely scrolls">
+
+- **The region becomes a keyboard tab stop, with arrow keys, Page Up/Down, Home and End scrolling
+  it, only once its content actually overflows the axis (or axes) offered** (WCAG 2.1.1) — content
+  that already fits gets no tab stop at all, matching `Table`'s own scroll container. Overflow is
+  re-measured live as content or size changes, not just once on mount.
+- **`role="region"` is added only alongside a real accessible name** — from `aria-label`, then
+  `aria-labelledby` — and only while the region is scrollable. An unnamed `role="region"` is just
+  noise to a screen reader, so no name means no role, whether or not the tab stop is present.
+- **The focus ring is drawn inside the region**, not outside it — an outline with a positive offset
+  would be clipped by the outer frame's own `overflow: hidden`.
+- **Wheel, trackpad, touch and keyboard scrolling all work regardless of `scrollbarVisibility`** —
+  it only controls when the scrollbar itself is drawn, never whether the region can be scrolled.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<ScrollArea style={{ maxHeight: "16rem" }}>
+  <LongList />
+</ScrollArea>
+```
+
+```tsx
+{/* aria-label becomes the region's accessible name, and enables role="region", once it actually overflows */}
+<ScrollArea aria-label="Recent activity" maxHeight="20rem">
+  <ActivityFeed />
+</ScrollArea>
+```
+
+```tsx
+{/* const logRef = useRef<HTMLDivElement>(null); */}
+{/* viewportRef reaches the real scrolling element — ref alone (the outer frame) can't scroll itself */}
+<Button onClick={() => logRef.current?.scrollTo({ top: 0, behavior: "smooth" })}>Scroll to top</Button>
+<ScrollArea viewportRef={logRef} maxHeight="12rem">
+  <ActivityLog />
+</ScrollArea>
+```
+
+```tsx
+{/* variant="ghost" for embedding inside a container that already has its own boundary */}
+<Card>
+  <Card.Body>
+    <ScrollArea variant="ghost" maxHeight="10rem">
+      <Notes />
+    </ScrollArea>
+  </Card.Body>
+</Card>
+```
+
+```tsx
+{/* onScroll fires on the actual scrolling element, not the outer frame — native attributes not in
+   the Properties table above (e.g. onWheel) still pass through to the outer frame. */}
+<ScrollArea onScroll={(event) => console.log(event.currentTarget.scrollTop)} maxHeight="16rem">
+  <Content />
+</ScrollArea>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.neutral" usage="thumb background" />
+<TokenRow token="bg.neutral-hover" usage="thumb background on hover" />
+<TokenRow token="bg.neutral-subtle" usage="corner fill, where both scrollbars meet" />
+<TokenRow token="border.default" usage="bordered variant's outer border" />
+<TokenRow token="border.focus" usage="viewport focus-visible outline color" />
+<TokenRow token="border-width.1" usage="bordered variant's outer border width" />
+<TokenRow token="border-width.2" usage="viewport focus-visible outline width" />
+<TokenRow token="radius.md" usage="bordered variant's outer corners" />
+<TokenRow token="radius.sm" usage="viewport focus-visible outline radius, per the standardized focus-ring convention" />
+<TokenRow token="radius.full" usage="thumb corner radius (fully round)" />
+<TokenRow token="motion.duration.fast" usage="scrollbar fade and thumb background transitions" />
+<TokenRow token="motion.easing.standard" usage="scrollbar fade and thumb background transitions" />
+<TokenRow token="space.1" usage="scrollbar thickness at size xs" />
+<TokenRow token="space.2" usage="scrollbar thickness at size sm" />
+<TokenRow token="space.3" usage="scrollbar thickness at size md (default)" />
+<TokenRow token="space.4" usage="scrollbar thickness at size lg" />
+<TokenRow token="space.5" usage="scrollbar thickness at size xl" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Table"
+  description="Its own overflow-aware scroll container follows the same keyboard-reachable-only-while-scrollable pattern"
+  href="/?path=/docs/molecules-data-display-table--docs"
+>
+  <Table size="sm">
+    <Table.Body>
+      <Table.Row>
+        <Table.Cell>Row</Table.Cell>
+      </Table.Row>
+    </Table.Body>
+  </Table>
+</RelatedCard>
+<RelatedCard
+  name="Card"
+  description="A common host for a ghost-variant ScrollArea, providing its own boundary"
+  href="/?path=/docs/molecules-data-display-card--docs"
+>
+  <Card style={{ width: "8rem" }}>
+    <Card.Body>Card</Card.Body>
+  </Card>
+</RelatedCard>
+</div>
