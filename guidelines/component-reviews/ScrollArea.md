@@ -9,8 +9,9 @@ Molecule, Layout category. Item 24 of the itemized molecule build order in
 A single (non-compound) component: `children` renders inside Radix's own `Viewport`, with one or
 two token-driven overlay scrollbar(s) — `scrollbars` (`vertical` default / `horizontal` / `both`)
 picks which axis (or axes) are actually offered; the other is clipped, not scrollable. `size` (the
-standard 5-step scale) sets scrollbar thickness, mapped directly onto the existing spacing tokens
-(`space.1`–`space.5`, 4–20px) — no new component-layer token needed. `variant` (`bordered` default /
+standard 5-step scale) sets scrollbar thickness — originally mapped directly onto the existing
+spacing tokens, revised (see the follow-up below) to a dedicated component-layer token,
+4/6/8/10/12px. `variant` (`bordered` default /
 `ghost`) follows `Table`'s own exact vocabulary and default. `scrollbarVisibility` (`auto` / `always`
 / `scroll` / `hover` default) and `scrollHideDelay` map straight onto Radix's own `type`/
 `scrollHideDelay`. `maxHeight` is a convenience shortcut (`Table`'s own precedent) for the region's
@@ -100,7 +101,8 @@ visible/API surface change — the same shape as `Divider`'s own `useResolvedRes
 - [x] `forwardRef` to `Root`; `className`/`style`/`id`/`data-testid` accepted (on `Root`);
       `aria-label`/`aria-labelledby` redeclared (routed to `Viewport`, only while scrollable);
       `onScroll` redeclared and routed to `Viewport`; `dir` defaulted, not inherited
-- [x] Zero hardcoded values — every value traces to an existing token (no new component-layer token)
+- [x] Zero hardcoded values — every value traces to a token (one new component-layer token family,
+      `scroll-area.thickness.*`, added in the follow-up below)
 - [x] Storybook: Docs page (`ComponentName.mdx`) first in the group, Playground second, full template
       (Intro, Playground, Properties, Variants gallery, Usage guidelines, Best practices,
       Accessibility, Code examples, Design tokens used, Related components)
@@ -113,7 +115,7 @@ visible/API surface change — the same shape as `Divider`'s own `useResolvedRes
       expressed as a plain destructuring default, was not one of the three shapes known to break
       docgen's inference, and this was confirmed rather than assumed)
 - [x] `ScrollArea.docs.test.ts` — the Design tokens table matches the stylesheet, checked by a test
-      (17 tokens, the `CodeBlock`/`Stat`/`DescriptionList` drift-guard pattern)
+      (18 tokens after the follow-up below, the `CodeBlock`/`Stat`/`DescriptionList` drift-guard pattern)
 - [x] Unit tests (jsdom, `ScrollArea.test.tsx`, 22 tests) covering rendering, ref/viewportRef split,
       variant/size/scrollbars classes, `onScroll` routing, tabIndex/role appearing only once
       scrollable, `dir`, native prop passthrough, and jest-axe with zero violations (both scrollable
@@ -128,6 +130,71 @@ visible/API surface change — the same shape as `Divider`'s own `useResolvedRes
       0.43KB CSS gzipped, comfortably within budget (comparable to `Avatar`'s 1.88KB baseline)
 - [x] Full package `lint`/`typecheck`/`build`/`test` clean (one pre-existing, unrelated flaky timeout
       in `CodeBlock.stories.test.ts`, confirmed passing in isolation, not caused by this change)
+
+## Follow-up: five real defects found by the user, live in the shipped Storybook (2026-09-29)
+
+After the initial commit, live use in Storybook surfaced issues the original review's own
+verification pass missed — checking a hover-revealed scrollbar's *presence* and *proportional
+sizing* were treated as one confirmation, when they're two independently-checkable things, and the
+size-comparison "Sizes" story was never screenshotted with real content wide enough to reveal a
+sizing bug. All five fixed same-day, re-verified live:
+
+1. **No visible track, only a thumb.** The scrollbar lane had no background at all — fixed by
+   giving `.scrollbar` `bg.track` (the same deliberately-faint token `Slider`/`ProgressBar`/`Switch`
+   use for their own tracks, ADR-0016's reasoning applies identically here: the thumb carries the
+   interactive affordance, the track is just a boundary guide).
+2. **The thumb always rendered at the full track's length, in every orientation** — a real, more
+   serious bug than #1, not just a styling gap. Root cause: `.thumb { flex: 1; }`. `.scrollbar` is
+   `display: flex`, and giving the (sole) flex child its own `flex: 1` (shorthand for
+   `flex-basis: 0%`, `flex-grow: 1`) makes it grow to fill the *entire* track along the main axis,
+   completely discarding Radix's own proportional sizing (the `--radix-scroll-area-thumb-width`/
+   `-height` CSS custom properties it computes and sets inline from how much of the content is
+   actually visible). Confirmed live via `getBoundingClientRect()`: the thumb's rect exactly
+   matched the scrollbar's own rect before the fix, and correctly showed ~63% (matching the real
+   viewport/content ratio) after removing `flex` from `.thumb` — the default `align-items: stretch`
+   still fills the thumb's cross-axis thickness with no `flex` property needed at all. This also
+   explains the user's separate "extends beyond the container, gets cropped by the border while
+   scrolling" report: a thumb that's always 100% of the track reads as clipped/overflowing the
+   instant the track itself is inset even slightly from the frame's own edge.
+3. **The scrollbar thickness scale read heavier than intended** (`size="md"`, the default, was
+   12px). Revised to 4/6/8/10/12px (`xs`–`xl`) — thinner overall, and now needs its own
+   component-layer token (`component/scroll-area.json`) since only two of the five steps still land
+   on the shared spacing scale; see `03-token-system-spec.md`'s own "Component-layer tokens" entry.
+4. **Demo content had no padding and touched the frame's border**, and used placeholder
+   "activity log" strings rather than genuinely long-form text. Fixed in `ScrollArea.stories.tsx`
+   only (never in the component itself, which stays an unopinionated wrapper, same as `Box`) — every
+   demo now wraps its content in `padding: var(--dbm-space-4)`, and uses three lorem ipsum paragraphs
+   (vertical-scroll demos) or five long `white-space: nowrap` lines built from the same placeholder
+   copy (horizontal/both-axis demos).
+5. **The Horizontal and Both-axes demos were artificially narrow** (`maxWidth: "20rem"`, ~320px)
+   and didn't read as full, deliberate compositions the way Vertical's own full-canvas-width demo
+   did. Fixed by removing the width cap entirely (the long nowrap lines overflow horizontally
+   regardless of how wide the canvas is) and sizing Horizontal's own height to its content's natural
+   height (no `maxHeight` at all — five lines, no vertical scrolling needed) rather than a guessed
+   pixel value. Both-axes needed its own explicit, shorter `maxHeight` (`8rem`, down from the
+   inherited `12rem` default): the five-line demo content's natural height landed just *under* 12rem,
+   so at that height the story only ever demonstrated horizontal overflow — a real gap in the
+   original story design, not just a cosmetic sizing choice, found by measuring rather than assuming
+   the box would obviously overflow both ways.
+
+A sixth issue reported alongside the other five — the Playground's `aria-label` control showing an
+inert "Set string" placeholder instead of a real text field — was the same class of bug this
+project has hit repeatedly (`06-engineering-standards.md` §9's Storybook checklist): an arg left
+`undefined` in the Playground's own top-level `args` renders as a non-interactive placeholder.
+Fixed by giving `"aria-label"` a real default (`"Scrollable content"`). That default's own second-
+order effect was caught immediately by the real-browser test suite, not missed: the `Sizes` story
+renders five `ScrollArea` instances side by side, and giving all five the identical inherited
+`aria-label` produced five identically-named `role="region"` landmarks — a genuine
+`landmark-unique` axe violation (`jest-axe`'s browser-mode equivalent), not a false positive. Fixed
+by giving each size its own distinct label (`` `Scrollable content, size ${size}` ``).
+
+Full re-verification after all five: `tsc`, `eslint --max-warnings 0`, the full unit + real-browser
+(Chromium) test suites (5559 + hidden interaction stories, all passing), `pnpm build`, the
+component bundle-size check (still 0.95KB JS / 0.45KB CSS, within budget), and the Foundations
+token-coverage check (unaffected — no semantic token changed) all clean. Re-verified live in the
+browser: track + proportionally-sized thumb in every orientation and both dark/light modes, the
+Horizontal/Both/Sizes/Ghost stories' new content and sizing, and the `aria-label` control now a
+real, editable text field.
 
 ## Not yet Finalized
 
