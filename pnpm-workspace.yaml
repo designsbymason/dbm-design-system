@@ -42,7 +42,14 @@ overrides:
   # public API) at a path that only exists in the 7.x line it actually
   # declares support for (`^7.25.0`) — confirmed by checking jsdom's own
   # declared undici range and reproducing the failure, not guessed.
-  undici: ">=7.29.0 <8.0.0"
+  #
+  # Bumped floor to >=7.29.1 on 2026-09-29 (GHSA-3wwx-pv8p-q78v): a separate
+  # DoS via an unhandled error in WebSocket permessage-deflate
+  # decompression, patched in 7.29.1 — the prior >=7.29.0 floor was exactly
+  # what pnpm had resolved to, and 7.29.0 itself is vulnerable to this
+  # newer advisory. Same dev/test-only path (jsdom, via vitest), same
+  # `<8.0.0` cap still required for the jsdom-internals reason above.
+  undici: ">=7.29.1 <8.0.0"
   # GHSA-5p4m-2wfm-xmqj: js-yaml quadratic CPU consumption (CVE-2026-59870,
   # ReDoS-style) in !!omap resolution. Two coexisting majors, both reached
   # only through @changesets/cli (dev-only release tooling, never shipped):
