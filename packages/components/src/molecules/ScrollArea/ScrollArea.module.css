@@ -53,7 +53,13 @@
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
+/* A visible track (`bg.track`, the same deliberately-faint token `Slider`/`ProgressBar`/`Switch`
+   use for their own tracks — the thumb carries the interactive affordance, the track is just a
+   faint boundary guide, the same ADR-0016 reasoning) — not just a transparent lane the thumb
+   floats over. */
 .scrollbar {
+  background-color: var(--dbm-bg-track);
+  border-radius: var(--dbm-radius-full);
   display: flex;
   touch-action: none;
   transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
@@ -81,11 +87,24 @@
    scrolled content with no buffer the way a slider's isolated thumb has —
    enlarging the hit target here risks stealing pointer events from content
    right at the edge. A thin, unpadded overlay thumb is the broadly
-   established convention for this exact control. */
+   established convention for this exact control.
+
+   Deliberately no `flex` property here (found live, a real defect, not a
+   style preference): `.scrollbar` is `display: flex` so the track's own
+   cross-axis stretch (the *default* `align-items: stretch`) is what fills
+   the thumb's thickness — but giving the thumb its own `flex: 1` (shorthand
+   for `flex-basis: 0%`, `flex-grow: 1`) made it grow to *fill the whole
+   track* along the main axis too, completely discarding Radix's own
+   proportional `width`/`height` (the CSS custom properties it sets inline,
+   computed from how much of the content is actually visible) — confirmed
+   live via `getBoundingClientRect()`: the thumb's rect exactly matched the
+   full scrollbar's rect in every orientation, regardless of how little of
+   the content the viewport actually showed. Removing `flex` here lets the
+   inline `width`/`height` size the thumb correctly along the main axis,
+   while the default cross-axis stretch still fills the track's thickness. */
 .thumb {
   background-color: var(--dbm-bg-neutral);
   border-radius: var(--dbm-radius-full);
-  flex: 1;
   transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
@@ -102,24 +121,32 @@
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
-/* Sizes — scrollbar thickness reuses the existing 4px-step spacing scale
-   directly (4/8/12/16/20px); no dedicated component-layer token was needed. */
+/* Sizes — scrollbar thickness. Originally mapped onto the existing 4px-step spacing scale
+   (4/8/12/16/20px); revised at explicit direction (2026-09-29) to a slightly thinner scale
+   (4/6/8/10/12px) once a real live-browser check showed the default (`md`, previously 12px)
+   reading heavier than a typical overlay scrollbar. Only two of the five steps (`xs` 4px, `md`
+   8px) land on the spacing scale — the rest don't, so a dedicated component-layer token
+   (`component/scroll-area.json`) was added rather than distorting the shared scale or mixing
+   token references with literals, the same reasoning as `Avatar`'s own size scale. Identical
+   values to `Indicators`' own dot-size scale, a real, independently-arrived-at coincidence, not a
+   shared token — the two components have no relationship that would justify aliasing one to the
+   other. */
 .sizeXs {
-  --scroll-area-thickness: var(--dbm-space-1);
+  --scroll-area-thickness: var(--dbm-scroll-area-thickness-xs);
 }
 
 .sizeSm {
-  --scroll-area-thickness: var(--dbm-space-2);
+  --scroll-area-thickness: var(--dbm-scroll-area-thickness-sm);
 }
 
 .sizeMd {
-  --scroll-area-thickness: var(--dbm-space-3);
+  --scroll-area-thickness: var(--dbm-scroll-area-thickness-md);
 }
 
 .sizeLg {
-  --scroll-area-thickness: var(--dbm-space-4);
+  --scroll-area-thickness: var(--dbm-scroll-area-thickness-lg);
 }
 
 .sizeXl {
-  --scroll-area-thickness: var(--dbm-space-5);
+  --scroll-area-thickness: var(--dbm-scroll-area-thickness-xl);
 }

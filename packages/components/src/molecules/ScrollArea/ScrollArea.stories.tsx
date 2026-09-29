@@ -4,35 +4,46 @@ import { Card } from "../Card";
 import { ScrollArea } from "./ScrollArea";
 import { scrollAreaPlaygroundSnippet, scrollAreaSnippets } from "./ScrollArea.snippets";
 
-const activityItems = [
-  "Signed in from a new device",
-  "Password changed",
-  "Email address verified",
-  "Two-factor authentication enabled",
-  "Signed in from a new device",
-  "Profile photo updated",
-  "Connected a new billing method",
-  "Signed out of all other sessions",
+// Placeholder copy, not this project's own content — a demo needs enough text to genuinely
+// overflow a bounded box, not a description of ScrollArea itself.
+const loremParagraphs = [
+  "Erat purus id ultricies erat integer maecenas sagittis eget ante integer. Nisl donec fermentum mus vestibulum magna faucibus cursus commodo curabitur massa libero ac. Montes risus pellentesque, quam euismod egestas euismod vehicula tempus dui. Elementum varius ante curabitur penatibus porttitor integer quis sapien massa elementum lectus. Dictumst lacus donec at tincidunt blandit netus, donec dictum libero. Quis penatibus tristique ac mauris faucibus sollicitudin ullamcorper vehicula natoque ultricies.",
+  "Varius consectetur adipiscing elementum et lacinia, ornare nunc ante vitae? Duis nunc rhoncus sollicitudin nisl nunc proin risus. Interdum hac molestie aenean ornare facilisi enim imperdiet dictumst donec cum. Phasellus nunc cras malesuada dolor condimentum posuere vestibulum. Cum quam interdum, ultrices nullam mauris porta quis at urna eros.",
+  "Lacus mauris fusce augue nisl scelerisque quam hac orci a egestas sagittis ultrices. Dui venenatis ultrices maecenas elementum interdum ridiculus adipiscing ac nec. Imperdiet est morbi ridiculus; habitasse cursus enim. Ante porttitor faucibus condimentum ut natoque convallis sed sagittis. Accumsan ullamcorper interdum; fames egestas aliquam platea suscipit ridiculus. Facilisis maecenas habitant habitasse fusce viverra ultricies quis nisl venenatis dui laoreet. Enim laoreet tortor non justo habitasse donec sit. Metus sem leo congue est ut cras pretium.",
 ];
 
-function DemoList() {
+// ScrollArea itself adds no padding around its own content (an unopinionated wrapper, matching
+// Box's own "bring your own presentation" default) — every demo below supplies its own, the same
+// pattern a real consumer follows.
+function DemoParagraphs() {
   return (
-    <>
-      {activityItems.map((item, index) => (
-        <p key={index} style={{ margin: 0, padding: "var(--dbm-space-2) 0" }}>
-          {item}
+    <div style={{ padding: "var(--dbm-space-4)" }}>
+      {loremParagraphs.map((paragraph, index) => (
+        <p key={index} style={{ margin: 0, marginBlockStart: index === 0 ? 0 : "var(--dbm-space-4)" }}>
+          {paragraph}
         </p>
       ))}
-    </>
+    </div>
   );
 }
 
-function DemoWideTall() {
+// Five lines, each long enough (from the same placeholder copy above, concatenated by sentence) to
+// overflow horizontally at any reasonable canvas width, `whiteSpace: "nowrap"` so a line never
+// wraps onto the next.
+const longLines = [
+  "Erat purus id ultricies erat integer maecenas sagittis eget ante integer. Nisl donec fermentum mus vestibulum magna faucibus cursus commodo curabitur massa libero ac.",
+  "Montes risus pellentesque, quam euismod egestas euismod vehicula tempus dui. Elementum varius ante curabitur penatibus porttitor integer quis sapien massa elementum lectus.",
+  "Dictumst lacus donec at tincidunt blandit netus, donec dictum libero. Quis penatibus tristique ac mauris faucibus sollicitudin ullamcorper vehicula natoque ultricies.",
+  "Varius consectetur adipiscing elementum et lacinia, ornare nunc ante vitae? Duis nunc rhoncus sollicitudin nisl nunc proin risus.",
+  "Interdum hac molestie aenean ornare facilisi enim imperdiet dictumst donec cum. Phasellus nunc cras malesuada dolor condimentum posuere vestibulum.",
+];
+
+function DemoLongLines() {
   return (
-    <div style={{ width: "40rem" }}>
-      {activityItems.map((item, index) => (
-        <p key={index} style={{ margin: 0, padding: "var(--dbm-space-2) 0", whiteSpace: "nowrap" }}>
-          {item} — wide enough, and there are enough lines, to overflow both directions
+    <div style={{ padding: "var(--dbm-space-4)" }}>
+      {longLines.map((line, index) => (
+        <p key={index} style={{ margin: 0, marginBlockStart: index === 0 ? 0 : "var(--dbm-space-3)", whiteSpace: "nowrap" }}>
+          {line}
         </p>
       ))}
     </div>
@@ -104,6 +115,7 @@ const meta: Meta<typeof ScrollArea> = {
     scrollHideDelay: 600,
     maxHeight: "12rem",
     dir: "ltr",
+    "aria-label": "Scrollable content",
   },
 };
 
@@ -121,9 +133,7 @@ export const Playground: Story = {
     },
   },
   render: (args) => (
-    <ScrollArea {...args} style={args.scrollbars === "both" ? { maxWidth: "20rem" } : undefined}>
-      {args.scrollbars === "both" ? <DemoWideTall /> : <DemoList />}
-    </ScrollArea>
+    <ScrollArea {...args}>{args.scrollbars === "vertical" ? <DemoParagraphs /> : <DemoLongLines />}</ScrollArea>
   ),
 };
 
@@ -133,7 +143,7 @@ export const Vertical: Story = {
   argTypes: { scrollbars: { control: false }, maxHeight: { control: false } },
   render: (args) => (
     <ScrollArea {...args} scrollbars="vertical">
-      <DemoList />
+      <DemoParagraphs />
     </ScrollArea>
   ),
 };
@@ -144,14 +154,8 @@ export const Horizontal: Story = {
   argTypes: { scrollbars: { control: false }, maxHeight: { control: false } },
   args: { maxHeight: undefined },
   render: (args) => (
-    <ScrollArea {...args} scrollbars="horizontal" style={{ maxWidth: "20rem" }}>
-      <div style={{ display: "flex", gap: "var(--dbm-space-4)", width: "max-content" }}>
-        {activityItems.map((item, index) => (
-          <p key={index} style={{ margin: 0, whiteSpace: "nowrap" }}>
-            {item}
-          </p>
-        ))}
-      </div>
+    <ScrollArea {...args} scrollbars="horizontal">
+      <DemoLongLines />
     </ScrollArea>
   ),
 };
@@ -159,10 +163,14 @@ export const Horizontal: Story = {
 export const Both: Story = {
   name: "Both axes",
   parameters: { docs: { source: { code: scrollAreaSnippets.both } } },
-  argTypes: { scrollbars: { control: false } },
+  argTypes: { scrollbars: { control: false }, maxHeight: { control: false } },
+  // Shorter than the meta default (12rem): DemoLongLines' own five lines plus padding land just
+  // under 12rem, so the region would only ever overflow horizontally at that height — this story
+  // is specifically about genuine overflow on both axes at once.
+  args: { maxHeight: "8rem" },
   render: (args) => (
-    <ScrollArea {...args} scrollbars="both" style={{ maxWidth: "20rem" }}>
-      <DemoWideTall />
+    <ScrollArea {...args} scrollbars="both">
+      <DemoLongLines />
     </ScrollArea>
   ),
 };
@@ -172,10 +180,10 @@ export const Ghost: Story = {
   parameters: { docs: { source: { code: scrollAreaSnippets.ghost } } },
   argTypes: { variant: { control: false } },
   render: (args) => (
-    <Card style={{ maxWidth: "20rem" }}>
+    <Card style={{ maxWidth: "24rem" }}>
       <Card.Body>
         <ScrollArea {...args} variant="ghost" style={{ maxHeight: "10rem" }}>
-          <DemoList />
+          <DemoParagraphs />
         </ScrollArea>
       </Card.Body>
     </Card>
@@ -188,14 +196,24 @@ export const Sizes: Story = {
     size: { control: false },
     scrollbarVisibility: { control: false },
     maxHeight: { control: false },
+    "aria-label": { control: false },
   },
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-6)", flexWrap: "wrap" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <div key={size} style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
           <span style={{ fontSize: "var(--dbm-font-size-xs)", color: "var(--dbm-text-tertiary)" }}>{size}</span>
-          <ScrollArea {...args} size={size} scrollbarVisibility="always" style={{ maxHeight: "8rem", width: "10rem" }}>
-            <DemoList />
+          <ScrollArea
+            {...args}
+            size={size}
+            scrollbarVisibility="always"
+            // Distinct per instance — five identically-named `role="region"` landmarks side by
+            // side is a real WCAG/axe `landmark-unique` violation, found live by this exact story
+            // once the Playground's shared `aria-label` default started reaching every story.
+            aria-label={`Scrollable content, size ${size}`}
+            style={{ maxHeight: "8rem", width: "12rem" }}
+          >
+            <DemoParagraphs />
           </ScrollArea>
         </div>
       ))}
@@ -209,7 +227,7 @@ export const KeyboardScrollInteraction: Story = {
   args: { "aria-label": "Recent activity" },
   render: (args) => (
     <ScrollArea {...args} data-testid="scroll-area">
-      <DemoList />
+      <DemoParagraphs />
     </ScrollArea>
   ),
   // Doesn't assert that a simulated keypress actually moves `scrollTop`: confirmed live (against

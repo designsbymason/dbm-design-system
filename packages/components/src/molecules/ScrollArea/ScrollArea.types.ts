@@ -3,8 +3,9 @@ import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref, UIEventHa
 /**
  * Scrollbar track/thumb thickness, on the standard 5-step scale
  * (`05-component-api-conventions.md` §2) — never a component-specific
- * scale. Maps directly onto the existing spacing tokens (4/8/12/16/20px);
- * no dedicated component-layer token was needed.
+ * scale. Maps onto a dedicated component-layer token (4/6/8/10/12px) — only
+ * two of the five steps land on the shared spacing scale, so the rest
+ * needed their own scale rather than distorting it.
  */
 export type ScrollAreaSize = "xs" | "sm" | "md" | "lg" | "xl";
 
