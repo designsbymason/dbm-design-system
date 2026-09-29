@@ -294,19 +294,21 @@ quoted in prose elsewhere.
 | CodeBlock | Molecule | Typography | ✅ | ✅ 2026-09-26 | [CodeBlock.md](component-reviews/CodeBlock.md) |
 | Stat | Molecule | Data Display | ✅ | ✅ 2026-09-27 | [Stat.md](component-reviews/Stat.md) |
 | DescriptionList | Molecule | Data Display | ✅ | ✅ 2026-09-29 | [DescriptionList.md](component-reviews/DescriptionList.md) |
+| ScrollArea | Molecule | Layout | ✅ | ⏳ reviewed 2026-09-29, awaiting user confirmation | [ScrollArea.md](component-reviews/ScrollArea.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-09-29):** every atom and the first 26 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-09-29):** every atom and 26 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`, `DescriptionList`) are reviewed and Finalized — see the table above.
-The queue continues through the remaining 10 of the 36 molecules, one at a time, in the dependency
-order itemized in `04-component-inventory.md`, starting with `ScrollArea` (item 24), each with the same
-full §9 process.
+`ScrollArea` (item 24) has completed the same full review pass with no outstanding gaps found and is
+awaiting the user's Finalization confirmation. The queue continues through the remaining 9 of the 36
+molecules, one at a time, in the dependency order itemized in `04-component-inventory.md`, starting
+with `HoverCard` (item 25), each with the same full §9 process.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full
 `06-engineering-standards.md` §9 review pass, not a separate sweep, run one component at a time. The atom
