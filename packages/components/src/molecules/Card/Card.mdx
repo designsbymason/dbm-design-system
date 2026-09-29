@@ -4,6 +4,7 @@ import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedC
 import { Box } from "../../atoms/Box";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Accordion } from "../Accordion";
+import { DescriptionList } from "../DescriptionList";
 import { EmptyState } from "../EmptyState";
 import { Grid } from "../Grid";
 import { Table } from "../Table";
@@ -411,6 +412,18 @@ what's listed here (e.g. `onClick`, `title`) — passed straight through.
       </Table.Row>
     </Table.Body>
   </Table>
+</RelatedCard>
+<RelatedCard
+  name="DescriptionList"
+  description="Its ghost variant likewise drops its own border — for a compact key/value details panel inside a card"
+  href="/?path=/docs/molecules-data-display-descriptionlist--docs"
+>
+  <DescriptionList size="xs" variant="ghost" style={{ width: 140 }}>
+    <DescriptionList.Item>
+      <DescriptionList.Term>Status</DescriptionList.Term>
+      <DescriptionList.Details>Paid</DescriptionList.Details>
+    </DescriptionList.Item>
+  </DescriptionList>
 </RelatedCard>
 <RelatedCard
   name="Accordion"

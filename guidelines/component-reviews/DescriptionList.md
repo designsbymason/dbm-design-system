@@ -1,6 +1,6 @@
 # DescriptionList
 
-Molecule, Data Display. Build session: 2026-09-27. Not yet Finalized — awaiting the user's review/declaration; a full `06-engineering-standards.md` §9 pass has not been completed (this entry records the initial build, including one real defect found and fixed during the build itself).
+Molecule, Data Display. Build session: 2026-09-27. **Finalized 2026-09-29** — the full `06-engineering-standards.md` §9 checklist, two user-reported bug fixes (grid alignment and icon-prefixed terms), a prop rename (`alignedTerms` → `alignedDetails`), a Storybook Controls-panel consistency pass, and a final pre-Finalize §9 review are all complete; see "Final `06-engineering-standards.md` §9 review pass" below for what that last pass checked (this entry also records the initial build, including one real defect found and fixed during the build itself).
 
 **Renamed `alignedTerms` → `alignedDetails`, 2026-09-28, at the user's request — pure identifier rename, no logic change.** The prop's own mechanism sizes every `Term` to a shared width, but what a reader actually perceives and cares about is that every `Details` value lands at the same starting position — `Term`s are already always left-aligned at their own start regardless of the prop, so "aligned" more accurately describes what happens to `Details`. Renamed throughout: the prop itself, its JSDoc, the CSS class, the internal derived variable/context field (`alignTerms` → `alignDetails`, for internal consistency — not itself part of the request, but the same category of change), every story/snippet/test/doc reference. This document uses `alignedDetails` throughout, including in entries describing work done before the rename (a same-day, pre-release rename on an unshipped component — not worth preserving "as it was called at the time" for every mention).
 
@@ -161,20 +161,65 @@ Two related Storybook-hygiene defects, both against the established, already-Fin
 
 **The interface reorder needed a Storybook dev-server restart to actually take effect** — confirmed live: the native per-story Controls tab still showed the old order after saving the file (Vite HMR doesn't invalidate react-docgen's own cache for a changed type file, the exact gotcha `07-storybook-and-documentation-standards.md` already documents from `Tabs`' own review). Restarted the server and re-verified both the native Controls tab and the Docs page's `PropertiesTable`/`PlaygroundControls` show the corrected order and the corrected `aria-label` control. Full suite re-verified clean: typecheck, lint, unit tests (4629), docs token-drift guard, story-snippets guard, and the real-browser Chromium suite (10/10).
 
+## Cross-links added (2026-09-29, at the user's request)
+
+`Table.mdx`, `Card.mdx`, and `EmptyState.mdx` (all already-Finalized) now each carry a `RelatedCard`
+back to `DescriptionList`, closing the one-directional-linking gap noted below. Purely additive
+(a new card each, nothing existing changed) — per `06-engineering-standards.md` §9's three-question
+finalization test, none of the three reopen. Verified live in Purple/Light and Emerald/Dark, and that
+each preview is inert (a click on it doesn't navigate away from the Docs page it's on).
+
+## Final `06-engineering-standards.md` §9 review pass (2026-09-29)
+
+Closed every item this component's review had left outstanding, plus a full re-sweep of the rest of
+the checklist. **Found zero real defects in the component's actual runtime behavior** — every
+previously-unverified item came back clean on the first real-browser check:
+
+- **Keyboard navigation** — confirmed programmatically (not just reasoned about): zero elements
+  inside a rendered `DescriptionList`, across all 16 descendants of a real example, carry a
+  `tabIndex`/are natively focusable. Matches the component's own "deliberately non-interactive"
+  design — there is nothing for keyboard navigation to get wrong.
+- **Right-to-left** — added a dedicated real-browser check story (`RightToLeftChecks`) covering
+  horizontal orientation (term/details swap sides), an icon-prefixed term (the icon stays on the
+  logical start side, not stranded by a hardcoded physical offset), and a multi-column grid (column
+  order mirrors). All three passed against real `getBoundingClientRect` measurements on the first
+  run — no fix needed. Every directional value in this component's CSS was already a logical
+  property, and this is the first time that was actually confirmed in a real browser rather than
+  assumed from reading the CSS (the project's own standing rule, motivated by `RangeSlider`'s
+  identical assumption once being wrong).
+- **Forced colors (Windows high contrast)** — verified by code inspection rather than a live emulation
+  this project's own browser tooling can't drive directly: `DescriptionList.module.css` has neither of
+  the two patterns that have ever caused a forced-colors defect elsewhere in this codebase (a
+  transparent border reserved for layout stability, or CSS-generated `content`) — every border is a
+  real, non-transparent token, which forced-colors mode recolors but does not hide.
+- **Context provided to children, tested nested inside itself** — a real checklist gap: added a unit
+  test nesting a differently-configured `DescriptionList` inside another one's own `Details`, and
+  documented (in `DescriptionList.tsx`'s own context comment, not just left implicit) why this
+  component deliberately does *not* merge with an outer instance's context the way `ButtonGroup`
+  does — every field here always resolves to a concrete value via its own destructuring default, so
+  there's no "left unset, should inherit the parent" case for merging to solve in the first place.
+- **Realistic content at every size** — checking the icon-prefixed-term example specifically at `xs`
+  and `xl` (not just the default `md` it was built and screenshotted at) found a real, if minor,
+  design-quality gap: the demo's own icon was hardcoded to `size="sm"` regardless of the list's own
+  `size`, reading as visibly undersized at `xl` and slightly large at `xs`. Not a component defect
+  (`DescriptionList.Term` has no icon slot to own that sizing decision in the first place), but a
+  polish gap in the shipped example — fixed by scaling the demo's own icon size with the control.
+
+Full suite re-verified clean after every change in this pass: typecheck, lint, unit tests (22 now,
+including the new nested-context test), docs token-drift guard, story-snippets guard, and the
+real-browser Chromium suite (11 stories now, including the new `RightToLeftChecks`).
+
 ## Not yet done
 
-**Closed in the 2026-09-28 follow-up session:** `DescriptionList.docs.test.ts` (the CSS-vs-mdx token
-drift guard, `CodeBlock`/`Stat`'s own pattern — all 19 stylesheet tokens confirmed listed);
-`04-component-inventory.md`'s molecule build-order list and
-`07-storybook-and-documentation-standards.md` §6's status table updated to record the build; and (in
-this same session, adding `alignedDetails`) a real run of the `@storybook/addon-vitest` Chromium project
-against this component specifically. Committed and pushed (`5525979`).
+**Closed across follow-up sessions:** `DescriptionList.docs.test.ts` (the CSS-vs-mdx token drift
+guard); `04-component-inventory.md`'s molecule build-order list and
+`07-storybook-and-documentation-standards.md` §6's status table updated to record the build; a real
+run of the `@storybook/addon-vitest` Chromium project against this component; the reverse
+`RelatedCard` cross-links from `Table`/`Card`/`EmptyState`; and (2026-09-29) the full
+`06-engineering-standards.md` §9 checklist, including keyboard-nav verification, an RTL pass, and a
+forced-colors check — all closed with zero real defects found. See this file's own sections above for
+the detail on each.
 
-**Still outstanding:**
-- The full `06-engineering-standards.md` §9 checklist has not been run end to end — jest-axe and the
-  Chromium `addon-vitest` project both now cover this component, but manual keyboard-nav verification,
-  an RTL/`dir` pass, and a forced-colors (Windows high-contrast) check are still open.
-- Other Finalized components' Docs pages (`Table.mdx`, `Card.mdx`, `EmptyState.mdx`) do not yet
-  cross-link back to `DescriptionList` via `RelatedCard` — not touched, since editing an already-Finalized
-  component's files needs the user's go-ahead first.
-- Not marked Finalized — that is the user's call to make, not something this session asserts.
+As of this review pass, every checklist item this file has ever flagged as outstanding is now closed.
+
+**Declared Finalized by the user, 2026-09-29.**

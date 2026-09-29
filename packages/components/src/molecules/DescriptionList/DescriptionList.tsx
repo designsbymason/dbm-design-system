@@ -25,6 +25,17 @@ interface DescriptionListContextValue {
 // identical context. The between-item divider doesn't need a context entry
 // of its own — it's a plain descendant selector off the root's own class
 // (`DescriptionList.module.css`'s `.dividers > .item:not(:first-child)`).
+//
+// Deliberately *not* merged with an outer list's own context, unlike
+// `ButtonGroup`'s `own ?? parent` pattern — every field here (`size`,
+// `orientation`, `columns`, `alignedDetails`) always resolves to a real,
+// concrete value on every `DescriptionList` (each has its own destructuring
+// default), so there is no "left unset, should inherit the parent's" case
+// the way `ButtonGroup`'s optional `disabled` has. A nested list is a
+// wholly separate, independently-configured list, not a continuation of
+// the outer one's settings — confirmed correct, not just assumed, by
+// nesting a differently-configured `DescriptionList` inside another one's
+// own `Details` and asserting the inner list's own classes reach it.
 const DescriptionListContext = createContext<DescriptionListContextValue>({
   size: "md",
   orientation: "horizontal",

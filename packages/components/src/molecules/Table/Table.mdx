@@ -5,6 +5,7 @@ import { Badge } from "../../atoms/Badge";
 import { Skeleton } from "../../atoms/Skeleton";
 import { ListItem } from "../../atoms/ListItem";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { DescriptionList } from "../DescriptionList";
 import { EmptyState } from "../EmptyState";
 import { List } from "../List";
 import * as TableStories from "./Table.stories";
@@ -453,6 +454,18 @@ inside it.
   <List>
     <ListItem>An item</ListItem>
   </List>
+</RelatedCard>
+<RelatedCard
+  name="DescriptionList"
+  description="For a handful of key/value facts rather than many uniform rows, a DescriptionList is the lighter choice"
+  href="/?path=/docs/molecules-data-display-descriptionlist--docs"
+>
+  <DescriptionList size="xs" style={{ width: 140 }}>
+    <DescriptionList.Item>
+      <DescriptionList.Term>Status</DescriptionList.Term>
+      <DescriptionList.Details>Paid</DescriptionList.Details>
+    </DescriptionList.Item>
+  </DescriptionList>
 </RelatedCard>
 <RelatedCard
   name="EmptyState"

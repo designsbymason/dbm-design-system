@@ -359,4 +359,33 @@ describe("DescriptionList", () => {
     );
     expect((await axe(multiColumn)).violations).toHaveLength(0);
   });
+
+  it("does not leak its context into a DescriptionList nested inside its own Details", () => {
+    render(
+      <DescriptionList size="lg" alignedDetails={false} orientation="vertical">
+        <DescriptionList.Item>
+          <DescriptionList.Term>Order</DescriptionList.Term>
+          <DescriptionList.Details>
+            <DescriptionList size="xs" alignedDetails orientation="horizontal">
+              <DescriptionList.Item>
+                <DescriptionList.Term>Customer</DescriptionList.Term>
+                <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+              </DescriptionList.Item>
+            </DescriptionList>
+          </DescriptionList.Details>
+        </DescriptionList.Item>
+      </DescriptionList>,
+    );
+    const innerTerm = screen.getByText("Customer");
+    const innerDetails = screen.getByText("Jane Cooper");
+    // The inner list's own size — not the outer's lg — reaches its term/details.
+    expect(innerTerm).toHaveClass(styles.termSizeXs as string);
+    expect(innerTerm).not.toHaveClass(styles.termSizeLg as string);
+    expect(innerDetails).toHaveClass(styles.detailsSizeXs as string);
+    // The inner list's own alignedDetails (true) and orientation (horizontal) —
+    // not the outer's false/vertical — reach its own item.
+    const innerItem = innerTerm.closest("div") as HTMLElement;
+    expect(innerItem).toHaveClass(styles.itemContents as string);
+    expect(innerItem).toHaveClass(styles.orientationHorizontal as string);
+  });
 });

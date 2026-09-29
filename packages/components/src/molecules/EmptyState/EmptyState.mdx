@@ -3,6 +3,7 @@ import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedC
 import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Card } from "../Card";
+import { DescriptionList } from "../DescriptionList";
 import { Table } from "../Table";
 import * as EmptyStateStories from "./EmptyState.stories";
 import * as EmptyStateMediaStories from "./EmptyStateMedia.stories";
@@ -412,6 +413,18 @@ import { TrayIcon } from "@dbm-design-system/icons";
       </Table.Row>
     </Table.Body>
   </Table>
+</RelatedCard>
+<RelatedCard
+  name="DescriptionList"
+  description="A short list of key/value facts — the other common place an empty state stands in when there's nothing to describe yet"
+  href="/?path=/docs/molecules-data-display-descriptionlist--docs"
+>
+  <DescriptionList size="xs" style={{ width: 140 }}>
+    <DescriptionList.Item>
+      <DescriptionList.Term>Status</DescriptionList.Term>
+      <DescriptionList.Details>Paid</DescriptionList.Details>
+    </DescriptionList.Item>
+  </DescriptionList>
 </RelatedCard>
 <RelatedCard
   name="Button"

@@ -4,8 +4,10 @@ import { expect, within } from "storybook/test";
 import { Card } from "../Card";
 import { Heading } from "../../atoms/Heading";
 import { Icon } from "../../atoms/Icon";
+import type { IconSize } from "../../atoms/Icon";
 import { DescriptionList } from "./DescriptionList";
 import { descriptionListPlaygroundSnippet, descriptionListSnippets } from "./DescriptionList.snippets";
+import type { DescriptionListSize } from "./DescriptionList.types";
 
 // DescriptionList.Term has no icon slot of its own (`children: ReactNode`
 // accepts anything) — a consumer composes one inline. `inline-flex`, not
@@ -27,6 +29,24 @@ const termIconWrapperStyle = {
   display: "inline-flex",
   gap: "var(--dbm-space-1)",
 } as const;
+
+// A term's icon has no built-in coupling to the list's own `size` (there's
+// no icon slot for DescriptionList to own that sizing decision) — found
+// live, checking every size step per 06-engineering-standards.md §9's own
+// "look at it with realistic content at every size" item: a hardcoded
+// icon size left over at the smallest/largest steps, most visibly a "sm"
+// icon reading as undersized next to "xl" text. Scaling the demo's own
+// icon with the control makes the example itself read as deliberately
+// sized at every step, without implying the component does this scaling
+// on the consumer's behalf — it's still the consumer's own icon, sized by
+// hand to fit, same as this mapping does.
+const iconSizeForListSize: Record<DescriptionListSize, IconSize> = {
+  xs: "xs",
+  sm: "xs",
+  md: "sm",
+  lg: "sm",
+  xl: "md",
+};
 
 // Matches Table's/Card's own established "constrain the demo width"
 // convention — an unbounded description list stretched across the full
@@ -238,34 +258,37 @@ export const AlignedTerms: Story = {
 export const IconPrefixedTerm: Story = {
   name: "A term with a leading icon",
   parameters: { docs: { source: { code: descriptionListSnippets.iconPrefixedTerm } } },
-  render: (args) => (
-    <div style={demoContainerStyle}>
-      <DescriptionList {...args}>
-        <DescriptionList.Item>
-          <DescriptionList.Term>
-            <span style={termIconWrapperStyle}>
-              <Icon icon={UserIcon} size="sm" />
-              Customer
-            </span>
-          </DescriptionList.Term>
-          <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
-        </DescriptionList.Item>
-        <DescriptionList.Item>
-          <DescriptionList.Term>Email</DescriptionList.Term>
-          <DescriptionList.Details>jane.cooper@example.com</DescriptionList.Details>
-        </DescriptionList.Item>
-        <DescriptionList.Item>
-          <DescriptionList.Term>
-            <span style={termIconWrapperStyle}>
-              <Icon icon={CheckCircleIcon} size="sm" tone="success" />
-              Status
-            </span>
-          </DescriptionList.Term>
-          <DescriptionList.Details>Paid</DescriptionList.Details>
-        </DescriptionList.Item>
-      </DescriptionList>
-    </div>
-  ),
+  render: (args) => {
+    const iconSize = iconSizeForListSize[(args.size as DescriptionListSize | undefined) ?? "md"];
+    return (
+      <div style={demoContainerStyle}>
+        <DescriptionList {...args}>
+          <DescriptionList.Item>
+            <DescriptionList.Term>
+              <span style={termIconWrapperStyle}>
+                <Icon icon={UserIcon} size={iconSize} />
+                Customer
+              </span>
+            </DescriptionList.Term>
+            <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+          </DescriptionList.Item>
+          <DescriptionList.Item>
+            <DescriptionList.Term>Email</DescriptionList.Term>
+            <DescriptionList.Details>jane.cooper@example.com</DescriptionList.Details>
+          </DescriptionList.Item>
+          <DescriptionList.Item>
+            <DescriptionList.Term>
+              <span style={termIconWrapperStyle}>
+                <Icon icon={CheckCircleIcon} size={iconSize} tone="success" />
+                Status
+              </span>
+            </DescriptionList.Term>
+            <DescriptionList.Details>Paid</DescriptionList.Details>
+          </DescriptionList.Item>
+        </DescriptionList>
+      </div>
+    );
+  },
 };
 
 export const Sizes: Story = {
@@ -648,5 +671,94 @@ export const AlignedTermsChecks: Story = {
     // accessibility tree — both still resolve to a real accessible role.
     await expect(shortTerm.closest("dt")).not.toBeNull();
     await expect(shortDetails.closest("dd")).not.toBeNull();
+  },
+};
+
+// Right-to-left checks — every directional value in this component's own
+// CSS is a logical property (padding-inline, border-block-start, grid's own
+// inline axis), so RTL is expected to "just work" via the browser's native
+// bidi handling with no dir prop of this component's own (unlike a
+// Radix-wrapping component, which needs an explicit dir passed to the
+// primitive) — but per this system's own hard-won rule, that's exactly the
+// kind of assumption that needs a real-browser measurement, not a read of
+// the CSS: `RangeSlider`'s min/max labels came out backwards under this
+// same "logical properties should just handle it" assumption. jsdom lays
+// out no text and can't evaluate `dir` at all, so this only exists as a
+// real-browser story. Hidden (`!dev`).
+export const RightToLeftChecks: Story = {
+  tags: ["!dev"],
+  render: () => (
+    <div dir="rtl" style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      <div data-testid="rtl-horizontal" style={{ inlineSize: "24rem" }}>
+        <DescriptionList>
+          <DescriptionList.Item>
+            <DescriptionList.Term>Customer</DescriptionList.Term>
+            <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+          </DescriptionList.Item>
+        </DescriptionList>
+      </div>
+      <div data-testid="rtl-icon" style={{ inlineSize: "24rem" }}>
+        <DescriptionList>
+          <DescriptionList.Item>
+            <DescriptionList.Term>
+              <span style={termIconWrapperStyle}>
+                <Icon icon={UserIcon} size="sm" />
+                Customer
+              </span>
+            </DescriptionList.Term>
+            <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+          </DescriptionList.Item>
+        </DescriptionList>
+      </div>
+      <div data-testid="rtl-columns" style={{ inlineSize: "36rem" }}>
+        <DescriptionList columns={3}>
+          <DescriptionList.Item>
+            <DescriptionList.Term>A</DescriptionList.Term>
+            <DescriptionList.Details>1</DescriptionList.Details>
+          </DescriptionList.Item>
+          <DescriptionList.Item>
+            <DescriptionList.Term>B</DescriptionList.Term>
+            <DescriptionList.Details>2</DescriptionList.Details>
+          </DescriptionList.Item>
+          <DescriptionList.Item>
+            <DescriptionList.Term>C</DescriptionList.Term>
+            <DescriptionList.Details>3</DescriptionList.Details>
+          </DescriptionList.Item>
+        </DescriptionList>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Horizontal orientation: the term sits on the *end* side (visually the
+    // right, under RTL) and the details on the *start* side (visually the
+    // left) — the mirror of the LTR case, confirming padding-inline/the
+    // grid's own logical inline axis actually flipped, not just that
+    // nothing crashed.
+    const horizontal = canvasElement.querySelector('[data-testid="rtl-horizontal"]') as HTMLElement;
+    const rtlTerm = within(horizontal).getByText("Customer");
+    const rtlDetails = within(horizontal).getByText("Jane Cooper");
+    await expect(rtlTerm.getBoundingClientRect().left).toBeGreaterThan(
+      rtlDetails.getBoundingClientRect().left,
+    );
+
+    // The icon stays on the *start* side of its own term text (immediately
+    // before "Customer" in reading order) — visually to the right of the
+    // text under RTL, not stranded on the opposite side from a hardcoded
+    // physical margin.
+    const iconRow = canvasElement.querySelector('[data-testid="rtl-icon"]') as HTMLElement;
+    const iconEl = iconRow.querySelector("dt svg") as SVGElement;
+    const iconTerm = within(iconRow).getByText("Customer");
+    await expect(iconEl.getBoundingClientRect().left).toBeGreaterThan(
+      iconTerm.getBoundingClientRect().left,
+    );
+
+    // columns={3}: item "A" is the first in reading order, so under RTL it
+    // renders as the *rightmost* of the three columns, not the leftmost.
+    const columnsRow = canvasElement.querySelector('[data-testid="rtl-columns"]') as HTMLElement;
+    const termA = within(columnsRow).getByText("A");
+    const termC = within(columnsRow).getByText("C");
+    await expect(termA.getBoundingClientRect().left).toBeGreaterThan(
+      termC.getBoundingClientRect().left,
+    );
   },
 };
