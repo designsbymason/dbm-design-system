@@ -84,11 +84,13 @@ export interface DescriptionListProps
    * set) keeps each term sized to its own content regardless of this prop.
    * @default true
    */
-  alignedTerms?: boolean;
-  /** Additional CSS classes for the `<dl>` element. */
-  className?: string;
-  /** Inline styles for the `<dl>` element, merged onto the component's own internal styles. */
-  style?: CSSProperties;
+  alignedDetails?: boolean;
+  /** An accessible name for the list, for when there's no visible heading naming it (e.g. a nearby `Card.Header`). */
+  "aria-label"?: string;
+  /** The id of an element that names this list (e.g. a nearby heading), for when there's no visible heading naming it directly above. */
+  "aria-labelledby"?: string;
+  /** The id of an element that describes this list (e.g. a paragraph of context above it). */
+  "aria-describedby"?: string;
   /**
    * Standard DOM id, applied to the `<dl>` element. Rarely needed directly,
    * but required when another element's `aria-labelledby`/`aria-describedby`
@@ -96,6 +98,10 @@ export interface DescriptionListProps
    * anchor.
    */
   id?: string;
+  /** Additional CSS classes for the `<dl>` element. */
+  className?: string;
+  /** Inline styles for the `<dl>` element, merged onto the component's own internal styles. */
+  style?: CSSProperties;
   /**
    * Test identifier for automated testing (e.g. Testing Library's
    * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
@@ -103,12 +109,6 @@ export interface DescriptionListProps
    * effect.
    */
   "data-testid"?: string;
-  /** An accessible name for the list, for when there's no visible heading naming it (e.g. a nearby `Card.Header`). */
-  "aria-label"?: string;
-  /** The id of an element that names this list (e.g. a nearby heading), for when there's no visible heading naming it directly above. */
-  "aria-labelledby"?: string;
-  /** The id of an element that describes this list (e.g. a paragraph of context above it). */
-  "aria-describedby"?: string;
 }
 
 export interface DescriptionListItemProps

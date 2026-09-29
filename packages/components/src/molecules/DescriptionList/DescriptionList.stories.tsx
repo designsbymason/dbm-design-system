@@ -41,9 +41,12 @@ const meta: Meta<typeof DescriptionList> = {
   component: DescriptionList,
   parameters: { layout: "padded" },
   // Ordered to match DescriptionListProps' own declaration order (children,
-  // variant, size, orientation, columns, id/className/style/data-testid,
-  // aria-*) — same sequencing principle as every other component's stories
-  // file (07-storybook-and-documentation-standards.md §4 item 3).
+  // variant, size, orientation, columns, alignedDetails, aria-*,
+  // id/className/style/data-testid) — same sequencing principle as every
+  // other component's stories file (07-storybook-and-documentation-
+  // standards.md §4 item 3), and the same relative order Card's/Table's own
+  // root props use for this exact tail (aria-* before id/className/style/
+  // data-testid).
   argTypes: {
     children: {
       control: false,
@@ -72,17 +75,21 @@ const meta: Meta<typeof DescriptionList> = {
       description: "Lays items out in a grid of this many columns.",
       table: { defaultValue: { summary: "1" } },
     },
-    alignedTerms: {
+    alignedDetails: {
       description: "Sizes every term to the width of the widest one, so every details value starts at the same position.",
       table: { defaultValue: { summary: "true" } },
     },
+    // Never visibly rendered (only exposed to the accessibility tree), so
+    // there's nothing in the canvas for a live control to demonstrate —
+    // the same reasoning Table's/Card's own identical aria-label argType
+    // already uses.
+    "aria-label": { control: false, description: "An accessible name for the list." },
+    "aria-labelledby": { control: false, description: "The id of an element that names this list." },
+    "aria-describedby": { control: false, description: "The id of an element that describes this list." },
     id: { control: false, description: "Standard DOM id, applied to the <dl>." },
     className: { control: false, description: "Additional CSS classes for the <dl>." },
     style: { control: false, description: "Inline styles for the <dl>." },
     "data-testid": { control: false, description: "Test identifier for automated testing." },
-    "aria-label": { control: "text", description: "An accessible name for the list." },
-    "aria-labelledby": { control: false, description: "The id of an element that names this list." },
-    "aria-describedby": { control: false, description: "The id of an element that describes this list." },
   },
   // Every controllable prop gets an explicit value here, matching its real
   // component default — see guidelines/07-storybook-and-documentation-
@@ -92,7 +99,7 @@ const meta: Meta<typeof DescriptionList> = {
     size: "md",
     orientation: "horizontal",
     columns: 1,
-    alignedTerms: true,
+    alignedDetails: true,
   },
   render: (args) => (
     <div style={demoContainerStyle}>
@@ -192,11 +199,11 @@ export const Orientation: Story = {
 
 export const AlignedTerms: Story = {
   name: "Aligned vs. per-item term widths",
-  parameters: { docs: { source: { code: descriptionListSnippets.alignedTerms } } },
-  argTypes: { alignedTerms: { control: false } },
+  parameters: { docs: { source: { code: descriptionListSnippets.alignedDetails } } },
+  argTypes: { alignedDetails: { control: false } },
   render: (args) => (
     <div style={{ ...demoContainerStyle, display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
-      <DescriptionList {...args} alignedTerms>
+      <DescriptionList {...args} alignedDetails>
         <DescriptionList.Item>
           <DescriptionList.Term>Customer</DescriptionList.Term>
           <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
@@ -210,7 +217,7 @@ export const AlignedTerms: Story = {
           <DescriptionList.Details>Paid</DescriptionList.Details>
         </DescriptionList.Item>
       </DescriptionList>
-      <DescriptionList {...args} alignedTerms={false}>
+      <DescriptionList {...args} alignedDetails={false}>
         <DescriptionList.Item>
           <DescriptionList.Term>Customer</DescriptionList.Term>
           <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
@@ -358,11 +365,11 @@ export const ResponsiveLayoutChecks: Story = {
           </DescriptionList.Item>
         </DescriptionList>
       </div>
-      {/* alignedTerms={false}: this story is specifically about the flex-wrap
+      {/* alignedDetails={false}: this story is specifically about the flex-wrap
         degrade, which only applies once alignment's fixed 2-column grid is
-        opted out of (alignedTerms's own default is true). */}
+        opted out of (alignedDetails's own default is true). */}
       <div data-testid="narrow" style={{ inlineSize: "8rem" }}>
-        <DescriptionList alignedTerms={false}>
+        <DescriptionList alignedDetails={false}>
           <DescriptionList.Item>
             <DescriptionList.Term>Shipping address</DescriptionList.Term>
             <DescriptionList.Details>4140 Parker Rd, Allentown</DescriptionList.Details>
@@ -415,7 +422,7 @@ export const ResponsiveLayoutChecks: Story = {
   },
 };
 
-// alignedTerms's own real-browser checks — real term-width alignment (a
+// alignedDetails's own real-browser checks — real term-width alignment (a
 // layout computation jsdom can't evaluate) and confirming `display: contents`
 // doesn't drop anything from the accessibility tree. Hidden (`!dev`).
 export const AlignedTermsChecks: Story = {
@@ -423,7 +430,7 @@ export const AlignedTermsChecks: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
       <div data-testid="aligned" style={{ inlineSize: "24rem" }}>
-        <DescriptionList alignedTerms>
+        <DescriptionList alignedDetails>
           <DescriptionList.Item>
             <DescriptionList.Term>ID</DescriptionList.Term>
             <DescriptionList.Details>1024</DescriptionList.Details>
@@ -435,7 +442,7 @@ export const AlignedTermsChecks: Story = {
         </DescriptionList>
       </div>
       <div data-testid="not-aligned" style={{ inlineSize: "24rem" }}>
-        <DescriptionList alignedTerms={false}>
+        <DescriptionList alignedDetails={false}>
           <DescriptionList.Item>
             <DescriptionList.Term>ID</DescriptionList.Term>
             <DescriptionList.Details>1024</DescriptionList.Details>
@@ -451,7 +458,7 @@ export const AlignedTermsChecks: Story = {
         grows toward it using the container's free space even when no term
         needs it, unlike fit-content(). */}
       <div data-testid="wide-short-terms" style={{ inlineSize: "48rem" }}>
-        <DescriptionList alignedTerms>
+        <DescriptionList alignedDetails>
           <DescriptionList.Item>
             <DescriptionList.Term>Customer</DescriptionList.Term>
             <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
@@ -478,7 +485,7 @@ export const AlignedTermsChecks: Story = {
         fixes it — flex children never wrap between each other the way
         inline text-flow content can. */}
       <div data-testid="narrow-icon-term" style={{ inlineSize: "13rem" }}>
-        <DescriptionList alignedTerms>
+        <DescriptionList alignedDetails>
           <DescriptionList.Item>
             <DescriptionList.Term>
               <span style={termIconWrapperStyle}>
@@ -499,7 +506,7 @@ export const AlignedTermsChecks: Story = {
         "Customer" and the divider below "Email" a few pixels higher on the
         term side than the details side. */}
       <div data-testid="icon-row-alignment" style={{ inlineSize: "24rem" }}>
-        <DescriptionList alignedTerms>
+        <DescriptionList alignedDetails>
           <DescriptionList.Item>
             <DescriptionList.Term>
               <span style={termIconWrapperStyle}>
@@ -538,7 +545,7 @@ export const AlignedTermsChecks: Story = {
     // Regression guard: the term's own box must reach exactly where the
     // details' box begins — zero true gap between them (the visual space
     // between the *text* lives inside the term's own trailing padding, not
-    // a grid column-gap; see `.alignedTerms`'s own CSS comment for why a
+    // a grid column-gap; see `.alignedDetails`'s own CSS comment for why a
     // real gap breaks the divider into two segments). Found live twice: a
     // leftover flex-mode `max-inline-size: 40%` first shrank the term to a
     // fraction of its track (a ~90px gap), and even once that was fixed a

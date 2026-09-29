@@ -107,16 +107,16 @@
    why). `:not(:first-child)` rather than "every item but the last" means no
    knowledge of where the list ends is needed, and nothing doubles against
    the outer border. Moot once `.itemContents` applies (a `display: contents`
-   element renders no border of its own) — the `.dividers.alignedTerms`
+   element renders no border of its own) — the `.dividers.alignedDetails`
    rule below draws the equivalent divider on the term/details themselves. */
 .dividers > .item:not(:first-child) {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
 
-/* `alignedTerms` (default on): every term joins one shared grid column
+/* `alignedDetails` (default on): every term joins one shared grid column
    instead of sizing to its own content, so every details value starts at
    the same position. Only reachable while the list is a genuine single
-   column (`DescriptionListProps.alignedTerms`'s own doc explains why) — the
+   column (`DescriptionListProps.alignedDetails`'s own doc explains why) — the
    item itself becomes `display: contents` (`.itemContents` below) so its
    `<dt>`/`<dd>` become direct grid children of `.root` here, sharing one
    real 2-column grid the browser sizes from every row's own widest term,
@@ -147,7 +147,7 @@
    this feature) — moving the same space into padding keeps the identical
    visual gap between the *text*, while the *boxes* (and therefore their
    borders) now touch, reading as one unbroken line. */
-.alignedTerms {
+.alignedDetails {
   align-items: stretch;
   column-gap: 0;
   grid-template-columns: fit-content(40%) minmax(0, 1fr);
@@ -170,8 +170,8 @@
    now-possibly-taller box is `.term`'s/`.details`' own `display: flex;
    align-items: center` (below) — a separate concern from the row-stretch
    above, and the reason both are needed together, not just one. */
-.alignedTerms .term,
-.alignedTerms .details {
+.alignedDetails .term,
+.alignedDetails .details {
   align-items: center;
   display: flex;
 }
@@ -179,7 +179,7 @@
 /* The item contributes no box once it's `display: contents` — the
    between-item divider (and its own vertical rhythm) moves onto its own
    `<dt>`/`<dd>` instead, both getting the top border so the line reads as
-   one continuous rule across the row (with `.alignedTerms`'s own
+   one continuous rule across the row (with `.alignedDetails`'s own
    `column-gap: 0` above, the two segments touch and read as unbroken, and
    `align-items: stretch` above, both segments sit at the same height even
    when the row's two cells have different natural content heights).
@@ -187,8 +187,8 @@
    first" here: `display: contents` removes an element from the box tree,
    not from the DOM, so its position among `.root`'s real children (and
    therefore this selector) is unaffected. */
-.dividers.alignedTerms > .item:not(:first-child) > .term,
-.dividers.alignedTerms > .item:not(:first-child) > .details {
+.dividers.alignedDetails > .item:not(:first-child) > .term,
+.dividers.alignedDetails > .item:not(:first-child) > .details {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
 }
 
@@ -217,7 +217,7 @@
   min-inline-size: 0;
 }
 
-/* In aligned mode the grid track itself (`.alignedTerms`, above) is what
+/* In aligned mode the grid track itself (`.alignedDetails`, above) is what
    caps how wide the term column may grow — `.orientationHorizontal >
    .term`'s own `max-inline-size: 40%` above is a leftover from the flex
    layout, and `.term` still carries that class in aligned mode too
@@ -230,7 +230,7 @@
    segments (found live, both from a single screenshot). Reset it and
    stretch the term to its track's full width instead, so its divider
    border reaches the column's own edge. */
-.root.alignedTerms .term {
+.root.alignedDetails .term {
   inline-size: 100%;
   max-inline-size: none;
 }
@@ -310,60 +310,60 @@
   font-size: var(--dbm-font-size-lg);
 }
 
-/* `alignedTerms`' own padding: the same block value as the matching
+/* `alignedDetails`' own padding: the same block value as the matching
    `.itemSize*` step above. The term carries the list's own inline-start
    edge *and* a fixed `space.4` trailing edge — the same fixed gap
-   `.item`'s own `column-gap` used before `alignedTerms` existed, now living
+   `.item`'s own `column-gap` used before `alignedDetails` existed, now living
    inside the term's own box (not a real grid gap) so its border reaches
-   the details' border with nothing undrawn in between (`.alignedTerms`'s
+   the details' border with nothing undrawn in between (`.alignedDetails`'s
    own doc, above, explains why). The details carries only the list's
    inline-end edge, unchanged. */
-.alignedTerms .termSizeXs {
+.alignedDetails .termSizeXs {
   padding-block: var(--dbm-space-1);
   padding-inline: var(--dbm-space-2) var(--dbm-space-4);
 }
 
-.alignedTerms .detailsSizeXs {
+.alignedDetails .detailsSizeXs {
   padding-block: var(--dbm-space-1);
   padding-inline: 0 var(--dbm-space-2);
 }
 
-.alignedTerms .termSizeSm {
+.alignedDetails .termSizeSm {
   padding-block: var(--dbm-space-2);
   padding-inline: var(--dbm-space-3) var(--dbm-space-4);
 }
 
-.alignedTerms .detailsSizeSm {
+.alignedDetails .detailsSizeSm {
   padding-block: var(--dbm-space-2);
   padding-inline: 0 var(--dbm-space-3);
 }
 
-.alignedTerms .termSizeMd {
+.alignedDetails .termSizeMd {
   padding-block: var(--dbm-space-3);
   padding-inline: var(--dbm-space-4) var(--dbm-space-4);
 }
 
-.alignedTerms .detailsSizeMd {
+.alignedDetails .detailsSizeMd {
   padding-block: var(--dbm-space-3);
   padding-inline: 0 var(--dbm-space-4);
 }
 
-.alignedTerms .termSizeLg {
+.alignedDetails .termSizeLg {
   padding-block: var(--dbm-space-4);
   padding-inline: var(--dbm-space-5) var(--dbm-space-4);
 }
 
-.alignedTerms .detailsSizeLg {
+.alignedDetails .detailsSizeLg {
   padding-block: var(--dbm-space-4);
   padding-inline: 0 var(--dbm-space-5);
 }
 
-.alignedTerms .termSizeXl {
+.alignedDetails .termSizeXl {
   padding-block: var(--dbm-space-5);
   padding-inline: var(--dbm-space-6) var(--dbm-space-4);
 }
 
-.alignedTerms .detailsSizeXl {
+.alignedDetails .detailsSizeXl {
   padding-block: var(--dbm-space-5);
   padding-inline: 0 var(--dbm-space-6);
 }

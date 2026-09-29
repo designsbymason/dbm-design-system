@@ -43,7 +43,7 @@ describe("DescriptionList", () => {
     expect(term).toHaveClass(styles.termSizeMd as string);
     expect(details).toHaveClass(styles.detailsSizeMd as string);
     expect(item).toHaveClass(styles.itemSizeMd as string);
-    expect(dl).toHaveClass(styles.alignedTerms as string);
+    expect(dl).toHaveClass(styles.alignedDetails as string);
     expect(item).toHaveClass(styles.itemContents as string);
   });
 
@@ -77,7 +77,7 @@ describe("DescriptionList", () => {
     expect(dl).not.toHaveClass(styles.dividers as string);
   });
 
-  it("drops alignedTerms once columns is more than 1, even though the prop defaults to true", () => {
+  it("drops alignedDetails once columns is more than 1, even though the prop defaults to true", () => {
     render(
       <DescriptionList columns={2}>
         <DescriptionList.Item>
@@ -88,11 +88,11 @@ describe("DescriptionList", () => {
     );
     const dl = screen.getByText("Customer").closest("dl") as HTMLElement;
     const item = screen.getByText("Customer").closest("div") as HTMLElement;
-    expect(dl).not.toHaveClass(styles.alignedTerms as string);
+    expect(dl).not.toHaveClass(styles.alignedDetails as string);
     expect(item).not.toHaveClass(styles.itemContents as string);
   });
 
-  it("drops alignedTerms for orientation vertical, even at the default columns of 1", () => {
+  it("drops alignedDetails for orientation vertical, even at the default columns of 1", () => {
     render(
       <DescriptionList orientation="vertical">
         <DescriptionList.Item>
@@ -103,13 +103,13 @@ describe("DescriptionList", () => {
     );
     const dl = screen.getByText("Customer").closest("dl") as HTMLElement;
     const item = screen.getByText("Customer").closest("div") as HTMLElement;
-    expect(dl).not.toHaveClass(styles.alignedTerms as string);
+    expect(dl).not.toHaveClass(styles.alignedDetails as string);
     expect(item).not.toHaveClass(styles.itemContents as string);
   });
 
-  it("lets alignedTerms={false} opt back into the original per-item term width", () => {
+  it("lets alignedDetails={false} opt back into the original per-item term width", () => {
     render(
-      <DescriptionList alignedTerms={false}>
+      <DescriptionList alignedDetails={false}>
         <DescriptionList.Item>
           <DescriptionList.Term>Customer</DescriptionList.Term>
           <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
@@ -118,19 +118,19 @@ describe("DescriptionList", () => {
     );
     const dl = screen.getByText("Customer").closest("dl") as HTMLElement;
     const item = screen.getByText("Customer").closest("div") as HTMLElement;
-    expect(dl).not.toHaveClass(styles.alignedTerms as string);
+    expect(dl).not.toHaveClass(styles.alignedDetails as string);
     expect(item).not.toHaveClass(styles.itemContents as string);
-    // The divider still applies — alignedTerms and dividers are independent.
+    // The divider still applies — alignedDetails and dividers are independent.
     expect(dl).toHaveClass(styles.dividers as string);
   });
 
-  it("draws the between-item divider on the term/details themselves once alignedTerms makes the item display: contents", () => {
+  it("draws the between-item divider on the term/details themselves once alignedDetails makes the item display: contents", () => {
     render(<BasicList />);
     const secondTerm = screen.getByText("Status");
     const secondDetails = screen.getByText("Paid");
     expect(secondTerm).toHaveClass(styles.term as string);
     expect(secondDetails).toHaveClass(styles.details as string);
-    // The CSS divider rule is `.dividers.alignedTerms > .item:not(:first-child) > .term`,
+    // The CSS divider rule is `.dividers.alignedDetails > .item:not(:first-child) > .term`,
     // which only requires the term/details to be a second-or-later Item's direct children —
     // confirmed structurally here (jsdom can't evaluate the border itself, an actual
     // painted style, so this is the real-browser story's job; see

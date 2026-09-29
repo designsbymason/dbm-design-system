@@ -32,10 +32,10 @@ export const descriptionListSnippets = {
   </DescriptionList.Item>
 </DescriptionList>`,
 
-  alignedTerms: `{/* alignedTerms (default true) sizes every term to the widest one, so every
+  alignedDetails: `{/* alignedDetails (default true) sizes every term to the widest one, so every
     details value starts at the same position. Set false for each term to hug
     its own content instead. */}
-<DescriptionList alignedTerms>
+<DescriptionList alignedDetails>
   <DescriptionList.Item>
     <DescriptionList.Term>Customer</DescriptionList.Term>
     <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
@@ -46,7 +46,7 @@ export const descriptionListSnippets = {
   </DescriptionList.Item>
 </DescriptionList>
 
-<DescriptionList alignedTerms={false}>
+<DescriptionList alignedDetails={false}>
   <DescriptionList.Item>
     <DescriptionList.Term>Customer</DescriptionList.Term>
     <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
@@ -141,7 +141,7 @@ export interface DescriptionListPlaygroundSnippetArgs {
   size?: string;
   orientation?: string;
   columns?: number;
-  alignedTerms?: boolean;
+  alignedDetails?: boolean;
 }
 
 /**
@@ -156,7 +156,7 @@ export function descriptionListPlaygroundSnippet(args: DescriptionListPlayground
     attributes.push(`orientation="${args.orientation}"`);
   }
   if (args.columns && args.columns !== 1) attributes.push(`columns={${args.columns}}`);
-  if (args.alignedTerms === false) attributes.push("alignedTerms={false}");
+  if (args.alignedDetails === false) attributes.push("alignedDetails={false}");
   const opening = attributes.length > 0 ? `<DescriptionList ${attributes.join(" ")}>` : "<DescriptionList>";
   return `${opening}
   <DescriptionList.Item>

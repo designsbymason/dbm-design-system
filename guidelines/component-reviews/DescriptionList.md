@@ -2,6 +2,8 @@
 
 Molecule, Data Display. Build session: 2026-09-27. Not yet Finalized — awaiting the user's review/declaration; a full `06-engineering-standards.md` §9 pass has not been completed (this entry records the initial build, including one real defect found and fixed during the build itself).
 
+**Renamed `alignedTerms` → `alignedDetails`, 2026-09-28, at the user's request — pure identifier rename, no logic change.** The prop's own mechanism sizes every `Term` to a shared width, but what a reader actually perceives and cares about is that every `Details` value lands at the same starting position — `Term`s are already always left-aligned at their own start regardless of the prop, so "aligned" more accurately describes what happens to `Details`. Renamed throughout: the prop itself, its JSDoc, the CSS class, the internal derived variable/context field (`alignTerms` → `alignDetails`, for internal consistency — not itself part of the request, but the same category of change), every story/snippet/test/doc reference. This document uses `alignedDetails` throughout, including in entries describing work done before the rename (a same-day, pre-release rename on an unshipped component — not worth preserving "as it was called at the time" for every mention).
+
 ## What it is
 
 A compact key/value display block: real `<dl>` semantics. `DescriptionList` is the `<dl>`; `DescriptionList.Item` wraps one `DescriptionList.Term` (`<dt>`)/`DescriptionList.Details` (`<dd>`) pair in its own `<div>` (an HTML5-valid grouping). `variant` (`bordered`/`ghost`, mirroring `Table`'s exact vocabulary), `size` (the shared 5-step scale), `orientation` (`horizontal`/`vertical` — horizontal wraps the details below the term via plain CSS `flex-wrap` once the item's own container narrows too far, with no breakpoint configuration needed), and `columns` (`Responsive<number>`, a CSS Grid of items with `DescriptionList.Item`'s own `span` as an escape hatch for a wide value).
@@ -32,11 +34,11 @@ A compact key/value display block: real `<dl>` semantics. `DescriptionList` is t
 - One MDX authoring bug caught and fixed the same way `07-storybook-and-documentation-standards.md` already documents: backslash-escaped quotes inside a `<TokenRow usage="...">` attribute (`size=\"xs\"`) broke the whole MDX parse — switched to single quotes (`size='xs'`) per the established convention.
 - Multi-column responsive collapse verified live at a real 320px and ~1100px iframe width (not just reasoned about) — this is what caught the span-clamping defect above.
 
-## Feature added post-build: `alignedTerms` (2026-09-28, at the user's request)
+## Feature added post-build: `alignedDetails` (2026-09-28, at the user's request)
 
 An optional boolean, **default `true`**, that sizes every term in the list to the width of the widest
 one, so every details value starts at the same position — a real aligned label column, not several
-independently-sized terms. Named `alignedTerms` rather than the user's own suggestion
+independently-sized terms. Named `alignedDetails` rather than the user's own suggestion
 (`equalWidthTerms`) to match this codebase's established adjective-form boolean convention (`striped`,
 `hoverable`, `divided`, `stacked`, `colorful`), offered as a recommendation and adopted.
 
@@ -48,36 +50,36 @@ children of the list. That would normally conflict with `Item`'s own `span` (a `
 element has no box to apply `grid-column: span N` to) — resolved by noticing `span` already only has
 an effect once `columns` is greater than `1`, and **term alignment only has one unambiguous shape at
 the default `columns={1}`** (the same reasoning already used for the between-item divider) — so
-`alignedTerms` is scoped to exactly that case (`orientation="horizontal"` and a genuine single column)
+`alignedDetails` is scoped to exactly that case (`orientation="horizontal"` and a genuine single column)
 and the conflict with `span` never actually arises. Past `columns={1}`, or under `orientation="vertical"`
 (no side-by-side term/details relationship to align in the first place), the prop has no effect and
 each term still hugs its own content — documented plainly in the prop's own JSDoc and the MDX Usage
 guidelines, not a silent gap.
 
-**Implementation:** `.root.alignedTerms` becomes a fixed 2-column grid (`minmax(auto, 40%) minmax(0,
+**Implementation:** `.root.alignedDetails` becomes a fixed 2-column grid (`minmax(auto, 40%) minmax(0,
 1fr)`); `.item` gets `display: contents` (`.itemContents`) so its `<dt>`/`<dd>` auto-flow directly into
 that grid, one term/details pair per row — the browser's own grid track-sizing algorithm does the
 actual alignment (sizing column 1 to the widest term across every row), no JS measurement involved.
 Padding moved from the (now boxless) item onto the term/details themselves, split inline-start/
 inline-end so the two together match the original visual padding, with the grid's own `column-gap`
 providing the space between them. The between-item divider moved from `.item` (invisible once it has
-no box) onto the term/details directly (`.dividers.alignedTerms > .item:not(:first-child) > .term/
+no box) onto the term/details directly (`.dividers.alignedDetails > .item:not(:first-child) > .term/
 .details`), using the same `:not(:first-child)` technique as before — still correct, since `display:
 contents` removes an element from the box tree, not the DOM, so its position among the real children
 is unaffected.
 
 **Verified, not assumed:**
 - A dedicated hidden real-browser story (`AlignedTermsChecks`) measures actual rendered widths —
-  confirms a short and a long term really do share one width when `alignedTerms` is on, that the
+  confirms a short and a long term really do share one width when `alignedDetails` is on, that the
   resulting details values start at the same inline position, that the opt-out (`false`) genuinely
   gives each term its own narrower/wider box, and that the term/details still resolve to real `<dt>`/
   `<dd>` elements (not dropped from the accessibility tree by `display: contents`).
 - The pre-existing `ResponsiveLayoutChecks` story's "narrow container wraps the details below the
-  term" case had to be given an explicit `alignedTerms={false}` — it was specifically testing the
+  term" case had to be given an explicit `alignedDetails={false}` — it was specifically testing the
   flex-wrap degrade, which the new default would otherwise have silently swapped out from under it.
   Caught by re-running the story, not assumed safe.
 - jest-axe: zero violations in the Storybook Accessibility panel, both light and dark, for the default
-  (`alignedTerms` on) case.
+  (`alignedDetails` on) case.
 - Added 4 new unit tests (scoping to `columns===1`/`orientation==="horizontal"`, the `false` opt-out,
   the divider-moves-to-term/details behavior) — 20 total, all passing. Ran the real-browser
   `@storybook/addon-vitest` Chromium project against this component's stories directly
@@ -86,14 +88,14 @@ is unaffected.
   addon-vitest run" item that was previously left outstanding below.
 - Full package regression: `tsc --noEmit` clean, `eslint --max-warnings 0` clean, `storySnippets.test.ts`
   clean, full `vitest run --project unit` — 91 files / 4628 tests, all passing.
-- Docs page re-verified live (Playground toggle, generated "Show code" reflecting `alignedTerms={false}`,
+- Docs page re-verified live (Playground toggle, generated "Show code" reflecting `alignedDetails={false}`,
   Properties table default, new gallery story) in Purple/Light and Purple/Dark.
 
-## Real defect found in `alignedTerms`, fixed the same session (user-reported, with a screenshot)
+## Real defect found in `alignedDetails`, fixed the same session (user-reported, with a screenshot)
 
 **A leftover flex-layout rule still matched in the new grid layout, resolving against the wrong reference box.** `.orientationHorizontal > .term { max-inline-size: 40%; }` was written for the original per-item flex layout, where `.term` is a flex child of `.item` and `40%` resolves against the item's own width. `.term` still carries the `orientationHorizontal` class in aligned mode, but its actual layout context there is `.root`'s grid — so the same `40%` instead resolved against the *grid track's* own width (which had already auto-sized to the term's content), capping the term to 40% of its own already-tight column. Confirmed live via `getBoundingClientRect`: a 126.8px track held a 50.7px term (exactly 40% of the track), opening a ~92px gap before the details and splitting the between-item divider into two visibly disconnected segments — both symptoms the user reported from a single screenshot, plus the term column itself reading as far narrower than its own visual column.
 
-**Fix:** `.root.alignedTerms .term { inline-size: 100%; max-inline-size: none; }` — the grid track's own `minmax(auto, 40%)` (on `.alignedTerms` already) is the correct, sufficient place for that 40% cap (bounding the *column*, not the individual term box); resetting removes the stale, wrongly-scoped duplicate and lets the term stretch to fill its real track, so its divider border reaches the column's own edge. Verified via `getBoundingClientRect` before/after (term width now equals its track's full width) and visually in both light and dark mode. A regression-guard assertion was added to the hidden `AlignedTermsChecks` story (`gap < 24px`, generous headroom over the real `space-4`/16px column-gap) so this exact class of bug fails loudly if it recurs.
+**Fix:** `.root.alignedDetails .term { inline-size: 100%; max-inline-size: none; }` — the grid track's own `minmax(auto, 40%)` (on `.alignedDetails` already) is the correct, sufficient place for that 40% cap (bounding the *column*, not the individual term box); resetting removes the stale, wrongly-scoped duplicate and lets the term stretch to fill its real track, so its divider border reaches the column's own edge. Verified via `getBoundingClientRect` before/after (term width now equals its track's full width) and visually in both light and dark mode. A regression-guard assertion was added to the hidden `AlignedTermsChecks` story (`gap < 24px`, generous headroom over the real `space-4`/16px column-gap) so this exact class of bug fails loudly if it recurs.
 
 **This first fix was incomplete — the user re-reported the same symptoms with a second screenshot,** and pushed back specifically on the "small known gap" framing above and the CSS Grid approach generally ("Maybe grid approach is not the best method... do it properly and carefully"). Re-investigating rather than defending the first fix found the actual, different root cause:
 
@@ -146,9 +148,18 @@ three were corrected together, not just the story).
 
 The icon-prefixed-term example (above) shipped with `align-items: baseline` on the shared grid (inherited from the original, icon-free design). An icon-prefixed term's line is genuinely taller than a plain-text details line, and `baseline` positions each cell by its own text baseline rather than its box — so `Jane Cooper` (no icon) sat visibly off-center against the taller `Customer` term, and — the same underlying cause, a second symptom — the divider border below `Email` (drawn separately on the term's box and the details' box) landed a few pixels higher on the term side than the details side, since the two boxes no longer shared a common top edge once their natural heights diverged.
 
-**Fix:** `align-items: stretch` on `.alignedTerms` (replacing `baseline`) — both `.term`'s and `.details`' own boxes now always span the row's full height, whichever side's content happens to be taller, which is what actually fixes the divider (both sides' borders are drawn at the same, shared row-top edge, unconditionally). Centering the *content* within that now-possibly-taller box is a separate, additional rule: `.alignedTerms .term`/`.details` are now `display: flex; align-items: center`, so a short plain-text line (or an icon+text run) centers vertically within whatever height the row ends up being.
+**Fix:** `align-items: stretch` on `.alignedDetails` (replacing `baseline`) — both `.term`'s and `.details`' own boxes now always span the row's full height, whichever side's content happens to be taller, which is what actually fixes the divider (both sides' borders are drawn at the same, shared row-top edge, unconditionally). Centering the *content* within that now-possibly-taller box is a separate, additional rule: `.alignedDetails .term`/`.details` are now `display: flex; align-items: center`, so a short plain-text line (or an icon+text run) centers vertically within whatever height the row ends up being.
 
 **Verified with exact-match assertions, not just "close enough":** measured live that the term's and details' *boxes* land at identical top/bottom (`toBe`, not `toBeCloseTo`) for a row with a genuinely taller icon-prefixed term next to a plain-text details value, and that the icon's own center, the term text's center, and the details text's center all land at the same Y position (within 2px). Re-verified the "Aligned vs. per-item term widths" gallery (multi-line wrapped term next to a longer wrapped details value) — stretch+center reads as an improvement there too, centering the shorter wrapped term against the full height of the taller wrapped value rather than pinning both to the same top baseline. Checked in Purple/Light and Purple/Dark; full suite (typecheck, lint, unit, real-browser Chromium) re-verified clean.
+
+## Storybook Controls panel: inert `aria-label` control and prop order, both user-reported
+
+Two related Storybook-hygiene defects, both against the established, already-Finalized-component convention this project checks for explicitly (`06-engineering-standards.md` §9's own Storybook checklist items) rather than anything specific to `DescriptionList`:
+
+1. **`aria-label` showed as an inert "Set string" placeholder in the Controls panel** — it had `control: "text"` but no explicit value in the Playground's own `args`, and an arg left `undefined` renders as a non-interactive placeholder button rather than a live control (the documented failure mode `07-storybook-and-documentation-standards.md` §5 already names). Rather than inventing a default value, checked how `Table`/`Card` — both already-Finalized components with the identical "accessible-name override, never visibly rendered" `aria-label` prop — handle this: both set `control: false` outright, since there's nothing in the canvas for a live edit to demonstrate. Matched that precedent exactly, and added `aria-label` to the `PlaygroundControls` `exclude` list alongside `aria-labelledby`/`aria-describedby` (which were already excluded).
+2. **Prop order put `id`/`className`/`style`/`data-testid` before the `aria-*` props**, the reverse of every other already-Finalized component checked (`Table`, `Card`, `Alert`, `Breadcrumb`, `AvatarGroup` all order `aria-label, aria-labelledby, aria-describedby, id, className, style, data-testid`). Fixed in three places, not just the visible one: the `DescriptionListProps` interface's own field declaration order in `DescriptionList.types.ts` (confirmed via `Card.types.ts` that the already-Finalized components' *interfaces*, not just their `propOrder` arrays, follow this same order), `DescriptionList.stories.tsx`'s `argTypes`, and the MDX `propOrder` array.
+
+**The interface reorder needed a Storybook dev-server restart to actually take effect** — confirmed live: the native per-story Controls tab still showed the old order after saving the file (Vite HMR doesn't invalidate react-docgen's own cache for a changed type file, the exact gotcha `07-storybook-and-documentation-standards.md` already documents from `Tabs`' own review). Restarted the server and re-verified both the native Controls tab and the Docs page's `PropertiesTable`/`PlaygroundControls` show the corrected order and the corrected `aria-label` control. Full suite re-verified clean: typecheck, lint, unit tests (4629), docs token-drift guard, story-snippets guard, and the real-browser Chromium suite (10/10).
 
 ## Not yet done
 
@@ -156,7 +167,7 @@ The icon-prefixed-term example (above) shipped with `align-items: baseline` on t
 drift guard, `CodeBlock`/`Stat`'s own pattern — all 19 stylesheet tokens confirmed listed);
 `04-component-inventory.md`'s molecule build-order list and
 `07-storybook-and-documentation-standards.md` §6's status table updated to record the build; and (in
-this same session, adding `alignedTerms`) a real run of the `@storybook/addon-vitest` Chromium project
+this same session, adding `alignedDetails`) a real run of the `@storybook/addon-vitest` Chromium project
 against this component specifically. Committed and pushed (`5525979`).
 
 **Still outstanding:**

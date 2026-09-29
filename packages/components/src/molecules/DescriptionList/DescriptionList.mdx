@@ -14,14 +14,14 @@ export const propOrder = [
   "size",
   "orientation",
   "columns",
-  "alignedTerms",
+  "alignedDetails",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
   "id",
   "className",
   "style",
   "data-testid",
-  "aria-label",
-  "aria-labelledby",
-  "aria-describedby",
 ];
 
 <Meta of={DescriptionListStories} />
@@ -52,7 +52,7 @@ import { DescriptionList } from "@dbm-design-system/components";
 </div>
 <PlaygroundControls
   of={DescriptionListStories.Playground}
-  exclude={["children", "id", "className", "style", "data-testid", "aria-labelledby", "aria-describedby"]}
+  exclude={["children", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]}
   order={propOrder}
 />
 
@@ -107,7 +107,7 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
   one long vertical list for that shape of data.
 - Give a wide value (notes, a long address, anything one column can't comfortably hold) its own
   `DescriptionList.Item` with `span` set to the full column count, rather than truncating it.
-- Leave `alignedTerms` at its default of `true` for most single-column lists — a real aligned label
+- Leave `alignedDetails` at its default of `true` for most single-column lists — a real aligned label
   column reads as more deliberate and premium than several independently-sized terms, and costs
   nothing to opt into.
 
@@ -115,7 +115,7 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 <Callout tone="danger" title="Don't">
 
 - Don't reach for `columns` greater than `1` and expect the automatic between-item divider, or
-  `alignedTerms` — a wrapping multi-column grid drops both (see `columns`'s own prop doc for why);
+  `alignedDetails` — a wrapping multi-column grid drops both (see `columns`'s own prop doc for why);
   give the list its own visual separation instead (`variant="bordered"`, or embed it in a `Card`).
 - Don't use `DescriptionList` for anything the reader needs to edit — it renders plain text, with no
   input, validation, or focus handling. Use `Form`/`FormField` for an editable set of fields instead.
@@ -137,7 +137,7 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 - A list this small rarely needs `Table`'s sorting, striping, or scroll handling — reach for
   `DescriptionList` first for a details panel, and only move to `Table` once the data genuinely grows
   into many uniform rows.
-- Set `alignedTerms={false}` when a list's terms are so mismatched in length (one word next to a full
+- Set `alignedDetails={false}` when a list's terms are so mismatched in length (one word next to a full
   sentence) that a shared column would leave a lot of empty space next to the short ones — letting each
   term hug its own content instead can read cleaner for that specific shape of data.
 - `DescriptionList.Term` isn't limited to plain text — it composes an icon, a `Tooltip` trigger, or
@@ -161,10 +161,10 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
   a visible heading right above it (e.g. inside a `Card` with its own `Card.Header`, the heading
   already serves that purpose and neither is needed).
 - The details' wrap-below-the-term response to a narrow container (`orientation="horizontal"`,
-  `alignedTerms={false}`) is pure CSS `flex-wrap` — verified in a real browser, since layout wrapping
+  `alignedDetails={false}`) is pure CSS `flex-wrap` — verified in a real browser, since layout wrapping
   isn't something a jsdom test can evaluate; see `DescriptionList.stories.tsx`'s hidden
   `ResponsiveLayoutChecks` story.
-- `alignedTerms` (the default) makes each `DescriptionList.Item` `display: contents`, so its
+- `alignedDetails` (the default) makes each `DescriptionList.Item` `display: contents`, so its
   `<dt>`/`<dd>` join the list's own grid directly — this changes nothing in the accessibility tree
   (the term/details are still real `<dt>`/`<dd>` elements, just no longer boxed by their own `<div>`),
   confirmed live rather than assumed; see the hidden `AlignedTermsChecks` story.
@@ -174,7 +174,7 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 ## Code examples
 
 ```tsx
-{/* alignedTerms defaults to true — both terms already share one aligned column */}
+{/* alignedDetails defaults to true — both terms already share one aligned column */}
 <DescriptionList>
   <DescriptionList.Item>
     <DescriptionList.Term>Customer</DescriptionList.Term>
@@ -187,7 +187,7 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 </DescriptionList>
 
 {/* Mismatched term lengths — opt out so each hugs its own content */}
-<DescriptionList alignedTerms={false}>
+<DescriptionList alignedDetails={false}>
   <DescriptionList.Item>
     <DescriptionList.Term>ID</DescriptionList.Term>
     <DescriptionList.Details>1024</DescriptionList.Details>
