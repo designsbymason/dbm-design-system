@@ -57,6 +57,21 @@ export const descriptionListSnippets = {
   </DescriptionList.Item>
 </DescriptionList>`,
 
+  iconPrefixedTerm: `{/* DescriptionList.Term takes any content, not just text — compose an icon
+    the same way you would anywhere else, wrapped with its label in a small
+    inline-flex span. Wrapping matters: without it, a browser can still break a
+    line between the icon and its word once the term column narrows, even with
+    no whitespace between them — an inline-flex span keeps them one atomic unit. */}
+<DescriptionList.Item>
+  <DescriptionList.Term>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--dbm-space-1)" }}>
+      <Icon icon={UserIcon} size="sm" />
+      Customer
+    </span>
+  </DescriptionList.Term>
+  <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+</DescriptionList.Item>`,
+
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <DescriptionList size="sm">
   <DescriptionList.Item>

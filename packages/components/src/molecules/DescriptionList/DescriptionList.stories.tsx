@@ -1,9 +1,32 @@
+import { CheckCircleIcon, UserIcon } from "@dbm-design-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 import { Card } from "../Card";
 import { Heading } from "../../atoms/Heading";
+import { Icon } from "../../atoms/Icon";
 import { DescriptionList } from "./DescriptionList";
 import { descriptionListPlaygroundSnippet, descriptionListSnippets } from "./DescriptionList.snippets";
+
+// DescriptionList.Term has no icon slot of its own (`children: ReactNode`
+// accepts anything) — a consumer composes one inline. `inline-flex`, not
+// Link's own plain-inline-SVG-plus-`vertical-align` technique: found live,
+// user-reported — Chromium allows a line-break immediately after an atomic
+// inline-level box (an SVG) even with *zero* literal whitespace next to it
+// (confirmed directly: the icon and "Customer" had no whitespace text node
+// between them in the rendered DOM and it still wrapped, the icon landing
+// alone on its own line, once the term column narrowed enough). Link's own
+// icon never hits this because it trails the text rather than sitting
+// between the text and a hard column-width cap the way a term's does.
+// `inline-flex` sidesteps it entirely: flex children never wrap between
+// each other the way inline text-flow content can, so the icon and word
+// stay one atomic unit regardless of how narrow the term column gets —
+// verified live (dt height back to a single line, full icon+text width
+// accommodated) before adopting this over the vertical-align approach.
+const termIconWrapperStyle = {
+  alignItems: "center",
+  display: "inline-flex",
+  gap: "var(--dbm-space-1)",
+} as const;
 
 // Matches Table's/Card's own established "constrain the demo width"
 // convention — an unbounded description list stretched across the full
@@ -198,6 +221,39 @@ export const AlignedTerms: Story = {
         </DescriptionList.Item>
         <DescriptionList.Item>
           <DescriptionList.Term>Status</DescriptionList.Term>
+          <DescriptionList.Details>Paid</DescriptionList.Details>
+        </DescriptionList.Item>
+      </DescriptionList>
+    </div>
+  ),
+};
+
+export const IconPrefixedTerm: Story = {
+  name: "A term with a leading icon",
+  parameters: { docs: { source: { code: descriptionListSnippets.iconPrefixedTerm } } },
+  render: (args) => (
+    <div style={demoContainerStyle}>
+      <DescriptionList {...args}>
+        <DescriptionList.Item>
+          <DescriptionList.Term>
+            <span style={termIconWrapperStyle}>
+              <Icon icon={UserIcon} size="sm" />
+              Customer
+            </span>
+          </DescriptionList.Term>
+          <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+        </DescriptionList.Item>
+        <DescriptionList.Item>
+          <DescriptionList.Term>Email</DescriptionList.Term>
+          <DescriptionList.Details>jane.cooper@example.com</DescriptionList.Details>
+        </DescriptionList.Item>
+        <DescriptionList.Item>
+          <DescriptionList.Term>
+            <span style={termIconWrapperStyle}>
+              <Icon icon={CheckCircleIcon} size="sm" tone="success" />
+              Status
+            </span>
+          </DescriptionList.Term>
           <DescriptionList.Details>Paid</DescriptionList.Details>
         </DescriptionList.Item>
       </DescriptionList>
@@ -410,6 +466,55 @@ export const AlignedTermsChecks: Story = {
           </DescriptionList.Item>
         </DescriptionList>
       </div>
+      {/* A narrow container, matching the width a Docs-page embed actually
+        renders at — found live, user-reported: even with zero literal
+        whitespace between the icon and "Customer" (confirmed directly in
+        the rendered DOM), Chromium still allowed a line-break right after
+        the icon at this width — an atomic inline-level box (an SVG) gets an
+        implicit break opportunity independent of whitespace. The icon
+        landed alone on its own line, with the details value reading as if
+        wedged between the icon and the label. `termIconWrapperStyle`'s own
+        `inline-flex` (this story's `IconPrefixedTerm`) is what actually
+        fixes it — flex children never wrap between each other the way
+        inline text-flow content can. */}
+      <div data-testid="narrow-icon-term" style={{ inlineSize: "13rem" }}>
+        <DescriptionList alignedTerms>
+          <DescriptionList.Item>
+            <DescriptionList.Term>
+              <span style={termIconWrapperStyle}>
+                <Icon icon={UserIcon} size="sm" />
+                Customer
+              </span>
+            </DescriptionList.Term>
+            <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+          </DescriptionList.Item>
+        </DescriptionList>
+      </div>
+      {/* A comfortably wide container (nothing wraps) with an icon-prefixed
+        term next to a plain-text details value, and a second, plain-text-only
+        row right after it — found live, user-reported, from a screenshot: an
+        icon-prefixed term's line is taller than a plain-text details value's,
+        and align-items: baseline positioned each by its own text baseline
+        rather than its box, leaving "Jane Cooper" visually off-center against
+        "Customer" and the divider below "Email" a few pixels higher on the
+        term side than the details side. */}
+      <div data-testid="icon-row-alignment" style={{ inlineSize: "24rem" }}>
+        <DescriptionList alignedTerms>
+          <DescriptionList.Item>
+            <DescriptionList.Term>
+              <span style={termIconWrapperStyle}>
+                <Icon icon={UserIcon} size="sm" />
+                Customer
+              </span>
+            </DescriptionList.Term>
+            <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+          </DescriptionList.Item>
+          <DescriptionList.Item>
+            <DescriptionList.Term>Email</DescriptionList.Term>
+            <DescriptionList.Details>jane.cooper@example.com</DescriptionList.Details>
+          </DescriptionList.Item>
+        </DescriptionList>
+      </div>
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -460,6 +565,67 @@ export const AlignedTermsChecks: Story = {
     const wideShortTerms = canvasElement.querySelector('[data-testid="wide-short-terms"]') as HTMLElement;
     const wideCustomerTerm = within(wideShortTerms).getByText("Customer");
     await expect(wideCustomerTerm.getBoundingClientRect().width).toBeLessThan(200);
+
+    // Regression guard: an icon and the word right after it must stay on
+    // the same line, even in a narrow term column — found live,
+    // user-reported, twice: first with the icon and text on separate JSX
+    // lines (a real inserted space gave the browser a break point there),
+    // and again even after removing that space entirely, because an atomic
+    // inline-level box (an SVG) gets an implicit break opportunity right
+    // after it independent of whitespace. `termIconWrapperStyle`'s
+    // `inline-flex` is what actually holds. Measures the icon's own box
+    // against a Range over just the text node (not the whole term, which —
+    // per this system's own "measure the content, not the box" rule —
+    // would still report matching left edges even if the text wrapped
+    // below, since a block-level box always spans the full column width
+    // regardless of where its content actually sits).
+    const narrowIconTerm = canvasElement.querySelector('[data-testid="narrow-icon-term"]') as HTMLElement;
+    const iconRect = (narrowIconTerm.querySelector("dt svg") as SVGElement).getBoundingClientRect();
+    const textNode = [...(narrowIconTerm.querySelector("dt span") as HTMLElement).childNodes].find(
+      (node) => node.nodeType === Node.TEXT_NODE,
+    ) as Text;
+    const range = document.createRange();
+    range.selectNodeContents(textNode);
+    const textRect = range.getBoundingClientRect();
+    await expect(Math.abs(iconRect.top - textRect.top)).toBeLessThan(10);
+
+    // Regression guard: a term's own box (icon-prefixed, so genuinely taller
+    // than a plain-text line) and its details' box must occupy exactly the
+    // same vertical span — found live, user-reported, from a screenshot:
+    // align-items: baseline positioned "Jane Cooper" by its own text
+    // baseline rather than its box, leaving it visibly off-center against
+    // the taller icon-prefixed "Customer" term, and it broke the divider
+    // below "Email" into two segments at different heights for the same
+    // underlying reason (each side's border is drawn on its own box, and the
+    // two boxes no longer shared a top edge). align-items: stretch (on the
+    // shared grid) is what guarantees the two boxes always match, however
+    // tall either side's own content is; asserting a `toBe`, not just
+    // "close", since this one has no legitimate reason ever to differ.
+    const iconRow = canvasElement.querySelector('[data-testid="icon-row-alignment"]') as HTMLElement;
+    const iconRowDt = iconRow.querySelector("dt") as HTMLElement;
+    const iconRowDd = iconRow.querySelector("dd") as HTMLElement;
+    await expect(iconRowDt.getBoundingClientRect().top).toBe(iconRowDd.getBoundingClientRect().top);
+    await expect(iconRowDt.getBoundingClientRect().bottom).toBe(iconRowDd.getBoundingClientRect().bottom);
+
+    // And the icon/term-text/details-text centers must all land at the same
+    // Y position — the box-level check above can't tell an off-center glyph
+    // from a truly centered one, since both terms/details still stretch to
+    // the same *box*; this measures the actual rendered content instead.
+    const iconEl = iconRowDt.querySelector("svg") as SVGElement;
+    const termText = [...(iconRowDt.querySelector("span") as HTMLElement).childNodes].find(
+      (node) => node.nodeType === Node.TEXT_NODE,
+    ) as Text;
+    const termTextRange = document.createRange();
+    termTextRange.selectNodeContents(termText);
+    const detailsRange = document.createRange();
+    detailsRange.selectNodeContents(iconRowDd);
+    const iconCenter = iconEl.getBoundingClientRect().top + iconEl.getBoundingClientRect().height / 2;
+    const termTextCenter =
+      termTextRange.getBoundingClientRect().top + termTextRange.getBoundingClientRect().height / 2;
+    const detailsCenter =
+      detailsRange.getBoundingClientRect().top + detailsRange.getBoundingClientRect().height / 2;
+    await expect(Math.abs(iconCenter - termTextCenter)).toBeLessThan(2);
+    await expect(Math.abs(termTextCenter - detailsCenter)).toBeLessThan(2);
 
     // The opt-out renders the original per-item behavior: the short term's
     // own box is genuinely narrower than the long one's (each hugs its own

@@ -105,6 +105,51 @@ is unaffected.
 
 **Both fixes verified with real margin, not just a passing screenshot:** a dedicated real-browser scenario (short terms in a 768px-wide container — the exact shape that exposed root cause #1) measures the term column at 102px against a 200px regression-guard ceiling (the old bug's value would have been ~307px); the zero-gap assertion checks for an *exact* pixel match, not "small enough." Re-verified live in Purple/Light and Purple/Dark.
 
+## Icon-prefixed term example, added at the user's request (2026-09-28)
+
+The user asked directly whether `DescriptionList.Term` is always text. Answer: no —
+`children: ReactNode`, already unrestricted — but the follow-up ("add an icon-prefixed term
+example and verify it live") surfaced a real rendering bug that a code-only answer would have missed.
+
+**First attempt (Link's own technique — a plain inline `Icon` next to bare text, `vertical-align`
+for baseline correction) broke at a narrow width, found live on the Docs page (which renders each
+Canvas at its own, often narrow, embed width, not the wide viewport used while first building the
+story).** The icon separated onto its own line, with the details value appearing wedged between the
+icon and the wrapped-below label. Root-caused in two passes, not one:
+
+1. First hypothesis: ordinary JSX formatting (icon and text on separate lines) inserts a real
+   whitespace text node between them, giving the browser a legal break point. Fixed by removing the
+   line break — did **not** fully fix it.
+2. Re-investigated rather than trusting the first fix: confirmed directly in the rendered DOM that
+   there was genuinely zero whitespace between the icon and "Customer" (`dt.childNodes` was exactly
+   `[svg, "Customer"]`), and it **still wrapped**. The actual cause: an atomic inline-level box (an
+   SVG) gets an implicit line-break opportunity immediately after it in normal inline flow,
+   independent of whitespace — this is normal browser behavior, not a whitespace bug.
+
+**Fix:** wrap the icon and its label in a small `display: inline-flex` span (`align-items: "center"`,
+a `space.1` `gap`) instead of relying on inline text-flow rules at all — flex children never wrap
+between each other the way inline content can, so this holds at any width. Verified live by
+programmatically wrapping the existing (still-broken) DOM in the browser first (confirming the
+hypothesis before writing any source change), then applying the same fix to the actual source and
+re-verifying: a dedicated real-browser story (`AlignedTermsChecks`' `narrow-icon-term` scenario, a
+13rem/208px container — matching the Docs-page embed width that exposed the bug) asserts the icon and
+its label's own text-node stay within 10px of each other vertically (an exact same-line check, not
+just "doesn't crash"). Re-verified in Purple/Light and Purple/Dark.
+
+Documented the working technique (not the broken one) in three places so it can't regress silently
+by being copied from stale docs: `DescriptionListTermProps.children`'s own JSDoc, the MDX Usage
+guidelines, and the MDX Code examples/Storybook snippet (all three originally shipped the broken
+`vertical-align` version in the same session, before the narrow-width Docs-page check caught it — all
+three were corrected together, not just the story).
+
+## `align-items: baseline` broke vertical centering and the divider, once a row's two cells had different natural heights (user-reported, with a screenshot)
+
+The icon-prefixed-term example (above) shipped with `align-items: baseline` on the shared grid (inherited from the original, icon-free design). An icon-prefixed term's line is genuinely taller than a plain-text details line, and `baseline` positions each cell by its own text baseline rather than its box — so `Jane Cooper` (no icon) sat visibly off-center against the taller `Customer` term, and — the same underlying cause, a second symptom — the divider border below `Email` (drawn separately on the term's box and the details' box) landed a few pixels higher on the term side than the details side, since the two boxes no longer shared a common top edge once their natural heights diverged.
+
+**Fix:** `align-items: stretch` on `.alignedTerms` (replacing `baseline`) — both `.term`'s and `.details`' own boxes now always span the row's full height, whichever side's content happens to be taller, which is what actually fixes the divider (both sides' borders are drawn at the same, shared row-top edge, unconditionally). Centering the *content* within that now-possibly-taller box is a separate, additional rule: `.alignedTerms .term`/`.details` are now `display: flex; align-items: center`, so a short plain-text line (or an icon+text run) centers vertically within whatever height the row ends up being.
+
+**Verified with exact-match assertions, not just "close enough":** measured live that the term's and details' *boxes* land at identical top/bottom (`toBe`, not `toBeCloseTo`) for a row with a genuinely taller icon-prefixed term next to a plain-text details value, and that the icon's own center, the term text's center, and the details text's center all land at the same Y position (within 2px). Re-verified the "Aligned vs. per-item term widths" gallery (multi-line wrapped term next to a longer wrapped details value) — stretch+center reads as an improvement there too, centering the shorter wrapped term against the full height of the taller wrapped value rather than pinning both to the same top baseline. Checked in Purple/Light and Purple/Dark; full suite (typecheck, lint, unit, real-browser Chromium) re-verified clean.
+
 ## Not yet done
 
 **Closed in the 2026-09-28 follow-up session:** `DescriptionList.docs.test.ts` (the CSS-vs-mdx token

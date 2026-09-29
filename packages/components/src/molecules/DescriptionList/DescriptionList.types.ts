@@ -145,7 +145,20 @@ export interface DescriptionListItemProps
 
 export interface DescriptionListTermProps
   extends Omit<ComponentPropsWithoutRef<"dt">, "children" | "className" | "style" | "id"> {
-  /** The term's own content — a field name or label. */
+  /**
+   * The term's own content — usually a field name or label, but any
+   * content works (an icon, a `Tooltip` trigger, a `Badge`) — there's no
+   * dedicated icon slot, so compose one inline. Wrap an icon with the word
+   * right after it in a small `display: inline-flex` span (`align-items:
+   * "center"`, a `space.1` `gap`) rather than a plain inline `Icon` next to
+   * bare text: a browser can still break a line between an icon and its
+   * word once the term column narrows, even with zero whitespace between
+   * them (an atomic inline-level box like an SVG gets an implicit break
+   * opportunity independent of whitespace) — found live, user-reported,
+   * landing the icon alone on its own line. `inline-flex` children never
+   * wrap between each other the way inline text-flow content can, so this
+   * holds at any width. See the Docs page's own icon example.
+   */
   children: ReactNode;
   /** Additional CSS classes for customization. */
   className?: string;

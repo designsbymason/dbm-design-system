@@ -79,6 +79,10 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 
 <Canvas of={DescriptionListStories.AlignedTerms} />
 
+### A term with a leading icon
+
+<Canvas of={DescriptionListStories.IconPrefixedTerm} />
+
 ### All sizes
 
 <Canvas of={DescriptionListStories.Sizes} />
@@ -136,6 +140,11 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
 - Set `alignedTerms={false}` when a list's terms are so mismatched in length (one word next to a full
   sentence) that a shared column would leave a lot of empty space next to the short ones — letting each
   term hug its own content instead can read cleaner for that specific shape of data.
+- `DescriptionList.Term` isn't limited to plain text — it composes an icon, a `Tooltip` trigger, or
+  anything else inline (see the icon example below), since it just renders `children` with no
+  dedicated icon slot to fit into. Wrap an icon with its label in a small `inline-flex` span rather
+  than placing a plain `Icon` next to bare text — a browser can still break a line between them once
+  the term column narrows, even with no whitespace at all between the icon and the word.
 
 ## Accessibility
 
@@ -200,6 +209,19 @@ accept any other native `<dt>`/`<dd>` attribute, in the same way.
     <DescriptionList.Details>Leave the package with the front desk.</DescriptionList.Details>
   </DescriptionList.Item>
 </DescriptionList>
+
+{/* A term composes an icon inline — no dedicated icon slot. Wrap it with its label in a
+  small inline-flex span: without that, a browser can still break a line between the icon
+  and its word once the term column narrows, even with no whitespace between them. */}
+<DescriptionList.Item>
+  <DescriptionList.Term>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--dbm-space-1)" }}>
+      <Icon icon={UserIcon} size="sm" />
+      Customer
+    </span>
+  </DescriptionList.Term>
+  <DescriptionList.Details>Jane Cooper</DescriptionList.Details>
+</DescriptionList.Item>
 
 {/* Embedded in a Card, borderless so it doesn't double up */}
 <Card>

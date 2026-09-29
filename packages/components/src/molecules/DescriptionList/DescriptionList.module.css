@@ -148,17 +148,41 @@
    visual gap between the *text*, while the *boxes* (and therefore their
    borders) now touch, reading as one unbroken line. */
 .alignedTerms {
-  align-items: baseline;
+  align-items: stretch;
   column-gap: 0;
   grid-template-columns: fit-content(40%) minmax(0, 1fr);
   row-gap: var(--dbm-space-1);
+}
+
+/* `align-items: stretch` (above), not `baseline` — found live, user-reported,
+   from two symptoms of the same cause: an icon-prefixed term's line is
+   taller than a plain-text details value's, and `baseline` positions each
+   by its own text baseline rather than its box, so the shorter one (no
+   icon) ends up shifted within the row instead of visually centered against
+   the taller one, and — separately but for the same underlying reason — the
+   divider border below (drawn on each element's own box) landed at two
+   different heights, since `.term`'s and `.details`' boxes no longer shared
+   a common top edge once their natural (unstretched) heights differed.
+   `stretch` makes both boxes span the row's own full height regardless of
+   which one's content is taller, which is what actually fixes the divider —
+   it's now always drawn at the row's own top edge on both sides, however
+   uneven the two cells' content is. Centering the *content* within that
+   now-possibly-taller box is `.term`'s/`.details`' own `display: flex;
+   align-items: center` (below) — a separate concern from the row-stretch
+   above, and the reason both are needed together, not just one. */
+.alignedTerms .term,
+.alignedTerms .details {
+  align-items: center;
+  display: flex;
 }
 
 /* The item contributes no box once it's `display: contents` — the
    between-item divider (and its own vertical rhythm) moves onto its own
    `<dt>`/`<dd>` instead, both getting the top border so the line reads as
    one continuous rule across the row (with `.alignedTerms`'s own
-   `column-gap: 0` above, the two segments touch and read as unbroken).
+   `column-gap: 0` above, the two segments touch and read as unbroken, and
+   `align-items: stretch` above, both segments sit at the same height even
+   when the row's two cells have different natural content heights).
    `.item:not(:first-child)` still correctly means "every item but the
    first" here: `display: contents` removes an element from the box tree,
    not from the DOM, so its position among `.root`'s real children (and
