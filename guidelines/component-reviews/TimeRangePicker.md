@@ -1,8 +1,10 @@
 # TimeRangePicker
 
 Molecule, Inputs & Forms category. Added to `04-component-inventory.md` on 2026-10-03 at the user's request (the
-first-version scope for `TimePicker` listed "time-range / paired fields"), and built the same day. **Not yet
-Finalized** — only the user declares that.
+first-version scope for `TimePicker` listed "time-range / paired fields"), and built the same day. **Finalized
+2026-10-03** (declared by the user, after the second round and a final §9 pass, both below); per the finalization rule, no
+further change to its code, stories, docs or tokens without asking first. Known limit left open on purpose: the shared popover
+shows each end's committed value, not a half-typed segment. Its own JS budget is 12KB (below).
 
 ## What it is
 

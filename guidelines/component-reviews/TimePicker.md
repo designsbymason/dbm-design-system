@@ -1,8 +1,10 @@
 # TimePicker
 
 Molecule, Inputs & Forms category. Item 26 of the itemized molecule build order in `04-component-inventory.md`
-— a time-of-day field with a popover picker. Built 2026-10-03. **Not yet Finalized** — only the user declares
-that; this file records what was built, checked and found.
+— a time-of-day field with a popover picker. Built 2026-10-03. **Finalized 2026-10-03** (declared by the user,
+after the second round of six additions and a final §9 pass, both below). Per the finalization rule, no further change to the
+component's code, stories, docs or tokens without asking first. Known limits left open on purpose: `periodPosition` is the only
+control over segment order (no separator prop), and a real phone, Safari and Firefox, and a screen reader were not tried.
 
 The inventory row had no notes, so the interaction model was an open fork and was put to the user (four
 options, plus the value shape, the hour cycle and the first version's scope). The answers, and the alternatives
