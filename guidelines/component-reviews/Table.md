@@ -420,3 +420,22 @@ click-through navigation both land on `EmptyState`'s Docs page. The page's table
 
 **Finalized status is unchanged.** A docs-only, purely additive change (no component code, props, stories, or tokens touched), made only
 after the user asked for it — the first of the three-question test (`06-engineering-standards.md` §9) answers "no".
+
+## Post-Finalization follow-up (2026-10-02, at explicit direction) — `useScrollableRegion` now shares its overflow-detection logic
+
+`useScrollableRegion.ts`'s own overflow-detection (`scrollable`) was a near-duplicate of `ScrollArea`'s own `useIsScrollable` hook —
+flagged as a DRY opportunity in `ScrollArea.md` but left unacted on at the time, since touching a Finalized component without
+authorization isn't allowed even for a zero-behavior-change refactor. Authorized and actioned now: `scrollable` is computed by calling
+the newly-extracted, shared `useIsScrollable(containerRef, "both")` from `@dbm-design-system/primitives` instead of this file's own
+local copy of the same `useSyncExternalStore` logic. The separate `captionId` lookup — reading this table's own `<caption>` id, not a
+general scroll-detection concern — stays local and untouched.
+
+**Finalized status is unchanged.** Three-question test (`06-engineering-standards.md` §9), question 1: does it change the
+rendered/behavioral output of anything that already existed at finalization time? No — same return shape
+(`{ scrollable, captionId }`), same DOM, same semantics, same subscription behavior (each `useSyncExternalStore` call already ran its
+own independent `ResizeObserver` subscription before this change, since React manages each call's subscription separately even given
+the same `subscribe` reference). A pure internal refactor, not a design decision — full details, including live re-verification of
+both consumers, are in `ScrollArea.md`'s own "`useIsScrollable` extracted to `primitives`" follow-up, which this entry is the `Table`
+side of. Re-confirmed here too: `eslint`, both `tsc` passes, the `unit` project (package-wide 4699 passing, identical to before), the
+real-browser `storybook` project (875 passing, identical to before), `tsup` build, and the bundle-size check — `Table` now measures
+2.34KB JS (down from the 2.57KB Finalized baseline, a genuine size improvement from deduplication, not a regression) — all clean.

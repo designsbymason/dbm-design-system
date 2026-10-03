@@ -355,6 +355,40 @@ attribute only at the non-default value, the same pattern `showTrack`/`tone` alr
 build` clean; the component bundle-size check (1.05KB JS / 0.59KB CSS, a small increase, still
 comfortably within budget).
 
+## Fifth follow-up: `useIsScrollable` extracted to `primitives` (2026-10-02)
+
+Acts on the DRY opportunity flagged above, at explicit direction. `useIsScrollable` moved verbatim
+to `packages/primitives/src/hooks/useIsScrollable.ts` (exported from that package's own `index.ts`,
+not re-exported from `@dbm-design-system/components`'s top-level index — it's an internal
+implementation detail, not something a consumer calls directly, the same treatment
+`useResolvedResponsiveValue` already gets). `ScrollArea.tsx` now imports it from
+`@dbm-design-system/primitives` instead of a local file; the local copy
+(`ScrollArea/useIsScrollable.ts`) is deleted.
+
+`Table`'s own `useScrollableRegion` now computes its `scrollable` value by calling
+`useIsScrollable(containerRef, "both")` instead of its own local, near-identical
+`useSyncExternalStore` logic — its separate `captionId` lookup (Table-specific, not a general
+scroll-detection concern) stays local, unchanged. **`Table`'s finalized status is unchanged**: the
+three-question test (`06-engineering-standards.md` §9), question 1 — does it change the
+rendered/behavioral output of anything that already existed at finalization time — answers "no":
+same return shape (`{ scrollable, captionId }`), same DOM, same semantics, same subscription
+behavior (both `useSyncExternalStore` calls already ran their own independent `ResizeObserver`
+subscription before this change, since React manages each call's subscription separately even when
+given the same `subscribe` function reference — so the observer count is unchanged too). A pure
+internal refactor, not a design decision.
+
+Verified live in both consumers, not just via the test suite: `ScrollArea`'s `Vertical` story still
+becomes a correctly tab-reachable, named `role="region"` once genuinely overflowing
+(`scrollHeight`/`clientHeight` 387/190); `Table`'s `Sticky header` story, same check, same result
+(716/286, `aria-label="Recent invoices"`). Full re-verification: `tsc --noEmit` and
+`eslint --max-warnings 0` clean in both `primitives` and `components`; the full unit suite (4699
+passing — identical count to before the refactor) and the full real-browser Chromium suite (875
+passing — also identical) both clean, confirming zero behavioral drift in either consumer; `pnpm
+build` clean in both packages; the component bundle-size check shows a genuine size *improvement*
+from deduplication, not just no regression — `ScrollArea` 0.85KB JS (down from 1.05KB) and `Table`
+2.34KB JS (down from its 2.57KB Finalized baseline), both still comfortably within budget; the
+Foundations token-coverage check unaffected (no tokens touched).
+
 ## Not yet Finalized
 
 Per the standing rule, only the user declares a component Finalized — this review documents a
