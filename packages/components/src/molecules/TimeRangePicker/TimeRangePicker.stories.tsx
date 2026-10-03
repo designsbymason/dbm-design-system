@@ -83,10 +83,37 @@ const meta: Meta<typeof TimeRangePicker> = {
       description:
         "Rules out particular times for either end, with the 24-hour string each end's value uses; return true for a time that isn't available. Flagged and still reported, as min/max are. See TimePicker.",
     },
+    minDuration: {
+      control: "number",
+      description:
+        "The shortest the range may be, in minutes. An end that makes it shorter is flagged and still reported, and the end's picker disables what would; with constrainStart so does the start's.",
+    },
+    maxDuration: {
+      control: "number",
+      description: "The longest the range may be, in minutes. Flagged and disabled as minDuration is.",
+    },
+    allowOvernight: {
+      control: "boolean",
+      description:
+        "Lets the end be earlier than the start, meaning the next day: 22:00 to 02:00 is four hours. The value stays a pair of times of day. Equal times are a range of no length. The duration limits count across midnight.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    constrainStart: {
+      control: "boolean",
+      description:
+        "Limits the start by the end as the end is by the start: a start after the end is flagged and the start's picker disables it, and the duration limits apply to it. With allowOvernight the start has no latest, only the duration limits apply.",
+      table: { defaultValue: { summary: "false" } },
+    },
     showPicker: {
       control: "boolean",
       description: "Shows each end's picker button.",
       table: { defaultValue: { summary: "true" } },
+    },
+    sharedPicker: {
+      control: "boolean",
+      description:
+        "Replaces the two pickers with one: a single button after the end opens one popover holding the start's wheels and the end's side by side. Picks follow commitOn. Needs showPicker.",
+      table: { defaultValue: { summary: "false" } },
     },
     openOnFocus: {
       control: "boolean",
@@ -171,7 +198,10 @@ const meta: Meta<typeof TimeRangePicker> = {
     secondStep: 1,
     min: "",
     max: "",
+    allowOvernight: false,
+    constrainStart: false,
     showPicker: true,
+    sharedPicker: false,
     openOnFocus: false,
     clearable: false,
     disabled: false,
@@ -199,6 +229,11 @@ const noControls = {
   min: { control: false },
   max: { control: false },
   isTimeDisabled: { control: false },
+  minDuration: { control: false },
+  maxDuration: { control: false },
+  allowOvernight: { control: false },
+  constrainStart: { control: false },
+  sharedPicker: { control: false },
   openOnFocus: { control: false },
   onFocus: { control: false },
   onBlur: { control: false },
@@ -251,6 +286,57 @@ export const Constrained: Story = {
       </Text>
     </div>
   ),
+};
+
+export const Overnight: Story = {
+  name: "Overnight",
+  parameters: { docs: { source: { code: timeRangePickerSnippets.overnight } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <TimeRangePicker hourCycle="24" allowOvernight aria-label="Night shift" defaultValue={["22:00", "06:00"]} />
+      <Text size="sm" color="secondary">
+        06:00 is before 22:00, so it is the next morning: an eight-hour range, and no end time is disabled.
+      </Text>
+    </div>
+  ),
+};
+
+export const DurationLimits: Story = {
+  name: "Duration limits",
+  parameters: { docs: { source: { code: timeRangePickerSnippets.duration } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <TimeRangePicker hourCycle="24" step={15} minDuration={30} maxDuration={120} aria-label="Booking" defaultValue={["09:00", "09:15"]} />
+      <Text size="sm" color="secondary">
+        A booking is 30 minutes to two hours: 09:15 is too short, so the end is flagged, and its picker disables the
+        times outside that window.
+      </Text>
+    </div>
+  ),
+};
+
+export const ConstrainedStart: Story = {
+  name: "The start limited by the end",
+  parameters: { docs: { source: { code: timeRangePickerSnippets.constrainStart } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <TimeRangePicker hourCycle="24" constrainStart maxDuration={60} aria-label="Slot" defaultValue={["10:00", "13:00"]} />
+      <Text size="sm" color="secondary">
+        With constrainStart the start is held to the end too: 10:00 would make a three-hour range, so the start is flagged
+        and its picker disables the starts outside the last hour.
+      </Text>
+    </div>
+  ),
+};
+
+export const SharedPicker: Story = {
+  name: "One shared picker",
+  parameters: { docs: { source: { code: timeRangePickerSnippets.shared } } },
+  argTypes: { ...noControls },
+  render: () => <TimeRangePicker sharedPicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} />,
 };
 
 export const Controlled: Story = {

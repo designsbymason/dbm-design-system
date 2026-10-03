@@ -20,6 +20,22 @@ which both import.
 - **Form value:** `name` submits as `name[]`, start first (`RangeSlider`'s convention), through each end's hidden time input,
   which also validates it (`required`, a half-filled or unavailable end): see
   [ADR-0030](adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md).
+- **Second round (2026-10-03), [ADR-0031](adr/0031-timerangepicker-keeps-a-pair-of-times-of-day-and-judges-length-through-the-ends-own-rules.md):**
+  `allowOvernight`, `minDuration`/`maxDuration` (minutes), `constrainStart` and `sharedPicker`.
+  - Overnight drops the end's "not before the start" minimum; durations wrap across midnight and equal times are zero.
+  - Duration limits and `constrainStart` become each end's `max` and an `isTimeDisabled` predicate (composed with the
+    owner's own), so flags, disabled rows and the form message come for free. With `allowOvernight` the start has no latest.
+  - `sharedPicker` renders `TimePickerColumns` twice in one popover (an `IconButton` trigger, `showPicker` still gates it);
+    picks go through `pickIntoDraft`, held in `held` state under `commitOn` and reported when the popover closes. Focus events
+    treat the popover and the trigger as part of the pair; `openOnFocus` opens it when focus arrives on a segment.
+  - Found: the popover's usual width cap stacked the two wheel sets, so the panel may grow to Radix's available width
+    (looked at in the browser); the duplicate group names in the popover made test helpers ambiguous (fields come first).
+  - Verified: 18 new unit tests, each behaviour broken on purpose and failing a test (overnight, both duration paths, the
+    wrap, `constrainStart`'s max and limits, the hold, the close flush, the popover's containment); 2 new real-browser stories
+    (side by side inside the viewport; picks reach their own end, focus starts at the start's hours); snippets typechecked;
+    lint, both typechecks, 5,123 unit and 963 Storybook-project tests (one `TimePicker` segment-clipping check failed once
+    under load and passed on three reruns; not investigated).
+  - Open: the shared popover shows committed values, not a half-typed field; no phone-width run of the popover.
 - **Passed through to both ends (2026-10-03):** `commitOn`, `secondStep`, `isTimeDisabled`, `periodPosition`, `openOnFocus`.
   `onFocus`/`onBlur` fire once for the pair: each end reports its own arrivals and departures, and the range ignores a
   departure whose `relatedTarget` is inside the group and an arrival while it already holds focus (a start end's picker is

@@ -16,6 +16,7 @@ import {
   hourRange,
   isTimeAllowed,
   parseTime,
+  pickIntoDraft,
   segmentsFor,
   stepSegment,
   valueToDraft,
@@ -503,13 +504,8 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
     // Choosing from the picker: whatever the other segments are, a chosen time is a whole one, so the empty ones
     // take the first value they can (minutes 00, AM) rather than leaving the field half-filled.
     const pick = (segment: Segment, picked: number | Period) => {
-      const next: TimeDraft = { ...draft, [draftKey[segment]]: picked };
-      if (next.hour === undefined) next.hour = cycle === "12" ? 12 : 0;
-      if (next.minute === undefined) next.minute = 0;
-      if (showSeconds && next.second === undefined) next.second = 0;
-      if (cycle === "12" && next.period === undefined) next.period = "am";
       setPending(null);
-      commit(next);
+      commit(pickIntoDraft(draft, segment, picked, cycle, showSeconds));
     };
 
     const periodChars = Math.max([...labels.am].length, [...labels.pm].length);

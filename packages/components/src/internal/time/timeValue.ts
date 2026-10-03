@@ -203,3 +203,32 @@ export function stepSegment(
       return { ...draft, period: draft.period === undefined ? (direction === 1 ? "am" : "pm") : draft.period === "am" ? "pm" : "am" };
   }
 }
+
+/**
+ * A draft with `picked` chosen in `segment`. A chosen time is a whole one, so the empty segments take the first value they
+ * can (an hour of 12 AM, minutes 00, AM) rather than leaving the field half-filled.
+ */
+export function pickIntoDraft(
+  draft: TimeDraft,
+  segment: Segment,
+  picked: number | Period,
+  cycle: HourCycle,
+  showSeconds: boolean,
+): TimeDraft {
+  const next: TimeDraft = { ...draft, [segment]: picked };
+  if (next.hour === undefined) next.hour = cycle === "12" ? 12 : 0;
+  if (next.minute === undefined) next.minute = 0;
+  if (showSeconds && next.second === undefined) next.second = 0;
+  if (cycle === "12" && next.period === undefined) next.period = "am";
+  return next;
+}
+
+/**
+ * Seconds from `start` to `end`. With `overnight` an end before the start is the next day's (so 22:00 to 02:00 is four
+ * hours, and equal times are none, not a day); without it an end before the start has no duration, `undefined`.
+ */
+export function durationSeconds(start: TimeParts, end: TimeParts, overnight: boolean): number | undefined {
+  const difference = compareTime(end, start);
+  if (difference >= 0) return difference;
+  return overnight ? difference + 24 * 3600 : undefined;
+}

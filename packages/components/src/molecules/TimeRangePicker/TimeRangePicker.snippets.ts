@@ -13,6 +13,18 @@ export const timeRangePickerSnippets = {
   constrained: `{/* The end can't be before the start: its picker disables earlier times, and an earlier end is flagged. */}
 <TimeRangePicker aria-label="Meeting" hourCycle="24" step={15} min="08:00" max="18:00" defaultValue={["14:00", "13:00"]} />`,
 
+  overnight: `{/* allowOvernight: an end before the start is the next day's, so 22:00 to 06:00 is eight hours. */}
+<TimeRangePicker aria-label="Night shift" hourCycle="24" allowOvernight defaultValue={["22:00", "06:00"]} />`,
+
+  duration: `{/* minDuration and maxDuration are minutes. A range outside them is flagged (not refused), and the end's picker disables what would be. */}
+<TimeRangePicker aria-label="Booking" hourCycle="24" step={15} minDuration={30} maxDuration={120} />`,
+
+  constrainStart: `{/* constrainStart holds the start to the end as well: a start after the end, or one that makes the range too long, is flagged and disabled. */}
+<TimeRangePicker aria-label="Slot" hourCycle="24" constrainStart maxDuration={60} defaultValue={["10:00", "13:00"]} />`,
+
+  shared: `{/* sharedPicker: one button after the end opens one popover with the start's wheels and the end's side by side. */}
+<TimeRangePicker aria-label="Opening hours" sharedPicker defaultValue={["09:00", "17:30"]} />`,
+
   controlled: `{/* const [range, setRange] = useState(["09:00", ""]); — an end that isn't complete yet is "". */}
 <TimeRangePicker aria-label="Opening hours" value={range} onValueChange={setRange} />`,
 
@@ -35,6 +47,11 @@ export interface TimeRangePickerPlaygroundSnippetArgs {
   secondStep?: number;
   min?: string;
   max?: string;
+  minDuration?: number;
+  maxDuration?: number;
+  allowOvernight?: boolean;
+  constrainStart?: boolean;
+  sharedPicker?: boolean;
   openOnFocus?: boolean;
   size?: TimePickerSize;
   hasError?: boolean;
@@ -57,6 +74,11 @@ export function timeRangePickerPlaygroundSnippet(args: TimeRangePickerPlayground
   if (args.secondStep !== undefined && args.secondStep !== 1) attributes.push(`secondStep={${args.secondStep}}`);
   if (args.min) attributes.push(`min="${args.min}"`);
   if (args.max) attributes.push(`max="${args.max}"`);
+  if (args.minDuration !== undefined && args.minDuration !== null) attributes.push(`minDuration={${args.minDuration}}`);
+  if (args.maxDuration !== undefined && args.maxDuration !== null) attributes.push(`maxDuration={${args.maxDuration}}`);
+  if (args.allowOvernight) attributes.push("allowOvernight");
+  if (args.constrainStart) attributes.push("constrainStart");
+  if (args.sharedPicker) attributes.push("sharedPicker");
   if (args.openOnFocus) attributes.push("openOnFocus");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.hasError) attributes.push("hasError");

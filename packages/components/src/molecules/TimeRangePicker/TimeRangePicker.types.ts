@@ -87,13 +87,46 @@ export interface TimeRangePickerProps
    */
   isTimeDisabled?: (time: string) => boolean;
   /**
+   * The shortest the range may be, in minutes, from the start to the end. An end that makes it shorter is flagged
+   * invalid and still reported, and the end's picker disables what would; with `constrainStart`, so does the
+   * start's. Nothing is checked until both ends are complete.
+   */
+  minDuration?: number;
+  /**
+   * The longest the range may be, in minutes, from the start to the end. Flagged and disabled as `minDuration` is.
+   */
+  maxDuration?: number;
+  /**
+   * Lets the end be earlier than the start, meaning the next day: 22:00 to 02:00 is four hours. The value stays a
+   * pair of times of day, with no date. Without it an end before the start is flagged. Equal times are a range of
+   * no length, not a full day. `minDuration` and `maxDuration` count across midnight.
+   * @default false
+   */
+  allowOvernight?: boolean;
+  /**
+   * Limits the start by the end as the end is by the start: a start after the end is flagged and the start's picker
+   * disables it (and, with the duration limits, whatever would make the range too short or long). Off by default
+   * because the start would be flagged whenever the end is mid-typing and briefly earlier. With `allowOvernight` the
+   * start has no latest, only the duration limits apply.
+   * @default false
+   */
+  constrainStart?: boolean;
+  /**
    * Shows each end's picker button.
    * @default true
    */
   showPicker?: boolean;
   /**
+   * Replaces the two pickers with one: a single button after the end opens one popover holding the start's wheels
+   * and the end's side by side, so both can be set in one visit. Needs `showPicker`. Picks follow `commitOn`: with
+   * `"complete"` or `"blur"` they are held until the popover closes.
+   * @default false
+   */
+  sharedPicker?: boolean;
+  /**
    * Opens an end's picker when focus lands on one of its segments other than from another of its own segments; see
-   * `TimePicker`. Moving from one end to the other opens the other's picker too.
+   * `TimePicker`. Moving from one end to the other opens the other's picker too. With `sharedPicker` it opens the
+   * shared popover when focus arrives in the pair, and moving between the ends leaves it open.
    * @default false
    */
   openOnFocus?: boolean;

@@ -20,7 +20,12 @@ export const propOrder = [
   "min",
   "max",
   "isTimeDisabled",
+  "minDuration",
+  "maxDuration",
+  "allowOvernight",
+  "constrainStart",
   "showPicker",
+  "sharedPicker",
   "openOnFocus",
   "clearable",
   "onClear",
@@ -89,6 +94,22 @@ the `id` goes on the start field's first segment.
 
 <Canvas of={TimeRangePickerStories.Constrained} />
 
+### Overnight
+
+<Canvas of={TimeRangePickerStories.Overnight} />
+
+### Duration limits
+
+<Canvas of={TimeRangePickerStories.DurationLimits} />
+
+### The start limited by the end
+
+<Canvas of={TimeRangePickerStories.ConstrainedStart} />
+
+### One shared picker
+
+<Canvas of={TimeRangePickerStories.SharedPicker} />
+
 ### Controlled value
 
 <Canvas of={TimeRangePickerStories.Controlled} />
@@ -108,6 +129,11 @@ the `id` goes on the start field's first segment.
 
 - Use it for a window within one day: opening hours, a meeting, a shift. Both ends are the same kind of value, so
   one `step`, `min` and `max` apply to both.
+- Use `allowOvernight` for a shift or a quiet-hours window that crosses midnight; the value stays two times of day, so
+  keep the date elsewhere. Without it an end before the start is flagged.
+- Use `minDuration`/`maxDuration` (minutes) for a booking length, and `constrainStart` when the start should be held to
+  the end as well, accepting that the start is flagged while the end is mid-typing.
+- Use `sharedPicker` when both ends are usually set together (a booking), and the two pickers when one end is edited alone.
 - The settings `TimePicker` has for the field as a whole carry over to both ends: `commitOn`, `secondStep`,
   `isTimeDisabled`, `periodPosition`, `openOnFocus`, and `required` as a real form constraint. `onFocus` and `onBlur`
   fire once for the pair, not as focus moves from one end to the other.
@@ -180,7 +206,8 @@ function Example() {
 
 ## Design tokens used
 
-<TokenRow token="space.2" usage="gap between the two fields and the dash" />
+<TokenRow token="space.2" usage="gap between the two fields and the dash; the shared popover's padding and the gap under each wheel set's name" />
+<TokenRow token="space.4" usage="gap between the start's wheels and the end's in the shared popover" />
 <TokenRow token="text.tertiary" usage="the dash between the fields" />
 <TokenRow token="font-family.primary" usage="the dash's typography" />
 

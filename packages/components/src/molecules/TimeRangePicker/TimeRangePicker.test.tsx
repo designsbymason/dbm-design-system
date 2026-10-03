@@ -7,7 +7,8 @@ import { FormField } from "../FormField";
 import { TimeRangePicker } from "./TimeRangePicker";
 import type { TimeRangeValue } from "./TimeRangePicker.types";
 
-const field = (name: string) => screen.getByRole("group", { name });
+// The shared popover names its sections the same, and is later in the document than the fields.
+const field = (name: string) => screen.getAllByRole("group", { name })[0]!;
 // Invalid is a state of a field's spinbuttons (a group doesn't take it), so ask the first.
 const invalid = (end: "Start time" | "End time") => within(field(end)).getAllByRole("spinbutton")[0]!.hasAttribute("aria-invalid");
 const part = (end: "Start time" | "End time", segmentName: string) =>
@@ -285,6 +286,195 @@ describe("TimeRangePicker", () => {
     expect(form.checkValidity()).toBe(true);
     await user.keyboard("{Backspace}");
     expect(form.checkValidity()).toBe(false);
+  });
+
+  describe("overnight", () => {
+    it("flags an end before the start unless it may be the next day", () => {
+      const { rerender } = render(<TimeRangePicker aria-label="r" hourCycle="24" defaultValue={["22:00", "02:00"]} />);
+      expect(invalid("End time")).toBe(true);
+      rerender(<TimeRangePicker aria-label="r" hourCycle="24" allowOvernight defaultValue={["22:00", "02:00"]} />);
+      expect(invalid("End time")).toBe(false);
+    });
+
+    it("stops disabling what is before the start in the end's picker", async () => {
+      const user = userEvent.setup();
+      render(<TimeRangePicker aria-label="r" hourCycle="24" allowOvernight defaultValue={["10:30", ""]} />);
+      await user.click(within(field("End time")).getByRole("button", { name: "Choose time" }));
+      const hours = await screen.findByRole("listbox", { name: "Hour" });
+      expect(within(hours).getByRole("option", { name: "09" })).not.toHaveAttribute("aria-disabled");
+    });
+
+    it("counts durations across midnight, and equal times as none", () => {
+      const { rerender } = render(
+        <TimeRangePicker aria-label="r" hourCycle="24" allowOvernight maxDuration={240} value={["22:00", "02:00"]} />,
+      );
+      expect(invalid("End time")).toBe(false);
+      rerender(<TimeRangePicker aria-label="r" hourCycle="24" allowOvernight maxDuration={180} value={["22:00", "02:00"]} />);
+      expect(invalid("End time")).toBe(true);
+      rerender(<TimeRangePicker aria-label="r" hourCycle="24" allowOvernight minDuration={1} value={["22:00", "22:00"]} />);
+      expect(invalid("End time")).toBe(true);
+    });
+  });
+
+  describe("duration limits", () => {
+    it("flags an end that makes the range too short or too long, and still reports it", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <TimeRangePicker
+          aria-label="r"
+          hourCycle="24"
+          minDuration={30}
+          maxDuration={120}
+          defaultValue={["09:00", ""]}
+          onValueChange={onValueChange}
+        />,
+      );
+      await user.click(part("End time", "Hour"));
+      await user.keyboard("0915");
+      expect(onValueChange).toHaveBeenLastCalledWith(["09:00", "09:15"]);
+      expect(invalid("End time")).toBe(true);
+      await user.click(part("End time", "Hour"));
+      await user.keyboard("1100");
+      expect(invalid("End time")).toBe(false);
+      await user.click(part("End time", "Hour"));
+      await user.keyboard("1101");
+      expect(invalid("End time")).toBe(true);
+    });
+
+    it("disables in the end's picker the hours no allowed length reaches", async () => {
+      const user = userEvent.setup();
+      render(<TimeRangePicker aria-label="r" hourCycle="24" minDuration={60} maxDuration={120} defaultValue={["09:00", ""]} />);
+      await user.click(within(field("End time")).getByRole("button", { name: "Choose time" }));
+      const hours = await screen.findByRole("listbox", { name: "Hour" });
+      const disabled = (name: string) => within(hours).getByRole("option", { name }).hasAttribute("aria-disabled");
+      // 10:00 to 11:00 are the lengths of one to two hours; 09:xx is under an hour and 12:xx is over two.
+      expect(["09", "10", "11", "12"].map(disabled)).toEqual([true, false, false, true]);
+    });
+
+    it("judges nothing until both ends are whole", () => {
+      render(<TimeRangePicker aria-label="r" hourCycle="24" minDuration={60} defaultValue={["09:00", ""]} />);
+      expect(invalid("End time")).toBe(false);
+      expect(invalid("Start time")).toBe(false);
+    });
+  });
+
+  describe("constrainStart", () => {
+    it("leaves the start free by default", () => {
+      render(<TimeRangePicker aria-label="r" hourCycle="24" defaultValue={["12:00", "09:00"]} />);
+      expect(invalid("Start time")).toBe(false);
+    });
+
+    it("flags a start after the end, and disables it in the start's picker", async () => {
+      const user = userEvent.setup();
+      render(<TimeRangePicker aria-label="r" hourCycle="24" constrainStart defaultValue={["12:00", "09:00"]} />);
+      expect(invalid("Start time")).toBe(true);
+      await user.click(within(field("Start time")).getByRole("button", { name: "Choose time" }));
+      const hours = await screen.findByRole("listbox", { name: "Hour" });
+      expect(within(hours).getByRole("option", { name: "10" })).toHaveAttribute("aria-disabled", "true");
+      expect(within(hours).getByRole("option", { name: "08" })).not.toHaveAttribute("aria-disabled");
+    });
+
+    it("applies the duration limits to the start", () => {
+      render(<TimeRangePicker aria-label="r" hourCycle="24" constrainStart maxDuration={60} defaultValue={["07:00", "09:00"]} />);
+      expect(invalid("Start time")).toBe(true);
+    });
+
+    it("has no latest start when overnight is allowed", () => {
+      render(<TimeRangePicker aria-label="r" hourCycle="24" constrainStart allowOvernight defaultValue={["22:00", "02:00"]} />);
+      expect(invalid("Start time")).toBe(false);
+    });
+  });
+
+  describe("sharedPicker", () => {
+    const openShared = async (user: ReturnType<typeof userEvent.setup>) => {
+      await user.click(screen.getByRole("button", { name: "Choose time" }));
+      return screen.findByRole("dialog", { name: "Choose a time" });
+    };
+
+    it("replaces the two picker buttons with one, holding both ends' wheels", async () => {
+      const user = userEvent.setup();
+      render(<TimeRangePicker aria-label="r" hourCycle="24" sharedPicker defaultValue={["09:00", "17:30"]} />);
+      expect(screen.getAllByRole("button", { name: "Choose time" })).toHaveLength(1);
+      const dialog = await openShared(user);
+      const start = within(within(dialog).getByRole("group", { name: "Start time" }));
+      const end = within(within(dialog).getByRole("group", { name: "End time" }));
+      expect(start.getByRole("listbox", { name: "Hour" })).toBeInTheDocument();
+      expect(within(end.getByRole("listbox", { name: "Hour" })).getByRole("option", { name: "17", selected: true })).toBeInTheDocument();
+    });
+
+    it("writes a pick into the end it was made in, and shows it in the field", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(<TimeRangePicker aria-label="r" hourCycle="24" sharedPicker defaultValue={["09:00", "17:30"]} onValueChange={onValueChange} />);
+      const dialog = await openShared(user);
+      const endHours = within(within(dialog).getByRole("group", { name: "End time" })).getByRole("listbox", { name: "Hour" });
+      endHours.focus();
+      await user.keyboard("{ArrowDown}");
+      expect(onValueChange).toHaveBeenLastCalledWith(["09:00", "18:30"]);
+      expect(texts("End time")).toEqual(["18", "30"]);
+    });
+
+    it("holds picks with commitOn complete until the popover closes", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <TimeRangePicker aria-label="r" hourCycle="24" sharedPicker commitOn="complete" defaultValue={["09:00", "17:30"]} onValueChange={onValueChange} />,
+      );
+      const dialog = await openShared(user);
+      const startHours = within(within(dialog).getByRole("group", { name: "Start time" })).getByRole("listbox", { name: "Hour" });
+      startHours.focus();
+      await user.keyboard("{ArrowDown}{ArrowDown}");
+      expect(texts("Start time")).toEqual(["11", "00"]);
+      expect(onValueChange).not.toHaveBeenCalled();
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(onValueChange.mock.calls).toEqual([[["11:00", "17:30"]]]));
+    });
+
+    it("applies the end's limits to the end's wheels", async () => {
+      const user = userEvent.setup();
+      render(<TimeRangePicker aria-label="r" hourCycle="24" sharedPicker defaultValue={["10:30", "12:00"]} />);
+      const dialog = await openShared(user);
+      const endHours = within(within(dialog).getByRole("group", { name: "End time" })).getByRole("listbox", { name: "Hour" });
+      expect(within(endHours).getByRole("option", { name: "09" })).toHaveAttribute("aria-disabled", "true");
+      const startHours = within(within(dialog).getByRole("group", { name: "Start time" })).getByRole("listbox", { name: "Hour" });
+      expect(within(startHours).getByRole("option", { name: "09" })).not.toHaveAttribute("aria-disabled");
+    });
+
+    it("is not a part of leaving: onBlur waits until focus is outside the pair and the popover", async () => {
+      const user = userEvent.setup();
+      const onFocus = vi.fn();
+      const onBlur = vi.fn();
+      render(
+        <>
+          <TimeRangePicker aria-label="r" sharedPicker onFocus={onFocus} onBlur={onBlur} />
+          <button type="button">After</button>
+        </>,
+      );
+      await openShared(user);
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      expect(onBlur).not.toHaveBeenCalled();
+      await user.click(screen.getByRole("button", { name: "After" }));
+      expect(onBlur).toHaveBeenCalledTimes(1);
+    });
+
+    it("opens on arriving with openOnFocus, without taking focus, and stays open between the ends", async () => {
+      const user = userEvent.setup();
+      render(<TimeRangePicker aria-label="r" hourCycle="24" sharedPicker openOnFocus />);
+      await user.click(part("Start time", "Hour"));
+      await screen.findByRole("dialog");
+      expect(part("Start time", "Hour")).toHaveFocus();
+      await user.click(part("End time", "Hour"));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getAllByRole("button", { name: "Choose time" })).toHaveLength(1);
+    });
+
+    it("needs showPicker, and is disabled with the range", () => {
+      const { rerender } = render(<TimeRangePicker aria-label="r" sharedPicker showPicker={false} />);
+      expect(screen.queryByRole("button", { name: "Choose time" })).not.toBeInTheDocument();
+      rerender(<TimeRangePicker aria-label="r" sharedPicker disabled />);
+      expect(screen.getByRole("button", { name: "Choose time" })).toBeDisabled();
+    });
   });
 
   it("has no axe violations, closed and with an end's picker open", { timeout: 30_000 }, async () => {

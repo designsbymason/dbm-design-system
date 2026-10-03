@@ -13,3 +13,26 @@
   font-family: var(--dbm-font-family-primary);
   user-select: none;
 }
+
+/* The shared popover: the start's wheels and the end's side by side, each under its name. The pair wraps on a phone. */
+.sharedPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-4);
+  justify-content: center;
+  padding: var(--dbm-space-2);
+}
+
+.section {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-2);
+}
+
+/* Two sets of wheels are wider than a popover's usual cap, so the panel is let grow to what the viewport has (Radix's own
+   live figure), and the sets wrap under each other only when that runs out. `div.` outranks the popover's own class
+   whichever stylesheet loads last. */
+div.sharedContent {
+  max-inline-size: var(--radix-popper-available-width);
+}
