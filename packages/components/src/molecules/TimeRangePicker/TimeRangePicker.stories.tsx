@@ -198,6 +198,9 @@ const meta: Meta<typeof TimeRangePicker> = {
     secondStep: 1,
     min: "",
     max: "",
+    // 0 and a full day (1440) are "no limit", so the number controls have real values instead of an inert "Set number".
+    minDuration: 0,
+    maxDuration: 1440,
     allowOvernight: false,
     constrainStart: false,
     showPicker: true,

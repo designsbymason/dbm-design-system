@@ -74,8 +74,9 @@ export function timeRangePickerPlaygroundSnippet(args: TimeRangePickerPlayground
   if (args.secondStep !== undefined && args.secondStep !== 1) attributes.push(`secondStep={${args.secondStep}}`);
   if (args.min) attributes.push(`min="${args.min}"`);
   if (args.max) attributes.push(`max="${args.max}"`);
-  if (args.minDuration !== undefined && args.minDuration !== null) attributes.push(`minDuration={${args.minDuration}}`);
-  if (args.maxDuration !== undefined && args.maxDuration !== null) attributes.push(`maxDuration={${args.maxDuration}}`);
+  // 0 and a full day are the Playground's "no limit", so they aren't written.
+  if (args.minDuration) attributes.push(`minDuration={${args.minDuration}}`);
+  if (args.maxDuration !== undefined && args.maxDuration < 1440) attributes.push(`maxDuration={${args.maxDuration}}`);
   if (args.allowOvernight) attributes.push("allowOvernight");
   if (args.constrainStart) attributes.push("constrainStart");
   if (args.sharedPicker) attributes.push("sharedPicker");
