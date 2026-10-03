@@ -298,6 +298,28 @@ build` clean; the component bundle-size check (1.01KB JS / 0.56KB CSS, a small i
 new rule, still comfortably within budget); the Foundations token-coverage check unaffected (no
 semantic token changed, only a new primitive).
 
+**Addendum, same day:** also at explicit direction, `.showTrack` gained
+`backdrop-filter: blur(var(--dbm-space-1))` — a frosted-glass effect behind the track, layered on
+top of the half-opacity treatment above. Reuses `space.1` as the blur radius rather than adding a
+dedicated blur token: `Backdrop`'s own `blur` prop already uses this exact token for this exact
+purpose, an established, previously-reviewed choice, not a new one. Declared once, unconditionally,
+on the base `.showTrack` rule — the `:hover`/`:active` rule only overrides `background-color`, so
+the blur persists through every state the track is visible in, with no separate hover-state
+declaration needed. `Backdrop`'s own code comments document a real pitfall this could have hit
+(combining the CSS `opacity` property with `backdrop-filter` on the same element blends the whole
+blurred element back with the sharp content behind it, visibly weakening the blur) — not applicable
+here, since `.showTrack` never uses `opacity`, only a pre-mixed, already-opaque `color-mix()`
+`background-color`.
+
+Verified live: `getComputedStyle` on both tracks (`Tone` story) reports `backdrop-filter: blur(4px)`
+at rest; confirmed via the stylesheet's own parsed `CSSRule` that the `:hover`/`:active` rule
+touches only `background-color`, so the blur isn't being re-declared or dropped in those states.
+Re-verified: `tsc --noEmit`, `eslint --max-warnings 0`, the full unit suite (4696 passing — one new
+token reference, `space.1`, needed its own `<TokenRow>` in the MDX, caught immediately by the
+docs-test drift guard and fixed) and the full real-browser Chromium suite (875 passing), `pnpm
+build`, and the component bundle-size check (1.01KB JS / 0.58KB CSS, a small further increase,
+still comfortably within budget) — all clean.
+
 ## Not yet Finalized
 
 Per the standing rule, only the user declares a component Finalized — this review documents a
