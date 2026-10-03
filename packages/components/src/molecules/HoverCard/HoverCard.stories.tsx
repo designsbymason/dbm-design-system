@@ -483,26 +483,22 @@ export const Sizes: Story = {
   parameters: { docs: { source: { code: hoverCardSnippets.sizes } } },
   argTypes: { ...noControls, size: { control: false } },
   render: () => (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-        gap: "var(--dbm-space-8)",
-        placeItems: "end center",
-        paddingBlock: "var(--dbm-space-24) var(--dbm-space-4)",
-      }}
-    >
+    // One row per size, each row tall enough for the largest card (about 68px), so the
+    // cards, all held open and drawn to the right of their links, never overlap.
+    <div style={{ display: "flex", flexDirection: "column", paddingInline: "var(--dbm-space-8)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-        <HoverCard key={size} open>
-          <HoverCard.Trigger asChild>
-            <Link href={`#${size}`} onClick={preventNavigation}>
-              {size}
-            </Link>
-          </HoverCard.Trigger>
-          <HoverCard.Content size={size}>
-            <Text size="sm">size=&quot;{size}&quot;</Text>
-          </HoverCard.Content>
-        </HoverCard>
+        <div key={size} style={{ alignItems: "center", display: "flex", minBlockSize: "var(--dbm-space-20)" }}>
+          <HoverCard open>
+            <HoverCard.Trigger asChild>
+              <Link href={`#${size}`} onClick={preventNavigation}>
+                {size}
+              </Link>
+            </HoverCard.Trigger>
+            <HoverCard.Content side="right" size={size}>
+              <Text size="sm">size=&quot;{size}&quot;</Text>
+            </HoverCard.Content>
+          </HoverCard>
+        </div>
       ))}
     </div>
   ),
