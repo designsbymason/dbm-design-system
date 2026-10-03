@@ -47,3 +47,11 @@ Known costs, not defects: the tooltip's `aria-describedby` repeats the name when
 hand-wrapped `Tooltip`); a disabled or loading button never shows one (it can't be hovered or focused); and `IconButton`
 now imports `Tooltip`, so every consumer's bundle carries it (Radix Tooltip is already a dependency; the per-component
 size check stays within budget at 1.59KB JS).
+
+## Blank `variant` and `size` descriptions fixed, 2026-10-03 (defect fix; stays Finalized)
+
+At explicit direction. Found while checking the new `tooltip` rows: the Properties table showed no description for `variant`
+or `size`, since the type file had only `@default` tags and the stories' `argTypes` had no description (`Button` carries its
+JSDoc prose, which is why its table was fine). A finalization checklist item ("every row has a non-empty Description") the
+original pass should have caught, so by the three-question test it is a defect fix and stays Finalized. Both now have JSDoc
+prose in the type file and the same text in the story's `argTypes`, the reliable mechanism (`07` §5).

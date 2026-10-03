@@ -1,5 +1,5 @@
 import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-design-system/primitives";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
 import { createContext, forwardRef, useCallback, useContext, useMemo, useRef } from "react";
 import type { Ref } from "react";
@@ -26,7 +26,6 @@ import type {
   ToolbarSpacerProps,
   ToolbarToggleGroupProps,
 } from "./Toolbar.types";
-import { useScrollEdges } from "./useScrollEdges";
 
 /** What the parts need to know about the bar they sit in. */
 interface ToolbarContextValue {
@@ -115,7 +114,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
     const resolvedOrientation = useResolvedResponsiveValue<ToolbarOrientation>(orientation, "horizontal");
     const isScroller = overflow === "scroll";
     const barRef = useRef<HTMLDivElement>(null);
-    const { overflowStart, overflowEnd } = useScrollEdges(barRef, resolvedOrientation, isScroller);
+    const { overflowStart, overflowEnd } = useScrollEdges(barRef, resolvedOrientation, { enabled: isScroller });
 
     const hasWarnedNoAccessibleNameRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {

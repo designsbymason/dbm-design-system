@@ -1,6 +1,7 @@
 export * from "./hooks/useAnnouncement";
 export * from "./hooks/useIsScrollable";
 export * from "./hooks/usePersistentDismiss";
+export * from "./hooks/useScrollEdges";
 export * from "./hooks/useResolvedResponsiveValue";
 export * from "./utils/cx";
 export * from "./utils/mergeDefined";

@@ -594,3 +594,12 @@ No real screen reader (VoiceOver, NVDA, JAWS) was run against it; roles, names a
 scrolling strip was checked with overlay scrollbars only; a platform with permanent scrollbars now shows none, by design. **Vertical overflow
 (2026-09-27):** not checked with a real screen reader either, and the touch/trackpad scroll gesture on a vertical list was not separately
 verified (mouse wheel and the buttons were).
+
+## Overflow hook moved to `primitives`, 2026-10-03 (zero-output refactor; stays Finalized)
+
+At explicit direction, once `Toolbar`'s `overflow="scroll"` needed the same logic: `useTabsOverflow` became the shared
+`useScrollEdges` in `@dbm-design-system/primitives` (`Tabs` passes `itemSelector: '[role="tab"]'`, so it still measures
+its first and last tab, not whatever else the list holds). The behaviour is identical (same rectangle comparison with the
+same one-pixel slack, same subscriptions); `useTabsOverflow.ts` is gone. By the three-question test nothing visible or
+behavioural changed, so it stays Finalized. Re-verified: every `Tabs` unit and browser test, including the scroll
+fade/button and keyboard-held-button stories, passes unchanged, and the hook has its own tests in `src/test/`.

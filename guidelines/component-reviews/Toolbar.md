@@ -170,9 +170,9 @@ removed, the scroll-end button never shown.
 
 ### Known limits and costs
 
-- **`useScrollEdges` repeats `Tabs`' `useTabsOverflow` technique** (compare the first and last child to the list's box). A second
-  consumer is the point to extract it into `primitives`, but that would change the Finalized `Tabs`, so it was kept local and
-  is flagged here for the user.
+- **`useScrollEdges` was first written here as a copy of `Tabs`' `useTabsOverflow`**; on the user's go-ahead the same day it was
+  extracted into `primitives` and `Tabs` moved onto it (see [Tabs.md](Tabs.md)), with `Toolbar` using direct children and `Tabs`
+  its `[role="tab"]`s.
 - A scrolling **column** only responds when its container has a height; `align` has nothing to do in a scrolling bar's frame
   beyond what the scroller shows.
 - A sticky **ghost** bar gets an opaque surface; a transparent sticky bar over scrolling content would be unreadable.

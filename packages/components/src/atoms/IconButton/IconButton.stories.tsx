@@ -43,9 +43,17 @@ const meta: Meta<typeof IconButton> = {
     variant: {
       control: "select",
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
+      description:
+        "Visual style, signaling emphasis: primary for the one main action, down to ghost for the quietest, and destructive for an action that deletes or can't be undone. The same five styles Button has.",
       table: { defaultValue: { summary: "primary" } },
     },
-    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"], table: { defaultValue: { summary: "md" } } },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description:
+        "The button's box, on the shared 5-step size scale. Its height and width match a Button of the same step, so an IconButton sits flush beside one; the icon scales with it.",
+      table: { defaultValue: { summary: "md" } },
+    },
     isLoading: {
       control: "boolean",
       description:

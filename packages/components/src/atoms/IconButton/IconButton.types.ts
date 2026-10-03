@@ -20,9 +20,17 @@ export interface IconButtonProps extends Omit<
 > {
   /** The icon to render — a component reference, not a string name. */
   icon: PhosphorIcon;
-  /** @default 'primary' */
+  /**
+   * Visual style, signaling emphasis/hierarchy: `primary` for the one main action, down to `ghost` for the quietest, and
+   * `destructive` for an action that deletes or can't be undone. The same five styles `Button` has.
+   * @default 'primary'
+   */
   variant?: ButtonVariant;
-  /** @default 'md' */
+  /**
+   * The button's box, on the shared 5-step size scale. Its height and width match a `Button` of the same step, so an
+   * `IconButton` sits flush beside one; the icon scales with it.
+   * @default 'md'
+   */
   size?: ButtonSize;
   /**
    * Shows a spinner in place of the icon and disables interaction while

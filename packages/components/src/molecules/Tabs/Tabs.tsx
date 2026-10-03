@@ -1,11 +1,10 @@
-import { cx, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-design-system/primitives";
 import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-design-system/icons";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize } from "../../atoms/Icon";
 import styles from "./Tabs.module.css";
-import { useTabsOverflow } from "./useTabsOverflow";
 import type {
   TabsAlign,
   TabsContentProps,
@@ -250,7 +249,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
     const { variant, size, orientation } = useContext(TabsContext);
     const listRef = useRef<HTMLDivElement>(null);
     const isHorizontal = orientation === "horizontal";
-    const { overflowStart, overflowEnd } = useTabsOverflow(listRef, orientation);
+    const { overflowStart, overflowEnd } = useScrollEdges(listRef, orientation, { itemSelector: '[role="tab"]' });
 
     // A scroll button that has just run out of anything to scroll to stays in the page, inert,
     // while it still has real keyboard focus — the same reasoning `Pagination`'s own arrows apply
