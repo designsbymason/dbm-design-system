@@ -8,7 +8,15 @@ overrides:
   # patched in 0.28.1. Pulled in transitively via Storybook/Vite/tsup (dev-only,
   # never shipped in published packages) — pinned here since upstream hasn't
   # bumped it yet. Flagged by GitHub Dependabot 2026-07-18.
-  esbuild: ">=0.28.1"
+  #
+  # Capped at `<0.29.0` on 2026-10-02 (routine audit of every override that had
+  # no upper bound, prompted by the js-yaml incident below) — no 0.29.x exists
+  # yet, so this is proactive, not reactive. `storybook@10.5.7`'s own declared
+  # esbuild range tops out at `^0.28.0`; `tsup@8.5.1`'s own direct dependency
+  # is narrower (`^0.27.0`), but the full build/lint/test pipeline already
+  # passed clean at 0.28.1 before this cap existed, confirming the two are
+  # compatible in practice. Bumped floor to the latest 0.28.x patch, 0.28.2.
+  esbuild: ">=0.28.2 <0.29.0"
   # CVE-2026-14257 / GHSA-mh99-v99m-4gvg: brace-expansion DoS via unbounded
   # expansion length, patched in 5.0.8. Two copies existed: one reached via
   # ESLint core + Storybook's docgen-typescript plugin (minimatch@10.2.5, a
@@ -27,7 +35,14 @@ overrides:
   # intermediate arrays that bypasses the CVE-2026-14257 mitigation above —
   # >=5.0.8 was no longer sufficient on its own. Same dev-only paths, same
   # minimatch@3.1.5 patch below still required (still >=2's export shape).
-  brace-expansion: ">=5.0.9"
+  #
+  # Capped at `<6.0.0` on 2026-10-02 (routine audit of every override that had
+  # no upper bound) — no 6.x exists yet, so this is proactive. Matches
+  # `minimatch@10.2.5`'s own declared `^5.0.5` range, the real consumer this
+  # cap protects; `minimatch@3.1.5`'s own declared range (`^1.1.7`) is already
+  # deliberately overridden regardless, bridged by the patch below. Bumped
+  # floor to the latest 5.x patch, 5.0.12.
+  brace-expansion: ">=5.0.12 <6.0.0"
   # GHSA-4cwx-7wf7-3272 (+4 related moderate advisories, same patched
   # version): undici vulnerable to cross-user info disclosure, parse-time
   # crashes, CRLF injection, and response desync, all patched in 7.29.0.
@@ -77,12 +92,29 @@ overrides:
   # indefinitely when size is 0, patched in 3.3.17. Dev-only, pulled in
   # transitively by the Vite/Storybook toolchain. Found via `pnpm audit`,
   # 2026-08-08.
-  nanoid: ">=3.3.17"
+  #
+  # Capped at `<4.0.0` on 2026-10-02 (routine audit of every override that had
+  # no upper bound, prompted by the js-yaml incident above) — a real, already-
+  # live instance of exactly that bug, not just a theoretical risk like the
+  # others in this pass: the uncapped floor had silently resolved to
+  # `nanoid@6.0.1`, a major the real consumer (`postcss@8.5.26`, which
+  # declares only `^3.3.17`) never asked for and was never verified against —
+  # nanoid dropped CommonJS support entirely starting at 4.0. Capped to match
+  # postcss's own declared range and bumped the floor to the latest verified-
+  # safe 3.x patch, 3.3.19 (no advisory affects 3.3.17–3.3.19).
+  nanoid: ">=3.3.19 <4.0.0"
   # GHSA-fxqj-rqcc-2cmp: PostCSS — incomplete fix of an earlier advisory,
   # still reads an attacker-controlled sourceMappingURL's arbitrary .map
   # file when `from` is unset, patched in 8.5.23. Dev-only, pulled in via
   # Vite (Storybook's bundler). Found via `pnpm audit`, 2026-08-08.
-  postcss: ">=8.5.23"
+  #
+  # Capped at `<9.0.0` on 2026-10-02 (routine audit of every override that had
+  # no upper bound) — no 9.x exists yet, so this is proactive. Matches every
+  # real consumer's own declared range (`vite@8.1.5`: `^8.5.17`; `tsup@8.5.1`'s
+  # own peer: `^8.4.12`; `postcss-load-config@6.0.1`'s own peer: `>=8.0.9`, the
+  # only one of the three that was itself open-ended). Bumped floor to the
+  # latest 8.x patch, 8.5.28.
+  postcss: ">=8.5.28 <9.0.0"
   # GHSA-c83g-rgw3-j3cx (unbounded memory growth / cache never evicted) and
   # GHSA-73wf-gq98-2v4g (crash / prototype write via untrusted
   # browserslist-stats.json), both patched in 4.28.7. Reached only via
@@ -93,7 +125,13 @@ overrides:
   # open-ended `^4.24.0` browserslist range, so this floor stays within its
   # own compatible major — no adjacent-major risk like the undici case
   # above. Flagged by GitHub Dependabot 2026-09-03.
-  browserslist: ">=4.28.7"
+  #
+  # Capped at `<5.0.0` on 2026-10-02 anyway (routine audit of every override
+  # that had no upper bound) — the consumer's own range being open-ended too
+  # is exactly the kind of thing that stops protecting once a new major
+  # actually ships; no 5.x exists yet, so this is proactive, not reactive.
+  # Bumped floor to the latest 4.x patch, 4.29.3.
+  browserslist: ">=4.29.3 <5.0.0"
   # GHSA-82fw-gwwq-j3cx: Vitest path traversal / arbitrary file read via
   # @vitest/mocker's redirect-mock handling, patched in 4.1.11. Both
   # `vitest` and `@vitest/mocker` were resolved at exactly 4.1.10 — a
