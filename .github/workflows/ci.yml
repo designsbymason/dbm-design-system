@@ -28,6 +28,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Any documented, accepted-risk exception (e.g. a vulnerability with no patched version
+      # upstream yet) is configured once in pnpm-workspace.yaml's own auditConfig.ignoreGhsas,
+      # not as a flag here — pnpm audit reads it automatically, so this step and a local
+      # `pnpm audit` run always agree, with no risk of the two drifting apart.
       - name: Audit dependencies
         run: pnpm audit
 
