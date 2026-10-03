@@ -11,6 +11,8 @@ import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
 import type { IconButtonProps } from "../../atoms/IconButton";
 import { Spacer } from "../../atoms/Spacer";
+import { TooltipProvider } from "../../atoms/Tooltip";
+import { TooltipProviderPresenceContext } from "../../atoms/Tooltip/TooltipProviderContext";
 import { ButtonGroup } from "../ButtonGroup";
 import { ToggleGroup } from "../ToggleGroup";
 import type { ToggleGroupItemProps, ToggleGroupProps } from "../ToggleGroup";
@@ -49,6 +51,33 @@ const ToolbarContext = createContext<ToolbarContextValue>({
 const ToggleGroupDisabledContext = createContext(false);
 
 const alignValues: ToolbarAlign[] = ["start", "center", "end"];
+
+/**
+ * Scrolls a scrolling bar just far enough to show an item in full, clear of the edge fades. A browser scrolls a focused
+ * element into view only when it is *completely* hidden, so an item that is only partly visible (cut off behind a fade)
+ * stays cut off without this. Measured from bounding rectangles and applied with `scrollBy`, so it is the same in a
+ * right-to-left bar (where `scrollLeft` counts the other way) and never scrolls the page, which `scrollIntoView` would.
+ * The room to keep clear on each side is the bar's own `scroll-padding`, the width of a fade.
+ */
+function revealItem(bar: HTMLElement, item: HTMLElement, orientation: ToolbarOrientation): void {
+  if (typeof bar.scrollBy !== "function") return;
+  const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
+  const box = bar.getBoundingClientRect();
+  const rect = item.getBoundingClientRect();
+  const style = getComputedStyle(bar);
+  const pad = (value: string) => Number.parseFloat(value) || 0;
+  if (orientation === "vertical") {
+    const start = box.top + pad(style.scrollPaddingTop);
+    const end = box.bottom - pad(style.scrollPaddingBottom);
+    if (rect.top < start) bar.scrollBy({ top: rect.top - start, behavior });
+    else if (rect.bottom > end) bar.scrollBy({ top: rect.bottom - end, behavior });
+    return;
+  }
+  const start = box.left + pad(style.scrollPaddingLeft);
+  const end = box.right - pad(style.scrollPaddingRight);
+  if (rect.left < start) bar.scrollBy({ left: rect.left - start, behavior });
+  else if (rect.right > end) bar.scrollBy({ left: rect.right - end, behavior });
+}
 
 function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
@@ -105,6 +134,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       stickyOffset = 0,
       scrollContainerRef,
       className,
+      onFocus,
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
       ...props
@@ -181,6 +211,17 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
         loop={loop}
         // Applied after `{...props}` so a same-named consumer prop can never replace them
         // (05-component-api-conventions.md §3).
+        onFocus={(event) => {
+          onFocus?.(event);
+          // Only an item inside the bar (a portaled `Select` list bubbles its focus through React too), and after the
+          // browser has done its own scrolling, which only happens for an item that is completely hidden.
+          const target = event.target as HTMLElement;
+          const bar = barRef.current;
+          if (!isScroller || !bar || !bar.contains(target)) return;
+          requestAnimationFrame(() => {
+            if (bar.isConnected && bar.contains(document.activeElement)) revealItem(bar, document.activeElement as HTMLElement, resolvedOrientation);
+          });
+        }}
         role="toolbar"
         aria-orientation={resolvedOrientation}
         aria-label={ariaLabel}
@@ -213,8 +254,8 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
         // The frame is the outermost element, so a sticky bar sticks as one box, fades and buttons with it.
         dir={dir}
       >
-        {/* The buttons are for a pointer: the arrow keys already move focus along the bar and the browser scrolls the
-            focused item into view, so they are out of the tab order and hidden from assistive tech, and a press on one
+        {/* The buttons are for a pointer: the arrow keys already move focus along the bar and the bar scrolls the
+            focused item into view (`onFocus` above), so they are out of the tab order and hidden from assistive tech, and a press on one
             never takes focus (which would otherwise be lost when it disappears at the end). */}
         <button
           type="button"
@@ -246,15 +287,28 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       bar
     );
 
+    const stuckOrPlain = sticky ? (
+      <Affix asChild offset={stickyOffset} scrollContainerRef={scrollContainerRef}>
+        {content}
+      </Affix>
+    ) : (
+      content
+    );
+
+    // The tooltips of a bar's icon buttons share one provider, so moving from one to the next opens the next at once
+    // instead of waiting the full delay again. An app's own `TooltipProvider` is left in charge when there is one; the
+    // delays here are the ones a standalone `Tooltip` has.
+    const hasAmbientTooltipProvider = useContext(TooltipProviderPresenceContext);
+
     return (
       <ToolbarContext.Provider value={toolbarSettings}>
         <ButtonGroupProvider value={buttonSettings}>
-          {sticky ? (
-            <Affix asChild offset={stickyOffset} scrollContainerRef={scrollContainerRef}>
-              {content}
-            </Affix>
+          {hasAmbientTooltipProvider ? (
+            stuckOrPlain
           ) : (
-            content
+            <TooltipProvider delayDuration={700} skipDelayDuration={300}>
+              {stuckOrPlain}
+            </TooltipProvider>
           )}
         </ButtonGroupProvider>
       </ToolbarContext.Provider>
@@ -397,9 +451,23 @@ const ToolbarToggleItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((p
 ToolbarToggleItem.displayName = "Toolbar.ToggleItem";
 
 /** A line between items, across the toolbar's own direction (a vertical rule in a row). Announced as a separator. */
-const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(({ className, ...props }, ref) => (
-  <ToolbarPrimitive.Separator ref={ref} {...props} className={cx(styles.separator, className)} />
-));
+const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(({ className, ...props }, ref) => {
+  const toolbar = useContext(ToolbarContext);
+  // Across the bar's own direction. Radix computes this too, but before spreading whatever else it is given, so a
+  // consumer's `role` or `aria-orientation` would replace it; set here, after `props`, they can't
+  // (05-component-api-conventions.md §3). A horizontal separator leaves `aria-orientation` off, as it is the ARIA default.
+  const orientation: ToolbarOrientation = toolbar.orientation === "vertical" ? "horizontal" : "vertical";
+  return (
+    <ToolbarPrimitive.Separator
+      ref={ref}
+      {...props}
+      role="separator"
+      aria-orientation={orientation === "vertical" ? "vertical" : undefined}
+      data-orientation={orientation}
+      className={cx(styles.separator, className)}
+    />
+  );
+});
 ToolbarSeparator.displayName = "Toolbar.Separator";
 
 /** Flexible empty space that pushes whatever follows it to the far end of the toolbar. Hidden from assistive tech. */

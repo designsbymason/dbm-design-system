@@ -22,6 +22,7 @@ import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { Tooltip } from "../../atoms/Tooltip";
 import { Popover } from "../Popover";
+import { send } from "../CodeBlock/browserProtocol";
 import { Select } from "../Select";
 import { Toolbar } from "./Toolbar";
 import { toolbarPlaygroundSnippet, toolbarSnippets } from "./Toolbar.snippets";
@@ -963,6 +964,194 @@ export const TooltipInteraction: Story = {
   },
 };
 
+export const RevealInteraction: Story = {
+  tags: ["!dev"],
+  ...hidden,
+  name: "Focus scrolls the item fully into view — interaction test",
+  args: { overflow: "scroll", surface: "outlined", variant: "secondary" },
+  render: (args) => (
+    <div style={{ width: "16rem" }}>
+      <Toolbar {...args} aria-label="Actions" data-testid="bar">
+        {["Edit", "Share", "Export", "Archive", "Duplicate", "Delete", "Rename", "Move"].map((label) => (
+          <Toolbar.Button key={label}>{label}</Toolbar.Button>
+        ))}
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    const fade = parseFloat(getComputedStyle(bar).scrollPaddingLeft);
+    // A browser scrolls a focused element into view only when it is *completely* hidden, so an item cut off behind the
+    // edge fade stayed cut off. Every item reached by an arrow key must end up inside the bar, clear of the fades.
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 450));
+    const expectVisible = async (name: string, atStart: boolean, atEnd: boolean) => {
+      await settle();
+      const item = canvas.getByRole("button", { name }).getBoundingClientRect();
+      const box = bar.getBoundingClientRect();
+      // the room kept clear on a side is the fade's width, except where the bar has run out of room to scroll
+      await expect(item.left - box.left).toBeGreaterThanOrEqual(atStart ? 0 : fade - 1);
+      await expect(box.right - item.right).toBeGreaterThanOrEqual(atEnd ? 0 : fade - 1);
+    };
+    await userEvent.tab();
+    await expectVisible("Edit", true, false);
+    const forward = ["Share", "Export", "Archive", "Duplicate", "Delete", "Rename", "Move"];
+    for (const name of forward) {
+      await userEvent.keyboard("{ArrowRight}");
+      await expectVisible(name, false, name === "Move");
+    }
+    for (const name of [...forward.slice(0, -1).reverse(), "Edit"]) {
+      await userEvent.keyboard("{ArrowLeft}");
+      await expectVisible(name, name === "Edit", false);
+    }
+  },
+};
+
+export const RevealColumnInteraction: Story = {
+  tags: ["!dev"],
+  ...hidden,
+  name: "Focus scrolls a column item into view — interaction test",
+  args: { overflow: "scroll", orientation: "vertical", surface: "outlined" },
+  render: (args) => (
+    // 7rem: not a whole number of items tall, so an arrow key lands on one that is only partly in view.
+    <div style={{ height: "7rem" }}>
+      <Toolbar {...args} aria-label="Tools" data-testid="bar">
+        {["One", "Two", "Three", "Four", "Five", "Six"].map((label) => (
+          <Toolbar.Button key={label} variant="secondary">
+            {label}
+          </Toolbar.Button>
+        ))}
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    await userEvent.tab();
+    for (const name of ["Two", "Three", "Four", "Five", "Six"]) {
+      await userEvent.keyboard("{ArrowDown}");
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      const item = canvas.getByRole("button", { name }).getBoundingClientRect();
+      const box = bar.getBoundingClientRect();
+      await expect(item.top).toBeGreaterThanOrEqual(box.top - 1);
+      await expect(item.bottom).toBeLessThanOrEqual(box.bottom + 1);
+    }
+  },
+};
+
+export const RevealRightToLeftInteraction: Story = {
+  tags: ["!dev"],
+  ...hidden,
+  name: "Focus scrolls an item into view, right to left — interaction test",
+  args: { overflow: "scroll", surface: "outlined", variant: "secondary", dir: "rtl" },
+  render: (args) => (
+    <div dir="rtl" style={{ width: "16rem" }}>
+      <Toolbar {...args} aria-label="Actions" data-testid="bar">
+        {["Edit", "Share", "Export", "Archive", "Duplicate", "Delete"].map((label) => (
+          <Toolbar.Button key={label}>{label}</Toolbar.Button>
+        ))}
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    await userEvent.tab();
+    // Arrow left goes forwards in a right-to-left bar; every item reached ends up inside the bar.
+    for (const name of ["Share", "Export", "Archive", "Duplicate", "Delete"]) {
+      await userEvent.keyboard("{ArrowLeft}");
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      const item = canvas.getByRole("button", { name }).getBoundingClientRect();
+      const box = bar.getBoundingClientRect();
+      await expect(item.left).toBeGreaterThanOrEqual(box.left - 1);
+      await expect(item.right).toBeLessThanOrEqual(box.right + 1);
+    }
+  },
+};
+
+export const ForcedColoursInteraction: Story = {
+  tags: ["!dev"],
+  ...hidden,
+  name: "Forced colours — interaction test",
+  args: { surface: "filled", sticky: true, overflow: "scroll" },
+  render: function Render(args) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    return (
+      <div ref={scrollRef} data-testid="scroller" style={{ height: "8rem", overflow: "auto", width: "18rem" }}>
+        <Toolbar {...args} aria-label="Formatting" scrollContainerRef={scrollRef} data-testid="bar">
+          <Items />
+          <Toolbar.Separator />
+          <ScrollItems />
+        </Toolbar>
+        <div style={{ height: "30rem" }} />
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const scroller = canvas.getByTestId("scroller");
+    const frame = canvas.getByTestId("bar").parentElement!;
+    const separator = canvas.getByRole("separator");
+    scroller.scrollTop = 200;
+    await waitFor(() => expect(frame).toHaveAttribute("data-stuck"));
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
+      // The separator is a background, which forced colours replaces with the page's, so it would be invisible; it names a
+      // system colour instead, which is kept, and so differs from the page.
+      const page = getComputedStyle(frame.parentElement!).backgroundColor;
+      await expect(getComputedStyle(separator).backgroundColor).not.toBe(page);
+      // A filled bar and a stuck bar lose their fill and shadow: each is bounded by a drawn outline instead.
+      await expect(getComputedStyle(frame).outlineStyle).toBe("solid");
+      await expect(getComputedStyle(frame).outlineWidth).not.toBe("0px");
+      // The edge fades are backgrounds too, so they are dropped.
+      await expect(getComputedStyle(frame, "::after").display).toBe("none");
+    } finally {
+      await emulate("none");
+    }
+  },
+};
+
+export const ScrollButtonHoverInteraction: Story = {
+  tags: ["!dev"],
+  ...hidden,
+  name: "Scroll button hover on a filled bar — interaction test",
+  args: { surface: "filled", overflow: "scroll", variant: "secondary" },
+  render: (args) => (
+    <div style={{ width: "14rem" }}>
+      <Toolbar {...args} aria-label="Actions" data-testid="bar">
+        <ScrollItems />
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const frame = within(canvasElement).getByTestId("bar").parentElement!;
+    // A synthetic pointer never matches `:hover`, so the pairing is read from the stylesheet itself: a filled bar is
+    // `bg.neutral-subtle`, so a scroll button's hover fill there has to be a different colour or it shows nothing.
+    const hoverRules: string[] = [];
+    const collect = (rules: CSSRuleList) => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof CSSStyleRule && rule.selectorText.includes("scrollButton") && rule.selectorText.includes(":hover") && rule.selectorText.includes("filled")) {
+          hoverRules.push(rule.style.getPropertyValue("background-color"));
+        } else if ("cssRules" in rule) collect((rule as CSSGroupingRule).cssRules);
+      }
+    };
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        collect(sheet.cssRules);
+      } catch {
+        // a cross-origin sheet can't be read, and isn't ours
+      }
+    }
+    await expect(hoverRules.length).toBeGreaterThan(0);
+    await expect(hoverRules.join(" ")).toContain("--dbm-bg-neutral-subtle-hover");
+    const style = getComputedStyle(frame);
+    await expect(style.getPropertyValue("--dbm-bg-neutral-subtle-hover").trim()).not.toBe(style.getPropertyValue("--dbm-bg-neutral-subtle").trim());
+  },
+};
+
 export const TargetSizeInteraction: Story = {
   ...hidden,
   tags: ["!dev"],
@@ -1031,10 +1220,10 @@ export const PhoneInteraction: Story = {
   },
 };
 
-export const ForcedColoursInteraction: Story = {
+export const PressedInteraction: Story = {
   ...hidden,
   tags: ["!dev"],
-  name: "Pressed and separator, themes — interaction test",
+  name: "Pressed toggle and separator — interaction test",
   args: { surface: "filled" },
   render: (args) => (
     <Toolbar {...args}>

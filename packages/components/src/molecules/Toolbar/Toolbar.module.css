@@ -285,6 +285,12 @@
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
+/* A filled bar is `bg.neutral-subtle` itself, so that hover fill would be the bar's own colour and show nothing: one
+   step on, as `Table`'s hovered row is. */
+.frame[data-surface="filled"] .scrollButton:hover {
+  background-color: var(--dbm-bg-neutral-subtle-hover);
+}
+
 .frame[data-orientation="horizontal"] .scrollButton {
   block-size: 100%;
   min-inline-size: var(--dbm-space-6);
@@ -320,5 +326,31 @@
   .frame::after,
   .scrollButton {
     transition: none;
+  }
+}
+
+/* --- Forced colours (Windows high contrast) ---
+   Forced colours replaces every background colour with the page's, so what is drawn *as* a background vanishes: the
+   separator (a 1px fill) would be white on white. System colours are the one thing it keeps, so the separator names one.
+   The edge fades are backgrounds too and are dropped (the scroll buttons, which are real controls, remain). A shadow
+   is removed, so a stuck bar and a filled bar, which are told apart from the page by fill and shadow alone, get a
+   one-pixel outline instead, drawn outside or inside the box so nothing moves. */
+@media (forced-colors: active) {
+  .separator {
+    background-color: CanvasText;
+  }
+
+  .frame::before,
+  .frame::after {
+    display: none;
+  }
+
+  .sticky[data-stuck] {
+    outline: var(--dbm-border-width-1) solid CanvasText;
+  }
+
+  .filled {
+    outline: var(--dbm-border-width-1) solid CanvasText;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
   }
 }

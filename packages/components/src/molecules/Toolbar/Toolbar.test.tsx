@@ -9,7 +9,7 @@ import buttonStyles from "../../atoms/Button/Button.module.css";
 import iconButtonStyles from "../../atoms/IconButton/IconButton.module.css";
 import buttonGroupStyles from "../ButtonGroup/ButtonGroup.module.css";
 import toggleStyles from "../ToggleGroup/ToggleGroup.module.css";
-import { Tooltip } from "../../atoms/Tooltip";
+import { Tooltip, TooltipProvider } from "../../atoms/Tooltip";
 import { Popover } from "../Popover";
 import { Select } from "../Select";
 import { ButtonGroup } from "../ButtonGroup";
@@ -458,6 +458,24 @@ describe("Toolbar", () => {
       expect(screen.getByRole("separator")).toHaveAttribute("data-orientation", "horizontal");
     });
 
+    it("does not let props replace a separator's role or orientation", () => {
+      const { rerender } = render(
+        <Toolbar aria-label="Bar">
+          <Toolbar.Separator {...({ role: "presentation", "aria-orientation": "horizontal" } as object)} data-testid="sep" />
+        </Toolbar>,
+      );
+      expect(screen.getByTestId("sep")).toHaveAttribute("role", "separator");
+      expect(screen.getByTestId("sep")).toHaveAttribute("aria-orientation", "vertical");
+      rerender(
+        <Toolbar aria-label="Bar" orientation="vertical">
+          <Toolbar.Separator {...({ role: "presentation", "aria-orientation": "vertical" } as object)} data-testid="sep" />
+        </Toolbar>,
+      );
+      expect(screen.getByTestId("sep")).toHaveAttribute("role", "separator");
+      expect(screen.getByTestId("sep")).not.toHaveAttribute("aria-orientation");
+      expect(screen.getByTestId("sep")).toHaveAttribute("data-orientation", "horizontal");
+    });
+
     it("hides a spacer from assistive tech", () => {
       render(
         <Toolbar aria-label="Bar">
@@ -686,6 +704,46 @@ describe("Toolbar", () => {
       await user.keyboard("{ArrowRight}");
       expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
       expect(await screen.findByText("Make it italic", { selector: '[role="tooltip"]' })).toBeInTheDocument();
+    });
+  });
+
+  describe("tooltips share one provider", () => {
+    const Icons = () => (
+      <>
+        <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" tooltip />
+        <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" tooltip />
+      </>
+    );
+
+    it("opens the next tooltip at once after one has just closed, instead of waiting the full delay again", async () => {
+      const user = userEvent.setup();
+      render(
+        <Toolbar aria-label="Bar">
+          <Icons />
+        </Toolbar>,
+      );
+      await user.hover(screen.getByRole("button", { name: "Bold" }));
+      expect(await screen.findByRole("tooltip", {}, { timeout: 1500 })).toHaveTextContent("Bold");
+      // closing one starts the provider's skip window, in which the next opens without its delay
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+      await user.hover(screen.getByRole("button", { name: "Italic" }));
+      // far sooner than the 700ms a standalone tooltip waits
+      await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("Italic"), { timeout: 250 });
+    });
+
+    it("leaves an app's own TooltipProvider in charge when there is one", async () => {
+      const user = userEvent.setup();
+      render(
+        <TooltipProvider delayDuration={0}>
+          <Toolbar aria-label="Bar">
+            <Icons />
+          </Toolbar>
+        </TooltipProvider>,
+      );
+      await user.hover(screen.getByRole("button", { name: "Bold" }));
+      // the app's zero delay applies; a nested provider with the default would make this wait 700ms
+      await waitFor(() => expect(screen.getByRole("tooltip")).toHaveTextContent("Bold"), { timeout: 250 });
     });
   });
 

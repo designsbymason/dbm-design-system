@@ -157,8 +157,8 @@ Seven items from the gap list, built the same day. Still not declared Finalized.
   column) with a scroller, edge fades and start/end buttons: the bar sits in a frame that carries the surface (outlined, filled,
   sticky) and is the positioning parent for the fades and buttons, which must be outside the scroller. The buttons are for a
   pointer only: out of the tab order, `aria-hidden`, and a press never takes focus (so nothing loses focus when one disappears
-  at the end), because the arrow keys already move along the bar and the browser scrolls the focused item into view, kept clear
-  of the fade by `scroll-padding`. Inside the scroller the focus ring is drawn inside each item (`05` §6: a scrolling box cuts off
+  at the end), because the arrow keys already move along the bar and the bar scrolls the focused item into view (see "Final review"
+  below: the browser alone does not), kept clear of the fade by `scroll-padding`. Inside the scroller the focus ring is drawn inside each item (`05` §6: a scrolling box cuts off
   a ring drawn outside it). Real-browser stories cover a row, a right-to-left row (the end is the left edge; `scrollLeft` goes negative), a column, the fade and
   button opacity (read after their transition), the 24px button size, and the last item scrolling fully into view.
 
@@ -195,3 +195,41 @@ removed, the scroll-end button never shown.
 - **`Select`'s dropdown wrapped its selected option in a narrow trigger.** Found through the "A select and a popover" story:
   the dropdown was exactly the trigger's width, so a 78px trigger left the bold, checked "14 pt" row too narrow and it wrapped
   to a second line while its neighbours did not. A component defect, not the story's; fixed in `Select` ([Select.md](Select.md)).
+
+## Final review before Finalizing (2026-10-03)
+
+A full `06` §9 pass with fresh eyes, probing what had only been reasoned about. Five findings, all fixed; two more were put to
+the user (the `Toolbar.ToggleGroup` default look and where `className`/`ref` land in scroll mode) and are not changed.
+
+- **Arrow-key focus did not reliably bring an item into view in `overflow="scroll"`; the docs said it did.** A browser scrolls a
+  focused element into view only when it is *completely* hidden, so an item cut off behind an edge fade stayed cut off (a probe
+  stepping through eight items left one 8px and one 37px clipped with `scrollLeft` unchanged; only fully hidden items scrolled, and
+  then centred). Fixed with a reveal-on-focus step like `Tabs`' `revealTab`: rectangle-based `scrollBy` (so it is right in
+  right-to-left and never scrolls the page), keeping the bar's own `scroll-padding` (the fade's width) clear on each side, run after
+  the browser's own scroll, and only for focus that lands inside the bar (a portaled `Select` list bubbles its focus through React
+  too). Real-browser stories step through every item, forwards and back, in a row and in right-to-left, asserting each ends up fully
+  inside and clear of the fades; both fail when the fix is removed. The vertical story passes with the fix removed, because
+  Chromium scrolls a column natively in that geometry, so it is a guard rather than a proof for columns. Four places that said
+  "the browser scrolls it into view" were corrected.
+- **The separator was invisible in forced colours.** It is a 1px background, which forced colours replaces with the page's
+  (measured: white on white). Fixed with a `@media (forced-colors: active)` rule naming a system colour; a filled bar and a stuck
+  sticky bar, which are told from the page by fill and shadow alone, get a one-pixel outline in its place; the edge fades (backgrounds)
+  are dropped, and the scroll buttons, real controls, remain. A story emulates forced colours in Chromium and checks all three. The
+  story that had been named "Pressed and separator, themes" never emulated anything; renamed to what it checks.
+- **`Toolbar.Separator` let `role` and `aria-orientation` props replace its own** (`05` §3's bug class; Radix sets them before
+  spreading). Set after the spread, from the bar's orientation (a horizontal separator leaves `aria-orientation` off, the ARIA
+  default). Tested with both orientations; fails when removed.
+- **Tooltips in a bar did not share a skip delay.** Each icon button's `Tooltip` made its own provider, so moving from one icon to
+  the next waited the full delay again. The bar now wraps its content in a `TooltipProvider` with a standalone tooltip's own delays
+  (700ms, 300ms skip), unless an app's `TooltipProvider` is already in charge, which then wins. Two tests, each failing under its own
+  mutant (no provider; a provider always nested). The first closes the opened tooltip with `Escape` and hovers the next, since
+  Radix's pointer-grace area never resolves in jsdom.
+- **The scroll buttons showed no hover on a `filled` bar** (their hover fill, `bg.neutral-subtle`, is the bar's own fill); one step
+  on (`bg.neutral-subtle-hover`) there. A synthetic pointer never matches `:hover`, so the story reads the stylesheet rule.
+
+Also checked clean: jest-axe in six modes (plain, scroll, sticky, scroll+sticky column, wrap in right-to-left, disabled), all under
+StrictMode; every icon, toggle and select target at least 24 × 24px at all five sizes; a disabled bar disables a `Select` inside
+`Toolbar.Item` (Radix hands `disabled` down through the slot); the dark/emerald toggle group.
+
+Not covered: only Chromium was run (the hidden scrollbar and `:dir()` are untested in Safari and Firefox), and real touch scrolling.
+`Select` and `IconButton` differ by 1px at `xl` (60 and 61), which predates this component.

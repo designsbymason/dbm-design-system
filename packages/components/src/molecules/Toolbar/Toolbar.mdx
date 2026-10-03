@@ -319,8 +319,9 @@ forwards in the page does so in the toolbar too.
 - In a right-to-left page pass `dir="rtl"`: Radix doesn't read the page, so without it Left would still go backwards.
 - A `Toolbar.ToggleGroup` adds no tab stop of its own (the toolbar owns focus; the group turns its own roving focus off): single is a `radiogroup` of `radio` items, with `aria-checked`, where an arrow key also chooses the item it lands on, and multiple is a plain `group` of toggle buttons with `aria-pressed` — not a `toolbar` inside a toolbar.
 - A `Select` or popover trigger in `Toolbar.Item` keeps its own keyboard behaviour: it opens with `Enter` or `Space`, and focus returns to it when it closes.
-- With `overflow="scroll"` the scroll buttons are `aria-hidden` and out of the tab order (the arrow keys already move along the bar and the browser scrolls the focused item into view, kept clear of the edge fade), so a keyboard or screen reader user meets the same one tab stop. The focus ring is drawn inside each item there, since a scrolling box would cut off a ring drawn outside it.
-- A `tooltip` on an icon button opens on hover and keyboard focus and closes with `Escape`; the button is named by its `aria-label`, so the tooltip is never the only name.
+- With `overflow="scroll"` the scroll buttons are `aria-hidden` and out of the tab order (the arrow keys already move along the bar, and the bar scrolls the focused item fully into view, clear of the edge fade: a browser does that only for an item that is completely hidden, so a partly visible one is brought in by the bar itself), so a keyboard or screen reader user meets the same one tab stop. The focus ring is drawn inside each item there, since a scrolling box would cut off a ring drawn outside it.
+- A `tooltip` on an icon button opens on hover and keyboard focus and closes with `Escape`; the button is named by its `aria-label`, so the tooltip is never the only name. The bar's tooltips share one provider, so moving from one icon to the next opens the next at once; an app's own `TooltipProvider` is used instead when there is one.
+- In Windows high contrast (forced colours) the separator is drawn in the system text colour, a filled bar and a stuck sticky bar get a one-pixel outline in place of their fill and shadow, and the edge fades are dropped (the scroll buttons remain).
 - A disabled item is not focusable, so the arrow keys skip it; the toolbar's `disabled` disables every item natively.
 - A toggle (`pressed`) is announced with `aria-pressed`; its pressed look is a filled icon as well as a colour, so the state
   is never colour alone.
@@ -394,6 +395,7 @@ A toolbar draws only its own bar and separator; every item is a `Button` or `Ico
 <TokenRow token="z-index.sticky" usage="a sticky bar's layer, and a scroll button's, above its own edge fade" />
 <TokenRow token="z-index.dropdown" usage="the edge fades of a scrolling bar, above its items" />
 <TokenRow token="icon.default" usage="a scroll button's icon" />
+<TokenRow token="bg.neutral-subtle-hover" usage="a scroll button's hover fill on a filled bar, one step on from the bar's own fill" />
 <TokenRow token="border-width.2" usage="how far inside an item its focus ring is drawn in a scrolling bar" />
 <TokenRow token="motion.duration.fast" usage="the edge fades and scroll buttons appearing" />
 <TokenRow token="motion.easing.standard" usage="the edge fades and scroll buttons appearing" />
