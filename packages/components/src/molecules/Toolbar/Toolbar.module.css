@@ -1,0 +1,102 @@
+/* The bar: a flex row (or column) of items, as wide as its items unless `fullWidth` says otherwise (the same as
+   `ButtonGroup`). Its padding and gap step up with `size` (set on the root as `data-size`) so the items keep the
+   breathing room that suits their own height. */
+.root {
+  --toolbar-gap: var(--dbm-space-1);
+  --toolbar-padding: var(--dbm-space-1);
+  align-items: center;
+  box-sizing: border-box;
+  display: inline-flex;
+  gap: var(--toolbar-gap);
+  max-inline-size: 100%;
+  padding: var(--toolbar-padding);
+}
+
+.root[data-size="lg"],
+.root[data-size="xl"] {
+  --toolbar-gap: var(--dbm-space-2);
+}
+
+.root[data-size="md"] {
+  --toolbar-padding: var(--dbm-space-2);
+}
+
+.root[data-size="lg"],
+.root[data-size="xl"] {
+  --toolbar-padding: var(--dbm-space-3);
+}
+
+.root[data-orientation="vertical"] {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+/* `fullWidth`: the bar fills its container, which also gives a `Toolbar.Spacer` room to take up. */
+.fullWidth {
+  display: flex;
+  inline-size: 100%;
+}
+
+/* A ghost bar has no surface, so its padding would only push the items off the line they should align to. */
+.root:not(.outlined):not(.filled) {
+  padding: 0;
+}
+
+.outlined,
+.filled {
+  border-radius: var(--dbm-radius-lg);
+}
+
+.outlined {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.filled {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* A pill-shaped bar to go with pill-shaped items. */
+.rounded.outlined,
+.rounded.filled {
+  border-radius: var(--dbm-radius-full);
+}
+
+/* Items wrap onto more lines when they don't fit, rather than overflowing; a column has no width to run out of. */
+.wrap[data-orientation="horizontal"] {
+  flex-wrap: wrap;
+}
+
+/* A named cluster: the same gap as the bar, kept together as one unit when the bar wraps. */
+.group {
+  align-items: center;
+  display: flex;
+  flex-direction: inherit;
+  gap: var(--toolbar-gap);
+}
+
+[data-orientation="vertical"] > .group {
+  align-items: stretch;
+}
+
+/* A rule across the bar's own direction: Radix reports the separator's orientation as the opposite of the bar's,
+   so a row gets a vertical rule. A divider isn't bound by WCAG 1.4.11 (each item is identified by its own label,
+   not by the line between them), but `border.neutral`, a step stronger than the bar's own border, keeps it visible
+   in dark mode, where `border.default` all but disappears. */
+.separator {
+  align-self: stretch;
+  background-color: var(--dbm-border-neutral);
+  flex-shrink: 0;
+}
+
+.separator[data-orientation="vertical"] {
+  inline-size: var(--dbm-border-width-1);
+  margin-block: var(--dbm-space-1);
+  margin-inline: var(--dbm-space-1);
+}
+
+.separator[data-orientation="horizontal"] {
+  block-size: var(--dbm-border-width-1);
+  margin-block: var(--dbm-space-1);
+  margin-inline: var(--dbm-space-1);
+}

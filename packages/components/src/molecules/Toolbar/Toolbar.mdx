@@ -1,0 +1,350 @@
+import { TextBIcon, TextItalicIcon } from "@dbm-design-system/icons";
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { IconButton } from "../../atoms/IconButton";
+import { Tooltip } from "../../atoms/Tooltip";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { ButtonGroup } from "../ButtonGroup";
+import { ToggleGroup } from "../ToggleGroup";
+import { Toolbar } from "./Toolbar";
+import * as ToolbarStories from "./Toolbar.stories";
+import * as ToolbarGroupStories from "./ToolbarGroup.stories";
+import * as ToolbarItemStories from "./ToolbarItem.stories";
+
+export const propOrder = [
+  "children",
+  "variant",
+  "itemVariant",
+  "size",
+  "rounded",
+  "disabled",
+  "orientation",
+  "dir",
+  "loop",
+  "fullWidth",
+  "wrap",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+export const itemPropOrder = ["children", "disabled"];
+
+export const groupPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+
+<Meta of={ToolbarStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Toolbar" tier="Molecule" />
+
+A bar of actions that is a single tab stop. `Tab` moves focus into the toolbar and out again; the arrow keys,
+`Home` and `End` move between its items — left and right for a row, up and down for a column. It is a named
+`role="toolbar"` built on Radix `Toolbar`, and it hands its `itemVariant`, `size`, `rounded` and `disabled` to the
+`Toolbar.Button`s and `Toolbar.IconButton`s inside it as defaults, so a bar of ten says them once. An item's own
+props still win.
+
+Use it for a cluster of commands acting on one thing — an editor's formatting bar, a canvas's tools, a row of
+table actions — where reaching every command with `Tab` would be tedious. For actions that are only visually
+grouped, with no change to how the keyboard moves, use a `ButtonGroup`; for choosing one option from several, a
+`ToggleGroup`.
+
+### Import
+
+```tsx
+import { Toolbar } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ToolbarStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ToolbarStories.Playground}
+  exclude={[
+    "children",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Toolbar` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`, `title`) —
+passed straight through to the underlying element.
+
+<PropertiesTable of={ToolbarStories} order={propOrder} />
+
+The parts of a toolbar:
+
+- **`Toolbar.Button`** is a `Button` in the arrow-key order, taking every `Button` prop. **`Toolbar.IconButton`** is an
+  `IconButton`, taking every `IconButton` prop, including `pressed` for a toggle. Their `variant`, `size`, `rounded` and
+  `disabled` default to the toolbar's.
+- **`Toolbar.Separator`** is a line between items, across the bar's own direction, announced as a separator. It takes
+  `className`, `style`, `id` and `data-testid`.
+- **`Toolbar.Spacer`** is flexible empty space that pushes whatever follows it to the far end. It is hidden from
+  assistive tech and takes the `Spacer` props.
+
+### Toolbar.Item properties
+
+<PropertiesTable of={ToolbarItemStories} order={itemPropOrder} />
+
+### Toolbar.Group properties
+
+`Toolbar.Group` also accepts any other native `<div>` attribute.
+
+<PropertiesTable of={ToolbarGroupStories} order={groupPropOrder} />
+
+## Variants
+
+### Bar variants
+
+`variant` is how the bar itself is drawn: no surface of its own (`ghost`), a bordered bar (`outlined`) or a tinted
+one (`filled`). A ghost bar has no padding, so its items line up with whatever sits beside it.
+
+<Canvas of={ToolbarStories.Variants} />
+
+### Item variants
+
+`itemVariant` is every item's default look. `ghost` keeps a row of icon buttons quiet; `secondary` or `primary` suit a
+bar of labelled actions.
+
+<Canvas of={ToolbarStories.ItemVariants} />
+
+### All sizes
+
+`size` sets the bar's padding and gaps and every item's default size.
+
+<Canvas of={ToolbarStories.AllSizes} />
+
+### Rounded
+
+<Canvas of={ToolbarStories.Rounded} />
+
+### Groups and separators
+
+A `Toolbar.Group` is a named cluster that screen readers announce on entry; a `Toolbar.Separator` draws the rule
+between clusters. The arrow keys move through every item in order, across groups.
+
+<Canvas of={ToolbarStories.Groups} />
+
+### With a spacer
+
+A `Toolbar.Spacer` takes the free space, so the bar needs more room than its items do: set `fullWidth`, or give the bar a
+width of its own.
+
+<Canvas of={ToolbarStories.WithSpacer} />
+
+### Toggle buttons
+
+A `Toolbar.IconButton` with `pressed` (or `defaultPressed`) is a toggle: its state is announced with `aria-pressed`
+and drawn with a filled icon. Control it with `pressed` and `onPressedChange`.
+
+<Canvas of={ToolbarStories.Toggles} />
+
+### Vertical
+
+<Canvas of={ToolbarStories.Vertical} />
+
+### A column on a phone, a row from md up
+
+`orientation` also takes a mobile-first map keyed by breakpoint. The arrow keys that move between items follow
+whichever layout is showing.
+
+<Canvas of={ToolbarStories.ResponsiveOrientation} />
+
+### Wrapping onto more lines
+
+A horizontal bar that runs out of room overflows its container unless `wrap` is set, which lets it wrap its items
+onto more lines. Arrow keys still follow the order the items are written in.
+
+<Canvas of={ToolbarStories.Wrapping} />
+
+### Disabled
+
+A disabled item can't be focused, so the arrow keys skip it. `disabled` on the toolbar disables every item.
+
+<Canvas of={ToolbarStories.Disabled} />
+
+### Wrapped in a tooltip, or a link
+
+A `Tooltip` wraps a toolbar item as it would a button. `Toolbar.Item` puts any other single focusable element — a link,
+a menu or popover trigger — into the arrow-key order.
+
+<Canvas of={ToolbarStories.Wrapped} />
+
+### Named by a visible label
+
+<Canvas of={ToolbarStories.LabelledBy} />
+
+### Right to left
+
+The layout mirrors with the page's direction, but the arrow keys don't read it: pass `dir="rtl"` so the arrow that points
+forwards in the page does so in the toolbar too.
+
+<Canvas of={ToolbarStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a toolbar for several commands that act on the same thing and are used together — formatting, tools, view controls.
+- Give it a name (`aria-label`, or `aria-labelledby` pointing at a visible label), and name each `Toolbar.Group` too.
+- Build it from `Toolbar.Button`, `Toolbar.IconButton` and `Toolbar.Item`, so every command is in the arrow-key order.
+- Give each `IconButton` an `aria-label`, and add a `Tooltip` where an icon alone is not clear.
+- Say `itemVariant` and `size` once on the toolbar, and override only the odd item out.
+- Keep a toolbar short — a handful to a dozen items — and group related commands with separators.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't put a text field, a select or anything else that needs the arrow keys itself into a toolbar: the toolbar takes them for moving between items.
+- Don't use a toolbar for navigation or for a list of unrelated actions; it is one tab stop, so a command inside it is
+  harder to discover than one that is a tab stop of its own.
+- Don't put a plain `Button` in a toolbar and expect the arrow keys to reach it: only `Toolbar.Button`,
+  `Toolbar.IconButton` and `Toolbar.Item` are in the order.
+- Don't use it to choose one option from several — a `ToggleGroup` announces and handles that.
+- Don't hide the only way to do something in a toolbar item that is disabled with no explanation.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Put the commands people use most first: focus lands on the first item when someone tabs in, and returns to the last one
+  they used when they tab back.
+- Prefer `ghost` items on a ghost or filled bar and `secondary` on an outlined one, and keep `primary` for the one command
+  the bar exists for — usually last, pushed to the end with a `Toolbar.Spacer`.
+- Stack a long bar on a phone with an `orientation` map, or let it `wrap`, rather than letting it overflow.
+- Keep related toggles together in a `Toolbar.Group`, and set each one's `pressed` from the state it controls so the bar
+  always shows what is on.
+- A toolbar is a surface for commands, not a layout: don't nest one inside another, or put them in a table cell.
+
+## Accessibility
+
+<Callout tone="info" title="One tab stop, arrow keys inside">
+
+- Renders `role="toolbar"` with `aria-orientation`, named by `aria-label` or `aria-labelledby`. A dev-mode console warning
+  fires once if it has neither, and once for a `Toolbar.Group` with neither.
+- It is a single tab stop (a roving tab index): `Tab` enters it on the item that last had focus (the first, the first time)
+  and the next `Tab` leaves it. Inside, the **Right** and **Left** arrows move through a row, **Down** and **Up** through a
+  column, and **Home** and **End** go to the first and last item. By default they wrap at the ends (`loop={false}` stops
+  there). `Enter` and `Space` press an item.
+- In a right-to-left page pass `dir="rtl"`: Radix doesn't read the page, so without it Left would still go backwards.
+- A disabled item is not focusable, so the arrow keys skip it; the toolbar's `disabled` disables every item natively.
+- A toggle (`pressed`) is announced with `aria-pressed`; its pressed look is a filled icon as well as a colour, so the state
+  is never colour alone.
+- A `Toolbar.Group` is a named `role="group"`; a `Toolbar.Separator` is announced as a separator, with its orientation
+  across the bar's own; a `Toolbar.Spacer` is hidden from assistive tech.
+- Every item is at least 24 × 24px (WCAG 2.5.8), at every size, and keeps its own focus ring. The separator is decoration:
+  each item is identified by its label, not by the line between items.
+- Radix handles the focus movement; the toolbar adds no key handling of its own. A text field inside needs the arrow keys
+  and would lose them, so keep fields out of a toolbar.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Toolbar aria-label="Text formatting" variant="outlined">
+  <Toolbar.Group aria-label="Text style">
+    <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" pressed={bold} onPressedChange={setBold} />
+    <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+  </Toolbar.Group>
+  <Toolbar.Separator />
+  <Toolbar.Button leadingIcon={LinkIcon}>Link</Toolbar.Button>
+  <Toolbar.Spacer />
+  <Toolbar.Button variant="primary">Save</Toolbar.Button>
+</Toolbar>
+
+<Toolbar aria-label="Tools" orientation="vertical">…</Toolbar>
+<Toolbar aria-label="Actions" orientation={{ base: "vertical", md: "horizontal" }}>…</Toolbar>
+<Toolbar aria-label="Actions" itemVariant="secondary" size="sm" rounded wrap>…</Toolbar>
+<Toolbar aria-label="Document" fullWidth>…</Toolbar>
+<Toolbar aria-label="Document" disabled>…</Toolbar>
+<Toolbar aria-label="Text formatting" dir="rtl">…</Toolbar>
+<Toolbar aria-label="Document" onFocus={() => trackFocus("document")}>…</Toolbar>
+
+{/* A tooltip wraps an item as it would a button; Toolbar.Item takes any other focusable element */}
+<Tooltip content="Make it bold">
+  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
+</Tooltip>
+<Toolbar.Item>
+  <Button variant="ghost" asChild>
+    <a href="/docs">Docs</a>
+  </Button>
+</Toolbar.Item>
+
+{/* A visible label names the toolbar */}
+<span id="format-label">Formatting</span>
+<Toolbar aria-labelledby="format-label">…</Toolbar>
+```
+
+## Design tokens used
+
+A toolbar draws only its own bar and separator; every item is a `Button` or `IconButton` with its own tokens.
+
+<TokenRow token="bg.surface" usage="the outlined bar's fill" />
+<TokenRow token="bg.neutral-subtle" usage="the filled bar's fill" />
+<TokenRow token="border.default" usage="the outlined bar's border" />
+<TokenRow token="border.neutral" usage="the separator between items — a step stronger than the bar's border, so it stays visible in dark mode" />
+<TokenRow token="border-width.1" usage="the outlined bar's border width, and the separator's thickness" />
+<TokenRow token="radius.lg" usage="the corners of an outlined or filled bar" />
+<TokenRow token="radius.full" usage="the ends of an outlined or filled bar with rounded" />
+<TokenRow token="space.1" usage="the gap between items, the separator's margins, and the padding of the smaller bars" />
+<TokenRow token="space.2" usage="the gap between items at lg and xl, and the padding of an md bar" />
+<TokenRow token="space.3" usage="the padding of an lg or xl bar" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="ButtonGroup"
+  description="Buttons laid out as one segmented control, with no change to how the keyboard moves"
+  href="/?path=/docs/molecules-inputs-buttongroup--docs"
+>
+  <ButtonGroup aria-label="Related" variant="secondary" size="sm">
+    <IconButton icon={TextBIcon} aria-label="Bold" />
+    <IconButton icon={TextItalicIcon} aria-label="Italic" />
+  </ButtonGroup>
+</RelatedCard>
+<RelatedCard
+  name="ToggleGroup"
+  description="Choosing one option, or several, from a set: a segmented control with a selected state"
+  href="/?path=/docs/molecules-inputs-togglegroup--docs"
+>
+  <ToggleGroup aria-label="Related" type="single" defaultValue="b" size="sm">
+    <ToggleGroup.Item value="b" icon={TextBIcon} aria-label="Bold" />
+    <ToggleGroup.Item value="i" icon={TextItalicIcon} aria-label="Italic" />
+  </ToggleGroup>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="The compact command a toolbar is mostly made of"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={TextBIcon} aria-label="Bold" variant="secondary" size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="Wrap an item in one to explain an icon, and it stays in the arrow-key order"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="Make it bold" open side="left">
+    <IconButton icon={TextBIcon} aria-label="Bold" variant="secondary" size="sm" />
+  </Tooltip>
+</RelatedCard>
+</div>
