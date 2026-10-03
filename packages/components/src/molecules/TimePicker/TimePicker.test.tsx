@@ -1172,6 +1172,29 @@ describe("TimePicker commitOn", () => {
   });
 });
 
+describe("TimePicker under StrictMode with the newer props", () => {
+  it("holds and flushes once, and keeps focus events once per visit", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    render(
+      <StrictMode>
+        <TimePicker aria-label="t" hourCycle="24" commitOn="blur" openOnFocus onValueChange={onValueChange} onFocus={onFocus} onBlur={onBlur} />
+        <button type="button">After</button>
+      </StrictMode>,
+    );
+    await user.click(segment("Hour"));
+    await screen.findByRole("dialog");
+    await user.keyboard("0930");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "After" }));
+    expect(onValueChange.mock.calls).toEqual([["09:30"]]);
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("TimePicker form validation", () => {
   const renderInForm = (props: Partial<React.ComponentProps<typeof TimePicker>> = {}) => {
     const utils = render(
@@ -1452,6 +1475,15 @@ describe("TimePicker accessibility", () => {
       expect(await axe(container)).toHaveNoViolations();
       unmount();
     }
+  });
+
+  it("has no axe violations in a form with a name, required, held reports, period first and openOnFocus", async () => {
+    const { container } = render(
+      <form aria-label="f">
+        <TimePicker aria-label="Start time" name="when" required commitOn="blur" periodPosition="start" openOnFocus defaultValue="09:30" />
+      </form>,
+    );
+    expect(await axe(container)).toHaveNoViolations();
   });
 
   // The wheels are a few hundred rows each, and axe walks every one: scanning just the dialog, without the seconds wheel,

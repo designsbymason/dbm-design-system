@@ -431,6 +431,19 @@ describe("TimeRangePicker", () => {
       await waitFor(() => expect(onValueChange.mock.calls).toEqual([[["11:00", "17:30"]]]));
     });
 
+    it("drops held picks when the range is set from outside", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(
+        <TimeRangePicker aria-label="r" hourCycle="24" sharedPicker commitOn="blur" value={["09:00", "17:30"]} onValueChange={() => {}} />,
+      );
+      const dialog = await openShared(user);
+      within(within(dialog).getByRole("group", { name: "End time" })).getByRole("listbox", { name: "Hour" }).focus();
+      await user.keyboard("{ArrowDown}");
+      expect(texts("End time")).toEqual(["18", "30"]);
+      rerender(<TimeRangePicker aria-label="r" hourCycle="24" sharedPicker commitOn="blur" value={["08:00", "12:00"]} onValueChange={() => {}} />);
+      expect(texts("End time")).toEqual(["12", "00"]);
+    });
+
     it("applies the end's limits to the end's wheels", async () => {
       const user = userEvent.setup();
       render(<TimeRangePicker aria-label="r" hourCycle="24" sharedPicker defaultValue={["10:30", "12:00"]} />);
@@ -475,6 +488,35 @@ describe("TimeRangePicker", () => {
       rerender(<TimeRangePicker aria-label="r" sharedPicker disabled />);
       expect(screen.getByRole("button", { name: "Choose time" })).toBeDisabled();
     });
+  });
+
+  it("has no axe violations with the shared popover open, and the trigger announces its popup", { timeout: 30_000 }, async () => {
+    const user = userEvent.setup();
+    render(<TimeRangePicker aria-label="Opening hours" sharedPicker defaultValue={["09:00", "17:30"]} />);
+    const trigger = screen.getByRole("button", { name: "Choose time" });
+    expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await user.click(trigger);
+    const dialog = await screen.findByRole("dialog");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(await axe(dialog, { rules: { region: { enabled: false } } })).toHaveNoViolations();
+  });
+
+  it("works inside StrictMode with the shared picker held by commitOn", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <StrictMode>
+        <TimeRangePicker aria-label="r" hourCycle="24" sharedPicker commitOn="blur" defaultValue={["09:00", "17:30"]} onValueChange={onValueChange} />
+      </StrictMode>,
+    );
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    const dialog = await screen.findByRole("dialog");
+    within(within(dialog).getByRole("group", { name: "End time" })).getByRole("listbox", { name: "Hour" }).focus();
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(onValueChange.mock.calls).toEqual([[["09:00", "18:30"]]]));
   });
 
   it("has no axe violations, closed and with an end's picker open", { timeout: 30_000 }, async () => {

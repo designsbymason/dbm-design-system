@@ -116,8 +116,16 @@ export const TimeRangePicker = forwardRef<HTMLDivElement, TimeRangePickerProps>(
     const pair = isControlled ? valueProp : uncontrolled;
     // Picks made in the shared popover that `commitOn` is holding back, shown in the fields and wheels meanwhile.
     const [held, setHeld] = useState<TimeRangeValue | null>(null);
-    const start = held ? held[0] : typeof pair?.[0] === "string" ? pair[0] : "";
-    const end = held ? held[1] : typeof pair?.[1] === "string" ? pair[1] : "";
+    const committedStart = typeof pair?.[0] === "string" ? pair[0] : "";
+    const committedEnd = typeof pair?.[1] === "string" ? pair[1] : "";
+    // A range set from outside while picks are held wins over them, as a `TimePicker`'s value does over a held edit.
+    const [seenPair, setSeenPair] = useState(`${committedStart}|${committedEnd}`);
+    if (seenPair !== `${committedStart}|${committedEnd}`) {
+      setSeenPair(`${committedStart}|${committedEnd}`);
+      if (held) setHeld(null);
+    }
+    const start = held ? held[0] : committedStart;
+    const end = held ? held[1] : committedEnd;
     const shared = sharedPicker && showPicker;
 
     useEffect(() => {

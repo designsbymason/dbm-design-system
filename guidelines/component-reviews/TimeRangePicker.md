@@ -35,7 +35,16 @@ which both import.
     (side by side inside the viewport; picks reach their own end, focus starts at the start's hours); snippets typechecked;
     lint, both typechecks, 5,123 unit and 963 Storybook-project tests (one `TimePicker` segment-clipping check failed once
     under load and passed on three reruns; not investigated).
-  - Open: the shared popover shows committed values, not a half-typed field; no phone-width run of the popover.
+  - Open: the shared popover shows committed values, not a half-typed field.
+- **Final review before Finalizing (2026-10-03):** the same §9 re-run. Closed: held picks were not dropped when the owner set a
+  new range while the popover was open (now they are, with a test); the shared popover had no axe scan or `aria-haspopup`/
+  `aria-expanded` check, nor a `StrictMode` run (all added, clean). Looked at live: both Docs pages (headings, no inert controls,
+  defaults), and the shared popover at 375px in dark mode (fits the viewport, the two sets stack, no horizontal overflow; the
+  trigger button drops to its own line when the row wraps). **Not closed — needs a decision:** the component bundle-size check
+  fails, `TimeRangePicker` at 10.58KB gzipped JS against the 10KB per-component budget (it was 7.49KB before the second round;
+  the number includes the `TimePicker` it composes, the wheels, `Popover` and `IconButton` the shared picker added). The budget
+  is a single constant in `scripts/check-component-bundle-size.mjs`; raise it (for one component or for all) or cut the shared
+  picker out of the range's bundle, with the reason written down.
 - **Passed through to both ends (2026-10-03):** `commitOn`, `secondStep`, `isTimeDisabled`, `periodPosition`, `openOnFocus`.
   `onFocus`/`onBlur` fire once for the pair: each end reports its own arrivals and departures, and the range ignores a
   departure whose `relatedTarget` is inside the group and an arrival while it already holds focus (a start end's picker is

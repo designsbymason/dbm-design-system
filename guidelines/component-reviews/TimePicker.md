@@ -237,6 +237,17 @@ Still open from this round: the browser's own validation bubble was not looked a
 goes to the segment), a real phone with `inputMode="none"` was not tried, and a locale that writes the minutes before the
 hours or uses another separator is not covered (`periodPosition` is the only ordering control).
 
+## Final review before Finalizing (2026-10-03)
+
+Re-ran `06` §9 against the component as it now stands (after the second round), by reading the source and measuring:
+spread order (`{...props}` first, `role` last), `labels` through `mergeDefined`, no `any`, SSR (browser globals only in
+handlers and guarded), the target sizes, theming (no new colour), the Docs page in Storybook (every template heading, no inert
+controls, defaults filled; `labels` shows its defaults in the description, as before) and the tokens table (unchanged, test-checked).
+Gaps found and closed: the axe scans had never run against the newer states, so there is now one for a form with `name`,
+`required`, `commitOn`, `periodPosition` and `openOnFocus` (clean); and nothing ran the held-report and focus paths under
+`StrictMode`, so there is a test (clean). Nothing else needed a change. Unit 5,128 and Storybook-project 963 tests pass;
+lint, both typechecks and build clean; `pnpm audit` shows only the already-accepted advisory.
+
 ## Not checked, or open
 
 - **A real phone keyboard, a real swipe, a screen reader, Safari and Firefox.** Insertion is exercised with
