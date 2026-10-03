@@ -60,6 +60,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
       tone = "neutral",
       scrollbarVisibility = "hover",
       scrollHideDelay = 600,
+      overscrollBehavior = "auto",
       maxHeight,
       dir = "ltr",
       onScroll,
@@ -103,7 +104,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
       >
         <ScrollAreaPrimitive.Viewport
           ref={mergeRefs(internalViewportRef, viewportRef)}
-          className={styles.viewport}
+          className={cx(styles.viewport, overscrollBehavior === "contain" && styles.overscrollContain)}
           onScroll={onScroll}
           {...regionProps}
         >

@@ -15,6 +15,7 @@ export const propOrder = [
   "tone",
   "scrollbarVisibility",
   "scrollHideDelay",
+  "overscrollBehavior",
   "maxHeight",
   "dir",
   "onScroll",
@@ -115,6 +116,9 @@ scrolling viewport (see `onScroll`'s own row below for why that one's different)
 - Reach for `viewportRef` when you need to scroll the region imperatively (jump to the bottom of a
   log, restore a saved scroll position) — `ref` forwards to the outer frame, which never scrolls
   itself.
+- Set `overscrollBehavior="contain"` on a region that should read as its own sealed-off panel — a
+  modal's body, a nested list inside another scrollable area — so reaching its end stops there
+  instead of continuing to scroll the page (or a parent `ScrollArea`) behind it.
 
 </Callout>
 <Callout tone="danger" title="Don't">

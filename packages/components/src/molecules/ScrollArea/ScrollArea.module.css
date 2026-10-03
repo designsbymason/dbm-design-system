@@ -53,6 +53,16 @@
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
+/* `overscrollBehavior="contain"` — stops scroll chaining at this region's own boundary instead of
+   the platform default (`auto`), which hands off to whatever scrolls behind it (the page, a parent
+   `ScrollArea`) once this one hits its end. A plain keyword, not a token — `overscroll-behavior`
+   has no color/spacing/etc. character for the token layer to express, the same reasoning
+   `touch-action: none` above gets no token either. Applied on `.viewport`, the real native-
+   scrolling element — not `.root`, which never scrolls itself. */
+.overscrollContain {
+  overscroll-behavior: contain;
+}
+
 /* Transparent by default — an overlay scrollbar with just a floating thumb and no track, the more
    common treatment this system defaults to. `showTrack` opts into a visible track (below). */
 .scrollbar {

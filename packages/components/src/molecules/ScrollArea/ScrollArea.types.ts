@@ -46,6 +46,17 @@ export type ScrollAreaTone = "neutral" | "brand";
  */
 export type ScrollAreaScrollbarVisibility = "auto" | "always" | "scroll" | "hover";
 
+/**
+ * Whether scrolling past this region's own boundary chains onto whatever
+ * scrolls behind it (the page, a parent `ScrollArea`). `"auto"` (the
+ * default, and the platform's own default) lets it chain — reaching the end
+ * and continuing to scroll keeps going on whatever's behind. `"contain"`
+ * stops it there, the usual choice for a region meant to read as its own
+ * sealed-off panel (a modal's body, a nested list) rather than a transparent
+ * extension of the page underneath it.
+ */
+export type ScrollAreaOverscrollBehavior = "auto" | "contain";
+
 export interface ScrollAreaProps
   extends Omit<ComponentPropsWithoutRef<"div">, "dir" | "onScroll" | "children"> {
   /**
@@ -105,6 +116,14 @@ export interface ScrollAreaProps
    * @default 600
    */
   scrollHideDelay?: number;
+  /**
+   * Whether scrolling past this region's own end chains onto whatever
+   * scrolls behind it. Set `"contain"` for a region that should read as its
+   * own sealed-off panel rather than a transparent extension of the page (or
+   * parent `ScrollArea`) underneath it.
+   * @default 'auto'
+   */
+  overscrollBehavior?: ScrollAreaOverscrollBehavior;
   /**
    * A shortcut for constraining the region's own block-axis size (applied
    * as `max-block-size`, so it respects a vertical writing mode) — the

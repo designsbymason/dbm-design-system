@@ -106,6 +106,12 @@ const meta: Meta<typeof ScrollArea> = {
         "How long, in milliseconds, a scrollbar stays visible after the pointer leaves or scrolling stops. Only meaningful for \"hover\"/\"scroll\".",
       table: { defaultValue: { summary: "600" } },
     },
+    overscrollBehavior: {
+      control: "select",
+      options: ["auto", "contain"],
+      description: "Whether scrolling past this region's own end chains onto whatever scrolls behind it.",
+      table: { defaultValue: { summary: "auto" } },
+    },
     maxHeight: {
       control: "text",
       description: "A shortcut for constraining the region's own block-axis size.",
@@ -133,6 +139,7 @@ const meta: Meta<typeof ScrollArea> = {
     tone: "neutral",
     scrollbarVisibility: "hover",
     scrollHideDelay: 600,
+    overscrollBehavior: "auto",
     maxHeight: "12rem",
     dir: "ltr",
     "aria-label": "Scrollable content",

@@ -183,6 +183,18 @@ describe("ScrollArea", () => {
     scrollbars.forEach((scrollbar) => expect(scrollbar.className).toContain(styles.toneBrand));
   });
 
+  it("defaults to overscrollBehavior='auto', applying no overscrollContain class", () => {
+    const { container } = render(<ScrollArea>Content</ScrollArea>);
+    const viewport = container.querySelector("[data-radix-scroll-area-viewport]");
+    expect(viewport?.className).not.toContain(styles.overscrollContain);
+  });
+
+  it("applies the overscrollContain class to the viewport when overscrollBehavior='contain'", () => {
+    const { container } = render(<ScrollArea overscrollBehavior="contain">Content</ScrollArea>);
+    const viewport = container.querySelector("[data-radix-scroll-area-viewport]");
+    expect(viewport?.className).toContain(styles.overscrollContain);
+  });
+
   it("fires onScroll on the actual scrolling viewport, not the outer frame", () => {
     installOverflowSimulation({ y: true });
     const onScroll = vi.fn();

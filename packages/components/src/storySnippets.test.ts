@@ -740,7 +740,7 @@ describe("ButtonGroup's Playground snippet", () => {
 describe("ScrollArea's Playground snippet", () => {
   it.each([
     {},
-    { variant: "ghost", size: "lg", scrollbars: "both", showTrack: true, tone: "brand", scrollbarVisibility: "always", scrollHideDelay: 300, maxHeight: "10rem", dir: "rtl", "aria-label": "Recent activity" },
+    { variant: "ghost", size: "lg", scrollbars: "both", showTrack: true, tone: "brand", scrollbarVisibility: "always", scrollHideDelay: 300, overscrollBehavior: "contain", maxHeight: "10rem", dir: "rtl", "aria-label": "Recent activity" },
     { scrollbars: "horizontal", maxHeight: "8rem" },
     { size: "xs" },
   ])("%j is a real snippet", (args) => {
@@ -782,6 +782,11 @@ describe("ScrollArea's Playground snippet", () => {
     expect(scrollAreaPlaygroundSnippet({ showTrack: false })).not.toContain("showTrack");
     expect(scrollAreaPlaygroundSnippet({ tone: "brand" })).toContain('tone="brand"');
     expect(scrollAreaPlaygroundSnippet({ tone: "neutral" })).not.toContain("tone");
+  });
+
+  it("writes overscrollBehavior only when set to 'contain'", () => {
+    expect(scrollAreaPlaygroundSnippet({ overscrollBehavior: "contain" })).toContain('overscrollBehavior="contain"');
+    expect(scrollAreaPlaygroundSnippet({ overscrollBehavior: "auto" })).not.toContain("overscrollBehavior");
   });
 });
 

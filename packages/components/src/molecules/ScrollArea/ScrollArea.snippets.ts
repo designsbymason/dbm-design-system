@@ -2,6 +2,7 @@
 // See `07-storybook-and-documentation-standards.md` §4.2 and ADR-0020.
 
 import type {
+  ScrollAreaOverscrollBehavior,
   ScrollAreaScrollbarVisibility,
   ScrollAreaScrollbars,
   ScrollAreaSize,
@@ -77,6 +78,7 @@ export interface ScrollAreaPlaygroundSnippetArgs {
   tone?: ScrollAreaTone;
   scrollbarVisibility?: ScrollAreaScrollbarVisibility;
   scrollHideDelay?: number;
+  overscrollBehavior?: ScrollAreaOverscrollBehavior;
   maxHeight?: string;
   dir?: "ltr" | "rtl";
   "aria-label"?: string;
@@ -84,8 +86,8 @@ export interface ScrollAreaPlaygroundSnippetArgs {
 
 /**
  * The Playground's snippet, built from its current controls: only the props that differ from
- * their defaults (`bordered`, `md`, `vertical`, `false`, `neutral`, `hover`, 600, `ltr`), around a
- * small real example. `maxHeight` has no built-in default at all (the region simply never scrolls
+ * their defaults (`bordered`, `md`, `vertical`, `false`, `neutral`, `hover`, 600, `auto`, `ltr`),
+ * around a small real example. `maxHeight` has no built-in default at all (the region simply never scrolls
  * without one), so it's always shown once set — including the Playground's own starting value,
  * which is exactly what makes the live demo scrollable in the first place.
  */
@@ -101,6 +103,9 @@ export function scrollAreaPlaygroundSnippet(args: ScrollAreaPlaygroundSnippetArg
   }
   if (args.scrollHideDelay !== undefined && args.scrollHideDelay !== 600) {
     attributes.push(`scrollHideDelay={${args.scrollHideDelay}}`);
+  }
+  if (args.overscrollBehavior && args.overscrollBehavior !== "auto") {
+    attributes.push(`overscrollBehavior="${args.overscrollBehavior}"`);
   }
   if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
   if (args["aria-label"]) attributes.push(`aria-label="${args["aria-label"]}"`);
