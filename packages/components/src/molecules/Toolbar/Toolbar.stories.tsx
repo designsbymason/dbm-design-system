@@ -91,6 +91,13 @@ const meta: Meta<ToolbarProps> = {
         "Stretches the bar to the width of its container. A bar is as wide as its items otherwise, so a Toolbar.Spacer has nothing to take up until the bar is given more room than its items need.",
       table: { defaultValue: { summary: "false" } },
     },
+    align: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description:
+        "Where the items sit along the bar's own direction when the bar has room to spare. It follows the reading direction, so start is the right edge in a right-to-left page. No effect while a Toolbar.Spacer takes the free space, or on a bar only as wide as its items.",
+      table: { defaultValue: { summary: "start" } },
+    },
     wrap: {
       control: "boolean",
       description: "Lets a horizontal bar wrap its items onto more lines when they don't fit. Off, a bar wider than its container overflows it.",
@@ -124,6 +131,7 @@ const meta: Meta<ToolbarProps> = {
     dir: "ltr",
     loop: true,
     fullWidth: false,
+    align: "start",
     wrap: false,
     "aria-label": "Text formatting",
   },
@@ -246,6 +254,22 @@ export const WithSpacer: Story = {
       <Toolbar.Spacer />
       <Toolbar.Button variant="primary">Publish</Toolbar.Button>
     </Toolbar>
+  ),
+};
+
+export const Align: Story = {
+  name: "Aligning the items",
+  parameters: { docs: { source: { code: toolbarSnippets.align } } },
+  args: { variant: "outlined", fullWidth: true },
+  argTypes: { align: noControls, fullWidth: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={{ ...column, alignItems: "stretch" }}>
+      {(["center", "end"] as const).map((align) => (
+        <Toolbar key={align} {...args} align={align} aria-label={`align ${align}`}>
+          <DemoItems />
+        </Toolbar>
+      ))}
+    </div>
   ),
 };
 
@@ -463,6 +487,58 @@ export const LayoutInteraction: Story = {
     await expect(rule.width).toBeGreaterThan(0);
     await expect(rule.width).toBeLessThan(4);
     await expect(rule.height).toBeGreaterThan(16);
+  },
+};
+
+export const AlignInteraction: Story = {
+  ...hidden,
+  name: "Align — interaction test",
+  args: { variant: "outlined", fullWidth: true },
+  render: (args) => (
+    <div style={{ width: "30rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {(["start", "center", "end"] as const).map((align) => (
+        <Toolbar key={align} {...args} align={align} aria-label={align} data-testid={align}>
+          <Items count={2} />
+        </Toolbar>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const gap = (align: string) => {
+      const bar = canvas.getByTestId(align).getBoundingClientRect();
+      const buttons = within(canvas.getByTestId(align)).getAllByRole("button").map((b) => b.getBoundingClientRect());
+      return { before: buttons[0]!.left - bar.left, after: bar.right - buttons[buttons.length - 1]!.right };
+    };
+    const [start, center, end] = [gap("start"), gap("center"), gap("end")];
+    await expect(start.before).toBeLessThan(start.after);
+    await expect(Math.abs(center.before - center.after)).toBeLessThan(2);
+    await expect(end.after).toBeLessThan(end.before);
+  },
+};
+
+export const FocusRingInteraction: Story = {
+  ...hidden,
+  name: "Focus ring over a neighbour — interaction test",
+  args: { variant: "outlined" },
+  render: (args) => (
+    <Toolbar {...args}>
+      <Items />
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.tab();
+    const bold = canvas.getByRole("button", { name: "Bold" });
+    const italic = canvas.getByRole("button", { name: "Italic" });
+    await expect(bold).toHaveFocus();
+    // The ring reaches further than the gap to the next item (the offset plus the line), so it overlaps it, and flex
+    // items paint in source order: the focused one has to be positioned to be drawn above its later neighbour.
+    const style = getComputedStyle(bold);
+    const reach = parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth);
+    await expect(italic.getBoundingClientRect().left - bold.getBoundingClientRect().right).toBeLessThan(reach);
+    await expect(style.position).toBe("relative");
+    await expect(getComputedStyle(italic).position).toBe("static");
   },
 };
 

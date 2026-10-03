@@ -31,6 +31,16 @@
   flex-direction: column;
 }
 
+/* `align`: where the items sit when the bar has room to spare. `start` and `end` are logical, so a right-to-left
+   page mirrors them; a `Toolbar.Spacer` takes the free space first, so it leaves nothing to align. */
+.root[data-align="center"] {
+  justify-content: center;
+}
+
+.root[data-align="end"] {
+  justify-content: flex-end;
+}
+
 /* `fullWidth`: the bar fills its container, which also gives a `Toolbar.Spacer` room to take up. */
 .fullWidth {
   display: flex;
@@ -65,6 +75,14 @@
 /* Items wrap onto more lines when they don't fit, rather than overflowing; a column has no width to run out of. */
 .wrap[data-orientation="horizontal"] {
   flex-wrap: wrap;
+}
+
+/* The focused item's ring is drawn over its neighbours, not under them. Flex items paint one after another in
+   source order, so a later item's background would otherwise cover the ring's side that overlaps it; a positioned
+   element paints above the static siblings around it whatever its order, so the base layer is all it needs. */
+.root :focus-visible {
+  position: relative;
+  z-index: var(--dbm-z-index-base);
 }
 
 /* A named cluster: the same gap as the bar, kept together as one unit when the bar wraps. */

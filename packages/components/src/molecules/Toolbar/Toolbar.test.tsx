@@ -279,6 +279,13 @@ describe("Toolbar", () => {
       expect(screen.getByTestId("bar")).toHaveClass(styles.fullWidth!);
     });
 
+    it("states where the items sit with align, start by default", () => {
+      const { rerender } = render(<Bar data-testid="bar" />);
+      expect(screen.getByTestId("bar")).toHaveAttribute("data-align", "start");
+      rerender(<Bar data-testid="bar" fullWidth align="end" />);
+      expect(screen.getByTestId("bar")).toHaveAttribute("data-align", "end");
+    });
+
     it("disables every item with disabled, and an item stays disabled by itself", () => {
       render(
         <Toolbar aria-label="Bar" disabled>

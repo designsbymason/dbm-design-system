@@ -5,39 +5,50 @@
 // compound parts. Each snippet is the smallest real usage of what its story shows — only exports of the package, no
 // demo scaffolding — and `storySnippets.test.ts` checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
+// The bar the stories put under test — three icon buttons, a rule, then a labelled button — written out in each
+// snippet so what "Show code" shows is what the story draws.
+const demo = (indent = "  ") =>
+  [
+    '<Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />',
+    '<Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />',
+    '<Toolbar.IconButton icon={TextUnderlineIcon} aria-label="Underline" />',
+    "<Toolbar.Separator />",
+    '<Toolbar.Button leadingIcon={LinkIcon}>Link</Toolbar.Button>',
+  ]
+    .map((line) => indent + line)
+    .join("\n");
+
 export const toolbarSnippets = {
-  basic: `{/* Icons come from @dbm-design-system/icons: TextBIcon, TextItalicIcon, TextUnderlineIcon, LinkIcon */}
-<Toolbar aria-label="Text formatting">
-  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
-  <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
-  <Toolbar.IconButton icon={TextUnderlineIcon} aria-label="Underline" />
-  <Toolbar.Separator />
-  <Toolbar.Button leadingIcon={LinkIcon}>Link</Toolbar.Button>
-</Toolbar>`,
-
   variants: `{/* variant: "ghost" (default) | "outlined" | "filled" — how the bar itself is drawn */}
-<Toolbar aria-label="Text formatting" variant="outlined">
-  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
-  <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+<Toolbar aria-label="ghost bar">
+${demo()}
+</Toolbar>
+
+<Toolbar aria-label="outlined bar" variant="outlined">
+${demo()}
+</Toolbar>
+
+<Toolbar aria-label="filled bar" variant="filled">
+${demo()}
 </Toolbar>`,
 
-  itemVariants: `{/* itemVariant: "ghost" (default) | "tertiary" | "secondary" | "primary" | "destructive" — every item's default */}
-<Toolbar aria-label="Document" variant="outlined" itemVariant="secondary">
+  itemVariants: `{/* itemVariant: "ghost" (default) | "tertiary" | "secondary" | "primary" | "destructive" — every item's default look.
+    Shown: secondary. */}
+<Toolbar aria-label="secondary items" variant="outlined" itemVariant="secondary">
   <Toolbar.Button>Copy</Toolbar.Button>
   <Toolbar.Button>Paste</Toolbar.Button>
-  <Toolbar.Button variant="primary">Save</Toolbar.Button>
+  <Toolbar.IconButton icon={TrashIcon} aria-label="Delete" />
 </Toolbar>`,
 
-  sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the bar's spacing and every item's default size */}
-<Toolbar aria-label="Text formatting" variant="outlined" size="sm">
-  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
-  <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+  sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the bar's spacing and every item's default size.
+    Shown: sm. */}
+<Toolbar aria-label="Size sm" variant="outlined" size="sm">
+${demo()}
 </Toolbar>`,
 
   rounded: `{/* rounded: round items, and a pill-shaped bar when the bar is drawn */}
 <Toolbar aria-label="Text formatting" variant="outlined" rounded>
-  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
-  <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+${demo()}
 </Toolbar>`,
 
   groups: `{/* Toolbar.Group names a cluster of related items; Toolbar.Separator draws a rule between clusters */}
@@ -62,6 +73,16 @@ export const toolbarSnippets = {
   <Toolbar.Button variant="primary">Publish</Toolbar.Button>
 </Toolbar>`,
 
+  align: `{/* align: "start" (default) | "center" | "end" — where the items sit when the bar has room to spare, so it
+    needs fullWidth (or a width of its own). Shown: center, then end. */}
+<Toolbar aria-label="align center" variant="outlined" fullWidth align="center">
+${demo()}
+</Toolbar>
+
+<Toolbar aria-label="align end" variant="outlined" fullWidth align="end">
+${demo()}
+</Toolbar>`,
+
   toggles: `{/* A pressed state makes an icon button a toggle. Controlled: pressed + onPressedChange */}
 {/* const [bold, setBold] = useState(true); */}
 <Toolbar aria-label="Text style" variant="outlined">
@@ -78,12 +99,18 @@ export const toolbarSnippets = {
 </Toolbar>`,
 
   responsive: `{/* A mobile-first map: a column on a phone, a row from the md breakpoint up */}
-<Toolbar aria-label="Actions" variant="outlined" orientation={{ base: "vertical", md: "horizontal" }}>
+<Toolbar
+  aria-label="Actions"
+  variant="outlined"
+  itemVariant="secondary"
+  orientation={{ base: "vertical", md: "horizontal" }}
+>
   <Toolbar.Button>Edit</Toolbar.Button>
   <Toolbar.Button>Share</Toolbar.Button>
 </Toolbar>`,
 
-  wrap: `{/* wrap: a horizontal bar that runs out of room wraps its items onto more lines */}
+  wrap: `{/* wrap: a horizontal bar that runs out of room (here, in a container narrower than its items) wraps its
+    items onto more lines */}
 <Toolbar aria-label="Actions" variant="outlined" itemVariant="secondary" wrap>
   <Toolbar.Button>Edit</Toolbar.Button>
   <Toolbar.Button>Share</Toolbar.Button>
@@ -112,16 +139,14 @@ export const toolbarSnippets = {
   rtl: `{/* Pass dir="rtl" so the arrow keys follow the page's direction; the layout mirrors on its own */}
 <div dir="rtl">
   <Toolbar aria-label="Text formatting" variant="outlined" dir="rtl">
-    <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
-    <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+${demo("    ")}
   </Toolbar>
 </div>`,
 
   labelled: `{/* A visible label names the toolbar */}
-<span id="format-label">Formatting</span>
-<Toolbar aria-labelledby="format-label" variant="outlined">
-  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
-  <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+<span id="toolbar-demo-label">Formatting</span>
+<Toolbar aria-labelledby="toolbar-demo-label" variant="outlined">
+${demo()}
 </Toolbar>`,
 } as const;
 
@@ -136,6 +161,7 @@ export interface ToolbarPlaygroundSnippetArgs {
   dir?: "ltr" | "rtl";
   loop?: boolean;
   fullWidth?: boolean;
+  align?: string;
   wrap?: boolean;
   "aria-label"?: string;
 }
@@ -159,12 +185,14 @@ export function toolbarPlaygroundSnippet(args: ToolbarPlaygroundSnippetArgs): st
   if (args.dir === "rtl") attributes.push('dir="rtl"');
   if (args.loop === false) attributes.push("loop={false}");
   if (args.fullWidth) attributes.push("fullWidth");
+  if (args.align === "center" || args.align === "end") attributes.push(`align="${args.align}"`);
   if (args.wrap) attributes.push("wrap");
   return `{/* Icons come from @dbm-design-system/icons */}
 <Toolbar ${attributes.join(" ")}>
   <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
   <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+  <Toolbar.IconButton icon={TextUnderlineIcon} aria-label="Underline" />
   <Toolbar.Separator />
-  <Toolbar.Button>Link</Toolbar.Button>
+  <Toolbar.Button leadingIcon={LinkIcon}>Link</Toolbar.Button>
 </Toolbar>`;
 }

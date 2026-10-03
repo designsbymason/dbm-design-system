@@ -6,6 +6,7 @@ import type { SpacerProps } from "../../atoms/Spacer";
 export type ToolbarOrientation = "horizontal" | "vertical";
 export type ToolbarVariant = "ghost" | "outlined" | "filled";
 export type ToolbarDirection = "ltr" | "rtl";
+export type ToolbarAlign = "start" | "center" | "end";
 
 export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "dir"> {
   /**
@@ -67,6 +68,14 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
    * @default false
    */
   fullWidth?: boolean;
+  /**
+   * Where the items sit along the bar's own direction when the bar is wider (or, in a column, taller) than they
+   * are — `start`, `center` or `end`. It follows the reading direction, so `start` is the right edge in a
+   * right-to-left page. Has no effect while a `Toolbar.Spacer` is taking up the free space, and none on a bar that is
+   * only as wide as its items (set `fullWidth`, or a width, to give it room).
+   * @default 'start'
+   */
+  align?: ToolbarAlign;
   /**
    * Lets a horizontal bar wrap its items onto more lines when they don't fit. Off, a bar wider than its container
    * overflows it. Arrow keys still follow DOM order, so a wrapped bar reads in the order written.

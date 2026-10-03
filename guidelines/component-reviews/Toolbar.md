@@ -11,7 +11,7 @@ Finalized** — the user declares that. The decision is [ADR-0032](../adr/0032-t
 A compound component, `Toolbar` plus `Toolbar.Button`, `.IconButton`, `.Item`, `.Group`, `.Separator`
 and `.Spacer`. The root is a named `role="toolbar"`: `variant` (how the bar is drawn: `ghost`
 default, `outlined`, `filled`), `itemVariant` (every item's default look, `ghost` default), `size`,
-`rounded`, `disabled`, `orientation` (a breakpoint map too), `dir`, `loop`, `fullWidth`, `wrap`.
+`rounded`, `disabled`, `orientation` (a breakpoint map too), `dir`, `loop`, `fullWidth`, `align`, `wrap`.
 `Toolbar.Button` and `Toolbar.IconButton` are the atoms in the arrow-key order and take every prop of
 theirs (a toggle is an icon button with `pressed`); `Toolbar.Item` puts any other single element in the
 order; `Toolbar.Group` is a named cluster; `Toolbar.Separator` runs across the bar's direction;
@@ -41,6 +41,32 @@ order; `Toolbar.Group` is a named cluster; `Toolbar.Separator` runs across the b
   `border.default`, as `Card`'s outlined variant has it.
 - **Disabled items leave the arrow-key order** (Radix's behaviour, kept). WAI-ARIA allows disabled items to stay
   focusable; this is recorded in ADR-0032 and is a call for the user if they would rather override it.
+
+## Follow-ups after the first push (2026-10-03, user review)
+
+Toolbar was not yet declared Finalized, so these are part of the build, not a reopening.
+
+- **`align` added** (`start` default, `center`, `end`), answering "how do developers align the items once `fullWidth`
+  gives the bar room?". `align` is the shared name for this (`Tabs`, `EmptyState`, `Divider`); it maps to
+  `justify-content`, so it follows the reading direction, and does nothing while a `Toolbar.Spacer` takes the free
+  space (to put some items at each end, use the spacer). `between` was left out: the spacer says it more clearly and
+  works with groups. A real-browser story measures the gap before and after the items for all three values.
+- **Focus ring drawn behind the next item (reported with a screenshot).** Flex items paint atomically in source order,
+  so a later item's background covers the part of an earlier item's ring that overlaps it (the ring reaches 4px + 3px
+  past the item, the gap is 4px). Fixed as `ButtonGroup` does it: the focused item is positioned (`position: relative`,
+  `z-index: base`), which paints above static siblings. The same bug was in the first push, and the keyboard story
+  (which checked the ring exists) could not see it; a new story asserts the ring reaches past the gap and that the
+  focused item is positioned and its neighbour is not, and fails when the rule is removed. A screenshot of the fix
+  could not be taken (the browser pane was hidden), so it rests on that computed-style check plus the user's own eyes.
+- **"Show code" snippets re-read against each story, and rewritten to match.** Found: Item variants showed a "Save"
+  primary button the story doesn't draw; Responsive left out `itemVariant="secondary"`; RTL, Labelled and the Playground
+  showed two icons where the stories draw three icons, a rule and a Link; Sizes and Rounded showed two icons; an unused
+  `basic` snippet had no story. Each snippet now writes out exactly what its story renders (the shared demo bar is
+  spelled out in every one), except where the story's own point is a set of values (Item variants, All sizes), which
+  show one instance and name the others in a comment. Read back from the live Docs page after it settled (all 16
+  panels present), and typechecked against the real components with a planted bad prop to prove the check bites.
+  A guard that compares snippets to stories automatically wasn't built: the two can't be compared mechanically
+  (the stories are components, the snippets text), so this stays a by-eye check at review time.
 
 ## Review checklist (06 §9), run on 2026-10-03
 
@@ -74,7 +100,7 @@ order; `Toolbar.Group` is a named cluster; `Toolbar.Separator` runs across the b
   typechecked against the real components with a planted bad prop to prove the check bites; a docs test holds the
   token table to the stylesheet in both directions; hidden real-browser stories for keyboard focus ring, RTL, layout
   (spacer pushes to the far end, the rule has size), target size, vertical, phone and pressed state.
-- **Verification run**: `pnpm lint` (eslint, both typechecks), `pnpm test` 5,197 tests, `pnpm test:storybook` 987 tests,
+- **Verification run**: `pnpm lint` (eslint, both typechecks), `pnpm test` 5,200 tests, `pnpm test:storybook` 990 tests,
   `pnpm -r build`, `check-component-bundle-size`, `check-foundations-token-coverage`, `pnpm audit` (the one accepted,
   documented advisory only). Mutation checks: breaking the vertical flex direction and the separator width failed three
   browser stories; dropping `disabled` from the roving item failed two unit tests.

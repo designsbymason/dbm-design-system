@@ -59,6 +59,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       loop = true,
       wrap = false,
       fullWidth = false,
+      align = "start",
       className,
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
@@ -110,6 +111,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
             aria-labelledby={ariaLabelledBy}
             data-orientation={resolvedOrientation}
             data-size={size}
+            data-align={align}
             className={cx(
               styles.root,
               variant === "outlined" && styles.outlined,

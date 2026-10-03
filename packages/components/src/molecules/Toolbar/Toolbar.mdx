@@ -22,6 +22,7 @@ export const propOrder = [
   "dir",
   "loop",
   "fullWidth",
+  "align",
   "wrap",
   "aria-label",
   "aria-labelledby",
@@ -146,6 +147,15 @@ A `Toolbar.Spacer` takes the free space, so the bar needs more room than its ite
 width of its own.
 
 <Canvas of={ToolbarStories.WithSpacer} />
+
+### Aligning the items
+
+When the bar is wider than its items — it has `fullWidth`, or a width of its own — `align` puts them at the `start`
+(the default), the `center` or the `end`. It follows the reading direction, so `start` is the right edge on a
+right-to-left page. To split the items instead, with some at each end, put a `Toolbar.Spacer` between them: it takes
+the free space, so `align` has nothing left to do.
+
+<Canvas of={ToolbarStories.Align} />
 
 ### Toggle buttons
 
@@ -273,7 +283,7 @@ forwards in the page does so in the toolbar too.
 <Toolbar aria-label="Tools" orientation="vertical">…</Toolbar>
 <Toolbar aria-label="Actions" orientation={{ base: "vertical", md: "horizontal" }}>…</Toolbar>
 <Toolbar aria-label="Actions" itemVariant="secondary" size="sm" rounded wrap>…</Toolbar>
-<Toolbar aria-label="Document" fullWidth>…</Toolbar>
+<Toolbar aria-label="Document" fullWidth align="end">…</Toolbar>
 <Toolbar aria-label="Document" disabled>…</Toolbar>
 <Toolbar aria-label="Text formatting" dir="rtl">…</Toolbar>
 <Toolbar aria-label="Document" onFocus={() => trackFocus("document")}>…</Toolbar>
@@ -304,6 +314,7 @@ A toolbar draws only its own bar and separator; every item is a `Button` or `Ico
 <TokenRow token="border-width.1" usage="the outlined bar's border width, and the separator's thickness" />
 <TokenRow token="radius.lg" usage="the corners of an outlined or filled bar" />
 <TokenRow token="radius.full" usage="the ends of an outlined or filled bar with rounded" />
+<TokenRow token="z-index.base" usage="the focused item's layer, so its focus ring is drawn over the next item rather than under it" />
 <TokenRow token="space.1" usage="the gap between items, the separator's margins, and the padding of the smaller bars" />
 <TokenRow token="space.2" usage="the gap between items at lg and xl, and the padding of an md bar" />
 <TokenRow token="space.3" usage="the padding of an lg or xl bar" />
