@@ -11,6 +11,7 @@ import { digitValue, enterDigit, periodFromLetter } from "../../internal/time/se
 import {
   draftToParts,
   draftToValue,
+  emptyDraft,
   hourRange,
   isTimeAllowed,
   parseTime,
@@ -97,6 +98,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
       readOnly = false,
       required = false,
       showPicker = true,
+      clearable,
       open: openProp,
       defaultOpen = false,
       onOpenChange,
@@ -191,7 +193,13 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
     const parts = draftToParts(draft, cycle, showSeconds);
     const outsideConstraints = parts !== undefined && !isTimeAllowed(parts, { min: minParts, max: maxParts, step });
     const invalid = hasError || outsideConstraints;
-    const hasContent = Object.values(draft).some((part) => part !== undefined);
+    // Something to clear: any number, or a period that isn't the empty field's own AM.
+    const hasContent =
+      draft.hour !== undefined ||
+      draft.minute !== undefined ||
+      draft.second !== undefined ||
+      (draft.period !== undefined && draft.period !== emptyDraft(cycle).period);
+    const showClear = (clearable ?? onClear !== undefined) && hasContent && !disabled && !readOnly;
 
     // Feeds typed text into the field, starting at `segment`: digits into the number segments, a letter into AM/PM, and
     // a separator to finish the one being typed. One keystroke is one character; a phone's keyboard, an autofill or a
@@ -349,7 +357,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
 
     const clear = () => {
       setPending(null);
-      commit({});
+      commit(emptyDraft(cycle));
       onClear?.();
       focusSegment("hour");
     };
@@ -452,7 +460,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
             );
           })}
         </div>
-        {onClear && hasContent && !disabled && !readOnly && (
+        {showClear && (
           <button
             type="button"
             className={cx(styles.iconButton, buttonClass[size])}

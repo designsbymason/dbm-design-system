@@ -205,11 +205,11 @@
   position: relative;
 }
 
-/* The chosen row: a subtle band across every wheel, as tall as a row and placed after the rows above the middle. It
+/* The chosen row: a subtle brand-tinted band across every wheel, as tall as a row and placed after the rows above the middle. It
    doesn't scroll (the numbers move behind it) and takes no pointer events. The count of rows is a token; the middle
    row has `(rows - 1) / 2` rows above it. */
 .band {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-brand-subtle);
   block-size: var(--dbm-space-10);
   border-radius: var(--dbm-radius-md);
   inline-size: 100%;

@@ -15,6 +15,16 @@ export interface TimeRangePickerLabels extends TimePickerLabels {
 export interface TimeRangePickerProps
   extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role"> {
   /**
+   * Overall size of both fields, on the shared scale.
+   * @default 'md'
+   */
+  size?: TimePickerSize;
+  /**
+   * Shows the error state on both ends. An end earlier than the start shows it on that end without this.
+   * @default false
+   */
+  hasError?: boolean;
+  /**
    * The range, as `[start, end]` 24-hour strings: `["09:00", "17:30"]`. Use `""` for an end with no time yet.
    * Controlled: pair it with `onValueChange`.
    */
@@ -49,40 +59,42 @@ export interface TimeRangePickerProps
   /** The latest time either end may be, as `"HH:mm"`. */
   max?: string;
   /**
-   * Overall size of both fields, on the shared scale.
-   * @default 'md'
+   * Shows each end's picker button.
+   * @default true
    */
-  size?: TimePickerSize;
+  showPicker?: boolean;
   /**
-   * Shows the error state on both ends. An end earlier than the start shows it on that end without this.
+   * Shows a clear ("×") button while any end has something in it. Pass it to turn the button on without
+   * having anything to do when it is used; `onClear` also turns it on, and `clearable={false}` turns it off
+   * whatever else is passed. Clearing empties that end.
    * @default false
    */
-  hasError?: boolean;
+  clearable?: boolean;
+  /**
+   * Called, with which end, after a clear button has emptied that end. Passing it also shows the buttons,
+   * unless `clearable={false}`.
+   */
+  onClear?: (end: "start" | "end") => void;
   /**
    * Disables both ends.
    * @default false
    */
   disabled?: boolean;
   /**
-   * Makes both ends read-only.
-   * @default false
-   */
-  readOnly?: boolean;
-  /**
    * Marks the range as required for assistive technology.
    * @default false
    */
   required?: boolean;
   /**
-   * Shows each end's picker button.
-   * @default true
+   * Makes both ends read-only.
+   * @default false
    */
-  showPicker?: boolean;
+  readOnly?: boolean;
   /**
-   * Shows a clear button on each end while it has something in it. Pass an empty function to show the buttons
-   * with nothing else to do.
+   * Focuses the start field's first segment on mount.
+   * @default false
    */
-  onClear?: (end: "start" | "end") => void;
+  autoFocus?: boolean;
   /**
    * The name a surrounding `<form>` submits both values under — `name[]`, as `RangeSlider` does — through hidden
    * inputs, start first.
@@ -91,11 +103,6 @@ export interface TimeRangePickerProps
   /** Associates the hidden form inputs with a `<form>` by id. */
   form?: string;
   /**
-   * Focuses the start field's first segment on mount.
-   * @default false
-   */
-  autoFocus?: boolean;
-  /**
    * Every piece of text the fields write themselves, and the two end names, for translation. Pass only the keys
    * you want to change.
    * @default { start: 'Start time', end: 'End time', hour: 'Hour', minute: 'Minute', second: 'Second', period: 'AM/PM', am: 'AM', pm: 'PM', empty: 'Empty', openPicker: 'Choose time', pickerName: 'Choose a time', clear: 'Clear time' }
@@ -103,17 +110,17 @@ export interface TimeRangePickerProps
   labels?: Partial<TimeRangePickerLabels>;
   /** Writes a number in the digits you want shown; see `TimePicker`. @default String */
   formatNumber?: (value: number) => string;
-  /**
-   * Standard DOM id, applied to the **start** field's first segment — what a `FieldLabel`'s `htmlFor` should point
-   * at. A `FormField` does this.
-   */
-  id?: string;
   /** The range's accessible name when there is no visible label to point `aria-labelledby` at. */
   "aria-label"?: string;
   /** Points at the visible label that names the range. A `FormField` passes this. */
   "aria-labelledby"?: string;
   /** Points at helper or error text. A `FormField` passes this. */
   "aria-describedby"?: string;
+  /**
+   * Standard DOM id, applied to the **start** field's first segment — what a `FieldLabel`'s `htmlFor` should point
+   * at. A `FormField` does this.
+   */
+  id?: string;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */

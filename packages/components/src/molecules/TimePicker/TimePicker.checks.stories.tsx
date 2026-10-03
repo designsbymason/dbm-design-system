@@ -27,7 +27,7 @@ export const HeightMatchesInputAndButton: Story = {
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", alignItems: "flex-start" }}>
       {sizes.map((size) => (
         <div key={size} data-testid={`row-${size}`} style={{ display: "flex", gap: "var(--dbm-space-2)", alignItems: "flex-start" }}>
-          <TimePicker size={size} aria-label={`t-${size}`} defaultValue="09:30" onClear={() => {}} />
+          <TimePicker size={size} aria-label={`t-${size}`} defaultValue="09:30" clearable />
           <Input size={size} aria-label={`i-${size}`} defaultValue="09:30" onClear={() => {}} />
           <Button size={size}>Go</Button>
         </div>
@@ -68,7 +68,7 @@ export const TabOrder: Story = {
   name: "One tab stop per segment, then the picker button, then the next control",
   render: () => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
-      <TimePicker aria-label="Start time" defaultValue="09:30" onClear={() => {}} />
+      <TimePicker aria-label="Start time" defaultValue="09:30" clearable />
       <Button>After</Button>
     </div>
   ),
@@ -85,7 +85,7 @@ export const TabOrder: Story = {
 
 export const RightToLeft: Story = {
   name: "Right to left: the digits keep their order, and the field's parts follow the page",
-  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="09:30" onClear={() => {}} />,
+  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="09:30" clearable />,
   play: async ({ canvasElement }) => {
     const previous = document.documentElement.dir;
     document.documentElement.dir = "rtl";
@@ -155,7 +155,7 @@ export const TargetSizes: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)", alignItems: "flex-start" }} data-testid="all">
       {sizes.map((size) => (
-        <TimePicker key={size} size={size} aria-label={`t-${size}`} defaultValue="09:30" onClear={() => {}} />
+        <TimePicker key={size} size={size} aria-label={`t-${size}`} defaultValue="09:30" clearable />
       ))}
     </div>
   ),
@@ -456,7 +456,7 @@ export const PickerKeyboard: Story = {
 };
 
 export const NeighbourNumbersKeepTheirContrast: Story = {
-  name: "The numbers a row from the middle still read at 4.5:1 in every theme",
+  name: "The numbers a row from the middle, and the chosen one on its band, still read at 4.5:1 in every theme",
   render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:30" defaultOpen />,
   play: async () => {
     await screen.findByRole("dialog");
@@ -486,6 +486,8 @@ export const NeighbourNumbersKeepTheirContrast: Story = {
         // The number drawn at its own opacity over the panel's surface.
         const seen = text.map((channel, index) => channel * opacity + surface[index]! * (1 - opacity));
         await expect(ratio(seen, surface)).toBeGreaterThanOrEqual(4.5);
+        // And the chosen number, at full strength, on the band it sits on.
+        await expect(ratio(text, rgb("var(--dbm-bg-brand-subtle)"))).toBeGreaterThanOrEqual(4.5);
       }
     } finally {
       document.documentElement.dataset.theme = previous;

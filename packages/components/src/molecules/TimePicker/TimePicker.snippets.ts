@@ -30,9 +30,10 @@ export const timePickerSnippets = {
 <TimePicker aria-label="Start time" disabled defaultValue="09:30" />
 <TimePicker aria-label="Start time" readOnly defaultValue="09:30" />`,
 
-  clearable: `{/* onClear makes the clear button appear (while there is something to clear) and the field empties itself.
+  clearable: `{/* clearable shows the clear button while there is something to clear; the field empties itself (the AM/PM
+    segment goes back to AM). Pass onClear as well if you want to be told.
     const [value, setValue] = useState("09:30"); */}
-<TimePicker aria-label="Start time" value={value} onValueChange={setValue} onClear={() => {}} />`,
+<TimePicker aria-label="Start time" value={value} onValueChange={setValue} clearable />`,
 
   withoutPicker: `{/* showPicker={false} drops the button and the popover: a field that is only ever typed into. */}
 <TimePicker aria-label="Start time" showPicker={false} defaultValue="09:30" />`,
@@ -50,7 +51,7 @@ export const timePickerSnippets = {
   defaultValue="21:05"
   labels={{ hour: "الساعة", minute: "الدقيقة", period: "ص/م", am: "ص", pm: "م", openPicker: "اختر الوقت", pickerName: "اختر وقتًا", clear: "مسح" }}
   formatNumber={(n) => n.toLocaleString("ar-EG")}
-  onClear={() => {}}
+  clearable
 />`,
 } as const;
 
@@ -68,7 +69,7 @@ export interface TimePickerPlaygroundSnippetArgs {
   readOnly?: boolean;
   required?: boolean;
   showPicker?: boolean;
-  onClear?: unknown;
+  clearable?: boolean;
 }
 
 /**
@@ -90,6 +91,6 @@ export function timePickerPlaygroundSnippet(args: TimePickerPlaygroundSnippetArg
   if (args.required) attributes.push("required");
   // `showPicker` defaults to true, so it only needs writing when it's off.
   if (args.showPicker === false) attributes.push("showPicker={false}");
-  if (args.onClear) attributes.push("onClear={() => {}}");
+  if (args.clearable) attributes.push("clearable");
   return `<TimePicker ${attributes.join(" ")} />`;
 }

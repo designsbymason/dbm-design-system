@@ -24,6 +24,13 @@ which both import.
 - **No overnight range.** The rule is "end is not before start", so 22:00 to 02:00 reads as invalid; the Docs page
   says to use two pickers for that.
 
+## Follow-up round, 2026-10-03
+
+`clearable` (and `onClear(end)` as the optional notification, as on `TimePicker`), the Playground args made real for
+`min` and `max` (no more "Set string" placeholders), and the prop order aligned with `TimePicker`'s and the other input
+molecules, in the types, stories and Docs page; each end also takes `TimePicker`'s empty AM/PM default. See
+[TimePicker.md](TimePicker.md)'s follow-up for the reasoning.
+
 ## Findings
 
 - **A read of the pair is defensive:** a value that isn't a two-element array of strings reads as empty, tested.

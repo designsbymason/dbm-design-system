@@ -94,10 +94,18 @@ export function draftToValue(draft: TimeDraft, cycle: HourCycle, showSeconds: bo
   return parts ? formatTime(parts, showSeconds) : "";
 }
 
-/** A draft from a value string; an empty draft for "" or anything unreadable. */
+/**
+ * What an empty field shows: nothing in the numbers, and in the 12-hour cycle AM, so a cleared field (and a new one) reads
+ * "-- : -- AM" rather than leaving the period to be chosen before a time can be complete.
+ */
+export function emptyDraft(cycle: HourCycle): TimeDraft {
+  return cycle === "12" ? { period: "am" } : {};
+}
+
+/** A draft from a value string; the empty draft for "" or anything unreadable. */
 export function valueToDraft(value: string | undefined, cycle: HourCycle, showSeconds: boolean): TimeDraft {
   const parts = parseTime(value);
-  return parts ? partsToDraft(parts, cycle, showSeconds) : {};
+  return parts ? partsToDraft(parts, cycle, showSeconds) : emptyDraft(cycle);
 }
 
 export interface TimeConstraints {

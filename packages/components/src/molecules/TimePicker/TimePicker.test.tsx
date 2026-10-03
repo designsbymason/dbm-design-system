@@ -34,9 +34,9 @@ describe("TimePicker segments", () => {
     expect(screen.getAllByRole("spinbutton")).toHaveLength(4);
   });
 
-  it("shows an empty field as placeholders, announced as empty", () => {
+  it("shows an empty field as placeholders for the numbers and AM for the period, announced as empty", () => {
     render(<TimePicker aria-label="t" />);
-    expect(texts()).toEqual(["", "", ""]);
+    expect(texts()).toEqual(["", "", "AM"]);
     expect(segment("Hour")).toHaveAttribute("placeholder", "––");
     expect(segment("Hour")).toHaveAttribute("aria-valuetext", "Empty");
     expect(segment("Hour")).not.toHaveAttribute("aria-valuenow");
@@ -95,10 +95,10 @@ describe("TimePicker typing", () => {
     render(<TimePicker aria-label="t" onValueChange={onValueChange} />);
     await user.click(segment("Hour"));
     await user.keyboard("0930");
-    expect(texts()).toEqual(["09", "30", ""]);
+    expect(texts()).toEqual(["09", "30", "AM"]);
     expect(segment("AM/PM")).toHaveFocus();
-    // Nothing is complete until the period is chosen.
-    expect(onValueChange).not.toHaveBeenCalled();
+    // The period starts as AM, so the time is already whole.
+    expect(onValueChange).toHaveBeenLastCalledWith("09:30");
     await user.keyboard("p");
     expect(texts()).toEqual(["09", "30", "PM"]);
     expect(onValueChange).toHaveBeenLastCalledWith("21:30");
@@ -136,7 +136,9 @@ describe("TimePicker typing", () => {
     expect(segment("Hour")).toHaveValue("");
     await user.click(segment("AM/PM"));
     await user.keyboard("5");
-    expect(segment("AM/PM")).toHaveValue("");
+    expect(segment("AM/PM")).toHaveValue("AM");
+    await user.keyboard("p");
+    expect(segment("AM/PM")).toHaveValue("PM");
     await user.keyboard("a");
     expect(segment("AM/PM")).toHaveValue("AM");
   });
@@ -317,12 +319,12 @@ describe("TimePicker value", () => {
     rerender(<TimePicker aria-label="t" value="21:05" />);
     expect(texts()).toEqual(["09", "05", "PM"]);
     rerender(<TimePicker aria-label="t" value="" />);
-    expect(texts()).toEqual(["", "", ""]);
+    expect(texts()).toEqual(["", "", "AM"]);
   });
 
   it("reads a value that isn't a time as empty", () => {
     render(<TimePicker aria-label="t" value="25:99" />);
-    expect(texts()).toEqual(["", "", ""]);
+    expect(texts()).toEqual(["", "", "AM"]);
   });
 
   it("re-reads the same value when the hour cycle changes", () => {
@@ -343,7 +345,7 @@ describe("TimePicker value", () => {
     render(<Controlled />);
     await user.click(segment("Hour"));
     await user.keyboard("09");
-    expect(texts()).toEqual(["09", "", ""]);
+    expect(texts()).toEqual(["09", "", "AM"]);
   });
 
   it("submits the 24-hour string under name, and an empty one while incomplete", async () => {
@@ -475,11 +477,65 @@ describe("TimePicker clear", () => {
     expect(screen.getByRole("button", { name: "Clear time" })).toBeInTheDocument();
     await user.keyboard("30p");
     await user.click(screen.getByRole("button", { name: "Clear time" }));
-    expect(texts()).toEqual(["", "", ""]);
+    expect(texts()).toEqual(["", "", "AM"]);
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenLastCalledWith("");
     expect(segment("Hour")).toHaveFocus();
     expect(screen.queryByRole("button", { name: "Clear time" })).not.toBeInTheDocument();
+  });
+});
+
+describe("TimePicker clearable", () => {
+  it("shows the clear button with clearable alone, and it empties the field without any callback", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" clearable defaultValue="15:45" />);
+    await user.click(screen.getByRole("button", { name: "Clear time" }));
+    expect(texts()).toEqual(["", "", "AM"]);
+    expect(segment("Hour")).toHaveFocus();
+  });
+
+  it("shows no clear button by default, with onClear it does, and clearable={false} turns it off whatever else is passed", () => {
+    const { rerender } = render(<TimePicker aria-label="t" defaultValue="15:45" />);
+    expect(screen.queryByRole("button", { name: "Clear time" })).not.toBeInTheDocument();
+    rerender(<TimePicker aria-label="t" defaultValue="15:45" onClear={() => {}} />);
+    expect(screen.getByRole("button", { name: "Clear time" })).toBeInTheDocument();
+    rerender(<TimePicker aria-label="t" defaultValue="15:45" onClear={() => {}} clearable={false} />);
+    expect(screen.queryByRole("button", { name: "Clear time" })).not.toBeInTheDocument();
+  });
+
+  it("puts AM/PM back to AM when cleared from PM, and the button goes with nothing left to clear", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" clearable defaultValue="21:05" onValueChange={onValueChange} />);
+    expect(segment("AM/PM")).toHaveValue("PM");
+    await user.click(screen.getByRole("button", { name: "Clear time" }));
+    expect(segment("AM/PM")).toHaveValue("AM");
+    expect(onValueChange).toHaveBeenLastCalledWith("");
+    expect(screen.queryByRole("button", { name: "Clear time" })).not.toBeInTheDocument();
+  });
+
+  it("counts a PM on its own as something to clear, but not the empty field's own AM", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" clearable />);
+    expect(screen.queryByRole("button", { name: "Clear time" })).not.toBeInTheDocument();
+    await user.click(segment("AM/PM"));
+    await user.keyboard("p");
+    expect(screen.getByRole("button", { name: "Clear time" })).toBeInTheDocument();
+  });
+
+  it("is also reset to AM when the owner sets the value to empty", () => {
+    const { rerender } = render(<TimePicker aria-label="t" value="21:05" />);
+    expect(segment("AM/PM")).toHaveValue("PM");
+    rerender(<TimePicker aria-label="t" value="" />);
+    expect(segment("AM/PM")).toHaveValue("AM");
+  });
+
+  it("still lets Backspace empty the AM/PM segment on its own", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" defaultValue="09:30" />);
+    await user.click(segment("AM/PM"));
+    await user.keyboard("{Backspace}");
+    expect(segment("AM/PM")).toHaveValue("");
   });
 });
 

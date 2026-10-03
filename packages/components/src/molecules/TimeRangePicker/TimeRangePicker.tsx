@@ -63,6 +63,7 @@ export const TimeRangePicker = forwardRef<HTMLDivElement, TimeRangePickerProps>(
       readOnly = false,
       required = false,
       showPicker = true,
+      clearable,
       onClear,
       name,
       form,
@@ -117,6 +118,7 @@ export const TimeRangePicker = forwardRef<HTMLDivElement, TimeRangePickerProps>(
       readOnly,
       required,
       showPicker,
+      clearable,
       labels: pickerLabels,
       formatNumber,
     };

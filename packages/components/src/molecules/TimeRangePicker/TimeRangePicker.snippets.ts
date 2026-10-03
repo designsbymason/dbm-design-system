@@ -16,8 +16,8 @@ export const timeRangePickerSnippets = {
   controlled: `{/* const [range, setRange] = useState(["09:00", ""]); — an end that isn't complete yet is "". */}
 <TimeRangePicker aria-label="Opening hours" value={range} onValueChange={setRange} />`,
 
-  clearable: `{/* onClear is told which end was cleared; the field empties itself. */}
-<TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} onClear={() => {}} />`,
+  clearable: `{/* clearable shows a clear button on each end while it has something in it; pass onClear as well to be told which end. */}
+<TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} clearable />`,
 
   formField: `<FormField label="Opening hours" helperText="In your local time">
   {(field) => <TimeRangePicker {...field} />}
@@ -38,7 +38,7 @@ export interface TimeRangePickerPlaygroundSnippetArgs {
   readOnly?: boolean;
   required?: boolean;
   showPicker?: boolean;
-  onClear?: unknown;
+  clearable?: boolean;
 }
 
 /** The Playground's snippet, built from its current controls: only the props that differ from their defaults. */
@@ -56,6 +56,6 @@ export function timeRangePickerPlaygroundSnippet(args: TimeRangePickerPlayground
   if (args.readOnly) attributes.push("readOnly");
   if (args.required) attributes.push("required");
   if (args.showPicker === false) attributes.push("showPicker={false}");
-  if (args.onClear) attributes.push("onClear={() => {}}");
+  if (args.clearable) attributes.push("clearable");
   return `<TimeRangePicker ${attributes.join(" ")} />`;
 }

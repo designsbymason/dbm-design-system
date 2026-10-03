@@ -13,6 +13,18 @@ const meta: Meta<typeof TimePicker> = {
   // Core value props first, then the format and constraint props, then visual and state props, then the picker and
   // form wiring, then advanced/escape-hatch props last (07-storybook-and-documentation-standards.md §4 item 3).
   argTypes: {
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "Overall size, on the shared scale; its height matches Input and Button at the same step.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
+    hasError: {
+      control: "boolean",
+      description:
+        "Shows the error state: a danger-coloured border and aria-invalid. A time outside min/max, or a minute off the step, shows it too without this.",
+      table: { defaultValue: { summary: "false" } },
+    },
     value: {
       control: false,
       description:
@@ -56,35 +68,6 @@ const meta: Meta<typeof TimePicker> = {
       description:
         "The latest allowed time, as \"HH:mm\" (or \"HH:mm:ss\"). A later time is flagged invalid, not refused, and the picker disables the options after it.",
     },
-    size: {
-      control: "select",
-      options: ["xs", "sm", "md", "lg", "xl"],
-      description: "Overall size, on the shared scale; its height matches Input and Button at the same step.",
-      table: { defaultValue: { summary: '"md"' } },
-    },
-    hasError: {
-      control: "boolean",
-      description:
-        "Shows the error state: a danger-coloured border and aria-invalid. A time outside min/max, or a minute off the step, shows it too without this.",
-      table: { defaultValue: { summary: "false" } },
-    },
-    disabled: {
-      control: "boolean",
-      description: "Disables the whole field: no segment takes focus, the picker button is inert, and nothing changes.",
-      table: { defaultValue: { summary: "false" } },
-    },
-    readOnly: {
-      control: "boolean",
-      description:
-        "Makes the field read-only: its segments can be focused and read but not changed, and the picker and the clear button are hidden.",
-      table: { defaultValue: { summary: "false" } },
-    },
-    required: {
-      control: "boolean",
-      description:
-        "Marks the field as required for assistive technology (aria-required). A TimePicker doesn't validate natively; a FormField's error is where an empty required field is reported.",
-      table: { defaultValue: { summary: "false" } },
-    },
     showPicker: {
       control: "boolean",
       description:
@@ -104,10 +87,39 @@ const meta: Meta<typeof TimePicker> = {
       control: false,
       description: "Called with the picker's new open state whenever it changes.",
     },
+    clearable: {
+      control: "boolean",
+      description:
+        "Shows a clear (×) button while any segment has something in it. Pass it to turn the button on without having anything to do when it is used; onClear also turns it on, and clearable={false} turns it off whatever else is passed. Clearing empties the field itself (the AM/PM segment goes back to AM).",
+      table: { defaultValue: { summary: "false" } },
+    },
     onClear: {
       control: false,
       description:
-        "Shows a clear (×) button while any segment has something in it, and fully empties the field itself before calling this. Pass an empty function to show the button with nothing else to do.",
+        "Called after the clear button has emptied the field (the field empties itself first, so this is only a notification). Passing it also shows the button, unless clearable={false}.",
+    },
+    disabled: {
+      control: "boolean",
+      description: "Disables the whole field: no segment takes focus, the picker button is inert, and nothing changes.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    required: {
+      control: "boolean",
+      description:
+        "Marks the field as required for assistive technology (aria-required). A TimePicker doesn't validate natively; a FormField's error is where an empty required field is reported.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    readOnly: {
+      control: "boolean",
+      description:
+        "Makes the field read-only: its segments can be focused and read but not changed, and the picker and the clear button are hidden.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    autoFocus: {
+      control: false,
+      description:
+        "Focuses the first segment when the field mounts. (React's own autoFocus only works on a native form control, so this is done with a ref and an effect.)",
+      table: { defaultValue: { summary: "false" } },
     },
     name: {
       control: "text",
@@ -118,12 +130,6 @@ const meta: Meta<typeof TimePicker> = {
       control: false,
       description: "Associates the hidden form input with a <form> by id, when this isn't inside it.",
     },
-    autoFocus: {
-      control: false,
-      description:
-        "Focuses the first segment when the field mounts. (React's own autoFocus only works on a native form control, so this is done with a ref and an effect.)",
-      table: { defaultValue: { summary: "false" } },
-    },
     labels: {
       control: false,
       description:
@@ -133,11 +139,6 @@ const meta: Meta<typeof TimePicker> = {
       control: false,
       description:
         "Writes a number in the digits you want shown: (n) => n.toLocaleString(\"ar-EG\"). Used for the digits on screen, in the picker and in what a screen reader hears; typing digits of any script still works. Never defaulted to a locale.",
-    },
-    id: {
-      control: false,
-      description:
-        "Standard DOM id, applied to the first segment (the hour) — which is what a FieldLabel's htmlFor should point at, so clicking the label focuses the field. A FormField already does this.",
     },
     "aria-label": {
       control: "text",
@@ -152,6 +153,11 @@ const meta: Meta<typeof TimePicker> = {
       control: false,
       description: "Points at helper or error text. A FormField passes this.",
     },
+    id: {
+      control: false,
+      description:
+        "Standard DOM id, applied to the first segment (the hour) — which is what a FieldLabel's htmlFor should point at, so clicking the label focuses the field. A FormField already does this.",
+    },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     "data-testid": {
@@ -160,20 +166,26 @@ const meta: Meta<typeof TimePicker> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
+  // Every control has a real value (an empty string for the optional text props), so none renders as an inert "Set string" or
+  // "Set boolean" placeholder; the defaults match the component's own.
   args: {
+    size: "md",
+    hasError: false,
     defaultValue: "09:30",
     hourCycle: "12",
     showSeconds: false,
     step: 1,
-    size: "md",
-    hasError: false,
-    disabled: false,
-    readOnly: false,
-    required: false,
+    min: "",
+    max: "",
     showPicker: true,
+    defaultOpen: false,
+    clearable: false,
+    disabled: false,
+    required: false,
+    readOnly: false,
+    name: "",
     "aria-label": "Start time",
     onValueChange: fn(),
-    onClear: fn(),
   },
 };
 
@@ -198,6 +210,7 @@ const noControls = {
   required: { control: false },
   showPicker: { control: false },
   defaultOpen: { control: false },
+  clearable: { control: false },
   onClear: { control: false },
   name: { control: false },
   "aria-label": { control: false },
@@ -294,7 +307,7 @@ export const Clearable: Story = {
   argTypes: { ...noControls },
   render: function ClearableStory() {
     const [value, setValue] = useState("09:30");
-    return <TimePicker aria-label="Start time" value={value} onValueChange={setValue} onClear={() => {}} />;
+    return <TimePicker aria-label="Start time" value={value} onValueChange={setValue} clearable />;
   },
 };
 
@@ -353,7 +366,7 @@ export const Translated: Story = {
           clear: "مسح",
         }}
         formatNumber={(n) => n.toLocaleString("ar-EG")}
-        onClear={() => {}}
+        clearable
       />
     </div>
   ),
@@ -365,7 +378,7 @@ export const Translated: Story = {
 export const TypeATime: Story = {
   name: "Type a time, step it, clear a segment — interaction test",
   tags: ["!dev"],
-  args: { defaultValue: "", onClear: undefined },
+  args: { defaultValue: "" },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("spinbutton", { name: "Hour" }));

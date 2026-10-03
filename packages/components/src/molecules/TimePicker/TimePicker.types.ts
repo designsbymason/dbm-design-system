@@ -35,6 +35,17 @@ export interface TimePickerLabels {
 export interface TimePickerProps
   extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role"> {
   /**
+   * Overall size, on the shared scale; its height matches `Input` and `Button` at the same step.
+   * @default 'md'
+   */
+  size?: TimePickerSize;
+  /**
+   * Shows the error state: a danger-coloured border and `aria-invalid`. A time outside `min`/`max`, or a
+   * minute off the `step`, shows it too without this.
+   * @default false
+   */
+  hasError?: boolean;
+  /**
    * The time, as a 24-hour string: `"14:30"`, or `"14:30:00"` when `showSeconds` is set. Use `""` (or
    * leave it out) for no time. The value is the same whichever `hourCycle` is shown, and while the
    * field is only partly filled it is `""`. A string that isn't a valid time reads as empty.
@@ -78,34 +89,6 @@ export interface TimePickerProps
    */
   max?: string;
   /**
-   * Overall size, on the shared scale; its height matches `Input` and `Button` at the same step.
-   * @default 'md'
-   */
-  size?: TimePickerSize;
-  /**
-   * Shows the error state: a danger-coloured border and `aria-invalid`. A time outside `min`/`max`, or a
-   * minute off the `step`, shows it too without this.
-   * @default false
-   */
-  hasError?: boolean;
-  /**
-   * Disables the whole field: no segment takes focus, the picker button is inert, and nothing changes.
-   * @default false
-   */
-  disabled?: boolean;
-  /**
-   * Makes the field read-only: its segments can be focused and read but not changed, and the picker and
-   * the clear button are hidden.
-   * @default false
-   */
-  readOnly?: boolean;
-  /**
-   * Marks the field as required for assistive technology (`aria-required`). A `TimePicker` doesn't validate
-   * natively; a `FormField`'s `error` is where an empty required field is reported.
-   * @default false
-   */
-  required?: boolean;
-  /**
    * Shows the button that opens the picker: a popover of wheels of hours, minutes (and seconds and AM/PM) to scroll
    * or tap, with the chosen row in the middle. Turn it off for a field that is only ever typed into.
    * @default true
@@ -121,11 +104,41 @@ export interface TimePickerProps
   /** Called with the picker's new open state whenever it changes. */
   onOpenChange?: (open: boolean) => void;
   /**
-   * Shows a clear ("×") button while any segment has something in it, and — unlike `Input`'s own
-   * `onClear` — fully empties the field itself before calling this. Pass an empty function to show the
-   * button with nothing else to do.
+   * Shows a clear ("×") button while any segment has something in it. Pass it to turn the button on without
+   * having anything to do when it is used; `onClear` also turns it on, and `clearable={false}` turns it off
+   * whatever else is passed. Clearing empties the field itself (the AM/PM segment goes back to AM).
+   * @default false
+   */
+  clearable?: boolean;
+  /**
+   * Called after the clear button has emptied the field (unlike `Input`'s own `onClear`, the field empties
+   * itself first, so this is only a notification). Passing it also shows the button, unless
+   * `clearable={false}`.
    */
   onClear?: () => void;
+  /**
+   * Disables the whole field: no segment takes focus, the picker button is inert, and nothing changes.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * Marks the field as required for assistive technology (`aria-required`). A `TimePicker` doesn't validate
+   * natively; a `FormField`'s `error` is where an empty required field is reported.
+   * @default false
+   */
+  required?: boolean;
+  /**
+   * Makes the field read-only: its segments can be focused and read but not changed, and the picker and
+   * the clear button are hidden.
+   * @default false
+   */
+  readOnly?: boolean;
+  /**
+   * Focuses the first segment when the field mounts. (React's own `autoFocus` only works on a native form
+   * control, so this is done with a ref and an effect.)
+   * @default false
+   */
+  autoFocus?: boolean;
   /**
    * The name a surrounding `<form>` submits the value under, through a hidden input holding the 24-hour
    * string (and `""` while the field is empty or incomplete).
@@ -133,12 +146,6 @@ export interface TimePickerProps
   name?: string;
   /** Associates the hidden form input with a `<form>` by id, when this isn't inside it. */
   form?: string;
-  /**
-   * Focuses the first segment when the field mounts. (React's own `autoFocus` only works on a native form
-   * control, so this is done with a ref and an effect.)
-   * @default false
-   */
-  autoFocus?: boolean;
   /**
    * Every piece of text the field writes itself — segment names, AM and PM, and the button names — for
    * translation. Pass only the keys you want to change.
@@ -153,11 +160,6 @@ export interface TimePickerProps
    */
   formatNumber?: (value: number) => string;
   /**
-   * Standard DOM id, applied to the **first segment** (the hour) — which is what a `FieldLabel`'s `htmlFor`
-   * should point at, so clicking the label focuses the field. A `FormField` already does this.
-   */
-  id?: string;
-  /**
    * The field's accessible name when there is no visible label to point `aria-labelledby` at. Applied to
    * the group the segments sit in.
    */
@@ -166,6 +168,11 @@ export interface TimePickerProps
   "aria-labelledby"?: string;
   /** Points at helper or error text. A `FormField` passes this. */
   "aria-describedby"?: string;
+  /**
+   * Standard DOM id, applied to the **first segment** (the hour) — which is what a `FieldLabel`'s `htmlFor`
+   * should point at, so clicking the label focuses the field. A `FormField` already does this.
+   */
+  id?: string;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */

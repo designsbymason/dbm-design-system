@@ -4,6 +4,7 @@ import {
   compareTime,
   draftToParts,
   draftToValue,
+  emptyDraft,
   formatTime,
   isTimeAllowed,
   overlapsRange,
@@ -80,9 +81,16 @@ describe("drafts", () => {
     expect(draftToValue({ hour: 12, minute: 0, period: "am" }, "12", false)).toBe("00:00");
   });
 
-  it("reads an unreadable value as an empty draft", () => {
-    expect(valueToDraft("nope", "12", false)).toEqual({});
+  it("reads an unreadable value as the empty draft, which is AM in the 12-hour cycle and nothing in the 24-hour one", () => {
+    expect(valueToDraft("nope", "12", false)).toEqual({ period: "am" });
     expect(valueToDraft(undefined, "24", true)).toEqual({});
+    expect(emptyDraft("12")).toEqual({ period: "am" });
+    expect(emptyDraft("24")).toEqual({});
+  });
+
+  it("is still an incomplete time when it is only the empty draft", () => {
+    expect(draftToValue(emptyDraft("12"), "12", false)).toBe("");
+    expect(draftToValue({ hour: 9, minute: 30, period: "am" }, "12", false)).toBe("09:30");
   });
 
   it("lists the segments a field shows", () => {

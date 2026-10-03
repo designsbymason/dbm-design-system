@@ -75,7 +75,7 @@ describe("TimeRangePicker", () => {
     expect(() =>
       render(<TimeRangePicker aria-label="r" value={undefined as unknown as TimeRangeValue} defaultValue={[5, null] as unknown as TimeRangeValue} />),
     ).not.toThrow();
-    expect(texts("Start time")).toEqual(["", "", ""]);
+    expect(texts("Start time")).toEqual(["", "", "AM"]);
   });
 
   it("flags an end earlier than the start, on the end only, and reports it", async () => {
@@ -136,8 +136,15 @@ describe("TimeRangePicker", () => {
     render(<TimeRangePicker aria-label="r" defaultValue={["09:00", "17:30"]} onClear={onClear} />);
     await user.click(within(field("End time")).getByRole("button", { name: "Clear time" }));
     expect(onClear).toHaveBeenCalledWith("end");
-    expect(texts("End time")).toEqual(["", "", ""]);
+    expect(texts("End time")).toEqual(["", "", "AM"]);
     expect(texts("Start time")).toEqual(["09", "00", "AM"]);
+  });
+
+  it("shows the clear buttons with clearable alone, and not with clearable={false}", () => {
+    const { rerender } = render(<TimeRangePicker aria-label="r" clearable defaultValue={["09:00", "17:30"]} />);
+    expect(screen.getAllByRole("button", { name: "Clear time" })).toHaveLength(2);
+    rerender(<TimeRangePicker aria-label="r" clearable={false} onClear={() => {}} defaultValue={["09:00", "17:30"]} />);
+    expect(screen.queryByRole("button", { name: "Clear time" })).not.toBeInTheDocument();
   });
 
   it("translates the end names and the rest, keeping defaults for what is left out", () => {

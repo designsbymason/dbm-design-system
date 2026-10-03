@@ -12,6 +12,17 @@ const meta: Meta<typeof TimeRangePicker> = {
   component: TimeRangePicker,
   parameters: { layout: "padded" },
   argTypes: {
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "Overall size of both fields, on the shared scale.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
+    hasError: {
+      control: "boolean",
+      description: "Shows the error state on both ends. An end earlier than the start shows it on that end without this.",
+      table: { defaultValue: { summary: "false" } },
+    },
     value: {
       control: false,
       description:
@@ -49,44 +60,39 @@ const meta: Meta<typeof TimeRangePicker> = {
       description: "The earliest time either end may be, as \"HH:mm\". The end's earliest is also the start.",
     },
     max: { control: "text", description: "The latest time either end may be, as \"HH:mm\"." },
-    size: {
-      control: "select",
-      options: ["xs", "sm", "md", "lg", "xl"],
-      description: "Overall size of both fields, on the shared scale.",
-      table: { defaultValue: { summary: '"md"' } },
-    },
-    hasError: {
-      control: "boolean",
-      description: "Shows the error state on both ends. An end earlier than the start shows it on that end without this.",
-      table: { defaultValue: { summary: "false" } },
-    },
-    disabled: { control: "boolean", description: "Disables both ends.", table: { defaultValue: { summary: "false" } } },
-    readOnly: { control: "boolean", description: "Makes both ends read-only.", table: { defaultValue: { summary: "false" } } },
-    required: {
-      control: "boolean",
-      description: "Marks the range as required for assistive technology.",
-      table: { defaultValue: { summary: "false" } },
-    },
     showPicker: {
       control: "boolean",
       description: "Shows each end's picker button.",
       table: { defaultValue: { summary: "true" } },
     },
+    clearable: {
+      control: "boolean",
+      description:
+        "Shows a clear (×) button while an end has something in it. Pass it to turn the button on without having anything to do when it is used; onClear also turns it on, and clearable={false} turns it off whatever else is passed. Clearing empties that end, calling onClear with which one.",
+      table: { defaultValue: { summary: "false" } },
+    },
     onClear: {
       control: false,
       description:
-        "Shows a clear button on each end while it has something in it, calling this with which end was cleared. Pass an empty function to show the buttons with nothing else to do.",
+        "Called, with which end, after a clear button has emptied that end. Passing it also shows the buttons, unless clearable={false}.",
+    },
+    disabled: { control: "boolean", description: "Disables both ends.", table: { defaultValue: { summary: "false" } } },
+    required: {
+      control: "boolean",
+      description: "Marks the range as required for assistive technology.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    readOnly: { control: "boolean", description: "Makes both ends read-only.", table: { defaultValue: { summary: "false" } } },
+    autoFocus: {
+      control: false,
+      description: "Focuses the start field's first segment on mount.",
+      table: { defaultValue: { summary: "false" } },
     },
     name: {
       control: false,
       description: "The name a surrounding <form> submits both values under — name[], as RangeSlider does — start first.",
     },
     form: { control: false, description: "Associates the hidden form inputs with a <form> by id." },
-    autoFocus: {
-      control: false,
-      description: "Focuses the start field's first segment on mount.",
-      table: { defaultValue: { summary: "false" } },
-    },
     labels: {
       control: false,
       description:
@@ -96,14 +102,14 @@ const meta: Meta<typeof TimeRangePicker> = {
       control: false,
       description: "Writes a number in the digits you want shown; see TimePicker. Never defaulted to a locale.",
     },
+    "aria-label": { control: "text", description: "The range's accessible name when there is no visible label to point aria-labelledby at." },
+    "aria-labelledby": { control: false, description: "Points at the visible label that names the range. A FormField passes this." },
+    "aria-describedby": { control: false, description: "Points at helper or error text. A FormField passes this." },
     id: {
       control: false,
       description:
         "Standard DOM id, applied to the start field's first segment — what a FieldLabel's htmlFor should point at. A FormField does this.",
     },
-    "aria-label": { control: "text", description: "The range's accessible name when there is no visible label to point aria-labelledby at." },
-    "aria-labelledby": { control: false, description: "Points at the visible label that names the range. A FormField passes this." },
-    "aria-describedby": { control: false, description: "Points at helper or error text. A FormField passes this." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     "data-testid": {
@@ -112,20 +118,24 @@ const meta: Meta<typeof TimeRangePicker> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
+  // Every control has a real value (an empty string for the optional text props), so none renders as an inert "Set string"
+  // placeholder; the defaults match the component's own.
   args: {
+    size: "md",
+    hasError: false,
     defaultValue: ["09:00", "17:30"],
     hourCycle: "12",
     showSeconds: false,
     step: 1,
-    size: "md",
-    hasError: false,
-    disabled: false,
-    readOnly: false,
-    required: false,
+    min: "",
+    max: "",
     showPicker: true,
+    clearable: false,
+    disabled: false,
+    required: false,
+    readOnly: false,
     "aria-label": "Opening hours",
     onValueChange: fn(),
-    onClear: fn(),
   },
 };
 
@@ -148,6 +158,7 @@ const noControls = {
   readOnly: { control: false },
   required: { control: false },
   showPicker: { control: false },
+  clearable: { control: false },
   onClear: { control: false },
   "aria-label": { control: false },
 } as const;
@@ -213,7 +224,7 @@ export const Clearable: Story = {
   name: "With clear buttons",
   parameters: { docs: { source: { code: timeRangePickerSnippets.clearable } } },
   argTypes: { ...noControls },
-  render: () => <TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} onClear={() => {}} />,
+  render: () => <TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} clearable />,
 };
 
 export const InFormField: Story = {

@@ -8,6 +8,8 @@ import { TimePicker } from "./TimePicker";
 import * as TimePickerStories from "./TimePicker.stories";
 
 export const propOrder = [
+  "size",
+  "hasError",
   "value",
   "defaultValue",
   "onValueChange",
@@ -16,19 +18,18 @@ export const propOrder = [
   "step",
   "min",
   "max",
-  "size",
-  "hasError",
-  "disabled",
-  "readOnly",
-  "required",
   "showPicker",
   "open",
   "defaultOpen",
   "onOpenChange",
+  "clearable",
   "onClear",
+  "disabled",
+  "required",
+  "readOnly",
+  "autoFocus",
   "name",
   "form",
-  "autoFocus",
   "labels",
   "formatNumber",
   "aria-label",
@@ -253,7 +254,8 @@ function Example() {
 <TokenRow token="text.disabled" usage="a row in the picker that the range rules out" />
 <TokenRow token="text.on-brand" usage="the focused segment's text" />
 <TokenRow token="bg.brand" usage="the focused segment's fill" />
-<TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons; the band behind the chosen row of the picker" />
+<TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons" />
+<TokenRow token="bg.brand-subtle" usage="the band behind the chosen row of the picker" />
 <TokenRow token="icon.default" usage="the clear and picker buttons' icons" />
 <TokenRow token="font-family.primary" usage="field typography" />
 <TokenRow token="font-size.xs" usage="text size at size xs" />

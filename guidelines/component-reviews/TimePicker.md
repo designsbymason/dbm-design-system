@@ -29,7 +29,7 @@ with `showSeconds`), `""` while the field is empty or only partly filled.
 - **The picker** is `Popover` with `align="end"` and no arrow, holding one **wheel** per segment (hour, minute,
   optional second, AM/PM), drawn like a phone's time picker. *It was first a plain list of columns with the chosen
   option filled in; the user then asked for the wheel, and the picker was replaced (ADR-0029's amendment).*
-  - **Five rows** (a token) with the chosen one always in the middle, behind one subtle band (`bg.neutral-subtle`)
+  - **Five rows** (a token) with the chosen one always in the middle, behind one subtle band (`bg.brand-subtle`)
     across every wheel; the numbers scroll behind it. A row's size and opacity follow its distance from the middle:
     full size and strength at the middle, 90% and 68% a row away, 80% and 35% two or more away, in two straight lines
     between, so a number grows into the chosen size as it arrives (`transform` and `opacity` only, from tokens).
@@ -84,7 +84,7 @@ wheel's `wheel-visible-rows` (5), `wheel-neighbour-scale` (0.9), `wheel-neighbou
   `modal` left off (a picker coexists with the page), `align`, `hideArrow`, `onOpenAutoFocus` (focus goes to the
   chosen option, not the panel), `aria-label` and `className` used; the placement props are `Popover`'s own scope.
 - **Colours:** the focused segment is a solid `bg.brand` fill with `text.on-brand`, the clearest "this one" that
-  stays AA; the picker's chosen row is the subtle band, with `text.primary` on it. No new pairing for these:
+  stays AA; the picker's chosen row is the subtle band (`bg.brand-subtle`; changed from `bg.neutral-subtle` at the user's request), with `text.primary` on it, **13.46–15.05:1 across the four themes** (the band against the surface is a faint 1.04–1.11:1: it is a tint, not the only cue, since the chosen number is also the largest and strongest). No new pairing for the rest:
   `text.on-brand`/`bg.brand` is 6.08–8.51:1 across the four themes, `text.primary` on `bg.surface` 13.5–14.1, on
   `bg.neutral-subtle` (the band, the button hover) 9.66–13.53, `text.tertiary` (the placeholder, the colon) on
   `bg.surface` 4.70–8.21, `icon.default` on the hover fill 4.51–5.86 (non-text), measured in a live browser in all
@@ -94,6 +94,33 @@ wheel's `wheel-visible-rows` (5), `wheel-neighbour-scale` (0.9), `wheel-neighbou
   dark, below the floor on purpose, as agreed: the half-cut-off outermost row is a hint of what is beyond, and every
   value is reachable at full contrast by scrolling it to the middle or from the keyboard. A real-browser check
   recomputes the neighbour figure from the drawn opacity in all four themes.
+
+## Follow-up round, 2026-10-03 (at explicit direction, after the wheel)
+
+- **`clearable` prop.** The clear button was turned on only by passing `onClear`, which is hard for an agent to find.
+  `clearable` is the switch now, and `onClear` stays an optional notification; to keep existing usage working, `onClear`
+  alone also still shows the button, and `clearable={false}` turns it off whatever else is passed
+  (`clearable ?? onClear !== undefined`). On `TimeRangePicker` the same, with `onClear` told which end.
+- **A cleared field puts AM/PM back to AM** instead of leaving it empty. The empty draft in the 12-hour cycle is now
+  `{ period: "am" }` (`emptyDraft`), used for the clear button, a value set to `""` from outside, and a field that
+  starts empty, so there is one empty state, not two. **Consequence worth knowing:** because the period starts as AM,
+  typing an hour and a minute completes the time as AM straight away (`"09:30"`), where before nothing was reported
+  until a period was chosen; typing `p` changes it. `Backspace` on the AM/PM segment still empties just that segment,
+  and a PM on its own counts as something to clear while the empty field's own AM does not.
+- **The Controls panel showed "Set string" / "Set boolean"** for `min`, `max`, `name` and `defaultOpen` (and would have for
+  `clearable`): the meta had controls for them but the Playground's args left them `undefined`, which is the exact
+  gap `07` §5's checklist already names ("every controllable prop has an explicit value in the Playground's args").
+  **That was missed in the first build.** Every control now has a real value (an empty string for the optional text
+  props, `false` for the booleans), `onClear` no longer defaults to a function (so the Playground's defaults are the real
+  ones), and the others are `control: false` ("–"). Checked in the live Controls panel for both components: every
+  row is a real input or a dash. `TimeRangePicker` had the same gap for `min` and `max`.
+- **Prop order** follows the other input molecules (`NumberInput`'s sequence): `size` and `hasError`, then the value
+  props (`value`, `defaultValue`, `onValueChange`), the format and limits (`hourCycle`, `showSeconds`, `step`, `min`,
+  `max`), the picker (`showPicker`, `open`, `defaultOpen`, `onOpenChange`), `clearable`, `onClear`, the state flags
+  (`disabled`, `required`, `readOnly`), `autoFocus`, `name`, `form`, `labels`, `formatNumber`, the `aria-*` props, then
+  `id`, `className`, `style`, `data-testid` last. The type declarations, the stories' `argTypes` and each Docs page's
+  `propOrder` were reordered together, and the native Controls panel and both Docs Properties tables and Playground
+  were read live to confirm the same order everywhere.
 
 ## Findings
 
@@ -160,7 +187,7 @@ wheel's `wheel-visible-rows` (5), `wheel-neighbour-scale` (0.9), `wheel-neighbou
   typed digits in dark mode, and the contrast figures above in all four themes.
 - Snippets typechecked against the real components (a planted bad prop failed it).
 - Whole package: `eslint`, both typechecks, `pnpm build`, the bundle-size check (TimePicker 7.07KB JS / 2.00KB CSS
-  gzipped, `TimeRangePicker` 7.49 / 2.04), the Foundations token-coverage check, 5,026 unit tests, 947
+  gzipped, `TimeRangePicker` 7.49 / 2.04), the Foundations token-coverage check, 5,035 unit tests, 947
   Storybook-project tests, the 8 visual tests, and `pnpm audit` (only the already-accepted `braces` advisory).
 
 ## Not checked, or open
