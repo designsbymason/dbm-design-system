@@ -88,7 +88,11 @@ import { Toolbar } from "@dbm-design-system/components";
 ## Properties
 
 `Toolbar` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`, `title`) —
-passed straight through to the underlying element.
+passed straight through to the toolbar element.
+
+`className` and `style` go on the outermost box — the toolbar element itself, or, while it scrolls (the default), the frame
+around it that carries its surface — so a margin or a width behaves the same whatever `overflow` is. `ref`, `id`,
+`data-testid` and the `aria-*` props stay on the element that is the `toolbar`.
 
 <PropertiesTable of={ToolbarStories} order={propOrder} />
 
@@ -99,7 +103,7 @@ The parts of a toolbar:
   `size`, `rounded` and `disabled` default to the toolbar's.
 - **`Toolbar.ToggleGroup`** and **`Toolbar.ToggleItem`** are a `ToggleGroup` and its `ToggleGroup.Item`s in the arrow-key
   order, for choosing one option (alignment) or several (text style). They take every `ToggleGroup` prop except `loop` and
-  `rovingFocus`, which the toolbar owns; `size`, `rounded`, `disabled`, `orientation` and `dir` default to the toolbar's.
+  `rovingFocus`, which the toolbar owns; `size`, `rounded`, `disabled`, `orientation` and `dir` default to the toolbar's, and `variant` to `subtle`.
 - **`Toolbar.Item`** puts any other single focusable element in the order: a `Select`, a popover or menu trigger, a link.
 - **`Toolbar.Group`** is a named cluster; **`Toolbar.Separator`** is a line between items, across the bar's own direction,
   announced as a separator (it takes `className`, `style`, `id` and `data-testid`); **`Toolbar.Spacer`** is flexible empty
@@ -175,7 +179,7 @@ the toolbar's arrow-key order. A group without it keeps its items apart.
 
 A `Toolbar.ToggleGroup` is a choice that is part of the bar: one option out of several (a `radiogroup`, where an arrow
 key also chooses the item it lands on) or independent toggles (`type="multiple"`, a plain `group`). Its items are
-`Toolbar.ToggleItem`s. Unlike a `ToggleGroup` placed in a toolbar directly, it doesn't add a tab stop of its own: the
+`Toolbar.ToggleItem`s. Its `variant` is `subtle` (borderless) unless you pass another, so it sits quietly among the bar's ghost items; a plain `ToggleGroup` is `outlined`. Unlike a `ToggleGroup` placed in a toolbar directly, it doesn't add a tab stop of its own: the
 arrow keys of the toolbar run straight through it.
 
 <Canvas of={ToolbarStories.ToggleGroups} />
@@ -198,21 +202,21 @@ whichever layout is showing.
 
 <Canvas of={ToolbarStories.ResponsiveOrientation} />
 
-### Wrapping onto more lines
-
-When there are more items than fit, `overflow` decides what happens. `visible` (the default) lets the bar overflow its
-container. `wrap` wraps a horizontal bar's items onto more lines; the arrow keys still follow the order the items are
-written in.
-
-<Canvas of={ToolbarStories.Wrapping} />
-
 ### Scrolling in one line
 
-`overflow="scroll"` keeps one line and scrolls it. An edge fade and a button show at whichever end has more; the buttons
-are for a pointer (they are not in the tab order and are hidden from assistive tech), and the arrow keys scroll the item
-that takes focus into view. A trackpad or a swipe scrolls it too.
+When there are more items than fit, `overflow` decides what happens. `scroll` (the default) keeps one line and scrolls it.
+An edge fade and a button show at whichever end has more; the buttons are for a pointer (they are not in the tab order and
+are hidden from assistive tech), and the arrow keys scroll the item that takes focus fully into view. A trackpad or a swipe
+scrolls it too. A bar that fits looks and behaves exactly as it would without any of this.
 
 <Canvas of={ToolbarStories.Scrolling} />
+
+### Wrapping onto more lines
+
+`overflow="wrap"` wraps a horizontal bar's items onto more lines instead; the arrow keys still follow the order the items are
+written in. `overflow="visible"` lets them spill past the container, with nothing to catch them.
+
+<Canvas of={ToolbarStories.Wrapping} />
 
 ### Scrolling in a column
 
@@ -299,7 +303,7 @@ forwards in the page does so in the toolbar too.
   they used when they tab back.
 - Prefer `ghost` items on a ghost or filled bar and `secondary` on an outlined one, and keep `primary` for the one command
   the bar exists for — usually last, pushed to the end with a `Toolbar.Spacer`.
-- Stack a long bar on a phone with an `orientation` map, or give it an `overflow` of `wrap` or `scroll`, rather than letting it overflow its container.
+- A long bar scrolls on a narrow screen by default; stack it with an `orientation` map, or give it `overflow="wrap"`, when every item should stay in view.
 - Use `sticky` for a bar that has to stay in reach of a long page or editor, and give the scrolling box to `scrollContainerRef` when the page itself isn't what scrolls.
 - Give an icon button a `tooltip` where the icon alone is not clear — it also shows on keyboard focus.
 - Keep related toggles together in a `Toolbar.Group`, and set each one's `pressed` from the state it controls so the bar
@@ -319,7 +323,7 @@ forwards in the page does so in the toolbar too.
 - In a right-to-left page pass `dir="rtl"`: Radix doesn't read the page, so without it Left would still go backwards.
 - A `Toolbar.ToggleGroup` adds no tab stop of its own (the toolbar owns focus; the group turns its own roving focus off): single is a `radiogroup` of `radio` items, with `aria-checked`, where an arrow key also chooses the item it lands on, and multiple is a plain `group` of toggle buttons with `aria-pressed` — not a `toolbar` inside a toolbar.
 - A `Select` or popover trigger in `Toolbar.Item` keeps its own keyboard behaviour: it opens with `Enter` or `Space`, and focus returns to it when it closes.
-- With `overflow="scroll"` the scroll buttons are `aria-hidden` and out of the tab order (the arrow keys already move along the bar, and the bar scrolls the focused item fully into view, clear of the edge fade: a browser does that only for an item that is completely hidden, so a partly visible one is brought in by the bar itself), so a keyboard or screen reader user meets the same one tab stop. The focus ring is drawn inside each item there, since a scrolling box would cut off a ring drawn outside it.
+- By default (`overflow="scroll"`) the scroll buttons are `aria-hidden` and out of the tab order (the arrow keys already move along the bar, and the bar scrolls the focused item fully into view, clear of the edge fade: a browser does that only for an item that is completely hidden, so a partly visible one is brought in by the bar itself), so a keyboard or screen reader user meets the same one tab stop. The focus ring is drawn inside each item while the bar scrolls, since a scrolling box would cut off a ring drawn outside it; with `overflow` set to `wrap` or `visible` it is drawn outside, like every other control's.
 - A `tooltip` on an icon button opens on hover and keyboard focus and closes with `Escape`; the button is named by its `aria-label`, so the tooltip is never the only name. The bar's tooltips share one provider, so moving from one icon to the next opens the next at once; an app's own `TooltipProvider` is used instead when there is one.
 - In Windows high contrast (forced colours) the separator is drawn in the system text colour, a filled bar and a stuck sticky bar get a one-pixel outline in place of their fill and shadow, and the edge fades are dropped (the scroll buttons remain).
 - A disabled item is not focusable, so the arrow keys skip it; the toolbar's `disabled` disables every item natively.
@@ -356,7 +360,7 @@ forwards in the page does so in the toolbar too.
 <Toolbar aria-label="Tools" orientation="vertical">…</Toolbar>
 <Toolbar aria-label="Actions" orientation={{ base: "vertical", md: "horizontal" }}>…</Toolbar>
 <Toolbar aria-label="Actions" variant="secondary" size="sm" rounded overflow="wrap">…</Toolbar>
-<Toolbar aria-label="Actions" overflow="scroll">…</Toolbar>
+<Toolbar aria-label="Actions" overflow="visible">…</Toolbar>
 <Toolbar aria-label="Editor" sticky stickyOffset={4} scrollContainerRef={panelRef}>…</Toolbar>
 <Toolbar aria-label="Document" fullWidth align="end">…</Toolbar>
 <Toolbar aria-label="Document" disabled>…</Toolbar>

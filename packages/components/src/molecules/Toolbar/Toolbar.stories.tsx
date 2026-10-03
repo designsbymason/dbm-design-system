@@ -113,8 +113,8 @@ const meta: Meta<ToolbarProps> = {
       control: "select",
       options: ["visible", "wrap", "scroll"],
       description:
-        "What a bar does when its items are more than fit. visible lets them overflow the container; wrap wraps a horizontal bar's items onto more lines; scroll keeps one line (or column) and scrolls it, with an edge fade and a button at whichever end has more. A scrolling column needs a height of its own.",
-      table: { defaultValue: { summary: "visible" } },
+        "What a bar does when its items are more than fit. scroll (the default) keeps one line (or column) and scrolls it, with an edge fade and a button at whichever end has more; wrap wraps a horizontal bar's items onto more lines; visible lets them overflow the container. A scrolling column needs a height of its own.",
+      table: { defaultValue: { summary: "scroll" } },
     },
     sticky: {
       ...noControls,
@@ -160,7 +160,7 @@ const meta: Meta<ToolbarProps> = {
     loop: true,
     fullWidth: false,
     align: "start",
-    overflow: "visible",
+    overflow: "scroll",
     "aria-label": "Text formatting",
   },
   render: (args) => (
@@ -364,8 +364,8 @@ export const Wrapping: Story = {
 export const Scrolling: Story = {
   name: "Scrolling in one line",
   parameters: { docs: { source: { code: toolbarSnippets.scroll } } },
-  args: { overflow: "scroll", surface: "outlined", variant: "secondary", "aria-label": "Actions" },
-  argTypes: { overflow: noControls, variant: noControls, "aria-label": noControls },
+  args: { surface: "outlined", variant: "secondary", "aria-label": "Actions" },
+  argTypes: { variant: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={{ maxWidth: "18rem" }}>
       <Toolbar {...args}>
@@ -383,8 +383,8 @@ export const Scrolling: Story = {
 export const ScrollingColumn: Story = {
   name: "Scrolling in a column",
   parameters: { docs: { source: { code: toolbarSnippets.scrollColumn } } },
-  args: { overflow: "scroll", orientation: "vertical", surface: "outlined", "aria-label": "Tools" },
-  argTypes: { overflow: noControls, orientation: noControls, "aria-label": noControls },
+  args: { orientation: "vertical", surface: "outlined", "aria-label": "Tools" },
+  argTypes: { orientation: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={{ height: "10rem" }}>
       <Toolbar {...args}>
@@ -451,12 +451,12 @@ export const ToggleGroups: Story = {
   argTypes: { "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
-      <Toolbar.ToggleGroup aria-label="Text style" type="multiple" variant="subtle">
+      <Toolbar.ToggleGroup aria-label="Text style" type="multiple">
         <Toolbar.ToggleItem value="bold" icon={TextBIcon} aria-label="Bold" />
         <Toolbar.ToggleItem value="italic" icon={TextItalicIcon} aria-label="Italic" />
       </Toolbar.ToggleGroup>
       <Toolbar.Separator />
-      <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left" variant="subtle">
+      <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left">
         <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Align left" />
         <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Align centre" />
         <Toolbar.ToggleItem value="right" icon={TextAlignRightIcon} aria-label="Align right" />
@@ -705,7 +705,9 @@ export const FocusRingInteraction: Story = {
   ...hidden,
   tags: ["!dev"],
   name: "Focus ring over a neighbour — interaction test",
-  args: { surface: "outlined" },
+  // Pinned to `visible`: this checks the ring drawn *outside* the item, over its neighbour. A scrolling bar draws it inside
+  // instead (checked by "Scrolling").
+  args: { surface: "outlined", overflow: "visible" },
   render: (args) => (
     <Toolbar {...args}>
       <Items />
@@ -838,7 +840,9 @@ export const StickyInteraction: Story = {
   ...hidden,
   tags: ["!dev"],
   name: "Sticky — interaction test",
-  args: { sticky: true, surface: "ghost" },
+  // Pinned to `visible`: the stuck state is on the bar itself here; a scrolling bar carries it on its frame (checked by
+  // "Forced colours").
+  args: { sticky: true, surface: "ghost", overflow: "visible" },
   render: function Render(args) {
     const scrollRef = useRef<HTMLDivElement>(null);
     return (
@@ -905,7 +909,7 @@ export const ToggleGroupInteraction: Story = {
       <button>before</button>
       <Toolbar {...args} aria-label="Formatting">
         <Toolbar.Button>Link</Toolbar.Button>
-        <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left" variant="subtle">
+        <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left">
           <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Align left" />
           <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Align centre" />
         </Toolbar.ToggleGroup>

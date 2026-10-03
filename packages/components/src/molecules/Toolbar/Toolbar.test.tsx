@@ -79,14 +79,37 @@ describe("Toolbar", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it("forwards its ref and passes className, style, id and data-testid through", () => {
+  it("forwards its ref to the toolbar element, and puts className and style on the outermost box", () => {
+    // Not scrolling: the toolbar element is the outermost box, so all of it is on one element.
     const ref = createRef<HTMLDivElement>();
-    render(<Bar ref={ref} className="extra" style={{ color: "red" }} id="bar" data-testid="bar" />);
+    const { unmount } = render(<Bar ref={ref} overflow="visible" className="extra" style={{ color: "red" }} id="bar" data-testid="bar" />);
     const bar = screen.getByTestId("bar");
     expect(ref.current).toBe(bar);
     expect(bar).toHaveClass("extra");
     expect(bar).toHaveAttribute("id", "bar");
     expect(bar.style.color).toBe("red");
+    unmount();
+    // Scrolling (the default): the frame around the toolbar is the outermost box. A margin or width belongs to it, but the
+    // ref, id, test id and aria props stay on the element that is the `toolbar`.
+    const scrollRef = createRef<HTMLDivElement>();
+    render(<Bar ref={scrollRef} className="extra" style={{ color: "red" }} id="bar" data-testid="bar" />);
+    const inner = screen.getByTestId("bar");
+    expect(scrollRef.current).toBe(inner);
+    expect(inner).toHaveAttribute("id", "bar");
+    expect(inner).toHaveAttribute("role", "toolbar");
+    expect(inner).not.toHaveClass("extra");
+    expect(inner.style.color).toBe("");
+    expect(inner.parentElement).toHaveClass("extra", styles.frame!);
+    expect(inner.parentElement!.style.color).toBe("red");
+  });
+
+  it("scrolls by default, and wraps or lets items spill when asked", () => {
+    const { rerender } = render(<Bar data-testid="bar" />);
+    expect(screen.getByTestId("bar")).toHaveClass(styles.scroller!);
+    expect(screen.getByTestId("bar").parentElement).toHaveClass(styles.frame!);
+    rerender(<Bar data-testid="bar" overflow="visible" />);
+    expect(screen.getByTestId("bar")).not.toHaveClass(styles.scroller!);
+    expect(screen.getByTestId("bar").parentElement).not.toHaveClass(styles.frame!);
   });
 
   it("does not let props replace its role or orientation", () => {
@@ -267,20 +290,26 @@ describe("Toolbar", () => {
       );
     });
 
-    it("draws the bar by surface", () => {
-      const { rerender } = render(<Bar data-testid="bar" />);
+    it("draws the bar by surface, on the bar or, while it scrolls, on the frame around it", () => {
+      const { rerender } = render(<Bar data-testid="bar" overflow="visible" />);
       expect(screen.getByTestId("bar")).not.toHaveClass(styles.outlined!, styles.filled!);
-      rerender(<Bar data-testid="bar" surface="outlined" />);
+      rerender(<Bar data-testid="bar" overflow="visible" surface="outlined" />);
       expect(screen.getByTestId("bar")).toHaveClass(styles.outlined!);
       rerender(<Bar data-testid="bar" surface="filled" overflow="wrap" />);
       expect(screen.getByTestId("bar")).toHaveClass(styles.filled!, styles.wrap!);
+      rerender(<Bar data-testid="bar" surface="filled" />);
+      expect(screen.getByTestId("bar").parentElement).toHaveClass(styles.filled!);
+      expect(screen.getByTestId("bar")).not.toHaveClass(styles.filled!);
     });
 
     it("is as wide as its items unless fullWidth is set", () => {
-      const { rerender } = render(<Bar data-testid="bar" />);
+      const { rerender } = render(<Bar data-testid="bar" overflow="visible" />);
       expect(screen.getByTestId("bar")).not.toHaveClass(styles.fullWidth!);
-      rerender(<Bar data-testid="bar" fullWidth />);
+      rerender(<Bar data-testid="bar" overflow="visible" fullWidth />);
       expect(screen.getByTestId("bar")).toHaveClass(styles.fullWidth!);
+      // scrolling: the frame is the box that fills the container
+      rerender(<Bar data-testid="bar" fullWidth />);
+      expect(screen.getByTestId("bar").parentElement).toHaveClass(styles.fullWidth!);
     });
 
     it("states where the items sit with align, start by default", () => {
@@ -614,6 +643,17 @@ describe("Toolbar", () => {
       expect(screen.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "true");
     });
 
+    it("looks subtle by default, ToggleGroup's own outlined being heavy beside a bar's ghost items, and takes a variant when told", () => {
+      render(
+        <Toolbar aria-label="Bar">
+          <Align data-testid="plain" />
+          <Align data-testid="outlined" aria-label="Outlined" variant="outlined" />
+        </Toolbar>,
+      );
+      expect(within(screen.getByTestId("plain")).getAllByRole("radio")[0]).toHaveClass(toggleStyles.variantSubtle!);
+      expect(within(screen.getByTestId("outlined")).getAllByRole("radio")[0]).toHaveClass(toggleStyles.variantOutlined!);
+    });
+
     it("takes the bar's size, rounded, orientation and disabled unless it says otherwise", () => {
       render(
         <Toolbar aria-label="Bar" size="lg" rounded orientation="vertical">
@@ -828,7 +868,7 @@ describe("Toolbar", () => {
 
   describe("sticky", () => {
     it("composes Affix: a surface and the marker in front, stuck state on the bar itself", () => {
-      render(<Bar sticky data-testid="bar" />);
+      render(<Bar sticky overflow="visible" data-testid="bar" />);
       const bar = screen.getByTestId("bar");
       expect(bar).toHaveClass(styles.sticky!);
       expect(bar.previousElementSibling).not.toBeNull();

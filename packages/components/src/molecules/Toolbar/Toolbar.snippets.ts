@@ -110,7 +110,7 @@ ${demo()}
 </Toolbar>`,
 
   wrap: `{/* overflow="wrap": a horizontal bar that runs out of room (here, in a container narrower than its items) wraps
-    its items onto more lines. "visible" (default) lets them overflow; "scroll" keeps one line */}
+    its items onto more lines. "scroll" (default) keeps one line and scrolls it; "visible" lets them overflow */}
 <Toolbar aria-label="Actions" surface="outlined" variant="secondary" overflow="wrap">
   <Toolbar.Button>Edit</Toolbar.Button>
   <Toolbar.Button>Share</Toolbar.Button>
@@ -118,9 +118,9 @@ ${demo()}
   <Toolbar.Button>Archive</Toolbar.Button>
 </Toolbar>`,
 
-  scroll: `{/* overflow="scroll": one line that scrolls (here, in a container narrower than its items), with an edge fade
-    and a button at whichever end has more. The arrow keys scroll the focused item into view */}
-<Toolbar aria-label="Actions" surface="outlined" variant="secondary" overflow="scroll">
+  scroll: `{/* overflow="scroll" is the default: one line that scrolls (here, in a container narrower than its items), with an
+    edge fade and a button at whichever end has more. The arrow keys scroll the focused item into view */}
+<Toolbar aria-label="Actions" surface="outlined" variant="secondary">
   <Toolbar.Button>Edit</Toolbar.Button>
   <Toolbar.Button>Share</Toolbar.Button>
   <Toolbar.Button>Export</Toolbar.Button>
@@ -130,7 +130,7 @@ ${demo()}
 </Toolbar>`,
 
   scrollColumn: `{/* A scrolling column needs a height of its own to respond to (here, a container 10rem tall) */}
-<Toolbar aria-label="Tools" surface="outlined" orientation="vertical" overflow="scroll">
+<Toolbar aria-label="Tools" surface="outlined" orientation="vertical">
   <Toolbar.IconButton icon={CursorIcon} aria-label="Select" />
   <Toolbar.IconButton icon={PencilSimpleIcon} aria-label="Draw" />
   <Toolbar.IconButton icon={TextBIcon} aria-label="Text" />
@@ -164,14 +164,15 @@ ${demo()}
 </Toolbar>`,
 
   toggleGroups: `{/* Toolbar.ToggleGroup: type "multiple" is independent toggles; the default, "single", chooses one of several
-    (a radio group). Both stay in the toolbar's arrow-key order, and their size follows the bar's */}
+    (a radio group). Both stay in the toolbar's arrow-key order, and their size follows the bar's. Their variant is
+    "subtle" unless you say "outlined" or "solid" */}
 <Toolbar aria-label="Text formatting" surface="outlined">
-  <Toolbar.ToggleGroup aria-label="Text style" type="multiple" variant="subtle">
+  <Toolbar.ToggleGroup aria-label="Text style" type="multiple">
     <Toolbar.ToggleItem value="bold" icon={TextBIcon} aria-label="Bold" />
     <Toolbar.ToggleItem value="italic" icon={TextItalicIcon} aria-label="Italic" />
   </Toolbar.ToggleGroup>
   <Toolbar.Separator />
-  <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left" variant="subtle">
+  <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left">
     <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Align left" />
     <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Align centre" />
     <Toolbar.ToggleItem value="right" icon={TextAlignRightIcon} aria-label="Align right" />
@@ -276,7 +277,8 @@ export function toolbarPlaygroundSnippet(args: ToolbarPlaygroundSnippetArgs): st
   if (args.loop === false) attributes.push("loop={false}");
   if (args.fullWidth) attributes.push("fullWidth");
   if (args.align === "center" || args.align === "end") attributes.push(`align="${args.align}"`);
-  if (args.overflow === "wrap" || args.overflow === "scroll") attributes.push(`overflow="${args.overflow}"`);
+  // "scroll" is the default, so only the other two are written
+  if (args.overflow === "wrap" || args.overflow === "visible") attributes.push(`overflow="${args.overflow}"`);
   return `{/* Icons come from @dbm-design-system/icons */}
 <Toolbar ${attributes.join(" ")}>
   <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />

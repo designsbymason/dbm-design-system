@@ -2,7 +2,7 @@ import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, RefObject } from "react";
 import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
 import type { SpacerProps } from "../../atoms/Spacer";
-import type { ToggleGroupMultipleProps, ToggleGroupSingleProps } from "../ToggleGroup";
+import type { ToggleGroupMultipleProps, ToggleGroupSingleProps, ToggleGroupVariant } from "../ToggleGroup";
 
 export type ToolbarOrientation = "horizontal" | "vertical";
 export type ToolbarSurface = "ghost" | "outlined" | "filled";
@@ -81,12 +81,13 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
    */
   align?: ToolbarAlign;
   /**
-   * What a bar does when its items are more than fit: `visible` (the default) lets them overflow the container;
-   * `wrap` wraps a horizontal bar's items onto more lines (arrow keys still follow the order they are written in);
-   * `scroll` keeps one line (or one column) and scrolls it along its own axis — an edge fade and a button show at
-   * whichever end has more, and the item that takes focus is scrolled into view. A scrolling column needs a height of its
-   * own to respond to (a bar in a box with a fixed or maximum height).
-   * @default 'visible'
+   * What a bar does when its items are more than fit. `scroll` (the default) keeps one line (or one column) and scrolls it
+   * along its own axis: an edge fade and a button show at whichever end has more, and the item that takes focus is scrolled
+   * fully into view. `wrap` wraps a horizontal bar's items onto more lines (arrow keys still follow the order they are
+   * written in). `visible` lets them overflow the container. A scrolling column needs a height of its own to respond to (a
+   * bar in a box with a fixed or maximum height). While it scrolls, the bar sits in a frame that carries its surface, and
+   * the focus ring is drawn inside each item, since a scrolling box would cut off one drawn outside it.
+   * @default 'scroll'
    */
   overflow?: ToolbarOverflow;
   /**
@@ -117,9 +118,12 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
   "aria-describedby"?: string;
   /** Standard DOM id. */
   id?: string;
-  /** Additional CSS classes for customization. */
+  /**
+   * Additional CSS classes for customization, on the outermost box: the toolbar element itself, or, while it scrolls (the
+   * default), the frame around it that carries the surface, so a margin or a width behaves the same either way.
+   */
   className?: string;
-  /** Inline styles, merged onto the component's own internal styles. */
+  /** Inline styles, merged onto the component's own internal styles, on the same outermost box as `className`. */
   style?: CSSProperties;
   /**
    * Test identifier for automated testing. Rendered as the DOM `data-testid` attribute on the toolbar's element;
@@ -188,5 +192,14 @@ export type ToolbarSpacerProps = SpacerProps;
  * `rovingFocus`, which the toolbar owns; its `size`, `rounded`, `disabled`, `orientation` and `dir` default to the toolbar's.
  */
 export type ToolbarToggleGroupProps =
-  | Omit<ToggleGroupSingleProps, "loop" | "rovingFocus">
-  | Omit<ToggleGroupMultipleProps, "loop" | "rovingFocus">;
+  | (Omit<ToggleGroupSingleProps, "loop" | "rovingFocus" | "variant"> & ToolbarToggleGroupVariantProp)
+  | (Omit<ToggleGroupMultipleProps, "loop" | "rovingFocus" | "variant"> & ToolbarToggleGroupVariantProp);
+
+interface ToolbarToggleGroupVariantProp {
+  /**
+   * How the chosen item is marked: `subtle` (borderless, a soft brand tint), `outlined` or `solid`. Here the default is
+   * `subtle`, not `ToggleGroup`'s `outlined`, so the group sits quietly among a bar's ghost items.
+   * @default 'subtle'
+   */
+  variant?: ToggleGroupVariant;
+}

@@ -233,3 +233,22 @@ StrictMode; every icon, toggle and select target at least 24 × 24px at all five
 
 Not covered: only Chromium was run (the hidden scrollbar and `:dir()` are untested in Safari and Firefox), and real touch scrolling.
 `Select` and `IconButton` differ by 1px at `xl` (60 and 61), which predates this component.
+
+## Decisions after the final review (2026-10-03, at the user's go-ahead)
+
+- **`Toolbar.ToggleGroup` defaults to `variant="subtle"`** (a plain `ToggleGroup` stays `outlined`; an explicit `variant` still wins).
+  Bordered toggle items read heavy beside a bar's ghost items, and every story had been overriding it. The stories and snippets
+  now show the default and no longer write `variant="subtle"`; the Docs page says the default differs from `ToggleGroup`'s.
+- **`overflow` defaults to `scroll`** (was `visible`): a bar that doesn't fit scrolls instead of spilling out of its container. A bar
+  that fits looks and behaves as before, but it is now always a framed scroller: its surface classes are on the frame, it has
+  scroll buttons that appear only when there is more, and its focus rings are drawn *inside* each item (a scrolling box cuts off a
+  ring drawn outside it), where `wrap` and `visible` keep the usual outside ring. All 46 real-browser stories passed unchanged under
+  the new default; four unit tests that had assumed the bar carries the surface classes were reworked to check both modes.
+  `wrap` and `visible` remain, written out explicitly.
+- **Where `className` and `style` land** was decided as "document only" while `visible` was the default. With `scroll` the default
+  it would have put every consumer's margin or width *inside* the frame, so they now go on the **outermost box** (the toolbar
+  element, or the frame while it scrolls) and behave the same whatever `overflow` is; `ref`, `id`, `data-testid` and the `aria-*`
+  props stay on the element that is the `toolbar`. Documented on the props and the Docs page, and tested in both modes. A small
+  step beyond the recorded decision, taken because the default change altered its premise; easy to revert to inner-bar-only.
+- Each of the three has a test that fails on its mutant (toggle default back to `outlined`; `className` on the inner bar;
+  default back to `visible`).

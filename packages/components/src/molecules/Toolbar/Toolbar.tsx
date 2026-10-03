@@ -96,7 +96,8 @@ function prefersReducedMotion(): boolean {
  * on an icon button (`pressed`) makes it a toggle, and `tooltip` on one shows its name on hover and focus. Don't put a text
  * field in a toolbar: it needs the arrow keys itself.
  *
- * When there are more items than fit, `overflow` wraps them or scrolls the bar; `sticky` keeps it at the top of the page.
+ * When there are more items than fit, the bar scrolls (`overflow`, the default; `wrap` wraps them, `visible` lets them spill);
+ * `sticky` keeps it at the top of the page.
  *
  * @example
  * ```tsx
@@ -129,11 +130,12 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       loop = true,
       fullWidth = false,
       align = "start",
-      overflow = "visible",
+      overflow = "scroll",
       sticky = false,
       stickyOffset = 0,
       scrollContainerRef,
       className,
+      style,
       onFocus,
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
@@ -234,8 +236,9 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
           surface === "ghost" && styles.ghost,
           isScroller ? styles.scroller : surfaceClasses,
           overflow === "wrap" && styles.wrap,
-          className,
+          !isScroller && className,
         )}
+        style={isScroller ? undefined : style}
       >
         {children}
       </ToolbarPrimitive.Root>
@@ -246,7 +249,10 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
 
     const content = isScroller ? (
       <div
-        className={cx(styles.frame, surfaceClasses)}
+        // `className` and `style` go on the outermost box, so a margin or a width behaves the same whatever `overflow` is;
+        // `ref`, `id`, `data-testid` and the `aria-*` props stay on the toolbar element itself.
+        className={cx(styles.frame, surfaceClasses, className)}
+        style={style}
         data-orientation={resolvedOrientation}
         data-surface={surface}
         data-overflow-start={overflowStart}
@@ -413,7 +419,8 @@ ToolbarGroup.displayName = "Toolbar.Group";
  * the toolbar stays one tab stop and its arrow keys run straight through the group's items (`Toolbar.ToggleItem`). Single
  * is a `radiogroup` (an arrow key chooses the item it lands on, as in a native radio group); multiple is a plain `group`
  * of independent toggles. Takes every `ToggleGroup` prop except `loop` and `rovingFocus`; its `size`, `rounded`,
- * `disabled`, `orientation` and `dir` default to the toolbar's.
+ * `disabled`, `orientation` and `dir` default to the toolbar's, and its `variant` to `subtle` (borderless, to sit quietly
+ * among the bar's ghost items) rather than `ToggleGroup`'s own `outlined`.
  */
 const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, ref) => {
   const toolbar = useContext(ToolbarContext);
@@ -426,6 +433,7 @@ const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((
         ref={ref}
         {...group}
         rovingFocus={false}
+        variant={group.variant ?? "subtle"}
         size={group.size ?? toolbar.size}
         rounded={group.rounded ?? toolbar.rounded}
         orientation={group.orientation ?? toolbar.orientation}
