@@ -270,12 +270,15 @@ function Wheel({ column, chosen, onPick, onDone, onNavigate }: WheelProps) {
       case "ArrowDown":
       case "ArrowUp": {
         event.preventDefault();
-        if (chosenIndex < 0) {
+        // Stepped from the last value reported, not the one last drawn: a key repeating faster than the page re-renders
+        // would otherwise step from the same value twice.
+        const from = reported.current >= 0 ? reported.current : chosenIndex;
+        if (from < 0) {
           // Nothing chosen yet: the first arrow chooses what is in the middle.
           choose(nearestAllowedIndex(allowed, centredValueIndex(), loops));
           break;
         }
-        choose(stepAllowedIndex(allowed, chosenIndex, event.key === "ArrowDown" ? 1 : -1, loops));
+        choose(stepAllowedIndex(allowed, from, event.key === "ArrowDown" ? 1 : -1, loops));
         break;
       }
       case "Home":

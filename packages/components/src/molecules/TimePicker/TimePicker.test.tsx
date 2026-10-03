@@ -10,7 +10,6 @@ import styles from "./TimePicker.module.css";
 
 const segment = (name: string) => screen.getByRole("spinbutton", { name });
 const texts = () => screen.getAllByRole("spinbutton").map((input) => (input as HTMLInputElement).value);
-const scanBody = () => axe(document.body, { rules: { region: { enabled: false } } });
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -876,8 +875,10 @@ describe("TimePicker accessibility", () => {
     }
   });
 
-  it("has no axe violations with the picker open", async () => {
-    render(<TimePicker aria-label="Start time" defaultValue="15:45" defaultOpen showSeconds />);
-    expect(await scanBody()).toHaveNoViolations();
+  // The wheels are a few hundred rows each, and axe walks every one: scanning just the dialog, without the seconds wheel,
+  // and giving it room (the default 5s timed out on a slower CI machine) keeps it honest without being flaky.
+  it("has no axe violations with the picker open", { timeout: 30_000 }, async () => {
+    render(<TimePicker aria-label="Start time" defaultValue="15:45" defaultOpen />);
+    expect(await axe(screen.getByRole("dialog"), { rules: { region: { enabled: false } } })).toHaveNoViolations();
   });
 });

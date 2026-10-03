@@ -447,8 +447,10 @@ export const PickerKeyboard: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Choose time" }));
     await screen.findByRole("dialog");
     await waitFor(() => expect(wheelOf("Hour")).toHaveFocus());
-    await userEvent.keyboard("{ArrowDown}{ArrowDown}");
-    await expect(canvas.getByRole("spinbutton", { name: "Hour" })).toHaveValue("12");
+    await userEvent.keyboard("{ArrowDown}");
+    await waitFor(() => expect(canvas.getByRole("spinbutton", { name: "Hour" })).toHaveValue("11"));
+    await userEvent.keyboard("{ArrowDown}");
+    await waitFor(() => expect(canvas.getByRole("spinbutton", { name: "Hour" })).toHaveValue("12"));
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await expect(canvas.getByRole("button", { name: "Choose time" })).toHaveFocus();

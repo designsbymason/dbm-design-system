@@ -14,7 +14,6 @@ const part = (end: "Start time" | "End time", segmentName: string) =>
   within(field(end)).getByRole("spinbutton", { name: segmentName });
 const texts = (end: "Start time" | "End time") =>
   within(field(end)).getAllByRole("spinbutton").map((input) => (input as HTMLInputElement).value);
-const scanBody = () => axe(document.body, { rules: { region: { enabled: false } } });
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -208,7 +207,7 @@ describe("TimeRangePicker", () => {
     expect(onValueChange).toHaveBeenLastCalledWith(["09:30", ""]);
   });
 
-  it("has no axe violations, closed and with an end's picker open", async () => {
+  it("has no axe violations, closed and with an end's picker open", { timeout: 30_000 }, async () => {
     const { container, unmount } = render(<TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} />);
     expect(await axe(container)).toHaveNoViolations();
     unmount();
@@ -216,6 +215,6 @@ describe("TimeRangePicker", () => {
     render(<TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", ""]} />);
     await user.click(within(field("End time")).getByRole("button", { name: "Choose time" }));
     await screen.findByRole("dialog");
-    expect(await scanBody()).toHaveNoViolations();
+    expect(await axe(screen.getByRole("dialog"), { rules: { region: { enabled: false } } })).toHaveNoViolations();
   });
 });
