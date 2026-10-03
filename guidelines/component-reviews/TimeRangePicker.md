@@ -40,11 +40,11 @@ which both import.
   new range while the popover was open (now they are, with a test); the shared popover had no axe scan or `aria-haspopup`/
   `aria-expanded` check, nor a `StrictMode` run (all added, clean). Looked at live: both Docs pages (headings, no inert controls,
   defaults), and the shared popover at 375px in dark mode (fits the viewport, the two sets stack, no horizontal overflow; the
-  trigger button drops to its own line when the row wraps). **Not closed — needs a decision:** the component bundle-size check
-  fails, `TimeRangePicker` at 10.58KB gzipped JS against the 10KB per-component budget (it was 7.49KB before the second round;
-  the number includes the `TimePicker` it composes, the wheels, `Popover` and `IconButton` the shared picker added). The budget
-  is a single constant in `scripts/check-component-bundle-size.mjs`; raise it (for one component or for all) or cut the shared
-  picker out of the range's bundle, with the reason written down.
+  trigger button drops to its own line when the row wraps). **Bundle size, decided 2026-10-03:** `TimeRangePicker` is 10.58KB gzipped JS against the 10KB
+  per-component budget (it was 7.49KB before the second round; the number includes the `TimePicker` it composes, the wheels,
+  `Popover` and `IconButton` the shared picker added). It gets its own 12KB JS budget (`JS_BUDGET_OVERRIDES_KB` in
+  `scripts/check-component-bundle-size.mjs`, reason beside it); every other component keeps 10KB, and 12 still trips if it grows
+  by another ~1.4KB.
 - **Passed through to both ends (2026-10-03):** `commitOn`, `secondStep`, `isTimeDisabled`, `periodPosition`, `openOnFocus`.
   `onFocus`/`onBlur` fire once for the pair: each end reports its own arrivals and departures, and the range ignores a
   departure whose `relatedTarget` is inside the group and an arrival while it already holds focus (a start end's picker is

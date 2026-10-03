@@ -50,6 +50,13 @@ const OUT_DIR = join(PACKAGE_ROOT, "dist/.bundle-size-check");
 const PER_COMPONENT_JS_BUDGET_KB = 10;
 const PER_COMPONENT_CSS_BUDGET_KB = 5;
 
+// A component whose bundle legitimately holds other components gets its own JS budget, with the reason beside it. Not a way
+// to excuse growth: the default stands for every other component, and an override is sized to the measured number plus a
+// little headroom, so it still trips if the component balloons.
+//   TimeRangePicker (2026-10-03): composes two `TimePicker`s (8.0KB on their own, wheels included) and adds the shared
+//   popover (`Popover`, `IconButton`, a second set of wheels), 10.58KB measured.
+const JS_BUDGET_OVERRIDES_KB = { TimeRangePicker: 12 };
+
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component
 // import one, its bundle grows for every app whatever language it uses, and this says so before the byte budget
@@ -154,10 +161,9 @@ async function main() {
 
   const failures = [];
   for (const { name, jsGzipKb, cssGzipKb } of results) {
-    if (jsGzipKb > PER_COMPONENT_JS_BUDGET_KB) {
-      failures.push(
-        `${name}: JS ${formatKb(jsGzipKb)} exceeds per-component budget ${formatKb(PER_COMPONENT_JS_BUDGET_KB)}.`,
-      );
+    const jsBudgetKb = JS_BUDGET_OVERRIDES_KB[name] ?? PER_COMPONENT_JS_BUDGET_KB;
+    if (jsGzipKb > jsBudgetKb) {
+      failures.push(`${name}: JS ${formatKb(jsGzipKb)} exceeds per-component budget ${formatKb(jsBudgetKb)}.`);
     }
     if (cssGzipKb > PER_COMPONENT_CSS_BUDGET_KB) {
       failures.push(
