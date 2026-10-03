@@ -1,6 +1,6 @@
 # 0029 — `TimePicker` is a custom segmented field with a popover, whose value is an `"HH:mm"` string, over a native time input or a slot list
 
-**Status:** Accepted · **Date:** 2026-10-03
+**Status:** Accepted · **Date:** 2026-10-03 · **Amended 2026-10-03** — the popover's design is a wheel, not columns of a list; the decision itself is unchanged
 
 ## Context
 `TimePicker` (molecule item 26) had no design notes in `04-component-inventory.md`, so the shape of
@@ -13,6 +13,11 @@ value is, how the 12- or 24-hour display is chosen, and which features the first
 cycle — each an `<input role="spinbutton">` (type digits, `ArrowUp`/`ArrowDown`, `Backspace` to clear,
 `ArrowLeft`/`ArrowRight` to move), **plus a `Popover` of scrollable columns** (hour, minute, second,
 period) to pick with a pointer. Every part is styled from tokens and named for assistive technology.
+*(Amended 2026-10-03: the columns were first drawn as plain lists of options with the chosen one highlighted; the user then
+asked for an iOS-style wheel, so each column is a five-row wheel with the chosen row in the middle behind a band, the
+numbers growing and strengthening as they reach it, hours, minutes and seconds looping, values chosen live as the wheel
+passes them and a disallowed row moved off to the nearest allowed one when it rests. Same popover, same segmented field,
+same value: only how the popover draws and scrolls its choices changed.)*
 
 **The value is a 24-hour string**, `"HH:mm"`, or `"HH:mm:ss"` when seconds are shown; `""` for no value,
 and also while the field is partly filled. What the segments show is a separate draft; the string is only

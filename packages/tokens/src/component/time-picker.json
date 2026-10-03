@@ -5,15 +5,35 @@
       "$value": "2.25ch",
       "$description": "New token (2026-10-03), for TimePicker's hour, minute and second segments: the width of two digits in the field's own font, with a quarter of a digit to spare, so a segment never grows or shrinks as it fills and the colons between them don't shift. The spare quarter is measured, not a guess: the digits of this font are not all one width (a \"59\" at the xs size was a pixel wider than \"00\", which `ch` is measured from) and a segment exactly two `ch` wide scrolled sideways. Font-relative (ch), following the size step; no home on any existing primitive scale, which are all absolute lengths."
     },
-    "column-max-height": {
-      "$type": "dimension",
-      "$value": "14rem",
-      "$description": "New token (2026-10-03), for TimePicker's popover: how tall a column of options grows before it scrolls, about seven rows, so the popover stays a compact size at any step and the selected option can be scrolled into view. A content-measure constraint with no home on any existing primitive scale (the spacing scale tops out at 8rem)."
-    },
     "period-character-width": {
       "$type": "dimension",
       "$value": "1.5ch",
       "$description": "New token (2026-10-03), for TimePicker's AM/PM segment: the width allowed per character of its longer label, so \"AM\" and \"PM\" are never clipped. Letters are wider than the digits `ch` is measured from (an M is about 1.6ch), so the segment can't be sized from the same two-digit width as the hour; 1.5ch per character leaves each label room without a visible gap. Font-relative (ch), following the size step; no home on any existing primitive scale."
+    },
+    "wheel-visible-rows": {
+      "$type": "number",
+      "$value": 5,
+      "$description": "New token (2026-10-03), for TimePicker's picker wheels: how many rows of numbers a wheel shows, the chosen one in the middle with two above and two below. Must be odd, so there is a middle row; the wheel's own padding, the chosen-row band and the snapping are all worked from it. A count with no home on any existing primitive scale."
+    },
+    "wheel-neighbour-scale": {
+      "$type": "number",
+      "$value": 0.9,
+      "$description": "New token (2026-10-03), for TimePicker's picker wheels: how large a number is drawn one row from the middle, as a fraction of the chosen number's size. The size and opacity fall away in two straight steps, middle to one row to two rows, and keep changing continuously as the wheel scrolls, so a number grows into the chosen size as it arrives."
+    },
+    "wheel-neighbour-opacity": {
+      "$type": "number",
+      "$value": 0.68,
+      "$description": "New token (2026-10-03), for TimePicker's picker wheels: the opacity of a number one row from the middle. Still selectable, so it is measured: text.primary at this opacity on bg.surface is 5.03:1 (light) and 7.10:1 (dark), above the 4.5:1 text floor in every theme. It started at 0.6 (the first proposal), which measured 3.95:1 in the light themes, so it was raised to the lowest round value that clears the floor with margin (0.66 gives 4.73:1)."
+    },
+    "wheel-edge-scale": {
+      "$type": "number",
+      "$value": 0.8,
+      "$description": "New token (2026-10-03), for TimePicker's picker wheels: how large a number is drawn two or more rows from the middle (the outer rows), as a fraction of the chosen number's size."
+    },
+    "wheel-edge-opacity": {
+      "$type": "number",
+      "$value": 0.35,
+      "$description": "New token (2026-10-03), for TimePicker's picker wheels: the opacity of a number two or more rows from the middle. This is the one place the text falls below the 4.5:1 floor, deliberately: it is the outermost, half-cut-off row, a hint of what is beyond rather than a value to read, and every value is also reachable at full contrast by scrolling it to the middle or from the keyboard."
     }
   }
 }

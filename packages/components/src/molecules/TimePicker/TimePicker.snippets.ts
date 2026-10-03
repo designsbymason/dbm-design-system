@@ -17,7 +17,7 @@ export const timePickerSnippets = {
   hourCycles: `{/* hourCycle: "12" (default, with an AM/PM segment) | "24". The value is a 24-hour string either way. */}
 <TimePicker aria-label="Start time" hourCycle="24" defaultValue="17:45" />`,
 
-  seconds: `{/* showSeconds adds a seconds segment and column, and makes the value "HH:mm:ss". */}
+  seconds: `{/* showSeconds adds a seconds segment and wheel, and makes the value "HH:mm:ss". */}
 <TimePicker aria-label="Start time" hourCycle="24" showSeconds defaultValue="17:45:30" />`,
 
   step: `{/* step: minutes between the values the field accepts. The arrow keys move along it and the picker lists only those minutes. */}

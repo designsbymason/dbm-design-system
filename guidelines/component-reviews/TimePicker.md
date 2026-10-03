@@ -26,12 +26,31 @@ with `showSeconds`), `""` while the field is empty or only partly filled.
   overlap used by the picker. The component keeps a *draft* of the segments beside the committed value, because a
   field is mostly partly filled; the value wins whenever it stops matching the draft (set from outside, an owner
   that ignored a change, a changed `hourCycle`), adjusted during render so no frame shows the old time.
-- **The picker** is `Popover` with `align="end"` and no arrow: an hour, a minute, an optional second and an AM/PM
-  `listbox` (`option`, `aria-selected`, `aria-disabled`). Choosing commits at once and fills the segments it left
-  empty with their first value, so a pick is always a whole time; focus opens on the chosen hour; each column is
-  one tab stop with arrow keys inside it (which *choose* as focus moves, a native listbox's behaviour) and left and
-  right between columns; `Enter` closes, `Escape` closes and returns focus to the button. An option no allowed time
-  can be reached through (by `min`/`max`) is disabled, computed from time-interval overlap, not per option.
+- **The picker** is `Popover` with `align="end"` and no arrow, holding one **wheel** per segment (hour, minute,
+  optional second, AM/PM), drawn like a phone's time picker. *It was first a plain list of columns with the chosen
+  option filled in; the user then asked for the wheel, and the picker was replaced (ADR-0029's amendment).*
+  - **Five rows** (a token) with the chosen one always in the middle, behind one subtle band (`bg.neutral-subtle`)
+    across every wheel; the numbers scroll behind it. A row's size and opacity follow its distance from the middle:
+    full size and strength at the middle, 90% and 68% a row away, 80% and 35% two or more away, in two straight lines
+    between, so a number grows into the chosen size as it arrives (`transform` and `opacity` only, from tokens).
+  - **Scroll-snap** on a hidden-scrollbar column (`touch-action: pan-y`, `overscroll-behavior: contain`), padded
+    by two rows above and below so the first and last values can reach the middle. The mouse wheel, a swipe and a drag
+    all work; a click on a row chooses it and scrolls it to the middle; reduced motion turns the animation off.
+  - **Hours, minutes and seconds loop** (59 is followed by 00); AM/PM doesn't (two rows with blanks above and below).
+    A loop is drawn as an odd number of copies of its values (enough for about 200 rows) and put back to the middle
+    copy, invisibly, each time it comes to rest, so a fling never reaches its ends. Only the middle copy is in the
+    accessibility tree (`role="option"`); the others are `aria-hidden` rows.
+  - **Choosing is live**, as iOS: the row in the middle is chosen as it passes, if it is allowed and nothing is
+    steering the wheel; a disallowed row is moved off to the nearest allowed one (the short way round a loop) when
+    the wheel rests. A pick fills the other segments' empty ones with their first value, so it is always a whole time.
+    Opening the picker on an empty field chooses nothing until a wheel is moved, clicked or keyed.
+  - **Keyboard and assistive technology:** each wheel is one tab stop, a `listbox` whose chosen option is its
+    `aria-activedescendant`; `ArrowUp`/`ArrowDown` choose the next allowed value (looping, skipping disallowed ones),
+    `Home`/`End` the first and last, `ArrowLeft`/`ArrowRight` move between wheels, `Enter` closes, `Escape` closes and
+    returns focus to the button; focus opens on the hours wheel. The keys choose directly and scroll to the value,
+    so they don't depend on scrolling (and are testable without it).
+  - **Pure arithmetic** for the loop, the nearest-allowed rule and the copy nearest the middle is in `wheelMath.ts`,
+    with a table of cases (20 tests). Disabled-by-range is computed from time-interval overlap, not per option.
 - **Constraints flag, they don't refuse.** A time outside `min`/`max`, or a minute off the `step`, sets the error
   state and `aria-invalid` and is still reported; the picker only offers what is allowed. A first digit of a
   two-digit segment is already a whole time (a `0` is `00`), so `onValueChange` can report an in-between value
@@ -41,8 +60,9 @@ with `showSeconds`), `""` while the field is empty or only partly filled.
 - **Everything the field says is `labels`** (merged with `mergeDefined`), digits go through `formatNumber`
   (ADR-0021), and the hour cycle is `hourCycle`, never the locale.
 
-New component tokens, `component/time-picker.json`: `segment-width` (2.25ch), `period-character-width` (1.5ch),
-`column-max-height` (14rem). The picker column's minimum width is the existing `space.16`.
+New component tokens, `component/time-picker.json`: `segment-width` (2.25ch), `period-character-width` (1.5ch), and the
+wheel's `wheel-visible-rows` (5), `wheel-neighbour-scale` (0.9), `wheel-neighbour-opacity` (0.68), `wheel-edge-scale`
+(0.8), `wheel-edge-opacity` (0.35). A row is `space.10` tall and a wheel's minimum width is `space.16`.
 
 ## Design decisions made during the build
 
@@ -54,20 +74,26 @@ New component tokens, `component/time-picker.json`: `segment-width` (2.25ch), `p
 - **Required and invalid are on the segments, not the group.** The `jsx-a11y` lint rule found the first draft
   put `aria-invalid` and `aria-required` on `role="group"`, which doesn't take either; they are states of the
   spinbuttons, so each segment carries them.
-- **`ScrollArea` is not used for the picker columns** (atom-reuse audit). It makes an overflowing region a tab stop
-  of its own, right for reading content and wrong for a listbox that scrolls by its arrow keys, so each column
-  is a plain scrolling `div` with a token-coloured thin scrollbar. **`IconButton` is not used** for the clear and
+- **`ScrollArea` is not used for the picker wheels** (atom-reuse audit). It makes an overflowing region a tab stop
+  of its own, right for reading content and wrong for a listbox that scrolls by its arrow keys, and a wheel needs
+  scroll-snap and no scrollbar, so each wheel is a plain scrolling `div`. **`IconButton` is not used** for the clear and
   picker buttons for `Input`'s reason (its boxes are as tall as a `Button`); both are local, with `Input`'s padding
   and compensating margin per size (`CloseButton` is reserved for modal surfaces, ADR-0008). **`Input` itself can't
   be wrapped**, being one `<input>`, so its box is redrawn from the same tokens. `Popover` and `Icon` are reused.
 - **The Radix-primitive prop audit** (for `Popover`, the wrapped primitive): `open`/`onOpenChange` mirrored,
   `modal` left off (a picker coexists with the page), `align`, `hideArrow`, `onOpenAutoFocus` (focus goes to the
   chosen option, not the panel), `aria-label` and `className` used; the placement props are `Popover`'s own scope.
-- **Segment colours:** the focused segment and the chosen option are a solid `bg.brand` fill with `text.on-brand`,
-  the clearest "this one" that stays AA. No new pairing: `text.on-brand`/`bg.brand` is 6.08–8.51:1 across the four
-  themes, `text.primary` on `bg.surface` 13.5–14.1, on the hover `bg.neutral-subtle` 9.7–13.5, `text.tertiary`
-  (the placeholder, the colon) on `bg.surface` 4.70–8.21, `icon.default` on the hover fill 4.51–5.86 (non-text),
-  measured in a live browser in all four themes.
+- **Colours:** the focused segment is a solid `bg.brand` fill with `text.on-brand`, the clearest "this one" that
+  stays AA; the picker's chosen row is the subtle band, with `text.primary` on it. No new pairing for these:
+  `text.on-brand`/`bg.brand` is 6.08–8.51:1 across the four themes, `text.primary` on `bg.surface` 13.5–14.1, on
+  `bg.neutral-subtle` (the band, the button hover) 9.66–13.53, `text.tertiary` (the placeholder, the colon) on
+  `bg.surface` 4.70–8.21, `icon.default` on the hover fill 4.51–5.86 (non-text), measured in a live browser in all
+  four themes. **The faded numbers are new pairings and were measured:** `text.primary` at the neighbour opacity over
+  `bg.surface` was **3.95:1 at the first proposed 0.6** in the light themes (7.10 dark), under the floor, so it
+  was raised to **0.68 (5.03:1 light, 7.10 dark; 0.66 gives 4.73)**; the outer rows at 0.35 are 2.05:1 light, 3.00
+  dark, below the floor on purpose, as agreed: the half-cut-off outermost row is a hint of what is beyond, and every
+  value is reachable at full contrast by scrolling it to the middle or from the keyboard. A real-browser check
+  recomputes the neighbour figure from the drawn opacity in all four themes.
 
 ## Findings
 
@@ -92,6 +118,16 @@ New component tokens, `component/time-picker.json`: `segment-width` (2.25ch), `p
   itself (a press on the padding or a colon focuses the nearest segment, as a native time field does) makes the
   whole box a target.
 - **The picker's labels were padded twice** ("0001"): the formatter already pads.
+- **`scroll-snap-stop: always` stopped programmatic scrolls after one row** (found in the wheel round: a scroll of three
+  rows ended one row along, so a live-choice check saw 11 and not 13). It also stops a real fling at every row, the
+  opposite of a wheel, so it is not used. A half-row position can't be held under `mandatory` snapping, so the fade
+  check switches snapping off to measure it.
+- **The recentring check didn't bite** until it flung more than a whole copy: with a single row of scroll the wheel
+  never left the middle copy, so removing the recentring passed. It now scrolls 30 rows (more than the 24 of a copy)
+  and fails without it.
+- **A click on a segment closes the picker** (the picker is non-modal, so a press outside it dismisses it, and the
+  segment is outside): reading the picker while typing needs the value set from outside, which is what the wheel
+  following the value is tested with.
 - **Lint:** `aria-invalid`/`aria-required` on a group (above), a pointer handler on a non-interactive element
   (disabled with the reason: it is a convenience, the segments are keyboard-operable), and `autoFocus`
   (the component's own prop, as in `Slider`).
@@ -108,25 +144,33 @@ New component tokens, `component/time-picker.json`: `segment-width` (2.25ch), `p
   wiring and a label click, standard props and spread order, `StrictMode`, and axe closed (four configurations)
   and with the picker open.
 - Real browser (Chromium, hidden `!dev` stories): height equal to `Input` and `Button` at all five sizes, width
-  unchanged as it fills, one tab stop per segment then the buttons then the next control, the chosen hour and
-  minute scrolled into view, the option's focus ring inside its column, the picker staying inside a phone's width
-  with four columns, right to left (digits keep their order, the buttons follow the page, `ArrowRight` still goes on
-  to the minutes), forced colours (the focused segment and chosen option in `Highlight`/`HighlightText`, the box
-  still bounded), the picker by keyboard, text insertion, no segment clipping its text, every button 24px, and a
-  press on the padding focusing the nearest segment. **Broken on purpose, to see them fail:** the height padding,
-  the segment width, the forced-colours block, and the scroll-to-chosen code each failed their check.
+  unchanged as it fills, one tab stop per segment then the buttons then the next control, right to left (digits keep
+  their order, the buttons follow the page, `ArrowRight` still goes on to the minutes), forced colours (the focused
+  segment in `Highlight`/`HighlightText`, the box and the picker's band outlined), text insertion, no segment clipping
+  its text, every button 24px, a press on the padding focusing the nearest segment, **and, for the wheel:** five
+  rows tall with the chosen row centred on the band in every wheel, the numbers at 100/90/68/80/35% and growing
+  between rows, scrolling choosing live and resting exactly on a row, looping (23 to 00, backwards, and a fling of
+  more than a copy put back to the middle copy), a disabled row moved off to the nearest allowed one without ever
+  being reported, a click bringing a row to the middle, opening on an empty field choosing nothing, the picker
+  inside a phone's width with four wheels, the wheel's focus ring drawn inside it, the keyboard, and the neighbour
+  contrast in all four themes. A real mouse-wheel scroll in a live browser moved a wheel and the field with it. **Broken on purpose, to see them fail:** the height padding, the segment width, the forced-colours block, the
+  recentring (after the check was strengthened) and the disabled-row snapping each failed their check.
 - Live in Storybook: both Docs pages (every template heading, Properties tables with every Default filled and no
   empty description, Playground controls, every "Show code" settled), the sizes, the open picker, a real focus and
   typed digits in dark mode, and the contrast figures above in all four themes.
 - Snippets typechecked against the real components (a planted bad prop failed it).
-- Whole package: `eslint`, both typechecks, `pnpm build`, the bundle-size check (TimePicker 5.90KB JS / 1.79KB CSS
-  gzipped, `TimeRangePicker` 6.32 / 1.84), the Foundations token-coverage check, 4,995 unit tests, 940
+- Whole package: `eslint`, both typechecks, `pnpm build`, the bundle-size check (TimePicker 7.07KB JS / 2.00KB CSS
+  gzipped, `TimeRangePicker` 7.49 / 2.04), the Foundations token-coverage check, 5,026 unit tests, 947
   Storybook-project tests, the 8 visual tests, and `pnpm audit` (only the already-accepted `braces` advisory).
 
 ## Not checked, or open
 
-- **A real phone keyboard, a screen reader, Safari and Firefox.** Insertion is exercised with Chromium's own text
-  insertion; announcements are reasoned from the ARIA roles, not heard.
+- **A real phone keyboard, a real swipe, a screen reader, Safari and Firefox.** Insertion is exercised with
+  Chromium's own text insertion; scrolling with a programmatic scroll in tests and a real mouse wheel by hand; touch
+  momentum and Safari's scroll-snap are not tried; announcements are reasoned from the ARIA roles, not heard. Firefox
+  has no scroll-driven animation, which is why the fade is set from script, not CSS alone.
+- **Scroll events and the live choice.** A very fast fling reports every row it passes (like iOS), so
+  `onValueChange` can be called many times; the Docs page says each call is the current time.
 - **WCAG 2.5.8 for the segments themselves.** At 16–24px wide they are under 24 × 24; the picker's options and
   button are the equivalent control for a pointer, and a press on the box's padding is sent to a segment, but with
   `showPicker={false}` the segments are the only pointer targets. Recorded rather than fixed (a native time field

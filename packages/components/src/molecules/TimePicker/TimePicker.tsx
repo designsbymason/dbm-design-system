@@ -56,7 +56,7 @@ const draftKey = { hour: "hour", minute: "minute", second: "second", period: "pe
 
 /**
  * A time-of-day field: separate hour, minute, (second) and AM/PM segments you type into or step with the arrow
- * keys, and a popover of scrollable columns to pick from with a pointer. The value is a 24-hour string —
+ * keys, and a popover of wheels to scroll or tap through with a pointer or a swipe. The value is a 24-hour string —
  * `"14:30"`, or `"14:30:00"` with `showSeconds` — whichever `hourCycle` is shown, so there is nothing to parse and
  * it submits as it is.
  *
@@ -480,10 +480,9 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
               aria-label={labels.pickerName}
               className={styles.picker}
               onOpenAutoFocus={(event) => {
-                // Focus goes to the chosen option (or the first) in the first column, not the panel itself.
+                // Focus goes to the first wheel (the hours), not the panel itself.
                 event.preventDefault();
-                const target = (event.currentTarget as HTMLElement).querySelector<HTMLElement>('[role="option"][tabindex="0"]');
-                target?.focus();
+                (event.currentTarget as HTMLElement).querySelector<HTMLElement>('[role="listbox"]')?.focus();
               }}
             >
               <TimePickerColumns

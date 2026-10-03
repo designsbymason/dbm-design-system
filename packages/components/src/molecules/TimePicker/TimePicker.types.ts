@@ -10,13 +10,13 @@ export type TimePickerHourCycle = HourCycle;
  * stays English. Written once, here, so a translation is one object and nothing is hardcoded in markup.
  */
 export interface TimePickerLabels {
-  /** The hour segment's accessible name, and its column's in the picker. @default 'Hour' */
+  /** The hour segment's accessible name, and its wheel's in the picker. @default 'Hour' */
   hour: string;
-  /** The minute segment's accessible name, and its column's. @default 'Minute' */
+  /** The minute segment's accessible name, and its wheel's. @default 'Minute' */
   minute: string;
-  /** The second segment's accessible name, and its column's. @default 'Second' */
+  /** The second segment's accessible name, and its wheel's. @default 'Second' */
   second: string;
-  /** The AM/PM segment's accessible name, and its column's. @default 'AM/PM' */
+  /** The AM/PM segment's accessible name, and its wheel's. @default 'AM/PM' */
   period: string;
   /** The text for the morning period, shown and announced. @default 'AM' */
   am: string;
@@ -57,7 +57,7 @@ export interface TimePickerProps
    */
   hourCycle?: TimePickerHourCycle;
   /**
-   * Shows a seconds segment (and a seconds column in the picker), and makes the value `"HH:mm:ss"`.
+   * Shows a seconds segment (and a seconds wheel in the picker), and makes the value `"HH:mm:ss"`.
    * @default false
    */
   showSeconds?: boolean;
@@ -106,8 +106,8 @@ export interface TimePickerProps
    */
   required?: boolean;
   /**
-   * Shows the button that opens the picker: a popover of scrollable columns of hours, minutes (and seconds
-   * and AM/PM) to choose from with a pointer. Turn it off for a field that is only ever typed into.
+   * Shows the button that opens the picker: a popover of wheels of hours, minutes (and seconds and AM/PM) to scroll
+   * or tap, with the chosen row in the middle. Turn it off for a field that is only ever typed into.
    * @default true
    */
   showPicker?: boolean;

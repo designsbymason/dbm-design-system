@@ -48,7 +48,8 @@ export const playgroundExclude = ["onValueChange", "onClear", "onOpenChange", "n
 <ComponentHeader title="TimePicker" tier="Molecule" />
 
 A time-of-day field: separate hour, minute, optional second and AM/PM segments you type into or step with the
-arrow keys, and a popover of scrollable columns to pick from with a pointer. The value is a 24-hour string —
+arrow keys, and a popover of wheels to scroll, swipe or tap, like a phone's time picker, with the chosen row in
+the middle. The value is a 24-hour string —
 `"14:30"`, or `"14:30:00"` with `showSeconds` — whichever hour cycle is shown, so there is nothing to parse and it
 submits as it is. Whether the field shows 12 or 24 hours is chosen with `hourCycle`, never read from the browser's
 locale, so a server-rendered page and the client agree. For a start and an end, use `TimeRangePicker`.
@@ -158,6 +159,9 @@ and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'
 - A first digit of a two-digit segment already makes a whole time (a `0` is `00`), so `onValueChange` can report
   an in-between value (`"09:03"`) before the second digit arrives (`"09:30"`). Treat each call as the current
   time, as you would a native input's `input` event, and wait for blur if you only want the final one.
+- The picker's wheels choose live, as a phone's does: a fast fling reports every row it passes, so `onValueChange` can
+  be called many times in a second, each with the time then in the middle. Debounce your own work on it, or wait for
+  the picker to close, if each change is expensive.
 - When the owner controls `value`, a change it doesn't apply is undone: the field shows what `value` says.
 - In a table row or a toolbar, drop to `size="sm"` or `"xs"`; each size is as tall as an `Input` or a `Button` at the
   same step, so a row of mixed controls lines up.
@@ -174,10 +178,15 @@ and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'
   minutes), `Home`/`End` go to its ends, `Backspace` clears it, and a letter in the AM/PM segment chooses it.
 - A phone's keyboard that doesn't report keys is handled through the text it inserts, and the segments ask for a
   numeric keyboard.
-- The picker button has an accessible name, and opens a `role="dialog"` holding one `listbox` per segment of
-  options (`aria-selected`, `aria-disabled` for what the range rules out). Focus moves to the chosen hour; each
-  column is a single tab stop; `ArrowUp`/`ArrowDown` move *and choose*, `ArrowLeft`/`ArrowRight` change column,
-  `Enter` closes, `Escape` closes and returns focus to the button.
+- The picker button has an accessible name, and opens a `role="dialog"` holding one wheel per segment, each a
+  `listbox` of options (`aria-selected`, `aria-disabled` for what the range rules out) that names the chosen
+  option with `aria-activedescendant`. Only one copy of a looping wheel's values is in the accessibility tree; the
+  copies that let it loop are hidden. Focus moves to the hours wheel; each wheel is a single tab stop;
+  `ArrowUp`/`ArrowDown` choose the next allowed value (looping), `Home`/`End` the first and last,
+  `ArrowLeft`/`ArrowRight` change wheel, `Enter` closes, `Escape` closes and returns focus to the button.
+- Scrolling a wheel with the mouse wheel, a swipe or a drag chooses the row that stops in the middle, live as it
+  passes, and a row that isn't allowed is moved off to the nearest allowed one when the wheel rests. Clicking a
+  row chooses it and scrolls it to the middle. A reduced-motion preference turns the scrolling animation off.
 - `hasError` and an out-of-range or off-grid time set `aria-invalid`, and `required` sets `aria-required`, on
   each segment (a group can't carry either); `disabled` sets `aria-disabled` and removes the segments from the
   tab order.
@@ -231,42 +240,46 @@ function Example() {
 
 <TokenRow token="bg.surface" usage="field background" />
 <TokenRow token="border.default" usage="field border" />
-<TokenRow token="border.neutral" usage="field border on hover; the picker columns' scrollbar" />
-<TokenRow token="border.focus" usage="field border and ring while a segment has focus; the focus ring of the buttons and options" />
+<TokenRow token="border.neutral" usage="field border on hover" />
+<TokenRow token="border.focus" usage="field border and ring while a segment has focus; the focus ring of the buttons and of a picker wheel" />
 <TokenRow token="border.danger" usage="field border in the error state" />
 <TokenRow token="border-width.1" usage="field border width" />
 <TokenRow token="border-width.2" usage="focus ring width" />
-<TokenRow token="radius.md" usage="field corner radius" />
-<TokenRow token="radius.sm" usage="focus-ring corner radius (the field while focused), and the segments' and options' corners" />
+<TokenRow token="radius.md" usage="field corner radius; the picker's chosen-row band and the focus ring of a wheel" />
+<TokenRow token="radius.sm" usage="focus-ring corner radius (the field while focused), and the segments' corners" />
 <TokenRow token="radius.full" usage="the clear and picker buttons' corners" />
 <TokenRow token="text.primary" usage="segment and option text" />
 <TokenRow token="text.tertiary" usage="an empty segment's placeholder, and the colon between segments" />
-<TokenRow token="text.disabled" usage="a disabled option in the picker" />
-<TokenRow token="text.on-brand" usage="the focused segment's and the chosen option's text" />
-<TokenRow token="bg.brand" usage="the focused segment's and the chosen option's fill" />
-<TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons and the options" />
+<TokenRow token="text.disabled" usage="a row in the picker that the range rules out" />
+<TokenRow token="text.on-brand" usage="the focused segment's text" />
+<TokenRow token="bg.brand" usage="the focused segment's fill" />
+<TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons; the band behind the chosen row of the picker" />
 <TokenRow token="icon.default" usage="the clear and picker buttons' icons" />
-<TokenRow token="icon.on-brand" usage="the focus ring on the chosen option" />
 <TokenRow token="font-family.primary" usage="field typography" />
 <TokenRow token="font-size.xs" usage="text size at size xs" />
-<TokenRow token="font-size.sm" usage="text size at size sm; the picker's option text" />
+<TokenRow token="font-size.sm" usage="text size at size sm" />
 <TokenRow token="font-size.base" usage="text size at size md" />
-<TokenRow token="font-size.md" usage="text size at size lg" />
+<TokenRow token="font-size.md" usage="text size at size lg; the picker's numbers" />
 <TokenRow token="font-size.lg" usage="text size at size xl" />
 <TokenRow token="line-height.tight" usage="line height, so each size is as tall as a Button" />
 <TokenRow token="icon-size.xs" usage="button icon size at sizes xs and sm" />
 <TokenRow token="icon-size.sm" usage="button icon size at size md" />
 <TokenRow token="icon-size.md" usage="button icon size at size lg" />
 <TokenRow token="icon-size.lg" usage="button icon size at size xl" />
-<TokenRow token="space.1" usage="gap between segments; the focus-ring offset; padding of the clear button at xs" />
-<TokenRow token="space.2" usage="gap between the segments and the buttons; padding at xs; the picker's padding; an option's vertical padding" />
-<TokenRow token="space.3" usage="padding at sizes sm and md; an option's horizontal padding" />
+<TokenRow token="space.1" usage="gap between segments and between the picker's wheels; the focus-ring offset; padding of the clear button at xs" />
+<TokenRow token="space.2" usage="gap between the segments and the buttons; padding at xs; the picker's padding" />
+<TokenRow token="space.3" usage="padding at sizes sm and md" />
 <TokenRow token="space.4" usage="padding at sizes lg and xl" />
 <TokenRow token="space.6" usage="the smallest a button gets (24px), so it stays a large enough target at size xs" />
-<TokenRow token="space.16" usage="the narrowest a picker column gets" />
+<TokenRow token="space.10" usage="the height of a picker row, so a wheel is five of them tall" />
+<TokenRow token="space.16" usage="the narrowest a picker wheel gets" />
 <TokenRow token="time-picker.segment-width" usage="the width of a two-digit segment" />
 <TokenRow token="time-picker.period-character-width" usage="the width allowed per character of the AM/PM segment" />
-<TokenRow token="time-picker.column-max-height" usage="how tall a picker column grows before it scrolls" />
+<TokenRow token="time-picker.wheel-visible-rows" usage="how many rows a picker wheel shows (five, the chosen one in the middle)" />
+<TokenRow token="time-picker.wheel-neighbour-scale" usage="the size of a number one row from the middle" />
+<TokenRow token="time-picker.wheel-neighbour-opacity" usage="the opacity of a number one row from the middle" />
+<TokenRow token="time-picker.wheel-edge-scale" usage="the size of a number two or more rows from the middle" />
+<TokenRow token="time-picker.wheel-edge-opacity" usage="the opacity of a number two or more rows from the middle" />
 <TokenRow token="opacity.40" usage="the disabled field" />
 <TokenRow token="motion.duration.fast" usage="border and fill transitions" />
 <TokenRow token="motion.easing.standard" usage="border and fill transitions" />

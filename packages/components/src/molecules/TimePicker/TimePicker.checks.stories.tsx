@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
 import { send } from "../CodeBlock/browserProtocol";
@@ -83,69 +83,6 @@ export const TabOrder: Story = {
   },
 };
 
-export const PickerScrollsToTheChosenOption: Story = {
-  name: "The picker opens with the chosen hour and minute in view",
-  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="22:47" />,
-  play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole("button", { name: "Choose time" }));
-    await screen.findByRole("dialog");
-    await settle();
-    for (const [column, text] of [["Hour", "22"], ["Minute", "47"]] as const) {
-      const box = screen.getByRole("listbox", { name: column });
-      const chosen = within(box).getByRole("option", { name: text });
-      const outer = box.getBoundingClientRect();
-      const inner = chosen.getBoundingClientRect();
-      // The column really scrolls (it has more than it shows), and the chosen option is inside what it shows.
-      await expect(box.scrollHeight).toBeGreaterThan(box.clientHeight);
-      await expect(inner.top).toBeGreaterThanOrEqual(outer.top - 1);
-      await expect(inner.bottom).toBeLessThanOrEqual(outer.bottom + 1);
-    }
-  },
-};
-
-export const OptionFocusRingIsInside: Story = {
-  name: "An option's focus ring is drawn inside its column, not clipped by it",
-  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="09:30" defaultOpen />,
-  play: async () => {
-    await screen.findByRole("dialog");
-    await settle();
-    const box = screen.getByRole("listbox", { name: "Hour" });
-    const option = within(box).getByRole("option", { name: "08" });
-    option.focus();
-    await userEvent.keyboard("{ArrowDown}");
-    const focused = document.activeElement as HTMLElement;
-    const style = getComputedStyle(focused);
-    await expect(focused.matches(":focus-visible")).toBe(true);
-    // A negative offset puts the ring inside the option's own box.
-    await expect(parseFloat(style.outlineOffset)).toBeLessThan(0);
-    await expect(parseFloat(style.outlineWidth)).toBeGreaterThan(0);
-  },
-};
-
-export const PickerFitsAPhone: Story = {
-  name: "On a phone the picker stays on screen",
-  globals: { viewport: { value: "mobile1", isRotated: false } },
-  render: () => (
-    <div style={{ display: "flex", justifyContent: "flex-end" }}>
-      <TimePicker aria-label="Start time" showSeconds defaultValue="09:30:15" size="sm" defaultOpen />
-    </div>
-  ),
-  play: async () => {
-    await expect(window.innerWidth).toBeLessThan(480);
-    const dialog = await screen.findByRole("dialog");
-    await settle();
-    const rect = dialog.getBoundingClientRect();
-    await expect(rect.left).toBeGreaterThanOrEqual(0);
-    await expect(rect.right).toBeLessThanOrEqual(window.innerWidth);
-    // All four columns are there, and none is cut off the panel's edge.
-    for (const name of ["Hour", "Minute", "Second", "AM/PM"]) {
-      const column = within(dialog).getByRole("listbox", { name }).getBoundingClientRect();
-      await expect(column.right).toBeLessThanOrEqual(rect.right + 1);
-      await expect(column.left).toBeGreaterThanOrEqual(rect.left - 1);
-    }
-  },
-};
-
 export const RightToLeft: Story = {
   name: "Right to left: the digits keep their order, and the field's parts follow the page",
   render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="09:30" onClear={() => {}} />,
@@ -171,56 +108,6 @@ export const RightToLeft: Story = {
     } finally {
       document.documentElement.dir = previous;
     }
-  },
-};
-
-export const ForcedColors: Story = {
-  name: "Forced colours: the focused segment and the chosen option still stand out",
-  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="09:30" defaultOpen />,
-  play: async ({ canvasElement }) => {
-    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
-    const colour = (value: string) => {
-      const probe = document.createElement("span");
-      probe.style.color = value;
-      document.body.appendChild(probe);
-      const resolved = getComputedStyle(probe).color;
-      probe.remove();
-      return resolved;
-    };
-    await screen.findByRole("dialog");
-    await emulate("active");
-    try {
-      await settle();
-      await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
-      const field = within(canvasElement).getByRole("group", { name: "Start time" });
-      // The box keeps a drawn edge.
-      await expect(getComputedStyle(field).borderTopStyle).toBe("solid");
-      const chosen = within(screen.getByRole("listbox", { name: "Hour" })).getByRole("option", { name: "09" });
-      await expect(getComputedStyle(chosen).backgroundColor).toBe(colour("Highlight"));
-      await expect(getComputedStyle(chosen).color).toBe(colour("HighlightText"));
-      const hour = within(canvasElement).getByRole("spinbutton", { name: "Hour" });
-      hour.focus();
-      await expect(getComputedStyle(hour).backgroundColor).toBe(colour("Highlight"));
-      await expect(getComputedStyle(hour).color).toBe(colour("HighlightText"));
-    } finally {
-      await emulate("none");
-    }
-  },
-};
-
-export const PickerKeyboard: Story = {
-  name: "Open the picker, move through a column choosing as you go, close with Escape",
-  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:00" />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "Choose time" }));
-    await screen.findByRole("dialog");
-    await waitFor(() => expect(within(screen.getByRole("listbox", { name: "Hour" })).getByRole("option", { name: "10" })).toHaveFocus());
-    await userEvent.keyboard("{ArrowDown}{ArrowDown}");
-    await expect(canvas.getByRole("spinbutton", { name: "Hour" })).toHaveValue("12");
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    await expect(canvas.getByRole("button", { name: "Choose time" })).toHaveFocus();
   },
 };
 
@@ -295,5 +182,314 @@ export const PressingTheFieldFocusesASegment: Story = {
     // Just past the minute's left edge (the colon's gap and the minute's own box): the minute.
     await userEvent.pointer({ keys: "[MouseLeft]", target: field, coords: { clientX: minute.left + 2, clientY: box.top + 3 } });
     await expect(within(field).getByRole("spinbutton", { name: "Minute" })).toHaveFocus();
+  },
+};
+
+const wheelOf = (name: string) => screen.getByRole("listbox", { name });
+const rowHeightOf = (wheel: HTMLElement) => (wheel.firstElementChild as HTMLElement).offsetHeight;
+const chosenOf = (name: string) => within(wheelOf(name)).getByRole("option", { selected: true });
+/** The wheel's own number the way it is drawn: the opacity and the scale of a row. */
+const drawn = (row: Element) => {
+  const style = getComputedStyle(row);
+  const matrix = style.transform === "none" ? [1] : style.transform.match(/-?[\d.]+/g)!.map(Number);
+  return { opacity: Number(style.opacity), scale: matrix[0]! };
+};
+
+export const WheelGeometry: Story = {
+  name: "Five rows, the chosen one in the middle behind the band",
+  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:30" defaultOpen />,
+  play: async () => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const hours = wheelOf("Hour");
+    const row = rowHeightOf(hours);
+    await expect(row).toBeGreaterThan(30);
+    // Five rows tall, scrolling exactly to a row.
+    await expect(hours.clientHeight).toBe(5 * row);
+    await expect(hours.scrollTop % row).toBeLessThan(1);
+    // The chosen option is in the middle of the wheel, and the band is behind exactly that row.
+    const chosen = chosenOf("Hour").getBoundingClientRect();
+    const wheel = hours.getBoundingClientRect();
+    await expect(Math.abs((chosen.top + chosen.bottom) / 2 - (wheel.top + wheel.bottom) / 2)).toBeLessThan(1);
+    const band = document.querySelector("[aria-hidden='true'][class*='band']")!.getBoundingClientRect();
+    await expect(Math.abs(band.top - (wheel.top + 2 * row))).toBeLessThan(1);
+    await expect(Math.abs(band.height - row)).toBeLessThan(1);
+    // Every wheel's chosen row is on the band.
+    for (const name of ["Hour", "Minute"]) {
+      const rect = chosenOf(name).getBoundingClientRect();
+      await expect(Math.abs((rect.top + rect.bottom) / 2 - (band.top + band.bottom) / 2)).toBeLessThan(1);
+    }
+  },
+};
+
+export const NumbersFadeAwayFromTheMiddle: Story = {
+  name: "The numbers grow and strengthen as they reach the middle",
+  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:30" defaultOpen />,
+  play: async () => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const hours = wheelOf("Hour");
+    const rows = [...hours.children];
+    const middle = rows.findIndex((r) => r.getAttribute("aria-selected") === "true");
+    const at = (offset: number) => drawn(rows[middle + offset]!);
+    const close = (a: number, b: number) => Math.abs(a - b) < 0.02;
+    // The chosen one at full size and strength; a row away at 90% and 68%; two rows away at 80% and 35%.
+    await expect(close(at(0).opacity, 1) && close(at(0).scale, 1)).toBe(true);
+    for (const offset of [-1, 1]) await expect(close(at(offset).opacity, 0.68) && close(at(offset).scale, 0.9)).toBe(true);
+    for (const offset of [-2, 2]) await expect(close(at(offset).opacity, 0.35) && close(at(offset).scale, 0.8)).toBe(true);
+    // Half way between two rows it is half way between the two looks.
+    // Held half way between two rows: snapping would pull it to one, so it is switched off for the measurement.
+    hours.style.scrollSnapType = "none";
+    hours.scrollTop += rowHeightOf(hours) / 2;
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const half = drawn(rows[middle + 1]!);
+    await expect(half.opacity).toBeGreaterThan(0.68);
+    await expect(half.opacity).toBeLessThan(1);
+    hours.style.scrollSnapType = "";
+  },
+};
+
+export const ScrollingChoosesLive: Story = {
+  name: "Scrolling chooses the row in the middle as it passes, and rests on a row",
+  args: { onValueChange: fn() },
+  render: (args) => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:30" defaultOpen onValueChange={(args as { onValueChange?: (v: string) => void }).onValueChange} />,
+  play: async ({ args }) => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const onValueChange = (args as { onValueChange: ReturnType<typeof fn> }).onValueChange;
+    onValueChange.mockClear();
+    const hours = wheelOf("Hour");
+    const row = rowHeightOf(hours);
+    // Three rows down (a swipe): 13:30, reported without waiting for the wheel to stop.
+    hours.scrollBy({ top: 3 * row, behavior: "auto" });
+    await waitFor(() => expect(onValueChange).toHaveBeenLastCalledWith("13:30"));
+    await settle(400);
+    await expect(chosenOf("Hour").textContent).toBe("13");
+    // And it came to rest exactly on a row: snapped, wherever the copy.
+    await expect(hours.scrollTop % row).toBeLessThan(1);
+  },
+};
+
+export const WheelLoops: Story = {
+  name: "Hours, minutes and seconds loop: 23 is followed by 00, and it never runs out",
+  args: { onValueChange: fn() },
+  render: (args) => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="23:00" defaultOpen onValueChange={(args as { onValueChange?: (v: string) => void }).onValueChange} />,
+  play: async ({ args }) => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const onValueChange = (args as { onValueChange: ReturnType<typeof fn> }).onValueChange;
+    onValueChange.mockClear();
+    const hours = wheelOf("Hour");
+    const row = rowHeightOf(hours);
+    const copyHeight = 24 * row;
+    // Rest in the middle copy, with copies of the hours still above and below.
+    await expect(hours.scrollTop).toBeGreaterThan(copyHeight);
+    await expect(hours.scrollTop).toBeLessThan(hours.scrollHeight - hours.clientHeight - copyHeight);
+    hours.scrollBy({ top: row, behavior: "auto" });
+    await waitFor(() => expect(onValueChange).toHaveBeenLastCalledWith("00:00"));
+    await settle(400);
+    // After a long way round it is put back to the middle copy, and says the same thing.
+    await expect(chosenOf("Hour").textContent).toBe("00");
+    await expect(hours.scrollTop).toBeGreaterThan(copyHeight);
+    await expect(hours.scrollTop).toBeLessThan(hours.scrollHeight - hours.clientHeight - copyHeight);
+    // Backwards past the start of the list as well.
+    hours.scrollBy({ top: -2 * row, behavior: "auto" });
+    await waitFor(() => expect(onValueChange).toHaveBeenLastCalledWith("22:00"));
+    await settle(400);
+    // A fling of more than a whole copy (30 rows): the value is where it lands, and the wheel is put back to the
+    // middle copy, so another fling the same way still has copies ahead of it.
+    hours.scrollBy({ top: 30 * row, behavior: "auto" });
+    await waitFor(() => expect(onValueChange).toHaveBeenLastCalledWith("04:00"));
+    await settle(500);
+    const middleStart = 4 * copyHeight;
+    await expect(hours.scrollTop).toBeGreaterThanOrEqual(middleStart - 1);
+    await expect(hours.scrollTop).toBeLessThan(middleStart + copyHeight);
+    await expect(chosenOf("Hour").textContent).toBe("04");
+  },
+};
+
+export const DisabledRowsAreMovedOff: Story = {
+  name: "A disabled row is moved off to the nearest allowed one when the wheel rests",
+  args: { onValueChange: fn() },
+  render: (args) => (
+    <TimePicker aria-label="Start time" hourCycle="24" min="09:00" max="17:00" defaultValue="10:00" defaultOpen onValueChange={(args as { onValueChange?: (v: string) => void }).onValueChange} />
+  ),
+  play: async ({ args }) => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const onValueChange = (args as { onValueChange: ReturnType<typeof fn> }).onValueChange;
+    onValueChange.mockClear();
+    const hours = wheelOf("Hour");
+    const row = rowHeightOf(hours);
+    // Seven rows up: 03, disabled. It is never chosen on the way, and the wheel comes back to the nearest allowed hour (09).
+    hours.scrollBy({ top: -7 * row, behavior: "auto" });
+    await settle(900);
+    await expect(chosenOf("Hour").textContent).toBe("09");
+    await expect(onValueChange).toHaveBeenLastCalledWith("09:00");
+    for (const [value] of onValueChange.mock.calls) {
+      const hour = Number(String(value).slice(0, 2));
+      await expect(hour).toBeGreaterThanOrEqual(9);
+      await expect(hour).toBeLessThanOrEqual(17);
+    }
+    await expect(hours.scrollTop % row).toBeLessThan(1);
+  },
+};
+
+export const ClickingARowBringsItToTheMiddle: Story = {
+  name: "A click on a row chooses it and scrolls it to the middle",
+  args: { onValueChange: fn() },
+  render: (args) => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:30" defaultOpen onValueChange={(args as { onValueChange?: (v: string) => void }).onValueChange} />,
+  play: async ({ args }) => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const hours = wheelOf("Hour");
+    const below = within(hours).getByRole("option", { name: "12" });
+    await userEvent.click(below);
+    await expect((args as { onValueChange: ReturnType<typeof fn> }).onValueChange).toHaveBeenLastCalledWith("12:30");
+    await settle(600);
+    const wheel = hours.getBoundingClientRect();
+    const rect = chosenOf("Hour").getBoundingClientRect();
+    await expect(chosenOf("Hour").textContent).toBe("12");
+    await expect(Math.abs((rect.top + rect.bottom) / 2 - (wheel.top + wheel.bottom) / 2)).toBeLessThan(1);
+  },
+};
+
+export const OpeningAnEmptyFieldChoosesNothing: Story = {
+  name: "Opening the picker on an empty field doesn't fill it in",
+  args: { onValueChange: fn() },
+  render: (args) => <TimePicker aria-label="Start time" defaultOpen onValueChange={(args as { onValueChange?: (v: string) => void }).onValueChange} />,
+  play: async ({ args }) => {
+    await screen.findByRole("dialog");
+    await settle(600);
+    await expect((args as { onValueChange: ReturnType<typeof fn> }).onValueChange).not.toHaveBeenCalled();
+    await expect(within(wheelOf("Hour")).queryAllByRole("option", { selected: true })).toHaveLength(0);
+  },
+};
+
+export const PickerFitsAPhone: Story = {
+  name: "On a phone the picker stays on screen",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <TimePicker aria-label="Start time" showSeconds defaultValue="09:30:15" size="sm" defaultOpen />
+    </div>
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(480);
+    const dialog = await screen.findByRole("dialog");
+    await settle(400);
+    const rect = dialog.getBoundingClientRect();
+    await expect(rect.left).toBeGreaterThanOrEqual(0);
+    await expect(rect.right).toBeLessThanOrEqual(window.innerWidth);
+    for (const name of ["Hour", "Minute", "Second", "AM/PM"]) {
+      const column = within(dialog).getByRole("listbox", { name }).getBoundingClientRect();
+      await expect(column.right).toBeLessThanOrEqual(rect.right + 1);
+      await expect(column.left).toBeGreaterThanOrEqual(rect.left - 1);
+    }
+  },
+};
+
+export const WheelFocusRingIsInside: Story = {
+  name: "A wheel's focus ring is drawn inside it, not clipped",
+  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="09:30" defaultOpen />,
+  play: async () => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const hours = wheelOf("Hour");
+    hours.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    const style = getComputedStyle(hours);
+    await expect(hours.matches(":focus-visible")).toBe(true);
+    await expect(parseFloat(style.outlineOffset)).toBeLessThan(0);
+    await expect(parseFloat(style.outlineWidth)).toBeGreaterThan(0);
+  },
+};
+
+export const ForcedColors: Story = {
+  name: "Forced colours: the focused segment still stands out, and the chosen row keeps an edge",
+  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="09:30" defaultOpen />,
+  play: async ({ canvasElement }) => {
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    const colour = (value: string) => {
+      const probe = document.createElement("span");
+      probe.style.color = value;
+      document.body.appendChild(probe);
+      const resolved = getComputedStyle(probe).color;
+      probe.remove();
+      return resolved;
+    };
+    await screen.findByRole("dialog");
+    await emulate("active");
+    try {
+      await settle(400);
+      await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
+      const field = within(canvasElement).getByRole("group", { name: "Start time" });
+      await expect(getComputedStyle(field).borderTopStyle).toBe("solid");
+      // The band's fill is gone, so it is outlined.
+      const band = document.querySelector("[aria-hidden='true'][class*='band']") as HTMLElement;
+      await expect(getComputedStyle(band).borderTopStyle).toBe("solid");
+      await expect(getComputedStyle(band).borderTopWidth).not.toBe("0px");
+      const hour = within(canvasElement).getByRole("spinbutton", { name: "Hour" });
+      hour.focus();
+      await expect(getComputedStyle(hour).backgroundColor).toBe(colour("Highlight"));
+      await expect(getComputedStyle(hour).color).toBe(colour("HighlightText"));
+    } finally {
+      await emulate("none");
+    }
+  },
+};
+
+export const PickerKeyboard: Story = {
+  name: "Open the picker, choose with the arrow keys, close with Escape",
+  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:00" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => expect(wheelOf("Hour")).toHaveFocus());
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+    await expect(canvas.getByRole("spinbutton", { name: "Hour" })).toHaveValue("12");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await expect(canvas.getByRole("button", { name: "Choose time" })).toHaveFocus();
+  },
+};
+
+export const NeighbourNumbersKeepTheirContrast: Story = {
+  name: "The numbers a row from the middle still read at 4.5:1 in every theme",
+  render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:30" defaultOpen />,
+  play: async () => {
+    await screen.findByRole("dialog");
+    await settle(400);
+    const probe = document.createElement("span");
+    document.body.appendChild(probe);
+    const rgb = (value: string) => {
+      probe.style.color = value;
+      return getComputedStyle(probe).color.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    };
+    const luminance = (c: number[]) => {
+      const f = (x: number) => ((x /= 255) <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * f(c[0]!) + 0.7152 * f(c[1]!) + 0.0722 * f(c[2]!);
+    };
+    const ratio = (a: number[], b: number[]) => {
+      const [la, lb] = [luminance(a), luminance(b)];
+      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    };
+    const opacity = Number(getComputedStyle(wheelOf("Hour").children[0]!.parentElement!.querySelector("[aria-selected='true']")!.nextElementSibling!).opacity);
+    const previous = document.documentElement.dataset.theme;
+    try {
+      for (const theme of ["purple-light", "purple-dark", "emerald-light", "emerald-dark"]) {
+        document.documentElement.dataset.theme = theme;
+        await settle(80);
+        const text = rgb("var(--dbm-text-primary)");
+        const surface = rgb("var(--dbm-bg-surface)");
+        // The number drawn at its own opacity over the panel's surface.
+        const seen = text.map((channel, index) => channel * opacity + surface[index]! * (1 - opacity));
+        await expect(ratio(seen, surface)).toBeGreaterThanOrEqual(4.5);
+      }
+    } finally {
+      document.documentElement.dataset.theme = previous;
+      probe.remove();
+    }
   },
 };

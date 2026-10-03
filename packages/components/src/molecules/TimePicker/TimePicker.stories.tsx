@@ -37,7 +37,7 @@ const meta: Meta<typeof TimePicker> = {
     },
     showSeconds: {
       control: "boolean",
-      description: "Shows a seconds segment (and a seconds column in the picker), and makes the value \"HH:mm:ss\".",
+      description: "Shows a seconds segment (and a seconds wheel in the picker), and makes the value \"HH:mm:ss\".",
       table: { defaultValue: { summary: "false" } },
     },
     step: {
@@ -88,7 +88,7 @@ const meta: Meta<typeof TimePicker> = {
     showPicker: {
       control: "boolean",
       description:
-        "Shows the button that opens the picker: a popover of scrollable columns to choose from with a pointer. Turn it off for a field that is only ever typed into.",
+        "Shows the button that opens the picker: a popover of wheels to scroll or tap, with the chosen row in the middle. Turn it off for a field that is only ever typed into.",
       table: { defaultValue: { summary: "true" } },
     },
     open: {

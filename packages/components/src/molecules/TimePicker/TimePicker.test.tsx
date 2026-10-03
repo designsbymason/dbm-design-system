@@ -488,58 +488,84 @@ describe("TimePicker picker", () => {
     await user.click(screen.getByRole("button", { name: "Choose time" }));
     return screen.findByRole("dialog", { name: "Choose a time" });
   };
-  const listbox = (name: string) => screen.getByRole("listbox", { name });
-  const option = (column: string, text: string) => within(listbox(column)).getByRole("option", { name: text });
+  const wheel = (name: string) => screen.getByRole("listbox", { name });
+  const option = (column: string, text: string) => within(wheel(column)).getByRole("option", { name: text });
+  const optionTexts = (column: string) => within(wheel(column)).getAllByRole("option").map((o) => o.textContent);
 
-  it("opens a dialog of an hour, a minute and an AM/PM listbox", async () => {
+  it("opens a dialog of an hour, a minute and an AM/PM wheel", async () => {
     const user = userEvent.setup();
     render(<TimePicker aria-label="t" />);
     const dialog = await open(user);
     expect(within(dialog).getAllByRole("listbox").map((box) => box.getAttribute("aria-label"))).toEqual(["Hour", "Minute", "AM/PM"]);
-    expect(within(listbox("Hour")).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "12",
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-      "08",
-      "09",
-      "10",
-      "11",
-    ]);
-    expect(within(listbox("Minute")).getAllByRole("option")).toHaveLength(60);
-    expect(within(listbox("AM/PM")).getAllByRole("option").map((o) => o.textContent)).toEqual(["AM", "PM"]);
+    expect(optionTexts("Hour")).toEqual(["12", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11"]);
+    expect(optionTexts("Minute")).toHaveLength(60);
+    expect(optionTexts("AM/PM")).toEqual(["AM", "PM"]);
+  });
+
+  it("draws a looping wheel as several copies, with only the middle copy in the accessibility tree", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" hourCycle="24" />);
+    await open(user);
+    const hours = wheel("Hour");
+    // 24 values, drawn nine times; one copy of them is options, the rest are hidden rows.
+    expect(hours.children).toHaveLength(24 * 9);
+    expect(within(hours).getAllByRole("option")).toHaveLength(24);
+    expect([...hours.children].filter((row) => row.getAttribute("aria-hidden") === "true")).toHaveLength(24 * 8);
+    // AM/PM doesn't loop: one copy.
+  });
+
+  it("does not repeat a wheel that doesn't loop", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" />);
+    await open(user);
+    expect(wheel("AM/PM").children).toHaveLength(2);
   });
 
   it("lists 24 hours in the 24-hour cycle, seconds when shown, and only minutes on the step", async () => {
     const user = userEvent.setup();
     render(<TimePicker aria-label="t" hourCycle="24" showSeconds step={15} />);
     await open(user);
-    expect(within(listbox("Hour")).getAllByRole("option")).toHaveLength(24);
-    expect(within(listbox("Minute")).getAllByRole("option").map((o) => o.textContent)).toEqual(["00", "15", "30", "45"]);
-    expect(within(listbox("Second")).getAllByRole("option")).toHaveLength(60);
+    expect(optionTexts("Hour")).toHaveLength(24);
+    expect(optionTexts("Minute")).toEqual(["00", "15", "30", "45"]);
+    expect(optionTexts("Second")).toHaveLength(60);
     expect(screen.queryByRole("listbox", { name: "AM/PM" })).not.toBeInTheDocument();
   });
 
-  it("marks the chosen option in each column, and makes it each column's tab stop", async () => {
+  it("marks the chosen option in each wheel, names it as the active one, and gives each wheel one tab stop", async () => {
     const user = userEvent.setup();
     render(<TimePicker aria-label="t" defaultValue="15:45" />);
     await open(user);
     expect(option("Hour", "03")).toHaveAttribute("aria-selected", "true");
     expect(option("Minute", "45")).toHaveAttribute("aria-selected", "true");
     expect(option("AM/PM", "PM")).toHaveAttribute("aria-selected", "true");
-    expect(option("Hour", "03")).toHaveAttribute("tabindex", "0");
-    expect(option("Hour", "04")).toHaveAttribute("tabindex", "-1");
+    expect(option("Hour", "04")).toHaveAttribute("aria-selected", "false");
+    expect(wheel("Hour")).toHaveAttribute("aria-activedescendant", option("Hour", "03").id);
+    for (const name of ["Hour", "Minute", "AM/PM"]) expect(wheel(name)).toHaveAttribute("tabindex", "0");
   });
 
-  it("focuses the chosen hour when it opens", async () => {
+  it("chooses nothing while a segment is empty, and names no active option", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" />);
+    await open(user);
+    expect(within(wheel("Hour")).queryAllByRole("option", { selected: true })).toHaveLength(0);
+    expect(wheel("Hour")).not.toHaveAttribute("aria-activedescendant");
+  });
+
+  it("focuses the hour wheel when it opens", async () => {
     const user = userEvent.setup();
     render(<TimePicker aria-label="t" defaultValue="15:45" />);
     await open(user);
-    await waitFor(() => expect(option("Hour", "03")).toHaveFocus());
+    await waitFor(() => expect(wheel("Hour")).toHaveFocus());
+  });
+
+  it("follows a value set from outside while the picker is open", () => {
+    const { rerender } = render(<TimePicker aria-label="t" value="09:30" defaultOpen />);
+    expect(option("Hour", "09")).toHaveAttribute("aria-selected", "true");
+    rerender(<TimePicker aria-label="t" value="23:15" defaultOpen />);
+    expect(option("Hour", "11")).toHaveAttribute("aria-selected", "true");
+    expect(option("Hour", "09")).toHaveAttribute("aria-selected", "false");
+    expect(option("AM/PM", "PM")).toHaveAttribute("aria-selected", "true");
+    expect(option("Minute", "15")).toHaveAttribute("aria-selected", "true");
   });
 
   it("commits a pick at once, and fills the segments it left empty with their first value", async () => {
@@ -557,23 +583,67 @@ describe("TimePicker picker", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
-  it("chooses with the arrow keys as focus moves, and Enter closes", async () => {
+  it("chooses with the arrow keys, and Enter closes", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
     render(<TimePicker aria-label="t" hourCycle="24" defaultValue="10:00" onValueChange={onValueChange} />);
     await open(user);
-    await waitFor(() => expect(option("Hour", "10")).toHaveFocus());
+    await waitFor(() => expect(wheel("Hour")).toHaveFocus());
     await user.keyboard("{ArrowDown}");
-    expect(option("Hour", "11")).toHaveFocus();
     expect(onValueChange).toHaveBeenLastCalledWith("11:00");
+    await user.keyboard("{ArrowUp}{ArrowUp}");
+    expect(onValueChange).toHaveBeenLastCalledWith("09:00");
     await user.keyboard("{End}");
     expect(onValueChange).toHaveBeenLastCalledWith("23:00");
     await user.keyboard("{Home}");
     expect(onValueChange).toHaveBeenLastCalledWith("00:00");
     await user.keyboard("{ArrowRight}");
-    expect(option("Minute", "00")).toHaveFocus();
+    expect(wheel("Minute")).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(wheel("Hour")).toHaveFocus();
     await user.keyboard("{Enter}");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("loops the hours, minutes and seconds past their ends, and not AM/PM", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" showSeconds defaultValue="23:59:59" onValueChange={onValueChange} />);
+    await open(user);
+    await waitFor(() => expect(wheel("Hour")).toHaveFocus());
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).toHaveBeenLastCalledWith("00:59:59");
+    await user.keyboard("{ArrowUp}");
+    expect(onValueChange).toHaveBeenLastCalledWith("23:59:59");
+    wheel("Minute").focus();
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).toHaveBeenLastCalledWith("23:00:59");
+    wheel("Second").focus();
+    await user.keyboard("{ArrowUp}{ArrowUp}");
+    expect(onValueChange).toHaveBeenLastCalledWith("23:00:57");
+  });
+
+  it("doesn't go past either end of AM/PM", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" defaultValue="03:00" onValueChange={onValueChange} defaultOpen />);
+    wheel("AM/PM").focus();
+    await user.keyboard("{ArrowUp}");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).toHaveBeenLastCalledWith("15:00");
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("chooses what is in the middle on the first arrow when nothing is chosen yet", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" onValueChange={onValueChange} defaultOpen />);
+    wheel("Hour").focus();
+    await user.keyboard("{ArrowDown}");
+    // The wheel rests at its first value, 00; choosing it fills the minutes with 00 too.
+    expect(onValueChange).toHaveBeenLastCalledWith("00:00");
   });
 
   it("closes on Escape and returns focus to the button", async () => {
@@ -608,13 +678,17 @@ describe("TimePicker picker", () => {
     expect(option("AM/PM", "PM")).not.toHaveAttribute("aria-disabled");
   });
 
-  it("skips disabled options when moving with the arrow keys", async () => {
+  it("steps over disabled values with the arrow keys", async () => {
     const user = userEvent.setup();
-    render(<TimePicker aria-label="t" hourCycle="24" min="10:00" defaultValue="10:00" />);
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" min="10:00" max="12:00" defaultValue="10:00" onValueChange={onValueChange} />);
     await open(user);
-    await waitFor(() => expect(option("Hour", "10")).toHaveFocus());
+    await waitFor(() => expect(wheel("Hour")).toHaveFocus());
+    // Looping up from 10 goes to 09, which is disabled, and on to 12, the nearest allowed the other way round.
     await user.keyboard("{ArrowUp}");
-    expect(option("Hour", "10")).toHaveFocus();
+    expect(onValueChange).toHaveBeenLastCalledWith("12:00");
+    await user.keyboard("{ArrowDown}");
+    expect(onValueChange).toHaveBeenLastCalledWith("10:00");
   });
 
   it("can be controlled, and is hidden for a disabled or read-only field", async () => {

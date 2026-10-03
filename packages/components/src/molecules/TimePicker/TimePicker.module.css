@@ -86,7 +86,7 @@
 }
 
 /* The segment being edited: a solid brand fill with its own label colour, the clearest "this one" that keeps
-   AA (`text.on-brand` on `bg.brand`), and the same fill the picker's chosen option takes. */
+   AA (`text.on-brand` on `bg.brand`). */
 .segment:focus {
   background-color: var(--dbm-bg-brand);
   color: var(--dbm-text-on-brand);
@@ -191,78 +191,103 @@
   margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-3)) / 2);
 }
 
-/* The picker's panel: `Popover.Content`'s own chrome with a tighter padding, since what is inside is rows of
-   options with their own padding. */
+/* The picker's panel: `Popover.Content`'s own chrome with a tighter padding, since what is inside is wheels with their own rows. */
 .picker {
   padding: var(--dbm-space-2);
 }
 
-.columns {
+/* The wheels, side by side, with the band that marks the chosen row behind them. Always left to right: the digits of a
+   time read in that order in every script. */
+.wheels {
+  direction: ltr;
   display: flex;
   gap: var(--dbm-space-1);
-}
-
-/* One column — a listbox that scrolls by itself, so it is not wrapped in `ScrollArea`: that makes an overflowing
-   region a tab stop of its own, right for reading content and wrong for a list whose options take focus. The
-   thin native scrollbar is coloured from tokens. `position: relative` makes it the offset parent the picker
-   measures to scroll the chosen option to the middle. */
-.column {
-  display: flex;
-  flex-direction: column;
-  max-block-size: var(--dbm-time-picker-column-max-height);
-  min-inline-size: var(--dbm-space-16);
-  overflow-y: auto;
   position: relative;
-  scrollbar-color: var(--dbm-border-neutral) transparent;
-  scrollbar-width: thin;
 }
 
-.option {
-  align-items: center;
-  border-radius: var(--dbm-radius-sm);
-  color: var(--dbm-text-primary);
-  cursor: pointer;
-  display: flex;
-  flex-shrink: 0;
-  font-size: var(--dbm-font-size-sm);
-  font-variant-numeric: tabular-nums;
-  justify-content: center;
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-3);
-  user-select: none;
-}
-
-.option:hover:not([aria-disabled="true"]):not([aria-selected="true"]) {
+/* The chosen row: a subtle band across every wheel, as tall as a row and placed after the rows above the middle. It
+   doesn't scroll (the numbers move behind it) and takes no pointer events. The count of rows is a token; the middle
+   row has `(rows - 1) / 2` rows above it. */
+.band {
   background-color: var(--dbm-bg-neutral-subtle);
+  block-size: var(--dbm-space-10);
+  border-radius: var(--dbm-radius-md);
+  inline-size: 100%;
+  inset-block-start: calc((var(--dbm-time-picker-wheel-visible-rows) - 1) / 2 * var(--dbm-space-10));
+  inset-inline-start: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
-/* A scrolling box clips an outside focus ring, so it is drawn inside (`05` §6). */
-.option:focus-visible {
+/* One wheel: five rows tall, scrolling a row at a time (`scroll-snap`), with `padding-block` of the rows above and
+   below the middle so the first and last values can come to it. Its scrollbar is hidden (it is a wheel, and the keys,
+   a swipe or the mouse wheel move it), `overscroll-behavior` keeps the page from scrolling when it reaches an end,
+   and `touch-action` leaves a vertical swipe to it. A scrolling box clips an outside focus ring, so the ring is
+   drawn inside. */
+.wheel {
+  block-size: calc(var(--dbm-time-picker-wheel-visible-rows) * var(--dbm-space-10));
+  box-sizing: border-box;
+  min-inline-size: var(--dbm-space-16);
+  outline: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-block: calc((var(--dbm-time-picker-wheel-visible-rows) - 1) / 2 * var(--dbm-space-10));
+  position: relative;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  touch-action: pan-y;
+}
+
+.wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel:focus-visible {
+  border-radius: var(--dbm-radius-md);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
-.option[aria-selected="true"] {
-  background-color: var(--dbm-bg-brand);
-  color: var(--dbm-text-on-brand);
+/* One row. Its size and opacity follow its distance from the middle (set from the script as a number of rows, and left
+   at "far" for the rows nobody sees): the chosen row is full size and strength, a row away is the neighbour step, two
+   rows away or more the outer step, in two straight lines between, so a number grows into the chosen size as it
+   scrolls in. `transform` and `opacity` only, so nothing reflows. */
+.wheelRow {
+  --distance: var(--time-picker-wheel-distance, 3);
+  --scale: calc(
+    1 - (1 - var(--dbm-time-picker-wheel-neighbour-scale)) * min(var(--distance), 1) -
+      (var(--dbm-time-picker-wheel-neighbour-scale) - var(--dbm-time-picker-wheel-edge-scale)) *
+      (min(var(--distance), 2) - min(var(--distance), 1))
+  );
+  --strength: calc(
+    1 - (1 - var(--dbm-time-picker-wheel-neighbour-opacity)) * min(var(--distance), 1) -
+      (var(--dbm-time-picker-wheel-neighbour-opacity) - var(--dbm-time-picker-wheel-edge-opacity)) *
+      (min(var(--distance), 2) - min(var(--distance), 1))
+  );
+  align-items: center;
+  block-size: var(--dbm-space-10);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  font-size: var(--dbm-font-size-md);
+  font-variant-numeric: tabular-nums;
+  justify-content: center;
+  opacity: var(--strength);
+  scroll-snap-align: center;
+  transform: scale(var(--scale));
+  user-select: none;
 }
 
-/* `border.focus` can't be read on a brand fill, so the chosen option's ring is the on-brand colour. */
-.option[aria-selected="true"]:focus-visible {
-  outline-color: var(--dbm-icon-on-brand);
-}
-
-.option[aria-disabled="true"] {
+.wheelRow[aria-disabled="true"] {
   color: var(--dbm-text-disabled);
   cursor: not-allowed;
 }
 
-/* Forced colours drops the fills, so the chosen option needs a mark that isn't a colour of its own. */
+/* Forced colours drops the fills, so the chosen row's band needs an edge that isn't a colour of its own. */
 @media (forced-colors: active) {
-  .option[aria-selected="true"] {
-    background-color: Highlight;
-    color: HighlightText;
-    forced-color-adjust: none;
+  .band {
+    border: var(--dbm-border-width-1) solid CanvasText;
   }
 
   .segment:focus {
