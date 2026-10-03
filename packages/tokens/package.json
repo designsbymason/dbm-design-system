@@ -1,7 +1,7 @@
 {
   "name": "@dbm-design-system/tokens",
   "version": "0.0.0",
-  "description": "Design tokens (primitive + semantic layers) for the DBM Design System.",
+  "description": "Design tokens (primitive, semantic, and component layers) for the DBM Design System.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

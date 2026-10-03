@@ -1,6 +1,6 @@
 # DBM Design System
 
-> **Status: early development.** This is a standalone, dependency-light React component library, currently being built from the ground up. Not yet published to npm — nothing here is ready for use in a project yet.
+> **Status: in active development, not yet published.** The component library is substantial — 75 of a planned 108 components (every atom, 27 of 36 molecules) are built, reviewed, and Finalized — but nothing has shipped to npm yet; the API can still change before the first publish.
 
 An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API.
 
@@ -8,11 +8,11 @@ An agentic, standalone React component library built for both AI coding agents a
 
 This is a monorepo. Once published, packages will live under the `@dbm-design-system` npm scope:
 
-- `@dbm-design-system/tokens` — design tokens (primitive + semantic layers)
-- `@dbm-design-system/primitives` — small shared utilities (class-name and ref merging, responsive-value helpers, and the shared `useAnnouncement` live-region hook)
+- `@dbm-design-system/tokens` — design tokens (primitive, semantic, and component layers)
+- `@dbm-design-system/primitives` — small shared utilities (class-name and ref merging, responsive-value helpers, and shared hooks like `useAnnouncement` and `usePersistentDismiss`)
 - `@dbm-design-system/icons` — Phosphor Icons wrapper
 - `@dbm-design-system/components` — the component library itself
-- `@dbm-design-system/manifest` — agent-readable component manifest generator
+- `@dbm-design-system/manifest` — agent-readable component manifest generator (not yet built — Phase 8)
 
 None of these are published yet.
 

@@ -1,7 +1,7 @@
 {
   "name": "@dbm-design-system/primitives",
   "version": "0.0.0",
-  "description": "Headless behavior layer for the DBM Design System — wraps Radix UI Primitives and shared hooks.",
+  "description": "Framework-agnostic utilities and shared hooks for the DBM Design System (classname/ref merging, responsive-value helpers, overflow/dismissal/announcement hooks).",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
