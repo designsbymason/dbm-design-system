@@ -1,3 +1,4 @@
+import { useIsScrollable } from "@dbm-design-system/primitives";
 import { useCallback, useSyncExternalStore } from "react";
 import type { RefObject } from "react";
 
@@ -9,10 +10,6 @@ export interface ScrollableRegionState {
 }
 
 const noop = () => {};
-
-const readScrollable = (container: HTMLDivElement | null): boolean =>
-  container !== null &&
-  (container.scrollWidth > container.clientWidth || container.scrollHeight > container.clientHeight);
 
 // Direct children only — a nested table's own caption inside a cell must never
 // be mistaken for this table's.
@@ -29,22 +26,27 @@ const readCaptionId = (container: HTMLDivElement | null): string | undefined => 
  * the keyboard) instead of adding a permanent, meaningless tab stop to every
  * table that happens to fit.
  *
- * Built on `useSyncExternalStore` — the layout of the DOM is external,
- * mutable state React doesn't own — rather than an effect that sets state:
- * React re-reads the snapshot right after the first commit and re-renders
- * synchronously *before paint* if it changed, so the region is already
- * correct on the first frame. (An effect-plus-`ResizeObserver`-callback
- * version only learns about overflow one async tick later, leaving a window
- * where the container scrolls but isn't yet focusable — a real
- * `scrollable-region-focusable` failure in an automated accessibility check
- * that runs the moment a story renders.)
+ * `scrollable` itself is `useIsScrollable(containerRef, "both")` — the
+ * shared `primitives` hook `ScrollArea` also uses, extracted here
+ * 2026-10-02 (an authorized, zero-behavior-change refactor; this hook's own
+ * return shape and every caller are unchanged, so `Table`'s finalized status
+ * holds per `06-engineering-standards.md` §9's three-question test). The
+ * `captionId` lookup stays local — it's specific to this component's own
+ * `<caption>` convention, not a general scroll-detection concern.
  *
- * Subsequent changes (viewport resize, content change) arrive via
- * `ResizeObserver` on both the container and its `<table>`. Guarded for
- * environments without it: those just never re-check after the first
- * commit, leaving the container unfocusable rather than crashing.
+ * `captionId`'s own `useSyncExternalStore`, below, still needs its own
+ * `ResizeObserver` subscription (a caption's presence/id can't change
+ * without a re-render touching this hook anyway, but kept symmetrical with
+ * `scrollable`'s own subscription rather than assumed stale-safe) — built on
+ * the same technique for the same reason: React re-reads the snapshot right
+ * after the first commit and re-renders synchronously *before paint* if it
+ * changed, so the region is already correct on the first frame, unlike an
+ * effect-plus-`ResizeObserver`-callback version, which only learns one
+ * async tick later.
  */
 export function useScrollableRegion(containerRef: RefObject<HTMLDivElement | null>): ScrollableRegionState {
+  const scrollable = useIsScrollable(containerRef, "both");
+
   const subscribe = useCallback(
     (onChange: () => void) => {
       const container = containerRef.current;
@@ -57,11 +59,6 @@ export function useScrollableRegion(containerRef: RefObject<HTMLDivElement | nul
     [containerRef],
   );
 
-  const scrollable = useSyncExternalStore(
-    subscribe,
-    () => readScrollable(containerRef.current),
-    () => false,
-  );
   const captionId = useSyncExternalStore(
     subscribe,
     () => readCaptionId(containerRef.current),

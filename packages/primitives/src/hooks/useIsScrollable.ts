@@ -19,21 +19,22 @@ function overflows(el: HTMLDivElement, axis: ScrollableAxis): boolean {
  * keyboard-reachable region (WCAG 2.1.1) only while it genuinely scrolls —
  * not a permanent, meaningless tab stop on content that already fits.
  *
- * Built on `useSyncExternalStore`, the same technique already established
- * for `Table`'s own scroll container (`Table/useScrollableRegion.ts`):
- * React re-reads the snapshot right after the first commit and, if it
- * changed, re-renders synchronously before paint — an effect-plus-state
- * version only learns about overflow one tick later, a real
- * `scrollable-region-focusable` failure the instant a story with
- * overflowing content first renders. Not yet extracted into a shared
- * `primitives` hook alongside `Table`'s copy (which reports one combined
- * boolean and never needs a specific axis) — flagged as a DRY opportunity
- * rather than touching `Table`, an already-Finalized component, without
- * asking first.
+ * Built on `useSyncExternalStore`: React re-reads the snapshot right after
+ * the first commit and, if it changed, re-renders synchronously before
+ * paint — an effect-plus-state version only learns about overflow one tick
+ * later, a real `scrollable-region-focusable` failure the instant a story
+ * with overflowing content first renders.
+ *
+ * Shared between `ScrollArea` (which needs a specific axis) and `Table`'s
+ * own `useScrollableRegion` (always `"both"`, combined with its own
+ * separate `captionId` lookup) — extracted here 2026-10-02 once a second
+ * consumer needed the identical overflow-detection logic, matching the
+ * precedent `useResolvedResponsiveValue` already set for this package (a
+ * shared hook extracted once a genuine second consumer showed up, rather
+ * than speculatively upfront).
  *
  * Subsequent changes (viewport resize, content change) arrive via
- * `ResizeObserver` on both the container and its first child (`Viewport`'s
- * own inner content-measuring wrapper, for `ScrollArea`). Guarded for
+ * `ResizeObserver` on both the container and its first child. Guarded for
  * environments without it: those just never re-check after the first
  * commit, leaving the container unfocusable rather than crashing.
  */

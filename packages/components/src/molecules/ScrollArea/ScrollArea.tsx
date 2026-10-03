@@ -1,9 +1,8 @@
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { cx, mergeRefs, useIsScrollable } from "@dbm-design-system/primitives";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { forwardRef, useRef } from "react";
 import styles from "./ScrollArea.module.css";
 import type { ScrollAreaProps, ScrollAreaSize } from "./ScrollArea.types";
-import { useIsScrollable } from "./useIsScrollable";
 
 const toneClass: Record<"neutral" | "brand", string | undefined> = {
   neutral: undefined,
