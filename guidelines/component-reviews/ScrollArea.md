@@ -320,6 +320,41 @@ docs-test drift guard and fixed) and the full real-browser Chromium suite (875 p
 build`, and the component bundle-size check (1.01KB JS / 0.58KB CSS, a small further increase,
 still comfortably within budget) — all clean.
 
+## Fourth follow-up: `overscrollBehavior` prop (2026-10-02)
+
+Raised during a question about whether `ScrollArea` could conflict with the page's own native
+scrollbar — it doesn't (Radix's `Viewport` runs real native `overflow: scroll`/`hidden`, scoped to
+its own element, with the OS scrollbar hidden only there, confirmed by reading
+`@radix-ui/react-scroll-area`'s own source), but the investigation surfaced a genuine, undecided
+nuance: with no `overscroll-behavior` set, the browser's default scroll-chaining applies — reaching
+the end of a `ScrollArea`'s content and continuing to scroll hands off to whatever scrolls behind it
+(the page, a parent `ScrollArea`). At explicit direction, made configurable rather than silently
+picking a default either way.
+
+New prop: `overscrollBehavior?: "auto" | "contain"` (default `"auto"`, the platform's own default —
+non-breaking, matches today's existing behavior with nothing set). `"contain"` stops the chain at
+this region's own boundary, for a region that should read as its own sealed-off panel (a modal's
+body, a nested list) rather than a transparent extension of whatever's behind it. Scoped to two
+values, not the full three-value CSS property (`auto`/`contain`/`none`) — `"none"` additionally
+suppresses the overscroll *glow/bounce* effect itself, not just the chaining, which wasn't part of
+what was asked; the type is additive, so a third value can be added later without a breaking change
+if a real need for it shows up.
+
+Applied as a CSS Modules class (`.overscrollContain`, a plain `overscroll-behavior: contain`
+declaration — no token involved, the same reasoning `touch-action: none` on `.scrollbar` already
+gets no token either), toggled on Radix's own `Viewport` — the real native-scrolling element, not
+`.root`, which never scrolls itself.
+
+Verified live (Playground story): toggling the control applies the class and
+`getComputedStyle(viewport).overscrollBehavior` resolves to `"contain"`; confirmed back to `"auto"`
+at the default with no class applied. Full re-verification: `tsc --noEmit`, `eslint --max-warnings
+0` both clean; the full unit suite (4699 passing — two new tests for the viewport's class
+application, mirroring `showTrack`'s own pattern) and the full real-browser Chromium suite (875
+passing) both clean; `storySnippets.test.ts` extended with a new describe-block case (writes the
+attribute only at the non-default value, the same pattern `showTrack`/`tone` already follow); `pnpm
+build` clean; the component bundle-size check (1.05KB JS / 0.59KB CSS, a small increase, still
+comfortably within budget).
+
 ## Not yet Finalized
 
 Per the standing rule, only the user declares a component Finalized — this review documents a
