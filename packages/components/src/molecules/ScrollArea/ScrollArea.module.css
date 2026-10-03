@@ -76,13 +76,25 @@
    `background-color` (below) completely unaffected. Radix sets pointer capture on this element at
    drag-start (confirmed in its own source), so `:hover`/`:active` both stay true for the entire
    drag even if the pointer moves outside the scrollbar's visible bounds — "hovered or interacted
-   with" in one pair of selectors, not two separate mechanisms. */
+   with" in one pair of selectors, not two separate mechanisms.
+
+   `backdrop-filter: blur()` layers a frosted-glass effect behind the track, reusing `space.1` as
+   the blur radius — the same token `Backdrop`'s own `blur` prop already uses for this exact
+   purpose (no dedicated blur scale exists, and this value is already an established, reviewed
+   choice rather than a new one). Safe to combine with the `color-mix()` alpha above: `Backdrop`'s
+   own comment documents that a plain `opacity` property *would* weaken an adjacent
+   `backdrop-filter` (blending the whole blurred element back with the sharp content behind it) —
+   but `.showTrack` never uses `opacity`, only a pre-mixed, already-opaque `background-color`, so
+   that pitfall doesn't apply here. Declared once, unconditionally, since the `:hover`/`:active`
+   rule below only overrides `background-color` — the blur itself stays on through every state
+   `showTrack` is visible in. */
 .showTrack {
   background-color: color-mix(
     in srgb,
     var(--scroll-area-track-color, var(--dbm-bg-track)) calc(var(--dbm-opacity-50) * 100%),
     transparent
   );
+  backdrop-filter: blur(var(--dbm-space-1));
 }
 
 .showTrack:hover,
