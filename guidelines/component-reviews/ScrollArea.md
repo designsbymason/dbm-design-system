@@ -196,6 +196,64 @@ browser: track + proportionally-sized thumb in every orientation and both dark/l
 Horizontal/Both/Sizes/Ghost stories' new content and sizing, and the `aria-label` control now a
 real, editable text field.
 
+## Second follow-up: track visibility, tone, and a genuine "both axes" demo (2026-10-02)
+
+Five more changes, all at explicit direction:
+
+1. **The scrollbar track defaults to transparent again** — reverting the first follow-up's own
+   `bg.track` default, after live use showed a floating thumb with no track reads as the more
+   expected overlay-scrollbar treatment. A new `showTrack?: boolean` prop (default `false`) opts
+   back into the visible track; it affects only `.scrollbar`'s own background, never the thumb,
+   which keeps its own styling regardless.
+2. **A new `tone?: "neutral" | "brand"` prop** (default `"neutral"`) colors the thumb and, when
+   `showTrack` is set, the track: `"brand"` uses `bg.brand`/`bg.brand-hover` for the thumb and
+   `bg.brand-subtle` for the track — all three already-verified, existing semantic tokens, no new
+   contrast check needed. Implemented as CSS custom properties defined once on `.toneBrand`
+   (applied to the scrollbar element) and consumed via `var(--scroll-area-thumb-color, ...)`-style
+   fallbacks on `.thumb`/`.showTrack` — the same "define per tone, consume generically" pattern
+   `Table`'s own tone classes use, relying on ordinary custom-property inheritance from the
+   scrollbar element down to its thumb child rather than a second class on the thumb itself.
+   Verified live against both brand themes (Purple and Emerald) and both color modes — the brand
+   tone correctly follows whichever brand is active, not a hardcoded purple.
+3. **The demo content is no longer lorem ipsum.** Replaced with real, educational sentences about
+   `ScrollArea` itself (what it is, how input/visibility work, its keyboard-accessibility model) —
+   genuinely informative rather than placeholder text, and long enough (individually and combined)
+   to overflow every demo's own bounds. One shared sentence array feeds both the wrapped-paragraph
+   form (vertical-scroll demos) and the one-sentence-per-line nowrap form (horizontal/both-axis
+   demos), so the two demo styles read as one real piece of writing rather than two disconnected
+   placeholder snippets.
+4. **A real defect, found as a direct consequence of fix #3:** the Playground's own `scrollbars="both"`
+   previously showed only a horizontal scrollbar — its demo content's natural height landed just
+   under the inherited 12rem default, so vertical content never actually overflowed. The new,
+   longer educational content (seven sentences instead of five) comfortably exceeds 12rem on its
+   own, so switching `scrollbars` to `"both"` in the Playground now genuinely demonstrates both
+   axes without a separate, hidden height override — confirmed live via `scrollHeight`/`clientHeight`
+   measurement before and after (`255 > 190` vertically, `1382 > 642` horizontally, at the
+   Playground's own default `maxHeight`). The dedicated `Both axes` story's own previous `8rem`
+   override (added in the first follow-up specifically to force this) was removed as no longer
+   needed.
+5. Added a `Tone` gallery story (neutral vs. brand, both with `showTrack` set so the track's own
+   tint is visible too, not just the thumb) and extended the Playground's `argTypes`/`args`,
+   `scrollAreaPlaygroundSnippet`, and `storySnippets.test.ts`'s own dedicated describe block for
+   both new props.
+
+A real mistake caught and fixed during this pass, not shipped: a first attempt at the new
+`<TokenRow usage="...">` strings used backslash-escaped double quotes (`tone=\"brand\"`) — MDX
+doesn't support that escape inside a JSX attribute (the same class of bug this project's own
+guidelines already document, found originally on `Avatar`) and would have broken the whole Docs
+page had it shipped. Caught before verifying live, fixed with single quotes instead
+(`tone='brand'`).
+
+Full re-verification: `tsc`, `eslint --max-warnings 0`, the full unit suite (5569 passing) and the
+real-browser Chromium suite for `ScrollArea` specifically (9 stories, including the new `Tone`
+story), `storySnippets.test.ts` (818 passing, including two new describe blocks for `showTrack`/
+`tone`), `pnpm build`, and the component bundle-size check (1.01KB JS / 0.50KB CSS, a small
+increase from the new props, still comfortably within budget) — all clean. Re-verified live: the
+default transparent track, `showTrack` toggling a visible one, `tone="brand"` on both the thumb and
+(with `showTrack`) the track, in both brand themes and both color modes, the Playground's `both`
+scrollbars now showing genuine two-axis overflow, and the Docs page's Properties table and embedded
+Playground panel both showing `showTrack`/`tone` in the correct position with correct defaults.
+
 ## Not yet Finalized
 
 Per the standing rule, only the user declares a component Finalized — this review documents a
