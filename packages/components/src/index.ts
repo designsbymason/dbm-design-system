@@ -63,6 +63,7 @@ export * from "./molecules/DescriptionList";
 export * from "./molecules/EmptyState";
 export * from "./molecules/FormField";
 export * from "./molecules/Grid";
+export * from "./molecules/HoverCard";
 export * from "./molecules/List";
 export * from "./molecules/NumberInput";
 export * from "./molecules/Pagination";

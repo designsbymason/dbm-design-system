@@ -1,0 +1,286 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Link } from "../../atoms/Link";
+import { Tooltip } from "../../atoms/Tooltip";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Button } from "../../atoms/Button";
+import { Popover } from "../Popover";
+import { HoverCard } from "./HoverCard";
+import * as HoverCardStories from "./HoverCard.stories";
+import * as HoverCardRootStories from "./HoverCardRoot.stories";
+import * as HoverCardTriggerStories from "./HoverCardTrigger.stories";
+import * as HoverCardContentStories from "./HoverCardContent.stories";
+
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "openDelay", "closeDelay"];
+export const playgroundOrder = [
+  "defaultOpen",
+  "openDelay",
+  "closeDelay",
+  "side",
+  "align",
+  "sideOffset",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "hideWhenDetached",
+  "hideArrow",
+];
+export const playgroundExclude = ["onOpenChange", "onEscapeKeyDown", "onPointerDownOutside", "onFocusOutside", "onInteractOutside"];
+export const triggerPropOrder = ["asChild", "children", "href", "target", "rel", "id", "className", "style", "data-testid"];
+export const contentPropOrder = [
+  "children",
+  "side",
+  "align",
+  "sideOffset",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "collisionBoundary",
+  "hideWhenDetached",
+  "hideArrow",
+  "container",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={HoverCardStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="HoverCard" tier="Molecule" />
+
+A rich preview that opens when the pointer rests on a link (or keyboard focus lands on it) and closes
+when it leaves — a profile on a username, a summary on a link — built on Radix HoverCard. Nothing is
+clicked: the card is *supplementary*, an extra look at where the link leads. It is for pointer and
+keyboard users on a screen wide enough to hover; it never opens on a touch screen. A compound
+component: compose `HoverCard.Trigger` and `HoverCard.Content` inside `HoverCard` itself.
+
+### Import
+
+```tsx
+import { HoverCard } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={HoverCardStories.Playground} />
+
+</div>
+<PlaygroundControls of={HoverCardStories.Playground} order={playgroundOrder} exclude={playgroundExclude} />
+
+## Properties
+
+`HoverCard` itself renders no DOM element of its own — it's a plain context provider around
+`HoverCard.Trigger`/`HoverCard.Content` (matching Radix's own `HoverCard.Root`), so it has no
+`className`/`style`/`id`/`data-testid`/`ref` of its own to accept.
+
+<PropertiesTable of={HoverCardRootStories} order={propOrder} />
+
+### HoverCard.Trigger properties
+
+The link the card previews. Also accepts any other native `<a>` attribute beyond what's listed here
+(e.g. `download`, `hrefLang`, `onClick`) — passed straight through.
+
+<PropertiesTable of={HoverCardTriggerStories} order={triggerPropOrder} />
+
+### HoverCard.Content properties
+
+The floating card itself. Also accepts any other native `<div>` attribute beyond what's listed here
+(e.g. `lang`, `onMouseEnter`) — passed straight through to the underlying content element.
+
+<PropertiesTable of={HoverCardContentStories} order={contentPropOrder} />
+
+## Variants
+
+### Open, with a profile preview
+
+<Canvas of={HoverCardStories.ProfileCard} />
+
+### All sides
+
+<Canvas of={HoverCardStories.AllSides} />
+
+### Responsive side (bottom on mobile, right from lg up)
+
+<Canvas of={HoverCardStories.ResponsiveSide} />
+
+### Hides when its trigger scrolls out of view
+
+<Canvas of={HoverCardStories.HideWhenDetached} />
+
+### Custom open and close delays
+
+<Canvas of={HoverCardStories.Delays} />
+
+### Controlled open state
+
+<Canvas of={HoverCardStories.Controlled} />
+
+### The built-in trigger (a plain link)
+
+<Canvas of={HoverCardStories.PlainTrigger} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `HoverCard` for a quick look at where a link leads — a person's profile, a page summary, a
+  repository's description — when the link already works perfectly well without the preview.
+- Give `HoverCard.Trigger` a real `href`, usually through `asChild` with the `Link` atom. The card
+  previews the destination; a trigger that goes nowhere has nothing to preview.
+- Keep the card short: an avatar or image, a name, a line or two. Whatever it shows should also be
+  on the page the link opens.
+- Leave `sideOffset` small, so the pointer can cross onto the card before `closeDelay` runs out.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't put anything in the card a user must reach: a button, a form, the only copy of a fact. It
+  never opens on touch, and its buttons and links are removed from the tab order — use `Popover`.
+- Don't use it for a short, plain-text label on an icon or control — that's `Tooltip`, which also
+  names the control for assistive technology.
+- Don't make the card the only place something is explained. A keyboard user can open it, but a
+  screen reader's own navigation doesn't read it.
+- Don't wrap a non-link in `HoverCard.Trigger` without giving it a way to take focus.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The default delays (`openDelay` 700, `closeDelay` 300) are deliberately unhurried: sweeping the
+  pointer across a paragraph of links shouldn't flash a card for each one. Shorten `openDelay` only
+  for a trigger that is plainly a "show me more" target, and keep `closeDelay` long enough to cross
+  the gap onto the card.
+- Pass `side`/`align` that suit the layout — a card under a link in the first column of a table
+  reads better as `align="start"` than centred.
+- Let `avoidCollisions` (on by default) handle the edges; it keeps the card inside the viewport and
+  the content's width is capped so it never outgrows a phone-width screen.
+- Use `hideWhenDetached` for a trigger in a scrolling list or table, so the card doesn't hover over
+  empty space once its row scrolls away.
+
+## Accessibility
+
+<Callout tone="info" title="A preview for sighted pointer and keyboard users, not a dialog">
+
+- The trigger is a link: `Tab` reaches it, and focus opens the card (after `openDelay`); moving
+  focus away closes it (after `closeDelay`). `Escape` closes it and leaves focus on the link.
+- The card follows the WCAG 1.4.13 pattern for content on hover or focus: it can be dismissed
+  (`Escape`), it stays open while the pointer is over it, and it stays until the pointer or focus
+  leaves.
+- The card has no `role` and no accessible name, and nothing links it to the trigger — it is not
+  announced when it opens, and a screen reader's own navigation does not reach it. Everything in it
+  must be available on the page the link opens.
+- Every focusable element inside the card is taken out of the tab order, so a keyboard user can't
+  move into it. It is for reading, not for interacting.
+- It does not open for a touch pointer, so on a phone or tablet a tap simply follows the link.
+- A dev-mode console warning fires once per trigger if `HoverCard.Trigger` renders a plain `<a>`
+  with no `href` or `tabIndex`, since a keyboard user could never open the card.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<HoverCard>
+  <HoverCard.Trigger asChild>
+    <Link href="/people/jane">@jane</Link>
+  </HoverCard.Trigger>
+  <HoverCard.Content>
+    <Text weight="semibold">Jane Doe</Text>
+    <Text size="sm" color="secondary">Design systems engineer</Text>
+  </HoverCard.Content>
+</HoverCard>
+
+{/* Quicker to open, aligned to the link's start, opening beside it on large screens */}
+<HoverCard openDelay={200} closeDelay={150}>
+  <HoverCard.Trigger asChild>
+    <Link href="/docs/tokens">tokens</Link>
+  </HoverCard.Trigger>
+  <HoverCard.Content align="start" side={{ base: "bottom", lg: "right" }}>
+    <Text size="sm">Design tokens are the single source of truth for every value.</Text>
+  </HoverCard.Content>
+</HoverCard>
+
+{/* Controlled open state */}
+function Example() {
+  const [open, setOpen] = useState(false);
+  return (
+    <HoverCard open={open} onOpenChange={setOpen}>
+      <HoverCard.Trigger asChild>
+        <Link href="/people/jane">@jane</Link>
+      </HoverCard.Trigger>
+      <HoverCard.Content>
+        <Text size="sm">{open ? "Open" : "Closed"}</Text>
+      </HoverCard.Content>
+    </HoverCard>
+  );
+}
+
+{/* A native <a> attribute, passed straight through: offer the link as a download */}
+<HoverCard.Trigger href="/people/jane.vcf" download>@jane</HoverCard.Trigger>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="content background; also the arrow's own fill" />
+<TokenRow token="text.primary" usage="content text colour" />
+<TokenRow token="border.default" usage="content border; also the arrow's own stroke, so it reads as one continuous edge" />
+<TokenRow token="border-width.1" usage="content border width; also the arrow's own stroke width" />
+<TokenRow token="radius.md" usage="content corner radius" />
+<TokenRow token="shadow.light.md" usage="content elevation, light themes" />
+<TokenRow token="shadow.dark.md" usage="content elevation, dark themes" />
+<TokenRow token="font-family.primary" usage="content typography — set explicitly since the content renders in a Portal outside this component's own tree" />
+<TokenRow token="hover-card.max-width" usage="content max width" />
+<TokenRow token="space.4" usage="content padding" />
+<TokenRow token="z-index.popover" usage="content stacking order" />
+<TokenRow token="motion.duration.fast" usage="open/close fade transition" />
+<TokenRow token="motion.easing.emphasized" usage="open fade-in transition" />
+<TokenRow token="motion.easing.standard" usage="close fade-out transition" />
+<TokenRow token="opacity.0" usage="open/close fade transition start and end" />
+<TokenRow token="opacity.100" usage="open/close fade transition start and end" />
+<TokenRow token="radius.sm" usage="built-in trigger's focus ring corner radius" />
+<TokenRow token="border.focus" usage="built-in trigger's focus ring colour" />
+<TokenRow token="border-width.2" usage="built-in trigger's focus ring width" />
+<TokenRow token="space.1" usage="built-in trigger's focus ring offset" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Popover"
+  description="A floating panel opened by a click, with fully interactive content — reach for this when the content must be reachable"
+  href="/?path=/docs/molecules-overlay-popover--docs"
+>
+  <Popover>
+    <Popover.Trigger asChild>
+      <Button size="sm">Open</Button>
+    </Popover.Trigger>
+  </Popover>
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="A short, plain-text hint for a control or icon, shown on hover and focus"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Tooltip content="A short hint">
+    <button type="button">Hover me</button>
+  </Tooltip>
+</RelatedCard>
+<RelatedCard
+  name="Link"
+  description="The usual trigger: a link whose destination the card previews"
+  href="/?path=/docs/atoms-typography-link--docs"
+>
+  <Link href="/docs">A link</Link>
+</RelatedCard>
+</div>

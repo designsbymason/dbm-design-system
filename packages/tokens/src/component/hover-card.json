@@ -1,0 +1,9 @@
+{
+  "hover-card": {
+    "max-width": {
+      "$type": "dimension",
+      "$value": "20rem",
+      "$description": "New token (2026-10-03), added for HoverCard's own floating content panel — a content-measure cap for a preview card (a profile, a link preview), which holds a few short lines and an optional avatar rather than a form, so it takes the same measure as a tooltip bubble instead of Popover's wider cap. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    }
+  }
+}

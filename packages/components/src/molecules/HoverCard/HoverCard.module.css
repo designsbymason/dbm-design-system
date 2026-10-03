@@ -1,0 +1,92 @@
+/* The default (non-`asChild`) trigger — an `<a>` that takes the colour of the
+   surrounding text but keeps a dotted underline: with the colour inherited, the
+   underline is the only cue that it is a link at all (WCAG 1.4.1), and a dotted
+   one reads as "there is more here" rather than as a plain link. Callers are
+   expected to reach for `asChild` with the `Link` atom for anything that should
+   look like a full link. The focus ring is restated because this reset removes
+   the browser's own link styling, and the ring is what shows a keyboard user
+   that the card is about to open. */
+.trigger {
+  border-radius: var(--dbm-radius-sm);
+  color: inherit;
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+}
+
+.trigger:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* The floating panel — the same "elevated surface" chrome as Popover's and
+   Select's portaled panels (background/border/radius/shadow); font-family
+   is set explicitly because a `Portal` renders outside this component's
+   own tree. Shadows are a fixed light/dark primitive pair selected via the
+   `[data-theme$="-dark"]` attribute-selector pattern used elsewhere. */
+.content {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  /* `min()` against Radix's live available width, for the reason
+     Popover's own `.content` documents: repositioning can't fix a box
+     wider than the viewport has room for, only shrinking it can. */
+  max-width: min(var(--dbm-hover-card-max-width), var(--radix-popper-available-width));
+  padding: var(--dbm-space-4);
+  position: relative;
+  will-change: transform, opacity;
+  z-index: var(--dbm-z-index-popover);
+}
+
+[data-theme$="-dark"] .content {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.content[data-state="open"] {
+  animation: fadeIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-state="closed"] {
+  animation: fadeOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* The arrow is a filled polygon plus a separate open path for the two
+   exposed edges, so the base blends into `.content`'s own edge instead of
+   drawing a line across the seam (see Popover's own `.arrowFill` and
+   `.arrowStroke` for the full reasoning, including why `vector-effect` is
+   set on the element itself rather than hoisted). */
+.arrowFill {
+  fill: var(--dbm-bg-surface);
+}
+
+.arrowStroke {
+  fill: none;
+  stroke: var(--dbm-border-default);
+  stroke-width: var(--dbm-border-width-1);
+  vector-effect: non-scaling-stroke;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
+}
