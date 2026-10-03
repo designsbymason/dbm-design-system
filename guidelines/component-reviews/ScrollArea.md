@@ -443,8 +443,20 @@ Everything else re-confirmed, not re-litigated:
   Chromium suite (875 passing), `pnpm build`, the component bundle-size check (0.85KB JS / 0.59KB
   CSS, within budget), and the Foundations token-coverage check — all clean.
 
-## Not yet Finalized
+## Finalized
 
-Per the standing rule, only the user declares a component Finalized — this review documents a
-complete pass, including a final dedicated review round, with no outstanding gaps, awaiting that
-confirmation.
+**Finalized 2026-10-02.** Verified immediately before, on the final state (after the fifth follow-up
+and the dedicated final review round above): `eslint` plus `tsc` clean, the `unit` project (53 tests
+for `ScrollArea`; 4700 for the package), the real-browser `storybook` project (9 stories for
+`ScrollArea`, including axe on every story and the two hidden interaction tests; 875 for the
+package), `tsup` build, and every size and coverage check (`ScrollArea`: 0.85KB JS / 0.59KB CSS
+gzipped, within budget; Foundations token coverage unaffected). Final surface: a single
+(non-compound) component; `children` (required); `variant` (`bordered`/`ghost`); `size` (the shared
+5-step scale); `scrollbars` (`vertical`/`horizontal`/`both`); `showTrack`; `tone`
+(`neutral`/`brand`); `scrollbarVisibility` (`auto`/`always`/`scroll`/`hover`); `scrollHideDelay`;
+`overscrollBehavior` (`auto`/`contain`); `maxHeight`; `dir`; `onScroll` and `viewportRef` (routed to
+the real scrolling viewport, distinct from `ref`); the standard `aria-label`/`aria-labelledby`/`id`/
+`className`/`style`/`data-testid` set — 19 props in total. Built on the shared `useIsScrollable`
+hook (`packages/primitives`, also backing `Table`'s own `useScrollableRegion`). Per
+`06-engineering-standards.md` §9, don't make further changes to `ScrollArea` (code, stories, docs,
+or its tokens) without asking first.
