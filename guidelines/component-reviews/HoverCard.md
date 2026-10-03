@@ -141,13 +141,18 @@ checks first, then all four features.
 
 **Two smaller ideas, done the same day**
 - **Only keyboard focus opens the card.** Radix opens it on any focus, including the one a click or
-  a tap leaves on the link. A real-browser check with a synthetic touch tap (`Input.synthesizeTapGesture`)
+  a tap leaves on the link. A real-browser check with a synthetic touch tap (`Input.synthesizeTapGesture`, run locally)
   **confirmed the suspicion that a tap did open it**, contradicting the docs' "never opens on touch"
   (the earlier touch check only covered the touch pointer's hover, which Radix ignores). It is fixed
   by the same mechanism as the `touchstart` workaround: `HoverCard.Trigger` runs the caller's
   `onFocus`, and when the link doesn't match `:focus-visible` marks the event handled, which makes
   Radix skip its open. A browser that throws on the selector keeps Radix's open-on-any-focus. The
-  tap check fails with the guard removed. Unit tests stub `:focus-visible` (jsdom's depends on test
+  tap check failed with the guard removed. **That tap check could not stay in the suite:** it needs
+  screen coordinates, which depend on how the test page scales the story's frame, and it passed
+  locally but missed the link on both CI images (found when CI failed after the push). The kept
+  check focuses the link with `focus({ focusVisible: false })`, the same kind of focus a tap leaves,
+  asserts it really isn't `:focus-visible`, and fails without the guard; the tap itself is no
+  longer exercised. Unit tests stub `:focus-visible` (jsdom's depends on test
   order), and cover the caller's `onFocus` and the fallback. **The Tab half is not in that check:** a
   scripted or CDP-keyed Tab after a touch wasn't reliably `:focus-visible` in the test page, so
   keyboard opening is covered by the existing keyboard story and the unit test instead.
