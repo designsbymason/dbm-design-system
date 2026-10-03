@@ -1,0 +1,15 @@
+/* Two `TimePicker`s and what joins them. The row wraps, so on a narrow screen the end drops under the start
+   rather than squeezing either. */
+.root {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+}
+
+.separator {
+  color: var(--dbm-text-tertiary);
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  user-select: none;
+}

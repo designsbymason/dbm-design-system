@@ -82,6 +82,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0026](./0026-codeblock-highlights-with-a-small-built-in-tokenizer-over-a-highlighting-dependency-or-bring-your-own.md) | `CodeBlock` highlights with a small built-in tokenizer, over a highlighting dependency or bring-your-own | Accepted |
 | [0027](./0027-codeblock-languages-are-registered-by-the-app-over-loading-every-grammar-or-loading-them-asynchronously.md) | `CodeBlock` languages beyond the core are registered by the app, over loading every grammar with the component or loading them asynchronously | Accepted |
 | [0028](./0028-scrollarea-puts-native-props-on-the-outer-frame-and-routes-only-scroll-relevant-props-to-the-viewport.md) | `ScrollArea` puts native props on the outer frame and routes only scroll-relevant props (`onScroll`, `viewportRef`) to the viewport | Accepted |
+| [0029](./0029-timepicker-is-a-segmented-field-with-a-popover-and-an-hhmm-string-value.md) | `TimePicker` is a custom segmented field with a popover, whose value is an `"HH:mm"` string, over a native time input or a slot list | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

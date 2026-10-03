@@ -1,0 +1,273 @@
+/* The field's box. It is drawn like `Input`'s (the same border, radius, focus ring and height at each
+   size), because a TimePicker sits beside inputs and buttons in a form and has to match them — but it is
+   a group of several small inputs rather than one, so the box is a `div` and the ring follows
+   `:focus-within`. Each size's `padding-block` is Button's, less the border, exactly as `Input`'s is. */
+.root {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  line-height: var(--dbm-line-height-tight);
+  transition:
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.root:hover:not(.disabled):not(.error) {
+  border-color: var(--dbm-border-neutral);
+}
+
+/* The standardized `sm` focus-ring radius, as `Input`'s own `:focus-within` (see its comment). */
+.root:focus-within {
+  border-color: var(--dbm-border-focus);
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.root.error {
+  border-color: var(--dbm-border-danger);
+}
+
+.root.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* The segments and what separates them. Always left to right: the digits of a time read in that order in
+   every script, and a right-to-left page only moves the field's own parts (the buttons) to the other side. */
+.segments {
+  align-items: center;
+  direction: ltr;
+  display: inline-flex;
+  flex: 1 1 auto;
+  gap: var(--dbm-space-1);
+}
+
+.separator {
+  color: var(--dbm-text-tertiary);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* One segment: a real `<input>`, so a phone's number keyboard can type into it. Its width is two digits in the
+   field's own font (a token), so it neither grows as it fills nor jumps when a digit is typed. */
+.segment {
+  appearance: none;
+  background: none;
+  border: none;
+  border-radius: var(--dbm-radius-sm);
+  caret-color: transparent;
+  color: inherit;
+  cursor: text;
+  font-family: inherit;
+  font-size: inherit;
+  font-variant-numeric: tabular-nums;
+  inline-size: var(--dbm-time-picker-segment-width);
+  line-height: inherit;
+  min-width: 0;
+  outline: none;
+  padding: 0;
+  text-align: center;
+}
+
+/* The AM/PM segment is as wide as its longer label, set from the labels in `TimePicker.tsx`. Letters are wider than
+   the digits `ch` is measured from, so each character gets its own allowance (a token), not the digits' width. */
+.period {
+  inline-size: calc(var(--time-picker-period-chars) * var(--dbm-time-picker-period-character-width));
+}
+
+.segment::placeholder {
+  color: var(--dbm-text-tertiary);
+}
+
+/* The segment being edited: a solid brand fill with its own label colour, the clearest "this one" that keeps
+   AA (`text.on-brand` on `bg.brand`), and the same fill the picker's chosen option takes. */
+.segment:focus {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+}
+
+.segment:focus::placeholder {
+  color: var(--dbm-text-on-brand);
+}
+
+.segment:disabled {
+  cursor: not-allowed;
+}
+
+/* Sizes — `Input`'s, step for step. */
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+  padding-block: calc(var(--dbm-space-2) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-base);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-md);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-lg);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-4);
+}
+
+/* The two small buttons at the end of the field (clear, open the picker): neutral, icon-only, no fill at rest
+   and `bg.neutral-subtle` on hover, as the in-field controls of `Input`, `PasswordInput` and `NumberInput` are.
+   Local rather than `IconButton` for the reason `Input`'s `.clear` documents: that atom's boxes are as tall as
+   a whole `Button`, which would inflate this row. The padding and the compensating negative `margin-block`
+   per size are `Input`'s too, so the hit area is comfortable and the field stays Button's height. */
+.iconButton {
+  align-items: center;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--dbm-radius-full);
+  color: var(--dbm-icon-default);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.iconButton:hover:not(:disabled) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.iconButton:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.iconButton:disabled {
+  cursor: not-allowed;
+}
+
+/* At xs the icon plus its padding is 20px, under the 24px a target must be (WCAG 2.5.8), so the box is held to
+   `space-6` and the compensating margin is worked from that. It still sits inside the field's own padding. */
+.buttonXs {
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding: var(--dbm-space-1);
+  margin-block: calc((var(--dbm-font-size-xs) * var(--dbm-line-height-tight) - var(--dbm-space-6)) / 2);
+}
+
+.buttonSm {
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xs) - 2 * var(--dbm-space-2)) / 2);
+}
+
+.buttonMd {
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--dbm-icon-size-sm) - 2 * var(--dbm-space-2)) / 2);
+}
+
+.buttonLg {
+  padding: var(--dbm-space-3);
+  margin-block: calc((var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--dbm-icon-size-md) - 2 * var(--dbm-space-3)) / 2);
+}
+
+.buttonXl {
+  padding: var(--dbm-space-3);
+  margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-3)) / 2);
+}
+
+/* The picker's panel: `Popover.Content`'s own chrome with a tighter padding, since what is inside is rows of
+   options with their own padding. */
+.picker {
+  padding: var(--dbm-space-2);
+}
+
+.columns {
+  display: flex;
+  gap: var(--dbm-space-1);
+}
+
+/* One column — a listbox that scrolls by itself, so it is not wrapped in `ScrollArea`: that makes an overflowing
+   region a tab stop of its own, right for reading content and wrong for a list whose options take focus. The
+   thin native scrollbar is coloured from tokens. `position: relative` makes it the offset parent the picker
+   measures to scroll the chosen option to the middle. */
+.column {
+  display: flex;
+  flex-direction: column;
+  max-block-size: var(--dbm-time-picker-column-max-height);
+  min-inline-size: var(--dbm-space-16);
+  overflow-y: auto;
+  position: relative;
+  scrollbar-color: var(--dbm-border-neutral) transparent;
+  scrollbar-width: thin;
+}
+
+.option {
+  align-items: center;
+  border-radius: var(--dbm-radius-sm);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  font-size: var(--dbm-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  justify-content: center;
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+  user-select: none;
+}
+
+.option:hover:not([aria-disabled="true"]):not([aria-selected="true"]) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* A scrolling box clips an outside focus ring, so it is drawn inside (`05` §6). */
+.option:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.option[aria-selected="true"] {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+}
+
+/* `border.focus` can't be read on a brand fill, so the chosen option's ring is the on-brand colour. */
+.option[aria-selected="true"]:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+}
+
+.option[aria-disabled="true"] {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+/* Forced colours drops the fills, so the chosen option needs a mark that isn't a colour of its own. */
+@media (forced-colors: active) {
+  .option[aria-selected="true"] {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .segment:focus {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}

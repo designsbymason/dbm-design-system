@@ -1,0 +1,186 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { TimePicker } from "../TimePicker";
+import { TimeRangePicker } from "./TimeRangePicker";
+import * as TimeRangePickerStories from "./TimeRangePicker.stories";
+
+export const propOrder = [
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "hourCycle",
+  "showSeconds",
+  "step",
+  "min",
+  "max",
+  "size",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "required",
+  "showPicker",
+  "onClear",
+  "name",
+  "form",
+  "autoFocus",
+  "labels",
+  "formatNumber",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundExclude = ["onValueChange", "onClear", "name"];
+
+<Meta of={TimeRangePickerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="TimeRangePicker" tier="Molecule" />
+
+A start time and an end time: two `TimePicker` fields side by side, joined by a dash, whose values are one
+`[start, end]` pair of 24-hour strings. Each end has everything a `TimePicker` has (segments you type into, a
+picker, seconds, a minute `step`, `hourCycle`, a clear button), and the end can't be before the start: its picker
+disables what is earlier, and an end earlier than the start is reported as typed and flagged invalid on that end.
+It is built by composing two `TimePicker` fields, not by copying one.
+
+### Import
+
+```tsx
+import { TimeRangePicker } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TimeRangePickerStories.Playground} />
+
+</div>
+<PlaygroundControls of={TimeRangePickerStories.Playground} order={propOrder} exclude={playgroundExclude} />
+
+## Properties
+
+`TimeRangePicker` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`onFocus`) — passed straight through to the group that holds the two fields. `ref` forwards to that group, and
+the `id` goes on the start field's first segment.
+
+<PropertiesTable of={TimeRangePickerStories} order={propOrder} />
+
+## Variants
+
+### 12-hour and 24-hour
+
+<Canvas of={TimeRangePickerStories.HourCycles} />
+
+### The end can't be before the start
+
+<Canvas of={TimeRangePickerStories.Constrained} />
+
+### Controlled value
+
+<Canvas of={TimeRangePickerStories.Controlled} />
+
+### With clear buttons
+
+<Canvas of={TimeRangePickerStories.Clearable} />
+
+### In a FormField
+
+<Canvas of={TimeRangePickerStories.InFormField} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use it for a window within one day: opening hours, a meeting, a shift. Both ends are the same kind of value, so
+  one `step`, `min` and `max` apply to both.
+- Give the group a name (`aria-label`, or a `FormField` label); the two fields are named "Start time" and "End
+  time" inside it, and `labels` translates both.
+- Treat `""` in either position as "not entered yet": the pair is reported on every change, with an empty
+  string for an end that isn't complete.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a range across midnight (22:00 to 02:00): the end is held to be no earlier than the start, so
+  an overnight range reads as invalid. Use two pickers and your own rule for that.
+- Don't use it for a duration; the value is two times of day.
+- Don't treat an end before the start as refused: it is reported and flagged, and your own validation decides.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The start is not limited by the end, only the other way round: constraining both would flag the start whenever
+  the end was momentarily earlier while being typed. Validate the pair yourself on submit.
+- Both ends share `hourCycle`, `showSeconds`, `step`, `min`, `max` and `size`; if two ends need different settings
+  they are two separate `TimePicker` fields.
+- Submitted in a form, the two values travel as `name[]`, start first, the same as `RangeSlider`'s.
+
+## Accessibility
+
+<Callout tone="info" title="Two named fields in a named group">
+
+- The pair is a `role="group"` named by `aria-label` or `aria-labelledby`; each end is itself a group named
+  "Start time" or "End time", of spinbuttons named Hour, Minute… See `TimePicker` for the keyboard and for the
+  picker's dialog and listboxes.
+- The end earlier than the start sets `aria-invalid` on the end field's segments only.
+- The dash between the fields is decorative and hidden from assistive technology.
+- A dev-mode console warning fires once if the group has no accessible name.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} />
+
+{/* Controlled, in 24 hours, on a 15-minute grid, inside a working day */}
+function Example() {
+  const [range, setRange] = useState<[string, string]>(["", ""]);
+  return (
+    <TimeRangePicker
+      aria-label="Meeting"
+      value={range}
+      onValueChange={setRange}
+      hourCycle="24"
+      step={15}
+      min="08:00"
+      max="18:00"
+    />
+  );
+}
+
+{/* A form field with a label, helper text and an error */}
+<FormField label="Opening hours" error={error}>
+  {(field) => <TimeRangePicker {...field} />}
+</FormField>
+
+{/* A native <div> attribute, passed straight through to the group */}
+<TimeRangePicker aria-label="Opening hours" title="Opening hours" />
+```
+
+## Design tokens used
+
+<TokenRow token="space.2" usage="gap between the two fields and the dash" />
+<TokenRow token="text.tertiary" usage="the dash between the fields" />
+<TokenRow token="font-family.primary" usage="the dash's typography" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="TimePicker"
+  description="One time of day: what each end of the range is, with the full set of segments, picker and options"
+  href="/?path=/docs/molecules-inputs-timepicker--docs"
+>
+  <TimePicker aria-label="Time" size="xs" defaultValue="09:30" showPicker={false} />
+</RelatedCard>
+</div>

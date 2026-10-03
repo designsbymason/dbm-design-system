@@ -210,7 +210,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and all 28 molecules built so far have a Docs page, a completed review pass, and are Finalized** — full atom-tier coverage, and
+**All 48 atoms and all 30 molecules built so far have a Docs page and a completed review pass; every one is Finalized except `TimePicker` and `TimeRangePicker` (built 2026-10-03), which await the user's declaration** — full atom-tier coverage, and
 every molecule built to date. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
@@ -296,19 +296,21 @@ quoted in prose elsewhere.
 | DescriptionList | Molecule | Data Display | ✅ | ✅ 2026-09-29 | [DescriptionList.md](component-reviews/DescriptionList.md) |
 | ScrollArea | Molecule | Layout | ✅ | ✅ 2026-10-02 | [ScrollArea.md](component-reviews/ScrollArea.md) |
 | HoverCard | Molecule | Overlay | ✅ | ✅ 2026-10-03 | [HoverCard.md](component-reviews/HoverCard.md) |
+| TimePicker | Molecule | Inputs & Forms | ✅ | ⏳ built 2026-10-03, awaiting declaration | [TimePicker.md](component-reviews/TimePicker.md) |
+| TimeRangePicker | Molecule | Inputs & Forms | ✅ | ⏳ built 2026-10-03, awaiting declaration | [TimeRangePicker.md](component-reviews/TimeRangePicker.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-10-03):** every atom and 28 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-10-03):** `TimePicker` (item 26) and `TimeRangePicker` (item 26b) are built and await their Finalized declarations; every atom and 28 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`, `DescriptionList`,
 `ScrollArea`, `HoverCard`) are reviewed and Finalized — see the table above. The queue continues through the
-remaining 8 of the 36 molecules, one at a time, in the dependency order itemized in
-`04-component-inventory.md`, starting with `TimePicker` (item 26), each with the same full §9
+remaining 7 of the 37 molecules, one at a time, in the dependency order itemized in
+`04-component-inventory.md`, starting with `Toolbar` (item 27), each with the same full §9
 process.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full

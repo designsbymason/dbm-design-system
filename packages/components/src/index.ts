@@ -78,6 +78,8 @@ export * from "./molecules/Slider";
 export * from "./molecules/Stat";
 export * from "./molecules/Table";
 export * from "./molecules/Tabs";
+export * from "./molecules/TimePicker";
+export * from "./molecules/TimeRangePicker";
 export * from "./molecules/ToggleGroup";
 
 // What a consumer is meant to use from `@dbm-design-system/primitives`, re-exported so that installing only this package
