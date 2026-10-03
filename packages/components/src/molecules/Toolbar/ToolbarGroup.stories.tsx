@@ -37,7 +37,7 @@ type Story = StoryObj<typeof Toolbar.Group>;
 
 export const Default: Story = {
   render: ({ children: _children, ...args }) => (
-    <Toolbar aria-label="Document" variant="outlined" itemVariant="secondary">
+    <Toolbar aria-label="Document" surface="outlined" variant="secondary">
       <Toolbar.Group {...args}>
         <Toolbar.Button>Copy</Toolbar.Button>
         <Toolbar.Button>Paste</Toolbar.Button>

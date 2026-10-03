@@ -264,7 +264,14 @@
      */
   max-height: var(--radix-select-content-available-height);
   overflow: hidden;
-  width: var(--radix-select-trigger-width);
+  /* At least as wide as the trigger, and as wide as its longest option needs, up to the room there is. The width
+     used to be exactly the trigger's, so a narrow trigger (a small select in a toolbar, "14 pt" in 78px) made the
+     selected option, which is bold and carries a check mark, wrap onto a second line while its neighbours stayed on
+     one (found 2026-10-03). `max-content` lets the panel grow; `max-width` stops a very long label from running off
+     the screen, where wrapping is then the right thing to do. */
+  max-width: var(--radix-select-content-available-width);
+  min-width: var(--radix-select-trigger-width);
+  width: max-content;
   z-index: var(--dbm-z-index-dropdown);
 }
 

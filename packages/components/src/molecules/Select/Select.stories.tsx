@@ -1,5 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Select } from "./Select";
 import { selectPlaygroundSnippet, selectSnippets } from "./Select.snippets";
@@ -542,5 +543,38 @@ export const Controlled: Story = {
         </span>
       </div>
     );
+  },
+};
+
+// A narrow trigger: the dropdown is at least as wide as it, but grows to fit the longest option rather than wrapping a
+// bold, checked one onto a second line (the dropdown used to be exactly the trigger's width). Hidden: a real-browser
+// measurement, run as a test only.
+export const NarrowTriggerInteraction: Story = {
+  name: "Narrow trigger — interaction test",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ width: "4.5rem" }}>
+      <Select aria-label="Font size" size="sm" defaultValue="14">
+        <Select.Option value="12">12 pt</Select.Option>
+        <Select.Option value="14">14 pt</Select.Option>
+        <Select.Option value="18">18 pt</Select.Option>
+        <Select.Option value="long">Twenty-four point, large print</Select.Option>
+      </Select>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole("combobox", { name: "Font size" });
+    await userEvent.click(trigger);
+    const listbox = await within(document.body).findByRole("listbox");
+    const options = within(listbox).getAllByRole("option");
+    await waitFor(() => expect(options.length).toBe(4));
+    // No short option wraps: the 12, 14 (checked, bold) and 18 rows are all one line, the same height.
+    const heights = options.slice(0, 3).map((option) => Math.round(option.getBoundingClientRect().height));
+    await expect(new Set(heights).size).toBe(1);
+    // The panel is at least as wide as the trigger, and wide enough for its longest option's text.
+    const content = listbox.closest("[data-radix-popper-content-wrapper]")!.firstElementChild as HTMLElement;
+    await expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(trigger.getBoundingClientRect().width - 1);
+    for (const option of options) await expect(option.scrollWidth).toBeLessThanOrEqual(option.clientWidth + 1);
+    await userEvent.keyboard("{Escape}");
   },
 };

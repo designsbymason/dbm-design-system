@@ -9,8 +9,8 @@ Finalized** — the user declares that. The decision is [ADR-0032](../adr/0032-t
 ## What it is
 
 A compound component, `Toolbar` plus `Toolbar.Button`, `.IconButton`, `.ToggleGroup`, `.ToggleItem`, `.Item`,
-`.Group`, `.Separator` and `.Spacer`. The root is a named `role="toolbar"`: `variant` (how the bar is drawn: `ghost`
-default, `outlined`, `filled`), `itemVariant` (every item's default look, `ghost` default), `size`,
+`.Group`, `.Separator` and `.Spacer`. The root is a named `role="toolbar"`: `surface` (how the bar is drawn: `ghost`
+default, `outlined`, `filled`), `variant` (every item's default look, `ghost` default), `size`,
 `rounded`, `disabled`, `orientation` (a breakpoint map too), `dir`, `loop`, `fullWidth`, `align`, `overflow`
 (`visible`/`wrap`/`scroll`), `sticky` (with `stickyOffset` and `scrollContainerRef`).
 `Toolbar.Button` and `Toolbar.IconButton` are the atoms in the arrow-key order and take every prop of
@@ -27,10 +27,13 @@ primitive tokens only (the Docs page lists them, and a test keeps the list true)
 
 - **Wrapper parts, not automatic membership** (ADR-0032): a plain `Button` in a bar is just another tab stop,
   and the docs, a Do/Don't and a test say so.
-- **`itemVariant`, not `variant`, for the buttons' look**: `variant` is the shared name for how a component
-  itself is drawn (`ghost`/`outlined`/`filled`, as on `Card` and `EmptyState`), so the buttons' default needed
-  another name. Open for the user: `ButtonGroup`'s `variant` means the buttons' look, so the two molecules now
-  use the word differently.
+- **`variant` is the items' look and `surface` is the bar's** (renamed 2026-10-03 from `itemVariant` and `variant`, at the
+  user's go-ahead after a recommendation). The first version used `variant` for the bar (the name `Card` and `EmptyState` use for
+  their own look) and `itemVariant` for the buttons, which made `Toolbar` the odd one out: in the group-style molecules
+  `variant` is the controls' look (`ButtonGroup`'s buttons, `ToggleGroup`'s items, `Pagination`'s controls), so an agent
+  writing `<Toolbar variant="secondary">` by analogy got a type error. The bar's three values keep the shared vocabulary
+  (`ghost`/`outlined`/`filled`). A breaking rename against the first two pushes, accepted because the package is unpublished
+  and `Toolbar` isn't Finalized. The story "Bar variants" became "Bar surfaces", and its snippet and docs heading with it.
 - **`Divider` atom not reused for the separator.** The atom is a 100%-wide or 100%-high flex box with a
   label slot and its own responsive orientation, and sets its own `role` and `aria-orientation` after its spread
   props; the toolbar needs a fixed hairline whose orientation Radix already derives from the bar's. Radix's
@@ -62,7 +65,7 @@ Toolbar was not yet declared Finalized, so these are part of the build, not a re
   focused item is positioned and its neighbour is not, and fails when the rule is removed. A screenshot of the fix
   could not be taken (the browser pane was hidden), so it rests on that computed-style check plus the user's own eyes.
 - **"Show code" snippets re-read against each story, and rewritten to match.** Found: Item variants showed a "Save"
-  primary button the story doesn't draw; Responsive left out `itemVariant="secondary"`; RTL, Labelled and the Playground
+  primary button the story doesn't draw; Responsive left out `variant="secondary"` (then called `itemVariant`); RTL, Labelled and the Playground
   showed two icons where the stories draw three icons, a rule and a Link; Sizes and Rounded showed two icons; an unused
   `basic` snippet had no story. Each snippet now writes out exactly what its story renders (the shared demo bar is
   spelled out in every one), except where the story's own point is a set of values (Item variants, All sizes), which
@@ -177,3 +180,18 @@ removed, the scroll-end button never shown.
   beyond what the scroller shows.
 - A sticky **ghost** bar gets an opaque surface; a transparent sticky bar over scrolling content would be unreadable.
 - Disabled items still can't be focused (Radix), and there is still no overflow *menu* (needs the `Menu` organism).
+
+## Third round (2026-10-03): rename, hidden stories, and a `Select` defect it found
+
+- **Rename**: see "`variant` is the items' look and `surface` is the bar's" above. Everything that named the props moved with it
+  (types, stories, snippets, docs page, tests, the component's own `data-surface` attribute), and the snippets were re-checked
+  against the real components.
+- **The interaction-test stories were never hidden.** Each carried `tags: ["!dev"]`, but through a shared object spread
+  (`...hidden`), and Storybook's indexer reads `tags` only from a literal property of the story, so all 16 stayed in the
+  sidebar (the Docs page was unaffected, since it embeds only what it names). Found by reading `index.json` after the user
+  reported how many Toolbar stories were showing. Each story now writes `tags: ["!dev"]` itself, and `src/storyTags.test.ts`
+  scans every stories file: any story named "… — interaction test" must carry a literal `!dev` tag (no other component had the
+  problem). Broken on purpose once to see it fail.
+- **`Select`'s dropdown wrapped its selected option in a narrow trigger.** Found through the "A select and a popover" story:
+  the dropdown was exactly the trigger's width, so a 78px trigger left the bold, checked "14 pt" row too narrow and it wrapped
+  to a second line while its neighbours did not. A component defect, not the story's; fixed in `Select` ([Select.md](Select.md)).

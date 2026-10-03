@@ -246,9 +246,9 @@ describe("Toolbar", () => {
       );
     });
 
-    it("hands itemVariant, size and rounded to items, and lets an item's own props win", () => {
+    it("hands variant, size and rounded to items, and lets an item's own props win", () => {
       render(
-        <Toolbar aria-label="Bar" itemVariant="secondary" size="sm" rounded>
+        <Toolbar aria-label="Bar" variant="secondary" size="sm" rounded>
           <Toolbar.Button>Plain</Toolbar.Button>
           <Toolbar.Button variant="primary" size="lg">
             Own
@@ -267,12 +267,12 @@ describe("Toolbar", () => {
       );
     });
 
-    it("draws the bar by variant", () => {
+    it("draws the bar by surface", () => {
       const { rerender } = render(<Bar data-testid="bar" />);
       expect(screen.getByTestId("bar")).not.toHaveClass(styles.outlined!, styles.filled!);
-      rerender(<Bar data-testid="bar" variant="outlined" />);
+      rerender(<Bar data-testid="bar" surface="outlined" />);
       expect(screen.getByTestId("bar")).toHaveClass(styles.outlined!);
-      rerender(<Bar data-testid="bar" variant="filled" overflow="wrap" />);
+      rerender(<Bar data-testid="bar" surface="filled" overflow="wrap" />);
       expect(screen.getByTestId("bar")).toHaveClass(styles.filled!, styles.wrap!);
     });
 
@@ -316,7 +316,7 @@ describe("Toolbar", () => {
 
     it("lets a ButtonGroup inside it keep the toolbar's settings", () => {
       render(
-        <Toolbar aria-label="Bar" itemVariant="secondary" disabled>
+        <Toolbar aria-label="Bar" variant="secondary" disabled>
           <ButtonGroup aria-label="Inner">
             <Button>One</Button>
           </ButtonGroup>
@@ -638,7 +638,7 @@ describe("Toolbar", () => {
     it("is a named group of ButtonGroup's, with its items still in the arrow-key order", async () => {
       const user = userEvent.setup();
       render(
-        <Toolbar aria-label="Bar" itemVariant="secondary">
+        <Toolbar aria-label="Bar" variant="secondary">
           <Toolbar.Group aria-label="Style" attached data-testid="group">
             <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
             <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
@@ -691,7 +691,7 @@ describe("Toolbar", () => {
 
   describe("overflow", () => {
     it("scroll: wraps the bar in a frame with the surface, and the bar is the scroller", () => {
-      render(<Bar overflow="scroll" variant="outlined" data-testid="bar" />);
+      render(<Bar overflow="scroll" surface="outlined" data-testid="bar" />);
       const bar = screen.getByTestId("bar");
       const frame = bar.parentElement!;
       expect(frame).toHaveClass(styles.frame!, styles.outlined!);
@@ -778,7 +778,7 @@ describe("Toolbar", () => {
     });
 
     it("sticks the frame, not the inner bar, when it also scrolls", () => {
-      render(<Bar sticky overflow="scroll" variant="outlined" data-testid="bar" />);
+      render(<Bar sticky overflow="scroll" surface="outlined" data-testid="bar" />);
       const bar = screen.getByTestId("bar");
       expect(bar.parentElement).toHaveClass(styles.sticky!, styles.frame!);
       expect(bar).not.toHaveClass(styles.sticky!);
@@ -817,8 +817,8 @@ describe("Toolbar", () => {
     it("has no axe violations when vertical, disabled, or with a link item", async () => {
       const { container } = render(
         <>
-          <Bar orientation="vertical" variant="outlined" />
-          <Bar disabled variant="filled" />
+          <Bar orientation="vertical" surface="outlined" />
+          <Bar disabled surface="filled" />
           <Toolbar aria-label="Links">
             <Toolbar.Item>
               <a href="/docs">Docs</a>

@@ -14,8 +14,8 @@ import * as ToolbarItemStories from "./ToolbarItem.stories";
 
 export const propOrder = [
   "children",
+  "surface",
   "variant",
-  "itemVariant",
   "size",
   "rounded",
   "disabled",
@@ -49,7 +49,7 @@ export const groupPropOrder = ["children", "attached", "aria-label", "aria-label
 
 A bar of actions that is a single tab stop. `Tab` moves focus into the toolbar and out again; the arrow keys,
 `Home` and `End` move between its items — left and right for a row, up and down for a column. It is a named
-`role="toolbar"` built on Radix `Toolbar`, and it hands its `itemVariant`, `size`, `rounded` and `disabled` to the
+`role="toolbar"` built on Radix `Toolbar`, and it hands its `variant`, `size`, `rounded` and `disabled` to the
 `Toolbar.Button`s and `Toolbar.IconButton`s inside it as defaults, so a bar of ten says them once. An item's own
 props still win.
 
@@ -117,16 +117,16 @@ The parts of a toolbar:
 
 ## Variants
 
-### Bar variants
+### Bar surfaces
 
-`variant` is how the bar itself is drawn: no surface of its own (`ghost`), a bordered bar (`outlined`) or a tinted
+`surface` is how the bar itself is drawn: no surface of its own (`ghost`), a bordered bar (`outlined`) or a tinted
 one (`filled`). A ghost bar has no padding, so its items line up with whatever sits beside it.
 
-<Canvas of={ToolbarStories.Variants} />
+<Canvas of={ToolbarStories.Surfaces} />
 
 ### Item variants
 
-`itemVariant` is every item's default look. `ghost` keeps a row of icon buttons quiet; `secondary` or `primary` suit a
+`variant` is every item's default look, as it is on `ButtonGroup`. `ghost` keeps a row of icon buttons quiet; `secondary` or `primary` suit a
 bar of labelled actions.
 
 <Canvas of={ToolbarStories.ItemVariants} />
@@ -276,7 +276,7 @@ forwards in the page does so in the toolbar too.
 - Give it a name (`aria-label`, or `aria-labelledby` pointing at a visible label), and name each `Toolbar.Group` too.
 - Build it from `Toolbar.Button`, `Toolbar.IconButton`, `Toolbar.ToggleGroup` and `Toolbar.Item`, so every command is in the arrow-key order.
 - Give each `IconButton` an `aria-label`, and add a `Tooltip` where an icon alone is not clear.
-- Say `itemVariant` and `size` once on the toolbar, and override only the odd item out.
+- Say `variant` and `size` once on the toolbar, and override only the odd item out.
 - Keep a toolbar short — a handful to a dozen items — and group related commands with separators.
 
 </Callout>
@@ -336,7 +336,7 @@ forwards in the page does so in the toolbar too.
 ## Code examples
 
 ```tsx
-<Toolbar aria-label="Text formatting" variant="outlined">
+<Toolbar aria-label="Text formatting" surface="outlined">
   <Toolbar.Group aria-label="Text style" attached>
     <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" tooltip pressed={bold} onPressedChange={setBold} />
     <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" tooltip />
@@ -354,7 +354,7 @@ forwards in the page does so in the toolbar too.
 
 <Toolbar aria-label="Tools" orientation="vertical">…</Toolbar>
 <Toolbar aria-label="Actions" orientation={{ base: "vertical", md: "horizontal" }}>…</Toolbar>
-<Toolbar aria-label="Actions" itemVariant="secondary" size="sm" rounded overflow="wrap">…</Toolbar>
+<Toolbar aria-label="Actions" variant="secondary" size="sm" rounded overflow="wrap">…</Toolbar>
 <Toolbar aria-label="Actions" overflow="scroll">…</Toolbar>
 <Toolbar aria-label="Editor" sticky stickyOffset={4} scrollContainerRef={panelRef}>…</Toolbar>
 <Toolbar aria-label="Document" fullWidth align="end">…</Toolbar>

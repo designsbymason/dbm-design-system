@@ -9,6 +9,6 @@ export type {
   ToolbarProps,
   ToolbarSeparatorProps,
   ToolbarSpacerProps,
+  ToolbarSurface,
   ToolbarToggleGroupProps,
-  ToolbarVariant,
 } from "./Toolbar.types";

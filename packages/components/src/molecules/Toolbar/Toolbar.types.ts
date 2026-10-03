@@ -5,7 +5,7 @@ import type { SpacerProps } from "../../atoms/Spacer";
 import type { ToggleGroupMultipleProps, ToggleGroupSingleProps } from "../ToggleGroup";
 
 export type ToolbarOrientation = "horizontal" | "vertical";
-export type ToolbarVariant = "ghost" | "outlined" | "filled";
+export type ToolbarSurface = "ghost" | "outlined" | "filled";
 export type ToolbarDirection = "ltr" | "rtl";
 export type ToolbarAlign = "start" | "center" | "end";
 /** What a bar does when its items don't fit: `visible` (overflow the container), `wrap` onto more lines, or `scroll`. */
@@ -19,24 +19,25 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
    */
   children?: ReactNode;
   /**
-   * How the bar itself is drawn: `ghost` (no surface of its own, the items sit on the page), `outlined` (a
-   * bordered bar) or `filled` (a tinted bar).
+   * How the bar itself is drawn: `ghost` (no surface of its own, the items sit on the page), `outlined` (a bordered bar)
+   * or `filled` (a tinted bar). The same three names `Card` and `EmptyState` use for their `variant`; it is `surface` here
+   * because `variant` is the look of the items, as it is on `ButtonGroup`, `ToggleGroup` and `Pagination`.
    * @default 'ghost'
    */
-  variant?: ToolbarVariant;
+  surface?: ToolbarSurface;
   /**
-   * The visual style every `Toolbar.Button` and `Toolbar.IconButton` uses unless it sets its own `variant`.
-   * `ghost` keeps a row of icon buttons quiet; use `secondary` or `primary` for a bar of labelled actions.
+   * The visual style every `Toolbar.Button` and `Toolbar.IconButton` uses unless it sets its own `variant`. `ghost` keeps
+   * a row of icon buttons quiet; use `secondary` or `primary` for a bar of labelled actions.
    * @default 'ghost'
    */
-  itemVariant?: ButtonVariant;
+  variant?: ButtonVariant;
   /**
    * The size of the bar's padding and gaps and the default `size` of every item, on the shared scale.
    * @default 'md'
    */
   size?: ButtonSize;
   /**
-   * Fully rounded items, and a pill-shaped bar when `variant` draws one. Also the default for each item's own
+   * Fully rounded items, and a pill-shaped bar when `surface` draws one. Also the default for each item's own
    * `rounded`.
    * @default false
    */

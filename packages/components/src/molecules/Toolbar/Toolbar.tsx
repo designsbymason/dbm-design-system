@@ -57,7 +57,7 @@ function prefersReducedMotion(): boolean {
 /**
  * A bar of actions that is one tab stop: `Tab` moves focus into the toolbar and out again, and the arrow keys
  * (`Home` and `End` too) move between its items — left and right for a row, up and down for a column. Built on
- * Radix `Toolbar`, it is a `role="toolbar"` with a name, and it hands its `itemVariant`, `size`, `rounded` and
+ * Radix `Toolbar`, it is a `role="toolbar"` with a name, and it hands its `variant`, `size`, `rounded` and
  * `disabled` to the `Toolbar.Button`s and `Toolbar.IconButton`s inside it as defaults — an item's own prop still wins.
  *
  * Parts: `Toolbar.Button`, `Toolbar.IconButton` (the `Button` and `IconButton` atoms, in the arrow-key order),
@@ -90,8 +90,8 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
   (
     {
       children,
+      surface = "ghost",
       variant = "ghost",
-      itemVariant = "ghost",
       size = "md",
       rounded = false,
       disabled = false,
@@ -132,12 +132,12 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
     const parentDisabled = parent?.disabled;
     const buttonSettings = useMemo(
       () => ({
-        variant: itemVariant,
+        variant,
         size,
         rounded: rounded || (parent?.rounded ?? false),
         disabled: disabled || parentDisabled,
       }),
-      [itemVariant, size, rounded, parent?.rounded, disabled, parentDisabled],
+      [variant, size, rounded, parent?.rounded, disabled, parentDisabled],
     );
     const toolbarSettings = useMemo<ToolbarContextValue>(
       () => ({
@@ -166,8 +166,8 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
     // fades and buttons sit inside, so it has to be the one with the surface).
     const surfaceClasses = cx(
       sticky && styles.sticky,
-      variant === "outlined" && styles.outlined,
-      variant === "filled" && styles.filled,
+      surface === "outlined" && styles.outlined,
+      surface === "filled" && styles.filled,
       rounded && styles.rounded,
       fullWidth && styles.fullWidth,
     );
@@ -190,7 +190,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
         data-align={alignValues.includes(align) ? align : "start"}
         className={cx(
           styles.root,
-          variant === "ghost" && styles.ghost,
+          surface === "ghost" && styles.ghost,
           isScroller ? styles.scroller : surfaceClasses,
           overflow === "wrap" && styles.wrap,
           className,
@@ -207,7 +207,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       <div
         className={cx(styles.frame, surfaceClasses)}
         data-orientation={resolvedOrientation}
-        data-variant={variant}
+        data-surface={surface}
         data-overflow-start={overflowStart}
         data-overflow-end={overflowEnd}
         // The frame is the outermost element, so a sticky bar sticks as one box, fades and buttons with it.

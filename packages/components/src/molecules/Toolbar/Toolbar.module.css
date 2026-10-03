@@ -151,7 +151,7 @@
   position: relative;
 }
 
-.frame[data-variant="filled"] {
+.frame[data-surface="filled"] {
   --toolbar-fade: var(--dbm-bg-neutral-subtle);
 }
 

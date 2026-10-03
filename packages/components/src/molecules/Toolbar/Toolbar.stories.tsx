@@ -48,13 +48,14 @@ const meta: Meta<ToolbarProps> = {
   // Core visual props first, then behavioral/state props, then advanced/escape-hatch props last — the same
   // sequencing as every other component's stories file (07-storybook-and-documentation-standards.md §4 item 3).
   argTypes: {
-    variant: {
+    surface: {
       control: "select",
       options: ["ghost", "outlined", "filled"],
-      description: "How the bar itself is drawn: ghost (no surface of its own), outlined (a bordered bar) or filled (a tinted bar).",
+      description:
+        "How the bar itself is drawn: ghost (no surface of its own), outlined (a bordered bar) or filled (a tinted bar). The names Card and EmptyState use for their variant; surface here because variant is the look of the items.",
       table: { defaultValue: { summary: "ghost" } },
     },
-    itemVariant: {
+    variant: {
       control: "select",
       options: ["ghost", "tertiary", "secondary", "primary", "destructive"],
       description: "The visual style every Toolbar.Button and Toolbar.IconButton uses unless it sets its own variant.",
@@ -68,7 +69,7 @@ const meta: Meta<ToolbarProps> = {
     },
     rounded: {
       control: "boolean",
-      description: "Fully rounded items, and a pill-shaped bar when variant draws one. Also the default for each item's own rounded.",
+      description: "Fully rounded items, and a pill-shaped bar when surface draws one. Also the default for each item's own rounded.",
       table: { defaultValue: { summary: "false" } },
     },
     disabled: {
@@ -148,8 +149,8 @@ const meta: Meta<ToolbarProps> = {
   },
   // Every controllable prop gets an explicit value here, matching its real default.
   args: {
+    surface: "ghost",
     variant: "ghost",
-    itemVariant: "ghost",
     size: "md",
     rounded: false,
     disabled: false,
@@ -184,18 +185,18 @@ const playgroundSource = {
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
   // A ghost bar has no edge of its own, so the Playground starts drawn to be visible.
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   parameters: playgroundSource,
 };
 
-export const Variants: Story = {
-  name: "Bar variants",
-  parameters: { docs: { source: { code: toolbarSnippets.variants } } },
-  argTypes: { variant: noControls, "aria-label": noControls },
+export const Surfaces: Story = {
+  name: "Bar surfaces",
+  parameters: { docs: { source: { code: toolbarSnippets.surfaces } } },
+  argTypes: { surface: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={column}>
-      {(["ghost", "outlined", "filled"] as const).map((variant) => (
-        <Toolbar key={variant} {...args} variant={variant} aria-label={`${variant} bar`}>
+      {(["ghost", "outlined", "filled"] as const).map((surface) => (
+        <Toolbar key={surface} {...args} surface={surface} aria-label={`${surface} bar`}>
           <DemoItems />
         </Toolbar>
       ))}
@@ -205,13 +206,13 @@ export const Variants: Story = {
 
 export const ItemVariants: Story = {
   name: "Item variants",
-  parameters: { docs: { source: { code: toolbarSnippets.itemVariants } } },
-  args: { variant: "outlined" },
-  argTypes: { itemVariant: noControls, "aria-label": noControls },
+  parameters: { docs: { source: { code: toolbarSnippets.variants } } },
+  args: { surface: "outlined" },
+  argTypes: { variant: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={column}>
-      {(["ghost", "tertiary", "secondary", "primary", "destructive"] as const).map((itemVariant) => (
-        <Toolbar key={itemVariant} {...args} itemVariant={itemVariant} aria-label={`${itemVariant} items`}>
+      {(["ghost", "tertiary", "secondary", "primary", "destructive"] as const).map((variant) => (
+        <Toolbar key={variant} {...args} variant={variant} aria-label={`${variant} items`}>
           <Toolbar.Button>Copy</Toolbar.Button>
           <Toolbar.Button>Paste</Toolbar.Button>
           <Toolbar.IconButton icon={TrashIcon} aria-label="Delete" />
@@ -224,7 +225,7 @@ export const ItemVariants: Story = {
 export const AllSizes: Story = {
   name: "All sizes",
   parameters: { docs: { source: { code: toolbarSnippets.sizes } } },
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   argTypes: { size: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={column}>
@@ -239,7 +240,7 @@ export const AllSizes: Story = {
 
 export const Rounded: Story = {
   parameters: { docs: { source: { code: toolbarSnippets.rounded } } },
-  args: { rounded: true, variant: "outlined" },
+  args: { rounded: true, surface: "outlined" },
   argTypes: { rounded: noControls },
   render: (args) => (
     <Toolbar {...args}>
@@ -251,7 +252,7 @@ export const Rounded: Story = {
 export const Groups: Story = {
   name: "Groups and separators",
   parameters: { docs: { source: { code: toolbarSnippets.groups } } },
-  args: { variant: "outlined", "aria-label": "Editor" },
+  args: { surface: "outlined", "aria-label": "Editor" },
   argTypes: { "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
@@ -271,8 +272,8 @@ export const Groups: Story = {
 export const WithSpacer: Story = {
   name: "With a spacer",
   parameters: { docs: { source: { code: toolbarSnippets.spacer } } },
-  args: { variant: "outlined", itemVariant: "secondary", fullWidth: true, "aria-label": "Document" },
-  argTypes: { itemVariant: noControls, fullWidth: noControls, "aria-label": noControls },
+  args: { surface: "outlined", variant: "secondary", fullWidth: true, "aria-label": "Document" },
+  argTypes: { variant: noControls, fullWidth: noControls, "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
       <Toolbar.Button>Edit</Toolbar.Button>
@@ -286,7 +287,7 @@ export const WithSpacer: Story = {
 export const Align: Story = {
   name: "Aligning the items",
   parameters: { docs: { source: { code: toolbarSnippets.align } } },
-  args: { variant: "outlined", fullWidth: true },
+  args: { surface: "outlined", fullWidth: true },
   argTypes: { align: noControls, fullWidth: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={{ ...column, alignItems: "stretch" }}>
@@ -302,7 +303,7 @@ export const Align: Story = {
 export const Toggles: Story = {
   name: "Toggle buttons",
   parameters: { docs: { source: { code: toolbarSnippets.toggles } } },
-  args: { variant: "outlined", "aria-label": "Text style" },
+  args: { surface: "outlined", "aria-label": "Text style" },
   argTypes: { "aria-label": noControls },
   render: function Render(args) {
     const [bold, setBold] = useState(true);
@@ -317,7 +318,7 @@ export const Toggles: Story = {
 
 export const Vertical: Story = {
   parameters: { docs: { source: { code: toolbarSnippets.vertical } } },
-  args: { orientation: "vertical", variant: "outlined", "aria-label": "Tools" },
+  args: { orientation: "vertical", surface: "outlined", "aria-label": "Tools" },
   argTypes: { orientation: noControls, "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
@@ -332,8 +333,8 @@ export const Vertical: Story = {
 export const ResponsiveOrientation: Story = {
   name: "A column on a phone, a row from md up",
   parameters: { docs: { source: { code: toolbarSnippets.responsive } } },
-  args: { variant: "outlined", itemVariant: "secondary", orientation: { base: "vertical", md: "horizontal" }, "aria-label": "Actions" },
-  argTypes: { orientation: noControls, itemVariant: noControls, "aria-label": noControls },
+  args: { surface: "outlined", variant: "secondary", orientation: { base: "vertical", md: "horizontal" }, "aria-label": "Actions" },
+  argTypes: { orientation: noControls, variant: noControls, "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
       <Toolbar.Button>Edit</Toolbar.Button>
@@ -345,8 +346,8 @@ export const ResponsiveOrientation: Story = {
 export const Wrapping: Story = {
   name: "Wrapping onto more lines",
   parameters: { docs: { source: { code: toolbarSnippets.wrap } } },
-  args: { overflow: "wrap", variant: "outlined", itemVariant: "secondary", "aria-label": "Actions" },
-  argTypes: { overflow: noControls, itemVariant: noControls, "aria-label": noControls },
+  args: { overflow: "wrap", surface: "outlined", variant: "secondary", "aria-label": "Actions" },
+  argTypes: { overflow: noControls, variant: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={{ maxWidth: "16rem" }}>
       <Toolbar {...args}>
@@ -362,8 +363,8 @@ export const Wrapping: Story = {
 export const Scrolling: Story = {
   name: "Scrolling in one line",
   parameters: { docs: { source: { code: toolbarSnippets.scroll } } },
-  args: { overflow: "scroll", variant: "outlined", itemVariant: "secondary", "aria-label": "Actions" },
-  argTypes: { overflow: noControls, itemVariant: noControls, "aria-label": noControls },
+  args: { overflow: "scroll", surface: "outlined", variant: "secondary", "aria-label": "Actions" },
+  argTypes: { overflow: noControls, variant: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={{ maxWidth: "18rem" }}>
       <Toolbar {...args}>
@@ -381,7 +382,7 @@ export const Scrolling: Story = {
 export const ScrollingColumn: Story = {
   name: "Scrolling in a column",
   parameters: { docs: { source: { code: toolbarSnippets.scrollColumn } } },
-  args: { overflow: "scroll", orientation: "vertical", variant: "outlined", "aria-label": "Tools" },
+  args: { overflow: "scroll", orientation: "vertical", surface: "outlined", "aria-label": "Tools" },
   argTypes: { overflow: noControls, orientation: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={{ height: "10rem" }}>
@@ -401,7 +402,7 @@ export const ScrollingColumn: Story = {
 export const Sticky: Story = {
   name: "Sticky",
   parameters: { docs: { source: { code: toolbarSnippets.sticky } } },
-  args: { sticky: true, variant: "outlined", "aria-label": "Text formatting" },
+  args: { sticky: true, surface: "outlined", "aria-label": "Text formatting" },
   argTypes: { sticky: noControls, "aria-label": noControls },
   // Stuck to the top of a box that scrolls (`scrollContainerRef`), not of the Docs page.
   render: function Render(args) {
@@ -424,8 +425,8 @@ export const Sticky: Story = {
 export const AttachedGroup: Story = {
   name: "Attached groups",
   parameters: { docs: { source: { code: toolbarSnippets.attached } } },
-  args: { variant: "outlined", itemVariant: "secondary", "aria-label": "Editor" },
-  argTypes: { itemVariant: noControls, "aria-label": noControls },
+  args: { surface: "outlined", variant: "secondary", "aria-label": "Editor" },
+  argTypes: { variant: noControls, "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
       <Toolbar.Group aria-label="Text style" attached>
@@ -445,7 +446,7 @@ export const AttachedGroup: Story = {
 export const ToggleGroups: Story = {
   name: "Single and multiple choice",
   parameters: { docs: { source: { code: toolbarSnippets.toggleGroups } } },
-  args: { variant: "outlined", "aria-label": "Text formatting" },
+  args: { surface: "outlined", "aria-label": "Text formatting" },
   argTypes: { "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
@@ -466,7 +467,7 @@ export const ToggleGroups: Story = {
 export const WithTooltips: Story = {
   name: "Icon buttons with tooltips",
   parameters: { docs: { source: { code: toolbarSnippets.tooltips } } },
-  args: { variant: "outlined", "aria-label": "Text formatting" },
+  args: { surface: "outlined", "aria-label": "Text formatting" },
   argTypes: { "aria-label": noControls },
   render: (args) => (
     <div style={{ paddingBlockStart: "var(--dbm-space-10)" }}>
@@ -482,7 +483,7 @@ export const WithTooltips: Story = {
 export const WithSelectAndPopover: Story = {
   name: "A select and a popover",
   parameters: { docs: { source: { code: toolbarSnippets.selectAndPopover } } },
-  args: { variant: "outlined", "aria-label": "Editor" },
+  args: { surface: "outlined", "aria-label": "Editor" },
   argTypes: { "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
@@ -510,8 +511,8 @@ export const WithSelectAndPopover: Story = {
 
 export const Disabled: Story = {
   parameters: { docs: { source: { code: toolbarSnippets.disabled } } },
-  args: { disabled: true, variant: "outlined", itemVariant: "secondary", "aria-label": "Document" },
-  argTypes: { disabled: noControls, itemVariant: noControls, "aria-label": noControls },
+  args: { disabled: true, surface: "outlined", variant: "secondary", "aria-label": "Document" },
+  argTypes: { disabled: noControls, variant: noControls, "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
       <Toolbar.Button>Copy</Toolbar.Button>
@@ -523,7 +524,7 @@ export const Disabled: Story = {
 export const Wrapped: Story = {
   name: "Wrapped in a tooltip, or a link",
   parameters: { docs: { source: { code: toolbarSnippets.wrapped } } },
-  args: { variant: "outlined", "aria-label": "Document" },
+  args: { surface: "outlined", "aria-label": "Document" },
   argTypes: { "aria-label": noControls },
   render: (args) => (
     <Toolbar {...args}>
@@ -544,7 +545,7 @@ export const Wrapped: Story = {
 export const RightToLeft: Story = {
   name: "Right to left",
   parameters: { docs: { source: { code: toolbarSnippets.rtl } } },
-  args: { dir: "rtl", variant: "outlined" },
+  args: { dir: "rtl", surface: "outlined" },
   argTypes: { dir: noControls },
   render: (args) => (
     <div dir="rtl">
@@ -558,7 +559,7 @@ export const RightToLeft: Story = {
 export const LabelledBy: Story = {
   name: "Named by a visible label",
   parameters: { docs: { source: { code: toolbarSnippets.labelled } } },
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   argTypes: { "aria-label": noControls },
   render: ({ "aria-label": _label, ...args }) => (
     <div style={column}>
@@ -572,7 +573,10 @@ export const LabelledBy: Story = {
 
 // ---- Hidden real-browser checks (07-storybook-and-documentation-standards.md §5): what jsdom can't evaluate. ----
 
-const hidden = { tags: ["!dev"], argTypes: { variant: noControls } } satisfies Partial<Story>;
+// The shared argTypes for the hidden checks below. `tags: ["!dev"]` is written out on each story and not shared through
+// this object: Storybook's indexer reads `tags` only from a literal property, so a spread (`...hidden`) is invisible to it
+// and the story stayed in the sidebar (found 2026-10-03).
+const hidden = { argTypes: { surface: noControls } } satisfies Partial<Story>;
 
 const Items = ({ count = 3 }: { count?: number }) => (
   <>
@@ -584,8 +588,9 @@ const Items = ({ count = 3 }: { count?: number }) => (
 
 export const KeyboardInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Keyboard — interaction test",
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   render: (args) => (
     <>
       <button>before</button>
@@ -613,8 +618,9 @@ export const KeyboardInteraction: Story = {
 
 export const RightToLeftInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Right to left — interaction test",
-  args: { dir: "rtl", variant: "outlined" },
+  args: { dir: "rtl", surface: "outlined" },
   render: (args) => (
     <div dir="rtl">
       <Toolbar {...args}>
@@ -636,8 +642,9 @@ export const RightToLeftInteraction: Story = {
 
 export const LayoutInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Layout — interaction test",
-  args: { variant: "outlined", itemVariant: "secondary", fullWidth: true },
+  args: { surface: "outlined", variant: "secondary", fullWidth: true },
   render: (args) => (
     <div style={{ width: "30rem" }}>
       <Toolbar {...args} data-testid="bar">
@@ -667,8 +674,9 @@ export const LayoutInteraction: Story = {
 
 export const AlignInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Align — interaction test",
-  args: { variant: "outlined", fullWidth: true },
+  args: { surface: "outlined", fullWidth: true },
   render: (args) => (
     <div style={{ width: "30rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
       {(["start", "center", "end"] as const).map((align) => (
@@ -694,8 +702,9 @@ export const AlignInteraction: Story = {
 
 export const FocusRingInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Focus ring over a neighbour — interaction test",
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   render: (args) => (
     <Toolbar {...args}>
       <Items />
@@ -727,8 +736,9 @@ const ScrollItems = () => (
 
 export const ScrollInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Scrolling — interaction test",
-  args: { overflow: "scroll", variant: "outlined", itemVariant: "secondary" },
+  args: { overflow: "scroll", surface: "outlined", variant: "secondary" },
   render: (args) => (
     <div style={{ width: "16rem" }}>
       <Toolbar {...args} aria-label="Actions" data-testid="bar">
@@ -771,8 +781,9 @@ export const ScrollInteraction: Story = {
 
 export const ScrollRightToLeftInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Scrolling, right to left — interaction test",
-  args: { overflow: "scroll", variant: "outlined", itemVariant: "secondary", dir: "rtl" },
+  args: { overflow: "scroll", surface: "outlined", variant: "secondary", dir: "rtl" },
   render: (args) => (
     <div dir="rtl" style={{ width: "16rem" }}>
       <Toolbar {...args} aria-label="Actions" data-testid="bar">
@@ -797,8 +808,9 @@ export const ScrollRightToLeftInteraction: Story = {
 
 export const ScrollColumnInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Scrolling column — interaction test",
-  args: { overflow: "scroll", orientation: "vertical", variant: "outlined" },
+  args: { overflow: "scroll", orientation: "vertical", surface: "outlined" },
   render: (args) => (
     <div style={{ height: "8rem" }}>
       <Toolbar {...args} aria-label="Tools" data-testid="bar">
@@ -823,8 +835,9 @@ export const ScrollColumnInteraction: Story = {
 
 export const StickyInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Sticky — interaction test",
-  args: { sticky: true, variant: "ghost" },
+  args: { sticky: true, surface: "ghost" },
   render: function Render(args) {
     const scrollRef = useRef<HTMLDivElement>(null);
     return (
@@ -854,8 +867,9 @@ export const StickyInteraction: Story = {
 
 export const AttachedInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Attached group — interaction test",
-  args: { variant: "outlined", itemVariant: "secondary" },
+  args: { surface: "outlined", variant: "secondary" },
   render: (args) => (
     <Toolbar {...args} aria-label="Editor">
       <Toolbar.Group aria-label="Text style" attached data-testid="group">
@@ -882,8 +896,9 @@ export const AttachedInteraction: Story = {
 
 export const ToggleGroupInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Toggle group in a toolbar — interaction test",
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   render: (args) => (
     <>
       <button>before</button>
@@ -923,8 +938,9 @@ export const ToggleGroupInteraction: Story = {
 
 export const TooltipInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Tooltip — interaction test",
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   render: (args) => (
     <div style={{ paddingBlockStart: "4rem" }}>
       <Toolbar {...args} aria-label="Formatting">
@@ -949,8 +965,9 @@ export const TooltipInteraction: Story = {
 
 export const TargetSizeInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Target size — interaction test",
-  args: { variant: "outlined" },
+  args: { surface: "outlined" },
   render: (args) => (
     <div style={column}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
@@ -973,8 +990,9 @@ export const TargetSizeInteraction: Story = {
 
 export const VerticalInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Vertical — interaction test",
-  args: { variant: "outlined", orientation: "vertical" },
+  args: { surface: "outlined", orientation: "vertical" },
   render: (args) => (
     <Toolbar {...args} aria-label="Tools">
       <Items />
@@ -995,9 +1013,10 @@ export const VerticalInteraction: Story = {
 
 export const PhoneInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "On a phone — interaction test",
   globals: { viewport: { value: "mobile1", isRotated: false } },
-  args: { variant: "outlined", orientation: { base: "vertical", md: "horizontal" } },
+  args: { surface: "outlined", orientation: { base: "vertical", md: "horizontal" } },
   render: (args) => (
     <Toolbar {...args} aria-label="Actions">
       <Toolbar.Button>Edit</Toolbar.Button>
@@ -1014,8 +1033,9 @@ export const PhoneInteraction: Story = {
 
 export const ForcedColoursInteraction: Story = {
   ...hidden,
+  tags: ["!dev"],
   name: "Pressed and separator, themes — interaction test",
-  args: { variant: "filled" },
+  args: { surface: "filled" },
   render: (args) => (
     <Toolbar {...args}>
       <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" defaultPressed />
