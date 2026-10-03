@@ -32,7 +32,7 @@ const link = '<Link href="/people/jane">@jane</Link>';
 export const hoverCardSnippets = {
   profilePreview: hoverCard("", "", link, profile),
 
-  allSides: `{/* side: "top" | "right" | "bottom" (default) | "left" — the side of the trigger the card
+  allSides: `{/* side: "top" (default) | "right" | "bottom" | "left" — the side of the trigger the card
     opens on, flipping to the opposite side if there isn't room. */}
 ${hoverCard("", 'side="top"', '<Link href="/people/jane">top</Link>', `    <Text size="sm">side="top"</Text>`)}`,
 
@@ -50,8 +50,8 @@ ${hoverCard(
 ${hoverCard("", "hideWhenDetached", link, `    <Text size="sm">Scroll me out of view.</Text>`)}`,
 
   delays: `{/* openDelay: how long the pointer or focus must rest on the trigger before the card opens
-    (default 700). closeDelay: how long it stays open after the pointer leaves (default 300). */}
-${hoverCard("openDelay={200} closeDelay={100}", "", link, `    <Text size="sm">Opens after 200ms, closes 100ms after leaving.</Text>`)}`,
+    (default 300). closeDelay: how long it stays open after the pointer leaves (default 300). */}
+${hoverCard("openDelay={100} closeDelay={100}", "", link, `    <Text size="sm">Opens after 100ms, closes 100ms after leaving.</Text>`)}`,
 
   controlled: `{/* const [open, setOpen] = useState(false); */}
 <HoverCard open={open} onOpenChange={setOpen}>
@@ -94,11 +94,11 @@ export interface HoverCardPlaygroundSnippetArgs {
 export function hoverCardPlaygroundSnippet(args: HoverCardPlaygroundSnippetArgs): string {
   const rootAttributes: string[] = [];
   if (args.defaultOpen) rootAttributes.push("defaultOpen");
-  if (args.openDelay !== undefined && args.openDelay !== 700) rootAttributes.push(`openDelay={${args.openDelay}}`);
+  if (args.openDelay !== undefined && args.openDelay !== 300) rootAttributes.push(`openDelay={${args.openDelay}}`);
   if (args.closeDelay !== undefined && args.closeDelay !== 300) rootAttributes.push(`closeDelay={${args.closeDelay}}`);
 
   const contentAttributes: string[] = [];
-  if (args.side && args.side !== "bottom") contentAttributes.push(`side="${args.side}"`);
+  if (args.side && args.side !== "top") contentAttributes.push(`side="${args.side}"`);
   if (args.align && args.align !== "center") contentAttributes.push(`align="${args.align}"`);
   if (args.sideOffset !== undefined && args.sideOffset !== 8) contentAttributes.push(`sideOffset={${args.sideOffset}}`);
   if (args.alignOffset !== undefined && args.alignOffset !== 0) contentAttributes.push(`alignOffset={${args.alignOffset}}`);

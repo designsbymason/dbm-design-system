@@ -18,7 +18,7 @@ const meta: Meta<typeof HoverCard.Content> = {
       options: ["top", "right", "bottom", "left"],
       description:
         "Which side of the trigger the content renders on — a single value, or a mobile-first responsive map keyed by breakpoint (e.g. { base: 'bottom', lg: 'right' }). Radix repositions it automatically to stay within the viewport, but only within the same axis; a responsive map lets you switch axes deliberately at a chosen breakpoint.",
-      table: { defaultValue: { summary: '"bottom"' } },
+      table: { defaultValue: { summary: '"top"' } },
     },
     align: {
       control: "select",
@@ -111,7 +111,7 @@ const meta: Meta<typeof HoverCard.Content> = {
   },
   args: {
     children: "Card content",
-    side: "bottom",
+    side: "top",
     align: "center",
   },
 };

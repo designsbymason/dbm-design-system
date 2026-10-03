@@ -9,9 +9,10 @@ built, checked and found.
 ## What it is
 
 A compound component, `HoverCard` + `HoverCard.Trigger` + `HoverCard.Content`, in `Popover`'s
-shape. The root takes `open` / `defaultOpen` / `onOpenChange` and `openDelay` (700) / `closeDelay`
-(300), Radix's own defaults. `HoverCard.Trigger` is a link (Radix renders an `<a>`); `asChild` swaps
-in the `Link` atom. `HoverCard.Content` takes `side` (a breakpoint map too, resolved in JS by
+shape. The root takes `open` / `defaultOpen` / `onOpenChange` and `openDelay` (300) / `closeDelay`
+(300) — `openDelay` is shorter than Radix's own 700, at explicit direction (2026-10-03, after the first
+push), since 700ms read as sluggish. `HoverCard.Trigger` is a link (Radix renders an `<a>`); `asChild` swaps
+in the `Link` atom. `HoverCard.Content` takes `side` (default `top`, changed from `bottom` at the same direction; a breakpoint map too, resolved in JS by
 `useResolvedResponsiveValue`, as `Popover` does), `align`, `sideOffset`, `alignOffset`,
 `avoidCollisions`, `collisionPadding`, `collisionBoundary`, `hideWhenDetached`, `hideArrow`,
 `container` and the four dismissal callbacks. It has the same elevated-surface chrome, arrow and
@@ -53,27 +54,36 @@ the Radix-primitive prop audit, not just the first layer). No `showCloseButton`,
 
 ## Findings
 
-- **Radix's trigger calls `preventDefault()` on `touchstart`.** Checked live, since a link that
-  couldn't be tapped would be a real defect: React attaches `onTouchStart` as a passive listener,
-  so the call is ignored (`defaultPrevented` stays `false`) and a tap still follows the link. The
-  cost is a console error from Chrome — "Unable to preventDefault inside passive event listener
-  invocation" — on each touch in development. Upstream, no behavioural effect, not worked around
-  (nothing a wrapper can pass stops Radix's handler running).
+- **Radix's trigger calls `preventDefault()` on `touchstart` — worked around, 2026-10-03.** Checked
+  live, since a link that couldn't be tapped would be a real defect: React attaches `onTouchStart`
+  as a passive listener, so the call is ignored (`defaultPrevented` stays `false`) and a tap still
+  follows the link. The cost was a console error from Chrome — "Unable to preventDefault inside
+  passive event listener invocation" — on each touch in development. First recorded as unfixable;
+  then fixed at explicit direction: Radix composes its handler after the caller's and runs it only
+  while `event.defaultPrevented` is false, so `HoverCard.Trigger` runs the caller's `onTouchStart`
+  and then marks the synthetic event handled (a plain property assignment, never a
+  `preventDefault()` call), which skips Radix's no-op. Nothing is lost — the call did nothing and a
+  card never opens on touch. A unit test spies on `Event.prototype.preventDefault` (fails with the
+  line removed), and in a real browser a dispatched `touchstart` makes zero `preventDefault` calls.
+  The workaround leans on Radix's `composeEventHandlers` skipping a handler once the event reads as
+  default-prevented; a Radix change to that would bring the console error back, and the test would
+  not catch it (it would still see no `preventDefault` call from us), so recheck it on a Radix bump.
 - **`data-state` on the trigger and content is set before Radix spreads the caller's props**, so a
   caller's own `data-state` would replace it (the bug class in `05` §3). Not guarded: it is a
   styling hook only, and this component's own CSS reads it from the content, where a caller has no
   reason to set it. Recomputing it would need the open state, which only Radix's context holds.
 - **A standalone `HoverCard.Trigger` or `.Content` throws outside a `HoverCard`** (Radix's scoped
   context), which a story that only wanted to measure a style had to learn.
-- **Arrow markup and CSS are duplicated from `Popover`** (the two-element filled polygon plus open
-  stroke, and the `.arrowFill` / `.arrowStroke` rules). A second user is the point at which §1
-  says to extract it. Not done: it means editing `Popover.tsx` and its stylesheet, which are
-  Finalized, so it needs the user's go-ahead first. Worth doing before a third overlay (`Menu`,
-  `Combobox`) repeats it.
+- **The arrow was first duplicated from `Popover`, then extracted (2026-10-03).** A second user is
+  the point at which `06` §1 says to share it, and extracting it meant editing the Finalized
+  `Popover`, so it waited for the user's go-ahead, which came the same day. Both now render
+  `OverlayArrow` (`src/internal/OverlayArrow/`, not exported from the package), a `forwardRef`
+  `<svg>` child for Radix's `Arrow asChild`, with the one stylesheet. `Popover`'s own change is
+  recorded in `Popover.md`.
 
 ## Verified
 
-- Unit: 57 tests — the open and close paths (mouse hover, keyboard focus and blur, Escape, the
+- Unit: 58 tests — the open and close paths (mouse hover, keyboard focus and blur, Escape, the
   pointer crossing onto the card and a custom delay), both default delays with fake timers, a touch
   pointer not opening it, a pointer that leaves before `openDelay` elapsing, controlled and
   uncontrolled state, unmount clearing the timers, `StrictMode`, a responsive `side` with a live
@@ -81,8 +91,8 @@ the Radix-primitive prop audit, not just the first layer). No `showCloseButton`,
   `asChild` with `Link` (no blocked click), the focus warning in all its cases, and axe closed and
   open (open scans the whole body, since the card is portaled; the page-level `region` rule is off
   because it is meaningless for a bare component).
-- **Two of them were broken on purpose to see them fail:** the default `openDelay` changed from
-  700 to 500 (the delay test failed), and the `min(…, available-width)` cap removed from the
+- **Four of them were broken on purpose to see them fail:** the default `openDelay` changed from
+  its default to 500 (the delay test failed), and the `min(…, available-width)` cap removed from the
   stylesheet (the phone-width story failed). The underline story was checked the same way.
 - Real browser (Chromium, the `storybook` project): hover opens and leaving closes, Tab opens and
   Escape closes with focus kept on the link, the card stays inside a phone's width and never past
@@ -96,8 +106,8 @@ the Radix-primitive prop audit, not just the first layer). No `showCloseButton`,
   Storybook's own stylesheet could have restyled it; it didn't).
 - Snippets typechecked against the real components, with a planted bad prop to prove the check bites.
 - Whole package: `eslint`, both typechecks, `pnpm build`, the per-component bundle-size check
-  (HoverCard 0.70KB JS / 0.53KB CSS gzipped), the Foundations token-coverage check, 4,764 unit tests,
-  890 Storybook-project tests, the 8 visual-regression tests, and `pnpm audit` (only the already-
+  (HoverCard 0.77KB JS / 0.53KB CSS gzipped), the Foundations token-coverage check, 4,767 unit tests,
+  892 Storybook-project tests, the 8 visual-regression tests, and `pnpm audit` (only the already-
   accepted `braces` advisory).
 
 ## Not checked, or open

@@ -1,5 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import type { MouseEvent } from "react";
 import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { Avatar } from "../../atoms/Avatar";
 import { Link } from "../../atoms/Link";
@@ -35,6 +36,11 @@ interface PlaygroundArgs {
   onInteractOutside: HoverCardContentProps["onInteractOutside"];
 }
 
+// Every trigger here is a real link (that is the component's contract), so a click
+// would leave the story for a page that doesn't exist. These demos are about the
+// card, not the destination: swallow the navigation.
+const preventNavigation = (event: MouseEvent) => event.preventDefault();
+
 const centered = { display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-16)" } as const;
 
 function ProfilePreview() {
@@ -64,7 +70,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "number",
       description:
         "Milliseconds the pointer or keyboard focus must stay on the trigger before the card opens.",
-      table: { defaultValue: { summary: "700" } },
+      table: { defaultValue: { summary: "300" } },
     },
     closeDelay: {
       control: "number",
@@ -83,7 +89,7 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["top", "right", "bottom", "left"],
       description:
         "Which side of the trigger the content renders on — a single value (shown here) or a mobile-first responsive map keyed by breakpoint (e.g. { base: 'bottom', lg: 'right' }).",
-      table: { defaultValue: { summary: '"bottom"' } },
+      table: { defaultValue: { summary: '"top"' } },
     },
     align: {
       control: "select",
@@ -141,9 +147,9 @@ const meta: Meta<PlaygroundArgs> = {
   },
   args: {
     defaultOpen: false,
-    openDelay: 700,
+    openDelay: 300,
     closeDelay: 300,
-    side: "bottom",
+    side: "top",
     align: "center",
     sideOffset: 8,
     alignOffset: 0,
@@ -166,7 +172,7 @@ const meta: Meta<PlaygroundArgs> = {
         onOpenChange={args.onOpenChange}
       >
         <HoverCard.Trigger asChild>
-          <Link href="#jane">@jane</Link>
+          <Link href="#jane" onClick={preventNavigation}>@jane</Link>
         </HoverCard.Trigger>
         <HoverCard.Content
           side={args.side}
@@ -246,7 +252,7 @@ export const AllSides: Story = {
       {(["top", "right", "bottom", "left"] as const).map((side) => (
         <HoverCard key={side} open>
           <HoverCard.Trigger asChild>
-            <Link href={`#${side}`}>{side}</Link>
+            <Link href={`#${side}`} onClick={preventNavigation}>{side}</Link>
           </HoverCard.Trigger>
           <HoverCard.Content
             side={side}
@@ -287,7 +293,7 @@ export const ResponsiveSide: Story = {
     <div style={centered}>
       <HoverCard defaultOpen>
         <HoverCard.Trigger asChild>
-          <Link href="#resize">Resize the viewport</Link>
+          <Link href="#resize" onClick={preventNavigation}>Resize the viewport</Link>
         </HoverCard.Trigger>
         <HoverCard.Content side={{ base: "bottom", lg: "right" }}>
           <Text size="sm">
@@ -332,7 +338,7 @@ export const HideWhenDetached: Story = {
         <div style={{ display: "flex", justifyContent: "center" }}>
           <HoverCard defaultOpen>
             <HoverCard.Trigger asChild>
-              <Link href="#detached">Trigger</Link>
+              <Link href="#detached" onClick={preventNavigation}>Trigger</Link>
             </HoverCard.Trigger>
             <HoverCard.Content hideWhenDetached>
               <Text size="sm">Scroll me out of view.</Text>
@@ -356,12 +362,12 @@ export const Delays: Story = {
   },
   render: (args) => (
     <div style={centered}>
-      <HoverCard openDelay={200} closeDelay={100}>
+      <HoverCard openDelay={100} closeDelay={100}>
         <HoverCard.Trigger asChild>
-          <Link href="#quick">Hover for a quicker card</Link>
+          <Link href="#quick" onClick={preventNavigation}>Hover for a quicker card</Link>
         </HoverCard.Trigger>
         <HoverCard.Content side={args.side} align={args.align} hideArrow={args.hideArrow}>
-          <Text size="sm">Opens after 200ms, closes 100ms after leaving.</Text>
+          <Text size="sm">Opens after 100ms, closes 100ms after leaving.</Text>
         </HoverCard.Content>
       </HoverCard>
     </div>
@@ -383,7 +389,7 @@ export const Controlled: Story = {
       <div style={{ ...centered, flexDirection: "column", alignItems: "center", gap: "var(--dbm-space-2)" }}>
         <HoverCard open={open} onOpenChange={setOpen} openDelay={args.openDelay} closeDelay={args.closeDelay}>
           <HoverCard.Trigger asChild>
-            <Link href="#controlled">@jane</Link>
+            <Link href="#controlled" onClick={preventNavigation}>@jane</Link>
           </HoverCard.Trigger>
           <HoverCard.Content side={args.side} align={args.align} hideArrow={args.hideArrow}>
             <Text size="sm">{open ? "Open" : "Closed"}</Text>
@@ -411,7 +417,9 @@ export const PlainTrigger: Story = {
       <Text>
         Posted by{" "}
         <HoverCard>
-          <HoverCard.Trigger href="#jane">@jane</HoverCard.Trigger>
+          <HoverCard.Trigger href="#jane" onClick={preventNavigation}>
+            @jane
+          </HoverCard.Trigger>
           <HoverCard.Content side={args.side} align={args.align} hideArrow={args.hideArrow}>
             <Text size="sm">Jane Doe</Text>
           </HoverCard.Content>
@@ -469,7 +477,7 @@ export const OnAPhone: Story = {
     <div style={{ display: "flex", justifyContent: "flex-end", paddingBlock: "var(--dbm-space-16)" }}>
       <HoverCard defaultOpen>
         <HoverCard.Trigger asChild>
-          <Link href="#edge">@jane</Link>
+          <Link href="#edge" onClick={preventNavigation}>@jane</Link>
         </HoverCard.Trigger>
         <HoverCard.Content data-testid="phone-card">
           <Text>
@@ -499,7 +507,9 @@ export const PlainTriggerLooksLikeALink: Story = {
     <p data-testid="sentence">
       Posted by{" "}
       <HoverCard>
-        <HoverCard.Trigger href="#jane">@jane</HoverCard.Trigger>
+        <HoverCard.Trigger href="#jane" onClick={preventNavigation}>
+            @jane
+          </HoverCard.Trigger>
         <HoverCard.Content>Jane Doe</HoverCard.Content>
       </HoverCard>{" "}
       yesterday.
@@ -511,5 +521,26 @@ export const PlainTriggerLooksLikeALink: Story = {
     // With the colour inherited from the sentence, the underline is the only cue (WCAG 1.4.1).
     await expect(style.color).toBe(getComputedStyle(within(canvasElement).getByTestId("sentence")).color);
     await expect(style.textDecorationLine).toContain("underline");
+  },
+};
+
+export const ArrowIsDrawnFromTheSurfaceTokens: Story = {
+  name: "The arrow matches the card's surface and border — interaction test",
+  tags: ["!dev"],
+  args: { defaultOpen: true },
+  play: async () => {
+    const card = await screen.findByText("Jane Doe");
+    const arrow = card.closest("[data-radix-popper-content-wrapper]")?.querySelector("svg");
+    await expect(arrow).toBeTruthy();
+    const polygon = arrow!.querySelector("polygon")!;
+    const path = arrow!.querySelector("path")!;
+    const content = card.closest<HTMLElement>("[data-state]")!;
+    // The fill is the surface and the stroke the border — the same colours as the card itself.
+    await expect(getComputedStyle(polygon).fill).toBe(getComputedStyle(content).backgroundColor);
+    await expect(getComputedStyle(path).stroke).toBe(getComputedStyle(content).borderTopColor);
+    await expect(getComputedStyle(path).fill).toBe("none");
+    // The stroke must stay one width however the 30x10 shape is scaled down.
+    await expect(getComputedStyle(path).vectorEffect).toBe("non-scaling-stroke");
+    await expect(getComputedStyle(path).strokeWidth).toBe(getComputedStyle(content).borderTopWidth);
   },
 };

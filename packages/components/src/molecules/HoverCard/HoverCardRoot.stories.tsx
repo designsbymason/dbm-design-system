@@ -35,7 +35,7 @@ const meta: Meta<typeof HoverCard> = {
       control: "number",
       description:
         "Milliseconds the pointer or keyboard focus must stay on the trigger before the card opens — long enough that sweeping the pointer across a page of links doesn't flash a card for each one.",
-      table: { defaultValue: { summary: "700" } },
+      table: { defaultValue: { summary: "300" } },
     },
     closeDelay: {
       control: "number",

@@ -53,22 +53,6 @@
   animation: fadeOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
-/* The arrow is a filled polygon plus a separate open path for the two
-   exposed edges, so the base blends into `.content`'s own edge instead of
-   drawing a line across the seam (see Popover's own `.arrowFill` and
-   `.arrowStroke` for the full reasoning, including why `vector-effect` is
-   set on the element itself rather than hoisted). */
-.arrowFill {
-  fill: var(--dbm-bg-surface);
-}
-
-.arrowStroke {
-  fill: none;
-  stroke: var(--dbm-border-default);
-  stroke-width: var(--dbm-border-width-1);
-  vector-effect: non-scaling-stroke;
-}
-
 @keyframes fadeIn {
   from {
     opacity: var(--dbm-opacity-0);

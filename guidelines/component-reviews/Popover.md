@@ -698,3 +698,24 @@ in place of the canvas (and so no "Show code" button).
   args-only stories build theirs from the live controls, so they show real code (`<Popover.Content hideArrow …>`, `<Popover modal>`).
 
 Typechecked against the real types. **Finalized status unchanged** — story-file and docs-only.
+
+## Post-Finalization changes, 2026-10-03 (both authorized by the user, while building `HoverCard`)
+
+Two changes to files of a Finalized component, each flagged and approved first; neither reopens its
+status under `06` §9's three-question test.
+
+- **The arrow moved into a shared internal component.** `HoverCard` needed the identical arrow, and
+  a second copy was the point to share it. `Popover.Content` now renders `<PopoverPrimitive.Arrow
+  asChild><OverlayArrow /></PopoverPrimitive.Arrow>`, and the `.arrowFill` / `.arrowStroke` rules
+  (with their comments) moved to `src/internal/OverlayArrow/OverlayArrow.module.css`. Same markup,
+  same tokens, same output: a live Docs page read the arrow's computed fill, stroke, stroke width,
+  `vector-effect` and rendered size (10 × 5) as the same values as before, Popover's existing tests
+  pass untouched, and the shared component has its own unit tests and a real-browser check of its
+  computed styles (broken on purpose once to see it fail). **Question 1: no change to the output of
+  anything existing, an internal refactor with no visible or API surface — stays Finalized.**
+- **The Properties table's root section now comes from `PopoverRoot.stories.tsx`** (a hidden,
+  docs-only stories file, `HoverCardRoot.stories.tsx`'s pattern and ADR-0013's). It had been built
+  from the Playground's meta, which also carries `Popover.Content`'s props, so it listed `side`,
+  `align`, `showCloseButton`… as the root's own and left out `open`. The rendered table now lists
+  `children`, `open`, `defaultOpen`, `onOpenChange` and `modal`, each with its description and
+  default. A factual error in the docs, so a defect fix: **stays Finalized.**

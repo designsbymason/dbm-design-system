@@ -1,6 +1,7 @@
 import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import { forwardRef, useEffect } from "react";
+import { OverlayArrow } from "../../internal/OverlayArrow/OverlayArrow";
 import styles from "./HoverCard.module.css";
 import type { HoverCardContentProps, HoverCardProps, HoverCardTriggerProps } from "./HoverCard.types";
 
@@ -43,7 +44,7 @@ function HoverCardRoot({
   open,
   defaultOpen,
   onOpenChange,
-  openDelay = 700,
+  openDelay = 300,
   closeDelay = 300,
 }: HoverCardProps) {
   return (
@@ -66,7 +67,7 @@ function HoverCardRoot({
  * card could not be opened from the keyboard.
  */
 const HoverCardTrigger = forwardRef<HTMLAnchorElement, HoverCardTriggerProps>(
-  ({ asChild = false, className, href, tabIndex, ...props }, ref) => {
+  ({ asChild = false, className, href, tabIndex, onTouchStart, ...props }, ref) => {
     // `asChild` can't be checked: the child may already be focusable.
     const isUnreachable = !asChild && href === undefined && tabIndex === undefined;
     useEffect(() => {
@@ -83,6 +84,17 @@ const HoverCardTrigger = forwardRef<HTMLAnchorElement, HoverCardTriggerProps>(
         className={asChild ? className : cx(styles.trigger, className)}
         href={href}
         tabIndex={tabIndex}
+        onTouchStart={(event) => {
+          onTouchStart?.(event);
+          // Radix's trigger ends its own `onTouchStart` with `event.preventDefault()`,
+          // but React listens for `touchstart` passively, so the browser ignores the
+          // call and logs "Unable to preventDefault inside passive event listener" on
+          // every touch (a tap still follows the link). Radix runs its handler only
+          // while `event.defaultPrevented` is false, so marking the event handled
+          // here skips it without ever calling `preventDefault()`. Nothing is lost:
+          // the call never did anything, and a card never opens on touch.
+          (event as { defaultPrevented: boolean }).defaultPrevented = true;
+        }}
         {...props}
       />
     );
@@ -98,7 +110,7 @@ HoverCardTrigger.displayName = "HoverCard.Trigger";
 const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
   (
     {
-      side = "bottom",
+      side = "top",
       align = "center",
       sideOffset = 8,
       alignOffset = 0,
@@ -114,7 +126,7 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
   ) => {
     // Radix's `side` drives a real positioning computation, not a CSS
     // cascade, so a responsive map has to resolve to one value in JS first.
-    const resolvedSide = useResolvedResponsiveValue(side, "bottom");
+    const resolvedSide = useResolvedResponsiveValue(side, "top");
 
     return (
       <HoverCardPrimitive.Portal container={container}>
@@ -131,14 +143,8 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
         >
           {children}
           {!hideArrow && (
-            // Custom markup rather than Radix's single `<polygon>`, so the
-            // base doesn't draw a border line across the seam (see the
-            // `.arrowFill`/`.arrowStroke` comment in the stylesheet).
             <HoverCardPrimitive.Arrow asChild>
-              <svg>
-                <polygon points="0,0 30,0 15,10" className={styles.arrowFill} />
-                <path d="M0,0 L15,10 L30,0" className={styles.arrowStroke} />
-              </svg>
+              <OverlayArrow />
             </HoverCardPrimitive.Arrow>
           )}
         </HoverCardPrimitive.Content>

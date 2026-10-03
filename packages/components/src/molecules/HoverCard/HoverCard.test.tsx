@@ -50,7 +50,7 @@ describe("HoverCard", () => {
     await waitFor(() => expect(screen.queryByText("Card content")).not.toBeInTheDocument());
   });
 
-  it("waits 700ms to open and 300ms to close by default", () => {
+  it("waits 300ms to open and 300ms to close by default", () => {
     vi.useFakeTimers();
     render(
       <HoverCard>
@@ -61,7 +61,7 @@ describe("HoverCard", () => {
     const trigger = screen.getByRole("link", { name: "Jane" });
 
     fireEvent.pointerEnter(trigger, { pointerType: "mouse" });
-    act(() => void vi.advanceTimersByTime(699));
+    act(() => void vi.advanceTimersByTime(299));
     expect(screen.queryByText("Card content")).not.toBeInTheDocument();
     act(() => void vi.advanceTimersByTime(1));
     expect(screen.getByText("Card content")).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("HoverCard", () => {
     );
     const trigger = screen.getByRole("link", { name: "Jane" });
     fireEvent.pointerEnter(trigger, { pointerType: "mouse" });
-    act(() => void vi.advanceTimersByTime(300));
+    act(() => void vi.advanceTimersByTime(150));
     fireEvent.pointerLeave(trigger, { pointerType: "mouse" });
     act(() => void vi.advanceTimersByTime(2000));
     expect(screen.queryByText("Card content")).not.toBeInTheDocument();
@@ -167,6 +167,22 @@ describe("HoverCard", () => {
     fireEvent.pointerEnter(screen.getByRole("link", { name: "Jane" }), { pointerType: "touch" });
     act(() => void vi.advanceTimersByTime(5000));
     expect(screen.queryByText("Card content")).not.toBeInTheDocument();
+  });
+
+  it("never calls preventDefault on touchstart, which React's passive listener only logs a warning for", () => {
+    const preventDefault = vi.spyOn(Event.prototype, "preventDefault");
+    const onTouchStart = vi.fn();
+    render(
+      <HoverCard>
+        <HoverCard.Trigger href="/jane" onTouchStart={onTouchStart}>
+          Jane
+        </HoverCard.Trigger>
+        <HoverCard.Content>Card content</HoverCard.Content>
+      </HoverCard>,
+    );
+    fireEvent.touchStart(screen.getByRole("link", { name: "Jane" }));
+    expect(onTouchStart).toHaveBeenCalledTimes(1);
+    expect(preventDefault).not.toHaveBeenCalled();
   });
 
   it("starts open with defaultOpen", () => {
@@ -259,9 +275,9 @@ describe("HoverCard", () => {
   });
 
   describe("positioning", () => {
-    it("defaults to side bottom and align center", () => {
+    it("defaults to side top and align center", () => {
       render(<Example defaultOpen />);
-      expect(screen.getByText("Card content")).toHaveAttribute("data-side", "bottom");
+      expect(screen.getByText("Card content")).toHaveAttribute("data-side", "top");
       expect(screen.getByText("Card content")).toHaveAttribute("data-align", "center");
     });
 

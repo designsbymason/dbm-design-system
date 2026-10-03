@@ -28,7 +28,7 @@ export interface HoverCardProps {
    * Milliseconds the pointer or keyboard focus must stay on the trigger
    * before the card opens — long enough that sweeping the pointer across a
    * page of links doesn't flash a card for each one.
-   * @default 700
+   * @default 300
    */
   openDelay?: number;
   /**
@@ -97,11 +97,11 @@ export interface HoverCardContentProps extends Omit<ComponentPropsWithoutRef<"di
    * `top`↔`bottom`), never across them. Pass a mobile-first responsive map
    * instead of a single value (e.g. `{ base: "bottom", lg: "right" }`) to
    * switch axes deliberately at a chosen breakpoint.
-   * @default 'bottom'
+   * @default 'top'
    */
   side?: Responsive<HoverCardSide>;
   /**
-   * Alignment along the chosen `side` — e.g. `side="bottom"` with
+   * Alignment along the chosen `side` — e.g. `side="top"` with
    * `align="start"` left-aligns the content under the trigger instead of
    * centering it.
    * @default 'center'

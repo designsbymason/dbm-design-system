@@ -157,10 +157,10 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
 
 ## Best practices
 
-- The default delays (`openDelay` 700, `closeDelay` 300) are deliberately unhurried: sweeping the
-  pointer across a paragraph of links shouldn't flash a card for each one. Shorten `openDelay` only
-  for a trigger that is plainly a "show me more" target, and keep `closeDelay` long enough to cross
-  the gap onto the card.
+- The default delays (`openDelay` 300, `closeDelay` 300) are a short beat, not an instant: a pointer
+  passing straight over a link opens nothing, while one that rests on it gets the card quickly.
+  Lengthen `openDelay` for a page dense with links, where sweeping the pointer across a paragraph
+  would otherwise flash several cards, and keep `closeDelay` long enough to cross the gap onto the card.
 - Pass `side`/`align` that suit the layout — a card under a link in the first column of a table
   reads better as `align="start"` than centred.
 - Let `avoidCollisions` (on by default) handle the edges; it keeps the card inside the viewport and
@@ -201,8 +201,8 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
   </HoverCard.Content>
 </HoverCard>
 
-{/* Quicker to open, aligned to the link's start, opening beside it on large screens */}
-<HoverCard openDelay={200} closeDelay={150}>
+{/* Quicker to open than the default, aligned to the link's start, opening beside it on large screens */}
+<HoverCard openDelay={100} closeDelay={150}>
   <HoverCard.Trigger asChild>
     <Link href="/docs/tokens">tokens</Link>
   </HoverCard.Trigger>

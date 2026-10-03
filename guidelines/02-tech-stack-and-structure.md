@@ -42,6 +42,7 @@ dbm-design-system/
 │   │   │   ├── molecules/        # Built so far (28): Accordion, Alert, AvatarGroup, Breadcrumb, ButtonGroup, Card, CheckboxGroup, CodeBlock, DescriptionList, EmptyState, FormField, Grid, HoverCard, List, NumberInput, Pagination, PasswordInput, Popover, RadioGroup, RangeSlider, ScrollArea, SearchInput, Select, Slider, Stat, Table, Tabs, ToggleGroup — the rest still open
 │   │   │   ├── organisms/        # Not started yet — DataTable, Modal, Navbar, CommandPalette, Form...
 │   │   │   ├── templates/        # Not started yet — page-level layout scaffolds (optional, later)
+│   │   │   ├── internal/         # Pieces shared by two or more components that are not part of the public API and are not exported — `OverlayArrow` (the arrow on `Popover` and `HoverCard`)
 │   │   │   ├── foundations/      # Storybook-only Foundations pages (*.mdx) — not shipped in the package
 │   │   │   ├── styles/           # global.css, resets, css var consumption
 │   │   │   ├── snippetHelpers.ts # helpers for the "Show code" snippet builders — docs-only, not shipped
