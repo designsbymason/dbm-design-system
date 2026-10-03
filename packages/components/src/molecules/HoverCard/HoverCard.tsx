@@ -40,7 +40,10 @@ function isFocusVisible(element: Element): boolean {
  * dependable, use `Popover`; for a short plain-text hint, `Tooltip`.
  *
  * A compound component: compose `HoverCard.Trigger` and `HoverCard.Content`
- * inside `HoverCard` itself. `HoverCard` renders no DOM element of its own —
+ * inside `HoverCard` itself, with an optional `HoverCard.Media` for an image
+ * across the top of the content. Wrap a run of cards in one
+ * `HoverCardProvider` so the next opens at once while another is open.
+ * `disabled` keeps a card shut without unmounting it. `HoverCard` renders no DOM element of its own —
  * a plain context provider, matching Radix's own `HoverCard.Root` — so it
  * takes no `ref`/`className`/`style`/`id`/`data-testid`; those apply to
  * `HoverCard.Trigger` and `HoverCard.Content`, each of which forwards its ref.

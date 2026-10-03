@@ -3,8 +3,9 @@
 Molecule, Overlay & Disclosure category. Item 25 of the itemized molecule build order in
 `04-component-inventory.md` — a rich preview that opens when the pointer rests on a link or keyboard
 focus lands on it, wrapping Radix HoverCard (`@radix-ui/react-hover-card` ^1.1.23, new dependency).
-Built 2026-10-03. **Not yet Finalized** — only the user declares that; this file records what was
-built, checked and found.
+Built 2026-10-03, **Finalized 2026-10-03** (declared by the user, after the feature-completeness round
+below and its two follow-ups). Before declaring, a last read of the component's JSDoc found the root
+doc block hadn't caught up with `Media`, `HoverCardProvider` and `disabled`; fixed (documentation only).
 
 ## What it is
 
