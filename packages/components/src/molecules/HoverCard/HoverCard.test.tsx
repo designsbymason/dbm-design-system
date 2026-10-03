@@ -27,6 +27,19 @@ function Example(props: Partial<React.ComponentProps<typeof HoverCard>> = {}) {
   );
 }
 
+// jsdom's own `:focus-visible` depends on which tests ran before it, so a test that
+// needs it says what it should be, as `Pagination`'s does.
+function stubFocusVisible(value: boolean | "throws") {
+  const matches = Element.prototype.matches;
+  vi.spyOn(Element.prototype, "matches").mockImplementation(function (this: Element, selector: string) {
+    if (selector === ":focus-visible") {
+      if (value === "throws") throw new SyntaxError("not a valid selector");
+      return value;
+    }
+    return matches.call(this, selector);
+  });
+}
+
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -113,6 +126,7 @@ describe("HoverCard", () => {
   });
 
   it("opens on keyboard focus and closes on blur", async () => {
+    stubFocusVisible(true);
     const user = userEvent.setup();
     render(
       <>
@@ -126,6 +140,42 @@ describe("HoverCard", () => {
 
     await user.tab();
     await waitFor(() => expect(screen.queryByText("Card content")).not.toBeInTheDocument());
+  });
+
+  it("does not open on a focus that is not keyboard focus (a click or a tap leaves one), but still on hover", async () => {
+    stubFocusVisible(false);
+    const user = userEvent.setup();
+    render(<Example />);
+    const trigger = screen.getByRole("link", { name: "Jane" });
+    act(() => trigger.focus());
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(trigger).toHaveFocus();
+    expect(screen.queryByText("Card content")).not.toBeInTheDocument();
+
+    await user.hover(trigger);
+    expect(await screen.findByText("Card content")).toBeInTheDocument();
+  });
+
+  it("falls back to opening on any focus in a browser that doesn't know :focus-visible", async () => {
+    stubFocusVisible("throws");
+    render(<Example />);
+    act(() => screen.getByRole("link", { name: "Jane" }).focus());
+    expect(await screen.findByText("Card content")).toBeInTheDocument();
+  });
+
+  it("still calls a caller's own onFocus", () => {
+    stubFocusVisible(false);
+    const onFocus = vi.fn();
+    render(
+      <HoverCard>
+        <HoverCard.Trigger href="/jane" onFocus={onFocus}>
+          Jane
+        </HoverCard.Trigger>
+        <HoverCard.Content>Card content</HoverCard.Content>
+      </HoverCard>,
+    );
+    act(() => screen.getByRole("link", { name: "Jane" }).focus());
+    expect(onFocus).toHaveBeenCalledTimes(1);
   });
 
   it("closes on Escape", async () => {

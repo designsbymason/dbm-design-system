@@ -283,3 +283,43 @@ export const SizesAndMedia: Story = {
     }
   },
 };
+
+export const TapDoesNotOpenIt: Story = {
+  name: "A tap focuses the link but does not open the card (Tab does: see the keyboard story)",
+  render: () => (
+    <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-24)" }}>
+      <HoverCard openDelay={0} closeDelay={0}>
+        <HoverCard.Trigger asChild>
+          <Link href="#tap" data-testid="trigger-tap" onClick={(event) => event.preventDefault()}>
+            @jane
+          </Link>
+        </HoverCard.Trigger>
+        <HoverCard.Content data-testid="card-tap">
+          <Text>Jane Doe</Text>
+        </HoverCard.Content>
+      </HoverCard>
+    </div>
+  ),
+  play: async () => {
+    const trigger = await screen.findByTestId("trigger-tap");
+    await send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+    try {
+      const rect = trigger.getBoundingClientRect();
+      // The story runs in a frame inside the test page, and the protocol's points are the page's.
+      // The test page also scales the frame to fit, so its size over the story's own is the scale.
+      const frame = window.frameElement?.getBoundingClientRect();
+      const scale = frame ? frame.width / window.innerWidth : 1;
+      const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+      const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+      await send("Input.synthesizeTapGesture", { x, y, gestureSourceType: "touch" });
+      await settle();
+      // The tap really did land on the link and focus it...
+      await expect(document.activeElement).toBe(trigger);
+      await expect(trigger.matches(":focus-visible")).toBe(false);
+      // ...and that focus is not what opens the card.
+      await expect(screen.queryByTestId("card-tap")).toBeNull();
+    } finally {
+      await send("Emulation.setTouchEmulationEnabled", { enabled: false });
+    }
+  },
+};

@@ -1,9 +1,10 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { Avatar } from "../../atoms/Avatar";
 import { Link } from "../../atoms/Link";
+import { Skeleton } from "../../atoms/Skeleton";
 import { Stack } from "../../atoms/Stack";
 import { Text } from "../../atoms/Text";
 import { HoverCard } from "./HoverCard";
@@ -558,6 +559,50 @@ export const Disabled: Story = {
   ),
 };
 
+export const LoadingContent: Story = {
+  name: "Loading its content when it opens",
+  parameters: { docs: { source: { code: hoverCardSnippets.loadingContent } } },
+  argTypes: noControls,
+  render: function LoadingContentStory() {
+    const [status, setStatus] = useState<"idle" | "loading" | "ready">("idle");
+    const timer = useRef<number | undefined>(undefined);
+    useEffect(() => () => window.clearTimeout(timer.current), []);
+    // The card asks for its data the first time it opens and keeps it, so a second hover shows it at once.
+    const handleOpenChange = (open: boolean) => {
+      if (!open || status !== "idle") return;
+      setStatus("loading");
+      timer.current = window.setTimeout(() => setStatus("ready"), 1200);
+    };
+    return (
+      <div style={centered}>
+        <HoverCard onOpenChange={handleOpenChange}>
+          <HoverCard.Trigger asChild>
+            <Link href="#jane" onClick={preventNavigation}>
+              @jane
+            </Link>
+          </HoverCard.Trigger>
+          <HoverCard.Content>
+            {/* The content reserves the loaded content's size (its width and its three rems of height), so the card doesn't change size when the data arrives. */}
+            <div style={{ minInlineSize: "14rem", minBlockSize: "3rem" }} aria-busy={status === "loading"}>
+              {status === "ready" ? (
+                <ProfilePreview />
+              ) : (
+                <Stack direction="row" gap={3} align="center">
+                  <Skeleton variant="circular" width="var(--dbm-avatar-size-md)" height="var(--dbm-avatar-size-md)" />
+                  <Stack gap={2}>
+                    <Skeleton width="7rem" />
+                    <Skeleton width="10rem" />
+                  </Stack>
+                </Stack>
+              )}
+            </div>
+          </HoverCard.Content>
+        </HoverCard>
+      </div>
+    );
+  },
+};
+
 export const SharedTiming: Story = {
   name: "Shared timing across a row of links (HoverCardProvider)",
   parameters: { docs: { source: { code: hoverCardSnippets.sharedTiming } } },
@@ -702,5 +747,26 @@ export const ArrowIsDrawnFromTheSurfaceTokens: Story = {
     // The stroke must stay one width however the 30x10 shape is scaled down.
     await expect(getComputedStyle(path).vectorEffect).toBe("non-scaling-stroke");
     await expect(getComputedStyle(path).strokeWidth).toBe(getComputedStyle(content).borderTopWidth);
+  },
+};
+
+export const LoadingContentInteraction: Story = {
+  name: "The loading card keeps its size when the data arrives — interaction test",
+  tags: ["!dev"],
+  render: LoadingContent.render,
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(within(canvasElement).getByRole("link", { name: "@jane" }));
+    const busy = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>("[data-state='open'] [aria-busy='true']");
+      if (!element) throw new Error("no loading card yet");
+      return element;
+    });
+    // Layout size, not the drawn rectangle: a card that is still fading in is scaled.
+    const before = busy.closest<HTMLElement>("[data-state]")!;
+    const beforeSize = [before.offsetWidth, before.offsetHeight];
+    await waitFor(() => expect(screen.getByText("Jane Doe")).toBeVisible(), { timeout: 3000 });
+    const after = screen.getByText("Jane Doe").closest<HTMLElement>("[data-state]")!;
+    await expect(after.offsetWidth).toBe(beforeSize[0]);
+    await expect(after.offsetHeight).toBe(beforeSize[1]);
   },
 };

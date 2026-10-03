@@ -138,6 +138,26 @@ checks first, then all four features.
    a disabled card doesn't warm the provider. A disabled card whose `open` is controlled `true`
    stays shut.
 
+**Two smaller ideas, done the same day**
+- **Only keyboard focus opens the card.** Radix opens it on any focus, including the one a click or
+  a tap leaves on the link. A real-browser check with a synthetic touch tap (`Input.synthesizeTapGesture`)
+  **confirmed the suspicion that a tap did open it**, contradicting the docs' "never opens on touch"
+  (the earlier touch check only covered the touch pointer's hover, which Radix ignores). It is fixed
+  by the same mechanism as the `touchstart` workaround: `HoverCard.Trigger` runs the caller's
+  `onFocus`, and when the link doesn't match `:focus-visible` marks the event handled, which makes
+  Radix skip its open. A browser that throws on the selector keeps Radix's open-on-any-focus. The
+  tap check fails with the guard removed. Unit tests stub `:focus-visible` (jsdom's depends on test
+  order), and cover the caller's `onFocus` and the fallback. **The Tab half is not in that check:** a
+  scripted or CDP-keyed Tab after a touch wasn't reliably `:focus-visible` in the test page, so
+  keyboard opening is covered by the existing keyboard story and the unit test instead.
+- **Async content is a docs pattern, not an API.** A "Loading its content when it opens" story and
+  Docs example start a request from `onOpenChange` the first time the card opens, show a `Skeleton`,
+  and keep the result. Its real-browser check found a real jump: the loaded content was 4px taller
+  than the skeleton (a 24px and a 20px line against 44px of skeleton), so the card resized when
+  the data arrived; the content now reserves `3rem` of height as well as its width, and the check
+  compares the card's layout size before and after (not the drawn rectangle, which is scaled while
+  the card fades in).
+
 ## Verified
 
 - Unit: `HoverCard.test.tsx` has 52 tests, plus the Docs-page token guard and `OverlayArrow`'s own 2 — the open and close paths (mouse hover, keyboard focus and blur, Escape, the
@@ -168,8 +188,8 @@ checks first, then all four features.
   Storybook's own stylesheet could have restyled it; it didn't).
 - Snippets typechecked against the real components, with a planted bad prop to prove the check bites.
 - Whole package: `eslint`, both typechecks, `pnpm build`, the per-component bundle-size check
-  (HoverCard 1.42KB JS / 0.82KB CSS gzipped), the Foundations token-coverage check, 4,791 unit tests,
-  905 Storybook-project tests, the 8 visual-regression tests, and `pnpm audit` (only the already-
+  (HoverCard 1.49KB JS / 0.82KB CSS gzipped), the Foundations token-coverage check, 4,795 unit tests,
+  908 Storybook-project tests, the 8 visual-regression tests, and `pnpm audit` (only the already-
   accepted `braces` advisory).
 
 ## Not checked, or open

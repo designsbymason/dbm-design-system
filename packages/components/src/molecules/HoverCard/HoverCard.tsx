@@ -17,6 +17,16 @@ import { HoverCardProviderContext } from "./HoverCardProviderContext";
 const ARROW_WIDTH = 10;
 const ARROW_HEIGHT = 5;
 
+/** `:focus-visible` is the browser's own guess at "this focus came from the keyboard". */
+function isFocusVisible(element: Element): boolean {
+  try {
+    return element.matches(":focus-visible");
+  } catch {
+    // A browser too old to know the selector: keep Radix's own behaviour, open on any focus.
+    return true;
+  }
+}
+
 /**
  * A rich preview that opens when the pointer rests on a trigger (or
  * keyboard focus lands on it) and closes when it leaves — a profile card on
@@ -123,7 +133,7 @@ function HoverCardRoot({
  * card could not be opened from the keyboard.
  */
 const HoverCardTrigger = forwardRef<HTMLAnchorElement, HoverCardTriggerProps>(
-  ({ asChild = false, className, href, tabIndex, onTouchStart, ...props }, ref) => {
+  ({ asChild = false, className, href, tabIndex, onTouchStart, onFocus, ...props }, ref) => {
     // `asChild` can't be checked: the child may already be focusable.
     const isUnreachable = !asChild && href === undefined && tabIndex === undefined;
     useEffect(() => {
@@ -148,8 +158,17 @@ const HoverCardTrigger = forwardRef<HTMLAnchorElement, HoverCardTriggerProps>(
           // every touch (a tap still follows the link). Radix runs its handler only
           // while `event.defaultPrevented` is false, so marking the event handled
           // here skips it without ever calling `preventDefault()`. Nothing is lost:
-          // the call never did anything, and a card never opens on touch.
+          // the call never did anything, and a touch never opens a card.
           (event as { defaultPrevented: boolean }).defaultPrevented = true;
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          // Radix opens the card on any focus, and a click or a tap focuses a link too.
+          // On a touch screen that is the one way left to open it (a tap that doesn't
+          // navigate), and with a mouse it is only the focus the click leaves behind.
+          // Only keyboard focus (`:focus-visible`) should open it, and Radix runs its
+          // handler only while `event.defaultPrevented` is false (see `onTouchStart`).
+          if (!isFocusVisible(event.currentTarget)) (event as { defaultPrevented: boolean }).defaultPrevented = true;
         }}
         {...props}
       />

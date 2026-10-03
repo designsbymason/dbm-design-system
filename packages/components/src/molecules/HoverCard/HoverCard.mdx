@@ -151,6 +151,10 @@ its own, so it takes no `className`/`style`/`id`/`data-testid`/`ref`.
 
 <Canvas of={HoverCardStories.Disabled} />
 
+### Loading its content when it opens
+
+<Canvas of={HoverCardStories.LoadingContent} />
+
 ### Shared timing across a row of links (HoverCardProvider)
 
 <Canvas of={HoverCardStories.SharedTiming} />
@@ -211,6 +215,9 @@ its own, so it takes no `className`/`style`/`id`/`data-testid`/`ref`.
   the content's width is capped so it never outgrows a phone-width screen.
 - A small gap is fine: a transparent bridge across `sideOffset` is part of the card, so the pointer can
   cross from the trigger onto it without the card closing, however large the offset.
+- When the preview has to be fetched, start the request from `onOpenChange` the first time it opens
+  and show a `Skeleton` shaped like the loaded content, so the card keeps its size when the data
+  arrives; keep the result so a second hover shows it at once.
 - Use `size` for how much room the content needs: `sm` for a name and a line, `lg` for a richer card.
 - Use `hideWhenDetached` for a trigger in a scrolling list or table, so the card doesn't hover over
   empty space once its row scrolls away.
@@ -219,8 +226,9 @@ its own, so it takes no `className`/`style`/`id`/`data-testid`/`ref`.
 
 <Callout tone="info" title="A preview for sighted pointer and keyboard users, not a dialog">
 
-- The trigger is a link: `Tab` reaches it, and focus opens the card (after `openDelay`); moving
-  focus away closes it (after `closeDelay`). `Escape` closes it and leaves focus on the link.
+- The trigger is a link: `Tab` reaches it, and keyboard focus opens the card (after `openDelay`);
+  moving focus away closes it (after `closeDelay`). Only keyboard focus opens it: the focus a click
+  or a tap leaves on the link does not. `Escape` closes it and leaves focus on the link.
 - The card follows the WCAG 1.4.13 pattern for content on hover or focus: it can be dismissed
   (`Escape`), it stays open while the pointer is over it, and it stays until the pointer or focus
   leaves.
@@ -237,7 +245,8 @@ its own, so it takes no `className`/`style`/`id`/`data-testid`/`ref`.
   physical (`left` is the left of the link in both directions).
 - In Windows high-contrast (forced colours) the card keeps its border and the arrow is drawn in the
   same system colours, so its edge still meets the card's.
-- It does not open for a touch pointer, so on a phone or tablet a tap simply follows the link.
+- It does not open for a touch pointer, nor for the focus a tap or click leaves on the link, so on a
+  phone or tablet a tap simply follows the link.
 - A dev-mode console warning fires once per trigger if `HoverCard.Trigger` renders a plain `<a>`
   with no `href` or `tabIndex`, since a keyboard user could never open the card.
 
@@ -308,6 +317,25 @@ its own, so it takes no `className`/`style`/`id`/`data-testid`/`ref`.
     <Text size="sm">Never shown</Text>
   </HoverCard.Content>
 </HoverCard>
+
+{/* Fetch the preview the first time the card opens, with a skeleton of the same shape meanwhile */}
+function Example() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  return (
+    <HoverCard onOpenChange={(open) => { if (open && !profile) fetchProfile().then(setProfile); }}>
+      <HoverCard.Trigger asChild>
+        <Link href="/people/jane">@jane</Link>
+      </HoverCard.Trigger>
+      <HoverCard.Content>
+        {profile ? (
+          <Text weight="semibold">{profile.name}</Text>
+        ) : (
+          <Skeleton width="10rem" />
+        )}
+      </HoverCard.Content>
+    </HoverCard>
+  );
+}
 
 {/* Controlled open state */}
 function Example() {

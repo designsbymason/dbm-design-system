@@ -105,6 +105,25 @@ ${hoverCard("disabled", "", link, profile)}`,
   </HoverCard>
 </HoverCardProvider>`,
 
+  loadingContent: `{/* Ask for the data the first time the card opens, show a skeleton meanwhile, with a minimum size on
+    the content equal to the loaded content's so the card doesn't resize, and keep the result:
+    const [profile, setProfile] = useState(null);
+    function handleOpenChange(open) { if (open && !profile) fetchProfile().then(setProfile); } */}
+<HoverCard onOpenChange={handleOpenChange}>
+  <HoverCard.Trigger asChild>
+    <Link href="/people/jane">@jane</Link>
+  </HoverCard.Trigger>
+  <HoverCard.Content>
+    <div style={{ minInlineSize: "14rem", minBlockSize: "3rem" }}>
+      {profile ? (
+        <Text weight="semibold">{profile.name}</Text>
+      ) : (
+        <Skeleton width="10rem" />
+      )}
+    </div>
+  </HoverCard.Content>
+</HoverCard>`,
+
   plainTrigger: `{/* Without asChild the trigger is a plain <a>: give it an href so a keyboard user can reach it. */}
 <HoverCard>
   <HoverCard.Trigger href="/people/jane">@jane</HoverCard.Trigger>
