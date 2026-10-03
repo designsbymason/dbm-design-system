@@ -1,6 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { createRef } from "react";
+import { createRef, StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScrollArea } from "./ScrollArea";
 import styles from "./ScrollArea.module.css";
@@ -224,6 +224,19 @@ describe("ScrollArea", () => {
   it("becomes a keyboard-reachable region once its content overflows the enabled axis", () => {
     const sim = installOverflowSimulation({ y: false });
     render(<ScrollArea data-testid="frame">Content</ScrollArea>);
+    const viewport = () => screen.getByTestId("frame").querySelector("[data-radix-scroll-area-viewport]");
+    expect(viewport()).not.toHaveAttribute("tabindex");
+    sim.setOverflowing({ y: true });
+    expect(viewport()).toHaveAttribute("tabindex", "0");
+  });
+
+  it("still detects overflow under StrictMode, which mounts, unmounts, and remounts in development", () => {
+    const sim = installOverflowSimulation({ y: false });
+    render(
+      <StrictMode>
+        <ScrollArea data-testid="frame">Content</ScrollArea>
+      </StrictMode>,
+    );
     const viewport = () => screen.getByTestId("frame").querySelector("[data-radix-scroll-area-viewport]");
     expect(viewport()).not.toHaveAttribute("tabindex");
     sim.setOverflowing({ y: true });

@@ -165,6 +165,14 @@ scrolling viewport (see `onScroll`'s own row below for why that one's different)
   would be clipped by the outer frame's own `overflow: hidden`.
 - **Wheel, trackpad, touch and keyboard scrolling all work regardless of `scrollbarVisibility`** —
   it only controls when the scrollbar itself is drawn, never whether the region can be scrolled.
+- **The scrollbar thumb is thinner than WCAG 2.5.8's 24×24px target-size minimum at every `size`
+  step** — an accepted, deliberate exception, not a gap: wheel, trackpad, touch-dragging the content
+  directly, and keyboard scrolling are all equivalent ways to scroll the same region without ever
+  needing to grab the thumb precisely, which is exactly 2.5.8's own "Equivalent" exception (an
+  alternate control of adequate size provides the same function). The thumb stays the thin,
+  unpadded overlay style this kind of control conventionally uses, rather than an enlarged invisible
+  hit target (see `Slider`'s own thumb for the contrasting case, where dragging *is* the primary
+  interaction).
 
 </Callout>
 
