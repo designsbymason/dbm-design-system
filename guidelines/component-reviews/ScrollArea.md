@@ -389,7 +389,62 @@ from deduplication, not just no regression — `ScrollArea` 0.85KB JS (down from
 2.34KB JS (down from its 2.57KB Finalized baseline), both still comfortably within budget; the
 Foundations token-coverage check unaffected (no tokens touched).
 
+## Final pre-Finalization review (2026-10-02)
+
+A fresh, full pass against the `06-engineering-standards.md` §9 checklist — not just trusting the
+prior rounds' own partial re-verifications, since five follow-ups had landed since the original
+build. Two real gaps found, both fixed in this pass; everything else re-confirmed clean.
+
+1. **No StrictMode test existed**, despite `useIsScrollable` genuinely subscribing from a mount-time
+   effect (`useSyncExternalStore` + `ResizeObserver`) — the checklist's own StrictMode item applies.
+   Added `"still detects overflow under StrictMode, which mounts, unmounts, and remounts in
+   development"` to `ScrollArea.test.tsx`, mirroring `EmptyState`'s own precedent for this exact
+   checklist item. Passes — expected, architecturally: unlike `EmptyState`'s original bug (a ref
+   remembering "already did this" across the remount), `useSyncExternalStore`'s own subscription
+   lifecycle has no such persistent flag to desync, so there was no actual defect here, just a
+   missing proof the checklist calls for.
+2. **The scrollbar thumb's sub-24×24px target size (WCAG 2.5.8) had never been explicitly recorded**
+   — true at every `size` step, down to 4px at `xs`. Not a defect: wheel, trackpad, touch-dragging
+   the content directly, and keyboard scrolling are all equivalent ways to scroll without needing to
+   grab the thumb precisely, squarely 2.5.8's own "Equivalent" exception — but the checklist expects
+   this reasoning on the record, not just implicit in the CSS module's own comment about why the
+   thumb has no enlarged hit target. Added a bullet to `ScrollArea.mdx`'s Accessibility section
+   spelling out the exception explicitly.
+
+Everything else re-confirmed, not re-litigated:
+- **Baseline correctness**: full "definition of done" re-verified; strict TypeScript, no `any`;
+  JSDoc complete on every prop including the three added since the original build
+  (`showTrack`/`tone`/`overscrollBehavior`); `forwardRef`/`className`/`style`/`id`/`data-testid` all
+  present; `{...props}` ordering on `Root` and `{...regionProps}` ordering on `Viewport` both correct
+  (dynamic ARIA attributes spread last, nothing after them to override); zero hardcoded values (the
+  CSS module's few bare keywords — `touch-action: none`, `overscroll-behavior: contain`,
+  `user-select: none` — are behavior keywords with no color/spacing/etc. character, not design
+  values a token would express).
+- **Feature completeness**: `showTrack`/`tone`/`overscrollBehavior` round out the prop surface since
+  the original build; sizes/variants/states all use the shared scales, no one-off vocabulary.
+- **Accessibility**: the thumb/track color pairings were already covered by `bg.neutral`/`bg.brand`'s
+  own existing, already-verified contrast rows (`03-token-system-spec.md`) — no new pairing was
+  introduced by `tone`, confirmed by re-reading rather than assumed; `bg.track` itself is an already-
+  documented 1.4.11 exception (the thumb, not the track, carries the state). jest-axe passes with
+  zero violations in both the scrollable and non-scrollable states.
+- **Responsiveness**: re-verified live at a 375px mobile viewport (`Both axes` story) — the demo
+  genuinely narrows and its content correctly overflows rather than breaking or overlapping.
+- **Theming**: re-verified live in all four combinations (Purple/Emerald × Light/Dark) on the `Tone`
+  story — computed thumb color on the `brand` scrollbar resolves to a genuine green
+  (`rgb(165, 210, 201)`) under Emerald, not a hardcoded purple; the `showTrack` opacity/blur combo
+  (`backdrop-filter: blur(4px)`, 0.5 alpha at rest) holds correctly in dark mode too.
+- **Storybook documentation**: Docs page re-verified live (renders correctly, nothing broken by the
+  five rounds of stories-file edits since original build); Properties table re-queried directly from
+  the rendered DOM — all 19 props present with correct Value options, Description, and Default
+  columns, including `overscrollBehavior`'s `auto` default; the native-prop disclaimer sentence and
+  its `onWheel` code-example pairing both still present and matched.
+- **Functional verification**: full suite re-run clean — `tsc --noEmit`, `eslint --max-warnings 0`,
+  the full unit suite (4700 passing, +1 from the new StrictMode test), the full real-browser
+  Chromium suite (875 passing), `pnpm build`, the component bundle-size check (0.85KB JS / 0.59KB
+  CSS, within budget), and the Foundations token-coverage check — all clean.
+
 ## Not yet Finalized
 
 Per the standing rule, only the user declares a component Finalized — this review documents a
-complete pass with no outstanding gaps found, awaiting that confirmation.
+complete pass, including a final dedicated review round, with no outstanding gaps, awaiting that
+confirmation.
