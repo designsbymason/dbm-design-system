@@ -28,6 +28,7 @@ interface PlaygroundArgs {
   fullWidth: boolean;
   disabled: boolean;
   loop: boolean;
+  rovingFocus: boolean;
   dir: "ltr" | "rtl";
   deselectable: boolean;
   /** Storybook only — how many items the demo group holds. */
@@ -164,6 +165,14 @@ const meta: Meta<PlaygroundArgs> = {
     loop: {
       control: "boolean",
       description: "Whether the arrow keys wrap from the last item to the first, and back.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    // Not live-editable: turning it off removes the group's own keyboard movement, which only makes sense inside
+    // another roving-focus container such as a Toolbar.
+    rovingFocus: {
+      control: false,
+      description:
+        "Whether the group is a roving-focus group of its own: one tab stop, arrow keys moving between its items. Leave it on. Turn it off only when the items sit inside another roving-focus container that moves focus between them (Toolbar.ToggleGroup does). With it off, loop has no effect and a multiple group is announced as a plain group, not a toolbar.",
       table: { defaultValue: { summary: "true" } },
     },
     dir: {

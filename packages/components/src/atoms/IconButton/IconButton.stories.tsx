@@ -97,6 +97,20 @@ const meta: Meta<typeof IconButton> = {
       description:
         "Fires when the pressed state changes. Demo via the Playground's \"Interaction mode\" control.",
     },
+    // Not a live control at the meta level: `tooltip` takes any content, and its Playground-only choices
+    // ("Off", "Label", "Custom text") are on the Playground story's own argTypes so they aren't listed as values.
+    tooltip: {
+      control: false,
+      description:
+        "Shows a tooltip on hover and keyboard focus. true uses the button's own aria-label as the text; any other content (a string, or a node) is shown instead. Left out, or false, there is no tooltip. The button is still named by aria-label. A tooltip doesn't open on a disabled or loading button.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    tooltipSide: {
+      control: "select",
+      options: ["top", "right", "bottom", "left"],
+      description: "Which side of the button the tooltip opens on, before it flips to fit. Has no effect without tooltip.",
+      table: { defaultValue: { summary: "top" } },
+    },
     "aria-label": {
       control: "text",
       description:
@@ -161,6 +175,7 @@ const meta: Meta<typeof IconButton> = {
     loadingLabel: "Favoriting…",
     asChild: false,
     rounded: false,
+    tooltipSide: "top",
     "aria-label": "Favorite",
     type: "button",
     disabled: false,
@@ -206,8 +221,17 @@ export const Playground: Story = {
     interactionMode: "Non-toggle",
     defaultPressed: false,
     onPressedChange: fn(),
+    tooltip: "Off",
   } as Partial<PlaygroundArgs>,
   argTypes: {
+    // Playground-only choices for `tooltip`: "Off" leaves the prop out, "Label" is `true`, "Custom text" is a string.
+    tooltip: {
+      control: "select",
+      options: ["Off", "Label", "Custom text"],
+      mapping: { Off: undefined, Label: true, "Custom text": "Add to favorites" },
+      description:
+        'Playground-only choices for tooltip. "Off": no tooltip. "Label": true, which shows the aria-label. "Custom text": a string shown instead of the label.',
+    },
     interactionMode: {
       name: "Interaction mode",
       control: "select",
@@ -289,6 +313,19 @@ export const AllSizes: Story = {
           size={size}
         />
       ))}
+    </div>
+  ),
+};
+
+export const WithTooltip: Story = {
+  name: "With a tooltip",
+  parameters: { docs: { source: { code: iconButtonSnippets.tooltip } } },
+  // `true` shows the aria-label; the second button shows its own text on the other side. Hover or tab to a button.
+  argTypes: { tooltip: { control: false }, tooltipSide: { control: false }, icon: { control: false }, "aria-label": { control: false } },
+  render: (args) => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)", padding: "var(--dbm-space-10)" }}>
+      <IconButton {...args} icon={HeartIcon} aria-label="Favorite" variant="secondary" tooltip />
+      <IconButton {...args} icon={TrashIcon} aria-label="Delete" variant="secondary" tooltip="Delete this item" tooltipSide="bottom" />
     </div>
   ),
 };

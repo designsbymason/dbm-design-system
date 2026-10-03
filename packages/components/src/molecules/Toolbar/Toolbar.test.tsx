@@ -1,5 +1,5 @@
 import { TextBIcon, TextItalicIcon } from "@dbm-design-system/icons";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
@@ -7,7 +7,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
 import buttonStyles from "../../atoms/Button/Button.module.css";
 import iconButtonStyles from "../../atoms/IconButton/IconButton.module.css";
+import buttonGroupStyles from "../ButtonGroup/ButtonGroup.module.css";
+import toggleStyles from "../ToggleGroup/ToggleGroup.module.css";
 import { Tooltip } from "../../atoms/Tooltip";
+import { Popover } from "../Popover";
+import { Select } from "../Select";
 import { ButtonGroup } from "../ButtonGroup";
 import { Toolbar } from "./Toolbar";
 import styles from "./Toolbar.module.css";
@@ -268,7 +272,7 @@ describe("Toolbar", () => {
       expect(screen.getByTestId("bar")).not.toHaveClass(styles.outlined!, styles.filled!);
       rerender(<Bar data-testid="bar" variant="outlined" />);
       expect(screen.getByTestId("bar")).toHaveClass(styles.outlined!);
-      rerender(<Bar data-testid="bar" variant="filled" wrap />);
+      rerender(<Bar data-testid="bar" variant="filled" overflow="wrap" />);
       expect(screen.getByTestId("bar")).toHaveClass(styles.filled!, styles.wrap!);
     });
 
@@ -462,6 +466,322 @@ describe("Toolbar", () => {
         </Toolbar>,
       );
       expect(screen.getByTestId("spacer")).toHaveAttribute("aria-hidden", "true");
+    });
+  });
+
+  describe("items that are not plain buttons", () => {
+    it("takes a Select into the arrow-key order, opens it with Enter, and gives focus back when a choice is made", async () => {
+      const user = userEvent.setup();
+      render(
+        <Toolbar aria-label="Bar">
+          <Toolbar.Button>One</Toolbar.Button>
+          <Toolbar.Item>
+            <Select aria-label="Font size" placeholder="Size">
+              <Select.Option value="12">12</Select.Option>
+              <Select.Option value="14">14</Select.Option>
+            </Select>
+          </Toolbar.Item>
+          <Toolbar.Button>Last</Toolbar.Button>
+        </Toolbar>,
+      );
+      await user.tab();
+      await user.keyboard("{ArrowRight}");
+      const trigger = screen.getByRole("combobox", { name: "Font size" });
+      expect(trigger).toHaveFocus();
+      await user.keyboard("{Enter}");
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(trigger).toHaveFocus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Last" })).toHaveFocus();
+    });
+
+    it("takes a popover trigger into the order, and returns to it when the popover closes", async () => {
+      const user = userEvent.setup();
+      render(
+        <Toolbar aria-label="Bar">
+          <Popover>
+            <Toolbar.Item>
+              <Popover.Trigger asChild>
+                <Button variant="ghost">More</Button>
+              </Popover.Trigger>
+            </Toolbar.Item>
+            <Popover.Content aria-label="More options">Extra options</Popover.Content>
+          </Popover>
+          <Toolbar.Button>Last</Toolbar.Button>
+        </Toolbar>,
+      );
+      await user.tab();
+      expect(screen.getByRole("button", { name: "More" })).toHaveFocus();
+      await user.keyboard("{Enter}");
+      expect(screen.getByText("Extra options")).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+      expect(screen.getByRole("button", { name: "More" })).toHaveFocus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Last" })).toHaveFocus();
+    });
+  });
+
+  describe("Toolbar.ToggleGroup", () => {
+    const Align = (props: Partial<React.ComponentProps<typeof Toolbar.ToggleGroup>> = {}) => (
+      <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left" {...(props as object)}>
+        <Toolbar.ToggleItem value="left">Left</Toolbar.ToggleItem>
+        <Toolbar.ToggleItem value="center">Centre</Toolbar.ToggleItem>
+        <Toolbar.ToggleItem value="right">Right</Toolbar.ToggleItem>
+      </Toolbar.ToggleGroup>
+    );
+
+    it("keeps the toolbar one tab stop, with the arrow keys running through the group's items", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <Toolbar aria-label="Bar">
+            <Toolbar.Button>Before</Toolbar.Button>
+            <Align />
+            <Toolbar.Button>After</Toolbar.Button>
+          </Toolbar>
+          <button>outside</button>
+        </>,
+      );
+      await user.tab();
+      expect(screen.getByRole("button", { name: "Before" })).toHaveFocus();
+      // a nested roving group would make its own container a second tab stop: Tab goes straight out of the bar
+      await user.tab();
+      expect(screen.getByRole("button", { name: "outside" })).toHaveFocus();
+      await user.tab({ shift: true });
+      expect(screen.getByRole("button", { name: "Before" })).toHaveFocus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("radio", { name: "Left" })).toHaveFocus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("radio", { name: "Centre" })).toHaveFocus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "outside" })).toHaveFocus();
+    });
+
+    it("is a radiogroup that chooses the item an arrow key lands on, but not one reached from outside", async () => {
+      const user = userEvent.setup();
+      render(
+        <Toolbar aria-label="Bar">
+          <Toolbar.Button>Before</Toolbar.Button>
+          <Align />
+        </Toolbar>,
+      );
+      expect(screen.getByRole("radiogroup", { name: "Alignment" })).toBeInTheDocument();
+      await user.tab();
+      await user.keyboard("{ArrowRight}");
+      // arrived from the button before the group: nothing is chosen by arriving
+      expect(screen.getByRole("radio", { name: "Left" })).toHaveAttribute("aria-checked", "true");
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("radio", { name: "Centre" })).toHaveAttribute("aria-checked", "true");
+      expect(screen.getByRole("radio", { name: "Left" })).toHaveAttribute("aria-checked", "false");
+    });
+
+    it("reports a choice made by click, and a multiple group is a plain group of toggles", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <Toolbar aria-label="Bar">
+          <Toolbar.ToggleGroup aria-label="Style" type="multiple" onValueChange={onValueChange}>
+            <Toolbar.ToggleItem value="b" icon={TextBIcon} aria-label="Bold" />
+            <Toolbar.ToggleItem value="i" icon={TextItalicIcon} aria-label="Italic" />
+          </Toolbar.ToggleGroup>
+        </Toolbar>,
+      );
+      expect(screen.getAllByRole("toolbar")).toHaveLength(1);
+      expect(screen.getByRole("group", { name: "Style" })).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Bold" }));
+      expect(onValueChange).toHaveBeenCalledWith(["b"]);
+      expect(screen.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("takes the bar's size, rounded, orientation and disabled unless it says otherwise", () => {
+      render(
+        <Toolbar aria-label="Bar" size="lg" rounded orientation="vertical">
+          <Align data-testid="group" />
+          <Align data-testid="own" size="xs" aria-label="Own" />
+        </Toolbar>,
+      );
+      expect(screen.getByTestId("group")).toHaveAttribute("data-orientation", "vertical");
+      expect(screen.getByTestId("group")).toHaveClass(toggleStyles.rounded!);
+      const [first, second] = [
+        within(screen.getByTestId("group")).getAllByRole("radio")[0]!,
+        within(screen.getByTestId("own")).getAllByRole("radio")[0]!,
+      ];
+      expect(first).toHaveClass(toggleStyles.sizeLg!);
+      expect(second).toHaveClass(toggleStyles.sizeXs!);
+    });
+
+    it("takes its items out of the arrow-key order when the bar or the group is disabled", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(
+        <Toolbar aria-label="Bar" disabled>
+          <Align />
+        </Toolbar>,
+      );
+      for (const radio of screen.getAllByRole("radio")) expect(radio).toBeDisabled();
+      rerender(
+        <Toolbar aria-label="Bar">
+          <Toolbar.Button>One</Toolbar.Button>
+          <Align disabled />
+          <Toolbar.Button>Last</Toolbar.Button>
+        </Toolbar>,
+      );
+      await user.tab();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Last" })).toHaveFocus();
+    });
+  });
+
+  describe("Toolbar.Group attached", () => {
+    it("is a named group of ButtonGroup's, with its items still in the arrow-key order", async () => {
+      const user = userEvent.setup();
+      render(
+        <Toolbar aria-label="Bar" itemVariant="secondary">
+          <Toolbar.Group aria-label="Style" attached data-testid="group">
+            <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
+            <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+          </Toolbar.Group>
+          <Toolbar.Button>Link</Toolbar.Button>
+        </Toolbar>,
+      );
+      const group = screen.getByRole("group", { name: "Style" });
+      expect(group).toHaveClass(buttonGroupStyles.attached!);
+      // the bar's own settings reach the buttons through the group
+      expect(screen.getByRole("button", { name: "Bold" })).toHaveClass(iconButtonStyles.variantSecondary!);
+      await user.tab();
+      expect(screen.getByRole("button", { name: "Bold" })).toHaveFocus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Link" })).toHaveFocus();
+    });
+
+    it("follows the bar's orientation, and is not attached by default", () => {
+      render(
+        <Toolbar aria-label="Bar" orientation="vertical">
+          <Toolbar.Group aria-label="A" attached>
+            <Toolbar.Button>One</Toolbar.Button>
+          </Toolbar.Group>
+          <Toolbar.Group aria-label="B">
+            <Toolbar.Button>Two</Toolbar.Button>
+          </Toolbar.Group>
+        </Toolbar>,
+      );
+      expect(screen.getByRole("group", { name: "A" })).toHaveAttribute("data-orientation", "vertical");
+      expect(screen.getByRole("group", { name: "B" })).not.toHaveClass(buttonGroupStyles.attached!);
+    });
+  });
+
+  describe("IconButton tooltip in a toolbar", () => {
+    it("shows the tooltip on keyboard focus and keeps the arrow keys moving", async () => {
+      const user = userEvent.setup();
+      render(
+        <Toolbar aria-label="Bar">
+          <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" tooltip />
+          <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" tooltip="Make it italic" />
+        </Toolbar>,
+      );
+      await user.tab();
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Bold");
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
+      expect(await screen.findByText("Make it italic", { selector: '[role="tooltip"]' })).toBeInTheDocument();
+    });
+  });
+
+  describe("overflow", () => {
+    it("scroll: wraps the bar in a frame with the surface, and the bar is the scroller", () => {
+      render(<Bar overflow="scroll" variant="outlined" data-testid="bar" />);
+      const bar = screen.getByTestId("bar");
+      const frame = bar.parentElement!;
+      expect(frame).toHaveClass(styles.frame!, styles.outlined!);
+      expect(bar).toHaveClass(styles.scroller!);
+      expect(bar).not.toHaveClass(styles.outlined!);
+      expect(frame).toHaveAttribute("data-overflow-start", "false");
+      expect(frame).toHaveAttribute("data-overflow-end", "false");
+    });
+
+    it("scroll: the buttons are for a pointer — out of the tab order and hidden from assistive tech", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <button>before</button>
+          <Bar overflow="scroll" data-testid="bar" />
+          <button>after</button>
+        </>,
+      );
+      const frame = screen.getByTestId("bar").parentElement!;
+      const scrollButtons = [...frame.querySelectorAll(":scope > button")];
+      expect(scrollButtons).toHaveLength(2);
+      for (const button of scrollButtons) {
+        expect(button).toHaveAttribute("aria-hidden", "true");
+        expect(button).toHaveAttribute("tabindex", "-1");
+      }
+      await user.tab();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "Bold" })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
+    });
+
+    it("scroll: shows the end that has more, and the button scrolls the bar that way (reversed in rtl)", async () => {
+      const user = userEvent.setup();
+      const rects = new Map<Element, DOMRect>();
+      const rect = (left: number, right: number) => ({ left, right, top: 0, bottom: 20, width: right - left, height: 20, x: left, y: 0 }) as DOMRect;
+      vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+        return rects.get(this) ?? rect(0, 0);
+      });
+      const scrollBy = vi.fn();
+      const { rerender } = render(<Bar overflow="scroll" data-testid="bar" />);
+      const bar = screen.getByTestId("bar");
+      Object.defineProperty(bar, "scrollBy", { value: scrollBy, configurable: true });
+      Object.defineProperty(bar, "clientWidth", { value: 200, configurable: true });
+      rects.set(bar, rect(0, 200));
+      rects.set(bar.firstElementChild!, rect(0, 40));
+      rects.set(bar.lastElementChild!, rect(300, 360));
+      // a change the observers watch makes it re-read
+      rerender(
+        <Bar overflow="scroll" data-testid="bar">
+          <Toolbar.Button>Extra</Toolbar.Button>
+        </Bar>,
+      );
+      const frame = bar.parentElement!;
+      await waitFor(() => expect(frame).toHaveAttribute("data-overflow-end", "true"));
+      expect(frame).toHaveAttribute("data-overflow-start", "false");
+      await user.click(frame.querySelectorAll(":scope > button")[1]!);
+      expect(scrollBy).toHaveBeenCalledWith(expect.objectContaining({ left: 150 }));
+      rerender(
+        <Bar overflow="scroll" data-testid="bar" dir="rtl">
+          <Toolbar.Button>Extra</Toolbar.Button>
+        </Bar>,
+      );
+      await user.click(frame.querySelectorAll(":scope > button")[1]!);
+      expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: -150 }));
+    });
+
+    it("is a plain bar, not a scroller, for visible and wrap", () => {
+      const { rerender } = render(<Bar data-testid="bar" overflow="wrap" />);
+      expect(screen.getByTestId("bar").parentElement).toBe(document.body.firstElementChild);
+      expect(screen.getByTestId("bar")).not.toHaveClass(styles.scroller!);
+      rerender(<Bar data-testid="bar" overflow="visible" />);
+      expect(screen.getByTestId("bar")).not.toHaveClass(styles.wrap!);
+    });
+  });
+
+  describe("sticky", () => {
+    it("composes Affix: a surface and the marker in front, stuck state on the bar itself", () => {
+      render(<Bar sticky data-testid="bar" />);
+      const bar = screen.getByTestId("bar");
+      expect(bar).toHaveClass(styles.sticky!);
+      expect(bar.previousElementSibling).not.toBeNull();
+      expect(screen.getByRole("toolbar")).toBe(bar);
+    });
+
+    it("sticks the frame, not the inner bar, when it also scrolls", () => {
+      render(<Bar sticky overflow="scroll" variant="outlined" data-testid="bar" />);
+      const bar = screen.getByTestId("bar");
+      expect(bar.parentElement).toHaveClass(styles.sticky!, styles.frame!);
+      expect(bar).not.toHaveClass(styles.sticky!);
     });
   });
 

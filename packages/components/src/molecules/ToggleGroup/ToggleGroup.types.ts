@@ -74,6 +74,15 @@ interface ToggleGroupBaseProps
    */
   loop?: boolean;
   /**
+   * Whether the group is a roving-focus group of its own: one tab stop, arrow keys moving between its items. Leave it
+   * on. Turn it off only when the items sit inside another roving-focus container that moves focus between them —
+   * `Toolbar.ToggleGroup` does, so the toolbar stays one tab stop. With it off the group doesn't manage focus at all,
+   * `loop` has no effect, and a `type="multiple"` group is announced as a plain `group` instead of a `toolbar`
+   * (a toolbar inside a toolbar isn't a valid structure).
+   * @default true
+   */
+  rovingFocus?: boolean;
+  /**
    * Text direction, passed through to Radix ToggleGroup: `"rtl"` mirrors the group (the first item at the right, the
    * arrow keys the other way round). Not read from the page — left out, the group stays left-to-right.
    * @default 'ltr'

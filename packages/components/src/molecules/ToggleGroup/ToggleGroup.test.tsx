@@ -628,4 +628,52 @@ describe("ToggleGroup", () => {
       expect((await axe(container)).violations).toHaveLength(0);
     });
   });
+
+  describe("rovingFocus", () => {
+    it("is a roving-focus group of its own by default: one tab stop", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <ToggleGroup aria-label="Style" type="multiple">
+            <ToggleGroup.Item value="b" icon={TextBIcon} aria-label="Bold" />
+            <ToggleGroup.Item value="i" icon={TextItalicIcon} aria-label="Italic" />
+          </ToggleGroup>
+          <button>after</button>
+        </>,
+      );
+      expect(screen.getByRole("toolbar", { name: "Style" })).toBeInTheDocument();
+      await user.tab();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
+    });
+
+    it("with rovingFocus off leaves focus to the container: every item is a tab stop, and a multiple group is a plain group", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToggleGroup aria-label="Style" type="multiple" rovingFocus={false}>
+          <ToggleGroup.Item value="b" icon={TextBIcon} aria-label="Bold" />
+          <ToggleGroup.Item value="i" icon={TextItalicIcon} aria-label="Italic" />
+        </ToggleGroup>,
+      );
+      expect(screen.queryByRole("toolbar")).toBeNull();
+      expect(screen.getByRole("group", { name: "Style" })).toBeInTheDocument();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "Bold" })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "Italic" })).toHaveFocus();
+    });
+
+    it("keeps a single group a radiogroup with rovingFocus off, and still chooses on click", async () => {
+      const user = userEvent.setup();
+      render(
+        <ToggleGroup aria-label="Align" defaultValue="l" rovingFocus={false}>
+          <ToggleGroup.Item value="l">Left</ToggleGroup.Item>
+          <ToggleGroup.Item value="r">Right</ToggleGroup.Item>
+        </ToggleGroup>,
+      );
+      expect(screen.getByRole("radiogroup", { name: "Align" })).toBeInTheDocument();
+      await user.click(screen.getByRole("radio", { name: "Right" }));
+      expect(screen.getByRole("radio", { name: "Right" })).toHaveAttribute("aria-checked", "true");
+    });
+  });
 });

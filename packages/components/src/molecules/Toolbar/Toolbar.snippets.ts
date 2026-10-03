@@ -109,13 +109,103 @@ ${demo()}
   <Toolbar.Button>Share</Toolbar.Button>
 </Toolbar>`,
 
-  wrap: `{/* wrap: a horizontal bar that runs out of room (here, in a container narrower than its items) wraps its
-    items onto more lines */}
-<Toolbar aria-label="Actions" variant="outlined" itemVariant="secondary" wrap>
+  wrap: `{/* overflow="wrap": a horizontal bar that runs out of room (here, in a container narrower than its items) wraps
+    its items onto more lines. "visible" (default) lets them overflow; "scroll" keeps one line */}
+<Toolbar aria-label="Actions" variant="outlined" itemVariant="secondary" overflow="wrap">
   <Toolbar.Button>Edit</Toolbar.Button>
   <Toolbar.Button>Share</Toolbar.Button>
   <Toolbar.Button>Export</Toolbar.Button>
   <Toolbar.Button>Archive</Toolbar.Button>
+</Toolbar>`,
+
+  scroll: `{/* overflow="scroll": one line that scrolls (here, in a container narrower than its items), with an edge fade
+    and a button at whichever end has more. The arrow keys scroll the focused item into view */}
+<Toolbar aria-label="Actions" variant="outlined" itemVariant="secondary" overflow="scroll">
+  <Toolbar.Button>Edit</Toolbar.Button>
+  <Toolbar.Button>Share</Toolbar.Button>
+  <Toolbar.Button>Export</Toolbar.Button>
+  <Toolbar.Button>Archive</Toolbar.Button>
+  <Toolbar.Button>Duplicate</Toolbar.Button>
+  <Toolbar.Button>Delete</Toolbar.Button>
+</Toolbar>`,
+
+  scrollColumn: `{/* A scrolling column needs a height of its own to respond to (here, a container 10rem tall) */}
+<Toolbar aria-label="Tools" variant="outlined" orientation="vertical" overflow="scroll">
+  <Toolbar.IconButton icon={CursorIcon} aria-label="Select" />
+  <Toolbar.IconButton icon={PencilSimpleIcon} aria-label="Draw" />
+  <Toolbar.IconButton icon={TextBIcon} aria-label="Text" />
+  <Toolbar.IconButton icon={LinkIcon} aria-label="Link" />
+  <Toolbar.IconButton icon={ImageIcon} aria-label="Image" />
+  <Toolbar.IconButton icon={TableIcon} aria-label="Table" />
+  <Toolbar.IconButton icon={TrashIcon} aria-label="Delete" />
+</Toolbar>`,
+
+  sticky: `{/* sticky: the bar stays at the top of the page as it scrolls, with a surface behind it and a shadow while
+    stuck. scrollContainerRef names the box that scrolls when it isn't the page (here, a box with a fixed height).
+    stickyOffset leaves room for a header that is sticky too. */}
+{/* const scrollRef = useRef(null); — and the scrolling box is <div ref={scrollRef} style={{ height: "14rem", overflow: "auto" }}> */}
+<Toolbar aria-label="Text formatting" variant="outlined" sticky scrollContainerRef={scrollRef}>
+${demo()}
+</Toolbar>`,
+
+  attached: `{/* Toolbar.Group attached: the group's buttons fuse into one segmented control, each still in the arrow-key order.
+    A group without it keeps its items apart */}
+<Toolbar aria-label="Editor" variant="outlined" itemVariant="secondary">
+  <Toolbar.Group aria-label="Text style" attached>
+    <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
+    <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+    <Toolbar.IconButton icon={TextUnderlineIcon} aria-label="Underline" />
+  </Toolbar.Group>
+  <Toolbar.Separator />
+  <Toolbar.Group aria-label="History">
+    <Toolbar.IconButton icon={ArrowCounterClockwiseIcon} aria-label="Undo" />
+    <Toolbar.IconButton icon={ArrowClockwiseIcon} aria-label="Redo" />
+  </Toolbar.Group>
+</Toolbar>`,
+
+  toggleGroups: `{/* Toolbar.ToggleGroup: type "multiple" is independent toggles; the default, "single", chooses one of several
+    (a radio group). Both stay in the toolbar's arrow-key order, and their size follows the bar's */}
+<Toolbar aria-label="Text formatting" variant="outlined">
+  <Toolbar.ToggleGroup aria-label="Text style" type="multiple" variant="subtle">
+    <Toolbar.ToggleItem value="bold" icon={TextBIcon} aria-label="Bold" />
+    <Toolbar.ToggleItem value="italic" icon={TextItalicIcon} aria-label="Italic" />
+  </Toolbar.ToggleGroup>
+  <Toolbar.Separator />
+  <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left" variant="subtle">
+    <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Align left" />
+    <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Align centre" />
+    <Toolbar.ToggleItem value="right" icon={TextAlignRightIcon} aria-label="Align right" />
+  </Toolbar.ToggleGroup>
+</Toolbar>`,
+
+  tooltips: `{/* tooltip: true shows the aria-label on hover and keyboard focus; any other content is shown instead */}
+<Toolbar aria-label="Text formatting" variant="outlined">
+  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" tooltip />
+  <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" tooltip />
+  <Toolbar.IconButton icon={TextUnderlineIcon} aria-label="Underline" tooltip="Underline (Ctrl+U)" />
+</Toolbar>`,
+
+  selectAndPopover: `{/* Toolbar.Item puts a Select, or a popover or menu trigger, into the arrow-key order. Enter or Space opens it,
+    Escape (or choosing) gives focus back to it, and the arrow keys carry on along the bar */}
+<Toolbar aria-label="Editor" variant="outlined">
+  <Toolbar.Item>
+    <Select aria-label="Font size" placeholder="Size" size="sm" defaultValue="14">
+      <Select.Option value="12">12 pt</Select.Option>
+      <Select.Option value="14">14 pt</Select.Option>
+      <Select.Option value="18">18 pt</Select.Option>
+    </Select>
+  </Toolbar.Item>
+  <Toolbar.Separator />
+  <Popover>
+    <Toolbar.Item>
+      <Popover.Trigger asChild>
+        <Button variant="ghost" leadingIcon={DotsThreeIcon}>
+          More
+        </Button>
+      </Popover.Trigger>
+    </Toolbar.Item>
+    <Popover.Content aria-label="More options">Extra options live here.</Popover.Content>
+  </Popover>
 </Toolbar>`,
 
   disabled: `{/* disabled: every item is disabled, and arrow keys skip them. An item can be disabled on its own too */}
@@ -162,7 +252,7 @@ export interface ToolbarPlaygroundSnippetArgs {
   loop?: boolean;
   fullWidth?: boolean;
   align?: string;
-  wrap?: boolean;
+  overflow?: string;
   "aria-label"?: string;
 }
 
@@ -186,7 +276,7 @@ export function toolbarPlaygroundSnippet(args: ToolbarPlaygroundSnippetArgs): st
   if (args.loop === false) attributes.push("loop={false}");
   if (args.fullWidth) attributes.push("fullWidth");
   if (args.align === "center" || args.align === "end") attributes.push(`align="${args.align}"`);
-  if (args.wrap) attributes.push("wrap");
+  if (args.overflow === "wrap" || args.overflow === "scroll") attributes.push(`overflow="${args.overflow}"`);
   return `{/* Icons come from @dbm-design-system/icons */}
 <Toolbar ${attributes.join(" ")}>
   <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />

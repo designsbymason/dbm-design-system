@@ -38,6 +38,7 @@ export const propOrder = [
   "fullWidth",
   "disabled",
   "loop",
+  "rovingFocus",
   "dir",
   "aria-label",
   "aria-labelledby",
@@ -60,7 +61,7 @@ italic, underline. The items are fused into one control by default, or spaced ap
 or a column, and the chosen one is marked in one of three looks (`subtle`, `outlined`, `solid`).
 
 The group is one tab stop; the arrow keys move between its items (roving focus). In a single group they also choose the item they land on,
-as in a native radio group; in a multiple group they only move focus, and `Space` or `Enter` chooses the focused one. A single group is a `radiogroup` of `radio` items, a multiple group a `toolbar` of toggle buttons.
+as in a native radio group; in a multiple group they only move focus, and `Space` or `Enter` chooses the focused one. A single group is a `radiogroup` of `radio` items, a multiple group a `toolbar` of toggle buttons. Inside a `Toolbar`, use `Toolbar.ToggleGroup`, which turns off the group's own roving focus (`rovingFocus={false}`) so the toolbar stays one tab stop; a multiple group is then a plain `group`.
 
 ### Import
 
@@ -81,6 +82,7 @@ Its items are `ToggleGroup.Item`s.
   of={ToggleGroupStories.Playground}
   exclude={[
     "children",
+    "rovingFocus",
     "value",
     "defaultValue",
     "onValueChange",

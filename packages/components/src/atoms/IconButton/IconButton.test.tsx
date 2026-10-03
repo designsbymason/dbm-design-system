@@ -1,5 +1,6 @@
 import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -701,5 +702,56 @@ describe("IconButton", () => {
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  describe("tooltip", () => {
+    it("shows no tooltip, and adds nothing to the DOM, unless asked", () => {
+      render(<IconButton icon={TrashIcon} aria-label="Delete" />);
+      expect(screen.getByRole("button", { name: "Delete" })).not.toHaveAttribute("data-state");
+    });
+
+    it("shows the aria-label on keyboard focus with tooltip, and the button keeps its name", async () => {
+      const user = userEvent.setup();
+      render(<IconButton icon={TrashIcon} aria-label="Delete" tooltip />);
+      await user.tab();
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Delete");
+      expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    });
+
+    it("shows other content in place of the label, and a node too", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<IconButton icon={TrashIcon} aria-label="Delete" tooltip="Delete this item" />);
+      await user.tab();
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Delete this item");
+      rerender(<IconButton icon={TrashIcon} aria-label="Delete" tooltip={<span>Delete <kbd>⌫</kbd></span>} />);
+      expect((await screen.findByRole("tooltip")).querySelector("kbd")).not.toBeNull();
+    });
+
+    it.each([[false], [""], [null], [undefined]])("treats tooltip=%s as no tooltip", async (value) => {
+      const user = userEvent.setup();
+      render(<IconButton icon={TrashIcon} aria-label="Delete" tooltip={value} />);
+      await user.tab();
+      expect(screen.queryByRole("tooltip")).toBeNull();
+    });
+
+    it("keeps its ref, click handler and toggle state with a tooltip", async () => {
+      const user = userEvent.setup();
+      const ref = createRef<HTMLButtonElement>();
+      const onClick = vi.fn();
+      render(<IconButton ref={ref} icon={HeartIcon} aria-label="Favorite" tooltip defaultPressed={false} onClick={onClick} />);
+      const button = screen.getByRole("button", { name: "Favorite" });
+      expect(ref.current).toBe(button);
+      await user.click(button);
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(button).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("has no axe violations with the tooltip open", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<IconButton icon={TrashIcon} aria-label="Delete" tooltip />);
+      await user.tab();
+      await screen.findByRole("tooltip");
+      expect(await axe(container)).toHaveNoViolations();
+    });
   });
 });

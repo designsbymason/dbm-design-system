@@ -8,6 +8,12 @@ const meta: Meta<typeof Toolbar.Group> = {
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "The items in the group." },
+    attached: {
+      control: "boolean",
+      description:
+        "Fuses the group's buttons into one segmented control: square corners where they meet, one separator between them, no gap (it renders a ButtonGroup), with every item still in the toolbar's arrow-key order. Off, the items sit apart by the bar's own gap.",
+      table: { defaultValue: { summary: "false" } },
+    },
     "aria-label": {
       control: "text",
       description:
@@ -22,7 +28,7 @@ const meta: Meta<typeof Toolbar.Group> = {
       description: "Test identifier for automated testing. Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: { "aria-label": "Text style" },
+  args: { "aria-label": "Text style", attached: false },
 };
 
 export default meta;

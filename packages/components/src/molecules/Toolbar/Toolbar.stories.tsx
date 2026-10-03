@@ -2,18 +2,27 @@ import {
   ArrowClockwiseIcon,
   ArrowCounterClockwiseIcon,
   CursorIcon,
+  DotsThreeIcon,
+  ImageIcon,
   LinkIcon,
   PencilSimpleIcon,
+  TableIcon,
+  TextAlignCenterIcon,
+  TextAlignLeftIcon,
+  TextAlignRightIcon,
   TextBIcon,
   TextItalicIcon,
   TextUnderlineIcon,
   TrashIcon,
 } from "@dbm-design-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
+import { Text } from "../../atoms/Text";
 import { Tooltip } from "../../atoms/Tooltip";
+import { Popover } from "../Popover";
+import { Select } from "../Select";
 import { Toolbar } from "./Toolbar";
 import { toolbarPlaygroundSnippet, toolbarSnippets } from "./Toolbar.snippets";
 import type { ToolbarProps } from "./Toolbar.types";
@@ -98,10 +107,27 @@ const meta: Meta<ToolbarProps> = {
         "Where the items sit along the bar's own direction when the bar has room to spare. It follows the reading direction, so start is the right edge in a right-to-left page. No effect while a Toolbar.Spacer takes the free space, or on a bar only as wide as its items.",
       table: { defaultValue: { summary: "start" } },
     },
-    wrap: {
-      control: "boolean",
-      description: "Lets a horizontal bar wrap its items onto more lines when they don't fit. Off, a bar wider than its container overflows it.",
+    overflow: {
+      control: "select",
+      options: ["visible", "wrap", "scroll"],
+      description:
+        "What a bar does when its items are more than fit. visible lets them overflow the container; wrap wraps a horizontal bar's items onto more lines; scroll keeps one line (or column) and scrolls it, with an edge fade and a button at whichever end has more. A scrolling column needs a height of its own.",
+      table: { defaultValue: { summary: "visible" } },
+    },
+    sticky: {
+      ...noControls,
+      description:
+        "Keeps the bar at the top of the page (or of scrollContainerRef) as the reader scrolls, with a surface behind it and a shadow while it is stuck. Built on Affix. Not a live control: on this page it would pin to the Docs page itself.",
       table: { defaultValue: { summary: "false" } },
+    },
+    stickyOffset: {
+      ...noControls,
+      description: "How far from the top a sticky bar sticks, from the spacing token scale. Has no effect without sticky.",
+      table: { defaultValue: { summary: "0" } },
+    },
+    scrollContainerRef: {
+      ...noControls,
+      description: "The scrollable container a sticky bar sticks within, if it isn't the page itself. Has no effect without sticky.",
     },
     children: {
       ...noControls,
@@ -132,7 +158,7 @@ const meta: Meta<ToolbarProps> = {
     loop: true,
     fullWidth: false,
     align: "start",
-    wrap: false,
+    overflow: "visible",
     "aria-label": "Text formatting",
   },
   render: (args) => (
@@ -319,8 +345,8 @@ export const ResponsiveOrientation: Story = {
 export const Wrapping: Story = {
   name: "Wrapping onto more lines",
   parameters: { docs: { source: { code: toolbarSnippets.wrap } } },
-  args: { wrap: true, variant: "outlined", itemVariant: "secondary", "aria-label": "Actions" },
-  argTypes: { wrap: noControls, itemVariant: noControls, "aria-label": noControls },
+  args: { overflow: "wrap", variant: "outlined", itemVariant: "secondary", "aria-label": "Actions" },
+  argTypes: { overflow: noControls, itemVariant: noControls, "aria-label": noControls },
   render: (args) => (
     <div style={{ maxWidth: "16rem" }}>
       <Toolbar {...args}>
@@ -330,6 +356,155 @@ export const Wrapping: Story = {
         <Toolbar.Button>Archive</Toolbar.Button>
       </Toolbar>
     </div>
+  ),
+};
+
+export const Scrolling: Story = {
+  name: "Scrolling in one line",
+  parameters: { docs: { source: { code: toolbarSnippets.scroll } } },
+  args: { overflow: "scroll", variant: "outlined", itemVariant: "secondary", "aria-label": "Actions" },
+  argTypes: { overflow: noControls, itemVariant: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={{ maxWidth: "18rem" }}>
+      <Toolbar {...args}>
+        <Toolbar.Button>Edit</Toolbar.Button>
+        <Toolbar.Button>Share</Toolbar.Button>
+        <Toolbar.Button>Export</Toolbar.Button>
+        <Toolbar.Button>Archive</Toolbar.Button>
+        <Toolbar.Button>Duplicate</Toolbar.Button>
+        <Toolbar.Button>Delete</Toolbar.Button>
+      </Toolbar>
+    </div>
+  ),
+};
+
+export const ScrollingColumn: Story = {
+  name: "Scrolling in a column",
+  parameters: { docs: { source: { code: toolbarSnippets.scrollColumn } } },
+  args: { overflow: "scroll", orientation: "vertical", variant: "outlined", "aria-label": "Tools" },
+  argTypes: { overflow: noControls, orientation: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={{ height: "10rem" }}>
+      <Toolbar {...args}>
+        <Toolbar.IconButton icon={CursorIcon} aria-label="Select" />
+        <Toolbar.IconButton icon={PencilSimpleIcon} aria-label="Draw" />
+        <Toolbar.IconButton icon={TextBIcon} aria-label="Text" />
+        <Toolbar.IconButton icon={LinkIcon} aria-label="Link" />
+        <Toolbar.IconButton icon={ImageIcon} aria-label="Image" />
+        <Toolbar.IconButton icon={TableIcon} aria-label="Table" />
+        <Toolbar.IconButton icon={TrashIcon} aria-label="Delete" />
+      </Toolbar>
+    </div>
+  ),
+};
+
+export const Sticky: Story = {
+  name: "Sticky",
+  parameters: { docs: { source: { code: toolbarSnippets.sticky } } },
+  args: { sticky: true, variant: "outlined", "aria-label": "Text formatting" },
+  argTypes: { sticky: noControls, "aria-label": noControls },
+  // Stuck to the top of a box that scrolls (`scrollContainerRef`), not of the Docs page.
+  render: function Render(args) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    return (
+      <div ref={scrollRef} style={{ height: "14rem", overflow: "auto", border: "var(--dbm-border-width-1) solid var(--dbm-border-default)" }}>
+        <Toolbar {...args} scrollContainerRef={scrollRef}>
+          <DemoItems />
+        </Toolbar>
+        <div style={{ padding: "var(--dbm-space-4)", display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
+          {["One", "Two", "Three", "Four", "Five", "Six"].map((label) => (
+            <Text key={label}>Scroll this box: the toolbar stays at the top. Paragraph {label}.</Text>
+          ))}
+        </div>
+      </div>
+    );
+  },
+};
+
+export const AttachedGroup: Story = {
+  name: "Attached groups",
+  parameters: { docs: { source: { code: toolbarSnippets.attached } } },
+  args: { variant: "outlined", itemVariant: "secondary", "aria-label": "Editor" },
+  argTypes: { itemVariant: noControls, "aria-label": noControls },
+  render: (args) => (
+    <Toolbar {...args}>
+      <Toolbar.Group aria-label="Text style" attached>
+        <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
+        <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+        <Toolbar.IconButton icon={TextUnderlineIcon} aria-label="Underline" />
+      </Toolbar.Group>
+      <Toolbar.Separator />
+      <Toolbar.Group aria-label="History">
+        <Toolbar.IconButton icon={ArrowCounterClockwiseIcon} aria-label="Undo" />
+        <Toolbar.IconButton icon={ArrowClockwiseIcon} aria-label="Redo" />
+      </Toolbar.Group>
+    </Toolbar>
+  ),
+};
+
+export const ToggleGroups: Story = {
+  name: "Single and multiple choice",
+  parameters: { docs: { source: { code: toolbarSnippets.toggleGroups } } },
+  args: { variant: "outlined", "aria-label": "Text formatting" },
+  argTypes: { "aria-label": noControls },
+  render: (args) => (
+    <Toolbar {...args}>
+      <Toolbar.ToggleGroup aria-label="Text style" type="multiple" variant="subtle">
+        <Toolbar.ToggleItem value="bold" icon={TextBIcon} aria-label="Bold" />
+        <Toolbar.ToggleItem value="italic" icon={TextItalicIcon} aria-label="Italic" />
+      </Toolbar.ToggleGroup>
+      <Toolbar.Separator />
+      <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left" variant="subtle">
+        <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Align left" />
+        <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Align centre" />
+        <Toolbar.ToggleItem value="right" icon={TextAlignRightIcon} aria-label="Align right" />
+      </Toolbar.ToggleGroup>
+    </Toolbar>
+  ),
+};
+
+export const WithTooltips: Story = {
+  name: "Icon buttons with tooltips",
+  parameters: { docs: { source: { code: toolbarSnippets.tooltips } } },
+  args: { variant: "outlined", "aria-label": "Text formatting" },
+  argTypes: { "aria-label": noControls },
+  render: (args) => (
+    <div style={{ paddingBlockStart: "var(--dbm-space-10)" }}>
+      <Toolbar {...args}>
+        <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" tooltip />
+        <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" tooltip />
+        <Toolbar.IconButton icon={TextUnderlineIcon} aria-label="Underline" tooltip="Underline (Ctrl+U)" />
+      </Toolbar>
+    </div>
+  ),
+};
+
+export const WithSelectAndPopover: Story = {
+  name: "A select and a popover",
+  parameters: { docs: { source: { code: toolbarSnippets.selectAndPopover } } },
+  args: { variant: "outlined", "aria-label": "Editor" },
+  argTypes: { "aria-label": noControls },
+  render: (args) => (
+    <Toolbar {...args}>
+      <Toolbar.Item>
+        <Select aria-label="Font size" placeholder="Size" size="sm" defaultValue="14">
+          <Select.Option value="12">12 pt</Select.Option>
+          <Select.Option value="14">14 pt</Select.Option>
+          <Select.Option value="18">18 pt</Select.Option>
+        </Select>
+      </Toolbar.Item>
+      <Toolbar.Separator />
+      <Popover>
+        <Toolbar.Item>
+          <Popover.Trigger asChild>
+            <Button variant="ghost" leadingIcon={DotsThreeIcon}>
+              More
+            </Button>
+          </Popover.Trigger>
+        </Toolbar.Item>
+        <Popover.Content aria-label="More options">Extra options live here.</Popover.Content>
+      </Popover>
+    </Toolbar>
   ),
 };
 
@@ -539,6 +714,236 @@ export const FocusRingInteraction: Story = {
     await expect(italic.getBoundingClientRect().left - bold.getBoundingClientRect().right).toBeLessThan(reach);
     await expect(style.position).toBe("relative");
     await expect(getComputedStyle(italic).position).toBe("static");
+  },
+};
+
+const ScrollItems = () => (
+  <>
+    {["Edit", "Share", "Export", "Archive", "Duplicate", "Delete"].map((label) => (
+      <Toolbar.Button key={label}>{label}</Toolbar.Button>
+    ))}
+  </>
+);
+
+export const ScrollInteraction: Story = {
+  ...hidden,
+  name: "Scrolling — interaction test",
+  args: { overflow: "scroll", variant: "outlined", itemVariant: "secondary" },
+  render: (args) => (
+    <div style={{ width: "16rem" }}>
+      <Toolbar {...args} aria-label="Actions" data-testid="bar">
+        <ScrollItems />
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    const frame = bar.parentElement!;
+    // Wider than the frame: the end has more, the start doesn't, and the end button and fade show.
+    await waitFor(() => expect(frame).toHaveAttribute("data-overflow-end", "true"));
+    await expect(frame).toHaveAttribute("data-overflow-start", "false");
+    const [startButton, endButton] = [...frame.querySelectorAll<HTMLButtonElement>(":scope > button")];
+    // (the fade and button ease in, so read them once the transition has finished)
+    await waitFor(() => expect(getComputedStyle(endButton!).opacity).toBe("1"));
+    await waitFor(() => expect(getComputedStyle(frame, "::after").opacity).toBe("1"));
+    await expect(getComputedStyle(startButton!).opacity).toBe("0");
+    await expect(getComputedStyle(frame, "::before").opacity).toBe("0");
+    // The buttons are at least 24 × 24 and a press never takes focus.
+    const box = endButton!.getBoundingClientRect();
+    await expect(box.width).toBeGreaterThanOrEqual(24);
+    await expect(box.height).toBeGreaterThanOrEqual(24);
+    await userEvent.click(endButton!);
+    await waitFor(() => expect(bar.scrollLeft).toBeGreaterThan(0));
+    await expect(document.activeElement).not.toBe(endButton);
+    await waitFor(() => expect(frame).toHaveAttribute("data-overflow-start", "true"));
+    // The keyboard reaches the last item and the bar scrolls it into view.
+    await userEvent.tab();
+    await userEvent.keyboard("{End}");
+    const last = canvas.getByRole("button", { name: "Delete" });
+    await expect(last).toHaveFocus();
+    await waitFor(() => expect(last.getBoundingClientRect().right).toBeLessThanOrEqual(bar.getBoundingClientRect().right + 1));
+    await waitFor(() => expect(frame).toHaveAttribute("data-overflow-end", "false"));
+    // Its ring is drawn inside the item, so the scrolling box can't cut it off.
+    await expect(parseFloat(getComputedStyle(last).outlineOffset)).toBeLessThan(0);
+  },
+};
+
+export const ScrollRightToLeftInteraction: Story = {
+  ...hidden,
+  name: "Scrolling, right to left — interaction test",
+  args: { overflow: "scroll", variant: "outlined", itemVariant: "secondary", dir: "rtl" },
+  render: (args) => (
+    <div dir="rtl" style={{ width: "16rem" }}>
+      <Toolbar {...args} aria-label="Actions" data-testid="bar">
+        <ScrollItems />
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    const frame = bar.parentElement!;
+    await waitFor(() => expect(frame).toHaveAttribute("data-overflow-end", "true"));
+    await expect(frame).toHaveAttribute("data-overflow-start", "false");
+    // The end of a right-to-left bar is its left edge: the end button and fade are there.
+    const endButton = frame.querySelectorAll<HTMLButtonElement>(":scope > button")[1]!;
+    await expect(endButton.getBoundingClientRect().left - frame.getBoundingClientRect().left).toBeLessThan(4);
+    await userEvent.click(endButton);
+    await waitFor(() => expect(bar.scrollLeft).toBeLessThan(0));
+    await waitFor(() => expect(frame).toHaveAttribute("data-overflow-start", "true"));
+  },
+};
+
+export const ScrollColumnInteraction: Story = {
+  ...hidden,
+  name: "Scrolling column — interaction test",
+  args: { overflow: "scroll", orientation: "vertical", variant: "outlined" },
+  render: (args) => (
+    <div style={{ height: "8rem" }}>
+      <Toolbar {...args} aria-label="Tools" data-testid="bar">
+        <Items />
+        <Toolbar.IconButton icon={LinkIcon} aria-label="Link" />
+        <Toolbar.IconButton icon={ImageIcon} aria-label="Image" />
+        <Toolbar.IconButton icon={TableIcon} aria-label="Table" />
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    const frame = bar.parentElement!;
+    await waitFor(() => expect(frame).toHaveAttribute("data-overflow-end", "true"));
+    await expect(bar.scrollHeight).toBeGreaterThan(bar.clientHeight);
+    await expect(getComputedStyle(bar).overflowY).toBe("auto");
+    await userEvent.click(frame.querySelectorAll<HTMLButtonElement>(":scope > button")[1]!);
+    await waitFor(() => expect(bar.scrollTop).toBeGreaterThan(0));
+  },
+};
+
+export const StickyInteraction: Story = {
+  ...hidden,
+  name: "Sticky — interaction test",
+  args: { sticky: true, variant: "ghost" },
+  render: function Render(args) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    return (
+      <div ref={scrollRef} data-testid="scroller" style={{ height: "10rem", overflow: "auto" }}>
+        <Toolbar {...args} aria-label="Formatting" scrollContainerRef={scrollRef} data-testid="bar">
+          <Items />
+        </Toolbar>
+        <div style={{ height: "40rem" }} />
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    const scroller = canvas.getByTestId("scroller");
+    await expect(bar).not.toHaveAttribute("data-stuck");
+    // A ghost bar still gets a surface when sticky, so what scrolls beneath doesn't show through.
+    await expect(getComputedStyle(bar).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    scroller.scrollTop = 300;
+    await waitFor(() => expect(bar).toHaveAttribute("data-stuck"));
+    await expect(getComputedStyle(bar).boxShadow).not.toBe("none");
+    await expect(Math.abs(bar.getBoundingClientRect().top - scroller.getBoundingClientRect().top)).toBeLessThan(2);
+    scroller.scrollTop = 0;
+    await waitFor(() => expect(bar).not.toHaveAttribute("data-stuck"));
+  },
+};
+
+export const AttachedInteraction: Story = {
+  ...hidden,
+  name: "Attached group — interaction test",
+  args: { variant: "outlined", itemVariant: "secondary" },
+  render: (args) => (
+    <Toolbar {...args} aria-label="Editor">
+      <Toolbar.Group aria-label="Text style" attached data-testid="group">
+        <Items />
+      </Toolbar.Group>
+      <Toolbar.Button>Link</Toolbar.Button>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = within(canvas.getByTestId("group")).getAllByRole("button");
+    // Fused: no gap between neighbours, square corners where they meet, rounded at the ends.
+    const [first, second] = [group[0]!.getBoundingClientRect(), group[1]!.getBoundingClientRect()];
+    await expect(Math.abs(second.left - first.right)).toBeLessThan(2);
+    await expect(getComputedStyle(group[0]!).borderStartEndRadius).toBe("0px");
+    await expect(getComputedStyle(group[1]!).borderStartStartRadius).toBe("0px");
+    await expect(parseFloat(getComputedStyle(group[0]!).borderStartStartRadius)).toBeGreaterThan(0);
+    // The bar is still one tab stop and the arrow keys run through the fused group into the button after it.
+    await userEvent.tab();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}{ArrowRight}");
+    await expect(canvas.getByRole("button", { name: "Link" })).toHaveFocus();
+  },
+};
+
+export const ToggleGroupInteraction: Story = {
+  ...hidden,
+  name: "Toggle group in a toolbar — interaction test",
+  args: { variant: "outlined" },
+  render: (args) => (
+    <>
+      <button>before</button>
+      <Toolbar {...args} aria-label="Formatting">
+        <Toolbar.Button>Link</Toolbar.Button>
+        <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left" variant="subtle">
+          <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Align left" />
+          <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Align centre" />
+        </Toolbar.ToggleGroup>
+      </Toolbar>
+      <button>after</button>
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.tab();
+    await userEvent.tab();
+    await expect(canvas.getByRole("button", { name: "Link" })).toHaveFocus();
+    // One tab stop in the whole bar: with focus inside it, exactly one item has a tab index of 0.
+    const bar = within(canvas.getByRole("toolbar"));
+    const items = [...bar.getAllByRole("button"), ...bar.getAllByRole("radio")];
+    await expect(items.filter((item) => item.tabIndex === 0)).toHaveLength(1);
+    // Tab leaves the bar from its first item: the toggle group adds no tab stop of its own.
+    await userEvent.tab();
+    await expect(canvas.getByRole("button", { name: "after" })).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(canvas.getByRole("button", { name: "Link" })).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(canvas.getByRole("radio", { name: "Align left" })).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(canvas.getByRole("radio", { name: "Align centre" })).toHaveFocus();
+    await expect(canvas.getByRole("radio", { name: "Align centre" })).toHaveAttribute("aria-checked", "true");
+    await userEvent.tab();
+    await expect(canvas.getByRole("button", { name: "after" })).toHaveFocus();
+  },
+};
+
+export const TooltipInteraction: Story = {
+  ...hidden,
+  name: "Tooltip — interaction test",
+  args: { variant: "outlined" },
+  render: (args) => (
+    <div style={{ paddingBlockStart: "4rem" }}>
+      <Toolbar {...args} aria-label="Formatting">
+        <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" tooltip data-testid="with" />
+        <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" data-testid="without" />
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // A tooltip adds no box of its own: the two buttons are the same size.
+    const [withTip, without] = [canvas.getByTestId("with"), canvas.getByTestId("without")];
+    await expect(withTip.getBoundingClientRect().width).toBe(without.getBoundingClientRect().width);
+    await expect(withTip.getBoundingClientRect().height).toBe(without.getBoundingClientRect().height);
+    await userEvent.tab();
+    const tooltip = await within(document.body).findByRole("tooltip");
+    await expect(tooltip).toHaveTextContent("Bold");
+    // Above its button, not over a neighbour.
+    await expect(tooltip.getBoundingClientRect().bottom).toBeLessThanOrEqual(withTip.getBoundingClientRect().top + 1);
   },
 };
 

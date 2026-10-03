@@ -8,17 +8,20 @@ Finalized** — the user declares that. The decision is [ADR-0032](../adr/0032-t
 
 ## What it is
 
-A compound component, `Toolbar` plus `Toolbar.Button`, `.IconButton`, `.Item`, `.Group`, `.Separator`
-and `.Spacer`. The root is a named `role="toolbar"`: `variant` (how the bar is drawn: `ghost`
+A compound component, `Toolbar` plus `Toolbar.Button`, `.IconButton`, `.ToggleGroup`, `.ToggleItem`, `.Item`,
+`.Group`, `.Separator` and `.Spacer`. The root is a named `role="toolbar"`: `variant` (how the bar is drawn: `ghost`
 default, `outlined`, `filled`), `itemVariant` (every item's default look, `ghost` default), `size`,
-`rounded`, `disabled`, `orientation` (a breakpoint map too), `dir`, `loop`, `fullWidth`, `align`, `wrap`.
+`rounded`, `disabled`, `orientation` (a breakpoint map too), `dir`, `loop`, `fullWidth`, `align`, `overflow`
+(`visible`/`wrap`/`scroll`), `sticky` (with `stickyOffset` and `scrollContainerRef`).
 `Toolbar.Button` and `Toolbar.IconButton` are the atoms in the arrow-key order and take every prop of
-theirs (a toggle is an icon button with `pressed`); `Toolbar.Item` puts any other single element in the
-order; `Toolbar.Group` is a named cluster; `Toolbar.Separator` runs across the bar's direction;
+theirs (a toggle is an icon button with `pressed`; `tooltip` labels it); `Toolbar.ToggleGroup` and
+`Toolbar.ToggleItem` are a single or multiple choice in the order; `Toolbar.Item` puts any other single element
+(a `Select`, a popover or menu trigger, a link) in the order; `Toolbar.Group` is a named cluster, `attached` to
+fuse its buttons; `Toolbar.Separator` runs across the bar's direction;
 `Toolbar.Spacer` is the `Spacer` atom. Settings reach the items through `ButtonGroup`'s context
-(ADR-0025), merged with an enclosing group's. No new token: the stylesheet uses `bg.surface`,
-`bg.neutral-subtle`, `border.default`, `border.neutral`, `border-width.1`, `radius.lg`/`full` and
-`space.1`–`3`. Adds 2.41KB JS / 1.48KB CSS gzipped (budget 10KB).
+(ADR-0025), merged with an enclosing group's. No new token: the stylesheet uses existing semantic and
+primitive tokens only (the Docs page lists them, and a test keeps the list true). Adds 5.41KB JS / 2.95KB CSS gzipped
+(budget 10KB; 2.41KB before the second round, which brought in `ToggleGroup`, `ButtonGroup` and `Affix`).
 
 ## Decisions made during the build
 
@@ -52,8 +55,8 @@ Toolbar was not yet declared Finalized, so these are part of the build, not a re
   space (to put some items at each end, use the spacer). `between` was left out: the spacer says it more clearly and
   works with groups. A real-browser story measures the gap before and after the items for all three values.
 - **Focus ring drawn behind the next item (reported with a screenshot).** Flex items paint atomically in source order,
-  so a later item's background covers the part of an earlier item's ring that overlaps it (the ring reaches 4px + 3px
-  past the item, the gap is 4px). Fixed as `ButtonGroup` does it: the focused item is positioned (`position: relative`,
+  so a later item's background covers the part of an earlier item's ring that overlaps it (the ring reaches a 4px offset plus a 2px line, 6px,
+  past the item, and the gap is 4px). Fixed as `ButtonGroup` does it: the focused item is positioned (`position: relative`,
   `z-index: base`), which paints above static siblings. The same bug was in the first push, and the keyboard story
   (which checked the ring exists) could not see it; a new story asserts the ring reaches past the gap and that the
   focused item is positioned and its neighbour is not, and fails when the rule is removed. A screenshot of the fix
@@ -122,3 +125,55 @@ Toolbar was not yet declared Finalized, so these are part of the build, not a re
   it. Toggles are covered by `pressed` icon buttons for now.
 - **Overflow menu** (items that don't fit collapse into a "…" menu): `wrap` and an `orientation` map cover narrow screens;
   an overflow menu needs the `Menu` organism.
+
+## Second round: the review's feature gaps (2026-10-03, at explicit direction)
+
+Seven items from the gap list, built the same day. Still not declared Finalized.
+
+- **A `Select` or popover trigger in `Toolbar.Item` (gap 1) — verified, then tested, not changed.** A probe first: a
+  `Select` and a `Popover.Trigger` both work through `Toolbar.Item` as it was: reached by the arrow keys, opened with
+  `Enter`, focus returned on `Escape` or on choosing, arrows resuming along the bar. So the gap was the missing proof and
+  docs, now unit tests (both), a story, a snippet and a Docs section. One limit, documented rather than fixed: in a vertical
+  bar a `Select`'s own `ArrowUp`/`ArrowDown` open its list instead of moving along the bar (the trigger takes them).
+- **`Toolbar.ToggleGroup` and `Toolbar.ToggleItem` (gap 2)**, [ADR-0033](../adr/0033-toolbar-togglegroup-is-togglegroup-with-its-own-roving-focus-turned-off.md):
+  `ToggleGroup` gained a public `rovingFocus` prop (additive, see [ToggleGroup.md](ToggleGroup.md)) and the toolbar wraps it
+  with its own size, rounded, orientation, dir and disabled. The first draft of the "one tab stop" test passed even with the
+  group keeping its own roving focus (it only tabbed *into* the bar); a mutation showed it, and the tests now press `Tab` from the
+  item before the group and expect to leave the bar, in jsdom and in Chromium.
+- **`Toolbar.Group attached` (gap 3)** renders a `ButtonGroup`, so the fused look, separators and focus lift are not
+  copied; the bar's settings reach it through the shared context, and the bar's orientation is passed down. A group with no
+  name warns once from the component that renders it (`Toolbar.Group`, or `ButtonGroup` when attached).
+- **`sticky` with `stickyOffset` and `scrollContainerRef` (gap 5)** composes `Affix` the way `Alert` does. A sticky bar gets a
+  surface (`bg.surface`; a filled or outlined bar keeps its own) so what scrolls beneath doesn't show, the one-pixel marker is
+  pulled up, and a shadow shows while stuck (light and dark pair, as `Card` and `Alert`). A real-browser story scrolls a box and
+  checks `data-stuck`, the shadow and the stuck position.
+- **`IconButton` `tooltip` (gap 7)**, an atom change: see [IconButton.md](IconButton.md).
+- **`overflow` replaces the boolean `wrap` (gap 8).** `wrap` shipped in the first push; `visible`/`wrap`/`scroll` are mutually
+  exclusive, and two booleans for them is the flag pile `06` §2 warns about, so it became one prop. This is a break against
+  the first push, accepted because the package is unpublished and `Toolbar` isn't Finalized. `scroll` keeps one line (or one
+  column) with a scroller, edge fades and start/end buttons: the bar sits in a frame that carries the surface (outlined, filled,
+  sticky) and is the positioning parent for the fades and buttons, which must be outside the scroller. The buttons are for a
+  pointer only: out of the tab order, `aria-hidden`, and a press never takes focus (so nothing loses focus when one disappears
+  at the end), because the arrow keys already move along the bar and the browser scrolls the focused item into view, kept clear
+  of the fade by `scroll-padding`. Inside the scroller the focus ring is drawn inside each item (`05` §6: a scrolling box cuts off
+  a ring drawn outside it). Real-browser stories cover a row, a right-to-left row (the end is the left edge; `scrollLeft` goes negative), a column, the fade and
+  button opacity (read after their transition), the 24px button size, and the last item scrolling fully into view.
+
+### Checks added this round
+
+Nested providers both ways stay tested; a `Toolbar.ToggleGroup` disabled by the bar or by itself leaves the order; the
+scroll end detection and the button's direction (including reversed in right-to-left) are unit-tested by stubbing layout
+rectangles, since jsdom has none; a tooltip adds no box (buttons with and without it are the same size, in Chromium) and
+opens above its button; the attached group is fused (no gap, square meeting corners, round ends) and the bar stays one tab stop
+through it. Mutations that each failed a test: the toggle group keeping its own roving focus, `attached` ignored, the sticky surface
+removed, the scroll-end button never shown.
+
+### Known limits and costs
+
+- **`useScrollEdges` repeats `Tabs`' `useTabsOverflow` technique** (compare the first and last child to the list's box). A second
+  consumer is the point to extract it into `primitives`, but that would change the Finalized `Tabs`, so it was kept local and
+  is flagged here for the user.
+- A scrolling **column** only responds when its container has a height; `align` has nothing to do in a scrolling bar's frame
+  beyond what the scroller shows.
+- A sticky **ghost** bar gets an opaque surface; a transparent sticky bar over scrolling content would be unreadable.
+- Disabled items still can't be focused (Radix), and there is still no overflow *menu* (needs the `Menu` organism).

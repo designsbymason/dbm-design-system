@@ -76,3 +76,16 @@ Declared by the user after the final review: its one defect was fixed, and the s
 The gaps and limitations listed in the final review are accepted as they stand.
 
 Later changes get a dated entry here, and go through `06-engineering-standards.md` §9's Finalized rules (ask first, then the three-question test).
+
+## `rovingFocus` added, 2026-10-03 (additive; stays Finalized)
+
+At explicit direction, for `Toolbar.ToggleGroup` ([ADR-0033](../adr/0033-toolbar-togglegroup-is-togglegroup-with-its-own-roving-focus-turned-off.md)).
+A public `rovingFocus` prop (default `true`, Radix's own prop): off, the group manages no focus of its own, so a
+container that owns roving focus (a toolbar) can put its items in its own order. With it off `loop` has no effect and a
+`type="multiple"` group is a plain `group` rather than Radix's `toolbar` (a toolbar inside a toolbar is invalid); a single
+group stays a `radiogroup`.
+
+Three-question test: the default is today's behaviour, so nothing that existed changes and it stays Finalized, with a
+scoped mini-pass: JSDoc, a Properties-table row (a non-live control: turning it off in the Playground would only remove
+the keyboard movement), a Docs sentence, and three tests (one tab stop by default; with it off every item is a tab stop and
+a multiple group is a `group`; a single group stays a `radiogroup` and still chooses).

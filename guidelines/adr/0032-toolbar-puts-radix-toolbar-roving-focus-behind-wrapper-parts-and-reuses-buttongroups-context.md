@@ -1,6 +1,6 @@
 # 0032 — `Toolbar` gets its roving focus from Radix `Toolbar` through wrapper parts (`Toolbar.Button`, `Toolbar.IconButton`, `Toolbar.Item`) and hands settings down through `ButtonGroup`'s context, over a hand-rolled key handler or a bare container
 
-**Status:** Accepted · **Date:** 2026-10-03
+**Status:** Accepted · **Date:** 2026-10-03 · **Amended 2026-10-03** — the toggle group, left out of the first version, was added the same day ([ADR-0033](0033-toolbar-togglegroup-is-togglegroup-with-its-own-roving-focus-turned-off.md)); the decision itself is unchanged
 
 ## Context
 A toolbar is not a styled row of buttons: it is one tab stop with arrow-key movement between its items (the ARIA toolbar pattern: a roving tab index, `Home`/`End`, direction-aware arrows, focus returning to the last-used item). Two things had to be settled.
@@ -14,7 +14,7 @@ A toolbar is not a styled row of buttons: it is one tab stop with arrow-key move
 - **Items are wrapper parts, not automatic.** `Toolbar.Button` and `Toolbar.IconButton` render Radix's toolbar button `asChild` onto the `Button` and `IconButton` atoms; `Toolbar.Item` does the same for any other single focusable element. A plain `Button` placed in a toolbar is just another tab stop; the docs and a test say so. `Toolbar.Group` (a named `role="group"`), `Toolbar.Separator` (Radix's, so its orientation is always across the bar's) and `Toolbar.Spacer` (the existing `Spacer` atom) complete the set.
 - **Settings reach the buttons through `ButtonGroup`'s own context**, with no second context: the bar provides `variant` (named `itemVariant` on the bar, since `variant` there means how the bar itself is drawn), `size`, `rounded` and `disabled`, merged with an enclosing `ButtonGroup`'s, and an item's own prop still wins. The bar's own context carries only `disabled`, so an item can leave the arrow-key order when the bar is disabled.
 - **`itemVariant` defaults to `ghost`**, because a toolbar of icon buttons is the common case and a row of `primary` buttons is not.
-- **A toggle is an icon button with `pressed`**, which the atom already has. There is no `Toolbar.ToggleGroup`; a `ToggleGroup` inside a toolbar would be a second roving-focus group, and Radix has a special part for exactly that nesting. Left out of the first version, not ruled out.
+- **A toggle is an icon button with `pressed`**, which the atom already has. *(Amended 2026-10-03: this originally went on to say there was no `Toolbar.ToggleGroup`, since a `ToggleGroup` inside a toolbar is a second roving-focus group, and that it was left out of the first version, not ruled out. It was added the same day: ADR-0033.)*
 
 ## Alternatives considered
 **A hand-rolled key handler** — rejected under ADR-0004: it would re-implement roving focus, direction handling and the "tab stop moves to a still-focusable item" rule, and every one of those has a bug-shaped corner.

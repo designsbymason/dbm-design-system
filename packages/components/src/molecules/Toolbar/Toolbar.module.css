@@ -41,15 +41,33 @@
   justify-content: flex-end;
 }
 
-/* `fullWidth`: the bar fills its container, which also gives a `Toolbar.Spacer` room to take up. */
+/* `fullWidth`: the bar (or, scrolling, its frame) fills its container, which also gives a `Toolbar.Spacer` room to take up. */
 .fullWidth {
   display: flex;
   inline-size: 100%;
 }
 
 /* A ghost bar has no surface, so its padding would only push the items off the line they should align to. */
-.root:not(.outlined):not(.filled) {
+.ghost {
   padding: 0;
+}
+
+/* `sticky`: a surface behind the bar so what scrolls beneath it doesn't show through (a filled or outlined bar sets its
+   own, below), and a shadow while it is stuck (`Affix` puts `data-stuck` on this element). `Affix` puts a 1px marker in
+   front of a sticky element to tell when it is stuck, which would leave a hairline of page above the bar; pulling the bar
+   up by the marker's height cancels it. Shadows aren't a reactive semantic token, so the light/dark pair is swapped per
+   theme, as `Card` and `Alert` do. */
+.sticky {
+  background-color: var(--dbm-bg-surface);
+  margin-block-start: calc(var(--dbm-space-px) * -1);
+}
+
+.sticky[data-stuck] {
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .sticky[data-stuck] {
+  box-shadow: var(--dbm-shadow-dark-md);
 }
 
 .outlined,
@@ -117,4 +135,190 @@
   block-size: var(--dbm-border-width-1);
   margin-block: var(--dbm-space-1);
   margin-inline: var(--dbm-space-1);
+}
+
+/* --- overflow="scroll" ---
+   The bar becomes a scroller inside a frame. The frame is the outermost box: it carries the surface (outlined, filled,
+   sticky), is the positioning parent for the edge fades and scroll buttons, and is as wide as its items up to its
+   container's width. They have to sit outside the scrolling element, or they would scroll away with it. */
+.frame {
+  --toolbar-fade: var(--dbm-bg-surface);
+  box-sizing: border-box;
+  display: inline-flex;
+  max-inline-size: 100%;
+  min-block-size: 0;
+  min-inline-size: 0;
+  position: relative;
+}
+
+.frame[data-variant="filled"] {
+  --toolbar-fade: var(--dbm-bg-neutral-subtle);
+}
+
+.frame[data-orientation="vertical"] {
+  flex-direction: column;
+  max-block-size: 100%;
+}
+
+.frame.fullWidth {
+  display: flex;
+}
+
+/* Scrolls along the bar's own axis with no visible scrollbar (the fades and buttons say there is more; the arrow keys,
+   a trackpad and a swipe always scroll it). `scroll-padding` keeps a focused item clear of the fade over the edge. */
+.scroller {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overscroll-behavior: contain;
+  scroll-padding: var(--dbm-space-10);
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.scroller[data-orientation="horizontal"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.scroller[data-orientation="vertical"] {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Inside a box that scrolls, the focus ring is drawn inside the control: an outline drawn outside would be cut off by
+   the box's edge (`05-component-api-conventions.md` §6). Three classes deep so it wins over each item's own ring rule,
+   whichever stylesheet loads last. */
+.frame .scroller :focus-visible {
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* A gradient from the surface fading to transparent over whichever end has more, shown only while there is more that
+   way. Pseudo-elements, since there is nothing interactive or readable in them. The gradient's direction is physical,
+   so the right-to-left flip is below; position is logical and mirrors on its own. */
+.frame::before,
+.frame::after {
+  border-radius: inherit;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-dropdown);
+}
+
+.frame[data-orientation="horizontal"]::before,
+.frame[data-orientation="horizontal"]::after {
+  block-size: 100%;
+  inline-size: var(--dbm-space-10);
+  inset-block: 0;
+}
+
+.frame[data-orientation="horizontal"]::before {
+  background: linear-gradient(to right, var(--toolbar-fade), transparent);
+  inset-inline-start: 0;
+}
+
+.frame[data-orientation="horizontal"]::after {
+  background: linear-gradient(to left, var(--toolbar-fade), transparent);
+  inset-inline-end: 0;
+}
+
+.frame[data-orientation="horizontal"]:dir(rtl)::before {
+  background: linear-gradient(to left, var(--toolbar-fade), transparent);
+}
+
+.frame[data-orientation="horizontal"]:dir(rtl)::after {
+  background: linear-gradient(to right, var(--toolbar-fade), transparent);
+}
+
+.frame[data-orientation="vertical"]::before,
+.frame[data-orientation="vertical"]::after {
+  block-size: var(--dbm-space-10);
+  inline-size: 100%;
+  inset-inline: 0;
+}
+
+.frame[data-orientation="vertical"]::before {
+  background: linear-gradient(to bottom, var(--toolbar-fade), transparent);
+  inset-block-start: 0;
+}
+
+.frame[data-orientation="vertical"]::after {
+  background: linear-gradient(to top, var(--toolbar-fade), transparent);
+  inset-block-end: 0;
+}
+
+.frame[data-overflow-start="true"]::before,
+.frame[data-overflow-end="true"]::after {
+  opacity: 1;
+}
+
+/* The scroll buttons sit on the fade's solid end, above it. They are for a pointer, so they show only while there is
+   more that way and are never in the tab order. At least 24 × 24px (WCAG 2.5.8). */
+.scrollButton {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--dbm-icon-default);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  padding: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-sticky);
+}
+
+.frame[data-overflow-start="true"] .scrollButtonStart,
+.frame[data-overflow-end="true"] .scrollButtonEnd {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scrollButton:hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.frame[data-orientation="horizontal"] .scrollButton {
+  block-size: 100%;
+  min-inline-size: var(--dbm-space-6);
+}
+
+.frame[data-orientation="vertical"] .scrollButton {
+  inline-size: 100%;
+  min-block-size: var(--dbm-space-6);
+}
+
+.frame[data-orientation="horizontal"] .scrollButtonStart {
+  inset-block: 0;
+  inset-inline-start: 0;
+}
+
+.frame[data-orientation="horizontal"] .scrollButtonEnd {
+  inset-block: 0;
+  inset-inline-end: 0;
+}
+
+.frame[data-orientation="vertical"] .scrollButtonStart {
+  inset-block-start: 0;
+  inset-inline: 0;
+}
+
+.frame[data-orientation="vertical"] .scrollButtonEnd {
+  inset-block-end: 0;
+  inset-inline: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame::before,
+  .frame::after,
+  .scrollButton {
+    transition: none;
+  }
 }

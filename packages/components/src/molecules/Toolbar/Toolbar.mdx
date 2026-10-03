@@ -1,6 +1,7 @@
 import { TextBIcon, TextItalicIcon } from "@dbm-design-system/icons";
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { Tooltip } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -23,7 +24,10 @@ export const propOrder = [
   "loop",
   "fullWidth",
   "align",
-  "wrap",
+  "overflow",
+  "sticky",
+  "stickyOffset",
+  "scrollContainerRef",
   "aria-label",
   "aria-labelledby",
   "aria-describedby",
@@ -35,7 +39,7 @@ export const propOrder = [
 
 export const itemPropOrder = ["children", "disabled"];
 
-export const groupPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["children", "attached", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 
 <Meta of={ToolbarStories} />
 
@@ -90,13 +94,16 @@ passed straight through to the underlying element.
 
 The parts of a toolbar:
 
-- **`Toolbar.Button`** is a `Button` in the arrow-key order, taking every `Button` prop. **`Toolbar.IconButton`** is an
-  `IconButton`, taking every `IconButton` prop, including `pressed` for a toggle. Their `variant`, `size`, `rounded` and
-  `disabled` default to the toolbar's.
-- **`Toolbar.Separator`** is a line between items, across the bar's own direction, announced as a separator. It takes
-  `className`, `style`, `id` and `data-testid`.
-- **`Toolbar.Spacer`** is flexible empty space that pushes whatever follows it to the far end. It is hidden from
-  assistive tech and takes the `Spacer` props.
+- **`Toolbar.Button`** is a `Button` in the arrow-key order. **`Toolbar.IconButton`** is an `IconButton`, taking every
+  `IconButton` prop, including `pressed` for a toggle and `tooltip` for a label on hover and focus. Their `variant`,
+  `size`, `rounded` and `disabled` default to the toolbar's.
+- **`Toolbar.ToggleGroup`** and **`Toolbar.ToggleItem`** are a `ToggleGroup` and its `ToggleGroup.Item`s in the arrow-key
+  order, for choosing one option (alignment) or several (text style). They take every `ToggleGroup` prop except `loop` and
+  `rovingFocus`, which the toolbar owns; `size`, `rounded`, `disabled`, `orientation` and `dir` default to the toolbar's.
+- **`Toolbar.Item`** puts any other single focusable element in the order: a `Select`, a popover or menu trigger, a link.
+- **`Toolbar.Group`** is a named cluster; **`Toolbar.Separator`** is a line between items, across the bar's own direction,
+  announced as a separator (it takes `className`, `style`, `id` and `data-testid`); **`Toolbar.Spacer`** is flexible empty
+  space that pushes whatever follows it to the far end, hidden from assistive tech (it takes the `Spacer` props).
 
 ### Toolbar.Item properties
 
@@ -157,6 +164,22 @@ the free space, so `align` has nothing left to do.
 
 <Canvas of={ToolbarStories.Align} />
 
+### Attached groups
+
+`Toolbar.Group attached` fuses a group's buttons into one segmented control, as a `ButtonGroup` does, while each stays in
+the toolbar's arrow-key order. A group without it keeps its items apart.
+
+<Canvas of={ToolbarStories.AttachedGroup} />
+
+### Single and multiple choice
+
+A `Toolbar.ToggleGroup` is a choice that is part of the bar: one option out of several (a `radiogroup`, where an arrow
+key also chooses the item it lands on) or independent toggles (`type="multiple"`, a plain `group`). Its items are
+`Toolbar.ToggleItem`s. Unlike a `ToggleGroup` placed in a toolbar directly, it doesn't add a tab stop of its own: the
+arrow keys of the toolbar run straight through it.
+
+<Canvas of={ToolbarStories.ToggleGroups} />
+
 ### Toggle buttons
 
 A `Toolbar.IconButton` with `pressed` (or `defaultPressed`) is a toggle: its state is announced with `aria-pressed`
@@ -177,16 +200,54 @@ whichever layout is showing.
 
 ### Wrapping onto more lines
 
-A horizontal bar that runs out of room overflows its container unless `wrap` is set, which lets it wrap its items
-onto more lines. Arrow keys still follow the order the items are written in.
+When there are more items than fit, `overflow` decides what happens. `visible` (the default) lets the bar overflow its
+container. `wrap` wraps a horizontal bar's items onto more lines; the arrow keys still follow the order the items are
+written in.
 
 <Canvas of={ToolbarStories.Wrapping} />
+
+### Scrolling in one line
+
+`overflow="scroll"` keeps one line and scrolls it. An edge fade and a button show at whichever end has more; the buttons
+are for a pointer (they are not in the tab order and are hidden from assistive tech), and the arrow keys scroll the item
+that takes focus into view. A trackpad or a swipe scrolls it too.
+
+<Canvas of={ToolbarStories.Scrolling} />
+
+### Scrolling in a column
+
+A vertical bar scrolls the same way once it has a height of its own to respond to — here a container 10rem tall.
+
+<Canvas of={ToolbarStories.ScrollingColumn} />
+
+### Sticky
+
+`sticky` keeps the bar at the top of the page as the reader scrolls, with a surface behind it and a shadow while it is
+stuck. It is built on `Affix`, like `Alert`'s `sticky`: `scrollContainerRef` names the box that scrolls when it isn't the
+page (here, the framed box), and `stickyOffset` leaves room for a header that is sticky too.
+
+<Canvas of={ToolbarStories.Sticky} />
 
 ### Disabled
 
 A disabled item can't be focused, so the arrow keys skip it. `disabled` on the toolbar disables every item.
 
 <Canvas of={ToolbarStories.Disabled} />
+
+### Icon buttons with tooltips
+
+`tooltip` on a `Toolbar.IconButton` shows its name on hover and keyboard focus (`true` uses the `aria-label`; any other
+content is shown instead), so the three-line `Tooltip` wrapper isn't needed.
+
+<Canvas of={ToolbarStories.WithTooltips} />
+
+### A select and a popover
+
+`Toolbar.Item` puts a `Select`, or a popover or menu trigger, into the arrow-key order. `Enter` or `Space` opens it,
+`Escape` (or choosing an option) gives focus back to it, and the arrow keys carry on along the bar. In a vertical bar a
+`Select`'s own `ArrowUp` and `ArrowDown` open its list instead of moving along the bar.
+
+<Canvas of={ToolbarStories.WithSelectAndPopover} />
 
 ### Wrapped in a tooltip, or a link
 
@@ -213,7 +274,7 @@ forwards in the page does so in the toolbar too.
 
 - Use a toolbar for several commands that act on the same thing and are used together — formatting, tools, view controls.
 - Give it a name (`aria-label`, or `aria-labelledby` pointing at a visible label), and name each `Toolbar.Group` too.
-- Build it from `Toolbar.Button`, `Toolbar.IconButton` and `Toolbar.Item`, so every command is in the arrow-key order.
+- Build it from `Toolbar.Button`, `Toolbar.IconButton`, `Toolbar.ToggleGroup` and `Toolbar.Item`, so every command is in the arrow-key order.
 - Give each `IconButton` an `aria-label`, and add a `Tooltip` where an icon alone is not clear.
 - Say `itemVariant` and `size` once on the toolbar, and override only the odd item out.
 - Keep a toolbar short — a handful to a dozen items — and group related commands with separators.
@@ -221,12 +282,12 @@ forwards in the page does so in the toolbar too.
 </Callout>
 <Callout tone="danger" title="Don't">
 
-- Don't put a text field, a select or anything else that needs the arrow keys itself into a toolbar: the toolbar takes them for moving between items.
+- Don't put a text field, or anything else that needs the left and right arrow keys itself, into a toolbar: the toolbar takes them for moving between items. A `Select` or a popover trigger is fine in a row; in a column the `Select` takes up and down for its own list.
 - Don't use a toolbar for navigation or for a list of unrelated actions; it is one tab stop, so a command inside it is
   harder to discover than one that is a tab stop of its own.
 - Don't put a plain `Button` in a toolbar and expect the arrow keys to reach it: only `Toolbar.Button`,
   `Toolbar.IconButton` and `Toolbar.Item` are in the order.
-- Don't use it to choose one option from several — a `ToggleGroup` announces and handles that.
+- Don't put a plain `ToggleGroup` in a toolbar to choose among options: it is a tab stop of its own. Use `Toolbar.ToggleGroup`.
 - Don't hide the only way to do something in a toolbar item that is disabled with no explanation.
 
 </Callout>
@@ -238,7 +299,9 @@ forwards in the page does so in the toolbar too.
   they used when they tab back.
 - Prefer `ghost` items on a ghost or filled bar and `secondary` on an outlined one, and keep `primary` for the one command
   the bar exists for — usually last, pushed to the end with a `Toolbar.Spacer`.
-- Stack a long bar on a phone with an `orientation` map, or let it `wrap`, rather than letting it overflow.
+- Stack a long bar on a phone with an `orientation` map, or give it an `overflow` of `wrap` or `scroll`, rather than letting it overflow its container.
+- Use `sticky` for a bar that has to stay in reach of a long page or editor, and give the scrolling box to `scrollContainerRef` when the page itself isn't what scrolls.
+- Give an icon button a `tooltip` where the icon alone is not clear — it also shows on keyboard focus.
 - Keep related toggles together in a `Toolbar.Group`, and set each one's `pressed` from the state it controls so the bar
   always shows what is on.
 - A toolbar is a surface for commands, not a layout: don't nest one inside another, or put them in a table cell.
@@ -254,6 +317,10 @@ forwards in the page does so in the toolbar too.
   column, and **Home** and **End** go to the first and last item. By default they wrap at the ends (`loop={false}` stops
   there). `Enter` and `Space` press an item.
 - In a right-to-left page pass `dir="rtl"`: Radix doesn't read the page, so without it Left would still go backwards.
+- A `Toolbar.ToggleGroup` adds no tab stop of its own (the toolbar owns focus; the group turns its own roving focus off): single is a `radiogroup` of `radio` items, with `aria-checked`, where an arrow key also chooses the item it lands on, and multiple is a plain `group` of toggle buttons with `aria-pressed` — not a `toolbar` inside a toolbar.
+- A `Select` or popover trigger in `Toolbar.Item` keeps its own keyboard behaviour: it opens with `Enter` or `Space`, and focus returns to it when it closes.
+- With `overflow="scroll"` the scroll buttons are `aria-hidden` and out of the tab order (the arrow keys already move along the bar and the browser scrolls the focused item into view, kept clear of the edge fade), so a keyboard or screen reader user meets the same one tab stop. The focus ring is drawn inside each item there, since a scrolling box would cut off a ring drawn outside it.
+- A `tooltip` on an icon button opens on hover and keyboard focus and closes with `Escape`; the button is named by its `aria-label`, so the tooltip is never the only name.
 - A disabled item is not focusable, so the arrow keys skip it; the toolbar's `disabled` disables every item natively.
 - A toggle (`pressed`) is announced with `aria-pressed`; its pressed look is a filled icon as well as a colour, so the state
   is never colour alone.
@@ -270,10 +337,15 @@ forwards in the page does so in the toolbar too.
 
 ```tsx
 <Toolbar aria-label="Text formatting" variant="outlined">
-  <Toolbar.Group aria-label="Text style">
-    <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" pressed={bold} onPressedChange={setBold} />
-    <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+  <Toolbar.Group aria-label="Text style" attached>
+    <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" tooltip pressed={bold} onPressedChange={setBold} />
+    <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" tooltip />
   </Toolbar.Group>
+  <Toolbar.Separator />
+  <Toolbar.ToggleGroup aria-label="Alignment" defaultValue="left">
+    <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Align left" />
+    <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Align centre" />
+  </Toolbar.ToggleGroup>
   <Toolbar.Separator />
   <Toolbar.Button leadingIcon={LinkIcon}>Link</Toolbar.Button>
   <Toolbar.Spacer />
@@ -282,7 +354,9 @@ forwards in the page does so in the toolbar too.
 
 <Toolbar aria-label="Tools" orientation="vertical">…</Toolbar>
 <Toolbar aria-label="Actions" orientation={{ base: "vertical", md: "horizontal" }}>…</Toolbar>
-<Toolbar aria-label="Actions" itemVariant="secondary" size="sm" rounded wrap>…</Toolbar>
+<Toolbar aria-label="Actions" itemVariant="secondary" size="sm" rounded overflow="wrap">…</Toolbar>
+<Toolbar aria-label="Actions" overflow="scroll">…</Toolbar>
+<Toolbar aria-label="Editor" sticky stickyOffset={4} scrollContainerRef={panelRef}>…</Toolbar>
 <Toolbar aria-label="Document" fullWidth align="end">…</Toolbar>
 <Toolbar aria-label="Document" disabled>…</Toolbar>
 <Toolbar aria-label="Text formatting" dir="rtl">…</Toolbar>
@@ -308,13 +382,24 @@ forwards in the page does so in the toolbar too.
 A toolbar draws only its own bar and separator; every item is a `Button` or `IconButton` with its own tokens.
 
 <TokenRow token="bg.surface" usage="the outlined bar's fill" />
-<TokenRow token="bg.neutral-subtle" usage="the filled bar's fill" />
+<TokenRow token="bg.neutral-subtle" usage="the filled bar's fill, the edge fade on it, and a scroll button's hover fill" />
 <TokenRow token="border.default" usage="the outlined bar's border" />
 <TokenRow token="border.neutral" usage="the separator between items — a step stronger than the bar's border, so it stays visible in dark mode" />
 <TokenRow token="border-width.1" usage="the outlined bar's border width, and the separator's thickness" />
 <TokenRow token="radius.lg" usage="the corners of an outlined or filled bar" />
 <TokenRow token="radius.full" usage="the ends of an outlined or filled bar with rounded" />
 <TokenRow token="z-index.base" usage="the focused item's layer, so its focus ring is drawn over the next item rather than under it" />
+<TokenRow token="shadow.light.md" usage="the lift while a sticky bar is stuck, in light mode" />
+<TokenRow token="shadow.dark.md" usage="the lift while a sticky bar is stuck, in dark mode" />
+<TokenRow token="z-index.sticky" usage="a sticky bar's layer, and a scroll button's, above its own edge fade" />
+<TokenRow token="z-index.dropdown" usage="the edge fades of a scrolling bar, above its items" />
+<TokenRow token="icon.default" usage="a scroll button's icon" />
+<TokenRow token="border-width.2" usage="how far inside an item its focus ring is drawn in a scrolling bar" />
+<TokenRow token="motion.duration.fast" usage="the edge fades and scroll buttons appearing" />
+<TokenRow token="motion.easing.standard" usage="the edge fades and scroll buttons appearing" />
+<TokenRow token="space.px" usage="how far a sticky bar is pulled up to hide the one-pixel marker in front of it" />
+<TokenRow token="space.6" usage="the smallest a scroll button is, so it is at least 24 × 24px" />
+<TokenRow token="space.10" usage="the width of an edge fade, and how far a focused item is kept from it" />
 <TokenRow token="space.1" usage="the gap between items, the separator's margins, and the padding of the smaller bars" />
 <TokenRow token="space.2" usage="the gap between items at lg and xl, and the padding of an md bar" />
 <TokenRow token="space.3" usage="the padding of an lg or xl bar" />

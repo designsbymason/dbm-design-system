@@ -5,6 +5,7 @@ import type { MouseEvent } from "react";
 import type { ButtonSize, ButtonVariant } from "../Button/Button.types";
 import { useButtonGroup } from "../Button/buttonGroupContext";
 import { Icon } from "../Icon";
+import { Tooltip } from "../Tooltip";
 import styles from "./IconButton.module.css";
 import type { IconButtonProps } from "./IconButton.types";
 
@@ -49,6 +50,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       pressed,
       defaultPressed,
       onPressedChange,
+      tooltip,
+      tooltipSide = "top",
       asChild = false,
       disabled,
       className,
@@ -154,7 +157,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       onClick?.(event);
     };
 
-    return (
+    // `true` says what the accessible name says; any other content stands in for it. `false`, `null`, an empty
+    // string and `undefined` all mean no tooltip.
+    const tooltipContent = tooltip === true ? effectiveAriaLabel : tooltip;
+    const hasTooltip = tooltipContent !== undefined && tooltipContent !== null && tooltipContent !== false && tooltipContent !== "";
+
+    const button = (
       <Component
         ref={ref}
         {...props}
@@ -204,6 +212,14 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           />
         )}
       </Component>
+    );
+
+    return hasTooltip ? (
+      <Tooltip content={tooltipContent} side={tooltipSide}>
+        {button}
+      </Tooltip>
+    ) : (
+      button
     );
   },
 );

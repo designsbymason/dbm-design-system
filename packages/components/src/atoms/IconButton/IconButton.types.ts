@@ -3,7 +3,9 @@ import type {
   ComponentPropsWithoutRef,
   CSSProperties,
   MouseEventHandler,
+  ReactNode,
 } from "react";
+import type { TooltipSide } from "../Tooltip/Tooltip.types";
 import type { ButtonSize, ButtonVariant } from "../Button/Button.types";
 
 export interface IconButtonProps extends Omit<
@@ -95,6 +97,20 @@ export interface IconButtonProps extends Omit<
   disabled?: boolean;
   /** Fires on click, unless `disabled`/`isLoading` blocks it. */
   onClick?: MouseEventHandler<HTMLButtonElement>;
+  /**
+   * Shows a tooltip on hover and keyboard focus, so a sighted user can read what an icon means. `true` uses the
+   * button's own `aria-label` as the text; any other content (a string, or a node such as a label with its shortcut)
+   * is shown instead. Left out, or `false`, there is no tooltip. The button is still named by `aria-label`, so the
+   * tooltip is a convenience for sighted users, never the only name. A tooltip doesn't open on a disabled or
+   * loading button (it can't be hovered or focused), and is built on `Tooltip`.
+   * @default false
+   */
+  tooltip?: ReactNode;
+  /**
+   * Which side of the button the tooltip opens on, before it flips to fit. Has no effect without `tooltip`.
+   * @default 'top'
+   */
+  tooltipSide?: TooltipSide;
   /**
    * Required — an icon-only button has no visible text, so an accessible
    * name must be supplied explicitly.

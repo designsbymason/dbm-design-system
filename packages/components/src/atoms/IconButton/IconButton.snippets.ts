@@ -10,6 +10,7 @@
 // true. See `07-storybook-and-documentation-standards.md` §4.2.
 
 import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
+import { quote } from "../../snippetHelpers";
 
 export const iconButtonSnippets = {
   allVariants: `{/* variant: "primary" (default) | "secondary" | "tertiary" | "ghost" | "destructive".
@@ -18,6 +19,17 @@ export const iconButtonSnippets = {
 
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl". HeartIcon comes from @dbm-design-system/icons. */}
 <IconButton icon={HeartIcon} aria-label="Favorite" size="lg" />`,
+
+  tooltip: `{/* tooltip: true shows the aria-label; any other content is shown instead. tooltipSide: "top" (default) |
+    "right" | "bottom" | "left". HeartIcon and TrashIcon come from @dbm-design-system/icons. */}
+<IconButton icon={HeartIcon} aria-label="Favorite" variant="secondary" tooltip />
+<IconButton
+  icon={TrashIcon}
+  aria-label="Delete"
+  variant="secondary"
+  tooltip="Delete this item"
+  tooltipSide="bottom"
+/>`,
 
   loading: `{/* isLoading swaps the icon for a spinner and blocks interaction. HeartIcon comes from
     @dbm-design-system/icons. */}
@@ -74,6 +86,9 @@ export interface IconButtonPlaygroundSnippetArgs {
   isLoading?: boolean;
   loadingLabel?: string;
   rounded?: boolean;
+  /** The Playground's choice ("Off" | "Label" | "Custom text"), or the value it maps to (`true` or a string). */
+  tooltip?: unknown;
+  tooltipSide?: string;
   "aria-label"?: string;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
@@ -94,6 +109,11 @@ export function iconButtonPlaygroundSnippet(args: IconButtonPlaygroundSnippetArg
   if (args.variant && args.variant !== "primary") attributes.push(`variant="${args.variant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.rounded) attributes.push("rounded");
+  // The Playground's select hands the transform its option key; accept the mapped value too.
+  if (args.tooltip === true || args.tooltip === "Label") attributes.push("tooltip");
+  else if (args.tooltip === "Custom text") attributes.push('tooltip="Add to favorites"');
+  else if (typeof args.tooltip === "string" && args.tooltip !== "Off" && args.tooltip !== "") attributes.push(`tooltip=${quote(args.tooltip)}`);
+  if (args.tooltip && args.tooltip !== "Off" && args.tooltipSide && args.tooltipSide !== "top") attributes.push(`tooltipSide="${args.tooltipSide}"`);
   if (args.type && args.type !== "button") attributes.push(`type="${args.type}"`);
   if (args.isLoading) {
     attributes.push("isLoading");

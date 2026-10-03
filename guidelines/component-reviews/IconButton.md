@@ -29,3 +29,21 @@ At explicit direction ([ADR-0025](../adr/0025-buttongroup-shares-settings-throug
 ## `asChild` guard moved to the capture phase, 2026-09-26 (defect fix; stays Finalized)
 
 At explicit direction. The same defect, found with `Button`'s: a link rendered `asChild` on a disabled or loading `IconButton`, or inside a disabled `ButtonGroup`, set `aria-disabled` but still ran its **own** `onClick` (a router's navigation, say), because the guard was a bubble-phase `onClick` and Radix `Slot` runs the child's own handler first — the bug `05-component-api-conventions.md` §3 documents for `Link`. Confirmed with a probe before the fix, and the existing test hadn't caught it because it only checked `IconButton`'s *own* `onClick`. The guard is now `onClickCapture` (a caller's own `onClickCapture` still runs when the click isn't blocked), and the bubble-phase branch, now unreachable, is gone. Under `06-engineering-standards.md` §9's three-question test it corrects a genuine defect (question 2), so `IconButton` stays Finalized. Four new tests (the same as `Button`'s): the slotted child's handler and `IconButton`'s own are both blocked when disabled, the child's handler is blocked and the link not followed while loading, the child's handler, `onClick` and a caller's `onClickCapture` all run in that order when not blocked, and a caller's `onClickCapture` doesn't run on a blocked click — all fail on the old guard (checked), as does a new `ButtonGroup` test for a disabled group.
+
+## `tooltip` and `tooltipSide` added, 2026-10-03 (additive; stays Finalized)
+
+At explicit direction, for `Toolbar` (every icon item there needed the same three-line `Tooltip` wrapper). `tooltip` takes
+`true` (the button's own `aria-label` is the text) or any other content (a string, or a node such as a label with its
+shortcut); `false`, `null`, an empty string and `undefined` mean none. `tooltipSide` (default `top`) picks the side. It
+renders the button inside the `Tooltip` atom, so the DOM is unchanged unless `tooltip` is set. The button is still named
+by `aria-label`; the tooltip is a convenience for sighted users and never the only name.
+
+Three-question test: no existing output changes (a new prop whose default is no tooltip), so it stays Finalized, with a
+scoped mini-pass: JSDoc on both props, a Properties-table row each (the Playground's Off / Label / Custom text choices live
+on the Playground story, not the meta-level argTypes, so they aren't listed as values), a "With a tooltip" story and
+snippet (typechecked), a Docs section and code example, and eight tests (no tooltip unless asked, shown on keyboard focus,
+custom text and a node, the four no-tooltip values, ref and click and toggle state kept, axe with the tooltip open).
+Known costs, not defects: the tooltip's `aria-describedby` repeats the name when `tooltip` is `true` (as it does for a
+hand-wrapped `Tooltip`); a disabled or loading button never shows one (it can't be hovered or focused); and `IconButton`
+now imports `Tooltip`, so every consumer's bundle carries it (Radix Tooltip is already a dependency; the per-component
+size check stays within budget at 1.59KB JS).

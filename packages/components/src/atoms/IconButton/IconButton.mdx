@@ -16,6 +16,8 @@ export const propOrder = [
   "isLoading",
   "loadingLabel",
   "rounded",
+  "tooltip",
+  "tooltipSide",
   "pressed",
   "defaultPressed",
   "onPressedChange",
@@ -96,6 +98,14 @@ element `asChild`'s slotted child renders).
 ### Rounded (circular)
 
 <Canvas of={IconButtonStories.Rounded} />
+
+### With a tooltip
+
+`tooltip` shows a tooltip on hover and keyboard focus. `true` uses the button's own `aria-label` as the text; any other
+content is shown instead, and `tooltipSide` picks the side. The button is still named by `aria-label` — the tooltip is a
+convenience for sighted users, never the only name — and nothing opens on a disabled or loading button.
+
+<Canvas of={IconButtonStories.WithTooltip} />
 
 ### Toggle (click to favorite)
 
@@ -199,6 +209,9 @@ element `asChild`'s slotted child renders).
 <IconButton icon={TrashIcon} aria-label="Delete item" variant="destructive" />
 <IconButton icon={TrashIcon} aria-label="Delete" isLoading loadingLabel="Deleting…" />
 <IconButton icon={PlusIcon} aria-label="Add" rounded />
+{/* A tooltip: true shows the aria-label; a string shows that text instead */}
+<IconButton icon={TrashIcon} aria-label="Delete" tooltip />
+<IconButton icon={TrashIcon} aria-label="Delete" tooltip="Delete this item" tooltipSide="bottom" />
 {/* Plain, non-toggle (the default — no pressed/defaultPressed/onPressedChange at all) */}
 <IconButton icon={HeartIcon} aria-label="Favorite" variant="ghost" onClick={handleFavoriteClick} />
 {/* Uncontrolled toggle — IconButton manages its own pressed state */}

@@ -1,12 +1,15 @@
-import type { Responsive } from "@dbm-design-system/primitives";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode } from "react";
+import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, RefObject } from "react";
 import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
 import type { SpacerProps } from "../../atoms/Spacer";
+import type { ToggleGroupMultipleProps, ToggleGroupSingleProps } from "../ToggleGroup";
 
 export type ToolbarOrientation = "horizontal" | "vertical";
 export type ToolbarVariant = "ghost" | "outlined" | "filled";
 export type ToolbarDirection = "ltr" | "rtl";
 export type ToolbarAlign = "start" | "center" | "end";
+/** What a bar does when its items don't fit: `visible` (overflow the container), `wrap` onto more lines, or `scroll`. */
+export type ToolbarOverflow = "visible" | "wrap" | "scroll";
 
 export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "dir"> {
   /**
@@ -77,11 +80,31 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
    */
   align?: ToolbarAlign;
   /**
-   * Lets a horizontal bar wrap its items onto more lines when they don't fit. Off, a bar wider than its container
-   * overflows it. Arrow keys still follow DOM order, so a wrapped bar reads in the order written.
+   * What a bar does when its items are more than fit: `visible` (the default) lets them overflow the container;
+   * `wrap` wraps a horizontal bar's items onto more lines (arrow keys still follow the order they are written in);
+   * `scroll` keeps one line (or one column) and scrolls it along its own axis — an edge fade and a button show at
+   * whichever end has more, and the item that takes focus is scrolled into view. A scrolling column needs a height of its
+   * own to respond to (a bar in a box with a fixed or maximum height).
+   * @default 'visible'
+   */
+  overflow?: ToolbarOverflow;
+  /**
+   * Keeps the bar at the top of the page (or of `scrollContainerRef`) as the reader scrolls, with a surface behind
+   * it and a shadow while it is stuck. Built on `Affix`, the same as `Alert`'s `sticky`.
    * @default false
    */
-  wrap?: boolean;
+  sticky?: boolean;
+  /**
+   * How far from the top a sticky bar sticks, from the spacing token scale — for a page whose own header is also
+   * sticky. Has no effect without `sticky`.
+   * @default 0
+   */
+  stickyOffset?: SpaceValue;
+  /**
+   * The scrollable container a sticky bar sticks within, if it isn't the page itself. Has no effect without `sticky`.
+   * The same prop `Affix`, `BackToTop` and `Alert` take.
+   */
+  scrollContainerRef?: RefObject<HTMLElement | null>;
   /**
    * Names the toolbar for assistive tech ("Text formatting") — announced when focus enters it. Required unless
    * `aria-labelledby` points at a visible label.
@@ -123,6 +146,14 @@ export interface ToolbarGroupProps extends Omit<ComponentPropsWithoutRef<"div">,
   /** The items in the group. */
   children?: ReactNode;
   /**
+   * Fuses the group's `Toolbar.Button`s and `Toolbar.IconButton`s into one segmented control — square corners where they
+   * meet, one separator between them, no gap — the look `ButtonGroup` has by default (it is a `ButtonGroup`), with every
+   * item still in the toolbar's arrow-key order. Off, the items sit apart by the bar's own gap. For choosing among options,
+   * use `Toolbar.ToggleGroup`, which is attached by default.
+   * @default false
+   */
+  attached?: boolean;
+  /**
    * Names the group for assistive tech ("Text style"). Required unless `aria-labelledby` points at a visible label:
    * a group with no name is just a set of items.
    */
@@ -149,3 +180,12 @@ export interface ToolbarSeparatorProps extends Omit<ComponentPropsWithoutRef<"di
 }
 
 export type ToolbarSpacerProps = SpacerProps;
+
+/**
+ * A `ToggleGroup` that sits in the toolbar's arrow-key order: single (a segmented choice such as text alignment, a
+ * `radiogroup`) or multiple (independent toggles, a plain `group`). Takes every `ToggleGroup` prop except `loop` and
+ * `rovingFocus`, which the toolbar owns; its `size`, `rounded`, `disabled`, `orientation` and `dir` default to the toolbar's.
+ */
+export type ToolbarToggleGroupProps =
+  | Omit<ToggleGroupSingleProps, "loop" | "rovingFocus">
+  | Omit<ToggleGroupMultipleProps, "loop" | "rovingFocus">;

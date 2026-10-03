@@ -89,6 +89,7 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupProps>((props, ref
     fullWidth = false,
     disabled = false,
     loop = true,
+    rovingFocus = true,
     dir = "ltr",
     className,
     children,
@@ -141,11 +142,12 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupProps>((props, ref
     ref,
     dir,
     loop,
+    rovingFocus,
     disabled,
     orientation: resolvedOrientation,
     // Applied after `...rest` so a same-named consumer prop can never replace them (05-component-api-conventions.md
     // §3): the role is what tells assistive tech which pattern this is, and the orientation drives the layout.
-    role: type === "multiple" ? "toolbar" : "radiogroup",
+    role: type === "multiple" ? (rovingFocus ? "toolbar" : "group") : "radiogroup",
     "data-orientation": resolvedOrientation,
     "aria-label": ariaLabel,
     "aria-labelledby": ariaLabelledBy,
