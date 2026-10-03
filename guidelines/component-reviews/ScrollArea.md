@@ -254,6 +254,50 @@ default transparent track, `showTrack` toggling a visible one, `tone="brand"` on
 scrollbars now showing genuine two-axis overflow, and the Docs page's Properties table and embedded
 Playground panel both showing `showTrack`/`tone` in the correct position with correct defaults.
 
+## Third follow-up: `showTrack`'s own hover/active opacity (2026-10-02)
+
+At explicit direction: `showTrack`'s track now renders at half-opacity at rest, going fully opaque
+the moment it's hovered or actively dragged — rather than one fixed opacity regardless of
+interaction state.
+
+A plain CSS `opacity` on `.scrollbar` itself was not an option: the thumb is a child of that same
+element and would fade along with the track, which must stay fully opaque always. `color-mix()`
+blends only `.scrollbar`'s own `background-color` toward transparent instead, leaving the thumb's
+separate `background-color` declaration completely unaffected — `.showTrack`'s resting rule became
+`color-mix(in srgb, var(--scroll-area-track-color, var(--dbm-bg-track)) calc(var(--dbm-opacity-50) * 100%), transparent)`,
+with `.showTrack:hover, .showTrack:active` restoring the plain, fully-opaque `background-color`.
+
+**New primitive token:** `opacity.50` (`other.json`) — the existing scale jumped `40` → `60` with
+no half-opacity step; added to fill that gap rather than reusing an adjacent, numerically-wrong
+step. Documented in `03-token-system-spec.md`'s `other.json` row.
+
+**Why one selector pair covers "hovered or interacted with":** Radix sets pointer capture on the
+scrollbar element at drag-start (confirmed in its own source), so `:hover` and `:active` both stay
+true for the entire drag even if the pointer moves outside the scrollbar's visible bounds mid-drag
+— there's no separate "actively dragging but not hovering" state to handle.
+
+**No dedicated automated test added for the hover/active transition itself** — following this
+project's own established precedent (`Breadcrumb`'s `ColourInteraction` story, which documents via
+a comment that "Storybook's `userEvent` sends synthetic events, which never match `:hover`" rather
+than attempting to force the state). The existing unit tests (`ScrollArea.test.tsx`) already cover
+`showTrack`'s class application; the opacity/hover mechanism itself is pure CSS, verified live
+instead (below).
+
+Verified live in the browser (`Tone` story, both tones, both color modes): computed
+`background-color` at rest resolves to the expected 0.5-alpha `color()` value for both the neutral
+and brand tracks; hovering one scrollbar with real mouse coordinates flips only that element's own
+background to fully opaque (`sb.matches(':hover')` → `true`), while the other, non-hovered
+scrollbar stays at 0.5 alpha — confirming per-element scoping, not a global state leak; the thumb's
+own `background-color` stays solid and unaffected in both the hovered and non-hovered cases.
+
+Full re-verification: `tsc --noEmit` and `eslint --max-warnings 0` both clean; the full unit suite
+(4695 passing, package-wide) and the full real-browser Chromium suite (875 passing, package-wide)
+both clean — the docs-test drift guard (`ScrollArea.docs.test.ts`) initially caught the new
+`--dbm-opacity-50` reference missing its `<TokenRow>` entry in the MDX, fixed by adding one; `pnpm
+build` clean; the component bundle-size check (1.01KB JS / 0.56KB CSS, a small increase from the
+new rule, still comfortably within budget); the Foundations token-coverage check unaffected (no
+semantic token changed, only a new primitive).
+
 ## Not yet Finalized
 
 Per the standing rule, only the user declares a component Finalized — this review documents a

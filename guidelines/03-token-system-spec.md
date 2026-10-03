@@ -23,7 +23,7 @@ Status/neutral tokens (red, amber, green, blue, gray) are **shared across both b
 | `shadow.json` | Layered elevation shadows, **separate light/dark values** — dark-mode shadows are higher-opacity black, not a naive inversion, and should pair with a subtle border on raised surfaces |
 | `breakpoint.json` | `sm`(640) → `3xl`(1920, for enterprise dashboard monitors) |
 | `motion.json` | Duration scale (`instant` at 0ms through 600ms) + 5 easing curves — `standard`/`decelerate`/`accelerate`, an "emphasized" expo-out curve for premium micro-interactions, and `linear` (added 2026-08-16, Skeleton's wave shimmer — a cubicBezier token equivalent to the CSS `linear` keyword, added so a constant-rate curve goes through the same build pipeline as the others instead of being hardcoded) |
-| `other.json` | Icon sizes (paired with Phosphor, 12–48px), border widths, opacity scale, z-index layering scale |
+| `other.json` | Icon sizes (paired with Phosphor, 12–48px), border widths, opacity scale (`0`/`5`/`10`/`20`/`40`/`50`/`60`/`80`/`90`/`100` — `50` added 2026-10-02, filling the gap between the existing `40`/`60` steps, for `ScrollArea`'s `showTrack` resting-state blend via `color-mix()`), z-index layering scale |
 
 ## Color scale generation
 
