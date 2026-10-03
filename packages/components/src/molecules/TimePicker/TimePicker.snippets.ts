@@ -6,7 +6,7 @@
 // no demo scaffolding — and `storySnippets.test.ts` checks that stays true. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { TimePickerHourCycle, TimePickerSize } from "./TimePicker.types";
+import type { TimePickerCommitOn, TimePickerHourCycle, TimePickerPeriodPosition, TimePickerSize } from "./TimePicker.types";
 
 export const timePickerSnippets = {
   basic: `<TimePicker aria-label="Start time" defaultValue="09:30" />`,
@@ -22,6 +22,35 @@ export const timePickerSnippets = {
 
   step: `{/* step: minutes between the values the field accepts. The arrow keys move along it and the picker lists only those minutes. */}
 <TimePicker aria-label="Appointment" hourCycle="24" step={15} defaultValue="10:15" />`,
+
+  secondStep: `{/* secondStep: seconds between the values accepted, as step is for minutes. */}
+<TimePicker aria-label="Start time" hourCycle="24" showSeconds secondStep={15} defaultValue="10:15:30" />`,
+
+  unavailable: `{/* isTimeDisabled gets each time as the 24-hour value string; true rules it out. It is flagged (not refused) when typed,
+    and the picker disables a row that leaves nothing to reach — here, the 12 hour. Keep it pure and cheap. */}
+<TimePicker
+  aria-label="Appointment"
+  hourCycle="24"
+  step={15}
+  isTimeDisabled={(time) => time >= "12:00" && time < "13:00"}
+/>`,
+
+  periodFirst: `{/* periodPosition: "end" (default) writes 3:45 PM; "start" writes PM 3:45. The picker's AM/PM wheel moves too. */}
+<TimePicker aria-label="Start time" periodPosition="start" defaultValue="15:45" />`,
+
+  openOnFocus: `{/* openOnFocus opens the picker when focus arrives on a segment; focus stays there, so typing still works. */}
+<TimePicker aria-label="Start time" openOnFocus defaultValue="09:30" />`,
+
+  commitOn: `{/* commitOn: when onValueChange is called.
+    "change" (default): every change. "complete": once a whole time has no digit still expected and the picker is closed.
+    "blur": once, when focus leaves, the picker closes or Enter is pressed. */}
+<TimePicker aria-label="Start time" commitOn="complete" onValueChange={setTime} />`,
+
+  form: `{/* required, min, max and a half-filled field are real form constraints: the browser won't submit and says why. */}
+<form onSubmit={save}>
+  <TimePicker aria-label="Reminder" name="reminder" required hourCycle="24" min="08:00" max="20:00" />
+  <Button type="submit">Save</Button>
+</form>`,
 
   range: `{/* min and max: a time outside them is flagged invalid (not refused), and the picker disables what can't be reached. */}
 <TimePicker aria-label="Appointment" hourCycle="24" min="09:00" max="17:00" defaultValue="18:30" />`,
@@ -58,11 +87,15 @@ export const timePickerSnippets = {
 /** The Playground's live controls, as far as the snippet cares. */
 export interface TimePickerPlaygroundSnippetArgs {
   defaultValue?: string;
+  commitOn?: TimePickerCommitOn;
   hourCycle?: TimePickerHourCycle;
+  periodPosition?: TimePickerPeriodPosition;
   showSeconds?: boolean;
   step?: number;
+  secondStep?: number;
   min?: string;
   max?: string;
+  openOnFocus?: boolean;
   size?: TimePickerSize;
   hasError?: boolean;
   disabled?: boolean;
@@ -79,11 +112,15 @@ export interface TimePickerPlaygroundSnippetArgs {
 export function timePickerPlaygroundSnippet(args: TimePickerPlaygroundSnippetArgs): string {
   const attributes: string[] = ['aria-label="Start time"'];
   if (args.defaultValue) attributes.push(`defaultValue="${args.defaultValue}"`);
+  if (args.commitOn && args.commitOn !== "change") attributes.push(`commitOn="${args.commitOn}"`);
   if (args.hourCycle && args.hourCycle !== "12") attributes.push(`hourCycle="${args.hourCycle}"`);
+  if (args.periodPosition && args.periodPosition !== "end") attributes.push(`periodPosition="${args.periodPosition}"`);
   if (args.showSeconds) attributes.push("showSeconds");
   if (args.step !== undefined && args.step !== 1) attributes.push(`step={${args.step}}`);
+  if (args.secondStep !== undefined && args.secondStep !== 1) attributes.push(`secondStep={${args.secondStep}}`);
   if (args.min) attributes.push(`min="${args.min}"`);
   if (args.max) attributes.push(`max="${args.max}"`);
+  if (args.openOnFocus) attributes.push("openOnFocus");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.hasError) attributes.push("hasError");
   if (args.disabled) attributes.push("disabled");

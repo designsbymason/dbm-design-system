@@ -1,7 +1,7 @@
 import { ClockIcon, XIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import { Fragment, forwardRef, useEffect, useRef, useState } from "react";
-import type { ChangeEvent, CSSProperties, KeyboardEvent, MouseEvent } from "react";
+import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { Icon } from "../../atoms/Icon";
 import { Popover } from "../Popover";
 import styles from "./TimePicker.module.css";
@@ -12,6 +12,7 @@ import {
   draftToParts,
   draftToValue,
   emptyDraft,
+  formatTime,
   hourRange,
   isTimeAllowed,
   parseTime,
@@ -19,7 +20,7 @@ import {
   stepSegment,
   valueToDraft,
 } from "../../internal/time/timeValue";
-import type { Period, Segment, TimeDraft } from "../../internal/time/timeValue";
+import type { Period, Segment, TimeDraft, TimeParts } from "../../internal/time/timeValue";
 
 const defaultLabels: TimePickerLabels = {
   hour: "Hour",
@@ -32,6 +33,8 @@ const defaultLabels: TimePickerLabels = {
   openPicker: "Choose time",
   pickerName: "Choose a time",
   clear: "Clear time",
+  incomplete: "Enter a complete time",
+  unavailable: "This time isn't available",
 };
 
 const sizeClass: Record<TimePickerSize, string | undefined> = {
@@ -55,6 +58,13 @@ const iconSizeFor: Record<TimePickerSize, "xs" | "sm" | "md" | "lg"> = { xs: "xs
 
 const draftKey = { hour: "hour", minute: "minute", second: "second", period: "period" } as const;
 
+/** Something to clear: any number, or a period that isn't the empty field's own AM. */
+const hasContentOf = (draft: TimeDraft, cycle: "12" | "24") =>
+  draft.hour !== undefined ||
+  draft.minute !== undefined ||
+  draft.second !== undefined ||
+  (draft.period !== undefined && draft.period !== emptyDraft(cycle).period);
+
 /**
  * A time-of-day field: separate hour, minute, (second) and AM/PM segments you type into or step with the arrow
  * keys, and a popover of wheels to scroll or tap through with a pointer or a swipe. The value is a 24-hour string —
@@ -70,6 +80,11 @@ const draftKey = { hour: "hour", minute: "minute", second: "second", period: "pe
  * reported, not refused — refusing a half-typed time would make the field fight the person — and the picker
  * disables what can't be reached. The hour cycle is chosen with `hourCycle`, never read from the browser's locale,
  * and every word it writes is in `labels` ([ADR-0029](../../../../guidelines/adr/0029-timepicker-is-a-segmented-field-with-a-popover-and-an-hhmm-string-value.md)).
+ *
+ * A form can use it as a native control: `required` stops a submit while the field is empty, and a half-filled or
+ * unavailable time stops it too (see `required`). `onFocus`/`onBlur` fire for the field as a whole, not for each
+ * segment, `commitOn` holds `onValueChange` back until the person is done, `isTimeDisabled` and `secondStep`
+ * narrow what is available, `periodPosition` writes AM/PM first, and `openOnFocus` opens the picker on arrival.
  *
  * `ref` forwards to the group element that holds the segments. The `id` goes on the first segment (the hour),
  * which is what a label's `htmlFor` should point at.
@@ -87,22 +102,29 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
       value: valueProp,
       defaultValue = "",
       onValueChange,
+      commitOn = "change",
       hourCycle = "12",
+      periodPosition = "end",
       showSeconds = false,
       step: stepProp = 1,
+      secondStep: secondStepProp = 1,
       min,
       max,
+      isTimeDisabled,
       size = "md",
       hasError = false,
       disabled = false,
       readOnly = false,
       required = false,
       showPicker = true,
+      openOnFocus = false,
       clearable,
       open: openProp,
       defaultOpen = false,
       onOpenChange,
       onClear,
+      onFocus,
+      onBlur,
       name,
       form,
       autoFocus = false,
@@ -122,13 +144,21 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
     const labels = mergeDefined(defaultLabels, labelOverrides);
     const cycle = hourCycle === "24" ? "24" : "12";
     const step = Number.isInteger(stepProp) && stepProp >= 1 && stepProp <= 59 ? stepProp : 1;
+    const secondStep = Number.isInteger(secondStepProp) && secondStepProp >= 1 && secondStepProp <= 59 ? secondStepProp : 1;
     const minParts = parseTime(min);
     const maxParts = parseTime(max);
+    const periodFirst = cycle === "12" && periodPosition === "start";
+    const segments = segmentsFor(cycle, showSeconds, periodFirst);
+    const blocked = isTimeDisabled ? (parts: TimeParts) => isTimeDisabled(formatTime(parts, showSeconds)) : undefined;
+    const rules = { min: minParts, max: maxParts, step, secondStep, blocked };
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
       if (step !== stepProp) {
         console.warn(`TimePicker: \`step\` must be a whole number of minutes from 1 to 59; got ${String(stepProp)}, using 1.`);
+      }
+      if (secondStep !== secondStepProp) {
+        console.warn(`TimePicker: \`secondStep\` must be a whole number of seconds from 1 to 59; got ${String(secondStepProp)}, using 1.`);
       }
       for (const [prop, text, parts] of [["min", min, minParts], ["max", max, maxParts]] as const) {
         if (text !== undefined && text !== "" && !parts) {
@@ -137,7 +167,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
       }
       // Only the values that make a warning matter, not their identity on every render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [stepProp, min, max]);
+    }, [stepProp, secondStepProp, min, max]);
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
@@ -156,9 +186,23 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
     const parsed = parseTime(rawValue);
     const value = parsed ? draftToValue(valueToDraft(rawValue, cycle, showSeconds), cycle, showSeconds) : "";
     const [draft, setDraft] = useState<TimeDraft>(() => valueToDraft(rawValue, cycle, showSeconds));
-    // A value that is no longer what the segments stand for (set from outside, or the hour cycle changed) wins.
-    // Adjusted while rendering, not in an effect, so there is never a frame showing the old time.
-    if (value !== draftToValue(draft, cycle, showSeconds)) setDraft(valueToDraft(value, cycle, showSeconds));
+    // With `commitOn` the segments run ahead of the value on purpose: `dirty` is an edit not yet reported.
+    const [dirty, setDirty] = useState(false);
+    const draftValue = draftToValue(draft, cycle, showSeconds);
+    // A value that is no longer what the segments stand for (set from outside, or the hour cycle changed) wins, except
+    // while an edit is being held back and nothing outside has changed. Adjusted while rendering, not in an effect,
+    // so there is never a frame showing the old time.
+    const syncKey = `${value}|${cycle}|${String(showSeconds)}`;
+    const [seenKey, setSeenKey] = useState(syncKey);
+    if (seenKey !== syncKey) {
+      setSeenKey(syncKey);
+      if (value !== draftValue) {
+        setDraft(valueToDraft(value, cycle, showSeconds));
+        setDirty(false);
+      }
+    } else if (!dirty && value !== draftValue) {
+      setDraft(valueToDraft(value, cycle, showSeconds));
+    }
 
     const [pending, setPending] = useState<{ segment: Segment; digit: number } | null>(null);
     const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
@@ -168,38 +212,79 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
       onOpenChange?.(next);
     };
 
-    const segments = segmentsFor(cycle, showSeconds);
     const segmentRefs = useRef<Partial<Record<Segment, HTMLInputElement | null>>>({});
     const focusSegment = (segment: Segment | undefined) => {
       if (segment) segmentRefs.current[segment]?.focus();
     };
 
     useEffect(() => {
-      if (autoFocus) segmentRefs.current.hour?.focus();
+      if (autoFocus) segmentRefs.current[segments[0]!]?.focus();
       // On mount only, as a native `autoFocus` is.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const commit = (next: TimeDraft) => {
-      setDraft(next);
-      const nextValue = draftToValue(next, cycle, showSeconds);
-      if (nextValue === value) return;
+    // What handlers that outlive a render read: the latest of each, kept up to date after every render.
+    const latest = useRef({ value, draft, open, dirty });
+    useEffect(() => {
+      latest.current = { value, draft, open, dirty };
+    });
+
+    const setHeld = (held: boolean) => {
+      latest.current.dirty = held;
+      setDirty(held);
+    };
+
+    // The one place `onValueChange` is called from. Comparing with the latest value (not the one this render saw) is
+    // what keeps two commits in one event from reporting the same time twice.
+    const report = (nextValue: string) => {
+      if (nextValue === latest.current.value) return;
+      latest.current.value = nextValue;
       if (!isControlled) setUncontrolledValue(nextValue);
       onValueChange?.(nextValue);
     };
 
+    // `awaiting`: a digit has been typed that may still get a second one. `now`: an explicit action (the clear button, a
+    // key) that is a decision, not an edit in progress, so it is never held back.
+    const commit = (next: TimeDraft, { awaiting = false, now = false } = {}) => {
+      latest.current.draft = next;
+      setDraft(next);
+      const nextValue = draftToValue(next, cycle, showSeconds);
+      const hold =
+        !now &&
+        (commitOn === "blur" ||
+          (commitOn === "complete" &&
+            (awaiting || latest.current.open || (nextValue === "" && hasContentOf(next, cycle)))));
+      setHeld(hold);
+      if (!hold) report(nextValue);
+    };
+
+    // Reports whatever is being held, as it stands: what leaving the field, closing the picker or `Enter` does.
+    const flush = () => {
+      if (!latest.current.dirty) return;
+      setHeld(false);
+      report(draftToValue(latest.current.draft, cycle, showSeconds));
+    };
+
+    // The picker closing, however it was closed (also when `open` is controlled), is the end of choosing.
+    useEffect(() => {
+      if (!open) flush();
+      // `flush` reads only refs and the cycle and seconds of this render.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
     const format = (n: number) => (n < 10 ? formatNumber(0) : "") + formatNumber(n);
 
     const parts = draftToParts(draft, cycle, showSeconds);
-    const outsideConstraints = parts !== undefined && !isTimeAllowed(parts, { min: minParts, max: maxParts, step });
+    const outsideConstraints = parts !== undefined && !isTimeAllowed(parts, rules);
     const invalid = hasError || outsideConstraints;
-    // Something to clear: any number, or a period that isn't the empty field's own AM.
-    const hasContent =
-      draft.hour !== undefined ||
-      draft.minute !== undefined ||
-      draft.second !== undefined ||
-      (draft.period !== undefined && draft.period !== emptyDraft(cycle).period);
+    const hasContent = hasContentOf(draft, cycle);
     const showClear = (clearable ?? onClear !== undefined) && hasContent && !disabled && !readOnly;
+    // What a form says when it is asked to submit: a time that isn't there yet, or one that isn't allowed.
+    const validationMessage = outsideConstraints ? labels.unavailable : parts === undefined && hasContent ? labels.incomplete : "";
+    const proxy = useRef<HTMLInputElement>(null);
+    useEffect(() => {
+      proxy.current?.setCustomValidity(validationMessage);
+    }, [validationMessage]);
 
     // Feeds typed text into the field, starting at `segment`: digits into the number segments, a letter into AM/PM, and
     // a separator to finish the one being typed. One keystroke is one character; a phone's keyboard, an autofill or a
@@ -222,7 +307,16 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
         }
         if (current === "period") {
           const period = periodFromLetter(character, { am: labels.am, pm: labels.pm });
-          if (period) working = { ...working, period };
+          if (period) {
+            working = { ...working, period };
+            // A period written first hands over to the hour once it is chosen, as a number segment does when it is full.
+            const next = segments[segments.indexOf("period") + 1];
+            if (next !== undefined) {
+              current = next;
+              carried = null;
+              touched = false;
+            }
+          }
           continue;
         }
         let digit = digitValue(character);
@@ -231,8 +325,11 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
           const period = segments.includes("period") ? periodFromLetter(character, { am: labels.am, pm: labels.pm }) : undefined;
           if (period && !carried) {
             working = { ...working, period };
-            current = "period";
-            touched = true;
+            // With the period last, what follows it is the period itself; written first, the number goes on where it was.
+            if (!periodFirst) {
+              current = "period";
+              touched = true;
+            }
           }
           continue;
         }
@@ -259,7 +356,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
         }
       }
       setPending(carried);
-      commit(working);
+      commit(working, { awaiting: carried !== null });
       if (current !== startSegment) focusSegment(current);
     };
 
@@ -277,8 +374,11 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
           event.preventDefault();
           focusSegment(segments[index + 1]);
           return;
-        case "Tab":
         case "Enter":
+          // A native field reports its value on Enter; here it also ends a held edit.
+          flush();
+          return;
+        case "Tab":
         case "Escape":
           return;
       }
@@ -291,7 +391,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
         case "ArrowDown":
           event.preventDefault();
           setPending(null);
-          commit(stepSegment(draft, segment, key === "ArrowUp" ? 1 : -1, cycle, step));
+          commit(stepSegment(draft, segment, key === "ArrowUp" ? 1 : -1, cycle, step, secondStep));
           return;
         case "Home":
         case "End": {
@@ -304,7 +404,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
               : segment === "minute"
                 ? { ...draft, minute: first ? 0 : Math.floor(59 / step) * step }
                 : segment === "second"
-                  ? { ...draft, second: first ? 0 : 59 }
+                  ? { ...draft, second: first ? 0 : Math.floor(59 / secondStep) * secondStep }
                   : { ...draft, period: (first ? "am" : "pm") as Period },
           );
           return;
@@ -355,11 +455,49 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
       focusSegment(nearest);
     };
 
+    // The field as a whole, for `onFocus`/`onBlur` and `openOnFocus`: the group and the portaled picker are one thing, so
+    // focus moving between their parts is neither arriving nor leaving.
+    const group = useRef<HTMLDivElement | null>(null);
+    const picker = useRef<HTMLDivElement | null>(null);
+    const inside = useRef(false);
+    // The picker was opened by arriving in the field, so focus has stayed on the segment and should stay there.
+    const openedByFocus = useRef(false);
+    const withinField = (node: EventTarget | null) =>
+      node instanceof Node && (group.current?.contains(node) === true || picker.current?.contains(node) === true);
+
+    const onGroupFocus = (event: FocusEvent<HTMLDivElement>) => {
+      const segmentElements: unknown[] = Object.values(segmentRefs.current);
+      // A segment reached from anywhere but another segment: from outside, from the field's buttons (Shift+Tab backwards
+      // into the field lands on the picker button first) or from a click. Moving along the segments never reopens it.
+      if (
+        openOnFocus &&
+        showPicker &&
+        !disabled &&
+        !readOnly &&
+        !open &&
+        segmentElements.includes(event.target) &&
+        !segmentElements.includes(event.relatedTarget)
+      ) {
+        openedByFocus.current = true;
+        setOpen(true);
+      }
+      if (inside.current) return;
+      inside.current = true;
+      onFocus?.(event);
+    };
+
+    const onGroupBlur = (event: FocusEvent<HTMLDivElement>) => {
+      if (withinField(event.relatedTarget)) return;
+      inside.current = false;
+      flush();
+      onBlur?.(event);
+    };
+
     const clear = () => {
       setPending(null);
-      commit(emptyDraft(cycle));
+      commit(emptyDraft(cycle), { now: true });
       onClear?.();
-      focusSegment("hour");
+      focusSegment(segments[0]);
     };
 
     // Choosing from the picker: whatever the other segments are, a chosen time is a whole one, so the empty ones
@@ -392,7 +530,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
       return {
         label: labels[segment],
         min: range.min,
-        max: segment === "minute" ? Math.floor(59 / step) * step : range.max,
+        max: segment === "minute" ? Math.floor(59 / step) * step : segment === "second" ? Math.floor(59 / secondStep) * secondStep : range.max,
         now,
         valueText: text === "" ? labels.empty : text,
         text,
@@ -403,7 +541,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
       // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a pointer convenience only, like clicking a <label>: a press on the box's padding is sent to the nearest segment, which is already fully keyboard-operable (each is a tab stop), so the group itself needs no role or key handling.
       <div
         {...props}
-        ref={ref}
+        ref={mergeRefs(ref, group)}
         role="group"
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
@@ -415,6 +553,8 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
           onFieldMouseDown(event);
           props.onMouseDown?.(event);
         }}
+        onFocus={onGroupFocus}
+        onBlur={onGroupBlur}
         className={cx(styles.root, sizeClass[size], invalid && styles.error, disabled && styles.disabled, className)}
       >
         <div className={styles.segments}>
@@ -422,7 +562,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
             const spec = segmentSpec(segment);
             return (
               <Fragment key={segment}>
-                {index > 0 && segment !== "period" && (
+                {index > 0 && segment !== "period" && segments[index - 1] !== "period" && (
                   <span aria-hidden="true" className={styles.separator}>
                     :
                   </span>
@@ -435,7 +575,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
                   id={index === 0 ? id : undefined}
                   type="text"
                   role="spinbutton"
-                  inputMode={segment === "period" ? "text" : "numeric"}
+                  inputMode={segment === "period" ? "text" : openOnFocus && showPicker ? "none" : "numeric"}
                   autoComplete="off"
                   spellCheck={false}
                   aria-label={spec.label}
@@ -483,23 +623,36 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
               </button>
             </Popover.Trigger>
             <Popover.Content
+              ref={picker}
               align="end"
               hideArrow
               aria-label={labels.pickerName}
               className={styles.picker}
               onOpenAutoFocus={(event) => {
-                // Focus goes to the first wheel (the hours), not the panel itself.
                 event.preventDefault();
-                (event.currentTarget as HTMLElement).querySelector<HTMLElement>('[role="listbox"]')?.focus();
+                // Opened by arriving in the field, focus stays on the segment being typed into; otherwise it goes to the
+                // hours wheel (not the AM/PM one, even when that is drawn first), not the panel itself.
+                if (openedByFocus.current) return;
+                const wheels = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="listbox"]')];
+                (wheels.find((wheel) => wheel.getAttribute("aria-label") === labels.hour) ?? wheels[0])?.focus();
+              }}
+              onCloseAutoFocus={(event) => {
+                // Focus never left the segment, so there is nothing to give back to the button.
+                if (openedByFocus.current) event.preventDefault();
+                openedByFocus.current = false;
+              }}
+              onInteractOutside={(event) => {
+                // With the picker opening on focus it sits open beside the segments: a click or Tab among them is not a
+                // dismissal. Anything outside the field still is.
+                if (openOnFocus && withinField(event.target)) event.preventDefault();
               }}
             >
               <TimePickerColumns
                 draft={draft}
                 cycle={cycle}
                 showSeconds={showSeconds}
-                step={step}
-                min={minParts}
-                max={maxParts}
+                rules={rules}
+                periodFirst={periodFirst}
                 labels={labels}
                 format={format}
                 onPick={pick}
@@ -508,7 +661,28 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(
             </Popover.Content>
           </Popover>
         )}
-        {name && <input type="hidden" name={name} form={form} value={value} disabled={disabled} />}
+        {/* The value a form submits and validates. A hidden input is never validated, so this is a time input that is only
+            hidden from sight (and from assistive tech, which has the segments): `required` and the custom message above
+            give a surrounding form its native checks. Arriving on it, which a browser does to show its message, sends
+            focus to the segment that needs attention. */}
+        <input
+          ref={proxy}
+          type="time"
+          tabIndex={-1}
+          aria-hidden="true"
+          className={styles.proxy}
+          name={name}
+          form={form}
+          value={value}
+          required={required}
+          disabled={disabled}
+          readOnly={readOnly}
+          onChange={() => {}}
+          onFocus={() => {
+            const empty = segments.find((segment) => segmentText(segment) === "");
+            focusSegment(empty ?? segments[0]);
+          }}
+        />
       </div>
     );
   },

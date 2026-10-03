@@ -190,6 +190,53 @@ wheel's `wheel-visible-rows` (5), `wheel-neighbour-scale` (0.9), `wheel-neighbou
   gzipped, `TimeRangePicker` 7.49 / 2.04), the Foundations token-coverage check, 5,035 unit tests, 947
   Storybook-project tests, the 8 visual tests, and `pnpm audit` (only the already-accepted `braces` advisory).
 
+## Second round: six additions (2026-10-03)
+
+Asked for after the first review listed what a form field still lacked. The two that are real forks are
+[ADR-0030](adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md); the rest
+follow existing patterns.
+
+- **Field-level `onFocus`/`onBlur`.** Once on arriving, once on leaving; moving between segments, buttons and the
+  portaled picker is neither. The picker is portaled but React bubbles its events here, so containment is judged on
+  the DOM (`group` and the picker's own element) and an `inside` flag, not on the event's path.
+- **`commitOn`** (`"change"` | `"complete"` | `"blur"`). The draft-versus-value rule gained a `dirty` flag: a held
+  edit is allowed to differ from the value until something outside changes it; the sync key is the value with the
+  hour cycle and seconds. All reports go through one `report` that compares with the latest value, kept in a ref
+  refreshed after every render (so an owner that ignores a change is still undone).
+- **Form validation.** The hidden input is a `type="time"` one, visually hidden but with real layout (a `display: none`
+  control can't be reported on) and zero size, on the field's lower edge. `required` is native; a half-filled field and
+  an unavailable time set a custom message from `labels.incomplete` / `labels.unavailable`. `proxy.focus()` (what a
+  browser does to show its message) moves focus to the first empty segment.
+- **`isTimeDisabled`** and **`secondStep`.** `isTimeAllowed` takes both; the picker's rows are disabled by
+  `hasAllowedTime` (an option is disabled only if nothing it can lead to is allowed: an hour by its minutes, a minute
+  by its seconds, AM/PM by its twelve hours), which replaced `overlapsRange`. It also fixed a gap: with a `step` of 15
+  and a `min` of 08:50 the 8 o'clock hour used to look reachable though no :00/:15/:30/:45 minute in it is. A time
+  the predicate rules out is flagged and reported, like `min`/`max`.
+- **`periodPosition`** (`"end"` | `"start"`). Only the AM/PM segment moves (hour, minute, second keep their order);
+  the wheel follows; the separator is drawn only between two numbers; typing a period first moves on to the hour, and a
+  letter typed among the numbers sets the period without moving; the `id`, `autoFocus` and the clear button's focus go
+  to the first segment drawn; the picker's initial focus stays on the hours wheel by name.
+- **`openOnFocus`.** Opens when a *segment* gets focus from anywhere but another segment (so Shift+Tab, which reaches
+  the picker button first, still opens it on the next stop). Focus stays on the segment: `onOpenAutoFocus` and
+  `onCloseAutoFocus` leave it alone, and `onInteractOutside` ignores targets inside the field (without it, moving
+  between segments dismissed the picker). The segments ask for no phone keyboard (`inputMode="none"`).
+  `TimeRangePicker` opens the other end's picker when focus moves across.
+
+Found while doing it: an early rule ("only entry to the field opens it") never opened on Shift+Tab, caught by the
+real-browser story rather than the unit tests; and `isTimeDisabled` tests that rerendered with `showSeconds` kept the
+old uncontrolled value (incomplete in the new shape), so they render fresh.
+
+Verified: 47 new unit cases for the field, 6 for the range, 11 for the model; every new behaviour **broken on purpose,
+to see it fail** (blur containment, focus dedupe, holding, flushing, the outside-interaction guard, period advance, custom
+validity, the separator rule, the proxy's focus hand-over); 4 new real-browser stories (open on focus keeping focus and
+typing, focus events across the picker with Radix's real focus return, form validation focusing the segment, period-first
+order in the field and the wheels); the snippets typechecked against the real components; looked at in Storybook (open on
+focus, period first). Whole package: `eslint`, both typechecks, build, bundle-size, 5,101 unit tests, 957 Storybook-project tests.
+
+Still open from this round: the browser's own validation bubble was not looked at (only that the form refuses and focus
+goes to the segment), a real phone with `inputMode="none"` was not tried, and a locale that writes the minutes before the
+hours or uses another separator is not covered (`periodPosition` is the only ordering control).
+
 ## Not checked, or open
 
 - **A real phone keyboard, a real swipe, a screen reader, Safari and Firefox.** Insertion is exercised with

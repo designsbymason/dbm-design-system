@@ -11,14 +11,21 @@ export const propOrder = [
   "value",
   "defaultValue",
   "onValueChange",
+  "commitOn",
   "hourCycle",
+  "periodPosition",
   "showSeconds",
   "step",
+  "secondStep",
   "min",
   "max",
+  "isTimeDisabled",
   "showPicker",
+  "openOnFocus",
   "clearable",
   "onClear",
+  "onFocus",
+  "onBlur",
   "disabled",
   "required",
   "readOnly",
@@ -35,7 +42,7 @@ export const propOrder = [
   "style",
   "data-testid",
 ];
-export const playgroundExclude = ["onValueChange", "onClear", "name"];
+export const playgroundExclude = ["onValueChange", "onClear", "onFocus", "onBlur", "isTimeDisabled", "name"];
 
 <Meta of={TimeRangePickerStories} />
 
@@ -67,7 +74,7 @@ import { TimeRangePicker } from "@dbm-design-system/components";
 ## Properties
 
 `TimeRangePicker` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
-`onFocus`) — passed straight through to the group that holds the two fields. `ref` forwards to that group, and
+`onKeyDown`) — passed straight through to the group that holds the two fields. `ref` forwards to that group, and
 the `id` goes on the start field's first segment.
 
 <PropertiesTable of={TimeRangePickerStories} order={propOrder} />
@@ -101,6 +108,9 @@ the `id` goes on the start field's first segment.
 
 - Use it for a window within one day: opening hours, a meeting, a shift. Both ends are the same kind of value, so
   one `step`, `min` and `max` apply to both.
+- The settings `TimePicker` has for the field as a whole carry over to both ends: `commitOn`, `secondStep`,
+  `isTimeDisabled`, `periodPosition`, `openOnFocus`, and `required` as a real form constraint. `onFocus` and `onBlur`
+  fire once for the pair, not as focus moves from one end to the other.
 - Give the group a name (`aria-label`, or a `FormField` label); the two fields are named "Start time" and "End
   time" inside it, and `labels` translates both.
 - Treat `""` in either position as "not entered yet": the pair is reported on every change, with an empty

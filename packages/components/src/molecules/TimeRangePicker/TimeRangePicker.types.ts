@@ -1,5 +1,11 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
-import type { TimePickerHourCycle, TimePickerLabels, TimePickerSize } from "../TimePicker";
+import type { ComponentPropsWithoutRef, CSSProperties, FocusEventHandler } from "react";
+import type {
+  TimePickerCommitOn,
+  TimePickerHourCycle,
+  TimePickerLabels,
+  TimePickerPeriodPosition,
+  TimePickerSize,
+} from "../TimePicker";
 
 /** `[start, end]`, each a 24-hour `"HH:mm"` (or `"HH:mm:ss"`) string, or `""` while that end is empty. */
 export type TimeRangeValue = [start: string, end: string];
@@ -13,7 +19,7 @@ export interface TimeRangePickerLabels extends TimePickerLabels {
 }
 
 export interface TimeRangePickerProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role" | "onFocus" | "onBlur"> {
   /**
    * Overall size of both fields, on the shared scale.
    * @default 'md'
@@ -40,10 +46,22 @@ export interface TimeRangePickerProps
    */
   onValueChange?: (value: TimeRangeValue) => void;
   /**
+   * When `onValueChange` is called, for each end: on every change, once that end is settled, or when focus leaves
+   * it; see `TimePicker`.
+   * @default 'change'
+   */
+  commitOn?: TimePickerCommitOn;
+  /**
    * `"12"` shows each end with an AM/PM segment; `"24"` does not. Chosen explicitly, never read from the locale.
    * @default '12'
    */
   hourCycle?: TimePickerHourCycle;
+  /**
+   * In the 12-hour cycle, whether each end's AM/PM comes after the time (`"end"`, "3:45 PM") or before it
+   * (`"start"`, "PM 3:45").
+   * @default 'end'
+   */
+  periodPosition?: TimePickerPeriodPosition;
   /**
    * Shows a seconds segment on both ends, making each value `"HH:mm:ss"`.
    * @default false
@@ -54,15 +72,31 @@ export interface TimeRangePickerProps
    * @default 1
    */
   step?: number;
+  /**
+   * Seconds between the second values either end accepts, with `showSeconds`: `15` allows `:00 :15 :30 :45`.
+   * @default 1
+   */
+  secondStep?: number;
   /** The earliest time either end may be, as `"HH:mm"`. The end's earliest is also the start. */
   min?: string;
   /** The latest time either end may be, as `"HH:mm"`. */
   max?: string;
   /**
+   * Rules out particular times for either end, with the 24-hour string each end's value uses; return `true` for a
+   * time that isn't available. Flagged and still reported, as `min`/`max` are; see `TimePicker`.
+   */
+  isTimeDisabled?: (time: string) => boolean;
+  /**
    * Shows each end's picker button.
    * @default true
    */
   showPicker?: boolean;
+  /**
+   * Opens an end's picker when focus lands on one of its segments other than from another of its own segments; see
+   * `TimePicker`. Moving from one end to the other opens the other's picker too.
+   * @default false
+   */
+  openOnFocus?: boolean;
   /**
    * Shows a clear ("×") button while any end has something in it. Pass it to turn the button on without
    * having anything to do when it is used; `onClear` also turns it on, and `clearable={false}` turns it off
@@ -76,12 +110,23 @@ export interface TimeRangePickerProps
    */
   onClear?: (end: "start" | "end") => void;
   /**
+   * Called when focus arrives in the range from outside it. Moving between the two ends, their buttons or their
+   * pickers is not arriving, so it fires once per visit to the pair.
+   */
+  onFocus?: FocusEventHandler<HTMLDivElement>;
+  /**
+   * Called when focus leaves the range for somewhere outside it, for validating the pair once the person has
+   * left both ends.
+   */
+  onBlur?: FocusEventHandler<HTMLDivElement>;
+  /**
    * Disables both ends.
    * @default false
    */
   disabled?: boolean;
   /**
-   * Marks the range as required for assistive technology.
+   * Marks both ends as required: a form won't submit while either is empty, and a half-filled or unavailable end
+   * stops it too; see `TimePicker`.
    * @default false
    */
   required?: boolean;
@@ -105,7 +150,7 @@ export interface TimeRangePickerProps
   /**
    * Every piece of text the fields write themselves, and the two end names, for translation. Pass only the keys
    * you want to change.
-   * @default { start: 'Start time', end: 'End time', hour: 'Hour', minute: 'Minute', second: 'Second', period: 'AM/PM', am: 'AM', pm: 'PM', empty: 'Empty', openPicker: 'Choose time', pickerName: 'Choose a time', clear: 'Clear time' }
+   * @default { start: 'Start time', end: 'End time', hour: 'Hour', minute: 'Minute', second: 'Second', period: 'AM/PM', am: 'AM', pm: 'PM', empty: 'Empty', openPicker: 'Choose time', pickerName: 'Choose a time', clear: 'Clear time', incomplete: 'Enter a complete time', unavailable: "This time isn't available" }
    */
   labels?: Partial<TimeRangePickerLabels>;
   /** Writes a number in the digits you want shown; see `TimePicker`. @default String */

@@ -13,17 +13,24 @@ export const propOrder = [
   "value",
   "defaultValue",
   "onValueChange",
+  "commitOn",
   "hourCycle",
+  "periodPosition",
   "showSeconds",
   "step",
+  "secondStep",
   "min",
   "max",
+  "isTimeDisabled",
   "showPicker",
+  "openOnFocus",
   "open",
   "defaultOpen",
   "onOpenChange",
   "clearable",
   "onClear",
+  "onFocus",
+  "onBlur",
   "disabled",
   "required",
   "readOnly",
@@ -40,7 +47,7 @@ export const propOrder = [
   "style",
   "data-testid",
 ];
-export const playgroundExclude = ["onValueChange", "onClear", "onOpenChange", "name"];
+export const playgroundExclude = ["onValueChange", "onClear", "onOpenChange", "onFocus", "onBlur", "isTimeDisabled", "name"];
 
 <Meta of={TimePickerStories} />
 
@@ -73,7 +80,7 @@ import { TimePicker } from "@dbm-design-system/components";
 ## Properties
 
 `TimePicker` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
-`onFocus`) — passed straight through to the group element that holds the segments. `ref` forwards to that group,
+`onKeyDown`) — passed straight through to the group element that holds the segments. `ref` forwards to that group,
 and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'s `htmlFor` should point at.
 
 <PropertiesTable of={TimePickerStories} order={propOrder} />
@@ -96,9 +103,33 @@ and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'
 
 <Canvas of={TimePickerStories.MinuteStep} />
 
+### Second step
+
+<Canvas of={TimePickerStories.SecondStep} />
+
 ### Limited to a range
 
 <Canvas of={TimePickerStories.TimeRange} />
+
+### Unavailable times
+
+<Canvas of={TimePickerStories.UnavailableTimes} />
+
+### AM/PM first
+
+<Canvas of={TimePickerStories.PeriodFirst} />
+
+### Open on focus
+
+<Canvas of={TimePickerStories.OpenOnFocus} />
+
+### When it reports
+
+<Canvas of={TimePickerStories.CommitTiming} />
+
+### Required, in a form
+
+<Canvas of={TimePickerStories.InAForm} />
 
 ### Error, disabled and read-only
 
@@ -132,8 +163,10 @@ and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'
 - Use `TimePicker` for a time of day: a reminder, an opening hour, an appointment. For a duration (two hours, ten
   minutes) use a number field; for a date, a date picker.
 - Pick `hourCycle` for your users and say so explicitly; the field never guesses it from the locale.
-- Use `step` for times that fall on a grid (appointments every 15 minutes), so the arrow keys and the picker only
-  offer what is valid, and `min` and `max` for a window.
+- Use `step` (and `secondStep`) for times that fall on a grid (appointments every 15 minutes), so the arrow keys
+  and the picker only offer what is valid, `min` and `max` for a window, and `isTimeDisabled` for gaps in it.
+- Use `periodPosition="start"` for languages that write AM/PM before the time, as you pick `hourCycle`: explicitly.
+- Use `openOnFocus` where the picker is the main way in (a booking form), not on a field people mostly type into.
 - Put it in a `FormField` for a visible label, helper text and error text wired together.
 - Pass `labels` and `formatNumber` for a language that isn't English or digits that aren't 0–9; the whole field,
   announcements included, follows them.
@@ -145,8 +178,11 @@ and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'
   only partly filled.
 - Don't treat a `min`/`max` or `step` violation as refused input: the field flags it and still reports it, so your
   own validation decides what to do.
-- Don't expect it to validate natively or block a form submit: it holds a hidden input, which the browser doesn't
-  validate. Report an empty required field with the `FormField`'s `error`.
+- Don't build your own "is it filled in?" check for a plain form: `required`, a half-filled field and a time the
+  field flags are real form constraints, so the browser blocks the submit. Use a `FormField`'s `error` for rules of
+  your own (an end before a start, a slot that was booked a moment ago).
+- Don't reach for `isTimeDisabled` for a window: `min` and `max` are cheaper and the picker reads them directly.
+  `isTimeDisabled` is called for many times as the wheels draw, so it must be quick and pure.
 - Don't use it for a time with a date or a timezone attached; the value is only a time of day.
 
 </Callout>
@@ -157,12 +193,17 @@ and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'
 - Typing works the way a native time field does: a digit that can't start a two-digit number is the whole number
   and moves on (a 7 in the minutes), one that can waits for a second. `Backspace` clears a segment. Keep the
   field for people who know the time; the picker is there for the ones who don't.
-- A first digit of a two-digit segment already makes a whole time (a `0` is `00`), so `onValueChange` can report
-  an in-between value (`"09:03"`) before the second digit arrives (`"09:30"`). Treat each call as the current
-  time, as you would a native input's `input` event, and wait for blur if you only want the final one.
-- The picker's wheels choose live, as a phone's does: a fast fling reports every row it passes, so `onValueChange` can
-  be called many times in a second, each with the time then in the middle. Debounce your own work on it, or wait for
-  the picker to close, if each change is expensive.
+- A first digit of a two-digit segment already makes a whole time (a `0` is `00`), so by default `onValueChange` can
+  report an in-between value (`"09:03"`) before the second digit arrives (`"09:30"`). Treat each call as the current
+  time, as you would a native input's `input` event — or set `commitOn="complete"` to hear only about a time that
+  is whole, or `"blur"` to hear once, when the person is done.
+- The picker's wheels choose live, as a phone's does: a fast fling reports every row it passes, so with the default
+  `commitOn="change"` `onValueChange` can be called many times in a second, each with the time then in the middle.
+  `commitOn="complete"` or `"blur"` holds those until the picker closes, which is the way to make each change cheap.
+- Held modes catch up on blur, `Enter`, the picker closing and the clear button, and the segments always show the
+  latest edit; only the report is held. A `value` set from outside while one is held wins over it.
+- `onFocus` and `onBlur` are for the field as a whole: they fire once on arriving and once on leaving, not as focus
+  moves between the segments, the buttons and the picker, so `onBlur` is the place for validate-on-blur.
 - When the owner controls `value`, a change it doesn't apply is undone: the field shows what `value` says.
 - In a table row or a toolbar, drop to `size="sm"` or `"xs"`; each size is as tall as an `Input` or a `Button` at the
   same step, so a row of mixed controls lines up.
@@ -178,7 +219,13 @@ and the `id` goes on the first segment (the hour), which is what a `FieldLabel`'
   (also a colon or space), `ArrowUp`/`ArrowDown` step the segment (wrapping, and along the `step` grid in the
   minutes), `Home`/`End` go to its ends, `Backspace` clears it, and a letter in the AM/PM segment chooses it.
 - A phone's keyboard that doesn't report keys is handled through the text it inserts, and the segments ask for a
-  numeric keyboard.
+  numeric keyboard (none at all with `openOnFocus`, where the wheels are the input).
+- With `openOnFocus` the picker opens beside the focused segment without taking focus, so a keyboard user types
+  as usual; moving among the segments leaves it open, `Escape` closes it with focus where it was, and leaving the
+  field closes it.
+- For a form, the value lives on a hidden `<input type="time">` that carries `required` and the validation messages
+  (`labels.incomplete`, `labels.unavailable`); the browser's message points at the field, and focus goes to the
+  first empty segment.
 - The picker button has an accessible name, and opens a `role="dialog"` holding one wheel per segment, each a
   `listbox` of options (`aria-selected`, `aria-disabled` for what the range rules out) that names the chosen
   option with `aria-activedescendant`. Only one copy of a looping wheel's values is in the accessibility tree; the

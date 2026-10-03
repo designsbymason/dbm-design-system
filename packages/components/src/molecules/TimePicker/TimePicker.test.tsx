@@ -350,7 +350,7 @@ describe("TimePicker value", () => {
   it("submits the 24-hour string under name, and an empty one while incomplete", async () => {
     const user = userEvent.setup();
     const { container } = render(<TimePicker aria-label="t" name="start" form="f" defaultValue="15:45" />);
-    const hidden = container.querySelector<HTMLInputElement>('input[type="hidden"]')!;
+    const hidden = container.querySelector<HTMLInputElement>('input[type="time"]')!;
     expect(hidden).toHaveAttribute("name", "start");
     expect(hidden).toHaveAttribute("form", "f");
     expect(hidden).toHaveValue("15:45");
@@ -858,6 +858,585 @@ describe("TimePicker robustness", () => {
       render(<TimePicker aria-label="t" step={Number.NaN} value={5 as unknown as string} labels={{ hour: undefined as unknown as string }} />),
     ).not.toThrow();
     expect(segment("Hour")).toBeInTheDocument();
+  });
+});
+
+describe("TimePicker focus and blur", () => {
+  it("calls onFocus once on arriving and onBlur once on leaving, not for each part it moves between", async () => {
+    const user = userEvent.setup();
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    render(
+      <>
+        <TimePicker aria-label="t" clearable defaultValue="09:30" onFocus={onFocus} onBlur={onBlur} />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.click(segment("Hour"));
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    await user.keyboard("{ArrowRight}{ArrowRight}");
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Choose time" })).toHaveFocus();
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    expect(onBlur).not.toHaveBeenCalled();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    await user.click(segment("Minute"));
+    expect(onFocus).toHaveBeenCalledTimes(2);
+  });
+
+  it("counts the picker as part of the field: focus into it is not leaving, and out of it is", async () => {
+    const user = userEvent.setup();
+    const onBlur = vi.fn();
+    render(
+      <>
+        <TimePicker aria-label="t" defaultValue="09:30" onBlur={onBlur} />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog", { name: "Choose a time" });
+    expect(screen.getByRole("listbox", { name: "Hour" })).toHaveFocus();
+    expect(onBlur).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "After" }));
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it("hands the original focus event to the handlers", async () => {
+    const user = userEvent.setup();
+    const onFocus = vi.fn();
+    render(<TimePicker aria-label="t" onFocus={onFocus} />);
+    await user.click(segment("Minute"));
+    expect(onFocus.mock.calls[0]![0].target).toBe(segment("Minute"));
+  });
+});
+
+describe("TimePicker openOnFocus", () => {
+  it("opens the picker when a segment is reached from outside, and leaves focus on the segment", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" openOnFocus hourCycle="24" />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(segment("Hour"));
+    await screen.findByRole("dialog", { name: "Choose a time" });
+    expect(segment("Hour")).toHaveFocus();
+    // Typing still works, and the wheels follow it.
+    await user.keyboard("0930");
+    expect(texts()).toEqual(["09", "30"]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(within(screen.getByRole("listbox", { name: "Hour" })).getByRole("option", { name: "09" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("stays open as focus moves among the segments, and closes on Escape with focus kept where it was", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" openOnFocus hourCycle="24" />);
+    await user.tab();
+    await screen.findByRole("dialog");
+    await user.keyboard("{ArrowRight}");
+    expect(segment("Minute")).toHaveFocus();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(segment("Hour"));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(segment("Hour")).toHaveFocus();
+    // Moving on inside the field does not open it again.
+    await user.keyboard("{ArrowRight}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("closes when focus leaves the field, and opens again on the next visit", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <TimePicker aria-label="t" openOnFocus hourCycle="24" />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.tab();
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: "After" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await user.click(segment("Minute"));
+    await screen.findByRole("dialog");
+  });
+
+  it("does not open when the picker button or the clear button is what is reached, and the button still toggles", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" openOnFocus clearable defaultValue="09:30" hourCycle="24" />);
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("opens when a segment is reached from the field's own button, as Shift+Tab into the field does", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <TimePicker aria-label="t" openOnFocus hourCycle="24" />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.click(screen.getByRole("button", { name: "After" }));
+    await user.tab({ shift: true });
+    expect(screen.getByRole("button", { name: "Choose time" })).toHaveFocus();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.tab({ shift: true });
+    expect(segment("Minute")).toHaveFocus();
+    await screen.findByRole("dialog");
+  });
+
+  it("asks a phone for no keyboard, since the wheels are the input", () => {
+    render(<TimePicker aria-label="t" openOnFocus />);
+    expect(segment("Hour")).toHaveAttribute("inputmode", "none");
+    expect(segment("Minute")).toHaveAttribute("inputmode", "none");
+  });
+
+  it("does nothing without the picker, when read-only, or when disabled", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<TimePicker aria-label="t" openOnFocus showPicker={false} />);
+    await user.click(segment("Hour"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(segment("Hour")).toHaveAttribute("inputmode", "numeric");
+    rerender(<TimePicker aria-label="t" openOnFocus readOnly />);
+    await user.click(segment("Minute"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("asks a controlled owner to open, through onOpenChange", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<TimePicker aria-label="t" openOnFocus open={false} onOpenChange={onOpenChange} />);
+    await user.click(segment("Hour"));
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("TimePicker commitOn", () => {
+  it('reports every change by default, the first digit of a minute included ("change")', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" onValueChange={onValueChange} />);
+    await user.click(segment("Hour"));
+    await user.keyboard("093");
+    expect(onValueChange).toHaveBeenLastCalledWith("09:03");
+    await user.keyboard("0");
+    expect(onValueChange.mock.calls.map((call) => call[0])).toEqual(["09:03", "09:30"]);
+  });
+
+  it('"complete" waits for a digit that may still get a second one, then reports once', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" commitOn="complete" onValueChange={onValueChange} />);
+    await user.click(segment("Hour"));
+    await user.keyboard("093");
+    // The field already shows what was typed.
+    expect(texts()).toEqual(["09", "03"]);
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("0");
+    expect(onValueChange.mock.calls).toEqual([["09:30"]]);
+  });
+
+  it('"complete" reports at once a minute that is whole as typed (a 7), and each arrow step', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" commitOn="complete" onValueChange={onValueChange} />);
+    await user.click(segment("Hour"));
+    await user.keyboard("097");
+    expect(onValueChange.mock.calls).toEqual([["09:07"]]);
+    await user.keyboard("{ArrowLeft}{ArrowUp}");
+    expect(onValueChange.mock.calls.at(-1)).toEqual(["10:07"]);
+  });
+
+  it('"complete" holds a half-edited field, and reports it as "" when focus leaves', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <>
+        <TimePicker aria-label="t" hourCycle="24" commitOn="complete" defaultValue="09:30" onValueChange={onValueChange} />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.click(segment("Minute"));
+    await user.keyboard("{Backspace}");
+    expect(texts()).toEqual(["09", ""]);
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "After" }));
+    expect(onValueChange.mock.calls).toEqual([[""]]);
+  });
+
+  it('"complete" reports at once when the whole field is emptied', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" commitOn="complete" clearable defaultValue="09:30" onValueChange={onValueChange} />);
+    await user.click(screen.getByRole("button", { name: "Clear time" }));
+    expect(onValueChange.mock.calls).toEqual([[""]]);
+  });
+
+  it('"complete" holds every row a wheel passes while the picker is open, and reports the last when it closes', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" commitOn="complete" defaultValue="09:30" onValueChange={onValueChange} />);
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+    expect(texts()).toEqual(["12", "30"]);
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(onValueChange.mock.calls).toEqual([["12:30"]]));
+  });
+
+  it('"blur" reports nothing while typing, then once when focus leaves', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <>
+        <TimePicker aria-label="t" hourCycle="24" commitOn="blur" onValueChange={onValueChange} />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.click(segment("Hour"));
+    await user.keyboard("0930{ArrowUp}");
+    expect(texts()).toEqual(["09", "31"]);
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "After" }));
+    expect(onValueChange.mock.calls).toEqual([["09:31"]]);
+  });
+
+  it('"blur" also reports on Enter, and the clear button is never held', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" commitOn="blur" clearable onValueChange={onValueChange} />);
+    await user.click(segment("Hour"));
+    await user.keyboard("0930{Enter}");
+    expect(onValueChange.mock.calls).toEqual([["09:30"]]);
+    await user.click(screen.getByRole("button", { name: "Clear time" }));
+    expect(onValueChange.mock.calls).toEqual([["09:30"], [""]]);
+  });
+
+  it("reports nothing when the edit ends where it began", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <>
+        <TimePicker aria-label="t" hourCycle="24" commitOn="blur" defaultValue="09:30" onValueChange={onValueChange} />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.click(segment("Minute"));
+    await user.keyboard("{ArrowUp}{ArrowDown}");
+    await user.click(screen.getByRole("button", { name: "After" }));
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("keeps what is typed while a controlled value stands still, and takes a value set from outside over it", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [value, setValue] = useState("08:00");
+      return (
+        <>
+          <button type="button" onClick={() => setValue("20:15")}>
+            Set
+          </button>
+          <TimePicker aria-label="t" hourCycle="24" commitOn="blur" value={value} onValueChange={setValue} />
+        </>
+      );
+    }
+    render(<Controlled />);
+    await user.click(segment("Minute"));
+    await user.keyboard("45");
+    expect(texts()).toEqual(["08", "45"]);
+    await user.click(screen.getByRole("button", { name: "Set" }));
+    expect(texts()).toEqual(["20", "15"]);
+  });
+
+  it("does not lose a half-filled field when the owner echoes back the \"\" it was told", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [value, setValue] = useState("08:00");
+      return (
+        <>
+          <TimePicker aria-label="t" hourCycle="24" commitOn="blur" value={value} onValueChange={setValue} />
+          <button type="button">After</button>
+        </>
+      );
+    }
+    render(<Controlled />);
+    await user.click(segment("Minute"));
+    await user.keyboard("{Backspace}");
+    await user.click(screen.getByRole("button", { name: "After" }));
+    expect(texts()).toEqual(["08", ""]);
+  });
+});
+
+describe("TimePicker form validation", () => {
+  const renderInForm = (props: Partial<React.ComponentProps<typeof TimePicker>> = {}) => {
+    const utils = render(
+      <form aria-label="f" data-testid="form">
+        <TimePicker aria-label="t" name="when" hourCycle="24" {...props} />
+      </form>,
+    );
+    const form = screen.getByTestId("form") as HTMLFormElement;
+    const proxy = form.querySelector<HTMLInputElement>('input[type="time"]')!;
+    return { ...utils, form, proxy };
+  };
+
+  it("won't submit an empty required field, with the browser's own missing-value state", () => {
+    const { form, proxy } = renderInForm({ required: true });
+    expect(form.checkValidity()).toBe(false);
+    expect(proxy.validity.valueMissing).toBe(true);
+  });
+
+  it("submits once a required field is filled in", async () => {
+    const user = userEvent.setup();
+    const { form } = renderInForm({ required: true });
+    await user.click(segment("Hour"));
+    await user.keyboard("0930");
+    expect(form.checkValidity()).toBe(true);
+    expect(new FormData(form).get("when")).toBe("09:30");
+  });
+
+  it("doesn't block an empty field that isn't required", () => {
+    const { form } = renderInForm();
+    expect(form.checkValidity()).toBe(true);
+  });
+
+  it("refuses a half-filled field, required or not, with the incomplete message", async () => {
+    const user = userEvent.setup();
+    const { form, proxy } = renderInForm();
+    await user.click(segment("Hour"));
+    await user.keyboard("09");
+    expect(form.checkValidity()).toBe(false);
+    expect(proxy.validationMessage).toBe("Enter a complete time");
+    await user.keyboard("30");
+    expect(form.checkValidity()).toBe(true);
+  });
+
+  it("refuses a time outside min and max, off the step, or ruled out, with the unavailable message", () => {
+    const cases: Partial<React.ComponentProps<typeof TimePicker>>[] = [
+      { defaultValue: "08:00", min: "09:00" },
+      { defaultValue: "18:00", max: "17:00" },
+      { defaultValue: "09:20", step: 15 },
+      { defaultValue: "12:30", isTimeDisabled: (time) => time.startsWith("12") },
+    ];
+    for (const props of cases) {
+      const { form, proxy, unmount } = renderInForm(props);
+      expect(form.checkValidity()).toBe(false);
+      expect(proxy.validationMessage).toBe("This time isn't available");
+      unmount();
+    }
+    const { form } = renderInForm({ defaultValue: "09:30", min: "09:00", max: "17:00", step: 15 });
+    expect(form.checkValidity()).toBe(true);
+  });
+
+  it("uses the translated messages", async () => {
+    const { proxy } = renderInForm({ defaultValue: "08:00", min: "09:00", labels: { unavailable: "Indisponible" } });
+    expect(proxy.validationMessage).toBe("Indisponible");
+  });
+
+  it("is left out of the form's check when disabled or read-only", () => {
+    const disabled = renderInForm({ required: true, disabled: true });
+    expect(disabled.form.checkValidity()).toBe(true);
+    disabled.unmount();
+    expect(renderInForm({ required: true, readOnly: true }).form.checkValidity()).toBe(true);
+  });
+
+  it("sends the browser's attention to the segment that needs it", () => {
+    const { proxy } = renderInForm({ required: true, defaultValue: "" });
+    proxy.focus();
+    expect(segment("Hour")).toHaveFocus();
+  });
+
+  it("is hidden from assistive technology and the tab order, and submits nothing without a name", () => {
+    const { proxy } = renderInForm();
+    expect(proxy).toHaveAttribute("aria-hidden", "true");
+    expect(proxy).toHaveAttribute("tabindex", "-1");
+    const { container } = render(<TimePicker aria-label="n" />);
+    expect(container.querySelector('input[type="time"]')).not.toHaveAttribute("name");
+  });
+});
+
+describe("TimePicker isTimeDisabled", () => {
+  const lunch = (time: string) => time >= "12:00" && time < "13:00";
+
+  it("is given each time as the value string, with seconds when they are shown", async () => {
+    const user = userEvent.setup();
+    const isTimeDisabled = vi.fn(() => false);
+    const { unmount } = render(<TimePicker aria-label="t" hourCycle="24" isTimeDisabled={isTimeDisabled} />);
+    await user.click(segment("Hour"));
+    await user.keyboard("0930");
+    expect(isTimeDisabled).toHaveBeenCalledWith("09:30");
+    unmount();
+    render(<TimePicker aria-label="t" hourCycle="24" showSeconds defaultValue="09:30:15" isTimeDisabled={isTimeDisabled} />);
+    expect(isTimeDisabled).toHaveBeenCalledWith("09:30:15");
+  });
+
+  it("flags a time it rules out, and still reports it", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" isTimeDisabled={lunch} onValueChange={onValueChange} />);
+    await user.click(segment("Hour"));
+    await user.keyboard("1230");
+    expect(onValueChange).toHaveBeenLastCalledWith("12:30");
+    expect(segment("Hour")).toHaveAttribute("aria-invalid", "true");
+    await user.keyboard("{ArrowLeft}{ArrowUp}");
+    expect(texts()).toEqual(["13", "30"]);
+    expect(segment("Hour")).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("disables in the picker an hour with no available minute, but not one with some", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" hourCycle="24" defaultValue="09:30" isTimeDisabled={lunch} />);
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    const hours = await screen.findByRole("listbox", { name: "Hour" });
+    expect(within(hours).getByRole("option", { name: "12" })).toHaveAttribute("aria-disabled", "true");
+    expect(within(hours).getByRole("option", { name: "11" })).not.toHaveAttribute("aria-disabled");
+    expect(within(hours).getByRole("option", { name: "13" })).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("disables a second only for the exact time, and leaves a minute that still has some", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" hourCycle="24" showSeconds defaultValue="10:20:00" isTimeDisabled={(time) => time === "10:20:05"} />);
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    expect(within(screen.getByRole("listbox", { name: "Second" })).getByRole("option", { name: "05" })).toHaveAttribute("aria-disabled", "true");
+    expect(within(screen.getByRole("listbox", { name: "Second" })).getByRole("option", { name: "06" })).not.toHaveAttribute("aria-disabled");
+    expect(within(screen.getByRole("listbox", { name: "Minute" })).getByRole("option", { name: "20" })).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("disables a minute whose every second is ruled out, and a second", async () => {
+    const user = userEvent.setup();
+    render(
+      <TimePicker
+        aria-label="t"
+        hourCycle="24"
+        showSeconds
+        secondStep={30}
+        defaultValue="10:15:30"
+        isTimeDisabled={(time) => time.startsWith("10:20")}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    expect(within(screen.getByRole("listbox", { name: "Minute" })).getByRole("option", { name: "20" })).toHaveAttribute("aria-disabled", "true");
+    expect(within(screen.getByRole("listbox", { name: "Minute" })).getByRole("option", { name: "21" })).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("disables AM or PM when nothing in it is available, in the 12-hour cycle", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" defaultValue="15:30" isTimeDisabled={(time) => time < "12:00"} />);
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    const period = await screen.findByRole("listbox", { name: "AM/PM" });
+    expect(within(period).getByRole("option", { name: "AM" })).toHaveAttribute("aria-disabled", "true");
+    expect(within(period).getByRole("option", { name: "PM" })).not.toHaveAttribute("aria-disabled");
+  });
+});
+
+describe("TimePicker secondStep", () => {
+  it("lists only the seconds on the step in the picker", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" hourCycle="24" showSeconds secondStep={15} />);
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    const seconds = await screen.findByRole("listbox", { name: "Second" });
+    expect(within(seconds).getAllByRole("option").map((o) => o.textContent)).toEqual(["00", "15", "30", "45"]);
+  });
+
+  it("steps the arrow keys along it, wrapping, with Home and End at its ends", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" hourCycle="24" showSeconds secondStep={15} defaultValue="09:30:45" />);
+    await user.click(segment("Second"));
+    await user.keyboard("{ArrowUp}");
+    expect(segment("Second")).toHaveValue("00");
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    expect(segment("Second")).toHaveValue("30");
+    await user.keyboard("{Home}");
+    expect(segment("Second")).toHaveValue("00");
+    await user.keyboard("{End}");
+    expect(segment("Second")).toHaveValue("45");
+    expect(segment("Second")).toHaveAttribute("aria-valuemax", "45");
+  });
+
+  it("flags a second off the grid, without refusing it", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" hourCycle="24" showSeconds secondStep={15} defaultValue="09:30:00" onValueChange={onValueChange} />);
+    expect(segment("Hour")).not.toHaveAttribute("aria-invalid");
+    await user.click(segment("Second"));
+    await user.keyboard("20");
+    expect(onValueChange).toHaveBeenLastCalledWith("09:30:20");
+    expect(segment("Hour")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("warns about a step that isn't a whole number of seconds from 1 to 59, and uses 1", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" hourCycle="24" showSeconds secondStep={0} />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("`secondStep` must be a whole number"));
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    expect(within(await screen.findByRole("listbox", { name: "Second" })).getAllByRole("option")).toHaveLength(60);
+  });
+});
+
+describe("TimePicker periodPosition", () => {
+  it("puts AM/PM before the time, with one colon between the numbers", () => {
+    const { container } = render(<TimePicker aria-label="t" periodPosition="start" defaultValue="15:45" />);
+    expect(screen.getAllByRole("spinbutton").map((input) => input.getAttribute("aria-label"))).toEqual(["AM/PM", "Hour", "Minute"]);
+    expect(texts()).toEqual(["PM", "03", "45"]);
+    expect(container.querySelectorAll(`.${styles.separator}`)).toHaveLength(1);
+  });
+
+  it("keeps hour, minute and second in order after it", () => {
+    render(<TimePicker aria-label="t" periodPosition="start" showSeconds />);
+    expect(screen.getAllByRole("spinbutton").map((input) => input.getAttribute("aria-label"))).toEqual(["AM/PM", "Hour", "Minute", "Second"]);
+  });
+
+  it("is ignored in the 24-hour cycle", () => {
+    render(<TimePicker aria-label="t" hourCycle="24" periodPosition="start" />);
+    expect(screen.getAllByRole("spinbutton").map((input) => input.getAttribute("aria-label"))).toEqual(["Hour", "Minute"]);
+  });
+
+  it("types the period first and goes on to the hour, then the minute", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimePicker aria-label="t" periodPosition="start" onValueChange={onValueChange} />);
+    await user.click(segment("AM/PM"));
+    await user.keyboard("p");
+    expect(segment("Hour")).toHaveFocus();
+    await user.keyboard("0345");
+    expect(texts()).toEqual(["PM", "03", "45"]);
+    expect(onValueChange).toHaveBeenLastCalledWith("15:45");
+  });
+
+  it("still takes a letter typed among the numbers, without losing its place", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" periodPosition="start" />);
+    await user.click(segment("Hour"));
+    await user.keyboard("0345p");
+    expect(texts()).toEqual(["PM", "03", "45"]);
+  });
+
+  it("starts at the period for the id, autoFocus and the clear button", async () => {
+    const user = userEvent.setup();
+    // eslint-disable-next-line jsx-a11y/no-autofocus -- exercising the component's own opt-in prop
+    render(<TimePicker aria-label="t" periodPosition="start" id="when" autoFocus clearable defaultValue="15:45" />);
+    expect(segment("AM/PM")).toHaveAttribute("id", "when");
+    expect(segment("AM/PM")).toHaveFocus();
+    await user.click(segment("Minute"));
+    await user.click(screen.getByRole("button", { name: "Clear time" }));
+    expect(segment("AM/PM")).toHaveFocus();
+  });
+
+  it("moves the wheel too", async () => {
+    const user = userEvent.setup();
+    render(<TimePicker aria-label="t" periodPosition="start" />);
+    await user.click(screen.getByRole("button", { name: "Choose time" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getAllByRole("listbox").map((box) => box.getAttribute("aria-label"))).toEqual(["AM/PM", "Hour", "Minute"]);
+    // Focus still starts at the hours.
+    expect(screen.getByRole("listbox", { name: "Hour" })).toHaveFocus();
   });
 });
 

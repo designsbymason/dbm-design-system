@@ -2,8 +2,8 @@ import { useEffect, useId, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import styles from "./TimePicker.module.css";
 import type { TimePickerLabels } from "./TimePicker.types";
-import { hourRange, overlapsRange } from "../../internal/time/timeValue";
-import type { HourCycle, Period, Segment, TimeDraft, TimeParts } from "../../internal/time/timeValue";
+import { hasAllowedTime, hourRange } from "../../internal/time/timeValue";
+import type { HourCycle, Period, Segment, TimeConstraints, TimeDraft } from "../../internal/time/timeValue";
 import {
   copiesFor,
   middleGlobalIndex,
@@ -31,9 +31,10 @@ export interface TimePickerColumnsProps {
   draft: TimeDraft;
   cycle: HourCycle;
   showSeconds: boolean;
-  step: number;
-  min: TimeParts | undefined;
-  max: TimeParts | undefined;
+  /** The range, the minute and second steps and the owner's own rule, which decide what each row is allowed. */
+  rules: TimeConstraints;
+  /** Puts the AM/PM wheel before the others rather than after. */
+  periodFirst: boolean;
   labels: TimePickerLabels;
   /** Writes a number as it is shown: two digits, in the field's own numerals. */
   format: (value: number) => string;
@@ -56,8 +57,6 @@ function hour24Of(draft: TimeDraft, cycle: HourCycle): number | undefined {
   if (draft.period === undefined) return undefined;
   return (draft.hour % 12) + (draft.period === "pm" ? 12 : 0);
 }
-
-const at = (hours: number, minutes: number, seconds: number): TimeParts => ({ hours, minutes, seconds });
 
 /** How long after the last scroll event a wheel is taken to have come to rest. */
 const SETTLE_MS = 140;
@@ -353,9 +352,8 @@ export function TimePickerColumns({
   draft,
   cycle,
   showSeconds,
-  step,
-  min,
-  max,
+  rules,
+  periodFirst,
   labels,
   format,
   onPick,
@@ -364,6 +362,12 @@ export function TimePickerColumns({
   const root = useRef<HTMLDivElement>(null);
   const hour24 = hour24Of(draft, cycle);
   const columns: WheelColumn[] = [];
+  const secondStep = rules.secondStep ?? 1;
+  // An option is disabled when no allowed time can still be reached through it: an hour by any of its minutes, a minute
+  // by any of its seconds. What is chosen in the segments after it doesn't count, only the ones that decide it (the
+  // period for an hour, the hour for a minute, the minute for a second).
+  const reachable = (hours: readonly number[], minute?: number, second?: number) =>
+    hasAllowedTime(hours, minute, second, rules, showSeconds);
 
   const hourValues = cycle === "12" ? [12, ...range(1, 11)] : range(hourRange("24").min, hourRange("24").max);
   columns.push({
@@ -378,11 +382,7 @@ export function TimePickerColumns({
           : draft.period === undefined
             ? [hour % 12, (hour % 12) + 12]
             : [(hour % 12) + (draft.period === "pm" ? 12 : 0)];
-      return {
-        value: hour,
-        text: format(hour),
-        disabled: !candidates.some((h) => overlapsRange(at(h, 0, 0), at(h, 59, 59), min, max)),
-      };
+      return { value: hour, text: format(hour), disabled: !reachable(candidates) };
     }),
   });
 
@@ -390,10 +390,10 @@ export function TimePickerColumns({
     segment: "minute",
     label: labels.minute,
     loops: true,
-    options: range(0, 59, step).map((minute) => ({
+    options: range(0, 59, rules.step).map((minute) => ({
       value: minute,
       text: format(minute),
-      disabled: hour24 === undefined ? false : !overlapsRange(at(hour24, minute, 0), at(hour24, minute, 59), min, max),
+      disabled: hour24 === undefined ? false : !reachable([hour24], minute),
     })),
   });
 
@@ -402,26 +402,23 @@ export function TimePickerColumns({
       segment: "second",
       label: labels.second,
       loops: true,
-      options: range(0, 59).map((second) => ({
+      options: range(0, 59, secondStep).map((second) => ({
         value: second,
         text: format(second),
-        disabled:
-          hour24 === undefined || draft.minute === undefined
-            ? false
-            : !overlapsRange(at(hour24, draft.minute, second), at(hour24, draft.minute, second), min, max),
+        disabled: hour24 === undefined || draft.minute === undefined ? false : !reachable([hour24], draft.minute, second),
       })),
     });
   }
 
   if (cycle === "12") {
-    columns.push({
+    columns[periodFirst ? "unshift" : "push"]({
       segment: "period",
       label: labels.period,
       loops: false,
       options: (["am", "pm"] as const).map((period) => ({
         value: period,
         text: period === "am" ? labels.am : labels.pm,
-        disabled: !overlapsRange(at(period === "am" ? 0 : 12, 0, 0), at(period === "am" ? 11 : 23, 59, 59), min, max),
+        disabled: !reachable(range(period === "am" ? 0 : 12, period === "am" ? 11 : 23)),
       })),
     });
   }

@@ -54,11 +54,14 @@ export function hourRange(cycle: HourCycle): { min: number; max: number } {
   return cycle === "12" ? { min: 1, max: 12 } : { min: 0, max: 23 };
 }
 
-/** The segments a field shows, in order. */
-export function segmentsFor(cycle: HourCycle, showSeconds: boolean): Segment[] {
+/** The segments a field shows, in order; the AM/PM segment goes first with `periodFirst` ("PM 3:45"). */
+export function segmentsFor(cycle: HourCycle, showSeconds: boolean, periodFirst = false): Segment[] {
   const segments: Segment[] = ["hour", "minute"];
   if (showSeconds) segments.push("second");
-  if (cycle === "12") segments.push("period");
+  if (cycle === "12") {
+    if (periodFirst) segments.unshift("period");
+    else segments.push("period");
+  }
   return segments;
 }
 
@@ -113,13 +116,49 @@ export interface TimeConstraints {
   max?: TimeParts | undefined;
   /** Minutes between allowed minute values; 1 allows any. */
   step: number;
+  /** Seconds between allowed second values; 1 (or leaving it out) allows any. */
+  secondStep?: number | undefined;
+  /** Whether a time is ruled out by the owner (a lunch break, a booked slot), on top of the range and the steps. */
+  blocked?: ((parts: TimeParts) => boolean) | undefined;
 }
 
-/** Whether a time satisfies the range and the minute step: what a native time input calls its validity. */
-export function isTimeAllowed(parts: TimeParts, { min, max, step }: TimeConstraints): boolean {
+/** Whether a time satisfies the range, the steps and the owner's own rule: what a native time input calls its validity. */
+export function isTimeAllowed(parts: TimeParts, { min, max, step, secondStep = 1, blocked }: TimeConstraints): boolean {
   if (min && compareTime(parts, min) < 0) return false;
   if (max && compareTime(parts, max) > 0) return false;
-  return parts.minutes % step === 0;
+  if (parts.minutes % step !== 0 || parts.seconds % secondStep !== 0) return false;
+  return !blocked?.(parts);
+}
+
+const grid = (step: number) => {
+  const values: number[] = [];
+  for (let n = 0; n <= 59; n += step) values.push(n);
+  return values;
+};
+
+/**
+ * Whether any allowed time exists among the given hours, in the given minute and second (each `undefined` for "any, on
+ * its grid"). The picker uses it to disable an option no allowed time can still be reached through: an hour is allowed
+ * if some time within it is. It stops at the first allowed time, so the usual case is a single check; only an option
+ * that really is ruled out scans everything it could mean.
+ */
+export function hasAllowedTime(
+  hours: readonly number[],
+  minute: number | undefined,
+  second: number | undefined,
+  constraints: TimeConstraints,
+  showSeconds: boolean,
+): boolean {
+  const minutes = minute === undefined ? grid(constraints.step) : [minute];
+  const seconds = !showSeconds ? [0] : second === undefined ? grid(constraints.secondStep ?? 1) : [second];
+  for (const hours24 of hours) {
+    for (const minutes24 of minutes) {
+      for (const seconds24 of seconds) {
+        if (isTimeAllowed({ hours: hours24, minutes: minutes24, seconds: seconds24 }, constraints)) return true;
+      }
+    }
+  }
+  return false;
 }
 
 /** Steps a number within [min, max] by `delta`, wrapping at the ends. */
@@ -128,7 +167,7 @@ export function wrap(value: number, delta: number, min: number, max: number): nu
   return ((((value - min + delta) % size) + size) % size) + min;
 }
 
-/** The minute after (`direction` 1) or before (-1) `current` on a grid of `step`, wrapping; from nothing, the first or last. */
+/** The minute (or second) after (`direction` 1) or before (-1) `current` on a grid of `step`, wrapping; from nothing, the first or last. */
 export function stepMinute(current: number | undefined, direction: 1 | -1, step: number): number {
   const last = Math.floor(59 / step) * step;
   if (current === undefined) return direction === 1 ? 0 : last;
@@ -147,6 +186,7 @@ export function stepSegment(
   direction: 1 | -1,
   cycle: HourCycle,
   step: number,
+  secondStep = 1,
 ): TimeDraft {
   switch (segment) {
     case "hour": {
@@ -157,23 +197,9 @@ export function stepSegment(
     case "minute":
       return { ...draft, minute: stepMinute(draft.minute, direction, step) };
     case "second": {
-      const next = draft.second === undefined ? (direction === 1 ? 0 : 59) : wrap(draft.second, direction, 0, 59);
-      return { ...draft, second: next };
+      return { ...draft, second: stepMinute(draft.second, direction, secondStep) };
     }
     case "period":
       return { ...draft, period: draft.period === undefined ? (direction === 1 ? "am" : "pm") : draft.period === "am" ? "pm" : "am" };
   }
-}
-
-const toSeconds = (parts: TimeParts) => parts.hours * 3600 + parts.minutes * 60 + parts.seconds;
-
-/**
- * Whether any time from `from` to `to` (both included) is inside the `min`–`max` range, either end of which
- * may be absent. The picker uses it to disable an option no allowed time could still be reached through: an
- * hour is allowed if some time within it is.
- */
-export function overlapsRange(from: TimeParts, to: TimeParts, min?: TimeParts, max?: TimeParts): boolean {
-  if (min && toSeconds(to) < toSeconds(min)) return false;
-  if (max && toSeconds(from) > toSeconds(max)) return false;
-  return true;
 }

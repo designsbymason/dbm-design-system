@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
@@ -495,5 +496,133 @@ export const NeighbourNumbersKeepTheirContrast: Story = {
       document.documentElement.dataset.theme = previous;
       probe.remove();
     }
+  },
+};
+
+export const OpenOnFocusKeepsFocus: Story = {
+  name: "With openOnFocus the picker opens beside the focused segment, which keeps focus and typing",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+      <TimePicker aria-label="Start time" openOnFocus hourCycle="24" />
+      <Button>After</Button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const hour = canvas.getByRole("spinbutton", { name: "Hour" });
+    await userEvent.tab();
+    await expect(hour).toHaveFocus();
+    await screen.findByRole("dialog", { name: "Choose a time" });
+    // Typing goes to the segment while the picker is open, and the wheel follows.
+    await userEvent.keyboard("0930");
+    await expect(hour).toHaveValue("09");
+    await expect(canvas.getByRole("spinbutton", { name: "Minute" })).toHaveValue("30");
+    await waitFor(async () => {
+      const selected = within(screen.getByRole("listbox", { name: "Hour" })).getByRole("option", { selected: true });
+      await expect(selected).toHaveTextContent("09");
+    });
+    // Moving along the segments leaves it open; Escape closes it and focus stays on the segment.
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(screen.getByRole("dialog")).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await expect(hour).toHaveFocus();
+    // Tabbing out of the field to the button after it, and back in, opens it again.
+    await userEvent.tab();
+    await userEvent.tab();
+    await userEvent.tab();
+    await expect(canvas.getByRole("button", { name: "After" })).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await userEvent.tab({ shift: true });
+    await userEvent.tab({ shift: true });
+    await screen.findByRole("dialog");
+  },
+};
+
+/** A field that shows how often its own `onFocus` and `onBlur` have been called. */
+function CountingField() {
+  const [counts, setCounts] = useState({ focus: 0, blur: 0 });
+  return (
+    <div style={{ display: "flex", gap: "var(--dbm-space-4)", alignItems: "center" }}>
+      <TimePicker
+        aria-label="Start time"
+        defaultValue="09:30"
+        onFocus={() => setCounts((c) => ({ ...c, focus: c.focus + 1 }))}
+        onBlur={() => setCounts((c) => ({ ...c, blur: c.blur + 1 }))}
+      />
+      <Button>After</Button>
+      <span data-testid="counts">{`focus ${counts.focus}, blur ${counts.blur}`}</span>
+    </div>
+  );
+}
+
+export const FieldFocusEventsAcrossThePicker: Story = {
+  name: "onFocus and onBlur ignore focus going into the picker and back out of it",
+  render: () => <CountingField />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const counts = () => canvas.getByTestId("counts");
+    await userEvent.click(canvas.getByRole("spinbutton", { name: "Minute" }));
+    await expect(counts()).toHaveTextContent("focus 1, blur 0");
+    await userEvent.click(canvas.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => expect(screen.getByRole("listbox", { name: "Hour" })).toHaveFocus());
+    await userEvent.keyboard("{ArrowDown}{ArrowRight}{ArrowDown}");
+    // Escape closes the picker, and Radix gives focus back to the button: all of it inside the field.
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await expect(canvas.getByRole("button", { name: "Choose time" })).toHaveFocus();
+    await settle(100);
+    await expect(counts()).toHaveTextContent("focus 1, blur 0");
+    await userEvent.click(canvas.getByRole("button", { name: "After" }));
+    await expect(counts()).toHaveTextContent("focus 1, blur 1");
+  },
+};
+
+export const FormValidationInTheBrowser: Story = {
+  name: "A form refuses an empty or half-filled field and puts focus on the segment that needs it",
+  render: () => (
+    <form data-testid="form" onSubmit={(event) => event.preventDefault()} style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+      <TimePicker aria-label="Reminder" name="reminder" required hourCycle="24" data-testid="field" />
+      <Button type="submit">Save</Button>
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const form = canvas.getByTestId("form") as HTMLFormElement;
+    const field = canvas.getByTestId("field");
+    const widthBefore = field.getBoundingClientRect().width;
+    const proxy = form.querySelector<HTMLInputElement>('input[type="time"]')!;
+    // Hidden from sight and layout, but a real control the browser can validate and focus.
+    await expect(proxy.getBoundingClientRect().width).toBe(0);
+    await expect(getComputedStyle(proxy).display).not.toBe("none");
+    await expect(form.checkValidity()).toBe(false);
+    form.reportValidity();
+    await waitFor(() => expect(canvas.getByRole("spinbutton", { name: "Hour" })).toHaveFocus());
+    await userEvent.keyboard("09");
+    await expect(form.checkValidity()).toBe(false);
+    await expect(proxy.validationMessage).toBe("Enter a complete time");
+    await userEvent.keyboard("30");
+    await expect(form.checkValidity()).toBe(true);
+    await expect(new FormData(form).get("reminder")).toBe("09:30");
+    await expect(field.getBoundingClientRect().width).toBe(widthBefore);
+  },
+};
+
+export const PeriodFirstReadsLeftToRight: Story = {
+  name: "With periodPosition start, AM/PM is the leftmost segment, in the field and in the picker",
+  render: () => <TimePicker aria-label="Start time" periodPosition="start" defaultValue="15:45" showSeconds />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const lefts = (names: string[]) => names.map((name) => canvas.getByRole("spinbutton", { name }).getBoundingClientRect().left);
+    const field = lefts(["AM/PM", "Hour", "Minute", "Second"]);
+    await expect([...field].sort((a, b) => a - b)).toEqual(field);
+    await userEvent.click(canvas.getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    const wheel = ["AM/PM", "Hour", "Minute", "Second"].map((name) => screen.getByRole("listbox", { name }).getBoundingClientRect().left);
+    await expect([...wheel].sort((a, b) => a - b)).toEqual(wheel);
+    // The wheel for the period sits on the same row as the others, centred on the band.
+    const band = document.querySelector('[class*="band"]')!.getBoundingClientRect();
+    await expect(band.width).toBeGreaterThan(0);
   },
 };

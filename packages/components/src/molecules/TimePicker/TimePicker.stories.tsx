@@ -1,6 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { FormField } from "../FormField";
 import { TimePicker } from "./TimePicker";
@@ -40,12 +41,26 @@ const meta: Meta<typeof TimePicker> = {
       description:
         "Called with the new value whenever it changes: a complete time as \"HH:mm\" (or \"HH:mm:ss\"), or \"\" when a segment is cleared and the time is no longer complete.",
     },
+    commitOn: {
+      control: "select",
+      options: ["change", "complete", "blur"],
+      description:
+        "When onValueChange is called. \"change\" reports every change, an in-between time and every wheel row included. \"complete\" waits until a whole time has no digit still expected and the picker is closed (or the field is emptied). \"blur\" reports once, when focus leaves, the picker closes, Enter is pressed or the clear button is used. Both held modes also report on blur. The segments always show the latest edit.",
+      table: { defaultValue: { summary: '"change"' } },
+    },
     hourCycle: {
       control: "select",
       options: ["12", "24"],
       description:
         "\"12\" shows an hour from 1 to 12 and an AM/PM segment; \"24\" shows 0 to 23. Chosen explicitly and never read from the browser's locale. The value is 24-hour either way.",
       table: { defaultValue: { summary: '"12"' } },
+    },
+    periodPosition: {
+      control: "select",
+      options: ["end", "start"],
+      description:
+        "In the 12-hour cycle, where the AM/PM segment goes: \"end\" for \"3:45 PM\", \"start\" for \"PM 3:45\". The picker's AM/PM wheel moves with it. Ignored with hourCycle=\"24\".",
+      table: { defaultValue: { summary: '"end"' } },
     },
     showSeconds: {
       control: "boolean",
@@ -58,6 +73,12 @@ const meta: Meta<typeof TimePicker> = {
         "Minutes between the minute values the field accepts: 15 allows :00 :15 :30 :45. The arrow keys move along the grid and the picker lists only those minutes; a typed minute off the grid is flagged invalid.",
       table: { defaultValue: { summary: "1" } },
     },
+    secondStep: {
+      control: "number",
+      description:
+        "Seconds between the second values the field accepts, when showSeconds is on: 15 allows :00 :15 :30 :45. Works as step does for minutes.",
+      table: { defaultValue: { summary: "1" } },
+    },
     min: {
       control: "text",
       description:
@@ -68,11 +89,22 @@ const meta: Meta<typeof TimePicker> = {
       description:
         "The latest allowed time, as \"HH:mm\" (or \"HH:mm:ss\"). A later time is flagged invalid, not refused, and the picker disables the options after it.",
     },
+    isTimeDisabled: {
+      control: false,
+      description:
+        "Rules out particular times — a lunch break, a booked slot. Called with a time as the 24-hour string the value uses; return true for one that isn't available. A time it rules out is flagged invalid and still reported, and the picker disables a row when it leaves no available time to reach. Keep it cheap and pure.",
+    },
     showPicker: {
       control: "boolean",
       description:
         "Shows the button that opens the picker: a popover of wheels to scroll or tap, with the chosen row in the middle. Turn it off for a field that is only ever typed into.",
       table: { defaultValue: { summary: "true" } },
+    },
+    openOnFocus: {
+      control: "boolean",
+      description:
+        "Opens the picker when a segment receives focus, by Tab or a click, from outside the field or from its own buttons. Focus stays on the segment, so typing still works, and the segments stop asking a phone for its keyboard. Moving from one segment to the next never reopens it. Needs showPicker.",
+      table: { defaultValue: { summary: "false" } },
     },
     open: {
       control: false,
@@ -98,6 +130,16 @@ const meta: Meta<typeof TimePicker> = {
       description:
         "Called after the clear button has emptied the field (the field empties itself first, so this is only a notification). Passing it also shows the button, unless clearable={false}.",
     },
+    onFocus: {
+      control: false,
+      description:
+        "Called when focus arrives in the field from outside it. Moving between the segments, the buttons or into the picker is not arriving, so it fires once per visit.",
+    },
+    onBlur: {
+      control: false,
+      description:
+        "Called when focus leaves the field for somewhere outside it (the picker counts as part of the field). The usual place for validate-on-blur; with commitOn it fires after the held value has been reported.",
+    },
     disabled: {
       control: "boolean",
       description: "Disables the whole field: no segment takes focus, the picker button is inert, and nothing changes.",
@@ -106,7 +148,7 @@ const meta: Meta<typeof TimePicker> = {
     required: {
       control: "boolean",
       description:
-        "Marks the field as required for assistive technology (aria-required). A TimePicker doesn't validate natively; a FormField's error is where an empty required field is reported.",
+        "Marks the field as required: aria-required on each segment, and a real form constraint, so a surrounding <form> won't submit while the field is empty. A half-filled field and a time outside min/max, off a step or ruled out by isTimeDisabled stop a submit too.",
       table: { defaultValue: { summary: "false" } },
     },
     readOnly: {
@@ -124,7 +166,7 @@ const meta: Meta<typeof TimePicker> = {
     name: {
       control: "text",
       description:
-        "The name a surrounding <form> submits the value under, through a hidden input holding the 24-hour string (and \"\" while the field is empty or incomplete).",
+        "The name a surrounding <form> submits the value under, through a hidden time input holding the 24-hour string (and \"\" while the field is empty or incomplete). The same input is what a form validates.",
     },
     form: {
       control: false,
@@ -133,7 +175,7 @@ const meta: Meta<typeof TimePicker> = {
     labels: {
       control: false,
       description:
-        "Every piece of text the field writes itself — segment names, AM and PM, and the button names — for translation. Pass only the keys you want to change. Defaults: Hour, Minute, Second, AM/PM, AM, PM, Empty, Choose time, Choose a time, Clear time.",
+        "Every piece of text the field writes itself — segment names, AM and PM, and the button names — for translation. Pass only the keys you want to change. Defaults: Hour, Minute, Second, AM/PM, AM, PM, Empty, Choose time, Choose a time, Clear time, Enter a complete time, This time isn't available.",
     },
     formatNumber: {
       control: false,
@@ -172,12 +214,16 @@ const meta: Meta<typeof TimePicker> = {
     size: "md",
     hasError: false,
     defaultValue: "09:30",
+    commitOn: "change",
     hourCycle: "12",
+    periodPosition: "end",
     showSeconds: false,
     step: 1,
+    secondStep: 1,
     min: "",
     max: "",
     showPicker: true,
+    openOnFocus: false,
     defaultOpen: false,
     clearable: false,
     disabled: false,
@@ -198,11 +244,18 @@ const noControls = {
   value: { control: false },
   defaultValue: { control: false },
   onValueChange: { control: false },
+  commitOn: { control: false },
   hourCycle: { control: false },
+  periodPosition: { control: false },
   showSeconds: { control: false },
   step: { control: false },
+  secondStep: { control: false },
   min: { control: false },
   max: { control: false },
+  isTimeDisabled: { control: false },
+  openOnFocus: { control: false },
+  onFocus: { control: false },
+  onBlur: { control: false },
   size: { control: false },
   hasError: { control: false },
   disabled: { control: false },
@@ -286,6 +339,110 @@ export const TimeRange: Story = {
       </Text>
     </div>
   ),
+};
+
+export const SecondStep: Story = {
+  name: "Second step",
+  parameters: { docs: { source: { code: timePickerSnippets.secondStep } } },
+  argTypes: { ...noControls },
+  render: () => <TimePicker hourCycle="24" showSeconds secondStep={15} aria-label="Start time" defaultValue="10:15:30" />,
+};
+
+export const UnavailableTimes: Story = {
+  name: "Unavailable times",
+  parameters: { docs: { source: { code: timePickerSnippets.unavailable } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <TimePicker
+        hourCycle="24"
+        step={15}
+        aria-label="Appointment"
+        defaultValue="09:30"
+        isTimeDisabled={(time) => time >= "12:00" && time < "13:00"}
+      />
+      <Text size="sm" color="secondary">
+        Lunch, 12:00 to 13:00, is ruled out: open the picker and the 12 hour is disabled, and typing 12:30 flags the field.
+      </Text>
+    </div>
+  ),
+};
+
+export const PeriodFirst: Story = {
+  name: "AM/PM first",
+  parameters: { docs: { source: { code: timePickerSnippets.periodFirst } } },
+  argTypes: { ...noControls },
+  render: () => <TimePicker periodPosition="start" aria-label="Start time" defaultValue="15:45" />,
+};
+
+export const OpenOnFocus: Story = {
+  name: "Open on focus",
+  parameters: { docs: { source: { code: timePickerSnippets.openOnFocus } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <TimePicker openOnFocus aria-label="Start time" defaultValue="09:30" />
+      <Text size="sm" color="secondary">
+        Click or Tab to a segment: the picker opens beside it, and typing still works.
+      </Text>
+    </div>
+  ),
+};
+
+/** What `commitOn` holds back: each field counts how often it has reported, and what it last said. */
+function ReportingField({ commitOn }: { commitOn: "change" | "complete" | "blur" }) {
+  const [reports, setReports] = useState<string[]>([]);
+  return (
+    <div style={stack}>
+      <TimePicker
+        aria-label={`Start time, commitOn ${commitOn}`}
+        hourCycle="24"
+        commitOn={commitOn}
+        onValueChange={(next) => setReports((all) => [...all, next])}
+      />
+      <Text size="sm" color="secondary">
+        <code>{commitOn}</code>: {reports.length} {reports.length === 1 ? "report" : "reports"}, last{" "}
+        <code>{reports.length === 0 ? "none yet" : JSON.stringify(reports.at(-1))}</code>
+      </Text>
+    </div>
+  );
+}
+
+export const CommitTiming: Story = {
+  name: "When it reports",
+  parameters: { docs: { source: { code: timePickerSnippets.commitOn } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <ReportingField commitOn="change" />
+      <ReportingField commitOn="complete" />
+      <ReportingField commitOn="blur" />
+    </div>
+  ),
+};
+
+export const InAForm: Story = {
+  name: "Required, in a form",
+  parameters: { docs: { source: { code: timePickerSnippets.form } } },
+  argTypes: { ...noControls },
+  render: function InAFormStory() {
+    const [submitted, setSubmitted] = useState<string | null>(null);
+    return (
+      <form
+        style={stack}
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSubmitted(String(new FormData(event.currentTarget).get("reminder")));
+        }}
+      >
+        <TimePicker aria-label="Reminder" name="reminder" required hourCycle="24" min="08:00" max="20:00" />
+        <Button type="submit">Save</Button>
+        <Text size="sm" color="secondary">
+          {submitted === null ? "Submit it empty, half-filled or out of range: the browser stops it." : `Submitted ${submitted}`}
+        </Text>
+      </form>
+    );
+  },
 };
 
 export const States: Story = {

@@ -2,7 +2,7 @@
 // real usage of what each story shows; `storySnippets.test.ts` checks they stay valid. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { TimePickerHourCycle, TimePickerSize } from "../TimePicker";
+import type { TimePickerCommitOn, TimePickerHourCycle, TimePickerPeriodPosition, TimePickerSize } from "../TimePicker";
 
 export const timeRangePickerSnippets = {
   basic: `<TimeRangePicker aria-label="Opening hours" defaultValue={["09:00", "17:30"]} />`,
@@ -27,11 +27,15 @@ export const timeRangePickerSnippets = {
 /** The Playground's live controls, as far as the snippet cares. */
 export interface TimeRangePickerPlaygroundSnippetArgs {
   defaultValue?: [string, string];
+  commitOn?: TimePickerCommitOn;
   hourCycle?: TimePickerHourCycle;
+  periodPosition?: TimePickerPeriodPosition;
   showSeconds?: boolean;
   step?: number;
+  secondStep?: number;
   min?: string;
   max?: string;
+  openOnFocus?: boolean;
   size?: TimePickerSize;
   hasError?: boolean;
   disabled?: boolean;
@@ -45,11 +49,15 @@ export interface TimeRangePickerPlaygroundSnippetArgs {
 export function timeRangePickerPlaygroundSnippet(args: TimeRangePickerPlaygroundSnippetArgs): string {
   const attributes: string[] = ['aria-label="Opening hours"'];
   if (args.defaultValue) attributes.push(`defaultValue={[${args.defaultValue.map((time) => `"${time}"`).join(", ")}]}`);
+  if (args.commitOn && args.commitOn !== "change") attributes.push(`commitOn="${args.commitOn}"`);
   if (args.hourCycle && args.hourCycle !== "12") attributes.push(`hourCycle="${args.hourCycle}"`);
+  if (args.periodPosition && args.periodPosition !== "end") attributes.push(`periodPosition="${args.periodPosition}"`);
   if (args.showSeconds) attributes.push("showSeconds");
   if (args.step !== undefined && args.step !== 1) attributes.push(`step={${args.step}}`);
+  if (args.secondStep !== undefined && args.secondStep !== 1) attributes.push(`secondStep={${args.secondStep}}`);
   if (args.min) attributes.push(`min="${args.min}"`);
   if (args.max) attributes.push(`max="${args.max}"`);
+  if (args.openOnFocus) attributes.push("openOnFocus");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.hasError) attributes.push("hasError");
   if (args.disabled) attributes.push("disabled");

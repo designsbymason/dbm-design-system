@@ -38,12 +38,25 @@ const meta: Meta<typeof TimeRangePicker> = {
       description:
         "Called with the new [start, end] whenever either end changes. An end that is empty or still half-filled is \"\". An end earlier than the start is reported as typed and flagged invalid, not refused.",
     },
+    commitOn: {
+      control: "select",
+      options: ["change", "complete", "blur"],
+      description:
+        "When onValueChange is called, for each end: on every change, once that end is settled, or when focus leaves it. See TimePicker.",
+      table: { defaultValue: { summary: '"change"' } },
+    },
     hourCycle: {
       control: "select",
       options: ["12", "24"],
       description:
         "\"12\" shows each end with an AM/PM segment; \"24\" does not. Chosen explicitly, never read from the locale.",
       table: { defaultValue: { summary: '"12"' } },
+    },
+    periodPosition: {
+      control: "select",
+      options: ["end", "start"],
+      description: "In the 12-hour cycle, whether each end's AM/PM comes after the time (\"end\", 3:45 PM) or before it (\"start\", PM 3:45).",
+      table: { defaultValue: { summary: '"end"' } },
     },
     showSeconds: {
       control: "boolean",
@@ -55,15 +68,31 @@ const meta: Meta<typeof TimeRangePicker> = {
       description: "Minutes between the minute values either end accepts: 15 allows :00 :15 :30 :45.",
       table: { defaultValue: { summary: "1" } },
     },
+    secondStep: {
+      control: "number",
+      description: "Seconds between the second values either end accepts, with showSeconds: 15 allows :00 :15 :30 :45.",
+      table: { defaultValue: { summary: "1" } },
+    },
     min: {
       control: "text",
       description: "The earliest time either end may be, as \"HH:mm\". The end's earliest is also the start.",
     },
     max: { control: "text", description: "The latest time either end may be, as \"HH:mm\"." },
+    isTimeDisabled: {
+      control: false,
+      description:
+        "Rules out particular times for either end, with the 24-hour string each end's value uses; return true for a time that isn't available. Flagged and still reported, as min/max are. See TimePicker.",
+    },
     showPicker: {
       control: "boolean",
       description: "Shows each end's picker button.",
       table: { defaultValue: { summary: "true" } },
+    },
+    openOnFocus: {
+      control: "boolean",
+      description:
+        "Opens an end's picker when focus lands on one of its segments other than from another of its own segments. Moving from one end to the other opens the other's picker too.",
+      table: { defaultValue: { summary: "false" } },
     },
     clearable: {
       control: "boolean",
@@ -76,10 +105,20 @@ const meta: Meta<typeof TimeRangePicker> = {
       description:
         "Called, with which end, after a clear button has emptied that end. Passing it also shows the buttons, unless clearable={false}.",
     },
+    onFocus: {
+      control: false,
+      description:
+        "Called when focus arrives in the range from outside it. Moving between the two ends, their buttons or their pickers is not arriving, so it fires once per visit to the pair.",
+    },
+    onBlur: {
+      control: false,
+      description: "Called when focus leaves the range for somewhere outside it, for validating the pair once the person has left both ends.",
+    },
     disabled: { control: "boolean", description: "Disables both ends.", table: { defaultValue: { summary: "false" } } },
     required: {
       control: "boolean",
-      description: "Marks the range as required for assistive technology.",
+      description:
+        "Marks both ends as required: a form won't submit while either is empty, and a half-filled or unavailable end stops it too.",
       table: { defaultValue: { summary: "false" } },
     },
     readOnly: { control: "boolean", description: "Makes both ends read-only.", table: { defaultValue: { summary: "false" } } },
@@ -124,12 +163,16 @@ const meta: Meta<typeof TimeRangePicker> = {
     size: "md",
     hasError: false,
     defaultValue: ["09:00", "17:30"],
+    commitOn: "change",
     hourCycle: "12",
+    periodPosition: "end",
     showSeconds: false,
     step: 1,
+    secondStep: 1,
     min: "",
     max: "",
     showPicker: true,
+    openOnFocus: false,
     clearable: false,
     disabled: false,
     required: false,
@@ -147,11 +190,18 @@ const noControls = {
   value: { control: false },
   defaultValue: { control: false },
   onValueChange: { control: false },
+  commitOn: { control: false },
   hourCycle: { control: false },
+  periodPosition: { control: false },
   showSeconds: { control: false },
   step: { control: false },
+  secondStep: { control: false },
   min: { control: false },
   max: { control: false },
+  isTimeDisabled: { control: false },
+  openOnFocus: { control: false },
+  onFocus: { control: false },
+  onBlur: { control: false },
   size: { control: false },
   hasError: { control: false },
   disabled: { control: false },

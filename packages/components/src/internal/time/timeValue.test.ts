@@ -6,8 +6,8 @@ import {
   draftToValue,
   emptyDraft,
   formatTime,
+  hasAllowedTime,
   isTimeAllowed,
-  overlapsRange,
   parseTime,
   partsToDraft,
   segmentsFor,
@@ -238,23 +238,83 @@ describe("typing digits", () => {
   });
 });
 
-describe("overlapsRange", () => {
+describe("hasAllowedTime", () => {
+  const at = (value: string) => parseTime(value)!;
+  const open = { step: 1 };
+
+  it("is true when some time among the hours is allowed, ends of the range included", () => {
+    const range = { min: at("09:59"), max: at("17:00"), step: 1 };
+    expect(hasAllowedTime([9], undefined, undefined, range, false)).toBe(true);
+    expect(hasAllowedTime([17], undefined, undefined, range, false)).toBe(true);
+    expect(hasAllowedTime([12], undefined, undefined, range, false)).toBe(true);
+  });
+
+  it("is false when every time among them is outside the range", () => {
+    const range = { min: at("09:00"), max: at("17:00"), step: 1 };
+    expect(hasAllowedTime([8], undefined, undefined, range, false)).toBe(false);
+    expect(hasAllowedTime([18], undefined, undefined, range, false)).toBe(false);
+  });
+
+  it("looks only at minutes on the step grid", () => {
+    // 08:50 and later is allowed, but no :00 :15 :30 :45 minute is, so the hour can't be reached.
+    expect(hasAllowedTime([8], undefined, undefined, { min: at("08:50"), step: 15 }, false)).toBe(false);
+    expect(hasAllowedTime([8], undefined, undefined, { min: at("08:50"), step: 1 }, false)).toBe(true);
+  });
+
+  it("looks only at seconds on the second grid, and only when seconds are shown", () => {
+    const constraints = { min: at("10:00:20"), max: at("10:00:25"), step: 1, secondStep: 15 };
+    expect(hasAllowedTime([10], 0, undefined, constraints, true)).toBe(false);
+    expect(hasAllowedTime([10], 0, undefined, { ...constraints, secondStep: 5 }, true)).toBe(true);
+    // Seconds aren't shown: the time is :00, which is before the minimum.
+    expect(hasAllowedTime([10], 0, undefined, constraints, false)).toBe(false);
+  });
+
+  it("is ruled out by the owner's own rule only when every time is", () => {
+    const lunch = (parts: { hours: number }) => parts.hours === 12;
+    expect(hasAllowedTime([12], undefined, undefined, { ...open, blocked: lunch }, false)).toBe(false);
+    expect(hasAllowedTime([12, 13], undefined, undefined, { ...open, blocked: lunch }, false)).toBe(true);
+    const halfPast = (parts: { minutes: number }) => parts.minutes < 30;
+    expect(hasAllowedTime([12], undefined, undefined, { ...open, blocked: halfPast }, false)).toBe(true);
+    expect(hasAllowedTime([12], 10, undefined, { ...open, blocked: halfPast }, false)).toBe(false);
+  });
+
+  it("stops at the first allowed time", () => {
+    let calls = 0;
+    const counting = () => {
+      calls += 1;
+      return false;
+    };
+    expect(hasAllowedTime([0, 1, 2], undefined, undefined, { ...open, blocked: counting }, true)).toBe(true);
+    expect(calls).toBe(1);
+  });
+});
+
+describe("the owner's rule and the second step in isTimeAllowed", () => {
   const at = (value: string) => parseTime(value)!;
 
-  it("is true when the span touches the range anywhere, ends included", () => {
-    expect(overlapsRange(at("09:00"), at("09:59"), at("09:59"), at("17:00"))).toBe(true);
-    expect(overlapsRange(at("17:00"), at("17:59"), at("09:00"), at("17:00"))).toBe(true);
-    expect(overlapsRange(at("12:00"), at("12:59"), at("09:00"), at("17:00"))).toBe(true);
+  it("rejects a time the rule blocks", () => {
+    expect(isTimeAllowed(at("12:30"), { step: 1, blocked: (p) => p.hours === 12 })).toBe(false);
+    expect(isTimeAllowed(at("13:30"), { step: 1, blocked: (p) => p.hours === 12 })).toBe(true);
   });
 
-  it("is false when the span is wholly outside it", () => {
-    expect(overlapsRange(at("08:00"), at("08:59"), at("09:00"), at("17:00"))).toBe(false);
-    expect(overlapsRange(at("18:00"), at("18:59"), at("09:00"), at("17:00"))).toBe(false);
+  it("requires the second to be on its step", () => {
+    expect(isTimeAllowed(at("10:00:30"), { step: 1, secondStep: 15 })).toBe(true);
+    expect(isTimeAllowed(at("10:00:20"), { step: 1, secondStep: 15 })).toBe(false);
+    expect(isTimeAllowed(at("10:00:20"), { step: 1 })).toBe(true);
+  });
+});
+
+describe("period position and the second step in stepping", () => {
+  it("puts AM/PM first when asked, only in the 12-hour cycle", () => {
+    expect(segmentsFor("12", false, true)).toEqual(["period", "hour", "minute"]);
+    expect(segmentsFor("12", true, true)).toEqual(["period", "hour", "minute", "second"]);
+    expect(segmentsFor("24", false, true)).toEqual(["hour", "minute"]);
   });
 
-  it("allows everything when the range is open", () => {
-    expect(overlapsRange(at("00:00"), at("23:59"))).toBe(true);
-    expect(overlapsRange(at("03:00"), at("03:59"), at("09:00"))).toBe(false);
-    expect(overlapsRange(at("03:00"), at("03:59"), undefined, at("09:00"))).toBe(true);
+  it("steps the second along its grid, wrapping", () => {
+    expect(stepSegment({ second: 45 }, "second", 1, "24", 1, 15).second).toBe(0);
+    expect(stepSegment({ second: 0 }, "second", -1, "24", 1, 15).second).toBe(45);
+    expect(stepSegment({ second: 20 }, "second", 1, "24", 1, 15).second).toBe(30);
+    expect(stepSegment({}, "second", -1, "24", 1, 15).second).toBe(45);
   });
 });

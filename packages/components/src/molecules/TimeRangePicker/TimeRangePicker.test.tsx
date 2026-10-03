@@ -123,7 +123,7 @@ describe("TimeRangePicker", () => {
 
   it("submits both values under name[], start first", () => {
     const { container } = render(<TimeRangePicker aria-label="r" name="hours" form="f" defaultValue={["09:00", "17:30"]} />);
-    const hidden = [...container.querySelectorAll<HTMLInputElement>('input[type="hidden"]')];
+    const hidden = [...container.querySelectorAll<HTMLInputElement>('input[type="time"]')];
     expect(hidden.map((input) => input.name)).toEqual(["hours[]", "hours[]"]);
     expect(hidden.map((input) => input.value)).toEqual(["09:00", "17:30"]);
     expect(hidden.every((input) => input.getAttribute("form") === "f")).toBe(true);
@@ -205,6 +205,86 @@ describe("TimeRangePicker", () => {
     await user.click(part("Start time", "Hour"));
     await user.keyboard("0930");
     expect(onValueChange).toHaveBeenLastCalledWith(["09:30", ""]);
+  });
+
+  it("calls onFocus and onBlur once for the pair, not as focus moves between the ends", async () => {
+    const user = userEvent.setup();
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    render(
+      <>
+        <TimeRangePicker aria-label="r" onFocus={onFocus} onBlur={onBlur} />
+        <button type="button">After</button>
+      </>,
+    );
+    await user.click(part("Start time", "Hour"));
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    await user.click(part("End time", "Hour"));
+    await user.click(within(field("End time")).getByRole("button", { name: "Choose time" }));
+    await screen.findByRole("dialog");
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    expect(onBlur).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "After" }));
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    await user.click(part("Start time", "Minute"));
+    expect(onFocus).toHaveBeenCalledTimes(2);
+  });
+
+  it("passes commitOn to both ends, reporting the pair when each settles", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<TimeRangePicker aria-label="r" hourCycle="24" commitOn="complete" onValueChange={onValueChange} />);
+    await user.click(part("Start time", "Hour"));
+    await user.keyboard("093");
+    expect(onValueChange).not.toHaveBeenCalled();
+    await user.keyboard("0");
+    expect(onValueChange.mock.calls).toEqual([[["09:30", ""]]]);
+  });
+
+  it("passes the second step, the period position and the owner's rule to both ends", async () => {
+    const user = userEvent.setup();
+    render(
+      <TimeRangePicker
+        aria-label="r"
+        showSeconds
+        secondStep={15}
+        periodPosition="start"
+        isTimeDisabled={(time) => time.startsWith("12")}
+        defaultValue={["12:30:00", "13:00:00"]}
+      />,
+    );
+    for (const end of ["Start time", "End time"] as const) {
+      expect(within(field(end)).getAllByRole("spinbutton")[0]).toHaveAttribute("aria-label", "AM/PM");
+    }
+    expect(invalid("Start time")).toBe(true);
+    expect(invalid("End time")).toBe(false);
+    await user.click(within(field("End time")).getByRole("button", { name: "Choose time" }));
+    const seconds = await screen.findByRole("listbox", { name: "Second" });
+    expect(within(seconds).getAllByRole("option")).toHaveLength(4);
+  });
+
+  it("opens an end's picker on arriving at it with openOnFocus", async () => {
+    const user = userEvent.setup();
+    render(<TimeRangePicker aria-label="r" openOnFocus />);
+    await user.click(part("End time", "Hour"));
+    await screen.findByRole("dialog");
+    expect(part("End time", "Hour")).toHaveFocus();
+  });
+
+  it("makes a form refuse a range with an empty or half-filled end", async () => {
+    const user = userEvent.setup();
+    render(
+      <form data-testid="form" aria-label="f">
+        <TimeRangePicker aria-label="r" hourCycle="24" name="hours" required defaultValue={["09:00", ""]} />
+      </form>,
+    );
+    const form = screen.getByTestId("form") as HTMLFormElement;
+    expect(form.checkValidity()).toBe(false);
+    await user.click(part("End time", "Hour"));
+    await user.keyboard("1730");
+    expect(form.checkValidity()).toBe(true);
+    await user.keyboard("{Backspace}");
+    expect(form.checkValidity()).toBe(false);
   });
 
   it("has no axe violations, closed and with an end's picker open", { timeout: 30_000 }, async () => {

@@ -17,7 +17,13 @@ which both import.
   *not* limited by the end: constraining both flagged the start whenever the end was momentarily earlier mid-typing
   (found by a unit test, which expected only the end flagged), so only the end is held. An end equal to the start is
   allowed.
-- **Form value:** `name` submits as `name[]`, start first (`RangeSlider`'s convention), through each end's hidden input.
+- **Form value:** `name` submits as `name[]`, start first (`RangeSlider`'s convention), through each end's hidden time input,
+  which also validates it (`required`, a half-filled or unavailable end): see
+  [ADR-0030](adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md).
+- **Passed through to both ends (2026-10-03):** `commitOn`, `secondStep`, `isTimeDisabled`, `periodPosition`, `openOnFocus`.
+  `onFocus`/`onBlur` fire once for the pair: each end reports its own arrivals and departures, and the range ignores a
+  departure whose `relatedTarget` is inside the group and an arrival while it already holds focus (a start end's picker is
+  portaled, so containment alone would call a move from it to the end field an arrival).
 - **Names:** the group takes `aria-label`/`aria-labelledby` (a `FormField` supplies them); the ends are named
   "Start time" and "End time" (`labels.start`, `labels.end`, in the same object as `TimePicker`'s labels). `id` goes
   on the start field's first segment. `onClear(end)` says which end.

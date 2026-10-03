@@ -1,5 +1,6 @@
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
-import { forwardRef, useEffect, useState } from "react";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
+import { forwardRef, useEffect, useRef, useState } from "react";
+import type { FocusEvent } from "react";
 import { TimePicker } from "../TimePicker";
 import type { TimePickerLabels } from "../TimePicker";
 import { compareTime, formatTime, parseTime } from "../../internal/time/timeValue";
@@ -19,6 +20,8 @@ const defaultLabels: TimeRangePickerLabels = {
   openPicker: "Choose time",
   pickerName: "Choose a time",
   clear: "Clear time",
+  incomplete: "Enter a complete time",
+  unavailable: "This time isn't available",
 };
 
 /** The later of two times (as the strings a `TimePicker` takes), or the one that exists. */
@@ -52,19 +55,26 @@ export const TimeRangePicker = forwardRef<HTMLDivElement, TimeRangePickerProps>(
       value: valueProp,
       defaultValue = ["", ""],
       onValueChange,
+      commitOn,
       hourCycle = "12",
+      periodPosition,
       showSeconds = false,
       step,
+      secondStep,
       min,
       max,
+      isTimeDisabled,
       size = "md",
       hasError = false,
       disabled = false,
       readOnly = false,
       required = false,
       showPicker = true,
+      openOnFocus,
       clearable,
       onClear,
+      onFocus,
+      onBlur,
       name,
       form,
       autoFocus = false,
@@ -107,11 +117,35 @@ export const TimeRangePicker = forwardRef<HTMLDivElement, TimeRangePickerProps>(
     // by the end too would flag the start whenever the end is mid-typing and briefly earlier.
     const endMin = later(min, start, showSeconds);
 
+    // The pair is one field to the outside: focus moving between the ends (or into either one's picker) is not arriving or
+    // leaving. Each end already reports only its own arrivals and departures, so a departure that lands in the other end
+    // is told apart by where focus went, and an arrival by whether the pair was already focused.
+    const rootElement = useRef<HTMLDivElement | null>(null);
+    const inside = useRef(false);
+    const onEndFocus = (event: FocusEvent<HTMLDivElement>) => {
+      if (inside.current) return;
+      inside.current = true;
+      onFocus?.(event);
+    };
+    const onEndBlur = (event: FocusEvent<HTMLDivElement>) => {
+      const to = event.relatedTarget;
+      if (to instanceof Node && rootElement.current?.contains(to)) return;
+      inside.current = false;
+      onBlur?.(event);
+    };
+
     const pickerLabels: Partial<TimePickerLabels> = labels;
     const common = {
+      commitOn,
       hourCycle,
+      periodPosition,
       showSeconds,
       step,
+      secondStep,
+      isTimeDisabled,
+      openOnFocus,
+      onFocus: onEndFocus,
+      onBlur: onEndBlur,
       size,
       hasError,
       disabled,
@@ -126,7 +160,7 @@ export const TimeRangePicker = forwardRef<HTMLDivElement, TimeRangePickerProps>(
     return (
       <div
         {...props}
-        ref={ref}
+        ref={mergeRefs(ref, rootElement)}
         role="group"
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}

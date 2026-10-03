@@ -1,9 +1,13 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, FocusEventHandler } from "react";
 import type { InputSize } from "../../atoms/Input";
 import type { HourCycle } from "../../internal/time/timeValue";
 
 export type TimePickerSize = InputSize;
 export type TimePickerHourCycle = HourCycle;
+/** When `onValueChange` is called: on every change, once a time is settled, or only when the person is done. */
+export type TimePickerCommitOn = "change" | "complete" | "blur";
+/** Where the AM/PM segment sits in the 12-hour cycle: after the time ("3:45 PM") or before it ("PM 3:45"). */
+export type TimePickerPeriodPosition = "start" | "end";
 
 /**
  * Every piece of text `TimePicker` writes itself. Pass a partial object to translate any of it; the rest
@@ -30,10 +34,14 @@ export interface TimePickerLabels {
   pickerName: string;
   /** The accessible name of the clear button. @default 'Clear time' */
   clear: string;
+  /** The message a form shows when the field is only partly filled and the form is submitted. @default 'Enter a complete time' */
+  incomplete: string;
+  /** The message a form shows when the time is outside `min`/`max`, off a step or ruled out by `isTimeDisabled`. @default "This time isn't available" */
+  unavailable: string;
 }
 
 export interface TimePickerProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role"> {
+  extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange" | "children" | "role" | "onFocus" | "onBlur"> {
   /**
    * Overall size, on the shared scale; its height matches `Input` and `Button` at the same step.
    * @default 'md'
@@ -62,11 +70,29 @@ export interface TimePickerProps
    */
   onValueChange?: (value: string) => void;
   /**
+   * When `onValueChange` is called. `"change"` reports every change as it happens, including an in-between time
+   * (a first minute digit `3` already makes `"09:03"` before the `0` makes `"09:30"`) and every row a wheel passes.
+   * `"complete"` waits until the field is settled: a whole time with no digit still expected, and the picker
+   * closed, or the field emptied entirely. `"blur"` reports once, when focus leaves the field, the picker closes,
+   * `Enter` is pressed, or the clear button is used. Both held modes also report on blur, so what the owner has
+   * always catches up with what is shown, `""` included when the field is left half-filled. The segments always
+   * show the latest edit; only the report is held.
+   * @default 'change'
+   */
+  commitOn?: TimePickerCommitOn;
+  /**
    * `"12"` shows an hour from 1 to 12 and an AM/PM segment; `"24"` shows 0 to 23. Chosen explicitly and never
    * read from the browser's locale, so the server and the client always agree. The `value` is 24-hour either way.
    * @default '12'
    */
   hourCycle?: TimePickerHourCycle;
+  /**
+   * In the 12-hour cycle, where the AM/PM segment goes: `"end"` for "3:45 PM", `"start"` for "PM 3:45" (some
+   * languages write it that way). The picker's AM/PM wheel moves with it. Chosen explicitly like `hourCycle`,
+   * never read from the locale, and ignored with `hourCycle="24"`. The hour, minute and second keep their order.
+   * @default 'end'
+   */
+  periodPosition?: TimePickerPeriodPosition;
   /**
    * Shows a seconds segment (and a seconds wheel in the picker), and makes the value `"HH:mm:ss"`.
    * @default false
@@ -79,6 +105,12 @@ export interface TimePickerProps
    */
   step?: number;
   /**
+   * Seconds between the second values the field accepts, when `showSeconds` is on: `15` allows `:00 :15 :30 :45`.
+   * Works as `step` does for minutes. Seconds that aren't shown are always `00`.
+   * @default 1
+   */
+  secondStep?: number;
+  /**
    * The earliest allowed time, as `"HH:mm"` (or `"HH:mm:ss"`). An earlier time is flagged invalid, not
    * refused, and the picker disables the options before it.
    */
@@ -89,11 +121,28 @@ export interface TimePickerProps
    */
   max?: string;
   /**
+   * Rules out particular times — a lunch break, a booked slot. Called with a time as the 24-hour string the field's
+   * `value` uses (`"12:30"`, or `"12:30:00"` with `showSeconds`); return `true` for one that isn't available.
+   * Like `min`/`max`, a time it rules out is flagged invalid and still reported, not refused, and the picker
+   * disables a row when it leaves no available time to reach (an hour only if every one of its minutes is ruled
+   * out). Keep it cheap and pure: the picker calls it for many times as it draws.
+   */
+  isTimeDisabled?: (time: string) => boolean;
+  /**
    * Shows the button that opens the picker: a popover of wheels of hours, minutes (and seconds and AM/PM) to scroll
    * or tap, with the chosen row in the middle. Turn it off for a field that is only ever typed into.
    * @default true
    */
   showPicker?: boolean;
+  /**
+   * Opens the picker when a segment receives focus, by Tab or a click, from outside the field or from its own
+   * buttons, so the wheels are there as soon as the person gets to it. Focus stays on the segment, so typing still
+   * works, and the segments stop asking a phone for its keyboard (`inputMode="none"`) since the wheels are the
+   * input. Reaching the picker or clear button doesn't open it, and neither does moving from one segment to the
+   * next, so a picker closed with `Escape` stays closed while the person moves along. Needs `showPicker`.
+   * @default false
+   */
+  openOnFocus?: boolean;
   /** The controlled open state of the picker. Omit (along with `defaultOpen`) to manage it internally. */
   open?: boolean;
   /**
@@ -117,13 +166,26 @@ export interface TimePickerProps
    */
   onClear?: () => void;
   /**
+   * Called when focus arrives in the field from outside it. Unlike a native `focus` event on the group, moving
+   * between the segments, the buttons or into the picker is not leaving or arriving, so it fires once per visit.
+   */
+  onFocus?: FocusEventHandler<HTMLDivElement>;
+  /**
+   * Called when focus leaves the field for somewhere outside it (the picker counts as part of the field). The
+   * usual place for validate-on-blur; with `commitOn` it fires after the held value has been reported.
+   */
+  onBlur?: FocusEventHandler<HTMLDivElement>;
+  /**
    * Disables the whole field: no segment takes focus, the picker button is inert, and nothing changes.
    * @default false
    */
   disabled?: boolean;
   /**
-   * Marks the field as required for assistive technology (`aria-required`). A `TimePicker` doesn't validate
-   * natively; a `FormField`'s `error` is where an empty required field is reported.
+   * Marks the field as required: `aria-required` on each segment, and a real form constraint, so a surrounding
+   * `<form>` won't submit while the field is empty (the browser's own "fill out this field" message). The same
+   * form check also refuses a half-filled field and a time outside `min`/`max`, off a step or ruled out by
+   * `isTimeDisabled`, with the `incomplete` and `unavailable` labels as the message. That check lives on a hidden
+   * time input that holds the value, which is what is submitted under `name`.
    * @default false
    */
   required?: boolean;
@@ -141,7 +203,8 @@ export interface TimePickerProps
   autoFocus?: boolean;
   /**
    * The name a surrounding `<form>` submits the value under, through a hidden input holding the 24-hour
-   * string (and `""` while the field is empty or incomplete).
+   * string (and `""` while the field is empty or incomplete). The input is also what a form validates: see
+   * `required`.
    */
   name?: string;
   /** Associates the hidden form input with a `<form>` by id, when this isn't inside it. */
@@ -149,7 +212,7 @@ export interface TimePickerProps
   /**
    * Every piece of text the field writes itself — segment names, AM and PM, and the button names — for
    * translation. Pass only the keys you want to change.
-   * @default { hour: 'Hour', minute: 'Minute', second: 'Second', period: 'AM/PM', am: 'AM', pm: 'PM', empty: 'Empty', openPicker: 'Choose time', pickerName: 'Choose a time', clear: 'Clear time' }
+   * @default { hour: 'Hour', minute: 'Minute', second: 'Second', period: 'AM/PM', am: 'AM', pm: 'PM', empty: 'Empty', openPicker: 'Choose time', pickerName: 'Choose a time', clear: 'Clear time', incomplete: 'Enter a complete time', unavailable: "This time isn't available" }
    */
   labels?: Partial<TimePickerLabels>;
   /**
