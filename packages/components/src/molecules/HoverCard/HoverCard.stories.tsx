@@ -8,7 +8,8 @@ import { Stack } from "../../atoms/Stack";
 import { Text } from "../../atoms/Text";
 import { HoverCard } from "./HoverCard";
 import { hoverCardPlaygroundSnippet, hoverCardSnippets } from "./HoverCard.snippets";
-import type { HoverCardAlign, HoverCardContentProps, HoverCardSide } from "./HoverCard.types";
+import { HoverCardProvider } from "./HoverCardProvider";
+import type { HoverCardAlign, HoverCardContentProps, HoverCardSide, HoverCardSize } from "./HoverCard.types";
 
 // Combines HoverCard's own root-level args (defaultOpen/openDelay/closeDelay/
 // onOpenChange) with HoverCard.Content's own args (side/align/etc.) in one
@@ -21,7 +22,9 @@ interface PlaygroundArgs {
   defaultOpen: boolean;
   openDelay: number;
   closeDelay: number;
+  disabled: boolean;
   onOpenChange: (open: boolean) => void;
+  size: HoverCardSize;
   side: HoverCardSide;
   align: HoverCardAlign;
   sideOffset: number;
@@ -78,9 +81,20 @@ const meta: Meta<PlaygroundArgs> = {
         "Milliseconds the card stays open after the pointer or focus leaves the trigger and the card.",
       table: { defaultValue: { summary: "300" } },
     },
+    disabled: {
+      control: "boolean",
+      description: "Turns the card off: it never opens, and one that is open closes. The trigger stays a working link.",
+      table: { defaultValue: { summary: "false" } },
+    },
     onOpenChange: {
       control: false,
       description: "Called whenever the open state changes.",
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "The padding step around the content, on the standard scale (8, 12, 16, 20, 24px).",
+      table: { defaultValue: { summary: '"md"' } },
     },
     side: {
       // A `select` of the single-value form — `Responsive<HoverCardSide>` has no
@@ -149,6 +163,8 @@ const meta: Meta<PlaygroundArgs> = {
     defaultOpen: false,
     openDelay: 300,
     closeDelay: 300,
+    disabled: false,
+    size: "md",
     side: "top",
     align: "center",
     sideOffset: 8,
@@ -169,12 +185,14 @@ const meta: Meta<PlaygroundArgs> = {
         defaultOpen={args.defaultOpen}
         openDelay={args.openDelay}
         closeDelay={args.closeDelay}
+        disabled={args.disabled}
         onOpenChange={args.onOpenChange}
       >
         <HoverCard.Trigger asChild>
           <Link href="#jane" onClick={preventNavigation}>@jane</Link>
         </HoverCard.Trigger>
         <HoverCard.Content
+          size={args.size}
           side={args.side}
           align={args.align}
           sideOffset={args.sideOffset}
@@ -235,6 +253,7 @@ export const AllSides: Story = {
     openDelay: { control: false },
     closeDelay: { control: false },
     onOpenChange: { control: false },
+    disabled: { control: false },
   },
   render: (args) => (
     // `repeat(auto-fit, minmax(...))` so two columns never sit closer than an
@@ -256,6 +275,7 @@ export const AllSides: Story = {
           </HoverCard.Trigger>
           <HoverCard.Content
             side={side}
+            size={args.size}
             align={args.align}
             sideOffset={args.sideOffset}
             alignOffset={args.alignOffset}
@@ -280,6 +300,8 @@ export const ResponsiveSide: Story = {
     openDelay: { control: false },
     closeDelay: { control: false },
     onOpenChange: { control: false },
+    size: { control: false },
+    disabled: { control: false },
     side: { control: false },
     align: { control: false },
     sideOffset: { control: false },
@@ -313,6 +335,8 @@ export const HideWhenDetached: Story = {
     openDelay: { control: false },
     closeDelay: { control: false },
     onOpenChange: { control: false },
+    size: { control: false },
+    disabled: { control: false },
     side: { control: false },
     align: { control: false },
     sideOffset: { control: false },
@@ -359,6 +383,8 @@ export const Delays: Story = {
     openDelay: { control: false },
     closeDelay: { control: false },
     onOpenChange: { control: false },
+    size: { control: false },
+    disabled: { control: false },
   },
   render: (args) => (
     <div style={centered}>
@@ -382,6 +408,8 @@ export const Controlled: Story = {
     openDelay: { control: false },
     closeDelay: { control: false },
     onOpenChange: { control: false },
+    size: { control: false },
+    disabled: { control: false },
   },
   render: function ControlledStory(args) {
     const [open, setOpen] = useState(false);
@@ -411,6 +439,8 @@ export const PlainTrigger: Story = {
     openDelay: { control: false },
     closeDelay: { control: false },
     onOpenChange: { control: false },
+    size: { control: false },
+    disabled: { control: false },
   },
   render: (args) => (
     <div style={centered}>
@@ -427,6 +457,136 @@ export const PlainTrigger: Story = {
         yesterday.
       </Text>
     </div>
+  ),
+};
+
+const noControls = {
+  defaultOpen: { control: false },
+  openDelay: { control: false },
+  closeDelay: { control: false },
+  onOpenChange: { control: false },
+  side: { control: false },
+  align: { control: false },
+  sideOffset: { control: false },
+  alignOffset: { control: false },
+  avoidCollisions: { control: false },
+  collisionPadding: { control: false },
+  hideWhenDetached: { control: false },
+  hideArrow: { control: false },
+  size: { control: false },
+  disabled: { control: false },
+} as const;
+
+export const Sizes: Story = {
+  name: "Sizes",
+  parameters: { docs: { source: { code: hoverCardSnippets.sizes } } },
+  argTypes: { ...noControls, size: { control: false } },
+  render: () => (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+        gap: "var(--dbm-space-8)",
+        placeItems: "end center",
+        paddingBlock: "var(--dbm-space-24) var(--dbm-space-4)",
+      }}
+    >
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <HoverCard key={size} open>
+          <HoverCard.Trigger asChild>
+            <Link href={`#${size}`} onClick={preventNavigation}>
+              {size}
+            </Link>
+          </HoverCard.Trigger>
+          <HoverCard.Content size={size}>
+            <Text size="sm">size=&quot;{size}&quot;</Text>
+          </HoverCard.Content>
+        </HoverCard>
+      ))}
+    </div>
+  ),
+};
+
+export const WithMedia: Story = {
+  name: "With an image across the top",
+  parameters: { docs: { source: { code: hoverCardSnippets.withMedia } } },
+  argTypes: noControls,
+  render: () => (
+    <div style={{ ...centered, paddingBlockStart: "calc(var(--dbm-space-32) + var(--dbm-space-8))" }}>
+      <HoverCard open>
+        <HoverCard.Trigger asChild>
+          <Link href="#jane" onClick={preventNavigation}>
+            @jane
+          </Link>
+        </HoverCard.Trigger>
+        <HoverCard.Content>
+          <HoverCard.Media data-testid="media">
+            {/* A drawn banner so the story has no file to load; a real card uses <img>. */}
+            <svg viewBox="0 0 320 112" role="img" aria-label="Banner">
+              <rect width="320" height="112" fill="var(--dbm-bg-brand-subtle)" />
+              <circle cx="262" cy="30" r="46" fill="var(--dbm-bg-brand)" opacity="0.35" />
+              <circle cx="60" cy="100" r="64" fill="var(--dbm-bg-brand)" opacity="0.2" />
+            </svg>
+          </HoverCard.Media>
+          <ProfilePreview />
+        </HoverCard.Content>
+      </HoverCard>
+    </div>
+  ),
+};
+
+export const Disabled: Story = {
+  name: "Disabled",
+  parameters: { docs: { source: { code: hoverCardSnippets.disabled } } },
+  argTypes: { ...noControls, disabled: { control: false } },
+  render: () => (
+    <div style={{ ...centered, flexDirection: "column", alignItems: "center", gap: "var(--dbm-space-4)" }}>
+      <HoverCard disabled>
+        <HoverCard.Trigger asChild>
+          <Link href="#jane" onClick={preventNavigation}>
+            @jane (no card)
+          </Link>
+        </HoverCard.Trigger>
+        <HoverCard.Content>
+          <ProfilePreview />
+        </HoverCard.Content>
+      </HoverCard>
+      <Text size="sm" color="secondary">
+        The link still works; the card never opens.
+      </Text>
+    </div>
+  ),
+};
+
+export const SharedTiming: Story = {
+  name: "Shared timing across a row of links (HoverCardProvider)",
+  parameters: { docs: { source: { code: hoverCardSnippets.sharedTiming } } },
+  argTypes: noControls,
+  render: () => (
+    <HoverCardProvider openDelay={500}>
+      <div style={{ ...centered, flexDirection: "column", alignItems: "center", gap: "var(--dbm-space-4)" }}>
+        <Text size="sm" color="secondary">
+          Rest on the first name, then move along the row: each next card opens at once.
+        </Text>
+        <Stack direction="row" gap={6}>
+          {["Jane Doe", "Sam Lee", "Ana Ruiz", "Tom Ito"].map((name) => (
+            <HoverCard key={name}>
+              <HoverCard.Trigger asChild>
+                <Link href={`#${name}`} onClick={preventNavigation}>
+                  {name}
+                </Link>
+              </HoverCard.Trigger>
+              <HoverCard.Content>
+                <Stack direction="row" gap={3} align="center">
+                  <Avatar name={name} size="md" />
+                  <Text weight="semibold">{name}</Text>
+                </Stack>
+              </HoverCard.Content>
+            </HoverCard>
+          ))}
+        </Stack>
+      </div>
+    </HoverCardProvider>
   ),
 };
 

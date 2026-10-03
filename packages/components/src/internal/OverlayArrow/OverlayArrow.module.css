@@ -26,3 +26,18 @@
   stroke-width: var(--dbm-border-width-1);
   vector-effect: non-scaling-stroke;
 }
+
+/* Forced colours (Windows high contrast) recolours the surface's own background and
+   border to system colours, but not an SVG's `fill` and `stroke` — found measuring it:
+   the card's border became CanvasText while the arrow kept its pale `border.default`
+   stroke, so the arrow's edge no longer met the card's. System colours are the one
+   thing forced colours keeps, so the arrow is drawn in the same ones the surface gets. */
+@media (forced-colors: active) {
+  .fill {
+    fill: Canvas;
+  }
+
+  .stroke {
+    stroke: CanvasText;
+  }
+}

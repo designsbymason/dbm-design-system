@@ -6,6 +6,7 @@ type HoverCardPrimitiveContentProps = ComponentPropsWithoutRef<typeof HoverCardP
 
 export type HoverCardSide = "top" | "right" | "bottom" | "left";
 export type HoverCardAlign = "start" | "center" | "end";
+export type HoverCardSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface HoverCardProps {
   /** `HoverCard.Trigger` and `HoverCard.Content`. */
@@ -27,17 +28,28 @@ export interface HoverCardProps {
   /**
    * Milliseconds the pointer or keyboard focus must stay on the trigger
    * before the card opens — long enough that sweeping the pointer across a
-   * page of links doesn't flash a card for each one.
+   * page of links doesn't flash a card for each one. Inside a
+   * `HoverCardProvider` the default comes from it, and a card opens at once
+   * while another is open or has just closed.
    * @default 300
    */
   openDelay?: number;
   /**
    * Milliseconds the card stays open after the pointer or focus leaves the
    * trigger and the card — the grace period that lets the pointer cross the
-   * gap from the trigger onto the card without closing it.
+   * gap from the trigger onto the card without closing it. Inside a
+   * `HoverCardProvider` the default comes from it.
    * @default 300
    */
   closeDelay?: number;
+  /**
+   * Turns the card off: it never opens, and one that is open closes. The
+   * trigger stays a working link. Use it for a row that doesn't need a
+   * preview right now (already selected, still loading) without unmounting
+   * the card or controlling `open` yourself.
+   * @default false
+   */
+  disabled?: boolean;
 }
 
 export interface HoverCardTriggerProps extends Omit<ComponentPropsWithoutRef<"a">, "children"> {
@@ -91,6 +103,13 @@ export interface HoverCardContentProps extends Omit<ComponentPropsWithoutRef<"di
   /** The card's own content — a short preview, never the only way to reach anything. */
   children?: ReactNode;
   /**
+   * The padding step around the content, on the standard scale
+   * (`xs`…`xl` = 8, 12, 16, 20, 24px). A `HoverCard.Media` bleeds out to the
+   * card's edges whatever the step.
+   * @default 'md'
+   */
+  size?: HoverCardSize;
+  /**
    * Which side of the trigger the content renders on. Radix repositions it
    * automatically to stay within the viewport if the requested side would
    * overflow — but only within the same axis (`left`↔`right`,
@@ -108,9 +127,10 @@ export interface HoverCardContentProps extends Omit<ComponentPropsWithoutRef<"di
    */
   align?: HoverCardAlign;
   /**
-   * Pixel gap between the trigger and the content along `side`. Keep it
-   * small: the pointer has to cross this gap onto the card within
-   * `closeDelay`, and the card has no bridge across it.
+   * Pixel gap between the trigger and the content along `side`. A
+   * transparent bridge, as long as the gap, is part of the card, so the
+   * pointer can cross it onto the card without the card closing, whatever
+   * the offset.
    * @default 8
    */
   sideOffset?: number;
@@ -182,6 +202,31 @@ export interface HoverCardContentProps extends Omit<ComponentPropsWithoutRef<"di
   onInteractOutside?: HoverCardPrimitiveContentProps["onInteractOutside"];
   /**
    * Standard DOM id, applied to the content element.
+   */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's
+   * `getByTestId`, Playwright/Cypress selectors). Rendered as the DOM
+   * `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface HoverCardMediaProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  /**
+   * An image or video that fills the card's width — `<img>`, `<video>` or a
+   * DBM `Image`. It is laid out as a block, full width, and clipped to the
+   * card's rounded top corners.
+   */
+  children?: ReactNode;
+  /**
+   * Standard DOM id. Rarely needed directly, but required when another
+   * element's `aria-labelledby`/`aria-describedby` needs to point at this
+   * element, or when a test or router needs a stable anchor.
    */
   id?: string;
   /** Additional CSS classes for customization. */

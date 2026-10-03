@@ -13,6 +13,13 @@ const meta: Meta<typeof HoverCard.Content> = {
       control: "text",
       description: "The card's own content — a short preview, never the only way to reach anything.",
     },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description:
+        "The padding step around the content, on the standard scale (8, 12, 16, 20, 24px). A HoverCard.Media bleeds out to the card's edges whatever the step.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
     side: {
       control: "select",
       options: ["top", "right", "bottom", "left"],
@@ -29,7 +36,7 @@ const meta: Meta<typeof HoverCard.Content> = {
     sideOffset: {
       control: "number",
       description:
-        "Pixel gap between the trigger and the content along side. Keep it small: the pointer has to cross this gap onto the card within closeDelay.",
+        "Pixel gap between the trigger and the content along side. A transparent bridge, as long as the gap, is part of the card, so the pointer can cross it onto the card without the card closing, whatever the offset.",
       table: { defaultValue: { summary: "8" } },
     },
     alignOffset: {

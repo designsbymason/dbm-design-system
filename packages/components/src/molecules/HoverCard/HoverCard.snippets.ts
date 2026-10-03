@@ -7,7 +7,7 @@
 // of the package, no demo scaffolding — and `storySnippets.test.ts` checks that
 // stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { HoverCardAlign, HoverCardSide } from "./HoverCard.types";
+import type { HoverCardAlign, HoverCardSide, HoverCardSize } from "./HoverCard.types";
 
 const profile = `    <Stack direction="row" gap={3} align="center">
       <Avatar name="Jane Doe" size="md" />
@@ -63,6 +63,48 @@ ${hoverCard("openDelay={100} closeDelay={100}", "", link, `    <Text size="sm">O
   </HoverCard.Content>
 </HoverCard>`,
 
+  sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the padding step around the content (8, 12, 16, 20, 24px). */}
+${hoverCard("", 'size="lg"', link, `    <Text size="sm">size="lg"</Text>`)}`,
+
+  withMedia: `{/* HoverCard.Media bleeds out through the padding to the card's edges and takes its rounded top corners.
+    Put it first. */}
+<HoverCard>
+  <HoverCard.Trigger asChild>
+    <Link href="/people/jane">@jane</Link>
+  </HoverCard.Trigger>
+  <HoverCard.Content>
+    <HoverCard.Media>
+      <img src="/people/jane/banner.jpg" alt="" />
+    </HoverCard.Media>
+${profile}
+  </HoverCard.Content>
+</HoverCard>`,
+
+  disabled: `{/* disabled: the card never opens and one that is open closes; the link still works. */}
+${hoverCard("disabled", "", link, profile)}`,
+
+  sharedTiming: `{/* One HoverCardProvider around a row of cards: once one has opened, the next opens at once
+    (for skipDelayDuration, default 300ms, after it closes too), and only one is ever open.
+    openDelay and closeDelay here are the defaults for every card below it. */}
+<HoverCardProvider openDelay={500}>
+  <HoverCard>
+    <HoverCard.Trigger asChild>
+      <Link href="/people/jane">Jane Doe</Link>
+    </HoverCard.Trigger>
+    <HoverCard.Content>
+      <Text weight="semibold">Jane Doe</Text>
+    </HoverCard.Content>
+  </HoverCard>
+  <HoverCard>
+    <HoverCard.Trigger asChild>
+      <Link href="/people/sam">Sam Lee</Link>
+    </HoverCard.Trigger>
+    <HoverCard.Content>
+      <Text weight="semibold">Sam Lee</Text>
+    </HoverCard.Content>
+  </HoverCard>
+</HoverCardProvider>`,
+
   plainTrigger: `{/* Without asChild the trigger is a plain <a>: give it an href so a keyboard user can reach it. */}
 <HoverCard>
   <HoverCard.Trigger href="/people/jane">@jane</HoverCard.Trigger>
@@ -75,6 +117,8 @@ ${hoverCard("openDelay={100} closeDelay={100}", "", link, `    <Text size="sm">O
 /** The Playground's live controls, as far as the snippet cares. */
 export interface HoverCardPlaygroundSnippetArgs {
   defaultOpen?: boolean;
+  disabled?: boolean;
+  size?: HoverCardSize;
   openDelay?: number;
   closeDelay?: number;
   side?: HoverCardSide;
@@ -94,10 +138,12 @@ export interface HoverCardPlaygroundSnippetArgs {
 export function hoverCardPlaygroundSnippet(args: HoverCardPlaygroundSnippetArgs): string {
   const rootAttributes: string[] = [];
   if (args.defaultOpen) rootAttributes.push("defaultOpen");
+  if (args.disabled) rootAttributes.push("disabled");
   if (args.openDelay !== undefined && args.openDelay !== 300) rootAttributes.push(`openDelay={${args.openDelay}}`);
   if (args.closeDelay !== undefined && args.closeDelay !== 300) rootAttributes.push(`closeDelay={${args.closeDelay}}`);
 
   const contentAttributes: string[] = [];
+  if (args.size && args.size !== "md") contentAttributes.push(`size="${args.size}"`);
   if (args.side && args.side !== "top") contentAttributes.push(`side="${args.side}"`);
   if (args.align && args.align !== "center") contentAttributes.push(`align="${args.align}"`);
   if (args.sideOffset !== undefined && args.sideOffset !== 8) contentAttributes.push(`sideOffset={${args.sideOffset}}`);

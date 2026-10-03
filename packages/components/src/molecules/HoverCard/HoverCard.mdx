@@ -10,12 +10,16 @@ import * as HoverCardStories from "./HoverCard.stories";
 import * as HoverCardRootStories from "./HoverCardRoot.stories";
 import * as HoverCardTriggerStories from "./HoverCardTrigger.stories";
 import * as HoverCardContentStories from "./HoverCardContent.stories";
+import * as HoverCardMediaStories from "./HoverCardMedia.stories";
+import * as HoverCardProviderStories from "./HoverCardProvider.stories";
 
-export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "openDelay", "closeDelay"];
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "openDelay", "closeDelay", "disabled"];
 export const playgroundOrder = [
   "defaultOpen",
   "openDelay",
   "closeDelay",
+  "disabled",
+  "size",
   "side",
   "align",
   "sideOffset",
@@ -26,9 +30,12 @@ export const playgroundOrder = [
   "hideArrow",
 ];
 export const playgroundExclude = ["onOpenChange", "onEscapeKeyDown", "onPointerDownOutside", "onFocusOutside", "onInteractOutside"];
+export const mediaPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const providerPropOrder = ["children", "openDelay", "closeDelay", "skipDelayDuration"];
 export const triggerPropOrder = ["asChild", "children", "href", "target", "rel", "id", "className", "style", "data-testid"];
 export const contentPropOrder = [
   "children",
+  "size",
   "side",
   "align",
   "sideOffset",
@@ -59,12 +66,14 @@ A rich preview that opens when the pointer rests on a link (or keyboard focus la
 when it leaves — a profile on a username, a summary on a link — built on Radix HoverCard. Nothing is
 clicked: the card is *supplementary*, an extra look at where the link leads. It is for pointer and
 keyboard users on a screen wide enough to hover; it never opens on a touch screen. A compound
-component: compose `HoverCard.Trigger` and `HoverCard.Content` inside `HoverCard` itself.
+component: compose `HoverCard.Trigger` and `HoverCard.Content` inside `HoverCard` itself, with an
+optional `HoverCard.Media` for an image across the top and an optional `HoverCardProvider` that
+lets a run of cards share timing.
 
 ### Import
 
 ```tsx
-import { HoverCard } from "@dbm-design-system/components";
+import { HoverCard, HoverCardProvider } from "@dbm-design-system/components";
 ```
 
 ## Playground
@@ -98,6 +107,20 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
 
 <PropertiesTable of={HoverCardContentStories} order={contentPropOrder} />
 
+### HoverCard.Media properties
+
+An image or video across the top of the card. Also accepts any other native `<div>` attribute beyond
+what's listed here — passed straight through.
+
+<PropertiesTable of={HoverCardMediaStories} order={mediaPropOrder} />
+
+### HoverCardProvider properties
+
+An optional wrapper that makes every `HoverCard` below it share timing. It renders no DOM element of
+its own, so it takes no `className`/`style`/`id`/`data-testid`/`ref`.
+
+<PropertiesTable of={HoverCardProviderStories} order={providerPropOrder} />
+
 ## Variants
 
 ### Open, with a profile preview
@@ -115,6 +138,22 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
 ### Hides when its trigger scrolls out of view
 
 <Canvas of={HoverCardStories.HideWhenDetached} />
+
+### Sizes
+
+<Canvas of={HoverCardStories.Sizes} />
+
+### With an image across the top
+
+<Canvas of={HoverCardStories.WithMedia} />
+
+### Disabled
+
+<Canvas of={HoverCardStories.Disabled} />
+
+### Shared timing across a row of links (HoverCardProvider)
+
+<Canvas of={HoverCardStories.SharedTiming} />
 
 ### Custom open and close delays
 
@@ -139,7 +178,10 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
   previews the destination; a trigger that goes nowhere has nothing to preview.
 - Keep the card short: an avatar or image, a name, a line or two. Whatever it shows should also be
   on the page the link opens.
-- Leave `sideOffset` small, so the pointer can cross onto the card before `closeDelay` runs out.
+- Wrap a run of triggers (mentions in a paragraph, names in a table) in one `HoverCardProvider`, so
+  moving along them opens each next card at once.
+- Put `HoverCard.Media` first inside the content, so it can bleed out to the card's top edge.
+- Use `disabled` for a row that doesn't need a preview right now, instead of unmounting the card.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -151,6 +193,8 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
 - Don't make the card the only place something is explained. A keyboard user can open it, but a
   screen reader's own navigation doesn't read it.
 - Don't wrap a non-link in `HoverCard.Trigger` without giving it a way to take focus.
+- Don't use `disabled` to hide a card you meant to remove — a disabled card still renders its trigger,
+  and the preview is just gone.
 
 </Callout>
 </div>
@@ -165,6 +209,9 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
   reads better as `align="start"` than centred.
 - Let `avoidCollisions` (on by default) handle the edges; it keeps the card inside the viewport and
   the content's width is capped so it never outgrows a phone-width screen.
+- A small gap is fine: a transparent bridge across `sideOffset` is part of the card, so the pointer can
+  cross from the trigger onto it without the card closing, however large the offset.
+- Use `size` for how much room the content needs: `sm` for a name and a line, `lg` for a richer card.
 - Use `hideWhenDetached` for a trigger in a scrolling list or table, so the card doesn't hover over
   empty space once its row scrolls away.
 
@@ -182,6 +229,14 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
   must be available on the page the link opens.
 - Every focusable element inside the card is taken out of the tab order, so a keyboard user can't
   move into it. It is for reading, not for interacting.
+- `disabled` leaves the trigger a working link and keeps the card shut for pointer and focus alike.
+- Inside a `HoverCardProvider` only one card is open at a time, so a screen magnifier user never has two
+  stacked previews to read.
+- Text direction follows the page: the card is portaled to `body`, so it takes the direction set on
+  the document, and `align="start"` lines up with the link's start edge in either direction. `side` is
+  physical (`left` is the left of the link in both directions).
+- In Windows high-contrast (forced colours) the card keeps its border and the arrow is drawn in the
+  same system colours, so its edge still meets the card's.
 - It does not open for a touch pointer, so on a phone or tablet a tap simply follows the link.
 - A dev-mode console warning fires once per trigger if `HoverCard.Trigger` renders a plain `<a>`
   with no `href` or `tabIndex`, since a keyboard user could never open the card.
@@ -211,6 +266,49 @@ The floating card itself. Also accepts any other native `<div>` attribute beyond
   </HoverCard.Content>
 </HoverCard>
 
+{/* A row of links sharing timing, with a default open delay of 500ms */}
+<HoverCardProvider openDelay={500}>
+  <HoverCard>
+    <HoverCard.Trigger asChild>
+      <Link href="/people/jane">Jane Doe</Link>
+    </HoverCard.Trigger>
+    <HoverCard.Content>
+      <Text weight="semibold">Jane Doe</Text>
+    </HoverCard.Content>
+  </HoverCard>
+  <HoverCard>
+    <HoverCard.Trigger asChild>
+      <Link href="/people/sam">Sam Lee</Link>
+    </HoverCard.Trigger>
+    <HoverCard.Content>
+      <Text weight="semibold">Sam Lee</Text>
+    </HoverCard.Content>
+  </HoverCard>
+</HoverCardProvider>
+
+{/* An image across the top, with more padding */}
+<HoverCard>
+  <HoverCard.Trigger asChild>
+    <Link href="/people/jane">@jane</Link>
+  </HoverCard.Trigger>
+  <HoverCard.Content size="lg">
+    <HoverCard.Media>
+      <img src="/people/jane/banner.jpg" alt="" />
+    </HoverCard.Media>
+    <Text weight="semibold">Jane Doe</Text>
+  </HoverCard.Content>
+</HoverCard>
+
+{/* Off for a row that doesn't need a preview */}
+<HoverCard disabled>
+  <HoverCard.Trigger asChild>
+    <Link href="/people/jane">@jane</Link>
+  </HoverCard.Trigger>
+  <HoverCard.Content>
+    <Text size="sm">Never shown</Text>
+  </HoverCard.Content>
+</HoverCard>
+
 {/* Controlled open state */}
 function Example() {
   const [open, setOpen] = useState(false);
@@ -236,12 +334,16 @@ function Example() {
 <TokenRow token="text.primary" usage="content text colour" />
 <TokenRow token="border.default" usage="content border; also the arrow's own stroke, so it reads as one continuous edge" />
 <TokenRow token="border-width.1" usage="content border width; also the arrow's own stroke width" />
-<TokenRow token="radius.md" usage="content corner radius" />
+<TokenRow token="radius.md" usage="content corner radius; also the top corners of HoverCard.Media, less the border width" />
 <TokenRow token="shadow.light.md" usage="content elevation, light themes" />
 <TokenRow token="shadow.dark.md" usage="content elevation, dark themes" />
 <TokenRow token="font-family.primary" usage="content typography — set explicitly since the content renders in a Portal outside this component's own tree" />
 <TokenRow token="hover-card.max-width" usage="content max width" />
-<TokenRow token="space.4" usage="content padding" />
+<TokenRow token="space.2" usage="content padding at size xs" />
+<TokenRow token="space.3" usage="content padding at size sm" />
+<TokenRow token="space.4" usage="content padding at size md (the default); also the gap below HoverCard.Media" />
+<TokenRow token="space.5" usage="content padding at size lg" />
+<TokenRow token="space.6" usage="content padding at size xl" />
 <TokenRow token="z-index.popover" usage="content stacking order" />
 <TokenRow token="motion.duration.fast" usage="open/close fade transition" />
 <TokenRow token="motion.easing.emphasized" usage="open fade-in transition" />

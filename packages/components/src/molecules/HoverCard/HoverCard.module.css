@@ -35,10 +35,87 @@
      Popover's own `.content` documents: repositioning can't fix a box
      wider than the viewport has room for, only shrinking it can. */
   max-width: min(var(--dbm-hover-card-max-width), var(--radix-popper-available-width));
-  padding: var(--dbm-space-4);
+  padding: var(--hover-card-padding);
   position: relative;
   will-change: transform, opacity;
   z-index: var(--dbm-z-index-popover);
+}
+
+/* The padding step. `HoverCard.Media` reads the same variable to bleed back out. */
+.xs {
+  --hover-card-padding: var(--dbm-space-2);
+}
+
+.sm {
+  --hover-card-padding: var(--dbm-space-3);
+}
+
+.md {
+  --hover-card-padding: var(--dbm-space-4);
+}
+
+.lg {
+  --hover-card-padding: var(--dbm-space-5);
+}
+
+.xl {
+  --hover-card-padding: var(--dbm-space-6);
+}
+
+/* A bridge across the gap between the trigger and the card (`sideOffset`). Radix
+   draws nothing there, so a pointer crossing it is over neither and the card's
+   close timer runs. This transparent strip, as long as the gap, is part of the card
+   for hit-testing, so crossing it never leaves it. Radix's `data-side` is physical
+   (the card sits on that side of the trigger), so the strip is on the opposite
+   physical edge: `left`/`right` are deliberate here, not a missed logical property.
+   The arrow, in the same gap, is the card's own too. The strip is positioned from the
+   padding box, so it starts inside the border: it is one border width longer, to end
+   exactly at the trigger. */
+.content::before {
+  content: "";
+  position: absolute;
+}
+
+.content[data-side="top"]::before {
+  inset-block-start: 100%;
+  inset-inline: 0;
+  block-size: calc(var(--hover-card-side-offset) + var(--dbm-border-width-1));
+}
+
+.content[data-side="bottom"]::before {
+  inset-block-end: 100%;
+  inset-inline: 0;
+  block-size: calc(var(--hover-card-side-offset) + var(--dbm-border-width-1));
+}
+
+.content[data-side="left"]::before {
+  inset-block: 0;
+  left: 100%;
+  inline-size: calc(var(--hover-card-side-offset) + var(--dbm-border-width-1));
+}
+
+.content[data-side="right"]::before {
+  inset-block: 0;
+  right: 100%;
+  inline-size: calc(var(--hover-card-side-offset) + var(--dbm-border-width-1));
+}
+
+/* An image or video across the top of the card. Negative margins cancel the
+   content's padding on the top and both sides; the bottom keeps a step of
+   spacing. The top corners follow the card's own radius less its border, so the
+   image sits flush inside the border instead of poking past the rounded corner. */
+.media {
+  border-start-end-radius: calc(var(--dbm-radius-md) - var(--dbm-border-width-1));
+  border-start-start-radius: calc(var(--dbm-radius-md) - var(--dbm-border-width-1));
+  margin-block: calc(-1 * var(--hover-card-padding)) var(--hover-card-padding);
+  margin-inline: calc(-1 * var(--hover-card-padding));
+  overflow: hidden;
+}
+
+.media > :where(img, video, svg) {
+  block-size: auto;
+  display: block;
+  inline-size: 100%;
 }
 
 [data-theme$="-dark"] .content {

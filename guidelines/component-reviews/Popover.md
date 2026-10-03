@@ -719,3 +719,11 @@ status under `06` §9's three-question test.
   `align`, `showCloseButton`… as the root's own and left out `open`. The rendered table now lists
   `children`, `open`, `defaultOpen`, `onOpenChange` and `modal`, each with its description and
   default. A factual error in the docs, so a defect fix: **stays Finalized.**
+- **The arrow's edge now meets the border in forced colours (2026-10-03, a defect found while
+  checking `HoverCard`).** In Windows high-contrast mode the surface's own border is recoloured to a
+  system colour but an SVG's `fill` and `stroke` are not, so `Popover`'s arrow kept a pale stroke
+  against a black border. The shared `OverlayArrow` now draws in `Canvas` / `CanvasText` under
+  `@media (forced-colors: active)` (measured in a real browser for `HoverCard`, whose check covers
+  the shared stylesheet). A defect against the "WCAG AA" requirement the original pass was meant to
+  meet, so under the three-question test it **stays Finalized**. `Popover` itself has no
+  forced-colours check of its own yet.

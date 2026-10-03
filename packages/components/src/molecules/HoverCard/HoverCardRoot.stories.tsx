@@ -26,6 +26,12 @@ const meta: Meta<typeof HoverCard> = {
       description: "The initial open state for uncontrolled usage — ignored once open is provided.",
       table: { defaultValue: { summary: "false" } },
     },
+    disabled: {
+      control: "boolean",
+      description:
+        "Turns the card off: it never opens, and one that is open closes. The trigger stays a working link. Use it for a row that doesn't need a preview right now without unmounting the card or controlling open yourself.",
+      table: { defaultValue: { summary: "false" } },
+    },
     onOpenChange: {
       control: false,
       description:
@@ -34,13 +40,13 @@ const meta: Meta<typeof HoverCard> = {
     openDelay: {
       control: "number",
       description:
-        "Milliseconds the pointer or keyboard focus must stay on the trigger before the card opens — long enough that sweeping the pointer across a page of links doesn't flash a card for each one.",
+        "Milliseconds the pointer or keyboard focus must stay on the trigger before the card opens — long enough that sweeping the pointer across a page of links doesn't flash a card for each one. Inside a HoverCardProvider the default comes from it, and a card opens at once while another is open or has just closed.",
       table: { defaultValue: { summary: "300" } },
     },
     closeDelay: {
       control: "number",
       description:
-        "Milliseconds the card stays open after the pointer or focus leaves the trigger and the card — the grace period that lets the pointer cross the gap from the trigger onto the card without closing it.",
+        "Milliseconds the card stays open after the pointer or focus leaves the trigger and the card — the grace period that lets the pointer cross the gap from the trigger onto the card without closing it. Inside a HoverCardProvider the default comes from it.",
       table: { defaultValue: { summary: "300" } },
     },
   },

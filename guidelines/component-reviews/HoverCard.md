@@ -19,6 +19,8 @@ in the `Link` atom. `HoverCard.Content` takes `side` (default `top`, changed fro
 fade as `Popover`, and one new component token, `hover-card.max-width` (20rem, in
 `component/hover-card.json`).
 
+Added after the first round: `HoverCardProvider`, `disabled`, `size`, `HoverCard.Media` (see "Feature-completeness round").
+
 Deliberately **not** exposed, matching `Popover`'s own scope: `forceMount`, `sticky`,
 `arrowPadding`, `updatePositionStrategy` (traced through the whole `PopperContentProps` chain, per
 the Radix-primitive prop audit, not just the first layer). No `showCloseButton`, `modal`, or
@@ -81,23 +83,83 @@ the Radix-primitive prop audit, not just the first layer). No `showCloseButton`,
   `<svg>` child for Radix's `Arrow asChild`, with the one stylesheet. `Popover`'s own change is
   recorded in `Popover.md`.
 
+## Feature-completeness round, 2026-10-03 (at explicit direction, after the first push)
+
+A gap pass listed four missing features and two unchecked environments; the user asked for the two
+checks first, then all four features.
+
+**The two checks**
+- **Right to left: passes.** A real-browser check sets `dir="rtl"` on the document (where a real
+  app sets it, and where the portaled card inherits it from) and measures: the card's computed
+  direction is `rtl`, `align="start"` lines the card's right edge up with the link's, and
+  `align="end"` its left edge. `side` stays physical, as Radix defines it (the card is on that side
+  of the link in either direction). A `dir` set on an ancestor *below* `body` would not reach the
+  card, since it is portaled to `body`; that is reasoned from how the DOM inherits, not measured, and
+  is the same as `Popover`, with the library-wide answer still open (`01` §12, `05` §3).
+- **Forced colours: one real defect, fixed.** Emulating `forced-colors: active` showed the card's
+  border recoloured to `CanvasText`, but the arrow's SVG `stroke` kept its pale `border.default`,
+  so the arrow's edge no longer met the card's (Chromium doesn't recolour SVG `fill`/`stroke`).
+  The shared `OverlayArrow` now draws in `Canvas` / `CanvasText` under the media query, which also
+  fixes `Popover`'s arrow (recorded in `Popover.md`). Standing convention added in `05` §6.
+
+**The four features**
+1. **`HoverCardProvider`** — shared timing, in `TooltipProvider`'s role. `openDelay`, `closeDelay`
+   defaults for every card below it, and `skipDelayDuration` (300): while a card is open, and for
+   that long after the last one closes, the next card opens at once, and only one card is ever
+   open (the provider closes the previous one when another opens). It works by holding each card's
+   open state in `HoverCard` itself rather than in Radix, so a card can be told to close and a
+   disabled card can stay shut; Radix still gets a controlled `open`. A card's own props win over
+   the provider's. A separate named export beside `HoverCard`, as `TooltipProvider` is beside
+   `Tooltip`.
+   - **Found by a test:** Radix runs its own close timer after the pointer leaves a trigger even
+     when the provider has already closed that card, and reports it as a second
+     `onOpenChange(false)`. Only a real change is passed on now (a ref of the current state).
+   - Checked live in a real browser: moving from one name to the next, the second card is `open` and
+     the first `closed` in the same mutation, with a 500ms `openDelay`.
+2. **A bridge across `sideOffset`** — a transparent `::before` strip on the card, as long as the
+   gap, so the pointer crossing it is still over the card and `closeDelay` never starts. The first
+   version was wrong twice, each found by measuring the gap with `elementFromPoint`: **Radix adds the
+   arrow's height to `sideOffset`** when it places the card (so the gap is the offset plus 5px, and
+   the strip fell short beside the arrow), and the strip is positioned from the padding box, so it
+   started one border-width inside the edge (and ended 1px short of the link). It is now the offset,
+   plus the arrow when there is one, plus the border width. `left` and `right` are used on purpose
+   for the two horizontal sides: Radix's `data-side` is physical. `ARROW_WIDTH`/`ARROW_HEIGHT` are
+   passed to Radix explicitly so the 5 isn't an assumption about its default.
+3. **`size` and `HoverCard.Media`** — `size` is the padding step on the standard scale (8, 12, 16,
+   20, 24px, existing `space.*` tokens; `md` is the old fixed padding, so nothing changes by
+   default). `HoverCard.Media` is a sub-part for an image or video across the top: negative margins
+   cancel the content's padding on the top and sides (reading the same variable `size` sets), and its
+   top corners are the card's radius less its border, so it sits inside the rounded corner.
+   Chosen over a `padding="none"` flag because the point of removing padding is an edge-to-edge
+   image, and a flag alone would leave the corners and the spacing below it to the caller. It
+   assumes it is first; the docs say so. Measured at every size: padding, media edges against the
+   card, radius.
+4. **`disabled`** — never opens (pointer or focus), closes one that is open, trigger still a link;
+   a disabled card doesn't warm the provider. A disabled card whose `open` is controlled `true`
+   stays shut.
+
 ## Verified
 
-- Unit: 58 tests — the open and close paths (mouse hover, keyboard focus and blur, Escape, the
+- Unit: `HoverCard.test.tsx` has 52 tests, plus the Docs-page token guard and `OverlayArrow`'s own 2 — the open and close paths (mouse hover, keyboard focus and blur, Escape, the
   pointer crossing onto the card and a custom delay), both default delays with fake timers, a touch
   pointer not opening it, a pointer that leaves before `openDelay` elapsing, controlled and
   uncontrolled state, unmount clearing the timers, `StrictMode`, a responsive `side` with a live
   `matchMedia` change, the arrow, `container`, ref forwarding and pass-through on both parts,
   `asChild` with `Link` (no blocked click), the focus warning in all its cases, and axe closed and
   open (open scans the whole body, since the card is portaled; the page-level `region` rule is off
-  because it is meaningless for a bare component).
-- **Four of them were broken on purpose to see them fail:** the default `openDelay` changed from
-  its default to 500 (the delay test failed), and the `min(…, available-width)` cap removed from the
-  stylesheet (the phone-width story failed). The underline story was checked the same way.
+  because it is meaningless for a bare component); the provider (defaults and overrides, instant open while warm, the skip window and its end, `skipDelayDuration` 0, one card at a time, the controlled and disabled cases, `StrictMode` and unmount); `disabled`; `size`; and `Media`.
+- **Several were broken on purpose to see them fail:** the default `openDelay` changed (the delay
+  test failed), the `min(…, available-width)` cap removed (the phone-width story failed), the
+  underline removed, the arrow's `vector-effect` removed, the `touchstart` marking removed, the
+  bridge's `content` removed (all three bridge checks failed), the provider's warm check replaced
+  with `false` (four provider tests failed) and `disabled` taken out (five failed).
 - Real browser (Chromium, the `storybook` project): hover opens and leaving closes, Tab opens and
   Escape closes with focus kept on the link, the card stays inside a phone's width and never past
   the 20rem cap, and the built-in trigger is underlined in its inherited colour. Hidden `!dev`
-  stories, so none animates on the Docs page.
+  stories, so none animates on the Docs page. Added in the second round: right to left, forced
+  colours, the bridge on all four sides with and without an arrow, and padding and media edges at
+  every size. One of them (right to left) was flaky until it told Radix the layout had changed after
+  flipping the direction (a real app sets it before mounting).
 - Live in Storybook: the Docs page (every template heading, three Properties tables with every
   Default filled and no empty description, the Playground controls, every "Show code" settled and
   pasteable), a real mouse hover and a real Tab, all four themes (computed surface, text, border,
@@ -106,8 +168,8 @@ the Radix-primitive prop audit, not just the first layer). No `showCloseButton`,
   Storybook's own stylesheet could have restyled it; it didn't).
 - Snippets typechecked against the real components, with a planted bad prop to prove the check bites.
 - Whole package: `eslint`, both typechecks, `pnpm build`, the per-component bundle-size check
-  (HoverCard 0.77KB JS / 0.53KB CSS gzipped), the Foundations token-coverage check, 4,767 unit tests,
-  892 Storybook-project tests, the 8 visual-regression tests, and `pnpm audit` (only the already-
+  (HoverCard 1.42KB JS / 0.82KB CSS gzipped), the Foundations token-coverage check, 4,791 unit tests,
+  905 Storybook-project tests, the 8 visual-regression tests, and `pnpm audit` (only the already-
   accepted `braces` advisory).
 
 ## Not checked, or open
@@ -116,5 +178,5 @@ the Radix-primitive prop audit, not just the first layer). No `showCloseButton`,
   dispatched `touchstart`; a physical tap on a phone was not tried.
 - **Screen readers.** Nothing in the card is announced by design; this was reasoned from Radix's
   source, not heard through VoiceOver or NVDA.
-- **The 1.4.13 "hoverable" test on a very large `sideOffset`.** The default 8px gap is crossed
-  within `closeDelay` in the unit test; a large offset has no bridge, as noted on the prop.
+- **A `dir` set below `body`.** Not measured (see above).
+- **`pnpm audit` after the second round.** No dependency changed, so it was not re-run.

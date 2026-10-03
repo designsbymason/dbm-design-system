@@ -5,6 +5,8 @@ import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Link } from "../../atoms/Link";
 import { HoverCard } from "./HoverCard";
+import styles from "./HoverCard.module.css";
+import { HoverCardProvider } from "./HoverCardProvider";
 
 // Zero delays everywhere except the tests about the delays themselves, so the
 // open/close tests don't depend on a timer.
@@ -544,5 +546,297 @@ describe("HoverCard", () => {
       );
       expect(await scanBody()).toHaveNoViolations();
     });
+  });
+});
+
+describe("HoverCard disabled", () => {
+  it("never opens, however long the pointer rests on the trigger", () => {
+    vi.useFakeTimers();
+    const onOpenChange = vi.fn();
+    render(
+      <HoverCard disabled onOpenChange={onOpenChange}>
+        <HoverCard.Trigger href="/jane">Jane</HoverCard.Trigger>
+        <HoverCard.Content>Card content</HoverCard.Content>
+      </HoverCard>,
+    );
+    fireEvent.pointerEnter(screen.getByRole("link", { name: "Jane" }), { pointerType: "mouse" });
+    act(() => void vi.advanceTimersByTime(5000));
+    expect(screen.queryByText("Card content")).not.toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalledWith(true);
+  });
+
+  it("does not open on keyboard focus either, and the trigger is still a working link", async () => {
+    const user = userEvent.setup();
+    render(<Example disabled />);
+    await user.tab();
+    const trigger = screen.getByRole("link", { name: "Jane" });
+    expect(trigger).toHaveFocus();
+    expect(trigger).toHaveAttribute("href", "/jane");
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(screen.queryByText("Card content")).not.toBeInTheDocument();
+  });
+
+  it("closes a card that is open when it becomes disabled, and opens it again when enabled", () => {
+    const { rerender } = render(<Example defaultOpen />);
+    expect(screen.getByText("Card content")).toBeInTheDocument();
+    rerender(<Example defaultOpen disabled />);
+    expect(screen.queryByText("Card content")).not.toBeInTheDocument();
+    rerender(<Example defaultOpen />);
+    expect(screen.getByText("Card content")).toBeInTheDocument();
+  });
+
+  it("stays shut when controlled open is true but the card is disabled", () => {
+    render(<Example open disabled />);
+    expect(screen.queryByText("Card content")).not.toBeInTheDocument();
+  });
+});
+
+describe("HoverCard size and media", () => {
+  it("defaults to the md padding step and takes any of the five", () => {
+    const { rerender } = render(<Example defaultOpen />);
+    expect(screen.getByText("Card content")).toHaveClass(styles.md as string);
+    for (const size of ["xs", "sm", "md", "lg", "xl"] as const) {
+      rerender(
+        <HoverCard defaultOpen>
+          <HoverCard.Trigger href="/jane">Jane</HoverCard.Trigger>
+          <HoverCard.Content size={size}>Card content</HoverCard.Content>
+        </HoverCard>,
+      );
+      expect(screen.getByText("Card content")).toHaveClass(styles[size] as string);
+    }
+  });
+
+  it("sets the bridge's length from sideOffset, and lets a caller's style add to it", () => {
+    render(
+      <HoverCard defaultOpen>
+        <HoverCard.Trigger href="/jane">Jane</HoverCard.Trigger>
+        <HoverCard.Content sideOffset={20} style={{ margin: "1px" }}>
+          Card content
+        </HoverCard.Content>
+      </HoverCard>,
+    );
+    const card = screen.getByText("Card content");
+    // The offset plus the arrow Radix adds to it.
+    expect(card.style.getPropertyValue("--hover-card-side-offset")).toBe("25px");
+    expect(card).toHaveStyle({ margin: "1px" });
+  });
+
+  it("bridges only the offset when there is no arrow", () => {
+    render(
+      <HoverCard defaultOpen>
+        <HoverCard.Trigger href="/jane">Jane</HoverCard.Trigger>
+        <HoverCard.Content sideOffset={20} hideArrow>
+          Card content
+        </HoverCard.Content>
+      </HoverCard>,
+    );
+    expect(screen.getByText("Card content").style.getPropertyValue("--hover-card-side-offset")).toBe("20px");
+  });
+
+  it("renders Media as a div that forwards its ref and props", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <HoverCard defaultOpen>
+        <HoverCard.Trigger href="/jane">Jane</HoverCard.Trigger>
+        <HoverCard.Content>
+          <HoverCard.Media ref={ref} className="m" id="media" data-testid="media" style={{ color: "red" }}>
+            <img src="/x.png" alt="Jane" />
+          </HoverCard.Media>
+          Card content
+        </HoverCard.Content>
+      </HoverCard>,
+    );
+    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+    expect(ref.current).toHaveClass("m", styles.media as string);
+    expect(screen.getByTestId("media")).toHaveAttribute("id", "media");
+    expect(screen.getByTestId("media")).toContainElement(screen.getByRole("img", { name: "Jane" }));
+  });
+});
+
+describe("HoverCardProvider", () => {
+  const hover = (name: string) => fireEvent.pointerEnter(screen.getByRole("link", { name }), { pointerType: "mouse" });
+  const leave = (name: string) => fireEvent.pointerLeave(screen.getByRole("link", { name }), { pointerType: "mouse" });
+  const advance = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
+
+  function Pair(props: { provider?: React.ComponentProps<typeof HoverCardProvider>; bOpenDelay?: number }) {
+    return (
+      <HoverCardProvider {...props.provider}>
+        <HoverCard>
+          <HoverCard.Trigger href="/a">A</HoverCard.Trigger>
+          <HoverCard.Content>Card A</HoverCard.Content>
+        </HoverCard>
+        <HoverCard openDelay={props.bOpenDelay}>
+          <HoverCard.Trigger href="/b">B</HoverCard.Trigger>
+          <HoverCard.Content>Card B</HoverCard.Content>
+        </HoverCard>
+      </HoverCardProvider>
+    );
+  }
+
+  it("supplies the default openDelay and closeDelay, and a card's own props win", () => {
+    vi.useFakeTimers();
+    render(<Pair provider={{ openDelay: 500, closeDelay: 40 }} bOpenDelay={100} />);
+    hover("A");
+    advance(499);
+    expect(screen.queryByText("Card A")).not.toBeInTheDocument();
+    advance(1);
+    expect(screen.getByText("Card A")).toBeInTheDocument();
+    leave("A");
+    advance(39);
+    expect(screen.getByText("Card A")).toBeInTheDocument();
+    advance(1);
+    expect(screen.queryByText("Card A")).not.toBeInTheDocument();
+    // B sets its own, but the provider is still warm just after A closed, so it is not the delay under test here.
+    advance(1000);
+    hover("B");
+    advance(99);
+    expect(screen.queryByText("Card B")).not.toBeInTheDocument();
+    advance(1);
+    expect(screen.getByText("Card B")).toBeInTheDocument();
+  });
+
+  it("opens the next card at once while another is open, and closes the first", () => {
+    vi.useFakeTimers();
+    render(<Pair />);
+    hover("A");
+    advance(300);
+    expect(screen.getByText("Card A")).toBeInTheDocument();
+
+    leave("A");
+    hover("B");
+    advance(0);
+    expect(screen.getByText("Card B")).toBeInTheDocument();
+    // Never two on screen at once.
+    expect(screen.queryByText("Card A")).not.toBeInTheDocument();
+  });
+
+  it("opens the next card at once within skipDelayDuration of the last closing, and waits after it", () => {
+    vi.useFakeTimers();
+    render(<Pair provider={{ skipDelayDuration: 500 }} />);
+    hover("A");
+    advance(300);
+    leave("A");
+    advance(300);
+    expect(screen.queryByText("Card A")).not.toBeInTheDocument();
+
+    // 200ms after A closed: inside the 500ms window.
+    advance(200);
+    hover("B");
+    advance(0);
+    expect(screen.getByText("Card B")).toBeInTheDocument();
+    leave("B");
+    advance(300);
+    expect(screen.queryByText("Card B")).not.toBeInTheDocument();
+
+    // Past the window: the full delay again.
+    advance(600);
+    hover("A");
+    advance(299);
+    expect(screen.queryByText("Card A")).not.toBeInTheDocument();
+    advance(1);
+    expect(screen.getByText("Card A")).toBeInTheDocument();
+  });
+
+  it("waits on every card when skipDelayDuration is 0", () => {
+    vi.useFakeTimers();
+    render(<Pair provider={{ skipDelayDuration: 0 }} />);
+    hover("A");
+    advance(300);
+    leave("A");
+    advance(300);
+    expect(screen.queryByText("Card A")).not.toBeInTheDocument();
+    advance(1);
+    hover("B");
+    advance(299);
+    expect(screen.queryByText("Card B")).not.toBeInTheDocument();
+    advance(1);
+    expect(screen.getByText("Card B")).toBeInTheDocument();
+  });
+
+  it("calls the first card's onOpenChange(false) when the next one takes over", () => {
+    vi.useFakeTimers();
+    const onOpenChange = vi.fn();
+    render(
+      <HoverCardProvider>
+        <HoverCard onOpenChange={onOpenChange}>
+          <HoverCard.Trigger href="/a">A</HoverCard.Trigger>
+          <HoverCard.Content>Card A</HoverCard.Content>
+        </HoverCard>
+        <HoverCard>
+          <HoverCard.Trigger href="/b">B</HoverCard.Trigger>
+          <HoverCard.Content>Card B</HoverCard.Content>
+        </HoverCard>
+      </HoverCardProvider>,
+    );
+    hover("A");
+    advance(300);
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    leave("A");
+    hover("B");
+    advance(0);
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    // And the first card's own pending close does not report a second time.
+    advance(1000);
+    expect(onOpenChange.mock.calls.filter(([value]) => value === false)).toHaveLength(1);
+  });
+
+  it("closes a controlled card by asking its owner, not by closing it itself", () => {
+    vi.useFakeTimers();
+    const onOpenChange = vi.fn();
+    render(
+      <HoverCardProvider>
+        <HoverCard open onOpenChange={onOpenChange}>
+          <HoverCard.Trigger href="/a">A</HoverCard.Trigger>
+          <HoverCard.Content>Card A</HoverCard.Content>
+        </HoverCard>
+        <HoverCard>
+          <HoverCard.Trigger href="/b">B</HoverCard.Trigger>
+          <HoverCard.Content>Card B</HoverCard.Content>
+        </HoverCard>
+      </HoverCardProvider>,
+    );
+    hover("B");
+    advance(0);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    // The owner didn't act on it, so A is still open: controlled state is theirs.
+    expect(screen.getByText("Card A")).toBeInTheDocument();
+  });
+
+  it("does not warm the provider for a disabled card", () => {
+    vi.useFakeTimers();
+    render(
+      <HoverCardProvider>
+        <HoverCard disabled>
+          <HoverCard.Trigger href="/a">A</HoverCard.Trigger>
+          <HoverCard.Content>Card A</HoverCard.Content>
+        </HoverCard>
+        <HoverCard>
+          <HoverCard.Trigger href="/b">B</HoverCard.Trigger>
+          <HoverCard.Content>Card B</HoverCard.Content>
+        </HoverCard>
+      </HoverCardProvider>,
+    );
+    hover("A");
+    advance(1000);
+    hover("B");
+    advance(299);
+    expect(screen.queryByText("Card B")).not.toBeInTheDocument();
+    advance(1);
+    expect(screen.getByText("Card B")).toBeInTheDocument();
+  });
+
+  it("survives StrictMode, and clears its timer on unmount", () => {
+    vi.useFakeTimers();
+    const { unmount } = render(
+      <StrictMode>
+        <Pair />
+      </StrictMode>,
+    );
+    hover("A");
+    advance(300);
+    leave("A");
+    advance(300);
+    unmount();
+    expect(() => advance(1000)).not.toThrow();
   });
 });

@@ -1,9 +1,21 @@
 import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import { forwardRef, useEffect } from "react";
+import type { CSSProperties } from "react";
+import { forwardRef, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import { OverlayArrow } from "../../internal/OverlayArrow/OverlayArrow";
 import styles from "./HoverCard.module.css";
-import type { HoverCardContentProps, HoverCardProps, HoverCardTriggerProps } from "./HoverCard.types";
+import type {
+  HoverCardContentProps,
+  HoverCardMediaProps,
+  HoverCardProps,
+  HoverCardTriggerProps,
+} from "./HoverCard.types";
+import { HoverCardProviderContext } from "./HoverCardProviderContext";
+
+// Radix's arrow is 10 x 5 unless told otherwise, and it adds the arrow's height to
+// `sideOffset` when it places the card, so the gap to bridge is the two together.
+const ARROW_WIDTH = 10;
+const ARROW_HEIGHT = 5;
 
 /**
  * A rich preview that opens when the pointer rests on a trigger (or
@@ -41,19 +53,63 @@ import type { HoverCardContentProps, HoverCardProps, HoverCardTriggerProps } fro
  */
 function HoverCardRoot({
   children,
-  open,
-  defaultOpen,
+  open: openProp,
+  defaultOpen = false,
   onOpenChange,
-  openDelay = 300,
-  closeDelay = 300,
+  openDelay,
+  closeDelay,
+  disabled = false,
 }: HoverCardProps) {
+  const provider = useContext(HoverCardProviderContext);
+  const id = useId();
+  // The open state is held here, not in Radix, so that a disabled card can stay
+  // shut and a provider can close this one when another opens. Radix still gets
+  // a controlled `open`, which it handles as well as its own.
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+  const isControlled = openProp !== undefined;
+  const open = (isControlled ? openProp : uncontrolledOpen) && !disabled;
+
+  // Radix runs its own close timer after a trigger is left, even when the provider
+  // has already closed this card, and reports that as a change again. Only a real
+  // change is passed on.
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  const request = useCallback(
+    (next: boolean) => {
+      if (next && disabled) return;
+      if (next === openRef.current) return;
+      if (!isControlled) setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    },
+    [disabled, isControlled, onOpenChange],
+  );
+  // The provider's `close` has to stay one function while this card is open.
+  const requestRef = useRef(request);
+  useEffect(() => {
+    requestRef.current = request;
+  }, [request]);
+
+  const controls = provider?.controls;
+  useEffect(() => {
+    if (!controls || !open) return;
+    controls.reportOpen(id, () => requestRef.current(false));
+    return () => controls.reportClosed(id);
+  }, [controls, id, open]);
+
+  // A card opens at once while the provider is warm: another is open, or one
+  // closed a moment ago.
+  const effectiveOpenDelay = provider?.isWarm ? 0 : (openDelay ?? provider?.openDelay ?? 300);
+  const effectiveCloseDelay = closeDelay ?? provider?.closeDelay ?? 300;
+
   return (
     <HoverCardPrimitive.Root
       open={open}
-      defaultOpen={defaultOpen}
-      onOpenChange={onOpenChange}
-      openDelay={openDelay}
-      closeDelay={closeDelay}
+      onOpenChange={request}
+      openDelay={effectiveOpenDelay}
+      closeDelay={effectiveCloseDelay}
     >
       {children}
     </HoverCardPrimitive.Root>
@@ -117,8 +173,10 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
       avoidCollisions = true,
       collisionPadding = 8,
       hideArrow = false,
+      size = "md",
       container,
       className,
+      style,
       children,
       ...props
     },
@@ -138,12 +196,15 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
           alignOffset={alignOffset}
           avoidCollisions={avoidCollisions}
           collisionPadding={collisionPadding}
-          className={cx(styles.content, className)}
+          className={cx(styles.content, styles[size], className)}
+          // The bridge across the gap (see `.content::before`) is exactly as long as the gap:
+          // the offset, plus the arrow when there is one.
+          style={{ "--hover-card-side-offset": `${sideOffset + (hideArrow ? 0 : ARROW_HEIGHT)}px`, ...style } as CSSProperties}
           {...props}
         >
           {children}
           {!hideArrow && (
-            <HoverCardPrimitive.Arrow asChild>
+            <HoverCardPrimitive.Arrow asChild width={ARROW_WIDTH} height={ARROW_HEIGHT}>
               <OverlayArrow />
             </HoverCardPrimitive.Arrow>
           )}
@@ -154,12 +215,24 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
 );
 HoverCardContent.displayName = "HoverCard.Content";
 
+/**
+ * An image or video at the top of the card, filling its width: it bleeds out
+ * through the content's padding to the card's edges and takes the card's
+ * rounded top corners. Put it first inside `HoverCard.Content`.
+ */
+const HoverCardMedia = forwardRef<HTMLDivElement, HoverCardMediaProps>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cx(styles.media, className)} {...props} />
+));
+HoverCardMedia.displayName = "HoverCard.Media";
+
 type HoverCardComponent = typeof HoverCardRoot & {
   Trigger: typeof HoverCardTrigger;
   Content: typeof HoverCardContent;
+  Media: typeof HoverCardMedia;
 };
 
 export const HoverCard: HoverCardComponent = Object.assign(HoverCardRoot, {
   Trigger: HoverCardTrigger,
   Content: HoverCardContent,
+  Media: HoverCardMedia,
 });
