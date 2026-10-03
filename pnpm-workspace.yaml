@@ -64,7 +64,15 @@ overrides:
   # this newer advisory; 3.15.2 is the next (and latest) 3.x release,
   # confirmed to exist on the registry before pinning to it.
   read-yaml-file>js-yaml: ">=3.15.2 <4.0.0"
-  "@changesets/parse>js-yaml": ">=4.3.1"
+  # GHSA-r3ph-w7gj-g6xm: a second, unrelated js-yaml advisory (maxTotalMergeKeys
+  # doesn't count empty mappings, CPU exhaustion), vulnerable range >=5.0.0
+  # <=5.4.0, patched in 5.4.1. The floor below had no upper cap — exactly the
+  # undici mistake this file's own §3.1 commentary already warns about — so
+  # pnpm's resolver floated this past the 4.x line @changesets/parse@0.4.3
+  # actually declares (js-yaml: "^4.1.1") and onto the now-vulnerable 5.2.3.
+  # Capped to match, the same way its read-yaml-file sibling above already is.
+  # Found via a GitHub Dependabot alert, 2026-10-02.
+  "@changesets/parse>js-yaml": ">=4.3.1 <5.0.0"
   # GHSA-...-nanoid-zero-size (nanoid): custom generators can loop
   # indefinitely when size is 0, patched in 3.3.17. Dev-only, pulled in
   # transitively by the Vite/Storybook toolchain. Found via `pnpm audit`,
