@@ -1,7 +1,13 @@
 // The code shown under each story's "Show code" button on ScrollArea's Docs page.
 // See `07-storybook-and-documentation-standards.md` §4.2 and ADR-0020.
 
-import type { ScrollAreaScrollbarVisibility, ScrollAreaScrollbars, ScrollAreaSize, ScrollAreaVariant } from "./ScrollArea.types";
+import type {
+  ScrollAreaScrollbarVisibility,
+  ScrollAreaScrollbars,
+  ScrollAreaSize,
+  ScrollAreaTone,
+  ScrollAreaVariant,
+} from "./ScrollArea.types";
 
 export const scrollAreaSnippets = {
   vertical: `<ScrollArea style={{ maxHeight: "12rem" }}>
@@ -12,19 +18,22 @@ export const scrollAreaSnippets = {
 </ScrollArea>`,
 
   horizontal: `{/* scrollbars="horizontal" enables scrolling only sideways — content that overflows vertically would
-    be clipped instead */}
-<ScrollArea scrollbars="horizontal" style={{ maxWidth: "20rem" }}>
-  <div style={{ display: "flex", gap: "var(--dbm-space-4)", width: "max-content" }}>
-    <p>First column</p>
-    <p>Second column</p>
-    <p>Third column</p>
-  </div>
+    be clipped instead. No maxHeight: the region sizes to its own content's natural height. */}
+<ScrollArea scrollbars="horizontal">
+  <p style={{ whiteSpace: "nowrap" }}>A single line, long enough to overflow the region's own width.</p>
 </ScrollArea>`,
 
   both: `{/* scrollbars="both" offers both axes — for content that can genuinely overflow either way, e.g. a wide,
     tall grid or code block */}
-<ScrollArea scrollbars="both" style={{ maxHeight: "12rem", maxWidth: "20rem" }}>
-  <div style={{ width: "40rem" }}>Wide, tall content that overflows in both directions.</div>
+<ScrollArea scrollbars="both" style={{ maxHeight: "12rem" }}>
+  <p style={{ whiteSpace: "nowrap" }}>A single wide line…</p>
+  {/* …repeated with enough lines to also exceed 12rem of height */}
+</ScrollArea>`,
+
+  tone: `{/* tone="brand" colors the thumb with bg.brand/bg.brand-hover and, with showTrack, the track with
+    bg.brand-subtle — "neutral" (the default) is the same gray every other track/thumb pair uses */}
+<ScrollArea tone="brand" showTrack style={{ maxHeight: "12rem" }}>
+  <p>Content styled with the active brand's own colors.</p>
 </ScrollArea>`,
 
   ghost: `{/* variant="ghost" removes the outer border/corners for embedding inside a container that already
@@ -64,6 +73,8 @@ export interface ScrollAreaPlaygroundSnippetArgs {
   variant?: ScrollAreaVariant;
   size?: ScrollAreaSize;
   scrollbars?: ScrollAreaScrollbars;
+  showTrack?: boolean;
+  tone?: ScrollAreaTone;
   scrollbarVisibility?: ScrollAreaScrollbarVisibility;
   scrollHideDelay?: number;
   maxHeight?: string;
@@ -73,16 +84,18 @@ export interface ScrollAreaPlaygroundSnippetArgs {
 
 /**
  * The Playground's snippet, built from its current controls: only the props that differ from
- * their defaults (`bordered`, `md`, `vertical`, `hover`, 600, `ltr`), around a small real example.
- * `maxHeight` has no built-in default at all (the region simply never scrolls without one), so it's
- * always shown once set — including the Playground's own starting value, which is exactly what
- * makes the live demo scrollable in the first place.
+ * their defaults (`bordered`, `md`, `vertical`, `false`, `neutral`, `hover`, 600, `ltr`), around a
+ * small real example. `maxHeight` has no built-in default at all (the region simply never scrolls
+ * without one), so it's always shown once set — including the Playground's own starting value,
+ * which is exactly what makes the live demo scrollable in the first place.
  */
 export function scrollAreaPlaygroundSnippet(args: ScrollAreaPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.variant && args.variant !== "bordered") attributes.push(`variant="${args.variant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.scrollbars && args.scrollbars !== "vertical") attributes.push(`scrollbars="${args.scrollbars}"`);
+  if (args.showTrack) attributes.push("showTrack");
+  if (args.tone && args.tone !== "neutral") attributes.push(`tone="${args.tone}"`);
   if (args.scrollbarVisibility && args.scrollbarVisibility !== "hover") {
     attributes.push(`scrollbarVisibility="${args.scrollbarVisibility}"`);
   }
@@ -94,13 +107,12 @@ export function scrollAreaPlaygroundSnippet(args: ScrollAreaPlaygroundSnippetArg
 
   const style: string[] = [];
   if (args.maxHeight) style.push(`maxHeight: "${args.maxHeight}"`);
-  if (args.scrollbars === "both") style.push('maxWidth: "20rem"');
   if (style.length > 0) attributes.push(`style={{ ${style.join(", ")} }}`);
 
   const open = attributes.length > 0 ? `<ScrollArea ${attributes.join(" ")}>` : "<ScrollArea>";
   const content =
-    args.scrollbars === "both"
-      ? '\n  <div style={{ width: "40rem" }}>Wide, tall content.</div>\n'
-      : "\n  <p>First item</p>\n  <p>Second item</p>\n  <p>Third item</p>\n";
+    args.scrollbars === "vertical"
+      ? "\n  <p>First item</p>\n  <p>Second item</p>\n  <p>Third item</p>\n"
+      : '\n  <p style={{ whiteSpace: "nowrap" }}>A single line, long enough to overflow the region\'s own width.</p>\n';
   return `${open}${content}</ScrollArea>`;
 }

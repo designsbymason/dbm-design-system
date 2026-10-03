@@ -4,5 +4,6 @@ export type {
   ScrollAreaScrollbars,
   ScrollAreaScrollbarVisibility,
   ScrollAreaSize,
+  ScrollAreaTone,
   ScrollAreaVariant,
 } from "./ScrollArea.types";

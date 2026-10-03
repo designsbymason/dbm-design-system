@@ -53,17 +53,23 @@
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
-/* A visible track (`bg.track`, the same deliberately-faint token `Slider`/`ProgressBar`/`Switch`
-   use for their own tracks — the thumb carries the interactive affordance, the track is just a
-   faint boundary guide, the same ADR-0016 reasoning) — not just a transparent lane the thumb
-   floats over. */
+/* Transparent by default — an overlay scrollbar with just a floating thumb and no track, the more
+   common treatment this system defaults to. `showTrack` opts into a visible track (below). */
 .scrollbar {
-  background-color: var(--dbm-bg-track);
+  background-color: transparent;
   border-radius: var(--dbm-radius-full);
   display: flex;
   touch-action: none;
   transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
   user-select: none;
+}
+
+/* `showTrack` — `bg.track` (or, tinted, `--scroll-area-track-color` from `.toneBrand` below), the
+   same deliberately-faint token `Slider`/`ProgressBar`/`Switch` use for their own tracks — the
+   thumb carries the interactive affordance, the track is just a faint boundary guide, the same
+   ADR-0016 reasoning. */
+.showTrack {
+  background-color: var(--scroll-area-track-color, var(--dbm-bg-track));
 }
 
 .scrollbar[data-state="hidden"] {
@@ -103,13 +109,23 @@
    inline `width`/`height` size the thumb correctly along the main axis,
    while the default cross-axis stretch still fills the track's thickness. */
 .thumb {
-  background-color: var(--dbm-bg-neutral);
+  background-color: var(--scroll-area-thumb-color, var(--dbm-bg-neutral));
   border-radius: var(--dbm-radius-full);
   transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
 .thumb:hover {
-  background-color: var(--dbm-bg-neutral-hover);
+  background-color: var(--scroll-area-thumb-hover-color, var(--dbm-bg-neutral-hover));
+}
+
+/* `tone="brand"` — defined on `.scrollbar` (alongside `.toneBrand`) as custom properties, not
+   applied to `.thumb` directly, so the same values reach both `.thumb` (a child) and `.showTrack`
+   (the scrollbar element itself) through ordinary CSS custom-property inheritance, the same
+   "define once per tone, consume generically" pattern `Table`'s own tone classes use. */
+.toneBrand {
+  --scroll-area-thumb-color: var(--dbm-bg-brand);
+  --scroll-area-thumb-hover-color: var(--dbm-bg-brand-hover);
+  --scroll-area-track-color: var(--dbm-bg-brand-subtle);
 }
 
 /* Decorative filler where both scrollbars meet — not text, not

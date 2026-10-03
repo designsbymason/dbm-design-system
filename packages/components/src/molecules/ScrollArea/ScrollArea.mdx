@@ -11,6 +11,8 @@ export const propOrder = [
   "variant",
   "size",
   "scrollbars",
+  "showTrack",
+  "tone",
   "scrollbarVisibility",
   "scrollHideDelay",
   "maxHeight",
@@ -207,10 +209,13 @@ scrolling viewport (see `onScroll`'s own row below for why that one's different)
 
 ## Design tokens used
 
-<TokenRow token="bg.track" usage="scrollbar track background" />
-<TokenRow token="bg.neutral" usage="thumb background" />
-<TokenRow token="bg.neutral-hover" usage="thumb background on hover" />
+<TokenRow token="bg.track" usage="scrollbar track background, tone='neutral' (default) and showTrack" />
+<TokenRow token="bg.neutral" usage="thumb background, tone='neutral' (default)" />
+<TokenRow token="bg.neutral-hover" usage="thumb background on hover, tone='neutral' (default)" />
 <TokenRow token="bg.neutral-subtle" usage="corner fill, where both scrollbars meet" />
+<TokenRow token="bg.brand" usage="thumb background, tone='brand'" />
+<TokenRow token="bg.brand-hover" usage="thumb background on hover, tone='brand'" />
+<TokenRow token="bg.brand-subtle" usage="scrollbar track background, tone='brand' and showTrack" />
 <TokenRow token="border.default" usage="bordered variant's outer border" />
 <TokenRow token="border.focus" usage="viewport focus-visible outline color" />
 <TokenRow token="border-width.1" usage="bordered variant's outer border width" />

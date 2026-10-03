@@ -4,12 +4,25 @@ import { Card } from "../Card";
 import { ScrollArea } from "./ScrollArea";
 import { scrollAreaPlaygroundSnippet, scrollAreaSnippets } from "./ScrollArea.snippets";
 
-// Placeholder copy, not this project's own content — a demo needs enough text to genuinely
-// overflow a bounded box, not a description of ScrollArea itself.
-const loremParagraphs = [
-  "Erat purus id ultricies erat integer maecenas sagittis eget ante integer. Nisl donec fermentum mus vestibulum magna faucibus cursus commodo curabitur massa libero ac. Montes risus pellentesque, quam euismod egestas euismod vehicula tempus dui. Elementum varius ante curabitur penatibus porttitor integer quis sapien massa elementum lectus. Dictumst lacus donec at tincidunt blandit netus, donec dictum libero. Quis penatibus tristique ac mauris faucibus sollicitudin ullamcorper vehicula natoque ultricies.",
-  "Varius consectetur adipiscing elementum et lacinia, ornare nunc ante vitae? Duis nunc rhoncus sollicitudin nisl nunc proin risus. Interdum hac molestie aenean ornare facilisi enim imperdiet dictumst donec cum. Phasellus nunc cras malesuada dolor condimentum posuere vestibulum. Cum quam interdum, ultrices nullam mauris porta quis at urna eros.",
-  "Lacus mauris fusce augue nisl scelerisque quam hac orci a egestas sagittis ultrices. Dui venenatis ultrices maecenas elementum interdum ridiculus adipiscing ac nec. Imperdiet est morbi ridiculus; habitasse cursus enim. Ante porttitor faucibus condimentum ut natoque convallis sed sagittis. Accumsan ullamcorper interdum; fames egestas aliquam platea suscipit ridiculus. Facilisis maecenas habitant habitasse fusce viverra ultricies quis nisl venenatis dui laoreet. Enim laoreet tortor non justo habitasse donec sit. Metus sem leo congue est ut cras pretium.",
+// Real, educational sentences about ScrollArea itself — not placeholder copy — long enough
+// (individually and combined) to genuinely overflow every demo below, including the tallest,
+// widest ones. Grouped into paragraphs for the vertical-scroll demos (`educationalParagraphs`)
+// and used one sentence per line for the horizontal/both-axis demos (`DemoLongLines`), so both
+// demo styles share one real, single-sourced piece of writing instead of two disconnected ones.
+const educationalSentences = [
+  "Every browser and operating system draws its own native scrollbar a little differently, and most of them take up their own layout space all the time, whether or not there's anything to scroll.",
+  "ScrollArea replaces that with one consistent, token-driven scrollbar that looks the same everywhere it renders, floating over its content instead of reserving space for itself.",
+  "Wheel, trackpad, touch, and keyboard input all keep working exactly as they would with a native scrollbar — nothing about how someone actually scrolls changes.",
+  "The scrollbar itself can fade in only on hover, only while actively scrolling, stay visible all the time, or appear only once there's genuinely something to scroll.",
+  "The region becomes reachable by keyboard, and, once given an accessible name, announced as a landmark, only while its content actually overflows the space available to it.",
+  "A short list that already fits doesn't pick up an extra, meaningless tab stop, and a long one that later shrinks below the fold loses that tab stop automatically.",
+  "Overflow is measured live as content or the surrounding layout changes, never assumed once and left stale for the lifetime of the component.",
+];
+
+const educationalParagraphs = [
+  educationalSentences.slice(0, 2).join(" "),
+  educationalSentences.slice(2, 4).join(" "),
+  educationalSentences.slice(4, 7).join(" "),
 ];
 
 // ScrollArea itself adds no padding around its own content (an unopinionated wrapper, matching
@@ -18,7 +31,7 @@ const loremParagraphs = [
 function DemoParagraphs() {
   return (
     <div style={{ padding: "var(--dbm-space-4)" }}>
-      {loremParagraphs.map((paragraph, index) => (
+      {educationalParagraphs.map((paragraph, index) => (
         <p key={index} style={{ margin: 0, marginBlockStart: index === 0 ? 0 : "var(--dbm-space-4)" }}>
           {paragraph}
         </p>
@@ -27,23 +40,17 @@ function DemoParagraphs() {
   );
 }
 
-// Five lines, each long enough (from the same placeholder copy above, concatenated by sentence) to
-// overflow horizontally at any reasonable canvas width, `whiteSpace: "nowrap"` so a line never
-// wraps onto the next.
-const longLines = [
-  "Erat purus id ultricies erat integer maecenas sagittis eget ante integer. Nisl donec fermentum mus vestibulum magna faucibus cursus commodo curabitur massa libero ac.",
-  "Montes risus pellentesque, quam euismod egestas euismod vehicula tempus dui. Elementum varius ante curabitur penatibus porttitor integer quis sapien massa elementum lectus.",
-  "Dictumst lacus donec at tincidunt blandit netus, donec dictum libero. Quis penatibus tristique ac mauris faucibus sollicitudin ullamcorper vehicula natoque ultricies.",
-  "Varius consectetur adipiscing elementum et lacinia, ornare nunc ante vitae? Duis nunc rhoncus sollicitudin nisl nunc proin risus.",
-  "Interdum hac molestie aenean ornare facilisi enim imperdiet dictumst donec cum. Phasellus nunc cras malesuada dolor condimentum posuere vestibulum.",
-];
-
+// One sentence per line, `whiteSpace: "nowrap"` so a line never wraps onto the next — long enough,
+// individually, to overflow horizontally at any reasonable canvas width, and with enough lines
+// (seven) to also overflow a typical vertical constraint (e.g. the Playground's own 12rem default),
+// so switching `scrollbars` to "both" shows genuine overflow on both axes without a separate,
+// narrower demo.
 function DemoLongLines() {
   return (
     <div style={{ padding: "var(--dbm-space-4)" }}>
-      {longLines.map((line, index) => (
+      {educationalSentences.map((sentence, index) => (
         <p key={index} style={{ margin: 0, marginBlockStart: index === 0 ? 0 : "var(--dbm-space-3)", whiteSpace: "nowrap" }}>
-          {line}
+          {sentence}
         </p>
       ))}
     </div>
@@ -75,6 +82,17 @@ const meta: Meta<typeof ScrollArea> = {
       options: ["vertical", "horizontal", "both"],
       description: "Which scrollbar(s) to render, and which axis (or axes) actually scroll.",
       table: { defaultValue: { summary: "vertical" } },
+    },
+    showTrack: {
+      control: "boolean",
+      description: "Draws a visible track behind the thumb.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    tone: {
+      control: "select",
+      options: ["neutral", "brand"],
+      description: "The scrollbar's own color.",
+      table: { defaultValue: { summary: "neutral" } },
     },
     scrollbarVisibility: {
       control: "select",
@@ -111,6 +129,8 @@ const meta: Meta<typeof ScrollArea> = {
     variant: "bordered",
     size: "md",
     scrollbars: "vertical",
+    showTrack: false,
+    tone: "neutral",
     scrollbarVisibility: "hover",
     scrollHideDelay: 600,
     maxHeight: "12rem",
@@ -163,11 +183,7 @@ export const Horizontal: Story = {
 export const Both: Story = {
   name: "Both axes",
   parameters: { docs: { source: { code: scrollAreaSnippets.both } } },
-  argTypes: { scrollbars: { control: false }, maxHeight: { control: false } },
-  // Shorter than the meta default (12rem): DemoLongLines' own five lines plus padding land just
-  // under 12rem, so the region would only ever overflow horizontally at that height — this story
-  // is specifically about genuine overflow on both axes at once.
-  args: { maxHeight: "8rem" },
+  argTypes: { scrollbars: { control: false } },
   render: (args) => (
     <ScrollArea {...args} scrollbars="both">
       <DemoLongLines />
@@ -212,6 +228,37 @@ export const Sizes: Story = {
             // once the Playground's shared `aria-label` default started reaching every story.
             aria-label={`Scrollable content, size ${size}`}
             style={{ maxHeight: "8rem", width: "12rem" }}
+          >
+            <DemoParagraphs />
+          </ScrollArea>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const Tone: Story = {
+  parameters: { docs: { source: { code: scrollAreaSnippets.tone } } },
+  argTypes: {
+    tone: { control: false },
+    showTrack: { control: false },
+    scrollbarVisibility: { control: false },
+    "aria-label": { control: false },
+  },
+  // showTrack so the track's own tinted color (bg.brand-subtle for tone="brand") is visible too,
+  // not just the thumb.
+  render: (args) => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-6)", flexWrap: "wrap" }}>
+      {(["neutral", "brand"] as const).map((tone) => (
+        <div key={tone} style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+          <span style={{ fontSize: "var(--dbm-font-size-xs)", color: "var(--dbm-text-tertiary)" }}>{tone}</span>
+          <ScrollArea
+            {...args}
+            tone={tone}
+            showTrack
+            scrollbarVisibility="always"
+            aria-label={`Scrollable content, ${tone} tone`}
+            style={{ maxHeight: "8rem", width: "14rem" }}
           >
             <DemoParagraphs />
           </ScrollArea>

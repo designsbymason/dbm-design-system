@@ -5,6 +5,11 @@ import styles from "./ScrollArea.module.css";
 import type { ScrollAreaProps, ScrollAreaSize } from "./ScrollArea.types";
 import { useIsScrollable } from "./useIsScrollable";
 
+const toneClass: Record<"neutral" | "brand", string | undefined> = {
+  neutral: undefined,
+  brand: styles.toneBrand,
+};
+
 const sizeClass: Record<ScrollAreaSize, string | undefined> = {
   xs: styles.sizeXs,
   sm: styles.sizeSm,
@@ -51,6 +56,8 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
       variant = "bordered",
       size = "md",
       scrollbars = "vertical",
+      showTrack = false,
+      tone = "neutral",
       scrollbarVisibility = "hover",
       scrollHideDelay = 600,
       maxHeight,
@@ -103,12 +110,18 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
           {children}
         </ScrollAreaPrimitive.Viewport>
         {showVertical && (
-          <ScrollAreaPrimitive.Scrollbar orientation="vertical" className={cx(styles.scrollbar, sizeClass[size])}>
+          <ScrollAreaPrimitive.Scrollbar
+            orientation="vertical"
+            className={cx(styles.scrollbar, sizeClass[size], toneClass[tone], showTrack && styles.showTrack)}
+          >
             <ScrollAreaPrimitive.Thumb className={styles.thumb} />
           </ScrollAreaPrimitive.Scrollbar>
         )}
         {showHorizontal && (
-          <ScrollAreaPrimitive.Scrollbar orientation="horizontal" className={cx(styles.scrollbar, sizeClass[size])}>
+          <ScrollAreaPrimitive.Scrollbar
+            orientation="horizontal"
+            className={cx(styles.scrollbar, sizeClass[size], toneClass[tone], showTrack && styles.showTrack)}
+          >
             <ScrollAreaPrimitive.Thumb className={styles.thumb} />
           </ScrollAreaPrimitive.Scrollbar>
         )}

@@ -151,6 +151,38 @@ describe("ScrollArea", () => {
     scrollbars.forEach((scrollbar) => expect(scrollbar.className).toContain(styles.sizeLg));
   });
 
+  it("has no visible track by default", () => {
+    const { container } = render(<ScrollArea scrollbarVisibility="always">Content</ScrollArea>);
+    expect(container.querySelector(`.${styles.scrollbar}`)?.className).not.toContain(styles.showTrack);
+  });
+
+  it("applies the showTrack class to every rendered scrollbar when set", () => {
+    const { container } = render(
+      <ScrollArea scrollbars="both" scrollbarVisibility="always" showTrack>
+        Content
+      </ScrollArea>,
+    );
+    const scrollbars = container.querySelectorAll(`.${styles.scrollbar}`);
+    expect(scrollbars).toHaveLength(2);
+    scrollbars.forEach((scrollbar) => expect(scrollbar.className).toContain(styles.showTrack));
+  });
+
+  it("defaults to tone='neutral', applying no tone class", () => {
+    const { container } = render(<ScrollArea scrollbarVisibility="always">Content</ScrollArea>);
+    expect(container.querySelector(`.${styles.scrollbar}`)?.className).not.toContain(styles.toneBrand);
+  });
+
+  it("applies the toneBrand class to every rendered scrollbar when tone='brand'", () => {
+    const { container } = render(
+      <ScrollArea scrollbars="both" scrollbarVisibility="always" tone="brand">
+        Content
+      </ScrollArea>,
+    );
+    const scrollbars = container.querySelectorAll(`.${styles.scrollbar}`);
+    expect(scrollbars).toHaveLength(2);
+    scrollbars.forEach((scrollbar) => expect(scrollbar.className).toContain(styles.toneBrand));
+  });
+
   it("fires onScroll on the actual scrolling viewport, not the outer frame", () => {
     installOverflowSimulation({ y: true });
     const onScroll = vi.fn();

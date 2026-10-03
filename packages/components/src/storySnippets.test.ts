@@ -740,7 +740,7 @@ describe("ButtonGroup's Playground snippet", () => {
 describe("ScrollArea's Playground snippet", () => {
   it.each([
     {},
-    { variant: "ghost", size: "lg", scrollbars: "both", scrollbarVisibility: "always", scrollHideDelay: 300, maxHeight: "10rem", dir: "rtl", "aria-label": "Recent activity" },
+    { variant: "ghost", size: "lg", scrollbars: "both", showTrack: true, tone: "brand", scrollbarVisibility: "always", scrollHideDelay: 300, maxHeight: "10rem", dir: "rtl", "aria-label": "Recent activity" },
     { scrollbars: "horizontal", maxHeight: "8rem" },
     { size: "xs" },
   ])("%j is a real snippet", (args) => {
@@ -771,9 +771,17 @@ describe("ScrollArea's Playground snippet", () => {
     expect(scrollAreaPlaygroundSnippet({})).not.toContain("maxHeight");
   });
 
-  it("switches the demo content for scrollbars='both'", () => {
-    expect(scrollAreaPlaygroundSnippet({ scrollbars: "both" })).toContain("Wide, tall content");
-    expect(scrollAreaPlaygroundSnippet({ scrollbars: "vertical" })).not.toContain("Wide, tall content");
+  it("switches the demo content for a non-vertical scrollbars value", () => {
+    expect(scrollAreaPlaygroundSnippet({ scrollbars: "both" })).toContain("whiteSpace");
+    expect(scrollAreaPlaygroundSnippet({ scrollbars: "horizontal" })).toContain("whiteSpace");
+    expect(scrollAreaPlaygroundSnippet({ scrollbars: "vertical" })).not.toContain("whiteSpace");
+  });
+
+  it("writes showTrack and tone only when set to a non-default value", () => {
+    expect(scrollAreaPlaygroundSnippet({ showTrack: true })).toContain("showTrack");
+    expect(scrollAreaPlaygroundSnippet({ showTrack: false })).not.toContain("showTrack");
+    expect(scrollAreaPlaygroundSnippet({ tone: "brand" })).toContain('tone="brand"');
+    expect(scrollAreaPlaygroundSnippet({ tone: "neutral" })).not.toContain("tone");
   });
 });
 

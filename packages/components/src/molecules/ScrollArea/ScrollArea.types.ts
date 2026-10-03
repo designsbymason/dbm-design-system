@@ -28,6 +28,16 @@ export type ScrollAreaVariant = "bordered" | "ghost";
 export type ScrollAreaScrollbars = "vertical" | "horizontal" | "both";
 
 /**
+ * The scrollbar's own color. `"neutral"` (the default) is the same gray fill
+ * used everywhere else a passive track/thumb pair appears
+ * (`Slider`/`ProgressBar`/`Switch`). `"brand"` colors the thumb with
+ * `bg.brand`/`bg.brand-hover` and the track (when `showTrack` is set) with
+ * `bg.brand-subtle`, for a scrollbar that should read as an on-brand accent
+ * rather than a neutral utility control.
+ */
+export type ScrollAreaTone = "neutral" | "brand";
+
+/**
  * When the scrollbar(s) are shown. `"hover"` (the default) shows them while
  * the pointer is over the region, fading out after `scrollHideDelay`.
  * `"scroll"` shows them only while actively scrolling, fading out the same
@@ -65,6 +75,22 @@ export interface ScrollAreaProps
    * @default 'vertical'
    */
   scrollbars?: ScrollAreaScrollbars;
+  /**
+   * Draws a visible track behind the thumb. Off by default — an overlay
+   * scrollbar with no track, just a floating thumb, is the more common
+   * treatment this system defaults to; set this when the track's own
+   * boundary needs to be visible even before the thumb is (e.g.
+   * `scrollbarVisibility="hover"` with nothing else on screen hinting the
+   * region scrolls). Affects only the track's own background — the thumb's
+   * color is unaffected either way.
+   * @default false
+   */
+  showTrack?: boolean;
+  /**
+   * The scrollbar's own color.
+   * @default 'neutral'
+   */
+  tone?: ScrollAreaTone;
   /**
    * When the scrollbar(s) are visible. Purely a visual/interaction
    * preference — every value still allows scrolling by wheel, trackpad,
