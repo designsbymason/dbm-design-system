@@ -60,15 +60,33 @@
   border-radius: var(--dbm-radius-full);
   display: flex;
   touch-action: none;
-  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
   user-select: none;
 }
 
 /* `showTrack` — `bg.track` (or, tinted, `--scroll-area-track-color` from `.toneBrand` below), the
    same deliberately-faint token `Slider`/`ProgressBar`/`Switch` use for their own tracks — the
    thumb carries the interactive affordance, the track is just a faint boundary guide, the same
-   ADR-0016 reasoning. */
+   ADR-0016 reasoning. Half-opacity at rest, full once hovered or actively dragged (`:active`) — a
+   plain CSS `opacity` on `.scrollbar` itself was not an option, since the thumb is a child of this
+   same element and would fade along with it; `color-mix()` blends only this element's own
+   `background-color` toward transparent instead, leaving the thumb's own separate, opaque
+   `background-color` (below) completely unaffected. Radix sets pointer capture on this element at
+   drag-start (confirmed in its own source), so `:hover`/`:active` both stay true for the entire
+   drag even if the pointer moves outside the scrollbar's visible bounds — "hovered or interacted
+   with" in one pair of selectors, not two separate mechanisms. */
 .showTrack {
+  background-color: color-mix(
+    in srgb,
+    var(--scroll-area-track-color, var(--dbm-bg-track)) calc(var(--dbm-opacity-50) * 100%),
+    transparent
+  );
+}
+
+.showTrack:hover,
+.showTrack:active {
   background-color: var(--scroll-area-track-color, var(--dbm-bg-track));
 }
 
