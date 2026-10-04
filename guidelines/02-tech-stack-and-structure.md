@@ -133,6 +133,8 @@ Dependabot version updates are off ([ADR-0022](adr/0022-dependency-updates-are-a
 3. **GitHub Actions pins** in `.github/workflows/`: for each `uses:`, check for a newer major and read the `runs.using` runtime in that version's `action.yml`. Every pin should declare a runtime GitHub still supports (`node24` as of 2026-09; a Node 20 removal was what forced the bump on 2026-09-20). Read its release notes against the inputs the workflows actually pass it, not against everything it accepts.
 4. After a Storybook bump, re-verify per `07-storybook-and-documentation-standards.md` §9. After a Playwright bump, confirm it supports the Ubuntu image `browser-tests` runs on (support arrives per Playwright version; Ubuntu 26.04 needed 1.61 or later) and that the visual baseline still matches.
 
+**Adding a dependency while Storybook is running.** The dev server's pre-bundle cache can end up serving two copies of React to the new package (an "Invalid hook call … reading 'useMemo'" from the new component), while the real-browser Vitest run passes. A plain restart did not clear it; deleting `packages/components/node_modules/.cache/storybook` and restarting did (found adding `@radix-ui/react-toolbar`, 2026-10-03).
+
 **Testing a workflow change.** CI triggers only on pushes to `main` and on pull requests, and pull requests are disabled, so there is no branch a workflow can be tried on: the only real test is a push to `main`.
 - Keep such changes small, one concern per commit, and validate the YAML locally first.
 - For anything uncertain, add an informational leg (`continue-on-error: true`) instead of changing the required one.

@@ -3,8 +3,8 @@
 Molecule, Inputs & Forms category. Item 27 of the itemized molecule build order in
 `04-component-inventory.md` (nominally ⚪, promoted ahead of its tier because `Table Toolbar` builds on it).
 A bar of actions that is one tab stop with arrow-key movement between its items, wrapping Radix
-Toolbar (`@radix-ui/react-toolbar` ^1.1.19, new dependency). Built 2026-10-03. **Not yet declared
-Finalized** — the user declares that. The decision is [ADR-0032](../adr/0032-toolbar-puts-radix-toolbar-roving-focus-behind-wrapper-parts-and-reuses-buttongroups-context.md).
+Toolbar (`@radix-ui/react-toolbar` ^1.1.19, new dependency). Built 2026-10-03, **Finalized 2026-10-03**
+(declared by the user after the final review below and the three decisions that followed it). The decision is [ADR-0032](../adr/0032-toolbar-puts-radix-toolbar-roving-focus-behind-wrapper-parts-and-reuses-buttongroups-context.md).
 
 ## What it is
 
@@ -50,7 +50,7 @@ primitive tokens only (the Docs page lists them, and a test keeps the list true)
 
 ## Follow-ups after the first push (2026-10-03, user review)
 
-Toolbar was not yet declared Finalized, so these are part of the build, not a reopening.
+Toolbar was not yet declared Finalized then, so these are part of the build, not a reopening.
 
 - **`align` added** (`start` default, `center`, `end`), answering "how do developers align the items once `fullWidth`
   gives the bar room?". `align` is the shared name for this (`Tabs`, `EmptyState`, `Divider`); it maps to
@@ -252,3 +252,16 @@ Not covered: only Chromium was run (the hidden scrollbar and `:dir()` are untest
   step beyond the recorded decision, taken because the default change altered its premise; easy to revert to inner-bar-only.
 - Each of the three has a test that fails on its mutant (toggle default back to `outlined`; `className` on the inner bar;
   default back to `visible`).
+
+## Finalized, 2026-10-03
+
+Declared by the user after the final review and its three follow-up decisions (subtle toggle-group default, `scroll` as the
+default `overflow`, `className`/`style` on the outermost box). State at declaration: lint clean; 5,274 unit and 1,011 real-browser
+tests passing; build, per-component bundle budget (Toolbar 5.48KB JS / 3.01KB CSS gzipped) and token coverage clean; CI green on
+`main`. The decisions are [ADR-0032](../adr/0032-toolbar-puts-radix-toolbar-roving-focus-behind-wrapper-parts-and-reuses-buttongroups-context.md)
+and [ADR-0033](../adr/0033-toolbar-togglegroup-is-togglegroup-with-its-own-roving-focus-turned-off.md). The consumed or extended
+components (`IconButton`, `ToggleGroup`, `Select`, `Tabs`) each stayed Finalized through the three-question test; their own review
+files hold the entries. Not covered, and not claimed: Safari and Firefox, and real touch scrolling.
+
+Later changes get a dated entry here, and go through `06-engineering-standards.md` §9's Finalized rules (ask first, then the
+three-question test).
