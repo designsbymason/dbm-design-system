@@ -1,11 +1,13 @@
-import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
-import { forwardRef, useId, useMemo, useRef } from "react";
+import { cx, useResolvedResponsiveValue, type SpaceValue } from "@dbm-design-system/primitives";
+import { forwardRef, useId, useMemo, useRef, type CSSProperties } from "react";
 import { FieldError } from "../../atoms/FieldError";
 import { FieldHelperText } from "../../atoms/FieldHelperText";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { FieldGroupProvider, useFieldGroup } from "../../internal/fieldGroupContext";
 import styles from "./FieldGroup.module.css";
+import { FieldGroupLayoutProvider, useFieldGroupColumns } from "./fieldGroupLayoutContext";
 import type {
+  FieldGroupItemProps,
   FieldGroupOrientation,
   FieldGroupProps,
   FieldGroupVariant,
@@ -46,18 +48,22 @@ const sizeClass = {
  * <FieldGroup legend="Contact" error="Give us an email or a phone number">…</FieldGroup>
  * ```
  */
-export const FieldGroup = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
+const FieldGroupRoot = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
   (
     {
       legend,
       children,
       description,
       error,
+      required = false,
       hideLegend = false,
       variant = "ghost",
       size,
+      legendSize,
       orientation = "vertical",
+      columns,
       gap = 4,
+      columnGap,
       disabled = false,
       id,
       className,
@@ -77,6 +83,14 @@ export const FieldGroup = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
       "vertical",
     );
 
+    const resolvedColumns = useResolvedResponsiveValue<number | undefined>(columns, undefined);
+    const resolvedGap = useResolvedResponsiveValue<SpaceValue>(gap, 4);
+    const resolvedColumnGap = useResolvedResponsiveValue<SpaceValue | undefined>(columnGap, undefined);
+    const gridColumns =
+      resolvedColumns !== undefined && Number.isInteger(resolvedColumns) && resolvedColumns > 0
+        ? resolvedColumns
+        : null;
+
     // A group inside another keeps what the outer one set: its own settings win, what it leaves out comes
     // from the outer group, and a disabled outer group disables the inner fields too. Without this the inner
     // provider would replace the outer value and silently drop both.
@@ -93,8 +107,10 @@ export const FieldGroup = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
     const hasError = Boolean(error);
     const hasDescription = Boolean(description);
     const hasLegend = legend !== null && legend !== undefined && legend !== false && legend !== "";
+    // One message at a time, as in FormField: the error replaces the description.
+    const showDescription = hasDescription && !hasError;
     const describedBy =
-      [ariaDescribedBy, hasDescription ? descriptionId : undefined, hasError ? errorId : undefined]
+      [ariaDescribedBy, showDescription ? descriptionId : undefined, hasError ? errorId : undefined]
         .filter(Boolean)
         .join(" ") || undefined;
 
@@ -110,8 +126,19 @@ export const FieldGroup = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
 
     const legendClassName = cx(
       styles.legend,
-      sizeClass[size ?? parentSize ?? "md"],
+      sizeClass[legendSize ?? size ?? parentSize ?? "md"],
       effectiveDisabled && styles.disabled,
+    );
+    const legendContent = (
+      <>
+        {legend}
+        {required && !hideLegend && (
+          <span className={styles.required} aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </>
     );
 
     return (
@@ -130,17 +157,17 @@ export const FieldGroup = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
           hasError && styles.invalid,
           className,
         )}
-        style={{ ["--field-group-gap" as string]: `var(--dbm-space-${gap})`, ...style }}
+        style={style}
       >
         {hasLegend &&
           (hideLegend ? (
             <VisuallyHidden asChild>
-              <legend>{legend}</legend>
+              <legend>{legendContent}</legend>
             </VisuallyHidden>
           ) : (
-            <legend className={legendClassName}>{legend}</legend>
+            <legend className={legendClassName}>{legendContent}</legend>
           ))}
-        {hasDescription && (
+        {showDescription && (
           <FieldHelperText id={descriptionId} disabled={effectiveDisabled} className={styles.description}>
             {description}
           </FieldHelperText>
@@ -148,11 +175,21 @@ export const FieldGroup = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
         <div
           className={cx(
             styles.body,
-            resolvedOrientation === "horizontal" && styles.horizontal,
-            (hasDescription || (hasLegend && !hideLegend)) && styles.bodySpaced,
+            gridColumns === null && resolvedOrientation === "horizontal" && styles.horizontal,
+            gridColumns !== null && styles.columns,
+            (showDescription || (hasLegend && !hideLegend)) && styles.bodySpaced,
           )}
+          style={
+            {
+              "--field-group-gap": `var(--dbm-space-${resolvedGap})`,
+              "--field-group-column-gap": `var(--dbm-space-${resolvedColumnGap ?? resolvedGap})`,
+              ...(gridColumns !== null ? { "--field-group-columns": String(gridColumns) } : {}),
+            } as CSSProperties
+          }
         >
-          <FieldGroupProvider value={settings}>{children}</FieldGroupProvider>
+          <FieldGroupProvider value={settings}>
+            <FieldGroupLayoutProvider value={gridColumns}>{children}</FieldGroupLayoutProvider>
+          </FieldGroupProvider>
         </div>
         {hasError && (
           <FieldError id={errorId} disabled={effectiveDisabled} className={styles.error}>
@@ -164,4 +201,57 @@ export const FieldGroup = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
   },
 );
 
-FieldGroup.displayName = "FieldGroup";
+FieldGroupRoot.displayName = "FieldGroup";
+
+function hasNonPositiveSpan(span: number | undefined) {
+  return span !== undefined && (!Number.isInteger(span) || span <= 0);
+}
+
+/**
+ * One cell of a `FieldGroup` that sets `columns`: holds a field, and takes a `span` of the columns. Elsewhere
+ * (a stacked or `horizontal` group) it is a plain wrapper and the span does nothing.
+ *
+ * @example
+ * ```tsx
+ * <FieldGroup legend="Address" columns={{ base: 1, md: 3 }}>
+ *   <FieldGroup.Item span={{ base: 1, md: 3 }}>…street…</FieldGroup.Item>
+ *   <FieldGroup.Item span={2}>…city…</FieldGroup.Item>
+ *   <FieldGroup.Item>…postcode…</FieldGroup.Item>
+ * </FieldGroup>
+ * ```
+ */
+const FieldGroupItem = forwardRef<HTMLDivElement, FieldGroupItemProps>(
+  ({ span = 1, className, style, ...props }, ref) => {
+    const columns = useFieldGroupColumns();
+    const resolvedSpan = useResolvedResponsiveValue<number>(span, 1);
+
+    const hasWarnedRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (hasNonPositiveSpan(resolvedSpan) && !hasWarnedRef.current) {
+        hasWarnedRef.current = true;
+        console.warn(
+          "FieldGroup.Item: `span` must be a positive whole number — anything else is invalid per the CSS Grid spec, so the browser would ignore the placement instead of clamping it.",
+        );
+      }
+    }
+
+    // A span wider than the grid forces the browser to widen the grid to fit it, which would keep a narrow
+    // screen's one-column grid wide, so clamp it to the columns the group has right now.
+    const effective = hasNonPositiveSpan(resolvedSpan) ? 1 : resolvedSpan;
+    const clamped = columns === null ? effective : Math.min(effective, columns);
+
+    return (
+      <div
+        {...props}
+        ref={ref}
+        className={cx(styles.item, className)}
+        style={{ ...(clamped !== 1 ? { gridColumn: `span ${clamped}` } : {}), ...style }}
+      />
+    );
+  },
+);
+FieldGroupItem.displayName = "FieldGroup.Item";
+
+type FieldGroupComponent = typeof FieldGroupRoot & { Item: typeof FieldGroupItem };
+
+export const FieldGroup: FieldGroupComponent = Object.assign(FieldGroupRoot, { Item: FieldGroupItem });

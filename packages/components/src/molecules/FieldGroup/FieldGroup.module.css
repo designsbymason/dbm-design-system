@@ -103,9 +103,10 @@
    up zero wide at the far edge. */
 .body {
   clear: both;
+  column-gap: var(--field-group-column-gap, var(--field-group-gap));
   display: flex;
   flex-direction: column;
-  gap: var(--field-group-gap);
+  row-gap: var(--field-group-gap);
 }
 
 /* Padding, not margin: a cleared box's top margin is absorbed by the clearance, so a margin here does nothing. */
@@ -124,6 +125,22 @@
 .horizontal > * {
   flex: 1 1 var(--dbm-field-group-field-min-width);
   min-inline-size: 0;
+}
+
+/* Equal columns, for fields of different widths: each FieldGroup.Item spans however many it asks for. */
+.columns {
+  align-items: start;
+  display: grid;
+  grid-template-columns: repeat(var(--field-group-columns, 1), minmax(0, 1fr));
+}
+
+.item {
+  min-inline-size: 0;
+}
+
+/* The legend's required marker, as FieldLabel draws it. */
+.required {
+  color: var(--dbm-text-danger);
 }
 
 .error {

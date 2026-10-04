@@ -89,8 +89,9 @@ import { FormField, Input } from "@dbm-design-system/components";
 - Reach for `error` once the field actually fails validation, and `helperText` for neutral,
   always-relevant guidance — the two are mutually exclusive here, not stacked.
 - Let the control's own visual size (`Input`'s `size`, `Select`'s `size`, etc.) match `FormField`'s
-  `size` yourself — it isn't cascaded automatically, since this API already has you author the
-  control explicitly on the same line.
+  `size` yourself — on its own, a field's `size` sizes only its label, since this API already has you
+  author the control explicitly on the same line. Inside a `FieldGroup` that sets a `size`, the field
+  also hands that size to the control through `fieldProps.size`, so spreading `fieldProps` sizes it too.
 
 </Callout>
 <Callout tone="danger" title="Don't">

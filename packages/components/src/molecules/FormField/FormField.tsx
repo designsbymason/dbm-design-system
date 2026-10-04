@@ -58,6 +58,8 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
     const group = useFieldGroup();
     const disabled = disabledProp || Boolean(group?.disabled);
     const size = sizeProp ?? group?.size ?? "md";
+    // Only a group that sets a size reaches the control with it; a field on its own sizes just its label.
+    const controlSize = group?.size !== undefined ? size : undefined;
 
     const generatedId = useId();
     const baseId = id ?? generatedId;
@@ -87,6 +89,7 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
           hasError,
           disabled,
           required,
+          ...(controlSize ? { size: controlSize } : {}),
         })}
         {hasError ? (
           <FieldError id={errorId} disabled={disabled}>

@@ -29,6 +29,10 @@ const meta: Meta<typeof FieldGroup> = {
       control: "text",
       description: "An error about the group as a whole, shown below the fields. Its presence marks the group invalid.",
     },
+    required: {
+      description: "Marks the legend with a required-indicator asterisk — visual only, since a group role supports no aria-required.",
+      table: { defaultValue: { summary: "false" } },
+    },
     hideLegend: {
       description: "Keeps the legend for assistive tech and removes it from the page.",
       table: { defaultValue: { summary: "false" } },
@@ -42,21 +46,40 @@ const meta: Meta<typeof FieldGroup> = {
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
-      description: "Font size of the legend, and the default size of every FormField inside.",
+      description:
+        "The default size of every FormField inside — its label, and the control it hands its size to — which a field can override. Also the legend's size unless legendSize is set.",
       table: { defaultValue: { summary: '"md"' } },
+    },
+    // The three props below have no value of their own by default, so their live controls are on the Playground
+    // story alone (with an "off"/"default" choice that isn't a real value); everywhere else they are not controls.
+    legendSize: {
+      control: false,
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "Font size of the legend alone, so a large section title can sit over ordinary-sized fields. Defaults to the group's size.",
     },
     orientation: {
       control: "select",
       options: ["vertical", "horizontal"],
       description:
-        "Stack the fields, or put them side by side and wrap the next onto its own line when a field would be too narrow. Takes a breakpoint map.",
+        "Stack the fields, or put them side by side and wrap the next onto its own line when a field would be too narrow. Takes a breakpoint map. Ignored when columns is set.",
       table: { defaultValue: { summary: '"vertical"' } },
+    },
+    columns: {
+      control: false,
+      options: [1, 2, 3, 4],
+      description:
+        "A number of equal columns, or a breakpoint map, for fields of different widths: wrap each in FieldGroup.Item and give it a span. Takes precedence over orientation.",
     },
     gap: {
       control: "select",
       options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
-      description: "The space between fields, as a step on the spacing scale.",
+      description: "The space between rows of fields, as a step on the spacing scale — a single value or a breakpoint map. Also the column gap unless columnGap is set.",
       table: { defaultValue: { summary: "4" } },
+    },
+    columnGap: {
+      control: false,
+      options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
+      description: "The space between side-by-side fields, when it should differ from gap. Defaults to gap.",
     },
     disabled: {
       description: "Disables the whole group: native controls through the fieldset, every FormField inside, and nested groups.",
@@ -76,6 +99,7 @@ const meta: Meta<typeof FieldGroup> = {
     legend: "Shipping address",
     description: "",
     error: "",
+    required: false,
     hideLegend: false,
     variant: "ghost",
     size: "md",
@@ -96,6 +120,21 @@ const meta: Meta<typeof FieldGroup> = {
 
 export default meta;
 
+/** The Playground's "default"/"off" choices aren't real values; turn them back into "leave the prop out". */
+const fromPlayground = (args: Record<string, unknown>) => {
+  const { legendSize, columns, columnGap, ...rest } = args as {
+    legendSize?: string;
+    columns?: string | number;
+    columnGap?: string | number;
+  };
+  return {
+    ...rest,
+    legendSize: legendSize === "default" || legendSize === undefined ? undefined : legendSize,
+    columns: columns === "off" || columns === undefined ? undefined : Number(columns),
+    columnGap: columnGap === "default" || columnGap === undefined ? undefined : Number(columnGap),
+  };
+};
+
 type Story = StoryObj<typeof FieldGroup>;
 
 const column = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-8)", maxWidth: "40rem" } as const;
@@ -108,11 +147,27 @@ const two = (
 
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
+  args: { legendSize: "default", columns: "off", columnGap: "default" } as unknown as Story["args"],
+  argTypes: {
+    legendSize: { control: "select", options: ["default", "xs", "sm", "md", "lg", "xl"] },
+    columns: { control: "select", options: ["off", 2, 3, 4] },
+    columnGap: { control: "select", options: ["default", 0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32] },
+  },
+  render: (args) => (
+    <div style={{ maxWidth: "40rem" }}>
+      <FieldGroup {...(fromPlayground(args as unknown as Record<string, unknown>) as typeof args)}>
+        <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+        <FormField label="City">{(field) => <Input {...field} />}</FormField>
+        <FormField label="Postcode">{(field) => <Input {...field} />}</FormField>
+      </FieldGroup>
+    </div>
+  ),
   parameters: {
     docs: {
       source: {
         type: "dynamic",
-        transform: (_code: string, context: StoryContext) => fieldGroupPlaygroundSnippet(context.args),
+        transform: (_code: string, context: StoryContext) =>
+          fieldGroupPlaygroundSnippet(fromPlayground(context.args as Record<string, unknown>)),
       },
     },
   },
@@ -207,8 +262,64 @@ export const SizeCascade: Story = {
   render: (args) => (
     <div style={{ maxWidth: "40rem" }}>
       <FieldGroup {...args} legend="Large group" size="lg">
-        <FormField label="Inherits lg">{(field) => <Input {...field} size="lg" />}</FormField>
-        <FormField label="Own size: sm" size="sm">{(field) => <Input {...field} size="sm" />}</FormField>
+        <FormField label="Inherits lg">{(field) => <Input {...field} />}</FormField>
+        <FormField label="Own size: sm" size="sm">{(field) => <Input {...field} />}</FormField>
+      </FieldGroup>
+    </div>
+  ),
+};
+
+export const Columns: Story = {
+  name: "Columns and spans",
+  parameters: { docs: { source: { code: fieldGroupSnippets.columns } } },
+  argTypes: { legend: { control: false }, orientation: { control: false } },
+  render: (args) => (
+    <div style={{ maxWidth: "48rem" }}>
+      <FieldGroup {...args} legend="Delivery address" columns={{ base: 1, md: 3 }}>
+        <FieldGroup.Item span={{ base: 1, md: 3 }}>
+          <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+        <FieldGroup.Item span={{ base: 1, md: 2 }}>
+          <FormField label="City">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+        <FieldGroup.Item>
+          <FormField label="Postcode">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+      </FieldGroup>
+    </div>
+  ),
+};
+
+export const LegendSizeAndRequired: Story = {
+  name: "Legend size and required",
+  parameters: { docs: { source: { code: fieldGroupSnippets.legend } } },
+  argTypes: { legend: { control: false }, required: { control: false }, size: { control: false } },
+  render: (args) => (
+    <div style={{ maxWidth: "40rem" }}>
+      <FieldGroup
+        {...args}
+        legend="Account details"
+        legendSize="xl"
+        size="sm"
+        required
+        description="All of these are needed to create your account."
+      >
+        {two}
+      </FieldGroup>
+    </div>
+  ),
+};
+
+export const Gaps: Story = {
+  name: "Row and column gaps",
+  parameters: { docs: { source: { code: fieldGroupSnippets.gaps } } },
+  argTypes: { legend: { control: false }, gap: { control: false }, orientation: { control: false } },
+  render: (args) => (
+    <div style={{ maxWidth: "48rem" }}>
+      <FieldGroup {...args} legend="Tight rows, wide columns" orientation="horizontal" gap={{ base: 2, md: 3 }} columnGap={{ base: 4, md: 10 }}>
+        <FormField label="First name">{(field) => <Input {...field} />}</FormField>
+        <FormField label="Middle name">{(field) => <Input {...field} />}</FormField>
+        <FormField label="Last name">{(field) => <Input {...field} />}</FormField>
       </FieldGroup>
     </div>
   ),
@@ -221,11 +332,15 @@ const noControls = {
   description: { control: false },
   error: { control: false },
   hideLegend: { control: false },
+  required: { control: false },
   variant: { control: false },
   size: { control: false },
   orientation: { control: false },
   gap: { control: false },
   disabled: { control: false },
+  legendSize: { control: false },
+  columns: { control: false },
+  columnGap: { control: false },
 } as const;
 
 export const LegendLayoutInteraction: Story = {
@@ -355,5 +470,90 @@ export const ForcedColorsInteraction: Story = {
     } finally {
       await emulate("none");
     }
+  },
+};
+
+export const ColumnsInteraction: Story = {
+  name: "Columns: spans give the cells their widths, and the gaps are the ones asked for — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div data-testid="frame" style={{ width: "48rem" }}>
+      <FieldGroup legend="Delivery address" columns={3} gap={3} columnGap={10}>
+        <FieldGroup.Item span={3} data-testid="street">
+          <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+        <FieldGroup.Item span={2} data-testid="city">
+          <FormField label="City">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+        <FieldGroup.Item data-testid="postcode">
+          <FormField label="Postcode">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+      </FieldGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const rect = (id: string) => within(canvasElement).getByTestId(id).getBoundingClientRect();
+    const street = rect("street");
+    const city = rect("city");
+    const postcode = rect("postcode");
+    // Street takes a whole row; city and postcode share the next, two to one.
+    await expect(postcode.top).toBeCloseTo(city.top, 0);
+    await expect(city.top).toBeGreaterThan(street.bottom);
+    await expect(Math.round(street.width)).toBeGreaterThan(Math.round(city.width + postcode.width));
+    const column = (street.width - 2 * 40) / 3;
+    await expect(city.width).toBeCloseTo(column * 2 + 40, 0);
+    await expect(postcode.width).toBeCloseTo(column, 0);
+    // The gaps: 10 steps (40px) between columns, 3 steps (12px) between rows.
+    await expect(postcode.left - city.right).toBeCloseTo(40, 0);
+    await expect(city.top - street.bottom).toBeCloseTo(12, 0);
+  },
+};
+
+export const ColumnsOnAPhoneInteraction: Story = {
+  name: "Columns on a phone: a responsive map collapses to one column, and a wide span doesn't keep the grid wide — interaction test",
+  tags: ["!dev"],
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  argTypes: noControls,
+  render: () => (
+    <FieldGroup legend="Delivery address" columns={{ base: 1, md: 3 }}>
+      <FieldGroup.Item span={{ base: 3, md: 3 }} data-testid="street">
+        <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+      </FieldGroup.Item>
+      <FieldGroup.Item span={2} data-testid="city">
+        <FormField label="City">{(field) => <Input {...field} />}</FormField>
+      </FieldGroup.Item>
+      <FieldGroup.Item data-testid="postcode">
+        <FormField label="Postcode">{(field) => <Input {...field} />}</FormField>
+      </FieldGroup.Item>
+    </FieldGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(768);
+    const group = canvasElement.querySelector("fieldset")!.getBoundingClientRect();
+    const rect = (id: string) => within(canvasElement).getByTestId(id).getBoundingClientRect();
+    for (const id of ["street", "city", "postcode"]) {
+      await expect(Math.round(rect(id).width)).toBe(Math.round(rect("street").width));
+    }
+    await expect(rect("street").width).toBeLessThanOrEqual(group.width);
+    await expect(rect("city").top).toBeGreaterThan(rect("street").bottom);
+    await expect(rect("postcode").top).toBeGreaterThan(rect("city").bottom);
+  },
+};
+
+export const ErrorReplacesDescriptionInteraction: Story = {
+  name: "An error replaces the description, and the group is described by the error — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <FieldGroup legend="Contact" description="Only for orders" error="Give an email or a phone number">
+      {two}
+    </FieldGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText("Only for orders")).toBeNull();
+    const group = canvas.getByRole("group", { name: "Contact" });
+    await expect(group).toHaveAccessibleDescription("Give an email or a phone number");
   },
 };

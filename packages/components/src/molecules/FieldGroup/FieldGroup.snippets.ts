@@ -52,11 +52,47 @@ ${field("Email", "    ", 'type="email"')}
   </FieldGroup>
 </FieldGroup>`,
 
-  size: `{/* size sets the legend's type size, and is the default size for every FormField's label inside (a field's own size wins).
-    It does not size the controls: set each Input's size yourself. */}
+  columns: `{/* columns gives the group a grid; wrap each field in FieldGroup.Item and give it a span (a number, or a breakpoint map) */}
+<FieldGroup legend="Delivery address" columns={{ base: 1, md: 3 }}>
+  <FieldGroup.Item span={{ base: 1, md: 3 }}>
+${field("Street", "    ")}
+  </FieldGroup.Item>
+  <FieldGroup.Item span={{ base: 1, md: 2 }}>
+${field("City", "    ")}
+  </FieldGroup.Item>
+  <FieldGroup.Item>
+${field("Postcode", "    ")}
+  </FieldGroup.Item>
+</FieldGroup>`,
+
+  legend: `{/* legendSize sizes the legend alone; size is the default for every field inside; required marks the legend (visual only) */}
+<FieldGroup
+  legend="Account details"
+  legendSize="xl"
+  size="sm"
+  required
+  description="All of these are needed to create your account."
+>
+${contact}
+</FieldGroup>`,
+
+  gaps: `{/* gap is the space between rows, columnGap between side-by-side fields (it defaults to gap); both take a breakpoint map */}
+<FieldGroup
+  legend="Tight rows, wide columns"
+  orientation="horizontal"
+  gap={{ base: 2, md: 3 }}
+  columnGap={{ base: 4, md: 10 }}
+>
+${field("First name")}
+${field("Middle name")}
+${field("Last name")}
+</FieldGroup>`,
+
+  size: `{/* size is the default for every FormField inside — its label, and the control it hands its size to when you spread
+    {...field} (a field's own size wins) — and the legend's size unless legendSize is set */}
 <FieldGroup legend="Large group" size="lg">
-  <FormField label="Inherits lg">{(field) => <Input {...field} size="lg" />}</FormField>
-  <FormField label="Own size: sm" size="sm">{(field) => <Input {...field} size="sm" />}</FormField>
+  <FormField label="Inherits lg">{(field) => <Input {...field} />}</FormField>
+  <FormField label="Own size: sm" size="sm">{(field) => <Input {...field} />}</FormField>
 </FieldGroup>`,
 } as const;
 
@@ -65,11 +101,15 @@ export interface FieldGroupPlaygroundSnippetArgs {
   legend?: string;
   description?: string;
   error?: string;
+  required?: boolean;
   hideLegend?: boolean;
   variant?: string;
   size?: string;
+  legendSize?: string;
   orientation?: unknown;
+  columns?: number;
   gap?: number | string;
+  columnGap?: number | string;
   disabled?: boolean;
 }
 
@@ -82,11 +122,15 @@ export function fieldGroupPlaygroundSnippet(args: FieldGroupPlaygroundSnippetArg
   const attributes: string[] = [`legend=${quote(args.legend || "Shipping address")}`];
   if (args.description) attributes.push(`description=${quote(args.description)}`);
   if (args.error) attributes.push(`error=${quote(args.error)}`);
+  if (args.required) attributes.push("required");
   if (args.hideLegend) attributes.push("hideLegend");
   if (args.variant && args.variant !== "ghost") attributes.push(`variant="${args.variant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.legendSize) attributes.push(`legendSize="${args.legendSize}"`);
   if (args.orientation && args.orientation !== "vertical") attributes.push(`orientation="${String(args.orientation)}"`);
+  if (args.columns) attributes.push(`columns={${args.columns}}`);
   if (args.gap !== undefined && Number(args.gap) !== 4) attributes.push(`gap={${Number(args.gap)}}`);
+  if (args.columnGap !== undefined && !Number.isNaN(args.columnGap)) attributes.push(`columnGap={${Number(args.columnGap)}}`);
   if (args.disabled) attributes.push("disabled");
   return group(attributes.join(" "), address);
 }

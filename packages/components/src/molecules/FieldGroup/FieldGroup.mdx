@@ -6,17 +6,22 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { FormField } from "../FormField";
 import { FieldGroup } from "./FieldGroup";
 import * as FieldGroupStories from "./FieldGroup.stories";
+import * as FieldGroupItemStories from "./FieldGroupItem.stories";
 
 export const propOrder = [
   "legend",
   "children",
   "description",
   "error",
+  "required",
   "hideLegend",
   "variant",
   "size",
+  "legendSize",
   "orientation",
+  "columns",
   "gap",
+  "columnGap",
   "disabled",
   "id",
   "className",
@@ -24,6 +29,8 @@ export const propOrder = [
   "data-testid",
   "aria-describedby",
 ];
+
+export const itemPropOrder = ["children", "span", "id", "className", "style", "data-testid"];
 
 <Meta of={FieldGroupStories} />
 
@@ -38,7 +45,8 @@ optionally, a border or a tinted box around the set.
 
 `FieldGroup` holds the fields' layout (stacked, or side by side and wrapping), an optional description under
 the legend, and an error about the group as a whole. It hands its `disabled` and `size` to the `FormField`s
-inside as defaults. It owns no values and runs no validation: each field keeps its own value and its own error.
+inside as defaults — a field's own props still win — and `size` reaches the field's control too, through the props
+the field hands it. It owns no values and runs no validation: each field keeps its own value and its own error.
 
 ### Import
 
@@ -67,6 +75,13 @@ combined with what the group computes, never a replacement for it.
 
 <PropertiesTable of={FieldGroupStories} order={propOrder} />
 
+### FieldGroup.Item properties
+
+`FieldGroup.Item` is one cell of a group that sets `columns`: it holds a field and takes a `span` of the columns.
+In any other layout it is a plain wrapper. It also accepts any native `<div>` attribute.
+
+<PropertiesTable of={FieldGroupItemStories} order={itemPropOrder} />
+
 ## Variants
 
 ### Variants
@@ -80,6 +95,18 @@ combined with what the group computes, never a replacement for it.
 ### States
 
 <Canvas of={FieldGroupStories.States} />
+
+### Columns and spans
+
+<Canvas of={FieldGroupStories.Columns} />
+
+### Legend size and required
+
+<Canvas of={FieldGroupStories.LegendSizeAndRequired} />
+
+### Row and column gaps
+
+<Canvas of={FieldGroupStories.Gaps} />
 
 ### Legend hidden from view
 
@@ -102,7 +129,10 @@ combined with what the group computes, never a replacement for it.
 - Write the legend as a noun phrase that names the set ("Shipping address"), not an instruction.
 - Use `error` for a rule that spans fields ("give an email or a phone number"), and leave each field's own
   `error` on that field.
-- Use `orientation="horizontal"` for short, related fields (day, month, year) and let it wrap on a small screen.
+- Use `orientation="horizontal"` for short, related fields of similar width (day, month, year) and let it wrap on a small screen.
+- Use `columns` with `FieldGroup.Item` when fields need different widths: a street across the whole row, a city
+  twice as wide as a postcode.
+- Use `legendSize` to make a section title large without enlarging every label.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -110,6 +140,7 @@ combined with what the group computes, never a replacement for it.
 - Don't wrap a single field in a `FieldGroup` — that is a `FormField`.
 - Don't use it for one choice among options: `RadioGroup` and `CheckboxGroup` already carry their own name.
 - Don't leave the legend empty or put a long paragraph in it; it is read out in front of every field.
+- Don't use `required` as the only statement of what is required; say it in the `description` and set `required` on the fields.
 - Don't nest groups more than one level deep — a screen reader announces every legend on the way in.
 
 </Callout>
@@ -122,7 +153,11 @@ combined with what the group computes, never a replacement for it.
 - Choose `outlined` or `filled` when several groups share a page and need to read as separate blocks; `ghost` is
   right when the page already separates them with headings.
 - Prefer `hideLegend` only when a visible heading right above already names the group.
-- Set `size` on the group to size every field's label at once; set it on a field to make an exception.
+- Set `size` on the group to size every field's label and control at once; set it on a field to make an exception.
+  The control takes the size from the props the field hands it, so spread them (`{...field}`) onto a design-system
+  control; a native `<input>` would read it as its own `size` attribute.
+- `description` and `error` replace one another, as a `FormField`'s helper text and error do: write a description
+  that is fine to lose while the error is showing, and put anything that must stay in the legend.
 
 ## Accessibility
 
@@ -130,7 +165,10 @@ combined with what the group computes, never a replacement for it.
 
 - The group is a `<fieldset>` named by its `<legend>`, announced as "Shipping address, group" on entering it.
   `hideLegend` keeps the legend in the accessibility tree and takes it off the page.
-- `description` and `error` are joined into the group's `aria-describedby`, together with any ids you pass.
+- The `description`, or the `error` when there is one (they replace one another), is joined into the group's
+  `aria-describedby`, together with any ids you pass.
+- `required` draws an asterisk that is hidden from assistive tech: a group role supports no `aria-required`, so the
+  requirement is carried by the description and by `required` on the fields themselves.
 - A group-level `error` is a `role="alert"`, announced when it appears.
 - `disabled` is the native `<fieldset disabled>`: every native control inside becomes unfocusable and
   uneditable, and each `FormField` inside is marked disabled too, so its label and helper text dim with it.
@@ -154,6 +192,20 @@ combined with what the group computes, never a replacement for it.
   <FormField label="Year">{(field) => <Input {...field} inputMode="numeric" />}</FormField>
 </FieldGroup>
 
+<FieldGroup legend="Delivery address" columns={{ base: 1, md: 3 }}>
+  <FieldGroup.Item span={{ base: 1, md: 3 }}>
+    <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+  </FieldGroup.Item>
+  <FieldGroup.Item span={{ base: 1, md: 2 }}>
+    <FormField label="City">{(field) => <Input {...field} />}</FormField>
+  </FieldGroup.Item>
+  <FieldGroup.Item>
+    <FormField label="Postcode">{(field) => <Input {...field} />}</FormField>
+  </FieldGroup.Item>
+</FieldGroup>
+
+<FieldGroup legend="Account details" legendSize="xl" size="sm" required description="All of these are needed.">…</FieldGroup>
+
 <FieldGroup legend="Contact" error="Give us an email address or a phone number.">
   <FormField label="Email">{(field) => <Input {...field} type="email" />}</FormField>
   <FormField label="Phone">{(field) => <Input {...field} type="tel" />}</FormField>
@@ -166,6 +218,7 @@ combined with what the group computes, never a replacement for it.
 ## Design tokens used
 
 <TokenRow token="text.primary" usage="legend and field text colour" />
+<TokenRow token="text.danger" usage="the required marker on the legend" />
 <TokenRow token="text.disabled" usage="legend colour in a disabled group" />
 <TokenRow token="bg.neutral-subtle" usage="the filled variant's fill" />
 <TokenRow token="border.default" usage="the outlined variant's border" />

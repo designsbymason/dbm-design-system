@@ -14,6 +14,8 @@ const fields = (
   </>
 );
 
+const bodyOf = () => screen.getByRole("group").querySelector(`.${styles.body}`) as HTMLElement;
+
 describe("FieldGroup", () => {
   afterEach(() => vi.restoreAllMocks());
 
@@ -107,9 +109,115 @@ describe("FieldGroup", () => {
         {fields}
       </FieldGroup>,
     );
-    expect(screen.getByRole("group").style.getPropertyValue("--field-group-gap")).toBe(
-      "var(--dbm-space-8)",
+    expect(bodyOf().style.getPropertyValue("--field-group-gap")).toBe("var(--dbm-space-8)");
+    // the column gap follows the gap unless it is set
+    expect(bodyOf().style.getPropertyValue("--field-group-column-gap")).toBe("var(--dbm-space-8)");
+  });
+
+  it("takes a breakpoint map for gap and a separate columnGap", () => {
+    render(
+      <FieldGroup legend="Address" gap={{ base: 2, md: 8 }} columnGap={{ base: 6 }} orientation="horizontal">
+        {fields}
+      </FieldGroup>,
     );
+    // jsdom matches no media query, so the base values apply
+    expect(bodyOf().style.getPropertyValue("--field-group-gap")).toBe("var(--dbm-space-2)");
+    expect(bodyOf().style.getPropertyValue("--field-group-column-gap")).toBe("var(--dbm-space-6)");
+  });
+
+  it("sizes the legend apart from the fields with legendSize", () => {
+    render(
+      <FieldGroup legend="Address" size="sm" legendSize="xl">
+        {fields}
+      </FieldGroup>,
+    );
+    expect(screen.getByText("Address").className).toContain(styles.sizeXl);
+    expect(screen.getByText("Address").className).not.toContain(styles.sizeSm);
+  });
+
+  it("marks the legend required, visually only", () => {
+    const { rerender } = render(
+      <FieldGroup legend="Contact" required>
+        {fields}
+      </FieldGroup>,
+    );
+    const marker = screen.getByText("*");
+    expect(marker).toHaveAttribute("aria-hidden", "true");
+    // the accessible name is just the legend text
+    expect(screen.getByRole("group", { name: "Contact" })).toBeInTheDocument();
+    rerender(
+      <FieldGroup legend="Contact" required hideLegend>
+        {fields}
+      </FieldGroup>,
+    );
+    expect(screen.queryByText("*")).toBeNull();
+  });
+
+  it("shows the error instead of the description, and describes the group by the error alone", () => {
+    render(
+      <FieldGroup legend="Contact" description="Only for orders" error="Give an email or a phone">
+        {fields}
+      </FieldGroup>,
+    );
+    expect(screen.queryByText("Only for orders")).toBeNull();
+    const group = screen.getByRole("group", { name: "Contact" });
+    expect(group.getAttribute("aria-describedby")).toBe(screen.getByRole("alert").id);
+  });
+
+  describe("columns and FieldGroup.Item", () => {
+    const grid = (span?: number | { base: number; md: number }) => (
+      <FieldGroup legend="Address" columns={3} orientation="horizontal">
+        <FieldGroup.Item span={span} data-testid="wide">
+          <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+        <FieldGroup.Item data-testid="narrow">
+          <FormField label="City">{(field) => <Input {...field} />}</FormField>
+        </FieldGroup.Item>
+      </FieldGroup>
+    );
+
+    it("lays the fields out on a grid of that many columns, over orientation", () => {
+      render(grid());
+      expect(bodyOf().className).toContain(styles.columns);
+      expect(bodyOf().className).not.toContain(styles.horizontal);
+      expect(bodyOf().style.getPropertyValue("--field-group-columns")).toBe("3");
+    });
+
+    it("spans cells across columns, and clamps a span wider than the grid", () => {
+      const { rerender } = render(grid(2));
+      expect(screen.getByTestId("wide").style.gridColumn).toBe("span 2");
+      expect(screen.getByTestId("narrow").style.gridColumn).toBe("");
+      rerender(grid(9));
+      expect(screen.getByTestId("wide").style.gridColumn).toBe("span 3");
+    });
+
+    it("takes a breakpoint map for the span", () => {
+      render(grid({ base: 1, md: 3 }));
+      expect(screen.getByTestId("wide").style.gridColumn).toBe("");
+    });
+
+    it("warns once in development for a span that is not a positive whole number", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(grid(0));
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toMatch(/FieldGroup\.Item: `span`/);
+      expect(screen.getByTestId("wide").style.gridColumn).toBe("");
+    });
+
+    it("is a plain wrapper outside a grid, forwarding its ref and props", () => {
+      const ref = createRef<HTMLDivElement>();
+      render(
+        <FieldGroup legend="Address">
+          <FieldGroup.Item ref={ref} span={2} className="mine" style={{ marginBlockStart: "4px" }} data-testid="cell">
+            {fields}
+          </FieldGroup.Item>
+        </FieldGroup>,
+      );
+      const cell = screen.getByTestId("cell");
+      expect(ref.current).toBe(cell);
+      expect(cell).toHaveClass("mine");
+      expect(cell.style.marginBlockStart).toBe("4px");
+    });
   });
 
   describe("nested inside another group", () => {

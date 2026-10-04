@@ -271,3 +271,34 @@ describe("FormField inside a FieldGroup", () => {
     expect(screen.getByText("Email").className).toContain(fieldLabelStyles.sizeMd);
   });
 });
+
+describe("FormField's handed-back size inside a FieldGroup", () => {
+  it("hands the group's size to the control, and the field's own size wins", async () => {
+    const { FieldGroup } = await import("../FieldGroup");
+    const received: Array<FormFieldControlProps["size"]> = [];
+    render(
+      <FieldGroup legend="Account" size="lg">
+        <FormField label="A">{(field) => { received.push(field.size); return <Input {...field} />; }}</FormField>
+        <FormField label="B" size="xs">{(field) => { received.push(field.size); return <Input {...field} />; }}</FormField>
+      </FieldGroup>,
+    );
+    expect(received).toContain("lg");
+    expect(received).toContain("xs");
+  });
+
+  it("hands nothing when the group sets no size, or outside a group", async () => {
+    const { FieldGroup } = await import("../FieldGroup");
+    let inGroup: FormFieldControlProps | undefined;
+    let alone: FormFieldControlProps | undefined;
+    render(
+      <>
+        <FieldGroup legend="Account">
+          <FormField label="A">{(field) => { inGroup = field; return <Input {...field} />; }}</FormField>
+        </FieldGroup>
+        <FormField label="B" size="xl">{(field) => { alone = field; return <Input {...field} />; }}</FormField>
+      </>,
+    );
+    expect(inGroup && "size" in inGroup).toBe(false);
+    expect(alone && "size" in alone).toBe(false);
+  });
+});
