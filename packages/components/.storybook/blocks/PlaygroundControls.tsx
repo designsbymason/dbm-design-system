@@ -35,6 +35,13 @@ interface ArgTypeLike {
     | false;
   options?: unknown[];
   mapping?: Record<string, unknown>;
+  /**
+   * Storybook's own conditional-control convention (a subset): show this control only while another arg meets a
+   * condition — `truthy` (the default), `exists`, `eq` or `neq`. The native Controls panel already honours it; this
+   * block reads it too, so a control that has no effect in the current state (RatingInput's `count`, which only a
+   * read-only rating draws) isn't offered as if it did.
+   */
+  if?: { arg: string; truthy?: boolean; exists?: boolean; eq?: unknown; neq?: unknown };
   table?: { disable?: boolean };
   /**
    * Opt-in, not a Storybook concept — computes what this control should
@@ -413,6 +420,9 @@ export function PlaygroundControls({
   const resolved = useOf(of, ["story"]);
   const story = resolved.type === "story" ? resolved.story : undefined;
   const [args, updateArgs, resetArgs] = usePlaygroundArgs(context, story);
+  // What was just set, before the round trip through Storybook's channel returns it in `args`. Only the conditional
+  // controls read it (below), so that turning `readOnly` on offers `count` at once rather than a few seconds later.
+  const [justSet, setJustSet] = useState<Record<string, unknown>>({});
 
   if (!story) return null;
 
@@ -435,6 +445,16 @@ export function PlaygroundControls({
   // Render nothing at all in that case, rather than dead UI.
   if (rows.length === 0) return null;
 
+  const isShown = (argType: ArgTypeLike) => {
+    const condition = argType.if;
+    if (!condition) return true;
+    const current = condition.arg in justSet ? justSet[condition.arg] : args[condition.arg];
+    if ("eq" in condition) return current === condition.eq;
+    if ("neq" in condition) return current !== condition.neq;
+    if ("exists" in condition) return (current !== undefined) === condition.exists;
+    return Boolean(current) === (condition.truthy ?? true);
+  };
+
   return (
     <>
       <div
@@ -447,14 +467,17 @@ export function PlaygroundControls({
         }}
       >
         <div className="dbm-playground-controls-grid">
-          {rows.map(([name, argType]) => (
+          {rows.filter(([, argType]) => isShown(argType)).map(([name, argType]) => (
             <ControlField
               key={name}
               name={name}
               argType={argType}
               value={args[name]}
               resolvedDisplayValue={argType.resolveDisplayValue?.(args)}
-              onChange={(value) => updateArgs({ [name]: value })}
+              onChange={(value) => {
+                setJustSet((previous) => ({ ...previous, [name]: value }));
+                updateArgs({ [name]: value });
+              }}
             />
           ))}
         </div>
@@ -470,7 +493,10 @@ export function PlaygroundControls({
         <Button
           size="xs"
           variant="tertiary"
-          onClick={() => resetArgs()}
+          onClick={() => {
+            setJustSet({});
+            resetArgs();
+          }}
           className="dbm-playground-reset-button"
         >
           <Icon icon={ArrowCounterClockwiseIcon} size="xs" />

@@ -77,7 +77,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       onValueChange,
       precision = 1,
       size = "md",
-      tone = "highlight",
+      tone = "brand",
       icon = StarIcon,
       readOnly = false,
       clearable = false,

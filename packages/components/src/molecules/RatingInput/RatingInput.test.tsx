@@ -597,9 +597,11 @@ describe("RatingInput", () => {
       expect(screen.getByRole("radiogroup")).not.toHaveAttribute("aria-invalid");
     });
 
-    it("draws the filled icons in the highlight tone by default, and in another when asked", () => {
+    it("draws the filled icons in the brand tone by default, and in another when asked", () => {
     const { container, rerender } = render(<RatingInput aria-label="Rating" defaultValue={2} />);
     const filledColor = () => getComputedStyle(container.querySelector("[class*='filled'] svg") as Element).color;
+    expect(filledColor()).toBe("var(--dbm-icon-brand)");
+    rerender(<RatingInput aria-label="Rating" defaultValue={2} tone="highlight" />);
     expect(filledColor()).toBe("var(--dbm-icon-highlight)");
     rerender(<RatingInput aria-label="Rating" defaultValue={2} tone="warning" />);
     expect(filledColor()).toBe("var(--dbm-icon-warning)");

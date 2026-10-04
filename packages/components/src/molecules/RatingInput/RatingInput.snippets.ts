@@ -10,8 +10,8 @@ export const ratingInputSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <RatingInput aria-label="Rating" size="sm" />`,
 
-  tones: `{/* tone: "highlight" (default) | "warning" | "brand" | "success" | "info" | "danger" */}
-<RatingInput aria-label="Rating" tone="brand" defaultValue={4} />`,
+  tones: `{/* tone: "brand" (default) | "highlight" | "warning" | "success" | "info" | "danger" */}
+<RatingInput aria-label="Rating" tone="highlight" defaultValue={4} />`,
 
   halfSteps: `{/* precision: 1 (default) | 0.5 */}
 <RatingInput aria-label="Rating" precision={0.5} defaultValue={3.5} />`,
@@ -69,6 +69,8 @@ export interface RatingInputPlaygroundSnippetArgs {
   showValueName?: boolean;
   showValue?: boolean;
   count?: number;
+  /** The link node, or the name of the choice that stands for it ("None", "Read reviews link"). */
+  suffix?: unknown;
   name?: string;
   "aria-label"?: string;
 }
@@ -85,7 +87,7 @@ export function ratingInputPlaygroundSnippet(args: RatingInputPlaygroundSnippetA
   if (args.max !== undefined && args.max !== 5) attributes.push(`max={${args.max}}`);
   if (args.precision !== undefined && args.precision !== 1) attributes.push(`precision={${args.precision}}`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
-  if (args.tone && args.tone !== "highlight") attributes.push(`tone="${args.tone}"`);
+  if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   const iconName = typeof args.icon === "string" ? iconNames[args.icon] : undefined;
   if (iconName) attributes.push(`icon={${iconName}}`);
   if (args.defaultValue) attributes.push(`defaultValue={${args.defaultValue}}`);
@@ -93,6 +95,8 @@ export function ratingInputPlaygroundSnippet(args: RatingInputPlaygroundSnippetA
   if (args.clearable && !args.readOnly) attributes.push("clearable");
   if (args.showValue) attributes.push("showValue");
   if (args.readOnly && args.count !== undefined) attributes.push(`count={${args.count}}`);
+  // The control hands the option key; a story that passes the node itself is accepted too.
+  if (args.readOnly && args.suffix && args.suffix !== "None") attributes.push('suffix={<Link href="#reviews">Read reviews</Link>}');
   if (args.showValueName) attributes.push('valueNames={["Poor", "Fair", "Good", "Great", "Excellent"]} showValueName');
   if (args.hasError) attributes.push("hasError");
   if (args.required) attributes.push("required");

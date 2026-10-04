@@ -16,7 +16,7 @@
 
 .value {
   color: var(--dbm-text-primary);
-  font-size: var(--name-font-size);
+  font-size: var(--value-font-size);
   font-variant-numeric: tabular-nums;
   font-weight: var(--dbm-font-weight-medium);
   line-height: var(--dbm-line-height-tight);
@@ -181,26 +181,31 @@
 .sizeXs {
   --icon-size: var(--dbm-icon-size-sm);
   --name-font-size: var(--dbm-font-size-xs);
+  --value-font-size: var(--dbm-font-size-sm);
 }
 
 .sizeSm {
   --icon-size: var(--dbm-icon-size-md);
   --name-font-size: var(--dbm-font-size-sm);
+  --value-font-size: var(--dbm-font-size-base);
 }
 
 .sizeMd {
   --icon-size: var(--dbm-icon-size-lg);
   --name-font-size: var(--dbm-font-size-base);
+  --value-font-size: var(--dbm-font-size-md);
 }
 
 .sizeLg {
   --icon-size: var(--dbm-icon-size-xl);
   --name-font-size: var(--dbm-font-size-md);
+  --value-font-size: var(--dbm-font-size-lg);
 }
 
 .sizeXl {
   --icon-size: var(--dbm-icon-size-2xl);
   --name-font-size: var(--dbm-font-size-lg);
+  --value-font-size: var(--dbm-font-size-xl);
 }
 
 @media (prefers-reduced-motion: reduce) {

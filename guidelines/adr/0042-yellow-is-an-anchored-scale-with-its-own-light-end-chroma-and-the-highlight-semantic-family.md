@@ -1,6 +1,6 @@
 # 0042 — Yellow is an anchored scale with its own light-end chroma, and its semantic family is named `highlight`
 
-**Status:** Accepted · **Date:** 2026-10-04
+**Status:** Accepted · **Date:** 2026-10-04 · **Amended 2026-10-04** — `RatingInput`'s default tone is `brand`, not `highlight`; the decision itself is unchanged
 
 ## Context
 The system had no yellow. Its closest scale, `amber` (hue 75, `amber.600` = `#9C6800`), reads as brown, so a rating's stars, a text marker and a featured badge all looked muddy. The user wanted a general highlight and accent colour for `Highlight`, `Badge`, `RatingInput` and others, anchored at `#949415` as `yellow.600`, and a darker single mustard (not a bright fill plus outline) so that an icon passes the 3:1 non-text floor on its own.
@@ -12,7 +12,7 @@ Two things made this more than another scale. The shared OKLCH generator tapers 
 - **The generator gains `--only=<scale>`**, which writes one scale and leaves every other value alone. A run without it regenerates every scale and would overwrite the manual purple overrides, so yellow is added and maintained with `--only=yellow`.
 - **The semantic family is named `highlight`**, by what it is for (existing families are named by meaning, not hue: `brand`, `danger`, `warning`, `success`, `info`, `neutral`), not `yellow`, and not a status. It is the full set (5 `bg`, 2 `text`, 3 `border`, 2 `icon`), shared across both brands, in light and dark.
 - **Steps follow the measured contrast, not one step for every role:** light `icon`/`border` 600 (3.23:1), `text` 800 (6.89:1; 700 would be 4.50:1 on the subtle fill and 4.16:1 on its hover), solid `bg` 700 (white on it 4.67:1; 600 gives 3.23:1), subtle 50 and subtle-hover 100; dark `icon`/`text`/`border`/solid `bg` 300 (8.97:1) with `on-highlight` 900 (6.42:1), subtle 950 and subtle-hover 900.
-- **It is adopted as a `highlight` tone** on `Icon` (with `on-highlight`), `Highlight`, `Badge` and `RatingInput`, where it is the default. `warning` (amber) is unchanged and stays an option everywhere; `Highlight`'s own default stays `warning`.
+- **It is adopted as a `highlight` tone** on `Icon` (with `on-highlight`), `Highlight`, `Badge` and `RatingInput`. *(Amended 2026-10-04: this originally said `highlight` is `RatingInput`'s default; the default was then set to `brand`, and `highlight` stays an option.)* `warning` (amber) is unchanged and stays an option everywhere; `Highlight`'s own default stays `warning`.
 
 ## Alternatives considered
 - **The stock curve (scale A):** no exception to maintain, but `yellow.50` and `yellow.100` are near-white greys and the marker tint disappears.

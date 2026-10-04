@@ -1,6 +1,6 @@
 import { CircleIcon, HeartIcon, SmileyIcon, ThumbsUpIcon } from "@dbm-design-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Link } from "../../atoms/Link";
@@ -17,6 +17,15 @@ const meta: Meta<typeof RatingInput> = {
   title: "Molecules/Inputs/RatingInput",
   component: RatingInput,
   parameters: { layout: "padded" },
+  // `defaultValue` only sets where an uncontrolled rating starts, so changing its control would do nothing to a rating
+  // that is already on screen. Keying the story by it starts the rating again at the new value.
+  decorators: [
+    (Story, context) => (
+      <Fragment key={String(context.args.defaultValue)}>
+        <Story />
+      </Fragment>
+    ),
+  ],
   // Content-ish props first (max, value), then the look, then behaviour and state, then the escape hatches last
   // (07-storybook-and-documentation-standards.md §4 item 3).
   argTypes: {
@@ -53,9 +62,9 @@ const meta: Meta<typeof RatingInput> = {
     },
     tone: {
       control: "select",
-      options: ["highlight", "warning", "brand", "success", "info", "danger"],
+      options: ["brand", "highlight", "warning", "success", "info", "danger"],
       description: "The colour of the filled icons.",
-      table: { defaultValue: { summary: "highlight" } },
+      table: { defaultValue: { summary: "brand" } },
     },
     icon: {
       control: "select",
@@ -110,6 +119,8 @@ const meta: Meta<typeof RatingInput> = {
     },
     count: {
       control: { type: "number", min: 0 },
+      // Only a read-only rating draws a count, so the control is offered only while `readOnly` is on.
+      if: { arg: "readOnly" },
       description:
         'How many ratings the value is made of, written after the icons as (124) and added to the text alternative in words ("124 reviews"). For a read-only summary: ignored, with a development warning, on a rating a person can change.',
     },
@@ -173,7 +184,7 @@ const meta: Meta<typeof RatingInput> = {
     defaultValue: 3,
     precision: 1,
     size: "md",
-    tone: "highlight",
+    tone: "brand",
     readOnly: false,
     clearable: false,
     hasError: false,
@@ -181,7 +192,6 @@ const meta: Meta<typeof RatingInput> = {
     required: false,
     showValue: false,
     showValueName: false,
-    count: 124,
     valueNames,
     name: "",
     "aria-label": "Rating",
@@ -202,11 +212,23 @@ const builtSnippet = {
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
   parameters: { docs: { source: builtSnippet } },
-  // A count is for a read-only summary, so it is only passed on while `readOnly` is on.
-  render: ({ count, ...args }) => <RatingInput {...args} count={args.readOnly ? count : undefined} />,
+  // A count and a link are for a read-only summary: the component ignores them otherwise, so they are only passed on
+  // (and their controls only offered) while `readOnly` is on.
+  render: ({ count, suffix, ...args }) => (
+    <RatingInput {...args} count={args.readOnly ? count : undefined} suffix={args.readOnly ? suffix : undefined} />
+  ),
   // "Star" is the default, not a value to choose, so it is a Playground-only choice that leaves the prop out.
-  argTypes: { icon: { control: "select", options: ["Star", ...Object.keys(iconChoices)], mapping: { Star: undefined, ...iconChoices } } },
-  args: { icon: "Star" as never },
+  argTypes: {
+    icon: { control: "select", options: ["Star", ...Object.keys(iconChoices)], mapping: { Star: undefined, ...iconChoices } },
+    // A link to pass as `suffix`, a Playground-only choice (the prop takes any node).
+    suffix: {
+      control: "select",
+      options: ["None", "Read reviews link"],
+      mapping: { None: undefined, "Read reviews link": <Link href="#reviews">Read reviews</Link> },
+      if: { arg: "readOnly" },
+    },
+  },
+  args: { icon: "Star" as never, count: 124, suffix: "None" as never },
 };
 
 export const AllSizes: Story = {
@@ -229,7 +251,7 @@ export const Tones: Story = {
   args: { defaultValue: 4 },
   render: (args) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
-      {(["highlight", "warning", "brand", "success", "info", "danger"] as const).map((tone) => (
+      {(["brand", "highlight", "warning", "success", "info", "danger"] as const).map((tone) => (
         <RatingInput key={tone} {...args} tone={tone} aria-label={`Tone ${tone}`} />
       ))}
     </div>
@@ -246,7 +268,8 @@ export const HalfSteps: Story = {
 export const ReadOnly: Story = {
   name: "Read-only average",
   parameters: { docs: { source: { code: ratingInputSnippets.readOnly } } },
-  argTypes: { readOnly: { control: false }, defaultValue: { control: false } },
+  // A read-only rating draws its value exactly, so `precision` (a step for choosing) does nothing here.
+  argTypes: { readOnly: { control: false }, defaultValue: { control: false }, precision: { control: false } },
   args: { readOnly: true, defaultValue: undefined, "aria-label": "Average rating" },
   render: (args) => <RatingInput {...args} value={4.3} />,
 };
@@ -261,7 +284,14 @@ export const ShowValue: Story = {
 export const ReviewSummary: Story = {
   name: "Review summary",
   parameters: { docs: { source: { code: ratingInputSnippets.reviewSummary } } },
-  argTypes: { readOnly: { control: false }, showValue: { control: false }, count: { control: false }, defaultValue: { control: false } },
+  argTypes: {
+    readOnly: { control: false },
+    showValue: { control: false },
+    count: { control: false },
+    defaultValue: { control: false },
+    // A read-only rating draws its value exactly, so `precision` does nothing here.
+    precision: { control: false },
+  },
   args: { readOnly: true, showValue: true, count: 124, defaultValue: undefined, "aria-label": "Average rating" },
   render: ({ count, ...args }) => (
     <RatingInput {...args} value={4.2} count={count} suffix={<Link href="#reviews">Read reviews</Link>} />
@@ -305,7 +335,7 @@ export const InFormField: Story = {
   name: "In a FormField",
   parameters: { docs: { source: { code: ratingInputSnippets.inFormField } } },
   argTypes: Object.fromEntries(
-    ["max", "defaultValue", "precision", "size", "tone", "icon", "readOnly", "clearable", "hasError", "disabled", "required", "showValueName", "name", "aria-label"].map((key) => [key, { control: false }]),
+    ["max", "defaultValue", "precision", "size", "tone", "icon", "readOnly", "clearable", "hasError", "disabled", "required", "showValue", "showValueName", "count", "name", "aria-label"].map((key) => [key, { control: false }]),
   ),
   render: () => (
     <FormField label="How was it?" helperText="Choose a rating from 1 to 5." required>
@@ -391,13 +421,13 @@ export const HoverPreviewColoursCheck: Story = {
   args: { defaultValue: 0 },
   render: (args) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
-      {(["highlight", "warning", "brand", "success", "info", "danger"] as const).map((tone) => (
+      {(["brand", "highlight", "warning", "success", "info", "danger"] as const).map((tone) => (
         <RatingInput key={tone} {...args} tone={tone} aria-label={`Tone ${tone}`} />
       ))}
     </div>
   ),
   play: async ({ canvasElement }) => {
-    for (const tone of ["highlight", "warning", "brand", "success", "info", "danger"]) {
+    for (const tone of ["brand", "highlight", "warning", "success", "info", "danger"]) {
       const group = within(canvasElement).getByRole("radiogroup", { name: `Tone ${tone}` });
       const radio = within(group).getAllByRole("radio")[2] as HTMLElement;
       await userEvent.hover(radio);

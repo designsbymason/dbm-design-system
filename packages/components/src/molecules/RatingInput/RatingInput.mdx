@@ -75,7 +75,6 @@ import { RatingInput } from "@dbm-design-system/components";
     "value",
     "onValueChange",
     "valueNames",
-    "suffix",
     "formatValue",
     "formatNumber",
     "labels",
@@ -268,7 +267,7 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 
 ## Design tokens used
 
-The icons are drawn by `Icon`, which lists its own colour tokens (`icon.highlight`, `icon.secondary`, `icon.danger` and the rest of the tones).
+The icons are drawn by `Icon`, which lists its own colour tokens (`icon.brand`, `icon.secondary`, `icon.danger` and the rest of the tones).
 
 <TokenRow token="bg.highlight-subtle" usage="the preview fill at the `highlight` tone" />
 <TokenRow token="border.highlight" usage="the preview outline at the `highlight` tone" />
@@ -289,11 +288,12 @@ The icons are drawn by `Icon`, which lists its own colour tokens (`icon.highligh
 <TokenRow token="border-width.2" usage="the focus ring's width" />
 <TokenRow token="radius.sm" usage="the focus ring's corners, the standard focus-ring radius" />
 <TokenRow token="font-family.primary" usage="the value name beside the icons" />
-<TokenRow token="font-size.xs" usage="the value name at `xs`" />
-<TokenRow token="font-size.sm" usage="the value name at `sm`" />
-<TokenRow token="font-size.base" usage="the value name at `md`" />
-<TokenRow token="font-size.md" usage="the value name at `lg`" />
-<TokenRow token="font-size.lg" usage="the value name at `xl`" />
+<TokenRow token="font-size.xs" usage="the value name, count and link at `xs`" />
+<TokenRow token="font-size.sm" usage="the value name, count and link at `sm`; the number at `xs`" />
+<TokenRow token="font-size.base" usage="the value name, count and link at `md`; the number at `sm`" />
+<TokenRow token="font-size.md" usage="the value name, count and link at `lg`; the number at `md`" />
+<TokenRow token="font-size.lg" usage="the value name, count and link at `xl`; the number at `lg`" />
+<TokenRow token="font-size.xl" usage="the number at `xl`" />
 <TokenRow token="line-height.tight" usage="the value name's line" />
 <TokenRow token="icon-size.sm" usage="an icon at `xs`" />
 <TokenRow token="icon-size.md" usage="an icon at `sm`" />
