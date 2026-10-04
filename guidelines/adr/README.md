@@ -93,6 +93,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0037](./0037-splitter-is-hand-rolled-on-the-window-splitter-pattern-with-automatic-handles-and-a-percentage-layout.md) | `Splitter` is hand-rolled on the window-splitter pattern, with automatic handles and a percentage layout, over a dependency, explicit handle parts or pixel sizes | Accepted |
 | [0038](./0038-splitter-panes-have-an-identity-fixed-panes-are-rescaled-and-locked-panes-have-plain-dividers.md) | `Splitter` panes have an identity (`id`, else `key`), fixed panes are rescaled by the container's ratio and locked panes get plain dividers, over required ids, a pixel layout or disabled-but-focusable handles | Accepted |
 | [0039](./0039-a-handle-only-asks-a-controlled-pane-to-collapse.md) | A `Splitter` handle only asks a controlled pane to collapse, and the pane follows its prop, over applying the gesture and enforcing the prop afterwards | Accepted |
+| [0040](./0040-pininput-is-one-real-input-drawn-as-cells-over-an-input-per-cell.md) | `PinInput` is one real input drawn as cells, over an input per cell | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

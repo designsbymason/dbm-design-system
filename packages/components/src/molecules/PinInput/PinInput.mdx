@@ -1,0 +1,315 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldHelperText } from "../../atoms/FieldHelperText";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { PasswordInput } from "../PasswordInput";
+import { FormField } from "../FormField";
+import { PinInput } from "./PinInput";
+import * as PinInputStories from "./PinInput.stories";
+
+export const propOrder = [
+  "length",
+  "type",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "onComplete",
+  "size",
+  "groups",
+  "separator",
+  "placeholder",
+  "mask",
+  "revealable",
+  "revealed",
+  "defaultRevealed",
+  "onRevealedChange",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "required",
+  "autoFocus",
+  "autoComplete",
+  "name",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={PinInputStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="PinInput" tier="Molecule" />
+
+A field for a short code — a one-time code sent by text message, a verification code, a PIN — drawn as one
+cell for each character. It is a single real `<input>` lying invisibly over the cells, so a code that arrives by
+text message can be autofilled, a pasted code fills the cells, a screen reader finds one field with one name, and a
+surrounding `<form>` submits the code under `name` as one string. Typing fills the cells in order and overwrites the
+character in the cell you are on; the arrow keys, Home and End move between cells; pressing a cell moves to it.
+
+### Import
+
+```tsx
+import { PinInput } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={PinInputStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={PinInputStories.Playground}
+  exclude={[
+    "value",
+    "onValueChange",
+    "onComplete",
+    "groups",
+    "separator",
+    "revealed",
+    "defaultRevealed",
+    "onRevealedChange",
+    "autoFocus",
+    "autoComplete",
+    "labels",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`PinInput` also accepts any other native `<input>` attribute beyond what is listed here (e.g. `form`,
+`tabIndex`) — passed straight through to the field. `className` and `style` go on the outermost box; `ref`, `id`,
+`data-testid` and the `aria-*` props go on the `<input>`.
+
+<PropertiesTable of={PinInputStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={PinInputStories.AllSizes} />
+
+### Letters and digits
+
+<Canvas of={PinInputStories.Alphanumeric} />
+
+### In groups
+
+<Canvas of={PinInputStories.Grouped} />
+
+### Masked, with a show button
+
+<Canvas of={PinInputStories.Masked} />
+
+### With a placeholder
+
+<Canvas of={PinInputStories.WithPlaceholder} />
+
+### Error state
+
+<Canvas of={PinInputStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={PinInputStories.Disabled} />
+
+### Read-only
+
+<Canvas of={PinInputStories.ReadOnly} />
+
+### In a FormField
+
+<Canvas of={PinInputStories.InFormField} />
+
+### Submit when complete
+
+<Canvas of={PinInputStories.OnComplete} />
+
+### Controlled
+
+<Canvas of={PinInputStories.Controlled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `onComplete` to submit or verify as soon as the last cell fills, so there is no button to press for a code
+  that people expect to be checked on its own.
+- Give the field a name: a visible `FieldLabel` (or a `FormField`), or `aria-label` when the surrounding text
+  already says what the code is.
+- Keep `autoComplete="one-time-code"` (the default) for a code sent by text message, so a phone can offer it.
+- Use `mask` for a PIN or a secret, and `revealable` so a person can check what they typed.
+- Say what went wrong near the field when a code is rejected, with `hasError` and an error message.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a long string, a password or a free-text answer — `Input` and `PasswordInput` are for those.
+  A code is short and a fixed length.
+- Don't use `mask` for a code that arrives by text message: the person can't check a masked code against the
+  message.
+- Don't rely on the placeholder to say what to type; it is decorative and is not read out.
+- Don't put the cells in separate inputs of your own — one field is what makes autofill, paste and screen readers
+  work.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Match `length` to what you actually send; a six-digit code is the most familiar, four for a PIN.
+- Use `groups` for a code people read aloud or copy from a message in chunks (`[3, 3]`), and `type="alphanumeric"`
+  for an invite code that mixes letters and digits.
+- Pasting is forgiving by design: spaces and dashes are dropped, so `482-916` and `482 916` both fill six cells.
+- A code stays left to right in a right-to-left page, the way a phone number does.
+- On a narrow screen the cells shrink together and stay square rather than overflowing; set `size` to suit the
+  space you have.
+- Keep the value in your own state (`value` / `onValueChange`) when a sibling needs it, for example a "Resend code"
+  button that clears the field.
+
+## Accessibility
+
+<Callout tone="info" title="One real, labelled text field, with the cells drawn from it">
+
+- The field is a single native `<input>`, so it has one tab stop, one accessible name and one value for a screen
+  reader to read; the cells are decorative and hidden from assistive technology.
+- Name it with `aria-label`, `aria-labelledby`, or a `FieldLabel` whose `htmlFor` points at its `id` (a
+  `FormField` does this for you).
+- Left and Right move one cell, Home and End go to the first cell and the first empty one, Backspace deletes, and
+  a typed character overwrites the character in the cell you are on. Shift and the other modifier keys keep their
+  native selection behaviour.
+- Tabbing in lands on the first empty cell; pressing a cell moves to it.
+- `hasError` sets `aria-invalid`. `required` and a minimum length of `length` are real form constraints, so a
+  `<form>` stops a submit with a missing or short code.
+- A masked code is a password-type field, so a screen reader announces bullets instead of the characters; the show
+  button is a toggle (`aria-pressed`) with its own name.
+- The active cell and the caret use outlines and text, which stay visible in Windows high-contrast mode.
+- The caret stops blinking when the person has asked for reduced motion.
+- The field's text is at least 16px, so iOS does not zoom the page when it takes focus.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| Characters | Fill the cells in order, overwriting the character in the active cell. Characters the `type` does not accept are dropped. |
+| Left, Right | Move to the previous or next cell, never past the first empty one. |
+| Home, End | Move to the first cell, or the first empty cell. |
+| Backspace | Delete the active cell's character, or the last character from the first empty cell. |
+| Shift + arrows, Ctrl or Cmd + A | Select several cells, as in any text field. |
+| Paste | Fills the cells from the cleaned-up text. |
+
+## Code examples
+
+```tsx
+<PinInput aria-label="Verification code" onComplete={verify} />
+
+{/* A four-digit PIN that can be shown */}
+<PinInput aria-label="PIN" length={4} mask revealable />
+
+{/* Read in two chunks, letters and digits */}
+<PinInput aria-label="Invite code" type="alphanumeric" groups={[3, 3]} />
+
+{/* Submitted with a form, under `otp`, as one string */}
+<form onSubmit={handleSubmit}>
+  <PinInput aria-label="Verification code" name="otp" required />
+</form>
+
+{/* Controlled, with a field-level native attribute */}
+<PinInput aria-label="Verification code" value={code} onValueChange={setCode} form="verify-form" />
+
+{/* With a label and helper text; the wiring is done for you */}
+<FormField label="Verification code" helperText="We sent a 6-digit code to your phone.">
+  {(fieldProps) => <PinInput {...fieldProps} />}
+</FormField>
+```
+
+## Design tokens used
+
+Every cell is drawn from semantic tokens; the show/hide button is an `IconButton`, which lists its own.
+
+<TokenRow token="bg.surface" usage="each cell's fill" />
+<TokenRow token="border.default" usage="a cell's border at rest" />
+<TokenRow token="border.neutral" usage="a cell's border while the pointer is over the field" />
+<TokenRow token="border.focus" usage="the active cell's border and focus ring" />
+<TokenRow token="border.danger" usage="every cell's border when `hasError` is set" />
+<TokenRow token="text.primary" usage="the character in a cell, and the caret" />
+<TokenRow token="text.tertiary" usage="the separator and the placeholder" />
+<TokenRow token="border-width.1" usage="a cell's border, and the caret's width" />
+<TokenRow token="border-width.2" usage="the active cell's focus ring" />
+<TokenRow token="radius.md" usage="a cell's corners" />
+<TokenRow token="radius.sm" usage="the active cell's corners, the standard focus-ring radius" />
+<TokenRow token="space.1" usage="the focus ring's offset" />
+<TokenRow token="space.2" usage="the gap between cells in a group" />
+<TokenRow token="space.3" usage="the gap around a separator, and before the show/hide button" />
+<TokenRow token="space.4" usage="a cell's height at `lg` and `xl`, with the font's line" />
+<TokenRow token="font-family.primary" usage="the characters in the cells" />
+<TokenRow token="font-size.xs" usage="a cell's height at `xs`" />
+<TokenRow token="font-size.sm" usage="a cell's character at `xs`, and its height at `sm`" />
+<TokenRow token="font-size.base" usage="a cell's character at `sm`, its height at `md`, and the hidden field's size" />
+<TokenRow token="font-size.md" usage="a cell's height at `lg`" />
+<TokenRow token="font-size.lg" usage="a cell's character at `md`, and its height at `xl`" />
+<TokenRow token="font-size.xl" usage="a cell's character at `lg`" />
+<TokenRow token="font-size.2xl" usage="a cell's character at `xl`" />
+<TokenRow token="font-weight.medium" usage="the characters in the cells" />
+<TokenRow token="line-height.tight" usage="a cell's height, matching `Input` and `Button`" />
+<TokenRow token="motion-duration.fast" usage="the border-colour change" />
+<TokenRow token="motion-duration.slower" usage="the caret's blink, at twice this" />
+<TokenRow token="motion-easing.standard" usage="the border-colour change" />
+<TokenRow token="opacity.40" usage="the whole field while disabled" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Input"
+  description="A single text field for anything longer or less structured than a code"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Enter text" />
+</RelatedCard>
+<RelatedCard
+  name="PasswordInput"
+  description="A masked field with a show/hide toggle, for a password rather than a short code"
+  href="/?path=/docs/molecules-inputs-passwordinput--docs"
+>
+  <PasswordInput aria-label="Password" defaultValue="secret" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom that names this field when you are not using a FormField"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Code</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="Says where the code was sent, below the field"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>We sent a code to your phone</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this field with a label and helper or error text, with the id and aria wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <PinInput aria-label="Code" length={4} defaultValue="12" size="xs" />
+</RelatedCard>
+</div>

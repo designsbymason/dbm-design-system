@@ -1,0 +1,160 @@
+.root {
+  align-items: center;
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-3);
+  max-inline-size: 100%;
+}
+
+/* The one real input lies over the drawn cells, invisible, and owns the text, the
+   selection, autofill and paste. */
+.field {
+  display: inline-flex;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  position: relative;
+}
+
+.cells {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-3);
+  min-inline-size: 0;
+}
+
+.group {
+  display: flex;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+.separator {
+  color: var(--dbm-text-tertiary);
+  display: inline-flex;
+  flex: none;
+  user-select: none;
+}
+
+/* A cell is as tall as an Input or Button of the same step: the line plus two paddings
+   (the Input's own padding and border add up to the same). The cell shrinks with its
+   row on a narrow screen and keeps its square. */
+.cell {
+  align-items: center;
+  aspect-ratio: 1;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex: 0 1 var(--cell-size);
+  font-size: var(--cell-font-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-medium);
+  justify-content: center;
+  line-height: var(--dbm-line-height-tight);
+  inline-size: var(--cell-size);
+  min-inline-size: 0;
+  transition: border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  user-select: none;
+}
+
+.root:not(.error):not(.disabled) .field:hover .cell:not([data-active="true"]) {
+  border-color: var(--dbm-border-neutral);
+}
+
+.error .cell {
+  border-color: var(--dbm-border-danger);
+}
+
+/* The standard focus-ring radius, as on every square-ish control. */
+.cell[data-active="true"] {
+  border-color: var(--dbm-border-focus);
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.placeholder {
+  color: var(--dbm-text-tertiary);
+}
+
+.caret {
+  animation: blink calc(var(--dbm-motion-duration-slower) * 2) step-end infinite;
+  background-color: var(--dbm-text-primary);
+  block-size: 1em;
+  inline-size: var(--dbm-border-width-1);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.input {
+  appearance: none;
+  background: none;
+  border: none;
+  block-size: 100%;
+  caret-color: transparent;
+  color: transparent;
+  font: inherit;
+  /* At least 16px, so iOS doesn't zoom the page when the field takes focus. */
+  font-size: var(--dbm-font-size-base);
+  inline-size: 100%;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  outline: none;
+  padding: 0;
+  position: absolute;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.sizeXs {
+  --cell-size: calc(var(--dbm-font-size-xs) * var(--dbm-line-height-tight) + 2 * var(--dbm-space-2));
+  --cell-font-size: var(--dbm-font-size-sm);
+}
+
+.sizeSm {
+  --cell-size: calc(var(--dbm-font-size-sm) * var(--dbm-line-height-tight) + 2 * var(--dbm-space-3));
+  --cell-font-size: var(--dbm-font-size-base);
+}
+
+.sizeMd {
+  --cell-size: calc(var(--dbm-font-size-base) * var(--dbm-line-height-tight) + 2 * var(--dbm-space-3));
+  --cell-font-size: var(--dbm-font-size-lg);
+}
+
+.sizeLg {
+  --cell-size: calc(var(--dbm-font-size-md) * var(--dbm-line-height-tight) + 2 * var(--dbm-space-4));
+  --cell-font-size: var(--dbm-font-size-xl);
+}
+
+.sizeXl {
+  --cell-size: calc(var(--dbm-font-size-lg) * var(--dbm-line-height-tight) + 2 * var(--dbm-space-4));
+  --cell-font-size: var(--dbm-font-size-2xl);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
+}
+
+/* Forced colours replaces a background colour with the page's, which would make the
+   caret vanish. */
+@media (forced-colors: active) {
+  .caret {
+    background-color: CanvasText;
+  }
+}

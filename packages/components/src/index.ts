@@ -69,6 +69,7 @@ export * from "./molecules/List";
 export * from "./molecules/NumberInput";
 export * from "./molecules/Pagination";
 export * from "./molecules/PasswordInput";
+export * from "./molecules/PinInput";
 export * from "./molecules/Popover";
 export * from "./molecules/RadioGroup";
 export * from "./molecules/RangeSlider";
