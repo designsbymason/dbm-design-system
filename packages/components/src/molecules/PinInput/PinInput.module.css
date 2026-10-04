@@ -75,6 +75,26 @@
   outline-offset: var(--dbm-space-1);
 }
 
+/* The cells give way before it does, so the spinner never gets squeezed. */
+.spinner {
+  flex: none;
+}
+
+.shake {
+  animation: shake var(--dbm-motion-duration-slow) var(--dbm-motion-easing-standard);
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(calc(-1 * var(--dbm-space-2)));
+  }
+  40%,
+  80% {
+    transform: translateX(var(--dbm-space-2));
+  }
+}
+
 .placeholder {
   color: var(--dbm-text-tertiary);
 }
@@ -146,7 +166,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .caret {
+  .caret,
+  .shake {
     animation: none;
   }
 }

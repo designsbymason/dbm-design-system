@@ -12,6 +12,7 @@ import * as PinInputStories from "./PinInput.stories";
 export const propOrder = [
   "length",
   "type",
+  "transform",
   "value",
   "defaultValue",
   "onValueChange",
@@ -25,6 +26,7 @@ export const propOrder = [
   "revealed",
   "defaultRevealed",
   "onRevealedChange",
+  "isLoading",
   "hasError",
   "disabled",
   "readOnly",
@@ -109,6 +111,10 @@ import { PinInput } from "@dbm-design-system/components";
 
 <Canvas of={PinInputStories.Alphanumeric} />
 
+### In capitals
+
+<Canvas of={PinInputStories.Capitals} />
+
 ### In groups
 
 <Canvas of={PinInputStories.Grouped} />
@@ -120,6 +126,10 @@ import { PinInput } from "@dbm-design-system/components";
 ### With a placeholder
 
 <Canvas of={PinInputStories.WithPlaceholder} />
+
+### Verifying a code
+
+<Canvas of={PinInputStories.Verifying} />
 
 ### Error state
 
@@ -157,6 +167,8 @@ import { PinInput } from "@dbm-design-system/components";
 - Keep `autoComplete="one-time-code"` (the default) for a code sent by text message, so a phone can offer it.
 - Use `mask` for a PIN or a secret, and `revealable` so a person can check what they typed.
 - Say what went wrong near the field when a code is rejected, with `hasError` and an error message.
+- Set `isLoading` from `onComplete` until your request answers, so a code being checked can't be typed over.
+- Use `transform="uppercase"` for a code that is shown in capitals but entered either way.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -201,7 +213,11 @@ import { PinInput } from "@dbm-design-system/components";
 - A masked code is a password-type field, so a screen reader announces bullets instead of the characters; the show
   button is a toggle (`aria-pressed`) with its own name.
 - The active cell and the caret use outlines and text, which stay visible in Windows high-contrast mode.
-- The caret stops blinking when the person has asked for reduced motion.
+- The caret stops blinking, and the cells stop shaking when an error appears, when the person has asked for
+  reduced motion. An error is never shown by the shake or the border colour alone: `aria-invalid` is set, and the
+  error message you show beside the field says what is wrong.
+- While `isLoading`, the field is set aside from editing without being disabled (it keeps focus and its value),
+  `aria-busy` is set, and a status message ("Verifying code", translatable through `labels`) is announced.
 - The field's text is at least 16px, so iOS does not zoom the page when it takes focus.
 
 </Callout>
@@ -222,6 +238,12 @@ import { PinInput } from "@dbm-design-system/components";
 
 {/* A four-digit PIN that can be shown */}
 <PinInput aria-label="PIN" length={4} mask revealable />
+
+{/* Checking a code over the network */}
+<PinInput aria-label="Verification code" isLoading={checking} hasError={rejected} onComplete={verify} />
+
+{/* Entered either way, kept in capitals */}
+<PinInput aria-label="Invite code" type="alphanumeric" transform="uppercase" length={6} />
 
 {/* Read in two chunks, letters and digits */}
 <PinInput aria-label="Invite code" type="alphanumeric" groups={[3, 3]} />
@@ -270,6 +292,7 @@ Every cell is drawn from semantic tokens; the show/hide button is an `IconButton
 <TokenRow token="font-weight.medium" usage="the characters in the cells" />
 <TokenRow token="line-height.tight" usage="a cell's height, matching `Input` and `Button`" />
 <TokenRow token="motion-duration.fast" usage="the border-colour change" />
+<TokenRow token="motion-duration.slow" usage="the shake when an error appears" />
 <TokenRow token="motion-duration.slower" usage="the caret's blink, at twice this" />
 <TokenRow token="motion-easing.standard" usage="the border-colour change" />
 <TokenRow token="opacity.40" usage="the whole field while disabled" />

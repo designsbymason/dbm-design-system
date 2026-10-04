@@ -1,13 +1,15 @@
 import { EyeIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
-import { Fragment, forwardRef, useEffect, useRef, useState } from "react";
+import { Fragment, forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent, SyntheticEvent } from "react";
 import type { InputSize } from "../../atoms/Input";
+import { Spinner } from "../../atoms/Spinner";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { IconButton } from "../../atoms/IconButton";
 import styles from "./PinInput.module.css";
-import type { PinInputLabels, PinInputProps, PinInputType } from "./PinInput.types";
+import type { PinInputLabels, PinInputProps, PinInputTransform, PinInputType } from "./PinInput.types";
 
-const defaultLabels: PinInputLabels = { reveal: "Show code" };
+const defaultLabels: PinInputLabels = { reveal: "Show code", loading: "Verifying code" };
 
 const defaultLength = 6;
 const maxLength = 32;
@@ -16,7 +18,7 @@ const maxLength = 32;
 // Multilingual Plane are dropped from it too, so one character is always one cell and one selection index.
 const rejected: Record<PinInputType, RegExp> = {
   numeric: /[^0-9]/g,
-  alphanumeric: /[^a-zA-Z0-9]/g,
+  alphanumeric: /[^\p{L}0-9]|[\u{10000}-\u{10FFFF}]/gu,
   text: /[^\p{L}]|[\u{10000}-\u{10FFFF}]/gu,
 };
 
@@ -36,8 +38,13 @@ function resolveLength(length: number): number {
   return defaultLength;
 }
 
-function sanitize(raw: string, type: PinInputType, length: number): string {
-  return raw.replace(rejected[type], "").slice(0, length);
+const spinnerSize: Record<InputSize, "xs" | "sm" | "md" | "lg"> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
+
+function sanitize(raw: string, type: PinInputType, length: number, transform?: PinInputTransform): string {
+  const accepted = raw.replace(rejected[type], "");
+  // Converted before it is cut, since a letter can become two ("ß" is "SS" in capitals).
+  const cased = transform === "uppercase" ? accepted.toUpperCase() : transform === "lowercase" ? accepted.toLowerCase() : accepted;
+  return cased.slice(0, length);
 }
 
 // The groups the cells are split into, as lists of cell indexes. Cells left over after `groups` make a last group.
@@ -80,6 +87,7 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     {
       length: lengthProp = defaultLength,
       type = "numeric",
+      transform,
       value,
       defaultValue = "",
       onValueChange,
@@ -93,6 +101,7 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       defaultRevealed = false,
       onRevealedChange,
       placeholder,
+      isLoading = false,
       hasError = false,
       disabled = false,
       readOnly = false,
@@ -119,7 +128,7 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
     // A value that isn't a string (untyped data on its way) reads as empty rather than throwing.
     const rawValue = isControlled ? value : uncontrolledValue;
-    const current = sanitize(typeof rawValue === "string" ? rawValue : "", type, length);
+    const current = sanitize(typeof rawValue === "string" ? rawValue : "", type, length, transform);
 
     const isRevealControlled = revealedProp !== undefined;
     const [uncontrolledRevealed, setUncontrolledRevealed] = useState(defaultRevealed);
@@ -129,14 +138,25 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     const inputRef = useRef<HTMLInputElement>(null);
     const fieldRef = useRef<HTMLDivElement>(null);
     const [focused, setFocused] = useState(false);
+    // The cells shake once when an error appears after the field is on the page: remembered by comparing with the
+    // last render, so a field that starts invalid doesn't.
+    const [previousError, setPreviousError] = useState(hasError);
+    const [shaking, setShaking] = useState(false);
+    if (hasError !== previousError) {
+      setPreviousError(hasError);
+      setShaking(hasError);
+    }
     // Whether a press is on the way to being a click, which picks the cell itself.
     const pressing = useRef(false);
     const lengthRef = useRef(0);
+    // Whether the edit being made adds to the end of a full code: read from the input itself just before the edit,
+    // since the selection kept in state can be a render behind.
+    const typingAtEnd = useRef(false);
     const [selection, setSelection] = useState({ start: 0, end: 0 });
 
     // A caret between characters becomes the character after it selected, so typing overwrites the cell you are
     // on instead of pushing the rest along. Reads the real input, which the browser keeps.
-    const syncSelection = () => {
+    const syncSelection = useCallback(() => {
       const input = inputRef.current;
       if (!input) return;
       let start = input.selectionStart ?? 0;
@@ -144,10 +164,15 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       if (start === end && start < input.value.length) {
         end = start + 1;
         input.setSelectionRange(start, end);
+      } else if (start === end && input.value.length >= length) {
+        // A full code has no empty cell to go on to: the last one is the one typing replaces.
+        start = length - 1;
+        end = length;
+        input.setSelectionRange(start, end);
       }
       start = Math.min(start, end);
       setSelection((previous) => (previous.start === start && previous.end === end ? previous : { start, end }));
-    };
+    }, [length]);
 
     const selectCell = (index: number) => {
       const input = inputRef.current;
@@ -161,7 +186,7 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     // The value can change from outside (a controlled reset), or by being cut back to the accepted characters.
     useEffect(() => {
       if (focused) syncSelection();
-    }, [current, focused]);
+    }, [current, focused, syncSelection]);
 
     // Characters the type does not accept never reach the input: left to the change handler, a rejected key would
     // still move the caret past the cell (the next cell lights up, this one stays empty), and typed over a selected
@@ -170,6 +195,8 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       const input = inputRef.current;
       if (!input) return;
       const block = (event: InputEvent) => {
+        typingAtEnd.current =
+          input.selectionStart === input.selectionEnd && (input.selectionStart ?? 0) >= length && input.value.length >= length;
         if (event.data && sanitize(event.data, type, length) === "") event.preventDefault();
       };
       input.addEventListener("beforeinput", block);
@@ -177,7 +204,13 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     }, [type, length]);
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-      const next = sanitize(event.target.value, type, length);
+      let raw = event.target.value;
+      // Characters added to the end of a full code (a caret that has not been moved onto the last cell yet, or text
+      // inserted all at once) replace its last character, as typing on a selected last cell does.
+      if (typingAtEnd.current && current.length === length && raw.length > length && raw.startsWith(current)) {
+        raw = current.slice(0, length - 1) + raw.slice(length);
+      }
+      const next = sanitize(raw, type, length, transform);
       if (!isControlled) setUncontrolledValue(next);
       if (next !== current) {
         onValueChange?.(next);
@@ -265,7 +298,7 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
         dir="ltr"
       >
         <div className={styles.field} ref={fieldRef}>
-          <div className={styles.cells} aria-hidden="true">
+          <div className={cx(styles.cells, shaking && styles.shake)} aria-hidden="true" onAnimationEnd={() => setShaking(false)}>
             {layout.map((group, groupIndex) => (
               <Fragment key={group[0]}>
                 {groupIndex > 0 ? <span className={styles.separator}>{separator}</span> : null}
@@ -307,7 +340,8 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
             autoCorrect="off"
             spellCheck={false}
             disabled={disabled}
-            readOnly={readOnly}
+            readOnly={readOnly || isLoading}
+            aria-busy={isLoading || undefined}
             required={required}
             aria-invalid={hasError || undefined}
             onChange={handleChange}
@@ -326,6 +360,9 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
             }}
           />
         </div>
+        {isLoading ? <Spinner size={spinnerSize[size]} className={styles.spinner} /> : null}
+        {/* In the page before it has anything to say, so the change is announced. */}
+        <VisuallyHidden role="status">{isLoading ? labels.loading : ""}</VisuallyHidden>
         {mask && revealable ? (
           <IconButton
             icon={EyeIcon}

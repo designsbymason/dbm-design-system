@@ -25,6 +25,11 @@ const meta: Meta<typeof PinInput> = {
         "Which characters are accepted. Anything else typed or pasted is dropped. `numeric` asks a phone for its number pad.",
       table: { defaultValue: { summary: "numeric" } },
     },
+    transform: {
+      control: "select",
+      options: ["uppercase", "lowercase"],
+      description: "Writes everything typed, pasted or passed in in one case. The value you are given back is the converted one.",
+    },
     value: {
       control: false,
       description: "The controlled value, a plain string. Pair with onValueChange.",
@@ -84,9 +89,16 @@ const meta: Meta<typeof PinInput> = {
       control: false,
       description: "Called when the show/hide button is pressed, with whether the code is now showing.",
     },
+    isLoading: {
+      control: "boolean",
+      description:
+        "Shows that the code is being checked: a spinner after the cells, edits set aside (the field keeps focus and its value) and the state announced.",
+      table: { defaultValue: { summary: "false" } },
+    },
     hasError: {
       control: "boolean",
-      description: "Marks the code as invalid, visually and with aria-invalid.",
+      description:
+        "Marks the code as invalid, visually and with aria-invalid. The cells shake once when it turns on after the field is on the page, unless reduced motion is asked for.",
       table: { defaultValue: { summary: "false" } },
     },
     disabled: {
@@ -158,11 +170,13 @@ const meta: Meta<typeof PinInput> = {
   args: {
     length: 6,
     type: "numeric",
+    transform: undefined,
     size: "md",
     defaultValue: "",
     placeholder: "",
     mask: false,
     revealable: false,
+    isLoading: false,
     hasError: false,
     disabled: false,
     readOnly: false,
@@ -186,6 +200,9 @@ const builtSnippet = {
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
   parameters: { docs: { source: builtSnippet } },
+  // "No conversion" is a Playground-only choice, not a value the prop takes.
+  argTypes: { transform: { control: "select", options: ["none", "uppercase", "lowercase"], mapping: { none: undefined } } },
+  args: { transform: "none" as never },
 };
 
 export const AllSizes: Story = {
@@ -210,6 +227,13 @@ export const Alphanumeric: Story = {
   args: { type: "alphanumeric", length: 8, defaultValue: "A7X9", "aria-label": "Invite code" },
 };
 
+export const Capitals: Story = {
+  name: "In capitals",
+  parameters: { docs: { source: { code: pinInputSnippets.capitals } } },
+  argTypes: { type: { control: false }, transform: { control: false }, length: { control: false } },
+  args: { type: "alphanumeric", transform: "uppercase", length: 6, defaultValue: "ab12", "aria-label": "Invite code" },
+};
+
 export const Grouped: Story = {
   name: "In groups",
   parameters: { docs: { source: { code: pinInputSnippets.grouped } } },
@@ -230,6 +254,32 @@ export const WithPlaceholder: Story = {
   parameters: { docs: { source: { code: pinInputSnippets.placeholder } } },
   argTypes: { placeholder: { control: false } },
   args: { placeholder: "○", defaultValue: "48" },
+};
+
+export const Verifying: Story = {
+  name: "Verifying a code",
+  parameters: { docs: { source: { code: pinInputSnippets.verifying } } },
+  argTypes: { isLoading: { control: false }, hasError: { control: false }, onComplete: { control: false } },
+  render: function VerifyingStory(args) {
+    const [checking, setChecking] = useState(false);
+    const [wrong, setWrong] = useState(false);
+    return (
+      <PinInput
+        {...args}
+        isLoading={checking}
+        hasError={wrong}
+        onValueChange={() => setWrong(false)}
+        onComplete={(code) => {
+          setChecking(true);
+          // Stands in for a request: 123456 is the right code.
+          setTimeout(() => {
+            setChecking(false);
+            setWrong(code !== "123456");
+          }, 1200);
+        }}
+      />
+    );
+  },
 };
 
 export const ErrorState: Story = {
@@ -315,6 +365,10 @@ export const TypeAndCompleteInteraction: Story = {
     await expect(input).toHaveValue("1234");
     await expect(args.onComplete).toHaveBeenCalledTimes(1);
     await expect(args.onComplete).toHaveBeenCalledWith("1234");
+    // A full code has no empty cell: the next character replaces the last one.
+    await userEvent.keyboard("9");
+    await expect(input).toHaveValue("1239");
+    await expect(args.onComplete).toHaveBeenLastCalledWith("1239");
   },
 };
 
@@ -444,6 +498,59 @@ export const NarrowContainerCheck: Story = {
       await expect(rect.right).toBeLessThanOrEqual(boxRect.right + 0.5);
       await expect(Math.abs(rect.width - rect.height)).toBeLessThan(1);
     }
+  },
+};
+
+export const ShakeCheck: Story = {
+  name: "The cells shake once when an error appears, and then stop — interaction test",
+  tags: ["!dev"],
+  args: { length: 3 },
+  render: function ShakeStory(args) {
+    const [wrong, setWrong] = useState(false);
+    return (
+      <>
+        <PinInput {...args} hasError={wrong} />
+        <Button onClick={() => setWrong(true)}>Reject</Button>
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const cells = canvasElement.querySelector("[data-cell]")!.parentElement!.parentElement as HTMLElement;
+    await expect(cells.getAnimations().length).toBe(0);
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Reject" }));
+    await waitFor(() => expect(cells.getAnimations().some((animation) => (animation as CSSAnimation).animationName.includes("shake"))).toBe(true));
+    // It moves sideways while it runs, and doesn't move anything else.
+    // It ends by itself and the class is gone.
+    await waitFor(() => expect(cells.getAnimations().length).toBe(0), { timeout: 2000 });
+    await expect(cells.className).not.toContain("shake");
+  },
+};
+
+export const LoadingDoesNotMoveCellsCheck: Story = {
+  name: "Starting to load doesn't move the cells — interaction test",
+  tags: ["!dev"],
+  args: { length: 4, defaultValue: "1234" },
+  render: function LoadingStory(args) {
+    const [loading, setLoading] = useState(false);
+    return (
+      <div style={{ inlineSize: "30rem" }}>
+        <PinInput {...args} isLoading={loading} />
+        <Button onClick={() => setLoading(true)}>Verify</Button>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const first = canvasElement.querySelector("[data-cell]") as HTMLElement;
+    const before = first.getBoundingClientRect();
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Verify" }));
+    await waitFor(() => expect(within(canvasElement).getByRole("status")).toHaveTextContent("Verifying code"));
+    const after = first.getBoundingClientRect();
+    await expect(after.left).toBe(before.left);
+    await expect(after.width).toBe(before.width);
+    const input = within(canvasElement).getByLabelText("Verification code") as HTMLInputElement;
+    await userEvent.click(input);
+    await userEvent.keyboard("9");
+    await expect(input).toHaveValue("1234");
   },
 };
 

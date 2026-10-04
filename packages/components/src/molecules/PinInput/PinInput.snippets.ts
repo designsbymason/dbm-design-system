@@ -12,6 +12,13 @@ export const pinInputSnippets = {
   alphanumeric: `{/* type: "numeric" (default) | "alphanumeric" | "text" */}
 <PinInput aria-label="Invite code" type="alphanumeric" length={8} />`,
 
+  capitals: `{/* transform: "uppercase" | "lowercase". The value you are given back is the converted one. */}
+<PinInput aria-label="Invite code" type="alphanumeric" transform="uppercase" length={6} />`,
+
+  verifying: `{/* isLoading while your request is out; hasError when it comes back wrong.
+    const [checking, setChecking] = useState(false); */}
+<PinInput aria-label="Verification code" isLoading={checking} onComplete={verify} />`,
+
   grouped: `{/* groups: the size of each run of cells, adding up to length. separator: what is drawn between runs. */}
 <PinInput aria-label="Verification code" groups={[3, 3]} />`,
 
@@ -36,10 +43,12 @@ export const pinInputSnippets = {
 export interface PinInputPlaygroundSnippetArgs {
   length?: number;
   type?: string;
+  transform?: string;
   size?: string;
   placeholder?: string;
   mask?: boolean;
   revealable?: boolean;
+  isLoading?: boolean;
   hasError?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
@@ -58,11 +67,13 @@ export function pinInputPlaygroundSnippet(args: PinInputPlaygroundSnippetArgs): 
   const attributes: string[] = [`aria-label="${args["aria-label"] || "Verification code"}"`];
   if (args.length !== undefined && args.length !== 6) attributes.push(`length={${args.length}}`);
   if (args.type && args.type !== "numeric") attributes.push(`type="${args.type}"`);
+  if (args.transform && args.transform !== "none") attributes.push(`transform="${args.transform}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.placeholder) attributes.push(`placeholder="${args.placeholder}"`);
   if (args.defaultValue) attributes.push(`defaultValue="${args.defaultValue}"`);
   if (args.mask) attributes.push("mask");
   if (args.mask && args.revealable) attributes.push("revealable");
+  if (args.isLoading) attributes.push("isLoading");
   if (args.hasError) attributes.push("hasError");
   if (args.required) attributes.push("required");
   if (args.readOnly) attributes.push("readOnly");

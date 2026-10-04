@@ -8,7 +8,12 @@ export type PinInputType = "numeric" | "alphanumeric" | "text";
 export interface PinInputLabels {
   /** The accessible name of the show/hide button. @default "Show code" */
   reveal: string;
+  /** Announced to screen readers when `isLoading` starts. @default "Verifying code" */
+  loading: string;
 }
+
+/** A case a `PinInput` writes everything in. */
+export type PinInputTransform = "uppercase" | "lowercase";
 
 export interface PinInputProps
   extends Omit<
@@ -32,11 +37,16 @@ export interface PinInputProps
   length?: number;
   /**
    * Which characters are accepted. `numeric` takes digits only and asks a phone for its number pad;
-   * `alphanumeric` takes letters and digits; `text` takes letters only, of any script. Anything else a person
+   * `alphanumeric` takes letters of any script and the digits 0 to 9; `text` takes letters only, of any script. Anything else a person
    * types or pastes is dropped, so a pasted `123-456` becomes `123456`.
    * @default "numeric"
    */
   type?: PinInputType;
+  /**
+   * Writes everything typed, pasted or passed in in one case, for a code that is displayed in capitals but
+   * entered either way. The value you are given back is the converted one.
+   */
+  transform?: PinInputTransform;
   /**
    * The controlled value, a plain string. Pair with `onValueChange`, or the code will appear frozen.
    */
@@ -100,7 +110,15 @@ export interface PinInputProps
    */
   placeholder?: string;
   /**
-   * Marks the code as invalid, visually and with `aria-invalid`.
+   * Shows that the code is being checked (set it from `onComplete` until you have an answer): a spinner after the
+   * cells, the field set aside from editing (it keeps focus and its value) and the state announced to screen
+   * readers.
+   * @default false
+   */
+  isLoading?: boolean;
+  /**
+   * Marks the code as invalid, visually and with `aria-invalid`. When it becomes true after the field is
+   * on the page, the cells shake once (not for people who have asked for reduced motion).
    * @default false
    */
   hasError?: boolean;
@@ -130,7 +148,7 @@ export interface PinInputProps
   name?: string;
   /**
    * Text this component writes itself, for translation. Missing keys keep their English defaults.
-   * @default { reveal: "Show code" }
+   * @default { reveal: "Show code", loading: "Verifying code" }
    */
   labels?: Partial<PinInputLabels>;
   /**

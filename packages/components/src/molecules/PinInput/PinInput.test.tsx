@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { StrictMode, createRef, useState } from "react";
@@ -73,12 +73,105 @@ describe("PinInput", () => {
   it("accepts letters and digits for alphanumeric, and letters only for text", async () => {
     const user = userEvent.setup();
     const { rerender } = render(<PinInput aria-label="Code" type="alphanumeric" length={6} />);
-    await user.type(field(), "a1-b2");
-    expect(field()).toHaveValue("a1b2");
+    await user.type(field(), "a1-b2é");
+    expect(field()).toHaveValue("a1b2é");
     rerender(<PinInput aria-label="Code" type="text" length={6} defaultValue="" key="text" />);
     await user.type(field(), "a-b 2é9");
     expect(field()).toHaveValue("abé");
     expect(field()).toHaveAttribute("inputmode", "text");
+  });
+
+  describe("transform", () => {
+    it("writes typed and pasted text in capitals", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(<PinInput aria-label="Code" type="alphanumeric" transform="uppercase" length={4} onValueChange={onValueChange} />);
+      await user.type(field(), "ab1");
+      expect(field()).toHaveValue("AB1");
+      expect(onValueChange).toHaveBeenLastCalledWith("AB1");
+      await user.paste("cd9");
+      expect(field()).toHaveValue("AB1C");
+    });
+
+    it("converts a value passed in, and can write in lower case", () => {
+      const { rerender } = render(<PinInput aria-label="Code" type="alphanumeric" transform="uppercase" value="ab" onValueChange={() => undefined} />);
+      expect(field()).toHaveValue("AB");
+      rerender(<PinInput aria-label="Code" type="alphanumeric" transform="lowercase" value="AB" onValueChange={() => undefined} />);
+      expect(field()).toHaveValue("ab");
+    });
+
+    it("converts before cutting to length, since a letter can become two", () => {
+      render(<PinInput aria-label="Code" type="text" transform="uppercase" length={3} defaultValue="ßß" />);
+      expect(field()).toHaveValue("SSS");
+    });
+  });
+
+  describe("isLoading", () => {
+    it("sets the field aside from editing without disabling it or losing the value", async () => {
+      const user = userEvent.setup();
+      render(<PinInput aria-label="Code" length={4} defaultValue="12" isLoading />);
+      expect(field()).toHaveAttribute("aria-busy", "true");
+      expect(field()).toHaveAttribute("readonly");
+      expect(field()).not.toBeDisabled();
+      await user.click(field());
+      await user.keyboard("9{Backspace}");
+      expect(field()).toHaveValue("12");
+      expect(field()).toHaveFocus();
+    });
+
+    it("shows a spinner and announces the state, in a region that was already there", () => {
+      const { container, rerender } = render(<PinInput aria-label="Code" />);
+      const status = screen.getByRole("status");
+      expect(status).toHaveTextContent("");
+      expect(container.querySelector("[class*='spinner']")).toBeNull();
+      rerender(<PinInput aria-label="Code" isLoading />);
+      expect(screen.getByRole("status")).toBe(status);
+      expect(status).toHaveTextContent("Verifying code");
+      expect(container.querySelector("[class*='spinner']")).not.toBeNull();
+      rerender(<PinInput aria-label="Code" />);
+      expect(status).toHaveTextContent("");
+    });
+
+    it("translates the announcement, keeping the default when it is undefined", () => {
+      const { rerender } = render(<PinInput aria-label="Code" isLoading labels={{ loading: "Vérification" }} />);
+      expect(screen.getByRole("status")).toHaveTextContent("Vérification");
+      rerender(<PinInput aria-label="Code" isLoading labels={{ loading: undefined }} />);
+      expect(screen.getByRole("status")).toHaveTextContent("Verifying code");
+    });
+
+    it("can be edited again once loading ends", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<PinInput aria-label="Code" isLoading />);
+      rerender(<PinInput aria-label="Code" />);
+      await user.type(field(), "12");
+      expect(field()).toHaveValue("12");
+    });
+  });
+
+  describe("the shake when an error appears", () => {
+    const shaking = (container: HTMLElement) => container.querySelector("[class*='shake']") !== null;
+
+    it("happens when hasError turns on after mount", () => {
+      const { container, rerender } = render(<PinInput aria-label="Code" />);
+      expect(shaking(container)).toBe(false);
+      rerender(<PinInput aria-label="Code" hasError />);
+      expect(shaking(container)).toBe(true);
+    });
+
+    it("does not happen for a field that starts invalid", () => {
+      const { container } = render(<PinInput aria-label="Code" hasError />);
+      expect(shaking(container)).toBe(false);
+    });
+
+    it("happens again for a second error, and stops when the error clears", () => {
+      const { container, rerender } = render(<PinInput aria-label="Code" />);
+      rerender(<PinInput aria-label="Code" hasError />);
+      rerender(<PinInput aria-label="Code" />);
+      rerender(<PinInput aria-label="Code" hasError />);
+      expect(shaking(container)).toBe(true);
+      rerender(<PinInput aria-label="Code" />);
+      expect(shaking(container)).toBe(false);
+    });
   });
 
   it("cleans a pasted code to the accepted characters and the length", async () => {
@@ -102,6 +195,28 @@ describe("PinInput", () => {
     await user.keyboard("9");
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith("129");
+  });
+
+  it("overwrites the last cell when the code is full, and reports the new code", async () => {
+    const user = userEvent.setup();
+    const onComplete = vi.fn();
+    render(<PinInput aria-label="Code" length={3} onComplete={onComplete} />);
+    await user.type(field(), "123");
+    await user.keyboard("9");
+    expect(field()).toHaveValue("129");
+    expect(onComplete).toHaveBeenLastCalledWith("129");
+    await user.keyboard("{Backspace}");
+    expect(field()).toHaveValue("12");
+  });
+
+  it("treats characters added to the end of a full code as replacing the last one, even before the selection has caught up", () => {
+    const onValueChange = vi.fn();
+    render(<PinInput aria-label="Code" length={3} defaultValue="123" onValueChange={onValueChange} />);
+    field().setSelectionRange(3, 3);
+    field().dispatchEvent(new InputEvent("beforeinput", { bubbles: true, cancelable: true, data: "7", inputType: "insertText" }));
+    fireEvent.change(field(), { target: { value: "1237" } });
+    expect(field()).toHaveValue("127");
+    expect(onValueChange).toHaveBeenLastCalledWith("127");
   });
 
   it("does not call onComplete again while a full code stays the same", async () => {
@@ -150,13 +265,13 @@ describe("PinInput", () => {
           <button type="button" onClick={() => setCode("")}>
             reset
           </button>
-          <output>{code}</output>
+          <p data-testid="code">{code}</p>
         </>
       );
     }
     render(<Controlled />);
     await user.type(field(), "1234");
-    expect(screen.getByRole("status")).toHaveTextContent("1234");
+    expect(screen.getByTestId("code")).toHaveTextContent("1234");
     await user.click(screen.getByRole("button", { name: "reset" }));
     expect(field()).toHaveValue("");
   });
@@ -464,6 +579,11 @@ describe("PinInput", () => {
 
     it("has no axe violations masked and revealable, with an error", async () => {
       const { container } = render(<PinInput aria-label="Code" mask revealable hasError groups={[3, 3]} defaultValue="123" />);
+      expect(await axe(container)).toHaveNoViolations();
+    });
+
+    it("has no axe violations while loading", async () => {
+      const { container } = render(<PinInput aria-label="Code" isLoading defaultValue="123456" />);
       expect(await axe(container)).toHaveNoViolations();
     });
 
