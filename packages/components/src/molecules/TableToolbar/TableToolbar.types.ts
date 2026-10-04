@@ -88,10 +88,12 @@ export interface TableToolbarFilterProps extends Omit<ComponentPropsWithoutRef<"
   onOpenChange?: (open: boolean) => void;
   /**
    * The button's look. Inside a `Toolbar` it follows the toolbar's `variant` when left out; on its own it is `secondary`.
+   * @default 'secondary'
    */
   variant?: ButtonVariant;
   /**
    * The button's size. Inside a `Toolbar` it follows the toolbar's `size` when left out; on its own it is the bar's `size`.
+   * @default the bar's `size` ('md')
    */
   size?: TableToolbarSize;
   /** An icon before the label, a component from `@dbm-design-system/icons` (a funnel for "Filter"). */
@@ -101,9 +103,15 @@ export interface TableToolbarFilterProps extends Omit<ComponentPropsWithoutRef<"
    * @default 'start'
    */
   align?: "start" | "center" | "end";
-  /** Replaces the words this part writes, per key. */
+  /**
+   * Replaces the words this part writes, per key. Any you leave out keep their English default; the counts are written with `formatNumber`.
+   * @default { clear: "Clear", activeCount: (n) => `${n} active`, panel: (label) => `${label} filter` }
+   */
   labels?: Partial<TableToolbarFilterLabels>;
-  /** Writes the count in a locale's own numerals. Plain `String` by default; also used by the default `activeCount`. */
+  /**
+   * Writes the count in a locale's own numerals. Plain `String` by default; also used by the default `activeCount`.
+   * @default (value) => String(value)
+   */
   formatNumber?: (value: number) => string;
   /** Additional CSS classes for customization. */
   className?: string;
@@ -145,7 +153,10 @@ export interface TableToolbarActiveFiltersProps extends Omit<ComponentPropsWitho
   onRemove?: (id: string) => void;
   /** Shows a "Clear all" button while more than one filter is applied, calling this when pressed. */
   onClearAll?: () => void;
-  /** The chips' size, on the shared scale. Defaults to the bar's `size`. */
+  /**
+   * The chips' size, on the shared scale.
+   * @default the bar's `size` ('md')
+   */
   size?: TableToolbarSize;
   /**
    * The chips' colour.
@@ -157,9 +168,15 @@ export interface TableToolbarActiveFiltersProps extends Omit<ComponentPropsWitho
    * @default true
    */
   announce?: boolean;
-  /** Replaces the words this part writes, per key. */
+  /**
+   * Replaces the words this part writes, per key. Any you leave out keep their English default; the counts are written with `formatNumber`.
+   * @default { list: "Applied filters", clearAll: "Clear all", remove: (label) => `Remove filter: ${label}`, applied: (n) => `${n} filters applied` }
+   */
   labels?: Partial<TableToolbarActiveFiltersLabels>;
-  /** Writes the counts in the default announcements in a locale's own numerals. Plain `String` by default. */
+  /**
+   * Writes the counts in the default announcements in a locale's own numerals. Plain `String` by default.
+   * @default (value) => String(value)
+   */
   formatNumber?: (value: number) => string;
   /** Additional CSS classes for customization. */
   className?: string;
@@ -185,16 +202,25 @@ export interface TableToolbarSummaryProps extends Omit<ComponentPropsWithoutRef<
   count?: number;
   /** The unfiltered total. Given, and larger than `count`, the text reads "12 of 128 results". */
   total?: number;
-  /** The text size, on the shared scale. Defaults to the bar's `size`. */
+  /**
+   * The text size, on the shared scale.
+   * @default the bar's `size` ('md')
+   */
   size?: TableToolbarSize;
   /**
    * Announces a change in the count to screen readers, never the first count to appear.
    * @default true
    */
   announce?: boolean;
-  /** Replaces the words this part writes, per key. */
+  /**
+   * Replaces the words this part writes, per key. Any you leave out keep their English default; the counts are written with `formatNumber`.
+   * @default { results: (n) => `${n} results`, resultsOf: (n, total) => `${n} of ${total} results` }
+   */
   labels?: Partial<TableToolbarSummaryLabels>;
-  /** Writes the numbers in a locale's own numerals. Plain `String` by default; also used by the default `results`. */
+  /**
+   * Writes the numbers in a locale's own numerals. Plain `String` by default; also used by the default `results`.
+   * @default (value) => String(value)
+   */
   formatNumber?: (value: number) => string;
   /** Additional CSS classes for customization. */
   className?: string;
@@ -232,16 +258,25 @@ export interface TableToolbarSelectionProps extends Omit<ComponentPropsWithoutRe
   onSelectAll?: () => void;
   /** The bulk actions: a `Toolbar` of `Toolbar.Button`s is the usual choice, so they are one tab stop. */
   children?: ReactNode;
-  /** The text and button size, on the shared scale. Defaults to the bar's `size`. */
+  /**
+   * The text and button size, on the shared scale.
+   * @default the bar's `size` ('md')
+   */
   size?: TableToolbarSize;
   /**
    * Announces a change in the selection to screen readers, never the first appearance.
    * @default true
    */
   announce?: boolean;
-  /** Replaces the words this part writes, per key. */
+  /**
+   * Replaces the words this part writes, per key. Any you leave out keep their English default; the counts are written with `formatNumber`.
+   * @default { group: "Selected rows", selected: (n) => `${n} selected`, cleared: "Selection cleared", clear: "Clear selection", selectAll: (total) => `Select all ${total}` }
+   */
   labels?: Partial<TableToolbarSelectionLabels>;
-  /** Writes the counts in a locale's own numerals. Plain `String` by default; also used by the default labels. */
+  /**
+   * Writes the counts in a locale's own numerals. Plain `String` by default; also used by the default labels.
+   * @default (value) => String(value)
+   */
   formatNumber?: (value: number) => string;
   /** Additional CSS classes for customization. */
   className?: string;
