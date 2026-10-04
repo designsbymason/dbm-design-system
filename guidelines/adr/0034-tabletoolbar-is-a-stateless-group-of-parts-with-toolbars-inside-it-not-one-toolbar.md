@@ -1,6 +1,6 @@
 # 0034 — `TableToolbar` is a stateless named group of parts, with real `Toolbar`s inside it for the buttons, over one big `role="toolbar"` or a component that owns the filter state
 
-**Status:** Accepted · **Date:** 2026-10-03
+**Status:** Accepted · **Date:** 2026-10-03 · **Amended 2026-10-04** — a third component token was added; the decision itself is unchanged
 
 ## Context
 The bar above a table holds a search field, filters, the filters currently applied, a result count and bulk actions. Two questions had no obvious answer.
@@ -27,7 +27,7 @@ The bar above a table holds a search field, filters, the filters currently appli
 **A single `filters` prop of data (`[{ label, options }]`)** — rejected: it would decide the panel's controls for everyone; filters are as varied as the data (a range, a date, a multi-select), so the panel is children.
 
 ## Consequences
-- The bar adds no dependency and two component tokens (`table-toolbar.search-min-width`/`max-width`); it is built from `Toolbar`, `Popover`, `Tag`, `Badge`, `Button`, `SearchInput` and the form controls.
+- The bar adds no dependency and three component tokens (`table-toolbar.search-min-width`/`max-width`, and `filter-count-size-xs`) *(Amended 2026-10-04: this originally said two, `search-min-width`/`max-width`; the third, the diameter of the filter button's count badge on the xs bar, was added after the build)*; it is built from `Toolbar`, `Popover`, `Tag`, `Badge`, `Button`, `SearchInput` and the form controls.
 - A consumer places the toolbars and a `Spacer` in a `TableToolbar.Row` themselves; the bar gives them wrapping and the search field a measure, not a layout engine.
 - `DataTable` (Phase 6) composes these parts rather than reimplementing them; if it finds a seam missing, the part grows then, not now.
 

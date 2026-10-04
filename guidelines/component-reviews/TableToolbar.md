@@ -2,8 +2,8 @@
 
 Molecule, Data Display category. Item 28 of the itemized molecule build order in `04-component-inventory.md`, named
 `TableToolbar` (one word) from 2026-10-03 to match `DataTable` and `TableOfContents`. The bar above a table of data: search,
-filters, the filters currently applied, a result count and bulk actions. Built 2026-10-03. **Not yet declared Finalized** — the
-user declares that. The decision is [ADR-0034](../adr/0034-tabletoolbar-is-a-stateless-group-of-parts-with-toolbars-inside-it-not-one-toolbar.md).
+filters, the filters currently applied, a result count and bulk actions. Built 2026-10-03, **Finalized 2026-10-04**
+(declared by the user after the final review below). The decision is [ADR-0034](../adr/0034-tabletoolbar-is-a-stateless-group-of-parts-with-toolbars-inside-it-not-one-toolbar.md).
 
 ## What it is
 
