@@ -32,8 +32,8 @@ export interface PinInputProps
   length?: number;
   /**
    * Which characters are accepted. `numeric` takes digits only and asks a phone for its number pad;
-   * `alphanumeric` takes letters and digits; `text` takes anything. Anything else a person types or pastes is
-   * dropped, so a pasted `123-456` becomes `123456`.
+   * `alphanumeric` takes letters and digits; `text` takes letters only, of any script. Anything else a person
+   * types or pastes is dropped, so a pasted `123-456` becomes `123456`.
    * @default "numeric"
    */
   type?: PinInputType;

@@ -12,12 +12,12 @@ const defaultLabels: PinInputLabels = { reveal: "Show code" };
 const defaultLength = 6;
 const maxLength = 32;
 
-// What each type drops. `text` takes everything but spaces (a pasted "123 456") and anything outside the Basic
-// Multilingual Plane, so one character is always one cell and one selection index.
+// What each type drops. `text` takes letters of any script and nothing else; characters outside the Basic
+// Multilingual Plane are dropped from it too, so one character is always one cell and one selection index.
 const rejected: Record<PinInputType, RegExp> = {
   numeric: /[^0-9]/g,
   alphanumeric: /[^a-zA-Z0-9]/g,
-  text: /[\s\uD800-\uDFFF]/g,
+  text: /[^\p{L}]|[\u{10000}-\u{10FFFF}]/gu,
 };
 
 const sizeClass: Record<InputSize, string | undefined> = {
@@ -162,6 +162,19 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     useEffect(() => {
       if (focused) syncSelection();
     }, [current, focused]);
+
+    // Characters the type does not accept never reach the input: left to the change handler, a rejected key would
+    // still move the caret past the cell (the next cell lights up, this one stays empty), and typed over a selected
+    // character it would delete it. A paste that is only partly accepted still gets through, and is cleaned.
+    useEffect(() => {
+      const input = inputRef.current;
+      if (!input) return;
+      const block = (event: InputEvent) => {
+        if (event.data && sanitize(event.data, type, length) === "") event.preventDefault();
+      };
+      input.addEventListener("beforeinput", block);
+      return () => input.removeEventListener("beforeinput", block);
+    }, [type, length]);
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
       const next = sanitize(event.target.value, type, length);

@@ -54,14 +54,30 @@ describe("PinInput", () => {
     expect(field()).toHaveValue("123");
   });
 
-  it("accepts letters and digits for alphanumeric, and anything but spaces for text", async () => {
+  it("ignores a rejected key without moving to the next cell or losing the character it would replace", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<PinInput aria-label="Code" length={4} defaultValue="12" />);
+    const active = () => cells(container).findIndex((cell) => cell.dataset.active === "true");
+    await tabIn(user, 2);
+    await user.keyboard("a");
+    expect(field()).toHaveValue("12");
+    expect(active()).toBe(2);
+    await user.keyboard("{Home}");
+    await user.keyboard("a");
+    expect(field()).toHaveValue("12");
+    expect(active()).toBe(0);
+    await user.paste("xyz");
+    expect(field()).toHaveValue("12");
+  });
+
+  it("accepts letters and digits for alphanumeric, and letters only for text", async () => {
     const user = userEvent.setup();
     const { rerender } = render(<PinInput aria-label="Code" type="alphanumeric" length={6} />);
     await user.type(field(), "a1-b2");
     expect(field()).toHaveValue("a1b2");
     rerender(<PinInput aria-label="Code" type="text" length={6} defaultValue="" key="text" />);
-    await user.type(field(), "a-b 2");
-    expect(field()).toHaveValue("a-b2");
+    await user.type(field(), "a-b 2é9");
+    expect(field()).toHaveValue("abé");
     expect(field()).toHaveAttribute("inputmode", "text");
   });
 

@@ -318,6 +318,27 @@ export const TypeAndCompleteInteraction: Story = {
   },
 };
 
+export const RejectedKeyInteraction: Story = {
+  name: "A rejected key changes nothing — interaction test",
+  tags: ["!dev"],
+  args: { length: 4, type: "numeric" },
+  play: async ({ canvasElement }) => {
+    const input = within(canvasElement).getByLabelText("Verification code") as HTMLInputElement;
+    const cells = Array.from(canvasElement.querySelectorAll<HTMLElement>("[data-cell]"));
+    await userEvent.click(input);
+    await waitFor(() => expect(cells[0]).toHaveAttribute("data-active", "true"));
+    await userEvent.keyboard("a");
+    // Still on the first, still empty, and the next cell hasn't lit up.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(input).toHaveValue("");
+    await expect(cells[0]).toHaveAttribute("data-active", "true");
+    await expect(cells[1]).toHaveAttribute("data-active", "false");
+    await userEvent.keyboard("7");
+    await expect(input).toHaveValue("7");
+    await expect(cells[1]).toHaveAttribute("data-active", "true");
+  },
+};
+
 export const PasteInteraction: Story = {
   name: "Pasting a code — interaction test",
   tags: ["!dev"],
