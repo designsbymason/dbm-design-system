@@ -87,13 +87,13 @@ const meta: Meta<typeof Splitter> = {
   render: (args) => (
     <div style={frame()}>
       <Splitter {...args}>
-        <Splitter.Pane defaultSize={25} minSize="160px" collapsible>
+        <Splitter.Pane label="Sidebar" defaultSize={25} minSize="10rem" collapsible>
           <Demo label="Sidebar" tint />
         </Splitter.Pane>
-        <Splitter.Pane>
+        <Splitter.Pane label="Content">
           <Demo label="Content" />
         </Splitter.Pane>
-        <Splitter.Pane defaultSize={25}>
+        <Splitter.Pane label="Details" defaultSize={25}>
           <Demo label="Details" tint />
         </Splitter.Pane>
       </Splitter>
@@ -193,8 +193,8 @@ export const Limits: Story = {
   render: (args) => (
     <div style={frame()}>
       <Splitter {...args} defaultLayout={[30, 70]}>
-        <Splitter.Pane minSize="240px" maxSize="50%">
-          <Demo label="Sidebar: at least 240px, at most half" tint />
+        <Splitter.Pane minSize="15rem" maxSize="50%">
+          <Demo label="Sidebar: at least 15rem, at most half" tint />
         </Splitter.Pane>
         <Splitter.Pane minSize={30}>
           <Demo label="Content: at least 30%" />
@@ -202,6 +202,74 @@ export const Limits: Story = {
       </Splitter>
     </div>
   ),
+};
+
+export const Fixed: Story = {
+  name: "Fixed width",
+  parameters: { docs: { source: { code: splitterSnippets.fixed } } },
+  render: (args) => (
+    <div style={{ ...frame(), width: "100%", maxWidth: "60rem", resize: "horizontal", overflow: "auto", minWidth: "20rem" }}>
+      <Splitter {...args} defaultLayout={[30, 70]}>
+        <Splitter.Pane fixed minSize="10rem" label="Sidebar">
+          <Demo label="Fixed: keeps its width as the box is resized — drag the corner to try" tint />
+        </Splitter.Pane>
+        <Splitter.Pane label="Content">
+          <Demo label="Content: takes the difference" />
+        </Splitter.Pane>
+      </Splitter>
+    </div>
+  ),
+};
+
+export const Locked: Story = {
+  name: "Locked panes",
+  parameters: { docs: { source: { code: splitterSnippets.locked } } },
+  argTypes: { orientation: { control: false } },
+  render: (args) => (
+    <div style={frame("22rem")}>
+      <Splitter {...args} orientation="vertical" defaultLayout={[15, 55, 30]}>
+        <Splitter.Pane resizable={false}>
+          <Demo label="Header: locked — the divider beside it is a plain line" tint />
+        </Splitter.Pane>
+        <Splitter.Pane label="Main">
+          <Demo label="Main" />
+        </Splitter.Pane>
+        <Splitter.Pane label="Terminal">
+          <Demo label="Terminal: the handle between it and Main still works" tint />
+        </Splitter.Pane>
+      </Splitter>
+    </div>
+  ),
+};
+
+export const PanesComingAndGoing: Story = {
+  name: "Panes coming and going",
+  parameters: { docs: { source: { code: splitterSnippets.dynamic } } },
+  render: function PanesComingAndGoingStory(args) {
+    const [showDetails, setShowDetails] = useState(true);
+    return (
+      <div style={{ display: "grid", gap: "var(--dbm-space-3)", justifyItems: "start" }}>
+        <Button size="sm" variant="secondary" onClick={() => setShowDetails(!showDetails)}>
+          {showDetails ? "Hide details" : "Show details"}
+        </Button>
+        <div style={{ ...frame(), width: "100%" }}>
+          <Splitter {...args}>
+            <Splitter.Pane key="nav" id="nav" label="Navigation" defaultSize={25}>
+              <Demo label="Navigation" tint />
+            </Splitter.Pane>
+            <Splitter.Pane key="content" id="content" label="Content">
+              <Demo label="Content" />
+            </Splitter.Pane>
+            {showDetails && (
+              <Splitter.Pane key="details" id="details" defaultSize={25}>
+                <Demo label="Details — hide it and the others keep their sizes" tint />
+              </Splitter.Pane>
+            )}
+          </Splitter>
+        </div>
+      </div>
+    );
+  },
 };
 
 export const Collapsible: Story = {
@@ -730,5 +798,140 @@ export const PhoneInteraction: Story = {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getByRole("separator")).toHaveAttribute("aria-orientation", "horizontal"));
     await expect(canvas.getByTestId("b").getBoundingClientRect().top).toBeGreaterThan(canvas.getByTestId("a").getBoundingClientRect().bottom - 1);
+  },
+};
+
+export const RemLimitInteraction: Story = {
+  name: "A rem limit is the same on the page as in rem — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <MeasuredFrame width="40rem">
+      <Splitter defaultLayout={[40, 60]}>
+        {pane("a", "A", { minSize: "15rem", maxSize: "20rem" })}
+        {pane("b", "B")}
+      </Splitter>
+    </MeasuredFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const handle = canvas.getByRole("separator");
+    handle.focus();
+    await userEvent.keyboard("{Home}");
+    await waitFor(() => expect(widthOf(canvas.getByTestId("a"))).toBeCloseTo(15 * rem, 0));
+    await userEvent.keyboard("{End}");
+    await waitFor(() => expect(widthOf(canvas.getByTestId("a"))).toBeCloseTo(20 * rem, 0));
+  },
+};
+
+export const FixedInteraction: Story = {
+  name: "A fixed pane keeps its width when the container is resized, and a flexible one keeps its share — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <MeasuredFrame width="50rem" height="10rem">
+      <Splitter defaultLayout={[30, 70]}>
+        {pane("fixed", "Fixed", { fixed: true })}
+        {pane("flex", "Flex")}
+      </Splitter>
+    </MeasuredFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const before = widthOf(canvas.getByTestId("fixed"));
+    // The panes ease to their new sizes, so wait for the width to arrive rather than reading it on the way.
+    canvas.getByTestId("frame").style.width = "30rem";
+    await waitFor(() => expect(widthOf(canvas.getByTestId("fixed"))).toBeCloseTo(before, 0));
+    await expect(widthOf(canvas.getByTestId("flex"))).toBeLessThan(before * 3);
+    canvas.getByTestId("frame").style.width = "70rem";
+    await waitFor(() => expect(widthOf(canvas.getByTestId("fixed"))).toBeCloseTo(before, 0));
+    await expect(widthOf(canvas.getByTestId("flex"))).toBeGreaterThan(before * 3);
+  },
+};
+
+export const LockedInteraction: Story = {
+  name: "A locked pane doesn't move, its dividers are neither tab stops nor targets, and the others still resize — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <MeasuredFrame width="30rem" height="24rem">
+      <Splitter orientation="vertical" defaultLayout={[20, 60, 20]}>
+        {pane("header", "Header", { resizable: false })}
+        {pane("main", "Main", { label: "Main" })}
+        {pane("footer", "Footer")}
+      </Splitter>
+    </MeasuredFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [lockedDivider, live] = canvas.getAllByRole("separator") as [HTMLElement, HTMLElement];
+    await expect(lockedDivider).not.toHaveAttribute("tabindex");
+    // A plain divider is not a target: the point beside it is the pane, not the divider.
+    const box = lockedDivider.getBoundingClientRect();
+    await expect(document.elementFromPoint(box.left + box.width / 2, box.top + 5)).not.toBe(lockedDivider);
+    // Tab reaches the working handle and nothing else on the way.
+    await userEvent.tab();
+    await expect(document.activeElement).toBe(live);
+    const header = heightOf(canvas.getByTestId("header"));
+    const main = heightOf(canvas.getByTestId("main"));
+    await userEvent.keyboard("{ArrowDown}");
+    await waitFor(() => expect(heightOf(canvas.getByTestId("main"))).toBeGreaterThan(main));
+    await expect(heightOf(canvas.getByTestId("header"))).toBeCloseTo(header, 0);
+    await expect(live).toHaveAccessibleName("Resize Main");
+  },
+};
+
+export const PanesComingAndGoingInteraction: Story = {
+  name: "Removing a pane lets the others keep their proportions, and adding one makes room — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: function Harness() {
+    const [showMiddle, setShowMiddle] = useState(true);
+    return (
+      <div>
+        <button type="button" onClick={() => setShowMiddle(!showMiddle)}>
+          Toggle
+        </button>
+        <MeasuredFrame width="40rem">
+          <Splitter defaultLayout={showMiddle ? [20, 30, 50] : undefined}>
+            <Splitter.Pane key="a" id="a" data-testid="a" defaultSize={20}>A</Splitter.Pane>
+            {showMiddle && <Splitter.Pane key="b" id="b" data-testid="b" defaultSize={30}>B</Splitter.Pane>}
+            <Splitter.Pane key="c" id="c" data-testid="c" defaultSize={50}>C</Splitter.Pane>
+          </Splitter>
+        </MeasuredFrame>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const ratio = () => widthOf(canvas.getByTestId("a")) / widthOf(canvas.getByTestId("c"));
+    await expect(ratio()).toBeCloseTo(20 / 50, 1);
+    await userEvent.click(canvas.getByRole("button", { name: "Toggle" }));
+    await waitFor(() => expect(canvas.queryByTestId("b")).toBeNull());
+    await expect(canvas.getAllByRole("separator")).toHaveLength(1);
+    await waitFor(() => expect(ratio()).toBeCloseTo(20 / 50, 1));
+    const share = widthOf(canvas.getByTestId("a")) + widthOf(canvas.getByTestId("c"));
+    await expect(share).toBeCloseTo(widthOf(canvas.getByTestId("frame")) - widthOf(canvas.getByRole("separator")), 0);
+  },
+};
+
+export const NamedHandlesInteraction: Story = {
+  name: "Each handle is named after the pane before it, computed in the browser — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <MeasuredFrame>
+      <Splitter>
+        {pane("a", "A", { label: "Sidebar" })}
+        {pane("b", "B", { label: "Content" })}
+        {pane("c", "C")}
+      </Splitter>
+    </MeasuredFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("separator", { name: "Resize Sidebar" })).toBeInTheDocument();
+    await expect(canvas.getByRole("separator", { name: "Resize Content" })).toBeInTheDocument();
   },
 };

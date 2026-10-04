@@ -172,3 +172,67 @@ export function togglePane(
 export function sameLayout(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((value, index) => Math.abs(value - (b[index] ?? 0)) < 1e-4);
 }
+
+/**
+ * The layout after panes were added or removed: a pane that is still there (by key) keeps its size, a new pane
+ * takes its own default (or the share nobody has claimed), and the whole is scaled to 100, so what a removed pane
+ * freed, or a new one needs, is shared out in proportion rather than every pane starting over.
+ */
+export function adaptLayout(
+  sizes: number[],
+  oldKeys: string[],
+  newKeys: string[],
+  defaults: Array<number | undefined>,
+  constraints: PaneConstraints[],
+): number[] {
+  const carried = newKeys.map((key, index) => {
+    const at = oldKeys.indexOf(key);
+    return at >= 0 && sizes[at] !== undefined ? sizes[at] : defaults[index];
+  });
+  // A pane that was collapsed stays collapsed: left to the limits, its size would be lifted to its minimum.
+  const held = constraints.map((limits, index) => {
+    const size = carried[index];
+    return size !== undefined && oldKeys.includes(newKeys[index] ?? "") && isCollapsed(size, limits)
+      ? { ...limits, min: limits.collapsed, max: limits.collapsed }
+      : limits;
+  });
+  return initialLayout(carried, held);
+}
+
+/**
+ * The layout after the container changed size, when some panes are `fixed` (they keep their length): a fixed
+ * pane's percentage is rescaled by `ratio` (the space the panes shared before over the space they share now) and
+ * the others share out what is left in proportion to what they had. Collapsed panes hold their collapsed size.
+ * When the fixed panes alone fill the container, every pane scales proportionally instead.
+ */
+export function rescaleForContainer(
+  sizes: number[],
+  constraints: PaneConstraints[],
+  fixed: boolean[],
+  ratio: number,
+): number[] {
+  const pinned = sizes.map((size, index) => {
+    const limits = constraints[index];
+    if (!limits) return undefined;
+    if (isCollapsed(size, limits)) return limits.collapsed;
+    return fixed[index] ? clamp(size * ratio, limits.min, limits.max) : undefined;
+  });
+  const pinnedTotal = sum(pinned.map((value) => value ?? 0));
+  const flexIndexes = sizes.map((_, index) => index).filter((index) => pinned[index] === undefined);
+  if (flexIndexes.length === 0 || pinnedTotal >= 100 - EPSILON) return normalizeLayout(sizes, constraints);
+
+  const remaining = 100 - pinnedTotal;
+  const flexOld = sum(flexIndexes.map((index) => sizes[index] ?? 0));
+  const next = sizes.map((size, index) => {
+    const value = pinned[index];
+    if (value !== undefined) return value;
+    return flexOld > EPSILON ? (size * remaining) / flexOld : remaining / flexIndexes.length;
+  });
+  return normalizeLayout(
+    next,
+    constraints.map((limits, index) => {
+      const value = pinned[index];
+      return value === undefined ? limits : { ...limits, min: value, max: value };
+    }),
+  );
+}

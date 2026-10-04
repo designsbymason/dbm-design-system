@@ -8,18 +8,21 @@ export type SplitterOrientation = "horizontal" | "vertical";
 export type SplitterVariant = "line" | "grip";
 
 /**
- * A pane size limit: a plain number is a percentage of the space the panes share, `"240px"` is a fixed length
- * and `"20%"` is the same as `20`. The panes share the container less its handles.
+ * A pane size limit: a plain number is a percentage of the space the panes share, `"20%"` is the same as `20`,
+ * and `"240px"` and `"15rem"` are lengths (a `rem` is measured against the page's root font size, so a limit
+ * written in it keeps up with the text size a person has chosen; it is read when the splitter mounts and whenever
+ * its container changes size). The panes share the container less its handles.
  */
-export type SplitterSize = number | `${number}px` | `${number}%`;
+export type SplitterSize = number | `${number}px` | `${number}rem` | `${number}%`;
 
 /** Text the splitter supplies itself (translate or replace it). */
 export interface SplitterLabels {
   /**
-   * The accessible name of a handle, from its position among the handles (1-based) and how many there are.
-   * Default: "Resize panels", or "Resize panels 1 of 2" when there is more than one handle.
+   * The accessible name of a handle, from its position among the resizable handles (1-based), how many there
+   * are, and the `label` of the pane before it when that pane has one. Default: "Resize Sidebar" for a labelled
+   * pane, otherwise "Resize panels", or "Resize panels 1 of 2" when there is more than one handle.
    */
-  handle: (position: number, total: number) => string;
+  handle: (position: number, total: number, paneLabel?: string) => string;
   /** What a handle reads while the pane before it is open, from that pane's size as a whole-number percentage. Default: "30%". */
   valueText: (percent: number) => string;
   /** What a handle reads while the pane before it is collapsed. Default: "Collapsed". */
@@ -106,6 +109,11 @@ export interface SplitterPaneProps extends Omit<ComponentPropsWithoutRef<"div">,
    */
   children?: ReactNode | ((state: SplitterPaneState) => ReactNode);
   /**
+   * A short name for the pane ("Sidebar"). The handle after it is named from it ("Resize Sidebar"), so a screen
+   * reader user with several handles can tell them apart. Not added to the pane itself.
+   */
+  label?: string;
+  /**
    * The pane's starting size as a percentage, when the splitter holds its own layout and gets no
    * `defaultLayout`. Panes without one share the rest equally.
    */
@@ -120,6 +128,20 @@ export interface SplitterPaneProps extends Omit<ComponentPropsWithoutRef<"div">,
    * @default 100
    */
   maxSize?: SplitterSize;
+  /**
+   * Whether a handle next to this pane can resize it. `false` locks the pane (a header, a footer): each handle
+   * beside it is drawn as a plain divider, out of the tab order, that moves nothing. The pane can still be
+   * collapsed from outside with `collapsed`.
+   * @default true
+   */
+  resizable?: boolean;
+  /**
+   * Keeps the pane's length when the container is resized: it stays the same number of pixels and the other
+   * panes share out the difference (a sidebar that holds its width while the content flexes). A person can still
+   * drag it to a new size, which it then keeps. Without it a pane keeps its percentage.
+   * @default false
+   */
+  fixed?: boolean;
   /**
    * Lets the pane collapse: pulled past halfway to its minimum it snaps shut, and Enter or a double click on a
    * neighbouring handle toggles it.

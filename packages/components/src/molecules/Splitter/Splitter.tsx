@@ -19,10 +19,12 @@ import {
 import styles from "./Splitter.module.css";
 import {
   type PaneConstraints,
+  adaptLayout,
   initialLayout,
   isCollapsed,
   normalizeLayout,
   pairRange,
+  rescaleForContainer,
   resizePair,
   sameLayout,
   togglePane,
@@ -44,24 +46,44 @@ interface PaneContextValue {
 
 const PaneContext = createContext<PaneContextValue | null>(null);
 
-/** A pane size limit as a percentage; a length can't be turned into one until the container has been measured. */
-function resolveSize(size: SplitterSize | undefined, fallback: number, available: number, unmeasured: number): number {
+/**
+ * A pane size limit as a percentage. A length (`px`, or `rem` against the root font size) can't be turned into
+ * one until the container has been measured, so until then it is `unmeasured`.
+ */
+function resolveSize(
+  size: SplitterSize | undefined,
+  fallback: number,
+  available: number,
+  unmeasured: number,
+  rootFontSize: number,
+): number {
   if (size === undefined) return fallback;
   if (typeof size === "number") return size;
   const value = Number.parseFloat(size);
   if (!Number.isFinite(value)) return fallback;
   if (size.endsWith("%")) return value;
-  return available > 0 ? (value / available) * 100 : unmeasured;
+  const pixels = size.endsWith("rem") ? value * rootFontSize : value;
+  return available > 0 ? (pixels / available) * 100 : unmeasured;
 }
 
-function paneConstraints(panes: ReactElement<SplitterPaneProps>[], available: number): PaneConstraints[] {
+function paneConstraints(
+  panes: ReactElement<SplitterPaneProps>[],
+  available: number,
+  rootFontSize: number,
+): PaneConstraints[] {
   return panes.map(({ props }) => {
-    const min = resolveSize(props.minSize, 10, available, 0);
-    const max = Math.max(min, resolveSize(props.maxSize, 100, available, 100));
+    const min = resolveSize(props.minSize, 10, available, 0, rootFontSize);
+    const max = Math.max(min, resolveSize(props.maxSize, 100, available, 100, rootFontSize));
     const collapsible = Boolean(props.collapsible);
-    const collapsed = collapsible ? Math.min(resolveSize(props.collapsedSize, 0, available, 0), min) : 0;
+    const collapsed = collapsible ? Math.min(resolveSize(props.collapsedSize, 0, available, 0, rootFontSize), min) : 0;
     return { min, max, collapsible, collapsed };
   });
+}
+
+/** The page's root font size in pixels — what a `rem` limit is measured against. */
+function readRootFontSize(): number {
+  if (typeof document === "undefined") return 16;
+  return Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 }
 
 /** The layout a splitter starts from: its panes' own sizes, with any `defaultCollapsed` pane already shut. */
@@ -95,6 +117,9 @@ const SplitterPane = forwardRef<HTMLDivElement, SplitterPaneProps>(
       maxSize: _maxSize,
       collapsible: _collapsible,
       collapsedSize: _collapsedSize,
+      label: _label,
+      resizable: _resizable,
+      fixed: _fixed,
       collapsed: _collapsed,
       defaultCollapsed: _defaultCollapsed,
       onCollapsedChange: _onCollapsedChange,
@@ -142,8 +167,12 @@ const isPane = (child: unknown): child is ReactElement<SplitterPaneProps> =>
   isValidElement(child) && child.type === SplitterPane;
 
 const defaultLabels = (formatNumber: (value: number) => string): SplitterLabels => ({
-  handle: (position, total) =>
-    total > 1 ? `Resize panels ${formatNumber(position)} of ${formatNumber(total)}` : "Resize panels",
+  handle: (position, total, paneLabel) =>
+    paneLabel
+      ? `Resize ${paneLabel}`
+      : total > 1
+        ? `Resize panels ${formatNumber(position)} of ${formatNumber(total)}`
+        : "Resize panels",
   valueText: (percent) => `${formatNumber(percent)}%`,
   collapsed: "Collapsed",
 });
@@ -198,6 +227,8 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
     const allChildren = Children.toArray(children);
     const panes = allChildren.filter(isPane);
     const paneIds = panes.map(({ props: paneProps }, index) => paneProps.id ?? `${id ?? baseId}-pane-${index}`);
+    // A pane's identity, so a layout survives panes coming and going: its `id`, else its `key`.
+    const paneKeys = panes.map(({ props: paneProps, key }, index) => paneProps.id ?? (key != null ? String(key) : `index-${index}`));
 
     const hasWarnedChildrenRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
@@ -211,15 +242,32 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
 
     // The space the panes share, in pixels, measured from the real container (none in a server render).
     const [available, setAvailable] = useState(0);
-    const constraints = paneConstraints(panes, available);
+    const [rootFontSize, setRootFontSize] = useState(16);
+    const constraints = paneConstraints(panes, available, rootFontSize);
 
-    const [uncontrolled, setUncontrolled] = useState<number[]>(() =>
-      defaultLayout && defaultLayout.length === panes.length
-        ? normalizeLayout(defaultLayout, paneConstraints(panes, 0))
-        : startingLayout(panes, paneConstraints(panes, 0)),
-    );
+    const [ownLayout, setOwnLayout] = useState<{ keys: string[]; layout: number[] }>(() => ({
+      keys: paneKeys,
+      layout:
+        defaultLayout && defaultLayout.length === panes.length
+          ? normalizeLayout(defaultLayout, paneConstraints(panes, 0, 16))
+          : startingLayout(panes, paneConstraints(panes, 0, 16)),
+    }));
     const isControlled = layoutProp !== undefined;
-    const held = layoutProp ?? uncontrolled;
+    // Panes came or went: panes that are still there keep their sizes, and the rest is shared out (derived
+    // state, set while rendering so the first paint already has the new layout).
+    if (!isControlled && ownLayout.keys.join("\u0000") !== paneKeys.join("\u0000")) {
+      setOwnLayout({
+        keys: paneKeys,
+        layout: adaptLayout(
+          ownLayout.layout,
+          ownLayout.keys,
+          paneKeys,
+          panes.map(({ props: paneProps }) => paneProps.defaultSize),
+          constraints,
+        ),
+      });
+    }
+    const held = layoutProp ?? ownLayout.layout;
     const layout = held.length === panes.length ? held : startingLayout(panes, constraints);
 
     const hasWarnedLengthRef = useRef(false);
@@ -245,6 +293,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       dir,
       horizontal,
       panes,
+      keys: paneKeys,
     });
     useLayoutEffect(() => {
       latest.current = {
@@ -258,9 +307,11 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
         dir,
         horizontal,
         panes,
+        keys: paneKeys,
       };
     });
-    const restoreRef = useRef<Record<number, number>>({});
+    // The size a collapsed pane had, by pane, to open it again at.
+    const restoreRef = useRef<Record<string, number>>({});
     const dragCleanupRef = useRef<(() => void) | null>(null);
     const [dragging, setDragging] = useState<number | null>(null);
 
@@ -270,11 +321,11 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       next.forEach((size, index) => {
         const limits = current.constraints[index];
         if (isCollapsed(size, limits) && !isCollapsed(current.layout[index] ?? 0, limits)) {
-          restoreRef.current[index] = current.layout[index] ?? 0;
+          restoreRef.current[current.keys[index] ?? String(index)] = current.layout[index] ?? 0;
         }
       });
       latest.current = { ...current, layout: next };
-      if (!current.isControlled) setUncontrolled(next);
+      if (!current.isControlled) setOwnLayout((state) => ({ ...state, layout: next }));
       current.onLayoutChange?.(next);
     }, []);
 
@@ -292,10 +343,14 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       return Math.max(whole - used, 0);
     }, []);
     useLayoutEffect(() => {
-      setAvailable(measure());
+      const remeasure = () => {
+        setAvailable(measure());
+        setRootFontSize(readRootFontSize());
+      };
+      remeasure();
       const root = rootRef.current;
       if (!root || typeof ResizeObserver === "undefined") return undefined;
-      const observer = new ResizeObserver(() => setAvailable(measure()));
+      const observer = new ResizeObserver(remeasure);
       observer.observe(root);
       return () => observer.disconnect();
     }, [measure, horizontal, panes.length]);
@@ -303,9 +358,19 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
     // A length limit becomes a different percentage when the container changes, and a pane's props can change
     // too: bring the layout back inside the limits, keeping a collapsed pane collapsed.
     const constraintsKey = constraints.map((c) => `${c.min}/${c.max}/${c.collapsed}`).join(",");
+    const previousAvailableRef = useRef(0);
     useLayoutEffect(() => {
+      const previous = previousAvailableRef.current;
+      previousAvailableRef.current = available;
       if (available <= 0 && constraints.every((c) => c.min === 0 && c.max === 100)) return;
       const current = latest.current;
+      const fixed = current.panes.map(({ props: paneProps }) => Boolean(paneProps.fixed));
+      // A pane that keeps its length keeps it through a resize: its share of the new space is rescaled, and the
+      // rest is shared out.
+      if (previous > 0 && available > 0 && Math.abs(previous - available) > 0.5 && fixed.some(Boolean)) {
+        commit(rescaleForContainer(current.layout, current.constraints, fixed, previous / available));
+        return;
+      }
       const pinned = current.constraints.map((limits, index) =>
         isCollapsed(current.layout[index] ?? 0, limits) ? { ...limits, min: limits.collapsed, max: limits.collapsed } : limits,
       );
@@ -313,22 +378,20 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps -- reconciles when the limits change, not on every layout change
     }, [constraintsKey, available]);
 
-    // An unheld layout that no longer fits the panes (one was added or removed) starts over.
-    useEffect(() => {
-      if (!isControlled && uncontrolled.length !== panes.length) setUncontrolled(layout);
-    }, [isControlled, uncontrolled.length, panes.length, layout]);
-
     // Tell each pane when it collapses or opens, however that came about.
     const flagsKey = collapsedFlags.join(",");
-    const previousFlagsRef = useRef<boolean[] | null>(null);
+    const previousFlagsRef = useRef<Record<string, boolean> | null>(null);
     useEffect(() => {
       const previous = previousFlagsRef.current;
-      if (previous && previous.length === collapsedFlags.length) {
+      const keys = latest.current.keys;
+      if (previous) {
         collapsedFlags.forEach((flag, index) => {
-          if (flag !== previous[index]) latest.current.panes[index]?.props.onCollapsedChange?.(flag);
+          const key = keys[index] ?? String(index);
+          // A pane that has only just arrived has nothing to compare against, and isn't a change.
+          if (key in previous && flag !== previous[key]) latest.current.panes[index]?.props.onCollapsedChange?.(flag);
         });
       }
-      previousFlagsRef.current = collapsedFlags;
+      previousFlagsRef.current = Object.fromEntries(collapsedFlags.map((flag, index) => [keys[index] ?? String(index), flag]));
       // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a pane's collapsed state changes
     }, [flagsKey]);
 
@@ -339,7 +402,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       current.panes.forEach(({ props: paneProps }, index) => {
         if (paneProps.collapsed === undefined) return;
         if (paneProps.collapsed === isCollapsed(current.layout[index] ?? 0, current.constraints[index])) return;
-        const next = togglePane(current.layout, index, current.constraints, restoreRef.current[index]);
+        const next = togglePane(current.layout, index, current.constraints, restoreRef.current[current.keys[index] ?? String(index)]);
         if (next) commit(next);
       });
       // eslint-disable-next-line react-hooks/exhaustive-deps -- follows the prop, and re-applies if the layout drifts from it
@@ -395,7 +458,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       const current = latest.current;
       // The pane before the handle collapses if it can; otherwise the one after it.
       const target = current.constraints[index]?.collapsible ? index : index + 1;
-      const next = togglePane(current.layout, target, current.constraints, restoreRef.current[target]);
+      const next = togglePane(current.layout, target, current.constraints, restoreRef.current[current.keys[target] ?? String(target)]);
       if (!next) return false;
       commit(next);
       current.onLayoutCommit?.(latest.current.layout);
@@ -430,6 +493,11 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
 
     const text: SplitterLabels = mergeDefined(defaultLabels(formatNumber), labels);
     const handleCount = Math.max(panes.length - 1, 0);
+    // A handle beside a locked pane is a plain divider; the others are the handles people use and name.
+    const isLocked = (index: number) =>
+      panes[index]?.props.resizable === false || panes[index + 1]?.props.resizable === false;
+    const resizableCount = Array.from({ length: handleCount }, (_, index) => index).filter((index) => !isLocked(index)).length;
+    let resizablePosition = 0;
 
     const items: ReactElement[] = [];
     panes.forEach((pane, index) => {
@@ -449,6 +517,18 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
         </PaneContext.Provider>,
       );
       if (index >= handleCount) return;
+      if (isLocked(index)) {
+        items.push(
+          <div
+            key={`handle-${index}`}
+            role="separator"
+            aria-orientation={horizontal ? "vertical" : "horizontal"}
+            className={cx(styles.handle, styles.handleStatic)}
+          />,
+        );
+        return;
+      }
+      resizablePosition += 1;
       const range = pairRange(layout, index, constraints);
       const open = !collapsedFlags[index];
       const percent = Math.round(size);
@@ -467,7 +547,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
           aria-valuemax={Math.round(range.max)}
           aria-valuetext={open ? text.valueText(percent) : text.collapsed}
           aria-controls={`${paneIds[index]} ${paneIds[index + 1]}`}
-          aria-label={text.handle(index + 1, handleCount)}
+          aria-label={text.handle(resizablePosition, resizableCount, pane.props.label)}
           aria-disabled={disabled || undefined}
           data-state={dragging === index ? "dragging" : "idle"}
           className={cx(styles.handle, variant === "grip" && styles.grip, disabled && styles.handleDisabled)}

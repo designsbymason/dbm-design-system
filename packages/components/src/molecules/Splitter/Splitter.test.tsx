@@ -400,6 +400,299 @@ describe("Splitter", () => {
     });
   });
 
+  describe("rem limits", () => {
+    const observerThatWeCanCall = () => {
+      let notify: () => void = () => {};
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          constructor(callback: () => void) {
+            notify = callback;
+          }
+          observe() {}
+          unobserve() {}
+          disconnect() {}
+        },
+      );
+      return () => notify();
+    };
+
+    afterEach(() => {
+      document.documentElement.style.fontSize = "";
+      vi.unstubAllGlobals();
+    });
+
+    it("reads a rem limit against the root font size", () => {
+      withContainerWidth(1000);
+      render(two({ defaultLayout: [50, 50] }, { minSize: "10rem", maxSize: "40rem" }));
+      // 10rem = 160px of 1000px, 40rem = 640px.
+      expect(first()).toHaveAttribute("aria-valuemin", "16");
+      expect(first()).toHaveAttribute("aria-valuemax", "64");
+    });
+
+    it("reads it again at the next measurement, so a changed root font size is picked up", () => {
+      const resized = observerThatWeCanCall();
+      withContainerWidth(1000);
+      render(two({ defaultLayout: [50, 50] }, { minSize: "10rem" }));
+      expect(first()).toHaveAttribute("aria-valuemin", "16");
+      document.documentElement.style.fontSize = "20px";
+      act(() => resized());
+      expect(first()).toHaveAttribute("aria-valuemin", "20");
+    });
+
+    it("holds a layout inside a rem limit", () => {
+      withContainerWidth(1000);
+      render(two({ defaultLayout: [5, 95] }, { minSize: "10rem" }));
+      expect(sizeOf("a")).toBeGreaterThanOrEqual(16 - 1e-6);
+    });
+
+    it("is not a limit before the container has been measured", () => {
+      render(two({ defaultLayout: [5, 95] }, { minSize: "10rem" }));
+      expect(first()).toHaveAttribute("aria-valuemin", "0");
+    });
+  });
+
+  describe("panes coming and going", () => {
+    const three = (keys: string[], extra: Record<string, Partial<React.ComponentProps<typeof Splitter.Pane>>> = {}) => (
+      <Splitter defaultLayout={keys.length === 3 ? [20, 30, 50] : undefined}>
+        {keys.map((key) => (
+          <Splitter.Pane key={key} data-testid={key} {...extra[key]}>
+            {key}
+          </Splitter.Pane>
+        ))}
+      </Splitter>
+    );
+
+    it("keeps the panes that are still there at their proportions when one is removed", () => {
+      const { rerender } = render(three(["a", "b", "c"]));
+      rerender(three(["a", "c"]));
+      expect(handles()).toHaveLength(1);
+      expect(sizeOf("a") / sizeOf("c")).toBeCloseTo(20 / 50, 4);
+      expect(sizeOf("a") + sizeOf("c")).toBeCloseTo(100, 4);
+    });
+
+    it("gives a new pane room without starting every pane over", () => {
+      const { rerender } = render(three(["a", "b", "c"]));
+      rerender(three(["a", "b", "c", "d"], { d: { defaultSize: 20 } }));
+      expect(sizeOf("d")).toBeCloseTo(20 / 1.2, 3);
+      expect(sizeOf("a") / sizeOf("b")).toBeCloseTo(20 / 30, 3);
+      expect(sizeOf("a") + sizeOf("b") + sizeOf("c") + sizeOf("d")).toBeCloseTo(100, 4);
+    });
+
+    it("follows a pane by its id when the keys change", () => {
+      const withIds = (ids: string[]) => (
+        <Splitter defaultLayout={[25, 75]}>
+          {ids.map((paneId, index) => (
+            <Splitter.Pane key={`k${index}`} id={paneId} data-testid={paneId}>
+              {paneId}
+            </Splitter.Pane>
+          ))}
+        </Splitter>
+      );
+      const { rerender } = render(withIds(["nav", "main"]));
+      rerender(withIds(["main", "nav"]));
+      expect(sizeOf("main")).toBe(75);
+      expect(sizeOf("nav")).toBe(25);
+    });
+
+    it("opens a collapsed pane at the size it had, even after another pane came or went", async () => {
+      const user = userEvent.setup();
+      const collapsible = { a: { collapsible: true, minSize: 10 } };
+      const { rerender } = render(three(["a", "b", "c"], collapsible));
+      handles()[0]?.focus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      const before = sizeOf("a");
+      await user.keyboard("{Enter}");
+      expect(sizeOf("a")).toBe(0);
+      rerender(three(["a", "b"], collapsible));
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(sizeOf("a")).toBeCloseTo(before, 3);
+    });
+
+    it("does not report a pane that has only just arrived as collapsing", () => {
+      const onCollapsedChange = vi.fn();
+      const { rerender } = render(three(["a", "b"]));
+      rerender(three(["a", "b", "c"], { c: { collapsible: true, minSize: 0, onCollapsedChange, defaultSize: 0 } }));
+      // It arrives collapsed (size 0, allowed to collapse), and that is how it starts, not a change.
+      expect(sizeOf("c")).toBe(0);
+      expect(onCollapsedChange).not.toHaveBeenCalled();
+    });
+
+    it("warns about nothing and renders for no panes at all", () => {
+      const { container } = render(<Splitter />);
+      expect(container.firstElementChild?.children).toHaveLength(0);
+    });
+  });
+
+  describe("locked panes", () => {
+    const locked = (extra: Partial<React.ComponentProps<typeof Splitter.Pane>> = {}) => (
+      <Splitter defaultLayout={[20, 40, 40]}>
+        <Splitter.Pane data-testid="header" resizable={false} {...extra}>
+          Header
+        </Splitter.Pane>
+        <Splitter.Pane data-testid="main" label="Main">Main</Splitter.Pane>
+        <Splitter.Pane data-testid="aside">Aside</Splitter.Pane>
+      </Splitter>
+    );
+
+    it("draws the handle beside a locked pane as a plain divider that is not a tab stop", () => {
+      render(locked());
+      const dividers = screen.getAllByRole("separator");
+      expect(dividers).toHaveLength(2);
+      const [staticOne, live] = dividers as [HTMLElement, HTMLElement];
+      expect(staticOne).not.toHaveAttribute("tabindex");
+      expect(staticOne).not.toHaveAttribute("aria-valuenow");
+      expect(staticOne.className).toContain(styles.handleStatic);
+      expect(live).toHaveAttribute("tabindex", "0");
+      expect(live).toHaveAttribute("aria-valuenow", "40");
+    });
+
+    it("leaves the other handles working, and moves only their panes", async () => {
+      const onLayoutChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <Splitter defaultLayout={[20, 40, 40]} onLayoutChange={onLayoutChange}>
+          <Splitter.Pane resizable={false}>Header</Splitter.Pane>
+          <Splitter.Pane>Main</Splitter.Pane>
+          <Splitter.Pane>Aside</Splitter.Pane>
+        </Splitter>,
+      );
+      screen.getAllByRole("separator")[1]?.focus();
+      await user.keyboard("{ArrowRight}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([20, 45, 35]);
+    });
+
+    it("numbers only the handles that can be used", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane resizable={false}>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+          <Splitter.Pane>C</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(screen.getByRole("separator", { name: "Resize panels" })).toBeInTheDocument();
+      expect(screen.queryByRole("separator", { name: /of/ })).toBeNull();
+    });
+
+    it("locks a handle on both sides of the pane", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane>A</Splitter.Pane>
+          <Splitter.Pane resizable={false}>B</Splitter.Pane>
+          <Splitter.Pane>C</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(screen.getAllByRole("separator").every((handle) => !handle.hasAttribute("tabindex"))).toBe(true);
+    });
+
+    it("does not follow a drag on a plain divider", () => {
+      withContainerWidth(1000);
+      const onLayoutChange = vi.fn();
+      render(
+        <Splitter onLayoutChange={onLayoutChange}>
+          <Splitter.Pane resizable={false}>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      fireEvent.pointerDown(first(), { clientX: 500, button: 0, pointerType: "mouse", pointerId: 1 });
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 600 }));
+      });
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("can still be collapsed from outside", () => {
+      const { rerender } = render(locked({ collapsible: true, minSize: 10, collapsed: false }));
+      rerender(locked({ collapsible: true, minSize: 10, collapsed: true }));
+      expect(sizeOf("header")).toBe(0);
+    });
+
+    it("is axe-clean with a plain divider", async () => {
+      const { container } = render(locked());
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("fixed panes", () => {
+    const fixedLayout = (changes: Partial<React.ComponentProps<typeof Splitter.Pane>> = {}) => (
+      <Splitter defaultLayout={[20, 80]}>
+        <Splitter.Pane data-testid="side" fixed {...changes}>
+          Side
+        </Splitter.Pane>
+        <Splitter.Pane data-testid="main">Main</Splitter.Pane>
+      </Splitter>
+    );
+
+    const setup = () => {
+      let notify: () => void = () => {};
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          constructor(callback: () => void) {
+            notify = callback;
+          }
+          observe() {}
+          unobserve() {}
+          disconnect() {}
+        },
+      );
+      const width = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1000);
+      return { resize: (to: number) => { width.mockReturnValue(to); act(() => notify()); } };
+    };
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("keeps its length when the container shrinks, and the others share the rest", () => {
+      const { resize } = setup();
+      render(fixedLayout());
+      expect(sizeOf("side")).toBeCloseTo(20, 3);
+      resize(500);
+      expect(sizeOf("side")).toBeCloseTo(40, 3);
+      expect(sizeOf("main")).toBeCloseTo(60, 3);
+    });
+
+    it("keeps its length when the container grows", () => {
+      const { resize } = setup();
+      render(fixedLayout());
+      resize(2000);
+      expect(sizeOf("side")).toBeCloseTo(10, 3);
+      expect(sizeOf("main")).toBeCloseTo(90, 3);
+    });
+
+    it("keeps the size a person gave it, not the size it started at", async () => {
+      const { resize } = setup();
+      const user = userEvent.setup();
+      render(fixedLayout());
+      first().focus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(sizeOf("side")).toBeCloseTo(30, 3);
+      resize(500);
+      expect(sizeOf("side")).toBeCloseTo(60, 3);
+    });
+
+    it("scales as an ordinary pane does when it isn't fixed", () => {
+      const { resize } = setup();
+      render(fixedLayout({ fixed: false }));
+      resize(500);
+      expect(sizeOf("side")).toBeCloseTo(20, 3);
+    });
+
+    it("tells the layout watcher about the new layout", () => {
+      const { resize } = setup();
+      const onLayoutChange = vi.fn();
+      render(
+        <Splitter defaultLayout={[20, 80]} onLayoutChange={onLayoutChange}>
+          <Splitter.Pane fixed>Side</Splitter.Pane>
+          <Splitter.Pane>Main</Splitter.Pane>
+        </Splitter>,
+      );
+      onLayoutChange.mockClear();
+      resize(500);
+      expect(onLayoutChange).toHaveBeenLastCalledWith([expect.closeTo(40, 3), expect.closeTo(60, 3)]);
+    });
+  });
+
   describe("collapsing", () => {
     const side = (props: Partial<React.ComponentProps<typeof Splitter>> = {}, pane: Partial<React.ComponentProps<typeof Splitter.Pane>> = {}) =>
       two({ defaultLayout: [30, 70], ...props }, { collapsible: true, minSize: 20, ...pane });
@@ -542,6 +835,40 @@ describe("Splitter", () => {
         </Splitter>,
       );
       expect(handles()[1]).toHaveAccessibleName("Resize panels 2 of 2");
+    });
+
+    it("names a handle after the pane before it, when the pane has a label", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane label="Sidebar">A</Splitter.Pane>
+          <Splitter.Pane label="Content">B</Splitter.Pane>
+          <Splitter.Pane>C</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(handles()[0]).toHaveAccessibleName("Resize Sidebar");
+      expect(handles()[1]).toHaveAccessibleName("Resize Content");
+    });
+
+    it("does not put the label on the pane itself", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane label="Sidebar" data-testid="a">A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(screen.getByTestId("a")).not.toHaveAttribute("label");
+      expect(screen.getByTestId("a")).not.toHaveAttribute("aria-label");
+    });
+
+    it("hands your own handle label the position, the count and the pane's label", () => {
+      const handle = vi.fn(() => "x");
+      render(
+        <Splitter labels={{ handle }}>
+          <Splitter.Pane label="Sidebar">A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(handle).toHaveBeenCalledWith(1, 1, "Sidebar");
     });
 
     it("takes your own labels, keeping the defaults for what you leave out or leave undefined", () => {

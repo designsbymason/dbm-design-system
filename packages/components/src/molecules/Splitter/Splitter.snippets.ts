@@ -23,11 +23,39 @@ export const splitterSnippets = {
   </Splitter>
 </div>`,
 
-  limits: `{/* minSize and maxSize take a percentage (30 or "30%") or a length in pixels ("240px") */}
+  limits: `{/* minSize and maxSize take a percentage (30 or "30%") or a length: "240px", or "15rem", which keeps up with the text size */}
 <div style={{ height: "20rem" }}>
   <Splitter defaultLayout={[30, 70]}>
-    <Splitter.Pane minSize="240px" maxSize="50%">Sidebar (at least 240px, at most half)</Splitter.Pane>
+    <Splitter.Pane minSize="15rem" maxSize="50%">Sidebar (at least 15rem, at most half)</Splitter.Pane>
     <Splitter.Pane minSize={30}>Content (at least 30%)</Splitter.Pane>
+  </Splitter>
+</div>`,
+
+  fixed: `{/* fixed: the pane keeps its width when the container is resized, and the others share out the difference */}
+<div style={{ height: "20rem" }}>
+  <Splitter defaultLayout={[30, 70]}>
+    <Splitter.Pane fixed minSize="10rem" label="Sidebar">Sidebar</Splitter.Pane>
+    <Splitter.Pane label="Content">Content</Splitter.Pane>
+  </Splitter>
+</div>`,
+
+  locked: `{/* resizable={false} locks a pane: the dividers beside it are plain lines, and the other handles still work. label names a handle after the pane before it ("Resize Main") */}
+<div style={{ height: "22rem" }}>
+  <Splitter orientation="vertical" defaultLayout={[15, 55, 30]}>
+    <Splitter.Pane resizable={false}>Header</Splitter.Pane>
+    <Splitter.Pane label="Main">Main</Splitter.Pane>
+    <Splitter.Pane label="Terminal">Terminal</Splitter.Pane>
+  </Splitter>
+</div>`,
+
+  dynamic: `{/* Give each pane an id (or a key), and the others keep their sizes when one comes or goes:
+    const [showDetails, setShowDetails] = useState(true); */}
+<Button size="sm" variant="secondary" onClick={() => setShowDetails(!showDetails)}>{showDetails ? "Hide details" : "Show details"}</Button>
+<div style={{ height: "20rem" }}>
+  <Splitter>
+    <Splitter.Pane key="nav" id="nav" label="Navigation" defaultSize={25}>Navigation</Splitter.Pane>
+    <Splitter.Pane key="content" id="content" label="Content">Content</Splitter.Pane>
+    {showDetails && <Splitter.Pane key="details" id="details" defaultSize={25}>Details</Splitter.Pane>}
   </Splitter>
 </div>`,
 
@@ -133,9 +161,9 @@ export function splitterPlaygroundSnippet(args: SplitterPlaygroundSnippetArgs): 
   const open = attributes.length > 0 ? `<Splitter ${attributes.join(" ")}>` : "<Splitter>";
   return `<div style={{ height: "20rem" }}>
   ${open}
-    <Splitter.Pane defaultSize={25} minSize="160px" collapsible>Sidebar</Splitter.Pane>
-    <Splitter.Pane>Content</Splitter.Pane>
-    <Splitter.Pane defaultSize={25}>Details</Splitter.Pane>
+    <Splitter.Pane label="Sidebar" defaultSize={25} minSize="10rem" collapsible>Sidebar</Splitter.Pane>
+    <Splitter.Pane label="Content">Content</Splitter.Pane>
+    <Splitter.Pane label="Details" defaultSize={25}>Details</Splitter.Pane>
   </Splitter>
 </div>`;
 }

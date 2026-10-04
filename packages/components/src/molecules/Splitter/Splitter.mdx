@@ -28,9 +28,12 @@ export const propOrder = [
 
 export const panePropOrder = [
   "children",
+  "label",
   "defaultSize",
   "minSize",
   "maxSize",
+  "resizable",
+  "fixed",
   "collapsible",
   "collapsedSize",
   "collapsed",
@@ -53,7 +56,8 @@ arrow keys on it, to give one pane space from its neighbour. Each handle is a fo
 that reports the size of the pane before it, and a pane can be allowed to collapse to a strip or to nothing.
 
 Pane sizes are **percentages of the space the panes share** (the container less its handles), so a layout keeps
-its proportions when the container is resized; a pane's limits can also be written in pixels. The splitter
+its proportions when the container is resized; a pane's limits can also be written in pixels or `rem`, and a
+pane can be `fixed` to keep its length instead. The splitter
 holds no content and keeps no storage: read the layout with `onLayoutChange` or `onLayoutCommit`, and hold it
 yourself with `layout` when you need to.
 
@@ -109,6 +113,21 @@ settings from the element. It also accepts any native `<div>` attribute.
 
 <Canvas of={SplitterStories.Limits} />
 
+### Fixed width
+
+A pane marked `fixed` keeps its length when the container is resized and the others share out the difference.
+Drag the bottom-right corner of the box to try it.
+
+<Canvas of={SplitterStories.Fixed} />
+
+### Locked panes
+
+<Canvas of={SplitterStories.Locked} />
+
+### Panes coming and going
+
+<Canvas of={SplitterStories.PanesComingAndGoing} />
+
 ### Collapsible
 
 <Canvas of={SplitterStories.Collapsible} />
@@ -147,7 +166,14 @@ own and narrow the window to watch the panes stack.
 
 - Give the splitter's parent a size. It fills its parent, so a `vertical` splitter in a box with no height has
   nothing to share out.
-- Set `minSize` on every pane that holds something that stops working when it is squeezed (a form, a table).
+- Set `minSize` on every pane that holds something that stops working when it is squeezed (a form, a table), and
+  write it in `rem` where it is about the text inside (`"15rem"`): it then keeps up with the text size a person
+  has chosen, which a pixel limit doesn't.
+- Mark a sidebar `fixed` when it should keep its width as the window changes, and a header or footer
+  `resizable={false}` when it should never be dragged.
+- Give every pane an `id` (or a `key`) when panes can come and go, so the others keep their sizes.
+- Give each pane a `label` when there are several handles: they are then named "Resize Sidebar", not "Resize
+  panels 2 of 3".
 - Use `collapsible` with a `collapsedSize` strip for a sidebar that should stay reachable, and
   `collapsedSize` of `0` for a panel that can go away entirely.
 - Save the layout in `onLayoutCommit`, which fires once a drag or key press is finished, not on every step.
@@ -160,6 +186,8 @@ own and narrow the window to watch the panes stack.
 
 - Don't put anything but `Splitter.Pane` elements directly inside a `Splitter`: a wrapper, a fragment or text is
   ignored, with a warning.
+- Don't leave panes that appear and disappear without an `id` or `key`: they are told apart by position, so
+  removing the first one gives its size to the wrong pane.
 - Don't use a splitter to let people resize something that is not one of two or more panes sharing space (a
   single panel's width is a plain resizable box, not this).
 - Don't make a pane's only way to be reached the handle of a pane that can collapse to nothing without another way
@@ -187,7 +215,10 @@ own and narrow the window to watch the panes stack.
 - Each handle is a `role="separator"` in the tab order, with `aria-orientation` (a vertical bar for panes side by
   side), `aria-valuenow`/`aria-valuemin`/`aria-valuemax` for the pane before it as a percentage,
   `aria-valuetext` ("30%", or "Collapsed"), `aria-controls` naming the two panes it resizes, and a name
-  (`labels.handle`: "Resize panels", or "Resize panels 1 of 2" when there are several).
+  (`labels.handle`: "Resize Sidebar" from the `label` of the pane before it, otherwise "Resize panels", or
+  "Resize panels 1 of 2" when there are several).
+- A handle beside a `resizable={false}` pane is a plain `role="separator"`: not focusable, no value, no target,
+  and not counted in the handle names.
 - A disabled splitter keeps its handles in the tab order, marked `aria-disabled`, and moves nothing.
 - A pane collapsed to nothing is `visibility: hidden`, so its content leaves the tab order and the
   accessibility tree; a strip stays reachable.
@@ -227,6 +258,12 @@ own and narrow the window to watch the panes stack.
     </Splitter.Pane>
   </Splitter>
 </div>
+
+<Splitter>
+  <Splitter.Pane key="nav" id="nav" label="Navigation" fixed minSize="15rem">…</Splitter.Pane>
+  <Splitter.Pane key="main" id="main" label="Content">…</Splitter.Pane>
+  {showDetails && <Splitter.Pane key="details" id="details" defaultSize={25}>…</Splitter.Pane>}
+</Splitter>
 
 {/* Native div attributes pass straight through to the container */}
 <Splitter title="Workspace layout" onFocus={handleFocus}>…</Splitter>

@@ -15,6 +15,20 @@ const meta: Meta<typeof Splitter.Pane> = {
       description:
         "What the pane holds — or a function of the pane's state ({ collapsed, size }), to show something else once it has collapsed to a strip (an icon where a label was).",
     },
+    label: {
+      control: "text",
+      description: 'A short name for the pane ("Sidebar"). The handle after it is named from it ("Resize Sidebar"), so a screen reader user with several handles can tell them apart. Not added to the pane itself.',
+    },
+    resizable: {
+      description:
+        "Whether a handle next to this pane can resize it. false locks the pane (a header, a footer): each handle beside it is drawn as a plain divider, out of the tab order, that moves nothing. The pane can still be collapsed from outside with collapsed.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    fixed: {
+      description:
+        "Keeps the pane's length when the container is resized: it stays the same number of pixels and the other panes share out the difference (a sidebar that holds its width while the content flexes). A person can still drag it to a new size, which it then keeps. Without it a pane keeps its percentage.",
+      table: { defaultValue: { summary: "false" } },
+    },
     defaultSize: {
       control: "number",
       description:
@@ -22,12 +36,12 @@ const meta: Meta<typeof Splitter.Pane> = {
     },
     minSize: {
       control: "text",
-      description: 'The smallest the pane can be: a percentage (20 or "20%") or a length in pixels ("240px").',
+      description: 'The smallest the pane can be: a percentage (20 or "20%") or a length ("240px", or "15rem" to keep up with the text size).',
       table: { defaultValue: { summary: "10" } },
     },
     maxSize: {
       control: "text",
-      description: 'The largest the pane can be: a percentage (60 or "60%") or a length in pixels ("480px").',
+      description: 'The largest the pane can be: a percentage (60 or "60%") or a length ("480px", or "30rem").',
       table: { defaultValue: { summary: "100" } },
     },
     collapsible: {
@@ -51,7 +65,7 @@ const meta: Meta<typeof Splitter.Pane> = {
     style: { control: false, description: "Inline styles for the pane." },
     "data-testid": { control: false, description: "Test identifier for automated testing." },
   },
-  args: { collapsible: false, defaultCollapsed: false },
+  args: { resizable: true, fixed: false, collapsible: false, defaultCollapsed: false },
   render: (args) => (
     <div style={{ height: "8rem" }}>
       <Splitter>

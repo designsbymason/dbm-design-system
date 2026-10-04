@@ -132,6 +132,20 @@
   --splitter-line-grow: var(--dbm-border-width-2);
 }
 
+/* A handle beside a locked pane: a plain divider. No target, no hover, no resize cursor. */
+.handleStatic,
+.handleStatic:hover {
+  --splitter-line-colour: var(--dbm-border-default);
+  --splitter-line-grow: 0px;
+
+  cursor: default;
+  pointer-events: none;
+}
+
+.handleStatic::after {
+  display: none;
+}
+
 .handleDisabled,
 .handleDisabled:hover {
   --splitter-line-colour: var(--dbm-border-default);

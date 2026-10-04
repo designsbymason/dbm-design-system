@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   type PaneConstraints,
+  adaptLayout,
   initialLayout,
   isCollapsed,
   normalizeLayout,
   pairRange,
+  rescaleForContainer,
   resizePair,
   sameLayout,
   togglePane,
@@ -179,5 +181,84 @@ describe("isCollapsed and sameLayout", () => {
     expect(sameLayout([50, 50], [50.00001, 49.99999])).toBe(true);
     expect(sameLayout([50, 50], [51, 49])).toBe(false);
     expect(sameLayout([50, 50], [100])).toBe(false);
+  });
+});
+
+describe("adaptLayout", () => {
+  const three = [pane(), pane(), pane()];
+
+  it("keeps the panes that are still there at their size, and shares out what a removed one freed", () => {
+    // A 20 / B 30 / C 50; B goes: A and C keep their proportions and fill the whole.
+    const layout = adaptLayout([20, 30, 50], ["a", "b", "c"], ["a", "c"], [undefined, undefined], [pane(), pane()]);
+    expect(layout[0]).toBeCloseTo((20 / 70) * 100, 4);
+    expect(layout[1]).toBeCloseTo((50 / 70) * 100, 4);
+  });
+
+  it("gives a new pane its own default and scales the others to make room", () => {
+    const layout = adaptLayout([40, 60], ["a", "b"], ["a", "b", "c"], [undefined, undefined, 20], three);
+    expect(layout[2]).toBeCloseTo(20 / 1.2, 4);
+    expect(total(layout)).toBeCloseTo(100, 6);
+    expect(layout[0]! / layout[1]!).toBeCloseTo(40 / 60, 4);
+  });
+
+  it("makes room for a new pane that has no default, at least its minimum", () => {
+    const layout = adaptLayout([50, 50], ["a", "b"], ["a", "b", "c"], [undefined, undefined, undefined], three);
+    expect(layout[2]).toBeGreaterThanOrEqual(10 - 1e-6);
+    expect(total(layout)).toBeCloseTo(100, 6);
+  });
+
+  it("keeps a collapsed pane collapsed, rather than lifting it to its minimum", () => {
+    const cs = [pane({ min: 10, collapsible: true }), pane(), pane()];
+    const layout = adaptLayout([0, 40, 60], ["a", "b", "c"], ["a", "b"], [undefined, undefined], cs.slice(0, 2));
+    expect(layout[0]).toBe(0);
+    expect(layout[1]).toBeCloseTo(100, 6);
+  });
+
+  it("follows a pane to its new place", () => {
+    const layout = adaptLayout([20, 30, 50], ["a", "b", "c"], ["c", "a", "b"], [undefined, undefined, undefined], three);
+    expect(layout).toEqual([50, 20, 30]);
+  });
+});
+
+describe("rescaleForContainer", () => {
+  const cs = [pane({ min: 0 }), pane({ min: 0 }), pane({ min: 0 })];
+
+  it("keeps a fixed pane's length and lets the others share the rest, when the container shrinks", () => {
+    // 1000px: [20, 40, 40] -> 500px: the 200px pane is now 40%; the others share the other 60% as they were.
+    const layout = rescaleForContainer([20, 40, 40], cs, [true, false, false], 1000 / 500);
+    expect(layout[0]).toBeCloseTo(40, 4);
+    expect(layout[1]).toBeCloseTo(30, 4);
+    expect(layout[2]).toBeCloseTo(30, 4);
+  });
+
+  it("and when it grows", () => {
+    const layout = rescaleForContainer([40, 30, 30], cs, [true, false, false], 500 / 1000);
+    expect(layout[0]).toBeCloseTo(20, 4);
+    expect(total(layout)).toBeCloseTo(100, 6);
+    expect(layout[1]! / layout[2]!).toBeCloseTo(1, 4);
+  });
+
+  it("keeps the proportions among the flexible panes", () => {
+    const layout = rescaleForContainer([20, 20, 60], cs, [true, false, false], 2);
+    expect(layout[1]! / layout[2]!).toBeCloseTo(20 / 60, 4);
+  });
+
+  it("holds a fixed pane inside its own limits", () => {
+    const limited = [pane({ min: 0, max: 30 }), pane({ min: 0 })];
+    expect(rescaleForContainer([20, 80], limited, [true, false], 3)[0]).toBe(30);
+  });
+
+  it("holds a collapsed pane at its collapsed size, fixed or not", () => {
+    const cc = [pane({ min: 10, collapsible: true, collapsed: 5 }), pane({ min: 0 })];
+    expect(rescaleForContainer([5, 95], cc, [false, false], 2)[0]).toBe(5);
+  });
+
+  it("scales everything proportionally when the fixed panes alone fill the container", () => {
+    const layout = rescaleForContainer([60, 40], [pane({ min: 0 }), pane({ min: 0 })], [true, true], 3);
+    expect(total(layout)).toBeCloseTo(100, 6);
+  });
+
+  it("changes nothing when no pane is fixed and the ratio is 1", () => {
+    expect(rescaleForContainer([30, 70], [pane(), pane()], [false, false], 1)).toEqual([30, 70]);
   });
 });
