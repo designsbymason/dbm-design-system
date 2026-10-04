@@ -1,0 +1,146 @@
+import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { InputSize } from "../../atoms/Input";
+
+/** The colour a `RatingInput`'s filled icons are drawn in. */
+export type RatingInputTone = "warning" | "brand" | "success" | "info" | "danger";
+
+/** The smallest step a rating moves in: a whole icon, or half of one. */
+export type RatingInputPrecision = 1 | 0.5;
+
+/** The text a `RatingInput` writes itself. Each function receives the plain numbers. */
+export interface RatingInputLabels {
+  /** The accessible name of one choice, `value` out of `max`. @default (value, max) => "3 out of 5" */
+  itemLabel: (value: number, max: number) => string;
+  /** The text alternative of a read-only rating. @default (value, max) => "Rated 4.3 out of 5" */
+  valueText: (value: number, max: number) => string;
+  /** The text alternative of a read-only rating that has no value. @default "Not rated" */
+  notRated: string;
+}
+
+export interface RatingInputProps
+  extends Omit<
+    ComponentPropsWithoutRef<"div">,
+    "children" | "onChange" | "defaultValue" | "role" | "dir"
+  > {
+  /**
+   * The number of icons.
+   * @default 5
+   */
+  max?: number;
+  /**
+   * The controlled value: `0` for no rating, up to `max`. Pair with `onValueChange`, or the rating will appear
+   * frozen. A value between steps is shown as the nearest step, except when `readOnly`, which draws it exactly.
+   */
+  value?: number;
+  /**
+   * The initial value when uncontrolled.
+   * @default 0
+   */
+  defaultValue?: number;
+  /**
+   * Called with the new value when a person chooses one: `0` when a rating is cleared.
+   */
+  onValueChange?: (value: number) => void;
+  /**
+   * The smallest step: `1` for whole icons, `0.5` for halves. Each icon then has two choices, one for each half.
+   * @default 1
+   */
+  precision?: RatingInputPrecision;
+  /**
+   * The icon's box, on the shared size scale. Every choice is a target of at least 24px.
+   * @default "md"
+   */
+  size?: InputSize;
+  /**
+   * The colour of the filled icons.
+   * @default "warning"
+   */
+  tone?: RatingInputTone;
+  /**
+   * The icon to draw, a Phosphor component reference (a heart, a thumb). It is drawn filled for the part of the
+   * rating that is chosen and as an outline for the rest.
+   * @default A star
+   */
+  icon?: PhosphorIcon;
+  /**
+   * Shows the value without letting it be changed, and draws a value between steps exactly (4.3 fills a
+   * third of the fifth icon). It is exposed as one image with a text alternative, not as a group of choices.
+   * @default false
+   */
+  readOnly?: boolean;
+  /**
+   * Lets a person take their rating back: pressing the chosen value again, or Backspace, Delete or Escape, sets
+   * it to `0`.
+   * @default false
+   */
+  clearable?: boolean;
+  /**
+   * Marks the rating as invalid, visually and with `aria-invalid`.
+   * @default false
+   */
+  hasError?: boolean;
+  /**
+   * Disables every choice.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * Makes a rating required for form validation.
+   * @default false
+   */
+  required?: boolean;
+  /**
+   * A name for each whole value, from `1` to `max` (`["Poor", "Fair", "Good", "Great", "Excellent"]`). It is
+   * added to that choice's accessible name and, with `showValueName`, written beside the icons.
+   */
+  valueNames?: string[];
+  /**
+   * Writes the name of the value under the pointer, or of the chosen one, beside the icons (a half step shows
+   * the name of the whole value below it). Needs `valueNames`. The space for the longest name is kept, so nothing moves as it changes.
+   * @default false
+   */
+  showValueName?: boolean;
+  /**
+   * The name the value is submitted under in a surrounding `<form>`, as a number.
+   */
+  name?: string;
+  /**
+   * Turns a number into the text shown or announced, for a locale's own numerals. Used by the default labels.
+   * Callbacks and the submitted value keep plain numbers.
+   * @default String
+   */
+  formatNumber?: (value: number) => string;
+  /**
+   * Text this component writes itself, for translation. Missing keys keep their English defaults.
+   */
+  labels?: Partial<RatingInputLabels>;
+  /**
+   * The accessible name of the rating when there is no visible label.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of the element that names the rating.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * The id of the helper or error text that describes the rating.
+   */
+  "aria-describedby"?: string;
+  /**
+   * The id of the element that carries the role, so a label's `htmlFor` or an `aria-labelledby` can point at it.
+   */
+  id?: string;
+  /**
+   * Extra classes, on the outermost box.
+   */
+  className?: string;
+  /**
+   * Inline styles, on the outermost box.
+   */
+  style?: CSSProperties;
+  /**
+   * A test identifier, on the element that carries the role.
+   */
+  "data-testid"?: string;
+}

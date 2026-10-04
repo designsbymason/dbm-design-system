@@ -73,6 +73,7 @@ export * from "./molecules/PinInput";
 export * from "./molecules/Popover";
 export * from "./molecules/RadioGroup";
 export * from "./molecules/RangeSlider";
+export * from "./molecules/RatingInput";
 export * from "./molecules/ScrollArea";
 export * from "./molecules/SearchInput";
 export * from "./molecules/Select";

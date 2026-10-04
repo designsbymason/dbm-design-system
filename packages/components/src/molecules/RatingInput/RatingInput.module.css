@@ -1,0 +1,125 @@
+.root {
+  align-items: center;
+  display: inline-flex;
+  font-family: var(--dbm-font-family-primary);
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  max-inline-size: 100%;
+}
+
+.group {
+  display: inline-flex;
+  gap: var(--dbm-space-1);
+}
+
+/* Each icon, with room around it so a choice is a target of at least 24px, and the radios lying over it. */
+.item {
+  align-items: center;
+  border-radius: var(--dbm-radius-sm);
+  display: inline-flex;
+  justify-content: center;
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding: var(--dbm-space-1);
+  position: relative;
+}
+
+.item:has(:focus-visible) {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+}
+
+.icons {
+  block-size: var(--icon-size);
+  display: inline-flex;
+  inline-size: var(--icon-size);
+  position: relative;
+}
+
+/* The chosen part of the icon: the filled icon over the outline, cut off after `--fill` of its width. The scale
+   reads left to right (the root sets it), so the cut is from the physical right. */
+.filled {
+  clip-path: inset(0 calc((1 - var(--fill)) * 100%) 0 0);
+  display: inline-flex;
+  inset: 0;
+  position: absolute;
+  transition: clip-path var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* One radio per choice, invisible and over the item: the whole item, or half of it for a half step. */
+.radio {
+  appearance: none;
+  block-size: 100%;
+  cursor: pointer;
+  inline-size: 100%;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.radioStart {
+  inline-size: 50%;
+}
+
+.radioEnd {
+  inline-size: 50%;
+  inset-inline-start: 50%;
+}
+
+.radio:disabled {
+  cursor: not-allowed;
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* Every name sits in the same cell, so the space for the longest is kept and nothing moves as they change. */
+.valueName {
+  color: var(--dbm-text-secondary);
+  display: inline-grid;
+  font-size: var(--name-font-size);
+  line-height: var(--dbm-line-height-tight);
+}
+
+.nameSlot {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.nameSlot[data-active="true"] {
+  visibility: visible;
+}
+
+.sizeXs {
+  --icon-size: var(--dbm-icon-size-sm);
+  --name-font-size: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  --icon-size: var(--dbm-icon-size-md);
+  --name-font-size: var(--dbm-font-size-sm);
+}
+
+.sizeMd {
+  --icon-size: var(--dbm-icon-size-lg);
+  --name-font-size: var(--dbm-font-size-base);
+}
+
+.sizeLg {
+  --icon-size: var(--dbm-icon-size-xl);
+  --name-font-size: var(--dbm-font-size-md);
+}
+
+.sizeXl {
+  --icon-size: var(--dbm-icon-size-2xl);
+  --name-font-size: var(--dbm-font-size-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filled {
+    transition: none;
+  }
+}

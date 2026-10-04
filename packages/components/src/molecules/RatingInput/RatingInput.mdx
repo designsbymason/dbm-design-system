@@ -1,0 +1,306 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldHelperText } from "../../atoms/FieldHelperText";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FormField } from "../FormField";
+import { Radio } from "../../atoms/Radio";
+import { RadioGroup } from "../RadioGroup";
+import { Slider } from "../Slider";
+import { RatingInput } from "./RatingInput";
+import * as RatingInputStories from "./RatingInput.stories";
+
+export const propOrder = [
+  "max",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "precision",
+  "size",
+  "tone",
+  "icon",
+  "readOnly",
+  "clearable",
+  "hasError",
+  "disabled",
+  "required",
+  "valueNames",
+  "showValueName",
+  "name",
+  "formatNumber",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={RatingInputStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="RatingInput" tier="Molecule" />
+
+A rating field: a row of icons (stars by default) of which a person chooses one, with the pointer or the
+keyboard. It is a native radio group with one radio for each value, so the arrow keys, a single tab stop, form
+submission under `name` and `required` validation are the browser's own, and a screen reader hears "3 out of 5".
+The value is a number, `0` for no rating. Icons light up under the pointer before a choice is made, `precision={0.5}`
+adds half steps, `clearable` lets a rating be taken back, and `readOnly` shows any value exactly (an average of 4.3
+fills a third of the fifth icon) as one image with a text alternative.
+
+### Import
+
+```tsx
+import { RatingInput } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={RatingInputStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={RatingInputStories.Playground}
+  exclude={[
+    "value",
+    "onValueChange",
+    "valueNames",
+    "formatNumber",
+    "labels",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`RatingInput` also accepts any other native `<div>` attribute beyond what is listed here (e.g. `title`,
+`onFocus`) — passed straight through to the element that carries the role. `className` and `style` go on the
+outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the element that carries the role.
+
+<PropertiesTable of={RatingInputStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={RatingInputStories.AllSizes} />
+
+### Tones
+
+<Canvas of={RatingInputStories.Tones} />
+
+### Half steps
+
+<Canvas of={RatingInputStories.HalfSteps} />
+
+### Read-only average
+
+<Canvas of={RatingInputStories.ReadOnly} />
+
+### With the value named
+
+<Canvas of={RatingInputStories.ValueNames} />
+
+### Clearable
+
+<Canvas of={RatingInputStories.Clearable} />
+
+### Another icon
+
+<Canvas of={RatingInputStories.CustomIcon} />
+
+### Error state
+
+<Canvas of={RatingInputStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={RatingInputStories.Disabled} />
+
+### In a FormField
+
+<Canvas of={RatingInputStories.InFormField} />
+
+### Controlled
+
+<Canvas of={RatingInputStories.Controlled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give the rating a name: a visible `FieldLabel` (or a `FormField`), or `aria-label` when the text around it
+  already says what is being rated.
+- Use `readOnly` with a fractional `value` to show an average, so 4.3 reads as 4.3 and not as 4.
+- Use `precision={0.5}` when the choice itself needs finer steps, such as a review that can be 3.5 stars.
+- Set `valueNames` when the numbers need meaning ("Poor" to "Excellent"); the names are announced with each choice.
+- Use `clearable` for an optional rating, so a person can change their mind and leave it blank.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a value on a long or continuous scale: a `Slider` is for that, and a rating is a short ladder
+  of steps.
+- Don't rely on the colour alone to show what is chosen: the filled shape against the outline already does, and
+  the value name or a visible number below reinforces it.
+- Don't use the default stars for something that is not a quality judgment (a priority, a difficulty): pick an
+  `icon` that fits.
+- Don't use `max` above 10; past that the icons stop being quick to scan.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Choose a `size` that fits the space: ten icons at `xl` are wider than a phone. Every choice is a target of at
+  least 24px at every size.
+- Show a rating's number or name as text somewhere near it as well when it matters; the icons alone are a quick,
+  approximate read.
+- A required rating that is missing should say so with `hasError` and an error message, not only by colour.
+- A `readOnly` rating is not a form control: it has no tab stop. It still submits its value when it has a `name`.
+- The scale reads left to right whatever the page's direction, the way a number does.
+
+## Accessibility
+
+<Callout tone="info" title="A native radio group, named, with a single tab stop">
+
+- It is a `radiogroup` of native radio inputs, so a screen reader announces the group's name, each choice ("3 out
+  of 5, Good") and which one is chosen. Name the group with `aria-label`, `aria-labelledby` or a `FormField`.
+- Tab enters the group on the chosen choice (or the first, if there is none) and leaves it on the next Tab. The
+  arrow keys move and choose in one step, as in any radio group.
+- With `clearable`, Backspace, Delete and Escape take the rating back and pressing the chosen icon again does the
+  same; a rating that is not clearable can't be emptied once it has a value.
+- A half step has its own choice ("2.5 out of 5") and is reached by the arrow keys as well as by pressing the left
+  half of an icon.
+- The hover preview is for mouse pointers only, and stops as soon as the keyboard is used; a touch tap simply
+  chooses.
+- `readOnly` is one image whose text alternative says the value ("Rated 4.3 out of 5", or "Not rated"), not a group
+  of disabled radios.
+- `hasError` sets `aria-invalid`; `required` sets `aria-required` and a real form constraint.
+- The filled and outline icons differ in shape, so what is chosen does not depend on colour, and both survive
+  Windows high-contrast mode, as does the focus ring.
+- The fill animates only for people who have not asked for reduced motion.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| Tab | Enter the group on the chosen choice, or the first; leave it on the next press. |
+| Right, Down | Choose the next value (the next half at `precision={0.5}`). |
+| Left, Up | Choose the previous value. |
+| Backspace, Delete, Escape | With `clearable`, take the rating back. |
+| Pointer | Pressing an icon chooses it; at half steps the left half chooses the half. |
+
+## Code examples
+
+```tsx
+<RatingInput aria-label="Rate this recipe" onValueChange={save} />
+
+{/* Half steps, stored as 0 to 5 */}
+<RatingInput aria-label="Rating" precision={0.5} defaultValue={3.5} />
+
+{/* Showing an average, which is not a form control */}
+<RatingInput aria-label="Average rating" readOnly value={4.3} />
+
+{/* Names for each value, and a rating that can be taken back */}
+<RatingInput
+  aria-label="Rating"
+  valueNames={["Poor", "Fair", "Good", "Great", "Excellent"]}
+  showValueName
+  clearable
+/>
+
+{/* Submitted with a form, as a number, and required */}
+<form onSubmit={handleSubmit}>
+  <RatingInput aria-label="Rating" name="rating" required />
+</form>
+
+{/* With a native attribute on the group */}
+<RatingInput aria-label="Rating" title="Your rating" />
+
+{/* With a label and helper text; the wiring is done for you */}
+<FormField label="How was it?" helperText="Choose a rating from 1 to 5.">
+  {(fieldProps) => <RatingInput {...fieldProps} />}
+</FormField>
+```
+
+## Design tokens used
+
+The icons are drawn by `Icon`, which lists its own colour tokens (`icon.warning`, `icon.secondary`, `icon.danger` and the rest of the tones).
+
+<TokenRow token="border.focus" usage="the focus ring around the icon that has keyboard focus" />
+<TokenRow token="border-width.2" usage="the focus ring's width" />
+<TokenRow token="radius.sm" usage="the focus ring's corners, the standard focus-ring radius" />
+<TokenRow token="font-family.primary" usage="the value name beside the icons" />
+<TokenRow token="font-size.xs" usage="the value name at `xs`" />
+<TokenRow token="font-size.sm" usage="the value name at `sm`" />
+<TokenRow token="font-size.base" usage="the value name at `md`" />
+<TokenRow token="font-size.md" usage="the value name at `lg`" />
+<TokenRow token="font-size.lg" usage="the value name at `xl`" />
+<TokenRow token="line-height.tight" usage="the value name's line" />
+<TokenRow token="icon-size.sm" usage="an icon at `xs`" />
+<TokenRow token="icon-size.md" usage="an icon at `sm`" />
+<TokenRow token="icon-size.lg" usage="an icon at `md`" />
+<TokenRow token="icon-size.xl" usage="an icon at `lg`" />
+<TokenRow token="icon-size.2xl" usage="an icon at `xl`" />
+<TokenRow token="motion-duration.fast" usage="the fill growing and shrinking as the choice or preview changes" />
+<TokenRow token="motion-easing.standard" usage="the fill growing and shrinking" />
+<TokenRow token="opacity.40" usage="the whole rating while disabled" />
+<TokenRow token="space.1" usage="the gap between icons, and the padding around each" />
+<TokenRow token="space.3" usage="the gap before the value name" />
+<TokenRow token="space.6" usage="the smallest an icon's choice gets, a 24px target" />
+<TokenRow token="text.secondary" usage="the value name" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Slider"
+  description="A value on a longer or continuous scale, where a rating's short ladder of steps is the wrong shape"
+  href="/?path=/docs/molecules-inputs-slider--docs"
+>
+  <Slider aria-label="Volume" defaultValue={40} />
+</RelatedCard>
+<RelatedCard
+  name="RadioGroup"
+  description="A choice among labelled options, where each one needs text of its own"
+  href="/?path=/docs/molecules-inputs-radiogroup--docs"
+>
+  <RadioGroup aria-label="Example" defaultValue="a">
+    <Radio value="a">A</Radio>
+  </RadioGroup>
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom that names this field when you are not using a FormField"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Rating</FieldLabel>
+</RelatedCard>
+<RelatedCard
+  name="FieldHelperText"
+  description="Explains the scale, below the field"
+  href="/?path=/docs/atoms-inputs-fieldhelpertext--docs"
+>
+  <FieldHelperText>1 is poor, 5 is excellent</FieldHelperText>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this field with a label and helper or error text, with the id and aria wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <RatingInput aria-label="Rating" defaultValue={3} size="xs" />
+</RelatedCard>
+</div>

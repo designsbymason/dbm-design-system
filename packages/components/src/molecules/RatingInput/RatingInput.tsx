@@ -1,0 +1,261 @@
+import { StarIcon } from "@dbm-design-system/icons";
+import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { forwardRef, useEffect, useId, useState } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
+import { Icon } from "../../atoms/Icon";
+import type { IconProps } from "../../atoms/Icon";
+import type { InputSize } from "../../atoms/Input";
+import styles from "./RatingInput.module.css";
+import type { RatingInputLabels, RatingInputProps, RatingInputTone } from "./RatingInput.types";
+
+const defaultMax = 5;
+const maxIcons = 10;
+
+const sizeClass: Record<InputSize, string | undefined> = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+  xl: styles.sizeXl,
+};
+
+// The icon is one step up from the shared scale's own icon size, so the largest rating is a comfortable 40px.
+const iconSize: Record<InputSize, IconProps["size"]> = { xs: "sm", sm: "md", md: "lg", lg: "xl", xl: "2xl" };
+
+const toneToIcon: Record<RatingInputTone, IconProps["tone"]> = {
+  warning: "warning",
+  brand: "brand",
+  success: "success",
+  info: "info",
+  danger: "danger",
+};
+
+function resolveMax(max: number): number {
+  if (Number.isInteger(max) && max >= 1 && max <= maxIcons) return max;
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`RatingInput: \`max\` must be a whole number from 1 to ${maxIcons}; got ${String(max)}. Using ${defaultMax}.`);
+  }
+  return defaultMax;
+}
+
+/**
+ * A rating field: a row of icons (stars by default) of which a person chooses one, by pointer or keyboard. It is a
+ * native radio group, one radio for each value (two for each icon at `precision={0.5}`), so the arrow keys, a
+ * single tab stop, form submission under `name` and `required` validation are the browser's own, and a screen reader
+ * hears "3 out of 5". The value is a number, `0` for no rating. Icons light up under the pointer before a choice is
+ * made, `clearable` lets a rating be taken back, and `readOnly` shows any value exactly (4.3 fills a third of the
+ * fifth icon) as one image with a text alternative. `ref` forwards to the element that carries the role;
+ * `className` and `style` go on the outermost box. It always reads left to right.
+ *
+ * @example
+ * ```tsx
+ * <RatingInput aria-label="Rate this recipe" onValueChange={save} />
+ * <RatingInput aria-label="Rating" precision={0.5} defaultValue={3.5} />
+ * <RatingInput aria-label="Average rating" readOnly value={4.3} />
+ * <RatingInput aria-label="Rating" valueNames={["Poor", "Fair", "Good", "Great", "Excellent"]} showValueName />
+ * ```
+ */
+export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
+  (
+    {
+      max: maxProp = defaultMax,
+      value,
+      defaultValue = 0,
+      onValueChange,
+      precision = 1,
+      size = "md",
+      tone = "warning",
+      icon = StarIcon,
+      readOnly = false,
+      clearable = false,
+      hasError = false,
+      disabled = false,
+      required = false,
+      name,
+      valueNames,
+      showValueName = false,
+      formatNumber = String,
+      labels: labelOverrides,
+      className,
+      style,
+      onKeyDown,
+      onPointerLeave,
+      id,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      "aria-describedby": ariaDescribedBy,
+      ...props
+    },
+    ref,
+  ) => {
+    const max = resolveMax(maxProp);
+    const step = precision === 0.5 ? 0.5 : 1;
+    const uid = useId();
+
+    const defaultLabels: RatingInputLabels = {
+      itemLabel: (current, total) => `${formatNumber(current)} out of ${formatNumber(total)}`,
+      valueText: (current, total) => `Rated ${formatNumber(current)} out of ${formatNumber(total)}`,
+      notRated: "Not rated",
+    };
+    const labels = mergeDefined(defaultLabels, labelOverrides);
+
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
+      if (precision !== 1 && precision !== 0.5) {
+        console.warn(`RatingInput: \`precision\` must be 1 or 0.5; got ${String(precision)}. Using 1.`);
+      }
+      if (value !== undefined && defaultValue !== 0) {
+        console.warn("RatingInput: pass either `value` or `defaultValue`, not both. `defaultValue` is ignored once `value` is set.");
+      }
+      if (showValueName && !valueNames) {
+        console.warn("RatingInput: `showValueName` has no text to show without `valueNames`.");
+      }
+    }, [precision, value, defaultValue, showValueName, valueNames]);
+
+    const isControlled = value !== undefined;
+    const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
+    const raw = isControlled ? value : uncontrolledValue;
+    // A value that isn't a number (untyped data on its way) reads as no rating rather than throwing.
+    const clamped = typeof raw === "number" && Number.isFinite(raw) ? Math.min(max, Math.max(0, raw)) : 0;
+    // Chosen values sit on a step; a read-only rating is drawn exactly.
+    const current = readOnly ? clamped : Math.round(clamped / step) * step;
+
+    const [hovered, setHovered] = useState<number | null>(null);
+    const shown = !readOnly && !disabled && hovered !== null ? hovered : current;
+
+    const commit = (next: number) => {
+      if (!isControlled) setUncontrolledValue(next);
+      if (next !== current) onValueChange?.(next);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(event);
+      // A key press means the keyboard is in charge: a pointer resting over an icon stops previewing until it moves.
+      setHovered(null);
+      if (event.defaultPrevented || !clearable || readOnly || disabled || current === 0) return;
+      if (event.key === "Backspace" || event.key === "Delete" || event.key === "Escape") {
+        event.preventDefault();
+        commit(0);
+      }
+    };
+
+    const nameFor = (whole: number) => valueNames?.[whole - 1];
+    // A half step shows the name of the whole value below it.
+    const shownWhole = Math.floor(shown);
+
+    const iconProps = (weight: "bold" | "fill", iconTone: IconProps["tone"]) =>
+      ({ icon, size: iconSize[size], weight, tone: iconTone }) as const;
+
+    const items = Array.from({ length: max }, (_, index) => {
+      const position = index + 1;
+      // Rounded so a value like 4.3 doesn't carry the float noise of 4.3 - 4 into the style.
+      const fill = Math.round(Math.min(1, Math.max(0, shown - index)) * 1000) / 1000;
+      const steps = step === 0.5 ? [position - 0.5, position] : [position];
+      return (
+        <span key={position} className={styles.item} data-fill={fill}>
+          <span className={styles.icons} style={{ "--fill": fill } as CSSProperties} aria-hidden="true">
+            <Icon {...iconProps("bold", hasError ? "danger" : "secondary")} />
+            <span className={styles.filled}>
+              <Icon {...iconProps("fill", toneToIcon[tone])} />
+            </span>
+          </span>
+          {readOnly
+            ? null
+            : steps.map((choice) => {
+                const whole = Number.isInteger(choice);
+                const choiceName = whole ? nameFor(choice) : undefined;
+                return (
+                  <input
+                    key={choice}
+                    type="radio"
+                    className={cx(styles.radio, step === 0.5 && (whole ? styles.radioEnd : styles.radioStart))}
+                    name={name || `${uid}-rating`}
+                    // Without a `name` the radios still group by it, but belong to no form, so nothing is submitted.
+                    form={name ? undefined : `${uid}-no-form`}
+                    value={choice}
+                    checked={current === choice}
+                    disabled={disabled}
+                    required={required}
+                    aria-label={`${labels.itemLabel(choice, max)}${choiceName ? `, ${choiceName}` : ""}`}
+                    onChange={() => commit(choice)}
+                    onClick={() => {
+                      if (clearable && current === choice) commit(0);
+                    }}
+                    onPointerEnter={(event) => {
+                      if (event.pointerType === "mouse") setHovered(choice);
+                    }}
+                  />
+                );
+              })}
+        </span>
+      );
+    });
+
+    const group = readOnly ? (
+      <div
+        {...props}
+        ref={ref}
+        id={id}
+        className={styles.group}
+        role="img"
+        aria-label={
+          ariaLabel
+            ? `${ariaLabel}, ${current > 0 ? labels.valueText(current, max) : labels.notRated}`
+            : current > 0
+              ? labels.valueText(current, max)
+              : labels.notRated
+        }
+        aria-labelledby={ariaLabelledBy ? `${ariaLabelledBy} ${id ?? `${uid}-self`}` : undefined}
+        aria-describedby={ariaDescribedBy}
+      >
+        {items}
+      </div>
+    ) : (
+      // The radios inside are the focusable parts; key presses and the pointer leaving reach the group from them.
+      // eslint-disable-next-line jsx-a11y/interactive-supports-focus
+      <div
+        {...props}
+        ref={ref}
+        id={id}
+        className={styles.group}
+        role="radiogroup"
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={hasError || undefined}
+        aria-required={required || undefined}
+        aria-disabled={disabled || undefined}
+        onKeyDown={handleKeyDown}
+        onPointerLeave={(event) => {
+          setHovered(null);
+          onPointerLeave?.(event);
+        }}
+      >
+        {items}
+      </div>
+    );
+
+    return (
+      <div
+        className={cx(styles.root, sizeClass[size], hasError && styles.error, disabled && styles.disabled, className)}
+        style={style}
+        // The scale reads left to right whatever the page's direction, the way a number does.
+        dir="ltr"
+      >
+        {group}
+        {readOnly && name ? <input type="hidden" name={name} value={current} /> : null}
+        {showValueName && valueNames && valueNames.length > 0 ? (
+          <span className={styles.valueName} aria-hidden="true">
+            {valueNames.map((text, index) => (
+              <span key={`${index}-${text}`} className={styles.nameSlot} data-active={shownWhole === index + 1}>
+                {text}
+              </span>
+            ))}
+          </span>
+        ) : null}
+      </div>
+    );
+  },
+);
+
+RatingInput.displayName = "RatingInput";
