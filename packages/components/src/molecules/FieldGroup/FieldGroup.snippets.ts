@@ -5,32 +5,41 @@
 // the smallest real usage of what its story shows — only exports of the package, no demo scaffolding — and
 // `storySnippets.test.ts` checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
-const field = (label: string, indent = "  ") =>
-  `${indent}<FormField label="${label}">{(field) => <Input {...field} />}</FormField>`;
+const field = (label: string, indent = "  ", inputProps = "", fieldProps = "") =>
+  `${indent}<FormField label="${label}"${fieldProps ? ` ${fieldProps}` : ""}>{(field) => <Input {...field}${inputProps ? ` ${inputProps}` : ""} />}</FormField>`;
 
 const address = `${field("Street")}
 ${field("City")}
 ${field("Postcode")}`;
+
+const streetAndCity = `${field("Street")}
+${field("City")}`;
+
+const contact = `${field("Email", "  ", 'type="email"')}
+${field("Phone", "  ", 'type="tel"')}`;
 
 const group = (attributes: string, children: string) =>
   `<FieldGroup ${attributes}>\n${children}\n</FieldGroup>`;
 
 export const fieldGroupSnippets = {
   variants: `{/* variant: "ghost" (default, no box) | "outlined" | "filled" */}
-${group('legend="Shipping address" variant="outlined"', address)}`,
+${group('legend="Shipping address" variant="outlined"', streetAndCity)}`,
 
   horizontal: `{/* orientation: "vertical" (default) | "horizontal" — fields side by side, wrapping when a field would get too narrow.
     It also takes a breakpoint map: orientation={{ base: "vertical", md: "horizontal" }} */}
-${group('legend="Date of birth" orientation="horizontal"', `${field("Day")}\n${field("Month")}\n${field("Year")}`)}`,
+${group(
+    'legend="Date of birth" orientation="horizontal"',
+    `${field("Day", "  ", 'inputMode="numeric"')}\n${field("Month", "  ", 'inputMode="numeric"')}\n${field("Year", "  ", 'inputMode="numeric"')}`,
+  )}`,
 
   states: `{/* description sits under the legend; error is about the group as a whole (each field keeps its own error) */}
-${group('legend="Contact" description="We only use this to confirm your order." error="Give us an email address or a phone number."', `${field("Email")}\n${field("Phone")}`)}
+${group('legend="Contact" description="We only use this to confirm your order." error="Give us an email address or a phone number."', contact)}
 
 {/* disabled disables every field in the group */}
-${group('legend="Contact" disabled', `${field("Email")}\n${field("Phone")}`)}`,
+${group('legend="Contact" description="We only use this to confirm your order." disabled', contact)}`,
 
   hiddenLegend: `{/* hideLegend keeps the legend for screen readers and takes it off the page */}
-${group('legend="Search filters" hideLegend', `${field("Keyword")}\n${field("Location")}`)}`,
+${group('legend="Search filters" hideLegend orientation="horizontal"', `${field("Keyword")}\n${field("Location")}`)}`,
 
   nested: `{/* A group inside a group keeps the outer group's size and disabled state */}
 <FieldGroup legend="Billing details" variant="outlined">
@@ -39,14 +48,15 @@ ${field("Street", "    ")}
 ${field("City", "    ")}
   </FieldGroup>
   <FieldGroup legend="Contact">
-${field("Email", "    ")}
+${field("Email", "    ", 'type="email"')}
   </FieldGroup>
 </FieldGroup>`,
 
-  size: `{/* size sets the legend's type size, and is the default size for every FormField inside (a field's own size wins) */}
+  size: `{/* size sets the legend's type size, and is the default size for every FormField's label inside (a field's own size wins).
+    It does not size the controls: set each Input's size yourself. */}
 <FieldGroup legend="Large group" size="lg">
-  <FormField label="Inherits lg">{(field) => <Input {...field} />}</FormField>
-  <FormField label="Own size: sm" size="sm">{(field) => <Input {...field} />}</FormField>
+  <FormField label="Inherits lg">{(field) => <Input {...field} size="lg" />}</FormField>
+  <FormField label="Own size: sm" size="sm">{(field) => <Input {...field} size="sm" />}</FormField>
 </FieldGroup>`,
 } as const;
 
