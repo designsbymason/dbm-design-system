@@ -15,11 +15,17 @@
 // regenerate fully from the canonical curve, using their current 600 value only to
 // pick a matching hue/peak-chroma so the scale keeps its existing color identity.
 //
+// A third kind, yellow, is anchored (yellow-600 = #949415) but also carries its own
+// chroma curve — see TUNED_ANCHORED_SCALES below for why.
+//
 // Re-run this whenever a scale needs re-deriving (e.g. adding a 3rd brand theme):
 //   node packages/tokens/scripts/generate-color-scales.mjs
 //
-// It overwrites src/primitive/color.json's hue scales; "neutral" (white/black) is
-// left untouched since it isn't a hue-based scale.
+// A full run overwrites src/primitive/color.json's hue scales (including the two
+// manual purple overrides noted in guidelines/03-token-system-spec.md); "neutral"
+// (white/black) is left untouched since it isn't a hue-based scale. To (re)generate
+// one scale without touching any other, pass --only:
+//   node packages/tokens/scripts/generate-color-scales.mjs --only=yellow
 
 import { converter, formatHex, clampChroma } from 'culori';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -48,6 +54,24 @@ const CHROMA_MULTIPLIER = {
 };
 
 const toOklch = converter('oklch');
+
+// Anchored scales whose chroma doesn't follow CHROMA_MULTIPLIER. That curve tapers
+// toward the light end the way blue or purple do, but yellow's gamut is widest at
+// high lightness, so the same taper leaves its light steps a dull olive-grey
+// (yellow-50 and -100 would read as near-white greys, and a highlight marker drawn
+// from them would barely show). Each light step instead takes a fixed share of the
+// largest chroma sRGB can show at that lightness and hue, which keeps it plainly
+// yellow; 600 is still the exact anchor, and steps 700 and darker hold one share.
+// A documented exception to the shared curve (see ADR-0042).
+const TUNED_ANCHORED_SCALES = {
+  yellow: {
+    anchor: '#949415',
+    chromaShareOfGamutMax: {
+      '50': 0.3, '100': 0.52, '200': 0.68, '300': 0.76, '400': 0.8, '500': 0.83,
+      '700': 0.85, '800': 0.85, '900': 0.85, '950': 0.85,
+    },
+  },
+};
 
 // Brand-anchored scales: exact hex required at 600 (guidelines/01-vision-and-goals.md
 // decisions log). Every other step is the canonical L curve shifted by a constant
@@ -122,6 +146,23 @@ function generateAnchoredScale(hex) {
   return scale;
 }
 
+function generateTunedAnchoredScale({ anchor: hex, chromaShareOfGamutMax }) {
+  const anchor = toOklch(hex);
+  const lOffset = anchor.l - CANONICAL_L['600'];
+  const scale = {};
+  for (const step of STEPS) {
+    if (step === '600') {
+      scale[step] = hex.toUpperCase();
+      continue;
+    }
+    const l = clampL(CANONICAL_L[step] + lOffset * OFFSET_BLEND[step]);
+    // The largest in-gamut chroma at this lightness and hue.
+    const gamutMax = clampChroma({ mode: 'oklch', l, c: 0.4, h: anchor.h }, 'oklch', 'rgb').c ?? 0;
+    scale[step] = toHex({ l, c: gamutMax * chromaShareOfGamutMax[step], h: anchor.h });
+  }
+  return scale;
+}
+
 function generateFreeScale(hex) {
   const anchor = toOklch(hex);
   const scale = {};
@@ -143,22 +184,44 @@ function toTokenShape(scale) {
 
 const current = JSON.parse(readFileSync(COLOR_JSON_PATH, 'utf-8'));
 
-const result = {
-  purple: toTokenShape(generateAnchoredScale(ANCHORED_SCALES.purple)),
-  emerald: toTokenShape(generateAnchoredScale(ANCHORED_SCALES.emerald)),
-  gray: toTokenShape(generateFreeScale(FREE_SCALES.gray)),
-  red: toTokenShape(generateFreeScale(FREE_SCALES.red)),
-  amber: toTokenShape(generateFreeScale(FREE_SCALES.amber)),
-  green: toTokenShape(generateFreeScale(FREE_SCALES.green)),
-  blue: toTokenShape(generateFreeScale(FREE_SCALES.blue)),
-  neutral: current.neutral,
+const generators = {
+  purple: () => toTokenShape(generateAnchoredScale(ANCHORED_SCALES.purple)),
+  emerald: () => toTokenShape(generateAnchoredScale(ANCHORED_SCALES.emerald)),
+  gray: () => toTokenShape(generateFreeScale(FREE_SCALES.gray)),
+  red: () => toTokenShape(generateFreeScale(FREE_SCALES.red)),
+  amber: () => toTokenShape(generateFreeScale(FREE_SCALES.amber)),
+  yellow: () => toTokenShape(generateTunedAnchoredScale(TUNED_ANCHORED_SCALES.yellow)),
+  green: () => toTokenShape(generateFreeScale(FREE_SCALES.green)),
+  blue: () => toTokenShape(generateFreeScale(FREE_SCALES.blue)),
 };
+
+// `--only=<scale>` regenerates that one scale and leaves every other value in the file as it is.
+const only = process.argv.find((arg) => arg.startsWith('--only='))?.slice('--only='.length);
+if (only !== undefined && !(only in generators)) {
+  console.error(`Unknown scale "${only}". Choose one of: ${Object.keys(generators).join(', ')}`);
+  process.exit(1);
+}
+
+let result;
+if (only === undefined) {
+  // Keeps the file's order: purple, emerald, gray, red, amber, yellow, green, blue, neutral.
+  const ordered = {};
+  for (const name of Object.keys(generators)) ordered[name] = generators[name]();
+  result = { ...ordered, neutral: current.neutral };
+} else {
+  result = {};
+  for (const [name, value] of Object.entries(current)) {
+    result[name] = name === only ? generators[only]() : value;
+    // A scale that isn't in the file yet goes right after amber, where it reads in the scale order.
+    if (name === 'amber' && !(only in current) && only === 'yellow') result.yellow = generators.yellow();
+  }
+}
 
 writeFileSync(COLOR_JSON_PATH, JSON.stringify(result, null, 2) + '\n');
 
 console.log('Regenerated', COLOR_JSON_PATH);
 for (const [name, scale] of Object.entries(result)) {
-  if (name === 'neutral') continue;
+  if (name === 'neutral' || (only !== undefined && name !== only)) continue;
   console.log(`\n${name}:`);
   for (const step of STEPS) {
     console.log(`  ${step.padStart(3)}: ${scale[step].$value}`);

@@ -15,7 +15,7 @@ export const badgeSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Badge size="lg">lg</Badge>`,
 
-  allTonesSubtle: `{/* tone: "brand" | "neutral" | "info" | "success" | "warning" | "danger" (default) */}
+  allTonesSubtle: `{/* tone: "brand" | "neutral" | "info" | "success" | "warning" | "highlight" | "danger" (default) */}
 <Badge variant="subtle" tone="success">success</Badge>`,
 
   allTonesSolid: `{/* variant: "solid" (default) | "subtle" — solid is the high-emphasis fill */}

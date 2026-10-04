@@ -9,6 +9,11 @@
   color: var(--dbm-text-warning);
 }
 
+.toneHighlight {
+  background-color: var(--dbm-bg-highlight-subtle);
+  color: var(--dbm-text-highlight);
+}
+
 .toneSuccess {
   background-color: var(--dbm-bg-success-subtle);
   color: var(--dbm-text-success);

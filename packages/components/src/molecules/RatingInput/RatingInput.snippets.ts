@@ -10,7 +10,7 @@ export const ratingInputSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <RatingInput aria-label="Rating" size="sm" />`,
 
-  tones: `{/* tone: "warning" (default) | "brand" | "success" | "info" | "danger" */}
+  tones: `{/* tone: "highlight" (default) | "warning" | "brand" | "success" | "info" | "danger" */}
 <RatingInput aria-label="Rating" tone="brand" defaultValue={4} />`,
 
   halfSteps: `{/* precision: 1 (default) | 0.5 */}
@@ -70,7 +70,7 @@ export function ratingInputPlaygroundSnippet(args: RatingInputPlaygroundSnippetA
   if (args.max !== undefined && args.max !== 5) attributes.push(`max={${args.max}}`);
   if (args.precision !== undefined && args.precision !== 1) attributes.push(`precision={${args.precision}}`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
-  if (args.tone && args.tone !== "warning") attributes.push(`tone="${args.tone}"`);
+  if (args.tone && args.tone !== "highlight") attributes.push(`tone="${args.tone}"`);
   const iconName = typeof args.icon === "string" ? iconNames[args.icon] : undefined;
   if (iconName) attributes.push(`icon={${iconName}}`);
   if (args.defaultValue) attributes.push(`defaultValue={${args.defaultValue}}`);

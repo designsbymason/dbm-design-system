@@ -149,6 +149,7 @@ A running record of foundational decisions, cross-referenced to the detailed doc
 | Repo visibility & governance | Public GitHub repo; MIT license; sole maintainer. **Pull requests are disabled on the repo** (verified 2026-09-20), so none is opened or merged; write access is controlled via the Collaborators list (empty), not by visibility | This document |
 | Dependency updates | Dependabot alerts and security updates on; **version-update PRs off**; routine updates in a periodic manual refresh pass, vulnerabilities fixed by hand | [ADR-0022](adr/0022-dependency-updates-are-a-manual-refresh-pass-not-dependabot-version-prs.md), `02-tech-stack-and-structure.md` §3.2 |
 | Color-scale generation tooling | `culori` (MIT), devDependency scoped to `packages/tokens` only — used solely by the one-off OKLCH scale generation script, never shipped in any published package. Distinct from the "dependency budget" above, which governs runtime dependencies of `@dbm-design-system/components` | `03-token-system-spec.md` |
+| Yellow / highlight colour | `yellow` primitive scale anchored at `#949415` = `yellow.600` with its own light-end chroma; semantic family `highlight` (the general highlight and accent colour, not a status), shared across both brands | [ADR-0042](adr/0042-yellow-is-an-anchored-scale-with-its-own-light-end-chroma-and-the-highlight-semantic-family.md), `03-token-system-spec.md` |
 
 ---
 

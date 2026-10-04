@@ -51,6 +51,10 @@
   color: var(--dbm-icon-info);
 }
 
+.toneHighlight {
+  color: var(--dbm-icon-highlight);
+}
+
 .toneOnBrand {
   color: var(--dbm-icon-on-brand);
 }
@@ -69,6 +73,10 @@
 
 .toneOnInfo {
   color: var(--dbm-icon-on-info);
+}
+
+.toneOnHighlight {
+  color: var(--dbm-icon-on-highlight);
 }
 
 .toneOnNeutral {

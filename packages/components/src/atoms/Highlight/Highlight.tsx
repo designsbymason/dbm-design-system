@@ -5,6 +5,7 @@ import type { HighlightProps, HighlightTone } from "./Highlight.types";
 
 const toneClass: Record<HighlightTone, string | undefined> = {
   warning: styles.toneWarning,
+  highlight: styles.toneHighlight,
   success: styles.toneSuccess,
   info: styles.toneInfo,
   danger: styles.toneDanger,

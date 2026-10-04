@@ -17,11 +17,13 @@ export type IconTone =
   | "warning"
   | "success"
   | "info"
+  | "highlight"
   | "on-brand"
   | "on-danger"
   | "on-warning"
   | "on-success"
   | "on-info"
+  | "on-highlight"
   | "on-neutral"
   | "white";
 

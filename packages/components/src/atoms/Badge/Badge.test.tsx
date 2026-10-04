@@ -56,6 +56,33 @@ describe("Badge", () => {
     });
   });
 
+  it("applies the highlight tone's tokens in each variant", () => {
+    const { rerender } = render(
+      <Badge tone="highlight" variant="subtle" data-testid="badge">
+        Featured
+      </Badge>,
+    );
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      backgroundColor: "var(--dbm-bg-highlight-subtle)",
+      color: "var(--dbm-text-highlight)",
+    });
+
+    rerender(
+      <Badge tone="highlight" variant="solid" data-testid="badge">
+        Featured
+      </Badge>,
+    );
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      backgroundColor: "var(--dbm-bg-highlight)",
+      color: "var(--dbm-text-on-highlight)",
+    });
+
+    rerender(<Badge tone="highlight" dot data-testid="badge" />);
+    expect(screen.getByTestId("badge")).toHaveStyle({
+      backgroundColor: "var(--dbm-bg-highlight)",
+    });
+  });
+
   it("applies each solid tone's background/on-tone text tokens", () => {
     const { rerender } = render(
       <Badge tone="danger" variant="solid" data-testid="badge">

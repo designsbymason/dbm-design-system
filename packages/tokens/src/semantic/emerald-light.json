@@ -145,6 +145,31 @@
       "$value": "{color.neutral.white}",
       "$description": "New token (2026-09-24), added for Alert's actions: the fill of a control drawn on a solid bg.info surface (the primary action inside a solid info Alert), an inverted fill. Same value as text.on-info (white light / blue.900 dark), but its own token so a component never uses a text token as a fill (the same pattern as bg.brand and text.brand). The control's label is text.info: 4.71:1 light / 8.20:1 dark. The fill against bg.info itself is 4.71:1 light / 8.20:1 dark, above the 3:1 non-text floor."
     },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.700}",
+      "$description": "New token family (2026-10-04), the general highlight and accent colour on the new yellow scale, shared across both brands and not a status tone. Light: yellow.700, the darkest step that still holds white text (white on it is 4.67:1; yellow.600, the scale's anchor, is only 3.23:1). Graphical contrast vs bg.surface 4.67:1."
+    },
+    "highlight-hover": {
+      "$type": "color",
+      "$value": "{color.yellow.800}",
+      "$description": "Hover state of bg.highlight. Light yellow.800: white on it is 6.89:1."
+    },
+    "highlight-subtle": {
+      "$type": "color",
+      "$value": "{color.yellow.100}",
+      "$description": "Light highlight tint, the marker behind highlighted text and the fill of a subtle highlight badge. Light yellow.100: text.highlight (yellow.800) on it is 6.13:1. icon.highlight on it is only 2.87:1, so an icon on this fill takes text.highlight's step instead."
+    },
+    "highlight-subtle-hover": {
+      "$type": "color",
+      "$value": "{color.yellow.200}",
+      "$description": "Hover state of bg.highlight-subtle. Light yellow.200: text.highlight (yellow.800) on it is 5.21:1."
+    },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Inverted fill of a control drawn on a solid bg.highlight surface, the same value as text.on-highlight, its own token so a component never uses a text token as a fill. White on bg.highlight is 4.67:1."
+    },
     "neutral": {
       "$type": "color",
       "$value": "{color.gray.600}",
@@ -244,6 +269,11 @@
       "$value": "{color.neutral.white}",
       "$description": "Text on a solid bg.neutral fill (Badge solid variant) — renamed from bg.neutral-strong, 2026-08-21. Light value unchanged (white). White on gray.600 = 4.70:1, passes."
     },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Text on a solid bg.highlight fill. White on yellow.700: 4.67:1."
+    },
     "link": {
       "$type": "color",
       "$value": "{color.blue.600}",
@@ -273,6 +303,11 @@
       "$type": "color",
       "$value": "{color.blue.600}",
       "$description": "Token consolidation (2026-08-20) — moved from blue.700 to blue.600, so text.info now shares the same primitive step as bg.info/border.info/icon.info in light mode. blue.600 vs bg.surface (white) = 4.71:1, still comfortably passes AA (was 6.93:1). Against bg.info-subtle specifically, this measures only 4.5068:1 — the tightest margin found across this whole family of consolidations; see bg.info-subtle's own description for the full note. See guidelines/03-token-system-spec.md's token-consolidation phase for the full rationale and contrast table."
+    },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.800}",
+      "$description": "New token family (2026-10-04), the general highlight and accent colour on the new yellow scale, shared across both brands and not a status tone. Light yellow.800 as literal text: 6.89:1 vs bg.surface, 6.13:1 on bg.highlight-subtle. yellow.700 would be 4.67:1 on the surface but only 4.16:1 on the subtle fill, so it is not used. It is 6.06:1 on bg.canvas."
     },
     "syntax-keyword": {
       "$type": "color",
@@ -430,6 +465,21 @@
       "$value": "{color.neutral.white}",
       "$description": "New token (2026-09-24), added for Alert's actions: the outline of a control drawn on a solid bg.info surface (the secondary action inside a solid info Alert). Same value as text.on-info (white light / blue.900 dark), but its own token so a component never uses a text token as a border. Against bg.info: 4.71:1 light / 8.20:1 dark, above the 3:1 non-text floor (WCAG 1.4.11)."
     },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.600}",
+      "$description": "State-identifying highlight border. Light yellow.600, the scale's anchor: 3.23:1 vs bg.surface, which clears the 3:1 non-text floor with little to spare; 2.84:1 on bg.canvas, so not for a boundary on the canvas."
+    },
+    "highlight-subtle": {
+      "$type": "color",
+      "$value": "{color.yellow.200}",
+      "$description": "Decorative highlight-tinted ring, around bg.highlight-subtle. Light yellow.200, about 1.2 to 1.3:1, a deliberate exception like the other subtle borders."
+    },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Outline of a control drawn on a solid bg.highlight surface, the same value as text.on-highlight, its own token so a component never uses a text token as a border."
+    },
     "code": {
       "$type": "color",
       "$value": "{color.blue.100}",
@@ -499,6 +549,16 @@
       "$type": "color",
       "$value": "{color.neutral.white}",
       "$description": "New token (2026-08-20), added as part of the info token consolidation — same value as text.on-info (white light / blue.900 dark), for an icon sitting on a solid bg.info fill. White on blue.600 = 4.71:1."
+    },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.600}",
+      "$description": "Standalone highlight-tone icon. Light yellow.600, the scale's anchor: 3.23:1 vs bg.surface (non-text floor 3:1), 3.09:1 on bg.neutral-subtle, but 2.84:1 on bg.canvas and 2.87:1 on bg.highlight-subtle, where text.highlight's step should be used instead."
+    },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.neutral.white}",
+      "$description": "Icon on a solid bg.highlight fill, the same value as text.on-highlight."
     },
     "on-neutral": {
       "$type": "color",

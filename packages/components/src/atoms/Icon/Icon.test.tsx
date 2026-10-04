@@ -99,6 +99,14 @@ describe("Icon", () => {
     });
   });
 
+  it.each([
+    ["highlight", "var(--dbm-icon-highlight)"],
+    ["on-highlight", "var(--dbm-icon-on-highlight)"],
+  ] as const)("applies the %s tone", (tone, color) => {
+    render(<Icon icon={WalletIcon} tone={tone} data-testid="icon" />);
+    expect(screen.getByTestId("icon")).toHaveStyle({ color });
+  });
+
   it("applies mirrored as a horizontal flip transform", () => {
     render(<Icon icon={WalletIcon} mirrored data-testid="icon" />);
     expect(screen.getByTestId("icon")).toHaveAttribute(

@@ -41,6 +41,7 @@ const standaloneTones = [
   "warning",
   "success",
   "info",
+  "highlight",
 ] as const;
 
 const onColorTones: { tone: IconTone; bg: string }[] = [
@@ -49,6 +50,7 @@ const onColorTones: { tone: IconTone; bg: string }[] = [
   { tone: "on-warning", bg: "var(--dbm-bg-warning)" },
   { tone: "on-success", bg: "var(--dbm-bg-success)" },
   { tone: "on-info", bg: "var(--dbm-bg-info)" },
+  { tone: "on-highlight", bg: "var(--dbm-bg-highlight)" },
   { tone: "on-neutral", bg: "var(--dbm-bg-neutral)" },
   { tone: "white", bg: "var(--dbm-bg-overlay)" },
 ];

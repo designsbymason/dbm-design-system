@@ -52,9 +52,9 @@ const meta: Meta<typeof RatingInput> = {
     },
     tone: {
       control: "select",
-      options: ["warning", "brand", "success", "info", "danger"],
+      options: ["highlight", "warning", "brand", "success", "info", "danger"],
       description: "The colour of the filled icons.",
-      table: { defaultValue: { summary: "warning" } },
+      table: { defaultValue: { summary: "highlight" } },
     },
     icon: {
       control: "select",
@@ -151,7 +151,7 @@ const meta: Meta<typeof RatingInput> = {
     defaultValue: 3,
     precision: 1,
     size: "md",
-    tone: "warning",
+    tone: "highlight",
     readOnly: false,
     clearable: false,
     hasError: false,
@@ -203,7 +203,7 @@ export const Tones: Story = {
   args: { defaultValue: 4 },
   render: (args) => (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
-      {(["warning", "brand", "success", "info", "danger"] as const).map((tone) => (
+      {(["highlight", "warning", "brand", "success", "info", "danger"] as const).map((tone) => (
         <RatingInput key={tone} {...args} tone={tone} aria-label={`Tone ${tone}`} />
       ))}
     </div>

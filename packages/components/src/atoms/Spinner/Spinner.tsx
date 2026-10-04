@@ -21,11 +21,13 @@ const toneClass: Record<IconTone, string | undefined> = {
   warning: styles.toneWarning,
   success: styles.toneSuccess,
   info: styles.toneInfo,
+  highlight: styles.toneHighlight,
   "on-brand": styles.toneOnBrand,
   "on-danger": styles.toneOnDanger,
   "on-warning": styles.toneOnWarning,
   "on-success": styles.toneOnSuccess,
   "on-info": styles.toneOnInfo,
+  "on-highlight": styles.toneOnHighlight,
   "on-neutral": styles.toneOnNeutral,
   white: styles.toneWhite,
 };

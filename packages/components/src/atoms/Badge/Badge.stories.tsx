@@ -19,7 +19,7 @@ const meta: Meta<typeof Badge> = {
     },
     tone: {
       control: "select",
-      options: ["brand", "neutral", "info", "success", "warning", "danger"],
+      options: ["brand", "neutral", "info", "success", "warning", "highlight", "danger"],
       description: "Feedback-type coloring, independent of `variant`.",
     },
     size: {
@@ -195,7 +195,7 @@ export const AllTonesSubtle: Story = {
   args: { variant: "subtle" },
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
-      {(["brand", "neutral", "info", "success", "warning", "danger"] as const).map(
+      {(["brand", "neutral", "info", "success", "warning", "highlight", "danger"] as const).map(
         (tone) => (
           <Badge key={tone} {...args} tone={tone}>
             {tone}
@@ -213,7 +213,7 @@ export const AllTonesSolid: Story = {
   args: { variant: "solid" },
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)" }}>
-      {(["brand", "neutral", "info", "success", "warning", "danger"] as const).map(
+      {(["brand", "neutral", "info", "success", "warning", "highlight", "danger"] as const).map(
         (tone) => (
           <Badge key={tone} {...args} tone={tone}>
             {tone}

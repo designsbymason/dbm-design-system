@@ -23,6 +23,7 @@ const sizeClass: Record<InputSize, string | undefined> = {
 const iconSize: Record<InputSize, IconProps["size"]> = { xs: "sm", sm: "md", md: "lg", lg: "xl", xl: "2xl" };
 
 const toneToIcon: Record<RatingInputTone, IconProps["tone"]> = {
+  highlight: "highlight",
   warning: "warning",
   brand: "brand",
   success: "success",
@@ -64,7 +65,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       onValueChange,
       precision = 1,
       size = "md",
-      tone = "warning",
+      tone = "highlight",
       icon = StarIcon,
       readOnly = false,
       clearable = false,

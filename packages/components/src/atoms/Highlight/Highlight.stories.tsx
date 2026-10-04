@@ -19,7 +19,7 @@ const meta: Meta<typeof Highlight> = {
     },
     tone: {
       control: "radio",
-      options: ["warning", "success", "info", "danger"],
+      options: ["warning", "highlight", "success", "info", "danger"],
       description: "Semantic tone controlling the background/text color pairing.",
     },
     query: {
@@ -101,7 +101,7 @@ export const AllTones: Story = {
   },
   render: () => (
     <div style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
-      {(["warning", "success", "info", "danger"] as const).map((tone) => (
+      {(["warning", "highlight", "success", "info", "danger"] as const).map((tone) => (
         <Highlight key={tone} tone={tone}>
           {tone}
         </Highlight>

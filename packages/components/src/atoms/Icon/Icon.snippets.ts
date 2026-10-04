@@ -34,12 +34,12 @@ export const iconSnippets = {
     @dbm-design-system/icons. */}
 <Icon icon={HeartIcon} weight="duotone" size="lg" tone="brand" />`,
 
-  allTones: `{/* tone: "default" | "secondary" | "brand" | "disabled" | "danger" | "warning" | "success" | "info".
+  allTones: `{/* tone: "default" | "secondary" | "brand" | "disabled" | "danger" | "warning" | "success" | "info" | "highlight".
     Leave it out and the icon takes the surrounding text color. HeartIcon comes from @dbm-design-system/icons. */}
 <Icon icon={HeartIcon} size="lg" tone="danger" />
 
 {/* The on-* tones are for an icon sitting on that solid fill: "on-brand" | "on-danger" | "on-warning" |
-    "on-success" | "on-info" | "on-neutral". "white" stays white in every theme. */}
+    "on-success" | "on-info" | "on-highlight" | "on-neutral". "white" stays white in every theme. */}
 <div style={{ background: "var(--dbm-bg-brand)", padding: "var(--dbm-space-2)" }}>
   <Icon icon={HeartIcon} size="lg" tone="on-brand" />
 </div>`,

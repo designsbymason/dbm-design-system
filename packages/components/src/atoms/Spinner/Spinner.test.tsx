@@ -47,6 +47,14 @@ describe("Spinner", () => {
     });
   });
 
+  it.each([
+    ["highlight", "var(--dbm-icon-highlight)"],
+    ["on-highlight", "var(--dbm-icon-on-highlight)"],
+  ] as const)("applies the %s tone", (tone, color) => {
+    const { container } = render(<Spinner tone={tone} />);
+    expect(container.firstChild).toHaveStyle({ color });
+  });
+
   it("defaults to no explicit tone (inherits currentColor)", () => {
     const { container } = render(<Spinner />);
     expect(container.firstChild).not.toHaveStyle({

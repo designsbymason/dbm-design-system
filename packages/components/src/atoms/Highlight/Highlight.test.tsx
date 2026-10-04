@@ -57,13 +57,21 @@ describe("Highlight", () => {
     expect(el.tagName).toBe("MARK");
   });
 
+  it("applies the highlight tone's background and text tokens", () => {
+    render(<Highlight tone="highlight">design</Highlight>);
+    expect(screen.getByText("design")).toHaveStyle({
+      backgroundColor: "var(--dbm-bg-highlight-subtle)",
+      color: "var(--dbm-text-highlight)",
+    });
+  });
+
   it("has no accessibility violations across tones", async () => {
     const { container, rerender } = render(
       <Highlight tone="warning">design</Highlight>,
     );
     expect((await axe(container)).violations).toHaveLength(0);
 
-    for (const tone of ["success", "info", "danger"] as const) {
+    for (const tone of ["highlight", "success", "info", "danger"] as const) {
       rerender(<Highlight tone={tone}>design</Highlight>);
       expect((await axe(container)).violations).toHaveLength(0);
     }

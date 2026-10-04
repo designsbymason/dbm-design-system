@@ -145,6 +145,31 @@
       "$value": "{color.blue.900}",
       "$description": "New token (2026-09-24), added for Alert's actions: the fill of a control drawn on a solid bg.info surface (the primary action inside a solid info Alert), an inverted fill. Same value as text.on-info (white light / blue.900 dark), but its own token so a component never uses a text token as a fill (the same pattern as bg.brand and text.brand). The control's label is text.info: 4.71:1 light / 8.20:1 dark. The fill against bg.info itself is 4.71:1 light / 8.20:1 dark, above the 3:1 non-text floor."
     },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.300}",
+      "$description": "New token family (2026-10-04), the general highlight and accent colour on the new yellow scale, shared across both brands and not a status tone. Dark: yellow.300, 8.97:1 vs bg.surface; text.on-highlight (yellow.900) on it is 6.42:1."
+    },
+    "highlight-hover": {
+      "$type": "color",
+      "$value": "{color.yellow.200}",
+      "$description": "Hover state of bg.highlight. Dark yellow.200: text.on-highlight (yellow.900) on it is 7.63:1."
+    },
+    "highlight-subtle": {
+      "$type": "color",
+      "$value": "{color.yellow.950}",
+      "$description": "Light highlight tint, the marker behind highlighted text and the fill of a subtle highlight badge. Dark yellow.950: text.highlight (yellow.300) on it is 9.08:1. Sits at about 1.01:1 against bg.surface, a deliberate decorative tint like the other dark subtle fills."
+    },
+    "highlight-subtle-hover": {
+      "$type": "color",
+      "$value": "{color.yellow.900}",
+      "$description": "Hover state of bg.highlight-subtle. Dark yellow.900: text.highlight (yellow.300) on it is 6.42:1."
+    },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.900}",
+      "$description": "Inverted fill of a control drawn on a solid bg.highlight surface, the same value as text.on-highlight, its own token so a component never uses a text token as a fill. yellow.900 on bg.highlight is 6.42:1."
+    },
     "neutral": {
       "$type": "color",
       "$value": "{color.gray.300}",
@@ -245,6 +270,11 @@
       "$value": "{color.gray.900}",
       "$description": "Text on a solid bg.neutral fill (Badge solid variant). Dark value moved white → gray.900 (step 2, 2026-08-21, at explicit direction) — bg.neutral's own dark value moved gray.600 → gray.300 in the same pass (see that token's description) to fix a real 3:1 non-text-contrast failure on the dot use case; white text on the new lighter gray.300 would only measure 1.72:1, so dark mode switches to dark text instead, the same pattern text.on-danger/warning/success/info already use in dark mode (e.g. text.on-danger = red.900, not white). gray.900 on gray.300 = 8.21:1, clears 4.5:1 with a wide margin."
     },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.900}",
+      "$description": "Text on a solid bg.highlight fill. yellow.900 on yellow.300: 6.42:1."
+    },
     "link": {
       "$type": "color",
       "$value": "{color.blue.300}",
@@ -274,6 +304,11 @@
       "$type": "color",
       "$value": "{color.blue.300}",
       "$description": "Unchanged by the 2026-08-20 info token consolidation (already blue.300) — now also the shared value bg.info, border.info, and icon.info resolve to in dark mode. See purple-light.json's own text.info description for the consolidation this is part of."
+    },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.300}",
+      "$description": "New token family (2026-10-04), the general highlight and accent colour on the new yellow scale, shared across both brands and not a status tone. Dark yellow.300: 8.97:1 vs bg.surface, 6.42:1 on bg.highlight-subtle-hover."
     },
     "syntax-keyword": {
       "$type": "color",
@@ -431,6 +466,21 @@
       "$value": "{color.blue.900}",
       "$description": "New token (2026-09-24), added for Alert's actions: the outline of a control drawn on a solid bg.info surface (the secondary action inside a solid info Alert). Same value as text.on-info (white light / blue.900 dark), but its own token so a component never uses a text token as a border. Against bg.info: 4.71:1 light / 8.20:1 dark, above the 3:1 non-text floor (WCAG 1.4.11)."
     },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.300}",
+      "$description": "State-identifying highlight border. Dark yellow.300: 8.97:1 vs bg.surface."
+    },
+    "highlight-subtle": {
+      "$type": "color",
+      "$value": "{color.yellow.900}",
+      "$description": "Decorative highlight-tinted ring, around bg.highlight-subtle. Dark yellow.900, about 1.4:1, a deliberate exception like the other subtle borders."
+    },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.900}",
+      "$description": "Outline of a control drawn on a solid bg.highlight surface, the same value as text.on-highlight, its own token so a component never uses a text token as a border."
+    },
     "code": {
       "$type": "color",
       "$value": "{color.gray.700}",
@@ -500,6 +550,16 @@
       "$type": "color",
       "$value": "{color.blue.900}",
       "$description": "New token (2026-08-20), added as part of the info token consolidation — dark counterpart to icon.on-info (light); see that token's own description for its purpose. blue.900 on bg.info's own dark value (blue.300) = 8.20:1."
+    },
+    "highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.300}",
+      "$description": "Standalone highlight-tone icon. Dark yellow.300: 8.97:1 vs bg.surface, 4.37:1 on bg.canvas."
+    },
+    "on-highlight": {
+      "$type": "color",
+      "$value": "{color.yellow.900}",
+      "$description": "Icon on a solid bg.highlight fill, the same value as text.on-highlight."
     },
     "on-neutral": {
       "$type": "color",

@@ -3,7 +3,7 @@ import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { InputSize } from "../../atoms/Input";
 
 /** The colour a `RatingInput`'s filled icons are drawn in. */
-export type RatingInputTone = "warning" | "brand" | "success" | "info" | "danger";
+export type RatingInputTone = "highlight" | "warning" | "brand" | "success" | "info" | "danger";
 
 /** The smallest step a rating moves in: a whole icon, or half of one. */
 export type RatingInputPrecision = 1 | 0.5;
@@ -54,7 +54,7 @@ export interface RatingInputProps
   size?: InputSize;
   /**
    * The colour of the filled icons.
-   * @default "warning"
+   * @default "highlight"
    */
   tone?: RatingInputTone;
   /**

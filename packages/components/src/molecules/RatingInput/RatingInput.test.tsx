@@ -434,7 +434,15 @@ describe("RatingInput", () => {
       expect(screen.getByRole("radiogroup")).not.toHaveAttribute("aria-invalid");
     });
 
-    it("draws any Phosphor icon", () => {
+    it("draws the filled icons in the highlight tone by default, and in another when asked", () => {
+    const { container, rerender } = render(<RatingInput aria-label="Rating" defaultValue={2} />);
+    const filledColor = () => getComputedStyle(container.querySelector("[class*='filled'] svg") as Element).color;
+    expect(filledColor()).toBe("var(--dbm-icon-highlight)");
+    rerender(<RatingInput aria-label="Rating" defaultValue={2} tone="warning" />);
+    expect(filledColor()).toBe("var(--dbm-icon-warning)");
+  });
+
+  it("draws any Phosphor icon", () => {
       const Dot = (props: { className?: string }) => <svg data-testid="dot" className={props.className} />;
       render(<RatingInput aria-label="Rating" max={2} icon={Dot as never} />);
       expect(screen.getAllByTestId("dot")).toHaveLength(4);

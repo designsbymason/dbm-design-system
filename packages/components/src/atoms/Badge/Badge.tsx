@@ -16,6 +16,7 @@ const classFor: Record<BadgeVariant, Record<BadgeTone, string | undefined>> = {
     info: styles.subtleInfo,
     success: styles.subtleSuccess,
     warning: styles.subtleWarning,
+    highlight: styles.subtleHighlight,
     danger: styles.subtleDanger,
   },
   solid: {
@@ -24,6 +25,7 @@ const classFor: Record<BadgeVariant, Record<BadgeTone, string | undefined>> = {
     info: styles.solidInfo,
     success: styles.solidSuccess,
     warning: styles.solidWarning,
+    highlight: styles.solidHighlight,
     danger: styles.solidDanger,
   },
 };
@@ -38,6 +40,7 @@ const dotClassFor: Record<BadgeTone, string | undefined> = {
   info: styles.dotInfo,
   success: styles.dotSuccess,
   warning: styles.dotWarning,
+  highlight: styles.dotHighlight,
   danger: styles.dotDanger,
 };
 

@@ -11,7 +11,7 @@ import { escapeJsxText, quote } from "../../snippetHelpers";
 import type { HighlightTone } from "./Highlight.types";
 
 export const highlightSnippets = {
-  allTones: `{/* tone: "warning" (default) | "success" | "info" | "danger" */}
+  allTones: `{/* tone: "warning" (default) | "highlight" | "success" | "info" | "danger" */}
 <Highlight tone="success">success</Highlight>`,
 
   searchMatch: `{/* With no query, the whole child is the highlight — mark up the match yourself */}

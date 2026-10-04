@@ -18,16 +18,19 @@ theme's stylesheet defines, the same mechanism every component uses.
 
 ## Primitive scales
 
-Seven 11-step color scales (`50`–`950`), plus two fixed neutrals (pure white/black). These are
+Eight 11-step color scales (`50`–`950`), plus two fixed neutrals (pure white/black). These are
 raw values with no assigned meaning — **components should never reference a primitive color
 directly** (`var(--dbm-color-purple-600)`); always go through a semantic token (below), which is
 what actually changes per brand/mode.
 
 `purple-600` and `emerald-600` (marked ★) are the two brand-mandated anchor colors — every other
 step in those two scales is generated from a shared perceptual lightness curve, shifted so it
-passes exactly through the anchor's own lightness at step 600. The five status/neutral scales
-(gray, red, amber, green, blue) have no anchor requirement and are shared, unmodified, across
-both brand themes — status meaning (danger is red, success is green) doesn't change with brand.
+passes exactly through the anchor's own lightness at step 600. `yellow-600` (also ★) is anchored
+too, but its light steps carry more color than the shared curve would give them, so the pale
+steps read as yellow and not as grey. The five status/neutral scales (gray, red, amber, green,
+blue) have no anchor requirement and are shared, unmodified, across both brand themes — status
+meaning (danger is red, success is green) doesn't change with brand. Yellow is shared across both
+brands as well; its semantic tokens are named `highlight`, for what it is used for.
 
 <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
 <ColorScaleGrid family="purple" anchor="600" />
@@ -35,6 +38,7 @@ both brand themes — status meaning (danger is red, success is green) doesn't c
 <ColorScaleGrid family="gray" />
 <ColorScaleGrid family="red" />
 <ColorScaleGrid family="amber" />
+<ColorScaleGrid family="yellow" anchor="600" />
 <ColorScaleGrid family="green" />
 <ColorScaleGrid family="blue" />
 
@@ -87,6 +91,11 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "bg.info-subtle", usage: "Light info tint" },
   { token: "bg.info-subtle-hover", usage: "Hover state of bg.info-subtle" },
   { token: "bg.on-info", usage: "Inverted fill of a control drawn on a solid bg.info surface" },
+  { token: "bg.highlight", usage: "Highlight-tone solid fill — the general highlight and accent colour; also non-text graphical indicators" },
+  { token: "bg.highlight-hover", usage: "Hover state of bg.highlight" },
+  { token: "bg.highlight-subtle", usage: "Light highlight tint — the marker behind highlighted text, a subtle highlight badge" },
+  { token: "bg.highlight-subtle-hover", usage: "Hover state of bg.highlight-subtle" },
+  { token: "bg.on-highlight", usage: "Inverted fill of a control drawn on a solid bg.highlight surface" },
   { token: "bg.neutral", usage: "Neutral-tone fill for status indicators, and for solid surfaces that host text" },
   { token: "bg.neutral-hover", usage: "Hover state of bg.neutral — uses the same value in light and dark themes, unlike other hover tokens" },
   { token: "bg.neutral-subtle", usage: "Hover fill for low-emphasis controls, dashboard panels, and general neutral tinting" },
@@ -115,8 +124,10 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "text.success", usage: "Success-tone literal text" },
   { token: "text.on-success", usage: "Text on a solid bg.success fill" },
   { token: "text.info", usage: "Info-tone literal text" },
+  { token: "text.highlight", usage: "Highlight-tone literal text" },
   { token: "text.on-info", usage: "Text on a solid bg.info fill" },
   { token: "text.on-neutral", usage: "Text on a solid bg.neutral fill" },
+  { token: "text.on-highlight", usage: "Text on a solid bg.highlight fill" },
   { token: "text.link", usage: "Inline link text" },
   { token: "text.syntax-keyword", usage: "Code block: keywords and at-rules" },
   { token: "text.syntax-string", usage: "Code block: string literals" },
@@ -154,6 +165,9 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "border.info", usage: "Info-tone state-identifying border; also the richer accent-ring role" },
   { token: "border.info-subtle", usage: "Decorative info-tinted ring" },
   { token: "border.on-info", usage: "Outline of a control drawn on a solid bg.info surface" },
+  { token: "border.highlight", usage: "Highlight-tone state-identifying border" },
+  { token: "border.highlight-subtle", usage: "Decorative highlight-tinted ring" },
+  { token: "border.on-highlight", usage: "Outline of a control drawn on a solid bg.highlight surface" },
   { token: "border.code", usage: "Border paired with the inline-code background" },
 ]} />
 
@@ -173,6 +187,8 @@ primitive step depending on the active brand/mode — that indirection is the en
   { token: "icon.on-success", usage: "Icon on a solid bg.success fill" },
   { token: "icon.info", usage: "Standalone info-tone icon" },
   { token: "icon.on-info", usage: "Icon on a solid bg.info fill" },
+  { token: "icon.highlight", usage: "Standalone highlight-tone icon" },
+  { token: "icon.on-highlight", usage: "Icon on a solid bg.highlight fill" },
   { token: "icon.on-neutral", usage: "Icon on a solid bg.neutral fill" },
   { token: "icon.white", usage: "Icon on the dimming scrim (bg.overlay)" },
 ]} />

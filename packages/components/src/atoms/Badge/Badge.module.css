@@ -108,6 +108,11 @@
   color: var(--dbm-text-warning);
 }
 
+.subtleHighlight {
+  background-color: var(--dbm-bg-highlight-subtle);
+  color: var(--dbm-text-highlight);
+}
+
 .subtleDanger {
   background-color: var(--dbm-bg-danger-subtle);
   color: var(--dbm-text-danger);
@@ -136,6 +141,11 @@
 .solidWarning {
   background-color: var(--dbm-bg-warning);
   color: var(--dbm-text-on-warning);
+}
+
+.solidHighlight {
+  background-color: var(--dbm-bg-highlight);
+  color: var(--dbm-text-on-highlight);
 }
 
 .solidDanger {
@@ -215,6 +225,10 @@
 
 .dotWarning {
   background-color: var(--dbm-bg-warning);
+}
+
+.dotHighlight {
+  background-color: var(--dbm-bg-highlight);
 }
 
 .dotDanger {

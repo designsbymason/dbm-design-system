@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
-/** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` is the one non-status tone — the system's own identity color, for things like "New"/"Beta" labels rather than a status. */
-export type BadgeTone = "brand" | "neutral" | "info" | "success" | "warning" | "danger";
+/** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` and `highlight` are the non-status tones — the system's own identity color, and its general highlight and accent color, for things like "New"/"Beta" labels or a featured marker rather than a status. */
+export type BadgeTone = "brand" | "neutral" | "info" | "success" | "warning" | "highlight" | "danger";
 export type BadgeVariant = "subtle" | "solid";
 export type BadgeSize = "xs" | "sm" | "md" | "lg" | "xl";
 /** Which corner of `anchor` the badge overlaps. Only relevant when `anchor` is set. */
