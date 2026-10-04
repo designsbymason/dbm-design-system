@@ -23,6 +23,11 @@ const meta: Meta<typeof TableToolbar.Filter> = {
         "How many values of this filter are applied. Above zero the button shows the count, its accessible name says it (\"Status, 2 active\"), and the panel offers onClear. Zero shows nothing.",
       table: { defaultValue: { summary: "0" } },
     },
+    max: {
+      control: { type: "number", min: 1 },
+      description: "The most the badge writes: a count above it reads \"99+\". The button's accessible name still says the real number.",
+      table: { defaultValue: { summary: "99" } },
+    },
     onClear: { control: false, description: "Shows a Clear button in the panel while count is above zero, calling this when pressed. Left out, there is none." },
     open: { control: false, description: "Whether the panel is open, when controlled. Pair with onOpenChange." },
     defaultOpen: { control: false, description: "Whether the panel starts open, when uncontrolled." },

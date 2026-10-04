@@ -53,6 +53,14 @@ export const tableToolbarSnippets = {
           </RadioGroup>
         </TableToolbar.Filter>
       </Toolbar.Item>
+      <Toolbar.Item>
+        {/* a count above max (99) reads "99+" on the badge; the button's name still says 1,284 */}
+        <TableToolbar.Filter label="Tags" count={1284}>
+          <CheckboxGroup aria-label="Tags">
+            <Checkbox value="rush">Rush</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
     </Toolbar>
   </TableToolbar.Row>
 </TableToolbar>`,
@@ -74,7 +82,7 @@ export const tableToolbarSnippets = {
 </TableToolbar>`,
 
   resultCount: `{/* count undefined means "not known yet": nothing is shown, and the count that arrives is not announced. With a total
-    larger than count it reads "12 of 128 results". */}
+    larger than count it reads "12 of 128 results". loading shows a placeholder in the count's place and announces nothing. */}
 <TableToolbar aria-label="Orders table tools">
   <TableToolbar.Row>
     <TableToolbar.Summary count={128} />
@@ -84,6 +92,9 @@ export const tableToolbarSnippets = {
   </TableToolbar.Row>
   <TableToolbar.Row>
     <TableToolbar.Summary count={0} total={128} />
+  </TableToolbar.Row>
+  <TableToolbar.Row>
+    <TableToolbar.Summary loading />
   </TableToolbar.Row>
 </TableToolbar>`,
 

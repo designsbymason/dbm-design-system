@@ -78,6 +78,12 @@ export interface TableToolbarFilterProps extends Omit<ComponentPropsWithoutRef<"
    * @default 0
    */
   count?: number;
+  /**
+   * The most the badge writes: a count above it reads "99+". The button's accessible name still says the real number
+   * ("Status, 1,284 active").
+   * @default 99
+   */
+  max?: number;
   /** Shows a "Clear" button in the panel while `count` is above zero, calling this when pressed. Left out, there is none. */
   onClear?: () => void;
   /** Whether the panel is open, when controlled. Pair with `onOpenChange`. */
@@ -188,6 +194,8 @@ export interface TableToolbarActiveFiltersProps extends Omit<ComponentPropsWitho
 
 /** The words `TableToolbar.Summary` supplies itself. */
 export interface TableToolbarSummaryLabels {
+  /** What a screen reader finds in place of the count while `loading`. */
+  loading: string;
   /** "128 results", "1 result", "No results". Takes the plain count. */
   results: (count: number) => string;
   /** "12 of 128 results", for a filtered list: the count shown, then the total. Takes the plain numbers. */
@@ -200,6 +208,13 @@ export interface TableToolbarSummaryProps extends Omit<ComponentPropsWithoutRef<
    * arrives is not announced as if someone had changed something. `0` is a count, and says "No results".
    */
   count?: number;
+  /**
+   * The count is on its way: a placeholder takes the count's place, and a screen reader finds `labels.loading` there. Nothing is
+   * announced while it is on; the count that arrives afterwards is announced if it differs from the last one announced, and is
+   * a first appearance (silent) if there was none.
+   * @default false
+   */
+  loading?: boolean;
   /** The unfiltered total. Given, and larger than `count`, the text reads "12 of 128 results". */
   total?: number;
   /**

@@ -7,6 +7,7 @@ import type { ButtonSize } from "../../atoms/Button";
 import { useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import { Tag } from "../../atoms/Tag";
 import type { TagSize } from "../../atoms/Tag";
+import { Skeleton } from "../../atoms/Skeleton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Popover } from "../Popover";
 import { focusNearestOutside } from "./focus";
@@ -154,6 +155,7 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
       label,
       children,
       count: countProp = 0,
+      max = 99,
       onClear,
       open,
       defaultOpen,
@@ -202,7 +204,7 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
             {count > 0 && (
               <span className={cx(styles.filterCount, (size ?? group?.size ?? bar.size) === "xs" && styles.filterCountXs)} aria-hidden="true">
                 <Badge tone="brand" size="xs">
-                  {formatNumber(count)}
+                  {count > max ? `${formatNumber(max)}+` : formatNumber(count)}
                 </Badge>
               </span>
             )}
@@ -360,6 +362,7 @@ const TableToolbarActiveFilters = forwardRef<HTMLDivElement, TableToolbarActiveF
 TableToolbarActiveFilters.displayName = "TableToolbar.ActiveFilters";
 
 const makeSummaryLabels = (formatNumber: (value: number) => string): TableToolbarSummaryLabels => ({
+  loading: "Loading results",
   results: (count) => (count === 0 ? "No results" : count === 1 ? "1 result" : `${formatNumber(count)} results`),
   resultsOf: (count, total) => `${formatNumber(count)} of ${formatNumber(total)} results`,
 });
@@ -371,7 +374,7 @@ const makeSummaryLabels = (formatNumber: (value: number) => string): TableToolba
  */
 const TableToolbarSummary = forwardRef<HTMLDivElement, TableToolbarSummaryProps>(
   (
-    { count, total, size: sizeProp, announce = true, labels: labelOverrides, formatNumber = String, className, ...props },
+    { count, total, loading = false, size: sizeProp, announce = true, labels: labelOverrides, formatNumber = String, className, ...props },
     ref,
   ) => {
     const bar = useContext(TableToolbarContext);
@@ -385,6 +388,9 @@ const TableToolbarSummary = forwardRef<HTMLDivElement, TableToolbarSummaryProps>
     const { message, announce: say } = useAnnouncement();
     const previousText = useRef<string | undefined>(undefined);
     useEffect(() => {
+      // Loading: the count on screen is out of date or not there yet, so say nothing; what arrives afterwards is compared with
+      // the last count announced (a change), or is a first appearance if there was none.
+      if (loading) return;
       // Nothing shown yet: forget the last text, so the one that arrives is a first appearance.
       if (shown === undefined) {
         previousText.current = undefined;
@@ -397,14 +403,21 @@ const TableToolbarSummary = forwardRef<HTMLDivElement, TableToolbarSummaryProps>
       if (previousText.current === text) return;
       previousText.current = text;
       if (announce) say(text);
-    }, [announce, say, shown, text]);
+    }, [announce, say, loading, shown, text]);
 
     return (
       <>
-        {shown !== undefined && (
-          <div ref={ref} {...props} className={cx(styles.summary, textClass[size], className)}>
-            {text}
+        {loading ? (
+          <div ref={ref} {...props} aria-busy="true" className={cx(styles.summary, textClass[size], className)}>
+            <Skeleton variant="text" className={styles.summarySkeleton} />
+            <VisuallyHidden>{labels.loading}</VisuallyHidden>
           </div>
+        ) : (
+          shown !== undefined && (
+            <div ref={ref} {...props} className={cx(styles.summary, textClass[size], className)}>
+              {text}
+            </div>
+          )
         )}
         {announce && <VisuallyHidden role="status">{message}</VisuallyHidden>}
       </>

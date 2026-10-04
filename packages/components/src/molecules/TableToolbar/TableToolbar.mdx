@@ -135,7 +135,7 @@ screen the row wraps: the search field takes a line of its own and the toolbars 
 
 `TableToolbar.Filter` is a button that opens a panel of the controls you put in it. `count` says how many values of the filter
 are applied: the button shows it, its accessible name says it ("Status, 2 active"), and the panel offers **Clear** when you give
-it `onClear`. Inside a `Toolbar` it takes the toolbar's `variant` and `size`; wrap it in a `Toolbar.Item` so it joins the
+it `onClear`. A count above `max` (99 by default) reads "99+" on the badge; the name still says the real number. Inside a `Toolbar` it takes the toolbar's `variant` and `size`; wrap it in a `Toolbar.Item` so it joins the
 arrow-key order.
 
 <Canvas of={TableToolbarStories.Filters} />
@@ -150,8 +150,10 @@ so the keyboard user keeps their place.
 
 ### Result count
 
-"128 results", or "12 of 128 results" once the list is filtered. Leave `count` undefined while it is loading: nothing is shown and
-the count that arrives is not announced as a change.
+"128 results", or "12 of 128 results" once the list is filtered. Leave `count` undefined while it is not known yet: nothing is shown and
+the count that arrives is not announced as a change. Say `loading` to show a placeholder in its place (a screen reader finds
+"Loading results" there); nothing is announced while it is on, and a count that differs from the last one announced is
+announced when it arrives.
 
 <Canvas of={TableToolbarStories.ResultCount} />
 

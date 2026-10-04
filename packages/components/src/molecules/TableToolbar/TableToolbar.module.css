@@ -102,6 +102,11 @@
   white-space: nowrap;
 }
 
+/* The placeholder while the count loads: about the width of "128 results", so the row doesn't shift when the count arrives. */
+.summarySkeleton {
+  inline-size: 8ch;
+}
+
 /* --- Selection ---
    A row of its own, tinted so it reads as a state the table is in. A real border (not only a fill) so it is still bounded
    in forced colours, where a background is replaced with the page's and a border is kept. */

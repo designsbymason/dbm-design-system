@@ -12,6 +12,11 @@ const meta: Meta<typeof TableToolbar.Summary> = {
       description:
         "How many results there are. Left out (undefined) it means not known yet: nothing is shown, and the count that arrives is not announced as if someone had changed something. 0 is a count, and says \"No results\".",
     },
+    loading: {
+      control: "boolean",
+      description: "The count is on its way: a placeholder takes its place and a screen reader finds labels.loading there. Nothing is announced while it is on.",
+      table: { defaultValue: { summary: "false" } },
+    },
     total: { control: { type: "number", min: 0 }, description: "The unfiltered total. Given, and larger than count, the text reads \"12 of 128 results\"." },
     size: {
       control: "select",

@@ -72,9 +72,8 @@ write is a `labels` object and numbers go through `formatNumber` (ADR-0021). No 
 
 ## Found along the way
 
-- **`Tag`'s remove button is under 24px at most sizes** (above): a finding in a Finalized atom, surfaced by the target-size story.
-  The options are to enlarge its hit area without enlarging its look (a pseudo-element, the usual way), or to record the spacing
-  exception as the accepted position. Awaiting the user.
+- **`Tag`'s remove button was under 24px at most sizes** (above): a finding in a Finalized atom, surfaced by the target-size story.
+  Fixed 2026-10-03 at explicit direction by extending the hit area to 24px with a pseudo-element (see `Tag.md`).
 - **A hidden subtree has no accessible name to a role query** (testing-library): a hidden `group` can't be found by
   `getByRole(..., { name })` even with `hidden: true`, so assertions about a hidden row read the `hidden` attribute. Applied in three
   tests; not a component defect.
@@ -89,3 +88,14 @@ write is a `labels` object and numbers go through `formatNumber` (ADR-0021). No 
   can slot in.
 - **A one-toolbar variant** (filters and actions in a single `Toolbar`) needs the `Toolbar` frame to share a row, which its
   `fullWidth` doesn't do; two toolbars with a `Spacer` between them is the supported layout.
+
+## Post-review additions (2026-10-04, at explicit direction)
+
+- **`Filter` `max`** (default 99): a count above it reads "99+" on the badge; the accessible name keeps the real number.
+- **`Summary` `loading`**: a skeleton in the count's place (`aria-busy`, with `labels.loading` hidden for screen readers); nothing is
+  announced while it is on, and the count that arrives is announced only if it differs from the last one announced.
+- **xs count badge** is smaller (`table-toolbar.filter-count-size-xs`, 20px), set through `Badge`'s own custom properties on a wrapper.
+- Fixes: a count no longer makes the filter button taller; the panel is at least as wide as its button; the panel's Clear is full
+  width; "Clear all" is rounded and as tall as the chips; every default shows in the Properties tables.
+- **Ideas not built**: ready-made checkbox-list/radio-list filter panels (wait for `MultiSelect`), a smaller badge at sm, and
+  Safari/Firefox/touch checks (a pass for the whole `Toolbar` family before publishing).

@@ -124,6 +124,13 @@ export const Filters: Story = {
                 </RadioGroup>
               </TableToolbar.Filter>
             </Toolbar.Item>
+            <Toolbar.Item>
+              <TableToolbar.Filter label="Tags" count={1284}>
+                <CheckboxGroup aria-label="Tags">
+                  <Checkbox value="rush">Rush</Checkbox>
+                </CheckboxGroup>
+              </TableToolbar.Filter>
+            </Toolbar.Item>
           </Toolbar>
         </TableToolbar.Row>
       </TableToolbar>
@@ -169,6 +176,9 @@ export const ResultCount: Story = {
       </TableToolbar.Row>
       <TableToolbar.Row>
         <TableToolbar.Summary count={0} total={128} />
+      </TableToolbar.Row>
+      <TableToolbar.Row>
+        <TableToolbar.Summary loading />
       </TableToolbar.Row>
     </TableToolbar>
   ),

@@ -85,6 +85,21 @@ describe("TableToolbar", () => {
   });
 
   describe("Filter", () => {
+    it("caps a large count on the badge at max, and keeps the real number in the name", () => {
+      render(<TableToolbar.Filter label="Tags" count={1284} formatNumber={(n) => n.toLocaleString("en-US")} />);
+      const button = screen.getByRole("button", { name: "Tags, 1,284 active" });
+      expect(button).toHaveTextContent("99+");
+      expect(button).not.toHaveTextContent("1,284");
+    });
+
+    it("writes the count in full up to max, and honours a custom max", () => {
+      const { rerender } = render(<TableToolbar.Filter label="Tags" count={99} />);
+      expect(screen.getByRole("button")).toHaveTextContent("99");
+      expect(screen.getByRole("button")).not.toHaveTextContent("99+");
+      rerender(<TableToolbar.Filter label="Tags" count={12} max={9} />);
+      expect(screen.getByRole("button")).toHaveTextContent("9+");
+    });
+
     it("is a button named for the filter, opening a named panel of the controls you put in it", async () => {
       const user = userEvent.setup();
       render(
@@ -414,6 +429,28 @@ describe("TableToolbar", () => {
   });
 
   describe("Summary", () => {
+    it("shows a placeholder and a hidden loading label while loading, and announces nothing then", async () => {
+      const { rerender } = render(<TableToolbar.Summary count={5} data-testid="s" />);
+      rerender(<TableToolbar.Summary count={9} loading data-testid="s" />);
+      expect(screen.getByTestId("s")).toHaveAttribute("aria-busy", "true");
+      expect(screen.getByText("Loading results")).toBeInTheDocument();
+      expect(screen.queryByText("9 results")).not.toBeInTheDocument();
+      // An announcement is made a moment after the change, so wait past it before saying nothing was made.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("");
+      rerender(<TableToolbar.Summary count={9} data-testid="s" />);
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("9 results"));
+    });
+
+    it("keeps the first count to arrive after loading silent", () => {
+      const { rerender } = render(<TableToolbar.Summary loading />);
+      rerender(<TableToolbar.Summary count={9} />);
+      expect(screen.getByText("9 results")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent("");
+    });
+
     it("reads results, one result and no results", () => {
       const { rerender } = render(<TableToolbar.Summary count={128} />);
       expect(screen.getByText("128 results")).toBeInTheDocument();
