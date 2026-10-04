@@ -54,7 +54,8 @@
   justify-content: center;
   line-height: var(--dbm-line-height-tight);
   inline-size: var(--cell-size);
-  min-inline-size: 0;
+  /* Never smaller than a 24px target (WCAG 2.5.8), so a very narrow container overflows rather than shrinks them. */
+  min-inline-size: var(--dbm-space-6);
   transition: border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
   user-select: none;
 }

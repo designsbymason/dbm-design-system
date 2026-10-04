@@ -2,6 +2,7 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
+import { send } from "../CodeBlock/browserProtocol";
 import { FormField } from "../FormField";
 import { PinInput } from "./PinInput";
 import { pinInputPlaygroundSnippet, pinInputSnippets } from "./PinInput.snippets";
@@ -497,6 +498,38 @@ export const NarrowContainerCheck: Story = {
       const rect = cell.getBoundingClientRect();
       await expect(rect.right).toBeLessThanOrEqual(boxRect.right + 0.5);
       await expect(Math.abs(rect.width - rect.height)).toBeLessThan(1);
+      // Still a target of at least 24 CSS pixels (WCAG 2.5.8).
+      await expect(rect.width).toBeGreaterThanOrEqual(24);
+    }
+  },
+};
+
+export const ForcedColorsCheck: Story = {
+  name: "The active cell and caret survive forced colours — interaction test",
+  tags: ["!dev"],
+  args: { length: 3 },
+  play: async ({ canvasElement }) => {
+    const emulate = (value: "active" | "none") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    const input = within(canvasElement).getByLabelText("Verification code");
+    await emulate("active");
+    try {
+      await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
+      await userEvent.click(input);
+      const active = canvasElement.querySelector("[data-active='true']") as HTMLElement;
+      await expect(active).not.toBeNull();
+      // A focus outline is kept, and the caret is drawn in a system colour rather than a background that vanishes.
+      await expect(getComputedStyle(active).outlineStyle).toBe("solid");
+      await expect(parseFloat(getComputedStyle(active).outlineWidth)).toBeGreaterThan(0);
+      const probe = document.createElement("span");
+      probe.style.color = "CanvasText";
+      document.body.appendChild(probe);
+      const canvasText = getComputedStyle(probe).color;
+      probe.remove();
+      const caret = active.querySelector("[class*='caret']") as HTMLElement;
+      await expect(getComputedStyle(caret).backgroundColor).toBe(canvasText);
+    } finally {
+      await emulate("none");
     }
   },
 };

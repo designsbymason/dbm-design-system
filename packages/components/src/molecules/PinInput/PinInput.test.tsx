@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { StrictMode, createRef, useState } from "react";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { PinInput } from "./PinInput";
 
@@ -557,6 +558,84 @@ describe("PinInput", () => {
     const { container } = render(<PinInput aria-label="Code" length={4} defaultValue="12" {...focusProps} />);
     expect(field()).toHaveFocus();
     await waitFor(() => expect(cells(container)[2]).toHaveAttribute("data-active", "true"));
+  });
+
+  it("leaves the selection alone while an input method is composing, and settles it afterwards", () => {
+    render(<PinInput aria-label="Code" type="text" length={4} defaultValue="ab" />);
+    field().focus();
+    field().setSelectionRange(0, 0);
+    fireEvent.compositionStart(field());
+    fireEvent.select(field());
+    // Not widened onto the next character, which would end the composition.
+    expect(field().selectionStart).toBe(0);
+    expect(field().selectionEnd).toBe(0);
+    fireEvent.compositionEnd(field());
+    expect(field().selectionEnd).toBe(1);
+  });
+
+  it("calls the consumer's composition handlers too", () => {
+    const onCompositionStart = vi.fn();
+    const onCompositionEnd = vi.fn();
+    render(<PinInput aria-label="Code" onCompositionStart={onCompositionStart} onCompositionEnd={onCompositionEnd} />);
+    fireEvent.compositionStart(field());
+    fireEvent.compositionEnd(field());
+    expect(onCompositionStart).toHaveBeenCalledTimes(1);
+    expect(onCompositionEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it("warns in development about value with defaultValue, and revealable without mask", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<PinInput aria-label="Code" value="12" defaultValue="34" onValueChange={() => undefined} revealable />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("either `value` or `defaultValue`"));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("`revealable` has no effect without `mask`"));
+    warn.mockRestore();
+  });
+
+  it("keeps the attributes it computes when a consumer passes the same ones", () => {
+    const stray = { "aria-invalid": "true", "aria-busy": "true" } as const;
+    render(<PinInput aria-label="Code" {...stray} />);
+    expect(field()).not.toHaveAttribute("aria-invalid");
+    expect(field()).not.toHaveAttribute("aria-busy");
+  });
+
+  it("renders on the server, with every cell", () => {
+    const html = renderToString(<PinInput aria-label="Code" length={4} defaultValue="12" mask revealable />);
+    expect(html.match(/data-cell/g)).toHaveLength(4);
+    expect(html).toContain('type="password"');
+  });
+
+  it("has one tab stop for the field and then the show button", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button type="button">before</button>
+        <PinInput aria-label="Code" mask revealable />
+        <button type="button">after</button>
+      </>,
+    );
+    await user.click(screen.getByRole("button", { name: "before" }));
+    await user.tab();
+    expect(field()).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Show code" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
+    await user.tab({ shift: true });
+    await user.tab({ shift: true });
+    expect(field()).toHaveFocus();
+  });
+
+  it("lets Enter submit a surrounding form, as in any text field", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <PinInput aria-label="Code" name="otp" />
+        <button type="submit">go</button>
+      </form>,
+    );
+    await user.type(field(), "123456{Enter}");
+    expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
   it("works inside StrictMode", async () => {

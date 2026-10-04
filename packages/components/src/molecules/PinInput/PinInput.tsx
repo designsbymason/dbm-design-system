@@ -117,6 +117,8 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       onClick,
       onPointerDown,
       onPointerCancel,
+      onCompositionStart,
+      onCompositionEnd,
       ...props
     },
     ref,
@@ -129,6 +131,16 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     // A value that isn't a string (untyped data on its way) reads as empty rather than throwing.
     const rawValue = isControlled ? value : uncontrolledValue;
     const current = sanitize(typeof rawValue === "string" ? rawValue : "", type, length, transform);
+
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
+      if (value !== undefined && defaultValue !== "") {
+        console.warn("PinInput: pass either `value` or `defaultValue`, not both. `defaultValue` is ignored once `value` is set.");
+      }
+      if (revealable && !mask) {
+        console.warn("PinInput: `revealable` has no effect without `mask`, so there is no show/hide button.");
+      }
+    }, [value, defaultValue, revealable, mask]);
 
     const isRevealControlled = revealedProp !== undefined;
     const [uncontrolledRevealed, setUncontrolledRevealed] = useState(defaultRevealed);
@@ -152,13 +164,16 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     // Whether the edit being made adds to the end of a full code: read from the input itself just before the edit,
     // since the selection kept in state can be a render behind.
     const typingAtEnd = useRef(false);
+    // An input method (Japanese, Chinese, Korean) is mid-composition: the selection is left alone, since changing
+    // it would end the composition.
+    const composing = useRef(false);
     const [selection, setSelection] = useState({ start: 0, end: 0 });
 
     // A caret between characters becomes the character after it selected, so typing overwrites the cell you are
     // on instead of pushing the rest along. Reads the real input, which the browser keeps.
     const syncSelection = useCallback(() => {
       const input = inputRef.current;
-      if (!input) return;
+      if (!input || composing.current) return;
       let start = input.selectionStart ?? 0;
       let end = input.selectionEnd ?? 0;
       if (start === end && start < input.value.length) {
@@ -195,6 +210,7 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       const input = inputRef.current;
       if (!input) return;
       const block = (event: InputEvent) => {
+        if (event.isComposing) return;
         typingAtEnd.current =
           input.selectionStart === input.selectionEnd && (input.selectionStart ?? 0) >= length && input.value.length >= length;
         if (event.data && sanitize(event.data, type, length) === "") event.preventDefault();
@@ -349,6 +365,15 @@ export const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
             onBlur={handleBlur}
             onSelect={handleSelect}
             onKeyDown={handleKeyDown}
+            onCompositionStart={(event) => {
+              composing.current = true;
+              onCompositionStart?.(event);
+            }}
+            onCompositionEnd={(event) => {
+              composing.current = false;
+              syncSelection();
+              onCompositionEnd?.(event);
+            }}
             onClick={handleClick}
             onPointerDown={(event) => {
               pressing.current = true;

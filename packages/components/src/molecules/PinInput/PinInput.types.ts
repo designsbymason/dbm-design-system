@@ -81,6 +81,11 @@ export interface PinInputProps
    */
   separator?: ReactNode;
   /**
+   * A hint drawn in each empty cell, one character per cell; a single character is repeated in every cell
+   * (`"○"`). Decorative: it is not read out.
+   */
+  placeholder?: string;
+  /**
    * Hides each character behind a dot, for a PIN rather than a code that arrives by text message. Set
    * `revealable` to let the person look.
    * @default false
@@ -104,11 +109,6 @@ export interface PinInputProps
    * Called when the show/hide button is pressed, with whether the code is now showing.
    */
   onRevealedChange?: (revealed: boolean) => void;
-  /**
-   * A hint drawn in each empty cell, one character per cell; a single character is repeated in every cell
-   * (`"○"`). Decorative: it is not read out.
-   */
-  placeholder?: string;
   /**
    * Shows that the code is being checked (set it from `onComplete` until you have an answer): a spinner after the
    * cells, the field set aside from editing (it keeps focus and its value) and the state announced to screen
@@ -137,6 +137,12 @@ export interface PinInputProps
    * @default false
    */
   required?: boolean;
+  /**
+   * Focuses the field on mount, with the first empty cell active. Use sparingly: it can disorient people using
+   * assistive technology and open a phone's keyboard before they have asked for it.
+   * @default false
+   */
+  autoFocus?: boolean;
   /**
    * The browser's autofill hint. The default lets a phone offer a code that has just arrived by text message.
    * @default "one-time-code"
