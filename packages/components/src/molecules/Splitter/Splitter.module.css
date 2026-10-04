@@ -25,7 +25,16 @@
   min-inline-size: 0;
   min-block-size: 0;
   overflow: auto;
-  transition: flex-grow var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-standard);
+  transition:
+    flex-grow var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-standard),
+    visibility 0s;
+}
+
+/* A pane that scrolls is a tab stop (see Splitter.tsx), so it needs a focus ring. Drawn inside: the pane clips
+   anything outside its own edge. */
+.pane:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 /* Nothing animates while the handle is being dragged (the pane has to follow the pointer exactly), and nothing
@@ -49,6 +58,11 @@
 .hidden {
   overflow: hidden;
   visibility: hidden;
+  /* Hidden only once the pane has finished closing: the content stays drawn while it is still on its way. Opening
+     again shows it at once (the pane's own transition has no delay). */
+  transition:
+    flex-grow var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-standard),
+    visibility 0s linear var(--dbm-motion-duration-moderate);
 }
 
 /* A strip that stays: only the overflow is clipped. */
@@ -194,6 +208,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pane,
+  .hidden,
   .handle::before,
   .gripMark {
     transition: none;

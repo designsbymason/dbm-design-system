@@ -190,6 +190,9 @@ own and narrow the window to watch the panes stack.
   removing the first one gives its size to the wrong pane.
 - Don't use a splitter to let people resize something that is not one of two or more panes sharing space (a
   single panel's width is a plain resizable box, not this).
+- Don't expect `collapsed` to be changed by a handle: on a pane you control with it, a handle only asks, through
+  `onCollapsedChange`, and the pane follows when you change the prop. Leave `collapsed` off for a pane the splitter
+  should look after itself.
 - Don't make a pane's only way to be reached the handle of a pane that can collapse to nothing without another way
   to open it (a button, using `collapsed`).
 - Don't rely on the line at rest to show that a handle exists; use `variant="grip"` where the handles need to be
@@ -223,6 +226,12 @@ own and narrow the window to watch the panes stack.
 - A handle beside a `resizable={false}` pane is a plain `role="separator"`: not focusable, no value, no target,
   and not counted in the handle names.
 - A disabled splitter keeps its handles in the tab order, marked `aria-disabled`, and moves nothing.
+- A key pressed with Alt, Ctrl or Cmd is left to the browser (Alt+Left is Back); it never moves a handle.
+- A pane whose content overflows it is a tab stop while it does, so a keyboard can scroll it (the way
+  `ScrollArea`'s viewport is), and a named region when it has a `label`; one that fits isn't, and nor is a pane
+  collapsed to a strip.
+- When a pane collapses to nothing while focus is inside it, focus moves to the handle beside it, from where Enter
+  opens it again.
 - A pane collapsed to nothing is `visibility: hidden`, so its content leaves the tab order and the
   accessibility tree; a strip stays reachable.
 - The handle's target is 24px across (WCAG 2.5.8) whatever the line's thickness. Keyboard focus draws a thicker

@@ -26,6 +26,23 @@ function withContainerWidth(width: number) {
   vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(width);
 }
 
+/** Replaces ResizeObserver with one the test can fire: every observer created (the container's, each pane's) is notified. */
+function stubResizeObserver(): () => void {
+  const callbacks: Array<() => void> = [];
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(callback: () => void) {
+        callbacks.push(callback);
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+  return () => callbacks.forEach((callback) => callback());
+}
+
 describe("Splitter", () => {
   afterEach(() => vi.restoreAllMocks());
 
@@ -372,18 +389,7 @@ describe("Splitter", () => {
     });
 
     it("reads a px limit again when the container is resized", () => {
-      let notify: () => void = () => {};
-      vi.stubGlobal(
-        "ResizeObserver",
-        class {
-          constructor(callback: () => void) {
-            notify = callback;
-          }
-          observe() {}
-          unobserve() {}
-          disconnect() {}
-        },
-      );
+      const notify = stubResizeObserver();
       const width = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1000);
       render(two({ defaultLayout: [50, 50] }, { minSize: "300px" }));
       expect(first()).toHaveAttribute("aria-valuemin", "30");
@@ -397,6 +403,95 @@ describe("Splitter", () => {
       withContainerWidth(1000);
       render(two({ defaultLayout: [10, 90] }, { minSize: "300px" }));
       expect(sizeOf("a")).toBeGreaterThanOrEqual(30 - 1e-6);
+    });
+  });
+
+  describe("keys with a modifier belong to the browser", () => {
+    it.each([
+      ["Alt", { altKey: true }],
+      ["Ctrl", { ctrlKey: true }],
+      ["Meta", { metaKey: true }],
+    ])("leaves %s with an arrow key (Alt+Left is Back) alone", (_name, modifier) => {
+      const onLayoutChange = vi.fn();
+      render(two({ defaultLayout: [50, 50], onLayoutChange }));
+      first().focus();
+      const notPrevented = fireEvent.keyDown(first(), { key: "ArrowLeft", ...modifier });
+      expect(notPrevented).toBe(true);
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("leaves a modified Home, End, Enter and Page key alone too", () => {
+      const onLayoutChange = vi.fn();
+      render(two({ defaultLayout: [30, 70], onLayoutChange }, { collapsible: true, minSize: 20 }));
+      for (const key of ["Home", "End", "Enter", "PageUp", "PageDown"]) {
+        expect(fireEvent.keyDown(first(), { key, ctrlKey: true })).toBe(true);
+      }
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("focus when the pane that holds it goes away", () => {
+    const withButton = (collapsed: boolean) => (
+      <Splitter defaultLayout={[30, 70]}>
+        <Splitter.Pane data-testid="a" collapsible minSize={20} collapsed={collapsed}>
+          <button type="button">Inside</button>
+        </Splitter.Pane>
+        <Splitter.Pane>B</Splitter.Pane>
+      </Splitter>
+    );
+
+    it("moves focus to the handle beside it when the pane collapses to nothing", () => {
+      const { rerender } = render(withButton(false));
+      screen.getByRole("button", { name: "Inside" }).focus();
+      rerender(withButton(true));
+      expect(document.activeElement).toBe(first());
+    });
+
+    it("leaves focus alone when the pane that collapses doesn't hold it", () => {
+      const { rerender } = render(
+        <>
+          <button type="button">Outside</button>
+          {withButton(false)}
+        </>,
+      );
+      screen.getByRole("button", { name: "Outside" }).focus();
+      rerender(
+        <>
+          <button type="button">Outside</button>
+          {withButton(true)}
+        </>,
+      );
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Outside" }));
+    });
+
+    it("leaves focus in a pane that collapses to a strip, since it is still there", () => {
+      const strip = (collapsed: boolean) => (
+        <Splitter defaultLayout={[30, 70]}>
+          <Splitter.Pane collapsible minSize={20} collapsedSize={5} collapsed={collapsed}>
+            <button type="button">Rail</button>
+          </Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>
+      );
+      const { rerender } = render(strip(false));
+      screen.getByRole("button", { name: "Rail" }).focus();
+      rerender(strip(true));
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Rail" }));
+    });
+
+    it("uses the handle before the pane when it is the last", () => {
+      const last = (collapsed: boolean) => (
+        <Splitter defaultLayout={[70, 30]}>
+          <Splitter.Pane>A</Splitter.Pane>
+          <Splitter.Pane collapsible minSize={20} collapsed={collapsed}>
+            <button type="button">Inside</button>
+          </Splitter.Pane>
+        </Splitter>
+      );
+      const { rerender } = render(last(false));
+      screen.getByRole("button", { name: "Inside" }).focus();
+      rerender(last(true));
+      expect(document.activeElement).toBe(first());
     });
   });
 
@@ -548,18 +643,7 @@ describe("Splitter", () => {
 
   describe("rem limits", () => {
     const observerThatWeCanCall = () => {
-      let notify: () => void = () => {};
-      vi.stubGlobal(
-        "ResizeObserver",
-        class {
-          constructor(callback: () => void) {
-            notify = callback;
-          }
-          observe() {}
-          unobserve() {}
-          disconnect() {}
-        },
-      );
+      const notify = stubResizeObserver();
       return () => notify();
     };
 
@@ -771,18 +855,7 @@ describe("Splitter", () => {
     );
 
     const setup = () => {
-      let notify: () => void = () => {};
-      vi.stubGlobal(
-        "ResizeObserver",
-        class {
-          constructor(callback: () => void) {
-            notify = callback;
-          }
-          observe() {}
-          unobserve() {}
-          disconnect() {}
-        },
-      );
+      const notify = stubResizeObserver();
       const width = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1000);
       return { resize: (to: number) => { width.mockReturnValue(to); act(() => notify()); } };
     };
@@ -958,6 +1031,103 @@ describe("Splitter", () => {
       first().focus();
       await user.keyboard("{Enter}");
       expect(screen.getByTestId("a")).toHaveTextContent("rail");
+    });
+
+    describe("a pane the parent controls", () => {
+      const controlled = (collapsed: boolean, onCollapsedChange?: (collapsed: boolean) => void) => (
+        <Splitter defaultLayout={[30, 70]}>
+          <Splitter.Pane data-testid="a" collapsible minSize={20} collapsed={collapsed} onCollapsedChange={onCollapsedChange}>
+            A
+          </Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>
+      );
+
+      it("is asked to collapse by a handle, and follows when the prop does", async () => {
+        const user = userEvent.setup();
+        const onCollapsedChange = vi.fn();
+        const { rerender } = render(controlled(false, onCollapsedChange));
+        first().focus();
+        await user.keyboard("{Enter}");
+        expect(onCollapsedChange).toHaveBeenCalledTimes(1);
+        expect(onCollapsedChange).toHaveBeenCalledWith(true);
+        // Nothing moved: it is the parent's to say.
+        expect(sizeOf("a")).toBe(30);
+        rerender(controlled(true, onCollapsedChange));
+        expect(sizeOf("a")).toBe(0);
+        // Following the prop is not a request, so it isn't reported again.
+        expect(onCollapsedChange).toHaveBeenCalledTimes(1);
+      });
+
+      it("settles when the parent holds the state, instead of fighting it", async () => {
+        const user = userEvent.setup();
+        const onCollapsedChange = vi.fn();
+        const Harness = () => {
+          const [collapsed, setCollapsed] = useState(false);
+          return controlled(collapsed, (next) => {
+            onCollapsedChange(next);
+            setCollapsed(next);
+          });
+        };
+        render(<Harness />);
+        first().focus();
+        await user.keyboard("{Enter}");
+        expect(sizeOf("a")).toBe(0);
+        await user.keyboard("{Enter}");
+        expect(sizeOf("a")).toBe(30);
+        await user.keyboard("{Enter}");
+        expect(sizeOf("a")).toBe(0);
+        expect(onCollapsedChange.mock.calls).toEqual([[true], [false], [true]]);
+      });
+
+      it("keeps being asked when the parent says no", async () => {
+        const user = userEvent.setup();
+        const onCollapsedChange = vi.fn();
+        render(controlled(false, onCollapsedChange));
+        first().focus();
+        await user.keyboard("{Enter}{Enter}");
+        expect(onCollapsedChange).toHaveBeenCalledTimes(2);
+        expect(sizeOf("a")).toBe(30);
+      });
+
+      it("is asked again by a second Home, when the parent said no to the first", async () => {
+        const user = userEvent.setup();
+        const onCollapsedChange = vi.fn();
+        render(controlled(false, onCollapsedChange));
+        first().focus();
+        await user.keyboard("{Home}{Home}");
+        expect(onCollapsedChange).toHaveBeenCalledTimes(2);
+        expect(sizeOf("a")).toBe(30);
+      });
+
+      it("is asked once, not on every pointer move, as a drag crosses the point where it would snap shut", () => {
+        withContainerWidth(1000);
+        const onCollapsedChange = vi.fn();
+        render(controlled(false, onCollapsedChange));
+        fireEvent.pointerDown(first(), { clientX: 300, button: 0, pointerType: "mouse", pointerId: 1 });
+        for (const x of [200, 100, 50, 10, 0]) {
+          act(() => {
+            window.dispatchEvent(new MouseEvent("pointermove", { clientX: x }));
+          });
+        }
+        expect(onCollapsedChange).toHaveBeenCalledTimes(1);
+        expect(onCollapsedChange).toHaveBeenCalledWith(true);
+        expect(sizeOf("a")).toBeGreaterThanOrEqual(20 - 1e-6);
+      });
+
+      it("starts shut, without animating shut, when it is controlled as collapsed", () => {
+        const onLayoutChange = vi.fn();
+        render(
+          <Splitter onLayoutChange={onLayoutChange}>
+            <Splitter.Pane data-testid="a" collapsible minSize={20} collapsed>
+              A
+            </Splitter.Pane>
+            <Splitter.Pane>B</Splitter.Pane>
+          </Splitter>,
+        );
+        expect(sizeOf("a")).toBe(0);
+        expect(onLayoutChange).not.toHaveBeenCalled();
+      });
     });
 
     it("never collapses a pane that isn't collapsible", async () => {

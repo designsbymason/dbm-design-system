@@ -978,3 +978,121 @@ export const ResetInteraction: Story = {
     await settled("a", 0.2);
   },
 };
+
+export const ScrollablePaneInteraction: Story = {
+  name: "A pane whose content overflows is a tab stop (named when it has a label), and one that fits isn't — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <div style={{ width: "40rem", height: "10rem" }}>
+      <Splitter defaultLayout={[40, 30, 30]}>
+        <Splitter.Pane data-testid="long" label="Long pane">
+          <div style={{ height: "40rem" }}>A pane with far more than fits</div>
+        </Splitter.Pane>
+        <Splitter.Pane data-testid="unnamed">
+          <div style={{ height: "40rem" }}>Also long, with no label</div>
+        </Splitter.Pane>
+        <Splitter.Pane data-testid="short" label="Short pane">
+          <div>Fits</div>
+        </Splitter.Pane>
+      </Splitter>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByTestId("long")).toHaveAttribute("tabindex", "0"));
+    await expect(canvas.getByTestId("long")).toHaveAttribute("role", "region");
+    await expect(canvas.getByRole("region", { name: "Long pane" })).toBe(canvas.getByTestId("long"));
+    // Unnamed: still reachable, but not announced as a region with no name.
+    await expect(canvas.getByTestId("unnamed")).toHaveAttribute("tabindex", "0");
+    await expect(canvas.getByTestId("unnamed")).not.toHaveAttribute("role");
+    // Content that fits needs no tab stop.
+    await expect(canvas.getByTestId("short")).not.toHaveAttribute("tabindex");
+    await expect(canvas.queryByRole("region", { name: "Short pane" })).toBeNull();
+  },
+};
+
+export const CollapsedStripNotScrollableInteraction: Story = {
+  name: "A pane collapsed to a strip, its content clipped, is not a tab stop — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <div style={{ width: "40rem", height: "10rem" }}>
+      <Splitter defaultLayout={[30, 70]}>
+        <Splitter.Pane data-testid="a" collapsible collapsedSize="48px" minSize={15}>
+          <div style={{ width: "20rem", whiteSpace: "nowrap" }}>A label wider than the strip it collapses to</div>
+        </Splitter.Pane>
+        {pane("b", "B")}
+      </Splitter>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    canvas.getByRole("separator").focus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(widthOf(canvas.getByTestId("a"))).toBeCloseTo(48, 0));
+    await expect(canvas.getByTestId("a")).not.toHaveAttribute("tabindex");
+  },
+};
+
+export const FocusLeavesWithPaneInteraction: Story = {
+  name: "When the pane that holds focus collapses to nothing, focus moves to its handle — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: function Harness() {
+    const [collapsed, setCollapsed] = useState(false);
+    return (
+      <MeasuredFrame>
+        <Splitter defaultLayout={[30, 70]}>
+          <Splitter.Pane collapsible minSize={15} collapsed={collapsed} onCollapsedChange={setCollapsed}>
+            <button type="button" onKeyDown={(event) => event.key === "Escape" && setCollapsed(true)}>
+              Press Escape to close this panel
+            </button>
+          </Splitter.Pane>
+          {pane("b", "B")}
+        </Splitter>
+      </MeasuredFrame>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const inside = canvas.getByRole("button", { name: "Press Escape to close this panel" });
+    inside.focus();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(canvas.getByRole("separator")).toHaveFocus());
+    // And the keyboard still works from there: Enter opens the panel again.
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Press Escape to close this panel" })).toBeVisible());
+  },
+};
+
+export const HidesAtTheEndInteraction: Story = {
+  name: "A pane collapsing to nothing keeps its content visible while it closes, and hides it once it has — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <MeasuredFrame>
+      <Splitter defaultLayout={[40, 60]}>
+        <Splitter.Pane data-testid="a" collapsible minSize={15}>
+          <div data-testid="content">Content</div>
+        </Splitter.Pane>
+        {pane("b", "B")}
+      </Splitter>
+    </MeasuredFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    canvas.getByRole("separator").focus();
+    const start = widthOf(canvas.getByTestId("a"));
+    await userEvent.keyboard("{Enter}");
+    // Part way through the easing, the pane is narrower but its content is still drawn.
+    await waitFor(() => expect(widthOf(canvas.getByTestId("a"))).toBeLessThan(start * 0.9));
+    await expect(widthOf(canvas.getByTestId("a"))).toBeGreaterThan(1);
+    await expect(getComputedStyle(canvas.getByTestId("content")).visibility).toBe("visible");
+    // Once it has arrived, it is hidden from everyone.
+    await waitFor(() => expect(getComputedStyle(canvas.getByTestId("content")).visibility).toBe("hidden"), { timeout: 3000 });
+    // And opening it again shows the content at once.
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(getComputedStyle(canvas.getByTestId("content")).visibility).toBe("visible"));
+  },
+};

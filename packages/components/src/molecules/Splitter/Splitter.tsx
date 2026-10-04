@@ -1,4 +1,4 @@
-import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs, useIsScrollable, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import {
   Children,
   createContext,
@@ -94,7 +94,8 @@ function startingLayout(panes: ReactElement<SplitterPaneProps>[], constraints: P
     constraints,
   );
   panes.forEach(({ props }, index) => {
-    if (!props.defaultCollapsed || props.collapsed !== undefined) return;
+    // Starts shut if it says so, or if it is controlled and the parent says so (so it doesn't animate shut on mount).
+    if (!(props.collapsed === undefined ? props.defaultCollapsed : props.collapsed)) return;
     layout = togglePane(layout, index, constraints, undefined) ?? layout;
   });
   return layout;
@@ -118,7 +119,7 @@ const SplitterPane = forwardRef<HTMLDivElement, SplitterPaneProps>(
       maxSize: _maxSize,
       collapsible: _collapsible,
       collapsedSize: _collapsedSize,
-      label: _label,
+      label,
       resizable: _resizable,
       fixed: _fixed,
       collapsed: _collapsed,
@@ -133,6 +134,13 @@ const SplitterPane = forwardRef<HTMLDivElement, SplitterPaneProps>(
     ref,
   ) => {
     const context = useContext(PaneContext);
+
+    // A pane clips what overflows it and scrolls, so (like `ScrollArea`'s viewport) it is a tab stop while it
+    // actually scrolls, to let a keyboard reach the rest — and a named region when it has a `label`. A pane
+    // collapsed to a strip clips its content and doesn't scroll.
+    const paneRef = useRef<HTMLDivElement>(null);
+    const overflowing = useIsScrollable(paneRef, "both");
+    const scrollable = overflowing && !context?.collapsed;
 
     const hasWarnedRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
@@ -149,7 +157,8 @@ const SplitterPane = forwardRef<HTMLDivElement, SplitterPaneProps>(
       // same-named prop (05-component-api-conventions.md §3).
       <div
         {...props}
-        ref={ref}
+        {...(scrollable ? { tabIndex: 0, ...(label ? { role: "region", "aria-label": label } : {}) } : {})}
+        ref={mergeRefs(ref, paneRef)}
         id={context?.id ?? id}
         className={cx(styles.pane, context?.collapsed && styles.collapsed, context?.hidden && styles.hidden, className)}
         data-collapsed={context?.collapsed ? "" : undefined}
@@ -343,6 +352,37 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       current.onLayoutChange?.(next);
     }, []);
 
+    // A change a person makes with a handle. Opening or closing a pane that is controlled (`collapsed` is set) is a
+    // request: it is reported through `onCollapsedChange`, and the pane follows when the prop does. Done any other
+    // way the pane and the prop would each be changing the other and never settle.
+    const askedRef = useRef<Record<string, boolean>>({});
+    const request = useCallback(
+      (next: number[]) => {
+        const current = latest.current;
+        const asks: Array<[number, boolean]> = [];
+        next.forEach((size, index) => {
+          const limits = current.constraints[index];
+          const shutNow = isCollapsed(current.layout[index] ?? 0, limits);
+          const shutThen = isCollapsed(size, limits);
+          if (shutNow !== shutThen && current.panes[index]?.props.collapsed !== undefined) asks.push([index, shutThen]);
+        });
+        if (asks.length === 0) {
+          askedRef.current = {};
+          commit(next);
+          return true;
+        }
+        // Asked once per direction: a drag past the point where a pane would snap shut moves on every pointer event.
+        asks.forEach(([index, shut]) => {
+          const key = current.keys[index] ?? String(index);
+          if (askedRef.current[key] === shut) return;
+          askedRef.current[key] = shut;
+          current.panes[index]?.props.onCollapsedChange?.(shut);
+        });
+        return false;
+      },
+      [commit],
+    );
+
     // Measure what the panes share, and again whenever the container (or a handle) changes size.
     const measure = useCallback(() => {
       const root = rootRef.current;
@@ -402,10 +442,30 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
         collapsedFlags.forEach((flag, index) => {
           const key = keys[index] ?? String(index);
           // A pane that has only just arrived has nothing to compare against, and isn't a change.
+          // A pane the parent controls was asked for (above); it already knows about a change its own prop made.
+          if (latest.current.panes[index]?.props.collapsed !== undefined) return;
           if (key in previous && flag !== previous[key]) latest.current.panes[index]?.props.onCollapsedChange?.(flag);
         });
       }
       previousFlagsRef.current = Object.fromEntries(collapsedFlags.map((flag, index) => [keys[index] ?? String(index), flag]));
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a pane's collapsed state changes
+    }, [flagsKey]);
+
+    // A pane that collapses to nothing is hidden from everyone, so focus inside it would be dropped to the top of
+    // the page: move it to the handle beside the pane, from where the keyboard can open it again.
+    useLayoutEffect(() => {
+      const root = rootRef.current;
+      const active = document.activeElement;
+      if (!root || !active || active === document.body) return;
+      const children = Array.from(root.children);
+      const paneElements = children.filter((child) => child.getAttribute("role") !== "separator");
+      const separators = children.filter((child) => child.getAttribute("role") === "separator");
+      paneElements.forEach((element, index) => {
+        const goneForGood = Boolean(collapsedFlags[index]) && (constraints[index]?.collapsed ?? 0) <= 0;
+        if (!goneForGood || !element.contains(active)) return;
+        const target = [separators[index], separators[index - 1]].find((handle) => handle?.getAttribute("tabindex") === "0");
+        (target as HTMLElement | undefined)?.focus();
+      });
       // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when a pane's collapsed state changes
     }, [flagsKey]);
 
@@ -419,8 +479,9 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
         const next = togglePane(current.layout, index, current.constraints, restoreRef.current[current.keys[index] ?? String(index)]);
         if (next) commit(next);
       });
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- follows the prop, and re-applies if the layout drifts from it
-    }, [wantedKey, flagsKey]);
+      askedRef.current = {};
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- follows the prop, when the prop changes
+    }, [wantedKey]);
 
     useEffect(() => () => dragCleanupRef.current?.(), []);
 
@@ -429,6 +490,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       if (current.disabled || (event.pointerType === "mouse" && event.button !== 0)) return;
       event.preventDefault();
       event.currentTarget.focus();
+      askedRef.current = {};
       const share = measure();
       const start = current.horizontal ? event.clientX : event.clientY;
       const direction = current.horizontal && current.dir === "rtl" ? -1 : 1;
@@ -445,7 +507,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       const move = (moveEvent: PointerEvent) => {
         const distance = ((current.horizontal ? moveEvent.clientX : moveEvent.clientY) - start) * direction;
         const percent = share > 0 ? (distance / share) * 100 : 0;
-        commit(resizePair(base, index, (base[index] ?? 0) + percent, latest.current.constraints));
+        request(resizePair(base, index, (base[index] ?? 0) + percent, latest.current.constraints));
       };
       const finish = () => {
         dragCleanupRef.current?.();
@@ -472,6 +534,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
     // two panes back to the proportions they started in.
     const toggleAt = (index: number) => {
       const current = latest.current;
+      askedRef.current = {};
       // The pane before the handle collapses if it can; otherwise the one after it.
       const collapsible = current.constraints[index]?.collapsible ? index : current.constraints[index + 1]?.collapsible ? index + 1 : null;
       const next =
@@ -484,14 +547,15 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
               current.constraints,
             );
       if (!next) return false;
-      commit(next);
+      if (!request(next)) return true;
       current.onLayoutCommit?.(latest.current.layout);
       return true;
     };
 
     const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>, index: number) => {
       const current = latest.current;
-      if (current.disabled) return;
+      // A key with a modifier is the browser's (Alt+Left is Back) or the system's, not the handle's.
+      if (current.disabled || event.altKey || event.ctrlKey || event.metaKey) return;
       const grow = current.horizontal ? (current.dir === "rtl" ? "ArrowLeft" : "ArrowRight") : "ArrowDown";
       const shrink = current.horizontal ? (current.dir === "rtl" ? "ArrowRight" : "ArrowLeft") : "ArrowUp";
       const size = current.layout[index] ?? 0;
@@ -508,11 +572,11 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
         if (toggleAt(index)) event.preventDefault();
         return;
       }
+      askedRef.current = {};
       const desired = desiredByKey[event.key];
       if (desired === undefined) return;
       event.preventDefault();
-      commit(resizePair(current.layout, index, desired, current.constraints));
-      current.onLayoutCommit?.(latest.current.layout);
+      if (request(resizePair(current.layout, index, desired, current.constraints))) current.onLayoutCommit?.(latest.current.layout);
     };
 
     const text: SplitterLabels = mergeDefined(defaultLabels(formatNumber), labels);

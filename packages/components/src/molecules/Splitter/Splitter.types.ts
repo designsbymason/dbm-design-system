@@ -154,14 +154,21 @@ export interface SplitterPaneProps extends Omit<ComponentPropsWithoutRef<"div">,
    * @default 0
    */
   collapsedSize?: SplitterSize;
-  /** Collapses or opens the pane from outside. Pair it with `onCollapsedChange`. */
+  /**
+   * Collapses or opens the pane from outside, and makes the pane controlled: a handle's gesture (a drag past the
+   * snap point, Home, Enter, a double click) then only asks, through `onCollapsedChange`, and the pane follows when
+   * you change this. Pair it with `onCollapsedChange`. A pane that is `true` at the start is already shut.
+   */
   collapsed?: boolean;
   /**
    * Whether the pane starts collapsed, when it isn't controlled.
    * @default false
    */
   defaultCollapsed?: boolean;
-  /** Called when the pane collapses or opens, whatever caused it. */
+  /**
+   * Called when the pane collapses or opens — or, for a pane you control with `collapsed`, when a handle asks it to
+   * (it is then yours to change `collapsed`; changing it yourself isn't reported back).
+   */
   onCollapsedChange?: (collapsed: boolean) => void;
   /**
    * Standard DOM id; the handles next to the pane point at it with `aria-controls`. Generated when left out.

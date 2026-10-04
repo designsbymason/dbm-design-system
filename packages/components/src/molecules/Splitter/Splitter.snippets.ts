@@ -72,7 +72,8 @@ export const splitterSnippets = {
   </Splitter>
 </div>`,
 
-  controlledCollapsed: `{/* You own whether the pane is open: const [collapsed, setCollapsed] = useState(false); */}
+  controlledCollapsed: `{/* You own whether the pane is open: const [collapsed, setCollapsed] = useState(false);
+    a handle's gesture on this pane only asks, through onCollapsedChange, and the pane follows when you change collapsed */}
 <Button size="sm" variant="secondary" onClick={() => setCollapsed(!collapsed)}>{collapsed ? "Show sidebar" : "Hide sidebar"}</Button>
 <div style={{ height: "20rem" }}>
   <Splitter defaultLayout={[25, 75]}>

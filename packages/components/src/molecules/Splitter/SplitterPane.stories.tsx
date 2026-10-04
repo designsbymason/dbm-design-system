@@ -54,12 +54,18 @@ const meta: Meta<typeof Splitter.Pane> = {
       description: 'The size a collapsed pane keeps — 0 makes it disappear (and hides its content from assistive tech), "48px" leaves a strip.',
       table: { defaultValue: { summary: "0" } },
     },
-    collapsed: { description: "Collapses or opens the pane from outside. Pair it with onCollapsedChange." },
+    collapsed: {
+      description:
+        "Collapses or opens the pane from outside, and makes the pane controlled: a handle's gesture (a drag past the snap point, Home, Enter, a double click) then only asks, through onCollapsedChange, and the pane follows when you change this. Pair it with onCollapsedChange. A pane that is true at the start is already shut.",
+    },
     defaultCollapsed: {
       description: "Whether the pane starts collapsed, when it isn't controlled.",
       table: { defaultValue: { summary: "false" } },
     },
-    onCollapsedChange: { description: "Called when the pane collapses or opens, whatever caused it." },
+    onCollapsedChange: {
+      description:
+        "Called when the pane collapses or opens — or, for a pane you control with collapsed, when a handle asks it to (it is then yours to change collapsed; changing it yourself isn't reported back).",
+    },
     id: { control: false, description: "Standard DOM id; the handles next to the pane point at it with aria-controls. Generated when left out." },
     className: { control: false, description: "Additional CSS classes for the pane." },
     style: { control: false, description: "Inline styles for the pane." },
