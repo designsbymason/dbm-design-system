@@ -1,0 +1,9 @@
+{
+  "field-group": {
+    "field-min-width": {
+      "$type": "dimension",
+      "$value": "14rem",
+      "$description": "New token (2026-10-04), added for FieldGroup's horizontal layout — the width each field asks for (its flex-basis) before the row wraps the next field onto its own line, so fields sit side by side only while each keeps a usable width, measured against the group's own box rather than the page. A content-measure constraint with no home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    }
+  }
+}

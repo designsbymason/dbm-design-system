@@ -67,7 +67,8 @@ export interface FormFieldProps
   required?: boolean;
   /**
    * Disables the field as a whole: dims the label/helper/error text, and
-   * sets `disabled: true` on the computed `FormFieldControlProps`.
+   * sets `disabled: true` on the computed `FormFieldControlProps`. Inside a
+   * disabled `FieldGroup` the field is disabled whatever this says.
    * @default false
    */
   disabled?: boolean;
@@ -76,7 +77,7 @@ export interface FormFieldProps
    * Deliberately not cascaded onto the control itself — this render-prop
    * API already has the consumer author the control explicitly, so sizing
    * it is one more explicit prop on that same line, not a hidden cascade
-   * to reason about.
+   * to reason about. Inside a `FieldGroup`, defaults to the group's `size`.
    * @default 'md'
    */
   size?: FieldLabelSize;

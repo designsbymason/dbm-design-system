@@ -57,7 +57,8 @@ const meta: Meta<typeof FormField> = {
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
-      description: "Font size for the FieldLabel, matching the control's own size scale.",
+      description: "Font size for the FieldLabel, matching the control's own size scale. Inside a FieldGroup, defaults to the group's size.",
+      table: { defaultValue: { summary: '"md"' } },
     },
     id: {
       control: false,

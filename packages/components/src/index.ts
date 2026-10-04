@@ -61,6 +61,7 @@ export * from "./molecules/CodeBlock";
 export * from "./molecules/CodeBlock/languages";
 export * from "./molecules/DescriptionList";
 export * from "./molecules/EmptyState";
+export * from "./molecules/FieldGroup";
 export * from "./molecules/FormField";
 export * from "./molecules/Grid";
 export * from "./molecules/HoverCard";

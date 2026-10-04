@@ -1,0 +1,207 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Checkbox } from "../../atoms/Checkbox";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FormField } from "../FormField";
+import { FieldGroup } from "./FieldGroup";
+import * as FieldGroupStories from "./FieldGroup.stories";
+
+export const propOrder = [
+  "legend",
+  "children",
+  "description",
+  "error",
+  "hideLegend",
+  "variant",
+  "size",
+  "orientation",
+  "gap",
+  "disabled",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+  "aria-describedby",
+];
+
+<Meta of={FieldGroupStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="FieldGroup" tier="Molecule" />
+
+Groups several fields under one name. It renders a native `<fieldset>` with a `<legend>`, which is how a
+screen reader learns that "Street", "City" and "Postcode" are parts of one shipping address: the legend is
+announced ahead of each field in the group. A sighted reader gets the same meaning from a visible heading and,
+optionally, a border or a tinted box around the set.
+
+`FieldGroup` holds the fields' layout (stacked, or side by side and wrapping), an optional description under
+the legend, and an error about the group as a whole. It hands its `disabled` and `size` to the `FormField`s
+inside as defaults. It owns no values and runs no validation: each field keeps its own value and its own error.
+
+### Import
+
+```tsx
+import { FieldGroup, FormField, Input } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FieldGroupStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={FieldGroupStories.Playground}
+  exclude={["children", "id", "className", "style", "data-testid", "aria-describedby"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`FieldGroup` also accepts any other native `<fieldset>` attribute beyond what's listed here (e.g. `form`,
+`name`) — passed straight through to the fieldset. A prop that sets `disabled` or `aria-describedby` is
+combined with what the group computes, never a replacement for it.
+
+<PropertiesTable of={FieldGroupStories} order={propOrder} />
+
+## Variants
+
+### Variants
+
+<Canvas of={FieldGroupStories.Variants} />
+
+### Side by side
+
+<Canvas of={FieldGroupStories.Horizontal} />
+
+### States
+
+<Canvas of={FieldGroupStories.States} />
+
+### Legend hidden from view
+
+<Canvas of={FieldGroupStories.HiddenLegend} />
+
+### Nested
+
+<Canvas of={FieldGroupStories.Nested} />
+
+### Size reaches the fields
+
+<Canvas of={FieldGroupStories.SizeCascade} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Group fields that answer one question together: an address, a date of birth, a set of contact details.
+- Write the legend as a noun phrase that names the set ("Shipping address"), not an instruction.
+- Use `error` for a rule that spans fields ("give an email or a phone number"), and leave each field's own
+  `error` on that field.
+- Use `orientation="horizontal"` for short, related fields (day, month, year) and let it wrap on a small screen.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't wrap a single field in a `FieldGroup` — that is a `FormField`.
+- Don't use it for one choice among options: `RadioGroup` and `CheckboxGroup` already carry their own name.
+- Don't leave the legend empty or put a long paragraph in it; it is read out in front of every field.
+- Don't nest groups more than one level deep — a screen reader announces every legend on the way in.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep the legend short and put the explanation in `description`; the description is read after the group's
+  name, once, not in front of each field.
+- Choose `outlined` or `filled` when several groups share a page and need to read as separate blocks; `ghost` is
+  right when the page already separates them with headings.
+- Prefer `hideLegend` only when a visible heading right above already names the group.
+- Set `size` on the group to size every field's label at once; set it on a field to make an exception.
+
+## Accessibility
+
+<Callout tone="info" title="A native fieldset and legend: the strongest grouping semantics there are">
+
+- The group is a `<fieldset>` named by its `<legend>`, announced as "Shipping address, group" on entering it.
+  `hideLegend` keeps the legend in the accessibility tree and takes it off the page.
+- `description` and `error` are joined into the group's `aria-describedby`, together with any ids you pass.
+- A group-level `error` is a `role="alert"`, announced when it appears.
+- `disabled` is the native `<fieldset disabled>`: every native control inside becomes unfocusable and
+  uneditable, and each `FormField` inside is marked disabled too, so its label and helper text dim with it.
+- A group has no `aria-required` or `aria-invalid` (a group role supports neither); an invalid group is shown
+  by its border or accent and by the announced error.
+- In forced-colours mode the filled variant keeps an edge, since a background fill is dropped there.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<FieldGroup legend="Shipping address" description="Where should we send it?">
+  <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+  <FormField label="City">{(field) => <Input {...field} />}</FormField>
+</FieldGroup>
+
+<FieldGroup legend="Date of birth" orientation="horizontal" variant="outlined">
+  <FormField label="Day">{(field) => <Input {...field} inputMode="numeric" />}</FormField>
+  <FormField label="Month">{(field) => <Input {...field} inputMode="numeric" />}</FormField>
+  <FormField label="Year">{(field) => <Input {...field} inputMode="numeric" />}</FormField>
+</FieldGroup>
+
+<FieldGroup legend="Contact" error="Give us an email address or a phone number.">
+  <FormField label="Email">{(field) => <Input {...field} type="email" />}</FormField>
+  <FormField label="Phone">{(field) => <Input {...field} type="tel" />}</FormField>
+</FieldGroup>
+
+{/* Native fieldset attributes pass straight through, such as form, to tie it to a form elsewhere on the page */}
+<FieldGroup legend="Preferences" form="settings-form" name="preferences">…</FieldGroup>
+```
+
+## Design tokens used
+
+<TokenRow token="text.primary" usage="legend and field text colour" />
+<TokenRow token="text.disabled" usage="legend colour in a disabled group" />
+<TokenRow token="bg.neutral-subtle" usage="the filled variant's fill" />
+<TokenRow token="border.default" usage="the outlined variant's border" />
+<TokenRow token="border.danger" usage="an invalid group's border, or the left-edge accent on the box-less variant" />
+<TokenRow token="border-width.1" usage="the boxed variants' border" />
+<TokenRow token="border-width.4" usage="the invalid accent's width" />
+<TokenRow token="radius.lg" usage="the boxed variants' corners" />
+<TokenRow token="space.1" usage="gap between the legend and what follows" />
+<TokenRow token="space.3" usage="gap between the legend or description and the fields, and above the error" />
+<TokenRow token="space.4" usage="default gap between fields, and the invalid accent's padding" />
+<TokenRow token="space.6" usage="padding inside the boxed variants" />
+<TokenRow token="field-group.field-min-width" usage="the width each field asks for before the horizontal layout wraps" />
+<TokenRow token="font-family.primary" usage="the group's typeface" />
+<TokenRow token="font-weight.semibold" usage="legend weight" />
+<TokenRow token="line-height.normal" usage="legend line height" />
+<TokenRow token="font-size.sm" usage="legend size at xs" />
+<TokenRow token="font-size.base" usage="legend size at sm" />
+<TokenRow token="font-size.md" usage="legend size at md" />
+<TokenRow token="font-size.lg" usage="legend size at lg" />
+<TokenRow token="font-size.xl" usage="legend size at xl" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FormField"
+  description="One label, one control and its helper or error text — the usual child of a group"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <FormField label="Email">{(field) => <Input {...field} />}</FormField>
+</RelatedCard>
+<RelatedCard
+  name="CheckboxGroup"
+  description="A set of checkboxes sharing one value, named as a group of its own"
+  href="/?path=/docs/molecules-inputs-checkboxgroup--docs"
+>
+  <Checkbox>Sports</Checkbox>
+</RelatedCard>
+</div>

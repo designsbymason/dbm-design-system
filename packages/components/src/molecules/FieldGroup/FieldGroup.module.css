@@ -1,0 +1,131 @@
+/* A native <fieldset>. Browsers give it a min-content width, a 2px groove border, padding and a margin, and draw
+   its <legend> straddling the top border — all reset here so the group looks like every other surface. */
+.root {
+  --field-group-pad: 0;
+
+  border: 0;
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  margin: 0;
+  min-inline-size: 0;
+  padding: var(--field-group-pad);
+}
+
+.ghost {
+  --field-group-pad: 0;
+}
+
+.outlined,
+.filled {
+  --field-group-pad: var(--dbm-space-6);
+
+  border: var(--dbm-border-width-1) solid transparent;
+  border-radius: var(--dbm-radius-lg);
+}
+
+.outlined {
+  border-color: var(--dbm-border-default);
+}
+
+.filled {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* An invalid group: a border in the danger colour on the boxed variants, and on the box-less one the same
+   coloured left-edge accent CheckboxGroup and RadioGroup use. */
+.outlined.invalid,
+.filled.invalid {
+  border-color: var(--dbm-border-danger);
+}
+
+.ghost.invalid {
+  border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-danger);
+  padding-inline-start: var(--dbm-space-4);
+}
+
+/* Forced colours draws a transparent border as a solid line and drops a background colour, so the filled box
+   keeps an edge only if it says so with a system colour. */
+@media (forced-colors: active) {
+  .filled {
+    border-color: CanvasText;
+  }
+
+  .filled.invalid {
+    border-color: Highlight;
+  }
+}
+
+/* A floated legend is not the browser's "rendered legend", so it sits in the content box like an ordinary
+   block, inside the padding and the border, instead of straddling the top edge. It is as wide as the box, so
+   whatever follows starts below it. */
+.legend {
+  float: inline-start;
+  font-weight: var(--dbm-font-weight-semibold);
+  inline-size: 100%;
+  line-height: var(--dbm-line-height-normal);
+  margin: 0;
+  margin-block-end: var(--dbm-space-1);
+  padding: 0;
+}
+
+/* Clears the floated legend: a block box would otherwise start beside it, at the same top. */
+.description {
+  clear: both;
+}
+
+.legend.disabled {
+  color: var(--dbm-text-disabled);
+}
+
+.sizeXs {
+  font-size: var(--dbm-font-size-sm);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-base);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-md);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-lg);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-xl);
+}
+
+/* The fields. `clear` is what puts them below the floated legend: a flex container is its own formatting
+   context, and left to itself it shrinks into whatever room the full-width float leaves beside it (none), ending
+   up zero wide at the far edge. */
+.body {
+  clear: both;
+  display: flex;
+  flex-direction: column;
+  gap: var(--field-group-gap);
+}
+
+/* Padding, not margin: a cleared box's top margin is absorbed by the clearance, so a margin here does nothing. */
+.bodySpaced {
+  padding-block-start: var(--dbm-space-3);
+}
+
+/* Side by side: each field asks for a usable width and the row wraps the next onto its own line, measured
+   against the group's own box, so there is no media query to keep in step with the page. */
+.horizontal {
+  align-items: flex-start;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.horizontal > * {
+  flex: 1 1 var(--dbm-field-group-field-min-width);
+  min-inline-size: 0;
+}
+
+.error {
+  margin-block-start: var(--dbm-space-3);
+}

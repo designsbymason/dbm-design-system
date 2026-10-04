@@ -3,6 +3,7 @@ import { forwardRef, useId } from "react";
 import { FieldError } from "../../atoms/FieldError";
 import { FieldHelperText } from "../../atoms/FieldHelperText";
 import { FieldLabel } from "../../atoms/FieldLabel";
+import { useFieldGroup } from "../../internal/fieldGroupContext";
 import styles from "./FormField.module.css";
 import type { FormFieldProps } from "./FormField.types";
 
@@ -44,14 +45,20 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
       helperText,
       error,
       required = false,
-      disabled = false,
-      size = "md",
+      disabled: disabledProp = false,
+      size: sizeProp,
       id,
       className,
       ...props
     },
     ref,
   ) => {
+    // Inside a FieldGroup, its `disabled` and `size` are this field's defaults: a disabled group disables the
+    // field, and the field's own `size` wins over the group's.
+    const group = useFieldGroup();
+    const disabled = disabledProp || Boolean(group?.disabled);
+    const size = sizeProp ?? group?.size ?? "md";
+
     const generatedId = useId();
     const baseId = id ?? generatedId;
     const controlId = `${baseId}-control`;

@@ -240,3 +240,34 @@ describe("FormField", () => {
     expect((await axe(disabledContainer)).violations).toHaveLength(0);
   });
 });
+
+describe("FormField inside a FieldGroup", () => {
+  it("is disabled, label and control, when its group is", async () => {
+    const { FieldGroup } = await import("../FieldGroup");
+    render(
+      <FieldGroup legend="Account" disabled>
+        <FormField label="Email">{(fieldProps) => <Input {...fieldProps} />}</FormField>
+      </FieldGroup>,
+    );
+    expect(screen.getByRole("textbox", { name: "Email" })).toBeDisabled();
+    expect(screen.getByText("Email").className).toContain(fieldLabelStyles.disabled);
+  });
+
+  it("takes the group's size, and its own size wins over it", async () => {
+    const { FieldGroup } = await import("../FieldGroup");
+    render(
+      <FieldGroup legend="Account" size="xl">
+        <FormField label="Inherited">{(fieldProps) => <Input {...fieldProps} />}</FormField>
+        <FormField label="Own" size="xs">{(fieldProps) => <Input {...fieldProps} />}</FormField>
+      </FieldGroup>,
+    );
+    expect(screen.getByText("Inherited").className).toContain(fieldLabelStyles.sizeXl);
+    expect(screen.getByText("Own").className).toContain(fieldLabelStyles.sizeXs);
+  });
+
+  it("is unchanged outside a group", () => {
+    render(<FormField label="Email">{(fieldProps) => <Input {...fieldProps} />}</FormField>);
+    expect(screen.getByRole("textbox", { name: "Email" })).not.toBeDisabled();
+    expect(screen.getByText("Email").className).toContain(fieldLabelStyles.sizeMd);
+  });
+});

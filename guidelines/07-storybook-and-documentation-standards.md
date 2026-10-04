@@ -210,7 +210,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and all 32 molecules built so far have a Docs page and a completed review pass; every one is Finalized, `TableToolbar` (built 2026-10-03, Finalized 2026-10-04) the latest declared** — full atom-tier coverage, and
+**All 48 atoms and all 33 molecules built so far have a Docs page and a completed review pass; every one is Finalized except `FieldGroup` (built 2026-10-04, awaiting Finalization), `TableToolbar` (built 2026-10-03, Finalized 2026-10-04) the latest declared** — full atom-tier coverage, and
 every molecule built to date. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
@@ -300,6 +300,7 @@ quoted in prose elsewhere.
 | TimeRangePicker | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-03 | [TimeRangePicker.md](component-reviews/TimeRangePicker.md) |
 | Toolbar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-03 | [Toolbar.md](component-reviews/Toolbar.md) |
 | TableToolbar | Molecule | Data Display | ✅ | ✅ 2026-10-04 | [TableToolbar.md](component-reviews/TableToolbar.md) |
+| FieldGroup | Molecule | Inputs & Forms | ✅ | ⏳ built 2026-10-04 | [FieldGroup.md](component-reviews/FieldGroup.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
@@ -310,9 +311,9 @@ and `List` are molecules) has a completed review pass and is Finalized. Per-comp
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`, `DescriptionList`,
-`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`) are reviewed and Finalized — see the table above. The queue continues through the
-remaining 5 of the 37 molecules, one at a time, in the dependency order itemized in
-`04-component-inventory.md`, starting with `FieldGroup` (item 29), each with the same full §9
+`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`) are reviewed and Finalized, and `FieldGroup` is built and awaiting Finalization — see the table above. The queue continues through the
+remaining 4 of the 37 molecules (`Splitter`, `PinInput`, `RatingInput`, `TableOfContents`), one at a time, in the dependency order itemized in
+`04-component-inventory.md`, each with the same full §9
 process.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full
