@@ -25,6 +25,7 @@ import {
   normalizeLayout,
   pairRange,
   rescaleForContainer,
+  resetPair,
   resizePair,
   sameLayout,
   togglePane,
@@ -184,6 +185,9 @@ const defaultLabels = (formatNumber: (value: number) => string): SplitterLabels 
  * its own and keeps no storage: read the layout with `onLayoutChange` / `onLayoutCommit`, hold it yourself with
  * `layout`.
  *
+ * Double clicking a handle, or pressing Enter on it, collapses or opens a collapsible pane beside it, or else sets
+ * the two panes beside it back to the proportions they started in (the others don't move).
+ *
  * Pane sizes are percentages of the space the panes share (the container less its handles), so a layout keeps
  * its proportions when the container is resized. The splitter fills its parent, so the parent needs a size
  * (a height, for a `vertical` splitter). `ref` forwards to the container `<div>`.
@@ -312,6 +316,16 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
     });
     // The size a collapsed pane had, by pane, to open it again at.
     const restoreRef = useRef<Record<string, number>>({});
+    // The layout a handle's reset goes back to, by pane: how the panes were laid out when the splitter mounted, or
+    // when panes were last added or removed. Taken all at once, because sizes recorded at different moments would
+    // not add up to proportions anyone had seen.
+    const startingRef = useRef<Record<string, number>>({});
+    const startingKey = paneKeys.join("\u0000");
+    useLayoutEffect(() => {
+      startingRef.current = Object.fromEntries(
+        latest.current.keys.map((key, index) => [key, latest.current.layout[index] ?? 0]),
+      );
+    }, [startingKey]);
     const dragCleanupRef = useRef<(() => void) | null>(null);
     const [dragging, setDragging] = useState<number | null>(null);
 
@@ -454,11 +468,21 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       };
     };
 
+    // What a double click or Enter does on a handle: collapse or open a collapsible pane beside it, or else set the
+    // two panes back to the proportions they started in.
     const toggleAt = (index: number) => {
       const current = latest.current;
       // The pane before the handle collapses if it can; otherwise the one after it.
-      const target = current.constraints[index]?.collapsible ? index : index + 1;
-      const next = togglePane(current.layout, target, current.constraints, restoreRef.current[current.keys[target] ?? String(target)]);
+      const collapsible = current.constraints[index]?.collapsible ? index : current.constraints[index + 1]?.collapsible ? index + 1 : null;
+      const next =
+        collapsible !== null
+          ? togglePane(current.layout, collapsible, current.constraints, restoreRef.current[current.keys[collapsible] ?? String(collapsible)])
+          : resetPair(
+              current.layout,
+              index,
+              current.keys.map((key) => startingRef.current[key]),
+              current.constraints,
+            );
       if (!next) return false;
       commit(next);
       current.onLayoutCommit?.(latest.current.layout);

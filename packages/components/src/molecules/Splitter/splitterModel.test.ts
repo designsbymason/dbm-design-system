@@ -7,6 +7,7 @@ import {
   normalizeLayout,
   pairRange,
   rescaleForContainer,
+  resetPair,
   resizePair,
   sameLayout,
   togglePane,
@@ -260,5 +261,36 @@ describe("rescaleForContainer", () => {
 
   it("changes nothing when no pane is fixed and the ratio is 1", () => {
     expect(rescaleForContainer([30, 70], [pane(), pane()], [false, false], 1)).toEqual([30, 70]);
+  });
+});
+
+describe("resetPair", () => {
+  const cs = [pane({ min: 0 }), pane({ min: 0 }), pane({ min: 0 })];
+
+  it("sets the two panes back to their starting proportions, keeping what they share", () => {
+    // Started [20, 30, 50]; the first two now share 60 as 45 / 15 -> back to 2:3 of 60.
+    expect(resetPair([45, 15, 40], 0, [20, 30, 50], cs)).toEqual([24, 36, 40]);
+  });
+
+  it("leaves the other panes where they are", () => {
+    const layout = resetPair([20, 45, 35], 1, [20, 30, 50], cs);
+    expect(layout?.[0]).toBe(20);
+    expect(layout?.[1]).toBeCloseTo(((45 + 35) * 30) / 80, 6);
+    expect(total(layout ?? [])).toBeCloseTo(100, 6);
+  });
+
+  it("is null when they are there already", () => {
+    expect(resetPair([20, 30, 50], 0, [20, 30, 50], cs)).toBeNull();
+  });
+
+  it("is null with no starting size to go back to, or none that means anything", () => {
+    expect(resetPair([50, 50], 0, [undefined, 50], cs)).toBeNull();
+    expect(resetPair([50, 50], 1, [50, 50], cs)).toBeNull();
+    expect(resetPair([50, 50], 0, [0, 0], cs)).toBeNull();
+  });
+
+  it("stays inside the limits", () => {
+    const limited = [pane({ min: 40 }), pane({ min: 0 })];
+    expect(resetPair([70, 30], 0, [10, 90], limited)?.[0]).toBeGreaterThanOrEqual(40);
   });
 });

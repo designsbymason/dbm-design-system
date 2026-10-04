@@ -205,6 +205,9 @@ own and narrow the window to watch the panes stack.
 - Prefer a layout you can restore: pass what you saved to `defaultLayout` (or hold it with `layout`).
 - A pane collapsed to nothing is hidden from every user, keyboard and screen reader included; if something in it
   must stay reachable, collapse to a strip (`collapsedSize="48px"`) instead.
+- Tell people that a double click, or Enter, on a handle puts the panes beside it back as they were: it is the
+  quickest way back from a layout that has been dragged somewhere awkward. "As they were" is how the panes were laid
+  out when the splitter mounted, or when panes were last added or removed.
 - Nest splitters for editor layouts (a sidebar beside a stack of editor over terminal); each handle moves only
   its own two panes.
 
@@ -233,8 +236,8 @@ own and narrow the window to watch the panes stack.
 | Up / Down Arrow | Moves a horizontal bar (stacked panes) |
 | Page Up / Page Down | Moves the bar twice as far |
 | Home / End | Moves the bar as far as the limits allow, or collapses a pane that can collapse |
-| Enter | Collapses or opens a collapsible pane next to the handle |
-| Double click | Collapses or opens a collapsible pane next to the handle |
+| Enter | Collapses or opens a collapsible pane next to the handle; with none, sets the two panes beside it back to the proportions they started in |
+| Double click | The same as Enter, for the pointer |
 
 </Callout>
 

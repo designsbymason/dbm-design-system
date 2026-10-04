@@ -236,3 +236,23 @@ export function rescaleForContainer(
     }),
   );
 }
+
+/**
+ * Sets the two panes beside a handle back to the proportions they started in, keeping the space they share, so the
+ * other panes don't move. `null` when they are there already, or have no starting size to go back to.
+ */
+export function resetPair(
+  sizes: number[],
+  index: number,
+  defaults: Array<number | undefined>,
+  constraints: PaneConstraints[],
+): number[] | null {
+  const first = defaults[index];
+  const second = defaults[index + 1];
+  const firstSize = sizes[index];
+  const secondSize = sizes[index + 1];
+  if (first === undefined || second === undefined || firstSize === undefined || secondSize === undefined) return null;
+  if (first + second <= EPSILON) return null;
+  const next = resizePair(sizes, index, ((firstSize + secondSize) * first) / (first + second), constraints);
+  return next === sizes ? null : next;
+}

@@ -935,3 +935,46 @@ export const NamedHandlesInteraction: Story = {
     await expect(canvas.getByRole("separator", { name: "Resize Content" })).toBeInTheDocument();
   },
 };
+
+export const ResetInteraction: Story = {
+  name: "A double click or Enter on a handle sets the two panes beside it back, leaving the others — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <MeasuredFrame width="48rem">
+      <Splitter defaultLayout={[20, 30, 50]}>
+        {pane("a", "A")}
+        {pane("b", "B")}
+        {pane("c", "C")}
+      </Splitter>
+    </MeasuredFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [first, second] = canvas.getAllByRole("separator") as [HTMLElement, HTMLElement];
+    const share = () => widthOf(canvas.getByTestId("a")) + widthOf(canvas.getByTestId("b")) + widthOf(canvas.getByTestId("c"));
+    const fraction = (id: string) => widthOf(canvas.getByTestId(id)) / share();
+    const settled = async (id: string, want: number) => waitFor(() => expect(fraction(id)).toBeCloseTo(want, 2));
+    // Drag the first handle, then double click it.
+    const start = first.getBoundingClientRect();
+    await userEvent.pointer([
+      { keys: "[MouseLeft>]", target: first, coords: { clientX: start.left, clientY: start.top + 20 } },
+      { coords: { clientX: start.left + 100, clientY: start.top + 20 } },
+      { keys: "[/MouseLeft]" },
+    ]);
+    await waitFor(() => expect(fraction("a")).toBeGreaterThan(0.25));
+    const cBefore = fraction("c");
+    await userEvent.dblClick(first);
+    await settled("a", 0.2);
+    await settled("b", 0.3);
+    // The pane that isn't beside that handle stayed where it was.
+    await expect(fraction("c")).toBeCloseTo(cBefore, 2);
+    // Enter does the same for the second handle.
+    second.focus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    await waitFor(() => expect(fraction("c")).toBeLessThan(0.5));
+    await userEvent.keyboard("{Enter}");
+    await settled("c", 0.5);
+    await settled("a", 0.2);
+  },
+};

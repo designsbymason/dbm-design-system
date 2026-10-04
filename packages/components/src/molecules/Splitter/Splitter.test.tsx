@@ -400,6 +400,152 @@ describe("Splitter", () => {
     });
   });
 
+  describe("reset to the starting proportions", () => {
+    it("sets the two panes back with a double click, after the keyboard moved them", async () => {
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [30, 70] }));
+      first().focus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(sizeOf("a")).toBe(40);
+      fireEvent.doubleClick(first());
+      expect(sizeOf("a")).toBe(30);
+      expect(sizeOf("b")).toBe(70);
+    });
+
+    it("sets them back after a drag too", () => {
+      withContainerWidth(1000);
+      render(two({ defaultLayout: [30, 70] }));
+      fireEvent.pointerDown(first(), { clientX: 300, button: 0, pointerType: "mouse", pointerId: 1 });
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 500 }));
+      });
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointerup"));
+      });
+      expect(sizeOf("a")).toBeCloseTo(50, 3);
+      fireEvent.doubleClick(first());
+      expect(sizeOf("a")).toBeCloseTo(30, 3);
+    });
+
+    it("does the same with Enter, so the keyboard has the pointer's shortcut", async () => {
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [30, 70] }));
+      first().focus();
+      await user.keyboard("{ArrowRight}{Enter}");
+      expect(sizeOf("a")).toBe(30);
+    });
+
+    it("goes back to the panes' own defaultSize when the splitter was given no layout", async () => {
+      const user = userEvent.setup();
+      render(
+        <Splitter>
+          <Splitter.Pane data-testid="a" defaultSize={25}>A</Splitter.Pane>
+          <Splitter.Pane data-testid="b">B</Splitter.Pane>
+        </Splitter>,
+      );
+      first().focus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      fireEvent.doubleClick(first());
+      expect(sizeOf("a")).toBe(25);
+    });
+
+    it("resets only the two panes beside the handle", async () => {
+      const user = userEvent.setup();
+      render(
+        <Splitter defaultLayout={[20, 30, 50]}>
+          <Splitter.Pane data-testid="a">A</Splitter.Pane>
+          <Splitter.Pane data-testid="b">B</Splitter.Pane>
+          <Splitter.Pane data-testid="c">C</Splitter.Pane>
+        </Splitter>,
+      );
+      handles()[0]?.focus();
+      await user.keyboard("{ArrowRight}");
+      handles()[1]?.focus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect([sizeOf("a"), sizeOf("b"), sizeOf("c")]).toEqual([25, 35, 40]);
+      fireEvent.doubleClick(handles()[1] as HTMLElement);
+      // The second handle's panes go back to 30:50 of what they share (75); the first pane is left as it was.
+      expect(sizeOf("a")).toBe(25);
+      expect(sizeOf("b")).toBeCloseTo(75 * (30 / 80), 4);
+      expect(sizeOf("c")).toBeCloseTo(75 * (50 / 80), 4);
+    });
+
+    it("says nothing when they are already there", async () => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommit = vi.fn();
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [30, 70], onLayoutChange, onLayoutCommit }));
+      fireEvent.doubleClick(first());
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      expect(onLayoutCommit).not.toHaveBeenCalled();
+    });
+
+    it("reports the reset, as a change and as a finished one", async () => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommit = vi.fn();
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [30, 70], onLayoutChange, onLayoutCommit }));
+      first().focus();
+      await user.keyboard("{ArrowRight}");
+      onLayoutChange.mockClear();
+      onLayoutCommit.mockClear();
+      fireEvent.doubleClick(first());
+      expect(onLayoutChange).toHaveBeenCalledWith([30, 70]);
+      expect(onLayoutCommit).toHaveBeenCalledWith([30, 70]);
+    });
+
+    it("still collapses a collapsible pane instead, when a neighbour can", () => {
+      render(two({ defaultLayout: [30, 70] }, { collapsible: true, minSize: 20 }));
+      fireEvent.doubleClick(first());
+      expect(sizeOf("a")).toBe(0);
+    });
+
+    it("goes back to how the panes were laid out when one last arrived", async () => {
+      const user = userEvent.setup();
+      const withPanes = (keys: string[]) => (
+        <Splitter>
+          {keys.map((key) => (
+            <Splitter.Pane key={key} data-testid={key} defaultSize={key === "c" ? 40 : undefined}>
+              {key}
+            </Splitter.Pane>
+          ))}
+        </Splitter>
+      );
+      const { rerender } = render(withPanes(["a", "b"]));
+      rerender(withPanes(["a", "b", "c"]));
+      const arrived = sizeOf("c");
+      handles()[1]?.focus();
+      await user.keyboard("{ArrowLeft}{ArrowLeft}");
+      expect(sizeOf("c")).toBeGreaterThan(arrived);
+      fireEvent.doubleClick(handles()[1] as HTMLElement);
+      expect(sizeOf("c")).toBeCloseTo(arrived, 4);
+    });
+
+    it("does nothing on a plain divider beside a locked pane", () => {
+      const onLayoutChange = vi.fn();
+      render(
+        <Splitter defaultLayout={[30, 70]} onLayoutChange={onLayoutChange}>
+          <Splitter.Pane resizable={false}>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      fireEvent.doubleClick(first());
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("stays inside the limits when it goes back", async () => {
+      withContainerWidth(1000);
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [10, 90] }, { minSize: "300px" }));
+      first().focus();
+      await user.keyboard("{ArrowRight}");
+      fireEvent.doubleClick(first());
+      expect(sizeOf("a")).toBeGreaterThanOrEqual(30 - 1e-6);
+    });
+  });
+
   describe("rem limits", () => {
     const observerThatWeCanCall = () => {
       let notify: () => void = () => {};

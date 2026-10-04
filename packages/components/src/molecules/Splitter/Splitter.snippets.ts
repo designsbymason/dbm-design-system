@@ -128,7 +128,8 @@ export const splitterSnippets = {
   </Splitter>
 </div>`,
 
-  threePanes: `{/* A handle sits between each pair of panes, and moves only the two beside it */}
+  threePanes: `{/* A handle sits between each pair of panes, and moves only the two beside it. A double click, or Enter, on a handle
+    sets the two panes beside it back to the proportions they started in */}
 <div style={{ height: "20rem" }}>
   <Splitter defaultLayout={[20, 55, 25]}>
     <Splitter.Pane>Navigation</Splitter.Pane>
