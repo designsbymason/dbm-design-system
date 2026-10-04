@@ -193,8 +193,23 @@
   border-radius: var(--dbm-radius-full);
   cursor: pointer;
   padding: 0;
+  position: relative;
   transition: background-color var(--dbm-motion-duration-fast)
     var(--dbm-motion-easing-standard);
+}
+
+/* WCAG 2.5.8 target size: the glyph is 12-20px, below the 24x24 minimum, and
+   the chip's own edge leaves no room to count the spacing exception — so the
+   hit area grows by an invisible, centred pseudo-element (the look, hover
+   background and focus ring stay as they were). */
+.removeButton::after {
+  content: "";
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  position: absolute;
+  translate: -50% -50%;
 }
 
 .removeButton:hover {

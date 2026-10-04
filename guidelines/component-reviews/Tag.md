@@ -35,3 +35,13 @@ Under the three-question test in `06-engineering-standards.md` §9 this is a pre
 re-finalization**: re-verified — types and JSDoc, stories and Docs page, tests, and rendering. Rendering is unchanged, and provably so: with the rename reversed, all seven files
 are byte-identical to what was committed, so no logic, style, token or behaviour changed. Not re-run, because nothing they cover was touched: the contrast and theming checks and the
 feature-completeness pass. A first pass missed nothing here; the two class selectors that pattern skipped were in `Tabs`, not `Tag`.
+
+## Post-Finalization fix (2026-10-03, at explicit direction) — remove button's hit area below 24 × 24px
+
+Found by `TableToolbar`'s review: the real remove `<button>` is 12, 12, 12, 16 and 20px across `xs`–`xl` (the glyph's size), under WCAG 2.5.8's 24 × 24px minimum, and no earlier
+review decided that. Fixed by growing the hit area only: `.removeButton` is `position: relative` and gets an invisible, centred `::after` of at least `--dbm-space-6` (24px) square. The
+look, hover background and focus ring are unchanged (the pseudo-element draws nothing; hover and focus belong to the button). The decorative `×` shown when the tag is itself
+clickable/selectable is not a target (it is `aria-hidden`, and the tag is the target), so it is untouched.
+
+Under the three-question test (`06` §9) this is a defect fix confined to `Tag.module.css`, so the component stays Finalized. Verified in a real browser by `TableToolbar`'s target-size
+story (points 11px either side of the button's centre resolve to the button, at all five sizes). jsdom cannot see pseudo-elements, so there is no unit test for it.

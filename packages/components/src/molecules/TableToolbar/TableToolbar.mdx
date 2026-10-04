@@ -239,8 +239,8 @@ arrow keys go the way the page reads.
 - Focus is never dropped: removing a chip from the keyboard moves focus to the next chip (or, with none left, to the nearest control
   before the chips), and emptying the selection with focus in the bulk row moves it to the nearest control before the row. A mouse
   press that does the same moves nothing.
-- Every control is at least 24 × 24px (WCAG 2.5.8), at every size, except a chip's remove button (`Tag`'s own, 12 to 20px), which
-  passes the spacing exception: a 24px circle centred on it touches no other control.
+- Every control has a hit area of at least 24 × 24px (WCAG 2.5.8), at every size. A chip's remove button draws a smaller
+  glyph (`Tag`'s own, 12 to 20px) but `Tag` extends its hit area to 24px, invisibly.
 - The bulk row is bounded by a real border as well as a tint, so it is still a box in forced colours, where backgrounds are
   replaced. Contrast: `text.primary` on the row's `bg.brand-subtle` is 13.4:1 or more in all four themes; the count is
   `text.secondary` on the surface (6.88:1 light, 10.47:1 dark).

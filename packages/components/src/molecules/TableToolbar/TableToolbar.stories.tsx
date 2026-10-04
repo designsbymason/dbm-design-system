@@ -447,38 +447,27 @@ export const TargetSizeInteraction: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    // WCAG 2.5.8 (Target Size, Minimum): a control is at least 24 × 24 CSS pixels, or it is small enough only to pass the
-    // spacing exception: a 24px circle centred on it touches no other target. Everything but a chip's remove button must
-    // clear 24px outright; the remove buttons are `Tag`'s own (12 to 20px) and are held to the exception.
+    // WCAG 2.5.8 (Target Size, Minimum): a control's hit area is at least 24 × 24 CSS pixels. A chip's remove button draws a
+    // 12 to 20px glyph but `Tag` grows its hit area with an invisible pseudo-element, which `getBoundingClientRect` does not
+    // see — so those are checked by pressing the points 11px either side of the centre (inside a 24px box) and expecting the
+    // button itself.
     const targets = Array.from(canvasElement.querySelectorAll<HTMLElement>("button, a[href], input, [role='checkbox']")).filter(
       (element) => element.getClientRects().length > 0 && !element.closest("[hidden]"),
     );
     const isRemove = (element: HTMLElement) => (element.getAttribute("aria-label") ?? "").startsWith("Remove filter");
-    const rect = (element: HTMLElement) => element.getBoundingClientRect();
-    const centre = (r: DOMRect) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
-    const circleTouchesRect = (c: { x: number; y: number }, r: DOMRect) => {
-      const dx = Math.max(r.left - c.x, 0, c.x - r.right);
-      const dy = Math.max(r.top - c.y, 0, c.y - r.bottom);
-      return Math.hypot(dx, dy) < 12;
-    };
     const failures: string[] = [];
     for (const element of targets) {
-      const r = rect(element);
+      const r = element.getBoundingClientRect();
       const name = element.getAttribute("aria-label") ?? element.textContent ?? element.tagName;
       if (r.width >= 24 && r.height >= 24) continue;
       if (!isRemove(element)) {
         failures.push(`${name} ${Math.round(r.width)}x${Math.round(r.height)}`);
         continue;
       }
-      const c = centre(r);
-      const crowded = targets.some((other) => {
-        if (other === element || element.contains(other) || other.contains(element)) return false;
-        const o = rect(other);
-        const undersized = o.width < 24 || o.height < 24;
-        if (undersized) return Math.hypot(centre(o).x - c.x, centre(o).y - c.y) < 24;
-        return circleTouchesRect(c, o);
-      });
-      if (crowded) failures.push(`${name} ${Math.round(r.width)}x${Math.round(r.height)} (another target within 24px)`);
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const missed = ([[-11, 0], [11, 0], [0, -11], [0, 11]] as const).filter(([dx, dy]) => document.elementFromPoint(cx + dx, cy + dy) !== element);
+      if (missed.length) failures.push(`${name} hit area under 24px (${missed.length} of 4 probe points miss it)`);
     }
     await expect(failures.join("; ")).toBe("");
   },

@@ -57,10 +57,10 @@ write is a `labels` object and numbers go through `formatNumber` (ADR-0021). No 
   actions at the far end) and a 20rem container (nothing wider than the box, the filters below the search); another a phone
   viewport (no horizontal scroll); right-to-left (search and chips start at the right, the count at the left); forced colours
   (the bulk row keeps its border). Checked by eye at a real 640px viewport too.
-- **Target size**: every control is at least 24 × 24px at all five sizes **except a chip's remove button**, which is `Tag`'s own
-  and measures 12, 12, 12, 16 and 20px across the sizes. It passes WCAG 2.5.8's spacing exception (a 24px circle centred on it
-  touches no other target), which the story implements and checks, but it does *not* meet the guideline's own "at least 24 ×
-  24" rule (`06` §9) and `Tag.md` records no decision about it. **Not changed here** (`Tag` is Finalized); put to the user.
+- **Target size**: every control has a hit area of at least 24 × 24px at all five sizes. A chip's remove button draws a 12 to 20px
+  glyph; this review found that was below the guideline's "at least 24 × 24" rule (`06` §9), and `Tag` now extends the button's hit
+  area to 24px with an invisible pseudo-element (see `Tag.md`, 2026-10-03). The story probes points 11px either side of each remove
+  button's centre with `elementFromPoint`, since the pseudo-element does not change the measured box.
 - **Storybook**: Docs page in the 10-section template; a Playground that is the whole working bar; five Properties tables (the
   bar, and `Filter`, `ActiveFilters`, `Summary`, `Selection` on hidden docs-only stories per ADR-0013), every row with a
   description and a default; hand-written snippets under every story; hidden real-browser stories with a literal `!dev` tag; a docs
