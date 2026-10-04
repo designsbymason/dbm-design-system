@@ -1,9 +1,9 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { SidebarSimpleIcon } from "@dbm-design-system/icons";
+import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
 import { Button } from "../../atoms/Button";
-import { Icon } from "../../atoms/Icon";
+import { IconButton } from "../../atoms/IconButton";
 import { Splitter } from "./Splitter";
 import { splitterPlaygroundSnippet, splitterSnippets } from "./Splitter.snippets";
 
@@ -277,12 +277,29 @@ export const Collapsible: Story = {
   render: (args) => (
     <div style={frame()}>
       <Splitter {...args} defaultLayout={[25, 75]}>
-        <Splitter.Pane collapsible collapsedSize="48px" minSize="180px">
-          {({ collapsed }) => (
-            <Demo
-              label={collapsed ? <Icon icon={SidebarSimpleIcon} aria-label="Sidebar" /> : "Sidebar — drag it shut, or press Enter on the handle"}
-              tint
-            />
+        <Splitter.Pane collapsible collapsedSize="48px" minSize="180px" label="Sidebar">
+          {({ collapsed, toggle }) => (
+            <div
+              style={{
+                ...content,
+                background: "var(--dbm-bg-neutral-subtle)",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: collapsed ? "center" : "space-between",
+                gap: "var(--dbm-space-2)",
+                padding: collapsed ? "var(--dbm-space-2)" : "var(--dbm-space-4)",
+              }}
+            >
+              {!collapsed && <span>Sidebar — drag it shut, press Enter on the handle, or use the button</span>}
+              {/* One button, in the same place whether the pane is open or not, so it keeps keyboard focus when it is pressed. */}
+              <IconButton
+                icon={collapsed ? CaretRightIcon : CaretLeftIcon}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                size="sm"
+                variant="ghost"
+                onClick={toggle}
+              />
+            </div>
           )}
         </Splitter.Pane>
         <Splitter.Pane>
@@ -596,7 +613,8 @@ export const CollapsedHiddenInteraction: Story = {
     await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(widthOf(canvas.getByTestId("none-a"))).toBeLessThan(1));
     // Hidden: the button inside is not reachable by name, and Tab goes past it.
-    await expect(none.queryByRole("button", { name: "Inside the sidebar" })).toBeNull();
+    // Hidden once the pane has finished closing, so wait for that rather than reading it on the way.
+    await waitFor(() => expect(none.queryByRole("button", { name: "Inside the sidebar" })).toBeNull());
     await userEvent.tab();
     await expect(document.activeElement?.textContent ?? "").not.toBe("Inside the sidebar");
 
@@ -1094,5 +1112,45 @@ export const HidesAtTheEndInteraction: Story = {
     // And opening it again shows the content at once.
     await userEvent.keyboard("{Enter}");
     await waitFor(() => expect(getComputedStyle(canvas.getByTestId("content")).visibility).toBe("visible"));
+  },
+};
+
+export const RailToggleInteraction: Story = {
+  name: "A button on the rail opens the pane and closes it again, and keeps keyboard focus — interaction test",
+  tags: ["!dev"],
+  argTypes: hiddenArgTypes,
+  render: () => (
+    <MeasuredFrame width="40rem">
+      <Splitter defaultLayout={[30, 70]}>
+        <Splitter.Pane data-testid="a" collapsible collapsedSize="48px" minSize="10rem">
+          {({ collapsed, toggle }) => (
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--dbm-space-2)", padding: "var(--dbm-space-2)" }}>
+              {!collapsed && <span>Sidebar</span>}
+              <IconButton
+                icon={collapsed ? CaretRightIcon : CaretLeftIcon}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                size="sm"
+                variant="ghost"
+                onClick={toggle}
+              />
+            </div>
+          )}
+        </Splitter.Pane>
+        {pane("b", "B")}
+      </Splitter>
+    </MeasuredFrame>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const open = widthOf(canvas.getByTestId("a"));
+    await userEvent.click(canvas.getByRole("button", { name: "Collapse sidebar" }));
+    await waitFor(() => expect(widthOf(canvas.getByTestId("a"))).toBeCloseTo(48, 0));
+    // The button is on the rail, still reachable, and still the element that has focus.
+    const expand = canvas.getByRole("button", { name: "Expand sidebar" });
+    await expect(expand).toBeVisible();
+    await expect(expand).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(widthOf(canvas.getByTestId("a"))).toBeCloseTo(open, 0));
+    await expect(canvas.getByRole("button", { name: "Collapse sidebar" })).toHaveFocus();
   },
 };

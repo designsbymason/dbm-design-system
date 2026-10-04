@@ -100,12 +100,18 @@ export interface SplitterPaneState {
   collapsed: boolean;
   /** The pane's current size, as a percentage of the space the panes share. */
   size: number;
+  /**
+   * Collapses the pane, or opens it again at the size it had — what Enter on a handle beside it does, for content
+   * inside the pane (a button on a collapsed rail). Does nothing for a pane that can't collapse or in a disabled
+   * splitter. On a pane you control with `collapsed` it only asks, through `onCollapsedChange`.
+   */
+  toggle: () => void;
 }
 
 export interface SplitterPaneProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /**
-   * What the pane holds — or a function of the pane's state, to show something else once it has collapsed to a
-   * strip (an icon where a label was).
+   * What the pane holds — or a function of the pane's state (`collapsed`, `size`, and `toggle` to collapse or open
+   * it), to show something else once it has collapsed to a strip, with a button that opens it.
    */
   children?: ReactNode | ((state: SplitterPaneState) => ReactNode);
   /**

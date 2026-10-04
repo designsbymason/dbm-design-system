@@ -61,19 +61,30 @@ export const splitterSnippets = {
 
   collapsible: `{/* collapsible: pulled past halfway to its minimum a pane snaps shut; Enter or a double click on the handle toggles it.
     collapsedSize: 0 (default, the pane disappears) or a length that stays, such as "48px".
-    children can be a function of the pane's state, to show an icon where a label was once it has collapsed */}
-{/* SidebarSimpleIcon comes from @dbm-design-system/icons */}
+    children can be a function of the pane's state, { collapsed, size, toggle }: toggle collapses or opens the pane, so a
+    rail can hold the button that opens it. Keep that one button in the same place in both states, so it keeps focus */}
+{/* CaretLeftIcon and CaretRightIcon come from @dbm-design-system/icons */}
 <div style={{ height: "20rem" }}>
   <Splitter defaultLayout={[25, 75]}>
-    <Splitter.Pane collapsible collapsedSize="48px" minSize="180px">
-      {({ collapsed }) => (collapsed ? <Icon icon={SidebarSimpleIcon} aria-label="Sidebar" /> : "Sidebar")}
+    <Splitter.Pane collapsible collapsedSize="48px" minSize="180px" label="Sidebar">
+      {({ collapsed, toggle }) => (
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          {!collapsed && <span>Sidebar</span>}
+          <IconButton
+            icon={collapsed ? CaretRightIcon : CaretLeftIcon}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={toggle}
+          />
+        </div>
+      )}
     </Splitter.Pane>
     <Splitter.Pane>Content</Splitter.Pane>
   </Splitter>
 </div>`,
 
   controlledCollapsed: `{/* You own whether the pane is open: const [collapsed, setCollapsed] = useState(false);
-    a handle's gesture on this pane only asks, through onCollapsedChange, and the pane follows when you change collapsed */}
+    a handle's gesture on this pane only asks, through onCollapsedChange, and the pane follows when you change collapsed.
+    (A button inside the pane can ask the same through the children's toggle.) */}
 <Button size="sm" variant="secondary" onClick={() => setCollapsed(!collapsed)}>{collapsed ? "Show sidebar" : "Hide sidebar"}</Button>
 <div style={{ height: "20rem" }}>
   <Splitter defaultLayout={[25, 75]}>

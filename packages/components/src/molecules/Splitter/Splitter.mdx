@@ -136,6 +136,35 @@ Drag the bottom-right corner of the box to try it.
 
 <Canvas of={SplitterStories.ControlledCollapsed} />
 
+### Placing the toggle
+
+The splitter draws no collapse button of its own: a pane's `children` can be a function of
+`{ collapsed, size, toggle }`, and `toggle()` collapses or opens the pane. Where the button goes, what it looks like
+and what else the collapsed rail shows is yours.
+
+- **Inside the pane**, anywhere in it: a header row, the bottom, the centre of the rail, an icon or a text button.
+  This is the form the Collapsible story uses. It needs a pane that collapses to a strip (`collapsedSize` above
+  `0`): a pane collapsed to nothing hides its content, button included. Keep the button the same element in both
+  states, changing its icon and label, so it keeps keyboard focus when pressed.
+- **Anywhere else** (a toolbar, a header in another pane): hold the state yourself with `collapsed` and
+  `onCollapsedChange`, as the story above does, and call your own setter. This also works for a pane that
+  collapses to nothing.
+- **On the divider itself** is not supported: the handles hold no custom content. A button placed in the pane
+  at its edge is clipped by the pane, so it can't straddle the divider.
+
+```tsx
+{/* A button in a header, for a sidebar that collapses to nothing: you hold the state. */}
+const [collapsed, setCollapsed] = useState(false);
+
+<Button onClick={() => setCollapsed(!collapsed)}>Toggle sidebar</Button>
+<Splitter defaultLayout={[25, 75]}>
+  <Splitter.Pane collapsible minSize="12rem" collapsed={collapsed} onCollapsedChange={setCollapsed}>
+    Sidebar
+  </Splitter.Pane>
+  <Splitter.Pane>Content</Splitter.Pane>
+</Splitter>
+```
+
 ### Layout held by you
 
 <Canvas of={SplitterStories.ControlledLayout} />
@@ -178,8 +207,10 @@ own and narrow the window to watch the panes stack.
   `collapsedSize` of `0` for a panel that can go away entirely.
 - Save the layout in `onLayoutCommit`, which fires once a drag or key press is finished, not on every step.
 - Put a `ScrollArea` or a scrolling element inside a pane that holds long content: a pane clips what overflows.
-- Give a pane that collapses to a strip a function as its `children`, so it can show an icon where it showed a
-  label: `{({ collapsed }) => (collapsed ? <Icon … /> : "Sidebar")}`.
+- Give a pane that collapses to a strip a function as its `children`, so it can show something else once it has
+  collapsed, and a button that opens it: `{({ collapsed, toggle }) => …}`. Keep that one button in the same place
+  in both states (change its icon and label, not the element), or it unmounts when pressed and keyboard focus is
+  lost. It only makes sense on a strip: a pane collapsed to nothing hides its content, button included.
 
 </Callout>
 <Callout tone="danger" title="Don't">

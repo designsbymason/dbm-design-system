@@ -43,9 +43,12 @@ interface PaneContextValue {
   size: number;
   collapsed: boolean;
   hidden: boolean;
+  toggle: () => void;
 }
 
 const PaneContext = createContext<PaneContextValue | null>(null);
+
+const noop = () => {};
 
 /**
  * A pane size limit as a percentage. A length (`px`, or `rem` against the root font size) can't be turned into
@@ -165,7 +168,7 @@ const SplitterPane = forwardRef<HTMLDivElement, SplitterPaneProps>(
         style={{ ["--splitter-pane-size" as string]: context?.size ?? 1, ...style } as CSSProperties}
       >
         {typeof children === "function"
-          ? children({ collapsed: context?.collapsed ?? false, size: context?.size ?? 100 })
+          ? children({ collapsed: context?.collapsed ?? false, size: context?.size ?? 100, toggle: context?.toggle ?? noop })
           : children}
       </div>
     );
@@ -552,6 +555,17 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
       return true;
     };
 
+    // What a pane's own content can ask for, through its children's `toggle`: the same as Enter on a handle beside
+    // a collapsible pane, a controlled pane only being asked.
+    const toggleOwn = (index: number) => {
+      const current = latest.current;
+      if (current.disabled) return;
+      askedRef.current = {};
+      const next = togglePane(current.layout, index, current.constraints, restoreRef.current[current.keys[index] ?? String(index)]);
+      if (!next || !request(next)) return;
+      current.onLayoutCommit?.(latest.current.layout);
+    };
+
     const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>, index: number) => {
       const current = latest.current;
       // A key with a modifier is the browser's (Alt+Left is Back) or the system's, not the handle's.
@@ -599,6 +613,7 @@ const SplitterRoot = forwardRef<HTMLDivElement, SplitterProps>(
             size,
             collapsed: collapsedFlags[index] ?? false,
             hidden: Boolean(collapsedFlags[index]) && (limits?.collapsed ?? 0) <= 0,
+            toggle: () => toggleOwn(index),
           }}
         >
           {pane}

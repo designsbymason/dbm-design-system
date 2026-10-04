@@ -1139,6 +1139,112 @@ describe("Splitter", () => {
     });
   });
 
+  describe("toggle, from a pane's own content", () => {
+    const withButton = (
+      props: Partial<React.ComponentProps<typeof Splitter>> = {},
+      pane: Partial<React.ComponentProps<typeof Splitter.Pane>> = {},
+    ) => (
+      <Splitter aria-label="Workspace" defaultLayout={[30, 70]} {...props}>
+        <Splitter.Pane data-testid="a" collapsible minSize={20} collapsedSize={5} {...pane}>
+          {({ collapsed, toggle }) => (
+            <button type="button" onClick={toggle}>
+              {collapsed ? "Open" : "Close"}
+            </button>
+          )}
+        </Splitter.Pane>
+        <Splitter.Pane data-testid="b">B</Splitter.Pane>
+      </Splitter>
+    );
+
+    it("collapses the pane and opens it again at the size it had", async () => {
+      const user = userEvent.setup();
+      render(withButton());
+      first().focus();
+      await user.keyboard("{ArrowRight}");
+      expect(sizeOf("a")).toBe(35);
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(sizeOf("a")).toBe(5);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(sizeOf("a")).toBe(35);
+    });
+
+    it("reports a finished change, and the pane collapsing, as a handle's Enter would", async () => {
+      const user = userEvent.setup();
+      const onLayoutCommit = vi.fn();
+      const onCollapsedChange = vi.fn();
+      render(withButton({ onLayoutCommit }, { onCollapsedChange }));
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(onLayoutCommit).toHaveBeenCalledTimes(1);
+      expect(onLayoutCommit).toHaveBeenCalledWith([5, 95]);
+      expect(onCollapsedChange).toHaveBeenCalledWith(true);
+    });
+
+    it("only asks a pane that is controlled, and the pane follows the prop", async () => {
+      const user = userEvent.setup();
+      const onCollapsedChange = vi.fn();
+      const { rerender } = render(withButton({}, { collapsed: false, onCollapsedChange }));
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(onCollapsedChange).toHaveBeenCalledWith(true);
+      expect(sizeOf("a")).toBe(30);
+      rerender(withButton({}, { collapsed: true, onCollapsedChange }));
+      expect(sizeOf("a")).toBe(5);
+      expect(screen.getByRole("button", { name: "Open" })).toBeInTheDocument();
+    });
+
+    it("settles when the parent holds the state", async () => {
+      const user = userEvent.setup();
+      const Harness = () => {
+        const [collapsed, setCollapsed] = useState(false);
+        return withButton({}, { collapsed, onCollapsedChange: setCollapsed });
+      };
+      render(<Harness />);
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(sizeOf("a")).toBe(5);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(sizeOf("a")).toBe(30);
+    });
+
+    it("does nothing in a disabled splitter", async () => {
+      const user = userEvent.setup();
+      const onLayoutChange = vi.fn();
+      render(withButton({ disabled: true, onLayoutChange }));
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      expect(sizeOf("a")).toBe(30);
+    });
+
+    it("does nothing for a pane that can't collapse", async () => {
+      const user = userEvent.setup();
+      const onLayoutChange = vi.fn();
+      render(withButton({ onLayoutChange }, { collapsible: false }));
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("works for a locked pane, which only a handle is barred from moving", async () => {
+      const user = userEvent.setup();
+      render(withButton({}, { resizable: false }));
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(sizeOf("a")).toBe(5);
+    });
+
+    it("is a harmless no-op for a pane outside a splitter", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <Splitter.Pane>
+          {({ toggle }) => (
+            <button type="button" onClick={toggle}>
+              Lone
+            </button>
+          )}
+        </Splitter.Pane>,
+      );
+      await user.click(screen.getByRole("button", { name: "Lone" }));
+      expect(screen.getByRole("button", { name: "Lone" })).toBeInTheDocument();
+    });
+  });
+
   describe("labels", () => {
     it("names one handle plainly and several by position", () => {
       const { rerender } = render(two());

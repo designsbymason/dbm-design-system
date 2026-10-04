@@ -13,7 +13,7 @@ const meta: Meta<typeof Splitter.Pane> = {
     children: {
       control: false,
       description:
-        "What the pane holds — or a function of the pane's state ({ collapsed, size }), to show something else once it has collapsed to a strip (an icon where a label was).",
+        "What the pane holds — or a function of the pane's state ({ collapsed, size, toggle }; toggle collapses or opens the pane), to show something else once it has collapsed to a strip, with a button that opens it.",
     },
     label: {
       control: "text",
