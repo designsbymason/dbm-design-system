@@ -18,7 +18,7 @@ const meta: Meta<typeof TableToolbar.ActiveFilters> = {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "The chips' size, on the shared scale. Defaults to the bar's size.",
-      table: { defaultValue: { summary: "the bar's size ('md')" } },
+      table: { defaultValue: { summary: "bar's size" } },
     },
     tone: {
       control: "select",
@@ -35,9 +35,9 @@ const meta: Meta<typeof TableToolbar.ActiveFilters> = {
       control: false,
       description:
         "Replaces the words this part writes, per key: list, clearAll, remove (takes the chip's text) and applied (takes the plain count: \"2 filters applied\", \"No filters applied\").",
-      table: { defaultValue: { summary: "{ list: \"Applied filters\", clearAll: \"Clear all\", remove: (label) => `Remove filter: ${label}`, applied: (n) => `${n} filters applied` }" } },
+      table: { defaultValue: { summary: "English words" } },
     },
-    formatNumber: { control: false, description: "Writes the counts in the default announcements in a locale's own numerals. Plain String by default.", table: { defaultValue: { summary: "(value) => String(value)" } } },
+    formatNumber: { control: false, description: "Writes the counts in the default announcements in a locale's own numerals. Plain String by default.", table: { defaultValue: { summary: "String" } } },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
