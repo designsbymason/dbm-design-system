@@ -342,6 +342,7 @@ const TableToolbarActiveFilters = forwardRef<HTMLDivElement, TableToolbarActiveF
               variant="ghost"
               size={smallerButton[size]}
               rounded
+              className={styles.clearAll}
               onClick={() => {
                 noteKeyboardRemoval(-1);
                 onClearAll();

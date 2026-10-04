@@ -73,6 +73,20 @@
   padding: 0;
 }
 
+/* A chip is the only child of its item; as a flex box the item is exactly the chip's height, not a line box taller. */
+.chips > li {
+  display: flex;
+}
+
+/* "Clear all" is as tall as the chips beside it: no `Button` size matches their height, so it stretches to the row's and drops its
+   own vertical padding. The floor keeps it a 24px target at the sizes where the chips are a hair shorter (WCAG 2.5.8). It sits
+   after `Button`'s own rules in the cascade only by specificity, hence the doubled class. */
+.clearAll.clearAll {
+  align-self: stretch;
+  min-block-size: var(--dbm-space-6);
+  padding-block: 0;
+}
+
 /* --- Summary --- */
 .summary {
   color: var(--dbm-text-secondary);

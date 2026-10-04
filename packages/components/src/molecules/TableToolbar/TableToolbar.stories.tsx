@@ -472,6 +472,13 @@ export const TargetSizeInteraction: Story = {
       const missed = ([[-11, 0], [11, 0], [0, -11], [0, 11]] as const).filter(([dx, dy]) => document.elementFromPoint(cx + dx, cy + dy) !== element);
       if (missed.length) failures.push(`${name} hit area under 24px (${missed.length} of 4 probe points miss it)`);
     }
+    // "Clear all" is as tall as the chips beside it (and at least 24px).
+    for (const size of ["xs", "sm", "md", "lg", "xl"]) {
+      const bar = canvasElement.querySelector(`[data-testid="${size}"]`)!;
+      const chip = bar.querySelector<HTMLElement>("li > *")!.getBoundingClientRect().height;
+      const clear = Array.from(bar.querySelectorAll<HTMLElement>("button")).find((b) => b.textContent === "Clear all")!;
+      await expect(clear.getBoundingClientRect().height).toBeCloseTo(Math.max(chip, 24), 1);
+    }
     // A filter button showing a count is the same height as one without (the badge must not grow it).
     for (const size of ["xs", "sm", "md", "lg", "xl"]) {
       const bar = canvasElement.querySelector(`[data-testid="${size}"]`)!;
