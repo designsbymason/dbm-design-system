@@ -1,7 +1,7 @@
 # Toolbar
 
 Molecule, Inputs & Forms category. Item 27 of the itemized molecule build order in
-`04-component-inventory.md` (nominally ⚪, promoted ahead of its tier because `Table Toolbar` builds on it).
+`04-component-inventory.md` (nominally ⚪, promoted ahead of its tier because `TableToolbar` builds on it).
 A bar of actions that is one tab stop with arrow-key movement between its items, wrapping Radix
 Toolbar (`@radix-ui/react-toolbar` ^1.1.19, new dependency). Built 2026-10-03, **Finalized 2026-10-03**
 (declared by the user after the final review below and the three decisions that followed it). The decision is [ADR-0032](../adr/0032-toolbar-puts-radix-toolbar-roving-focus-behind-wrapper-parts-and-reuses-buttongroups-context.md).

@@ -1,0 +1,14 @@
+{
+  "table-toolbar": {
+    "search-min-width": {
+      "$type": "dimension",
+      "$value": "14rem",
+      "$description": "New token (2026-10-03), added for TableToolbar.Search — the width its search field wants before the row it shares with the filter and action toolbars wraps it onto a line of its own (its flex-basis), so on a narrow screen the field keeps a usable width instead of being squeezed to nothing. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    },
+    "search-max-width": {
+      "$type": "dimension",
+      "$value": "24rem",
+      "$description": "New token (2026-10-03), added for TableToolbar.Search — the widest the search field grows when the row has room to spare, so a wide table doesn't stretch it across the page. A content-measure cap with no home on any existing primitive scale."
+    }
+  }
+}

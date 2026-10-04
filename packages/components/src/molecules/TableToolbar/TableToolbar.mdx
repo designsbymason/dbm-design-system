@@ -1,0 +1,346 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Tag } from "../../atoms/Tag";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Pagination } from "../Pagination";
+import { SearchInput } from "../SearchInput";
+import { Toolbar } from "../Toolbar";
+import * as TableToolbarStories from "./TableToolbar.stories";
+import * as FilterStories from "./TableToolbarFilter.stories";
+import * as ActiveFiltersStories from "./TableToolbarActiveFilters.stories";
+import * as SummaryStories from "./TableToolbarSummary.stories";
+import * as SelectionStories from "./TableToolbarSelection.stories";
+
+export const propOrder = [
+  "children",
+  "size",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+export const filterPropOrder = [
+  "label",
+  "children",
+  "count",
+  "onClear",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "variant",
+  "size",
+  "icon",
+  "align",
+  "labels",
+  "formatNumber",
+  "disabled",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+export const activeFiltersPropOrder = ["items", "onRemove", "onClearAll", "size", "tone", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
+
+export const summaryPropOrder = ["count", "total", "size", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
+
+export const selectionPropOrder = ["count", "totalCount", "onClear", "onSelectAll", "children", "size", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
+
+<Meta of={TableToolbarStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="TableToolbar" tier="Molecule" />
+
+The bar above a table of data: search, filters, the filters currently applied, a result count, and the bulk actions that
+appear when rows are selected. It owns no data — rows, query, filters and selection are yours, passed in and called back — so
+a `Table`, a card list or a future `DataTable` can all sit under it.
+
+It is a named `role="group"`, deliberately not a `role="toolbar"`: a search field can't live in a toolbar, which takes the left
+and right arrow keys for itself. Inside it the search field is an ordinary tab stop; the filters and the actions go in real
+`Toolbar`s (so each is one tab stop with arrow-key movement), and the applied-filter chips are ordinary tab stops in reading
+order. It is built from parts you place yourself, so a bar can be as small as a search field or as full as the example below.
+
+### Import
+
+```tsx
+import { TableToolbar } from "@dbm-design-system/components";
+```
+
+Its parts are `TableToolbar.Row`, `.Search`, `.Filter`, `.ActiveFilters`, `.Summary` and `.Selection`.
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TableToolbarStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={TableToolbarStories.Playground}
+  exclude={["children", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`TableToolbar` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `onFocus`, `title`) — passed
+straight through to the underlying element. `role` is the bar's own (`group`) and can't be replaced.
+
+<PropertiesTable of={TableToolbarStories} order={propOrder} />
+
+The parts of the bar:
+
+- **`TableToolbar.Row`** is a row that wraps: what shares it moves to the next line when it doesn't fit. It takes the native
+  `<div>` attributes.
+- **`TableToolbar.Search`** sizes the search field: it wants a usable width before its row wraps, grows into spare room up to a
+  measure, and never shrinks to nothing. Put a `SearchInput` in it. It takes the native `<div>` attributes.
+- **A `Toolbar`** (your own, from this library) holds the filters and the actions. A `Spacer` between two of them pushes the
+  second to the far end.
+
+### TableToolbar.Filter properties
+
+`TableToolbar.Filter` hands every other native `<button>` attribute to its button, so inside a `Toolbar` it is wrapped in a
+`Toolbar.Item` and takes the roving tab index like any other item.
+
+<PropertiesTable of={FilterStories} order={filterPropOrder} />
+
+### TableToolbar.ActiveFilters properties
+
+<PropertiesTable of={ActiveFiltersStories} order={activeFiltersPropOrder} />
+
+### TableToolbar.Summary properties
+
+<PropertiesTable of={SummaryStories} order={summaryPropOrder} />
+
+### TableToolbar.Selection properties
+
+<PropertiesTable of={SelectionStories} order={selectionPropOrder} />
+
+## Variants
+
+### Search, filters and actions
+
+The main row. The search field is an ordinary tab stop; the filters and the actions are each a `Toolbar`, so each is one tab
+stop with the arrow keys moving along it. A `Spacer` between the two toolbars pushes the actions to the far end. On a narrow
+screen the row wraps: the search field takes a line of its own and the toolbars scroll inside themselves if they must.
+
+<Canvas of={TableToolbarStories.SearchAndActions} />
+
+### Filters
+
+`TableToolbar.Filter` is a button that opens a panel of the controls you put in it. `count` says how many values of the filter
+are applied: the button shows it, its accessible name says it ("Status, 2 active"), and the panel offers **Clear** when you give
+it `onClear`. Inside a `Toolbar` it takes the toolbar's `variant` and `size`; wrap it in a `Toolbar.Item` so it joins the
+arrow-key order.
+
+<Canvas of={TableToolbarStories.Filters} />
+
+### Active filters
+
+The filters applied right now, as removable chips, with **Clear all** once there is more than one. Nothing is drawn while there
+are none. Removing a chip from the keyboard moves focus to the next chip, or, if it was the last, to the nearest control before it,
+so the keyboard user keeps their place.
+
+<Canvas of={TableToolbarStories.ActiveFilters} />
+
+### Result count
+
+"128 results", or "12 of 128 results" once the list is filtered. Leave `count` undefined while it is loading: nothing is shown and
+the count that arrives is not announced as a change.
+
+<Canvas of={TableToolbarStories.ResultCount} />
+
+### Bulk selection
+
+A row of its own, shown while something is selected, so search and filters keep their state and focus. It holds the count,
+**Select all N** while fewer than `totalCount` are selected, your bulk actions (a `Toolbar` of buttons is the usual choice), and
+**Clear selection**.
+
+<Canvas of={TableToolbarStories.BulkSelection} />
+
+### Above a Table
+
+The whole bar over a live, filterable `Table`: typing filters the rows, the filters and chips stay in step, a checkbox per row
+selects, and the header checkbox is "indeterminate" while some are selected. The bar knows nothing about the table; the example
+holds the state and passes it in.
+
+<Canvas of={TableToolbarStories.WithATable} />
+
+### All sizes
+
+<Canvas of={TableToolbarStories.AllSizes} />
+
+### Right to left
+
+The layout mirrors with the page's direction. Pass `dir="rtl"` to each `Toolbar` too, since Radix doesn't read the page, so its
+arrow keys go the way the page reads.
+
+<Canvas of={TableToolbarStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Name the bar (`aria-label`) and every `Toolbar` inside it ("Filters", "Actions", "Bulk actions"), so a screen reader can say
+  what each group is for.
+- Put the filters and the actions in `Toolbar`s: each becomes one tab stop, so a long set of buttons doesn't mean a long run of Tabs.
+- Say the same `size` on the bar, the `SearchInput` and the `Toolbar`s; only the bar's own parts read it.
+- Keep the count honest: pass `total` once filtered, and leave `count` undefined while loading.
+- Give each filter's `count` and `onClear`, so the person can see and undo what a filter is doing without opening it.
+- Render `TableToolbar.Selection` always and let `count` decide: its live region has to be in the page to announce the selection
+  being emptied.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't put the search field inside a `Toolbar`: a toolbar takes the left and right arrow keys, which the field needs to move
+  its caret.
+- Don't use it as a general page header or a form's button row; it is for the controls that act on a table's rows.
+- Don't keep filter state inside the bar: it has none. Hold it where the rows are, so the table, the chips and the count agree.
+- Don't hide the only way to undo a filter inside its closed panel: the chips and **Clear all** are there for that.
+
+</Callout>
+</div>
+
+## Best practices
+
+- A filter with many values is better as a panel of checkboxes than as a row of buttons; keep the panel short and the labels
+  parallel. (`MultiSelect` and `Menu` will be natural panel contents when they exist.)
+- Show the chips even when the panel shows the same information: they are the one place that says everything applied, and each
+  is removable on its own.
+- Put the bulk actions that are safe first and the destructive one last, and name each one for what it does ("Delete 3 orders" is
+  better than "Delete" when the label has room for the count).
+- On a phone the search field takes its own line. Let the toolbars scroll (the default) instead of hiding filters, so everything
+  stays reachable.
+- Pair it with `Pagination` below the table, and show the `Summary` count here so the two agree about how many rows there are.
+
+## Accessibility
+
+<Callout tone="info" title="A named group of ordinary controls, with real toolbars inside">
+
+- The bar is `role="group"`, named by `aria-label` or `aria-labelledby`; a dev-mode warning fires once if it has neither. It is
+  not a `toolbar`, so the search field keeps its own arrow keys.
+- Tab order is reading order: the search field, each `Toolbar` once (the arrow keys, `Home` and `End` move along it), then the
+  chips and **Clear all**. There is no keyboard trap, and the bar adds no key handling of its own.
+- A filter's button is `aria-haspopup="dialog"` and `aria-expanded`; its panel is a named `dialog` ("Status filter") that returns
+  focus to the button on `Escape`. While some of it is applied the name says so ("Status, 2 active"), and the visible word is
+  inside the name (WCAG 2.5.3).
+- The chips are a named list (explicit `list` and `listitem` roles, which Safari with VoiceOver needs under `list-style: none`);
+  each remove button is named for what it removes ("Remove filter: Status: Open").
+- Three live regions, each in the page before its text changes, announce a change and never a first appearance: how many filters
+  are applied, the result count, and the selection ("3 selected", "Selection cleared"). They stay in the page when their visible part is hidden, so
+  going to none is still announced. `announce={false}` turns one off.
+- Focus is never dropped: removing a chip from the keyboard moves focus to the next chip (or, with none left, to the nearest control
+  before the chips), and emptying the selection with focus in the bulk row moves it to the nearest control before the row. A mouse
+  press that does the same moves nothing.
+- Every control is at least 24 × 24px (WCAG 2.5.8), at every size, except a chip's remove button (`Tag`'s own, 12 to 20px), which
+  passes the spacing exception: a 24px circle centred on it touches no other control.
+- The bulk row is bounded by a real border as well as a tint, so it is still a box in forced colours, where backgrounds are
+  replaced. Contrast: `text.primary` on the row's `bg.brand-subtle` is 13.4:1 or more in all four themes; the count is
+  `text.secondary` on the surface (6.88:1 light, 10.47:1 dark).
+
+</Callout>
+
+## Code examples
+
+```tsx
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <TableToolbar.Search>
+      <SearchInput aria-label="Search orders" onSearch={setQuery} />
+    </TableToolbar.Search>
+    <Toolbar aria-label="Filters" variant="secondary">
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" icon={FunnelSimpleIcon} count={statuses.length} onClear={() => setStatuses([])}>
+          <CheckboxGroup aria-label="Status" value={statuses} onValueChange={setStatuses}>
+            <Checkbox value="Open">Open</Checkbox>
+            <Checkbox value="Shipped">Shipped</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+    <Spacer />
+    <Toolbar aria-label="Actions" variant="secondary">
+      <Toolbar.Button leadingIcon={DownloadSimpleIcon}>Export</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Row>
+  <TableToolbar.Row>
+    <TableToolbar.ActiveFilters items={applied} onRemove={removeFilter} onClearAll={clearFilters} />
+    <TableToolbar.Summary count={rows.length} total={orders.length} />
+  </TableToolbar.Row>
+  <TableToolbar.Selection count={selected.length} totalCount={rows.length} onClear={clearSelection} onSelectAll={selectAll}>
+    <Toolbar aria-label="Bulk actions" variant="secondary">
+      <Toolbar.Button leadingIcon={TrashIcon}>Delete</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Selection>
+</TableToolbar>
+
+{/* Words the parts write are a labels object; numbers go through formatNumber */}
+<TableToolbar.Summary count={12} total={128} labels={{ resultsOf: (count, total) => `${count} sur ${total} résultats` }} />
+<TableToolbar.Selection count={3} labels={{ selected: (count) => `${count} choisies`, clear: "Tout désélectionner" }} />
+
+{/* Native props reach the part's element */}
+<TableToolbar aria-label="Orders table tools" onFocus={() => trackFocus("orders")}>…</TableToolbar>
+<TableToolbar.Filter label="Status" disabled data-testid="status-filter">…</TableToolbar.Filter>
+```
+
+## Design tokens used
+
+<TokenRow token="space.2" usage="the gap between chips, and the bulk row's vertical padding" />
+<TokenRow token="space.3" usage="the gap between rows and between a row's items, the bulk row's horizontal padding, and the room above a filter panel's footer" />
+<TokenRow token="text.secondary" usage="the result count" />
+<TokenRow token="text.primary" usage="the bulk row's text" />
+<TokenRow token="bg.brand-subtle" usage="the bulk row's tint" />
+<TokenRow token="border.brand-subtle" usage="the bulk row's border, which also keeps it bounded in forced colours" />
+<TokenRow token="border.default" usage="the rule above a filter panel's Clear button" />
+<TokenRow token="border-width.1" usage="the bulk row's border and the filter panel's rule" />
+<TokenRow token="radius.md" usage="the bulk row's corners" />
+<TokenRow token="font-family.primary" usage="the result count and the bulk row's text" />
+<TokenRow token="font-weight.semibold" usage="the selected count" />
+<TokenRow token="font-size.xs" usage="the count and bulk row text at size xs and sm" />
+<TokenRow token="font-size.sm" usage="the count and bulk row text at size md" />
+<TokenRow token="font-size.base" usage="the count and bulk row text at size lg" />
+<TokenRow token="font-size.md" usage="the count and bulk row text at size xl" />
+<TokenRow token="table-toolbar.search-min-width" usage="the width the search field wants before its row wraps" />
+<TokenRow token="table-toolbar.search-max-width" usage="the widest the search field grows when the row has room to spare" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Toolbar"
+  description="What holds the filters and the actions: one tab stop, arrow keys between its items"
+  href="/?path=/docs/molecules-inputs-toolbar--docs"
+>
+  <Toolbar aria-label="Related" variant="secondary" size="sm">
+    <Toolbar.Button>Export</Toolbar.Button>
+  </Toolbar>
+</RelatedCard>
+<RelatedCard
+  name="SearchInput"
+  description="The search field, debounced, with a clear button"
+  href="/?path=/docs/molecules-inputs-searchinput--docs"
+>
+  <SearchInput aria-label="Related search" size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="Tag"
+  description="The chips for applied filters, each removable"
+  href="/?path=/docs/atoms-data-display-tag--docs"
+>
+  <Tag removable size="sm">Open</Tag>
+</RelatedCard>
+<RelatedCard
+  name="Pagination"
+  description="The page controls below the table, which should agree with the result count"
+  href="/?path=/docs/molecules-data-display-pagination--docs"
+>
+  <Pagination pageCount={5} defaultValue={2} size="sm" aria-label="Related pages" />
+</RelatedCard>
+</div>

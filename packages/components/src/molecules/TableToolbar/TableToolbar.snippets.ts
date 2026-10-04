@@ -1,0 +1,231 @@
+// The code shown under each story's "Show code" button on TableToolbar's Docs page.
+//
+// Hand-written rather than generated from the rendered story: the generated code spells out every default, fills every handler
+// with a no-op, prints an icon as `{ $$typeof: Symbol(react.forward_ref) … }` and freezes state. Each snippet here is the
+// smallest real usage of what its story shows — only exports of the package, no demo scaffolding — and `storySnippets.test.ts`
+// checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
+
+export const tableToolbarSnippets = {
+  searchAndActions: `{/* Icons come from @dbm-design-system/icons: FunnelSimpleIcon, DownloadSimpleIcon.
+    The search field is an ordinary tab stop; the filters and the actions are each a Toolbar (one tab stop, arrow keys). */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <TableToolbar.Search>
+      <SearchInput aria-label="Search orders" />
+    </TableToolbar.Search>
+    <Toolbar aria-label="Filters" variant="secondary">
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" icon={FunnelSimpleIcon}>
+          <CheckboxGroup aria-label="Status">
+            <Checkbox value="open">Open</Checkbox>
+            <Checkbox value="shipped">Shipped</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+    <Spacer />
+    <Toolbar aria-label="Actions" variant="secondary">
+      <Toolbar.Button leadingIcon={DownloadSimpleIcon}>Export</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Row>
+</TableToolbar>`,
+
+  filters: `{/* count: how many values of the filter are applied (shown on the button, said in its name, and Clear appears in the
+    panel when onClear is given). What is in the panel, and its state, is yours. */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <Toolbar aria-label="Filters" variant="secondary">
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" count={2} onClear={clearStatuses}>
+          <CheckboxGroup aria-label="Status" defaultValue={["open", "shipped"]}>
+            <Checkbox value="open">Open</Checkbox>
+            <Checkbox value="shipped">Shipped</Checkbox>
+            <Checkbox value="delayed">Delayed</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Owner">
+          <RadioGroup aria-label="Owner" defaultValue="jane">
+            <Radio value="jane">Jane</Radio>
+            <Radio value="marcus">Marcus</Radio>
+            <Radio value="priya">Priya</Radio>
+          </RadioGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+  </TableToolbar.Row>
+</TableToolbar>`,
+
+  activeFilters: `{/* const [applied, setApplied] = useState([
+      { id: "status:open", group: "Status", label: "Open" },
+      { id: "owner:jane", group: "Owner", label: "Jane" },
+    ]);
+    onRemove gets the chip's id; Clear all shows once there is more than one. Removing from the keyboard moves focus to the
+    next chip. */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <TableToolbar.ActiveFilters
+      items={applied}
+      onRemove={(id) => setApplied(applied.filter((item) => item.id !== id))}
+      onClearAll={() => setApplied([])}
+    />
+  </TableToolbar.Row>
+</TableToolbar>`,
+
+  resultCount: `{/* count undefined means "not known yet": nothing is shown, and the count that arrives is not announced. With a total
+    larger than count it reads "12 of 128 results". */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <TableToolbar.Summary count={128} />
+  </TableToolbar.Row>
+  <TableToolbar.Row>
+    <TableToolbar.Summary count={12} total={128} />
+  </TableToolbar.Row>
+  <TableToolbar.Row>
+    <TableToolbar.Summary count={0} total={128} />
+  </TableToolbar.Row>
+</TableToolbar>`,
+
+  bulkSelection: `{/* const [count, setCount] = useState(3);
+    The row shows while count > 0; Select all N shows while fewer than totalCount are selected. */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Selection count={count} totalCount={12} onClear={() => setCount(0)} onSelectAll={() => setCount(12)}>
+    <Toolbar aria-label="Bulk actions" variant="secondary">
+      <Toolbar.Button leadingIcon={DownloadSimpleIcon}>Export selected</Toolbar.Button>
+      <Toolbar.Button leadingIcon={TrashIcon}>Delete</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Selection>
+</TableToolbar>`,
+
+  withATable: `{/* The bar owns no data: rows, query, filters and selection are the app's (or a future DataTable's), passed in and
+    called back. A Checkbox per row selects; the header Checkbox is "indeterminate" while some are. */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <TableToolbar.Search>
+      <SearchInput aria-label="Search orders" onSearch={setQuery} />
+    </TableToolbar.Search>
+    <Toolbar aria-label="Filters" variant="secondary">
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" icon={FunnelSimpleIcon} count={statuses.length} onClear={() => setStatuses([])}>
+          <CheckboxGroup aria-label="Status" value={statuses} onValueChange={setStatuses}>
+            <Checkbox value="Open">Open</Checkbox>
+            <Checkbox value="Shipped">Shipped</Checkbox>
+            <Checkbox value="Delayed">Delayed</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+    <Spacer />
+    <Toolbar aria-label="Actions" variant="secondary">
+      <Toolbar.Button leadingIcon={DownloadSimpleIcon}>Export</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Row>
+  <TableToolbar.Row>
+    <TableToolbar.ActiveFilters items={applied} onRemove={removeFilter} onClearAll={clearFilters} />
+    <TableToolbar.Summary count={rows.length} total={orders.length} />
+  </TableToolbar.Row>
+  <TableToolbar.Selection count={selected.length} totalCount={rows.length} onClear={clearSelection} onSelectAll={selectAll}>
+    <Toolbar aria-label="Bulk actions" variant="secondary">
+      <Toolbar.Button leadingIcon={TrashIcon}>Delete</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Selection>
+</TableToolbar>
+<Table aria-label="Orders" hoverable>
+  {/* a header row with a "Select all orders" Checkbox, and a body row per order with its own Checkbox */}
+</Table>`,
+
+  sizes: `{/* size on the bar is the default for ActiveFilters, Summary, Selection and a Filter outside a toolbar. Say the same size on the
+    SearchInput and the Toolbars, which are your own components. Shown: sm. */}
+<TableToolbar size="sm" aria-label="Size sm">
+  <TableToolbar.Row>
+    <TableToolbar.Search>
+      <SearchInput aria-label="Search (sm)" size="sm" />
+    </TableToolbar.Search>
+    <Toolbar aria-label="Filters (sm)" variant="secondary" size="sm">
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" count={2}>
+          <CheckboxGroup aria-label="Status">
+            <Checkbox value="open">Open</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+    <Spacer />
+    <TableToolbar.Summary count={12} total={128} />
+  </TableToolbar.Row>
+</TableToolbar>`,
+
+  rtl: `{/* The layout mirrors with the page's direction; pass dir="rtl" to each Toolbar so its arrow keys follow it too */}
+<div dir="rtl">
+  <TableToolbar aria-label="Orders table tools">
+    <TableToolbar.Row>
+      <TableToolbar.Search>
+        <SearchInput aria-label="Search orders" />
+      </TableToolbar.Search>
+      <Toolbar aria-label="Filters" variant="secondary" dir="rtl">
+        <Toolbar.Item>
+          <TableToolbar.Filter label="Status" count={2}>
+            <CheckboxGroup aria-label="Status">
+              <Checkbox value="open">Open</Checkbox>
+            </CheckboxGroup>
+          </TableToolbar.Filter>
+        </Toolbar.Item>
+      </Toolbar>
+    </TableToolbar.Row>
+    <TableToolbar.Row>
+      <TableToolbar.ActiveFilters items={[{ id: "status:open", group: "Status", label: "Open" }]} onRemove={removeFilter} />
+      <TableToolbar.Summary count={12} total={128} />
+    </TableToolbar.Row>
+  </TableToolbar>
+</div>`,
+} as const;
+
+/** The Playground's live controls, as far as the snippet cares. */
+export interface TableToolbarPlaygroundSnippetArgs {
+  size?: string;
+  "aria-label"?: string;
+}
+
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
+
+/**
+ * The Playground's snippet, built from its current controls: the whole bar the Playground shows, with `size` written on the
+ * bar and on the search field and toolbars that don't read it, only when it isn't the default.
+ */
+export function tableToolbarPlaygroundSnippet(args: TableToolbarPlaygroundSnippetArgs): string {
+  const size = args.size && args.size !== "md" && (sizes as readonly string[]).includes(args.size) ? ` size="${args.size}"` : "";
+  const label = args["aria-label"] || "Orders table tools";
+  return `{/* Icons come from @dbm-design-system/icons: FunnelSimpleIcon, DownloadSimpleIcon, TrashIcon. The rows, query, filters and
+    selection are the app's own state. */}
+<TableToolbar${size} aria-label="${label}">
+  <TableToolbar.Row>
+    <TableToolbar.Search>
+      <SearchInput aria-label="Search orders"${size} onSearch={setQuery} />
+    </TableToolbar.Search>
+    <Toolbar aria-label="Filters" variant="secondary"${size}>
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" icon={FunnelSimpleIcon} count={statuses.length} onClear={() => setStatuses([])}>
+          <CheckboxGroup aria-label="Status" value={statuses} onValueChange={setStatuses}>
+            <Checkbox value="Open">Open</Checkbox>
+            <Checkbox value="Shipped">Shipped</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+    <Spacer />
+    <Toolbar aria-label="Actions" variant="secondary"${size}>
+      <Toolbar.Button leadingIcon={DownloadSimpleIcon}>Export</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Row>
+  <TableToolbar.Row>
+    <TableToolbar.ActiveFilters items={applied} onRemove={removeFilter} onClearAll={clearFilters} />
+    <TableToolbar.Summary count={rows.length} total={orders.length} />
+  </TableToolbar.Row>
+  <TableToolbar.Selection count={selected.length} totalCount={rows.length} onClear={clearSelection} onSelectAll={selectAll}>
+    <Toolbar aria-label="Bulk actions" variant="secondary"${size}>
+      <Toolbar.Button leadingIcon={TrashIcon}>Delete</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Selection>
+</TableToolbar>`;
+}

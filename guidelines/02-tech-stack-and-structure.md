@@ -39,7 +39,7 @@ dbm-design-system/
 │   ├── components/                # The actual DBM component library (this is the npm package)
 │   │   ├── src/
 │   │   │   ├── atoms/            # Built: Avatar, Badge, Button, GridItem, Icon, Input... (48 shipped so far, including Radio — see ADR-0012 for GridItem/ListItem's own tier history and ADR-0014 for Radio's)
-│   │   │   ├── molecules/        # Built so far (31): Accordion, Alert, AvatarGroup, Breadcrumb, ButtonGroup, Card, CheckboxGroup, CodeBlock, DescriptionList, EmptyState, FormField, Grid, HoverCard, List, NumberInput, Pagination, PasswordInput, Popover, RadioGroup, RangeSlider, ScrollArea, SearchInput, Select, Slider, Stat, Table, Tabs, TimePicker, TimeRangePicker, ToggleGroup, Toolbar — the rest still open
+│   │   │   ├── molecules/        # Built so far (32): Accordion, Alert, AvatarGroup, Breadcrumb, ButtonGroup, Card, CheckboxGroup, CodeBlock, DescriptionList, EmptyState, FormField, Grid, HoverCard, List, NumberInput, Pagination, PasswordInput, Popover, RadioGroup, RangeSlider, ScrollArea, SearchInput, Select, Slider, Stat, Table, TableToolbar, Tabs, TimePicker, TimeRangePicker, ToggleGroup, Toolbar — the rest still open
 │   │   │   ├── organisms/        # Not started yet — DataTable, Modal, Navbar, CommandPalette, Form...
 │   │   │   ├── templates/        # Not started yet — page-level layout scaffolds (optional, later)
 │   │   │   ├── internal/         # Pieces shared by two or more components that are not part of the public API and are not exported — `OverlayArrow` (the arrow on `Popover` and `HoverCard`) and `time/` (the pure time model — parsing, drafts, stepping, digit entry — shared by `TimePicker` and `TimeRangePicker`)

@@ -77,6 +77,7 @@ export * from "./molecules/Select";
 export * from "./molecules/Slider";
 export * from "./molecules/Stat";
 export * from "./molecules/Table";
+export * from "./molecules/TableToolbar";
 export * from "./molecules/Tabs";
 export * from "./molecules/TimePicker";
 export * from "./molecules/TimeRangePicker";

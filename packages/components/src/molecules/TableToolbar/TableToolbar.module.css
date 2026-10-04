@@ -1,0 +1,121 @@
+/* The bar: rows stacked, with room between them. It owns no surface of its own; the table it sits above does. */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-3);
+  min-inline-size: 0;
+}
+
+/* A row wraps rather than overflowing: the search field, the toolbars and the result count each move to the next line
+   when they don't fit, so a phone gets the same bar a desktop does, stacked. */
+.row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  min-inline-size: 0;
+}
+
+/* The search field wants a usable width before its row wraps (`flex-basis`), grows into spare room up to a measure, and
+   `min-inline-size: 0` lets it shrink below its content on a very narrow screen instead of forcing the row wider. */
+.search {
+  flex: 1 1 var(--dbm-table-toolbar-search-min-width);
+  max-inline-size: var(--dbm-table-toolbar-search-max-width);
+  min-inline-size: 0;
+}
+
+/* `display` below overrides the `hidden` attribute (a class beats the browser's own `[hidden]` rule), so each part that is
+   hidden by it says so again. */
+.activeFilters[hidden],
+.selection[hidden] {
+  display: none;
+}
+
+/* --- Filter --- */
+.filterFooter {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: var(--dbm-space-3);
+  padding-block-start: var(--dbm-space-2);
+}
+
+/* --- ActiveFilters --- */
+.activeFilters {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+.chips {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Summary --- */
+.summary {
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-primary);
+  margin-inline-start: auto;
+  white-space: nowrap;
+}
+
+/* --- Selection ---
+   A row of its own, tinted so it reads as a state the table is in. A real border (not only a fill) so it is still bounded
+   in forced colours, where a background is replaced with the page's and a border is kept. */
+.selection {
+  align-items: center;
+  background-color: var(--dbm-bg-brand-subtle);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-brand-subtle);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-3);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+}
+
+.selectionCount {
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+/* The bulk actions take the room between the count and "Clear selection", so "Clear selection" sits at the far end. */
+.selectionActions {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+/* Text size follows the bar's `size`, one step down from the controls it sits beside. */
+.textXs {
+  font-size: var(--dbm-font-size-xs);
+}
+
+.textSm {
+  font-size: var(--dbm-font-size-xs);
+}
+
+.textMd {
+  font-size: var(--dbm-font-size-sm);
+}
+
+.textLg {
+  font-size: var(--dbm-font-size-base);
+}
+
+.textXl {
+  font-size: var(--dbm-font-size-md);
+}
