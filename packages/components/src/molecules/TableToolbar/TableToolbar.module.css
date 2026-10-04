@@ -32,10 +32,23 @@
 }
 
 /* --- Filter --- */
+/* The panel is at least as wide as its button (`Popover` already caps the width), so it never looks like a stub beneath it. */
+.filterPanel {
+  min-inline-size: var(--radix-popover-trigger-width);
+}
+
+/* The count badge is taller than a line of the button's text, which made a button with a count taller than one without. A
+   zero-height box centres the badge on the line and lets it overflow, so it adds no height. */
+.filterCount {
+  align-items: center;
+  block-size: 0;
+  display: inline-flex;
+  overflow: visible;
+}
+
 .filterFooter {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
   display: flex;
-  justify-content: flex-end;
   margin-block-start: var(--dbm-space-3);
   padding-block-start: var(--dbm-space-2);
 }

@@ -200,17 +200,19 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
           >
             {label}
             {count > 0 && (
-              <Badge tone="brand" size="xs" aria-hidden="true">
-                {formatNumber(count)}
-              </Badge>
+              <span className={styles.filterCount} aria-hidden="true">
+                <Badge tone="brand" size="xs">
+                  {formatNumber(count)}
+                </Badge>
+              </span>
             )}
           </Button>
         </Popover.Trigger>
-        <Popover.Content aria-label={labels.panel(label)} align={align}>
+        <Popover.Content aria-label={labels.panel(label)} align={align} className={styles.filterPanel}>
           {children}
           {count > 0 && onClear && (
             <div className={styles.filterFooter}>
-              <Button variant="ghost" size="sm" onClick={onClear}>
+              <Button variant="ghost" size="sm" fullWidth onClick={onClear}>
                 {labels.clear}
               </Button>
             </div>
@@ -339,6 +341,7 @@ const TableToolbarActiveFilters = forwardRef<HTMLDivElement, TableToolbarActiveF
             <Button
               variant="ghost"
               size={smallerButton[size]}
+              rounded
               onClick={() => {
                 noteKeyboardRemoval(-1);
                 onClearAll();

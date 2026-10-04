@@ -440,6 +440,9 @@ export const TargetSizeInteraction: Story = {
                   x
                 </TableToolbar.Filter>
               </Toolbar.Item>
+              <Toolbar.Item>
+                <TableToolbar.Filter label="Owner">x</TableToolbar.Filter>
+              </Toolbar.Item>
             </Toolbar>
           </TableToolbar.Row>
         </TableToolbar>
@@ -468,6 +471,13 @@ export const TargetSizeInteraction: Story = {
       const cy = r.top + r.height / 2;
       const missed = ([[-11, 0], [11, 0], [0, -11], [0, 11]] as const).filter(([dx, dy]) => document.elementFromPoint(cx + dx, cy + dy) !== element);
       if (missed.length) failures.push(`${name} hit area under 24px (${missed.length} of 4 probe points miss it)`);
+    }
+    // A filter button showing a count is the same height as one without (the badge must not grow it).
+    for (const size of ["xs", "sm", "md", "lg", "xl"]) {
+      const bar = canvasElement.querySelector(`[data-testid="${size}"]`)!;
+      const withCount = bar.querySelector<HTMLElement>('button[aria-label="Status, 1 active"]')!;
+      const without = bar.querySelector<HTMLElement>('button[aria-label="Owner"]')!;
+      await expect(withCount.getBoundingClientRect().height).toBeCloseTo(without.getBoundingClientRect().height, 1);
     }
     await expect(failures.join("; ")).toBe("");
   },
