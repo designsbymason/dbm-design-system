@@ -521,6 +521,57 @@ export const PhoneInteraction: Story = {
   },
 };
 
+export const LiveTextInteraction: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Live text — interaction test",
+  render: () => (
+    <div style={column}>
+      {[1, 9, 10, 100].map((count) => (
+        <TableToolbar key={count} aria-label={`Selected ${count}`} data-testid={`bar-${count}`}>
+          <TableToolbar.Selection count={count} totalCount={1000} onSelectAll={() => {}} />
+          <Toolbar aria-label={`Filters ${count}`} variant="secondary">
+            <Toolbar.Item>
+              <TableToolbar.Filter label="Status" count={count}>
+                x
+              </TableToolbar.Filter>
+            </Toolbar.Item>
+            <Toolbar.Item>
+              <TableToolbar.Filter label="Owner">x</TableToolbar.Filter>
+            </Toolbar.Item>
+          </Toolbar>
+        </TableToolbar>
+      ))}
+      <TableToolbar aria-label="Counts">
+        <TableToolbar.Summary count={128} data-testid="loaded" />
+        <TableToolbar.Summary loading data-testid="loading" />
+      </TableToolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Text that changes as the user interacts never resizes or moves what is beside it: across one, two and three digits the
+    // control after the count, and the button after the filter's badge, stay where they were.
+    const counts = [1, 9, 10, 100];
+    const positions = counts.map((count) => {
+      const bar = canvasElement.querySelector<HTMLElement>(`[data-testid="bar-${count}"]`)!;
+      const selectAll = Array.from(bar.querySelectorAll("button")).find((b) => b.textContent?.startsWith("Select all"))!;
+      const owner = bar.querySelector<HTMLElement>('button[aria-label="Owner"]')!;
+      return { selectAll: selectAll.getBoundingClientRect().left, owner: owner.getBoundingClientRect().left };
+    });
+    for (const p of positions) {
+      await expect(p.selectAll).toBeCloseTo(positions[0]!.selectAll, 1);
+    }
+    // The badge reserves two digits, so 1, 9, 10 and 99 are the same width (a count past `max` is wider by design).
+    for (const p of positions.slice(0, 3)) {
+      await expect(p.owner).toBeCloseTo(positions[0]!.owner, 1);
+    }
+    // The loading placeholder holds the height of the count it stands in for.
+    const loaded = canvasElement.querySelector<HTMLElement>('[data-testid="loaded"]')!;
+    const loading = canvasElement.querySelector<HTMLElement>('[data-testid="loading"]')!;
+    await expect(loading.getBoundingClientRect().height).toBeCloseTo(loaded.getBoundingClientRect().height, 1);
+  },
+};
+
 export const ForcedColoursInteraction: Story = {
   ...hidden,
   tags: ["!dev"],
@@ -528,10 +579,12 @@ export const ForcedColoursInteraction: Story = {
   render: () => (
     <TableToolbar aria-label="Orders table tools">
       <TableToolbar.Selection count={3} data-testid="selection" />
+      <TableToolbar.Summary loading data-testid="loading" />
     </TableToolbar>
   ),
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByTestId("selection");
+    const placeholder = within(canvasElement).getByTestId("loading").firstElementChild as HTMLElement;
     const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
     await emulate("active");
     try {
@@ -543,6 +596,8 @@ export const ForcedColoursInteraction: Story = {
       await expect(parseFloat(style.borderTopWidth)).toBeGreaterThan(0);
       await expect(style.borderTopColor).not.toBe("rgba(0, 0, 0, 0)");
       await expect(style.borderTopColor).not.toBe(style.backgroundColor);
+      // The loading placeholder is a background too; its outline keeps it visible.
+      await expect(parseFloat(getComputedStyle(placeholder).borderTopWidth)).toBeGreaterThan(0);
     } finally {
       await emulate("none");
     }

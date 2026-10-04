@@ -88,7 +88,10 @@ const safeCount = (value: unknown): number => (typeof value === "number" && Numb
  * ```
  */
 const TableToolbarRoot = forwardRef<HTMLDivElement, TableToolbarProps>(
-  ({ children, size = "md", className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+  ({ children, size: sizeProp, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+    // Nested in another bar, a size left out follows the outer bar's, as `ButtonGroup`'s does (alone, the context's default is `md`).
+    const parent = useContext(TableToolbarContext);
+    const size = sizeProp ?? parent.size;
     const hasWarnedNoAccessibleNameRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (!ariaLabel && !ariaLabelledBy && !hasWarnedNoAccessibleNameRef.current) {
@@ -408,7 +411,7 @@ const TableToolbarSummary = forwardRef<HTMLDivElement, TableToolbarSummaryProps>
     return (
       <>
         {loading ? (
-          <div ref={ref} {...props} aria-busy="true" className={cx(styles.summary, textClass[size], className)}>
+          <div ref={ref} {...props} aria-busy="true" className={cx(styles.summary, styles.summaryLoading, textClass[size], className)}>
             <Skeleton variant="text" className={styles.summarySkeleton} />
             <VisuallyHidden>{labels.loading}</VisuallyHidden>
           </div>
@@ -514,7 +517,9 @@ const TableToolbarSelection = forwardRef<HTMLDivElement, TableToolbarSelectionPr
           }}
           className={cx(styles.selection, textClass[size], className)}
         >
-          <span className={styles.selectionCount}>{labels.selected(count)}</span>
+          <span className={styles.selectionCount} data-widest={labels.selected(Math.max(count, safeCount(totalCount)))}>
+            {labels.selected(count)}
+          </span>
           {showSelectAll && (
             <Button variant="ghost" size={smallerButton[size]} onClick={onSelectAll}>
               {labels.selectAll(totalCount as number)}

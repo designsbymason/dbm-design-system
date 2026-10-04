@@ -99,3 +99,27 @@ write is a `labels` object and numbers go through `formatNumber` (ADR-0021). No 
   width; "Clear all" is rounded and as tall as the chips; every default shows in the Properties tables.
 - **Ideas not built**: ready-made checkbox-list/radio-list filter panels (wait for `MultiSelect`), a smaller badge at sm, and
   Safari/Firefox/touch checks (a pass for the whole `Toolbar` family before publishing).
+
+## Final review (2026-10-04) — six findings, all fixed
+
+Run before the user declares the component Finalized.
+
+1. **The bulk row's count moved its neighbours** (8px per digit: "Select all N" moved 0, 8 and 16px going from 9 to 10 to 100 selected).
+   Now tabular figures plus the width of the widest text it can show (`labels.selected` at `max(count, totalCount)`, drawn invisibly
+   after it from a `data-widest` attribute, so no second copy of the text is in the page).
+2. **The loading placeholder was 13.3px tall against 18px of text**, so the row jumped when the count arrived. The loading box now
+   holds a line's height (`min-block-size: 1lh`).
+3. **The placeholder vanished in forced colours** (`Skeleton` draws only a background). TableToolbar gives its own placeholder a
+   `GrayText` outline there; the forced-colours story asserts it. `Skeleton` itself has the same gap and is a Finalized atom: flagged,
+   not changed.
+4. **The filter button widened as its count grew** (1.4px at 10, 7px at "99+"). The badge's wrapper now reserves a two-digit badge's
+   width (its padding plus `2ch`, with tabular figures), so counts 1 to 99 are one width. "99+" is wider by design; a count appearing
+   at all (0 to 1) still widens the button, since reserving that would leave a gap with nothing in it.
+5. **A bar nested in another replaced its size with `md`.** A size left out now follows the outer bar's (`own ?? parent`), as
+   `ButtonGroup`'s does; tested.
+6. **The StrictMode test covered only `Selection`.** Now also `Summary` (including `loading`) and `ActiveFilters`: a first
+   appearance is silent, a change is announced, and loading says nothing.
+
+Real-browser story "Live text" measures 1, 9, 10 and 100 (and the loading height); each fix was undone on purpose to see its test
+fail (the reserved width, the badge width, the loading height, the forced-colours outline, the nested size, the loading hold-back).
+

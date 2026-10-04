@@ -749,6 +749,65 @@ describe("TableToolbar", () => {
       expect(await axe(container)).toHaveNoViolations();
     });
 
+    it("a bar nested in another follows its size unless it says its own", () => {
+      render(
+        <TableToolbar aria-label="Outer" size="xl">
+          <TableToolbar.Summary count={1} data-testid="outer" />
+          <TableToolbar aria-label="Inner">
+            <TableToolbar.Summary count={2} data-testid="inner" />
+          </TableToolbar>
+          <TableToolbar aria-label="Inner xs" size="xs">
+            <TableToolbar.Summary count={3} data-testid="inner-xs" />
+          </TableToolbar>
+        </TableToolbar>,
+      );
+      const sizeClass = (id: string) => screen.getByTestId(id).className;
+      expect(sizeClass("inner")).toBe(sizeClass("outer"));
+      expect(sizeClass("inner-xs")).not.toBe(sizeClass("outer"));
+    });
+
+    it("keeps the announcement rules inside StrictMode: a first appearance is silent, a change is announced, loading says nothing", async () => {
+      const { rerender } = render(
+        <StrictMode>
+          <TableToolbar aria-label="Bar">
+            <TableToolbar.Summary loading />
+            <TableToolbar.ActiveFilters items={[{ id: "a", label: "Open" }]} />
+          </TableToolbar>
+        </StrictMode>,
+      );
+      const statuses = () => screen.getAllByRole("status").map((node) => node.textContent);
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      });
+      expect(statuses()).toEqual(["", ""]);
+      rerender(
+        <StrictMode>
+          <TableToolbar aria-label="Bar">
+            <TableToolbar.Summary count={5} />
+            <TableToolbar.ActiveFilters items={[{ id: "a", label: "Open" }]} />
+          </TableToolbar>
+        </StrictMode>,
+      );
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      });
+      expect(statuses()).toEqual(["", ""]);
+      rerender(
+        <StrictMode>
+          <TableToolbar aria-label="Bar">
+            <TableToolbar.Summary count={7} />
+            <TableToolbar.ActiveFilters
+              items={[
+                { id: "a", label: "Open" },
+                { id: "b", label: "Jane" },
+              ]}
+            />
+          </TableToolbar>
+        </StrictMode>,
+      );
+      await waitFor(() => expect(statuses()).toEqual(["7 results", "2 filters applied"]));
+    });
+
     it("survives StrictMode", async () => {
       const user = userEvent.setup();
       render(

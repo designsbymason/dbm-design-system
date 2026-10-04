@@ -43,6 +43,11 @@
   align-items: center;
   block-size: 0;
   display: inline-flex;
+  font-size: var(--dbm-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  justify-content: center;
+  /* The width of a two-digit badge, so the button doesn't widen as the count goes from 9 to 10. */
+  min-inline-size: calc(var(--dbm-badge-padding-inline-xs) * 2 + 2ch);
   overflow: visible;
 }
 
@@ -107,6 +112,20 @@
   inline-size: 8ch;
 }
 
+/* The placeholder holds a line's height, so the row doesn't jump when the count arrives. */
+.summaryLoading {
+  align-items: center;
+  display: flex;
+  min-block-size: 1lh;
+}
+
+/* Forced colours replaces a background, so the placeholder would vanish; an outline in a system colour keeps it a visible bar. */
+@media (forced-colors: active) {
+  .summarySkeleton {
+    border: var(--dbm-border-width-1) solid GrayText;
+  }
+}
+
 /* --- Selection ---
    A row of its own, tinted so it reads as a state the table is in. A real border (not only a fill) so it is still bounded
    in forced colours, where a background is replaced with the page's and a border is kept. */
@@ -124,8 +143,21 @@
   padding-inline: var(--dbm-space-3);
 }
 
+/* Tabular figures, and the width of the widest text it can show (`data-widest`, drawn invisibly after it), so the controls beside
+   it don't move as the count goes from 9 to 10 to 100. */
 .selectionCount {
+  display: inline-flex;
+  flex-direction: column;
+  font-variant-numeric: tabular-nums;
   font-weight: var(--dbm-font-weight-semibold);
+}
+
+.selectionCount::after {
+  block-size: 0;
+  content: attr(data-widest);
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 /* The bulk actions take the room between the count and "Clear selection", so "Clear selection" sits at the far end. */
