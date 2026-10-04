@@ -23,6 +23,8 @@ export const propOrder = [
   "gap",
   "columnGap",
   "disabled",
+  "form",
+  "name",
   "id",
   "className",
   "style",
@@ -63,14 +65,14 @@ import { FieldGroup, FormField, Input } from "@dbm-design-system/components";
 </div>
 <PlaygroundControls
   of={FieldGroupStories.Playground}
-  exclude={["children", "id", "className", "style", "data-testid", "aria-describedby"]}
+  exclude={["children", "form", "name", "id", "className", "style", "data-testid", "aria-describedby"]}
   order={propOrder}
 />
 
 ## Properties
 
-`FieldGroup` also accepts any other native `<fieldset>` attribute beyond what's listed here (e.g. `form`,
-`name`) — passed straight through to the fieldset. A prop that sets `disabled` or `aria-describedby` is
+`FieldGroup` also accepts any other native `<fieldset>` attribute beyond what's listed here (e.g. `title`,
+`onFocus`) — passed straight through to the fieldset. A prop that sets `disabled` or `aria-describedby` is
 combined with what the group computes, never a replacement for it.
 
 <PropertiesTable of={FieldGroupStories} order={propOrder} />
@@ -173,7 +175,8 @@ In any other layout it is a plain wrapper. It also accepts any native `<div>` at
 - `disabled` is the native `<fieldset disabled>`: every native control inside becomes unfocusable and
   uneditable, and each `FormField` inside is marked disabled too, so its label and helper text dim with it.
 - A group has no `aria-required` or `aria-invalid` (a group role supports neither); an invalid group is shown
-  by its border or accent and by the announced error.
+  by its border or accent and by the announced error. The box-less variant's accent hangs in the gutter to the
+  start of the group, so an error that appears never moves the fields; leave about 20px of room there.
 - In forced-colours mode the filled variant keeps an edge, since a background fill is dropped there.
 
 </Callout>
@@ -211,8 +214,8 @@ In any other layout it is a plain wrapper. It also accepts any native `<div>` at
   <FormField label="Phone">{(field) => <Input {...field} type="tel" />}</FormField>
 </FieldGroup>
 
-{/* Native fieldset attributes pass straight through, such as form, to tie it to a form elsewhere on the page */}
-<FieldGroup legend="Preferences" form="settings-form" name="preferences">…</FieldGroup>
+{/* form ties a group to a form it is not inside, by that form's id */}
+<FieldGroup legend="Preferences" form="settings-form">…</FieldGroup>
 ```
 
 ## Design tokens used

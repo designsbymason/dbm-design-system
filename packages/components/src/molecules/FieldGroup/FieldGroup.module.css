@@ -32,16 +32,26 @@
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
-/* An invalid group: a border in the danger colour on the boxed variants, and on the box-less one the same
-   coloured left-edge accent CheckboxGroup and RadioGroup use. */
+/* An invalid group: a border in the danger colour on the boxed variants. The box-less one has no border to
+   recolour, so it draws a left-edge accent like CheckboxGroup's and RadioGroup's — but hung in the gutter beside
+   the group, where those two borrow padding from their own content. An error that appears (usually on submit)
+   must not move the fields, and a border and padding on the group itself shifted all of them 20px. */
 .outlined.invalid,
 .filled.invalid {
   border-color: var(--dbm-border-danger);
 }
 
 .ghost.invalid {
+  position: relative;
+}
+
+.ghost.invalid::before {
   border-inline-start: var(--dbm-border-width-4) solid var(--dbm-border-danger);
-  padding-inline-start: var(--dbm-space-4);
+  content: "";
+  inset-block: 0;
+  inset-inline-start: calc(-1 * (var(--dbm-space-4) + var(--dbm-border-width-4)));
+  pointer-events: none;
+  position: absolute;
 }
 
 /* Forced colours draws a transparent border as a solid line and drops a background colour, so the filled box

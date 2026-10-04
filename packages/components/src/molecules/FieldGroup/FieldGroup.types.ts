@@ -111,6 +111,16 @@ export interface FieldGroupProps
    * @default false
    */
   disabled?: boolean;
+  /**
+   * Associates the group with a `<form>` by that form's id, for a group rendered outside the form's own element.
+   * The native `<fieldset form>` attribute.
+   */
+  form?: string;
+  /**
+   * The native `<fieldset name>` attribute: a name for the group in the form's `elements` collection. It is not
+   * a field name, and nothing is submitted under it.
+   */
+  name?: string;
   /** Overrides the auto-generated base id used for the description's and error's own ids. */
   id?: string;
   /** Additional CSS classes for the `<fieldset>`. */

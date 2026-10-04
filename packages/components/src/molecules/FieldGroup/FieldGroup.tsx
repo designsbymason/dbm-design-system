@@ -114,6 +114,16 @@ const FieldGroupRoot = forwardRef<HTMLFieldSetElement, FieldGroupProps>(
         .filter(Boolean)
         .join(" ") || undefined;
 
+    const hasWarnedColumnsRef = useRef(false);
+    if (process.env.NODE_ENV !== "production") {
+      if (resolvedColumns !== undefined && gridColumns === null && !hasWarnedColumnsRef.current) {
+        hasWarnedColumnsRef.current = true;
+        console.warn(
+          "FieldGroup: `columns` must be a positive whole number (or a breakpoint map of them) — anything else is ignored and the group is laid out as if `columns` were not set.",
+        );
+      }
+    }
+
     const hasWarnedNoLegendRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (!hasLegend && !hasWarnedNoLegendRef.current) {

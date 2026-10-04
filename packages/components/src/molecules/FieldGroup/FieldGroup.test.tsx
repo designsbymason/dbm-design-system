@@ -1,10 +1,13 @@
 import { render, screen, within } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Input } from "../../atoms/Input";
 import { FormField } from "../FormField";
 import { FieldGroup } from "./FieldGroup";
+import fieldLabelStyles from "../../atoms/FieldLabel/FieldLabel.module.css";
+import type { FormFieldControlProps } from "../FormField";
 import styles from "./FieldGroup.module.css";
 
 const fields = (
@@ -245,6 +248,43 @@ describe("FieldGroup", () => {
       expect(screen.getByText("Inner").className).toContain(styles.sizeLg);
     });
 
+    it("hands the inner fields the outer group's disabled state through the context, not only the native fieldset", () => {
+      render(
+        <FieldGroup legend="Outer" disabled>
+          {inner({})}
+        </FieldGroup>,
+      );
+      // The FormField's own label dims: that comes from the context, where the native fieldset only disables the input.
+      expect(screen.getByText("Street").className).toContain(fieldLabelStyles.disabled);
+    });
+
+    it("hands the inner fields the outer size, and the inner group's own size wins over it", () => {
+      const sizes: Array<FormFieldControlProps["size"]> = [];
+      const field = (
+        <FormField label="Street">
+          {(f) => {
+            sizes.push(f.size);
+            return <Input {...f} />;
+          }}
+        </FormField>
+      );
+      const { rerender } = render(
+        <FieldGroup legend="Outer" size="lg">
+          <FieldGroup legend="Inner">{field}</FieldGroup>
+        </FieldGroup>,
+      );
+      expect(new Set(sizes)).toEqual(new Set(["lg"]));
+      sizes.length = 0;
+      rerender(
+        <FieldGroup legend="Outer" size="lg">
+          <FieldGroup legend="Inner" size="xs">
+            {field}
+          </FieldGroup>
+        </FieldGroup>,
+      );
+      expect(new Set(sizes)).toEqual(new Set(["xs"]));
+    });
+
     it("lets the inner group's own size win", () => {
       render(
         <FieldGroup legend="Outer" size="lg">
@@ -290,6 +330,39 @@ describe("FieldGroup", () => {
     render(<FieldGroup legend="">{fields}</FieldGroup>);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]?.[0]).toMatch(/FieldGroup: empty `legend`/);
+  });
+
+  it("warns once, and falls back to the plain layout, for columns that aren't a positive whole number", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <FieldGroup legend="Address" columns={1.5}>
+        {fields}
+      </FieldGroup>,
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toMatch(/`columns` must be a positive whole number/);
+    expect(bodyOf().className).not.toContain(styles.columns);
+  });
+
+  it("passes form and name to the fieldset", () => {
+    render(
+      <FieldGroup legend="Preferences" form="settings" name="prefs">
+        {fields}
+      </FieldGroup>,
+    );
+    expect(screen.getByRole("group")).toHaveAttribute("form", "settings");
+    expect(screen.getByRole("group")).toHaveAttribute("name", "prefs");
+  });
+
+  it("renders on the server without touching the browser, with every part in place", () => {
+    const html = renderToString(
+      <FieldGroup legend="Address" description="Hint" required columns={{ base: 1, md: 3 }} gap={{ base: 2, md: 6 }}>
+        <FieldGroup.Item span={2}>{fields}</FieldGroup.Item>
+      </FieldGroup>,
+    );
+    expect(html).toContain("<fieldset");
+    expect(html).toContain("<legend");
+    expect(html).toContain("Hint");
   });
 
   it("works inside StrictMode", () => {

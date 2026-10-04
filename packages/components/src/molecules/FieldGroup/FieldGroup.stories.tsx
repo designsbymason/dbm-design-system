@@ -66,7 +66,6 @@ const meta: Meta<typeof FieldGroup> = {
     },
     columns: {
       control: false,
-      options: [1, 2, 3, 4],
       description:
         "A number of equal columns, or a breakpoint map, for fields of different widths: wrap each in FieldGroup.Item and give it a span. Takes precedence over orientation.",
     },
@@ -85,6 +84,8 @@ const meta: Meta<typeof FieldGroup> = {
       description: "Disables the whole group: native controls through the fieldset, every FormField inside, and nested groups.",
       table: { defaultValue: { summary: "false" } },
     },
+    form: { control: false, description: "Associates the group with a <form> by that form's id, for a group rendered outside the form's own element." },
+    name: { control: false, description: "The native fieldset name: a name for the group in the form's elements collection. Nothing is submitted under it." },
     id: { control: false, description: "Overrides the auto-generated base id used for the description's and error's own ids." },
     className: { control: false, description: "Additional CSS classes for the fieldset." },
     style: { control: false, description: "Inline styles for the fieldset." },
@@ -204,7 +205,7 @@ export const Horizontal: Story = {
 };
 
 export const States: Story = {
-  parameters: { a11y: { test: "todo" }, docs: { source: { code: fieldGroupSnippets.states } } },
+  parameters: { docs: { source: { code: fieldGroupSnippets.states } } },
   argTypes: { legend: { control: false }, description: { control: false }, error: { control: false }, disabled: { control: false } },
   render: (args) => (
     <div style={column}>
@@ -438,8 +439,9 @@ export const RightToLeftInteraction: Story = {
     const legend = group.querySelector("legend")!.getBoundingClientRect();
     const box = group.getBoundingClientRect();
     // Accent border and the legend's text both sit at the right-hand edge.
-    await expect(getComputedStyle(group).borderRightWidth).not.toBe("0px");
-    await expect(getComputedStyle(group).borderLeftWidth).toBe("0px");
+    const accent = getComputedStyle(group, "::before");
+    await expect(accent.borderRightWidth).not.toBe("0px");
+    await expect(accent.borderLeftWidth).toBe("0px");
     await expect(box.right - legend.right).toBeLessThan(box.width / 2);
   },
 };
@@ -555,5 +557,76 @@ export const ErrorReplacesDescriptionInteraction: Story = {
     await expect(canvas.queryByText("Only for orders")).toBeNull();
     const group = canvas.getByRole("group", { name: "Contact" });
     await expect(group).toHaveAccessibleDescription("Give an email or a phone number");
+  },
+};
+
+export const NamesAndTabOrderInteraction: Story = {
+  name: "The group's name and description are computed in the browser, and Tab walks the fields in order — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div>
+      <button type="button">Before</button>
+      <FieldGroup legend="Shipping address" description="Where it goes" required>
+        <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+        <FormField label="City">{(field) => <Input {...field} />}</FormField>
+      </FieldGroup>
+      <FieldGroup legend="Hidden name" hideLegend>
+        <FormField label="Keyword">{(field) => <Input {...field} />}</FormField>
+      </FieldGroup>
+      <button type="button">After</button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The required asterisk is decoration: the name is the legend's text alone.
+    const shipping = canvas.getByRole("group", { name: "Shipping address" });
+    await expect(shipping).toHaveAccessibleDescription("Where it goes");
+    // A hidden legend still names its group.
+    await expect(canvas.getByRole("group", { name: "Hidden name" })).toBeInTheDocument();
+    const order = ["Before", "Street", "City", "Keyword", "After"];
+    const focused = async () => {
+      const element = document.activeElement as HTMLElement;
+      const labelId = element.getAttribute("aria-labelledby");
+      return labelId ? document.getElementById(labelId)?.textContent : element.textContent;
+    };
+    canvas.getByRole("button", { name: "Before" }).focus();
+    for (const expected of order.slice(1)) {
+      await userEvent.tab();
+      await expect(await focused()).toBe(expected);
+    }
+  },
+};
+
+export const ErrorDoesNotMoveFieldsInteraction: Story = {
+  name: "A group that turns invalid keeps its fields where they were, and the accent hangs outside — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={{ paddingInlineStart: "var(--dbm-space-8)", ...column }}>
+      {(["ghost", "outlined", "filled"] as const).map((variant) => (
+        <div key={variant} style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+          <FieldGroup legend="Valid" variant={variant} data-testid={`${variant}-valid`}>{two}</FieldGroup>
+          <FieldGroup legend="Invalid" variant={variant} error="Required" data-testid={`${variant}-invalid`}>{two}</FieldGroup>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const variant of ["ghost", "outlined", "filled"]) {
+      const valid = canvas.getByTestId(`${variant}-valid`);
+      const invalid = canvas.getByTestId(`${variant}-invalid`);
+      const left = (group: HTMLElement) => group.querySelector("input")!.getBoundingClientRect().left;
+      await expect(left(invalid)).toBeCloseTo(left(valid), 0);
+      await expect(invalid.getBoundingClientRect().left).toBeCloseTo(valid.getBoundingClientRect().left, 0);
+    }
+    // The box-less variant's accent is drawn in the gutter, to the start of the group, in the danger colour.
+    const invalid = canvas.getByTestId("ghost-invalid");
+    const accent = getComputedStyle(invalid, "::before");
+    await expect(accent.position).toBe("absolute");
+    await expect(parseFloat(accent.borderInlineStartWidth)).toBeGreaterThan(0);
+    await expect(parseFloat(accent.insetInlineStart)).toBeLessThan(0);
+    await expect(accent.borderInlineStartColor).toBe(getComputedStyle(canvas.getByTestId("outlined-invalid")).borderTopColor);
   },
 };
