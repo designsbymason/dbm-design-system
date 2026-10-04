@@ -16,16 +16,15 @@ const meta: Meta<typeof TableToolbar.Summary> = {
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
-      description: "The text size, on the shared scale. Defaults to the bar's size.",
-      table: { defaultValue: { summary: "bar's size" } },
+      description: "The text size, on the shared scale. Defaults to the bar's size."
     },
     announce: {
       control: "boolean",
       description: "Announces a change in the count to screen readers, never the first count to appear.",
       table: { defaultValue: { summary: "true" } },
     },
-    labels: { control: false, description: "Replaces the words this part writes, per key: results (takes the plain count) and resultsOf (takes the count and the total).", table: { defaultValue: { summary: "English words" } } },
-    formatNumber: { control: false, description: "Writes the numbers in a locale's own numerals. Plain String by default; also used by the default results.", table: { defaultValue: { summary: "String" } } },
+    labels: { control: false, description: "Replaces the words this part writes, per key: results (takes the plain count) and resultsOf (takes the count and the total)." },
+    formatNumber: { control: false, description: "Writes the numbers in a locale's own numerals. Plain String by default; also used by the default results." },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },

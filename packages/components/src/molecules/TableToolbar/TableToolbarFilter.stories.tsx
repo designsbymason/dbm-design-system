@@ -36,8 +36,7 @@ const meta: Meta<typeof TableToolbar.Filter> = {
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
-      description: "The button's size. Inside a Toolbar it follows the toolbar's size when left out; on its own it is the bar's size.",
-      table: { defaultValue: { summary: "bar's size" } },
+      description: "The button's size. Inside a Toolbar it follows the toolbar's size when left out; on its own it is the bar's size."
     },
     icon: { control: false, description: "An icon before the label, a component from @dbm-design-system/icons (a funnel for \"Filter\")." },
     align: {
@@ -46,8 +45,8 @@ const meta: Meta<typeof TableToolbar.Filter> = {
       description: "Which edge of the button the panel lines up with.",
       table: { defaultValue: { summary: "start" } },
     },
-    labels: { control: false, description: "Replaces the words this part writes, per key: clear, activeCount (takes the plain count) and panel (takes the label).", table: { defaultValue: { summary: "English words" } } },
-    formatNumber: { control: false, description: "Writes the count in a locale's own numerals. Plain String by default; also used by the default activeCount.", table: { defaultValue: { summary: "String" } } },
+    labels: { control: false, description: "Replaces the words this part writes, per key: clear, activeCount (takes the plain count) and panel (takes the label)." },
+    formatNumber: { control: false, description: "Writes the count in a locale's own numerals. Plain String by default; also used by the default activeCount." },
     disabled: { control: "boolean", description: "Disables the button, so the panel can't be opened.", table: { defaultValue: { summary: "false" } } },
     id: { control: false, description: "Standard DOM id, on the button." },
     className: { control: false, description: "Additional CSS classes for customization, on the button." },

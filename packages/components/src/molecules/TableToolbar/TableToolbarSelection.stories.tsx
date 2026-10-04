@@ -24,8 +24,7 @@ const meta: Meta<typeof TableToolbar.Selection> = {
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
-      description: "The text and button size, on the shared scale. Defaults to the bar's size.",
-      table: { defaultValue: { summary: "bar's size" } },
+      description: "The text and button size, on the shared scale. Defaults to the bar's size."
     },
     announce: {
       control: "boolean",
@@ -36,9 +35,8 @@ const meta: Meta<typeof TableToolbar.Selection> = {
       control: false,
       description:
         "Replaces the words this part writes, per key: group, selected (takes the plain count), cleared, clear and selectAll (takes the plain total).",
-      table: { defaultValue: { summary: "English words" } },
     },
-    formatNumber: { control: false, description: "Writes the counts in a locale's own numerals. Plain String by default; also used by the default labels.", table: { defaultValue: { summary: "String" } } },
+    formatNumber: { control: false, description: "Writes the counts in a locale's own numerals. Plain String by default; also used by the default labels." },
     id: { control: false, description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
