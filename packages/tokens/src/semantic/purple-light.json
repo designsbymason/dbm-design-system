@@ -157,13 +157,13 @@
     },
     "highlight-subtle": {
       "$type": "color",
-      "$value": "{color.yellow.100}",
-      "$description": "Light highlight tint, the marker behind highlighted text and the fill of a subtle highlight badge. Light yellow.100: text.highlight (yellow.800) on it is 6.13:1. icon.highlight on it is only 2.87:1, so an icon on this fill takes text.highlight's step instead."
+      "$value": "{color.yellow.50}",
+      "$description": "Light highlight tint, the marker behind highlighted text and the fill of a subtle highlight badge. Light yellow.50: text.highlight (yellow.800) on it is 6.64:1, and icon.highlight (yellow.600) is 3.11:1, over the 3:1 non-text floor. Sits at about 1.04:1 against bg.surface, a deliberately pale tint."
     },
     "highlight-subtle-hover": {
       "$type": "color",
-      "$value": "{color.yellow.200}",
-      "$description": "Hover state of bg.highlight-subtle. Light yellow.200: text.highlight (yellow.800) on it is 5.21:1."
+      "$value": "{color.yellow.100}",
+      "$description": "Hover state of bg.highlight-subtle. Light yellow.100: text.highlight (yellow.800) on it is 6.13:1. icon.highlight on it is only 2.87:1, so an icon on this fill takes text.highlight's step instead."
     },
     "on-highlight": {
       "$type": "color",
@@ -307,7 +307,7 @@
     "highlight": {
       "$type": "color",
       "$value": "{color.yellow.800}",
-      "$description": "New token family (2026-10-04), the general highlight and accent colour on the new yellow scale, shared across both brands and not a status tone. Light yellow.800 as literal text: 6.89:1 vs bg.surface, 6.13:1 on bg.highlight-subtle. yellow.700 would be 4.67:1 on the surface but only 4.16:1 on the subtle fill, so it is not used. It is 6.06:1 on bg.canvas."
+      "$description": "New token family (2026-10-04), the general highlight and accent colour on the new yellow scale, shared across both brands and not a status tone. Light yellow.800 as literal text: 6.89:1 vs bg.surface, 6.64:1 on bg.highlight-subtle and 6.13:1 on bg.highlight-subtle-hover. yellow.700 would be 4.67:1 on the surface but 4.50:1 on the subtle fill and only 4.16:1 on its hover, so it is not used. It is 6.06:1 on bg.canvas."
     },
     "syntax-keyword": {
       "$type": "color",
@@ -471,8 +471,8 @@
     },
     "highlight-subtle": {
       "$type": "color",
-      "$value": "{color.yellow.200}",
-      "$description": "Decorative highlight-tinted ring, around bg.highlight-subtle. Light yellow.200, about 1.2 to 1.3:1, a deliberate exception like the other subtle borders."
+      "$value": "{color.yellow.100}",
+      "$description": "Decorative highlight-tinted ring, around bg.highlight-subtle. Light yellow.100, the same step as bg.highlight-subtle-hover, as the other tones' subtle borders match their hover fills, about 1.1:1 against bg.surface, a deliberate exception like the other subtle borders."
     },
     "on-highlight": {
       "$type": "color",
@@ -552,7 +552,7 @@
     "highlight": {
       "$type": "color",
       "$value": "{color.yellow.600}",
-      "$description": "Standalone highlight-tone icon. Light yellow.600, the scale's anchor: 3.23:1 vs bg.surface (non-text floor 3:1), 3.09:1 on bg.neutral-subtle, but 2.84:1 on bg.canvas and 2.87:1 on bg.highlight-subtle, where text.highlight's step should be used instead."
+      "$description": "Standalone highlight-tone icon. Light yellow.600, the scale's anchor: 3.23:1 vs bg.surface (non-text floor 3:1), 3.09:1 on bg.neutral-subtle, 3.11:1 on bg.highlight-subtle, but 2.84:1 on bg.canvas and 2.87:1 on bg.highlight-subtle-hover, where text.highlight's step should be used instead."
     },
     "on-highlight": {
       "$type": "color",
