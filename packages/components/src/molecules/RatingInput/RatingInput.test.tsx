@@ -382,6 +382,136 @@ describe("RatingInput", () => {
     });
   });
 
+  describe("review summary", () => {
+    const valueText = (container: HTMLElement) => container.querySelector("[class*='value']:not([class*='valueName'])") as HTMLElement | null;
+    const countText = (container: HTMLElement) => container.querySelector("[class*='count']") as HTMLElement | null;
+
+    it("writes the value before the icons with one decimal, hidden from assistive technology", () => {
+      const { container } = render(<RatingInput aria-label="Rating" showValue defaultValue={3} />);
+      const value = valueText(container) as HTMLElement;
+      expect(value).toHaveTextContent("3.0");
+      expect(value).toHaveAttribute("aria-hidden", "true");
+      expect(value.nextElementSibling).toBe(screen.getByRole("radiogroup"));
+    });
+
+    it("writes a read-only value exactly, and a rating that has none as 0.0", () => {
+      const { container, rerender } = render(<RatingInput aria-label="Rating" readOnly showValue value={4.2} />);
+      expect(valueText(container)).toHaveTextContent("4.2");
+      rerender(<RatingInput aria-label="Rating" readOnly showValue value={4.25} />);
+      expect(valueText(container)).toHaveTextContent("4.3");
+      rerender(<RatingInput aria-label="Rating" readOnly showValue value={0} />);
+      expect(valueText(container)).toHaveTextContent("0.0");
+    });
+
+    it("follows the value under the pointer on a rating that can be changed", () => {
+      const { container } = render(<RatingInput aria-label="Rating" showValue defaultValue={2} />);
+      fireEvent.pointerEnter(radios()[3] as HTMLElement, { pointerType: "mouse" });
+      expect(valueText(container)).toHaveTextContent("4.0");
+      fireEvent.pointerLeave(screen.getByRole("radiogroup"));
+      expect(valueText(container)).toHaveTextContent("2.0");
+    });
+
+    it("writes the number through formatValue, with plain numbers", () => {
+      const formatValue = vi.fn((value: number) => `${value.toFixed(2)} stars`);
+      const { container } = render(<RatingInput aria-label="Rating" readOnly showValue value={4.2} formatValue={formatValue} />);
+      expect(valueText(container)).toHaveTextContent("4.20 stars");
+      expect(formatValue).toHaveBeenCalledWith(4.2);
+    });
+
+    it("keeps the space for the widest value, so a changing value never moves the icons", () => {
+      const { container, rerender } = render(<RatingInput aria-label="Rating" showValue />);
+      expect(valueText(container)).toHaveStyle({ minInlineSize: "3ch" });
+      rerender(<RatingInput aria-label="Rating" showValue max={10} />);
+      expect(valueText(container)).toHaveStyle({ minInlineSize: "4ch" });
+    });
+
+    it("draws no value unless asked", () => {
+      const { container } = render(<RatingInput aria-label="Rating" defaultValue={3} />);
+      expect(valueText(container)).toBeNull();
+    });
+
+    it("writes the count after the icons as (124), hidden from assistive technology", () => {
+      const { container } = render(<RatingInput aria-label="Rating" readOnly value={4.2} count={124} />);
+      const count = countText(container) as HTMLElement;
+      expect(count).toHaveTextContent("(124)");
+      expect(count).toHaveAttribute("aria-hidden", "true");
+      expect(screen.getByRole("img").parentElement?.nextElementSibling).toBe(count);
+    });
+
+    it("adds the count, in words, to the rating's text alternative", () => {
+      const { rerender } = render(<RatingInput aria-label="Average rating" readOnly value={4.2} count={124} />);
+      expect(screen.getByRole("img", { name: "Average rating, Rated 4.2 out of 5, 124 reviews" })).toBeInTheDocument();
+      rerender(<RatingInput aria-label="Average rating" readOnly value={4} count={1} />);
+      expect(screen.getByRole("img", { name: "Average rating, Rated 4 out of 5, 1 review" })).toBeInTheDocument();
+      rerender(<RatingInput readOnly value={0} count={0} />);
+      expect(screen.getByRole("img", { name: "Not rated, 0 reviews" })).toBeInTheDocument();
+    });
+
+    it("writes the count through labels and formatNumber, keeping a default when a label is undefined", () => {
+      const { container, rerender } = render(
+        <RatingInput aria-label="Note" readOnly value={4} count={1240} formatNumber={(n) => `#${n}`} />,
+      );
+      expect(countText(container)).toHaveTextContent("(#1240)");
+      rerender(
+        <RatingInput
+          aria-label="Note"
+          readOnly
+          value={4}
+          count={124}
+          labels={{ count: (n) => `${n} avis`, countText: (n) => `${n} avis au total` }}
+        />,
+      );
+      expect(countText(container)).toHaveTextContent("124 avis");
+      expect(screen.getByRole("img")).toHaveAccessibleName("Note, Rated 4 out of 5, 124 avis au total");
+      rerender(<RatingInput aria-label="Note" readOnly value={4} count={124} labels={{ count: undefined }} />);
+      expect(countText(container)).toHaveTextContent("(124)");
+    });
+
+    it("ignores a count that is not a number", () => {
+      const { container } = render(<RatingInput aria-label="Rating" readOnly value={4} count={Number.NaN} />);
+      expect(countText(container)).toBeNull();
+      expect(screen.getByRole("img")).toHaveAccessibleName("Rating, Rated 4 out of 5");
+    });
+
+    it("puts a suffix on the same row after the count, as a real control that keeps its own name and tab stop", async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <>
+          <button type="button">before</button>
+          <RatingInput aria-label="Rating" readOnly value={4.2} count={124} suffix={<a href="#reviews">Read reviews</a>} />
+          <button type="button">after</button>
+        </>,
+      );
+      const link = screen.getByRole("link", { name: "Read reviews" });
+      expect(countText(container)?.nextElementSibling).toBe(link.parentElement);
+      expect(link.closest("[aria-hidden='true']")).toBeNull();
+      await user.click(screen.getByRole("button", { name: "before" }));
+      await user.tab();
+      expect(link).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
+    });
+
+    it("ignores count and suffix, with a development warning, on a rating that can be changed", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { container } = render(<RatingInput aria-label="Rating" count={5} suffix={<a href="#r">Read</a>} />);
+      expect(countText(container)).toBeNull();
+      expect(screen.queryByRole("link")).toBeNull();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`count` and `suffix` are for a read-only summary"));
+      warn.mockRestore();
+    });
+
+    it("has no axe violations as a whole summary, or beside an interactive rating", async () => {
+      const { container } = render(
+        <>
+          <RatingInput aria-label="Average rating" readOnly value={4.2} showValue count={124} suffix={<a href="#reviews">Read reviews</a>} />
+          <RatingInput aria-label="Your rating" showValue defaultValue={3} />
+        </>,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe("value names", () => {
     const names = ["Poor", "Fair", "Good", "Great", "Excellent"];
 

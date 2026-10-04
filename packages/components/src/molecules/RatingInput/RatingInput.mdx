@@ -4,6 +4,7 @@ import { FieldHelperText } from "../../atoms/FieldHelperText";
 import { FieldLabel } from "../../atoms/FieldLabel";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { FormField } from "../FormField";
+import { Link } from "../../atoms/Link";
 import { Radio } from "../../atoms/Radio";
 import { RadioGroup } from "../RadioGroup";
 import { Slider } from "../Slider";
@@ -24,9 +25,13 @@ export const propOrder = [
   "hasError",
   "disabled",
   "required",
+  "showValue",
   "valueNames",
   "showValueName",
+  "count",
+  "suffix",
   "name",
+  "formatValue",
   "formatNumber",
   "labels",
   "aria-label",
@@ -70,6 +75,8 @@ import { RatingInput } from "@dbm-design-system/components";
     "value",
     "onValueChange",
     "valueNames",
+    "suffix",
+    "formatValue",
     "formatNumber",
     "labels",
     "aria-labelledby",
@@ -107,6 +114,14 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 ### Read-only average
 
 <Canvas of={RatingInputStories.ReadOnly} />
+
+### With the value
+
+<Canvas of={RatingInputStories.ShowValue} />
+
+### Review summary
+
+<Canvas of={RatingInputStories.ReviewSummary} />
 
 ### With the value named
 
@@ -169,6 +184,8 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 - Show a rating's number or name as text somewhere near it as well when it matters; the icons alone are a quick,
   approximate read.
 - A required rating that is missing should say so with `hasError` and an error message, not only by colour.
+- For a review summary, set `readOnly`, `showValue`, `count` and a `suffix` link: `4.2 ★★★★☆ (124) Read reviews`. The
+  count and the link are for a summary; they are ignored on a rating a person can change.
 - A `readOnly` rating is not a form control: it has no tab stop. It still submits its value when it has a `name`.
 - The scale reads left to right whatever the page's direction, the way a number does.
 
@@ -188,7 +205,9 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
   chooses. The stars it would add are drawn pale with a tone-coloured outline, apart from the solid ones already
   chosen, and in forced colours as outlines.
 - `readOnly` is one image whose text alternative says the value ("Rated 4.3 out of 5", or "Not rated"), not a group
-  of disabled radios.
+  of disabled radios. With `count` it also says how many ratings are behind it ("Rated 4.2 out of 5, 124 reviews").
+- The number from `showValue` and the count are drawn for the eye and hidden from assistive technology, so nothing is
+  read twice; the `suffix` is a real control and is read and focused as itself, after the rating.
 - `hasError` sets `aria-invalid`; `required` sets `aria-required` and a real form constraint.
 - The filled and outline icons differ in shape, so what is chosen does not depend on colour, and both survive
   Windows high-contrast mode, as does the focus ring.
@@ -228,6 +247,16 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
   <RatingInput aria-label="Rating" name="rating" required />
 </form>
 
+{/* A review summary: the number, the icons, the count and a link, on one row */}
+<RatingInput
+  aria-label="Average rating"
+  readOnly
+  value={4.2}
+  showValue
+  count={124}
+  suffix={<Link href="#reviews">Read reviews</Link>}
+/>
+
 {/* With a native attribute on the group */}
 <RatingInput aria-label="Rating" title="Your rating" />
 
@@ -253,6 +282,9 @@ The icons are drawn by `Icon`, which lists its own colour tokens (`icon.highligh
 <TokenRow token="border.info" usage="the preview outline at the `info` tone" />
 <TokenRow token="bg.danger-subtle" usage="the preview fill at the `danger` tone" />
 <TokenRow token="border.danger" usage="the preview outline at the `danger` tone" />
+<TokenRow token="space.2" usage="the gap between the number and the icons" />
+<TokenRow token="text.primary" usage="the number written by showValue" />
+<TokenRow token="font-weight.medium" usage="the number written by showValue" />
 <TokenRow token="border.focus" usage="the focus ring around the icon that has keyboard focus" />
 <TokenRow token="border-width.2" usage="the focus ring's width" />
 <TokenRow token="radius.sm" usage="the focus ring's corners, the standard focus-ring radius" />
@@ -294,6 +326,13 @@ The icons are drawn by `Icon`, which lists its own colour tokens (`icon.highligh
   <RadioGroup aria-label="Example" defaultValue="a">
     <Radio value="a">A</Radio>
   </RadioGroup>
+</RelatedCard>
+<RelatedCard
+  name="Link"
+  description="The control to pass as suffix, for a Read reviews link that matches the row's size"
+  href="/?path=/docs/atoms-typography-link--docs"
+>
+  <Link href="#reviews">Read reviews</Link>
 </RelatedCard>
 <RelatedCard
   name="FieldLabel"

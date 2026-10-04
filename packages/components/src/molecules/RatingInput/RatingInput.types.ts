@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { InputSize } from "../../atoms/Input";
 
@@ -16,6 +16,10 @@ export interface RatingInputLabels {
   valueText: (value: number, max: number) => string;
   /** The text alternative of a read-only rating that has no value. @default "Not rated" */
   notRated: string;
+  /** The count written after the icons, from `count`. @default (count) => "(124)" */
+  count: (count: number) => string;
+  /** The count in words, added to a read-only rating's text alternative. @default (count) => "124 reviews" */
+  countText: (count: number) => string;
 }
 
 export interface RatingInputProps
@@ -91,6 +95,14 @@ export interface RatingInputProps
    */
   required?: boolean;
   /**
+   * Writes the rating as a number before the icons (`4.2`), on the same row: the chosen value, or the one under the
+   * pointer while one is being previewed. One decimal by default (`4.0`), through `formatValue`; the space for the
+   * widest value is kept, so nothing moves as it changes. Hidden from assistive technology, since the rating's own
+   * text alternative already says it.
+   * @default false
+   */
+  showValue?: boolean;
+  /**
    * A name for each whole value, from `1` to `max` (`["Poor", "Fair", "Good", "Great", "Excellent"]`). It is
    * added to that choice's accessible name and, with `showValueName`, written beside the icons.
    */
@@ -102,9 +114,25 @@ export interface RatingInputProps
    */
   showValueName?: boolean;
   /**
+   * How many ratings the value is made of, written after the icons as `(124)` (change the wording with
+   * `labels.count`) and added to the text alternative in words ("124 reviews"). For a read-only summary: it is
+   * ignored, with a development warning, on a rating a person can change.
+   */
+  count?: number;
+  /**
+   * Anything to put after the icons and the count on the same row, such as a "Read reviews" `Link` or `Button`. For a
+   * read-only summary, like `count`. It is a real, separate control: it keeps its own role, focus and name.
+   */
+  suffix?: ReactNode;
+  /**
    * The name the value is submitted under in a surrounding `<form>`, as a number.
    */
   name?: string;
+  /**
+   * Writes the number `showValue` draws. Receives the plain number, already between 0 and `max`.
+   * @default (value) => value.toFixed(1)
+   */
+  formatValue?: (value: number) => string;
   /**
    * Turns a number into the text shown or announced, for a locale's own numerals. Used by the default labels.
    * Callbacks and the submitted value keep plain numbers.

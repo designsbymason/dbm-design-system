@@ -9,6 +9,7 @@ import styles from "./RatingInput.module.css";
 import type { RatingInputLabels, RatingInputProps, RatingInputTone } from "./RatingInput.types";
 
 const defaultMax = 5;
+const defaultFormatValue = (value: number) => value.toFixed(1);
 const maxIcons = 10;
 
 const sizeClass: Record<InputSize, string | undefined> = {
@@ -55,7 +56,8 @@ function resolveMax(max: number): number {
  * single tab stop, form submission under `name` and `required` validation are the browser's own, and a screen reader
  * hears "3 out of 5". The value is a number, `0` for no rating. Icons light up under the pointer before a choice is
  * made (the stars it would add are drawn pale, with a tone-coloured outline), `clearable` lets a rating be taken back, and `readOnly` shows any value exactly (4.3 fills a third of the
- * fifth icon) as one image with a text alternative. `ref` forwards to the element that carries the role;
+ * fifth icon) as one image with a text alternative, to which `count` adds the number of ratings behind it. `showValue`
+ * writes the number before the icons, `count` writes `(124)` after them, and `suffix` puts a "Read reviews" link on the same row. `ref` forwards to the element that carries the role;
  * `className` and `style` go on the outermost box. It always reads left to right.
  *
  * @example
@@ -83,8 +85,12 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       disabled = false,
       required = false,
       name,
+      showValue = false,
       valueNames,
       showValueName = false,
+      count,
+      suffix,
+      formatValue = defaultFormatValue,
       formatNumber = String,
       labels: labelOverrides,
       className,
@@ -107,6 +113,8 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       itemLabel: (current, total) => `${formatNumber(current)} out of ${formatNumber(total)}`,
       valueText: (current, total) => `Rated ${formatNumber(current)} out of ${formatNumber(total)}`,
       notRated: "Not rated",
+      count: (total) => `(${formatNumber(total)})`,
+      countText: (total) => `${formatNumber(total)} ${total === 1 ? "review" : "reviews"}`,
     };
     const labels = mergeDefined(defaultLabels, labelOverrides);
 
@@ -121,7 +129,10 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       if (showValueName && !valueNames) {
         console.warn("RatingInput: `showValueName` has no text to show without `valueNames`.");
       }
-    }, [precision, value, defaultValue, showValueName, valueNames]);
+      if (!readOnly && (count !== undefined || suffix !== undefined)) {
+        console.warn("RatingInput: `count` and `suffix` are for a read-only summary; they are ignored on a rating a person can change.");
+      }
+    }, [precision, value, defaultValue, showValueName, valueNames, readOnly, count, suffix]);
 
     const isControlled = value !== undefined;
     const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
@@ -154,6 +165,8 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       }
     };
 
+    const hasCount = readOnly && typeof count === "number" && Number.isFinite(count) && count >= 0;
+    const countText = hasCount ? labels.countText(count) : undefined;
     const nameFor = (whole: number) => valueNames?.[whole - 1];
     // A half step shows the name of the whole value below it.
     const shownWhole = Math.floor(shown);
@@ -223,13 +236,9 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
         id={id}
         className={styles.group}
         role="img"
-        aria-label={
-          ariaLabel
-            ? `${ariaLabel}, ${current > 0 ? labels.valueText(current, max) : labels.notRated}`
-            : current > 0
-              ? labels.valueText(current, max)
-              : labels.notRated
-        }
+        aria-label={[ariaLabel, current > 0 ? labels.valueText(current, max) : labels.notRated, countText]
+          .filter((part): part is string => Boolean(part))
+          .join(", ")}
         aria-labelledby={ariaLabelledBy ? `${ariaLabelledBy} ${id ?? `${uid}-self`}` : undefined}
         aria-describedby={ariaDescribedBy}
       >
@@ -267,7 +276,15 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
         // The scale reads left to right whatever the page's direction, the way a number does.
         dir="ltr"
       >
-        {group}
+        <span className={styles.main}>
+          {showValue ? (
+            // The space for the widest value is kept, so a value that changes never moves the icons.
+            <span className={styles.value} aria-hidden="true" style={{ minInlineSize: `${formatValue(max).length}ch` }}>
+              {formatValue(shown)}
+            </span>
+          ) : null}
+          {group}
+        </span>
         {readOnly && name ? <input type="hidden" name={name} value={current} /> : null}
         {showValueName && valueNames && valueNames.length > 0 ? (
           <span className={styles.valueName} aria-hidden="true">
@@ -278,6 +295,12 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
             ))}
           </span>
         ) : null}
+        {hasCount ? (
+          <span className={styles.count} aria-hidden="true">
+            {labels.count(count)}
+          </span>
+        ) : null}
+        {readOnly && suffix !== undefined && suffix !== null ? <span className={styles.suffix}>{suffix}</span> : null}
       </div>
     );
   },

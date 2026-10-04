@@ -19,6 +19,19 @@ export const ratingInputSnippets = {
   readOnly: `{/* An average: any value from 0 to max is drawn exactly. */}
 <RatingInput aria-label="Average rating" readOnly value={4.3} />`,
 
+  showValue: `{/* showValue writes the number before the icons, to one decimal; formatValue changes how. */}
+<RatingInput aria-label="Rating" showValue defaultValue={3.5} precision={0.5} />`,
+
+  reviewSummary: `{/* A review summary: the number before the icons, the count after them, and a link on the same row. */}
+<RatingInput
+  aria-label="Average rating"
+  readOnly
+  value={4.2}
+  showValue
+  count={124}
+  suffix={<Link href="#reviews">Read reviews</Link>}
+/>`,
+
   valueNames: `<RatingInput
   aria-label="Rating"
   valueNames={["Poor", "Fair", "Good", "Great", "Excellent"]}
@@ -54,6 +67,8 @@ export interface RatingInputPlaygroundSnippetArgs {
   disabled?: boolean;
   required?: boolean;
   showValueName?: boolean;
+  showValue?: boolean;
+  count?: number;
   name?: string;
   "aria-label"?: string;
 }
@@ -76,6 +91,8 @@ export function ratingInputPlaygroundSnippet(args: RatingInputPlaygroundSnippetA
   if (args.defaultValue) attributes.push(`defaultValue={${args.defaultValue}}`);
   if (args.readOnly) attributes.push("readOnly");
   if (args.clearable && !args.readOnly) attributes.push("clearable");
+  if (args.showValue) attributes.push("showValue");
+  if (args.readOnly && args.count !== undefined) attributes.push(`count={${args.count}}`);
   if (args.showValueName) attributes.push('valueNames={["Poor", "Fair", "Good", "Great", "Excellent"]} showValueName');
   if (args.hasError) attributes.push("hasError");
   if (args.required) attributes.push("required");

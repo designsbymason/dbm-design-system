@@ -3,6 +3,7 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
+import { Link } from "../../atoms/Link";
 import { send } from "../CodeBlock/browserProtocol";
 import { FormField } from "../FormField";
 import { RatingInput } from "./RatingInput";
@@ -90,6 +91,12 @@ const meta: Meta<typeof RatingInput> = {
       description: "Makes a rating required for form validation.",
       table: { defaultValue: { summary: "false" } },
     },
+    showValue: {
+      control: "boolean",
+      description:
+        "Writes the rating as a number before the icons (4.2), on the same row: the chosen value, or the one under the pointer. One decimal by default; the space for the widest value is kept.",
+      table: { defaultValue: { summary: "false" } },
+    },
     valueNames: {
       control: false,
       description:
@@ -101,9 +108,24 @@ const meta: Meta<typeof RatingInput> = {
         "Writes the name of the value under the pointer, or of the chosen one, beside the icons. Needs valueNames. The space for the longest name is kept.",
       table: { defaultValue: { summary: "false" } },
     },
+    count: {
+      control: { type: "number", min: 0 },
+      description:
+        'How many ratings the value is made of, written after the icons as (124) and added to the text alternative in words ("124 reviews"). For a read-only summary: ignored, with a development warning, on a rating a person can change.',
+    },
+    suffix: {
+      control: false,
+      description:
+        'Anything to put after the icons and the count on the same row, such as a "Read reviews" Link or Button. For a read-only summary, like count. A real control that keeps its own role, focus and name.',
+    },
     name: {
       control: "text",
       description: "The name the value is submitted under in a surrounding form, as a number.",
+    },
+    formatValue: {
+      control: false,
+      description: "Writes the number showValue draws. Receives the plain number, already between 0 and max.",
+      table: { defaultValue: { summary: "(value) => value.toFixed(1)" } },
     },
     formatNumber: {
       control: false,
@@ -113,7 +135,7 @@ const meta: Meta<typeof RatingInput> = {
     labels: {
       control: false,
       description:
-        'Text this component writes itself, for translation: `{ itemLabel, valueText, notRated }`. Each function receives the plain numbers. Defaults: "3 out of 5", "Rated 4.3 out of 5", "Not rated".',
+        'Text this component writes itself, for translation: `{ itemLabel, valueText, notRated, count, countText }`. Each function receives the plain numbers. Defaults: "3 out of 5", "Rated 4.3 out of 5", "Not rated", "(124)", "124 reviews".',
     },
     "aria-label": {
       control: "text",
@@ -157,7 +179,9 @@ const meta: Meta<typeof RatingInput> = {
     hasError: false,
     disabled: false,
     required: false,
+    showValue: false,
     showValueName: false,
+    count: 124,
     valueNames,
     name: "",
     "aria-label": "Rating",
@@ -178,6 +202,8 @@ const builtSnippet = {
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
   parameters: { docs: { source: builtSnippet } },
+  // A count is for a read-only summary, so it is only passed on while `readOnly` is on.
+  render: ({ count, ...args }) => <RatingInput {...args} count={args.readOnly ? count : undefined} />,
   // "Star" is the default, not a value to choose, so it is a Playground-only choice that leaves the prop out.
   argTypes: { icon: { control: "select", options: ["Star", ...Object.keys(iconChoices)], mapping: { Star: undefined, ...iconChoices } } },
   args: { icon: "Star" as never },
@@ -223,6 +249,23 @@ export const ReadOnly: Story = {
   argTypes: { readOnly: { control: false }, defaultValue: { control: false } },
   args: { readOnly: true, defaultValue: undefined, "aria-label": "Average rating" },
   render: (args) => <RatingInput {...args} value={4.3} />,
+};
+
+export const ShowValue: Story = {
+  name: "With the value",
+  parameters: { docs: { source: { code: ratingInputSnippets.showValue } } },
+  argTypes: { showValue: { control: false }, precision: { control: false }, defaultValue: { control: false } },
+  args: { showValue: true, precision: 0.5, defaultValue: 3.5 },
+};
+
+export const ReviewSummary: Story = {
+  name: "Review summary",
+  parameters: { docs: { source: { code: ratingInputSnippets.reviewSummary } } },
+  argTypes: { readOnly: { control: false }, showValue: { control: false }, count: { control: false }, defaultValue: { control: false } },
+  args: { readOnly: true, showValue: true, count: 124, defaultValue: undefined, "aria-label": "Average rating" },
+  render: ({ count, ...args }) => (
+    <RatingInput {...args} value={4.2} count={count} suffix={<Link href="#reviews">Read reviews</Link>} />
+  ),
 };
 
 export const ValueNames: Story = {
@@ -366,6 +409,66 @@ export const HoverPreviewColoursCheck: Story = {
       await expect(stroke).toBe(resolved("color", `var(--dbm-border-${tone})`));
       await userEvent.unhover(radio);
     }
+  },
+};
+
+export const ReviewSummaryRowCheck: Story = {
+  name: "The value, icons, count and link sit on one row, in order and level — interaction test",
+  tags: ["!dev"],
+  args: { readOnly: true, showValue: true, count: 124, defaultValue: undefined, "aria-label": "Average rating" },
+  render: ({ count, ...args }) => (
+    <RatingInput {...args} value={4.2} count={count} suffix={<Link href="#reviews">Read reviews</Link>} />
+  ),
+  play: async ({ canvasElement }) => {
+    const value = canvasElement.querySelector("[class*='value']:not([class*='valueName'])") as HTMLElement;
+    const group = within(canvasElement).getByRole("img");
+    const count = canvasElement.querySelector("[class*='count']") as HTMLElement;
+    const link = within(canvasElement).getByRole("link", { name: "Read reviews" });
+    const parts = [value, group, count, link].map((part) => part.getBoundingClientRect());
+    // Left to right, in that order, without overlapping.
+    for (let index = 1; index < parts.length; index += 1) {
+      await expect(parts[index]!.left).toBeGreaterThanOrEqual(parts[index - 1]!.right - 0.5);
+    }
+    // On one row: every centre sits within a few pixels of the icons' centre.
+    const middle = parts[1]!.top + parts[1]!.height / 2;
+    for (const part of parts) {
+      await expect(Math.abs(part.top + part.height / 2 - middle)).toBeLessThan(4);
+    }
+  },
+};
+
+export const ValueNeverMovesIconsCheck: Story = {
+  name: "A changing value never moves the icons — interaction test",
+  tags: ["!dev"],
+  args: { showValue: true, precision: 0.5, defaultValue: 0, max: 10 },
+  play: async ({ canvasElement }) => {
+    const group = within(canvasElement).getByRole("radiogroup");
+    const radios = within(canvasElement).getAllByRole("radio");
+    const left = group.getBoundingClientRect().left;
+    for (const radio of [radios[0], radios[9], radios[19]]) {
+      await userEvent.hover(radio as HTMLElement);
+      await waitFor(() => expect(canvasElement.querySelector("[data-preview]")).not.toBeNull());
+      await expect(group.getBoundingClientRect().left).toBe(left);
+    }
+  },
+};
+
+export const SummaryWrapsCheck: Story = {
+  name: "The count and link wrap below the icons in a narrow container — interaction test",
+  tags: ["!dev"],
+  args: { readOnly: true, showValue: true, count: 1240, defaultValue: undefined, "aria-label": "Average rating" },
+  render: ({ count, ...args }) => (
+    <div data-box="" style={{ inlineSize: "16rem" }}>
+      <RatingInput {...args} value={4.2} count={count} suffix={<Link href="#reviews">Read reviews</Link>} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector("[data-box]") as HTMLElement;
+    await expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth);
+    // The number stays with the icons.
+    const value = (canvasElement.querySelector("[class*='value']:not([class*='valueName'])") as HTMLElement).getBoundingClientRect();
+    const group = within(canvasElement).getByRole("img").getBoundingClientRect();
+    await expect(Math.abs(value.top + value.height / 2 - (group.top + group.height / 2))).toBeLessThan(4);
   },
 };
 

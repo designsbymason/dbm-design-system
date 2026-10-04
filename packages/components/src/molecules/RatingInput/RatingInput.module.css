@@ -7,6 +7,36 @@
   max-inline-size: 100%;
 }
 
+/* The number and the icons stay together; the row wraps between this and what follows. */
+.main {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+}
+
+.value {
+  color: var(--dbm-text-primary);
+  font-size: var(--name-font-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-medium);
+  line-height: var(--dbm-line-height-tight);
+  text-align: end;
+}
+
+.count {
+  color: var(--dbm-text-secondary);
+  font-size: var(--name-font-size);
+  line-height: var(--dbm-line-height-tight);
+}
+
+/* A "Read reviews" link inherits the row's size, so it matches the number and the count. */
+.suffix {
+  align-items: center;
+  display: inline-flex;
+  font-size: var(--name-font-size);
+  line-height: var(--dbm-line-height-tight);
+}
+
 .group {
   display: inline-flex;
   gap: var(--dbm-space-1);
