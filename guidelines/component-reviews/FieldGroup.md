@@ -1,6 +1,6 @@
 # FieldGroup — build and review findings
 
-**Inputs & Forms:** FieldGroup — built 2026-10-04, item 29 in the molecule build order (`04-component-inventory.md`). **Not yet declared Finalized** (the user declares that). Decision: [ADR-0035](../adr/0035-fieldgroup-is-a-native-fieldset-and-hands-disabled-and-size-to-formfield-through-a-context.md).
+**Inputs & Forms:** FieldGroup — built 2026-10-04, item 29 in the molecule build order (`04-component-inventory.md`). **Finalized 2026-10-04** by the user, after the final review recorded at the end of this file. Decision: [ADR-0035](../adr/0035-fieldgroup-is-a-native-fieldset-and-hands-disabled-and-size-to-formfield-through-a-context.md).
 
 **What it is:** a native `<fieldset>`/`<legend>` around a set of fields, with `description`, a group-level `error`, `hideLegend`, `variant` (`ghost`/`outlined`/`filled`), `size`, `orientation` (a breakpoint map too) and `gap`, `disabled`. A flat props component (not compound), `ref` to the fieldset. It owns no values.
 
