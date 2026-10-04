@@ -21,8 +21,8 @@ which both import.
   allowed.
 - **Form value:** `name` submits as `name[]`, start first (`RangeSlider`'s convention), through each end's hidden time input,
   which also validates it (`required`, a half-filled or unavailable end): see
-  [ADR-0030](adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md).
-- **Second round (2026-10-03), [ADR-0031](adr/0031-timerangepicker-keeps-a-pair-of-times-of-day-and-judges-length-through-the-ends-own-rules.md):**
+  [ADR-0030](../adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md).
+- **Second round (2026-10-03), [ADR-0031](../adr/0031-timerangepicker-keeps-a-pair-of-times-of-day-and-judges-length-through-the-ends-own-rules.md):**
   `allowOvernight`, `minDuration`/`maxDuration` (minutes), `constrainStart` and `sharedPicker`.
   - Overnight drops the end's "not before the start" minimum; durations wrap across midnight and equal times are zero.
   - Duration limits and `constrainStart` become each end's `max` and an `isTimeDisabled` predicate (composed with the

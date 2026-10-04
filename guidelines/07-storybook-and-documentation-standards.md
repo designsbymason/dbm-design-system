@@ -210,7 +210,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and all 34 molecules built so far have a Docs page and a completed review pass; every one is Finalized except `Splitter` (built 2026-10-04, awaiting Finalization), `FieldGroup` (built and Finalized 2026-10-04) the latest declared** — full atom-tier coverage, and
+**All 48 atoms and all 34 molecules built so far have a Docs page and a completed review pass; every one is Finalized, `Splitter` (built and Finalized 2026-10-04) the latest declared** — full atom-tier coverage, and
 every molecule built to date. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
@@ -301,18 +301,18 @@ quoted in prose elsewhere.
 | Toolbar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-03 | [Toolbar.md](component-reviews/Toolbar.md) |
 | TableToolbar | Molecule | Data Display | ✅ | ✅ 2026-10-04 | [TableToolbar.md](component-reviews/TableToolbar.md) |
 | FieldGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [FieldGroup.md](component-reviews/FieldGroup.md) |
-| Splitter | Molecule | Layout | ✅ | ⏳ built 2026-10-04 | [Splitter.md](component-reviews/Splitter.md) |
+| Splitter | Molecule | Layout | ✅ | ✅ 2026-10-04 | [Splitter.md](component-reviews/Splitter.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-10-04):** Every atom and 33 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-10-04):** Every atom and 34 molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`, `DescriptionList`,
-`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`, `FieldGroup`) are reviewed and Finalized, and `Splitter` is built and awaiting Finalization — see the table above. The queue continues through the
+`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`, `FieldGroup`, `Splitter`) are reviewed and Finalized — see the table above. The queue continues through the
 remaining 3 of the 37 molecules (`PinInput`, `RatingInput`, `TableOfContents`), one at a time, in the dependency order itemized in
 `04-component-inventory.md`, each with the same full §9
 process.

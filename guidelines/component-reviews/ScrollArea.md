@@ -23,8 +23,8 @@ scrollbar and corner on the correct side automatically, so nothing else needed i
 `ref` forwards to the outer frame (`Root`); `viewportRef` is a second, explicitly-named prop reaching
 the real scrolling element (`Viewport`) for imperative scrolling/measurement. `onScroll` is
 redeclared and routed to `Viewport` specifically, since a plain native `onScroll` on `Root` would
-never fire — `Root` itself never scrolls. See [ADR-0028](adr/0028-scrollarea-puts-native-props-on-the-outer-frame-and-routes-only-scroll-relevant-props-to-the-viewport.md)
-for the full reasoning behind this split, which is the reverse of [ADR-0019](adr/0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md)'s
+never fire — `Root` itself never scrolls. See [ADR-0028](../adr/0028-scrollarea-puts-native-props-on-the-outer-frame-and-routes-only-scroll-relevant-props-to-the-viewport.md)
+for the full reasoning behind this split, which is the reverse of [ADR-0019](../adr/0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md)'s
 `Table` (there, native props go to the *inner* `<table>`; here, to the *outer* frame) — the two
 aren't in tension, since each follows the same underlying rule (props go where the consumer already
 means "the component"), just applied to a different DOM shape.

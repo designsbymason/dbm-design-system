@@ -8,7 +8,7 @@ control over segment order (no separator prop), and a real phone, Safari and Fir
 
 The inventory row had no notes, so the interaction model was an open fork and was put to the user (four
 options, plus the value shape, the hour cycle and the first version's scope). The answers, and the alternatives
-they were chosen over, are [ADR-0029](adr/0029-timepicker-is-a-segmented-field-with-a-popover-and-an-hhmm-string-value.md).
+they were chosen over, are [ADR-0029](../adr/0029-timepicker-is-a-segmented-field-with-a-popover-and-an-hhmm-string-value.md).
 
 ## What it is
 
@@ -195,7 +195,7 @@ wheel's `wheel-visible-rows` (5), `wheel-neighbour-scale` (0.9), `wheel-neighbou
 ## Second round: six additions (2026-10-03)
 
 Asked for after the first review listed what a form field still lacked. The two that are real forks are
-[ADR-0030](adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md); the rest
+[ADR-0030](../adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md); the rest
 follow existing patterns.
 
 - **Field-level `onFocus`/`onBlur`.** Once on arriving, once on leaving; moving between segments, buttons and the
