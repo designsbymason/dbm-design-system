@@ -1,0 +1,278 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Divider } from "../../atoms/Divider";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { ScrollArea } from "../ScrollArea";
+import { Splitter } from "./Splitter";
+import * as SplitterStories from "./Splitter.stories";
+import * as SplitterPaneStories from "./SplitterPane.stories";
+
+export const propOrder = [
+  "children",
+  "orientation",
+  "layout",
+  "defaultLayout",
+  "onLayoutChange",
+  "onLayoutCommit",
+  "variant",
+  "keyboardStep",
+  "disabled",
+  "dir",
+  "labels",
+  "formatNumber",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+export const panePropOrder = [
+  "children",
+  "defaultSize",
+  "minSize",
+  "maxSize",
+  "collapsible",
+  "collapsedSize",
+  "collapsed",
+  "defaultCollapsed",
+  "onCollapsedChange",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={SplitterStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Splitter" tier="Molecule" />
+
+A row or column of panes divided by draggable handles, for dashboards and editors: pull a handle, or use the
+arrow keys on it, to give one pane space from its neighbour. Each handle is a focusable `role="separator"`
+that reports the size of the pane before it, and a pane can be allowed to collapse to a strip or to nothing.
+
+Pane sizes are **percentages of the space the panes share** (the container less its handles), so a layout keeps
+its proportions when the container is resized; a pane's limits can also be written in pixels. The splitter
+holds no content and keeps no storage: read the layout with `onLayoutChange` or `onLayoutCommit`, and hold it
+yourself with `layout` when you need to.
+
+### Import
+
+```tsx
+import { Splitter } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SplitterStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={SplitterStories.Playground}
+  exclude={["children", "layout", "defaultLayout", "onLayoutChange", "onLayoutCommit", "labels", "formatNumber", "id", "className", "style", "data-testid"]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Splitter` also accepts any other native `<div>` attribute beyond what's listed here (e.g. `title`,
+`onFocus`) — passed straight through to the container, apart from `dir`, which it computes from its own
+`dir` prop.
+
+<PropertiesTable of={SplitterStories} order={propOrder} />
+
+### Splitter.Pane properties
+
+`Splitter.Pane` is one pane. It must be a direct child of `Splitter`, which reads its limits and collapse
+settings from the element. It also accepts any native `<div>` attribute.
+
+<PropertiesTable of={SplitterPaneStories} order={panePropOrder} />
+
+## Variants
+
+### Orientation
+
+<Canvas of={SplitterStories.Orientation} />
+
+### Variants
+
+<Canvas of={SplitterStories.Variants} />
+
+### Three panes
+
+<Canvas of={SplitterStories.ThreePanes} />
+
+### Size limits
+
+<Canvas of={SplitterStories.Limits} />
+
+### Collapsible
+
+<Canvas of={SplitterStories.Collapsible} />
+
+### Collapsed from outside
+
+<Canvas of={SplitterStories.ControlledCollapsed} />
+
+### Layout held by you
+
+<Canvas of={SplitterStories.ControlledLayout} />
+
+### Saving the layout
+
+<Canvas of={SplitterStories.Saving} />
+
+### Nested
+
+<Canvas of={SplitterStories.Nested} />
+
+### Stacked on a phone
+
+The orientation takes a breakpoint map. This story is drawn in the wide page like any other; open it on its
+own and narrow the window to watch the panes stack.
+
+<Canvas of={SplitterStories.Responsive} />
+
+### States
+
+<Canvas of={SplitterStories.States} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give the splitter's parent a size. It fills its parent, so a `vertical` splitter in a box with no height has
+  nothing to share out.
+- Set `minSize` on every pane that holds something that stops working when it is squeezed (a form, a table).
+- Use `collapsible` with a `collapsedSize` strip for a sidebar that should stay reachable, and
+  `collapsedSize` of `0` for a panel that can go away entirely.
+- Save the layout in `onLayoutCommit`, which fires once a drag or key press is finished, not on every step.
+- Put a `ScrollArea` or a scrolling element inside a pane that holds long content: a pane clips what overflows.
+- Give a pane that collapses to a strip a function as its `children`, so it can show an icon where it showed a
+  label: `{({ collapsed }) => (collapsed ? <Icon … /> : "Sidebar")}`.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't put anything but `Splitter.Pane` elements directly inside a `Splitter`: a wrapper, a fragment or text is
+  ignored, with a warning.
+- Don't use a splitter to let people resize something that is not one of two or more panes sharing space (a
+  single panel's width is a plain resizable box, not this).
+- Don't make a pane's only way to be reached the handle of a pane that can collapse to nothing without another way
+  to open it (a button, using `collapsed`).
+- Don't rely on the line at rest to show that a handle exists; use `variant="grip"` where the handles need to be
+  discovered.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Write limits that mean something: a sidebar's `minSize="240px"` says what it needs; `minSize={20}` says only
+  that it should not be small.
+- Prefer a layout you can restore: pass what you saved to `defaultLayout` (or hold it with `layout`).
+- A pane collapsed to nothing is hidden from every user, keyboard and screen reader included; if something in it
+  must stay reachable, collapse to a strip (`collapsedSize="48px"`) instead.
+- Nest splitters for editor layouts (a sidebar beside a stack of editor over terminal); each handle moves only
+  its own two panes.
+
+## Accessibility
+
+<Callout tone="info" title="The window splitter pattern: every handle is a focusable separator">
+
+- Each handle is a `role="separator"` in the tab order, with `aria-orientation` (a vertical bar for panes side by
+  side), `aria-valuenow`/`aria-valuemin`/`aria-valuemax` for the pane before it as a percentage,
+  `aria-valuetext` ("30%", or "Collapsed"), `aria-controls` naming the two panes it resizes, and a name
+  (`labels.handle`: "Resize panels", or "Resize panels 1 of 2" when there are several).
+- A disabled splitter keeps its handles in the tab order, marked `aria-disabled`, and moves nothing.
+- A pane collapsed to nothing is `visibility: hidden`, so its content leaves the tab order and the
+  accessibility tree; a strip stays reachable.
+- The handle's target is 24px across (WCAG 2.5.8) whatever the line's thickness. Keyboard focus draws a thicker
+  line in the focus colour; forced-colours mode draws it in system colours.
+- At rest the `line` variant is a divider as `Divider` is, not a control drawn to a 3:1 contrast; the `grip`
+  variant's mark is (4.7:1 light, 8.2:1 dark).
+
+| Key | Behaviour |
+|---|---|
+| Left / Right Arrow | Moves a vertical bar (panes side by side) by `keyboardStep`; in `rtl` text the keys follow the layout |
+| Up / Down Arrow | Moves a horizontal bar (stacked panes) |
+| Page Up / Page Down | Moves the bar twice as far |
+| Home / End | Moves the bar as far as the limits allow, or collapses a pane that can collapse |
+| Enter | Collapses or opens a collapsible pane next to the handle |
+| Double click | Collapses or opens a collapsible pane next to the handle |
+
+</Callout>
+
+## Code examples
+
+```tsx
+<div style={{ height: "24rem" }}>
+  <Splitter defaultLayout={[25, 75]} onLayoutCommit={save}>
+    <Splitter.Pane minSize="200px" collapsible collapsedSize="48px">
+      {({ collapsed }) => (collapsed ? <SidebarRail /> : <Sidebar />)}
+    </Splitter.Pane>
+    <Splitter.Pane>
+      <Splitter orientation="vertical" defaultLayout={[70, 30]}>
+        <Splitter.Pane>
+          <Editor />
+        </Splitter.Pane>
+        <Splitter.Pane minSize="120px">
+          <Terminal />
+        </Splitter.Pane>
+      </Splitter>
+    </Splitter.Pane>
+  </Splitter>
+</div>
+
+{/* Native div attributes pass straight through to the container */}
+<Splitter title="Workspace layout" onFocus={handleFocus}>…</Splitter>
+
+{/* Text the splitter writes, in your own words and digits */}
+<Splitter labels={{ handle: (position, total) => `Cambiar tamaño ${position} de ${total}`, collapsed: "Cerrado" }}>…</Splitter>
+```
+
+## Design tokens used
+
+<TokenRow token="border.default" usage="the handle's line at rest" />
+<TokenRow token="border.brand" usage="the line while hovered or dragged" />
+<TokenRow token="border.focus" usage="the line under keyboard focus" />
+<TokenRow token="border-width.1" usage="the handle's own width and the line's resting thickness" />
+<TokenRow token="border-width.2" usage="how much thicker the line grows under keyboard focus" />
+<TokenRow token="bg.neutral" usage="the grip variant's mark" />
+<TokenRow token="bg.neutral-hover" usage="the grip mark while hovered or dragged" />
+<TokenRow token="radius.full" usage="the grip mark's rounded ends" />
+<TokenRow token="opacity.40" usage="a disabled splitter's grip" />
+<TokenRow token="space.1" usage="the grip mark's thickness" />
+<TokenRow token="space.6" usage="the handle's target, 24px across" />
+<TokenRow token="space.8" usage="the grip mark's length" />
+<TokenRow token="motion.duration.moderate" usage="the panes easing to a new size" />
+<TokenRow token="motion.duration.fast" usage="the line's colour and thickness changing" />
+<TokenRow token="motion.easing.standard" usage="the easing of both" />
+<TokenRow token="font-family.primary" usage="the container's typeface, inherited by the panes" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Divider"
+  description="A static line between areas, where nothing needs to be resized"
+  href="/?path=/docs/atoms-layout-divider--docs"
+>
+  <div style={{ width: "100%" }}>
+    <Divider />
+  </div>
+</RelatedCard>
+<RelatedCard
+  name="ScrollArea"
+  description="A scrolling region with its own scrollbars, for a pane that holds long content"
+  href="/?path=/docs/molecules-layout-scrollarea--docs"
+>
+  <ScrollArea maxHeight="3rem">
+    <div style={{ height: "6rem", padding: "var(--dbm-space-2)" }}>A long pane</div>
+  </ScrollArea>
+</RelatedCard>
+</div>

@@ -1,0 +1,688 @@
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { axe } from "jest-axe";
+import { createRef, StrictMode, useState } from "react";
+import { renderToString } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { Splitter } from "./Splitter";
+import styles from "./Splitter.module.css";
+
+const two = (props: Partial<React.ComponentProps<typeof Splitter>> = {}, pane: Partial<React.ComponentProps<typeof Splitter.Pane>> = {}) => (
+  <Splitter aria-label="Workspace" {...props}>
+    <Splitter.Pane data-testid="a" {...pane}>
+      A
+    </Splitter.Pane>
+    <Splitter.Pane data-testid="b">B</Splitter.Pane>
+  </Splitter>
+);
+
+const handles = () => screen.getAllByRole("separator");
+const first = () => handles()[0] as HTMLElement;
+const sizeOf = (testId: string) => Number.parseFloat((screen.getByTestId(testId) as HTMLElement).style.getPropertyValue("--splitter-pane-size"));
+
+/** jsdom lays nothing out: give the container a width, so lengths and drags have something to be a percentage of. */
+function withContainerWidth(width: number) {
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(width);
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(width);
+}
+
+describe("Splitter", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  describe("structure", () => {
+    it("puts a handle between each pair of panes", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+          <Splitter.Pane>C</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(handles()).toHaveLength(2);
+    });
+
+    it("has no handle for one pane", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane>A</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(screen.queryAllByRole("separator")).toHaveLength(0);
+    });
+
+    it("makes each handle a focusable separator that reports the pane before it", () => {
+      render(two({ defaultLayout: [30, 70] }, { minSize: 10, maxSize: 60 }));
+      const handle = first();
+      expect(handle).toHaveAttribute("tabindex", "0");
+      expect(handle).toHaveAttribute("aria-orientation", "vertical");
+      expect(handle).toHaveAttribute("aria-valuenow", "30");
+      expect(handle).toHaveAttribute("aria-valuemin", "10");
+      expect(handle).toHaveAttribute("aria-valuemax", "60");
+      expect(handle).toHaveAttribute("aria-valuetext", "30%");
+    });
+
+    it("points each handle at the panes it resizes", () => {
+      render(two());
+      const ids = (first().getAttribute("aria-controls") ?? "").split(" ");
+      expect(ids).toHaveLength(2);
+      expect(document.getElementById(ids[0] as string)).toBe(screen.getByTestId("a"));
+      expect(document.getElementById(ids[1] as string)).toBe(screen.getByTestId("b"));
+    });
+
+    it("uses a pane's own id", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane id="nav">A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(first().getAttribute("aria-controls")?.split(" ")[0]).toBe("nav");
+      expect(document.getElementById("nav")).toHaveTextContent("A");
+    });
+
+    it("orients the handles across the layout", () => {
+      const { rerender } = render(two({ orientation: "vertical" }));
+      expect(first()).toHaveAttribute("aria-orientation", "horizontal");
+      rerender(two({ orientation: "horizontal" }));
+      expect(first()).toHaveAttribute("aria-orientation", "vertical");
+    });
+
+    it("takes a breakpoint map for the orientation (the base applies where no media query matches)", () => {
+      render(two({ orientation: { base: "vertical", md: "horizontal" } }));
+      expect(first()).toHaveAttribute("aria-orientation", "horizontal");
+    });
+  });
+
+  describe("layout", () => {
+    it("starts from defaultLayout", () => {
+      render(two({ defaultLayout: [25, 75] }));
+      expect([sizeOf("a"), sizeOf("b")]).toEqual([25, 75]);
+    });
+
+    it("starts from each pane's defaultSize, the others sharing the rest", () => {
+      render(
+        <Splitter>
+          <Splitter.Pane data-testid="a" defaultSize={20}>A</Splitter.Pane>
+          <Splitter.Pane data-testid="b">B</Splitter.Pane>
+          <Splitter.Pane data-testid="c">C</Splitter.Pane>
+        </Splitter>,
+      );
+      expect([sizeOf("a"), sizeOf("b"), sizeOf("c")]).toEqual([20, 40, 40]);
+    });
+
+    it("splits equally when nothing is said", () => {
+      render(two());
+      expect([sizeOf("a"), sizeOf("b")]).toEqual([50, 50]);
+    });
+
+    it("brings a default that breaks a limit inside it", () => {
+      render(two({ defaultLayout: [5, 95] }, { minSize: 20 }));
+      expect(sizeOf("a")).toBeGreaterThanOrEqual(20);
+    });
+
+    it("starts over when a pane is added", () => {
+      const { rerender } = render(two({ defaultLayout: [30, 70] }));
+      rerender(
+        <Splitter aria-label="Workspace">
+          <Splitter.Pane data-testid="a">A</Splitter.Pane>
+          <Splitter.Pane data-testid="b">B</Splitter.Pane>
+          <Splitter.Pane data-testid="c">C</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(handles()).toHaveLength(2);
+      expect(sizeOf("a") + sizeOf("b") + sizeOf("c")).toBeCloseTo(100, 4);
+    });
+
+    it("holds a layout you pass, and asks to change it rather than changing it", async () => {
+      const user = userEvent.setup();
+      const onLayoutChange = vi.fn();
+      render(two({ layout: [40, 60], onLayoutChange }));
+      first().focus();
+      await user.keyboard("{ArrowRight}");
+      expect(onLayoutChange).toHaveBeenCalledWith([45, 55]);
+      expect([sizeOf("a"), sizeOf("b")]).toEqual([40, 60]);
+    });
+
+    it("follows a controlled layout as it changes", () => {
+      const { rerender } = render(two({ layout: [40, 60] }));
+      rerender(two({ layout: [70, 30] }));
+      expect(sizeOf("a")).toBe(70);
+    });
+  });
+
+  describe("keyboard", () => {
+    const setup = (props: Partial<React.ComponentProps<typeof Splitter>> = {}, pane: Partial<React.ComponentProps<typeof Splitter.Pane>> = {}) => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommit = vi.fn();
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [50, 50], onLayoutChange, onLayoutCommit, ...props }, pane));
+      first().focus();
+      return { user, onLayoutChange, onLayoutCommit };
+    };
+
+    it("moves a vertical bar with the left and right arrows, by keyboardStep", async () => {
+      const { user, onLayoutChange } = setup();
+      await user.keyboard("{ArrowRight}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([55, 45]);
+      await user.keyboard("{ArrowLeft}{ArrowLeft}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([45, 55]);
+      expect(first()).toHaveAttribute("aria-valuenow", "45");
+    });
+
+    it("moves a horizontal bar with the up and down arrows", async () => {
+      const { user, onLayoutChange } = setup({ orientation: "vertical" });
+      await user.keyboard("{ArrowDown}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([55, 45]);
+      await user.keyboard("{ArrowUp}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([50, 50]);
+    });
+
+    it("ignores the arrows across the bar", async () => {
+      const { user, onLayoutChange } = setup({ orientation: "vertical" });
+      await user.keyboard("{ArrowLeft}{ArrowRight}");
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("follows the text direction: in rtl the first pane is on the right", async () => {
+      const { user, onLayoutChange } = setup({ dir: "rtl" });
+      await user.keyboard("{ArrowLeft}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([55, 45]);
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([45, 55]);
+    });
+
+    it("moves twice as far with Page Down and Page Up, and by a step you choose", async () => {
+      const { user, onLayoutChange } = setup({ keyboardStep: 2 });
+      await user.keyboard("{PageDown}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([54, 46]);
+      await user.keyboard("{PageUp}{PageUp}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([46, 54]);
+    });
+
+    it("goes to either end with Home and End, as far as the limits allow", async () => {
+      const { user, onLayoutChange } = setup({}, { minSize: 20, maxSize: 70 });
+      await user.keyboard("{Home}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([20, 80]);
+      await user.keyboard("{End}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([70, 30]);
+    });
+
+    it("stops at a limit and does not report a move that did nothing", async () => {
+      const { user, onLayoutChange } = setup({ defaultLayout: [20, 80] }, { minSize: 20 });
+      await user.keyboard("{ArrowLeft}");
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      expect(first()).toHaveAttribute("aria-valuenow", "20");
+    });
+
+    it("reports the finished layout with onLayoutCommit, once per key press", async () => {
+      const { user, onLayoutCommit } = setup();
+      await user.keyboard("{ArrowRight}");
+      expect(onLayoutCommit).toHaveBeenCalledTimes(1);
+      expect(onLayoutCommit).toHaveBeenCalledWith([55, 45]);
+    });
+
+    it("does nothing for other keys, and lets them through", async () => {
+      const { user, onLayoutChange } = setup();
+      await user.keyboard("a{Tab}");
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("ignores a double click while disabled", () => {
+      const onLayoutChange = vi.fn();
+      render(two({ disabled: true, onLayoutChange, defaultLayout: [30, 70] }, { collapsible: true, minSize: 20 }));
+      fireEvent.doubleClick(first());
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("does nothing while disabled, and says so", async () => {
+      const { user, onLayoutChange } = setup({ disabled: true });
+      await user.keyboard("{ArrowRight}{Home}");
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      expect(first()).toHaveAttribute("aria-disabled", "true");
+      expect(first()).toHaveAttribute("tabindex", "0");
+    });
+
+    it("resizes only the two panes beside the handle", async () => {
+      const onLayoutChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <Splitter defaultLayout={[25, 25, 50]} onLayoutChange={onLayoutChange}>
+          <Splitter.Pane>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+          <Splitter.Pane>C</Splitter.Pane>
+        </Splitter>,
+      );
+      handles()[1]?.focus();
+      await user.keyboard("{ArrowRight}");
+      expect(onLayoutChange).toHaveBeenLastCalledWith([25, 30, 45]);
+    });
+  });
+
+  describe("dragging", () => {
+    const drag = (handle: HTMLElement, from: number, to: number) => {
+      fireEvent.pointerDown(handle, { clientX: from, clientY: from, button: 0, pointerType: "mouse", pointerId: 1 });
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: to, clientY: to }));
+      });
+    };
+
+    it("moves the boundary by the distance dragged, as a share of the space the panes have", () => {
+      withContainerWidth(1000);
+      const onLayoutChange = vi.fn();
+      render(two({ defaultLayout: [50, 50], onLayoutChange }));
+      drag(first(), 500, 600);
+      expect(onLayoutChange).toHaveBeenLastCalledWith([60, 40]);
+      expect(first()).toHaveAttribute("aria-valuenow", "60");
+    });
+
+    it("reports the finished layout when the pointer is released, and stops following it", () => {
+      withContainerWidth(1000);
+      const onLayoutCommit = vi.fn();
+      const onLayoutChange = vi.fn();
+      render(two({ defaultLayout: [50, 50], onLayoutChange, onLayoutCommit }));
+      drag(first(), 500, 600);
+      expect(onLayoutCommit).not.toHaveBeenCalled();
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointerup"));
+      });
+      expect(onLayoutCommit).toHaveBeenCalledTimes(1);
+      expect(onLayoutCommit).toHaveBeenCalledWith([60, 40]);
+      onLayoutChange.mockClear();
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 900, clientY: 900 }));
+      });
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("marks the handle and the container while dragging", () => {
+      withContainerWidth(1000);
+      const { container } = render(two());
+      drag(first(), 500, 520);
+      expect(first()).toHaveAttribute("data-state", "dragging");
+      expect(container.firstElementChild).toHaveAttribute("data-dragging");
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointerup"));
+      });
+      expect(first()).toHaveAttribute("data-state", "idle");
+      expect(container.firstElementChild).not.toHaveAttribute("data-dragging");
+    });
+
+    it("goes the other way in rtl", () => {
+      withContainerWidth(1000);
+      const onLayoutChange = vi.fn();
+      render(two({ defaultLayout: [50, 50], onLayoutChange, dir: "rtl" }));
+      drag(first(), 500, 600);
+      expect(onLayoutChange).toHaveBeenLastCalledWith([40, 60]);
+    });
+
+    it("uses the vertical distance for a stacked splitter", () => {
+      withContainerWidth(1000);
+      const onLayoutChange = vi.fn();
+      render(two({ defaultLayout: [50, 50], onLayoutChange, orientation: "vertical" }));
+      fireEvent.pointerDown(first(), { clientX: 0, clientY: 200, button: 0, pointerType: "mouse", pointerId: 1 });
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 900, clientY: 300 }));
+      });
+      expect(onLayoutChange).toHaveBeenLastCalledWith([60, 40]);
+    });
+
+    it("stops at the limits", () => {
+      withContainerWidth(1000);
+      render(two({ defaultLayout: [50, 50] }, { minSize: 20, maxSize: 70 }));
+      drag(first(), 500, 5000);
+      expect(first()).toHaveAttribute("aria-valuenow", "70");
+    });
+
+    it("ignores a drag while disabled, and a button that isn't the main one", () => {
+      withContainerWidth(1000);
+      const onLayoutChange = vi.fn();
+      const { rerender } = render(two({ onLayoutChange, disabled: true }));
+      drag(first(), 500, 600);
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      rerender(two({ onLayoutChange }));
+      fireEvent.pointerDown(first(), { clientX: 500, button: 2, pointerType: "mouse", pointerId: 1 });
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 600 }));
+      });
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("lets go of the window when it unmounts mid-drag", () => {
+      withContainerWidth(1000);
+      const onLayoutChange = vi.fn();
+      const { unmount } = render(two({ onLayoutChange }));
+      drag(first(), 500, 510);
+      onLayoutChange.mockClear();
+      unmount();
+      window.dispatchEvent(new MouseEvent("pointermove", { clientX: 900 }));
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("lengths", () => {
+    it("reads a px limit against the space the panes share", () => {
+      withContainerWidth(1000);
+      render(two({ defaultLayout: [50, 50] }, { minSize: "300px" }));
+      expect(first()).toHaveAttribute("aria-valuemin", "30");
+    });
+
+    it("reads a % limit as a plain number", () => {
+      render(two({}, { minSize: "35%" }));
+      expect(first()).toHaveAttribute("aria-valuemin", "35");
+    });
+
+    it("reads a px limit again when the container is resized", () => {
+      let notify: () => void = () => {};
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          constructor(callback: () => void) {
+            notify = callback;
+          }
+          observe() {}
+          unobserve() {}
+          disconnect() {}
+        },
+      );
+      const width = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1000);
+      render(two({ defaultLayout: [50, 50] }, { minSize: "300px" }));
+      expect(first()).toHaveAttribute("aria-valuemin", "30");
+      width.mockReturnValue(500);
+      act(() => notify());
+      expect(first()).toHaveAttribute("aria-valuemin", "60");
+      vi.unstubAllGlobals();
+    });
+
+    it("pulls a layout back inside a px limit once the container is measured", () => {
+      withContainerWidth(1000);
+      render(two({ defaultLayout: [10, 90] }, { minSize: "300px" }));
+      expect(sizeOf("a")).toBeGreaterThanOrEqual(30 - 1e-6);
+    });
+  });
+
+  describe("collapsing", () => {
+    const side = (props: Partial<React.ComponentProps<typeof Splitter>> = {}, pane: Partial<React.ComponentProps<typeof Splitter.Pane>> = {}) =>
+      two({ defaultLayout: [30, 70], ...props }, { collapsible: true, minSize: 20, ...pane });
+
+    it("collapses with Home, reads as collapsed, and hides a pane that collapses to nothing", async () => {
+      const user = userEvent.setup();
+      render(side());
+      first().focus();
+      await user.keyboard("{Home}");
+      expect(sizeOf("a")).toBe(0);
+      expect(first()).toHaveAttribute("aria-valuetext", "Collapsed");
+      expect(screen.getByTestId("a")).toHaveAttribute("data-collapsed");
+      expect(screen.getByTestId("a").className).toContain(styles.hidden);
+    });
+
+    it("toggles with Enter, and opens at the size it had", async () => {
+      const user = userEvent.setup();
+      render(side());
+      first().focus();
+      await user.keyboard("{ArrowRight}");
+      expect(sizeOf("a")).toBe(35);
+      await user.keyboard("{Enter}");
+      expect(sizeOf("a")).toBe(0);
+      await user.keyboard("{Enter}");
+      expect(sizeOf("a")).toBe(35);
+      expect(screen.getByTestId("a")).not.toHaveAttribute("data-collapsed");
+    });
+
+    it("toggles with a double click", () => {
+      render(side());
+      fireEvent.doubleClick(first());
+      expect(sizeOf("a")).toBe(0);
+      fireEvent.doubleClick(first());
+      expect(sizeOf("a")).toBe(30);
+    });
+
+    it("toggles the pane after the handle when the one before it can't collapse", async () => {
+      const user = userEvent.setup();
+      render(
+        <Splitter defaultLayout={[70, 30]}>
+          <Splitter.Pane data-testid="a">A</Splitter.Pane>
+          <Splitter.Pane data-testid="b" collapsible minSize={20}>B</Splitter.Pane>
+        </Splitter>,
+      );
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(sizeOf("b")).toBe(0);
+    });
+
+    it("does nothing on Enter when neither neighbour collapses", async () => {
+      const onLayoutChange = vi.fn();
+      const user = userEvent.setup();
+      render(two({ onLayoutChange }));
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it("snaps shut when dragged far enough, and keeps a strip when told to", () => {
+      withContainerWidth(1000);
+      render(side({}, { collapsedSize: "48px" }));
+      fireEvent.pointerDown(first(), { clientX: 300, button: 0, pointerType: "mouse", pointerId: 1 });
+      act(() => {
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 0 }));
+      });
+      expect(sizeOf("a")).toBeCloseTo(4.8, 1);
+      expect(screen.getByTestId("a")).toHaveAttribute("data-collapsed");
+      // A strip stays visible: only a pane collapsed to nothing is hidden.
+      expect(screen.getByTestId("a").className).not.toContain(styles.hidden);
+    });
+
+    it("starts collapsed with defaultCollapsed", () => {
+      render(side({ defaultLayout: undefined }, { defaultCollapsed: true }));
+      expect(sizeOf("a")).toBe(0);
+      expect(screen.getByTestId("a")).toHaveAttribute("data-collapsed");
+    });
+
+    it("tells the pane when it collapses and opens", async () => {
+      const onCollapsedChange = vi.fn();
+      const user = userEvent.setup();
+      render(side({}, { onCollapsedChange }));
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(onCollapsedChange).toHaveBeenLastCalledWith(true);
+      await user.keyboard("{Enter}");
+      expect(onCollapsedChange).toHaveBeenLastCalledWith(false);
+      expect(onCollapsedChange).toHaveBeenCalledTimes(2);
+    });
+
+    it("follows a collapsed prop, and gives it back its size", () => {
+      const { rerender } = render(side({}, { collapsed: false }));
+      rerender(side({}, { collapsed: true }));
+      expect(sizeOf("a")).toBe(0);
+      rerender(side({}, { collapsed: false }));
+      expect(sizeOf("a")).toBe(30);
+    });
+
+    it("keeps a controlled pane where the prop says, whatever the keyboard asks", async () => {
+      const user = userEvent.setup();
+      render(side({}, { collapsed: true }));
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(sizeOf("a")).toBe(0);
+    });
+
+    it("lets a pane's children be a function of its state, to show something else once it has collapsed", async () => {
+      const user = userEvent.setup();
+      render(
+        <Splitter defaultLayout={[30, 70]}>
+          <Splitter.Pane data-testid="a" collapsible minSize={20}>
+            {({ collapsed, size }) => (collapsed ? <span>rail</span> : <span>full {Math.round(size)}</span>)}
+          </Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(screen.getByTestId("a")).toHaveTextContent("full 30");
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(screen.getByTestId("a")).toHaveTextContent("rail");
+    });
+
+    it("never collapses a pane that isn't collapsible", async () => {
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [30, 70] }, { minSize: 20 }));
+      first().focus();
+      await user.keyboard("{Home}");
+      expect(sizeOf("a")).toBe(20);
+    });
+  });
+
+  describe("labels", () => {
+    it("names one handle plainly and several by position", () => {
+      const { rerender } = render(two());
+      expect(first()).toHaveAccessibleName("Resize panels");
+      rerender(
+        <Splitter>
+          <Splitter.Pane>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+          <Splitter.Pane>C</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(handles()[1]).toHaveAccessibleName("Resize panels 2 of 2");
+    });
+
+    it("takes your own labels, keeping the defaults for what you leave out or leave undefined", () => {
+      render(two({ labels: { handle: (n, t) => `Redimensionar ${n}/${t}`, collapsed: undefined } }));
+      expect(first()).toHaveAccessibleName("Redimensionar 1/1");
+      expect(first()).toHaveAttribute("aria-valuetext", "50%");
+    });
+
+    it("keeps the default word for collapsed when a label is passed as undefined", async () => {
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [30, 70], labels: { collapsed: undefined } }, { collapsible: true, minSize: 20 }));
+      first().focus();
+      await user.keyboard("{Home}");
+      expect(first()).toHaveAttribute("aria-valuetext", "Collapsed");
+    });
+
+    it("uses your word for collapsed", async () => {
+      const user = userEvent.setup();
+      render(two({ defaultLayout: [30, 70], labels: { collapsed: "Cerrado" } }, { collapsible: true, minSize: 20 }));
+      first().focus();
+      await user.keyboard("{Home}");
+      expect(first()).toHaveAttribute("aria-valuetext", "Cerrado");
+    });
+
+    it("writes the percentage in your own digits", () => {
+      render(two({ formatNumber: (value) => `#${value}` }));
+      expect(first()).toHaveAttribute("aria-valuetext", "#50%");
+    });
+  });
+
+  describe("props and warnings", () => {
+    it("forwards its ref, and className, style, id and data-testid, to the container", () => {
+      const ref = createRef<HTMLDivElement>();
+      render(
+        <Splitter ref={ref} className="mine" style={{ marginBlockStart: "4px" }} id="split" data-testid="root">
+          <Splitter.Pane>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      const root = screen.getByTestId("root");
+      expect(ref.current).toBe(root);
+      expect(root).toHaveClass("mine");
+      expect(root.style.marginBlockStart).toBe("4px");
+      expect(root.id).toBe("split");
+    });
+
+    it("forwards a pane's ref and props, and keeps its computed size", () => {
+      const ref = createRef<HTMLDivElement>();
+      render(
+        <Splitter defaultLayout={[40, 60]}>
+          <Splitter.Pane ref={ref} className="mine" style={{ ["--splitter-pane-size" as string]: 99, color: "red" }} aria-label="Sidebar" data-testid="a">
+            A
+          </Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(ref.current).toBe(screen.getByTestId("a"));
+      expect(screen.getByTestId("a")).toHaveClass("mine");
+      expect(screen.getByTestId("a")).toHaveAttribute("aria-label", "Sidebar");
+      expect(screen.getByTestId("a").style.color).toBe("red");
+    });
+
+    it("keeps its computed direction and orientation against a same-named prop", () => {
+      render(
+        <Splitter dir="rtl" data-testid="root" {...({ "data-orientation": "vertical" } as object)}>
+          <Splitter.Pane>A</Splitter.Pane>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(screen.getByTestId("root")).toHaveAttribute("dir", "rtl");
+      expect(screen.getByTestId("root")).toHaveAttribute("data-orientation", "horizontal");
+    });
+
+    it("warns once about a child that isn't a pane, and leaves it out", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(
+        <Splitter data-testid="root">
+          <Splitter.Pane>A</Splitter.Pane>
+          <div>stray</div>
+          <Splitter.Pane>B</Splitter.Pane>
+        </Splitter>,
+      );
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toMatch(/only `Splitter.Pane` elements/);
+      expect(screen.queryByText("stray")).toBeNull();
+      expect(handles()).toHaveLength(1);
+    });
+
+    it("warns once about a pane outside a splitter, and still renders it", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(<Splitter.Pane data-testid="lone">Lone</Splitter.Pane>);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toMatch(/Splitter.Pane: rendered outside/);
+      expect(screen.getByTestId("lone")).toHaveTextContent("Lone");
+    });
+
+    it("warns once, and falls back to the pane defaults, for a layout of the wrong length", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      render(two({ layout: [100] }));
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toMatch(/`layout` has 1 sizes for 2 panes/);
+      expect([sizeOf("a"), sizeOf("b")]).toEqual([50, 50]);
+    });
+
+    it("works in StrictMode", async () => {
+      const onCollapsedChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <StrictMode>
+          {two({ defaultLayout: [30, 70] }, { collapsible: true, minSize: 20, onCollapsedChange })}
+        </StrictMode>,
+      );
+      first().focus();
+      await user.keyboard("{Enter}");
+      expect(sizeOf("a")).toBe(0);
+      expect(onCollapsedChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("renders on the server with every pane and handle in place", () => {
+      const html = renderToString(two({ defaultLayout: [30, 70] }, { id: "nav" }));
+      expect(html).toContain('role="separator"');
+      expect(html).toContain('id="nav"');
+      expect(html).toContain("--splitter-pane-size:30");
+    });
+
+    it("has no accessibility violations", async () => {
+      const Harness = () => {
+        const [open, setOpen] = useState(true);
+        return (
+          <Splitter defaultLayout={[30, 70]}>
+            <Splitter.Pane collapsible collapsed={!open} onCollapsedChange={(c) => setOpen(!c)} minSize={20}>
+              <button type="button">Inside</button>
+            </Splitter.Pane>
+            <Splitter.Pane>B</Splitter.Pane>
+          </Splitter>
+        );
+      };
+      const { container, rerender } = render(<Harness />);
+      expect(await axe(container)).toHaveNoViolations();
+      rerender(two({ variant: "grip", disabled: true, orientation: "vertical" }));
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+});

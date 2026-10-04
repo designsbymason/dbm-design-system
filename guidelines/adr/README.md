@@ -90,6 +90,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0034](./0034-tabletoolbar-is-a-stateless-group-of-parts-with-toolbars-inside-it-not-one-toolbar.md) | `TableToolbar` is a stateless named group of parts, with real `Toolbar`s inside it for the buttons, over one big `role="toolbar"` or a component that owns the filter state | Accepted |
 | [0035](./0035-fieldgroup-is-a-native-fieldset-and-hands-disabled-and-size-to-formfield-through-a-context.md) | `FieldGroup` is a native `<fieldset>` and hands `disabled` and `size` to `FormField` through a context, over a `role="group"` div or fieldset-only disabling | Accepted |
 | [0036](./0036-a-field-hands-its-size-to-its-control-only-inside-a-fieldgroup-that-sets-one.md) | A `FormField` hands its size to its control only inside a `FieldGroup` that sets one, over always handing it or a context every control reads | Accepted |
+| [0037](./0037-splitter-is-hand-rolled-on-the-window-splitter-pattern-with-automatic-handles-and-a-percentage-layout.md) | `Splitter` is hand-rolled on the window-splitter pattern, with automatic handles and a percentage layout, over a dependency, explicit handle parts or pixel sizes | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

@@ -76,6 +76,7 @@ export * from "./molecules/ScrollArea";
 export * from "./molecules/SearchInput";
 export * from "./molecules/Select";
 export * from "./molecules/Slider";
+export * from "./molecules/Splitter";
 export * from "./molecules/Stat";
 export * from "./molecules/Table";
 export * from "./molecules/TableToolbar";
