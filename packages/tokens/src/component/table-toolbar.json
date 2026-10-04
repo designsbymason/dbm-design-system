@@ -3,12 +3,17 @@
     "search-min-width": {
       "$type": "dimension",
       "$value": "14rem",
-      "$description": "New token (2026-10-03), added for TableToolbar.Search — the width its search field wants before the row it shares with the filter and action toolbars wraps it onto a line of its own (its flex-basis), so on a narrow screen the field keeps a usable width instead of being squeezed to nothing. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+      "$description": "New token (2026-10-03), added for TableToolbar.Search \u2014 the width its search field wants before the row it shares with the filter and action toolbars wraps it onto a line of its own (its flex-basis), so on a narrow screen the field keeps a usable width instead of being squeezed to nothing. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
     },
     "search-max-width": {
       "$type": "dimension",
       "$value": "24rem",
-      "$description": "New token (2026-10-03), added for TableToolbar.Search — the widest the search field grows when the row has room to spare, so a wide table doesn't stretch it across the page. A content-measure cap with no home on any existing primitive scale."
+      "$description": "New token (2026-10-03), added for TableToolbar.Search \u2014 the widest the search field grows when the row has room to spare, so a wide table doesn't stretch it across the page. A content-measure cap with no home on any existing primitive scale."
+    },
+    "filter-count-size-xs": {
+      "$type": "dimension",
+      "$value": "1.25rem",
+      "$description": "New token (2026-10-04), added for TableToolbar.Filter \u2014 the diameter of the count badge on the xs bar. Badge's own xs diameter (25px) is taller than the xs button's line of text (about 15px) and crowds the button; 20px (a pill when the count has two digits) sits comfortably inside it. Replaces the Badge's own diameter only inside the Filter's button, through its custom property. No home on any existing primitive scale."
     }
   }
 }

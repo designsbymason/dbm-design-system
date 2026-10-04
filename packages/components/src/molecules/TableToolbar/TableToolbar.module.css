@@ -46,6 +46,13 @@
   overflow: visible;
 }
 
+/* On the xs bar the badge is smaller than Badge's own xs (25px), which is taller than the xs button's text. The Badge reads its
+   size and padding from these custom properties, so setting them here changes this badge and no other. */
+.filterCountXs {
+  --dbm-badge-padding-inline-xs: var(--dbm-space-1);
+  --dbm-badge-size-xs: var(--dbm-table-toolbar-filter-count-size-xs);
+}
+
 .filterFooter {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
   display: flex;

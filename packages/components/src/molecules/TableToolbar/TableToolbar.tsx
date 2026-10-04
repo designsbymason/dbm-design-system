@@ -200,7 +200,7 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
           >
             {label}
             {count > 0 && (
-              <span className={styles.filterCount} aria-hidden="true">
+              <span className={cx(styles.filterCount, (size ?? group?.size ?? bar.size) === "xs" && styles.filterCountXs)} aria-hidden="true">
                 <Badge tone="brand" size="xs">
                   {formatNumber(count)}
                 </Badge>
