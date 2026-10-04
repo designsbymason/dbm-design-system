@@ -25,12 +25,11 @@ what actually changes per brand/mode.
 
 `purple-600` and `emerald-600` (marked ★) are the two brand-mandated anchor colors — every other
 step in those two scales is generated from a shared perceptual lightness curve, shifted so it
-passes exactly through the anchor's own lightness at step 600. `yellow-600` (also ★) is anchored
-too, but its light steps carry more color than the shared curve would give them, so the pale
-steps read as yellow and not as grey. The five status/neutral scales (gray, red, amber, green,
-blue) have no anchor requirement and are shared, unmodified, across both brand themes — status
-meaning (danger is red, success is green) doesn't change with brand. Yellow is shared across both
-brands as well; its semantic tokens are named `highlight`, for what it is used for.
+passes exactly through the anchor's own lightness at step 600. The five status/neutral scales
+(gray, red, amber, green, blue) have no anchor requirement and are shared, unmodified, across
+both brand themes — status meaning (danger is red, success is green) doesn't change with brand.
+Yellow is shared across both brands too; its semantic tokens are named `highlight`, for what it
+is used for.
 
 <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
 <ColorScaleGrid family="purple" anchor="600" />
@@ -38,7 +37,7 @@ brands as well; its semantic tokens are named `highlight`, for what it is used f
 <ColorScaleGrid family="gray" />
 <ColorScaleGrid family="red" />
 <ColorScaleGrid family="amber" />
-<ColorScaleGrid family="yellow" anchor="600" />
+<ColorScaleGrid family="yellow" />
 <ColorScaleGrid family="green" />
 <ColorScaleGrid family="blue" />
 
