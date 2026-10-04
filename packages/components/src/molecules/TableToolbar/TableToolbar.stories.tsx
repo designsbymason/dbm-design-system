@@ -13,7 +13,7 @@ import { Toolbar } from "../Toolbar";
 import { TableToolbar } from "./TableToolbar";
 import { tableToolbarPlaygroundSnippet, tableToolbarSnippets } from "./TableToolbar.snippets";
 import type { TableToolbarProps } from "./TableToolbar.types";
-import { OrdersDemo } from "./TableToolbarStoryKit";
+import { OrdersDemo, SelectionBelowDemo, SplitBarDemo } from "./TableToolbarStoryKit";
 
 const noControls = { control: false } as const;
 const column = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "stretch" } as const;
@@ -213,6 +213,20 @@ export const WithATable: Story = {
   parameters: { docs: { source: { code: tableToolbarSnippets.withATable } } },
   argTypes: { "aria-label": noControls },
   render: (args) => <OrdersDemo {...args} />,
+};
+
+export const SplitAboveAndBelow: Story = {
+  name: "Split above and below a Table",
+  parameters: { docs: { source: { code: tableToolbarSnippets.split } } },
+  argTypes: { "aria-label": noControls },
+  render: (args) => <SplitBarDemo {...args} />,
+};
+
+export const SelectionInAnotherPlace: Story = {
+  name: "Selection in another place",
+  parameters: { docs: { source: { code: tableToolbarSnippets.selectionElsewhere } } },
+  argTypes: { "aria-label": noControls },
+  render: (args) => <SelectionBelowDemo {...args} />,
 };
 
 export const AllSizes: Story = {

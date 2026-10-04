@@ -104,9 +104,57 @@ export const OwnerPanel = ({ value, onChange }: { value: string; onChange: (valu
 );
 
 /** The whole bar over a live, filterable table: search, filters, chips, count, bulk actions. */
+type OrdersState = ReturnType<typeof useOrders>;
+
+/** The orders table with a checkbox per row; the header checkbox is "indeterminate" while some are selected. */
+export function OrdersTable({ state }: { state: OrdersState }) {
+  const allSelected = state.rows.length > 0 && state.selected.length === state.rows.length;
+  return (
+    <Table aria-label="Orders" hoverable>
+      <Table.Header>
+        <Table.Row>
+          <Table.HeaderCell scope="col">
+            <Checkbox
+              aria-label="Select all orders"
+              checked={allSelected ? true : state.selected.length > 0 ? "indeterminate" : false}
+              onCheckedChange={(checked) => state.setSelected(checked === true ? state.rows.map((row) => row.id) : [])}
+            />
+          </Table.HeaderCell>
+          <Table.HeaderCell scope="col">Order</Table.HeaderCell>
+          <Table.HeaderCell scope="col">Customer</Table.HeaderCell>
+          <Table.HeaderCell scope="col">Status</Table.HeaderCell>
+          <Table.HeaderCell scope="col">Owner</Table.HeaderCell>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {state.rows.map((row) => (
+          <Table.Row key={row.id}>
+            <Table.Cell>
+              <Checkbox
+                aria-label={`Select order ${row.id}`}
+                checked={state.selected.includes(row.id)}
+                onCheckedChange={(checked) =>
+                  state.setSelected(checked === true ? [...state.selected, row.id] : state.selected.filter((id) => id !== row.id))
+                }
+              />
+            </Table.Cell>
+            <Table.HeaderCell scope="row">{row.id}</Table.HeaderCell>
+            <Table.Cell>{row.customer}</Table.Cell>
+            <Table.Cell>
+              <Badge tone={row.status === "Open" ? "info" : row.status === "Shipped" ? "success" : "danger"} size="sm">
+                {row.status}
+              </Badge>
+            </Table.Cell>
+            <Table.Cell>{row.owner}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table>
+  );
+}
+
 export function OrdersDemo({ withTable = true, ...barProps }: TableToolbarProps & { withTable?: boolean }) {
   const state = useOrders({ statuses: ["Open"] });
-  const allSelected = state.rows.length > 0 && state.selected.length === state.rows.length;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
       <TableToolbar aria-label="Orders table tools" {...barProps}>
@@ -152,48 +200,76 @@ export function OrdersDemo({ withTable = true, ...barProps }: TableToolbarProps 
           </Toolbar>
         </TableToolbar.Selection>
       </TableToolbar>
-      {withTable && (
-        <Table aria-label="Orders" hoverable>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell scope="col">
-                <Checkbox
-                  aria-label="Select all orders"
-                  checked={allSelected ? true : state.selected.length > 0 ? "indeterminate" : false}
-                  onCheckedChange={(checked) => state.setSelected(checked === true ? state.rows.map((row) => row.id) : [])}
-                />
-              </Table.HeaderCell>
-              <Table.HeaderCell scope="col">Order</Table.HeaderCell>
-              <Table.HeaderCell scope="col">Customer</Table.HeaderCell>
-              <Table.HeaderCell scope="col">Status</Table.HeaderCell>
-              <Table.HeaderCell scope="col">Owner</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {state.rows.map((row) => (
-              <Table.Row key={row.id}>
-                <Table.Cell>
-                  <Checkbox
-                    aria-label={`Select order ${row.id}`}
-                    checked={state.selected.includes(row.id)}
-                    onCheckedChange={(checked) =>
-                      state.setSelected(checked === true ? [...state.selected, row.id] : state.selected.filter((id) => id !== row.id))
-                    }
-                  />
-                </Table.Cell>
-                <Table.HeaderCell scope="row">{row.id}</Table.HeaderCell>
-                <Table.Cell>{row.customer}</Table.Cell>
-                <Table.Cell>
-                  <Badge tone={row.status === "Open" ? "info" : row.status === "Shipped" ? "success" : "danger"} size="sm">
-                    {row.status}
-                  </Badge>
-                </Table.Cell>
-                <Table.Cell>{row.owner}</Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table>
-      )}
+      {withTable && <OrdersTable state={state} />}
+    </div>
+  );
+}
+
+const stack = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" } as const;
+
+/** The search, filters and chips above the table, the result count in a footer below it. */
+export function SplitBarDemo(barProps: TableToolbarProps) {
+  const state = useOrders({ statuses: ["Open"] });
+  return (
+    <div style={stack}>
+      <TableToolbar aria-label="Orders table tools" {...barProps}>
+        <TableToolbar.Row>
+          <TableToolbar.Search>
+            <SearchInput aria-label="Search orders" size={barProps.size} onSearch={state.setQuery} />
+          </TableToolbar.Search>
+          <Toolbar aria-label="Filters" variant="secondary" size={barProps.size}>
+            <Toolbar.Item>
+              <TableToolbar.Filter
+                label="Status"
+                icon={FunnelSimpleIcon}
+                count={state.selectedStatuses.length}
+                onClear={() => state.setSelectedStatuses([])}
+              >
+                <StatusPanel value={state.selectedStatuses} onChange={state.setSelectedStatuses} />
+              </TableToolbar.Filter>
+            </Toolbar.Item>
+          </Toolbar>
+        </TableToolbar.Row>
+        <TableToolbar.Row>
+          <TableToolbar.ActiveFilters items={state.applied} onRemove={state.removeFilter} onClearAll={state.clearFilters} />
+        </TableToolbar.Row>
+      </TableToolbar>
+      <OrdersTable state={state} />
+      <TableToolbar aria-label="Orders table footer" {...barProps}>
+        <TableToolbar.Row>
+          <TableToolbar.Summary count={state.rows.length} total={orders.length} />
+        </TableToolbar.Row>
+      </TableToolbar>
+    </div>
+  );
+}
+
+/** The bulk row after the table, pinned to the bottom of the box that scrolls, instead of under the filters. */
+export function SelectionBelowDemo(barProps: TableToolbarProps) {
+  const state = useOrders({ selected: ["#1042", "#1045"] });
+  return (
+    <div style={{ alignContent: "start", blockSize: "22rem", display: "grid", gap: "var(--dbm-space-4)", gridAutoRows: "max-content", overflow: "auto" }}>
+      <TableToolbar aria-label="Orders table tools" {...barProps}>
+        <TableToolbar.Row>
+          <TableToolbar.Search>
+            <SearchInput aria-label="Search orders" size={barProps.size} onSearch={state.setQuery} />
+          </TableToolbar.Search>
+          <TableToolbar.Summary count={state.rows.length} total={orders.length} />
+        </TableToolbar.Row>
+      </TableToolbar>
+      <OrdersTable state={state} />
+      <TableToolbar.Selection
+        size={barProps.size}
+        style={{ bottom: 0, position: "sticky" }}
+        count={state.selected.length}
+        totalCount={state.rows.length}
+        onClear={() => state.setSelected([])}
+        onSelectAll={() => state.setSelected(state.rows.map((row) => row.id))}
+      >
+        <Toolbar aria-label="Bulk actions" variant="secondary" size={barProps.size}>
+          <Toolbar.Button leadingIcon={TrashIcon}>Delete</Toolbar.Button>
+        </Toolbar>
+      </TableToolbar.Selection>
     </div>
   );
 }

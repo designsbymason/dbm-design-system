@@ -123,3 +123,11 @@ Run before the user declares the component Finalized.
 Real-browser story "Live text" measures 1, 9, 10 and 100 (and the loading height); each fix was undone on purpose to see its test
 fail (the reserved width, the badge width, the loading height, the forced-colours outline, the nested size, the loading hold-back).
 
+## Post-Finalization addition (2026-10-04, at explicit direction) — two layout examples
+
+Two Docs-page examples with stories and snippets, no change to the component: **"Split above and below a Table"** (search, filters and chips
+above; a second, named `TableToolbar` holding `Summary` below) and **"Selection in another place"** (`Selection` after the table, sticky at the
+bottom of the scrolling box through its own `style`). Purely additive docs and stories, so the component stays Finalized. Checked in a
+real browser: the sticky row stays at the box's bottom edge scrolled or not, and keyboard "Clear selection" from there moves focus to the nearest
+control before it (the last row's checkbox), not the top of the document. Parts outside a root use size `md`; both examples say so.
+

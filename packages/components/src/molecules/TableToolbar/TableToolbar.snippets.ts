@@ -146,6 +146,65 @@ export const tableToolbarSnippets = {
   {/* a header row with a "Select all orders" Checkbox, and a body row per order with its own Checkbox */}
 </Table>`,
 
+  split: `{/* The parts don't have to share one box. The search, filters and chips go above the table; the result count goes in a
+    second, named bar below it (next to a Pagination, say). A part outside a TableToolbar uses size "md", so give it the same
+    size as the top bar, or wrap it in its own TableToolbar as here. */}
+<TableToolbar aria-label="Orders table tools">
+  <TableToolbar.Row>
+    <TableToolbar.Search>
+      <SearchInput aria-label="Search orders" onSearch={setQuery} />
+    </TableToolbar.Search>
+    <Toolbar aria-label="Filters" variant="secondary">
+      <Toolbar.Item>
+        <TableToolbar.Filter label="Status" count={statuses.length} onClear={() => setStatuses([])}>
+          <CheckboxGroup aria-label="Status" value={statuses} onValueChange={setStatuses}>
+            <Checkbox value="Open">Open</Checkbox>
+            <Checkbox value="Shipped">Shipped</Checkbox>
+          </CheckboxGroup>
+        </TableToolbar.Filter>
+      </Toolbar.Item>
+    </Toolbar>
+  </TableToolbar.Row>
+  <TableToolbar.Row>
+    <TableToolbar.ActiveFilters items={applied} onRemove={removeFilter} onClearAll={clearFilters} />
+  </TableToolbar.Row>
+</TableToolbar>
+<Table aria-label="Orders" hoverable>
+  {/* the rows */}
+</Table>
+<TableToolbar aria-label="Orders table footer">
+  <TableToolbar.Row>
+    <TableToolbar.Summary count={rows.length} total={orders.length} />
+  </TableToolbar.Row>
+</TableToolbar>`,
+
+  selectionElsewhere: `{/* Selection is a part of its own: put it after the table and pin it to the bottom of the box that scrolls. It is hidden
+    while nothing is selected, and its announcements come from a live region beside it, wherever it sits. Put it after the table
+    in the markup too, so the Tab order matches where it appears. */}
+<div style={{ alignContent: "start", blockSize: "22rem", display: "grid", gap: "var(--dbm-space-4)", gridAutoRows: "max-content", overflow: "auto" }}>
+  <TableToolbar aria-label="Orders table tools">
+    <TableToolbar.Row>
+      <TableToolbar.Search>
+        <SearchInput aria-label="Search orders" onSearch={setQuery} />
+      </TableToolbar.Search>
+    </TableToolbar.Row>
+  </TableToolbar>
+  <Table aria-label="Orders" hoverable>
+    {/* the rows, with a Checkbox each */}
+  </Table>
+  <TableToolbar.Selection
+    style={{ bottom: 0, position: "sticky" }}
+    count={selected.length}
+    totalCount={rows.length}
+    onClear={clearSelection}
+    onSelectAll={selectAll}
+  >
+    <Toolbar aria-label="Bulk actions" variant="secondary">
+      <Toolbar.Button leadingIcon={TrashIcon}>Delete</Toolbar.Button>
+    </Toolbar>
+  </TableToolbar.Selection>
+</div>`,
+
   sizes: `{/* size on the bar is the default for ActiveFilters, Summary, Selection and a Filter outside a toolbar. Say the same size on the
     SearchInput and the Toolbars, which are your own components. Shown: sm. */}
 <TableToolbar size="sm" aria-label="Size sm">
