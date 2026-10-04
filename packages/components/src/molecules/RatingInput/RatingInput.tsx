@@ -22,6 +22,16 @@ const sizeClass: Record<InputSize, string | undefined> = {
 // The icon is one step up from the shared scale's own icon size, so the largest rating is a comfortable 40px.
 const iconSize: Record<InputSize, IconProps["size"]> = { xs: "sm", sm: "md", md: "lg", lg: "xl", xl: "2xl" };
 
+// The look of a star the pointer is previewing: a pale tone fill with a tone-coloured outline, set in the stylesheet.
+const toneClass: Record<RatingInputTone, string | undefined> = {
+  highlight: styles.toneHighlight,
+  warning: styles.toneWarning,
+  brand: styles.toneBrand,
+  success: styles.toneSuccess,
+  info: styles.toneInfo,
+  danger: styles.toneDanger,
+};
+
 const toneToIcon: Record<RatingInputTone, IconProps["tone"]> = {
   highlight: "highlight",
   warning: "warning",
@@ -44,7 +54,7 @@ function resolveMax(max: number): number {
  * native radio group, one radio for each value (two for each icon at `precision={0.5}`), so the arrow keys, a
  * single tab stop, form submission under `name` and `required` validation are the browser's own, and a screen reader
  * hears "3 out of 5". The value is a number, `0` for no rating. Icons light up under the pointer before a choice is
- * made, `clearable` lets a rating be taken back, and `readOnly` shows any value exactly (4.3 fills a third of the
+ * made (the stars it would add are drawn pale, with a tone-coloured outline), `clearable` lets a rating be taken back, and `readOnly` shows any value exactly (4.3 fills a third of the
  * fifth icon) as one image with a text alternative. `ref` forwards to the element that carries the role;
  * `className` and `style` go on the outermost box. It always reads left to right.
  *
@@ -122,7 +132,11 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
     const current = readOnly ? clamped : Math.round(clamped / step) * step;
 
     const [hovered, setHovered] = useState<number | null>(null);
-    const shown = !readOnly && !disabled && hovered !== null ? hovered : current;
+    const previewing = !readOnly && !disabled && hovered !== null;
+    const shown = previewing ? hovered : current;
+    // While previewing, the chosen stars stay solid up to the pointer (a lower hover empties those above it), and
+    // the stars the pointer would add are drawn in the preview look.
+    const solid = previewing ? Math.min(current, hovered) : current;
 
     const commit = (next: number) => {
       if (!isControlled) setUncontrolledValue(next);
@@ -150,12 +164,22 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
     const items = Array.from({ length: max }, (_, index) => {
       const position = index + 1;
       // Rounded so a value like 4.3 doesn't carry the float noise of 4.3 - 4 into the style.
-      const fill = Math.round(Math.min(1, Math.max(0, shown - index)) * 1000) / 1000;
+      const portion = (value: number) => Math.round(Math.min(1, Math.max(0, value - index)) * 1000) / 1000;
+      const fill = portion(solid);
+      const preview = previewing ? portion(shown) : undefined;
       const steps = step === 0.5 ? [position - 0.5, position] : [position];
       return (
-        <span key={position} className={styles.item} data-fill={fill}>
-          <span className={styles.icons} style={{ "--fill": fill } as CSSProperties} aria-hidden="true">
+        <span key={position} className={styles.item} data-fill={fill} data-preview={preview}>
+          <span className={styles.icons} style={{ "--fill": fill, "--preview": preview ?? 0 } as CSSProperties} aria-hidden="true">
             <Icon {...iconProps("bold", hasError ? "danger" : "secondary")} />
+            <span className={styles.preview}>
+              <span className={styles.previewFill}>
+                <Icon {...iconProps("fill", undefined)} />
+              </span>
+              <span className={styles.previewStroke}>
+                <Icon {...iconProps("bold", undefined)} />
+              </span>
+            </span>
             <span className={styles.filled}>
               <Icon {...iconProps("fill", toneToIcon[tone])} />
             </span>
@@ -238,7 +262,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
 
     return (
       <div
-        className={cx(styles.root, sizeClass[size], hasError && styles.error, disabled && styles.disabled, className)}
+        className={cx(styles.root, sizeClass[size], toneClass[tone], hasError && styles.error, disabled && styles.disabled, className)}
         style={style}
         // The scale reads left to right whatever the page's direction, the way a number does.
         dir="ltr"

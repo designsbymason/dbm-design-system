@@ -8,6 +8,10 @@ import { RatingInput } from "./RatingInput";
 
 const radios = () => screen.getAllByRole("radio") as HTMLInputElement[];
 const checked = () => radios().find((radio) => radio.checked)?.value;
+const previews = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll<HTMLElement>("[data-fill]")).map((item) =>
+    item.dataset.preview === undefined ? undefined : Number(item.dataset.preview),
+  );
 const fills = (container: HTMLElement) =>
   Array.from(container.querySelectorAll<HTMLElement>("[data-fill]")).map((item) => Number(item.dataset.fill));
 
@@ -25,10 +29,10 @@ describe("RatingInput", () => {
     expect(checked()).toBeUndefined();
   });
 
-  it("draws an outline and a filled icon for each value, hidden from assistive technology", () => {
+  it("draws four icon layers for each value (outline, the preview's fill and outline, the chosen fill), hidden from assistive technology", () => {
     const { container } = render(<RatingInput aria-label="Rating" max={3} />);
-    expect(container.querySelectorAll("svg")).toHaveLength(6);
-    expect(container.querySelectorAll("[aria-hidden='true'] svg")).toHaveLength(6);
+    expect(container.querySelectorAll("svg")).toHaveLength(12);
+    expect(container.querySelectorAll("[aria-hidden='true'] svg")).toHaveLength(12);
   });
 
   it("takes a custom number of icons, falling back to five for an invalid one", () => {
@@ -207,25 +211,53 @@ describe("RatingInput", () => {
   });
 
   describe("hover preview", () => {
-    it("lights the icons under a mouse pointer without choosing, and puts them back on leaving", () => {
+    it("previews the stars under a mouse pointer without choosing, keeping the chosen ones solid, and puts it back on leaving", () => {
       const { container } = render(<RatingInput aria-label="Rating" defaultValue={1} />);
       fireEvent.pointerEnter(radios()[3] as HTMLElement, { pointerType: "mouse" });
-      expect(fills(container)).toEqual([1, 1, 1, 1, 0]);
+      // The chosen star stays solid; the pointer's stars are drawn in the preview look.
+      expect(fills(container)).toEqual([1, 0, 0, 0, 0]);
+      expect(previews(container)).toEqual([1, 1, 1, 1, 0]);
       expect(checked()).toBe("1");
       fireEvent.pointerLeave(screen.getByRole("radiogroup"));
       expect(fills(container)).toEqual([1, 0, 0, 0, 0]);
+      expect(previews(container)).toEqual([undefined, undefined, undefined, undefined, undefined]);
+    });
+
+    it("empties the chosen stars above a pointer that is below the rating, and previews nothing new", () => {
+      const { container } = render(<RatingInput aria-label="Rating" defaultValue={4} />);
+      fireEvent.pointerEnter(radios()[1] as HTMLElement, { pointerType: "mouse" });
+      expect(fills(container)).toEqual([1, 1, 0, 0, 0]);
+      expect(previews(container)).toEqual([1, 1, 0, 0, 0]);
+    });
+
+    it("previews half an icon at a half step", () => {
+      const { container } = render(<RatingInput aria-label="Rating" precision={0.5} />);
+      fireEvent.pointerEnter(radios().find((radio) => radio.value === "2.5") as HTMLElement, { pointerType: "mouse" });
+      expect(fills(container)).toEqual([0, 0, 0, 0, 0]);
+      expect(previews(container)).toEqual([1, 1, 0.5, 0, 0]);
+    });
+
+    it("draws the preview as a pale fill under a tone-coloured outline, hidden from assistive technology", () => {
+      const { container } = render(<RatingInput aria-label="Rating" />);
+      const preview = container.querySelector("[class*='preview']:not([data-fill])") as HTMLElement;
+      expect(preview.querySelectorAll("svg")).toHaveLength(2);
+      expect(preview.closest("[aria-hidden='true']")).not.toBeNull();
+      expect(preview.querySelector("[class*='previewFill']")).not.toBeNull();
+      expect(preview.querySelector("[class*='previewStroke']")).not.toBeNull();
     });
 
     it("ignores touch and pen pointers", () => {
       const { container } = render(<RatingInput aria-label="Rating" />);
       fireEvent.pointerEnter(radios()[3] as HTMLElement, { pointerType: "touch" });
       expect(fills(container)).toEqual([0, 0, 0, 0, 0]);
+      expect(previews(container)).toEqual([undefined, undefined, undefined, undefined, undefined]);
     });
 
     it("does not preview when disabled", () => {
       const { container } = render(<RatingInput aria-label="Rating" disabled />);
       fireEvent.pointerEnter(radios()[3] as HTMLElement, { pointerType: "mouse" });
       expect(fills(container)).toEqual([0, 0, 0, 0, 0]);
+      expect(previews(container)).toEqual([undefined, undefined, undefined, undefined, undefined]);
     });
 
     it("calls the consumer's pointer-leave handler too", () => {
@@ -241,9 +273,10 @@ describe("RatingInput", () => {
     const { container } = render(<RatingInput aria-label="Rating" defaultValue={2} />);
     await user.tab();
     fireEvent.pointerEnter(radios()[4] as HTMLElement, { pointerType: "mouse" });
-    expect(fills(container)).toEqual([1, 1, 1, 1, 1]);
+    expect(previews(container)).toEqual([1, 1, 1, 1, 1]);
     await user.keyboard("{ArrowRight}");
     expect(fills(container)).toEqual([1, 1, 1, 0, 0]);
+    expect(previews(container)).toEqual([undefined, undefined, undefined, undefined, undefined]);
   });
 
   describe("read-only", () => {
@@ -445,7 +478,7 @@ describe("RatingInput", () => {
   it("draws any Phosphor icon", () => {
       const Dot = (props: { className?: string }) => <svg data-testid="dot" className={props.className} />;
       render(<RatingInput aria-label="Rating" max={2} icon={Dot as never} />);
-      expect(screen.getAllByTestId("dot")).toHaveLength(4);
+      expect(screen.getAllByTestId("dot")).toHaveLength(8);
     });
   });
 

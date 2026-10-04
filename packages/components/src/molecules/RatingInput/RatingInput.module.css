@@ -45,6 +45,61 @@
   transition: clip-path var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
+/* The star the pointer is previewing, between the outline and the chosen fill: a pale tone fill under a tone-coloured
+   outline, cut off after `--preview` of its width, like the chosen fill. */
+.preview {
+  clip-path: inset(0 calc((1 - var(--preview)) * 100%) 0 0);
+  display: inline-flex;
+  inset: 0;
+  position: absolute;
+  transition: clip-path var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.previewFill,
+.previewStroke {
+  display: inline-flex;
+  inset: 0;
+  position: absolute;
+}
+
+.previewFill {
+  color: var(--preview-fill);
+}
+
+.previewStroke {
+  color: var(--preview-stroke);
+}
+
+.toneHighlight {
+  --preview-fill: var(--dbm-bg-highlight-subtle);
+  --preview-stroke: var(--dbm-border-highlight);
+}
+
+.toneWarning {
+  --preview-fill: var(--dbm-bg-warning-subtle);
+  --preview-stroke: var(--dbm-border-warning);
+}
+
+.toneBrand {
+  --preview-fill: var(--dbm-bg-brand-subtle);
+  --preview-stroke: var(--dbm-border-brand);
+}
+
+.toneSuccess {
+  --preview-fill: var(--dbm-bg-success-subtle);
+  --preview-stroke: var(--dbm-border-success);
+}
+
+.toneInfo {
+  --preview-fill: var(--dbm-bg-info-subtle);
+  --preview-stroke: var(--dbm-border-info);
+}
+
+.toneDanger {
+  --preview-fill: var(--dbm-bg-danger-subtle);
+  --preview-stroke: var(--dbm-border-danger);
+}
+
 /* One radio per choice, invisible and over the item: the whole item, or half of it for a half step. */
 .radio {
   appearance: none;
@@ -119,7 +174,20 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .filled {
+  .filled,
+  .preview {
     transition: none;
+  }
+}
+
+/* Forced colours makes every colour the same system colour, which would turn the preview into a solid star like
+   the chosen ones; system colours are kept, so it is drawn as an outline with the page's own colour inside. */
+@media (forced-colors: active) {
+  .previewFill {
+    color: Canvas;
+  }
+
+  .previewStroke {
+    color: CanvasText;
   }
 }

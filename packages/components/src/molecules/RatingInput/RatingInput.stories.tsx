@@ -296,6 +296,17 @@ export const Controlled: Story = {
 
 const items = (canvasElement: HTMLElement) => Array.from(canvasElement.querySelectorAll<HTMLElement>("[data-fill]"));
 const fills = (canvasElement: HTMLElement) => items(canvasElement).map((item) => Number(item.dataset.fill));
+const previews = (canvasElement: HTMLElement) =>
+  items(canvasElement).map((item) => (item.dataset.preview === undefined ? undefined : Number(item.dataset.preview)));
+// The colour a token resolves to, by reading it back from an element.
+const resolved = (property: "color" | "backgroundColor", value: string) => {
+  const probe = document.createElement("span");
+  probe.style[property] = value;
+  document.body.appendChild(probe);
+  const colour = getComputedStyle(probe)[property];
+  probe.remove();
+  return colour;
+};
 const checkedValue = (canvasElement: HTMLElement) =>
   (Array.from(canvasElement.querySelectorAll<HTMLInputElement>("input[type=radio]")).find((radio) => radio.checked) ?? { value: "" }).value;
 
@@ -321,10 +332,40 @@ export const HoverPreviewCheck: Story = {
   play: async ({ canvasElement }) => {
     const radios = within(canvasElement).getAllByRole("radio");
     await userEvent.hover(radios[3] as HTMLElement);
-    await waitFor(() => expect(fills(canvasElement)).toEqual([1, 1, 1, 1, 0]));
+    // The chosen star stays solid; the stars the pointer would add are the preview.
+    await waitFor(() => expect(previews(canvasElement)).toEqual([1, 1, 1, 1, 0]));
+    await expect(fills(canvasElement)).toEqual([1, 0, 0, 0, 0]);
     await expect(checkedValue(canvasElement)).toBe("1");
     await userEvent.unhover(radios[3] as HTMLElement);
     await waitFor(() => expect(fills(canvasElement)).toEqual([1, 0, 0, 0, 0]));
+    await expect(previews(canvasElement)).toEqual([undefined, undefined, undefined, undefined, undefined]);
+  },
+};
+
+export const HoverPreviewColoursCheck: Story = {
+  name: "A previewed star is a pale tone fill under a tone-coloured outline — interaction test",
+  tags: ["!dev"],
+  args: { defaultValue: 0 },
+  render: (args) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-3)" }}>
+      {(["highlight", "warning", "brand", "success", "info", "danger"] as const).map((tone) => (
+        <RatingInput key={tone} {...args} tone={tone} aria-label={`Tone ${tone}`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const tone of ["highlight", "warning", "brand", "success", "info", "danger"]) {
+      const group = within(canvasElement).getByRole("radiogroup", { name: `Tone ${tone}` });
+      const radio = within(group).getAllByRole("radio")[2] as HTMLElement;
+      await userEvent.hover(radio);
+      await waitFor(() => expect(group.querySelector("[data-preview='1']")).not.toBeNull());
+      const item = group.querySelector("[data-preview='1']") as HTMLElement;
+      const fill = getComputedStyle(item.querySelector("[class*='previewFill']") as HTMLElement).color;
+      const stroke = getComputedStyle(item.querySelector("[class*='previewStroke']") as HTMLElement).color;
+      await expect(fill).toBe(resolved("color", `var(--dbm-bg-${tone}-subtle)`));
+      await expect(stroke).toBe(resolved("color", `var(--dbm-border-${tone})`));
+      await userEvent.unhover(radio);
+    }
   },
 };
 
@@ -434,8 +475,16 @@ export const ForcedColorsCheck: Story = {
       const item = (document.activeElement as HTMLElement).closest("[data-fill]") as HTMLElement;
       await expect(getComputedStyle(item).outlineStyle).toBe("solid");
       // Filled and outline icons are told apart by their shape, since every colour becomes the same system colour.
-      const [outline, filled] = Array.from(items(canvasElement)[0]!.querySelectorAll("svg")) as SVGElement[];
+      const svgs = Array.from(items(canvasElement)[0]!.querySelectorAll("svg")) as SVGElement[];
+      const [outline, , , filled] = svgs;
       await expect(outline!.innerHTML).not.toBe(filled!.innerHTML);
+      // A previewed star is an outline with the page's own colour inside, not a solid star like the chosen ones.
+      const radios = within(canvasElement).getAllByRole("radio");
+      await userEvent.hover(radios[4] as HTMLElement);
+      await waitFor(() => expect(items(canvasElement)[4]!.dataset.preview).toBe("1"));
+      const preview = items(canvasElement)[4]!;
+      await expect(getComputedStyle(preview.querySelector("[class*='previewFill']") as HTMLElement).color).toBe(resolved("color", "Canvas"));
+      await expect(getComputedStyle(preview.querySelector("[class*='previewStroke']") as HTMLElement).color).toBe(resolved("color", "CanvasText"));
     } finally {
       await emulate("none");
     }

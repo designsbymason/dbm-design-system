@@ -185,7 +185,8 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 - A half step has its own choice ("2.5 out of 5") and is reached by the arrow keys as well as by pressing the left
   half of an icon.
 - The hover preview is for mouse pointers only, and stops as soon as the keyboard is used; a touch tap simply
-  chooses.
+  chooses. The stars it would add are drawn pale with a tone-coloured outline, apart from the solid ones already
+  chosen, and in forced colours as outlines.
 - `readOnly` is one image whose text alternative says the value ("Rated 4.3 out of 5", or "Not rated"), not a group
   of disabled radios.
 - `hasError` sets `aria-invalid`; `required` sets `aria-required` and a real form constraint.
@@ -240,6 +241,18 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 
 The icons are drawn by `Icon`, which lists its own colour tokens (`icon.highlight`, `icon.secondary`, `icon.danger` and the rest of the tones).
 
+<TokenRow token="bg.highlight-subtle" usage="the preview fill at the `highlight` tone" />
+<TokenRow token="border.highlight" usage="the preview outline at the `highlight` tone" />
+<TokenRow token="bg.warning-subtle" usage="the preview fill at the `warning` tone" />
+<TokenRow token="border.warning" usage="the preview outline at the `warning` tone" />
+<TokenRow token="bg.brand-subtle" usage="the preview fill at the `brand` tone" />
+<TokenRow token="border.brand" usage="the preview outline at the `brand` tone" />
+<TokenRow token="bg.success-subtle" usage="the preview fill at the `success` tone" />
+<TokenRow token="border.success" usage="the preview outline at the `success` tone" />
+<TokenRow token="bg.info-subtle" usage="the preview fill at the `info` tone" />
+<TokenRow token="border.info" usage="the preview outline at the `info` tone" />
+<TokenRow token="bg.danger-subtle" usage="the preview fill at the `danger` tone" />
+<TokenRow token="border.danger" usage="the preview outline at the `danger` tone" />
 <TokenRow token="border.focus" usage="the focus ring around the icon that has keyboard focus" />
 <TokenRow token="border-width.2" usage="the focus ring's width" />
 <TokenRow token="radius.sm" usage="the focus ring's corners, the standard focus-ring radius" />
