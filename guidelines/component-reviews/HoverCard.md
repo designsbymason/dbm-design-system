@@ -206,3 +206,15 @@ checks first, then all four features.
   source, not heard through VoiceOver or NVDA.
 - **A `dir` set below `body`.** Not measured (see above).
 - **`pnpm audit` after the second round.** No dependency changed, so it was not re-run.
+
+## Post-Finalization fix (2026-10-04, at explicit direction) — `HoverCardProvider` leaked a cool-down timer when it unmounted with a card open
+
+Found by a CI run (one unhandled `window is not defined` from `HoverCardProvider.tsx`, in an otherwise green unit run). When the provider unmounts with a card
+open, the provider's cleanup (which clears the cool-down timer) runs first and the card's own cleanup runs after it, calling `reportClosed`, which started a new
+`skipDelayDuration` timer that nothing would ever clear. In the tests it was a *real* timer, since the file's `afterEach` restores real timers before React Testing Library
+unmounts, and it could fire after the test environment was torn down. In an app it set state on an unmounted provider after 300ms: harmless, but a leak.
+
+Fix: a ref set while the provider is unmounting (reset on every mount, so StrictMode's mount, unmount, remount leaves it right); `reportClosed` starts no timer then.
+Two new tests, each shown to fail with its half of the fix removed: no timer is left after unmounting with a card open, and the cool-down still happens inside
+StrictMode (the next card waits again). A defect fix with no change to rendering, API or any existing behaviour, so the component stays Finalized.
+

@@ -875,6 +875,38 @@ describe("HoverCardProvider", () => {
     expect(screen.getByText("Card B")).toBeInTheDocument();
   });
 
+  it("starts no cool-down timer when it unmounts with a card open", () => {
+    vi.useFakeTimers();
+    const { unmount } = render(<Pair />);
+    hover("A");
+    advance(300);
+    expect(screen.getByText("Card A")).toBeInTheDocument();
+    // The open card reports itself closed from its own cleanup, after the provider's: that must not leave a timer behind.
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("still cools down after a card closes inside StrictMode, so the next card waits again", () => {
+    vi.useFakeTimers();
+    render(
+      <StrictMode>
+        <Pair />
+      </StrictMode>,
+    );
+    hover("A");
+    advance(300);
+    leave("A");
+    advance(300);
+    expect(screen.queryByText("Card A")).not.toBeInTheDocument();
+    // Past skipDelayDuration (300): the provider is no longer warm, so B waits out its own delay.
+    advance(400);
+    hover("B");
+    advance(0);
+    expect(screen.queryByText("Card B")).not.toBeInTheDocument();
+    advance(300);
+    expect(screen.getByText("Card B")).toBeInTheDocument();
+  });
+
   it("survives StrictMode, and clears its timer on unmount", () => {
     vi.useFakeTimers();
     const { unmount } = render(

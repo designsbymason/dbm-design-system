@@ -34,6 +34,10 @@ export function HoverCardProvider({
   const [isWarm, setIsWarm] = useState(false);
   const openCard = useRef<{ id: string; close: () => void } | null>(null);
   const coolDownTimer = useRef<number | undefined>(undefined);
+  // Set while the provider is going away. A card that is open when it unmounts reports itself closed from its own cleanup, which
+  // can run after this component's (a parent's cleanup runs first), and that report must not start a cool-down timer nobody
+  // will ever clear. Reset on every mount, so StrictMode's mount, unmount, remount leaves it correct.
+  const unmounting = useRef(false);
   // Read inside `reportClosed`, which has to stay the same function for the
   // provider's whole life: an open card's effect depends on it.
   const skipDelayRef = useRef(skipDelayDuration);
@@ -53,10 +57,17 @@ export function HoverCardProvider({
     if (openCard.current?.id !== id) return;
     openCard.current = null;
     window.clearTimeout(coolDownTimer.current);
+    if (unmounting.current) return;
     coolDownTimer.current = window.setTimeout(() => setIsWarm(false), skipDelayRef.current);
   }, []);
 
-  useEffect(() => () => window.clearTimeout(coolDownTimer.current), []);
+  useEffect(() => {
+    unmounting.current = false;
+    return () => {
+      unmounting.current = true;
+      window.clearTimeout(coolDownTimer.current);
+    };
+  }, []);
 
   const controls = useMemo<HoverCardProviderControls>(() => ({ reportOpen, reportClosed }), [reportOpen, reportClosed]);
   const value = useMemo(
