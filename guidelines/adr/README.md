@@ -96,6 +96,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0040](./0040-pininput-is-one-real-input-drawn-as-cells-over-an-input-per-cell.md) | `PinInput` is one real input drawn as cells, over an input per cell | Accepted |
 | [0041](./0041-ratinginput-is-a-native-radio-group-with-two-radios-per-icon-at-half-steps-over-a-slider-role.md) | `RatingInput` is a native radio group, with two radios per icon at half steps, over a slider role | Accepted |
 | [0042](./0042-yellow-is-an-anchored-scale-with-its-own-light-end-chroma-and-the-highlight-semantic-family.md) | Yellow is an anchored scale with its own light-end chroma, and its semantic family is named `highlight` | Accepted |
+| [0043](./0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md) | Reordering is a hand-rolled sortable hook in `primitives` for a single list, over a drag-and-drop dependency | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 
