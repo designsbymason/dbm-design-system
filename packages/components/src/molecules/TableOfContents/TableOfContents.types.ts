@@ -1,3 +1,5 @@
+import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { SpaceValue } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
 
 /**
@@ -27,7 +29,27 @@ export interface TableOfContentsItem {
    * @default 1
    */
   level?: 1 | 2 | 3 | 4;
+  /** An icon shown before the text — a component reference from `@dbm-design-system/icons`, not a string name. Decorative. */
+  icon?: PhosphorIcon;
+  /** Content shown at the end of the entry, such as a `Badge` ("New"). It is part of the link, so it is read with the label. */
+  trailing?: ReactNode;
+  /**
+   * Dims the entry and blocks it, as `aria-disabled`; it stays in the page and focusable, per WAI-ARIA guidance.
+   * @default false
+   */
+  disabled?: boolean;
 }
+
+/**
+ * Whether the outline folds into a single "On this page" button that opens the list, to save room on a small screen.
+ *
+ * - `"never"` (the default) — the list is always open.
+ * - `"auto"` — the list is always open from the `sm` breakpoint up, and behind the button below it.
+ * - `"always"` — behind the button at every width.
+ *
+ * A list that has keyboard focus inside it stays open while it does, so a screen that shrinks never drops focus.
+ */
+export type TableOfContentsCollapse = "never" | "auto" | "always";
 
 /**
  * The text `TableOfContents` supplies itself, translatable through the `labels` prop (`ADR-0021`).
@@ -88,6 +110,49 @@ export interface TableOfContentsProps
    * @default true
    */
   smoothScroll?: boolean;
+  /**
+   * The shallowest level drawn, 1 to 4: entries above it are left out, and the rest are indented from it. Level here
+   * means an `items` entry's `level`, or, for headings read from the page, how far below the highest one found.
+   * @default 1
+   */
+  minLevel?: 1 | 2 | 3 | 4;
+  /**
+   * The deepest level drawn, 1 to 4: entries below it are left out.
+   * @default 4
+   */
+  maxLevel?: 1 | 2 | 3 | 4;
+  /**
+   * Keeps the outline in view while the page scrolls, as a sticky box (built on `Affix`). It sticks to the page, or
+   * to `scrollContainerRef`. Distinct from `scrollOffset`, which is about where the *headings* land.
+   * @default false
+   */
+  sticky?: boolean;
+  /**
+   * How far from the top a sticky outline sticks, from the spacing token scale — for a page whose own header is also
+   * sticky. Has no effect without `sticky`.
+   */
+  stickyOffset?: SpaceValue;
+  /**
+   * Whether, when the page loads with `#id` in its address and `id` is one of the entries, the outline scrolls that
+   * section to `scrollOffset` and marks it. The browser's own jump ignores a sticky header, and cannot reach a
+   * heading that is read from the page after the first render.
+   * @default true
+   */
+  scrollToHash?: boolean;
+  /**
+   * Folds the outline behind an "On this page" button — see {@link TableOfContentsCollapse}.
+   * @default 'never'
+   */
+  collapse?: TableOfContentsCollapse;
+  /** Whether the list is open while folded, controlled. Pair it with `onOpenChange`. */
+  open?: boolean;
+  /**
+   * Whether the list is open at first while folded, uncontrolled.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  /** Called when the button opens or closes the list, or choosing an entry closes it. */
+  onOpenChange?: (open: boolean) => void;
   /**
    * The size of the text and spacing.
    * @default 'md'

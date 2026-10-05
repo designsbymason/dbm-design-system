@@ -15,6 +15,15 @@ export const propOrder = [
   "size",
   "tone",
   "highlightActive",
+  "minLevel",
+  "maxLevel",
+  "sticky",
+  "stickyOffset",
+  "scrollToHash",
+  "collapse",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
   "showTitle",
   "activeId",
   "defaultActiveId",
@@ -46,8 +55,10 @@ Give it `items` — each an `id` to link to, a `label`, and an optional `level` 
 or leave `items` out and it reads the `h2` and `h3` headings from the page (or from one element, with
 `contentRef`). The marked entry follows the scroll position, and a click scrolls to the section,
 smoothly unless the reader prefers less motion. `scrollOffset` keeps a section clear of a sticky
-header, and `scrollContainerRef` points it at a scrolling box instead of the page. It doesn't stick to
-the screen by itself: wrap it in `Affix` to keep it in view beside long content.
+header, and `scrollContainerRef` points it at a scrolling box instead of the page. `sticky` keeps it in
+view beside long content, `collapse` folds it behind an "On this page" button on a small screen, and an
+outline that is taller than its own box keeps the current entry in view in it. `minLevel` and `maxLevel`
+choose which levels are drawn, and an entry can carry an icon, trailing content or `disabled`.
 
 ### Import
 
@@ -62,7 +73,7 @@ import { TableOfContents } from "@dbm-design-system/components";
 <Canvas of={TableOfContentsStories.Playground} />
 
 </div>
-<PlaygroundControls of={TableOfContentsStories.Playground} order={propOrder} exclude={["items", "contentRef", "selector", "activeId", "defaultActiveId", "onActiveIdChange", "scrollContainerRef", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+<PlaygroundControls of={TableOfContentsStories.Playground} order={propOrder} exclude={["items", "contentRef", "selector", "sticky", "stickyOffset", "scrollToHash", "open", "defaultOpen", "onOpenChange", "activeId", "defaultActiveId", "onActiveIdChange", "scrollContainerRef", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
 
 Scroll the article, and click an entry: the outline follows the scroll and the click.
 
@@ -77,7 +88,7 @@ Scroll the article, and click an entry: the outline follows the scroll and the c
 
 Each entry of `items` is an object with these fields.
 
-<PropertiesTable of={TableOfContentsItemStories} order={["id", "label", "level"]} />
+<PropertiesTable of={TableOfContentsItemStories} order={["id", "label", "level", "icon", "trailing", "disabled"]} />
 
 ## Variants
 
@@ -105,6 +116,46 @@ marker bar stays, so the background is never the only cue.
 `highlightActive={false}` leaves just the marker bar and the change of colour.
 
 <Canvas of={TableOfContentsStories.NotHighlighted} />
+
+### Choosing the levels
+
+`minLevel` and `maxLevel` (1 to 4) draw only some levels; what is left is indented from `minLevel`. They
+apply to `items` and to headings read from the page alike, so a page with `h2`, `h3` and `h4` headings can show
+just the first two without writing a selector.
+
+<Canvas of={TableOfContentsStories.Levels} />
+
+### Icons, badges and disabled entries
+
+An entry can take an `icon`, `trailing` content (a `Badge`, say) that sits at the far edge and is read with the
+label, and `disabled`, which dims it and blocks it but leaves it focusable, as `aria-disabled`.
+
+<Canvas of={TableOfContentsStories.EntryExtras} />
+
+### Folded behind a button
+
+`collapse` folds the outline into an "On this page" button that opens the list: `"always"`, or `"auto"` to do it
+below the `sm` breakpoint only. Choosing an entry closes the list again, `Escape` closes it from inside it, and
+`open`, `defaultOpen` and `onOpenChange` control it. A list with keyboard focus inside it stays open while it
+does, so a screen that narrows never drops focus. On this page the box is a fixed width, so `"always"` shows it;
+open the story on its own at a phone size to see `"auto"`.
+
+<Canvas of={TableOfContentsStories.Folded} />
+
+### Sticky
+
+`sticky` keeps the outline in view as the content scrolls. It is built on `Affix`: it sticks to the page, or
+within `scrollContainerRef` as here, and `stickyOffset` (on the spacing scale) leaves room for a sticky header
+of your own. Give its column the height of the content, so it has room to travel.
+
+<Canvas of={TableOfContentsStories.Sticky} />
+
+### A long outline in a box of its own
+
+An outline taller than its box scrolls inside that box, and the current entry is kept in view in it — only the
+box moves, never the page. Scroll the article and watch the outline follow.
+
+<Canvas of={TableOfContentsStories.LongOutline} />
 
 ### Nested levels
 
@@ -162,7 +213,7 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
 
 - Use an outline on a long page, or one with several sections a reader will want to jump between:
   documentation, an article, a settings page, a policy.
-- Keep it beside the content, and wrap it in `Affix` so it stays in view while the page scrolls.
+- Keep it beside the content, with `sticky` so it stays in view while the page scrolls.
 - Point it at headings that already have `id`s, and keep the labels short — the heading's own text.
 - Use `scrollOffset` whenever a sticky header covers the top of the page, so a section isn't left under it.
 - Pass `items` for a server-rendered page, or one whose outline must be there before scripts run.
@@ -198,8 +249,15 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
   works.
 - After a click made with the keyboard, focus moves to the section, so the next `Tab` continues from
   there. The heading is given `tabindex="-1"` for that, unless it already has a `tabindex`.
-- In a long outline of its own, put the list in a box with a height (such as `ScrollArea`); it doesn't
-  scroll the current entry into view by itself.
+- An outline that is longer than the screen can sit in a box with its own height (a `ScrollArea`, or any box
+  that scrolls); the current entry is scrolled into view in it, and only that box moves.
+- Use `collapse="auto"` where the outline sits above the content on a phone, so it costs one line until it is
+  asked for. The title on the button is `labels.title`.
+- A page opened at `#section` is moved to that section by the outline, clear of a sticky header, even when
+  the headings are read from the page after the first render (`scrollToHash`). Give the headings a
+  `scroll-margin-top` too, so a plain link to them lands clear of the header before the outline loads.
+- Use `disabled` for a section the reader can't use yet, rather than leaving it out, so the outline still
+  shows the whole structure.
 - Every piece of text the component writes itself is in `labels`.
 
 ## Accessibility
@@ -218,6 +276,12 @@ removed as one. The entry being read carries `aria-current="location"`, announce
 | `Tab` | Moves to the next link — every entry is one stop |
 | `Shift+Tab` | Moves to the previous one |
 | `Enter` | Follows the link: scrolls to the section and moves focus to it |
+
+When the outline is folded, the button is a disclosure: it carries `aria-expanded` and `aria-controls`, and
+closing the list — by choosing an entry or with `Escape` — never leaves focus on something that has just
+disappeared: after a key press focus goes to the section, after a mouse click or `Escape` to the button. A list
+holding keyboard focus stays open even if the screen narrows. A `disabled` entry stays in the tab order with
+`aria-disabled`, as WAI-ARIA recommends, and does nothing when activated.
 
 A mouse click scrolls without moving focus, as a plain anchor does; a keyboard activation also moves focus
 to the section. The marker is not colour alone: the current entry also has a thicker, differently coloured
@@ -258,9 +322,20 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 <TableOfContents contentRef={articleRef} selector="h2, h3, h4" />
 
 {/* Beside long content, in view while the page scrolls, clear of a 56px sticky header (offset 16 is 64px) */}
-<Affix offset={16}>
-  <TableOfContents contentRef={articleRef} scrollOffset={56} />
-</Affix>
+<TableOfContents contentRef={articleRef} scrollOffset={56} sticky stickyOffset={16} />
+
+{/* Folded behind a button below the sm breakpoint */}
+<TableOfContents contentRef={articleRef} collapse="auto" />
+
+{/* Only the first two levels, with an icon, a badge and a disabled entry */}
+<TableOfContents
+  maxLevel={2}
+  items={[
+    { id: "guide", label: "Guide", icon: BookOpenIcon },
+    { id: "news", label: "News", trailing: <Badge size="xs" tone="info">New</Badge> },
+    { id: "soon", label: "Soon", disabled: true },
+  ]}
+/>
 
 {/* The headings are in a scrolling box of your own */}
 <TableOfContents contentRef={boxRef} scrollContainerRef={boxRef} />
@@ -322,7 +397,7 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 </RelatedCard>
 <RelatedCard
   name="Affix"
-  description="Keeps the outline in view beside long content"
+  description="What a sticky outline is built on, for keeping any box in view"
   href="/?path=/docs/atoms-layout-affix--docs"
 >
   <Badge tone="info">Sticky</Badge>

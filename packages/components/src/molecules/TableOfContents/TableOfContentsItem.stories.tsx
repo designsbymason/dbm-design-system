@@ -18,6 +18,22 @@ const meta: Meta<TableOfContentsItem> = {
       description: "The entry's text.",
       type: { name: "other", value: "ReactNode", required: true },
     },
+    icon: {
+      control: false,
+      description:
+        "An icon shown before the text: a component reference from @dbm-design-system/icons, not a string name. Decorative.",
+    },
+    trailing: {
+      control: false,
+      description:
+        "Content shown at the end of the entry, such as a Badge. It is part of the link, so it is read with the label.",
+      type: { name: "other", value: "ReactNode" },
+    },
+    disabled: {
+      control: "boolean",
+      description: "Dims the entry and blocks it, as aria-disabled; it stays in the page and focusable.",
+      table: { defaultValue: { summary: "false" } },
+    },
     level: {
       control: false,
       options: [1, 2, 3, 4],

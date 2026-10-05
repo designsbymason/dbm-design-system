@@ -70,12 +70,29 @@
   align-items: center;
   border-radius: var(--dbm-radius-sm);
   display: flex;
+  gap: var(--dbm-space-2);
   min-block-size: var(--dbm-space-6);
   padding-block: var(--dbm-space-1);
   padding-inline: var(--dbm-space-3) var(--dbm-space-2);
   transition:
     color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
     background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Content at the end of an entry (a badge) stays whole and sits at the far edge. */
+.trailing {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  padding-inline-start: var(--dbm-space-2);
 }
 
 .level2 > .link {
@@ -123,6 +140,45 @@ a.link:hover {
 
 .highlighted.toneNeutral a.active {
   background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* --- Folded: the list sits behind an "On this page" button. --- */
+
+.root .toggle {
+  display: none;
+}
+
+.toggle + .list {
+  margin-block-start: var(--dbm-space-2);
+}
+
+.collapseAlways .toggle {
+  display: inline-flex;
+}
+
+.collapseAlways .title {
+  display: none;
+}
+
+.collapseAlways.folded .list {
+  display: none;
+}
+
+/* `auto` folds below the `sm` breakpoint. `var()` can't appear inside an `@media` condition, so this is the
+   `breakpoint.sm` value (640px) written out — the limitation `Breadcrumb`'s compact form notes too — and the
+   script's own `matchMedia` question uses the same number. */
+@media (max-width: 639.98px) {
+  .collapseAuto .toggle {
+    display: inline-flex;
+  }
+
+  .collapseAuto .title {
+    display: none;
+  }
+
+  .collapseAuto.folded .list {
+    display: none;
+  }
 }
 
 /* Forced colours replaces every colour but the system's own: the track and the marker would both be one

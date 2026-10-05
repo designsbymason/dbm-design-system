@@ -45,6 +45,42 @@ ${toc(['tone="neutral"'])}`,
   notHighlighted: `{/* highlightActive={false} leaves just the marker bar beside the current entry */}
 ${toc(["highlightActive={false}"])}`,
 
+  levels: `{/* minLevel and maxLevel (1 to 4) draw only some levels; the rest are indented from minLevel.
+    They apply to items and to headings read from the page alike. */}
+${toc(["maxLevel={1}"], nestedItems)}
+
+${toc(["minLevel={2}"], nestedItems)}`,
+
+  entryExtras: `{/* Each entry can take an icon (from @dbm-design-system/icons), trailing content such as a Badge,
+    and disabled — which dims it and blocks it, but leaves it focusable. */}
+<TableOfContents
+  items={[
+    { id: "guide", label: "Guide", icon: BookOpenIcon },
+    { id: "notifications", label: "Notifications", icon: BellIcon, trailing: <Badge size="xs" tone="info">New</Badge> },
+    { id: "settings", label: "Settings", icon: GearIcon, disabled: true },
+  ]}
+/>`,
+
+  folded: `{/* collapse: "never" (default) | "auto" (folded below the sm breakpoint) | "always".
+    The list sits behind an "On this page" button; choosing an entry closes it again. */}
+${toc(['collapse="auto"'])}
+
+{/* open / defaultOpen / onOpenChange control the folded list */}
+${toc(['collapse="always"', "defaultOpen"])}`,
+
+  sticky: `{/* sticky keeps the outline in view as the page scrolls. Here it sticks within a scrolling box of your
+    own; leave scrollContainerRef out and it sticks to the page (stickyOffset, on the spacing scale,
+    leaves room for a sticky header of your own). */}
+{/* const boxRef = useRef<HTMLDivElement>(null); */}
+${toc(["sticky", "scrollContainerRef={boxRef}"])}`,
+
+  longOutline: `{/* An outline taller than its box scrolls inside that box, and the current entry is kept in view
+    in it — the page is never scrolled to do it. */}
+{/* const articleRef = useRef<HTMLDivElement>(null); */}
+<div style={{ maxHeight: "9rem", overflow: "auto" }}>
+${toc(["scrollContainerRef={articleRef}", "showTitle={false}"])}
+</div>`,
+
   nested: `{/* level: 1 (default) to 4 — each level is indented one step */}
 ${toc([], nestedItems)}`,
 
@@ -86,6 +122,9 @@ export interface TableOfContentsPlaygroundSnippetArgs {
   size?: TableOfContentsSize;
   tone?: TableOfContentsTone;
   highlightActive?: boolean;
+  collapse?: "never" | "auto" | "always";
+  minLevel?: number;
+  maxLevel?: number;
   showTitle?: boolean;
   smoothScroll?: boolean;
   scrollOffset?: number;
@@ -100,6 +139,9 @@ export function tableOfContentsPlaygroundSnippet(args: TableOfContentsPlayground
   const attributes: string[] = [];
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
+  if (args.collapse && args.collapse !== "never") attributes.push(`collapse="${args.collapse}"`);
+  if (typeof args.minLevel === "number" && args.minLevel !== 1) attributes.push(`minLevel={${args.minLevel}}`);
+  if (typeof args.maxLevel === "number" && args.maxLevel !== 4) attributes.push(`maxLevel={${args.maxLevel}}`);
   if (args.highlightActive === false) attributes.push("highlightActive={false}");
   if (args.showTitle === false) attributes.push("showTitle={false}");
   if (args.smoothScroll === false) attributes.push("smoothScroll={false}");

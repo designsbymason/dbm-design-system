@@ -1,6 +1,11 @@
+import { CaretDownIcon, CaretUpIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined } from "@dbm-design-system/primitives";
 import { forwardRef, useCallback, useEffect, useId, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import type { FocusEvent, KeyboardEvent, MouseEvent } from "react";
+import { Affix } from "../../atoms/Affix";
+import { Button } from "../../atoms/Button";
+import { Icon } from "../../atoms/Icon";
+import type { IconSize } from "../../atoms/Icon";
 import { Link } from "../../atoms/Link";
 import styles from "./TableOfContents.module.css";
 import type {
@@ -26,16 +31,27 @@ const toneClass: Record<TableOfContentsTone, string | undefined> = {
 
 const levelClass = [undefined, undefined, styles.level2, styles.level3, styles.level4] as const;
 
+// One step down from the text's own size at the small end, the mapping `Breadcrumb` and `Button` use.
+const iconSizeForSize: Record<TableOfContentsSize, IconSize> = { xs: "xs", sm: "xs", md: "sm", lg: "sm", xl: "md" };
+
 const defaultLabels: TableOfContentsLabels = { title: "On this page", navigation: "Table of contents" };
+
+/** The width below which `collapse="auto"` folds the list — the `sm` breakpoint (640px), in a form `matchMedia` takes. */
+const NARROW_QUERY = "(max-width: 639.98px)";
+
+type Level = 1 | 2 | 3 | 4;
 
 /** An entry as it is drawn: written by the caller, or read from a heading. */
 interface Entry {
   id: string;
   label: TableOfContentsItem["label"];
-  level: 1 | 2 | 3 | 4;
+  level: Level;
+  icon?: TableOfContentsItem["icon"];
+  trailing?: TableOfContentsItem["trailing"];
+  disabled?: boolean;
 }
 
-const clampLevel = (level: number): 1 | 2 | 3 | 4 => Math.min(Math.max(Math.trunc(level) || 1, 1), 4) as 1 | 2 | 3 | 4;
+const clampLevel = (level: number): Level => Math.min(Math.max(Math.trunc(level) || 1, 1), 4) as Level;
 
 /** The page's own preference, read when it is needed rather than at render, so a server render never touches it. */
 const prefersReducedMotion = (): boolean =>
@@ -75,18 +91,27 @@ function scan(root: ParentNode, selector: string): Entry[] {
 const sameEntries = (a: Entry[], b: Entry[]): boolean =>
   a.length === b.length && a.every((entry, index) => entry.id === b[index]?.id && entry.label === b[index]?.label && entry.level === b[index]?.level);
 
+/** The nearest ancestor that scrolls vertically and is currently overflowing, other than the page and `except`. */
+function scrollableAncestor(element: HTMLElement, except: HTMLElement | null): HTMLElement | null {
+  for (let node = element.parentElement; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+    if (node !== except && /(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight) return node;
+  }
+  return null;
+}
+
 /**
  * An outline of a page: a list of links to its sections, with the one being read marked as it scrolls.
  *
  * Give it `items`, or leave them out and it reads the `h2` and `h3` headings from the page (or from `contentRef`).
  * The current entry follows the scroll position and is marked `aria-current="location"`; a click scrolls to the
  * section (smoothly, unless the person prefers less motion) and keeps it clear of a sticky header with
- * `scrollOffset`. Wrap it in `Affix` to keep it in view beside long content.
+ * `scrollOffset`. `sticky` keeps the outline in view beside long content, `collapse` folds it behind a button on a
+ * small screen, and a long outline that scrolls on its own keeps the current entry in view.
  *
  * @example
  * ```tsx
  * <TableOfContents items={[{ id: "intro", label: "Intro" }, { id: "usage", label: "Usage" }]} />
- * <TableOfContents contentRef={articleRef} />
+ * <TableOfContents contentRef={articleRef} sticky collapse="auto" />
  * ```
  */
 export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
@@ -95,12 +120,21 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       items,
       contentRef,
       selector = "h2, h3",
+      minLevel = 1,
+      maxLevel = 4,
       activeId: controlledActiveId,
       defaultActiveId,
       onActiveIdChange,
       scrollContainerRef,
       scrollOffset = 0,
       smoothScroll = true,
+      scrollToHash = true,
+      sticky = false,
+      stickyOffset,
+      collapse = "never",
+      open: controlledOpen,
+      defaultOpen = false,
+      onOpenChange,
       size = "md",
       tone = "brand",
       highlightActive = true,
@@ -108,6 +142,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       labels,
       className,
       style,
+      onKeyDown,
       "aria-label": ariaLabel,
       "aria-labelledby": ariaLabelledBy,
       ...props
@@ -116,6 +151,9 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
   ) => {
     const text = mergeDefined(defaultLabels, labels);
     const titleId = useId();
+    const listId = useId();
+    const listRef = useRef<HTMLUListElement>(null);
+    const toggleRef = useRef<HTMLButtonElement>(null);
     const reading = items === undefined;
 
     // --- The entries ---
@@ -149,9 +187,20 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       };
     }, [reading, contentRef, selector]);
 
-    const entries: Entry[] = reading
+    // Only the levels asked for, the shallowest drawn at the top of the indentation.
+    const low = clampLevel(minLevel);
+    const high = Math.max(clampLevel(maxLevel), low);
+    const everyEntry: Entry[] = reading
       ? scanned
-      : items.map((item) => ({ id: item.id, label: item.label, level: clampLevel(item.level ?? 1) }));
+      : items.map((item) => ({
+          id: item.id,
+          label: item.label,
+          level: clampLevel(item.level ?? 1),
+          icon: item.icon,
+          trailing: item.trailing,
+          disabled: item.disabled,
+        }));
+    const entries = everyEntry.filter((entry) => entry.level >= low && entry.level <= high).map((entry) => ({ ...entry, level: clampLevel(entry.level - low + 1) }));
 
     // --- The current entry ---
     const isControlled = controlledActiveId !== undefined;
@@ -175,6 +224,17 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
     // While a click is scrolling to its section the outline holds that section, and catches up once the scroll stops.
     const holdingRef = useRef(false);
 
+    /** Scrolls the container or the page so `target` sits `scrollOffset` pixels from the top. */
+    const scrollToTarget = useCallback(
+      (target: HTMLElement, behavior: ScrollBehavior) => {
+        const container = scrollContainerRef?.current ?? null;
+        const distance = target.getBoundingClientRect().top - (container ? container.getBoundingClientRect().top : 0) - scrollOffset;
+        if (container) container.scrollTo({ top: container.scrollTop + distance, behavior });
+        else window.scrollTo({ top: window.scrollY + distance, behavior });
+      },
+      [scrollContainerRef, scrollOffset],
+    );
+
     const entryIds = entries.map((entry) => entry.id).join("\n");
     useEffect(() => {
       if (isControlled || entryIds === "") return undefined;
@@ -193,8 +253,8 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
             currentTop = top;
           }
         }
-        // Nothing has reached the top yet (the first heading sits a little below it): the first heading showing
-        // in the scrolling area is the one being read. One still below the fold marks nothing.
+        // Nothing has reached the top yet (the first heading sits a little below it): the first heading showing in the
+        // scrolling area is the one being read. One still below the fold marks nothing.
         if (current === undefined) {
           const bottom = container ? container.getBoundingClientRect().bottom : window.innerHeight;
           let firstTop = Infinity;
@@ -252,18 +312,68 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       };
     }, [entryIds, isControlled, scrollContainerRef, scrollOffset, setActive]);
 
+    // --- A page opened at `#id` ---
+    useEffect(() => {
+      if (!scrollToHash || entryIds === "") return undefined;
+      const raw = window.location.hash.slice(1);
+      if (!raw) return undefined;
+      let id = raw;
+      try {
+        id = decodeURIComponent(raw);
+      } catch {
+        // A malformed escape: the raw text is the best guess.
+      }
+      const target = document.getElementById(id);
+      if (!target || !entryIds.split("\n").includes(id)) return undefined;
+      // After the browser's own jump to the fragment, so this is the position that stands.
+      const frame = requestAnimationFrame(() => {
+        scrollToTarget(target, "auto");
+        setActive(id);
+      });
+      return () => cancelAnimationFrame(frame);
+    }, [scrollToHash, entryIds, scrollToTarget, setActive]);
+
+    // --- The current entry stays in view in an outline that scrolls on its own ---
+    useEffect(() => {
+      const link = listRef.current?.querySelector<HTMLElement>('[aria-current="location"]');
+      // A folded, closed list has no box to measure.
+      if (!link || link.getClientRects().length === 0) return;
+      const area = scrollableAncestor(link, scrollContainerRef?.current ?? null);
+      if (!area) return;
+      const box = area.getBoundingClientRect();
+      const rect = link.getBoundingClientRect();
+      // Moves the box itself, not `scrollIntoView`, which would scroll the page as well.
+      if (rect.top < box.top) area.scrollTop += rect.top - box.top;
+      else if (rect.bottom > box.bottom) area.scrollTop += rect.bottom - box.bottom;
+    }, [activeId, scrollContainerRef]);
+
+    // --- Folding ---
+    const isOpenControlled = controlledOpen !== undefined;
+    const [internalOpen, setInternalOpen] = useState(defaultOpen);
+    const isOpen = isOpenControlled ? controlledOpen : internalOpen;
+    const setOpen = (next: boolean) => {
+      if (next === isOpen) return;
+      if (!isOpenControlled) setInternalOpen(next);
+      onOpenChange?.(next);
+    };
+    /** Whether the list is folded right now. The stylesheet decides by media query; this asks the same question. */
+    const isFolded = (): boolean =>
+      collapse === "always" ||
+      (collapse === "auto" && typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(NARROW_QUERY).matches);
+    // Focus inside the list holds it open, so a screen that narrows can't hide the control that has focus.
+    const [focusInside, setFocusInside] = useState(false);
+    const keepOpen = (event: FocusEvent<HTMLUListElement>, inside: boolean) => {
+      if (inside || !event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusInside(inside);
+    };
+
     // --- Following a link ---
     const follow = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const target = document.getElementById(id);
       if (!target) return;
       event.preventDefault();
-      const behavior: ScrollBehavior = smoothScroll && !prefersReducedMotion() ? "smooth" : "auto";
-      const container = scrollContainerRef?.current ?? null;
-      const distance = target.getBoundingClientRect().top - (container ? container.getBoundingClientRect().top : 0) - scrollOffset;
+      scrollToTarget(target, smoothScroll && !prefersReducedMotion() ? "smooth" : "auto");
       holdingRef.current = true;
-      if (container) container.scrollTo({ top: container.scrollTop + distance, behavior });
-      else window.scrollTo({ top: window.scrollY + distance, behavior });
       setActive(id);
       try {
         // The address names the section, as a plain link would, without adding a history entry for each click.
@@ -275,29 +385,75 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       if (event.detail === 0) {
         if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
         target.focus({ preventScroll: true });
+      } else if (isFolded() && isOpen) {
+        // The list is about to fold away under the pointer's own focus: hand it to the button.
+        toggleRef.current?.focus({ preventScroll: true });
       }
+      if (isFolded()) setOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+      onKeyDown?.(event);
+      if (event.defaultPrevented || event.key !== "Escape" || !isFolded() || !isOpen) return;
+      if (!listRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+      toggleRef.current?.focus();
     };
 
     if (entries.length === 0) return null;
 
-    return (
+    const folds = collapse !== "never";
+    const nav = (
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape is heard from the links and button inside; the nav takes no key itself.
       <nav
         {...props}
         ref={ref}
         // After `...props`, so a caller's own value can't replace what the component works out.
         aria-label={ariaLabel ?? (ariaLabelledBy === undefined && !showTitle ? text.navigation : undefined)}
         aria-labelledby={ariaLabel === undefined ? (ariaLabelledBy ?? (showTitle ? titleId : undefined)) : undefined}
-        className={cx(styles.root, sizeClass[size], toneClass[tone], highlightActive && styles.highlighted, className)}
+        className={cx(
+          styles.root,
+          sizeClass[size],
+          toneClass[tone],
+          highlightActive && styles.highlighted,
+          collapse === "always" && styles.collapseAlways,
+          collapse === "auto" && styles.collapseAuto,
+          folds && !isOpen && !focusInside && styles.folded,
+          className,
+        )}
         style={style}
+        onKeyDown={handleKeyDown}
       >
         {showTitle && (
           <p id={titleId} className={styles.title}>
             {text.title}
           </p>
         )}
+        {folds && (
+          <Button
+            ref={toggleRef}
+            variant="secondary"
+            size={size}
+            fullWidth
+            trailingIcon={isOpen ? CaretUpIcon : CaretDownIcon}
+            aria-expanded={isOpen}
+            aria-controls={listId}
+            className={styles.toggle}
+            onClick={() => setOpen(!isOpen)}
+          >
+            {text.title}
+          </Button>
+        )}
         {/* The roles are stated outright: Safari with VoiceOver drops list semantics once the markers are removed. */}
         {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above. */}
-        <ul role="list" className={styles.list}>
+        <ul
+          role="list"
+          id={listId}
+          ref={listRef}
+          className={styles.list}
+          onFocus={(event) => keepOpen(event, true)}
+          onBlur={(event) => keepOpen(event, false)}
+        >
           {entries.map((entry) => {
             const isActive = entry.id === activeId;
             return (
@@ -306,17 +462,27 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
                 <Link
                   href={`#${entry.id}`}
                   underline="none"
+                  disabled={entry.disabled}
                   className={cx(styles.link, isActive && styles.active)}
                   aria-current={isActive ? "location" : undefined}
                   onClick={(event) => follow(event, entry.id)}
                 >
-                  {entry.label}
+                  {entry.icon && <Icon icon={entry.icon} size={iconSizeForSize[size]} className={styles.icon} />}
+                  <span className={styles.label}>{entry.label}</span>
+                  {entry.trailing && <span className={styles.trailing}>{entry.trailing}</span>}
                 </Link>
               </li>
             );
           })}
         </ul>
       </nav>
+    );
+    return sticky ? (
+      <Affix asChild offset={stickyOffset} scrollContainerRef={scrollContainerRef}>
+        {nav}
+      </Affix>
+    ) : (
+      nav
     );
   },
 );

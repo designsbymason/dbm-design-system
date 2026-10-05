@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
 import type { ReactNode } from "react";
+import { BellIcon } from "@dbm-design-system/icons";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TableOfContents } from "./TableOfContents";
 import type { TableOfContentsItem } from "./TableOfContents.types";
@@ -582,4 +583,329 @@ describe("TableOfContents — cleanup", () => {
     expect(remove.mock.calls.map(([type]) => type)).toEqual(expect.arrayContaining(["scroll", "resize"]));
   });
 
+});
+
+describe("TableOfContents — levels", () => {
+  const leveled: TableOfContentsItem[] = [
+    { id: "a", label: "A" },
+    { id: "b", label: "B", level: 2 },
+    { id: "c", label: "C", level: 3 },
+    { id: "d", label: "D" },
+  ];
+
+  it("maxLevel leaves out the deeper entries", () => {
+    render(<TableOfContents items={leveled} maxLevel={2} />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["A", "B", "D"]);
+  });
+
+  it("minLevel leaves out the shallower entries and indents the rest from it", () => {
+    render(<TableOfContents items={leveled} minLevel={2} />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["B", "C"]);
+    const [b, c] = screen.getAllByRole("listitem");
+    expect(b?.className).not.toMatch(/level/);
+    expect(c?.className).toMatch(/level2/);
+  });
+
+  it("treats a maxLevel below minLevel as minLevel, and renders nothing when nothing is left", () => {
+    render(<TableOfContents items={leveled} minLevel={3} maxLevel={1} />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["C"]);
+    const { container } = render(<TableOfContents items={[{ id: "x", label: "X" }]} minLevel={2} />);
+    expect(container.querySelector("nav")).toBeNull();
+  });
+
+  it("applies to headings read from the page too", async () => {
+    render(
+      <>
+        <h2 id="h2">Two</h2>
+        <h3 id="h3">Three</h3>
+        <h4 id="h4">Four</h4>
+        <TableOfContents selector="h2, h3, h4" maxLevel={2} />
+      </>,
+    );
+    const nav = await screen.findByRole("navigation");
+    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Two", "Three"]);
+  });
+});
+
+describe("TableOfContents — entry extras", () => {
+  it("draws an icon before the text and trailing content after it, inside the link", () => {
+    render(<TableOfContents items={[{ id: "a", label: "Alerts", icon: BellIcon, trailing: <span>New</span> }]} />);
+    const link = screen.getByRole("link", { name: /Alerts\s*New/ });
+    expect(link.querySelector("svg")).toBeInTheDocument();
+    expect(link.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(within(link).getByText("New")).toBeInTheDocument();
+  });
+
+  it("disables an entry: aria-disabled, focusable, and a click neither scrolls nor asks to mark it", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    const onActiveIdChange = vi.fn();
+    render(
+      <>
+        <Page />
+        <TableOfContents
+          items={[{ id: "setup", label: "Setup", disabled: true }, { id: "usage", label: "Usage" }]}
+          activeId="usage"
+          onActiveIdChange={onActiveIdChange}
+        />
+      </>,
+    );
+    const link = screen.getByRole("link", { name: "Setup" });
+    expect(link).toHaveAttribute("aria-disabled", "true");
+    link.focus();
+    expect(link).toHaveFocus();
+    await userEvent.click(link);
+    expect(window.scrollTo).not.toHaveBeenCalled();
+    expect(onActiveIdChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("TableOfContents — sticky", () => {
+  it("stays one nav with its name, ref and attributes, and is drawn sticky", () => {
+    const ref = createRef<HTMLElement>();
+    render(<TableOfContents ref={ref} items={items} sticky data-testid="toc" className="mine" />);
+    const nav = screen.getByRole("navigation", { name: "On this page" });
+    expect(ref.current).toBe(nav);
+    expect(nav).toHaveAttribute("data-testid", "toc");
+    expect(nav).toHaveClass("mine");
+    // `Affix` gives it a `top` offset on the spacing scale; a plain outline has none.
+    expect(nav.getAttribute("style") ?? "").toMatch(/top:\s*var\(--dbm-space/);
+  });
+
+  it("is not sticky by default", () => {
+    render(<TableOfContents items={items} />);
+    expect(screen.getByRole("navigation").getAttribute("style") ?? "").not.toMatch(/top:/);
+  });
+});
+
+describe("TableOfContents — a page opened at #id", () => {
+  it("scrolls that section to the offset and marks it", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    window.history.replaceState(null, "", "/#usage");
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} scrollOffset={56} />
+      </>,
+    );
+    await waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 744, behavior: "auto" }));
+    expect(current()).toBe("Usage");
+  });
+
+  it("does nothing when told not to", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    window.history.replaceState(null, "", "/#usage");
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} scrollToHash={false} />
+      </>,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when the address names no entry, or its target isn't on the page", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    window.history.replaceState(null, "", "/#not-an-entry");
+    const { unmount } = render(
+      <>
+        <Page />
+        <TableOfContents items={items} />
+      </>,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    unmount();
+    window.history.replaceState(null, "", "/#elsewhere");
+    render(<TableOfContents items={[...items, { id: "elsewhere", label: "Elsewhere" }]} />);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("reaches a heading read from the page after the first render", async () => {
+    window.history.replaceState(null, "", "/#late");
+    const { rerender } = render(<TableOfContents />);
+    layout({ late: 900 });
+    rerender(
+      <>
+        <h2 id="late">Late</h2>
+        <TableOfContents />
+      </>,
+    );
+    await waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 900, behavior: "auto" }));
+  });
+
+  it("works inside StrictMode", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    window.history.replaceState(null, "", "/#setup");
+    render(
+      <StrictMode>
+        <Page />
+        <TableOfContents items={items} />
+      </StrictMode>,
+    );
+    await waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith({ top: 400, behavior: "auto" }));
+  });
+});
+
+describe("TableOfContents — an outline that scrolls on its own", () => {
+  function setup(linkTop: number, linkBottom: number) {
+    const box = document.createElement("div");
+    box.style.overflowY = "auto";
+    document.body.appendChild(box);
+    Object.defineProperty(box, "scrollHeight", { configurable: true, value: 500 });
+    Object.defineProperty(box, "clientHeight", { configurable: true, value: 100 });
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(() => [{}] as unknown as DOMRectList);
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const rect = (top: number, bottom: number) => ({ top, bottom, left: 0, right: 0, width: 0, height: bottom - top, x: 0, y: top, toJSON: () => ({}) });
+      if (this === box) return rect(100, 200);
+      if (this.getAttribute("aria-current") === "location") return rect(linkTop, linkBottom);
+      return rect(0, 0);
+    });
+    return box;
+  }
+
+  it("scrolls the box, not the page, until the current entry is in it", () => {
+    const box = setup(260, 290);
+    box.scrollTop = 50;
+    render(<TableOfContents items={items} defaultActiveId="usage" />, { container: box });
+    expect(box.scrollTop).toBe(140);
+    expect(window.scrollTo).not.toHaveBeenCalled();
+    box.remove();
+  });
+
+  it("scrolls up when the current entry is above the box", () => {
+    const box = setup(40, 70);
+    box.scrollTop = 80;
+    render(<TableOfContents items={items} defaultActiveId="usage" />, { container: box });
+    expect(box.scrollTop).toBe(20);
+    box.remove();
+  });
+
+  it("leaves it alone when the entry is already showing", () => {
+    const box = setup(120, 150);
+    box.scrollTop = 33;
+    render(<TableOfContents items={items} defaultActiveId="usage" />, { container: box });
+    expect(box.scrollTop).toBe(33);
+    box.remove();
+  });
+
+  it("does not move the container the headings scroll in", () => {
+    const box = setup(260, 290);
+    box.scrollTop = 50;
+    render(<TableOfContents items={items} defaultActiveId="usage" scrollContainerRef={{ current: box }} />, { container: box });
+    expect(box.scrollTop).toBe(50);
+    box.remove();
+  });
+});
+
+describe("TableOfContents — folding", () => {
+  const matchMedia = (narrow: boolean) =>
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query) => ({ matches: narrow && query.includes("max-width"), media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList,
+    );
+
+  it("has no button by default", () => {
+    render(<TableOfContents items={items} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("puts the list behind a button that says whether it is open and what it opens", async () => {
+    render(<TableOfContents items={items} collapse="always" />);
+    const button = screen.getByRole("button", { name: "On this page" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(document.getElementById(button.getAttribute("aria-controls") as string)).toBe(screen.getByRole("list", { hidden: true }));
+    expect(screen.getByRole("navigation").className).toMatch(/folded/);
+    await userEvent.click(button);
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("navigation").className).not.toMatch(/folded/);
+  });
+
+  it("starts open with defaultOpen, translates the button, and is controlled with open", async () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<TableOfContents items={items} collapse="always" defaultOpen labels={{ title: "Sur cette page" }} />);
+    expect(screen.getByRole("button", { name: "Sur cette page" })).toHaveAttribute("aria-expanded", "true");
+    rerender(<TableOfContents items={items} collapse="always" open={false} onOpenChange={onOpenChange} />);
+    await userEvent.click(screen.getByRole("button"));
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(screen.getByRole("button")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("closes after an entry is chosen and, for a key press, moves focus to the section", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    matchMedia(false);
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="always" defaultOpen />
+      </>,
+    );
+    screen.getByRole("link", { name: "Usage" }).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(document.getElementById("usage")).toHaveFocus();
+    expect(screen.getByRole("button")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("hands focus to the button after a mouse click, so it isn't lost with the list", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    matchMedia(false);
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="always" defaultOpen />
+      </>,
+    );
+    await userEvent.click(screen.getByRole("link", { name: "Usage" }));
+    expect(screen.getByRole("button")).toHaveFocus();
+    expect(screen.getByRole("button")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("closes on Escape from inside the list and returns focus to the button", async () => {
+    render(<TableOfContents items={items} collapse="always" defaultOpen />);
+    screen.getByRole("link", { name: "Setup" }).focus();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByRole("button")).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button")).toHaveFocus();
+  });
+
+  it("with `auto`, folds only when the screen is narrow", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    matchMedia(false);
+    const { unmount } = render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="auto" defaultOpen />
+      </>,
+    );
+    await userEvent.click(screen.getByRole("link", { name: "Usage" }));
+    // A wide screen shows the list whatever the state, so choosing an entry doesn't close it. (jsdom doesn't evaluate the
+    // stylesheet's media query, so the button is looked up whether or not it is drawn.)
+    expect(screen.getByRole("button", { hidden: true })).toHaveAttribute("aria-expanded", "true");
+    unmount();
+    matchMedia(true);
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="auto" defaultOpen />
+      </>,
+    );
+    await userEvent.click(screen.getByRole("link", { name: "Usage" }));
+    expect(screen.getByRole("button", { hidden: true })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("holds the list open while focus is inside it", () => {
+    render(<TableOfContents items={items} collapse="always" open={false} />);
+    const nav = screen.getByRole("navigation");
+    expect(nav.className).toMatch(/folded/);
+    const link = screen.getByRole("link", { name: "Intro", hidden: true });
+    act(() => link.focus());
+    expect(nav.className).not.toMatch(/folded/);
+    act(() => link.blur());
+    expect(nav.className).toMatch(/folded/);
+  });
+
+  it("keeps the nav's name and doesn't change its roles", async () => {
+    const { container } = render(<TableOfContents items={items} collapse="always" defaultOpen />);
+    expect(screen.getByRole("navigation", { name: "On this page" })).toBeInTheDocument();
+    expect(await axe(container)).toHaveNoViolations();
+  });
 });

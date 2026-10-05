@@ -1,16 +1,27 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { useId, useRef, useState } from "react";
+import { BellIcon, BookOpenIcon, GearIcon } from "@dbm-design-system/icons";
+import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { TableOfContents } from "./TableOfContents";
 import { tableOfContentsPlaygroundSnippet, tableOfContentsSnippets } from "./TableOfContents.snippets";
-import type { TableOfContentsItem, TableOfContentsProps, TableOfContentsSize, TableOfContentsTone } from "./TableOfContents.types";
+import type {
+  TableOfContentsCollapse,
+  TableOfContentsItem,
+  TableOfContentsProps,
+  TableOfContentsSize,
+  TableOfContentsTone,
+} from "./TableOfContents.types";
 
 interface PlaygroundArgs {
   size: TableOfContentsSize;
   tone: TableOfContentsTone;
   highlightActive: boolean;
+  collapse: TableOfContentsCollapse;
+  minLevel: 1 | 2 | 3 | 4;
+  maxLevel: 1 | 2 | 3 | 4;
   showTitle: boolean;
   smoothScroll: boolean;
   scrollOffset: number;
@@ -19,6 +30,12 @@ interface PlaygroundArgs {
   items: TableOfContentsProps["items"];
   contentRef: TableOfContentsProps["contentRef"];
   selector: string;
+  sticky: boolean;
+  stickyOffset: TableOfContentsProps["stickyOffset"];
+  scrollToHash: boolean;
+  open: boolean;
+  defaultOpen: boolean;
+  onOpenChange: TableOfContentsProps["onOpenChange"];
   activeId: string;
   defaultActiveId: string;
   onActiveIdChange: TableOfContentsProps["onActiveIdChange"];
@@ -138,6 +155,9 @@ const noControls = {
   size: { control: false },
   tone: { control: false },
   highlightActive: { control: false },
+  collapse: { control: false },
+  minLevel: { control: false },
+  maxLevel: { control: false },
   showTitle: { control: false },
   smoothScroll: { control: false },
   scrollOffset: { control: false },
@@ -152,7 +172,7 @@ const meta: Meta<PlaygroundArgs> = {
     items: {
       control: false,
       description:
-        "The entries, written out: each an object with id (the element it points at; the link goes to #id), label (its text) and level (1 to 4, indented one step each, default 1). Leave it out to read them from the page. An empty list renders nothing.",
+        "The entries, written out: each an object with id (the element it points at; the link goes to #id), label (its text), and optionally level (1 to 4, indented one step each, default 1), icon, trailing (content at the end, such as a Badge) and disabled. Leave it out to read them from the page. An empty list renders nothing.",
     },
     contentRef: {
       control: false,
@@ -177,6 +197,56 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The colour of the current entry and its marker: brand (the brand theme's accent) or neutral (primary text and a strong neutral marker). Place a brand outline on a surface, not on the canvas; neutral is safe on either.",
       table: { defaultValue: { summary: '"brand"' } },
+    },
+    minLevel: {
+      control: "select",
+      options: [1, 2, 3, 4],
+      description:
+        "The shallowest level drawn: entries above it are left out and the rest are indented from it. Level is an items entry's level, or how far below the highest one a heading read from the page is.",
+      table: { defaultValue: { summary: "1" } },
+    },
+    maxLevel: {
+      control: "select",
+      options: [1, 2, 3, 4],
+      description: "The deepest level drawn: entries below it are left out.",
+      table: { defaultValue: { summary: "4" } },
+    },
+    sticky: {
+      control: false,
+      description:
+        "Keeps the outline in view while the page scrolls, as a sticky box built on Affix; it sticks to the page, or to scrollContainerRef. Distinct from scrollOffset, which is where the headings land.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    stickyOffset: {
+      control: false,
+      description:
+        "How far from the top a sticky outline sticks, on the spacing scale: for a page whose own header is also sticky. No effect without sticky.",
+    },
+    scrollToHash: {
+      control: false,
+      description:
+        "When the page loads with #id in its address and id is an entry, scrolls that section to scrollOffset and marks it: the browser's own jump ignores a sticky header and can't reach a heading read from the page after the first render.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    collapse: {
+      control: "select",
+      options: ["never", "auto", "always"],
+      description:
+        'Folds the outline behind an "On this page" button: never (the default), auto (below the sm breakpoint) or always. A list with keyboard focus inside it stays open while it does.',
+      table: { defaultValue: { summary: '"never"' } },
+    },
+    open: {
+      control: false,
+      description: "Whether the list is open while folded, controlled; pair it with onOpenChange.",
+    },
+    defaultOpen: {
+      control: false,
+      description: "Whether the list is open at first while folded, uncontrolled.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onOpenChange: {
+      control: false,
+      description: "Called when the button opens or closes the list, or choosing an entry closes it.",
     },
     highlightActive: {
       control: "boolean",
@@ -251,6 +321,9 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     tone: "brand",
     highlightActive: true,
+    collapse: "never",
+    minLevel: 1,
+    maxLevel: 4,
     showTitle: true,
     smoothScroll: true,
     scrollOffset: 0,
@@ -263,6 +336,9 @@ const meta: Meta<PlaygroundArgs> = {
         size: args.size,
         tone: args.tone,
         highlightActive: args.highlightActive,
+        collapse: args.collapse,
+        minLevel: args.minLevel,
+        maxLevel: args.maxLevel,
         showTitle: args.showTitle,
         smoothScroll: args.smoothScroll,
         scrollOffset: args.scrollOffset,
@@ -509,6 +585,125 @@ export const RightToLeft: Story = {
   ),
 };
 
+const leveledItems: TableOfContentsItem[] = [
+  { id: "lv-installation", label: "Installation" },
+  { id: "lv-requirements", label: "Requirements", level: 2 },
+  { id: "lv-setup", label: "Setup", level: 2 },
+  { id: "lv-options", label: "Options", level: 3 },
+  { id: "lv-usage", label: "Usage" },
+];
+
+export const Levels: Story = {
+  name: "Choosing the levels",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.levels } } },
+  render: () => (
+    <Static>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-8)" }}>
+        <TableOfContents aria-label="Top level only" maxLevel={1} defaultActiveId="lv-usage" items={leveledItems} labels={{ title: "maxLevel 1" }} />
+        <TableOfContents aria-label="From level two" minLevel={2} defaultActiveId="lv-setup" items={leveledItems} labels={{ title: "minLevel 2" }} />
+      </div>
+    </Static>
+  ),
+};
+
+export const EntryExtras: Story = {
+  name: "Icons, badges and disabled entries",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.entryExtras } } },
+  render: () => (
+    <Static>
+      <TableOfContents
+        defaultActiveId="ex-guide"
+        items={[
+          { id: "ex-guide", label: "Guide", icon: BookOpenIcon },
+          { id: "ex-notifications", label: "Notifications", icon: BellIcon, trailing: <Badge size="xs" tone="info">New</Badge> },
+          { id: "ex-settings", label: "Settings", icon: GearIcon, disabled: true },
+        ]}
+      />
+    </Static>
+  ),
+};
+
+export const Folded: Story = {
+  name: "Folded behind a button",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.folded } } },
+  render: () => (
+    <Static>
+      <div style={{ maxInlineSize: "18rem" }}>
+        <TableOfContents collapse="always" defaultActiveId="lv-setup" items={leveledItems} />
+      </div>
+    </Static>
+  ),
+};
+
+const articleSections = (prefix: string, count: number) =>
+  Array.from({ length: count }, (_, index) => ({ id: `${prefix}-s${index + 1}`, label: `Section ${index + 1}` }));
+
+/** An article of `count` sections, each with a heading `prefix-sN`, in a box that scrolls. */
+function ScrollingArticle({ prefix, count, boxRef, children }: { prefix: string; count: number; boxRef: React.RefObject<HTMLDivElement | null>; children?: ReactNode }) {
+  return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be keyboard-focusable.
+    <div ref={boxRef} tabIndex={0} role="region" aria-label="Article" style={boxStyle} data-testid="article">
+      <div style={{ display: "flex", gap: "var(--dbm-space-6)", padding: "var(--dbm-space-4)", alignItems: "flex-start" }}>
+        {children}
+        <div style={{ flex: "1 1 0", minInlineSize: 0 }}>
+          {articleSections(prefix, count).map((section) => (
+            <section key={section.id} style={{ marginBlockEnd: "var(--dbm-space-6)" }}>
+              <h2 id={section.id} style={{ margin: 0, color: "var(--dbm-text-primary)", fontFamily: "var(--dbm-font-family-primary)" }}>
+                {section.label}
+              </h2>
+              <p style={{ color: "var(--dbm-text-secondary)", fontFamily: "var(--dbm-font-family-primary)" }}>{filler}</p>
+            </section>
+          ))}
+          <div style={{ blockSize: "12rem" }} aria-hidden="true" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StickyDemo({ prefix = "sticky" }: { prefix?: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  return (
+    <ScrollingArticle prefix={prefix} count={10} boxRef={boxRef}>
+      {/* As tall as the article, so the sticky outline has room to travel. */}
+      <div style={{ flex: "0 0 10rem", alignSelf: "stretch" }}>
+        <TableOfContents sticky scrollContainerRef={boxRef} data-testid="sticky-toc" items={articleSections(prefix, 10)} />
+      </div>
+    </ScrollingArticle>
+  );
+}
+
+export const Sticky: Story = {
+  name: "Sticky",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.sticky } } },
+  render: () => <StickyDemo />,
+};
+
+/** A long outline in a box of its own, beside an article it follows. */
+function LongOutlineDemo({ prefix = "long" }: { prefix?: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-6)", alignItems: "flex-start", maxInlineSize: "48rem" }}>
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be keyboard-focusable. */}
+      <div tabIndex={0} role="region" aria-label="Outline box" style={{ ...boxStyle, flex: "0 0 12rem", blockSize: "9rem" }} data-testid="outline-box">
+        <TableOfContents scrollContainerRef={boxRef} showTitle={false} aria-label="Sections" items={articleSections(prefix, 16)} />
+      </div>
+      <ScrollingArticle prefix={prefix} count={16} boxRef={boxRef} />
+    </div>
+  );
+}
+
+export const LongOutline: Story = {
+  name: "A long outline in a box of its own",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.longOutline } } },
+  render: () => <LongOutlineDemo />,
+};
+
 // --- Hidden real-browser checks. `!dev` is written out on each story: the indexer reads `tags` only from a literal. ---
 
 const currentEntry = (nav: HTMLElement) => nav.querySelector('[aria-current="location"]')?.textContent ?? null;
@@ -675,5 +870,123 @@ export const RightToLeftInteraction: Story = {
     const range = document.createRange();
     range.selectNodeContents(secondLink);
     await expect(range.getBoundingClientRect().right).toBeLessThan(firstText.right);
+  },
+};
+
+export const StickyInteraction: Story = {
+  name: "A sticky outline stays at the top of the box — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <StickyDemo prefix="stk" />,
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByTestId("article");
+    const toc = within(canvasElement).getByTestId("sticky-toc");
+    box.scrollTo({ top: 600, behavior: "instant" });
+    await waitFor(() => expect(Math.abs(toc.getBoundingClientRect().top - box.getBoundingClientRect().top)).toBeLessThan(box.clientTop + 3));
+    await expect(box.scrollTop).toBeGreaterThan(500);
+  },
+};
+
+export const LongOutlineInteraction: Story = {
+  name: "The current entry scrolls into view in a long outline — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <LongOutlineDemo prefix="lng" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const article = canvas.getByTestId("article");
+    const outline = canvas.getByTestId("outline-box");
+    const heading = canvasElement.querySelector<HTMLElement>("#lng-s14") as HTMLElement;
+    article.scrollTo({ top: article.scrollTop + heading.getBoundingClientRect().top - article.getBoundingClientRect().top, behavior: "instant" });
+    const link = canvas.getByRole("link", { name: "Section 14" });
+    await waitFor(() => expect(link).toHaveAttribute("aria-current", "location"));
+    await waitFor(() => {
+      const box = outline.getBoundingClientRect();
+      const rect = link.getBoundingClientRect();
+      expect(rect.top).toBeGreaterThanOrEqual(box.top - 1);
+      expect(rect.bottom).toBeLessThanOrEqual(box.bottom + 1);
+    });
+    // The page itself was not scrolled to do it.
+    await expect(window.scrollY).toBe(0);
+  },
+};
+
+export const FoldInteraction: Story = {
+  name: "Folds behind a button that opens, and Escape closes — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <Static>
+      <TableOfContents collapse="always" defaultActiveId="fold-b" items={[{ id: "fold-a", label: "First" }, { id: "fold-b", label: "Second" }]} />
+    </Static>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: "On this page" });
+    const link = canvas.getByRole("link", { name: "Second", hidden: true });
+    await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(link.getClientRects().length).toBe(0);
+    await userEvent.click(button);
+    await expect(button).toHaveAttribute("aria-expanded", "true");
+    await expect(link.getClientRects().length).toBeGreaterThan(0);
+    link.focus();
+    await userEvent.keyboard("{Escape}");
+    await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(button).toHaveFocus();
+    await expect(link.getClientRects().length).toBe(0);
+  },
+};
+
+export const FoldsOnAPhoneInteraction: Story = {
+  name: "collapse=auto folds on a phone and not above it — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Static>
+      <TableOfContents collapse="auto" defaultActiveId="ph-b" items={[{ id: "ph-a", label: "First" }, { id: "ph-b", label: "Second" }]} />
+    </Static>
+  ),
+  play: async ({ canvasElement }) => {
+    // Fails loudly if the viewport didn't apply.
+    await expect(window.innerWidth).toBeLessThan(640);
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: "On this page" });
+    await expect(button.getClientRects().length).toBeGreaterThan(0);
+    await expect(canvas.getByRole("link", { name: "Second", hidden: true }).getClientRects().length).toBe(0);
+  },
+};
+
+function HoldDemo() {
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    const close = () => setOpen(false);
+    window.addEventListener("close-toc", close);
+    return () => window.removeEventListener("close-toc", close);
+  }, []);
+  return (
+    <Static>
+      <TableOfContents collapse="always" open={open} onOpenChange={setOpen} items={[{ id: "hold-a", label: "First" }, { id: "hold-b", label: "Second" }]} />
+    </Static>
+  );
+}
+
+export const FocusHoldsOpenInteraction: Story = {
+  name: "Focus inside a folded list keeps it open — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <HoldDemo />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole("link", { name: "First" });
+    link.focus();
+    // Something other than the person closes the list (a parent's state, a resize): the focused link stays.
+    window.dispatchEvent(new Event("close-toc"));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await expect(link.getClientRects().length).toBeGreaterThan(0);
+    await expect(link).toHaveFocus();
+    // Once focus moves on, the closed list folds away.
+    link.blur();
+    await waitFor(() => expect(link.getClientRects().length).toBe(0));
   },
 };
