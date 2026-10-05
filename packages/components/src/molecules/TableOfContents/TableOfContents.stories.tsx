@@ -182,7 +182,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description:
         "Draws a subtle background behind the current entry, in the tone's own tint (bg.brand-subtle for brand, bg.neutral-subtle for neutral). The marker bar stays, so the background is never the only cue.",
-      table: { defaultValue: { summary: "false" } },
+      table: { defaultValue: { summary: "true" } },
     },
     showTitle: {
       control: "boolean",
@@ -250,7 +250,7 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     size: "md",
     tone: "brand",
-    highlightActive: false,
+    highlightActive: true,
     showTitle: true,
     smoothScroll: true,
     scrollOffset: 0,
@@ -340,7 +340,7 @@ export const Tones: Story = {
 };
 
 export const Highlighted: Story = {
-  name: "Highlighted current entry",
+  name: "Highlighted current entry (the default)",
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.highlighted } } },
   render: () => (
@@ -350,7 +350,6 @@ export const Highlighted: Story = {
           <TableOfContents
             key={tone}
             tone={tone}
-            highlightActive
             aria-label={`Outline (${tone}, highlighted)`}
             defaultActiveId={`hl-${tone}-b`}
             items={[
@@ -361,6 +360,24 @@ export const Highlighted: Story = {
           />
         ))}
       </div>
+    </Static>
+  ),
+};
+
+export const NotHighlighted: Story = {
+  name: "Without the highlight",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.notHighlighted } } },
+  render: () => (
+    <Static>
+      <TableOfContents
+        highlightActive={false}
+        defaultActiveId="plainmark-b"
+        items={[
+          { id: "plainmark-a", label: "Another entry" },
+          { id: "plainmark-b", label: "Current entry" },
+        ]}
+      />
     </Static>
   ),
 };

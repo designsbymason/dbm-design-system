@@ -103,7 +103,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       smoothScroll = true,
       size = "md",
       tone = "brand",
-      highlightActive = false,
+      highlightActive = true,
       showTitle = true,
       labels,
       className,

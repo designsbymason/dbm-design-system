@@ -119,11 +119,11 @@ describe("TableOfContents — structure", () => {
 });
 
 describe("TableOfContents — highlightActive", () => {
-  it("is off by default, and on adds a class to the outline that fills the current entry", () => {
+  it("is on by default, and false takes the class that fills the current entry off", () => {
     const { rerender } = render(<TableOfContents items={items} defaultActiveId="setup" />);
-    expect(screen.getByRole("navigation").className).not.toMatch(/highlighted/);
-    rerender(<TableOfContents items={items} defaultActiveId="setup" highlightActive />);
     expect(screen.getByRole("navigation").className).toMatch(/highlighted/);
+    rerender(<TableOfContents items={items} defaultActiveId="setup" highlightActive={false} />);
+    expect(screen.getByRole("navigation").className).not.toMatch(/highlighted/);
     // It changes how the current entry is drawn, not what is announced or which entry it is.
     expect(screen.getByRole("link", { name: "Setup" })).toHaveAttribute("aria-current", "location");
     expect(screen.getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
