@@ -380,6 +380,24 @@ describe("Calendar", () => {
       expect(onMonthChange.mock.calls).toEqual([["2026-11"], ["2026-10"], ["2026-09"]]);
     });
 
+    it("keeps keyboard focus on the month button, and on a field, after using it", async () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" captionLayout="dropdown" />);
+      act(() => next().focus());
+      await userEvent.keyboard("{Enter}");
+      expect(title()).toBe("November 2026");
+      expect(next()).toHaveFocus();
+      await userEvent.keyboard(" ");
+      expect(title()).toBe("December 2026");
+      expect(next()).toHaveFocus();
+      act(() => previous().focus());
+      await userEvent.keyboard("{Enter}");
+      expect(previous()).toHaveFocus();
+      const field = screen.getByRole("combobox", { name: "Month" });
+      act(() => field.focus());
+      await userEvent.keyboard("{ArrowDown}{Enter}");
+      expect(screen.getByRole("combobox", { name: "Month" })).toHaveFocus();
+    });
+
     it("crosses a year", async () => {
       render(<Calendar defaultMonth="2026-12" today="2026-10-14" />);
       await userEvent.click(next());
@@ -707,6 +725,481 @@ describe("Calendar", () => {
         disabled: true,
       } as Partial<CalendarProps>);
       expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("month and year fields", () => {
+    const monthField = () => screen.getByRole("combobox", { name: "Month" });
+    const yearField = () => screen.getByRole("combobox", { name: "Year" });
+    const dropdown = (props: Partial<CalendarProps> = {}) =>
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" captionLayout="dropdown" {...(props as CalendarProps)} />);
+
+    it("shows the month and the year as two named fields in place of the heading, keeping the grid's name", () => {
+      dropdown();
+      expect(monthField()).toHaveTextContent("October");
+      expect(yearField()).toHaveTextContent("2026");
+      expect(screen.getByRole("grid", { name: "October 2026" })).toBeInTheDocument();
+    });
+
+    it("goes previous, month, year, next, then the grid when tabbing", async () => {
+      dropdown({ defaultValue: "2026-10-06" });
+      await userEvent.tab();
+      expect(previous()).toHaveFocus();
+      await userEvent.tab();
+      expect(monthField()).toHaveFocus();
+      await userEvent.tab();
+      expect(yearField()).toHaveFocus();
+      await userEvent.tab();
+      expect(next()).toHaveFocus();
+      await userEvent.tab();
+      expect(day("2026-10-06")).toHaveFocus();
+    });
+
+    it("changes the month and the year, and reports each", async () => {
+      const onMonthChange = vi.fn();
+      dropdown({ onMonthChange });
+      await userEvent.click(monthField());
+      await userEvent.click(await screen.findByRole("option", { name: "March" }));
+      expect(title()).toBe("March 2026");
+      expect(onMonthChange).toHaveBeenLastCalledWith("2026-03");
+      await userEvent.click(yearField());
+      await userEvent.click(await screen.findByRole("option", { name: "1999" }));
+      expect(title()).toBe("March 1999");
+      expect(onMonthChange).toHaveBeenLastCalledWith("1999-03");
+    });
+
+    it("follows the buttons and the keys: the fields show the month on show", async () => {
+      dropdown();
+      await userEvent.click(next());
+      expect(monthField()).toHaveTextContent("November");
+      focusDay("2026-11-30");
+      await userEvent.keyboard("{Shift>}{PageDown}{/Shift}");
+      expect(yearField()).toHaveTextContent("2027");
+    });
+
+    it("offers the hundred years before this one and the twenty after it, unless told otherwise", async () => {
+      dropdown();
+      await userEvent.click(yearField());
+      const years = (await screen.findAllByRole("option")).map((option) => option.textContent);
+      expect(years[0]).toBe("1926");
+      expect(years[years.length - 1]).toBe("2046");
+      expect(years).toHaveLength(121);
+    });
+
+    it("offers the years of yearRange, narrowed by min and max, and always the year on show", async () => {
+      dropdown({ yearRange: [2000, 2030], min: "2010-05-01", max: "2020-01-01", defaultMonth: "2026-10" });
+      await userEvent.click(yearField());
+      const years = (await screen.findAllByRole("option")).map((option) => option.textContent);
+      expect(years[0]).toBe("2010");
+      expect(years[years.length - 1]).toBe("2026");
+    });
+
+    it("uses yearRange when min and max are not set", async () => {
+      dropdown({ yearRange: [2024, 2028] });
+      await userEvent.click(yearField());
+      expect((await screen.findAllByRole("option")).map((option) => option.textContent)).toEqual(["2024", "2025", "2026", "2027", "2028"]);
+    });
+
+    it("rules out the months that min and max leave no day in", async () => {
+      dropdown({ min: "2026-03-10", max: "2026-11-20" });
+      await userEvent.click(monthField());
+      expect(await screen.findByRole("option", { name: "February" })).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("option", { name: "March" })).not.toHaveAttribute("aria-disabled");
+      expect(screen.getByRole("option", { name: "December" })).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("writes the years with formatNumber and names the fields from labels", async () => {
+      const arabic = new Intl.NumberFormat("ar-EG", { useGrouping: false }).format;
+      dropdown({ formatNumber: arabic, labels: { monthSelect: "Mes", yearSelect: "Año" } });
+      expect(screen.getByRole("combobox", { name: "Año" })).toHaveTextContent(arabic(2026));
+      expect(screen.getByRole("combobox", { name: "Mes" })).toBeInTheDocument();
+    });
+
+    it("announces the new month when a field changes it", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      dropdown();
+      await userEvent.click(monthField());
+      await userEvent.click(await screen.findByRole("option", { name: "May" }));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("May 2026");
+    });
+
+    it("gives the fields to the first month only when several are on show, and says so", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      dropdown({ numberOfMonths: 2 });
+      expect(screen.getAllByRole("combobox")).toHaveLength(2);
+      expect(screen.getByRole("grid", { name: "November 2026" })).toBeInTheDocument();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("gives the fields to the first month only"));
+    });
+
+    it("keeps the label heading when the layout is label", () => {
+      renderCalendar();
+      expect(screen.queryByRole("combobox")).toBeNull();
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = dropdown({ defaultValue: "2026-10-06" });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("several months", () => {
+    const two = (props: Partial<CalendarProps> = {}) =>
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" numberOfMonths={2} {...(props as CalendarProps)} />);
+
+    it("draws a named grid for each month, side by side", () => {
+      two();
+      expect(screen.getAllByRole("grid").map((grid) => grid.getAttribute("aria-labelledby"))).toHaveLength(2);
+      expect(screen.getByRole("grid", { name: "October 2026" })).toBeInTheDocument();
+      expect(screen.getByRole("grid", { name: "November 2026" })).toBeInTheDocument();
+      expect(document.querySelectorAll("button[data-date]")).toHaveLength(31 + 30);
+    });
+
+    it("leaves the neighbouring months' days out, so no date is drawn twice", () => {
+      two();
+      const dates = [...document.querySelectorAll<HTMLElement>("button[data-date]")].map((button) => button.dataset.date);
+      expect(new Set(dates).size).toBe(dates.length);
+      expect(dates).toHaveLength(31 + 30);
+    });
+
+    it("has the previous button before the first month and the next after the last, and no more", () => {
+      two();
+      expect(screen.getAllByRole("button", { name: "Previous month" })).toHaveLength(1);
+      expect(screen.getAllByRole("button", { name: "Next month" })).toHaveLength(1);
+    });
+
+    it("steps the first month by one, and reports it", async () => {
+      const onMonthChange = vi.fn();
+      two({ onMonthChange });
+      await userEvent.click(next());
+      expect(screen.getByRole("grid", { name: "November 2026" })).toBeInTheDocument();
+      expect(screen.getByRole("grid", { name: "December 2026" })).toBeInTheDocument();
+      expect(onMonthChange).toHaveBeenCalledWith("2026-11");
+    });
+
+    it("is one tab stop for all the months", () => {
+      two({ defaultValue: "2026-11-05" });
+      const stops = [...document.querySelectorAll("button[data-date]")].filter((button) => button.getAttribute("tabindex") === "0");
+      expect(stops).toHaveLength(1);
+      expect(stops[0]).toHaveAttribute("data-date", "2026-11-05");
+    });
+
+    it("moves focus from one month to the next without turning the page", async () => {
+      const onMonthChange = vi.fn();
+      two({ onMonthChange });
+      focusDay("2026-10-31");
+      await userEvent.keyboard("{ArrowRight}");
+      expect(focused()).toBe("2026-11-01");
+      expect(onMonthChange).not.toHaveBeenCalled();
+    });
+
+    it("turns the page when focus leaves the months on show, forward and back", async () => {
+      two();
+      focusDay("2026-11-30");
+      await userEvent.keyboard("{ArrowRight}");
+      expect(focused()).toBe("2026-12-01");
+      expect(screen.getByRole("grid", { name: "November 2026" })).toBeInTheDocument();
+      expect(screen.getByRole("grid", { name: "December 2026" })).toBeInTheDocument();
+      expect(screen.queryByRole("grid", { name: "October 2026" })).toBeNull();
+      focusDay("2026-11-01");
+      await userEvent.keyboard("{PageUp}{PageUp}");
+      expect(focused()).toBe("2026-09-01");
+      expect(screen.getByRole("grid", { name: "September 2026" })).toBeInTheDocument();
+    });
+
+    it("draws the strip of a range across the months", async () => {
+      two({ mode: "range", defaultValue: ["2026-10-28", "2026-11-03"] } as Partial<CalendarProps>);
+      expect(cell("2026-10-31")).toHaveClass(styles.band ?? "");
+      expect(cell("2026-11-01")).toHaveClass(styles.band ?? "");
+      expect(cell("2026-11-03")).toHaveClass(styles.bandEnd ?? "");
+    });
+
+    it("previews a range into the second month from the pointer", async () => {
+      two({ mode: "range", defaultValue: ["2026-10-28", ""] } as Partial<CalendarProps>);
+      await userEvent.hover(day("2026-11-02"));
+      expect(cell("2026-11-01")).toHaveClass(styles.band ?? "");
+      expect(cell("2026-11-02")).toHaveClass(styles.bandEnd ?? "");
+    });
+
+    it("announces both months", () => {
+      vi.useFakeTimers();
+      two();
+      fireEvent.click(next());
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("November 2026 – December 2026");
+    });
+
+    it("makes next unavailable when the last month on show holds max, and previous when the first holds min", () => {
+      two({ max: "2026-11-30", min: "2026-10-01" });
+      expect(next()).toHaveAttribute("aria-disabled", "true");
+      expect(previous()).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("never shows months past December 9999", () => {
+      render(<Calendar defaultMonth="9999-12" today="9999-12-01" numberOfMonths={2} />);
+      expect(screen.getByRole("grid", { name: "November 9999" })).toBeInTheDocument();
+      expect(screen.getByRole("grid", { name: "December 9999" })).toBeInTheDocument();
+      expect(next()).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("uses one month for a number that is not a whole number of 1 to 4, and 4 at most, and says so", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" numberOfMonths={1.5} />);
+      expect(screen.getAllByRole("grid")).toHaveLength(1);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`numberOfMonths` must be a whole number from 1 to 4"));
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" numberOfMonths={9} />);
+      expect(screen.getAllByRole("grid")).toHaveLength(1 + 4);
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = two({ mode: "range", defaultValue: ["2026-10-28", "2026-11-03"], showLegend: true } as Partial<CalendarProps>);
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("footer", () => {
+    const todayButton = () => screen.getByRole("button", { name: "Today" });
+    const clearButton = () => screen.getByRole("button", { name: "Clear" });
+
+    it("is not drawn unless something asks for it", () => {
+      renderCalendar();
+      expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Clear" })).toBeNull();
+    });
+
+    it("goes to today's month and chooses today", async () => {
+      const onValueChange = vi.fn();
+      render(<Calendar defaultMonth="2027-03" today="2026-10-14" showTodayButton onValueChange={onValueChange} />);
+      await userEvent.click(todayButton());
+      expect(title()).toBe("October 2026");
+      expect(onValueChange).toHaveBeenCalledWith("2026-10-14");
+      expect(cell("2026-10-14")).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("starts a range with today", async () => {
+      const onValueChange = vi.fn();
+      render(<Calendar mode="range" defaultMonth="2027-03" today="2026-10-14" showTodayButton onValueChange={onValueChange} />);
+      await userEvent.click(todayButton());
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-14", ""]);
+    });
+
+    it("shows today's month but chooses nothing when today can't be chosen", async () => {
+      const onValueChange = vi.fn();
+      render(<Calendar defaultMonth="2027-03" today="2026-10-14" showTodayButton min="2026-11-01" onValueChange={onValueChange} />);
+      await userEvent.click(todayButton());
+      expect(title()).toBe("October 2026");
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("is unavailable, but focusable, when the calendar is disabled", async () => {
+      renderCalendar({ showTodayButton: true, disabled: true });
+      expect(todayButton()).toHaveAttribute("aria-disabled", "true");
+      expect(todayButton()).not.toBeDisabled();
+    });
+
+    it("keeps focus on the Today button after it is used", async () => {
+      render(<Calendar defaultMonth="2027-03" today="2026-10-14" showTodayButton />);
+      await userEvent.click(todayButton());
+      expect(todayButton()).toHaveFocus();
+    });
+
+    it("clears a date, and a range, and keeps its place afterwards with focus on it", async () => {
+      const onValueChange = vi.fn();
+      const { unmount } = renderCalendar({ clearable: true, defaultValue: "2026-10-06", onValueChange });
+      expect(clearButton()).not.toHaveAttribute("aria-disabled");
+      await userEvent.click(clearButton());
+      expect(onValueChange).toHaveBeenCalledWith("");
+      expect(document.querySelector('[aria-selected="true"]')).toBeNull();
+      expect(clearButton()).toHaveAttribute("aria-disabled", "true");
+      expect(clearButton()).toHaveFocus();
+      unmount();
+      const onRangeChange = vi.fn();
+      renderCalendar({ mode: "range", clearable: true, defaultValue: ["2026-10-06", "2026-10-09"], onValueChange: onRangeChange } as Partial<CalendarProps>);
+      await userEvent.click(clearButton());
+      expect(onRangeChange).toHaveBeenCalledWith(["", ""]);
+    });
+
+    it("is unavailable with nothing chosen, when read-only and when disabled", async () => {
+      const onValueChange = vi.fn();
+      const { rerender } = renderCalendar({ clearable: true, onValueChange });
+      expect(clearButton()).toHaveAttribute("aria-disabled", "true");
+      await userEvent.click(clearButton());
+      expect(onValueChange).not.toHaveBeenCalled();
+      rerender(<Calendar key="ro" month="2026-10" today="2026-10-14" clearable readOnly defaultValue="2026-10-06" onValueChange={onValueChange} />);
+      expect(clearButton()).toHaveAttribute("aria-disabled", "true");
+      await userEvent.click(clearButton());
+      expect(onValueChange).not.toHaveBeenCalled();
+      rerender(<Calendar key="dis" month="2026-10" today="2026-10-14" clearable disabled defaultValue="2026-10-06" />);
+      expect(clearButton()).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("draws the footer of your own after the buttons, below the grid", () => {
+      renderCalendar({
+        showTodayButton: true,
+        clearable: true,
+        footer: <p data-testid="note">Times are local.</p>,
+      });
+      const note = screen.getByTestId("note");
+      expect(screen.getByRole("grid").compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(todayButton().compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("takes its words from labels", () => {
+      renderCalendar({ showTodayButton: true, clearable: true, labels: { todayButton: "Hoy", clearButton: "Borrar" } });
+      expect(screen.getByRole("button", { name: "Hoy" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Borrar" })).toBeInTheDocument();
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = renderCalendar({ showTodayButton: true, clearable: true, footer: <p>Note</p> });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("markers", () => {
+    it("draws a dot under a marked day, hidden from assistive technology, in the tone asked for", () => {
+      renderCalendar({ getMarker: (date: string) => (date === "2026-10-20" ? { tone: "danger" } : undefined) });
+      const dot = day("2026-10-20").querySelector("[aria-hidden='true'] > span");
+      expect(dot).toHaveClass(styles.dot ?? "");
+      expect(dot).toHaveClass(styles.dotDanger ?? "");
+      expect(day("2026-10-21").querySelector("[aria-hidden='true']")).toBeNull();
+    });
+
+    it("uses the brand tone when none is given, and ignores a day it returns nothing or false for", () => {
+      renderCalendar({ getMarker: (date: string) => (date === "2026-10-20" ? {} : date === "2026-10-21" ? false : date === "2026-10-22" ? null : undefined) });
+      expect(day("2026-10-20").querySelector(`.${styles.dotBrand}`)).toBeInTheDocument();
+      for (const date of ["2026-10-21", "2026-10-22", "2026-10-23"]) expect(day(date).querySelector(`.${styles.dot}`)).toBeNull();
+    });
+
+    it("adds the marker's label to the day's accessible name", () => {
+      renderCalendar({ getMarker: (date: string) => (date === "2026-10-20" ? { tone: "info", label: "2 events" } : undefined) });
+      expect(day("2026-10-20")).toHaveAccessibleName("Tuesday, October 20, 2026, 2 events");
+    });
+
+    it("draws content of your own instead of the dot, still hidden, and puts every number at the top", () => {
+      renderCalendar({ getMarker: (date: string) => (date === "2026-10-20" ? { content: <span data-testid="price">$80</span>, label: "$80" } : undefined) });
+      expect(screen.getByTestId("price")).toBeInTheDocument();
+      expect(screen.getByTestId("price").closest("[aria-hidden='true']")).toBeInTheDocument();
+      expect(day("2026-10-20").querySelector(`.${styles.dot}`)).toBeNull();
+      expect(screen.getByTestId("calendar")).toHaveClass(styles.contentMarkers ?? "");
+    });
+
+    it("leaves the numbers centred when the markers are only dots", () => {
+      renderCalendar({ getMarker: (date: string) => (date === "2026-10-20" ? { tone: "info" } : undefined) });
+      expect(screen.getByTestId("calendar")).not.toHaveClass(styles.contentMarkers ?? "");
+    });
+
+    it("keeps the number as the day's visible text", () => {
+      renderCalendar({ getMarker: () => ({ content: <span>$80</span> }) });
+      expect(day("2026-10-20")).toHaveTextContent("20");
+    });
+
+    it("marks days that are only a neighbouring month's", () => {
+      renderCalendar({ getMarker: () => ({ tone: "info" }) });
+      expect(day("2026-09-30").querySelector(`.${styles.dot}`)).toBeInTheDocument();
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = renderCalendar({
+        defaultValue: "2026-10-20",
+        getMarker: (date: string) => (date === "2026-10-20" || date === "2026-10-21" ? { tone: "success", label: "Booked" } : undefined),
+      });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("range limits", () => {
+    const range = (props: Partial<CalendarProps> = {}) =>
+      renderCalendar({ mode: "range", ...props } as Partial<CalendarProps>);
+    const isUnavailable = (date: string) => cell(date).getAttribute("aria-disabled") === "true";
+
+    it("rules out ends that would make the range shorter than minRangeDays, counting both ends", async () => {
+      const onValueChange = vi.fn();
+      range({ minRangeDays: 3, defaultValue: ["2026-10-10", ""], onValueChange });
+      expect(isUnavailable("2026-10-10")).toBe(true);
+      expect(isUnavailable("2026-10-11")).toBe(true);
+      expect(isUnavailable("2026-10-12")).toBe(false);
+      await userEvent.click(day("2026-10-11"));
+      expect(onValueChange).not.toHaveBeenCalled();
+      await userEvent.click(day("2026-10-12"));
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-10", "2026-10-12"]);
+    });
+
+    it("rules out ends that would make the range longer than maxRangeDays", async () => {
+      const onValueChange = vi.fn();
+      range({ maxRangeDays: 5, defaultValue: ["2026-10-10", ""], onValueChange });
+      expect(isUnavailable("2026-10-14")).toBe(false);
+      expect(isUnavailable("2026-10-15")).toBe(true);
+      await userEvent.click(day("2026-10-15"));
+      expect(onValueChange).not.toHaveBeenCalled();
+      await userEvent.click(day("2026-10-14"));
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-10", "2026-10-14"]);
+    });
+
+    it("lets a date before the start restart the range, whatever the limits", async () => {
+      const onValueChange = vi.fn();
+      range({ minRangeDays: 3, maxRangeDays: 4, defaultValue: ["2026-10-10", ""], onValueChange });
+      expect(isUnavailable("2026-10-05")).toBe(false);
+      await userEvent.click(day("2026-10-05"));
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-05", ""]);
+    });
+
+    it("applies the limits only while the end is being chosen", () => {
+      range({ minRangeDays: 3, defaultValue: ["2026-10-10", "2026-10-14"] });
+      expect(isUnavailable("2026-10-11")).toBe(false);
+    });
+
+    it("lets a range run over an unavailable date by default", async () => {
+      const onValueChange = vi.fn();
+      range({ isDateDisabled: (date: string) => date === "2026-10-15", defaultValue: ["2026-10-10", ""], onValueChange });
+      expect(isUnavailable("2026-10-20")).toBe(false);
+      await userEvent.click(day("2026-10-20"));
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-10", "2026-10-20"]);
+    });
+
+    it("rules out everything after the first unavailable date with rangeSpansUnavailable false", async () => {
+      const onValueChange = vi.fn();
+      range({ rangeSpansUnavailable: false, isDateDisabled: (date: string) => date === "2026-10-15", defaultValue: ["2026-10-10", ""], onValueChange });
+      expect(isUnavailable("2026-10-14")).toBe(false);
+      expect(isUnavailable("2026-10-15")).toBe(true);
+      expect(isUnavailable("2026-10-16")).toBe(true);
+      expect(isUnavailable("2026-10-31")).toBe(true);
+      expect(isUnavailable("2026-10-05")).toBe(false);
+      await userEvent.click(day("2026-10-20"));
+      expect(onValueChange).not.toHaveBeenCalled();
+      await userEvent.click(day("2026-10-14"));
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-10", "2026-10-14"]);
+    });
+
+    it("lets a start after the unavailable date reach as far as the calendar goes", () => {
+      range({ rangeSpansUnavailable: false, isDateDisabled: (date: string) => date === "2026-10-15", defaultValue: ["2026-10-16", ""] });
+      expect(isUnavailable("2026-10-31")).toBe(false);
+    });
+
+    it("combines the limits with the unavailable date", () => {
+      range({ rangeSpansUnavailable: false, maxRangeDays: 10, minRangeDays: 2, isDateDisabled: (date: string) => date === "2026-10-15", defaultValue: ["2026-10-10", ""] });
+      expect(isUnavailable("2026-10-10")).toBe(true);
+      expect(isUnavailable("2026-10-11")).toBe(false);
+      expect(isUnavailable("2026-10-14")).toBe(false);
+      expect(isUnavailable("2026-10-15")).toBe(true);
+    });
+
+    it("has no effect in single mode", () => {
+      renderCalendar({ minRangeDays: 5, maxRangeDays: 5, rangeSpansUnavailable: false, defaultValue: "2026-10-10" });
+      expect(isUnavailable("2026-10-11")).toBe(false);
+    });
+
+    it("is listed in the key as an unavailable look", () => {
+      range({ minRangeDays: 3, showLegend: true });
+      expect(screen.getByRole("list", { name: "Key" })).toHaveTextContent("Unavailable");
+    });
+
+    it("warns about a limit that is not a whole number of days, and about max below min", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      range({ maxRangeDays: 0 });
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`maxRangeDays` must be a whole number of at least 1"));
+      range({ minRangeDays: 5, maxRangeDays: 3 });
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`maxRangeDays` is less than `minRangeDays`"));
     });
   });
 

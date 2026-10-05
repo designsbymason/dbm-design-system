@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /**
  * The size of the calendar, on the standard 5-step scale (`05-component-api-conventions.md` §2). It sets
@@ -24,6 +24,39 @@ export type CalendarWeekStart = 0 | 1 | 2 | 3 | 4 | 5 | 6;
  * whose start is chosen and end isn't, `["2026-10-05", ""]`, is a range in progress.
  */
 export type CalendarRangeValue = readonly [start: string, end: string];
+
+/**
+ * How the month and year are shown above each grid.
+ *
+ * - `"label"` (the default) — as text: "October 2026".
+ * - `"dropdown"` — as two select fields, one for the month and one for the year, so a far-off date is one choice
+ *   away instead of many presses of the month buttons. With more than one month on show, only the first month gets the
+ *   fields; the others keep their text.
+ */
+export type CalendarCaptionLayout = "label" | "dropdown";
+
+/** The colour of a day's marker dot. The same tones the system uses elsewhere, as `tone`. */
+export type CalendarMarkerTone = "neutral" | "brand" | "info" | "success" | "warning" | "danger" | "highlight";
+
+/** What `getMarker` returns for a day it wants to mark. */
+export interface CalendarMarker {
+  /**
+   * The colour of the dot drawn under the day's number. On a chosen day the dot is drawn in the on-brand colour whatever
+   * the tone, as every tone would be lost against the fill.
+   * @default "brand"
+   */
+  tone?: CalendarMarkerTone;
+  /**
+   * Your own content for the day's marker slot — a price, a count, a small icon — drawn under the number instead of
+   * the dot. It is purely visual (hidden from assistive technology): say what it means in `label`. Needs room: the
+   * slot is as high as the text at the `xs` step, so use it from `lg` up, or keep the content to a dot-sized shape.
+   */
+  content?: ReactNode;
+  /**
+   * What the marker means, added to the day's accessible name ("…, 2 events"). Without it the marker is decorative.
+   */
+  label?: string;
+}
 
 /** The facts about one day that its accessible name is built from. All plain numbers. */
 export interface CalendarDayInfo {
@@ -84,6 +117,20 @@ export interface CalendarLabels {
   rangeStart: string;
   /** Added to the name of the last date of a range. @default "range end" */
   rangeEnd: string;
+  /** The accessible name of the month field (`captionLayout="dropdown"`). @default "Month" */
+  monthSelect: string;
+  /** The accessible name of the year field (`captionLayout="dropdown"`). @default "Year" */
+  yearSelect: string;
+  /**
+   * What is announced when the months on show change with more than one month showing, given the first and the last
+   * month's headings (each already written by `monthYear`).
+   * @default `${first} – ${last}`
+   */
+  monthRange: (first: string, last: string) => string;
+  /** The text of the footer's button that goes to today (`showTodayButton`). @default "Today" */
+  todayButton: string;
+  /** The text of the footer's button that clears the choice (`clearable`). @default "Clear" */
+  clearButton: string;
   /** The accessible name of the key (`showLegend`). @default "Key" */
   legend: string;
   /** The key's text for today's date. @default "Today" */
@@ -158,6 +205,69 @@ interface CalendarBaseProps
    * @default "md"
    */
   size?: CalendarSize;
+  /**
+   * How many months are on show side by side, 1 to 4 — two is the usual choice for a range that may cross a month. The
+   * months wrap onto more than one row when the container is too narrow for them. The previous and next buttons move
+   * the first month on show by one, and `month` / `defaultMonth` / `onMonthChange` are the first month on show.
+   * Neighbouring months' days (`showOutsideDays`) are only drawn when one month is on show, as they would otherwise
+   * appear twice.
+   * @default 1
+   */
+  numberOfMonths?: number;
+  /**
+   * How the month and year are shown above the grid: as text, or as two select fields to jump to a far-off month or
+   * year. See `CalendarCaptionLayout`.
+   * @default "label"
+   */
+  captionLayout?: CalendarCaptionLayout;
+  /**
+   * The first and last year the year field offers, with `captionLayout="dropdown"`. `min` and `max`, when set, narrow
+   * it further; the year on show is always offered. Left out, it is the hundred years before this year and the twenty
+   * after it.
+   */
+  yearRange?: readonly [from: number, to: number];
+  /**
+   * Adds a footer button that shows today's month and chooses today when it can be chosen (in range mode it is a
+   * choice like any other). It is `aria-disabled` until the clock is known, and when the calendar is `disabled`.
+   * @default false
+   */
+  showTodayButton?: boolean;
+  /**
+   * Adds a footer button that clears the choice (the date, or the whole range). It stays in the footer and becomes
+   * `aria-disabled` when nothing is chosen, or the calendar is `readOnly` or `disabled`, so keyboard focus is never
+   * lost when pressing it empties the calendar.
+   * @default false
+   */
+  clearable?: boolean;
+  /**
+   * Your own content for the footer, below the grid and the key, after the built-in buttons: a note, a link, a row of
+   * presets. It is yours to label and to make accessible.
+   */
+  footer?: ReactNode;
+  /**
+   * Marks a day with a dot, or with your own content, under its number — for events, bookings, prices. Called with a
+   * date as `"YYYY-MM-DD"` for each day drawn, on every render, so keep it cheap and pure. Return nothing (or `false`)
+   * for a day without a marker. See `CalendarMarker`.
+   */
+  getMarker?: (date: string) => CalendarMarker | false | null | undefined;
+  /**
+   * In range mode, the fewest days a range may span, counting both ends: a range from the 5th to the 7th is 3 days.
+   * While the end is being chosen, the dates that would make the range shorter are unavailable. Ignored in single mode.
+   * @default 1
+   */
+  minRangeDays?: number;
+  /**
+   * In range mode, the most days a range may span, counting both ends. While the end is being chosen, the dates that
+   * would make the range longer are unavailable. Ignored in single mode.
+   */
+  maxRangeDays?: number;
+  /**
+   * In range mode, whether a range may run over an unavailable date. With `false`, once the start is chosen every date
+   * after the first unavailable one is unavailable too — for a booking where a booked night can't be stepped over.
+   * Ignored in single mode.
+   * @default true
+   */
+  rangeSpansUnavailable?: boolean;
   /**
    * Draws the days and both month buttons round: a circle for each day, the chosen days, today's ring and the focus
    * ring, and round month buttons. The strip behind a range keeps its straight edges, so it still reads as one run.

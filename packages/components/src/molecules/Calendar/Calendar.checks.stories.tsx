@@ -288,3 +288,140 @@ export const KeyFitsBelowTheGrid: Story = {
     await expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth + 1);
   },
 };
+
+/** The box of a day's number, apart from anything else drawn in its button. */
+const numberBox = (button: Element) => {
+  const text = [...button.childNodes].find((node) => node.nodeType === Node.TEXT_NODE)!;
+  const range = document.createRange();
+  range.selectNodeContents(text);
+  return range.getBoundingClientRect();
+};
+
+export const FieldsFitTheHeader: Story = {
+  name: "The month and year fields fit between the buttons at every size, and the heading row keeps its height",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "flex-start" }}>
+      {sizes.map((size) => (
+        <Calendar key={size} size={size} captionLayout="dropdown" defaultMonth="2026-10" today="2026-10-14" aria-label={`d-${size}`} data-testid={`d-${size}`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of sizes) {
+      const root = canvas.getByTestId(`d-${size}`);
+      const bounds = box(root);
+      const [month, year] = within(root).getAllByRole("combobox").map(box);
+      const previous = box(within(root).getByRole("button", { name: "Previous month" }));
+      const next = box(within(root).getByRole("button", { name: "Next month" }));
+      // Inside the calendar, side by side without overlapping each other or a button.
+      for (const field of [month!, year!]) {
+        await expect(field.left).toBeGreaterThanOrEqual(bounds.left - 0.5);
+        await expect(field.right).toBeLessThanOrEqual(bounds.right + 0.5);
+      }
+      await expect(month!.right).toBeLessThanOrEqual(year!.left + 0.5);
+      if (size !== "xs") {
+        // On the same row as the buttons, between them.
+        await expect(month!.left).toBeGreaterThanOrEqual(previous.right - 0.5);
+        await expect(year!.right).toBeLessThanOrEqual(next.left + 0.5);
+      } else {
+        // At xs they take a row of their own under the buttons.
+        await expect(month!.top).toBeGreaterThanOrEqual(previous.bottom - 0.5);
+      }
+    }
+  },
+};
+
+export const MonthsSideBySideThenStacked: Story = {
+  name: "Two months sit side by side with equal widths, and stack when their container is too narrow",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
+      <Calendar numberOfMonths={2} defaultMonth="2026-10" today="2026-10-14" aria-label="wide" data-testid="wide-two" />
+      <div style={{ inlineSize: "22rem" }}>
+        <Calendar numberOfMonths={2} defaultMonth="2026-10" today="2026-10-14" aria-label="narrow" data-testid="narrow-two" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [first, second] = within(canvas.getByTestId("wide-two")).getAllByRole("grid").map(box);
+    await expect(Math.abs(first!.width - second!.width)).toBeLessThan(1);
+    await expect(Math.abs(first!.top - second!.top)).toBeLessThan(1);
+    await expect(second!.left).toBeGreaterThan(first!.right);
+    const narrow = canvas.getByTestId("narrow-two");
+    const [top, below] = within(narrow).getAllByRole("grid").map(box);
+    await expect(below!.top).toBeGreaterThanOrEqual(top!.bottom - 0.5);
+    await expect(narrow.scrollWidth).toBeLessThanOrEqual(narrow.clientWidth + 1);
+    await expect(box(narrow).width).toBeLessThanOrEqual(22 * 16 + 0.5);
+  },
+};
+
+export const MonthsMirrorInRightToLeft: Story = {
+  name: "Right to left: the first month is at the right, with the previous button, and the next button ends at the left",
+  render: () => <Calendar dir="rtl" numberOfMonths={2} defaultMonth="2026-10" today="2026-10-14" aria-label="rtl two" data-testid="rtl-two" />,
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByTestId("rtl-two");
+    const [october, november] = within(root).getAllByRole("grid").map(box);
+    await expect(october!.left).toBeGreaterThan(november!.left);
+    const previous = box(within(root).getByRole("button", { name: "Previous month" }));
+    const next = box(within(root).getByRole("button", { name: "Next month" }));
+    await expect(previous.left).toBeGreaterThan(next.left);
+    day(root, "2026-10-31").focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect((document.activeElement as HTMLElement).dataset.date).toBe("2026-11-01");
+  },
+};
+
+export const MarkerSitsInsideTheDay: Story = {
+  name: "A marker's dot sits under the number inside the day, and with content every number is in line",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-8)", alignItems: "flex-start" }}>
+      <Calendar defaultMonth="2026-10" today="2026-10-14" getMarker={(date) => (date === "2026-10-20" ? { tone: "info" } : undefined)} aria-label="dots" data-testid="dots" />
+      <Calendar
+        size="lg"
+        showOutsideDays={false}
+        defaultMonth="2026-10"
+        today="2026-10-14"
+        getMarker={(date) => (date === "2026-10-20" ? { content: <span>$80</span>, label: "$80" } : undefined)}
+        aria-label="content"
+        data-testid="content"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dots = canvas.getByTestId("dots");
+    const marked = day(dots, "2026-10-20");
+    const dot = marked.querySelector("[aria-hidden='true'] > span")!;
+    await expect(box(dot).bottom).toBeLessThanOrEqual(box(marked).bottom + 0.5);
+    await expect(box(dot).top).toBeGreaterThanOrEqual(numberBox(marked).bottom - 1);
+    await expect(Math.abs(box(dot).left + box(dot).width / 2 - (box(marked).left + box(marked).width / 2))).toBeLessThan(1);
+    // A dot leaves the numbers where they are.
+    await expect(Math.abs(numberBox(marked).top - numberBox(day(dots, "2026-10-21")).top)).toBeLessThan(0.5);
+    const content = canvas.getByTestId("content");
+    const priced = day(content, "2026-10-20");
+    const slot = priced.querySelector("[aria-hidden='true']")!;
+    // The content sits under its number, inside the day, and every number in the row is at the same height.
+    await expect(box(slot).top).toBeGreaterThanOrEqual(numberBox(priced).bottom - 1);
+    await expect(box(slot).bottom).toBeLessThanOrEqual(box(priced).bottom + 0.5);
+    await expect(Math.abs(numberBox(priced).top - numberBox(day(content, "2026-10-21")).top)).toBeLessThan(0.5);
+  },
+};
+
+export const FooterKeepsFocus: Story = {
+  name: "Clear leaves keyboard focus on itself, and the footer sits below the grid and the key",
+  render: () => (
+    <Calendar clearable showTodayButton showLegend defaultMonth="2026-10" today="2026-10-14" defaultValue="2026-10-06" footer={<span data-testid="note">Note</span>} aria-label="footer" data-testid="footer" />
+  ),
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByTestId("footer");
+    const clear = within(root).getByRole("button", { name: "Clear" });
+    const key = within(root).getByRole("list", { name: "Key" });
+    await expect(box(clear).top).toBeGreaterThanOrEqual(box(key).bottom - 0.5);
+    await expect(box(within(root).getByTestId("note")).top).toBeGreaterThanOrEqual(box(root.querySelector("table")!).bottom);
+    clear.focus();
+    await userEvent.keyboard("{Enter}");
+    await expect(clear).toHaveFocus();
+    await expect(clear).toHaveAttribute("aria-disabled", "true");
+  },
+};

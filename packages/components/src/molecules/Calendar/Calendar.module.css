@@ -14,8 +14,11 @@
   flex-direction: column;
   font-family: var(--dbm-font-family-primary);
   gap: var(--dbm-space-2);
-  /* Seven squares wide, or all there is, on a screen narrower than that. */
-  inline-size: calc(7 * var(--calendar-cell));
+  /* Seven squares wide for each month on show (`--calendar-months`, set from `numberOfMonths`) and the gaps between
+     them, or all there is, on a screen narrower than that. */
+  inline-size: calc(
+    var(--calendar-months, 1) * 7 * var(--calendar-cell) + (var(--calendar-months, 1) - 1) * var(--dbm-space-6)
+  );
   max-inline-size: 100%;
   /* Never narrower than seven days of 24px, the smallest target WCAG 2.5.8 allows: in a container narrower than that
      it overflows (and scrolls, if the container does) instead of squeezing the days into each other. */
@@ -59,6 +62,22 @@
   opacity: var(--dbm-opacity-40);
 }
 
+/* The months on show side by side. Each keeps its own width, and wraps onto a new row when the container is too narrow
+   for the next one. */
+.months {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-4) var(--dbm-space-6);
+}
+
+.month {
+  display: flex;
+  flex: 0 1 calc(7 * var(--calendar-cell));
+  flex-direction: column;
+  gap: var(--dbm-space-2);
+  min-inline-size: calc(7 * var(--dbm-space-6));
+}
+
 /* The previous and next buttons either side of the heading. They keep their place in the row whatever the
    heading says, so the buttons never move as the month changes. */
 .header {
@@ -66,6 +85,36 @@
   display: flex;
   gap: var(--dbm-space-2);
   justify-content: space-between;
+  min-block-size: var(--calendar-cell);
+}
+
+/* The month and year fields take the heading's place. */
+.dropdowns {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+}
+
+.monthField {
+  flex: 3 1 0;
+  min-inline-size: 0;
+}
+
+.yearField {
+  flex: 2 1 0;
+  min-inline-size: 0;
+}
+
+/* Seven days of the smallest size leave too little room for two fields between the buttons, so there the fields go on
+   a row of their own under them. */
+.sizeXs .headerDropdown {
+  flex-wrap: wrap;
+}
+
+.sizeXs .headerDropdown .dropdowns {
+  flex-basis: 100%;
+  order: 3;
 }
 
 /* The previous and next buttons: `Button`s made into squares the size of a day. Two classes, so the square sizing
@@ -232,6 +281,80 @@
   outline-color: var(--dbm-icon-on-brand);
 }
 
+/* A mark under a day's number: a dot in a tone, or the caller's own content. */
+.marker {
+  display: flex;
+  font-size: var(--dbm-font-size-xs);
+  inline-size: 100%;
+  inset-block-end: var(--dbm-space-1);
+  inset-inline-start: 0;
+  justify-content: center;
+  line-height: var(--dbm-line-height-tight);
+  pointer-events: none;
+  position: absolute;
+}
+
+/* With content of its own under some day's number, every number moves up to make room, so they stay in line. */
+.contentMarkers .day {
+  align-items: flex-start;
+  padding-block-start: var(--dbm-space-1);
+}
+
+.dot {
+  block-size: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-full);
+  inline-size: var(--dbm-space-1);
+}
+
+.dotNeutral {
+  background-color: var(--dbm-bg-neutral);
+}
+
+.dotBrand {
+  background-color: var(--dbm-bg-brand);
+}
+
+.dotInfo {
+  background-color: var(--dbm-bg-info);
+}
+
+.dotSuccess {
+  background-color: var(--dbm-bg-success);
+}
+
+.dotWarning {
+  background-color: var(--dbm-bg-warning);
+}
+
+.dotDanger {
+  background-color: var(--dbm-bg-danger);
+}
+
+.dotHighlight {
+  background-color: var(--dbm-bg-highlight);
+}
+
+/* On the brand fill of a chosen day no tone would show, so the dot takes the on-brand colour. */
+.selected .dot {
+  background-color: var(--dbm-icon-on-brand);
+}
+
+/* The footer: the built-in buttons, then the caller's own content. */
+.footer {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+}
+
+.footerActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-2);
+}
+
 /* `rounded`: round days and, with them, the ring around today and the focus ring. The strip behind a range keeps its
    straight edges, so it reads as one run. */
 .rounded .day,
@@ -329,6 +452,14 @@
 
   .swatchUnavailable {
     color: GrayText;
+  }
+
+  .dot {
+    background-color: CanvasText;
+  }
+
+  .selected .dot {
+    background-color: HighlightText;
   }
 
   .swatchToday,

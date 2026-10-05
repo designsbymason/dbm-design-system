@@ -4,6 +4,7 @@ import { CalendarBlankIcon } from "@dbm-design-system/icons";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Select } from "../Select";
 import { TimePicker } from "../TimePicker";
 import * as CalendarStories from "./Calendar.stories";
 
@@ -20,6 +21,16 @@ export const propOrder = [
   "isDateDisabled",
   "weekStartsOn",
   "showOutsideDays",
+  "numberOfMonths",
+  "captionLayout",
+  "yearRange",
+  "minRangeDays",
+  "maxRangeDays",
+  "rangeSpansUnavailable",
+  "getMarker",
+  "showTodayButton",
+  "clearable",
+  "footer",
   "today",
   "size",
   "rounded",
@@ -48,6 +59,13 @@ export const playgroundPropOrder = [
   "max",
   "weekStartsOn",
   "showOutsideDays",
+  "numberOfMonths",
+  "captionLayout",
+  "minRangeDays",
+  "maxRangeDays",
+  "rangeSpansUnavailable",
+  "showTodayButton",
+  "clearable",
   "today",
   "size",
   "rounded",
@@ -75,6 +93,10 @@ timezone, and a `Date` carries both. So the value is plain text that compares, s
 `[start, end]` pair. The month on show is `"YYYY-MM"`, held by `month` and `onMonthChange` (or `defaultMonth`).
 `min`, `max` and `isDateDisabled` rule dates out, `weekStartsOn` sets the first column, and `showOutsideDays` fills the
 first and last weeks with the neighbouring months' days.
+
+Several months can sit side by side (`numberOfMonths`), the month and year can be two select fields for a far-off date
+(`captionLayout="dropdown"`), a footer can offer **Today** and **Clear** buttons and your own content, a day can carry a
+marker (`getMarker`), and a range can be limited in length or kept from running over an unavailable date.
 
 The grid is one tab stop and is driven by the keyboard — arrows by the day and the week, Home and End along the week,
 Page Up and Page Down by the month — and the month you move to is announced to screen readers.
@@ -137,6 +159,51 @@ be called `key`, which React keeps for itself.) The words are in `labels`: `lege
 `legendRange` and `legendUnavailable`, and `legend` names the list.
 
 <Canvas of={CalendarStories.Legend} />
+
+### Month and year fields
+
+`captionLayout="dropdown"` swaps the heading for a month field and a year field, so a far-off date is one choice away
+instead of many presses of the month buttons. `yearRange` sets the years offered (the hundred before this year and the
+twenty after it, left out), `min` and `max` narrow it further and rule out the months they leave no day in, and the year on
+show is always offered. With several months on show only the first gets the fields.
+
+<Canvas of={CalendarStories.Dropdowns} />
+
+### Two months
+
+`numberOfMonths` puts up to four months side by side — two is the usual choice for a range that may cross a month.
+The previous and next buttons move the first month on show by one, and the keyboard turns the page only when focus
+leaves the months on show. In a container too narrow for them the months wrap onto more rows. The neighbouring
+months' days are not drawn, as they would appear twice.
+
+<Canvas of={CalendarStories.TwoMonths} />
+
+### Today, Clear and a footer of your own
+
+`showTodayButton` shows today's month and chooses today when it can be chosen; `clearable` empties the choice. Neither
+button leaves the footer or loses keyboard focus when it can't be used — it is `aria-disabled` instead — so pressing
+Clear on the last chosen date leaves focus on Clear. `footer` is your own content after them: a note, a link, a row of
+presets.
+
+<Canvas of={CalendarStories.Footer} />
+
+### Markers on days
+
+`getMarker` is asked for each day drawn and can return a dot in a tone, a `label` that is added to the day's accessible name,
+or your own `content` (a price, a count) for the slot under the number. A marked day with only a dot keeps its number
+centred; once any day brings content of its own, every number moves to the top of its day so they stay in line along a row.
+Content needs room, so use it from size `lg`.
+
+<Canvas of={CalendarStories.Markers} />
+
+### Range limits
+
+`minRangeDays` and `maxRangeDays` count both ends (the 5th to the 7th is 3 days). While the end is being chosen, the
+dates that would make the range too short or too long are unavailable. `rangeSpansUnavailable={false}` also rules out
+every date after the first unavailable one, for a booking that can't step over a booked night. A date before the
+start still restarts the range.
+
+<Canvas of={CalendarStories.RangeLimits} />
 
 ### Weeks that start on Monday
 
@@ -210,8 +277,12 @@ same function.
 - Don't use it to choose a time as well. It chooses a day; pair it with a `TimePicker` for a time of day.
 - Don't put it on `bg.canvas`: the neighbouring months' days use the quietest text colour, which doesn't reach the
   4.5:1 floor on the canvas. The ordinary page background is what it is checked on.
-- Don't use it for a long jump across years (a birth date): Page Up and Page Down with Shift help, but a field you can
-  type into is faster.
+- Don't rely on the month buttons for a far-off date (a birth date): use `captionLayout="dropdown"`, or a field you can
+  type into.
+- Don't put a lot into a marker's `content`: it sits under the number in a slot as high as the text, and it is hidden from
+  assistive technology, so give it a short `label`.
+- Don't use `rangeSpansUnavailable={false}` with a rule that makes many dates unavailable (every weekend): a range could
+  then never run over one.
 
 </Callout>
 </div>
@@ -230,6 +301,10 @@ same function.
 - In `range` mode, tell the person what to do next. After the first choice the value is `[start, ""]` — show "choose
   the last day" beside it, as the range story does — and treat a range with an empty end as not finished.
 - A range of one day is allowed: choosing the start again as the end gives `[date, date]`.
+- Use two months for a range that is likely to cross a month, and one for a single date. Remember `month` is then the
+  first month on show.
+- A marker is for a fact about a day that the person can't see otherwise — an event, a booking, a price. Give it a `label`
+  so a screen-reader user hears it, and keep the number of kinds small.
 - Keep a controlled `month` when something outside the calendar should follow it (a list of events for the month on
   show), and let it manage the month itself otherwise.
 - `min` and `max` also stop the month buttons: the previous button becomes unavailable in the month that holds `min`,
@@ -263,6 +338,16 @@ same function.
   and the range strip, and the weekday headings at least 6.88:1, in every theme; the neighbouring months' days are
   4.70:1 on the page (and step up to the secondary text on a tinted fill, where the quietest text would fall under
   4.5:1). Today's ring is at least 6.08:1 and the focus ring at least 4.16:1 against the page.
+- With `captionLayout="dropdown"` the heading is replaced by two `Select` fields named "Month" and "Year" (translatable);
+  the grid keeps its name ("October 2026") through a visually hidden heading. They come between the previous and next
+  buttons in the tab order, which then reaches the grid.
+- With more than one month, each month is its own named grid, and still all of them are one tab stop together. A key
+  that moves onto a day in the next month moves focus there without turning the page; the page turns when focus leaves
+  the months on show. The months on show are announced together ("November 2026 – December 2026").
+- The Today and Clear buttons are `aria-disabled`, not natively disabled, when they can't be used, so focus is never
+  dropped from a button that has just emptied the calendar. A marker's `label` is added to the day's name ("…, 2 events");
+  the dot or content itself is hidden from assistive technology. While the end of a range is being chosen, the dates
+  the limits rule out are `aria-disabled` like any other unavailable date.
 - Every day is a target of at least 30 × 30 CSS pixels at the smallest size, above the 24px minimum, and the calendar
   never gets narrower than seven 24px days, however small its container.
 - The key (`showLegend`) is a list named "Key" (translatable). Its sample shapes are decorative and hidden from assistive
@@ -319,6 +404,28 @@ const [month, setMonth] = useState("2026-10");
 // A smaller calendar, without the neighbouring months' days
 <Calendar size="sm" showOutsideDays={false} />
 
+// Month and year fields, for a birth date
+<Calendar captionLayout="dropdown" yearRange={[1926, 2026]} max="2026-12-31" />
+
+// Two months side by side for a range
+<Calendar mode="range" numberOfMonths={2} value={range} onValueChange={setRange} />
+
+// A range of at least 3 days and at most 7 (counting both ends) that can't step over a booked night
+<Calendar
+  mode="range"
+  minRangeDays={3}
+  maxRangeDays={7}
+  rangeSpansUnavailable={false}
+  isDateDisabled={(date) => booked.has(date)}
+/>
+
+// Today and Clear buttons, and a note of your own
+<Calendar showTodayButton clearable footer={<Text size="xs">Times are in your timezone.</Text>} />
+
+// A dot for days with events, a price for others (from size lg)
+<Calendar getMarker={(date) => (events.has(date) ? { tone: "info", label: "1 event" } : undefined)} />
+<Calendar size="lg" getMarker={(date) => ({ content: <span>{price(date)}</span>, label: price(date) })} />
+
 // Round days and month buttons
 <Calendar rounded />
 
@@ -357,7 +464,13 @@ const [month, setMonth] = useState("2026-10");
 
 ## Design tokens used
 
-<TokenRow token="bg.brand" usage="the chosen day, the ends of a range, and the key's selected sample" />
+<TokenRow token="bg.brand" usage="the chosen day, the ends of a range, the key's selected sample, and a brand-toned marker dot" />
+<TokenRow token="bg.neutral" usage="a neutral marker dot" />
+<TokenRow token="bg.info" usage="an info marker dot" />
+<TokenRow token="bg.success" usage="a success marker dot" />
+<TokenRow token="bg.warning" usage="a warning marker dot" />
+<TokenRow token="bg.danger" usage="a danger marker dot" />
+<TokenRow token="bg.highlight" usage="a highlight marker dot" />
 <TokenRow token="bg.brand-hover" usage="the chosen day when hovered" />
 <TokenRow token="text.on-brand" usage="the chosen day's number" />
 <TokenRow token="bg.brand-subtle-hover" usage="the strip behind the days of a range, the day a click would end it on, and the key's range sample" />
@@ -368,7 +481,7 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="text.disabled" usage="a day that can't be chosen, and the key's unavailable sample" />
 <TokenRow token="border.brand" usage="the ring marking today" />
 <TokenRow token="border.focus" usage="a focused day's outline color" />
-<TokenRow token="icon.on-brand" usage="the outline of a focused, chosen day" />
+<TokenRow token="icon.on-brand" usage="the outline of a focused, chosen day, and a marker dot on a chosen day" />
 <TokenRow token="border-width.1" usage="today's ring, and the lines of a range in forced colours" />
 <TokenRow token="border-width.2" usage="a focused day's outline width" />
 <TokenRow token="radius.md" usage="the corners of a day" />
@@ -380,7 +493,7 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="icon-button.size.md" usage="the width and height of a day, and of the month buttons, at size md" />
 <TokenRow token="icon-button.size.lg" usage="the width and height of a day, and of the month buttons, at size lg" />
 <TokenRow token="icon-button.size.xl" usage="the width and height of a day, and of the month buttons, at size xl" />
-<TokenRow token="font-size.xs" usage="a day and the weekday headings at xs; the weekday headings at sm; the key" />
+<TokenRow token="font-size.xs" usage="a day and the weekday headings at xs; the weekday headings at sm; the key; a marker's content" />
 <TokenRow token="font-size.sm" usage="a day at sm; the weekday headings at md and lg" />
 <TokenRow token="font-size.base" usage="a day at md; the weekday headings at xl" />
 <TokenRow token="font-size.md" usage="a day and the month heading at lg" />
@@ -388,9 +501,11 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="font-weight.medium" usage="the weekday headings" />
 <TokenRow token="font-weight.semibold" usage="the month heading, today, and the chosen days" />
 <TokenRow token="font-family.primary" usage="calendar typography" />
+<TokenRow token="space.1" usage="the size of a marker dot, and its distance from the bottom of the day" />
+<TokenRow token="line-height.tight" usage="the line height of a marker's content" />
 <TokenRow token="space.2" usage="the gap between the heading row and the grid, and between the buttons and the heading, and between a key entry's sample and its text" />
-<TokenRow token="space.4" usage="the gap between the key's entries" />
-<TokenRow token="space.6" usage="the size of the key's samples, and the least width of a day — seven of them make the calendar's minimum width" />
+<TokenRow token="space.4" usage="the gap between the key's entries, and between rows of months" />
+<TokenRow token="space.6" usage="the gap between months side by side, the size of the key's samples, and the least width of a day — seven of them make the calendar's minimum width" />
 <TokenRow token="motion.duration.fast" usage="day hover transitions" />
 <TokenRow token="motion.easing.standard" usage="day hover transitions" />
 
@@ -410,6 +525,15 @@ const [month, setMonth] = useState("2026-10");
   href="/?path=/docs/atoms-inputs-button--docs"
 >
   <Button size="sm">Next month</Button>
+</RelatedCard>
+<RelatedCard
+  name="Select"
+  description="The month and year fields are Selects"
+  href="/?path=/docs/molecules-inputs-select--docs"
+>
+  <Select size="sm" aria-label="Month" defaultValue="10">
+    <Select.Option value="10">October</Select.Option>
+  </Select>
 </RelatedCard>
 <RelatedCard
   name="IconButton"

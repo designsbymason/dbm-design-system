@@ -98,6 +98,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0042](./0042-yellow-is-an-anchored-scale-with-its-own-light-end-chroma-and-the-highlight-semantic-family.md) | Yellow is an anchored scale with its own light-end chroma, and its semantic family is named `highlight` | Accepted |
 | [0043](./0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md) | Reordering is a hand-rolled sortable hook in `primitives` for a single list, over a drag-and-drop dependency | Accepted |
 | [0044](./0044-calendar-dates-are-yyyy-mm-dd-strings-with-a-single-and-a-range-mode-and-a-hand-built-grid.md) | `Calendar` dates are `"YYYY-MM-DD"` strings, one component has a single and a range mode, and the grid is hand-built, over a `Date` value, a separate range component or a date library | Accepted |
+| [0045](./0045-calendar-grows-by-months-on-show-select-fields-a-footer-and-a-marker-prop-over-a-view-switcher-or-a-day-render-prop.md) | `Calendar` grows by months on show, select fields for the month and year, a footer and a marker prop, over a month/year view switcher or a day render prop | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

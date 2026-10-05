@@ -41,6 +41,34 @@ export const calendarSnippets = {
 {/* readOnly: the choice is shown but can't change; the months and the dates can still be moved through */}
 <Calendar readOnly defaultValue="2026-10-06" />`,
 
+  dropdowns: `{/* captionLayout="dropdown" swaps the month heading for a month field and a year field, so a far-off date is
+    one choice away. yearRange sets the years offered; min and max narrow it further. */}
+<Calendar captionLayout="dropdown" yearRange={[1926, 2026]} max="2026-12-31" />`,
+
+  twoMonths: `{/* numberOfMonths: 1 to 4 months side by side, wrapping onto more rows in a narrow container. The previous and
+    next buttons move the first month on show by one; month and onMonthChange are the first month on show. */}
+<Calendar mode="range" numberOfMonths={2} />`,
+
+  footer: `{/* showTodayButton goes to today's month and chooses today when it can be chosen; clearable empties the choice
+    (and stays, aria-disabled, when there is nothing to clear). footer is your own content after them. */}
+<Calendar showTodayButton clearable footer={<Text size="xs">Times are in your timezone.</Text>} />`,
+
+  markers: `{/* getMarker is called with each date drawn, as "YYYY-MM-DD". Return a tone for a dot, a label to add to the day's
+    accessible name, or your own content (a price) for the slot under the number — from size lg up, where there is room. */}
+<Calendar
+  getMarker={(date) => (eventsByDate[date] ? { tone: "info", label: "1 event" } : undefined)}
+/>
+
+<Calendar size="lg" getMarker={(date) => (prices[date] ? { content: <span>{prices[date]}</span>, label: prices[date] } : undefined)} />`,
+
+  rangeLimits: `{/* minRangeDays and maxRangeDays count both ends: the 5th to the 7th is 3 days. While the end is being
+    chosen, dates that would make the range too short or too long are unavailable. */}
+<Calendar mode="range" minRangeDays={3} maxRangeDays={7} />
+
+{/* rangeSpansUnavailable={false}: once the start is chosen, every date after the first unavailable one is unavailable
+    too, for a booking that can't step over a booked night. */}
+<Calendar mode="range" rangeSpansUnavailable={false} isDateDisabled={(date) => booked.includes(date)} />`,
+
   rounded: `{/* rounded draws the days and both month buttons round — the days, the chosen ones, today's ring and the focus
     ring. The strip behind a range keeps its straight edges. */}
 <Calendar rounded defaultValue="2026-10-06" />`,
@@ -94,6 +122,13 @@ export interface CalendarPlaygroundSnippetArgs {
   max?: string;
   weekStartsOn?: CalendarWeekStart;
   showOutsideDays?: boolean;
+  numberOfMonths?: number;
+  captionLayout?: "label" | "dropdown";
+  showTodayButton?: boolean;
+  clearable?: boolean;
+  minRangeDays?: number | "";
+  maxRangeDays?: number | "";
+  rangeSpansUnavailable?: boolean;
   size?: CalendarSize;
   rounded?: boolean;
   showLegend?: boolean;
@@ -121,6 +156,15 @@ export function calendarPlaygroundSnippet(args: CalendarPlaygroundSnippetArgs): 
   if (args.weekStartsOn !== undefined && Number(args.weekStartsOn) !== 0) attributes.push(`weekStartsOn={${args.weekStartsOn}}`);
   if (args.showOutsideDays === false) attributes.push("showOutsideDays={false}");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.numberOfMonths !== undefined && Number(args.numberOfMonths) > 1) attributes.push(`numberOfMonths={${Number(args.numberOfMonths)}}`);
+  if (args.captionLayout === "dropdown") attributes.push('captionLayout="dropdown"');
+  if (args.showTodayButton) attributes.push("showTodayButton");
+  if (args.clearable) attributes.push("clearable");
+  if (range) {
+    if (args.minRangeDays !== undefined && args.minRangeDays !== "" && Number(args.minRangeDays) > 1) attributes.push(`minRangeDays={${Number(args.minRangeDays)}}`);
+    if (args.maxRangeDays !== undefined && args.maxRangeDays !== "" && Number(args.maxRangeDays) > 0) attributes.push(`maxRangeDays={${Number(args.maxRangeDays)}}`);
+    if (args.rangeSpansUnavailable === false) attributes.push("rangeSpansUnavailable={false}");
+  }
   if (args.rounded) attributes.push("rounded");
   if (args.showLegend) attributes.push("showLegend");
   if (args.disabled) attributes.push("disabled");

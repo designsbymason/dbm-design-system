@@ -1,7 +1,10 @@
 export { Calendar } from "./Calendar";
 export type {
+  CalendarCaptionLayout,
   CalendarDayInfo,
   CalendarLabels,
+  CalendarMarker,
+  CalendarMarkerTone,
   CalendarMode,
   CalendarProps,
   CalendarRangeProps,

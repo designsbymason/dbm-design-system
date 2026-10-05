@@ -6,7 +6,7 @@ import { useArgs } from "storybook/preview-api";
 import { Text } from "../../atoms/Text";
 import { Calendar } from "./Calendar";
 import { calendarPlaygroundSnippet, calendarSnippets } from "./Calendar.snippets";
-import type { CalendarMode, CalendarRangeValue, CalendarSize, CalendarWeekStart } from "./Calendar.types";
+import type { CalendarCaptionLayout, CalendarMode, CalendarRangeValue, CalendarSize, CalendarWeekStart } from "./Calendar.types";
 
 // `Calendar`'s props are a union (a single date, or a range), so this meta has no `component` and its argTypes
 // are written out here. The Playground is controlled: choosing a date in the canvas, or moving to another month,
@@ -21,6 +21,16 @@ interface PlaygroundArgs {
   max: string;
   weekStartsOn: CalendarWeekStart;
   showOutsideDays: boolean;
+  numberOfMonths: number;
+  captionLayout: CalendarCaptionLayout;
+  showTodayButton: boolean;
+  clearable: boolean;
+  minRangeDays: number | "";
+  maxRangeDays: number | "";
+  rangeSpansUnavailable: boolean;
+  yearRange: unknown;
+  footer: unknown;
+  getMarker: unknown;
   today: string;
   size: CalendarSize;
   rounded: boolean;
@@ -73,6 +83,16 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   max: { control: false },
   weekStartsOn: { control: false },
   showOutsideDays: { control: false },
+  numberOfMonths: { control: false },
+  captionLayout: { control: false },
+  showTodayButton: { control: false },
+  clearable: { control: false },
+  minRangeDays: { control: false },
+  maxRangeDays: { control: false },
+  rangeSpansUnavailable: { control: false },
+  yearRange: { control: false },
+  footer: { control: false },
+  getMarker: { control: false },
   today: { control: false },
   size: { control: false },
   rounded: { control: false },
@@ -163,6 +183,66 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description:
         "Shows the days of the neighbouring months that fill the first and last weeks, dimmed. They can be chosen, which moves the calendar to their month. With false those cells are empty.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    numberOfMonths: {
+      control: { type: "number", min: 1, max: 4, step: 1 },
+      description:
+        "How many months are on show side by side, 1 to 4 — two is the usual choice for a range that may cross a month. They wrap onto more than one row when the container is too narrow. The previous and next buttons move the first month on show by one, and month / defaultMonth / onMonthChange are the first month on show. Neighbouring months' days (showOutsideDays) are only drawn when one month is on show.",
+      table: { defaultValue: { summary: "1" } },
+    },
+    captionLayout: {
+      control: "radio",
+      options: ["label", "dropdown"],
+      description:
+        "How the month and year are shown above the grid: as text (label), or as two select fields (dropdown) to jump to a far-off month or year. With more than one month on show, only the first gets the fields.",
+      table: { defaultValue: { summary: "'label'" } },
+    },
+    yearRange: {
+      control: false,
+      description:
+        "The first and last year the year field offers, as [from, to], with captionLayout=\"dropdown\". min and max, when set, narrow it further; the year on show is always offered. Left out, it is the hundred years before this year and the twenty after it.",
+    },
+    showTodayButton: {
+      control: "boolean",
+      description:
+        "Adds a footer button that shows today's month and chooses today when it can be chosen (in range mode it is a choice like any other). It is aria-disabled until the clock is known, and when the calendar is disabled.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    clearable: {
+      control: "boolean",
+      description:
+        "Adds a footer button that clears the choice (the date, or the whole range). It stays in the footer and becomes aria-disabled when nothing is chosen, or the calendar is readOnly or disabled, so keyboard focus is never lost when pressing it empties the calendar.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    footer: {
+      control: false,
+      description:
+        "Your own content for the footer, below the grid and the key, after the built-in buttons: a note, a link, a row of presets. It is yours to label and to make accessible.",
+    },
+    getMarker: {
+      control: false,
+      description:
+        "Marks a day with a dot, or with your own content, under its number — for events, bookings, prices. Called with a date as \"YYYY-MM-DD\" for each day drawn, on every render, so keep it cheap and pure. Return { tone, label, content }, or nothing for a day without a marker. A label is added to the day's accessible name; without one the marker is decorative.",
+    },
+    minRangeDays: {
+      control: { type: "number", min: 1, step: 1 },
+      if: { arg: "mode", eq: "range" },
+      description:
+        "In range mode, the fewest days a range may span, counting both ends: a range from the 5th to the 7th is 3 days. While the end is being chosen, the dates that would make the range shorter are unavailable. Ignored in single mode.",
+      table: { defaultValue: { summary: "1" } },
+    },
+    maxRangeDays: {
+      control: { type: "number", min: 1, step: 1 },
+      if: { arg: "mode", eq: "range" },
+      description:
+        "In range mode, the most days a range may span, counting both ends. While the end is being chosen, the dates that would make the range longer are unavailable. Ignored in single mode.",
+    },
+    rangeSpansUnavailable: {
+      control: "boolean",
+      if: { arg: "mode", eq: "range" },
+      description:
+        "In range mode, whether a range may run over an unavailable date. With false, once the start is chosen every date after the first unavailable one is unavailable too — for a booking where a booked night can't be stepped over. Ignored in single mode.",
       table: { defaultValue: { summary: "true" } },
     },
     today: {
@@ -261,6 +341,13 @@ const meta: Meta<PlaygroundArgs> = {
     max: "",
     weekStartsOn: 0,
     showOutsideDays: true,
+    numberOfMonths: 1,
+    captionLayout: "label",
+    showTodayButton: false,
+    clearable: false,
+    minRangeDays: "",
+    maxRangeDays: "",
+    rangeSpansUnavailable: true,
     today: "",
     size: "md",
     rounded: false,
@@ -279,6 +366,10 @@ const meta: Meta<PlaygroundArgs> = {
       max: args.max || undefined,
       weekStartsOn: args.weekStartsOn,
       showOutsideDays: args.showOutsideDays,
+      numberOfMonths: args.numberOfMonths,
+      captionLayout: args.captionLayout,
+      showTodayButton: args.showTodayButton,
+      clearable: args.clearable,
       today: args.today || undefined,
       size: args.size,
       rounded: args.rounded,
@@ -292,6 +383,9 @@ const meta: Meta<PlaygroundArgs> = {
       <Calendar
         {...shared}
         mode="range"
+        minRangeDays={args.minRangeDays === "" ? undefined : Number(args.minRangeDays)}
+        maxRangeDays={args.maxRangeDays === "" ? undefined : Number(args.maxRangeDays)}
+        rangeSpansUnavailable={args.rangeSpansUnavailable}
         value={[args.start, args.end]}
         onValueChange={([start, end]) => updateArgs({ start, end })}
       />
@@ -470,6 +564,142 @@ export const States: Story = {
           readOnly
         </Text>
         <Calendar readOnly defaultMonth={MONTH} defaultValue={inMonth(6)} aria-label="Read only" />
+      </div>
+    </div>
+  ),
+};
+
+export const Dropdowns: Story = {
+  name: "Month and year fields",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.dropdowns } } },
+  render: () => (
+    <div style={row}>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          A birth date: the last 100 years
+        </Text>
+        <Calendar captionLayout="dropdown" yearRange={[now.getFullYear() - 100, now.getFullYear()]} max={`${now.getFullYear()}-12-31`} aria-label="Birth date" />
+      </div>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          A window set by min and max
+        </Text>
+        <Calendar
+          captionLayout="dropdown"
+          defaultMonth={MONTH}
+          min={inMonth(8)}
+          max={`${now.getFullYear() + 1}-06-30`}
+          aria-label="Within a window"
+        />
+      </div>
+    </div>
+  ),
+};
+
+export const TwoMonths: Story = {
+  name: "Two months",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.twoMonths } } },
+  render: function TwoMonthsRender() {
+    const [range, setRange] = useState<CalendarRangeValue>([inMonth(24), ""]);
+    return (
+      <Calendar mode="range" numberOfMonths={2} defaultMonth={MONTH} value={range} onValueChange={setRange} aria-label="Stay" />
+    );
+  },
+};
+
+export const Footer: Story = {
+  name: "Today, Clear and a footer of your own",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.footer } } },
+  render: () => (
+    <Calendar
+      showTodayButton
+      clearable
+      defaultMonth={MONTH}
+      defaultValue={inMonth(6)}
+      footer={
+        <Text size="xs" color="secondary">
+          Times are in your timezone.
+        </Text>
+      }
+      aria-label="Appointment"
+    />
+  ),
+};
+
+const events: Record<number, { tone: "info" | "success" | "warning" | "danger"; label: string }> = {
+  3: { tone: "info", label: "1 event" },
+  12: { tone: "success", label: "Confirmed" },
+  18: { tone: "warning", label: "2 events" },
+  25: { tone: "danger", label: "Fully booked" },
+};
+
+export const Markers: Story = {
+  name: "Markers on days",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.markers } } },
+  render: () => (
+    <div style={row}>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          A dot in a tone
+        </Text>
+        <Calendar
+          defaultMonth={MONTH}
+          defaultValue={inMonth(12)}
+          getMarker={(date) => {
+            const marker = events[Number(date.slice(8))];
+            return date.startsWith(MONTH) && marker ? marker : undefined;
+          }}
+          aria-label="Events"
+        />
+      </div>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          Your own content, at size lg
+        </Text>
+        <Calendar
+          size="lg"
+          defaultMonth={MONTH}
+          showOutsideDays={false}
+          getMarker={(date) =>
+            date.startsWith(MONTH) && Number(date.slice(8)) % 5 === 0
+              ? { content: <span>${Number(date.slice(8)) * 4}</span>, label: `$${Number(date.slice(8)) * 4}` }
+              : undefined
+          }
+          aria-label="Prices"
+        />
+      </div>
+    </div>
+  ),
+};
+
+export const RangeLimits: Story = {
+  name: "Range limits",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.rangeLimits } } },
+  render: () => (
+    <div style={row}>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          At least 3 days, at most 7
+        </Text>
+        <Calendar mode="range" minRangeDays={3} maxRangeDays={7} defaultMonth={MONTH} defaultValue={[inMonth(8), ""]} aria-label="Stay of 3 to 7 days" />
+      </div>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          rangeSpansUnavailable=&#123;false&#125;, the 15th booked
+        </Text>
+        <Calendar
+          mode="range"
+          rangeSpansUnavailable={false}
+          isDateDisabled={(date) => date === inMonth(15)}
+          defaultMonth={MONTH}
+          defaultValue={[inMonth(8), ""]}
+          aria-label="Cannot step over a booked night"
+        />
       </div>
     </div>
   ),

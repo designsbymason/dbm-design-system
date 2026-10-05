@@ -51,3 +51,28 @@
 - **The samples are plain shapes, with no number in them.** The ring, the solid fill and the soft fill are empty shapes; the unavailable look, which in the grid is only a dimmed number, is a short dimmed line where the number would be. `formatNumber` no longer touches the key.
 - **The key lists the looks that are on screen, not the ones that could be.** "Selected" appears only once a date is chosen (so clearing a controlled `value` removes it — this was the component's behaviour, not Storybook's; it had listed "Selected" always, by design, until this change), "In range" once a range is started, "Unavailable" when `disabled`, `min`, `max` or `isDateDisabled` is in use, and "Today" once the clock is known (so a server render has no entry for it and nothing to mismatch). The list keeps one row's height, so the first entry appearing moves nothing; a second row appearing or disappearing as entries come and go does move what is below the key, which is the one place this component lets text change its surroundings.
 - **Tests:** the key's block was rewritten (entries by choice, by mode and by rule; following a click; the server render; hidden empty samples; labels with `undefined`; jest-axe): 124 unit tests in the Calendar file now. The `formatNumber` test went with the number.
+
+## Months, fields, a footer, markers and range limits (2026-10-05, at explicit direction)
+
+Five gaps named in a feature-completeness look, all built; the decisions are [ADR-0045](../adr/0045-calendar-grows-by-months-on-show-select-fields-a-footer-and-a-marker-prop-over-a-view-switcher-or-a-day-render-prop.md).
+
+- **`captionLayout="dropdown"` and `yearRange`:** two `Select` fields (month, year); years from `yearRange`, narrowed by `min` and `max`, always including the year on show (by default the hundred before this year and the twenty after); months with no available day disabled. The grid keeps its name through a visually hidden heading. At `xs` the fields take a row of their own.
+- **`numberOfMonths` (1 to 4):** the same grid, repeated; `month` is the first on show; the keyboard turns the page only when focus leaves the months on show; neighbouring days are not drawn with more than one month; the months wrap in a narrow container; announced together ("November 2026 – December 2026", `labels.monthRange`).
+- **`showTodayButton`, `clearable`, `footer`:** the buttons are `aria-disabled`, never removed, so focus stays on Clear after it empties the calendar.
+- **`getMarker`:** a dot in a tone (`neutral`, `brand`, `info`, `success`, `warning`, `danger`, `highlight`), or `content` of your own, and a `label` for the day's name. The dot takes the on-brand colour on a chosen day. Numbers move to the top of their day only when some marker has content.
+- **`minRangeDays`, `maxRangeDays`, `rangeSpansUnavailable`:** applied only while the end is being chosen, as unavailable dates.
+- **New labels:** `monthSelect`, `yearSelect`, `monthRange`, `todayButton`, `clearButton`.
+
+**Defects found:** the month panels were keyed by month, so pressing Next or Previous remounted the header and **dropped keyboard focus from the button** (found by a real-browser check, which measured a detached button; not by any of the unit tests, which have a test for it now). Fixed by keying the panels by position. Also found: the first version of the handlers (on the wrapper around the months, not on the grids) failed the `no-static-element-interactions` lint rule and was put back on each `role="grid"` table.
+
+**Contrast, measured in all four themes:** the seven marker dots against `bg.surface`, `bg.brand-subtle` (a hovered day) and `bg.brand-subtle-hover` (the range strip): 4.09:1 or more everywhere (the lowest: `bg.highlight`, 4.09:1 on the strip in light), against the 3:1 floor for graphics. On a chosen day the dot is `icon.on-brand`, as measured for the label (6.08:1 or more).
+
+**Tokens:** none new; the Docs page now has 45 token rows and the guard keeps them in step (adds `space.1`, `line-height.tight` and the seven marker dot colours).
+
+**Tests:** 144 unit tests in the Calendar file (58 more: fields, several months, footer, markers, range limits, focus kept on the month buttons), and 5 more real-browser stories in the checks file (the fields fit the header at every size; months side by side and stacked; right to left; a dot and content inside the day with numbers in line; Clear keeps focus and the footer's place). **Mutation check:** 21 deliberate breaks of the new behaviour, all killed (the first round, one of them, found the focus defect's missing unit test).
+
+**Self-verification (real runs, 2026-10-05):** `pnpm lint`, `pnpm build`, `pnpm test` (122 files, 6,441 tests) and the Chromium Storybook project (146 files, 1,234 tests) pass; bundle 7.66KB JS / 2.73KB CSS (the `Select` is now part of it; the budget is 10KB); the Docs page opened in a running Storybook: 18 canvases with clean "Show code", the Properties table 39 props at 644px, no errors; the new stories looked at (fields, two months, markers).
+
+**Not done:** the new stories in dark mode and Emerald by eye; a screen-reader pass of the fields and the footer; the fields and the months on a real touch device; the popover case (a `Select` inside a `Popover` inside a date picker) is not tried.
+
+**Known limits:** at most four months; with `rangeSpansUnavailable={false}` the unavailable date is looked for up to 732 days ahead, and a start beyond it reaches that far; `getMarker` and `isDateDisabled` run for each of the 42 days of each month on every render; the key (`showLegend`) does not list markers.
