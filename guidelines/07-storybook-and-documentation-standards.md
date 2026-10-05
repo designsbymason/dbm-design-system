@@ -214,7 +214,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and the first 37 molecules have a Docs page and a completed review pass; every one is Finalized, `TableOfContents` (built and Finalized 2026-10-04) the latest declared. `Calendar` (built 2026-10-05, the 38th molecule) has a Docs page and a completed review pass and is awaiting sign-off** — full atom-tier coverage, and
+**All 48 atoms and the first 38 molecules have a Docs page and a completed review pass; every one is Finalized, `Calendar` (built and Finalized 2026-10-05, the 38th molecule) the latest declared** — full atom-tier coverage, and
 every molecule built to date. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
@@ -309,7 +309,7 @@ quoted in prose elsewhere.
 | PinInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [PinInput.md](component-reviews/PinInput.md) |
 | RatingInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [RatingInput.md](component-reviews/RatingInput.md) |
 | TableOfContents | Molecule | Navigation | ✅ | ✅ 2026-10-04 | [TableOfContents.md](component-reviews/TableOfContents.md) |
-| Calendar | Molecule | Inputs & Forms | ✅ | Not yet — built 2026-10-05, awaiting your sign-off | [Calendar.md](component-reviews/Calendar.md) |
+| Calendar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-05 | [Calendar.md](component-reviews/Calendar.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
@@ -320,7 +320,7 @@ and `List` are molecules) has a completed review pass and is Finalized. Per-comp
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`, `DescriptionList`,
-`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`, `FieldGroup`, `Splitter`, `PinInput`, `RatingInput`, `TableOfContents`) are reviewed and Finalized — see the table above. `Calendar` (built 2026-10-05) is awaiting sign-off, `EditableText` and `TagsInput` (added 2026-10-05) are not built, and Phase 6 (organisms, `01-vision-and-goals.md` §13) follows the order set in `04-component-inventory.md`.
+`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`, `FieldGroup`, `Splitter`, `PinInput`, `RatingInput`, `TableOfContents`) are reviewed and Finalized — see the table above. `Calendar` (built and Finalized 2026-10-05) is the 38th, `EditableText` and `TagsInput` (added 2026-10-05) are not built, and Phase 6 (organisms, `01-vision-and-goals.md` §13) follows the order set in `04-component-inventory.md`.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full
 `06-engineering-standards.md` §9 review pass, not a separate sweep, run one component at a time. The atom

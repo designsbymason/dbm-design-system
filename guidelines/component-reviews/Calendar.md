@@ -1,6 +1,6 @@
 # Calendar — build findings
 
-**Navigation:** Calendar — built 2026-10-05; the first of the two molecules added to the inventory on 2026-10-05 (`04-component-inventory.md`), and the prerequisite of `DatePicker` (organism build order #9). **Not yet Finalized:** only the user declares that; the review pass below is complete and the items under "Not done" are open.
+**Navigation:** Calendar — built 2026-10-05; the first of the two molecules added to the inventory on 2026-10-05 (`04-component-inventory.md`), and the prerequisite of `DatePicker` (organism build order #9). **Finalized 2026-10-05** by the user, after the final review recorded at the end of this file, accepting the limits listed there under "Open" (no screen-reader pass, no real touch device, the animation and the newest grids looked at on a few stories rather than all, the per-render cost of the marker and rule callbacks not profiled with four months on show) and the 12KB bundle budget.
 
 **What it is:** one component, props a union keyed on `mode` (`"single"` default, `"range"`). A `role="group"` named "Calendar" holding a header (previous and next month `Button`s either side of the month heading) and a `role="grid"` `<table>` of seven weekday columns and always six week rows (42 days), each day a real `<button>` in a `gridcell`. `ref`, `className`, `style`, `id`, `data-testid` and the `aria-*` props go on the outer group. The value is a `"YYYY-MM-DD"` string (a `[start, end]` pair in range mode), the month `"YYYY-MM"`; controlled or uncontrolled for both. The decisions behind it — strings not `Date`s, one component with a range mode, a hand-built date model with no dependency — are [ADR-0044](../adr/0044-calendar-dates-are-yyyy-mm-dd-strings-with-a-single-and-a-range-mode-and-a-hand-built-grid.md). The date model is `src/internal/date/dateValue.ts` (54 tests, including a daylight-saving week), shared later with the pickers.
 
@@ -134,7 +134,7 @@ A full `06-engineering-standards.md` §9 pass over the component as it stands, w
 
 **Numbers:** `pnpm lint`, `pnpm build`, `pnpm test` (122 files, 6,579 tests) and the Chromium Storybook project (146 files, 1,250 tests) pass; the Foundations check passes; the bundle is 10.54KB JS / 3.21KB CSS against the 12KB override (the extraction added about 0.3KB of module boundaries).
 
-**Open, for the user to accept or ask for before Finalizing:**
+**Open, accepted by the user at Finalizing (2026-10-05):**
 - No screen-reader pass (names, roles, announcements and the grids were checked by structure and by test, not by listening).
 - No real touch device: the swipe is dispatched as events, not made by a finger; the drag was tried with Playwright's mouse.
 - The slide animation and the dark and Emerald themes of the newest grids were looked at on a few stories, not all.
