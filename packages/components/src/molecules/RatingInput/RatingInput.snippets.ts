@@ -16,6 +16,12 @@ export const ratingInputSnippets = {
   halfSteps: `{/* precision: 1 (default) | 0.5 */}
 <RatingInput aria-label="Rating" precision={0.5} defaultValue={3.5} />`,
 
+  rounded: `{/* roundTo: 1 | 0.5. The stars snap (3.3 draws three and a half); the number and the text alternative stay 3.3. */}
+<RatingInput aria-label="Average rating" readOnly value={3.3} roundTo={0.5} showValue />`,
+
+  rightToLeft: `{/* dir: "ltr" (default) | "rtl". Set explicitly; it is not read from the page. */}
+<RatingInput aria-label="Rating" dir="rtl" precision={0.5} defaultValue={3.5} />`,
+
   readOnly: `{/* An average: any value from 0 to max is drawn exactly. */}
 <RatingInput aria-label="Average rating" readOnly value={4.3} />`,
 
@@ -57,6 +63,8 @@ export interface RatingInputPlaygroundSnippetArgs {
   max?: number;
   defaultValue?: number;
   precision?: number;
+  roundTo?: unknown;
+  dir?: string;
   size?: string;
   tone?: string;
   /** The icon component, or the name of the choice that stands for it. */
@@ -86,6 +94,9 @@ export function ratingInputPlaygroundSnippet(args: RatingInputPlaygroundSnippetA
   const attributes: string[] = [`aria-label="${args["aria-label"] || "Rating"}"`];
   if (args.max !== undefined && args.max !== 5) attributes.push(`max={${args.max}}`);
   if (args.precision !== undefined && args.precision !== 1) attributes.push(`precision={${args.precision}}`);
+  // `roundTo` arrives as the option key ("Exact", 1 or 0.5); "Exact" leaves the prop out.
+  if (args.readOnly && (args.roundTo === 1 || args.roundTo === 0.5)) attributes.push(`roundTo={${args.roundTo}}`);
+  if (args.dir && args.dir !== "ltr") attributes.push(`dir="${args.dir}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   const iconName = typeof args.icon === "string" ? iconNames[args.icon] : undefined;

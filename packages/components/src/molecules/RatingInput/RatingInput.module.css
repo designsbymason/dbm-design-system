@@ -65,8 +65,8 @@
   position: relative;
 }
 
-/* The chosen part of the icon: the filled icon over the outline, cut off after `--fill` of its width. The scale
-   reads left to right (the root sets it), so the cut is from the physical right. */
+/* The chosen part of the icon: the filled icon over the outline, cut off after `--fill` of its width, from the end
+   the scale reads toward: the right in a left-to-right rating, the left in a right-to-left one. */
 .filled {
   clip-path: inset(0 calc((1 - var(--fill)) * 100%) 0 0);
   display: inline-flex;
@@ -77,6 +77,14 @@
 
 /* The star the pointer is previewing, between the outline and the chosen fill: a pale tone fill under a tone-coloured
    outline, cut off after `--preview` of its width, like the chosen fill. */
+.filled:dir(rtl) {
+  clip-path: inset(0 0 0 calc((1 - var(--fill)) * 100%));
+}
+
+.preview:dir(rtl) {
+  clip-path: inset(0 0 0 calc((1 - var(--preview)) * 100%));
+}
+
 .preview {
   clip-path: inset(0 calc((1 - var(--preview)) * 100%) 0 0);
   display: inline-flex;

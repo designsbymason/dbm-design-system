@@ -9,7 +9,7 @@ import styles from "./RatingInput.module.css";
 import type { RatingInputLabels, RatingInputProps, RatingInputTone } from "./RatingInput.types";
 
 const defaultMax = 5;
-const defaultFormatValue = (value: number) => value.toFixed(1);
+const defaultFormatValue = (value: number) => (value > 0 ? value.toFixed(1) : "–");
 const maxIcons = 10;
 
 const sizeClass: Record<InputSize, string | undefined> = {
@@ -58,7 +58,7 @@ function resolveMax(max: number): number {
  * made (the stars it would add are drawn pale, with a tone-coloured outline), `clearable` lets a rating be taken back, and `readOnly` shows any value exactly (4.3 fills a third of the
  * fifth icon) as one image with a text alternative, to which `count` adds the number of ratings behind it. `showValue`
  * writes the number before the icons, `count` writes `(124)` after them, and `suffix` puts a "Read reviews" link on the same row. `ref` forwards to the element that carries the role;
- * `className` and `style` go on the outermost box. It always reads left to right.
+ * `className` and `style` go on the outermost box. `dir="rtl"` mirrors it.
  *
  * @example
  * ```tsx
@@ -76,6 +76,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       defaultValue = 0,
       onValueChange,
       precision = 1,
+      roundTo,
       size = "md",
       tone = "brand",
       icon = StarIcon,
@@ -84,6 +85,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       hasError = false,
       disabled = false,
       required = false,
+      dir = "ltr",
       name,
       showValue = false,
       valueNames,
@@ -129,18 +131,26 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       if (showValueName && !valueNames) {
         console.warn("RatingInput: `showValueName` has no text to show without `valueNames`.");
       }
+      if (roundTo !== undefined && roundTo !== 1 && roundTo !== 0.5) {
+        console.warn(`RatingInput: \`roundTo\` must be 1 or 0.5; got ${String(roundTo)}. The value is drawn exactly.`);
+      } else if (roundTo !== undefined && !readOnly) {
+        console.warn("RatingInput: `roundTo` is for a read-only rating; one a person can change always uses `precision`.");
+      }
       if (!readOnly && (count !== undefined || suffix !== undefined)) {
         console.warn("RatingInput: `count` and `suffix` are for a read-only summary; they are ignored on a rating a person can change.");
       }
-    }, [precision, value, defaultValue, showValueName, valueNames, readOnly, count, suffix]);
+    }, [precision, roundTo, value, defaultValue, showValueName, valueNames, readOnly, count, suffix]);
 
     const isControlled = value !== undefined;
     const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
     const raw = isControlled ? value : uncontrolledValue;
     // A value that isn't a number (untyped data on its way) reads as no rating rather than throwing.
     const clamped = typeof raw === "number" && Number.isFinite(raw) ? Math.min(max, Math.max(0, raw)) : 0;
-    // Chosen values sit on a step; a read-only rating is drawn exactly.
-    const current = readOnly ? clamped : Math.round(clamped / step) * step;
+    // Chosen values sit on a step. A read-only rating reports its exact value, and is drawn exactly unless `roundTo`
+    // says to the nearest whole or half icon.
+    const rounding = readOnly && (roundTo === 1 || roundTo === 0.5) ? roundTo : undefined;
+    const reported = readOnly ? clamped : Math.round(clamped / step) * step;
+    const current = rounding ? Math.round(clamped / rounding) * rounding : reported;
 
     const [hovered, setHovered] = useState<number | null>(null);
     const previewing = !readOnly && !disabled && hovered !== null;
@@ -158,6 +168,20 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       onKeyDown?.(event);
       // A key press means the keyboard is in charge: a pointer resting over an icon stops previewing until it moves.
       setHovered(null);
+      // Browsers disagree on whether a radio group's Left and Right follow the direction it is drawn in, so in a
+      // right-to-left rating they are handled here: Left chooses the next value, which is the icon to the left.
+      if (!event.defaultPrevented && dir === "rtl" && !readOnly && !disabled && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+        const choices = Array.from(event.currentTarget.querySelectorAll<HTMLInputElement>("input[type=radio]:not(:disabled)"));
+        const position = choices.indexOf(event.target as HTMLInputElement);
+        if (position >= 0) {
+          event.preventDefault();
+          const target = choices[(position + (event.key === "ArrowLeft" ? 1 : -1) + choices.length) % choices.length] as HTMLInputElement;
+          target.focus();
+          commit(Number(target.value));
+        }
+        return;
+      }
       if (event.defaultPrevented || !clearable || readOnly || disabled || current === 0) return;
       if (event.key === "Backspace" || event.key === "Delete" || event.key === "Escape") {
         event.preventDefault();
@@ -236,7 +260,7 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
         id={id}
         className={styles.group}
         role="img"
-        aria-label={[ariaLabel, current > 0 ? labels.valueText(current, max) : labels.notRated, countText]
+        aria-label={[ariaLabel, reported > 0 ? labels.valueText(reported, max) : labels.notRated, countText]
           .filter((part): part is string => Boolean(part))
           .join(", ")}
         aria-labelledby={ariaLabelledBy ? `${ariaLabelledBy} ${id ?? `${uid}-self`}` : undefined}
@@ -273,19 +297,19 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       <div
         className={cx(styles.root, sizeClass[size], toneClass[tone], hasError && styles.error, disabled && styles.disabled, className)}
         style={style}
-        // The scale reads left to right whatever the page's direction, the way a number does.
-        dir="ltr"
+        // Left to right unless `dir` says otherwise: set explicitly, never read from the page.
+        dir={dir}
       >
         <span className={styles.main}>
           {showValue ? (
             // The space for the widest value is kept, so a value that changes never moves the icons.
             <span className={styles.value} aria-hidden="true" style={{ minInlineSize: `${formatValue(max).length}ch` }}>
-              {formatValue(shown)}
+              {formatValue(previewing ? shown : reported)}
             </span>
           ) : null}
           {group}
         </span>
-        {readOnly && name ? <input type="hidden" name={name} value={current} /> : null}
+        {readOnly && name ? <input type="hidden" name={name} value={reported} /> : null}
         {showValueName && valueNames && valueNames.length > 0 ? (
           <span className={styles.valueName} aria-hidden="true">
             {valueNames.map((text, index) => (

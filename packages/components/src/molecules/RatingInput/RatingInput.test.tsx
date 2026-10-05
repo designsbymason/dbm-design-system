@@ -394,13 +394,27 @@ describe("RatingInput", () => {
       expect(value.nextElementSibling).toBe(screen.getByRole("radiogroup"));
     });
 
-    it("writes a read-only value exactly, and a rating that has none as 0.0", () => {
+    it("writes a read-only value exactly, and a rating that has none as a dash", () => {
       const { container, rerender } = render(<RatingInput aria-label="Rating" readOnly showValue value={4.2} />);
       expect(valueText(container)).toHaveTextContent("4.2");
       rerender(<RatingInput aria-label="Rating" readOnly showValue value={4.25} />);
       expect(valueText(container)).toHaveTextContent("4.3");
       rerender(<RatingInput aria-label="Rating" readOnly showValue value={0} />);
+      expect(valueText(container)).toHaveTextContent("–");
+    });
+
+    it("writes a dash for an unrated rating that can be changed, until the pointer previews a value", () => {
+      const { container } = render(<RatingInput aria-label="Rating" showValue />);
+      expect(valueText(container)).toHaveTextContent("–");
+      fireEvent.pointerEnter(radios()[2] as HTMLElement, { pointerType: "mouse" });
+      expect(valueText(container)).toHaveTextContent("3.0");
+    });
+
+    it("leaves what no rating reads as to formatValue, which is given 0", () => {
+      const formatValue = vi.fn((value: number) => value.toFixed(1));
+      const { container } = render(<RatingInput aria-label="Rating" showValue formatValue={formatValue} />);
       expect(valueText(container)).toHaveTextContent("0.0");
+      expect(formatValue).toHaveBeenCalledWith(0);
     });
 
     it("follows the value under the pointer on a rating that can be changed", () => {
@@ -614,13 +628,109 @@ describe("RatingInput", () => {
     });
   });
 
-  it("is always left to right", () => {
-    const { container } = render(
-      <div dir="rtl">
-        <RatingInput aria-label="Rating" />
-      </div>,
-    );
-    expect(container.querySelector("[dir='ltr']")).not.toBeNull();
+  describe("roundTo", () => {
+    it("draws a read-only average to the nearest whole icon, keeping the exact value for the number and the name", () => {
+      const { container, rerender } = render(<RatingInput aria-label="Average" readOnly showValue value={3.2} roundTo={1} />);
+      expect(fills(container)).toEqual([1, 1, 1, 0, 0]);
+      expect(container.querySelector("[class*='value']:not([class*='valueName'])")).toHaveTextContent("3.2");
+      expect(screen.getByRole("img")).toHaveAccessibleName("Average, Rated 3.2 out of 5");
+      rerender(<RatingInput aria-label="Average" readOnly showValue value={3.6} roundTo={1} />);
+      expect(fills(container)).toEqual([1, 1, 1, 1, 0]);
+    });
+
+    it("draws it to the nearest half, and submits the exact value", () => {
+      const { container } = render(
+        <form>
+          <RatingInput aria-label="Average" readOnly value={3.3} roundTo={0.5} name="avg" />
+        </form>,
+      );
+      expect(fills(container)).toEqual([1, 1, 1, 0.5, 0]);
+      expect(new FormData(container.querySelector("form") as HTMLFormElement).get("avg")).toBe("3.3");
+    });
+
+    it("draws exactly when it is left out", () => {
+      const { container } = render(<RatingInput aria-label="Average" readOnly value={3.3} />);
+      expect(fills(container)[3]).toBeCloseTo(0.3);
+    });
+
+    it("shows the name of the whole value below the rounded drawing", () => {
+      const { container } = render(
+        <RatingInput aria-label="Average" readOnly value={3.3} roundTo={0.5} valueNames={["a", "b", "c", "d", "e"]} showValueName />,
+      );
+      expect(container.querySelector("[data-active='true']")).toHaveTextContent("c");
+    });
+
+    it("is ignored, with a development warning, on a rating that can be changed, and for a value that is not a step", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { container, rerender } = render(<RatingInput aria-label="Rating" defaultValue={3} roundTo={0.5} />);
+      expect(fills(container)).toEqual([1, 1, 1, 0, 0]);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`roundTo` is for a read-only rating"));
+      rerender(<RatingInput aria-label="Rating" readOnly value={3.3} roundTo={0.25 as 1} />);
+      expect(fills(container)[3]).toBeCloseTo(0.3);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`roundTo` must be 1 or 0.5"));
+      warn.mockRestore();
+    });
+  });
+
+  describe("dir", () => {
+    it("is left to right by default and draws right to left when asked, on the outermost box", () => {
+      const { container, rerender } = render(<RatingInput aria-label="Rating" />);
+      expect(container.firstElementChild).toHaveAttribute("dir", "ltr");
+      rerender(<RatingInput aria-label="Rating" dir="rtl" />);
+      expect(container.firstElementChild).toHaveAttribute("dir", "rtl");
+    });
+
+    it("does not read the page's direction", () => {
+      const { container } = render(
+        <div dir="rtl">
+          <RatingInput aria-label="Rating" />
+        </div>,
+      );
+      expect(container.querySelector("[dir='ltr']")).not.toBeNull();
+    });
+
+    it("turns Left and Right round, so the arrow keys follow the picture, and loops like a radio group", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(<RatingInput aria-label="Rating" dir="rtl" defaultValue={3} onValueChange={onValueChange} />);
+      await user.tab();
+      expect(radios()[2]).toHaveFocus();
+      await user.keyboard("{ArrowLeft}");
+      expect(checked()).toBe("4");
+      expect(radios()[3]).toHaveFocus();
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(checked()).toBe("2");
+      await user.keyboard("{ArrowRight}{ArrowRight}");
+      expect(checked()).toBe("5");
+      expect(onValueChange).toHaveBeenLastCalledWith(5);
+    });
+
+    it("leaves left to right to the browser: Right chooses the next value", async () => {
+      const user = userEvent.setup();
+      render(<RatingInput aria-label="Rating" defaultValue={3} />);
+      await user.tab();
+      await user.keyboard("{ArrowRight}");
+      expect(checked()).toBe("4");
+      await user.keyboard("{ArrowLeft}{ArrowLeft}");
+      expect(checked()).toBe("2");
+    });
+
+    it("leaves a modified arrow key alone in right to left", async () => {
+      const user = userEvent.setup();
+      render(<RatingInput aria-label="Rating" dir="rtl" defaultValue={3} />);
+      await user.tab();
+      await user.keyboard("{Shift>}{ArrowLeft}{/Shift}");
+      expect(checked()).not.toBe("4");
+    });
+
+    it("keeps the same choices, in the same order, so the value means the same", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(<RatingInput aria-label="Rating" dir="rtl" precision={0.5} onValueChange={onValueChange} />);
+      expect(radios().map((radio) => radio.value)).toEqual(["0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"]);
+      await user.click(radios()[5] as HTMLElement);
+      expect(onValueChange).toHaveBeenCalledWith(3);
+    });
   });
 
   it("renders on the server, with every icon", () => {

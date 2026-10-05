@@ -25,7 +25,7 @@ export interface RatingInputLabels {
 export interface RatingInputProps
   extends Omit<
     ComponentPropsWithoutRef<"div">,
-    "children" | "onChange" | "defaultValue" | "role" | "dir"
+    "children" | "onChange" | "defaultValue" | "role"
   > {
   /**
    * The number of icons.
@@ -51,6 +51,13 @@ export interface RatingInputProps
    * @default 1
    */
   precision?: RatingInputPrecision;
+  /**
+   * Draws a read-only rating's icons to the nearest `1` or `0.5` instead of exactly, so an average of 3.2 shows three
+   * icons and 3.3 three and a half. The number from `showValue`, the text alternative and the submitted value keep the
+   * exact value. For a read-only rating: ignored, with a development warning, on one a person can change, which
+   * always uses `precision`. Leave it out to draw the value exactly.
+   */
+  roundTo?: RatingInputPrecision;
   /**
    * The icon's box, on the shared size scale. Every choice is a target of at least 24px.
    * @default "md"
@@ -95,6 +102,13 @@ export interface RatingInputProps
    */
   required?: boolean;
   /**
+   * The direction the rating reads in. `rtl` puts the first icon at the right, fills from the right and turns the
+   * arrow keys round, with the number, the count and the link in the same order. Set explicitly, like the other
+   * components built on a Radix primitive: it is not read from the page.
+   * @default "ltr"
+   */
+  dir?: "ltr" | "rtl";
+  /**
    * Writes the rating as a number before the icons (`4.2`), on the same row: the chosen value, or the one under the
    * pointer while one is being previewed. One decimal by default (`4.0`), through `formatValue`; the space for the
    * widest value is kept, so nothing moves as it changes. Hidden from assistive technology, since the rating's own
@@ -129,8 +143,9 @@ export interface RatingInputProps
    */
   name?: string;
   /**
-   * Writes the number `showValue` draws. Receives the plain number, already between 0 and `max`.
-   * @default (value) => value.toFixed(1)
+   * Writes the number `showValue` draws. Receives the plain number, already between 0 and `max`, and `0` when there
+   * is no rating, so it decides what that reads as (a dash by default, `0.0` if you want it).
+   * @default (value) => (value > 0 ? value.toFixed(1) : "–")
    */
   formatValue?: (value: number) => string;
   /**

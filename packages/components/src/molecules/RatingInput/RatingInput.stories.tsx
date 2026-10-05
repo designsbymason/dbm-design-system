@@ -54,6 +54,14 @@ const meta: Meta<typeof RatingInput> = {
       description: "The smallest step: 1 for whole icons, 0.5 for halves (two choices for each icon).",
       table: { defaultValue: { summary: "1" } },
     },
+    roundTo: {
+      control: "select",
+      options: [1, 0.5],
+      // Only a read-only rating can be drawn rounded, so the control is offered only while `readOnly` is on.
+      if: { arg: "readOnly" },
+      description:
+        "Draws a read-only rating's icons to the nearest 1 or 0.5 instead of exactly (3.3 draws three and a half). The number, the text alternative and the submitted value keep the exact value. Ignored, with a development warning, on a rating a person can change.",
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -100,6 +108,13 @@ const meta: Meta<typeof RatingInput> = {
       description: "Makes a rating required for form validation.",
       table: { defaultValue: { summary: "false" } },
     },
+    dir: {
+      control: "select",
+      options: ["ltr", "rtl"],
+      description:
+        "The direction the rating reads in. rtl puts the first icon at the right, fills from the right and turns the arrow keys round, with the number, the count and the link in the same order. Set explicitly: not read from the page.",
+      table: { defaultValue: { summary: "ltr" } },
+    },
     showValue: {
       control: "boolean",
       description:
@@ -109,7 +124,7 @@ const meta: Meta<typeof RatingInput> = {
     valueNames: {
       control: false,
       description:
-        'A name for each whole value, from 1 to max (`["Poor", "Fair", "Good", "Great", "Excellent"]`), added to that choice\'s accessible name and, with showValueName, written beside the icons.',
+        'A name for each whole value, from 1 to max, such as "Poor" to "Excellent". Added to that choice\'s accessible name and, with showValueName, written beside the icons.',
     },
     showValueName: {
       control: "boolean",
@@ -135,8 +150,12 @@ const meta: Meta<typeof RatingInput> = {
     },
     formatValue: {
       control: false,
-      description: "Writes the number showValue draws. Receives the plain number, already between 0 and max.",
-      table: { defaultValue: { summary: "(value) => value.toFixed(1)" } },
+      // A function default is too long for the Default column, which would stretch the whole table, so it is
+      // stated in the description instead and the column shows a dash.
+      description:
+        "Writes the number showValue draws. Receives the plain number between 0 and max, and 0 when there is no rating, so it decides what that reads as. By default one decimal (4.0, 4.2), and a dash for no rating.",
+      // Overrides the function source docgen would otherwise read out of the component.
+      table: { defaultValue: { summary: "" } },
     },
     formatNumber: {
       control: false,
@@ -146,7 +165,7 @@ const meta: Meta<typeof RatingInput> = {
     labels: {
       control: false,
       description:
-        'Text this component writes itself, for translation: `{ itemLabel, valueText, notRated, count, countText }`. Each function receives the plain numbers. Defaults: "3 out of 5", "Rated 4.3 out of 5", "Not rated", "(124)", "124 reviews".',
+        'Text this component writes itself, for translation: `itemLabel`, `valueText`, `notRated`, `count` and `countText`. Each function receives the plain numbers. Defaults: "3 out of 5", "Rated 4.3 out of 5", "Not rated", "(124)", "124 reviews".',
     },
     "aria-label": {
       control: "text",
@@ -190,6 +209,7 @@ const meta: Meta<typeof RatingInput> = {
     hasError: false,
     disabled: false,
     required: false,
+    dir: "ltr",
     showValue: false,
     showValueName: false,
     valueNames,
@@ -214,12 +234,19 @@ export const Playground: Story = {
   parameters: { docs: { source: builtSnippet } },
   // A count and a link are for a read-only summary: the component ignores them otherwise, so they are only passed on
   // (and their controls only offered) while `readOnly` is on.
-  render: ({ count, suffix, ...args }) => (
-    <RatingInput {...args} count={args.readOnly ? count : undefined} suffix={args.readOnly ? suffix : undefined} />
+  render: ({ count, suffix, roundTo, ...args }) => (
+    <RatingInput
+      {...args}
+      count={args.readOnly ? count : undefined}
+      suffix={args.readOnly ? suffix : undefined}
+      roundTo={args.readOnly ? roundTo : undefined}
+    />
   ),
   // "Star" is the default, not a value to choose, so it is a Playground-only choice that leaves the prop out.
   argTypes: {
     icon: { control: "select", options: ["Star", ...Object.keys(iconChoices)], mapping: { Star: undefined, ...iconChoices } },
+    // "Exact" is the default (no rounding), not a value to choose, so it is a Playground-only choice.
+    roundTo: { control: "select", options: ["Exact", 1, 0.5], mapping: { Exact: undefined }, if: { arg: "readOnly" } },
     // A link to pass as `suffix`, a Playground-only choice (the prop takes any node).
     suffix: {
       control: "select",
@@ -228,7 +255,7 @@ export const Playground: Story = {
       if: { arg: "readOnly" },
     },
   },
-  args: { icon: "Star" as never, count: 124, suffix: "None" as never },
+  args: { icon: "Star" as never, count: 124, suffix: "None" as never, roundTo: "Exact" as never },
 };
 
 export const AllSizes: Story = {
@@ -268,9 +295,14 @@ export const HalfSteps: Story = {
 export const ReadOnly: Story = {
   name: "Read-only average",
   parameters: { docs: { source: { code: ratingInputSnippets.readOnly } } },
-  // A read-only rating draws its value exactly, so `precision` (a step for choosing) does nothing here.
-  argTypes: { readOnly: { control: false }, defaultValue: { control: false }, precision: { control: false } },
-  args: { readOnly: true, defaultValue: undefined, "aria-label": "Average rating" },
+  // A read-only rating ignores `precision` (a step for choosing); `roundTo` is what snaps it.
+  argTypes: {
+    readOnly: { control: false },
+    defaultValue: { control: false },
+    precision: { control: false },
+    roundTo: { control: "select", options: ["Exact", 1, 0.5], mapping: { Exact: undefined } },
+  },
+  args: { readOnly: true, defaultValue: undefined, "aria-label": "Average rating", roundTo: "Exact" as never },
   render: (args) => <RatingInput {...args} value={4.3} />,
 };
 
@@ -289,13 +321,34 @@ export const ReviewSummary: Story = {
     showValue: { control: false },
     count: { control: false },
     defaultValue: { control: false },
-    // A read-only rating draws its value exactly, so `precision` does nothing here.
+    // A read-only rating ignores `precision`; `roundTo` is what snaps it.
     precision: { control: false },
+    roundTo: { control: "select", options: ["Exact", 1, 0.5], mapping: { Exact: undefined } },
   },
-  args: { readOnly: true, showValue: true, count: 124, defaultValue: undefined, "aria-label": "Average rating" },
+  args: { readOnly: true, showValue: true, count: 124, defaultValue: undefined, "aria-label": "Average rating", roundTo: "Exact" as never },
   render: ({ count, ...args }) => (
     <RatingInput {...args} value={4.2} count={count} suffix={<Link href="#reviews">Read reviews</Link>} />
   ),
+};
+
+export const RoundedAverage: Story = {
+  name: "Rounded average",
+  parameters: { docs: { source: { code: ratingInputSnippets.rounded } } },
+  argTypes: {
+    readOnly: { control: false },
+    defaultValue: { control: false },
+    precision: { control: false },
+    roundTo: { control: "select", options: [1, 0.5] },
+  },
+  args: { readOnly: true, showValue: true, roundTo: 0.5, defaultValue: undefined, "aria-label": "Average rating" },
+  render: (args) => <RatingInput {...args} value={3.3} />,
+};
+
+export const RightToLeft: Story = {
+  name: "Right to left",
+  parameters: { docs: { source: { code: ratingInputSnippets.rightToLeft } } },
+  argTypes: { dir: { control: false }, precision: { control: false } },
+  args: { dir: "rtl", precision: 0.5, defaultValue: 3.5, showValue: true },
 };
 
 export const ValueNames: Story = {
@@ -621,6 +674,67 @@ export const ForcedColorsCheck: Story = {
     } finally {
       await emulate("none");
     }
+  },
+};
+
+export const RightToLeftCheck: Story = {
+  name: "dir=rtl: first icon at the right, filled from the right, arrow keys turned round — interaction test",
+  tags: ["!dev"],
+  args: { dir: "rtl", precision: 0.5, defaultValue: 2, showValue: true },
+  play: async ({ canvasElement }) => {
+    const [first, , , , last] = items(canvasElement) as HTMLElement[];
+    // The first icon is at the right, and the number is before the icons, so at the right of them.
+    await expect(first!.getBoundingClientRect().left).toBeGreaterThan(last!.getBoundingClientRect().left);
+    const value = canvasElement.querySelector("[class*='value']:not([class*='valueName'])") as HTMLElement;
+    await expect(value.getBoundingClientRect().left).toBeGreaterThan(first!.getBoundingClientRect().left);
+    // The filled part starts at the right edge: a full icon is not cut, and the clip for a part comes from the left.
+    const clip = (item: HTMLElement) => getComputedStyle(item.querySelector("[class*='filled']") as HTMLElement).clipPath;
+    await expect(clip(first!)).toMatch(/inset\(0(px)?\s+0(px)?\s+0(px)?\s+0(px|%)?\)/);
+    const radios = within(canvasElement).getAllByRole("radio");
+    // The right half of an icon is the first half, whatever the scale's direction.
+    const third = items(canvasElement)[2] as HTMLElement;
+    const box = third.getBoundingClientRect();
+    const press = async (fraction: number) => {
+      const clientX = box.left + box.width * fraction;
+      const clientY = box.top + box.height / 2;
+      await userEvent.pointer({ keys: "[MouseLeft]", target: document.elementFromPoint(clientX, clientY) as Element, coords: { clientX, clientY } });
+    };
+    await press(0.75);
+    await waitFor(() => expect(checkedValue(canvasElement)).toBe("2.5"));
+    await press(0.25);
+    await waitFor(() => expect(checkedValue(canvasElement)).toBe("3"));
+    // Arrow keys follow the picture: the next icon is to the left.
+    ((radios as HTMLInputElement[]).find((radio) => radio.checked) as HTMLElement).focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(checkedValue(canvasElement)).toBe("3.5");
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    await expect(checkedValue(canvasElement)).toBe("2.5");
+  },
+};
+
+export const RightToLeftFillCheck: Story = {
+  name: "dir=rtl: a read-only value fills from the right — interaction test",
+  tags: ["!dev"],
+  args: { dir: "rtl", readOnly: true, defaultValue: undefined, "aria-label": "Average rating" },
+  render: (args) => <RatingInput {...args} value={3.3} />,
+  play: async ({ canvasElement }) => {
+    const clip = (item: HTMLElement) => getComputedStyle(item.querySelector("[class*='filled']") as HTMLElement).clipPath;
+    const fourth = items(canvasElement)[3] as HTMLElement;
+    // Cut from the left: 70% of the width is left off, so the filled part is at the right.
+    await expect(clip(fourth)).toMatch(/inset\(0(px)?\s+0(px)?\s+0(px)?\s+70%\)/);
+  },
+};
+
+export const RoundedAverageCheck: Story = {
+  name: "roundTo snaps the drawing and leaves the number exact — interaction test",
+  tags: ["!dev"],
+  args: { readOnly: true, showValue: true, roundTo: 0.5, defaultValue: undefined, "aria-label": "Average rating" },
+  render: (args) => <RatingInput {...args} value={3.3} />,
+  play: async ({ canvasElement }) => {
+    const clip = (item: HTMLElement) => getComputedStyle(item.querySelector("[class*='filled']") as HTMLElement).clipPath;
+    // Three and a half icons: the fourth is cut at its middle.
+    await expect(clip(items(canvasElement)[3] as HTMLElement)).toContain("50%");
+    await expect(canvasElement.querySelector("[class*='value']:not([class*='valueName'])")).toHaveTextContent("3.3");
   },
 };
 
