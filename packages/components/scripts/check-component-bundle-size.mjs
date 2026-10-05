@@ -55,7 +55,11 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 // little headroom, so it still trips if the component balloons.
 //   TimeRangePicker (2026-10-03): composes two `TimePicker`s (8.0KB on their own, wheels included) and adds the shared
 //   popover (`Popover`, `IconButton`, a second set of wheels), 10.58KB measured.
-const JS_BUDGET_OVERRIDES_KB = { TimeRangePicker: 12 };
+//   Calendar (2026-10-05): the one month grid the date pickers will be built on, so it holds what they would otherwise each
+//   carry: the month, year and week grids, several months side by side, the month and year fields (it imports `Select`),
+//   range and multiple-date choosing with drag, the footer, the markers, week numbers and the key. 9.01KB before the year
+//   and month views and the week mode, 10.26KB measured with them. Sized at the user's direction (2026-10-05) to about 12KB.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, TimeRangePicker: 12 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

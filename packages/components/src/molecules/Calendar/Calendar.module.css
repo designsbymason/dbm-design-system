@@ -7,6 +7,9 @@
   --calendar-cell: var(--dbm-icon-button-size-md);
   --calendar-font: var(--dbm-font-size-base);
   --calendar-weekday-font: var(--dbm-font-size-sm);
+  /* The height of the weekday row and of the whole grid of days (six rows), which the months and years grids match. */
+  --calendar-weekday-block: calc(var(--calendar-weekday-font) * var(--dbm-line-height-tight) + 2 * var(--dbm-space-2));
+  --calendar-grid-block: calc(var(--calendar-weekday-block) + 6 * var(--calendar-cell));
 
   box-sizing: border-box;
   color: var(--dbm-text-primary);
@@ -237,12 +240,69 @@
 }
 
 .weekday {
+  block-size: var(--calendar-weekday-block);
   color: var(--dbm-text-secondary);
   font-size: var(--calendar-weekday-font);
   font-weight: var(--dbm-font-weight-medium);
-  padding-block: var(--dbm-space-2);
-  padding-inline: 0;
+  line-height: var(--dbm-line-height-tight);
+  padding: 0;
   text-align: center;
+}
+
+/* The heading button over the days and the months (\`captionLayout="views"\`): the heading, as a button. */
+.captionButton {
+  appearance: none;
+  background-color: transparent;
+  block-size: var(--calendar-cell);
+  border: 0;
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: var(--calendar-font);
+  font-weight: var(--dbm-font-weight-semibold);
+  min-inline-size: 0;
+  padding: 0;
+  text-align: center;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.captionButton:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.captionButton:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.rounded .captionButton {
+  border-radius: var(--dbm-radius-full);
+}
+
+/* The months and years grids: three columns and four rows, as tall as the days they replace, so what is below the
+   calendar does not move when one opens. */
+.picker {
+  block-size: var(--calendar-grid-block);
+  display: grid;
+  grid-auto-rows: 1fr;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.pickerRow {
+  display: contents;
+}
+
+.pickerCell {
+  display: flex;
+  min-inline-size: 0;
+  padding: var(--dbm-space-1);
+}
+
+.pickerCell > .day {
+  min-inline-size: 0;
 }
 
 /* The week numbers: a column before the days, as wide as one, and not interactive. */
@@ -277,6 +337,15 @@
 
 .band::before {
   inset-inline: 0;
+}
+
+/* The week under the pointer, in week mode: the whole row, lightly, before it is chosen. */
+.weekPreview::before {
+  background-color: var(--dbm-bg-brand-subtle);
+  content: "";
+  inset-block: 0;
+  inset-inline: 0;
+  position: absolute;
 }
 
 .bandStart::before {

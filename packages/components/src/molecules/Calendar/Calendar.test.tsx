@@ -1795,6 +1795,435 @@ describe("Calendar", () => {
     });
   });
 
+  describe("year and month views", () => {
+    const views = (props: Partial<CalendarProps> = {}) =>
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" captionLayout="views" {...(props as CalendarProps)} />);
+    const headingButton = () => screen.getByRole("button", { name: "October 2026, choose a month" });
+    const monthsGrid = (year = 2026) => screen.getByRole("grid", { name: `Months of ${year}` });
+    const yearsGrid = (range = "2017 – 2028") => screen.getByRole("grid", { name: range });
+    const cellsOf = (grid: HTMLElement) => [...grid.querySelectorAll<HTMLButtonElement>("button[data-picker-cell]")];
+    const openMonths = async () => userEvent.click(headingButton());
+    const openYears = async () => {
+      await openMonths();
+      await userEvent.click(screen.getByRole("button", { name: "2026, choose a year" }));
+    };
+
+    it("makes the heading a button that names what it opens, keeping the grid's own name", () => {
+      views();
+      expect(headingButton()).toHaveTextContent("October 2026");
+      expect(screen.getByRole("grid", { name: "October 2026" })).toBeInTheDocument();
+    });
+
+    it("leaves the heading as text for the other layouts, and with several months", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      renderCalendar();
+      expect(screen.queryByRole("button", { name: /choose a month/ })).toBeNull();
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" captionLayout="views" numberOfMonths={2} />);
+      expect(screen.queryByRole("button", { name: /choose a month/ })).toBeNull();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('`captionLayout="views"` needs one month on show'));
+    });
+
+    it("opens a grid of the year's twelve months, with the month on show chosen and today's month marked", async () => {
+      views();
+      await openMonths();
+      const cells = cellsOf(monthsGrid());
+      expect(cells.map((cell) => cell.textContent)).toEqual(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]);
+      expect(cells[9]).toHaveAccessibleName("October");
+      expect(cells[9]?.closest("[role=gridcell]")).toHaveAttribute("aria-selected", "true");
+      expect(cells[9]).toHaveAttribute("aria-current", "date");
+      expect(cells[3]?.closest("[role=gridcell]")).toHaveAttribute("aria-selected", "false");
+      expect(screen.queryByRole("grid", { name: "October 2026" })).toBeNull();
+    });
+
+    it("moves keyboard focus to the chosen month when the grid opens", async () => {
+      views();
+      await openMonths();
+      expect(cellsOf(monthsGrid())[9]).toHaveFocus();
+    });
+
+    it("goes back to the days of the month that is chosen, with focus on a day", async () => {
+      const onMonthChange = vi.fn();
+      views({ onMonthChange });
+      await openMonths();
+      await userEvent.click(screen.getByRole("button", { name: "March" }));
+      expect(onMonthChange).toHaveBeenCalledWith("2026-03");
+      expect(screen.getByRole("grid", { name: "March 2026" })).toBeInTheDocument();
+      expect(document.activeElement?.hasAttribute("data-date")).toBe(true);
+    });
+
+    it("steps the year in the months grid with its buttons", async () => {
+      views();
+      await openMonths();
+      await userEvent.click(screen.getByRole("button", { name: "Next year" }));
+      expect(monthsGrid(2027)).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "Previous year" }));
+      await userEvent.click(screen.getByRole("button", { name: "Previous year" }));
+      expect(monthsGrid(2025)).toBeInTheDocument();
+      // The month on show is only marked in its own year.
+      expect(cellsOf(monthsGrid(2025))[9]?.closest("[role=gridcell]")).toHaveAttribute("aria-selected", "false");
+    });
+
+    it("opens a page of twelve years from the year heading, with the year on show chosen", async () => {
+      views();
+      await openYears();
+      expect(cellsOf(yearsGrid()).map((cell) => cell.textContent)).toEqual(["2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028"]);
+      expect(cellsOf(yearsGrid())[9]).toHaveFocus();
+      expect(cellsOf(yearsGrid())[9]?.closest("[role=gridcell]")).toHaveAttribute("aria-selected", "true");
+      expect(screen.getByText("2017 – 2028")).toBeInTheDocument();
+    });
+
+    it("turns the pages of years", async () => {
+      views();
+      await openYears();
+      await userEvent.click(screen.getByRole("button", { name: "Next years" }));
+      expect(yearsGrid("2029 – 2040")).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "Previous years" }));
+      await userEvent.click(screen.getByRole("button", { name: "Previous years" }));
+      expect(yearsGrid("2005 – 2016")).toBeInTheDocument();
+    });
+
+    it("goes from a year to its months, and from a month to the days", async () => {
+      const onMonthChange = vi.fn();
+      views({ onMonthChange });
+      await openYears();
+      await userEvent.click(screen.getByRole("button", { name: "2023" }));
+      expect(monthsGrid(2023)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "2023, choose a year" })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "June" }));
+      expect(screen.getByRole("grid", { name: "June 2023" })).toBeInTheDocument();
+      expect(onMonthChange).toHaveBeenLastCalledWith("2023-06");
+    });
+
+    it("moves between months with the arrow keys, by one and by three, clamped to the year", async () => {
+      views();
+      await openMonths();
+      await userEvent.keyboard("{ArrowRight}");
+      expect(cellsOf(monthsGrid())[10]).toHaveFocus();
+      await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+      expect(cellsOf(monthsGrid())[11]).toHaveFocus();
+      await userEvent.keyboard("{ArrowUp}");
+      expect(cellsOf(monthsGrid())[8]).toHaveFocus();
+      await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+      expect(cellsOf(monthsGrid())[11]).toHaveFocus();
+      await userEvent.keyboard("{Home}");
+      expect(cellsOf(monthsGrid())[9]).toHaveFocus();
+      await userEvent.keyboard("{End}");
+      expect(cellsOf(monthsGrid())[11]).toHaveFocus();
+      // Up past the top row stays where it is: three ups from December reach March, and a fourth does not move.
+      await userEvent.keyboard("{ArrowUp}{ArrowUp}{ArrowUp}");
+      expect(cellsOf(monthsGrid())[2]).toHaveFocus();
+      await userEvent.keyboard("{ArrowUp}");
+      expect(cellsOf(monthsGrid())[2]).toHaveFocus();
+      await userEvent.keyboard("{ArrowLeft}{ArrowLeft}{ArrowLeft}");
+      expect(cellsOf(monthsGrid())[0]).toHaveFocus();
+    });
+
+    it("goes to the ends of its own row with Home and End, in the months and in the years", async () => {
+      views();
+      await openMonths();
+      await userEvent.keyboard("{ArrowUp}{ArrowUp}{ArrowUp}");
+      expect(cellsOf(monthsGrid())[0]).toHaveFocus();
+      await userEvent.keyboard("{ArrowRight}");
+      await userEvent.keyboard("{End}");
+      expect(cellsOf(monthsGrid())[2]).toHaveFocus();
+      await userEvent.keyboard("{Home}");
+      expect(cellsOf(monthsGrid())[0]).toHaveFocus();
+      await userEvent.click(screen.getByRole("button", { name: "2026, choose a year" }));
+      await userEvent.keyboard("{ArrowUp}{Home}");
+      expect(document.activeElement).toHaveTextContent("2023");
+      await userEvent.keyboard("{End}");
+      expect(document.activeElement).toHaveTextContent("2025");
+    });
+
+    it("marks today's month only in today's year, and today's year in the years", async () => {
+      views();
+      await openMonths();
+      expect(cellsOf(monthsGrid())[9]).toHaveAttribute("aria-current", "date");
+      await userEvent.click(screen.getByRole("button", { name: "Next year" }));
+      expect(monthsGrid(2027).querySelector("[aria-current]")).toBeNull();
+      await userEvent.click(screen.getByRole("button", { name: "2027, choose a year" }));
+      expect(yearsGrid().querySelectorAll("[aria-current]")).toHaveLength(1);
+      expect(yearsGrid().querySelector("[aria-current]")).toHaveTextContent("2026");
+    });
+
+    it("swaps the left and right arrows under right-to-left", async () => {
+      views({ dir: "rtl" });
+      await userEvent.click(screen.getByRole("button", { name: "October 2026, choose a month" }));
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(cellsOf(monthsGrid())[10]).toHaveFocus();
+    });
+
+    it("steps the year with Page Up and Page Down, leaving focus on the same month", async () => {
+      views();
+      await openMonths();
+      await userEvent.keyboard("{PageDown}");
+      expect(monthsGrid(2027)).toBeInTheDocument();
+      expect(cellsOf(monthsGrid(2027))[9]).toHaveFocus();
+      await userEvent.keyboard("{PageUp}{PageUp}");
+      expect(monthsGrid(2025)).toBeInTheDocument();
+    });
+
+    it("moves between years, and turns the page when the move leaves it", async () => {
+      views();
+      await openYears();
+      await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+      expect(document.activeElement).toHaveTextContent("2028");
+      await userEvent.keyboard("{ArrowRight}");
+      expect(yearsGrid("2029 – 2040")).toBeInTheDocument();
+      expect(document.activeElement).toHaveTextContent("2029");
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(yearsGrid("2017 – 2028")).toBeInTheDocument();
+      expect(document.activeElement).toHaveTextContent("2028");
+      await userEvent.keyboard("{PageDown}");
+      expect(document.activeElement).toHaveTextContent("2040");
+    });
+
+    it("chooses with Enter and Space", async () => {
+      views();
+      await openMonths();
+      await userEvent.keyboard("{ArrowLeft}{Enter}");
+      expect(screen.getByRole("grid", { name: "September 2026" })).toBeInTheDocument();
+    });
+
+    it("closes with Escape, returning focus to the heading button", async () => {
+      views();
+      await openMonths();
+      await userEvent.keyboard("{Escape}");
+      expect(screen.getByRole("grid", { name: "October 2026" })).toBeInTheDocument();
+      expect(headingButton()).toHaveFocus();
+    });
+
+    it("is one tab stop in a grid: previous, the heading, next, then the cell", async () => {
+      views();
+      await openMonths();
+      act(() => (document.activeElement as HTMLElement).blur());
+      await userEvent.tab();
+      expect(screen.getByRole("button", { name: "Previous year" })).toHaveFocus();
+      await userEvent.tab();
+      expect(screen.getByRole("button", { name: "2026, choose a year" })).toHaveFocus();
+      await userEvent.tab();
+      expect(screen.getByRole("button", { name: "Next year" })).toHaveFocus();
+      await userEvent.tab();
+      expect(cellsOf(monthsGrid())[9]).toHaveFocus();
+      expect(cellsOf(monthsGrid()).filter((cell) => cell.tabIndex === 0)).toHaveLength(1);
+    });
+
+    it("rules out the months and years that min and max leave no day in", async () => {
+      views({ min: "2026-03-10", max: "2027-05-20" });
+      await openMonths();
+      expect(screen.getByRole("button", { name: "February" }).closest("[role=gridcell]")).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("button", { name: "March" }).closest("[role=gridcell]")).not.toHaveAttribute("aria-disabled");
+      await userEvent.click(screen.getByRole("button", { name: "February" }));
+      expect(monthsGrid()).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "2026, choose a year" }));
+      expect(screen.getByRole("button", { name: "2025" }).closest("[role=gridcell]")).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("button", { name: "2027" }).closest("[role=gridcell]")).not.toHaveAttribute("aria-disabled");
+      expect(screen.getByRole("button", { name: "2028" }).closest("[role=gridcell]")).toHaveAttribute("aria-disabled", "true");
+      await userEvent.click(screen.getByRole("button", { name: "2028" }));
+      expect(yearsGrid()).toBeInTheDocument();
+    });
+
+    it("makes the year buttons unavailable at min and max", async () => {
+      views({ min: "2026-03-10", max: "2026-12-31" });
+      await openMonths();
+      expect(screen.getByRole("button", { name: "Previous year" })).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("button", { name: "Next year" })).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("stays within the years there are", async () => {
+      render(<Calendar defaultMonth="0001-05" today="0001-05-05" captionLayout="views" />);
+      await userEvent.click(screen.getByRole("button", { name: "May 1, choose a month" }));
+      expect(screen.getByRole("button", { name: "Previous year" })).toHaveAttribute("aria-disabled", "true");
+      await userEvent.click(screen.getByRole("button", { name: "1, choose a year" }));
+      expect(screen.getByRole("button", { name: "Previous years" })).toHaveAttribute("aria-disabled", "true");
+      expect(cellsOf(screen.getByRole("grid", { name: "1 – 12" }))).toHaveLength(12);
+    });
+
+    it("writes the years with formatNumber and takes its words from labels", async () => {
+      const arabic = new Intl.NumberFormat("ar-EG", { useGrouping: false }).format;
+      views({
+        formatNumber: arabic,
+        labels: {
+          openMonths: (heading: string) => `${heading} — meses`,
+          monthsView: (year: string) => `Meses de ${year}`,
+          openYears: (year: string) => `${year} — años`,
+          previousYear: "Año anterior",
+          monthsShort: ["en", "fe", "ma", "ab", "my", "jn", "jl", "ag", "se", "oc", "no", "di"],
+        },
+      });
+      await userEvent.click(screen.getByRole("button", { name: `October ${arabic(2026)} — meses` }));
+      expect(screen.getByRole("grid", { name: `Meses de ${arabic(2026)}` })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: `${arabic(2026)} — años` })).toHaveTextContent(arabic(2026));
+      expect(cellsOf(screen.getByRole("grid", { name: `Meses de ${arabic(2026)}` }))[9]).toHaveTextContent("oc");
+    });
+
+    it("announces the grid that opens", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      views();
+      await openMonths();
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("Months of 2026");
+      act(() => vi.advanceTimersByTime(1300));
+      await userEvent.click(screen.getByRole("button", { name: "2026, choose a year" }));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("2017 – 2028");
+    });
+
+    it("is not a grid when disabled: the buttons are unavailable but still focusable", async () => {
+      views({ disabled: true });
+      await openMonths();
+      expect(screen.getByRole("button", { name: "Previous year" })).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("has no axe violations in any of its three grids", async () => {
+      const { container } = views({ defaultValue: "2026-10-06" });
+      expect(await axe(container)).toHaveNoViolations();
+      await openMonths();
+      expect(await axe(container)).toHaveNoViolations();
+      await userEvent.click(screen.getByRole("button", { name: "2026, choose a year" }));
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("a whole week", () => {
+    const weekMode = (props: Partial<CalendarProps> = {}) =>
+      renderCalendar({ mode: "week", ...props } as Partial<CalendarProps>);
+    const selectedDates = () =>
+      [...document.querySelectorAll("td[aria-selected='true'] button")].map((button) => (button as HTMLElement).dataset.date);
+
+    it("chooses the whole row from any day in it, by the date the week starts on", async () => {
+      const onValueChange = vi.fn();
+      weekMode({ onValueChange });
+      await userEvent.click(day("2026-10-14"));
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange).toHaveBeenCalledWith("2026-10-11");
+      expect(selectedDates()).toEqual(["2026-10-11", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17"]);
+    });
+
+    it("starts the week where weekStartsOn says", async () => {
+      const onValueChange = vi.fn();
+      weekMode({ weekStartsOn: 1, onValueChange });
+      await userEvent.click(day("2026-10-11"));
+      expect(onValueChange).toHaveBeenCalledWith("2026-10-05");
+      expect(selectedDates()[0]).toBe("2026-10-05");
+      expect(selectedDates()[6]).toBe("2026-10-11");
+    });
+
+    it("draws the ends as chosen days and the rest as the strip", () => {
+      weekMode({ defaultValue: "2026-10-14" });
+      expect(day("2026-10-11")).toHaveClass(styles.selected ?? "");
+      expect(day("2026-10-17")).toHaveClass(styles.selected ?? "");
+      expect(day("2026-10-14")).not.toHaveClass(styles.selected ?? "");
+      expect(cell("2026-10-11")).toHaveClass(styles.bandStart ?? "");
+      expect(cell("2026-10-14")).toHaveClass(styles.band ?? "");
+      expect(cell("2026-10-17")).toHaveClass(styles.bandEnd ?? "");
+    });
+
+    it("reads any date in a week as that week, and reports the week's first day when another is chosen", async () => {
+      const onValueChange = vi.fn();
+      weekMode({ defaultValue: "2026-10-15", onValueChange });
+      expect(selectedDates()).toHaveLength(7);
+      await userEvent.click(day("2026-10-13"));
+      expect(onValueChange).not.toHaveBeenCalled();
+      await userEvent.click(day("2026-10-21"));
+      expect(onValueChange).toHaveBeenCalledWith("2026-10-18");
+    });
+
+    it("is controlled by value", async () => {
+      const onValueChange = vi.fn();
+      weekMode({ value: "2026-10-11", onValueChange });
+      await userEvent.click(day("2026-10-21"));
+      expect(onValueChange).toHaveBeenCalledWith("2026-10-18");
+      expect(selectedDates()[0]).toBe("2026-10-11");
+    });
+
+    it("draws a week that runs across months, whole, when both are on show", () => {
+      render(<Calendar mode="week" defaultMonth="2026-09" today="2026-09-14" numberOfMonths={2} defaultValue="2026-09-30" />);
+      expect([...document.querySelectorAll("td[aria-selected='true'] button")].map((button) => (button as HTMLElement).dataset.date)).toEqual([
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+      ]);
+    });
+
+    it("chooses with Enter and Space, and with Today and clears with Clear", async () => {
+      const onValueChange = vi.fn();
+      weekMode({ showTodayButton: true, clearable: true, onValueChange });
+      focusDay("2026-10-21");
+      await userEvent.keyboard("{Enter}");
+      expect(onValueChange).toHaveBeenLastCalledWith("2026-10-18");
+      await userEvent.click(screen.getByRole("button", { name: "Today" }));
+      expect(onValueChange).toHaveBeenLastCalledWith("2026-10-11");
+      await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+      expect(onValueChange).toHaveBeenLastCalledWith("");
+      expect(selectedDates()).toEqual([]);
+    });
+
+    it("does not choose from an unavailable day, a read-only or a disabled calendar", async () => {
+      const onValueChange = vi.fn();
+      const { unmount } = weekMode({ isDateDisabled: (date: string) => date === "2026-10-14", onValueChange });
+      await userEvent.click(day("2026-10-14"));
+      unmount();
+      const { unmount: unmountReadOnly } = weekMode({ readOnly: true, onValueChange });
+      await userEvent.click(day("2026-10-21"));
+      unmountReadOnly();
+      weekMode({ disabled: true, onValueChange });
+      await userEvent.click(day("2026-10-21"));
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("lets a week be chosen by any of its days that is available", async () => {
+      const onValueChange = vi.fn();
+      weekMode({ isDateDisabled: (date: string) => date === "2026-10-14", onValueChange });
+      await userEvent.click(day("2026-10-15"));
+      expect(onValueChange).toHaveBeenCalledWith("2026-10-11");
+    });
+
+    it("draws the whole week under the pointer lightly before it is chosen", async () => {
+      weekMode();
+      await userEvent.hover(day("2026-10-21"));
+      for (const date of ["2026-10-18", "2026-10-21", "2026-10-24"]) expect(cell(date)).toHaveClass(styles.weekPreview ?? "");
+      expect(cell("2026-10-17").className).not.toMatch(/weekPreview/);
+      await userEvent.unhover(day("2026-10-21"));
+      expect(cell("2026-10-21").className).not.toMatch(/weekPreview/);
+    });
+
+    it("does not draw that in the other modes", async () => {
+      renderCalendar();
+      await userEvent.hover(day("2026-10-21"));
+      expect(cell("2026-10-21").className).not.toMatch(/weekPreview/);
+    });
+
+    it("announces the week that is chosen", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      weekMode();
+      await userEvent.click(day("2026-10-14"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("Week Sunday, October 11, 2026 to Saturday, October 17, 2026");
+    });
+
+    it("submits the week's first day under its name", async () => {
+      weekMode({ name: "week", defaultValue: "2026-10-14" });
+      expect([...document.querySelectorAll<HTMLInputElement>("input[type='hidden']")].map((input) => [input.name, input.value])).toEqual([["week", "2026-10-11"]]);
+    });
+
+    it("is one tab stop, on the first day of the week chosen, and lists Selected in the key", () => {
+      weekMode({ defaultValue: "2026-10-14", showLegend: true });
+      expect(day("2026-10-11")).toHaveAttribute("tabindex", "0");
+      expect(screen.getByRole("list", { name: "Key" })).toHaveTextContent("Selected");
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = weekMode({ defaultValue: "2026-10-14", showWeekNumbers: true });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
   describe("text and numbers", () => {
     it("uses the labels it is given for names, months and weekdays, keeping English for the rest", () => {
       renderCalendar({

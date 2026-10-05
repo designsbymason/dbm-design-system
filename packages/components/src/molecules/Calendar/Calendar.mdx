@@ -100,7 +100,8 @@ own — a booking view, a schedule, a date filter — or as the grid inside a da
 A date is the string `"YYYY-MM-DD"`, never a JavaScript `Date`: a day on a calendar has no time of day and no
 timezone, and a `Date` carries both. So the value is plain text that compares, sorts and submits exactly as it is.
 `value` and `onValueChange` (or an uncontrolled `defaultValue`) hold the choice; with `mode="range"` the value is a
-`[start, end]` pair, and with `mode="multiple"` a list of any number of separate dates. The month on show is `"YYYY-MM"`, held by `month` and `onMonthChange` (or `defaultMonth`).
+`[start, end]` pair, with `mode="multiple"` a list of any number of separate dates, and with `mode="week"` the date a chosen
+week starts on. The month on show is `"YYYY-MM"`, held by `month` and `onMonthChange` (or `defaultMonth`).
 `min`, `max` and `isDateDisabled` rule dates out, `weekStartsOn` sets the first column, and `showOutsideDays` fills the
 first and last weeks with the neighbouring months' days.
 
@@ -185,6 +186,16 @@ months on show only the first gets the fields.
 
 <Canvas of={CalendarStories.Dropdowns} />
 
+### Year and month views
+
+`captionLayout="views"` makes the heading a button. Choosing it swaps the days for a grid of the year's twelve months;
+choosing the year there swaps that for a grid of years, twelve to a page. Choosing a year goes to its months, and a month goes
+back to the days; `Escape` closes a grid. Each grid is as tall as the days it replaces, so nothing below the calendar moves.
+Use it when the fields of `captionLayout="dropdown"` feel too heavy, or where a drill-down is what people expect. With more
+than one month on show it is the plain heading.
+
+<Canvas of={CalendarStories.Views} />
+
 ### Two months
 
 `numberOfMonths` puts up to four months side by side — two is the usual choice for a range that may cross a month.
@@ -220,6 +231,14 @@ every date after the first unavailable one, for a booking that can't step over a
 start still restarts the range.
 
 <Canvas of={CalendarStories.RangeLimits} />
+
+### A whole week
+
+With `mode="week"` any day chooses its whole row. The value is the date the week starts on (by `weekStartsOn`); a date
+that isn't a week's first day is read as the week it is in. The week under the pointer is drawn lightly before it is
+chosen, and a week can be chosen by any of its available days — for a rule about whole weeks, write it in `isDateDisabled`.
+
+<Canvas of={CalendarStories.Week} />
 
 ### Several dates
 
@@ -349,6 +368,10 @@ same function.
 - In `range` mode, tell the person what to do next. After the first choice the value is `[start, ""]` — show "choose
   the last day" beside it, as the range story does — and treat a range with an empty end as not finished.
 - A range of one day is allowed: choosing the start again as the end gives `[date, date]`.
+- Choose between the two ways of jumping far: `captionLayout="dropdown"` is one choice per field and suits a date a person
+  knows (a birth year); `"views"` narrows down year, month, day and suits browsing. They are not combined.
+- Offer `mode="week"` for timesheets, weekly reports and anything that is a week rather than a day, and set `weekStartsOn`
+  to where your weeks start.
 - Offer `mode="multiple"` for days off, availability, or any set of dates that aren't one run, and `maxSelected` when only
   so many make sense.
 - Leave `fixedWeeks` on unless something below the calendar is allowed to jump as the month changes.
@@ -391,6 +414,13 @@ same function.
   and the range strip, and the weekday headings at least 6.88:1, in every theme; the neighbouring months' days are
   4.70:1 on the page (and step up to the secondary text on a tinted fill, where the quietest text would fall under
   4.5:1). Today's ring is at least 6.08:1 and the focus ring at least 4.16:1 against the page.
+- The year and month views (`captionLayout="views"`) are two more grids, each named for what it holds ("Months of 2026",
+  "2017 – 2028"), with one tab stop and roving focus: arrows move by one and by three, Home and End go to the ends of a row,
+  Page Up and Page Down turn the year (or the page of years), Enter and Space choose, and Escape closes the grid and returns
+  focus to the heading button. The heading button is named for what it opens ("October 2026, choose a month"). Opening a grid
+  moves focus into it and says what opened. Months and years that `min` and `max` leave nothing in are `aria-disabled`.
+- In week mode every day of the chosen week is `aria-selected`, and the week is announced when it is chosen ("Week Sunday,
+  October 11, 2026 to Saturday, October 17, 2026").
 - A choice is announced: in range mode "Range start Thursday, October 8, 2026", then "Range Thursday, October 8, 2026 to
   Monday, October 12, 2026"; in multiple mode how many dates are chosen. The words are in `labels`, and `announce={false}`
   turns them off along with the month announcement. A drag is announced when it ends.
@@ -488,6 +518,12 @@ const [month, setMonth] = useState("2026-10");
 <Calendar getMarker={(date) => (events.has(date) ? { tone: "info", label: "1 event" } : undefined)} />
 <Calendar size="lg" getMarker={(date) => ({ content: <span>{price(date)}</span>, label: price(date) })} />
 
+// A whole week, starting on Monday
+<Calendar mode="week" weekStartsOn={1} value={week} onValueChange={setWeek} />
+
+// The heading opens a grid of months, and that a grid of years
+<Calendar captionLayout="views" />
+
 // Any number of separate dates, at most four
 <Calendar mode="multiple" maxSelected={4} value={dates} onValueChange={setDates} />
 
@@ -551,8 +587,8 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="bg.brand-hover" usage="the chosen day when hovered" />
 <TokenRow token="text.on-brand" usage="the chosen day's number" />
 <TokenRow token="bg.brand-subtle-hover" usage="the strip behind the days of a range, the day a click would end it on, and the key's range sample" />
-<TokenRow token="bg.brand-subtle" usage="the background of a hovered day" />
-<TokenRow token="text.primary" usage="the day numbers, and the month heading" />
+<TokenRow token="bg.brand-subtle" usage="the background of a hovered day or heading button, and of the week under the pointer in week mode" />
+<TokenRow token="text.primary" usage="the day numbers, the month heading and the heading button" />
 <TokenRow token="text.secondary" usage="the weekday headings, the week numbers, the key's text, and a neighbouring month's day on a tinted fill" />
 <TokenRow token="text.tertiary" usage="a neighbouring month's day on the plain page" />
 <TokenRow token="text.disabled" usage="a day that can't be chosen, and the key's unavailable sample" />
@@ -562,7 +598,7 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="border-width.1" usage="today's ring, the lines of a range in forced colours, and the size the month field's clipped full name is reduced to" />
 <TokenRow token="border-width.2" usage="a focused day's outline width" />
 <TokenRow token="radius.md" usage="the corners of a day, and of the range strip where it meets the end of a row" />
-<TokenRow token="radius.sm" usage="the corners of a focused day's outline" />
+<TokenRow token="radius.sm" usage="the corners of a focused day's outline and of a focused heading button" />
 <TokenRow token="radius.full" usage="the corners of every day, its focus ring, the range strip's row ends and the key's samples when rounded" />
 <TokenRow token="opacity.40" usage="a disabled calendar's dimmed opacity" />
 <TokenRow token="icon-button.size.xs" usage="the width and height of a day, and of the month buttons, at size xs" />
@@ -576,10 +612,10 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="font-size.md" usage="a day and the month heading at lg" />
 <TokenRow token="font-size.lg" usage="a day and the month heading at xl" />
 <TokenRow token="font-weight.medium" usage="the weekday headings and the week numbers" />
-<TokenRow token="font-weight.semibold" usage="the month heading, today, and the chosen days" />
+<TokenRow token="font-weight.semibold" usage="the month heading, the heading button, today, and the chosen days" />
 <TokenRow token="font-family.primary" usage="calendar typography" />
-<TokenRow token="space.1" usage="the size of a marker dot, and its distance from the bottom of the day" />
-<TokenRow token="line-height.tight" usage="the line height of a marker's content" />
+<TokenRow token="space.1" usage="the size of a marker dot, its distance from the bottom of the day, and the padding around a cell of the months and years grids" />
+<TokenRow token="line-height.tight" usage="the line height of a marker's content, and of the weekday row, whose height the months and years grids match" />
 <TokenRow token="space.2" usage="the gap between the heading row and the grid, and between the buttons and the heading, and between a key entry's sample and its text" />
 <TokenRow token="space.4" usage="the gap between the key's entries, between rows of months, and how far the month slides in from" />
 <TokenRow token="space.6" usage="the gap between months side by side, the size of the key's samples, and the least width of a day — seven of them make the calendar's minimum width" />

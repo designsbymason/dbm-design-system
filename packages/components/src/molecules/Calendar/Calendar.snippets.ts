@@ -41,6 +41,15 @@ export const calendarSnippets = {
 {/* readOnly: the choice is shown but can't change; the months and the dates can still be moved through */}
 <Calendar readOnly defaultValue="2026-10-06" />`,
 
+  views: `{/* captionLayout="views" makes the heading a button: it opens a grid of the year's months, whose heading opens a
+    grid of years. Choosing a year goes to its months, and a month goes back to the days. Escape closes a grid. With
+    more than one month on show it is the plain heading. */}
+<Calendar captionLayout="views" />`,
+
+  week: `{/* const [week, setWeek] = useState("2026-10-12"); */}
+{/* mode="week": any day chooses its whole row. The value is the date the week starts on, by weekStartsOn. */}
+<Calendar mode="week" weekStartsOn={1} value={week} onValueChange={setWeek} />`,
+
   dropdowns: `{/* captionLayout="dropdown" swaps the month heading for a month field and a year field, so a far-off date is
     one choice away. yearRange sets the years offered; min and max narrow it further. */}
 <Calendar captionLayout="dropdown" yearRange={[1926, 2026]} max="2026-12-31" />`,
@@ -147,8 +156,9 @@ export interface CalendarPlaygroundSnippetArgs {
   fixedWeeks?: boolean;
   animated?: boolean;
   dates?: string;
+  weekDate?: string;
   numberOfMonths?: number;
-  captionLayout?: "label" | "dropdown";
+  captionLayout?: "label" | "dropdown" | "views";
   showTodayButton?: boolean;
   clearable?: boolean;
   minRangeDays?: number | "";
@@ -170,6 +180,7 @@ export interface CalendarPlaygroundSnippetArgs {
 export function calendarPlaygroundSnippet(args: CalendarPlaygroundSnippetArgs): string {
   const range = args.mode === "range";
   const multiple = args.mode === "multiple";
+  const weekMode = args.mode === "week";
   const list = (args.dates ?? "")
     .split(",")
     .map((date) => date.trim())
@@ -180,12 +191,16 @@ export function calendarPlaygroundSnippet(args: CalendarPlaygroundSnippetArgs): 
     ? `{/* const [range, setRange] = useState([${quote(args.start ?? "")}, ${quote(args.end ?? "")}]); */}`
     : multiple
       ? `{/* const [dates, setDates] = useState([${list}]); */}`
-      : `{/* const [date, setDate] = useState(${quote(args.value ?? "")}); */}`;
+      : weekMode
+        ? `{/* const [week, setWeek] = useState(${quote(args.weekDate ?? "")}); */}`
+        : `{/* const [date, setDate] = useState(${quote(args.value ?? "")}); */}`;
   const attributes = range
     ? ['mode="range"', "value={range}", "onValueChange={setRange}"]
     : multiple
       ? ['mode="multiple"', "value={dates}", "onValueChange={setDates}"]
-      : ["value={date}", "onValueChange={setDate}"];
+      : weekMode
+        ? ['mode="week"', "value={week}", "onValueChange={setWeek}"]
+        : ["value={date}", "onValueChange={setDate}"];
   if (multiple && args.maxSelected !== undefined && args.maxSelected !== "" && Number(args.maxSelected) > 0) {
     attributes.push(`maxSelected={${Number(args.maxSelected)}}`);
   }
@@ -196,7 +211,7 @@ export function calendarPlaygroundSnippet(args: CalendarPlaygroundSnippetArgs): 
   if (args.showOutsideDays === false) attributes.push("showOutsideDays={false}");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.numberOfMonths !== undefined && Number(args.numberOfMonths) > 1) attributes.push(`numberOfMonths={${Number(args.numberOfMonths)}}`);
-  if (args.captionLayout === "dropdown") attributes.push('captionLayout="dropdown"');
+  if (args.captionLayout === "dropdown" || args.captionLayout === "views") attributes.push(`captionLayout="${args.captionLayout}"`);
   if (args.showTodayButton) attributes.push("showTodayButton");
   if (args.clearable) attributes.push("clearable");
   if (range) {

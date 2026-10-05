@@ -12,5 +12,6 @@ export type {
   CalendarRangeValue,
   CalendarSingleProps,
   CalendarSize,
+  CalendarWeekProps,
   CalendarWeekStart,
 } from "./Calendar.types";

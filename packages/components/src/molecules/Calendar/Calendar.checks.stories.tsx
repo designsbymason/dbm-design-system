@@ -630,3 +630,62 @@ export const TouchSwipe: Story = {
     await expect(await within(root).findByRole("grid", { name: "October 2026" })).toBeInTheDocument();
   },
 };
+
+export const ViewsKeepTheHeight: Story = {
+  name: "Opening the months or years grid keeps the calendar's height at every size, and focus moves into the grid",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", alignItems: "flex-start" }}>
+      {sizes.map((size) => (
+        <Calendar key={size} size={size} captionLayout="views" defaultMonth="2026-10" today="2026-10-14" aria-label={`v-${size}`} data-testid={`v-${size}`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of sizes) {
+      const root = canvas.getByTestId(`v-${size}`);
+      const days = box(root).height;
+      const daysGrid = box(root.querySelector("table")!).height;
+      await userEvent.click(within(root).getByRole("button", { name: /choose a month/ }));
+      const monthsGrid = within(root).getByRole("grid", { name: /Months of/ });
+      await expect(Math.abs(box(root).height - days)).toBeLessThan(1);
+      await expect(Math.abs(box(monthsGrid).height - daysGrid)).toBeLessThan(1);
+      // Focus is on the month on show, inside the grid, and the twelve cells fit it.
+      await expect(document.activeElement).toHaveAttribute("data-picker-cell", "10");
+      for (const cell of monthsGrid.querySelectorAll("button")) {
+        await expect(box(cell).left).toBeGreaterThanOrEqual(box(monthsGrid).left - 0.5);
+        await expect(box(cell).right).toBeLessThanOrEqual(box(monthsGrid).right + 0.5);
+        await expect(cell.scrollWidth).toBeLessThanOrEqual(cell.clientWidth + 1);
+      }
+      await userEvent.click(within(root).getByRole("button", { name: /choose a year/ }));
+      await expect(Math.abs(box(root).height - days)).toBeLessThan(1);
+      await userEvent.keyboard("{Escape}");
+      await expect(within(root).getByRole("button", { name: /choose a month/ })).toHaveFocus();
+      await expect(Math.abs(box(root).height - days)).toBeLessThan(1);
+    }
+  },
+};
+
+export const WeekIsDrawnAsOneRow: Story = {
+  name: "A chosen week is a strip of the whole row with its two ends filled, and the week under the pointer is lightly drawn",
+  render: () => <Calendar mode="week" defaultMonth="2026-10" today="2026-10-14" defaultValue="2026-10-14" aria-label="week" data-testid="week" />,
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByTestId("week");
+    const fill = (date: string) => getComputedStyle(day(root, date)).backgroundColor;
+    const strip = (date: string) => getComputedStyle(day(root, date).closest("td")!, "::before").backgroundColor;
+    const clear = "rgba(0, 0, 0, 0)";
+    await expect(fill("2026-10-11")).not.toBe(clear);
+    await expect(fill("2026-10-17")).toBe(fill("2026-10-11"));
+    await expect(fill("2026-10-14")).toBe(clear);
+    for (const date of ["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16"]) await expect(strip(date)).not.toBe(clear);
+    // The row ends line up with the row: left of the first day to right of the last.
+    const [first, last] = [box(day(root, "2026-10-11")), box(day(root, "2026-10-17"))];
+    await expect(Math.abs(first.top - last.top)).toBeLessThan(1);
+    // Another week, hovered, is drawn lightly, all seven days of it, and nothing in the weeks beside it.
+    await userEvent.hover(day(root, "2026-10-21"));
+    for (const date of ["2026-10-18", "2026-10-21", "2026-10-24"]) await expect(strip(date)).not.toBe(clear);
+    await expect(strip("2026-10-25")).toBe(clear);
+    await userEvent.unhover(day(root, "2026-10-21"));
+    await expect(strip("2026-10-21")).toBe(clear);
+  },
+};

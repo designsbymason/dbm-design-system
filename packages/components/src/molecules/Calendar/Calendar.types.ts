@@ -14,8 +14,10 @@ export type CalendarSize = "xs" | "sm" | "md" | "lg" | "xl";
  * - `"range"` — a first date and a last: the first choice is the start, the second the end, and a third
  *   starts a new range.
  * - `"multiple"` — any number of separate dates: choosing a date adds it, choosing it again takes it away.
+ * - `"week"` — a whole week: choosing any of its days chooses the row, from the day the week starts on to the day
+ *   before the next one. The value is the date the week starts on.
  */
-export type CalendarMode = "single" | "range" | "multiple";
+export type CalendarMode = "single" | "range" | "multiple" | "week";
 
 /** The day a week starts on, as `Date#getDay` counts: 0 is Sunday, 1 Monday, … 6 Saturday. */
 export type CalendarWeekStart = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -33,8 +35,11 @@ export type CalendarRangeValue = readonly [start: string, end: string];
  * - `"dropdown"` — as two select fields, one for the month and one for the year, so a far-off date is one choice
  *   away instead of many presses of the month buttons. With more than one month on show, only the first month gets the
  *   fields; the others keep their text.
+ * - `"views"` — as a button: choosing it swaps the days for a grid of the year's twelve months, and choosing its year
+ *   swaps that for a grid of years, so a far-off date is found by narrowing down — year, month, day. Only with one
+ *   month on show; with more, the layout is `"label"`.
  */
-export type CalendarCaptionLayout = "label" | "dropdown";
+export type CalendarCaptionLayout = "label" | "dropdown" | "views";
 
 /** The colour of a day's marker dot. The same tones the system uses elsewhere, as `tone`. */
 export type CalendarMarkerTone = "neutral" | "brand" | "info" | "success" | "warning" | "danger" | "highlight";
@@ -125,6 +130,41 @@ export interface CalendarLabels {
   rangeStart: string;
   /** Added to the name of the last date of a range. @default "range end" */
   rangeEnd: string;
+  /** The accessible name of the previous-year button in the month grid (`captionLayout="views"`). @default "Previous year" */
+  previousYear: string;
+  /** The accessible name of the next-year button in the month grid. @default "Next year" */
+  nextYear: string;
+  /** The accessible name of the previous-page button in the year grid. @default "Previous years" */
+  previousYears: string;
+  /** The accessible name of the next-page button in the year grid. @default "Next years" */
+  nextYears: string;
+  /**
+   * The accessible name of the heading button over the days, which opens the month grid, given the heading as it is
+   * drawn ("October 2026"). Keep the heading inside it, so what the button shows is part of what it is called.
+   * @default `${heading}, choose a month`
+   */
+  openMonths: (heading: string) => string;
+  /**
+   * The accessible name of the heading button over the months, which opens the year grid, given the year as it is
+   * drawn. Keep the year inside it.
+   * @default `${year}, choose a year`
+   */
+  openYears: (year: string) => string;
+  /**
+   * The heading over the year grid, and what is announced when it opens, given its first and last year as drawn.
+   * @default `${from} – ${to}`
+   */
+  yearsRange: (from: string, to: string) => string;
+  /**
+   * The accessible name of the month grid, and what is announced when it opens, given the year as drawn.
+   * @default `Months of ${year}`
+   */
+  monthsView: (year: string) => string;
+  /**
+   * Announced when a week has been chosen (`mode="week"`), given the names of its first and last day.
+   * @default `Week ${start} to ${end}`
+   */
+  weekChosen: (start: string, end: string) => string;
   /** The accessible name of the month field (`captionLayout="dropdown"`). @default "Month" */
   monthSelect: string;
   /** The accessible name of the year field (`captionLayout="dropdown"`). @default "Year" */
@@ -244,8 +284,8 @@ interface CalendarBaseProps
    */
   numberOfMonths?: number;
   /**
-   * How the month and year are shown above the grid: as text, or as two select fields to jump to a far-off month or
-   * year. See `CalendarCaptionLayout`.
+   * How the month and year are shown above the grid: as text, as two select fields, or as a button that opens a grid of
+   * months and then of years, to jump to a far-off month or year. See `CalendarCaptionLayout`.
    * @default "label"
    */
   captionLayout?: CalendarCaptionLayout;
@@ -467,5 +507,26 @@ export interface CalendarMultipleProps extends CalendarBaseProps {
   onValueChange?: (value: string[]) => void;
 }
 
-/** The props of `Calendar`: single-date props, or — with `mode="range"` or `mode="multiple"` — the props of that mode. */
-export type CalendarProps = CalendarSingleProps | CalendarRangeProps | CalendarMultipleProps;
+/** `Calendar` choosing a whole week. */
+export interface CalendarWeekProps extends CalendarBaseProps {
+  /** Chooses a whole week: any of its days chooses the row. */
+  mode: "week";
+  /**
+   * The chosen week as the date it starts on, `"YYYY-MM-DD"`, `""` for none — controlled. A date that is not a week's
+   * first day is read as the week it is in. Pair with `onValueChange`.
+   */
+  value?: string;
+  /**
+   * The week an *uncontrolled* calendar starts with, as any date in it. Ignored once `value` is also given.
+   * @default ""
+   */
+  defaultValue?: string;
+  /**
+   * Called when a week is chosen, with the date it starts on (the first day of its row, by `weekStartsOn`). Not called
+   * for the week already chosen. A week can be chosen by any of its available days.
+   */
+  onValueChange?: (weekStart: string) => void;
+}
+
+/** The props of `Calendar`: single-date props, or — with `mode` set — the props of that mode. */
+export type CalendarProps = CalendarSingleProps | CalendarRangeProps | CalendarMultipleProps | CalendarWeekProps;

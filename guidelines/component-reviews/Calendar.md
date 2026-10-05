@@ -103,3 +103,19 @@ The seven lower-priority gaps from the feature-completeness look, all built; dec
 **Known limits:** week numbers are ISO only; a drag works with a mouse and not with a pen or a finger; `fixedWeeks={false}` moves what is below; years 1 to 9999.
 
 **Self-verification (real runs, 2026-10-05):** `pnpm lint`, `pnpm build`, `pnpm test` (122 files, 6,532 tests) and the Chromium Storybook project (146 files, 1,245 tests) pass; bundle 9.01KB JS / 3.06KB CSS (the budget is 10KB, so the next feature needs either a budget override with a stated reason or the code split); the Foundations token check passes. The Docs page opened in a running Storybook: 22 canvases with clean "Show code", the Properties table 44 props at 644px, every new prop present, no errors; the week numbers, several-dates and form stories looked at. Every snippet was typechecked by the guard test and the Playground builder covers the new modes.
+
+## Year and month grids, a whole-week mode, and a 12KB budget (2026-10-05, at explicit direction)
+
+The two items asked about (whether a year/month view and a week choice are `Calendar` or `DatePicker` features: `Calendar`), decisions in [ADR-0047](../adr/0047-calendar-gets-year-and-month-grids-behind-its-heading-and-a-whole-week-mode-over-more-select-fields-or-a-separate-week-picker.md).
+
+- **`captionLayout="views"`:** the heading is a button named for what it opens ("October 2026, choose a month"), the grid keeps its own name through a visually hidden heading; a months grid (the year's twelve, short names, the full name as the accessible name), whose heading opens a years grid (a page of twelve); roving focus, Escape; each grid exactly as tall as the days it replaces (measured at all five sizes); months and years outside `min` and `max` are `aria-disabled`; labels `openMonths`, `openYears`, `yearsRange`, `monthsView`, `previousYear`, `nextYear`, `previousYears`, `nextYears`.
+- **`mode="week"`:** value is the week's first day; any date is read as its week; strip and filled ends as a range; the hovered week lightly drawn; announced as `weekChosen`; works with Today, Clear, `name`, week numbers and several months.
+- **Budget:** the measured size is 10.26KB JS / 3.21KB CSS gzipped, over the 10KB default, so `Calendar` has a 12KB override with the reason in `check-component-bundle-size.mjs`, beside `TimeRangePicker`'s. (My estimate before building was 10.5 to 11.5KB.)
+
+**Defects found while building:** a move up or down past the first or last row of the months grid clamped to the first or last *month* instead of staying put (a unit test of mine expected the right behaviour; the code did not); two of my tests miscounted a page edge.
+
+**Tests:** 256 unit tests in the Calendar file (about 40 more) and 2 more real-browser stories (the height held and focus moved at every size when a grid opens and closes; a week drawn as one row, and the hovered week). **Mutation check:** 33 deliberate breaks of the new behaviour; 31 killed at once; the two that survived (End only tried from the last row; today's month marked in other years) got tests, and all are killed.
+
+**Self-verification (real runs, 2026-10-05):** `pnpm lint`, `pnpm build`, `pnpm test` (122 files, 6,574 tests) and the Chromium Storybook project (146 files, 1,249 tests) pass, the bundle check is within budget with the override (10.26KB JS / 3.21KB CSS) and the Foundations check passes. One full Storybook run failed a `TimePicker` check ("Filling the field in never changes its width") that passes alone three times and on the rerun of the full suite, with no `TimePicker` file changed.
+
+**Not done:** the new grids in dark mode and Emerald by eye; a screen reader on the heading button and the grids; a decade view and other week-numbering systems (named in the ADR).

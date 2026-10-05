@@ -25,6 +25,7 @@ interface PlaygroundArgs {
   numberOfMonths: number;
   captionLayout: CalendarCaptionLayout;
   dates: string;
+  weekDate: string;
   maxSelected: number | "";
   showWeekNumbers: boolean;
   fixedWeeks: boolean;
@@ -93,6 +94,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   numberOfMonths: { control: false },
   captionLayout: { control: false },
   dates: { control: false },
+  weekDate: { control: false },
   maxSelected: { control: false },
   showWeekNumbers: { control: false },
   fixedWeeks: { control: false },
@@ -136,9 +138,9 @@ const meta: Meta<PlaygroundArgs> = {
   argTypes: {
     mode: {
       control: "radio",
-      options: ["single", "range", "multiple"],
+      options: ["single", "range", "multiple", "week"],
       description:
-        "What choosing a date means: one date (single), a first and a last (range) — the first choice is the start, the second the end, and a third starts again — or any number of separate dates (multiple), where choosing a date adds it and choosing it again takes it away. The value is a string for single, a [start, end] pair for range and a list of dates for multiple.",
+        "What choosing a date means: one date (single), a first and a last (range) — the first choice is the start, the second the end, and a third starts again — any number of separate dates (multiple), where choosing a date adds it and choosing it again takes it away — or a whole week (week), where any day chooses its row. The value is a string for single, a [start, end] pair for range, a list of dates for multiple and the date a week starts on for week.",
       table: { defaultValue: { summary: "'single'" } },
     },
     value: {
@@ -236,9 +238,9 @@ const meta: Meta<PlaygroundArgs> = {
     },
     captionLayout: {
       control: "radio",
-      options: ["label", "dropdown"],
+      options: ["label", "dropdown", "views"],
       description:
-        "How the month and year are shown above the grid: as text (label), or as two select fields (dropdown) to jump to a far-off month or year. With more than one month on show, only the first gets the fields.",
+        "How the month and year are shown above the grid: as text (label), as two select fields (dropdown), or as a button (views) that opens a grid of the year's months and then a grid of years, to jump to a far-off month or year. With more than one month on show, dropdown gives the fields to the first month only and views is the plain heading.",
       table: { defaultValue: { summary: "'label'" } },
     },
     yearRange: {
@@ -429,6 +431,16 @@ const meta: Meta<PlaygroundArgs> = {
       announce: args.announce,
       dir: args.dir,
     };
+    if (args.mode === "week") {
+      return (
+        <Calendar
+          {...shared}
+          mode="week"
+          value={args.weekDate}
+          onValueChange={(weekStart) => updateArgs({ weekDate: weekStart })}
+        />
+      );
+    }
     if (args.mode === "multiple") {
       const dates = args.dates
         .split(",")
@@ -466,10 +478,16 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Choose a date, step through the months, and drive every prop from the Controls panel. Choosing writes back to `value`. */
 export const Playground: Story = {
-  args: { start: inMonth(8), end: inMonth(12), dates: `${inMonth(6)}, ${inMonth(9)}, ${inMonth(16)}` },
+  args: { start: inMonth(8), end: inMonth(12), dates: `${inMonth(6)}, ${inMonth(9)}, ${inMonth(16)}`, weekDate: inMonth(12) },
   // The range's two ends are Playground-only controls (in code the range is the value prop's pair), so they are
   // declared here, not on the meta, where the Properties table would list them as props.
   argTypes: {
+    weekDate: {
+      control: "text",
+      if: { arg: "mode", eq: "week" },
+      description:
+        "The chosen week in week mode, written as the YYYY-MM-DD date it starts on. A Playground control only: in code it is the value prop.",
+    },
     dates: {
       control: "text",
       if: { arg: "mode", eq: "multiple" },
@@ -637,6 +655,35 @@ export const States: Story = {
       </div>
     </div>
   ),
+};
+
+export const Views: Story = {
+  name: "Year and month views",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.views } } },
+  render: () => (
+    <div style={row}>
+      <Calendar captionLayout="views" defaultMonth={MONTH} aria-label="Views" />
+      <Calendar captionLayout="views" rounded size="lg" defaultMonth={MONTH} aria-label="Views, rounded and large" />
+    </div>
+  ),
+};
+
+export const Week: Story = {
+  name: "A whole week",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.week } } },
+  render: function WeekRender() {
+    const [week, setWeek] = useState(inMonth(12));
+    return (
+      <div style={labelled}>
+        <Calendar mode="week" weekStartsOn={1} defaultMonth={MONTH} value={week} onValueChange={setWeek} aria-label="Week" showWeekNumbers />
+        <Text size="sm" color="secondary" data-testid="week-readout">
+          Week starting {week}
+        </Text>
+      </div>
+    );
+  },
 };
 
 export const Dropdowns: Story = {
