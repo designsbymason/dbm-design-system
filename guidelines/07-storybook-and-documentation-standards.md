@@ -214,7 +214,7 @@ Applied to every component, in this order:
 
 Foundational components first (prove the template before mass-applying it), then category by category. Per-component findings live in `guidelines/component-reviews/` (one file per component, migrated out of this section 2026-08-31 so this doc doesn't grow unbounded as molecules/organisms are added — see that folder's own README) — this table is the current-state index: what's done, and where to find why.
 
-**All 48 atoms and all 37 molecules built so far have a Docs page; every one is Finalized except `TableOfContents` (built 2026-10-04, awaiting its final review), `RatingInput` (built and Finalized 2026-10-04) the latest declared** — full atom-tier coverage, and
+**All 48 atoms and all 37 molecules built so far have a Docs page; every one is Finalized except `TableOfContents` (built and given its final review 2026-10-04, awaiting your declaration), `RatingInput` (built and Finalized 2026-10-04) the latest declared** — full atom-tier coverage, and
 every molecule built to date. `Radio` joined the atom tier on 2026-09-14 (split out of the
 former combined `RadioGroup / Radio` row per
 [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), and
@@ -308,7 +308,7 @@ quoted in prose elsewhere.
 | Splitter | Molecule | Layout | ✅ | ✅ 2026-10-04 | [Splitter.md](component-reviews/Splitter.md) |
 | PinInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [PinInput.md](component-reviews/PinInput.md) |
 | RatingInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [RatingInput.md](component-reviews/RatingInput.md) |
-| TableOfContents | Molecule | Navigation | ✅ | — built 2026-10-04, awaiting final review | [TableOfContents.md](component-reviews/TableOfContents.md) |
+| TableOfContents | Molecule | Navigation | ✅ | — built 2026-10-04, final review run 2026-10-04, awaiting your declaration | [TableOfContents.md](component-reviews/TableOfContents.md) |
 
 **Not yet started among atoms: none.** Every atom-tier component (48, per
 `04-component-inventory.md`; tier membership per ADR-0012 — `GridItem` and `ListItem` are atoms, `Grid`
@@ -320,7 +320,7 @@ and `List` are molecules) has a completed review pass and is Finalized. Per-comp
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`, `DescriptionList`,
 `ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`, `FieldGroup`, `Splitter`, `PinInput`, `RatingInput`) are reviewed and Finalized — see the table above. The last molecule,
-`TableOfContents`, is built (2026-10-04) and awaits its final review pass and your declaration. Next after it
+`TableOfContents`, is built (2026-10-04), has had its final review pass, and awaits your declaration. Next after it
 is Phase 6 (organisms, `01-vision-and-goals.md` §13), in the order that phase sets.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full

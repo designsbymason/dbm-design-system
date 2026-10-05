@@ -1,6 +1,6 @@
 # TableOfContents — build findings
 
-**Navigation:** TableOfContents — built 2026-10-04, item 33 (the last) in the molecule build order (`04-component-inventory.md`). **Not yet declared Finalized:** the build session's checks are recorded here; the final review pass and the declaration are the user's.
+**Navigation:** TableOfContents — built 2026-10-04, item 33 (the last) in the molecule build order (`04-component-inventory.md`). **Final review pass run 2026-10-04 (recorded at the end of this file); not yet declared Finalized — the declaration is the user's.**
 
 **What it is:** an outline of one page. A flat-props component (not compound): a `<nav>` named by its visible heading (or `labels.navigation`, or the caller's `aria-label`/`aria-labelledby`) around a `ul` of `Link` atoms going to `#id`. `ref`, `id`, `data-testid` and the `aria-*` props go on the `<nav>`, as does `className`/`style` (there is no frame, so no split). Entries are an `items` list (`id`, `label`, `level` 1–4) or, with no `items`, read in the browser from `contentRef` (default: the document) by `selector` (default `h2, h3`), indented by how far each heading is below the highest found, re-read when the content changes. It renders nothing with no entries.
 
@@ -91,3 +91,18 @@ An entry can carry `data-testid`, set on its link (the element a test clicks and
 ## Group buttons are tertiary (2026-10-04, at explicit direction)
 
 The `collapsibleGroups` buttons are a `tertiary` `IconButton` (were `ghost`), and the stylesheet no longer overrides their colour: they take `IconButton`'s own tertiary colours (brand-tinted: `text.brand` family, as verified for that variant), so the `icon.default` token row left the Docs page's table.
+
+## Final review (2026-10-04)
+
+A full `06-engineering-standards.md` §9 pass against the code as it stands, with real runs.
+
+**Fixed:**
+1. **The dropdown's accessible name had a hard-coded colon** ("On this page:" in a visually hidden span): punctuation the component wrote itself and a consumer couldn't translate (ADR-0021). The name is now `labels.dropdownTrigger(title, current)`, an `aria-label` used when the entry's label is plain text and built from the same text the button shows (the number too, so WCAG 2.5.3 holds with `numbered`); a label that isn't text keeps a content-derived name. Two tests, and a break (spreading `labels` instead of `mergeDefined`) killed them.
+2. **The Properties table's `labels` row was stale:** it named two of the four parts (the `groupToggle` added with the groups, and the new `dropdownTrigger`, were missing), and the type's `@default` showed an object missing both. `formatNumber`'s default (`String`) was undocumented and is now shown.
+3. **The Docs page didn't say where the dropdown's and the groups' names are translated**; one sentence now lists every part of `labels` and `formatNumber`.
+
+**Checked and passing, with what was run:** hard-coded values (the one literal is the 640px media condition `var()` can't hold, documented); `{...props}` before every computed attribute; every Properties row has a description and the right default (read from the rendered page against the type's `@default` tags); every Playground control drives the canvas (each changed through the channel and the markup compared, including `foldedStyle` and `groupsDefaultOpen`, which depend on another control); **contrast measured from computed styles in all four themes** (active text on its fill 5.83:1 or more, rest text 6.88:1 or more, bars 4.34:1 or more on the surface and on the fill — the dark brand fill is 1.11:1 from the surface, the accepted trade-off recorded for `highlightActive`); atom reuse (`Link`, `Button`, `IconButton`, `Icon`, `Affix`, `Popover`, `VisuallyHidden`); the full tab order across open groups, the dropdown and the inline fold (a real-browser story, broken once to prove it bites); fold, dropdown and group buttons at least 24px at every size; right-to-left for the marker, the group buttons and the dropdown; forced colours for the track, the marker and the current entry (emulated, broken once); server rendering of every option, hydration of the server's markup on a narrow screen with no warning; a render of 3,000 entries with groups in 214ms (jsdom), so no memoising was added; every one of the 23 "Show code" snippets typechecked as written; bundle 8.02KB JS / 2.80KB CSS; `pnpm audit` unchanged (the one ignored `braces` advisory).
+
+**Tests at this point:** 107 unit tests in `TableOfContents.test.tsx` (plus the Docs-page token guard), 25 hidden real-browser stories, lint, typecheck, build, the full unit suite (6,180) and the full Chromium Storybook suite (1,197) green.
+
+**Not done, and why:** a screen-reader pass (checked by structure and accessible names only); a real touch device and iOS Safari's moving toolbar against `position: sticky`; the hash correction in a real browser (a story can't reload with an address); the dropdown panel in dark and Emerald by eye (contrast was measured, not looked at); `onKeyDown`/`onFocus` a consumer puts on the root also hear events from the dropdown's panel, because React bubbles portal events to the React parent (a consumer's own handler only; the component's own handlers ignore them).

@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import type { ReactNode } from "react";
 import { BellIcon } from "@dbm-design-system/icons";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -1136,6 +1138,32 @@ describe("TableOfContents — folded as a dropdown", () => {
     expect(trigger()).toHaveTextContent("Setup");
   });
 
+  it("writes the name with labels.dropdownTrigger, keeping a default whose override is undefined", () => {
+    const { unmount } = render(
+      <TableOfContents
+        items={items}
+        collapse="always"
+        foldedStyle="dropdown"
+        defaultActiveId="setup"
+        labels={{ title: "Sur cette page", dropdownTrigger: (title, current) => `${title} — ${current}` }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Sur cette page/ })).toHaveAccessibleName("Sur cette page — Setup");
+    unmount();
+    render(<TableOfContents items={items} collapse="always" foldedStyle="dropdown" defaultActiveId="setup" labels={{ dropdownTrigger: undefined }} />);
+    expect(trigger()).toHaveAccessibleName("On this page: Setup");
+  });
+
+  it("keeps what the button shows inside its name: the number too, and a label that isn't text", () => {
+    const { unmount } = render(<TableOfContents items={items} collapse="always" foldedStyle="dropdown" defaultActiveId="usage" numbered />);
+    expect(trigger()).toHaveAccessibleName("On this page: 2 Usage");
+    expect(trigger()).toHaveTextContent("2");
+    unmount();
+    render(<TableOfContents items={[{ id: "a", label: <em>Rich</em> }]} collapse="always" foldedStyle="dropdown" defaultActiveId="a" />);
+    expect(trigger()).toHaveAccessibleName("On this page Rich");
+    expect(trigger()).not.toHaveAttribute("aria-label");
+  });
+
   it("follows the entry being read, without announcing it (it is not a live region)", async () => {
     layout({ intro: 100, setup: 400, usage: 800 });
     render(
@@ -1280,5 +1308,41 @@ describe("TableOfContents — sticky while folded", () => {
   it("with `sticky` true is still the Affix box", () => {
     render(<TableOfContents items={items} sticky stickyOffset={2} />);
     expect(screen.getByRole("navigation").getAttribute("style") ?? "").toMatch(/top:\s*var\(--dbm-space-2\)/);
+  });
+});
+
+describe("TableOfContents — server rendering and hydration", () => {
+  const tree = (
+    <>
+      <TableOfContents items={items} />
+      <TableOfContents items={items} numbered movingMarker collapsibleGroups sticky stickyOffset={2} />
+      <TableOfContents items={items} collapse="auto" foldedStyle="dropdown" sticky="folded" defaultActiveId="setup" />
+      <TableOfContents items={items} collapse="always" defaultOpen />
+    </>
+  );
+
+  it("renders every option on the server, current entry included", () => {
+    const html = renderToString(tree);
+    expect(html).toContain("Intro");
+    expect(html).toContain('aria-current="location"');
+  });
+
+  it("draws nothing on the server for headings it can only read in the browser", () => {
+    expect(renderToString(<TableOfContents />)).toBe("");
+  });
+
+  it("hydrates the server's markup, on a narrow screen too, without a mismatch warning", async () => {
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query) => ({ matches: query.includes("max-width"), media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList,
+    );
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(tree);
+    document.body.appendChild(container);
+    await act(async () => {
+      hydrateRoot(container, tree);
+    });
+    expect(error).not.toHaveBeenCalled();
+    container.remove();
   });
 });

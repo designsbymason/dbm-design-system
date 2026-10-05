@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
+import { send } from "../CodeBlock/browserProtocol";
 import { TableOfContents } from "./TableOfContents";
 import { tableOfContentsPlaygroundSnippet, tableOfContentsSnippets } from "./TableOfContents.snippets";
 import type {
@@ -220,7 +221,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description:
         "How a number in the outline is written, such as in a locale's own numerals. Never read from the browser's locale.",
-      table: { defaultValue: { summary: "" } },
+      table: { defaultValue: { summary: "String" } },
     },
     movingMarker: {
       control: "boolean",
@@ -343,7 +344,7 @@ const meta: Meta<PlaygroundArgs> = {
     labels: {
       control: false,
       description:
-        'The text the component supplies itself, each part replaceable: title (the visible heading, "On this page") and navigation (the nav\'s accessible name while the heading is hidden, "Table of contents").',
+        'The text the component supplies itself, each part replaceable on its own: title (the visible heading, "On this page"), navigation (the nav\'s accessible name while the heading is hidden, "Table of contents"), groupToggle (a function of a group\'s heading naming its open/close button, "Subsections of Setup") and dropdownTrigger (a function of the title and the entry being read naming the dropdown\'s button, "On this page: Setup").',
     },
     "aria-label": {
       control: "text",
@@ -1284,5 +1285,150 @@ export const DropdownInAScrollingPageInteraction: Story = {
       { timeout: 4000 },
     );
     await expect(box.scrollTop).toBeGreaterThan(300);
+  },
+};
+
+// --- Final-review checks: what only a real browser can say. ---
+
+/** The colour a system colour keyword resolves to. */
+const systemColour = (keyword: string) => {
+  const probe = document.createElement("span");
+  probe.style.color = keyword;
+  document.body.appendChild(probe);
+  const resolved = getComputedStyle(probe).color;
+  probe.remove();
+  return resolved;
+};
+
+export const ForcedColoursInteraction: Story = {
+  name: "Forced colours keep the track, the marker and the current entry apart — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-8)" }}>
+      <TableOfContents aria-label="plain" defaultActiveId="fc-b" items={[{ id: "fc-a", label: "Other" }, { id: "fc-b", label: "Current" }]} />
+      <TableOfContents aria-label="moving" movingMarker defaultActiveId="fc2-b" items={[{ id: "fc2-a", label: "Other" }, { id: "fc2-b", label: "Current" }]} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rowOf = (outline: string, name: string) => within(canvas.getByRole("navigation", { name: outline })).getByRole("link", { name }).closest("li") as HTMLElement;
+    await send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value: "active" }] });
+    try {
+      await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
+      // The track is a system colour, and the current entry's bar a different one — not both the same.
+      await expect(getComputedStyle(rowOf("plain", "Other")).borderInlineStartColor).toBe(systemColour("CanvasText"));
+      await expect(getComputedStyle(rowOf("plain", "Current")).borderInlineStartColor).toBe(systemColour("Highlight"));
+      // With the moving marker, the entries keep the plain track and the marker itself is the highlight.
+      await expect(getComputedStyle(rowOf("moving", "Current")).borderInlineStartColor).toBe(systemColour("CanvasText"));
+      const marker = canvas.getByRole("navigation", { name: "moving" }).querySelector('[aria-hidden="true"][data-visible]') as HTMLElement;
+      await expect(getComputedStyle(marker).borderInlineStartColor).toBe(systemColour("Highlight"));
+      await expect(parseFloat(getComputedStyle(marker).borderInlineStartWidth)).toBeGreaterThan(0);
+    } finally {
+      await send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value: "none" }] });
+    }
+  },
+};
+
+export const TabOrderInteraction: Story = {
+  name: "The tab order across the whole outline — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <Static>
+      <div>
+        <button type="button">before</button>
+        <TableOfContents aria-label="groups" collapsibleGroups items={leveledItems} />
+        <TableOfContents aria-label="dropdown" collapse="always" foldedStyle="dropdown" items={leveledItems} />
+        <TableOfContents aria-label="inline" collapse="always" items={leveledItems} />
+        <button type="button">after</button>
+      </div>
+    </Static>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    canvas.getByRole("button", { name: "before" }).focus();
+    const stops: string[] = [];
+    for (let step = 0; step < 14; step += 1) {
+      await userEvent.tab();
+      const active = document.activeElement as HTMLElement;
+      stops.push(active.getAttribute("aria-label") ?? active.textContent ?? "");
+      if (active.textContent === "after") break;
+    }
+    await expect(stops).toEqual([
+      // The open groups: a link, then its button, in reading order, a nested group's button after its own link.
+      "Installation",
+      "Subsections of Installation",
+      "Requirements",
+      "Setup",
+      "Subsections of Setup",
+      "Options",
+      "Usage",
+      // A folded outline is one stop, whichever way it is drawn, and its list is not tabbed through.
+      "On this page",
+      "On this page",
+      "after",
+    ]);
+  },
+};
+
+export const FoldButtonTargetsInteraction: Story = {
+  name: "The fold, dropdown and group buttons are at least 24px at every size — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <Static>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)" }}>
+        {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+          <div key={size} style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+            <TableOfContents size={size} aria-label={`inline-${size}`} collapse="always" items={leveledItems} />
+            <TableOfContents size={size} aria-label={`dropdown-${size}`} collapse="always" foldedStyle="dropdown" items={leveledItems} />
+            <TableOfContents size={size} aria-label={`groups-${size}`} collapsibleGroups items={leveledItems} />
+          </div>
+        ))}
+      </div>
+    </Static>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const size of ["xs", "sm", "md", "lg", "xl"]) {
+      for (const kind of ["inline", "dropdown", "groups"]) {
+        const nav = within(canvasElement).getByRole("navigation", { name: `${kind}-${size}`, hidden: true });
+        for (const button of within(nav).getAllByRole("button")) {
+          const box = button.getBoundingClientRect();
+          await expect(box.height, `${kind} button at ${size} is 24px tall`).toBeGreaterThanOrEqual(24);
+          await expect(box.width, `${kind} button at ${size} is 24px wide`).toBeGreaterThanOrEqual(24);
+        }
+      }
+    }
+  },
+};
+
+export const RightToLeftFeaturesInteraction: Story = {
+  name: "Right-to-left: the moving marker, the group buttons and the dropdown — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <Static>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)", maxInlineSize: "20rem" }}>
+        <TableOfContents dir="rtl" aria-label="marker" movingMarker collapsibleGroups defaultActiveId="rf-b" items={[{ id: "rf-a", label: "أ" }, { id: "rf-b", label: "ب", level: 2 }, { id: "rf-c", label: "ج" }]} />
+        <TableOfContents dir="rtl" aria-label="dropdown" collapse="always" foldedStyle="dropdown" defaultActiveId="rf-b" items={[{ id: "rf-a", label: "أ" }, { id: "rf-b", label: "ب" }]} />
+      </div>
+    </Static>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = canvas.getByRole("navigation", { name: "marker" });
+    const marker = nav.querySelector('[aria-hidden="true"][data-visible]') as HTMLElement;
+    await waitFor(() => expect(marker.dataset.visible).toBe("true"));
+    const row = within(nav).getByRole("link", { name: "ب" }).closest("li") as HTMLElement;
+    // The bar sits on the right edge of the row, where the track is, and the group's button at the left end.
+    await expect(Math.abs(marker.getBoundingClientRect().right - row.getBoundingClientRect().right)).toBeLessThan(2.5);
+    const toggle = within(nav).getByRole("button", { name: /./ });
+    const first = within(nav).getByRole("link", { name: "أ" }).closest("li") as HTMLElement;
+    await expect(toggle.getBoundingClientRect().left - first.getBoundingClientRect().left).toBeLessThan(12);
+    // The dropdown's button: caret at the left end, text from the right.
+    const trigger = within(canvas.getByRole("navigation", { name: "dropdown" })).getByRole("button");
+    const caret = trigger.querySelector("svg") as SVGElement;
+    await expect(caret.getBoundingClientRect().left).toBeLessThan(trigger.getBoundingClientRect().left + trigger.getBoundingClientRect().width / 2);
   },
 };

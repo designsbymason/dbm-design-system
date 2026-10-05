@@ -45,6 +45,7 @@ const defaultLabels: TableOfContentsLabels = {
   title: "On this page",
   navigation: "Table of contents",
   groupToggle: (label) => `Subsections of ${label}`,
+  dropdownTrigger: (title, current) => `${title}: ${current}`,
 };
 
 /** The width below which `collapse="auto"` folds the list — the `sm` breakpoint (640px), in a form `matchMedia` takes. */
@@ -594,10 +595,14 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       </ul>
     );
 
-    // The current entry's text on the dropdown's button, with the outline's name said first for a screen reader.
+    // The current entry's text on the dropdown's button. Its accessible name says the outline's name too, and contains
+    // everything the button shows (a number included), so the visible text is always inside the name.
+    const currentText =
+      currentEntry && typeof currentEntry.label === "string" ? (numbered ? `${numbers[currentIndex]} ${currentEntry.label}` : currentEntry.label) : undefined;
     const triggerLabel = currentEntry ? (
       <span className={styles.currentLabel}>
-        <VisuallyHidden>{text.title}:</VisuallyHidden>{" "}
+        {currentText === undefined && <VisuallyHidden>{text.title}</VisuallyHidden>}
+        {currentText === undefined && " "}
         {numbered && <span className={styles.number}>{numbers[currentIndex]}</span>}
         {currentEntry.label}
       </span>
@@ -659,6 +664,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
                 size={size}
                 fullWidth
                 trailingIcon={popoverOpen ? CaretUpIcon : CaretDownIcon}
+                aria-label={currentText === undefined ? undefined : text.dropdownTrigger(text.title, currentText)}
                 className={cx(styles.toggle, styles.dropdownTrigger)}
               >
                 {triggerLabel}

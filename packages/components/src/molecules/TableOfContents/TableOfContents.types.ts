@@ -80,6 +80,13 @@ export interface TableOfContentsLabels {
    * @default (label) => `Subsections of ${label}`
    */
   groupToggle: (label: string) => string;
+  /**
+   * The accessible name of the dropdown's button (`foldedStyle="dropdown"`), given the outline's title and the entry
+   * being read as plain text (with its number, when `numbered`), so what the button shows is always inside its name.
+   * Used when the entry's label is plain text; otherwise the name is the title followed by what is drawn.
+   * @default (title, current) => `${title}: ${current}`
+   */
+  dropdownTrigger: (title: string, current: string) => string;
 }
 
 export interface TableOfContentsProps
@@ -208,8 +215,9 @@ export interface TableOfContentsProps
    */
   numbered?: boolean;
   /**
-   * How a number in the outline is written — `numbered`'s digits, in a locale's own numerals for example. Defaults to
-   * `String`. Never read from the browser's locale.
+   * How a number in the outline is written — `numbered`'s digits, in a locale's own numerals for example. Never read
+   * from the browser's locale.
+   * @default String
    */
   formatNumber?: (n: number) => string;
   /**
@@ -236,7 +244,10 @@ export interface TableOfContentsProps
    * @default true
    */
   showTitle?: boolean;
-  /** Translatable text. @default { title: 'On this page', navigation: 'Table of contents' } */
+  /**
+   * Translatable text — see {@link TableOfContentsLabels}. Each part is replaceable on its own.
+   * @default { title: 'On this page', navigation: 'Table of contents', groupToggle: (label) => `Subsections of ${label}`, dropdownTrigger: (title, current) => `${title}: ${current}` }
+   */
   labels?: Partial<TableOfContentsLabels>;
   /** The `<nav>`'s accessible name, replacing the one from `labels` — for a page that has more than one outline. */
   "aria-label"?: string;
