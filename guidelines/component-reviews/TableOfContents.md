@@ -1,6 +1,6 @@
 # TableOfContents — build findings
 
-**Navigation:** TableOfContents — built 2026-10-04, item 33 (the last) in the molecule build order (`04-component-inventory.md`). **Final review pass run 2026-10-04 (recorded at the end of this file); not yet declared Finalized — the declaration is the user's.**
+**Navigation:** TableOfContents — built 2026-10-04, item 33 (the last) in the molecule build order (`04-component-inventory.md`). **Finalized 2026-10-04** by the user, after the final review recorded at the end of this file, accepting the limits listed there under "Not done, and why" (no screen-reader pass, real-device or iOS Safari check; the hash correction untested in a real browser; the dropdown panel's dark and Emerald look checked by contrast not by eye).
 
 **What it is:** an outline of one page. A flat-props component (not compound): a `<nav>` named by its visible heading (or `labels.navigation`, or the caller's `aria-label`/`aria-labelledby`) around a `ul` of `Link` atoms going to `#id`. `ref`, `id`, `data-testid` and the `aria-*` props go on the `<nav>`, as does `className`/`style` (there is no frame, so no split). Entries are an `items` list (`id`, `label`, `level` 1–4) or, with no `items`, read in the browser from `contentRef` (default: the document) by `selector` (default `h2, h3`), indented by how far each heading is below the highest found, re-read when the content changes. It renders nothing with no entries.
 
