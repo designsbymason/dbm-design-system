@@ -1,0 +1,270 @@
+/* A month of days. Every value is a token. A day's square is `IconButton`'s size token for the chosen step —
+   already matched to `Button`'s height — so a calendar and the buttons beside it line up.
+
+   `--calendar-cell` is the width and height of a day; `--calendar-font` is the day's and the heading's font
+   size, `--calendar-weekday-font` the column headings'. */
+.root {
+  --calendar-cell: var(--dbm-icon-button-size-md);
+  --calendar-font: var(--dbm-font-size-base);
+  --calendar-weekday-font: var(--dbm-font-size-sm);
+
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  /* Seven squares wide, or all there is, on a screen narrower than that. */
+  inline-size: calc(7 * var(--calendar-cell));
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  /* The visually hidden status region (`announce`) is positioned against this. */
+  position: relative;
+}
+
+.sizeXs {
+  --calendar-cell: var(--dbm-icon-button-size-xs);
+  --calendar-font: var(--dbm-font-size-xs);
+  --calendar-weekday-font: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  --calendar-cell: var(--dbm-icon-button-size-sm);
+  --calendar-font: var(--dbm-font-size-sm);
+  --calendar-weekday-font: var(--dbm-font-size-xs);
+}
+
+.sizeMd {
+  --calendar-cell: var(--dbm-icon-button-size-md);
+  --calendar-font: var(--dbm-font-size-base);
+  --calendar-weekday-font: var(--dbm-font-size-sm);
+}
+
+.sizeLg {
+  --calendar-cell: var(--dbm-icon-button-size-lg);
+  --calendar-font: var(--dbm-font-size-md);
+  --calendar-weekday-font: var(--dbm-font-size-sm);
+}
+
+.sizeXl {
+  --calendar-cell: var(--dbm-icon-button-size-xl);
+  --calendar-font: var(--dbm-font-size-lg);
+  --calendar-weekday-font: var(--dbm-font-size-base);
+}
+
+/* A disabled calendar is dimmed as a whole (disabled controls are exempt from the contrast floors). */
+.disabled {
+  opacity: var(--dbm-opacity-40);
+}
+
+/* The previous and next buttons either side of the heading. They keep their place in the row whatever the
+   heading says, so the buttons never move as the month changes. */
+.header {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-2);
+  justify-content: space-between;
+}
+
+/* The previous and next buttons: `Button`s made into squares the size of a day. Two classes, so the square sizing
+   beats `Button`'s own size padding whatever order the stylesheets load in. */
+.header .monthButton {
+  block-size: var(--calendar-cell);
+  flex: none;
+  inline-size: var(--calendar-cell);
+  min-inline-size: var(--calendar-cell);
+  padding: 0;
+}
+
+.caption {
+  color: var(--dbm-text-primary);
+  flex: 1 1 auto;
+  font-size: var(--calendar-font);
+  font-weight: var(--dbm-font-weight-semibold);
+  min-inline-size: 0;
+  text-align: center;
+}
+
+.grid {
+  border-collapse: collapse;
+  border-spacing: 0;
+  inline-size: 100%;
+  table-layout: fixed;
+}
+
+.weekday {
+  color: var(--dbm-text-secondary);
+  font-size: var(--calendar-weekday-font);
+  font-weight: var(--dbm-font-weight-medium);
+  padding-block: var(--dbm-space-2);
+  padding-inline: 0;
+  text-align: center;
+}
+
+.cell {
+  block-size: var(--calendar-cell);
+  padding: 0;
+  position: relative;
+  text-align: center;
+}
+
+/* The strip behind the days of a range. It is drawn on the cell, so it runs unbroken from one day to the
+   next; the first day's strip starts at its middle and the last day's ends there. Logical insets, so it
+   follows the reading direction. */
+.band::before,
+.bandStart::before,
+.bandEnd::before {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+  content: "";
+  inset-block: 0;
+  position: absolute;
+}
+
+.band::before {
+  inset-inline: 0;
+}
+
+.bandStart::before {
+  inset-inline: 50% 0;
+}
+
+.bandEnd::before {
+  inset-inline: 0 50%;
+}
+
+.day {
+  align-items: center;
+  appearance: none;
+  background-color: transparent;
+  block-size: 100%;
+  border: 0;
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: var(--calendar-font);
+  font-variant-numeric: tabular-nums;
+  inline-size: 100%;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  /* Above the range strip drawn behind it. */
+  position: relative;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* Neutral, not brand-tinted, so a hovered day still differs from the brand-tinted strip of a range. */
+.day:hover {
+  background-color: var(--dbm-bg-neutral-subtle-hover);
+}
+
+/* A day of the neighbouring month: the quietest text, which is 4.70:1 on the plain surface. On a tinted fill
+   (hovered, or inside the strip of a range) that same colour drops to 4.0 to 4.15:1 in the light themes, under the
+   4.5:1 floor, so it steps up to the secondary text there. */
+.outside {
+  color: var(--dbm-text-tertiary);
+}
+
+.outside:hover,
+.band .outside,
+.bandStart .outside,
+.bandEnd .outside,
+.previewEnd.outside {
+  color: var(--dbm-text-secondary);
+}
+
+/* Today: a ring, so it reads whether or not it is chosen. */
+.today {
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-brand);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+/* A day that can't be chosen. Dimmed, not removed: it stays in the keyboard's path. The extra selectors keep it
+   dimmed where a neighbouring-month day would otherwise step up to the secondary text. */
+.unavailable,
+.unavailable:hover,
+.band .unavailable,
+.bandStart .unavailable,
+.bandEnd .unavailable {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+.unavailable:hover {
+  background-color: transparent;
+}
+
+/* The chosen day, and the two ends of a range. After `.unavailable`, so a chosen day that has since become
+   unavailable still reads as chosen. */
+.selected,
+.selected.outside,
+.selected.unavailable {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+  font-weight: var(--dbm-font-weight-semibold);
+}
+
+.selected:hover,
+.selected.unavailable:hover {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+/* The day a click would end the range on, while the pointer or the focus is over it: the strip's colour, so the
+   strip ends in a rounded day, as it does once the range is chosen. */
+.previewEnd,
+.previewEnd:hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+/* The ring is drawn inside the day: the days touch, so a ring outside would run over the next one. */
+.day:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* On the brand fill the focus colour can't be read; the icon-on-brand colour can. */
+.selected:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+}
+
+/* Forced colours replaces fills and drops shadows: the chosen days are the system's highlight, the strip
+   behind a range becomes two lines, and today a one-pixel outline. */
+@media (forced-colors: active) {
+  .selected,
+  .selected.outside,
+  .selected.unavailable {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .band::before,
+  .bandStart::before,
+  .bandEnd::before {
+    background-color: transparent;
+    border-block: var(--dbm-border-width-1) solid Highlight;
+  }
+
+  .today {
+    box-shadow: none;
+    outline: var(--dbm-border-width-1) solid CanvasText;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+
+  .unavailable {
+    color: GrayText;
+  }
+
+  .day:focus-visible {
+    outline: var(--dbm-border-width-2) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-2));
+  }
+
+  .selected:focus-visible {
+    outline-color: HighlightText;
+  }
+}

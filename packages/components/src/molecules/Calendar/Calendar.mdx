@@ -1,0 +1,377 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { CalendarBlankIcon } from "@dbm-design-system/icons";
+import { Button } from "../../atoms/Button";
+import { IconButton } from "../../atoms/IconButton";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { TimePicker } from "../TimePicker";
+import * as CalendarStories from "./Calendar.stories";
+
+export const propOrder = [
+  "mode",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "month",
+  "defaultMonth",
+  "onMonthChange",
+  "min",
+  "max",
+  "isDateDisabled",
+  "weekStartsOn",
+  "showOutsideDays",
+  "today",
+  "size",
+  "disabled",
+  "readOnly",
+  "autoFocus",
+  "announce",
+  "dir",
+  "labels",
+  "formatNumber",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundPropOrder = [
+  "mode",
+  "value",
+  "start",
+  "end",
+  "month",
+  "min",
+  "max",
+  "weekStartsOn",
+  "showOutsideDays",
+  "today",
+  "size",
+  "disabled",
+  "readOnly",
+  "announce",
+  "dir",
+];
+
+<Meta of={CalendarStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Calendar" tier="Molecule" />
+
+A month of days to choose a date, or a range of dates, from: a heading with previous and next month buttons above a
+grid of seven columns — one for each day of the week — and six rows. The grid always holds the same 42 days, so it
+keeps one height whichever month it shows and nothing below it moves as you page through the year. Use it on its
+own — a booking view, a schedule, a date filter — or as the grid inside a date field.
+
+A date is the string `"YYYY-MM-DD"`, never a JavaScript `Date`: a day on a calendar has no time of day and no
+timezone, and a `Date` carries both. So the value is plain text that compares, sorts and submits exactly as it is.
+`value` and `onValueChange` (or an uncontrolled `defaultValue`) hold the choice, and with `mode="range"` the value is a
+`[start, end]` pair. The month on show is `"YYYY-MM"`, held by `month` and `onMonthChange` (or `defaultMonth`).
+`min`, `max` and `isDateDisabled` rule dates out, `weekStartsOn` sets the first column, and `showOutsideDays` fills the
+first and last weeks with the neighbouring months' days.
+
+The grid is one tab stop and is driven by the keyboard — arrows by the day and the week, Home and End along the week,
+Page Up and Page Down by the month — and the month you move to is announced to screen readers.
+
+### Import
+
+```tsx
+import { Calendar } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={CalendarStories.Playground} />
+
+</div>
+<PlaygroundControls of={CalendarStories.Playground} order={playgroundPropOrder} exclude={["defaultValue", "defaultMonth", "onValueChange", "onMonthChange", "isDateDisabled", "autoFocus", "labels", "formatNumber", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+## Properties
+
+`ref` forwards to the outermost `<div>`. Also accepts any other native `<div>` attribute beyond what's listed here
+(e.g. `title`, `lang`) — passed straight to it, except that the calendar always keeps its own `role` and `dir`. In
+`mode="range"`, `value`, `defaultValue` and `onValueChange` take and give a `[start, end]` pair instead of a single
+string.
+
+<PropertiesTable of={CalendarStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+A day is a square as tall as an `IconButton` of the same size, so the grid lines up with the buttons around it, and the
+calendar is seven of them wide.
+
+<Canvas of={CalendarStories.Sizes} />
+
+### Choosing a range
+
+With `mode="range"` the first choice is the start of the range and the second the end; a third starts again, and a
+choice before the start moves the start. While the end is still to be chosen, the range is previewed up to the day the
+pointer or the keyboard focus is on.
+
+<Canvas of={CalendarStories.Range} />
+
+### Weeks that start on Monday
+
+<Canvas of={CalendarStories.WeekStart} />
+
+### Unavailable dates
+
+<Canvas of={CalendarStories.Unavailable} />
+
+### Neighbouring months' days
+
+<Canvas of={CalendarStories.OutsideDays} />
+
+### Disabled and read-only
+
+<Canvas of={CalendarStories.States} />
+
+### Controlled value and month
+
+<Canvas of={CalendarStories.Controlled} />
+
+### In another language
+
+Every name the calendar writes — the month and weekday names, the buttons, the heading, the name of each day — is in
+the `labels` object, with English defaults. Translating `months` and `weekdays` is enough to translate the heading
+and the day names built from them.
+
+<Canvas of={CalendarStories.Labels} />
+
+### Numbers in your own locale
+
+`formatNumber` writes each day and the year the way a language or region does — here Arabic-Indic digits, through the
+browser's own `Intl.NumberFormat`. The default accessible names use it too, so what a day shows is always inside its
+name. If you write your own `labels.day` or `labels.monthYear`, they are given the plain numbers, so write them with the
+same function.
+
+<Canvas of={CalendarStories.Locale} />
+
+### Right to left
+
+<Canvas of={CalendarStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `Calendar` when the person benefits from seeing the dates around the one they choose — a booking, a
+  schedule, a date a few weeks or months away. For a date they can simply type, a field is faster.
+- Keep the date as the `"YYYY-MM-DD"` string all the way through your app and convert only when you must show it
+  (`Intl.DateTimeFormat` on a `Date` made from it). Comparing the strings with `<` and `>` is correct.
+- Set `weekStartsOn` for your audience: 1 (Monday) for most of Europe, 0 (Sunday) in the United States, 6 (Saturday)
+  in much of the Middle East. It is never read from the browser, so the page doesn't change under a reader.
+- Rule dates out with `min`, `max` and `isDateDisabled` rather than hiding them: the grid keeps its shape, and a
+  person can see that the day exists but isn't available.
+- Pass `today` in tests and screenshots so the marked day doesn't change with the date they run.
+- Translate the text with `labels`, and pass `dir="rtl"` for a right-to-left language — it is not read from the page.
+- Give each calendar on a page its own `aria-label` ("Departure", "Return") when there is more than one.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't pass a `Date`, a timestamp, or a differently shaped string. The value is `"YYYY-MM-DD"`; anything else reads
+  as no date and warns in development.
+- Don't hand it a `value` and forget `onValueChange`. A controlled calendar that never hears the change looks frozen.
+  Use `defaultValue` if you don't need to know the date as it changes.
+- Don't give both `value` and `defaultValue`, or both `month` and `defaultMonth`. The controlled one wins, and the
+  calendar warns in development.
+- Don't use `isDateDisabled` for a rule that is slow to compute: it is called for each of the 42 days on every render.
+- Don't use it to choose a time as well. It chooses a day; pair it with a `TimePicker` for a time of day.
+- Don't put it on `bg.canvas`: the neighbouring months' days use the quietest text colour, which doesn't reach the
+  4.5:1 floor on the canvas. The ordinary page background is what it is checked on.
+- Don't use it for a long jump across years (a birth date): Page Up and Page Down with Shift help, but a field you can
+  type into is faster.
+
+</Callout>
+</div>
+
+## Best practices
+
+- A calendar is seven days wide, so `md` is 294px wide. On a narrower container it shrinks to fit (the days stop being
+  exact squares) rather than overflowing; use `sm` or `xs` where space is tight.
+- In `range` mode, tell the person what to do next. After the first choice the value is `[start, ""]` — show "choose
+  the last day" beside it, as the range story does — and treat a range with an empty end as not finished.
+- A range of one day is allowed: choosing the start again as the end gives `[date, date]`.
+- Keep a controlled `month` when something outside the calendar should follow it (a list of events for the month on
+  show), and let it manage the month itself otherwise.
+- `min` and `max` also stop the month buttons: the previous button becomes unavailable in the month that holds `min`,
+  and the next in the month that holds `max`. They stay focusable, so focus is never lost.
+- The dates the arrow keys visit include unavailable ones, on purpose: skipping them would make the keys jump
+  unpredictably. They can be focused and named, but not chosen.
+- Today's marker is read from the browser's clock once the calendar has mounted, so a server-rendered page and its first
+  client render agree. The clock is read once; a page left open past midnight keeps yesterday marked until it is
+  reloaded.
+
+## Accessibility
+
+<Callout tone="info" title="A named group around an ARIA date grid, one tab stop, and keys for every move">
+
+- The calendar is a `role="group"` named "Calendar" (translatable, or give your own `aria-label`). Inside is a `table`
+  with `role="grid"`, named by the month heading ("October 2026"), with seven column headers and six rows of
+  `gridcell`s. Each column header shows the short weekday and is named by the full one ("Mo" / "Monday").
+- Each day is a real `<button>` inside its cell, named in full ("Monday, October 5, 2026"), and today is also marked
+  `aria-current="date"` and named "…, today". The chosen date, or every date of a range, is `aria-selected="true"` on its
+  cell; the ends of a range are named "range start" and "range end". An unavailable date's cell is `aria-disabled`.
+- Only one day is in the tab order — the one that last had focus, else the chosen date, else today, else the 1st — so
+  `Tab` goes to the grid in one step, past the previous and next month buttons, and leaves it in one. Arrow keys move
+  within it (roving focus).
+- The previous and next month buttons are `aria-disabled`, not natively disabled, when a limit is reached: pressing one
+  into its last month leaves focus where it was instead of dropping it to the top of the page.
+- When the month changes, the new month ("November 2026") is announced politely through a visually hidden status
+  region that is in the page from the start — not the first month shown. Turn it off with `announce={false}`.
+- Disabled and read-only are conveyed (`aria-disabled` and `aria-readonly` on the grid) and keep the keyboard working:
+  a read-only calendar can still be moved through.
+- Contrast: the chosen day's label on its fill measures at least 6.08:1, the day numbers at least 9.66:1 on the plain page
+  and the range strip, and the weekday headings at least 6.88:1, in every theme; the neighbouring months' days are
+  4.70:1 on the page (and step up to the secondary text on a tinted fill, where the quietest text would fall under
+  4.5:1). Today's ring is at least 6.08:1 and the focus ring at least 4.16:1 against the page.
+- Every day is a target of at least 30 × 30 CSS pixels at the smallest size, above the 24px minimum.
+- Forced colours: a chosen day is the system highlight, the strip behind a range becomes two lines, and today an
+  outline.
+
+**Keyboard**
+
+| Key | Action |
+|---|---|
+| `Tab` / `Shift + Tab` | Moves to the previous and next month buttons, then to the grid (its one tab stop), then out. |
+| `←` `→` | The previous or next day. Under `dir="rtl"` they follow the picture, so `←` goes forward. |
+| `↑` `↓` | The same day of the previous or next week. |
+| `Home` / `End` | The first or last day of the week, where `weekStartsOn` puts it. |
+| `Page Up` / `Page Down` | The same day of the previous or next month (the last day if it has no such day). |
+| `Shift + Page Up` / `Shift + Page Down` | The same day of the previous or next year. |
+| `Enter` / `Space` | Chooses the focused day. |
+
+A move onto a day in another month turns the calendar to it. A move never goes before `min` or after `max`.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Controlled: you hold the date, so the rest of the page can react to it
+const [date, setDate] = useState("2026-10-06");
+
+<Calendar value={date} onValueChange={setDate} />
+
+// Uncontrolled: it tracks the date itself; you're told when it changes
+<Calendar defaultValue="2026-10-06" onValueChange={(date) => track(date)} />
+
+// A range: [start, end], with "" for an end not chosen yet
+const [range, setRange] = useState<[string, string]>(["", ""]);
+
+<Calendar mode="range" value={range} onValueChange={setRange} />
+
+// Hold the month too, to show events for the month on show
+const [month, setMonth] = useState("2026-10");
+
+<Calendar value={date} onValueChange={setDate} month={month} onMonthChange={setMonth} />
+
+// Weeks that start on Monday, nothing in the past, nothing on a weekend
+<Calendar
+  weekStartsOn={1}
+  min={todayString}
+  isDateDisabled={(date) => [0, 6].includes(new Date(`${date}T00:00:00Z`).getUTCDay())}
+/>
+
+// A smaller calendar, without the neighbouring months' days
+<Calendar size="sm" showOutsideDays={false} />
+
+// Fixed "today", for a test or a screenshot
+<Calendar today="2026-10-14" defaultMonth="2026-10" />
+
+// Translated, with the week starting on Monday
+<Calendar
+  weekStartsOn={1}
+  labels={{
+    calendar: "Calendario",
+    previousMonth: "Mes anterior",
+    nextMonth: "Mes siguiente",
+    months: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+    weekdays: ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"],
+    weekdaysShort: ["do", "lu", "ma", "mi", "ju", "vi", "sá"],
+    today: "hoy",
+  }}
+/>
+
+// Days and years in a locale's own numerals (the default names follow it)
+<Calendar formatNumber={new Intl.NumberFormat("ar-EG", { useGrouping: false }).format} />
+
+// A right-to-left calendar
+<Calendar dir="rtl" weekStartsOn={6} />
+
+// Your own content already announces the month
+<Calendar announce={false} />
+
+// A native <div> attribute, passed straight through
+<Calendar title="Pick a day" lang="en" />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.brand" usage="the chosen day, and the ends of a range" />
+<TokenRow token="bg.brand-hover" usage="the chosen day when hovered" />
+<TokenRow token="text.on-brand" usage="the chosen day's number" />
+<TokenRow token="bg.brand-subtle-hover" usage="the strip behind the days of a range, and the day a click would end it on" />
+<TokenRow token="bg.neutral-subtle-hover" usage="the background of a hovered day" />
+<TokenRow token="text.primary" usage="the day numbers, and the month heading" />
+<TokenRow token="text.secondary" usage="the weekday headings, and a neighbouring month's day on a tinted fill" />
+<TokenRow token="text.tertiary" usage="a neighbouring month's day on the plain page" />
+<TokenRow token="text.disabled" usage="a day that can't be chosen" />
+<TokenRow token="border.brand" usage="the ring marking today" />
+<TokenRow token="border.focus" usage="a focused day's outline color" />
+<TokenRow token="icon.on-brand" usage="the outline of a focused, chosen day" />
+<TokenRow token="border-width.1" usage="today's ring, and the lines of a range in forced colours" />
+<TokenRow token="border-width.2" usage="a focused day's outline width" />
+<TokenRow token="radius.md" usage="the corners of a day" />
+<TokenRow token="radius.sm" usage="the corners of a focused day's outline" />
+<TokenRow token="opacity.40" usage="a disabled calendar's dimmed opacity" />
+<TokenRow token="icon-button.size.xs" usage="the width and height of a day, and of the month buttons, at size xs" />
+<TokenRow token="icon-button.size.sm" usage="the width and height of a day, and of the month buttons, at size sm" />
+<TokenRow token="icon-button.size.md" usage="the width and height of a day, and of the month buttons, at size md" />
+<TokenRow token="icon-button.size.lg" usage="the width and height of a day, and of the month buttons, at size lg" />
+<TokenRow token="icon-button.size.xl" usage="the width and height of a day, and of the month buttons, at size xl" />
+<TokenRow token="font-size.xs" usage="a day and the weekday headings at xs; the weekday headings at sm" />
+<TokenRow token="font-size.sm" usage="a day at sm; the weekday headings at md and lg" />
+<TokenRow token="font-size.base" usage="a day at md; the weekday headings at xl" />
+<TokenRow token="font-size.md" usage="a day and the month heading at lg" />
+<TokenRow token="font-size.lg" usage="a day and the month heading at xl" />
+<TokenRow token="font-weight.medium" usage="the weekday headings" />
+<TokenRow token="font-weight.semibold" usage="the month heading, today, and the chosen days" />
+<TokenRow token="font-family.primary" usage="calendar typography" />
+<TokenRow token="space.2" usage="the gap between the heading row and the grid, and between the buttons and the heading" />
+<TokenRow token="motion.duration.fast" usage="day hover transitions" />
+<TokenRow token="motion.easing.standard" usage="day hover transitions" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="TimePicker"
+  description="Chooses a time of day; pair it with a calendar when you need both"
+  href="/?path=/docs/molecules-inputs-timepicker--docs"
+>
+  <TimePicker size="sm" aria-label="Time" defaultValue="09:30" />
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="The previous and next month buttons are Buttons, so they look and behave like one"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button size="sm">Next month</Button>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="A day is as tall as an IconButton of the same size, so the two line up"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton size="sm" aria-label="Example" icon={CalendarBlankIcon} />
+</RelatedCard>
+</div>

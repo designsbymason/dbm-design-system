@@ -54,6 +54,7 @@ export * from "./molecules/Alert";
 export * from "./molecules/AvatarGroup";
 export * from "./molecules/Breadcrumb";
 export * from "./molecules/ButtonGroup";
+export * from "./molecules/Calendar";
 export * from "./molecules/Card";
 export * from "./molecules/CheckboxGroup";
 export * from "./molecules/CodeBlock";
