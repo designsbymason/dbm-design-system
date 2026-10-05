@@ -59,6 +59,13 @@ ${toc(["collapsibleGroups"], nestedItems)}`,
     entry, which opens as the page is read */}
 ${toc(["collapsibleGroups", "groupsDefaultOpen={false}"], nestedItems)}`,
 
+  dropdown: `{/* The phone setup: below the sm breakpoint the outline folds into a select-like button that always
+    shows the entry being read, opens the list as an overlay, and sticks to the top while folded. Above it,
+    it is the plain outline. The headings are kept clear of the bar for you. The bar's parent must be as
+    tall as the content it follows. */}
+{/* const boxRef = useRef<HTMLDivElement>(null);  (only if the page isn't what scrolls) */}
+${toc(['collapse="auto"', 'foldedStyle="dropdown"', 'sticky="folded"', "scrollContainerRef={boxRef}"])}`,
+
   levels: `{/* minLevel and maxLevel (1 to 4) draw only some levels; the rest are indented from minLevel.
     They apply to items and to headings read from the page alike. */}
 ${toc(["maxLevel={1}"], nestedItems)}
@@ -141,6 +148,7 @@ export interface TableOfContentsPlaygroundSnippetArgs {
   collapsibleGroups?: boolean;
   groupsDefaultOpen?: boolean;
   collapse?: "never" | "auto" | "always";
+  foldedStyle?: "inline" | "dropdown";
   minLevel?: number;
   maxLevel?: number;
   showTitle?: boolean;
@@ -163,7 +171,10 @@ export function tableOfContentsPlaygroundSnippet(args: TableOfContentsPlayground
     attributes.push("collapsibleGroups");
     if (args.groupsDefaultOpen === false) attributes.push("groupsDefaultOpen={false}");
   }
-  if (args.collapse && args.collapse !== "never") attributes.push(`collapse="${args.collapse}"`);
+  if (args.collapse && args.collapse !== "never") {
+    attributes.push(`collapse="${args.collapse}"`);
+    if (args.foldedStyle === "dropdown") attributes.push('foldedStyle="dropdown"');
+  }
   if (typeof args.minLevel === "number" && args.minLevel !== 1) attributes.push(`minLevel={${args.minLevel}}`);
   if (typeof args.maxLevel === "number" && args.maxLevel !== 4) attributes.push(`maxLevel={${args.maxLevel}}`);
   if (args.highlightActive === false) attributes.push("highlightActive={false}");

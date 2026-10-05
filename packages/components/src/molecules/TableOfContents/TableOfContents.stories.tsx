@@ -9,6 +9,7 @@ import { TableOfContents } from "./TableOfContents";
 import { tableOfContentsPlaygroundSnippet, tableOfContentsSnippets } from "./TableOfContents.snippets";
 import type {
   TableOfContentsCollapse,
+  TableOfContentsFoldedStyle,
   TableOfContentsItem,
   TableOfContentsProps,
   TableOfContentsSize,
@@ -19,6 +20,7 @@ interface PlaygroundArgs {
   size: TableOfContentsSize;
   tone: TableOfContentsTone;
   highlightActive: boolean;
+  foldedStyle: TableOfContentsFoldedStyle;
   numbered: boolean;
   movingMarker: boolean;
   collapsibleGroups: boolean;
@@ -160,6 +162,7 @@ const noControls = {
   size: { control: false },
   tone: { control: false },
   highlightActive: { control: false },
+  foldedStyle: { control: false },
   numbered: { control: false },
   movingMarker: { control: false },
   collapsibleGroups: { control: false },
@@ -254,7 +257,7 @@ const meta: Meta<PlaygroundArgs> = {
     sticky: {
       control: false,
       description:
-        "Keeps the outline in view while the page scrolls, as a sticky box built on Affix; it sticks to the page, or to scrollContainerRef. Distinct from scrollOffset, which is where the headings land.",
+        'Keeps the outline in view while the page scrolls: true is always sticky (a box built on Affix), "folded" only while the outline is folded (a bar across the top on a phone, drawn on the page\'s surface). It sticks to the page, or to scrollContainerRef, and its parent must be as tall as the content. While sticky and folded, headings are kept clear of it automatically.',
       table: { defaultValue: { summary: "false" } },
     },
     stickyOffset: {
@@ -274,6 +277,14 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         'Folds the outline behind an "On this page" button: never (the default), auto (below the sm breakpoint) or always. A list with keyboard focus inside it stays open while it does.',
       table: { defaultValue: { summary: '"never"' } },
+    },
+    foldedStyle: {
+      control: "select",
+      options: ["inline", "dropdown"],
+      if: { arg: "collapse", neq: "never" },
+      description:
+        'How a folded outline looks: inline (an "On this page" button opening the list in place) or dropdown (a select-like button that always shows the entry being read and opens the list as an overlay). Pair dropdown with sticky="folded" for a bar that stays in view on a phone.',
+      table: { defaultValue: { summary: '"inline"' } },
     },
     open: {
       control: false,
@@ -361,6 +372,7 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     tone: "brand",
     highlightActive: true,
+    foldedStyle: "inline",
     numbered: false,
     movingMarker: false,
     collapsibleGroups: false,
@@ -385,6 +397,7 @@ const meta: Meta<PlaygroundArgs> = {
         collapsibleGroups: args.collapsibleGroups,
         groupsDefaultOpen: args.groupsDefaultOpen,
         collapse: args.collapse,
+        foldedStyle: args.foldedStyle,
         minLevel: args.minLevel,
         maxLevel: args.maxLevel,
         showTitle: args.showTitle,
@@ -755,6 +768,43 @@ function StickyDemo({ prefix = "sticky" }: { prefix?: string }) {
   );
 }
 
+/** A phone-like column: the outline first, as a bar, then the article, all in one box that scrolls. */
+function DropdownDemo({ prefix = "dd", ...tocProps }: Partial<TableOfContentsProps> & { prefix?: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region must be keyboard-focusable.
+    <div ref={boxRef} tabIndex={0} role="region" aria-label="Article" style={{ ...boxStyle, flex: "none", maxInlineSize: "24rem" }} data-testid="article">
+      <div style={{ padding: "var(--dbm-space-4)" }}>
+        <TableOfContents
+          collapse="always"
+          foldedStyle="dropdown"
+          sticky="folded"
+          scrollContainerRef={boxRef}
+          data-testid="dropdown-toc"
+          items={articleSections(prefix, 10)}
+          {...tocProps}
+        />
+        {articleSections(prefix, 10).map((section) => (
+          <section key={section.id} style={{ marginBlockEnd: "var(--dbm-space-6)" }}>
+            <h2 id={section.id} style={{ margin: 0, color: "var(--dbm-text-primary)", fontFamily: "var(--dbm-font-family-primary)" }}>
+              {section.label}
+            </h2>
+            <p style={{ color: "var(--dbm-text-secondary)", fontFamily: "var(--dbm-font-family-primary)" }}>{filler}</p>
+          </section>
+        ))}
+        <div style={{ blockSize: "12rem" }} aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+export const Dropdown: Story = {
+  name: "Folded as a dropdown, sticky",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.dropdown } } },
+  render: () => <DropdownDemo />,
+};
+
 export const Sticky: Story = {
   name: "Sticky",
   argTypes: noControls,
@@ -1124,5 +1174,84 @@ export const GroupsInteraction: Story = {
     await userEvent.click(toggle("Usage"));
     await expect(canvas.queryByRole("link", { name: "Options" })).toBeNull();
     await expect(canvas.getByRole("link", { name: "Usage" }).closest("li")).toHaveAttribute("data-toc-marked");
+  },
+};
+
+export const DropdownInteraction: Story = {
+  name: "The dropdown follows the page, opens, and chooses — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <DropdownDemo prefix="dx" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("article");
+    const bar = canvas.getByTestId("dropdown-toc");
+    const trigger = within(bar).getByRole("button");
+    const heading = (key: string) => canvasElement.querySelector<HTMLElement>(`#dx-s${key}`) as HTMLElement;
+    const topInBox = (element: HTMLElement) => element.getBoundingClientRect().top - box.getBoundingClientRect().top;
+    const before = trigger.getBoundingClientRect();
+
+    // The bar stays at the top as the content scrolls, and its button names the section being read.
+    box.scrollTo({ top: box.scrollTop + topInBox(heading("4")) - bar.getBoundingClientRect().height, behavior: "instant" });
+    await waitFor(() => expect(trigger).toHaveAccessibleName("On this page: Section 4"));
+    await expect(Math.abs(bar.getBoundingClientRect().top - box.getBoundingClientRect().top)).toBeLessThan(box.clientTop + 20);
+    // A new label never resizes or moves the bar.
+    await expect(trigger.getBoundingClientRect().width).toBe(before.width);
+    await expect(trigger.getBoundingClientRect().height).toBe(before.height);
+
+    // Opening it floats the list over the page, with the current entry marked.
+    await userEvent.click(trigger);
+    const panel = await within(document.body).findByRole("dialog", { name: "On this page" });
+    await expect(within(panel).getAllByRole("link")).toHaveLength(10);
+    await expect(within(panel).getByRole("link", { name: "Section 4" })).toHaveAttribute("aria-current", "location");
+
+    // Choosing one closes the panel and leaves the section just under the bar, not behind it.
+    await userEvent.click(within(panel).getByRole("link", { name: "Section 8" }));
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(trigger).toHaveAccessibleName("On this page: Section 8"), { timeout: 3000 });
+    await waitFor(() => expect(topInBox(heading("8"))).toBeGreaterThanOrEqual(bar.getBoundingClientRect().height - 2), { timeout: 3000 });
+  },
+};
+
+export const DropdownKeyboardInteraction: Story = {
+  name: "The dropdown with the keyboard: Enter on a link, Escape — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <DropdownDemo prefix="dk" smoothScroll={false} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = within(canvas.getByTestId("dropdown-toc")).getByRole("button");
+    trigger.focus();
+    await userEvent.keyboard("{Enter}");
+    const panel = await within(document.body).findByRole("dialog", { name: "On this page" });
+    // Focus went into the list.
+    await waitFor(() => expect(panel.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await expect(trigger).toHaveFocus();
+    // Choosing a link with Enter leaves focus on the section, not the button.
+    await userEvent.keyboard("{Enter}");
+    const link = await within(document.body).findByRole("link", { name: "Section 3" });
+    link.focus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    // Long enough for the panel's own focus return to have happened, had it not been told to stand down.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await expect(canvasElement.querySelector("#dk-s3")).toHaveFocus();
+  },
+};
+
+export const DropdownOnAPhoneInteraction: Story = {
+  name: "collapse=auto with a dropdown on a phone is a sticky bar — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <DropdownDemo prefix="dp" collapse="auto" />,
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBeLessThan(640);
+    const bar = within(canvasElement).getByTestId("dropdown-toc");
+    await expect(getComputedStyle(bar).position).toBe("sticky");
+    await expect(within(bar).getByRole("button").getClientRects().length).toBeGreaterThan(0);
+    await expect(within(bar).queryAllByRole("link")).toHaveLength(0);
   },
 };

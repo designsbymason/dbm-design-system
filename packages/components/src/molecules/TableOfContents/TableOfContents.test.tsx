@@ -1118,3 +1118,167 @@ describe("TableOfContents — moving marker", () => {
     unmount();
   });
 });
+
+describe("TableOfContents — folded as a dropdown", () => {
+  const matchMedia = (narrow: boolean) =>
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query) => ({ matches: narrow && query.includes("max-width"), media: query, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList,
+    );
+  const trigger = () => screen.getByRole("button", { name: /On this page/ });
+
+  it("is a button that shows the outline's name, then the entry being read, with the name first for a screen reader", () => {
+    const { unmount } = render(<TableOfContents items={items} collapse="always" foldedStyle="dropdown" />);
+    expect(trigger()).toHaveAccessibleName("On this page");
+    unmount();
+    render(<TableOfContents items={items} collapse="always" foldedStyle="dropdown" defaultActiveId="setup" />);
+    expect(trigger()).toHaveAccessibleName("On this page: Setup");
+    // The visible text is inside the name.
+    expect(trigger()).toHaveTextContent("Setup");
+  });
+
+  it("follows the entry being read, without announcing it (it is not a live region)", async () => {
+    layout({ intro: 100, setup: 400, usage: 800 });
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="always" foldedStyle="dropdown" />
+      </>,
+    );
+    scrollTo(450);
+    await waitFor(() => expect(trigger()).toHaveAccessibleName("On this page: Setup"));
+    expect(trigger().closest("[aria-live]")).toBeNull();
+    expect(trigger()).not.toHaveAttribute("aria-live");
+  });
+
+  it("opens a panel of the real links, named for the outline, with the list drawn once", async () => {
+    render(<TableOfContents items={items} collapse="always" foldedStyle="dropdown" defaultActiveId="setup" />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(trigger()).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(trigger());
+    const panel = await screen.findByRole("dialog", { name: "On this page" });
+    expect(within(panel).getByRole("navigation", { name: "Table of contents" })).toBeInTheDocument();
+    expect(within(panel).getAllByRole("link").map((link) => link.textContent)).toEqual(["Intro", "Setup", "Usage"]);
+    expect(within(panel).getByRole("link", { name: "Setup" })).toHaveAttribute("aria-current", "location");
+    // The outline's own list isn't drawn as well while the dropdown is what shows: one link per entry on the page.
+    expect(screen.getAllByRole("link", { hidden: true })).toHaveLength(3);
+  });
+
+  it("puts an entry's data-testid in the page once", async () => {
+    render(<TableOfContents items={[{ id: "a", label: "A", "data-testid": "entry-a" }]} collapse="always" foldedStyle="dropdown" defaultOpen />);
+    await screen.findByRole("dialog");
+    expect(screen.getAllByTestId("entry-a")).toHaveLength(1);
+  });
+
+  it("closes after an entry is chosen, and scrolls", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    matchMedia(false);
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="always" foldedStyle="dropdown" defaultOpen />
+      </>,
+    );
+    await userEvent.click(await screen.findByRole("link", { name: "Usage" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(window.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 800 }));
+  });
+
+  it("leaves focus on the section after a key press, and returns it to the button on Escape", async () => {
+    layout({ intro: 0, setup: 400, usage: 800 });
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="always" foldedStyle="dropdown" />
+      </>,
+    );
+    await userEvent.click(trigger());
+    const usage = await screen.findByRole("link", { name: "Usage" });
+    usage.focus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(document.getElementById("usage")).toHaveFocus();
+    await userEvent.click(trigger());
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(trigger()).toHaveFocus();
+  });
+
+  it("with `auto`, is the plain outline when the screen is wide, and never opens its panel there", () => {
+    matchMedia(false);
+    render(<TableOfContents items={items} collapse="auto" foldedStyle="dropdown" defaultOpen />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // The list is in the page itself.
+    expect(screen.getAllByRole("link")).toHaveLength(3);
+  });
+
+  it("with `auto` on a narrow screen, replaces the list with the dropdown", async () => {
+    matchMedia(true);
+    render(<TableOfContents items={items} collapse="auto" foldedStyle="dropdown" defaultOpen />);
+    await screen.findByRole("dialog");
+    expect(screen.getAllByRole("link", { hidden: true })).toHaveLength(3);
+  });
+
+  it("is controlled with open and reports with onOpenChange", async () => {
+    const onOpenChange = vi.fn();
+    render(<TableOfContents items={items} collapse="always" foldedStyle="dropdown" open={false} onOpenChange={onOpenChange} />);
+    await userEvent.click(trigger());
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("has no accessibility violations, closed and open", async () => {
+    const { container, baseElement } = render(<TableOfContents items={items} collapse="always" foldedStyle="dropdown" defaultActiveId="setup" />);
+    expect(await axe(container)).toHaveNoViolations();
+    await userEvent.click(trigger());
+    await screen.findByRole("dialog");
+    expect(await axe(baseElement)).toHaveNoViolations();
+  });
+});
+
+describe("TableOfContents — sticky while folded", () => {
+  it('draws as a bar with `sticky="folded"`, takes stickyOffset from the spacing scale, and is not an Affix', () => {
+    render(<TableOfContents items={items} collapse="always" sticky="folded" stickyOffset={4} />);
+    const nav = screen.getByRole("navigation");
+    expect(nav.className).toMatch(/stickyFolded/);
+    expect(nav.style.getPropertyValue("--toc-sticky-top")).toBe("var(--dbm-space-4)");
+    expect(nav.getAttribute("style") ?? "").not.toMatch(/(^|;)\s*top:/);
+  });
+
+  it("keeps a caller's own style next to it", () => {
+    render(<TableOfContents items={items} collapse="always" sticky="folded" stickyOffset={2} style={{ margin: 3 }} />);
+    expect(screen.getByRole("navigation")).toHaveStyle({ margin: "3px" });
+  });
+
+  it("is not drawn sticky otherwise", () => {
+    render(<TableOfContents items={items} collapse="always" />);
+    expect(screen.getByRole("navigation").className).not.toMatch(/stickyFolded/);
+  });
+
+  it("keeps the headings clear of the bar: a click leaves the section below it", async () => {
+    const rect = (top: number, height: number) => ({ top, bottom: top + height, left: 0, right: 0, width: 0, height, x: 0, y: top, toJSON: () => ({}) });
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      if (this.tagName === "NAV") return rect(0, 48);
+      return rect(this.id === "usage" ? 800 : 0, 0);
+    });
+    const real = window.getComputedStyle;
+    vi.spyOn(window, "getComputedStyle").mockImplementation((element: Element, pseudo?: string | null) => {
+      const style = real(element, pseudo);
+      return element.tagName === "NAV" ? new Proxy(style, { get: (target, key) => (key === "position" ? "sticky" : key === "top" ? "8px" : Reflect.get(target, key) as unknown) }) : style;
+    });
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} collapse="always" sticky="folded" defaultOpen />
+      </>,
+    );
+    await userEvent.click(screen.getByRole("link", { name: "Usage" }));
+    // 800 (where it is) minus the bar's 48px and its 8px offset.
+    expect(window.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 744 }));
+  });
+
+  it("with `sticky` true is still the Affix box", () => {
+    render(<TableOfContents items={items} sticky stickyOffset={2} />);
+    expect(screen.getByRole("navigation").getAttribute("style") ?? "").toMatch(/top:\s*var\(--dbm-space-2\)/);
+  });
+});

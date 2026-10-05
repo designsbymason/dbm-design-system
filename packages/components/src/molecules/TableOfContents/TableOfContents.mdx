@@ -26,6 +26,7 @@ export const propOrder = [
   "stickyOffset",
   "scrollToHash",
   "collapse",
+  "foldedStyle",
   "open",
   "defaultOpen",
   "onOpenChange",
@@ -184,6 +185,20 @@ open the story on its own at a phone size to see `"auto"`.
 
 <Canvas of={TableOfContentsStories.Folded} />
 
+### Folded as a dropdown, sticky
+
+`foldedStyle="dropdown"` draws the folded outline as a select-like button that **always shows the entry being
+read** — it changes as the page scrolls, on one line with an ellipsis, so the bar never resizes — and opens the
+list as an overlay floating over the page. With `sticky="folded"` the button stays in view as a bar across the
+top, on the page's surface with a rule below it, and only while the outline is folded: above the breakpoint it is
+the plain outline again. The headings are kept clear of the bar for you (a click, the `#id` correction and the
+marked entry all allow for its height), so `scrollOffset` only has to cover what is *above* it. The bar sticks
+to the page or to `scrollContainerRef`, and its parent must be as tall as the content it follows. This is the phone
+setup: `collapse="auto" foldedStyle="dropdown" sticky="folded"`. It is a disclosure of real links, not a `Select`:
+an entry stays a link (it can be opened in a new tab), and the panel closes on a choice, `Escape` or a press outside.
+
+<Canvas of={TableOfContentsStories.Dropdown} />
+
 ### Sticky
 
 `sticky` keeps the outline in view as the content scrolls. It is built on `Affix`: it sticks to the page, or
@@ -304,8 +319,11 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
   stays in view (`sticky`) where the slide is seen, and leave it off where the outline scrolls out of sight.
 - `collapsibleGroups` is for outlines long enough to need it. For a short outline the buttons add a tab stop per
   group and nothing else; `groupsDefaultOpen={false}` with `sticky` is the "unfolds as you read" pattern.
-- **On a phone**, fold the whole outline with `collapse="auto"` and leave it non-sticky (a sticky box would cover
-  the content); open it from the button, pick a section, and it closes again.
+- **On a phone**, use `collapse="auto" foldedStyle="dropdown" sticky="folded"`: one line that always says where
+  you are, a list a tap away, and nothing at all taken from the content above the breakpoint. A plain
+  `collapse="auto"` (inline) suits a phone outline that sits above the content and doesn't need to follow you.
+- Don't also put `sticky` (true) on a folded outline: its box would cover the content. `sticky="folded"` is the
+  one that is drawn as a bar.
 - Use `disabled` for a section the reader can't use yet, rather than leaving it out, so the outline still
   shows the whole structure.
 - Every piece of text the component writes itself is in `labels`.
@@ -326,6 +344,13 @@ removed as one. The entry being read carries `aria-current="location"`, announce
 | `Tab` | Moves to the next link — every entry is one stop |
 | `Shift+Tab` | Moves to the previous one |
 | `Enter` | Follows the link: scrolls to the section and moves focus to it |
+
+The dropdown's button is a disclosure of a panel (`aria-haspopup`, `aria-expanded`): the panel is a named dialog
+holding a navigation landmark and the same real links, focus goes to the entry being read when it opens, `Escape`
+and a press outside close it and give focus back to the button, and choosing an entry with a key leaves focus on
+the section instead. The button's text is the entry being read, and its accessible name says the outline's name
+first ("On this page: Setup"), so the visible text is always inside the name. It is **not a live region**: the
+label changes silently as the page scrolls, because announcing every section passed would be noise.
 
 A group button is a disclosure too: it carries `aria-expanded` and a name from `labels.groupToggle` ("Subsections of
 Setup"), and folding never takes the entry that has focus out of the page. A closed group holding the current entry
@@ -414,6 +439,9 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 <TokenRow token="bg.brand-subtle" usage="the current entry's background with highlightActive, brand tone" />
 <TokenRow token="bg.neutral-subtle" usage="the current entry's background with highlightActive, neutral tone" />
 <TokenRow token="icon.default" usage="the buttons that open and close a group" />
+<TokenRow token="bg.surface" usage="the bar's background while it is sticky and folded" />
+<TokenRow token="z-index.sticky" usage="the sticky, folded bar's layer" />
+<TokenRow token="border-width.1" usage="the rule under the sticky, folded bar" />
 <TokenRow token="border.default" usage="the track along the start edge (decorative)" />
 <TokenRow token="border.brand" usage="the marker beside the current entry, brand tone" />
 <TokenRow token="border.neutral-strong" usage="the marker beside the current entry, neutral tone" />

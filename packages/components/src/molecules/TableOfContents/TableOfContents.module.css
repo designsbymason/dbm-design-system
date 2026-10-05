@@ -201,6 +201,63 @@ a.link:hover {
   .collapseAuto.folded .body {
     display: none;
   }
+
+  .collapseAuto.dropdown .body {
+    display: none;
+  }
+
+  .stickyFolded.collapseAuto {
+    background-color: var(--dbm-bg-surface);
+    border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+    inset-block-start: var(--toc-sticky-top, 0);
+    padding-block: var(--dbm-space-2);
+    position: sticky;
+    z-index: var(--dbm-z-index-sticky);
+  }
+}
+
+/* --- Folded as a dropdown: a select-like button showing the entry being read, over a panel. --- */
+
+.root .dropdownTrigger {
+  justify-content: space-between;
+}
+
+/* The current entry's text, on one line with an ellipsis, so changing as the page scrolls it never resizes the bar. */
+.currentLabel {
+  display: block;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* While the dropdown is what shows, the list drawn in the outline itself is not. */
+.collapseAlways.dropdown .body {
+  display: none;
+}
+
+/* The panel is portaled outside the outline, so it carries its own classes; it is as wide as the button that opens it
+   and as tall as the room below allows, scrolling inside. Doubled for the weight to win over `Popover`'s own rule. */
+.dropdownContent.dropdownContent {
+  inline-size: var(--radix-popover-trigger-width);
+  max-block-size: var(--radix-popover-content-available-height);
+  max-inline-size: var(--radix-popper-available-width);
+  overflow-y: auto;
+  padding: var(--dbm-space-2);
+}
+
+/* --- Sticky only while folded: a bar across the top, on the page's surface with a rule below, so content passing
+   beneath it doesn't show through. Sticks to the nearest scrolling ancestor. --- */
+
+.stickyFolded.collapseAlways {
+  background-color: var(--dbm-bg-surface);
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  inset-block-start: var(--toc-sticky-top, 0);
+  padding-block: var(--dbm-space-2);
+  position: sticky;
+  z-index: var(--dbm-z-index-sticky);
 }
 
 /* --- The moving marker: one bar that slides to the marked entry. It is a border, so forced colours keeps it. --- */

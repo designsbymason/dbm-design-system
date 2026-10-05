@@ -57,6 +57,16 @@ export interface TableOfContentsItem {
 export type TableOfContentsCollapse = "never" | "auto" | "always";
 
 /**
+ * How a folded outline (see {@link TableOfContentsCollapse}) is drawn.
+ *
+ * - `"inline"` (the default) — an "On this page" button that opens the list in place, pushing what follows down.
+ * - `"dropdown"` — a select-like button that always shows the entry being read, and opens the list as an overlay
+ *   floating over the page. Built as a disclosure of real links, not a form control. Pair it with `sticky="folded"`
+ *   for a bar that stays in view on a phone.
+ */
+export type TableOfContentsFoldedStyle = "inline" | "dropdown";
+
+/**
  * The text `TableOfContents` supplies itself, translatable through the `labels` prop (`ADR-0021`).
  */
 export interface TableOfContentsLabels {
@@ -133,11 +143,15 @@ export interface TableOfContentsProps
    */
   maxLevel?: 1 | 2 | 3 | 4;
   /**
-   * Keeps the outline in view while the page scrolls, as a sticky box (built on `Affix`). It sticks to the page, or
-   * to `scrollContainerRef`. Distinct from `scrollOffset`, which is about where the *headings* land.
+   * Keeps the outline in view while the page scrolls. `true` is always sticky, as a box built on `Affix`; `"folded"`
+   * is sticky only while the outline is folded (see `collapse`) — a bar across the top on a phone, a plain sidebar
+   * above it, drawn on the page's surface with a rule below so content passes cleanly beneath. It sticks to the page,
+   * or to `scrollContainerRef`, and its parent must be as tall as the content it follows. While it is sticky and
+   * folded, the headings are kept clear of it automatically (`scrollOffset` need only cover what is *above* it).
+   * Distinct from `scrollOffset`, which is about where the *headings* land.
    * @default false
    */
-  sticky?: boolean;
+  sticky?: boolean | "folded";
   /**
    * How far from the top a sticky outline sticks, from the spacing token scale — for a page whose own header is also
    * sticky. Has no effect without `sticky`.
@@ -155,6 +169,12 @@ export interface TableOfContentsProps
    * @default 'never'
    */
   collapse?: TableOfContentsCollapse;
+  /**
+   * How the outline looks while it is folded: `"inline"` or `"dropdown"` — see {@link TableOfContentsFoldedStyle}.
+   * Has no effect unless `collapse` is `"auto"` or `"always"`.
+   * @default 'inline'
+   */
+  foldedStyle?: TableOfContentsFoldedStyle;
   /** Whether the list is open while folded, controlled. Pair it with `onOpenChange`. */
   open?: boolean;
   /**

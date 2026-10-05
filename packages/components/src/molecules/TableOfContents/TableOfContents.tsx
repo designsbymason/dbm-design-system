@@ -1,13 +1,15 @@
 import { CaretDownIcon, CaretUpIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
-import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { FocusEvent, KeyboardEvent, MouseEvent } from "react";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
+import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { Affix } from "../../atoms/Affix";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
 import type { IconSize } from "../../atoms/Icon";
 import { Link } from "../../atoms/Link";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Popover } from "../Popover";
 import styles from "./TableOfContents.module.css";
 import type {
   TableOfContentsItem,
@@ -127,7 +129,7 @@ function scrollableAncestor(element: HTMLElement, except: HTMLElement | null): H
  * The current entry follows the scroll position and is marked `aria-current="location"`; a click scrolls to the
  * section (smoothly, unless the person prefers less motion) and keeps it clear of a sticky header with
  * `scrollOffset`. `sticky` keeps the outline in view beside long content, `collapse` folds it behind a button on a
- * small screen, and a long outline that scrolls on its own keeps the current entry in view.
+ * small screen (a dropdown over the page with `foldedStyle="dropdown"`), and a long outline that scrolls on its own keeps the current entry in view.
  *
  * @example
  * ```tsx
@@ -153,6 +155,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       sticky = false,
       stickyOffset,
       collapse = "never",
+      foldedStyle = "inline",
       open: controlledOpen,
       defaultOpen = false,
       onOpenChange,
@@ -181,6 +184,32 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
     const listRef = useRef<HTMLUListElement>(null);
     const toggleRef = useRef<HTMLButtonElement>(null);
     const reading = items === undefined;
+    const navRef = useRef<HTMLElement>(null);
+    const popoverListRef = useRef<HTMLUListElement>(null);
+    const setNavRef = useMemo(() => mergeRefs(ref, navRef), [ref]);
+    // Whether `collapse="auto"` is folding the outline right now: a media query the stylesheet asks too.
+    const subscribeNarrow = useCallback(
+      (notify: () => void) => {
+        if (collapse !== "auto" || typeof window.matchMedia !== "function") return () => {};
+        const query = window.matchMedia(NARROW_QUERY);
+        query.addEventListener?.("change", notify);
+        return () => query.removeEventListener?.("change", notify);
+      },
+      [collapse],
+    );
+    const narrow = useSyncExternalStore(
+      subscribeNarrow,
+      () => collapse === "auto" && typeof window.matchMedia === "function" && window.matchMedia(NARROW_QUERY).matches,
+      () => false,
+    );
+    const folded = collapse === "always" || narrow;
+    /** The room a sticky, folded bar takes at the top of the scrolling area: headings are kept clear of it. */
+    const stickyBarHeight = useCallback((): number => {
+      const nav = navRef.current;
+      if (!nav || !folded) return 0;
+      const style = getComputedStyle(nav);
+      return style.position === "sticky" ? nav.getBoundingClientRect().height + (parseFloat(style.top) || 0) : 0;
+    }, [folded]);
 
     // --- The entries ---
     const [scanned, setScanned] = useState<Entry[]>([]);
@@ -256,11 +285,12 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
     const scrollToTarget = useCallback(
       (target: HTMLElement, behavior: ScrollBehavior) => {
         const container = scrollContainerRef?.current ?? null;
-        const distance = target.getBoundingClientRect().top - (container ? container.getBoundingClientRect().top : 0) - scrollOffset;
+        const distance =
+          target.getBoundingClientRect().top - (container ? container.getBoundingClientRect().top : 0) - scrollOffset - stickyBarHeight();
         if (container) container.scrollTo({ top: container.scrollTop + distance, behavior });
         else window.scrollTo({ top: window.scrollY + distance, behavior });
       },
-      [scrollContainerRef, scrollOffset],
+      [scrollContainerRef, scrollOffset, stickyBarHeight],
     );
 
     const entryIds = entries.map((entry) => entry.id).join("\n");
@@ -271,7 +301,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       const scroller: HTMLElement | Window = container ?? window;
 
       const measure = (): string | undefined => {
-        const limit = (container ? container.getBoundingClientRect().top : 0) + scrollOffset + 1;
+        const limit = (container ? container.getBoundingClientRect().top : 0) + scrollOffset + stickyBarHeight() + 1;
         let current: string | undefined;
         let currentTop = -Infinity;
         for (const id of ids) {
@@ -338,7 +368,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
         cancelAnimationFrame(frame);
         window.clearTimeout(release);
       };
-    }, [entryIds, isControlled, scrollContainerRef, scrollOffset, setActive]);
+    }, [entryIds, isControlled, scrollContainerRef, scrollOffset, setActive, stickyBarHeight]);
 
     // --- A page opened at `#id` ---
     useEffect(() => {
@@ -362,18 +392,24 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
     }, [scrollToHash, entryIds, scrollToTarget, setActive]);
 
     // --- The current entry stays in view in an outline that scrolls on its own ---
+    const keepCurrentInView = useCallback(
+      (list: HTMLElement | null) => {
+        const link = list?.querySelector<HTMLElement>('[aria-current="location"]');
+        // A folded, closed list has no box to measure.
+        if (!link || link.getClientRects().length === 0) return;
+        const area = scrollableAncestor(link, scrollContainerRef?.current ?? null);
+        if (!area) return;
+        const box = area.getBoundingClientRect();
+        const rect = link.getBoundingClientRect();
+        // Moves the box itself, not `scrollIntoView`, which would scroll the page as well.
+        if (rect.top < box.top) area.scrollTop += rect.top - box.top;
+        else if (rect.bottom > box.bottom) area.scrollTop += rect.bottom - box.bottom;
+      },
+      [scrollContainerRef],
+    );
     useEffect(() => {
-      const link = listRef.current?.querySelector<HTMLElement>('[aria-current="location"]');
-      // A folded, closed list has no box to measure.
-      if (!link || link.getClientRects().length === 0) return;
-      const area = scrollableAncestor(link, scrollContainerRef?.current ?? null);
-      if (!area) return;
-      const box = area.getBoundingClientRect();
-      const rect = link.getBoundingClientRect();
-      // Moves the box itself, not `scrollIntoView`, which would scroll the page as well.
-      if (rect.top < box.top) area.scrollTop += rect.top - box.top;
-      else if (rect.bottom > box.bottom) area.scrollTop += rect.bottom - box.bottom;
-    }, [activeId, scrollContainerRef]);
+      keepCurrentInView(listRef.current);
+    }, [activeId, keepCurrentInView]);
 
     // --- Folding ---
     const isOpenControlled = controlledOpen !== undefined;
@@ -384,10 +420,16 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       if (!isOpenControlled) setInternalOpen(next);
       onOpenChange?.(next);
     };
-    /** Whether the list is folded right now. The stylesheet decides by media query; this asks the same question. */
-    const isFolded = (): boolean =>
-      collapse === "always" ||
-      (collapse === "auto" && typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(NARROW_QUERY).matches);
+    const folds = collapse !== "never";
+    const dropdown = folds && foldedStyle === "dropdown";
+    // The dropdown's panel is only ever open while the outline is folded, whatever the state says at a wide width.
+    const popoverOpen = dropdown && folded && isOpen;
+    // Opening the dropdown scrolls the current entry into view in the panel (a long outline scrolls there).
+    useEffect(() => {
+      if (!popoverOpen) return undefined;
+      const frame = requestAnimationFrame(() => keepCurrentInView(popoverListRef.current));
+      return () => cancelAnimationFrame(frame);
+    }, [popoverOpen, activeId, keepCurrentInView]);
     // Focus inside the list holds it open, so a screen that narrows can't hide the control that has focus.
     const [focusInside, setFocusInside] = useState(false);
     // The entry that has focus, so the group it sits in can't fold away under it.
@@ -480,16 +522,16 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       if (event.detail === 0) {
         if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
         target.focus({ preventScroll: true });
-      } else if (isFolded() && isOpen) {
+      } else if (folded && isOpen && !dropdown) {
         // The list is about to fold away under the pointer's own focus: hand it to the button.
         toggleRef.current?.focus({ preventScroll: true });
       }
-      if (isFolded()) setOpen(false);
+      if (folded) setOpen(false);
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
       onKeyDown?.(event);
-      if (event.defaultPrevented || event.key !== "Escape" || !isFolded() || !isOpen) return;
+      if (event.defaultPrevented || event.key !== "Escape" || !folded || !isOpen) return;
       if (!listRef.current?.contains(event.target as Node)) return;
       setOpen(false);
       toggleRef.current?.focus();
@@ -497,27 +539,95 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
 
     if (entries.length === 0) return null;
 
-    const folds = collapse !== "never";
+    const currentIndex = entries.findIndex((entry) => entry.id === activeId);
+    const currentEntry = currentIndex >= 0 ? entries[currentIndex] : undefined;
+    const navigationName = ariaLabel ?? (ariaLabelledBy === undefined && !showTitle ? text.navigation : undefined);
+    const lookClasses = cx(styles.root, sizeClass[size], toneClass[tone], highlightActive && styles.highlighted);
+
+    /** The list of links, drawn in the outline itself and, for the dropdown, again in its panel. */
+    const renderList = (listElementRef: typeof listRef, id?: string) => (
+      // The roles are stated outright: Safari with VoiceOver drops list semantics once the markers are removed.
+      // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
+      <ul role="list" id={id} ref={listElementRef} className={styles.list} onFocus={(event) => keepOpen(event, true)} onBlur={(event) => keepOpen(event, false)}>
+        {entries.map((entry, index) => {
+          if (!isShown(index)) return null;
+          const isActive = entry.id === activeId;
+          const isGroup = collapsibleGroups && (groupEnd[index] ?? index) > index;
+          const marked = isActive || index === containsMark;
+          return (
+            // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
+            <li
+              key={entry.id}
+              role="listitem"
+              data-toc-id={entry.id}
+              data-toc-marked={marked ? "" : undefined}
+              className={cx(styles.item, levelClass[entry.level], marked && styles.itemActive)}
+            >
+              <Link
+                href={`#${entry.id}`}
+                underline="none"
+                disabled={entry.disabled}
+                data-testid={entry.testId}
+                className={cx(styles.link, isActive && styles.active)}
+                aria-current={isActive ? "location" : undefined}
+                onClick={(event) => follow(event, entry.id)}
+              >
+                {entry.icon && <Icon icon={entry.icon} size={iconSizeForSize[size]} className={styles.icon} />}
+                {numbered && <span className={styles.number}>{numbers[index]}</span>}
+                <span className={styles.label}>{entry.label}</span>
+                {entry.trailing && <span className={styles.trailing}>{entry.trailing}</span>}
+              </Link>
+              {isGroup && (
+                <IconButton
+                  icon={groupIsOpen(index) ? CaretUpIcon : CaretDownIcon}
+                  size="xs"
+                  variant="ghost"
+                  className={styles.groupToggle}
+                  aria-label={text.groupToggle(typeof entry.label === "string" ? entry.label : "section")}
+                  aria-expanded={groupIsOpen(index)}
+                  onClick={() => setGroupOverride((current) => ({ ...current, [entry.id]: !groupIsOpen(index) }))}
+                />
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    );
+
+    // The current entry's text on the dropdown's button, with the outline's name said first for a screen reader.
+    const triggerLabel = currentEntry ? (
+      <span className={styles.currentLabel}>
+        <VisuallyHidden>{text.title}:</VisuallyHidden>{" "}
+        {numbered && <span className={styles.number}>{numbers[currentIndex]}</span>}
+        {currentEntry.label}
+      </span>
+    ) : (
+      <span className={styles.currentLabel}>{text.title}</span>
+    );
+
     const nav = (
       // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape is heard from the links and button inside; the nav takes no key itself.
       <nav
         {...props}
-        ref={ref}
+        ref={setNavRef}
         // After `...props`, so a caller's own value can't replace what the component works out.
-        aria-label={ariaLabel ?? (ariaLabelledBy === undefined && !showTitle ? text.navigation : undefined)}
+        aria-label={navigationName}
         aria-labelledby={ariaLabel === undefined ? (ariaLabelledBy ?? (showTitle ? titleId : undefined)) : undefined}
         className={cx(
-          styles.root,
-          sizeClass[size],
-          toneClass[tone],
-          highlightActive && styles.highlighted,
+          lookClasses,
           movingMarker && styles.moving,
           collapse === "always" && styles.collapseAlways,
           collapse === "auto" && styles.collapseAuto,
+          dropdown && styles.dropdown,
+          sticky === "folded" && styles.stickyFolded,
           folds && !isOpen && !focusInside && styles.folded,
           className,
         )}
-        style={style}
+        style={
+          sticky === "folded" && stickyOffset !== undefined
+            ? ({ "--toc-sticky-top": `var(--dbm-space-${stickyOffset})`, ...style } as CSSProperties)
+            : style
+        }
         onKeyDown={handleKeyDown}
       >
         {showTitle && (
@@ -525,7 +635,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
             {text.title}
           </p>
         )}
-        {folds && (
+        {folds && !dropdown && (
           <Button
             ref={toggleRef}
             variant="secondary"
@@ -540,65 +650,51 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
             {text.title}
           </Button>
         )}
-        <div className={styles.body}>
-          {movingMarker && <span ref={markerRef} aria-hidden="true" className={styles.marker} data-visible="false" />}
-          {/* The roles are stated outright: Safari with VoiceOver drops list semantics once the markers are removed. */}
-          {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above. */}
-          <ul
-            role="list"
-            id={listId}
-            ref={listRef}
-            className={styles.list}
-            onFocus={(event) => keepOpen(event, true)}
-            onBlur={(event) => keepOpen(event, false)}
-          >
-            {entries.map((entry, index) => {
-              if (!isShown(index)) return null;
-              const isActive = entry.id === activeId;
-              const isGroup = collapsibleGroups && (groupEnd[index] ?? index) > index;
-              const marked = isActive || index === containsMark;
-              return (
-                // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
-                <li
-                  key={entry.id}
-                  role="listitem"
-                  data-toc-id={entry.id}
-                  data-toc-marked={marked ? "" : undefined}
-                  className={cx(styles.item, levelClass[entry.level], marked && styles.itemActive)}
-                >
-                  <Link
-                    href={`#${entry.id}`}
-                    underline="none"
-                    disabled={entry.disabled}
-                    data-testid={entry.testId}
-                    className={cx(styles.link, isActive && styles.active)}
-                    aria-current={isActive ? "location" : undefined}
-                    onClick={(event) => follow(event, entry.id)}
-                  >
-                    {entry.icon && <Icon icon={entry.icon} size={iconSizeForSize[size]} className={styles.icon} />}
-                    {numbered && <span className={styles.number}>{numbers[index]}</span>}
-                    <span className={styles.label}>{entry.label}</span>
-                    {entry.trailing && <span className={styles.trailing}>{entry.trailing}</span>}
-                  </Link>
-                  {isGroup && (
-                    <IconButton
-                      icon={groupIsOpen(index) ? CaretUpIcon : CaretDownIcon}
-                      size="xs"
-                      variant="ghost"
-                      className={styles.groupToggle}
-                      aria-label={text.groupToggle(typeof entry.label === "string" ? entry.label : "section")}
-                      aria-expanded={groupIsOpen(index)}
-                      onClick={() => setGroupOverride((current) => ({ ...current, [entry.id]: !groupIsOpen(index) }))}
-                    />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        {dropdown && (
+          <Popover open={popoverOpen} onOpenChange={setOpen}>
+            <Popover.Trigger asChild>
+              <Button
+                ref={toggleRef}
+                variant="secondary"
+                size={size}
+                fullWidth
+                trailingIcon={popoverOpen ? CaretUpIcon : CaretDownIcon}
+                className={cx(styles.toggle, styles.dropdownTrigger)}
+              >
+                {triggerLabel}
+              </Button>
+            </Popover.Trigger>
+            <Popover.Content
+              side="bottom"
+              align="start"
+              sideOffset={4}
+              collisionPadding={8}
+              hideArrow
+              aria-label={text.title}
+              className={styles.dropdownContent}
+              onOpenAutoFocus={(event) => {
+                // Focus goes to the entry being read (or the first), not to the panel itself.
+                event.preventDefault();
+                const list = popoverListRef.current;
+                (list?.querySelector<HTMLElement>('[aria-current="location"]') ?? list?.querySelector<HTMLElement>("a"))?.focus({ preventScroll: true });
+              }}
+            >
+              <nav aria-label={ariaLabel ?? text.navigation} className={lookClasses}>
+                {renderList(popoverListRef)}
+              </nav>
+            </Popover.Content>
+          </Popover>
+        )}
+        {/* While the dropdown is what shows, its list isn't drawn here as well: an entry's data-testid stays unique. */}
+        {!(dropdown && folded) && (
+          <div className={styles.body}>
+            {movingMarker && <span ref={markerRef} aria-hidden="true" className={styles.marker} data-visible="false" />}
+            {renderList(listRef, listId)}
+          </div>
+        )}
       </nav>
     );
-    return sticky ? (
+    return sticky === true ? (
       <Affix asChild offset={stickyOffset} scrollContainerRef={scrollContainerRef}>
         {nav}
       </Affix>
