@@ -441,8 +441,8 @@ export const RightToLeft: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.rightToLeft } } },
   render: () => (
+    // Fills the demo box, so the outline sits against its right edge.
     <Static>
-    <div style={{ maxInlineSize: "16rem" }}>
       <TableOfContents
         dir="rtl"
         defaultActiveId="rtl-b"
@@ -452,7 +452,6 @@ export const RightToLeft: Story = {
           { id: "rtl-c", label: "الخيارات", level: 2 },
         ]}
       />
-    </div>
     </Static>
   ),
 };
