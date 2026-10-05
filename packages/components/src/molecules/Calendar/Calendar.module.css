@@ -14,15 +14,17 @@
   flex-direction: column;
   font-family: var(--dbm-font-family-primary);
   gap: var(--dbm-space-2);
-  /* Seven squares wide for each month on show (`--calendar-months`, set from `numberOfMonths`) and the gaps between
-     them, or all there is, on a screen narrower than that. */
+  /* Seven squares wide (eight with the week numbers: `--calendar-columns`) for each month on show
+     (`--calendar-months`, set from `numberOfMonths`) and the gaps between them, or all there is, on a screen narrower
+     than that. */
   inline-size: calc(
-    var(--calendar-months, 1) * 7 * var(--calendar-cell) + (var(--calendar-months, 1) - 1) * var(--dbm-space-6)
+    var(--calendar-months, 1) * var(--calendar-columns, 7) * var(--calendar-cell) + (var(--calendar-months, 1) - 1) *
+      var(--dbm-space-6)
   );
   max-inline-size: 100%;
   /* Never narrower than seven days of 24px, the smallest target WCAG 2.5.8 allows: in a container narrower than that
      it overflows (and scrolls, if the container does) instead of squeezing the days into each other. */
-  min-inline-size: calc(7 * var(--dbm-space-6));
+  min-inline-size: calc(var(--calendar-columns, 7) * var(--dbm-space-6));
   /* The visually hidden status region (`announce`) is positioned against this. */
   position: relative;
 }
@@ -65,17 +67,85 @@
 /* The months on show side by side. Each keeps its own width, and wraps onto a new row when the container is too narrow
    for the next one. */
 .months {
+  --calendar-shift: calc(var(--dbm-space-4) * -1);
+
   display: flex;
   flex-wrap: wrap;
   gap: var(--dbm-space-4) var(--dbm-space-6);
+  /* A finger moving sideways over the months turns the month; moving up or down still scrolls the page. */
+  touch-action: pan-y;
+}
+
+/* Which way a month change slides in from: the end of the row going forward, its start going back, and the other way
+   round in right-to-left text. */
+.months[data-forward] {
+  --calendar-shift: var(--dbm-space-4);
+}
+
+.months:dir(rtl) {
+  --calendar-shift: var(--dbm-space-4);
+}
+
+.months:dir(rtl)[data-forward] {
+  --calendar-shift: calc(var(--dbm-space-4) * -1);
+}
+
+/* The grid and the heading slide and fade in when the month changes; the buttons stay where they are. Two animations
+   with the same keyframes and different names, swapped on each change, so a second change starts it again. */
+.months[data-motion] .grid,
+.months[data-motion] .caption {
+  animation-duration: var(--dbm-motion-duration-base);
+  animation-fill-mode: both;
+  animation-timing-function: var(--dbm-motion-easing-decelerate);
+}
+
+.months[data-motion="a"] .grid,
+.months[data-motion="a"] .caption {
+  animation-name: monthInA;
+}
+
+.months[data-motion="b"] .grid,
+.months[data-motion="b"] .caption {
+  animation-name: monthInB;
+}
+
+@keyframes monthInA {
+  from {
+    opacity: 0;
+    translate: var(--calendar-shift) 0;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes monthInB {
+  from {
+    opacity: 0;
+    translate: var(--calendar-shift) 0;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .months[data-motion] .grid,
+  .months[data-motion] .caption {
+    animation: none;
+  }
 }
 
 .month {
   display: flex;
-  flex: 0 1 calc(7 * var(--calendar-cell));
+  flex: 0 1 calc(var(--calendar-columns, 7) * var(--calendar-cell));
   flex-direction: column;
   gap: var(--dbm-space-2);
-  min-inline-size: calc(7 * var(--dbm-space-6));
+  min-inline-size: calc(var(--calendar-columns, 7) * var(--dbm-space-6));
 }
 
 /* The previous and next buttons either side of the heading. They keep their place in the row whatever the
@@ -175,6 +245,17 @@
   text-align: center;
 }
 
+/* The week numbers: a column before the days, as wide as one, and not interactive. */
+.weekNumber {
+  block-size: var(--calendar-cell);
+  color: var(--dbm-text-secondary);
+  font-size: var(--calendar-weekday-font);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--dbm-font-weight-medium);
+  padding: 0;
+  text-align: center;
+}
+
 .cell {
   block-size: var(--calendar-cell);
   padding: 0;
@@ -206,6 +287,32 @@
   inset-inline: 0 50%;
 }
 
+/* The strip of a range is rounded where it meets the end of a row, so it reads as a band that wraps rather than as
+   squares cut off. The corners are on the side the row starts or ends, whichever way the text runs. */
+.rowFirst.band::before,
+.rowFirst.bandEnd::before {
+  border-end-start-radius: var(--dbm-radius-md);
+  border-start-start-radius: var(--dbm-radius-md);
+}
+
+.rowLast.band::before,
+.rowLast.bandStart::before {
+  border-end-end-radius: var(--dbm-radius-md);
+  border-start-end-radius: var(--dbm-radius-md);
+}
+
+.rounded .rowFirst.band::before,
+.rounded .rowFirst.bandEnd::before {
+  border-end-start-radius: var(--dbm-radius-full);
+  border-start-start-radius: var(--dbm-radius-full);
+}
+
+.rounded .rowLast.band::before,
+.rounded .rowLast.bandStart::before {
+  border-end-end-radius: var(--dbm-radius-full);
+  border-start-end-radius: var(--dbm-radius-full);
+}
+
 .day {
   align-items: center;
   appearance: none;
@@ -225,6 +332,8 @@
   padding: 0;
   /* Above the range strip drawn behind it. */
   position: relative;
+  /* A drag across days must select days, not their numbers. */
+  user-select: none;
   transition:
     background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
     color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);

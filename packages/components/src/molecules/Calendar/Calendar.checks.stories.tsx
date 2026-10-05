@@ -480,3 +480,153 @@ export const EveryMonthFitsItsField: Story = {
     await userEvent.keyboard("{Escape}");
   },
 };
+
+export const WeekNumbersAlignWithRows: Story = {
+  name: "Week numbers: a column as wide as a day, each number level with its row, and the days keep their widths",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-8)", alignItems: "flex-start" }}>
+      <Calendar defaultMonth="2026-10" today="2026-10-14" aria-label="plain" data-testid="plain" />
+      <Calendar showWeekNumbers defaultMonth="2026-10" today="2026-10-14" aria-label="weeks" data-testid="weeks" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const plain = canvas.getByTestId("plain");
+    const weeks = canvas.getByTestId("weeks");
+    const cellWidth = box(day(plain, "2026-10-14")).width;
+    // Eight columns of one day's width.
+    await expect(Math.abs(box(weeks).width - 8 * cellWidth)).toBeLessThan(1);
+    await expect(Math.abs(box(day(weeks, "2026-10-14")).width - cellWidth)).toBeLessThan(1);
+    const heading = within(weeks).getByRole("columnheader", { name: "Week number" });
+    await expect(Math.abs(box(heading).width - cellWidth)).toBeLessThan(1);
+    // Each number sits in its row.
+    for (const row of weeks.querySelectorAll("tbody tr")) {
+      const number = row.querySelector("th")!;
+      const first = row.querySelector("button")!;
+      await expect(Math.abs(box(number).top - box(first).top)).toBeLessThan(1);
+      await expect(Math.abs(box(number).height - box(first).height)).toBeLessThan(1);
+    }
+    // The week number is before the first day, in the reading direction.
+    await expect(box(weeks.querySelector("tbody th")!).right).toBeLessThanOrEqual(box(day(weeks, "2026-09-27")).left + 0.5);
+  },
+};
+
+export const OnlyTheRowsAMonthNeeds: Story = {
+  name: "Without fixed weeks a four-row month is shorter than a six-row one, by exactly the rows left out",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-8)", alignItems: "flex-start" }}>
+      <Calendar defaultMonth="2026-02" today="2026-10-14" aria-label="fixed" data-testid="fixed" />
+      <Calendar fixedWeeks={false} defaultMonth="2026-02" today="2026-10-14" aria-label="flexible" data-testid="flexible" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const fixed = canvas.getByTestId("fixed");
+    const flexible = canvas.getByTestId("flexible");
+    const rowHeight = box(day(fixed, "2026-02-10")).height;
+    await expect(flexible.querySelectorAll("tbody tr")).toHaveLength(4);
+    await expect(Math.abs(box(fixed).height - box(flexible).height - 2 * rowHeight)).toBeLessThan(1);
+  },
+};
+
+export const StripIsRoundedAtRowEnds: Story = {
+  name: "The strip behind a range is rounded where it meets the end of a row, and square between days",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-8)", alignItems: "flex-start" }}>
+      <Calendar mode="range" defaultMonth="2026-10" today="2026-10-14" defaultValue={["2026-10-08", "2026-10-20"]} aria-label="strip" data-testid="strip-square" />
+      <Calendar rounded mode="range" defaultMonth="2026-10" today="2026-10-14" defaultValue={["2026-10-08", "2026-10-20"]} aria-label="strip rounded" data-testid="strip-round" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const radius = (root: HTMLElement, date: string, corner: string) =>
+      parseFloat(getComputedStyle(day(root, date).closest("td")!, "::before").getPropertyValue(corner));
+    const square = canvas.getByTestId("strip-square");
+    // Oct 10 is the last day of its row (Saturday), Oct 11 the first of the next (Sunday).
+    await expect(radius(square, "2026-10-10", "border-top-right-radius")).toBeGreaterThan(0);
+    await expect(radius(square, "2026-10-11", "border-top-left-radius")).toBeGreaterThan(0);
+    await expect(radius(square, "2026-10-10", "border-top-left-radius")).toBe(0);
+    await expect(radius(square, "2026-10-15", "border-top-left-radius")).toBe(0);
+    await expect(radius(square, "2026-10-15", "border-top-right-radius")).toBe(0);
+    // Rounded draws them as full circles' halves.
+    const round = canvas.getByTestId("strip-round");
+    await expect(radius(round, "2026-10-10", "border-top-right-radius")).toBeGreaterThan(radius(square, "2026-10-10", "border-top-right-radius"));
+  },
+};
+
+export const MonthChangeSlides: Story = {
+  name: "A month change slides the grid in and leaves the buttons still; under reduced motion it does not",
+  render: () => <Calendar defaultMonth="2026-10" today="2026-10-14" aria-label="motion" data-testid="motion" />,
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByTestId("motion");
+    const grid = () => root.querySelector("table")!;
+    const next = within(root).getByRole("button", { name: "Next month" });
+    await expect(getComputedStyle(grid()).animationName).toBe("none");
+    await userEvent.click(next);
+    await expect(getComputedStyle(grid()).animationName).toMatch(/monthIn/);
+    await expect(getComputedStyle(next).animationName).toBe("none");
+    const first = getComputedStyle(grid()).animationName;
+    await userEvent.click(next);
+    await expect(getComputedStyle(grid()).animationName).not.toBe(first);
+    const emulate = (value: "reduce" | "no-preference") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value }] });
+    await emulate("reduce");
+    try {
+      await settle(200);
+      await userEvent.click(next);
+      await expect(getComputedStyle(grid()).animationName).toBe("none");
+    } finally {
+      await emulate("no-preference");
+    }
+  },
+};
+
+export const RealMouseDrag: Story = {
+  name: "Dragging with a real mouse across days chooses the range, and draws it as it goes",
+  render: () => <Calendar mode="range" defaultMonth="2026-10" today="2026-10-14" aria-label="drag" data-testid="drag" />,
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByTestId("drag");
+    const from = day(root, "2026-10-08");
+    const to = day(root, "2026-10-13");
+    await userEvent.pointer([{ keys: "[MouseLeft>]", target: from }, { target: day(root, "2026-10-11") }]);
+    await expect(day(root, "2026-10-10").closest("td")).toHaveAttribute("aria-selected", "true");
+    await expect(from).toHaveClass(/selected/);
+    await userEvent.pointer([{ target: to }, { keys: "[/MouseLeft]", target: to }]);
+    for (const date of ["2026-10-08", "2026-10-09", "2026-10-12", "2026-10-13"]) {
+      await expect(day(root, date).closest("td")).toHaveAttribute("aria-selected", "true");
+    }
+    await expect(day(root, "2026-10-14").closest("td")).toHaveAttribute("aria-selected", "false");
+    await expect(day(root, "2026-10-08")).toHaveAccessibleName(/range start/);
+    await expect(day(root, "2026-10-13")).toHaveAccessibleName(/range end/);
+  },
+};
+
+export const TouchSwipe: Story = {
+  name: "A swipe with a finger turns the month, and the page can still scroll up and down",
+  render: () => (
+    <div>
+      <Calendar defaultMonth="2026-10" today="2026-10-14" aria-label="swipe" data-testid="swipe" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByTestId("swipe");
+    const months = root.querySelector<HTMLElement>("[class*='months']")!;
+    // Sideways is the calendar's; up and down is the page's.
+    await expect(getComputedStyle(months).touchAction).toBe("pan-y");
+    const target = day(root, "2026-10-14");
+    const rect = box(target);
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const fire = (type: string, clientX: number) =>
+      target.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: "touch", pointerId: 3, clientX, clientY: y, isPrimary: true }));
+    fire("pointerdown", x);
+    fire("pointerup", x - 120);
+    await expect(await within(root).findByRole("grid", { name: "November 2026" })).toBeInTheDocument();
+    const later = day(root, "2026-11-10");
+    const fireLater = (type: string, clientX: number) =>
+      later.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: "touch", pointerId: 4, clientX, clientY: y, isPrimary: true }));
+    fireLater("pointerdown", x);
+    fireLater("pointerup", x + 120);
+    await expect(await within(root).findByRole("grid", { name: "October 2026" })).toBeInTheDocument();
+  },
+};

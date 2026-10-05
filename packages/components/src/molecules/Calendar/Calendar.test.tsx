@@ -1223,6 +1223,578 @@ describe("Calendar", () => {
     });
   });
 
+  describe("several dates", () => {
+    const multiple = (props: Partial<CalendarProps> = {}) =>
+      renderCalendar({ mode: "multiple", ...props } as Partial<CalendarProps>);
+    const selectedDates = () =>
+      [...document.querySelectorAll("td[aria-selected='true'] button")].map((button) => (button as HTMLElement).dataset.date);
+
+    it("adds a date when it is chosen and takes it away when it is chosen again", async () => {
+      const onValueChange = vi.fn();
+      multiple({ onValueChange });
+      await userEvent.click(day("2026-10-20"));
+      expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-20"]);
+      await userEvent.click(day("2026-10-08"));
+      expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-08", "2026-10-20"]);
+      await userEvent.click(day("2026-10-20"));
+      expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-08"]);
+      expect(selectedDates()).toEqual(["2026-10-08"]);
+    });
+
+    it("starts from defaultValue and marks every chosen date, however it is ordered", () => {
+      multiple({ defaultValue: ["2026-10-20", "2026-10-03", "2026-10-11"] });
+      expect(selectedDates()).toEqual(["2026-10-03", "2026-10-11", "2026-10-20"]);
+      expect(day("2026-10-03")).toHaveClass(styles.selected ?? "");
+    });
+
+    it("is controlled by value", async () => {
+      const onValueChange = vi.fn();
+      multiple({ value: ["2026-10-03"], onValueChange });
+      await userEvent.click(day("2026-10-04"));
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-03", "2026-10-04"]);
+      expect(selectedDates()).toEqual(["2026-10-03"]);
+    });
+
+    it("chooses with Enter and Space and takes away with the same keys", async () => {
+      const onValueChange = vi.fn();
+      multiple({ onValueChange });
+      focusDay("2026-10-08");
+      await userEvent.keyboard("{Enter}");
+      await userEvent.keyboard(" ");
+      expect(onValueChange.mock.calls).toEqual([[["2026-10-08"]], [[]]]);
+    });
+
+    it("stops adding once maxSelected are chosen, and still lets a chosen one be taken away", async () => {
+      const onValueChange = vi.fn();
+      multiple({ maxSelected: 2, defaultValue: ["2026-10-03", "2026-10-04"], onValueChange });
+      expect(cell("2026-10-05")).toHaveAttribute("aria-disabled", "true");
+      expect(cell("2026-10-03")).not.toHaveAttribute("aria-disabled");
+      await userEvent.click(day("2026-10-05"));
+      expect(onValueChange).not.toHaveBeenCalled();
+      await userEvent.click(day("2026-10-03"));
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-04"]);
+      expect(cell("2026-10-05")).not.toHaveAttribute("aria-disabled");
+    });
+
+    it("counts each date once, and leaves out dates that are not real, with a warning", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      multiple({ value: ["2026-10-03", "2026-10-03", "2026-02-30"] });
+      expect(selectedDates()).toEqual(["2026-10-03"]);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("same date more than once"));
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("must be a real date"));
+    });
+
+    it("warns about a maxSelected that is not a whole number of at least 1", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      multiple({ maxSelected: 0 });
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`maxSelected` must be a whole number of at least 1"));
+    });
+
+    it("is one tab stop, on the first date chosen", () => {
+      multiple({ defaultValue: ["2026-10-20", "2026-10-03"] });
+      const stops = [...document.querySelectorAll("button[data-date]")].filter((button) => button.getAttribute("tabindex") === "0");
+      expect(stops).toHaveLength(1);
+      expect(stops[0]).toHaveAttribute("data-date", "2026-10-03");
+    });
+
+    it("adds today with the Today button, and does not take it away when it is already chosen", async () => {
+      const onValueChange = vi.fn();
+      multiple({ showTodayButton: true, defaultValue: ["2026-10-03"], onValueChange });
+      await userEvent.click(screen.getByRole("button", { name: "Today" }));
+      expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-03", "2026-10-14"]);
+      await userEvent.click(screen.getByRole("button", { name: "Today" }));
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(selectedDates()).toContain("2026-10-14");
+    });
+
+    it("clears every date with Clear", async () => {
+      const onValueChange = vi.fn();
+      multiple({ clearable: true, defaultValue: ["2026-10-03", "2026-10-04"], onValueChange });
+      await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+      expect(onValueChange).toHaveBeenCalledWith([]);
+      expect(selectedDates()).toEqual([]);
+    });
+
+    it("does not change when read-only or disabled", async () => {
+      const onValueChange = vi.fn();
+      const { rerender } = multiple({ readOnly: true, onValueChange });
+      await userEvent.click(day("2026-10-20"));
+      rerender(<Calendar mode="multiple" month="2026-10" today="2026-10-14" disabled onValueChange={onValueChange} />);
+      await userEvent.click(day("2026-10-20"));
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("announces how many dates are chosen", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      multiple();
+      await userEvent.click(day("2026-10-20"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("1 date selected");
+      await userEvent.click(day("2026-10-21"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("2 dates selected");
+    });
+
+    it("is listed in the key as selected once there is a date", () => {
+      multiple({ showLegend: true, defaultValue: ["2026-10-03"] });
+      expect(screen.getByRole("list", { name: "Key" })).toHaveTextContent("Selected");
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = multiple({ defaultValue: ["2026-10-03", "2026-10-09"], maxSelected: 3 });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("submitting with a form", () => {
+    const inputs = () => [...document.querySelectorAll<HTMLInputElement>("input[type='hidden']")].map((input) => [input.name, input.value]);
+
+    it("submits nothing without a name", () => {
+      renderCalendar({ defaultValue: "2026-10-06" });
+      expect(inputs()).toEqual([]);
+    });
+
+    it("submits a single date as its name, an empty string when none is chosen", async () => {
+      const { unmount } = renderCalendar({ name: "arrival" });
+      expect(inputs()).toEqual([["arrival", ""]]);
+      unmount();
+      renderCalendar({ name: "arrival", defaultValue: "2026-10-06" });
+      expect(inputs()).toEqual([["arrival", "2026-10-06"]]);
+    });
+
+    it("follows the choice", async () => {
+      renderCalendar({ name: "arrival" });
+      await userEvent.click(day("2026-10-20"));
+      expect(inputs()).toEqual([["arrival", "2026-10-20"]]);
+    });
+
+    it("submits a range as two values under name[], an empty end while it is open", async () => {
+      renderCalendar({ name: "stay", mode: "range", defaultValue: ["2026-10-06", "2026-10-09"] } as Partial<CalendarProps>);
+      expect(inputs()).toEqual([["stay[]", "2026-10-06"], ["stay[]", "2026-10-09"]]);
+      await userEvent.click(day("2026-10-20"));
+      expect(inputs()).toEqual([["stay[]", "2026-10-20"], ["stay[]", ""]]);
+    });
+
+    it("submits several dates as one name[] each, and none when none is chosen", async () => {
+      renderCalendar({ name: "days", mode: "multiple", defaultValue: ["2026-10-09", "2026-10-06"] } as Partial<CalendarProps>);
+      expect(inputs()).toEqual([["days[]", "2026-10-06"], ["days[]", "2026-10-09"]]);
+      await userEvent.click(day("2026-10-06"));
+      await userEvent.click(day("2026-10-09"));
+      expect(inputs()).toEqual([]);
+    });
+
+    it("reaches a surrounding form's data, and nothing when the calendar is disabled", () => {
+      render(
+        <form data-testid="form">
+          <Calendar name="arrival" month="2026-10" today="2026-10-14" defaultValue="2026-10-06" />
+          <Calendar name="off" month="2026-10" today="2026-10-14" defaultValue="2026-10-07" disabled />
+        </form>,
+      );
+      const data = new FormData(screen.getByTestId("form") as HTMLFormElement);
+      expect([...data.entries()]).toEqual([["arrival", "2026-10-06"]]);
+    });
+  });
+
+  describe("week numbers", () => {
+    it("adds no column unless asked", () => {
+      renderCalendar();
+      expect(screen.queryByRole("rowheader")).toBeNull();
+      expect(screen.getAllByRole("columnheader")).toHaveLength(7);
+    });
+
+    it("adds a column of ISO week numbers, named, taken from each row's Thursday", () => {
+      renderCalendar({ showWeekNumbers: true });
+      expect(screen.getAllByRole("columnheader")).toHaveLength(8);
+      expect(screen.getByRole("columnheader", { name: "Week number" })).toHaveTextContent("Wk");
+      const rows = screen.getAllByRole("rowheader");
+      expect(rows.map((row) => row.textContent)).toEqual(["40", "41", "42", "43", "44", "45"]);
+      expect(rows[1]).toHaveAccessibleName("Week 41");
+    });
+
+    it("takes the same weeks when the week starts on Monday", () => {
+      renderCalendar({ showWeekNumbers: true, weekStartsOn: 1 });
+      expect(screen.getAllByRole("rowheader").map((row) => row.textContent)).toEqual(["40", "41", "42", "43", "44", "45"]);
+    });
+
+    it("takes a row's number from its Thursday, whichever day the rows start on", () => {
+      // A row from Wednesday to Tuesday runs into the next ISO week on its Monday; its Thursday is in the first.
+      renderCalendar({ showWeekNumbers: true, weekStartsOn: 3 });
+      expect(screen.getAllByRole("rowheader").map((row) => row.textContent)).toEqual(["40", "41", "42", "43", "44", "45"]);
+    });
+
+    it("counts the week that holds the new year's first Thursday as week 1, and the last week of a year as 52 or 53", () => {
+      render(<Calendar month="2026-12" today="2026-12-14" showWeekNumbers weekStartsOn={1} />);
+      expect(screen.getAllByRole("rowheader").map((row) => row.textContent)).toEqual(["49", "50", "51", "52", "53", "1"]);
+    });
+
+    it("writes them with formatNumber and names them from labels", () => {
+      const arabic = new Intl.NumberFormat("ar-EG").format;
+      renderCalendar({ showWeekNumbers: true, formatNumber: arabic, labels: { weekNumberShort: "أ", weekNumberColumn: "رقم الأسبوع", weekNumber: (week: number) => `أسبوع ${arabic(week)}` } });
+      expect(screen.getAllByRole("rowheader")[1]).toHaveTextContent(arabic(41));
+      expect(screen.getAllByRole("rowheader")[1]).toHaveAccessibleName(`أسبوع ${arabic(41)}`);
+      expect(screen.getByRole("columnheader", { name: "رقم الأسبوع" })).toBeInTheDocument();
+    });
+
+    it("leaves the number off a row with no day in it", () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" numberOfMonths={2} showWeekNumbers />);
+      const [october] = screen.getAllByRole("grid");
+      const numbers = [...(october as HTMLElement).querySelectorAll("tbody tr")].map((row) => row.firstElementChild?.textContent);
+      // October 2026's last row (1 to 7 November) is empty when the neighbouring days are left out.
+      expect(numbers).toEqual(["40", "41", "42", "43", "44", ""]);
+    });
+
+    it("gives each month its own column, and keeps the days the only tab stop", () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" numberOfMonths={2} showWeekNumbers />);
+      expect(screen.getAllByRole("columnheader", { name: "Week number" })).toHaveLength(2);
+      const stops = [...document.querySelectorAll("button[data-date]")].filter((button) => button.getAttribute("tabindex") === "0");
+      expect(stops).toHaveLength(1);
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = renderCalendar({ showWeekNumbers: true, defaultValue: "2026-10-06" });
+      expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+
+  describe("fixed weeks", () => {
+    const rows = () => document.querySelectorAll("tbody tr").length;
+
+    it("draws six rows for every month by default", () => {
+      renderCalendar();
+      expect(rows()).toBe(6);
+      render(<Calendar month="2026-02" today="2026-02-01" />);
+      expect(document.querySelectorAll("tbody tr").length).toBe(6 + 6);
+    });
+
+    it("draws only the rows a month needs without them", () => {
+      render(<Calendar month="2026-02" today="2026-02-01" fixedWeeks={false} />);
+      expect(rows()).toBe(4);
+    });
+
+    it.each([
+      ["2026-10", 5],
+      ["2026-08", 6],
+      ["2026-02", 4],
+      ["2027-05", 6],
+    ])("draws the rows %s needs: %i", (monthKey, expected) => {
+      render(<Calendar month={monthKey} today={`${monthKey}-01`} fixedWeeks={false} />);
+      expect(rows()).toBe(expected);
+    });
+
+    it("keeps the neighbouring days in the rows it draws", () => {
+      renderCalendar({ fixedWeeks: false });
+      expect(document.querySelector('button[data-date="2026-09-27"]')).toBeInTheDocument();
+      expect(document.querySelector('button[data-date="2026-11-01"]')).toBeNull();
+    });
+
+    it("draws each month of several by its own rows", () => {
+      render(<Calendar defaultMonth="2026-02" today="2026-02-01" numberOfMonths={2} fixedWeeks={false} />);
+      const [february, march] = screen.getAllByRole("grid").map((grid) => grid.querySelectorAll("tbody tr").length);
+      expect([february, march]).toEqual([4, 5]);
+    });
+  });
+
+  describe("the strip of a range at the ends of a row", () => {
+    it("marks the first and last day of each row, for the strip to be rounded there", () => {
+      renderCalendar();
+      expect(cell("2026-10-04")).toHaveClass(styles.rowFirst ?? "");
+      expect(cell("2026-10-10")).toHaveClass(styles.rowLast ?? "");
+      expect(cell("2026-10-07").className).not.toMatch(/row(First|Last)/);
+    });
+
+    it("marks them whatever day the week starts on", () => {
+      renderCalendar({ weekStartsOn: 1 });
+      expect(cell("2026-10-05")).toHaveClass(styles.rowFirst ?? "");
+      expect(cell("2026-10-11")).toHaveClass(styles.rowLast ?? "");
+    });
+  });
+
+  describe("moving between months with motion", () => {
+    const months = () => screen.getByTestId("calendar").querySelector(`.${styles.months}`) as HTMLElement;
+
+    it("starts no animation when the months are first drawn", () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" data-testid="calendar" />);
+      expect(months()).not.toHaveAttribute("data-motion");
+    });
+
+    it("starts one when the month changes, forward for the next month and not for the previous", async () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" data-testid="calendar" />);
+      await userEvent.click(next());
+      expect(months()).toHaveAttribute("data-motion");
+      expect(months()).toHaveAttribute("data-forward");
+      await userEvent.click(previous());
+      expect(months()).not.toHaveAttribute("data-forward");
+    });
+
+    it("swaps between two animations, so each change starts afresh", async () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" data-testid="calendar" />);
+      await userEvent.click(next());
+      const first = months().getAttribute("data-motion");
+      await userEvent.click(next());
+      const second = months().getAttribute("data-motion");
+      expect([first, second].sort()).toEqual(["a", "b"]);
+    });
+
+    it("starts none with animated off", async () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" animated={false} data-testid="calendar" />);
+      await userEvent.click(next());
+      expect(months()).not.toHaveAttribute("data-motion");
+    });
+
+    it("animates a month the keys or a controlled month change turns to", async () => {
+      const { rerender } = render(<Calendar month="2026-10" today="2026-10-14" data-testid="calendar" />);
+      rerender(<Calendar month="2027-01" today="2026-10-14" data-testid="calendar" />);
+      expect(months()).toHaveAttribute("data-motion");
+      expect(months()).toHaveAttribute("data-forward");
+    });
+  });
+
+  describe("announcing a choice", () => {
+    const range = (props: Partial<CalendarProps> = {}) => renderCalendar({ mode: "range", ...props } as Partial<CalendarProps>);
+
+    it("announces the start of a range and then the range", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      range();
+      await userEvent.click(day("2026-10-08"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("Range start Thursday, October 8, 2026");
+      act(() => vi.advanceTimersByTime(1300));
+      await userEvent.click(day("2026-10-12"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("Range Thursday, October 8, 2026 to Monday, October 12, 2026");
+    });
+
+    it("announces a restarted range as a start again", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      range({ defaultValue: ["2026-10-08", "2026-10-12"] });
+      await userEvent.click(day("2026-10-20"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("Range start Tuesday, October 20, 2026");
+    });
+
+    it("uses the labels it is given", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      range({ labels: { rangeStartChosen: (name: string) => `Inicio: ${name}`, rangeChosen: (a: string, b: string) => `${a} → ${b}` } });
+      await userEvent.click(day("2026-10-08"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("Inicio: Thursday, October 8, 2026");
+    });
+
+    it("keeps English for a label left undefined", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      range({ labels: { rangeStartChosen: undefined } });
+      await userEvent.click(day("2026-10-08"));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole("status")).toHaveTextContent("Range start Thursday, October 8, 2026");
+    });
+
+    it("is quiet with announce off, and says nothing for a single date", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { unmount } = range({ announce: false });
+      await userEvent.click(day("2026-10-08"));
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByRole("status")).toHaveTextContent("");
+      unmount();
+      renderCalendar();
+      await userEvent.click(day("2026-10-08"));
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByRole("status")).toHaveTextContent("");
+    });
+  });
+
+  describe("dragging across days", () => {
+    const range = (props: Partial<CalendarProps> = {}) => renderCalendar({ mode: "range", ...props } as Partial<CalendarProps>);
+    const drag = (from: string, to: string) =>
+      userEvent.pointer([{ keys: "[MouseLeft>]", target: day(from) }, { target: day(to) }, { keys: "[/MouseLeft]", target: day(to) }]);
+
+    it("chooses the range from where the press started to where it is let go", async () => {
+      const onValueChange = vi.fn();
+      range({ onValueChange });
+      await drag("2026-10-08", "2026-10-12");
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-08", "2026-10-12"]);
+    });
+
+    it("orders the two ends when dragged backwards", async () => {
+      const onValueChange = vi.fn();
+      range({ onValueChange });
+      await drag("2026-10-12", "2026-10-08");
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-08", "2026-10-12"]);
+    });
+
+    it("treats a press and release on one day as an ordinary click", async () => {
+      const onValueChange = vi.fn();
+      range({ onValueChange });
+      await userEvent.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { keys: "[/MouseLeft]", target: day("2026-10-08") }]);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-08", ""]);
+    });
+
+    it("draws the range as it is dragged", async () => {
+      range();
+      await userEvent.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { target: day("2026-10-11") }]);
+      expect(cell("2026-10-09")).toHaveClass(styles.band ?? "");
+      expect(cell("2026-10-11")).toHaveClass(styles.bandEnd ?? "");
+      expect(day("2026-10-08")).toHaveClass(styles.selected ?? "");
+      await userEvent.pointer({ keys: "[/MouseLeft]", target: day("2026-10-11") });
+    });
+
+    it("draws a range dragged backwards from its first day", async () => {
+      range();
+      await userEvent.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-12") }, { target: day("2026-10-09") }]);
+      expect(cell("2026-10-09")).toHaveClass(styles.bandStart ?? "");
+      expect(cell("2026-10-10")).toHaveClass(styles.band ?? "");
+      await userEvent.pointer({ keys: "[/MouseLeft]", target: day("2026-10-09") });
+    });
+
+    it("chooses nothing when the range is one the rules refuse: too short, too long, or over an unavailable date", async () => {
+      const onValueChange = vi.fn();
+      const { unmount } = range({ minRangeDays: 4, onValueChange });
+      await drag("2026-10-08", "2026-10-10");
+      unmount();
+      const { unmount: unmountLong } = range({ maxRangeDays: 3, onValueChange });
+      await drag("2026-10-08", "2026-10-12");
+      unmountLong();
+      range({ rangeSpansUnavailable: false, isDateDisabled: (date: string) => date === "2026-10-10", onValueChange });
+      await drag("2026-10-08", "2026-10-12");
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("accepts a range that meets the rules", async () => {
+      const onValueChange = vi.fn();
+      range({ minRangeDays: 3, maxRangeDays: 5, onValueChange });
+      await drag("2026-10-08", "2026-10-11");
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-08", "2026-10-11"]);
+    });
+
+    it("does not start from an unavailable day, and not when read-only", async () => {
+      const onValueChange = vi.fn();
+      const { unmount } = range({ min: "2026-10-10", onValueChange });
+      await drag("2026-10-08", "2026-10-12");
+      unmount();
+      range({ readOnly: true, onValueChange });
+      await drag("2026-10-08", "2026-10-12");
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("ends where the pointer is let go, outside the calendar too, choosing nothing there", async () => {
+      const onValueChange = vi.fn();
+      range({ onValueChange });
+      await userEvent.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { target: document.body }, { keys: "[/MouseLeft]", target: document.body }]);
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(cell("2026-10-09").className).not.toMatch(/band/);
+    });
+
+    it("chooses nothing when the drag is cancelled", async () => {
+      const onValueChange = vi.fn();
+      range({ onValueChange });
+      await userEvent.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { target: day("2026-10-12") }]);
+      fireEvent.pointerCancel(day("2026-10-12"), { pointerType: "mouse" });
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(cell("2026-10-10").className).not.toMatch(/band/);
+    });
+
+    it("chooses nothing when the calendar turned read-only during the drag", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      const { rerender } = range({ onValueChange });
+      await user.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { target: day("2026-10-12") }]);
+      rerender(<Calendar mode="range" month="2026-10" today="2026-10-14" readOnly onValueChange={onValueChange} data-testid="calendar" />);
+      await user.pointer({ keys: "[/MouseLeft]", target: day("2026-10-12") });
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("does choose the range when the same gesture is let go with the calendar still editable", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      range({ onValueChange });
+      await user.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { target: day("2026-10-12") }]);
+      await user.pointer({ keys: "[/MouseLeft]", target: day("2026-10-12") });
+      expect(onValueChange).toHaveBeenCalledWith(["2026-10-08", "2026-10-12"]);
+    });
+
+    it("draws no range while a drag that started on an unavailable day goes on", async () => {
+      range({ isDateDisabled: (date: string) => date === "2026-10-08" });
+      await userEvent.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { target: day("2026-10-12") }]);
+      expect(cell("2026-10-10").className).not.toMatch(/band/);
+      await userEvent.pointer({ keys: "[/MouseLeft]", target: day("2026-10-12") });
+    });
+
+    it("does not drag in single or multiple mode", async () => {
+      const onValueChange = vi.fn();
+      renderCalendar({ onValueChange });
+      await drag("2026-10-08", "2026-10-12");
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("moves the calendar to the month the drag ends in", async () => {
+      const onMonthChange = vi.fn();
+      render(<Calendar mode="range" defaultMonth="2026-10" today="2026-10-14" onMonthChange={onMonthChange} />);
+      await drag("2026-10-28", "2026-11-03");
+      // Neighbouring days are drawn, so the end is a real day on show.
+      expect(onMonthChange).toHaveBeenCalledWith("2026-11");
+    });
+  });
+
+  describe("swiping on a touch screen", () => {
+    const touch = (target: Element, type: "pointerDown" | "pointerUp", x: number, y = 100) =>
+      fireEvent[type](target, { pointerType: "touch", clientX: x, clientY: y, pointerId: 7 });
+    const swipe = (from: number, to: number, fromY = 100, toY = 100) => {
+      const grid = screen.getByRole("grid");
+      touch(grid.querySelector("button")!, "pointerDown", from, fromY);
+      touch(grid.querySelector("button")!, "pointerUp", to, toY);
+    };
+    const swipable = () => render(<Calendar defaultMonth="2026-10" today="2026-10-14" />);
+
+    it("turns to the next month on a swipe to the left, and back on a swipe to the right", () => {
+      swipable();
+      swipe(250, 150);
+      expect(title()).toBe("November 2026");
+      swipe(150, 250);
+      expect(title()).toBe("October 2026");
+    });
+
+    it("ignores a short swipe and one that goes mostly up or down", () => {
+      swipable();
+      swipe(200, 170);
+      swipe(250, 150, 100, 260);
+      expect(title()).toBe("October 2026");
+    });
+
+    it("goes the other way in right-to-left text", () => {
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" dir="rtl" />);
+      swipe(250, 150);
+      expect(title()).toBe("September 2026");
+    });
+
+    it("takes only a finger lifted after a finger touched down", () => {
+      swipable();
+      const button = screen.getByRole("grid").querySelector("button")!;
+      fireEvent.pointerDown(button, { pointerType: "touch", clientX: 250, clientY: 100 });
+      fireEvent.pointerUp(button, { pointerType: "mouse", clientX: 150, clientY: 100 });
+      expect(title()).toBe("October 2026");
+    });
+
+    it("ignores a mouse, and a disabled calendar", () => {
+      const { unmount } = swipable();
+      const grid = screen.getByRole("grid");
+      fireEvent.pointerDown(grid.querySelector("button")!, { pointerType: "mouse", clientX: 250, clientY: 100 });
+      fireEvent.pointerUp(grid.querySelector("button")!, { pointerType: "mouse", clientX: 150, clientY: 100 });
+      expect(title()).toBe("October 2026");
+      unmount();
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" disabled />);
+      swipe(250, 150);
+      expect(title()).toBe("October 2026");
+    });
+
+    it("reports the new month", () => {
+      const onMonthChange = vi.fn();
+      render(<Calendar defaultMonth="2026-10" today="2026-10-14" onMonthChange={onMonthChange} />);
+      swipe(250, 150);
+      expect(onMonthChange).toHaveBeenCalledWith("2026-11");
+    });
+  });
+
   describe("text and numbers", () => {
     it("uses the labels it is given for names, months and weekdays, keeping English for the rest", () => {
       renderCalendar({

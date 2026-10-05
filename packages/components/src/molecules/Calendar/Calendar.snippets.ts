@@ -69,6 +69,26 @@ export const calendarSnippets = {
     too, for a booking that can't step over a booked night. */}
 <Calendar mode="range" rangeSpansUnavailable={false} isDateDisabled={(date) => booked.includes(date)} />`,
 
+  multiple: `{/* const [dates, setDates] = useState(["2026-10-06", "2026-10-09"]); */}
+{/* Choosing a date adds it, choosing it again takes it away. The value is a list of "YYYY-MM-DD" strings, reported in
+    date order. maxSelected stops further dates once that many are chosen, and leaves the chosen ones free to remove. */}
+<Calendar mode="multiple" maxSelected={4} value={dates} onValueChange={setDates} />`,
+
+  weekNumbers: `{/* showWeekNumbers adds a column of ISO 8601 week numbers (1 to 53), taken from each row's Thursday. */}
+<Calendar showWeekNumbers weekStartsOn={1} />`,
+
+  flexibleWeeks: `{/* fixedWeeks (the default) draws six rows for every month, so the grid keeps one height. With false a month
+    is drawn as only the rows it needs, four to six, and what is below moves as the month changes. */}
+<Calendar fixedWeeks={false} />`,
+
+  form: `{/* name makes the calendar submit with the form: a date as name, a range as two values under name[] (start, then
+    end), several dates as one name[] each. A disabled calendar submits nothing. */}
+<form onSubmit={handleSubmit}>
+  <Calendar name="arrival" />
+  <Calendar name="stay" mode="range" />
+  <Button type="submit">Submit</Button>
+</form>`,
+
   rounded: `{/* rounded draws the days and both month buttons round — the days, the chosen ones, today's ring and the focus
     ring. The strip behind a range keeps its straight edges. */}
 <Calendar rounded defaultValue="2026-10-06" />`,
@@ -122,6 +142,11 @@ export interface CalendarPlaygroundSnippetArgs {
   max?: string;
   weekStartsOn?: CalendarWeekStart;
   showOutsideDays?: boolean;
+  maxSelected?: number | "";
+  showWeekNumbers?: boolean;
+  fixedWeeks?: boolean;
+  animated?: boolean;
+  dates?: string;
   numberOfMonths?: number;
   captionLayout?: "label" | "dropdown";
   showTodayButton?: boolean;
@@ -144,12 +169,26 @@ export interface CalendarPlaygroundSnippetArgs {
  */
 export function calendarPlaygroundSnippet(args: CalendarPlaygroundSnippetArgs): string {
   const range = args.mode === "range";
+  const multiple = args.mode === "multiple";
+  const list = (args.dates ?? "")
+    .split(",")
+    .map((date) => date.trim())
+    .filter(Boolean)
+    .map((date) => quote(date))
+    .join(", ");
   const state = range
     ? `{/* const [range, setRange] = useState([${quote(args.start ?? "")}, ${quote(args.end ?? "")}]); */}`
-    : `{/* const [date, setDate] = useState(${quote(args.value ?? "")}); */}`;
+    : multiple
+      ? `{/* const [dates, setDates] = useState([${list}]); */}`
+      : `{/* const [date, setDate] = useState(${quote(args.value ?? "")}); */}`;
   const attributes = range
     ? ['mode="range"', "value={range}", "onValueChange={setRange}"]
-    : ["value={date}", "onValueChange={setDate}"];
+    : multiple
+      ? ['mode="multiple"', "value={dates}", "onValueChange={setDates}"]
+      : ["value={date}", "onValueChange={setDate}"];
+  if (multiple && args.maxSelected !== undefined && args.maxSelected !== "" && Number(args.maxSelected) > 0) {
+    attributes.push(`maxSelected={${Number(args.maxSelected)}}`);
+  }
   attributes.push("month={month}", "onMonthChange={setMonth}");
   if (args.min) attributes.push(`min=${quote(args.min)}`);
   if (args.max) attributes.push(`max=${quote(args.max)}`);
@@ -165,6 +204,9 @@ export function calendarPlaygroundSnippet(args: CalendarPlaygroundSnippetArgs): 
     if (args.maxRangeDays !== undefined && args.maxRangeDays !== "" && Number(args.maxRangeDays) > 0) attributes.push(`maxRangeDays={${Number(args.maxRangeDays)}}`);
     if (args.rangeSpansUnavailable === false) attributes.push("rangeSpansUnavailable={false}");
   }
+  if (args.showWeekNumbers) attributes.push("showWeekNumbers");
+  if (args.fixedWeeks === false) attributes.push("fixedWeeks={false}");
+  if (args.animated === false) attributes.push("animated={false}");
   if (args.rounded) attributes.push("rounded");
   if (args.showLegend) attributes.push("showLegend");
   if (args.disabled) attributes.push("disabled");

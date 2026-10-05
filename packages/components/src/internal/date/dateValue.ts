@@ -160,3 +160,13 @@ export function moveDate(date: CivilDate, move: DateMove, weekStartsOn: Weekday)
       return addYears(date, 1);
   }
 }
+
+/**
+ * The ISO 8601 week number (1 to 53) of the week a date is in, where a week runs Monday to Sunday and belongs to the
+ * year that holds its Thursday. For a row of days that starts on another day, pass any date in it that is a Thursday.
+ */
+export function isoWeekNumber(date: CivilDate): number {
+  const isoWeekday = weekdayOf(date) === 0 ? 7 : weekdayOf(date);
+  const thursday = addDays(date, 4 - isoWeekday);
+  return Math.floor(daysBetween({ year: thursday.year, month: 1, day: 1 }, thursday) / 7) + 1;
+}

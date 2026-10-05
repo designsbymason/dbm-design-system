@@ -1,6 +1,6 @@
 import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
-import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, FocusEvent, KeyboardEvent, PointerEvent } from "react";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
@@ -8,7 +8,9 @@ import type { IconSize } from "../../atoms/Icon/Icon.types";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import {
   addDays,
+  daysBetween,
   formatDate,
+  isoWeekNumber,
   formatMonth,
   monthGrid,
   moveDate,
@@ -47,6 +49,9 @@ const FIRST_MONTH = 12;
 const LAST_MONTH = 9999 * 12 + 11;
 /** At most this many months side by side. */
 const MAX_MONTHS = 4;
+/** How far a finger must travel sideways, in pixels, to turn the month, and how much further than it travels up or down. */
+const SWIPE_DISTANCE = 48;
+const SWIPE_DOMINANCE = 2;
 /** How far ahead of the start of a range the unavailable dates are looked for, when a range may not run over them. */
 const SCAN_DAYS = 732;
 
@@ -92,6 +97,12 @@ function buildLabels(format: (value: number) => string, overrides: Partial<Calen
       monthRange: (first, last) => `${first} – ${last}`,
       todayButton: "Today",
       clearButton: "Clear",
+      weekNumberShort: "Wk",
+      weekNumberColumn: "Week number",
+      weekNumber: () => "",
+      rangeStartChosen: (day) => `Range start ${day}`,
+      rangeChosen: (start, end) => `Range ${start} to ${end}`,
+      datesChosen: () => "",
       legend: "Key",
       legendToday: "Today",
       legendSelected: "Selected",
@@ -108,6 +119,10 @@ function buildLabels(format: (value: number) => string, overrides: Partial<Calen
   const { months, weekdays } = merged;
   if (overrides?.monthYear === undefined) {
     merged.monthYear = (year, month) => `${months[month - 1] ?? ""} ${format(year)}`;
+  }
+  if (overrides?.weekNumber === undefined) merged.weekNumber = (week) => `Week ${format(week)}`;
+  if (overrides?.datesChosen === undefined) {
+    merged.datesChosen = (count) => (count === 1 ? `${format(count)} date selected` : `${format(count)} dates selected`);
   }
   if (overrides?.day === undefined) {
     merged.day = ({ year, month, day, weekday }) =>
@@ -132,6 +147,10 @@ function utcMonth(): string {
 
 /** A string that is a real date, else `""`. */
 const dateOrNone = (value: unknown): string => (parseDate(value) ? (value as string) : "");
+
+/** The ISO week number of a row of days: that of its Thursday, which is in the same week as most of the row. */
+const weekNumberOf = (week: CivilDate[]): number =>
+  isoWeekNumber(week.find((civil) => weekdayOf(civil) === 4) ?? (week[0] as CivilDate));
 
 /** The `"YYYY-MM"` of a month index (months counted from year 0). */
 const monthOfIndex = (index: number): string => formatMonth(Math.floor(index / 12), (index % 12) + 1);
@@ -215,6 +234,11 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     minRangeDays: rawMinRangeDays,
     maxRangeDays: rawMaxRangeDays,
     rangeSpansUnavailable = true,
+    maxSelected: rawMaxSelected,
+    name,
+    showWeekNumbers = false,
+    fixedWeeks = true,
+    animated = true,
     today: todayProp,
     size = "md",
     rounded = false,
@@ -235,15 +259,24 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     ...rest
   } = calendarProps;
   const isRange = calendarProps.mode === "range";
+  const isMultiple = calendarProps.mode === "multiple";
 
-  const [uncontrolledSelection, setUncontrolledSelection] = useState<readonly [string, string]>(() =>
-    calendarProps.mode === "range" ? (calendarProps.defaultValue ?? ["", ""]) : [calendarProps.defaultValue ?? "", ""],
+  // What an uncontrolled calendar holds: one date, a start and an end, or any number of dates, by mode.
+  const [uncontrolledSelection, setUncontrolledSelection] = useState<readonly string[]>(() =>
+    calendarProps.mode === "range"
+      ? (calendarProps.defaultValue ?? ["", ""])
+      : calendarProps.mode === "multiple"
+        ? (calendarProps.defaultValue ?? [])
+        : [calendarProps.defaultValue ?? ""],
   );
   // `null` until the person moves to another month: the month on show then follows the chosen date and the clock.
   const [uncontrolledMonth, setUncontrolledMonth] = useState<string | null>(null);
   const [focusedDate, setFocusedDate] = useState<string | null>(null);
   const [focusInside, setFocusInside] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
+  // The date a drag across days started on, with the pointer still down.
+  const [dragFrom, setDragFrom] = useState<string | null>(null);
+  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMemo(() => mergeRefs(ref, rootRef), [ref]);
   const idBase = useId();
@@ -262,15 +295,22 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
   const minRangeDays = isRange ? wholeNumber(rawMinRangeDays, 1, 1) : 1;
   const maxRangeDays = isRange && rawMaxRangeDays !== undefined ? wholeNumber(rawMaxRangeDays, 1, 0) : 0;
 
-  // What is chosen, whichever mode: a start, and — for a range — an end.
-  const rawSelection: readonly [string, string] =
+  // What is chosen, whichever mode.
+  const rawSelection: readonly string[] =
     value === undefined
       ? uncontrolledSelection
       : calendarProps.mode === "range"
         ? (calendarProps.value ?? ["", ""])
-        : [calendarProps.value ?? "", ""];
-  const start = dateOrNone(rawSelection[0]);
+        : calendarProps.mode === "multiple"
+          ? (calendarProps.value ?? [])
+          : [calendarProps.value ?? ""];
+  // Every real date chosen, in date order and without repeats: the one date, the two ends of a range, or all of them.
+  const chosenDates = [...new Set(rawSelection.map(dateOrNone).filter((date) => date !== ""))].sort();
+  const chosenSet = new Set(chosenDates);
+  // The first date chosen (the start of a range) and, for a range, its end.
+  const start = isRange ? dateOrNone(rawSelection[0]) : (chosenDates[0] ?? "");
   const end = isRange ? dateOrNone(rawSelection[1]) : "";
+  const maxSelected = isMultiple && rawMaxSelected !== undefined ? wholeNumber(rawMaxSelected, 1, 0) : 0;
 
   // The months on show: the first one, and as many after it as `numberOfMonths` says (never past December 9999).
   const firstKey = ((): string => {
@@ -286,13 +326,21 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
   const visibleKey = monthKeys[0] as string;
   const shown = { year: Math.floor(firstIndex / 12), month: (firstIndex % 12) + 1 };
 
+  // A change of month starts a slide in its direction. The two animations alternate (`n` odd or even) so a second
+  // change restarts it without remounting the grids, which would drop keyboard focus from the buttons.
+  const [motion, setMotion] = useState({ index: firstIndex, n: 0, forward: true });
+  if (motion.index !== firstIndex) setMotion({ index: firstIndex, n: motion.n + 1, forward: firstIndex > motion.index });
+
   const panels = useMemo(
     () =>
       monthKeys.map((key) => {
         const parsed = parseMonth(key) as { year: number; month: number };
-        return { key, ...parsed, weeks: monthGrid(parsed.year, parsed.month, weekStartsOn) };
+        const weeks = monthGrid(parsed.year, parsed.month, weekStartsOn);
+        // Without fixed weeks, a row with no day of the month in it is left out.
+        const rows = fixedWeeks ? weeks : weeks.filter((week) => week.some((civil) => civil.month === parsed.month));
+        return { key, ...parsed, weeks: rows };
       }),
-    [monthKeys, weekStartsOn],
+    [monthKeys, weekStartsOn, fixedWeeks],
   );
   // The neighbouring months' days would appear twice with more than one month on show, so they are left out.
   const outsideDays = showOutsideDays && count === 1;
@@ -331,14 +379,13 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     return { lowest, highest };
   }, [picking, start, minRangeDays, maxRangeDays, rangeSpansUnavailable, baseUnavailable]);
 
-  const unavailable = useCallback(
-    (date: string): boolean => {
-      if (baseUnavailable(date)) return true;
-      // A date before the start restarts the range, so only the dates from the start on are held to the rules.
-      return ruleBounds !== null && date >= start && (date < ruleBounds.lowest || (ruleBounds.highest !== "" && date > ruleBounds.highest));
-    },
-    [baseUnavailable, ruleBounds, start],
-  );
+  const unavailable = (date: string): boolean => {
+    if (baseUnavailable(date)) return true;
+    // Once as many dates are chosen as are allowed, the others can't be added (the chosen ones can be taken away).
+    if (maxSelected > 0 && chosenSet.size >= maxSelected && !chosenSet.has(date)) return true;
+    // A date before the start restarts the range, so only the dates from the start on are held to the rules.
+    return ruleBounds !== null && date >= start && (date < ruleBounds.lowest || (ruleBounds.highest !== "" && date > ruleBounds.highest));
+  };
   const rangeRules = isRange && (minRangeDays > 1 || maxRangeDays > 0 || !rangeSpansUnavailable);
 
   // The date Tab lands on: the one that last had focus, else the chosen date, else today, else the 1st of the first
@@ -364,10 +411,18 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     showFirst(index < firstIndex ? index : index - (count - 1));
   };
 
-  const commit = (nextStart: string, nextEnd: string): void => {
-    if (value === undefined) setUncontrolledSelection([nextStart, nextEnd]);
-    if (calendarProps.mode === "range") calendarProps.onValueChange?.([nextStart, nextEnd]);
-    else calendarProps.onValueChange?.(nextStart);
+  const commit = (next: readonly string[]): void => {
+    if (value === undefined) setUncontrolledSelection(next);
+    if (calendarProps.mode === "range") calendarProps.onValueChange?.([next[0] ?? "", next[1] ?? ""]);
+    else if (calendarProps.mode === "multiple") calendarProps.onValueChange?.([...next].sort());
+    else calendarProps.onValueChange?.(next[0] ?? "");
+  };
+
+  // Announce a month change or a choice. One status region, so the latest is what is said.
+  const { message: announcement, announce: say } = useAnnouncement();
+  const nameOf = (date: string): string => {
+    const civil = parseDate(date);
+    return civil ? labels.day({ year: civil.year, month: civil.month, day: civil.day, weekday: weekdayOf(civil) }) : date;
   };
 
   const choose = (date: string): void => {
@@ -376,10 +431,20 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     if (parsed) bringIntoView(parsed);
     if (calendarProps.mode === "range") {
       // A first choice, or a new range after a finished one, starts; a choice before the start moves the start.
-      if (start === "" || end !== "" || date < start) commit(date, "");
-      else commit(start, date);
+      if (start === "" || end !== "" || date < start) {
+        commit([date, ""]);
+        if (announce) say(labels.rangeStartChosen(nameOf(date)));
+      } else {
+        commit([start, date]);
+        if (announce) say(labels.rangeChosen(nameOf(start), nameOf(date)));
+      }
+    } else if (calendarProps.mode === "multiple") {
+      // Choosing a date adds it; choosing it again takes it away.
+      const next = chosenSet.has(date) ? chosenDates.filter((chosen) => chosen !== date) : [...chosenDates, date];
+      commit(next);
+      if (announce) say(labels.datesChosen(next.length));
     } else if (date !== start) {
-      commit(date, "");
+      commit([date]);
     }
   };
 
@@ -388,12 +453,81 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     if (!today || !parsed || disabled) return;
     bringIntoView(parsed);
     setFocusedDate(today);
+    // In `multiple` mode choosing a chosen date would take it away, which is not what a Today button is for.
+    if (isMultiple && chosenSet.has(today)) return;
     choose(today);
   };
 
   const clearChoice = (): void => {
-    if (readOnly || disabled || start === "") return;
-    commit("", "");
+    if (readOnly || disabled || chosenDates.length === 0) return;
+    commit([]);
+  };
+
+  /** Whether a range from one date to another could be chosen by dragging, by the same rules as choosing its end. */
+  const rangeAllowed = (from: string, to: string): boolean => {
+    const [low, high] = from <= to ? [from, to] : [to, from];
+    if (baseUnavailable(low) || baseUnavailable(high)) return false;
+    const length = daysBetween(parseDate(low) as CivilDate, parseDate(high) as CivilDate) + 1;
+    if (length < minRangeDays || (maxRangeDays > 0 && length > maxRangeDays)) return false;
+    if (!rangeSpansUnavailable) {
+      for (let offset = 1; offset < Math.min(length, SCAN_DAYS + 1); offset += 1) {
+        if (baseUnavailable(formatDate(addDays(parseDate(low) as CivilDate, offset)))) return false;
+      }
+    }
+    return true;
+  };
+
+  /** A drag across days has ended on another day: choose the range between them, if it is one that can be chosen. */
+  const finishDrag = (from: string, to: string): void => {
+    if (readOnly || from === to || !rangeAllowed(from, to)) return;
+    const [low, high] = from <= to ? [from, to] : [to, from];
+    const parsed = parseDate(high);
+    if (parsed) bringIntoView(parsed);
+    setFocusedDate(to);
+    commit([low, high]);
+    if (announce) say(labels.rangeChosen(nameOf(low), nameOf(high)));
+  };
+  const finishDragRef = useRef(finishDrag);
+  useLayoutEffect(() => {
+    finishDragRef.current = finishDrag;
+  });
+
+  // A drag ends wherever the pointer is let go, which may be outside the calendar.
+  useEffect(() => {
+    if (dragFrom === null) return;
+    const finish = (event: globalThis.PointerEvent) => {
+      const to = dayElement(event.target)?.dataset.date;
+      setDragFrom(null);
+      setHovered(null);
+      if (event.type === "pointerup" && to) finishDragRef.current(dragFrom, to);
+    };
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    return () => {
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+    };
+  }, [dragFrom]);
+
+  const onPointerDown = (event: PointerEvent<HTMLElement>): void => {
+    if (event.pointerType === "touch") {
+      swipeFrom.current = { x: event.clientX, y: event.clientY };
+      return;
+    }
+    const date = dayElement(event.target)?.dataset.date;
+    if (!isRange || event.button !== 0 || readOnly || !date || baseUnavailable(date)) return;
+    setDragFrom(date);
+  };
+
+  /** A finger lifted after a clear sideways swipe turns the month: left for the next in left-to-right text. */
+  const onPointerUp = (event: PointerEvent<HTMLElement>): void => {
+    const from = swipeFrom.current;
+    swipeFrom.current = null;
+    if (event.pointerType !== "touch" || !from || disabled) return;
+    const across = event.clientX - from.x;
+    const down = event.clientY - from.y;
+    if (Math.abs(across) < SWIPE_DISTANCE || Math.abs(across) < Math.abs(down) * SWIPE_DOMINANCE) return;
+    stepMonth((across < 0) === (dir !== "rtl") ? 1 : -1);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>): void => {
@@ -437,7 +571,6 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
   }, [autoFocus]);
 
   // Announce the months on show when they change — not the first time they are shown.
-  const { message: announcement, announce: announceMonth } = useAnnouncement();
   const previousMonths = useRef<string | undefined>(undefined);
   const monthYearLabel = labels.monthYear;
   const monthRangeLabel = labels.monthRange;
@@ -452,17 +585,17 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     const last = keys[keys.length - 1];
     if (!announce || !first || !last) return;
     const firstText = monthYearLabel(first.year, first.month);
-    announceMonth(keys.length > 1 ? monthRangeLabel(firstText, monthYearLabel(last.year, last.month)) : firstText);
-  }, [announce, announceMonth, monthYearLabel, monthRangeLabel, monthsId]);
+    say(keys.length > 1 ? monthRangeLabel(firstText, monthYearLabel(last.year, last.month)) : firstText);
+  }, [announce, say, monthYearLabel, monthRangeLabel, monthsId]);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
     const warn = (message: string) => console.warn(`Calendar: ${message}`);
     const dates: Array<[string, unknown]> = [
-      ["value", calendarProps.mode === "range" ? calendarProps.value?.[0] : calendarProps.value],
-      ["value (end)", calendarProps.mode === "range" ? calendarProps.value?.[1] : undefined],
-      ["defaultValue", calendarProps.mode === "range" ? calendarProps.defaultValue?.[0] : calendarProps.defaultValue],
-      ["defaultValue (end)", calendarProps.mode === "range" ? calendarProps.defaultValue?.[1] : undefined],
+      ...[calendarProps.value, calendarProps.defaultValue].flatMap((chosen, which): Array<[string, unknown]> => {
+        const label = which === 0 ? "value" : "defaultValue";
+        return typeof chosen === "string" || chosen === undefined ? [[label, chosen]] : chosen.map((date, index) => [`${label}[${index}]`, date]);
+      }),
       ["min", rawMin],
       ["max", rawMax],
       ["today", todayProp],
@@ -498,6 +631,12 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     if (count > 1 && captionLayout === "dropdown") {
       warn("with more than one month on show, `captionLayout=\"dropdown\"` gives the fields to the first month only.");
     }
+    if (isMultiple && rawMaxSelected !== undefined && maxSelected === 0) {
+      warn(`\`maxSelected\` must be a whole number of at least 1, but got ${String(rawMaxSelected)} — it is ignored.`);
+    }
+    if (isMultiple && calendarProps.value && new Set(calendarProps.value).size !== calendarProps.value.length) {
+      warn("`value` holds the same date more than once — each date is counted once.");
+    }
     if (isRange && rawMaxRangeDays !== undefined && maxRangeDays === 0) {
       warn(`\`maxRangeDays\` must be a whole number of at least 1, but got ${String(rawMaxRangeDays)} — it is ignored.`);
     }
@@ -527,6 +666,9 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     count,
     captionLayout,
     isRange,
+    isMultiple,
+    rawMaxSelected,
+    maxSelected,
     rawMaxRangeDays,
     maxRangeDays,
     minRangeDays,
@@ -534,8 +676,20 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
 
   // The range on show: what is chosen, and — while the end is still to be chosen — as far as the pointer or the
   // focus has gone, so the person sees what a click would pick.
-  const previewDate = picking ? (hovered ?? (focusInside ? focusedDate : null)) : null;
-  const bandEnd = end !== "" ? end : previewDate !== null && previewDate > start ? previewDate : "";
+  // While a drag is under way, the range on show is the one from where it started to where the pointer is.
+  const dragging = dragFrom !== null;
+  const keyboardPreview = picking && !dragging ? (hovered ?? (focusInside ? focusedDate : null)) : null;
+  let shownStart = start;
+  let shownEnd = end;
+  let bandFrom = start;
+  let bandTo = end !== "" ? end : keyboardPreview !== null && keyboardPreview > start ? keyboardPreview : "";
+  if (dragFrom !== null) {
+    const to = hovered ?? dragFrom;
+    [bandFrom, bandTo] = dragFrom <= to ? [dragFrom, to] : [to, dragFrom];
+    shownStart = bandFrom;
+    shownEnd = bandTo === bandFrom ? "" : bandTo;
+    if (bandTo === bandFrom) bandTo = "";
+  }
 
   const previousUnavailable =
     disabled || firstIndex <= FIRST_MONTH || (min !== "" && visibleKey <= min.slice(0, 7));
@@ -602,7 +756,11 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     return (min !== "" && key < min.slice(0, 7)) || (max !== "" && key > max.slice(0, 7));
   };
 
-  const rootStyle = { "--calendar-months": count, ...style } as CSSProperties;
+  const rootStyle = {
+    "--calendar-months": count,
+    "--calendar-columns": showWeekNumbers ? 8 : 7,
+    ...style,
+  } as CSSProperties;
 
   return (
     <div
@@ -624,7 +782,11 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
         className,
       )}
     >
-      <div className={styles.months}>
+      <div
+        className={styles.months}
+        data-motion={animated && motion.n > 0 ? (motion.n % 2 === 1 ? "a" : "b") : undefined}
+        data-forward={motion.forward ? "" : undefined}
+      >
         {panels.map((panel, panelIndex) => {
           const captionId = `${idBase}-${panelIndex}`;
           const heading = labels.monthYear(panel.year, panel.month);
@@ -697,6 +859,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                 aria-disabled={disabled || undefined}
                 onKeyDown={onKeyDown}
                 onPointerLeave={() => setHovered(null)}
+                onPointerDown={onPointerDown}
+                onPointerUp={onPointerUp}
                 onFocus={(event: FocusEvent<HTMLElement>) => setFocusInside(dayElement(event.target) !== null)}
                 onBlur={(event: FocusEvent<HTMLElement>) => {
                   if (!dayElement(event.relatedTarget)) setFocusInside(false);
@@ -704,6 +868,12 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
               >
                 <thead>
                   <tr>
+                    {showWeekNumbers && (
+                      <th scope="col" className={styles.weekday}>
+                        <span aria-hidden="true">{labels.weekNumberShort}</span>
+                        <VisuallyHidden>{labels.weekNumberColumn}</VisuallyHidden>
+                      </th>
+                    )}
                     {Array.from({ length: 7 }, (_, column) => {
                       const weekday = (weekStartsOn + column) % 7;
                       return (
@@ -718,19 +888,28 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                 <tbody>
                   {panel.weeks.map((week) => (
                     <tr key={formatDate(week[0] as CivilDate)}>
-                      {week.map((civil) => {
+                      {showWeekNumbers &&
+                        (outsideDays || week.some((civil) => civil.month === panel.month) ? (
+                          <th scope="row" className={styles.weekNumber} aria-label={labels.weekNumber(weekNumberOf(week))}>
+                            {formatNumber(weekNumberOf(week))}
+                          </th>
+                        ) : (
+                          // A row with no day in it (a month's last row, when the neighbouring days are left out) has no number.
+                          <td role="gridcell" className={styles.weekNumber} />
+                        ))}
+                      {week.map((civil, column) => {
                         const date = formatDate(civil);
                         const outside = date.slice(0, 7) !== panel.key;
                         if (outside && !outsideDays) return <td key={date} role="gridcell" className={styles.cell} />;
 
-                        const isStart = date === start;
-                        const isEnd = isRange && date === end;
-                        const isSelected = isStart || isEnd;
+                        const isStart = date === shownStart;
+                        const isEnd = isRange && date === shownEnd;
+                        const isSelected = isMultiple ? chosenSet.has(date) : isStart || isEnd;
                         const isToday = date === today;
                         const isUnavailable = unavailable(date);
-                        const inBand = bandEnd !== "" && start !== "" && date > start && date < bandEnd;
-                        const bandStart = bandEnd !== "" && start !== "" && date === start;
-                        const bandStop = bandEnd !== "" && start !== "" && date === bandEnd;
+                        const inBand = bandTo !== "" && bandFrom !== "" && date > bandFrom && date < bandTo;
+                        const bandStart = bandTo !== "" && bandFrom !== "" && date === bandFrom;
+                        const bandStop = bandTo !== "" && bandFrom !== "" && date === bandTo;
                         const marker = markers.get(date);
                         const name = [
                           labels.day({ year: civil.year, month: civil.month, day: civil.day, weekday: weekdayOf(civil) }),
@@ -752,6 +931,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                               inBand && styles.band,
                               bandStart && styles.bandStart,
                               bandStop && styles.bandEnd,
+                              column === 0 && styles.rowFirst,
+                              column === 6 && styles.rowLast,
                             )}
                           >
                             <button
@@ -771,7 +952,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                               onClick={() => choose(date)}
                               onFocus={() => setFocusedDate(date)}
                               onPointerEnter={(event: PointerEvent<HTMLButtonElement>) => {
-                                if (picking && event.pointerType === "mouse") setHovered(date);
+                                if ((picking || dragging) && event.pointerType === "mouse") setHovered(date);
                               }}
                             >
                               {formatNumber(civil.day)}
@@ -829,6 +1010,15 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
           )}
           {footer}
         </div>
+      )}
+      {name !== undefined && name !== "" && !disabled && (
+        <>
+          {isMultiple
+            ? chosenDates.map((date) => <input key={date} type="hidden" name={`${name}[]`} value={date} />)
+            : isRange
+              ? [start, end].map((date, index) => <input key={index} type="hidden" name={`${name}[]`} value={date} />)
+              : <input type="hidden" name={name} value={start} />}
+        </>
       )}
       <VisuallyHidden role="status">{announcement}</VisuallyHidden>
     </div>

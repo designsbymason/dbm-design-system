@@ -6,6 +6,7 @@ export type {
   CalendarMarker,
   CalendarMarkerTone,
   CalendarMode,
+  CalendarMultipleProps,
   CalendarProps,
   CalendarRangeProps,
   CalendarRangeValue,

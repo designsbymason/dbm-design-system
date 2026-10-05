@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import { expect, userEvent, within } from "storybook/test";
 import { useArgs } from "storybook/preview-api";
+import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { Calendar } from "./Calendar";
 import { calendarPlaygroundSnippet, calendarSnippets } from "./Calendar.snippets";
@@ -23,6 +24,12 @@ interface PlaygroundArgs {
   showOutsideDays: boolean;
   numberOfMonths: number;
   captionLayout: CalendarCaptionLayout;
+  dates: string;
+  maxSelected: number | "";
+  showWeekNumbers: boolean;
+  fixedWeeks: boolean;
+  animated: boolean;
+  name: string;
   showTodayButton: boolean;
   clearable: boolean;
   minRangeDays: number | "";
@@ -85,6 +92,12 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   showOutsideDays: { control: false },
   numberOfMonths: { control: false },
   captionLayout: { control: false },
+  dates: { control: false },
+  maxSelected: { control: false },
+  showWeekNumbers: { control: false },
+  fixedWeeks: { control: false },
+  animated: { control: false },
+  name: { control: false },
   showTodayButton: { control: false },
   clearable: { control: false },
   minRangeDays: { control: false },
@@ -123,13 +136,14 @@ const meta: Meta<PlaygroundArgs> = {
   argTypes: {
     mode: {
       control: "radio",
-      options: ["single", "range"],
+      options: ["single", "range", "multiple"],
       description:
-        "What choosing a date means: one date (single), or a first and a last (range) — the first choice is the start, the second the end, and a third starts again. The value is a string for single and a [start, end] pair for range.",
+        "What choosing a date means: one date (single), a first and a last (range) — the first choice is the start, the second the end, and a third starts again — or any number of separate dates (multiple), where choosing a date adds it and choosing it again takes it away. The value is a string for single, a [start, end] pair for range and a list of dates for multiple.",
       table: { defaultValue: { summary: "'single'" } },
     },
     value: {
       control: "text",
+      if: { arg: "mode", eq: "single" },
       description:
         "The chosen date as \"YYYY-MM-DD\" (empty for none) — controlled, in single mode. Pair with onValueChange to update it, or the calendar will appear frozen. In range mode the value is a [start, end] pair of those strings instead, an end of \"\" while it is still to be chosen. (In the Playground, choosing a date in the canvas writes it back here.)",
     },
@@ -183,6 +197,35 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description:
         "Shows the days of the neighbouring months that fill the first and last weeks, dimmed. They can be chosen, which moves the calendar to their month. With false those cells are empty.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    maxSelected: {
+      control: { type: "number", min: 1, step: 1 },
+      if: { arg: "mode", eq: "multiple" },
+      description:
+        "In multiple mode, the most dates that can be chosen. Once that many are, the others are unavailable (the chosen ones stay available, so one can be taken away). Ignored in the other modes.",
+    },
+    name: {
+      control: false,
+      description:
+        "A field name, so the calendar submits with a surrounding form through hidden inputs: a single date as name (an empty string when none is chosen), a range as two values under name[] (start, then end, an empty string for an end not chosen), and several dates as one name[] for each. A disabled calendar submits nothing.",
+    },
+    showWeekNumbers: {
+      control: "boolean",
+      description:
+        "Adds a column of week numbers before the days: the ISO 8601 number (1 to 53, weeks counted from the first one holding four days of the year) of the week each row is in, taken from the row's Thursday. They are not interactive.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    fixedWeeks: {
+      control: "boolean",
+      description:
+        "Whether every month is drawn as six rows of days, so the grid keeps one height whichever month it shows (the default). With false a month is drawn as only the rows it needs, four to six, and what is below the calendar moves as the month changes.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    animated: {
+      control: "boolean",
+      description:
+        "Slides and fades the months in when the month on show changes, in the direction of the change. It is off under the reader's reduced-motion preference whatever this is set to.",
       table: { defaultValue: { summary: "true" } },
     },
     numberOfMonths: {
@@ -343,6 +386,10 @@ const meta: Meta<PlaygroundArgs> = {
     showOutsideDays: true,
     numberOfMonths: 1,
     captionLayout: "label",
+    maxSelected: "",
+    showWeekNumbers: false,
+    fixedWeeks: true,
+    animated: true,
     showTodayButton: false,
     clearable: false,
     minRangeDays: "",
@@ -368,6 +415,9 @@ const meta: Meta<PlaygroundArgs> = {
       showOutsideDays: args.showOutsideDays,
       numberOfMonths: args.numberOfMonths,
       captionLayout: args.captionLayout,
+      showWeekNumbers: args.showWeekNumbers,
+      fixedWeeks: args.fixedWeeks,
+      animated: args.animated,
       showTodayButton: args.showTodayButton,
       clearable: args.clearable,
       today: args.today || undefined,
@@ -379,6 +429,21 @@ const meta: Meta<PlaygroundArgs> = {
       announce: args.announce,
       dir: args.dir,
     };
+    if (args.mode === "multiple") {
+      const dates = args.dates
+        .split(",")
+        .map((date) => date.trim())
+        .filter(Boolean);
+      return (
+        <Calendar
+          {...shared}
+          mode="multiple"
+          maxSelected={args.maxSelected === "" ? undefined : Number(args.maxSelected)}
+          value={dates}
+          onValueChange={(next) => updateArgs({ dates: next.join(", ") })}
+        />
+      );
+    }
     return args.mode === "range" ? (
       <Calendar
         {...shared}
@@ -401,11 +466,16 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Choose a date, step through the months, and drive every prop from the Controls panel. Choosing writes back to `value`. */
 export const Playground: Story = {
-  args: { start: inMonth(8), end: inMonth(12) },
+  args: { start: inMonth(8), end: inMonth(12), dates: `${inMonth(6)}, ${inMonth(9)}, ${inMonth(16)}` },
   // The range's two ends are Playground-only controls (in code the range is the value prop's pair), so they are
   // declared here, not on the meta, where the Properties table would list them as props.
   argTypes: {
-    value: { if: { arg: "mode", neq: "range" } },
+    dates: {
+      control: "text",
+      if: { arg: "mode", eq: "multiple" },
+      description:
+        "The chosen dates in multiple mode, written as YYYY-MM-DD separated by commas. A Playground control only: in code they are the value prop, a list.",
+    },
     start: {
       control: "text",
       if: { arg: "mode", eq: "range" },
@@ -703,6 +773,87 @@ export const RangeLimits: Story = {
       </div>
     </div>
   ),
+};
+
+export const Multiple: Story = {
+  name: "Several dates",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.multiple } } },
+  render: function MultipleRender() {
+    const [dates, setDates] = useState<string[]>([inMonth(6), inMonth(9)]);
+    return (
+      <div style={labelled}>
+        <Calendar mode="multiple" maxSelected={4} defaultMonth={MONTH} value={dates} onValueChange={setDates} aria-label="Days off" showLegend />
+        <Text size="sm" color="secondary" data-testid="multiple-readout">
+          {dates.length === 0 ? "No dates chosen" : `${dates.length} of 4: ${dates.join(", ")}`}
+        </Text>
+      </div>
+    );
+  },
+};
+
+export const WeekNumbers: Story = {
+  name: "Week numbers",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.weekNumbers } } },
+  render: () => (
+    <div style={row}>
+      <Calendar showWeekNumbers weekStartsOn={1} defaultMonth={MONTH} aria-label="Weeks, Monday first" />
+      <Calendar showWeekNumbers numberOfMonths={2} defaultMonth={MONTH} aria-label="Weeks, two months" />
+    </div>
+  ),
+};
+
+export const FlexibleWeeks: Story = {
+  name: "Only the rows a month needs",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.flexibleWeeks } } },
+  render: () => (
+    <div style={row}>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          fixedWeeks (default): six rows
+        </Text>
+        <Calendar defaultMonth="2026-02" aria-label="Six rows" />
+      </div>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          fixedWeeks=&#123;false&#125;: four rows
+        </Text>
+        <Calendar fixedWeeks={false} defaultMonth="2026-02" aria-label="Only the rows needed" />
+      </div>
+    </div>
+  ),
+};
+
+export const InAForm: Story = {
+  name: "In a form",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.form } } },
+  render: function InAFormRender() {
+    const [submitted, setSubmitted] = useState("");
+    return (
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          setSubmitted(
+            [...data.entries()].map(([key, value]) => `${key}=${String(value)}`).join("  "),
+          );
+        }}
+        style={labelled}
+      >
+        <Calendar name="arrival" defaultMonth={MONTH} defaultValue={inMonth(8)} aria-label="Arrival" />
+        <Calendar name="stay" mode="range" defaultMonth={MONTH} defaultValue={[inMonth(10), inMonth(13)]} aria-label="Stay" />
+        <Button type="submit" size="sm">
+          Submit
+        </Button>
+        <Text size="sm" color="secondary" data-testid="submitted">
+          {submitted === "" ? "Nothing submitted yet" : submitted}
+        </Text>
+      </form>
+    );
+  },
 };
 
 export const Rounded: Story = {

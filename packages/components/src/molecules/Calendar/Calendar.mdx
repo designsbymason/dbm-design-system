@@ -27,6 +27,11 @@ export const propOrder = [
   "minRangeDays",
   "maxRangeDays",
   "rangeSpansUnavailable",
+  "maxSelected",
+  "name",
+  "showWeekNumbers",
+  "fixedWeeks",
+  "animated",
   "getMarker",
   "showTodayButton",
   "clearable",
@@ -64,6 +69,11 @@ export const playgroundPropOrder = [
   "minRangeDays",
   "maxRangeDays",
   "rangeSpansUnavailable",
+  "dates",
+  "maxSelected",
+  "showWeekNumbers",
+  "fixedWeeks",
+  "animated",
   "showTodayButton",
   "clearable",
   "today",
@@ -89,12 +99,14 @@ own — a booking view, a schedule, a date filter — or as the grid inside a da
 
 A date is the string `"YYYY-MM-DD"`, never a JavaScript `Date`: a day on a calendar has no time of day and no
 timezone, and a `Date` carries both. So the value is plain text that compares, sorts and submits exactly as it is.
-`value` and `onValueChange` (or an uncontrolled `defaultValue`) hold the choice, and with `mode="range"` the value is a
-`[start, end]` pair. The month on show is `"YYYY-MM"`, held by `month` and `onMonthChange` (or `defaultMonth`).
+`value` and `onValueChange` (or an uncontrolled `defaultValue`) hold the choice; with `mode="range"` the value is a
+`[start, end]` pair, and with `mode="multiple"` a list of any number of separate dates. The month on show is `"YYYY-MM"`, held by `month` and `onMonthChange` (or `defaultMonth`).
 `min`, `max` and `isDateDisabled` rule dates out, `weekStartsOn` sets the first column, and `showOutsideDays` fills the
 first and last weeks with the neighbouring months' days.
 
-Several months can sit side by side (`numberOfMonths`), the month and year can be two select fields for a far-off date
+A mouse can drag across days to choose a range, a finger can swipe sideways to turn the month, a choice is announced to
+screen readers, `name` makes the calendar submit with a form, and `showWeekNumbers`, `fixedWeeks` and `animated` shape
+the grid. Several months can sit side by side (`numberOfMonths`), the month and year can be two select fields for a far-off date
 (`captionLayout="dropdown"`), a footer can offer **Today** and **Clear** buttons and your own content, a day can carry a
 marker (`getMarker`), and a range can be limited in length or kept from running over an unavailable date.
 
@@ -138,7 +150,9 @@ calendar is seven of them wide.
 
 With `mode="range"` the first choice is the start of the range and the second the end; a third starts again, and a
 choice before the start moves the start. While the end is still to be chosen, the range is previewed up to the day the
-pointer or the keyboard focus is on.
+pointer or the keyboard focus is on. With a mouse you can also press on the first day and drag to the last: the range is
+drawn as you go and chosen when you let go (by the same limits as choosing its end). The strip behind a range is rounded
+where it meets the end of a row.
 
 <Canvas of={CalendarStories.Range} />
 
@@ -206,6 +220,36 @@ every date after the first unavailable one, for a booking that can't step over a
 start still restarts the range.
 
 <Canvas of={CalendarStories.RangeLimits} />
+
+### Several dates
+
+With `mode="multiple"` choosing a date adds it and choosing it again takes it away. The value is a list, reported in date
+order; `maxSelected` stops further dates once that many are chosen (the chosen ones stay free, so one can be taken away).
+Each change is announced as a count — "2 dates selected".
+
+<Canvas of={CalendarStories.Multiple} />
+
+### Week numbers
+
+`showWeekNumbers` adds a column of ISO 8601 week numbers before the days, taken from each row's Thursday. They are not
+interactive and are named ("Week 41") for screen readers.
+
+<Canvas of={CalendarStories.WeekNumbers} />
+
+### Only the rows a month needs
+
+A month is drawn as six rows by default, so the grid keeps one height whichever month it shows and nothing below moves.
+`fixedWeeks={false}` draws only the rows the month needs — four to six — and what is below the calendar moves as the month
+changes.
+
+<Canvas of={CalendarStories.FlexibleWeeks} />
+
+### In a form
+
+`name` makes the calendar submit with a surrounding `<form>`, through hidden inputs: a single date as `name`, a range as two
+values under `name[]` (start, then end), and several dates as one `name[]` each. A disabled calendar submits nothing.
+
+<Canvas of={CalendarStories.InAForm} />
 
 ### Weeks that start on Monday
 
@@ -283,6 +327,8 @@ same function.
   type into.
 - Don't put a lot into a marker's `content`: it sits under the number in a slot as high as the text, and it is hidden from
   assistive technology, so give it a short `label`.
+- Don't expect a swipe to choose a range on a touch screen: it turns the month. Choose with two taps.
+- Don't turn `fixedWeeks` off in a layout where a button or a note sits directly under the calendar: it will move.
 - Don't use `rangeSpansUnavailable={false}` with a rule that makes many dates unavailable (every weekend): a range could
   then never run over one.
 
@@ -303,6 +349,11 @@ same function.
 - In `range` mode, tell the person what to do next. After the first choice the value is `[start, ""]` — show "choose
   the last day" beside it, as the range story does — and treat a range with an empty end as not finished.
 - A range of one day is allowed: choosing the start again as the end gives `[date, date]`.
+- Offer `mode="multiple"` for days off, availability, or any set of dates that aren't one run, and `maxSelected` when only
+  so many make sense.
+- Leave `fixedWeeks` on unless something below the calendar is allowed to jump as the month changes.
+- Dragging is a mouse shortcut, never the only way: a click on the first day and a click on the last does the same, and the
+  keyboard has Enter. On a touch screen a tap does it, and a swipe turns the month.
 - Use two months for a range that is likely to cross a month, and one for a single date. Remember `month` is then the
   first month on show.
 - A marker is for a fact about a day that the person can't see otherwise — an event, a booking, a price. Give it a `label`
@@ -340,6 +391,13 @@ same function.
   and the range strip, and the weekday headings at least 6.88:1, in every theme; the neighbouring months' days are
   4.70:1 on the page (and step up to the secondary text on a tinted fill, where the quietest text would fall under
   4.5:1). Today's ring is at least 6.08:1 and the focus ring at least 4.16:1 against the page.
+- A choice is announced: in range mode "Range start Thursday, October 8, 2026", then "Range Thursday, October 8, 2026 to
+  Monday, October 12, 2026"; in multiple mode how many dates are chosen. The words are in `labels`, and `announce={false}`
+  turns them off along with the month announcement. A drag is announced when it ends.
+- A mouse drag and a touch swipe are shortcuts: everything they do has a keyboard and a tap equivalent, and neither is
+  required. Under the reader's reduced-motion preference the month slide is off.
+- With `showWeekNumbers` each week's number is a row header named "Week 41"; the column header is named "Week number".
+  The numbers are not in the tab order.
 - With `captionLayout="dropdown"` the month field's button draws the short name but still holds the full one for assistive
   technology, so a screen reader hears "October", never "Oct"; the short name is hidden from it.
 - With `captionLayout="dropdown"` the heading is replaced by two `Select` fields named "Month" and "Year" (translatable);
@@ -430,6 +488,21 @@ const [month, setMonth] = useState("2026-10");
 <Calendar getMarker={(date) => (events.has(date) ? { tone: "info", label: "1 event" } : undefined)} />
 <Calendar size="lg" getMarker={(date) => ({ content: <span>{price(date)}</span>, label: price(date) })} />
 
+// Any number of separate dates, at most four
+<Calendar mode="multiple" maxSelected={4} value={dates} onValueChange={setDates} />
+
+// ISO week numbers, and only the rows each month needs
+<Calendar showWeekNumbers weekStartsOn={1} fixedWeeks={false} />
+
+// Submit with a form: a date as "arrival", a range as two values under "stay[]"
+<form onSubmit={handleSubmit}>
+  <Calendar name="arrival" />
+  <Calendar name="stay" mode="range" />
+</form>
+
+// No slide when the month changes
+<Calendar animated={false} />
+
 // Round days and month buttons
 <Calendar rounded />
 
@@ -480,7 +553,7 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="bg.brand-subtle-hover" usage="the strip behind the days of a range, the day a click would end it on, and the key's range sample" />
 <TokenRow token="bg.brand-subtle" usage="the background of a hovered day" />
 <TokenRow token="text.primary" usage="the day numbers, and the month heading" />
-<TokenRow token="text.secondary" usage="the weekday headings, the key's text, and a neighbouring month's day on a tinted fill" />
+<TokenRow token="text.secondary" usage="the weekday headings, the week numbers, the key's text, and a neighbouring month's day on a tinted fill" />
 <TokenRow token="text.tertiary" usage="a neighbouring month's day on the plain page" />
 <TokenRow token="text.disabled" usage="a day that can't be chosen, and the key's unavailable sample" />
 <TokenRow token="border.brand" usage="the ring marking today" />
@@ -488,9 +561,9 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="icon.on-brand" usage="the outline of a focused, chosen day, and a marker dot on a chosen day" />
 <TokenRow token="border-width.1" usage="today's ring, the lines of a range in forced colours, and the size the month field's clipped full name is reduced to" />
 <TokenRow token="border-width.2" usage="a focused day's outline width" />
-<TokenRow token="radius.md" usage="the corners of a day" />
+<TokenRow token="radius.md" usage="the corners of a day, and of the range strip where it meets the end of a row" />
 <TokenRow token="radius.sm" usage="the corners of a focused day's outline" />
-<TokenRow token="radius.full" usage="the corners of every day, its focus ring and the key's samples when rounded" />
+<TokenRow token="radius.full" usage="the corners of every day, its focus ring, the range strip's row ends and the key's samples when rounded" />
 <TokenRow token="opacity.40" usage="a disabled calendar's dimmed opacity" />
 <TokenRow token="icon-button.size.xs" usage="the width and height of a day, and of the month buttons, at size xs" />
 <TokenRow token="icon-button.size.sm" usage="the width and height of a day, and of the month buttons, at size sm" />
@@ -502,16 +575,18 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="font-size.base" usage="a day at md; the weekday headings at xl" />
 <TokenRow token="font-size.md" usage="a day and the month heading at lg" />
 <TokenRow token="font-size.lg" usage="a day and the month heading at xl" />
-<TokenRow token="font-weight.medium" usage="the weekday headings" />
+<TokenRow token="font-weight.medium" usage="the weekday headings and the week numbers" />
 <TokenRow token="font-weight.semibold" usage="the month heading, today, and the chosen days" />
 <TokenRow token="font-family.primary" usage="calendar typography" />
 <TokenRow token="space.1" usage="the size of a marker dot, and its distance from the bottom of the day" />
 <TokenRow token="line-height.tight" usage="the line height of a marker's content" />
 <TokenRow token="space.2" usage="the gap between the heading row and the grid, and between the buttons and the heading, and between a key entry's sample and its text" />
-<TokenRow token="space.4" usage="the gap between the key's entries, and between rows of months" />
+<TokenRow token="space.4" usage="the gap between the key's entries, between rows of months, and how far the month slides in from" />
 <TokenRow token="space.6" usage="the gap between months side by side, the size of the key's samples, and the least width of a day — seven of them make the calendar's minimum width" />
 <TokenRow token="motion.duration.fast" usage="day hover transitions" />
+<TokenRow token="motion.duration.base" usage="the slide when the month changes" />
 <TokenRow token="motion.easing.standard" usage="day hover transitions" />
+<TokenRow token="motion.easing.decelerate" usage="the slide when the month changes" />
 
 ## Related components
 

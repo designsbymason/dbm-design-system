@@ -13,8 +13,9 @@ export type CalendarSize = "xs" | "sm" | "md" | "lg" | "xl";
  * - `"single"` (the default) — one date.
  * - `"range"` — a first date and a last: the first choice is the start, the second the end, and a third
  *   starts a new range.
+ * - `"multiple"` — any number of separate dates: choosing a date adds it, choosing it again takes it away.
  */
-export type CalendarMode = "single" | "range";
+export type CalendarMode = "single" | "range" | "multiple";
 
 /** The day a week starts on, as `Date#getDay` counts: 0 is Sunday, 1 Monday, … 6 Saturday. */
 export type CalendarWeekStart = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -138,6 +139,27 @@ export interface CalendarLabels {
   todayButton: string;
   /** The text of the footer's button that clears the choice (`clearable`). @default "Clear" */
   clearButton: string;
+  /** The heading of the week-number column as it is drawn (`showWeekNumbers`). @default "Wk" */
+  weekNumberShort: string;
+  /** The accessible name of the week-number column. @default "Week number" */
+  weekNumberColumn: string;
+  /** The accessible name of a week's number, given the plain number. @default `Week ${number}`, written with `formatNumber` */
+  weekNumber: (week: number) => string;
+  /**
+   * Announced when the start of a range has been chosen, given the chosen day's name (as `day` writes it).
+   * @default `Range start ${day}`
+   */
+  rangeStartChosen: (day: string) => string;
+  /**
+   * Announced when the end of a range has been chosen, given the names of its two days.
+   * @default `Range ${start} to ${end}`
+   */
+  rangeChosen: (start: string, end: string) => string;
+  /**
+   * Announced when a date is added to or taken from the chosen dates in `multiple` mode, given how many are chosen now.
+   * @default `${count} dates selected` ("1 date selected" for one), the number written with `formatNumber`
+   */
+  datesChosen: (count: number) => string;
   /** The accessible name of the key (`showLegend`). @default "Key" */
   legend: string;
   /** The key's text for today's date. @default "Today" */
@@ -276,6 +298,36 @@ interface CalendarBaseProps
    */
   rangeSpansUnavailable?: boolean;
   /**
+   * In `multiple` mode, the most dates that can be chosen. Once that many are, the others are unavailable (the chosen
+   * ones stay available, so one can be taken away). Ignored in the other modes.
+   */
+  maxSelected?: number;
+  /**
+   * A field name, so the calendar submits with a surrounding `<form>` through hidden inputs: a single date as `name`
+   * (an empty string when none is chosen), a range as two values under `name[]` (start, then end, an empty string for
+   * an end not chosen), and several dates as one `name[]` for each. A `disabled` calendar submits nothing.
+   */
+  name?: string;
+  /**
+   * Adds a column of week numbers before the days: the ISO 8601 number (1 to 53, weeks counted from the first one
+   * holding four days of the year) of the week each row is in, taken from the row's Thursday. They are not interactive.
+   * @default false
+   */
+  showWeekNumbers?: boolean;
+  /**
+   * Whether every month is drawn as six rows of days, so the grid keeps one height whichever month it shows (the
+   * default). With `false` a month is drawn as only the rows it needs, four to six, and what is below the calendar moves
+   * as the month changes.
+   * @default true
+   */
+  fixedWeeks?: boolean;
+  /**
+   * Slides and fades the months in when the month on show changes, in the direction of the change. It is off under the
+   * reader's reduced-motion preference whatever this is set to.
+   * @default true
+   */
+  animated?: boolean;
+  /**
    * Draws the days and both month buttons round: a circle for each day, the chosen days, today's ring and the focus
    * ring, and round month buttons. The strip behind a range keeps its straight edges, so it still reads as one run.
    * @default false
@@ -395,5 +447,25 @@ export interface CalendarRangeProps extends CalendarBaseProps {
   onValueChange?: (value: [start: string, end: string]) => void;
 }
 
-/** The props of `Calendar`: single-date props, or — with `mode="range"` — range props. */
-export type CalendarProps = CalendarSingleProps | CalendarRangeProps;
+/** `Calendar` choosing any number of separate dates. */
+export interface CalendarMultipleProps extends CalendarBaseProps {
+  /** Chooses any number of dates: choosing one adds it, choosing it again takes it away. */
+  mode: "multiple";
+  /**
+   * The chosen dates, each `"YYYY-MM-DD"` — controlled. Pair with `onValueChange`. Dates that are not real, and repeats,
+   * are left out, with a warning in development. Order does not matter; they are reported in date order.
+   */
+  value?: readonly string[];
+  /**
+   * The dates an *uncontrolled* calendar starts with. Ignored once `value` is also given.
+   * @default []
+   */
+  defaultValue?: readonly string[];
+  /**
+   * Called each time a date is added or taken away, with all the chosen dates in date order.
+   */
+  onValueChange?: (value: string[]) => void;
+}
+
+/** The props of `Calendar`: single-date props, or — with `mode="range"` or `mode="multiple"` — the props of that mode. */
+export type CalendarProps = CalendarSingleProps | CalendarRangeProps | CalendarMultipleProps;

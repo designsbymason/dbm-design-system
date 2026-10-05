@@ -6,6 +6,7 @@ import {
   compareDates,
   daysBetween,
   daysInMonth,
+  isoWeekNumber,
   formatDate,
   formatMonth,
   isCivilDate,
@@ -223,5 +224,25 @@ describe("moveDate", () => {
     expect(text(moveDate(date, "week-end", 3))).toBe("2026-10-13");
     expect(text(moveDate(d("2026-10-04"), "week-start", 0))).toBe("2026-10-04");
     expect(text(moveDate(d("2026-10-10"), "week-end", 0))).toBe("2026-10-10");
+  });
+});
+
+describe("isoWeekNumber", () => {
+  it.each([
+    ["2026-10-05", 41],
+    ["2026-10-11", 41],
+    ["2026-10-12", 42],
+    ["2021-01-03", 53],
+    ["2021-01-04", 1],
+    ["2020-12-31", 53],
+    ["2026-01-01", 1],
+    ["2024-12-30", 1],
+    ["2025-12-28", 52],
+    ["2025-12-29", 1],
+    ["2016-01-03", 53],
+    ["2016-01-04", 1],
+    ["2024-02-29", 9],
+  ])("%s is in week %i", (value, week) => {
+    expect(isoWeekNumber(d(value))).toBe(week);
   });
 });
