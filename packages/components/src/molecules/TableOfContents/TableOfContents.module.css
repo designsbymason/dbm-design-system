@@ -111,9 +111,8 @@
   min-inline-size: var(--dbm-table-of-contents-number-min-width);
 }
 
-/* The button that opens and closes a group of entries. */
+/* The button that opens and closes a group of entries: a tertiary `IconButton`, which brings its own colours. */
 .groupToggle {
-  color: var(--dbm-icon-default);
   flex-shrink: 0;
 }
 

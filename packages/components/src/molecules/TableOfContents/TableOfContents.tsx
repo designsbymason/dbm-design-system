@@ -581,7 +581,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
                 <IconButton
                   icon={groupIsOpen(index) ? CaretUpIcon : CaretDownIcon}
                   size="xs"
-                  variant="ghost"
+                  variant="tertiary"
                   className={styles.groupToggle}
                   aria-label={text.groupToggle(typeof entry.label === "string" ? entry.label : "section")}
                   aria-expanded={groupIsOpen(index)}
