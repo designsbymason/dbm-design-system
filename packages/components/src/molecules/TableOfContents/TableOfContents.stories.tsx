@@ -123,6 +123,14 @@ function DemoPage({
   );
 }
 
+/**
+ * Wraps an outline whose entries point at ids that aren't on the page (a static demo): a click is cancelled before the
+ * outline sees it, so the browser doesn't follow `#id` and move the Storybook page.
+ */
+function Static({ children }: { children: ReactNode }) {
+  return <div onClickCapture={(event) => event.preventDefault()}>{children}</div>;
+}
+
 // A fixed-render story ignores its own args, so every control it can't honour is turned off
 // (07-storybook-and-documentation-standards.md §5).
 const noControls = {
@@ -276,6 +284,7 @@ export const Sizes: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.sizes } } },
   render: () => (
+    <Static>
     <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-8)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
         <TableOfContents
@@ -292,6 +301,7 @@ export const Sizes: Story = {
         />
       ))}
     </div>
+    </Static>
   ),
 };
 
@@ -299,6 +309,7 @@ export const Tones: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.tones } } },
   render: () => (
+    <Static>
     <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-8)" }}>
       {(["brand", "neutral"] as const).map((tone) => (
         <TableOfContents
@@ -314,6 +325,7 @@ export const Tones: Story = {
         />
       ))}
     </div>
+    </Static>
   ),
 };
 
@@ -322,6 +334,7 @@ export const Nested: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.nested } } },
   render: () => (
+    <Static>
     <TableOfContents
       defaultActiveId="nested-setup"
       items={[
@@ -332,6 +345,7 @@ export const Nested: Story = {
         { id: "nested-usage", label: "Usage" },
       ]}
     />
+    </Static>
   ),
 };
 
@@ -361,6 +375,7 @@ export const WithoutTitle: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.withoutTitle } } },
   render: () => (
+    <Static>
     <TableOfContents
       showTitle={false}
       defaultActiveId="plain-b"
@@ -369,6 +384,7 @@ export const WithoutTitle: Story = {
         { id: "plain-b", label: "Second" },
       ]}
     />
+    </Static>
   ),
 };
 
@@ -379,6 +395,7 @@ export const Controlled: Story = {
     const [active, setActive] = useState<string | undefined>("controlled-usage");
     const ids = ["controlled-overview", "controlled-usage", "controlled-accessibility"];
     return (
+      <Static>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-6)", alignItems: "flex-start" }}>
         <TableOfContents
           activeId={active}
@@ -397,6 +414,7 @@ export const Controlled: Story = {
           ))}
         </div>
       </div>
+      </Static>
     );
   },
 };
@@ -405,6 +423,7 @@ export const Translated: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.translated } } },
   render: () => (
+    <Static>
     <TableOfContents
       labels={{ title: "Sur cette page", navigation: "Table des matières" }}
       defaultActiveId="fr-b"
@@ -413,6 +432,7 @@ export const Translated: Story = {
         { id: "fr-b", label: "Utilisation" },
       ]}
     />
+    </Static>
   ),
 };
 
@@ -421,6 +441,7 @@ export const RightToLeft: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: tableOfContentsSnippets.rightToLeft } } },
   render: () => (
+    <Static>
     <div style={{ maxInlineSize: "16rem" }}>
       <TableOfContents
         dir="rtl"
@@ -432,6 +453,7 @@ export const RightToLeft: Story = {
         ]}
       />
     </div>
+    </Static>
   ),
 };
 
