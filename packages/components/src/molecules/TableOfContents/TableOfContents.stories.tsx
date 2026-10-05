@@ -1255,3 +1255,34 @@ export const DropdownOnAPhoneInteraction: Story = {
     await expect(within(bar).queryAllByRole("link")).toHaveLength(0);
   },
 };
+
+export const DropdownInAScrollingPageInteraction: Story = {
+  name: "A choice scrolls all the way, in a page that scrolls too — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  // A Docs page is a scrolling document with the demo somewhere in it: closing the panel hands focus back to its button,
+  // and that must not cut the smooth scroll to the section short.
+  render: () => (
+    <div>
+      <div style={{ blockSize: "30rem" }} aria-hidden="true" />
+      <DropdownDemo prefix="dpg" />
+      <div style={{ blockSize: "60rem" }} aria-hidden="true" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("article");
+    const bar = canvas.getByTestId("dropdown-toc");
+    box.scrollIntoView({ block: "center" });
+    await userEvent.click(within(bar).getByRole("button"));
+    const panel = await within(document.body).findByRole("dialog", { name: "On this page" });
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await userEvent.click(within(panel).getByRole("link", { name: "Section 7" }));
+    const heading = canvasElement.querySelector<HTMLElement>("#dpg-s7") as HTMLElement;
+    await waitFor(
+      () => expect(heading.getBoundingClientRect().top - box.getBoundingClientRect().top).toBeLessThan(bar.getBoundingClientRect().height + 4),
+      { timeout: 4000 },
+    );
+    await expect(box.scrollTop).toBeGreaterThan(300);
+  },
+};

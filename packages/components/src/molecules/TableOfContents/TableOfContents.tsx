@@ -672,6 +672,14 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
               hideArrow
               aria-label={text.title}
               className={styles.dropdownContent}
+              onCloseAutoFocus={(event) => {
+                // Radix gives focus back to the button with a plain `focus()`, which scrolls the page to reveal it and cuts
+                // short the smooth scroll to the section that was just chosen. Give it back without scrolling — unless a
+                // key press has already put focus on the section, which stays where it is.
+                event.preventDefault();
+                const holder = document.activeElement;
+                if (!holder || holder === document.body) toggleRef.current?.focus({ preventScroll: true });
+              }}
               onOpenAutoFocus={(event) => {
                 // Focus goes to the entry being read (or the first), not to the panel itself.
                 event.preventDefault();
