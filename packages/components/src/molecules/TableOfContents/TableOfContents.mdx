@@ -172,8 +172,10 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
 
 ## Best practices
 
-- The marked entry is the last heading that has reached the top of the scrolling area. Above the first
-  heading nothing is marked, which is honest about an introduction that belongs to no section.
+- The marked entry is the last heading that has reached the top of the scrolling area. Before any has,
+  it is the first heading showing in the area, so an outline is marked on load when a heading is in view.
+  When the first heading is still below the fold nothing is marked, which is honest about an introduction
+  that belongs to no section.
 - At the very end of the page the last entry is marked even if its heading can never reach the top, so
   a short final section isn't unreachable.
 - Leave some room after the last section, as a long page usually does, so every section can be scrolled

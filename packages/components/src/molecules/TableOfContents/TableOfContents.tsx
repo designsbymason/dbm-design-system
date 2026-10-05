@@ -192,6 +192,19 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
             currentTop = top;
           }
         }
+        // Nothing has reached the top yet (the first heading sits a little below it): the first heading showing
+        // in the scrolling area is the one being read. One still below the fold marks nothing.
+        if (current === undefined) {
+          const bottom = container ? container.getBoundingClientRect().bottom : window.innerHeight;
+          let firstTop = Infinity;
+          for (const id of ids) {
+            const top = document.getElementById(id)?.getBoundingClientRect().top;
+            if (top !== undefined && top > limit && top < bottom && top < firstTop) {
+              current = id;
+              firstTop = top;
+            }
+          }
+        }
         // A short last section can never reach the top; at the very end of the page it is the one being read.
         const area = container ?? document.documentElement;
         const atEnd = area.scrollHeight > area.clientHeight && Math.ceil(area.scrollTop + area.clientHeight) >= area.scrollHeight - 1;

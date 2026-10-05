@@ -451,6 +451,9 @@ export const ScrollspyInteraction: Story = {
     const heading = (key: string) => canvasElement.querySelector<HTMLElement>(`#spy-${key}`) as HTMLElement;
     const topOf = (element: HTMLElement) => element.getBoundingClientRect().top - box.getBoundingClientRect().top;
 
+    // On load, the first section is showing (a little below the top edge), so it is the one marked.
+    await waitFor(() => expect(currentEntry(nav)).toBe("Overview"));
+
     // Scrolling the box moves the marked entry to the last heading that has reached its top.
     box.scrollTo({ top: box.scrollTop + topOf(heading("usage")), behavior: "instant" });
     await waitFor(() => expect(currentEntry(nav)).toBe("Usage"));

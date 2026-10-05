@@ -67,7 +67,7 @@ export interface TableOfContentsProps
   activeId?: string;
   /**
    * The id of the entry marked as current at first — uncontrolled. Afterwards the outline follows the scroll position:
-   * the last heading that has reached the top of the scrolling area.
+   * the last heading that has reached the top of the scrolling area, or, before any has, the first one showing in it.
    */
   defaultActiveId?: string;
   /** Called when the current entry changes, by scrolling or by a click, with its id (or `undefined` when none). */

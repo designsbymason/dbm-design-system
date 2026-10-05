@@ -230,8 +230,9 @@ describe("TableOfContents — the current entry", () => {
     expect(screen.getByRole("link", { name: "Intro" })).not.toHaveAttribute("aria-current");
   });
 
-  it("follows the scroll position: the last heading that has reached the top", async () => {
-    layout({ intro: 100, setup: 400, usage: 800 });
+  it("follows the scroll position: the last heading that has reached the top, or the first one showing before any has", async () => {
+    // The headings start below the bottom of the (768px tall) window.
+    layout({ intro: 1000, setup: 1400, usage: 1800 });
     const onActiveIdChange = vi.fn();
     render(
       <>
@@ -239,18 +240,49 @@ describe("TableOfContents — the current entry", () => {
         <TableOfContents items={items} onActiveIdChange={onActiveIdChange} />
       </>,
     );
-    // Above the first heading, nothing is marked.
+    // The first heading is still below the fold: nothing is marked.
     expect(current()).toBeNull();
-    scrollTo(150);
+    scrollTo(300);
     await waitFor(() => expect(current()).toBe("Intro"));
-    scrollTo(450);
+    scrollTo(1050);
+    await waitFor(() => expect(current()).toBe("Intro"));
+    scrollTo(1450);
     await waitFor(() => expect(current()).toBe("Setup"));
-    scrollTo(900);
+    scrollTo(1900);
     await waitFor(() => expect(current()).toBe("Usage"));
-    expect(onActiveIdChange.mock.calls.map(([id]) => id)).toEqual(["Intro", "Setup", "Usage"].map((label) => label.toLowerCase()));
+    expect(onActiveIdChange.mock.calls.map(([id]) => id)).toEqual(["intro", "setup", "usage"]);
     scrollTo(0);
     await waitFor(() => expect(current()).toBeNull());
     expect(onActiveIdChange).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it("marks the first heading on load when it is showing, though it hasn't reached the top", () => {
+    layout({ intro: 100, setup: 400, usage: 800 });
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} />
+      </>,
+    );
+    expect(current()).toBe("Intro");
+  });
+
+  it("marks only a heading showing inside the scrolling box, not one below its bottom", () => {
+    const box = document.createElement("div");
+    document.body.appendChild(box);
+    const rect = (top: number, bottom: number) => ({ top, bottom, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON: () => ({}) });
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      if (this === box) return rect(0, 300);
+      return rect(this.id === "intro" ? 400 : 900, 0);
+    });
+    render(
+      <>
+        <Page />
+        <TableOfContents items={items} scrollContainerRef={{ current: box }} />
+      </>,
+    );
+    expect(current()).toBeNull();
+    box.remove();
   });
 
   it("starts where the page already is", () => {
