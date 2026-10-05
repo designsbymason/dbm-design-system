@@ -309,6 +309,13 @@ describe("TableOfContents — the current entry", () => {
     await waitFor(() => expect(current()).toBe("Setup"));
   });
 
+  it("keeps the marked entry when none of the sections are on the page, however the page scrolls", async () => {
+    render(<TableOfContents items={items} defaultActiveId="setup" />);
+    scrollTo(500);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(current()).toBe("Setup");
+  });
+
   it("counts a heading as reached `scrollOffset` pixels below the top", async () => {
     layout({ intro: 0, setup: 400, usage: 800 });
     render(

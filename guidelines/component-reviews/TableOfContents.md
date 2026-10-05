@@ -30,3 +30,11 @@
 **Not yet done (for the final review):** a keyboard walk through the Docs page's own Playground; all four themes by eye (three looked at); a real touch device; a screen-reader pass (checked by structure and names, not by listening); forced colours looked at (the CSS is written and the structure tested, not emulated); a server render (the reading path guards `document` inside an effect, but no SSR test renders it); the story-controls driving check from `07` §5.
 
 **Known limits:** reading headings costs a first paint with no outline on the server; a long outline doesn't scroll its own current entry into view (put it in a box with a height); `scrollOffset` is a number of pixels, not a token step (it matches a header's real height); a heading with no `id` is skipped, not given one; the outline isn't sticky on its own (wrap it in `Affix`).
+
+## Follow-ups after the user's first look (2026-10-04)
+
+- **A first heading showing on load wasn't marked** (component bug): the first heading sits a little below the top edge, so none had "reached the top". Before any has, the first one showing in the scrolling area is now marked; one below the fold marks nothing.
+- **Static demo stories navigated Storybook on a click** (story bug): their entries point at ids that aren't on the page, so the browser followed `#id`. A `Static` wrapper cancels the click in those stories.
+- **A page scroll cleared the marked entry of an outline with no sections on the page** (component bug, seen as most Variants stories showing no current entry on the Docs page): the scroll listener measured against nothing and set the mark to undefined. With none of the entries' targets on the page the mark is now left alone (a unit test, killed by removing the guard).
+- **The `items` fields table was a plain Markdown table**, unlike the main Properties table: it is now a `PropertiesTable` from a hidden `TableOfContentsItem.stories.tsx` (ADR-0013's pattern; the hidden file needs one story to be indexed).
+- **Snippets re-checked**: every snippet typechecked as written against the real components (one attribute to a line); the sticky-offset snippet now matches its story (a scrolling box with a 40px header, `scrollOffset={40}`).

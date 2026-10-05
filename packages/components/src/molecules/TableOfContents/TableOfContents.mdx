@@ -6,6 +6,7 @@ import { Link } from "../../atoms/Link";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Breadcrumb } from "../Breadcrumb";
 import * as TableOfContentsStories from "./TableOfContents.stories";
+import * as TableOfContentsItemStories from "./TableOfContentsItem.stories";
 
 export const propOrder = [
   "items",
@@ -71,13 +72,11 @@ Scroll the article, and click an entry: the outline follows the scroll and the c
 
 <PropertiesTable of={TableOfContentsStories} order={propOrder} />
 
-Each entry of `items` is an object with `id`, `label` and an optional `level`:
+### items entries
 
-| Field | Type | Meaning |
-|---|---|---|
-| `id` | `string` | The id of the element the entry points at; the link goes to `#id`. |
-| `label` | `ReactNode` | The entry's text. |
-| `level` | `1` \| `2` \| `3` \| `4` | How deeply it is nested, indented one step per level. Defaults to `1`. |
+Each entry of `items` is an object with these fields.
+
+<PropertiesTable of={TableOfContentsItemStories} order={["id", "label", "level"]} />
 
 ## Variants
 

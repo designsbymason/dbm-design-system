@@ -219,6 +219,9 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       let release = 0;
       const update = () => {
         frame = 0;
+        // With none of the sections on the page there is nothing to read a position from, so the mark stays as it
+        // is — a scroll of the page must not clear the entry of an outline that points elsewhere.
+        if (!ids.some((id) => document.getElementById(id))) return;
         if (holdingRef.current) {
           window.clearTimeout(release);
           release = window.setTimeout(() => {

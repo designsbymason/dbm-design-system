@@ -23,19 +23,23 @@ const nestedItems = `[
     { id: "usage", label: "Usage" },
   ]`;
 
-const toc = (attributes = "", items = defaultItems) =>
-  `<TableOfContents${attributes ? ` ${attributes}` : ""}\n  items={${items}}\n/>`;
+/** An outline, one attribute to a line. */
+const toc = (attributes: string[] = [], items = defaultItems) =>
+  `<TableOfContents
+${attributes.map((attribute) => `  ${attribute}
+`).join("")}  items={${items}}
+/>`;
 
 export const tableOfContentsSnippets = {
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — text and spacing */}
-${toc('size="sm"')}`,
+${toc(['size="sm"'])}`,
 
   tones: `{/* tone: "brand" (default) | "neutral". Neutral keeps the current entry in primary text, and is the one to
     use on bg.canvas, where brand text falls under the contrast floor. */}
-${toc('tone="neutral"')}`,
+${toc(['tone="neutral"'])}`,
 
   nested: `{/* level: 1 (default) to 4 — each level is indented one step */}
-${toc("", nestedItems)}`,
+${toc([], nestedItems)}`,
 
   readFromPage: `{/* With no items, the h2 and h3 headings are read from the page, in the browser. Each needs an id.
     Point contentRef at an element to read only its headings. */}
@@ -48,24 +52,26 @@ ${toc("", nestedItems)}`,
   scrollContainer: `{/* The headings live in a scrolling box of your own: tell the outline which one, so it measures and
     scrolls that box instead of the page. */}
 {/* const boxRef = useRef<HTMLDivElement>(null); */}
-<TableOfContents scrollContainerRef={boxRef} items={${defaultItems}} />`,
+${toc(["scrollContainerRef={boxRef}"])}`,
 
   stickyOffset: `{/* scrollOffset (px) is the height of a sticky header over the content: a heading counts as
-    reached, and a click leaves it, just below that header. */}
-${toc("scrollOffset={56}")}`,
+    reached, and a click leaves it, just below that header. Here the headings are in a scrolling box
+    of your own, which has the sticky header inside it. */}
+{/* const boxRef = useRef<HTMLDivElement>(null); */}
+${toc(["scrollContainerRef={boxRef}", "scrollOffset={40}"])}`,
 
   withoutTitle: `{/* The heading is hidden; the list keeps a name for screen readers (labels.navigation) */}
-${toc("showTitle={false}")}`,
+${toc(["showTitle={false}"])}`,
 
   controlled: `{/* const [active, setActive] = useState("usage"); */}
 {/* While activeId is set, scrolling no longer changes the marked entry on its own. */}
-${toc("activeId={active} onActiveIdChange={setActive}")}`,
+${toc(["activeId={active}", "onActiveIdChange={setActive}"])}`,
 
   translated: `{/* labels holds every piece of text the component writes itself */}
-${toc(`labels={{ title: "Sur cette page", navigation: "Table des matières" }}`)}`,
+${toc([`labels={{ title: "Sur cette page", navigation: "Table des matières" }}`])}`,
 
   rightToLeft: `{/* dir="rtl" mirrors the outline: the marker moves to the right edge and levels indent from it */}
-${toc('dir="rtl"')}`,
+${toc(['dir="rtl"'])}`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */
@@ -90,5 +96,5 @@ export function tableOfContentsPlaygroundSnippet(args: TableOfContentsPlayground
   if (args.smoothScroll === false) attributes.push("smoothScroll={false}");
   if (typeof args.scrollOffset === "number" && args.scrollOffset > 0) attributes.push(`scrollOffset={${args.scrollOffset}}`);
   if (args["aria-label"]) attributes.push(`aria-label=${quote(args["aria-label"])}`);
-  return toc(attributes.join(" "));
+  return toc(attributes);
 }
