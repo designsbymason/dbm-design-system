@@ -38,6 +38,11 @@ export interface TableOfContentsItem {
    * @default false
    */
   disabled?: boolean;
+  /**
+   * Test identifier, set on the entry's link — the element a test clicks and reads `aria-current` from. Rendered as
+   * the DOM `data-testid` attribute; it has no visual or behavioural effect.
+   */
+  "data-testid"?: string;
 }
 
 /**

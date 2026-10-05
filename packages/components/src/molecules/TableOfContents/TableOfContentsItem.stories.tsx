@@ -34,6 +34,11 @@ const meta: Meta<TableOfContentsItem> = {
       description: "Dims the entry and blocks it, as aria-disabled; it stays in the page and focusable.",
       table: { defaultValue: { summary: "false" } },
     },
+    "data-testid": {
+      control: false,
+      description:
+        "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors), set on the entry's link. Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    },
     level: {
       control: false,
       options: [1, 2, 3, 4],

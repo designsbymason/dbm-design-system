@@ -636,6 +636,14 @@ describe("TableOfContents — entry extras", () => {
     expect(within(link).getByText("New")).toBeInTheDocument();
   });
 
+  it("puts an entry's data-testid on its link, and never on the other entries", () => {
+    render(<TableOfContents items={[{ id: "a", label: "A", "data-testid": "entry-a" }, { id: "b", label: "B" }]} defaultActiveId="a" />);
+    const link = screen.getByTestId("entry-a");
+    expect(link.tagName).toBe("A");
+    expect(link).toHaveAttribute("aria-current", "location");
+    expect(document.querySelectorAll("[data-testid]")).toHaveLength(1);
+  });
+
   it("disables an entry: aria-disabled, focusable, and a click neither scrolls nor asks to mark it", async () => {
     layout({ intro: 0, setup: 400, usage: 800 });
     const onActiveIdChange = vi.fn();

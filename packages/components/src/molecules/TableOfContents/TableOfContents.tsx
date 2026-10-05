@@ -58,6 +58,7 @@ interface Entry {
   icon?: TableOfContentsItem["icon"];
   trailing?: TableOfContentsItem["trailing"];
   disabled?: boolean;
+  testId?: string;
 }
 
 const clampLevel = (level: number): Level => Math.min(Math.max(Math.trunc(level) || 1, 1), 4) as Level;
@@ -224,6 +225,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
           icon: item.icon,
           trailing: item.trailing,
           disabled: item.disabled,
+          testId: item["data-testid"],
         }));
     const entries = everyEntry.filter((entry) => entry.level >= low && entry.level <= high).map((entry) => ({ ...entry, level: clampLevel(entry.level - low + 1) }));
     const numbers = numbered ? numberEntries(entries, formatNumber) : [];
@@ -568,6 +570,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
                     href={`#${entry.id}`}
                     underline="none"
                     disabled={entry.disabled}
+                    data-testid={entry.testId}
                     className={cx(styles.link, isActive && styles.active)}
                     aria-current={isActive ? "location" : undefined}
                     onClick={(event) => follow(event, entry.id)}

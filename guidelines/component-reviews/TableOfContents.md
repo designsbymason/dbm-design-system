@@ -67,3 +67,7 @@ Three more from the lower-priority list.
 **Mobile recommendation (given, not a feature):** `collapse="auto"`, not sticky, `maxLevel` 2 where the outline is long; no `movingMarker` (nobody watches it on a phone), no `collapsibleGroups` inside an already-folded list.
 
 **Not done:** the moving marker with a wrapping entry in a real narrow column was measured by the geometry check but not looked at on a device; the group buttons add a tab stop each, which the docs say to weigh for short outlines.
+
+## `data-testid` on an `items` entry (2026-10-04, at explicit direction)
+
+An entry can carry `data-testid`, set on its link (the element a test clicks and reads `aria-current` from). `className`, `style` and `id` were considered and left out on purpose: entries get their look from `size`, `tone`, `highlightActive` and the level indent (`trailing` and `icon` cover a one-off emphasis), and an entry's `id` already means the section it points at. One unit test (it lands on the link only, and nowhere else); a deliberate break was caught.
