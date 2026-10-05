@@ -165,7 +165,9 @@ be called `key`, which React keeps for itself.) The words are in `labels`: `lege
 `captionLayout="dropdown"` swaps the heading for a month field and a year field, so a far-off date is one choice away
 instead of many presses of the month buttons. `yearRange` sets the years offered (the hundred before this year and the
 twenty after it, left out), `min` and `max` narrow it further and rule out the months they leave no day in, and the year on
-show is always offered. With several months on show only the first gets the fields.
+show is always offered. The month field's closed button shows a short name ("Oct", from `labels.monthsShort`) so the
+longest months ("September") never push its arrow out of the button; the list it opens shows the full names. With several
+months on show only the first gets the fields.
 
 <Canvas of={CalendarStories.Dropdowns} />
 
@@ -338,6 +340,8 @@ same function.
   and the range strip, and the weekday headings at least 6.88:1, in every theme; the neighbouring months' days are
   4.70:1 on the page (and step up to the secondary text on a tinted fill, where the quietest text would fall under
   4.5:1). Today's ring is at least 6.08:1 and the focus ring at least 4.16:1 against the page.
+- With `captionLayout="dropdown"` the month field's button draws the short name but still holds the full one for assistive
+  technology, so a screen reader hears "October", never "Oct"; the short name is hidden from it.
 - With `captionLayout="dropdown"` the heading is replaced by two `Select` fields named "Month" and "Year" (translatable);
   the grid keeps its name ("October 2026") through a visually hidden heading. They come between the previous and next
   buttons in the tab order, which then reaches the grid.
@@ -482,7 +486,7 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="border.brand" usage="the ring marking today" />
 <TokenRow token="border.focus" usage="a focused day's outline color" />
 <TokenRow token="icon.on-brand" usage="the outline of a focused, chosen day, and a marker dot on a chosen day" />
-<TokenRow token="border-width.1" usage="today's ring, and the lines of a range in forced colours" />
+<TokenRow token="border-width.1" usage="today's ring, the lines of a range in forced colours, and the size the month field's clipped full name is reduced to" />
 <TokenRow token="border-width.2" usage="a focused day's outline width" />
 <TokenRow token="radius.md" usage="the corners of a day" />
 <TokenRow token="radius.sm" usage="the corners of a focused day's outline" />

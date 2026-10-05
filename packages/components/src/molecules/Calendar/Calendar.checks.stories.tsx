@@ -425,3 +425,58 @@ export const FooterKeepsFocus: Story = {
     await expect(clear).toHaveAttribute("aria-disabled", "true");
   },
 };
+
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+export const EveryMonthFitsItsField: Story = {
+  name: "Every month's name fits the month field's button at every size, with the arrow inside the border",
+  render: () => (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", alignItems: "flex-start" }}>
+      {sizes.flatMap((size) =>
+        monthNames.map((_, index) => (
+          <Calendar
+            key={`${size}-${index}`}
+            size={size}
+            captionLayout="dropdown"
+            defaultMonth={`2026-${String(index + 1).padStart(2, "0")}`}
+            today="2026-10-14"
+            aria-label={`${size}-${index + 1}`}
+            data-testid={`${size}-${index + 1}`}
+          />
+        )),
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of sizes) {
+      for (const [index, name] of monthNames.entries()) {
+        const root = canvas.getByTestId(`${size}-${index + 1}`);
+        const trigger = within(root).getByRole("combobox", { name: "Month" });
+        const bounds = box(trigger);
+        const arrow = box(trigger.querySelector("svg")!);
+        // The arrow is inside the button's border box, and the text does not run past its own room.
+        await expect(arrow.right).toBeLessThanOrEqual(bounds.right + 0.5);
+        await expect(arrow.left).toBeGreaterThanOrEqual(bounds.left - 0.5);
+        await expect(trigger.scrollWidth).toBeLessThanOrEqual(trigger.clientWidth + 1);
+        // What is drawn is the short name; the full name is what assistive technology reads.
+        const short = trigger.querySelector<HTMLElement>("[class*='monthShort']")!;
+        const full = trigger.querySelector<HTMLElement>("[class*='monthFull']")!;
+        await expect(short.textContent).toBe(name.slice(0, 3));
+        await expect(getComputedStyle(short).display).not.toBe("none");
+        await expect(box(short).width).toBeGreaterThan(2);
+        // The full name is in the button but clipped to a dot, so it takes no room and is not drawn.
+        await expect(full.textContent).toBe(name);
+        await expect(box(full).width).toBeLessThanOrEqual(2);
+      }
+    }
+    // The list opened from it shows the full names.
+    const root = canvas.getByTestId("md-9");
+    await userEvent.click(within(root).getByRole("combobox", { name: "Month" }));
+    const options = await within(document.body).findAllByRole("option");
+    // What is drawn in the list (`innerText` leaves out the short names that are `display: none`) is the full names.
+    await expect(options.map((option) => option.innerText.trim())).toEqual(monthNames);
+    for (const option of options) await expect(option.scrollWidth).toBeLessThanOrEqual(option.clientWidth + 1);
+    await userEvent.keyboard("{Escape}");
+  },
+};

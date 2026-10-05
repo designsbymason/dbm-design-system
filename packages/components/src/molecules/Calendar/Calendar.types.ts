@@ -88,6 +88,13 @@ export interface CalendarLabels {
    */
   months: readonly string[];
   /**
+   * The twelve month names as they are drawn in the month field's closed button (`captionLayout="dropdown"`), January
+   * first — short enough to leave room for the arrow beside them. The list it opens, and everything announced, uses the
+   * full names in `months`, so keep each one the start of the full name.
+   * @default ["Jan", "Feb", …, "Dec"]
+   */
+  monthsShort: readonly string[];
+  /**
    * The seven weekday names, Sunday first (whichever day the week starts on), written in full. They name the
    * column headings and the days.
    * @default ["Sunday", "Monday", …, "Saturday"]

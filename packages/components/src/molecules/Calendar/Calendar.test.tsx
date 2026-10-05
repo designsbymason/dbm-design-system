@@ -808,6 +808,26 @@ describe("Calendar", () => {
       expect(screen.getByRole("option", { name: "December" })).toHaveAttribute("aria-disabled", "true");
     });
 
+    it("puts the full name and a short one in each month, the short one hidden from assistive technology", async () => {
+      dropdown();
+      expect(monthField().querySelector(`.${styles.monthShort}`)).toHaveAttribute("aria-hidden", "true");
+      expect(monthField().querySelector(`.${styles.monthShort}`)).toHaveTextContent("Oct");
+      expect(monthField().querySelector(`.${styles.monthFull}`)).toHaveTextContent("October");
+      await userEvent.click(monthField());
+      // The list's rows are named by the full name only.
+      expect(await screen.findByRole("option", { name: "September" })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: "Sep" })).toBeNull();
+      expect(screen.getAllByRole("option")).toHaveLength(12);
+    });
+
+    it("takes the short names from labels.monthsShort, and uses the English ones for a list of the wrong length", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      dropdown({ labels: { monthsShort: ["en", "fe", "ma", "ab", "my", "jn", "jl", "ag", "se", "oc", "no", "di"] } });
+      expect(monthField().querySelector(`.${styles.monthShort}`)).toHaveTextContent("oc");
+      dropdown({ labels: { monthsShort: ["x"] } });
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`labels.monthsShort` needs 12 entries"));
+    });
+
     it("writes the years with formatNumber and names the fields from labels", async () => {
       const arabic = new Intl.NumberFormat("ar-EG", { useGrouping: false }).format;
       dropdown({ formatNumber: arabic, labels: { monthSelect: "Mes", yearSelect: "Año" } });

@@ -64,6 +64,7 @@ const defaultMonths = [
   "November",
   "December",
 ] as const;
+const defaultMonthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 const defaultWeekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const defaultWeekdaysShort = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const;
 
@@ -78,6 +79,7 @@ function buildLabels(format: (value: number) => string, overrides: Partial<Calen
       previousMonth: "Previous month",
       nextMonth: "Next month",
       months: defaultMonths,
+      monthsShort: defaultMonthsShort,
       weekdays: defaultWeekdays,
       weekdaysShort: defaultWeekdaysShort,
       monthYear: () => "",
@@ -100,6 +102,7 @@ function buildLabels(format: (value: number) => string, overrides: Partial<Calen
   );
   // A list of the wrong length can't name every month or weekday; the English one stands in (a warning says so).
   if (merged.months.length !== 12) merged.months = defaultMonths;
+  if (merged.monthsShort.length !== 12) merged.monthsShort = defaultMonthsShort;
   if (merged.weekdays.length !== 7) merged.weekdays = defaultWeekdays;
   if (merged.weekdaysShort.length !== 7) merged.weekdaysShort = defaultWeekdaysShort;
   const { months, weekdays } = merged;
@@ -503,6 +506,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     }
     for (const [name, list, length] of [
       ["months", labelOverrides?.months, 12],
+      ["monthsShort", labelOverrides?.monthsShort, 12],
       ["weekdays", labelOverrides?.weekdays, 7],
       ["weekdaysShort", labelOverrides?.weekdaysShort, 7],
     ] as const) {
@@ -646,8 +650,19 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                         className={styles.monthField}
                       >
                         {labels.months.map((name, index) => (
-                          <Select.Option key={name} value={String(index + 1)} disabled={monthOutOfRange(index + 1)}>
-                            {name}
+                          <Select.Option
+                            key={name}
+                            value={String(index + 1)}
+                            textValue={name}
+                            disabled={monthOutOfRange(index + 1)}
+                          >
+                            {/* Both forms of the name, and CSS picks: the list shows the full one, the closed button the
+                                short one, so a long month never pushes the arrow out of the button. The full name is
+                                still in the button for assistive technology, and the short one never is. */}
+                            <span className={styles.monthFull}>{name}</span>
+                            <span className={styles.monthShort} aria-hidden="true">
+                              {labels.monthsShort[index]}
+                            </span>
                           </Select.Option>
                         ))}
                       </Select>

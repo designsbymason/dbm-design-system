@@ -106,6 +106,29 @@
   min-inline-size: 0;
 }
 
+/* A month's name in the month field comes in two forms, and which shows depends on where it is. In the list the full
+   name shows and the short one is gone. In the closed button — the only place with too little room for September —
+   the short one shows, and the full one is kept for assistive technology, hidden the way a screen-reader-only text
+   is (clipped to a dot, a border's width, rather than removed). */
+.monthShort {
+  display: none;
+}
+
+.monthField .monthShort {
+  display: inline;
+}
+
+.monthField .monthFull {
+  block-size: var(--dbm-border-width-1);
+  clip-path: inset(50%);
+  inline-size: var(--dbm-border-width-1);
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+}
+
 /* Seven days of the smallest size leave too little room for two fields between the buttons, so there the fields go on
    a row of their own under them. */
 .sizeXs .headerDropdown {
