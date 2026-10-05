@@ -1,6 +1,6 @@
 import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
 import { cx } from "@dbm-design-system/primitives";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
@@ -86,7 +86,9 @@ export function CalendarPicker({
   }, [view, monthsText, yearsText, say]);
 
   // Moves focus to the cell that should have it, after the grid is drawn: on opening, and after a key that turns it.
-  useEffect(() => {
+  // A layout effect, so focus has moved before the next key arrives: a passive one can lag behind a fast run of keys.
+  // The picker mounts only once it is opened, so it never runs on the server.
+  useLayoutEffect(() => {
     if (!pendingFocus.current) return;
     pendingFocus.current = false;
     const inPage = view === "years" ? Math.min(Math.max(pickerFocus, pageFrom), pageTo) : pickerFocus;

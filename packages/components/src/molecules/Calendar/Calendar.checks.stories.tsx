@@ -449,27 +449,34 @@ export const EveryMonthFitsItsField: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    // Every measure is gathered and judged once at the end: 36 calendars with ten awaited assertions each is slow on a busy runner.
+    const problems: string[] = [];
+    const must = (ok: boolean, what: string): void => {
+      if (!ok) problems.push(what);
+    };
     for (const size of sizes) {
       for (const [index, name] of monthNames.entries()) {
+        const where = `${size} ${name}`;
         const root = canvas.getByTestId(`${size}-${index + 1}`);
         const trigger = within(root).getByRole("combobox", { name: "Month" });
         const bounds = box(trigger);
         const arrow = box(trigger.querySelector("svg")!);
         // The arrow is inside the button's border box, and the text does not run past its own room.
-        await expect(arrow.right).toBeLessThanOrEqual(bounds.right + 0.5);
-        await expect(arrow.left).toBeGreaterThanOrEqual(bounds.left - 0.5);
-        await expect(trigger.scrollWidth).toBeLessThanOrEqual(trigger.clientWidth + 1);
+        must(arrow.right <= bounds.right + 0.5, `${where}: arrow past the right edge`);
+        must(arrow.left >= bounds.left - 0.5, `${where}: arrow past the left edge`);
+        must(trigger.scrollWidth <= trigger.clientWidth + 1, `${where}: text runs past the button`);
         // What is drawn is the short name; the full name is what assistive technology reads.
         const short = trigger.querySelector<HTMLElement>("[class*='monthShort']")!;
         const full = trigger.querySelector<HTMLElement>("[class*='monthFull']")!;
-        await expect(short.textContent).toBe(name.slice(0, 3));
-        await expect(getComputedStyle(short).display).not.toBe("none");
-        await expect(box(short).width).toBeGreaterThan(2);
+        must(short.textContent === name.slice(0, 3), `${where}: short name is "${short.textContent}"`);
+        must(getComputedStyle(short).display !== "none", `${where}: short name is not drawn`);
+        must(box(short).width > 2, `${where}: short name has no width`);
         // The full name is in the button but clipped to a dot, so it takes no room and is not drawn.
-        await expect(full.textContent).toBe(name);
-        await expect(box(full).width).toBeLessThanOrEqual(2);
+        must(full.textContent === name, `${where}: full name is "${full.textContent}"`);
+        must(box(full).width <= 2, `${where}: full name takes room`);
       }
     }
+    await expect(problems).toEqual([]);
     // The list opened from it shows the full names.
     const root = canvas.getByTestId("md-9");
     await userEvent.click(within(root).getByRole("combobox", { name: "Month" }));
