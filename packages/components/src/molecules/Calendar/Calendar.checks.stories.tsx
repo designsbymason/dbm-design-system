@@ -428,57 +428,54 @@ export const FooterKeepsFocus: Story = {
 
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-export const EveryMonthFitsItsField: Story = {
-  name: "Every month's name fits the month field's button at every size, with the arrow inside the border",
+// One story per size: twelve calendars each, because sixty in one test is too slow for a busy runner.
+const everyMonthFits = (size: (typeof sizes)[number]): Story => ({
+  name: `Every month's name fits the month field's button at size ${size}, with the arrow inside the border`,
   render: () => (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", alignItems: "flex-start" }}>
-      {sizes.flatMap((size) =>
-        monthNames.map((_, index) => (
-          <Calendar
-            key={`${size}-${index}`}
-            size={size}
-            captionLayout="dropdown"
-            defaultMonth={`2026-${String(index + 1).padStart(2, "0")}`}
-            today="2026-10-14"
-            aria-label={`${size}-${index + 1}`}
-            data-testid={`${size}-${index + 1}`}
-          />
-        )),
-      )}
+      {monthNames.map((_, index) => (
+        <Calendar
+          key={index}
+          size={size}
+          captionLayout="dropdown"
+          defaultMonth={`2026-${String(index + 1).padStart(2, "0")}`}
+          today="2026-10-14"
+          aria-label={`${size}-${index + 1}`}
+          data-testid={`${size}-${index + 1}`}
+        />
+      ))}
     </div>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Every measure is gathered and judged once at the end: 36 calendars with ten awaited assertions each is slow on a busy runner.
+    // Every measure is gathered and judged once at the end: awaiting each of them is slow on a busy runner.
     const problems: string[] = [];
     const must = (ok: boolean, what: string): void => {
       if (!ok) problems.push(what);
     };
-    for (const size of sizes) {
-      for (const [index, name] of monthNames.entries()) {
-        const where = `${size} ${name}`;
-        const root = canvas.getByTestId(`${size}-${index + 1}`);
-        const trigger = within(root).getByRole("combobox", { name: "Month" });
-        const bounds = box(trigger);
-        const arrow = box(trigger.querySelector("svg")!);
-        // The arrow is inside the button's border box, and the text does not run past its own room.
-        must(arrow.right <= bounds.right + 0.5, `${where}: arrow past the right edge`);
-        must(arrow.left >= bounds.left - 0.5, `${where}: arrow past the left edge`);
-        must(trigger.scrollWidth <= trigger.clientWidth + 1, `${where}: text runs past the button`);
-        // What is drawn is the short name; the full name is what assistive technology reads.
-        const short = trigger.querySelector<HTMLElement>("[class*='monthShort']")!;
-        const full = trigger.querySelector<HTMLElement>("[class*='monthFull']")!;
-        must(short.textContent === name.slice(0, 3), `${where}: short name is "${short.textContent}"`);
-        must(getComputedStyle(short).display !== "none", `${where}: short name is not drawn`);
-        must(box(short).width > 2, `${where}: short name has no width`);
-        // The full name is in the button but clipped to a dot, so it takes no room and is not drawn.
-        must(full.textContent === name, `${where}: full name is "${full.textContent}"`);
-        must(box(full).width <= 2, `${where}: full name takes room`);
-      }
+    for (const [index, name] of monthNames.entries()) {
+      const where = `${size} ${name}`;
+      const root = canvas.getByTestId(`${size}-${index + 1}`);
+      const trigger = within(root).getByRole("combobox", { name: "Month" });
+      const bounds = box(trigger);
+      const arrow = box(trigger.querySelector("svg")!);
+      // The arrow is inside the button's border box, and the text does not run past its own room.
+      must(arrow.right <= bounds.right + 0.5, `${where}: arrow past the right edge`);
+      must(arrow.left >= bounds.left - 0.5, `${where}: arrow past the left edge`);
+      must(trigger.scrollWidth <= trigger.clientWidth + 1, `${where}: text runs past the button`);
+      // What is drawn is the short name; the full name is what assistive technology reads.
+      const short = trigger.querySelector<HTMLElement>("[class*='monthShort']")!;
+      const full = trigger.querySelector<HTMLElement>("[class*='monthFull']")!;
+      must(short.textContent === name.slice(0, 3), `${where}: short name is "${short.textContent}"`);
+      must(getComputedStyle(short).display !== "none", `${where}: short name is not drawn`);
+      must(box(short).width > 2, `${where}: short name has no width`);
+      // The full name is in the button but clipped to a dot, so it takes no room and is not drawn.
+      must(full.textContent === name, `${where}: full name is "${full.textContent}"`);
+      must(box(full).width <= 2, `${where}: full name takes room`);
     }
     await expect(problems).toEqual([]);
     // The list opened from it shows the full names.
-    const root = canvas.getByTestId("md-9");
+    const root = canvas.getByTestId(`${size}-9`);
     await userEvent.click(within(root).getByRole("combobox", { name: "Month" }));
     const options = await within(document.body).findAllByRole("option");
     // What is drawn in the list (`innerText` leaves out the short names that are `display: none`) is the full names.
@@ -486,7 +483,13 @@ export const EveryMonthFitsItsField: Story = {
     for (const option of options) await expect(option.scrollWidth).toBeLessThanOrEqual(option.clientWidth + 1);
     await userEvent.keyboard("{Escape}");
   },
-};
+});
+
+export const EveryMonthFitsItsFieldXs: Story = everyMonthFits("xs");
+export const EveryMonthFitsItsFieldSm: Story = everyMonthFits("sm");
+export const EveryMonthFitsItsFieldMd: Story = everyMonthFits("md");
+export const EveryMonthFitsItsFieldLg: Story = everyMonthFits("lg");
+export const EveryMonthFitsItsFieldXl: Story = everyMonthFits("xl");
 
 export const WeekNumbersAlignWithRows: Story = {
   name: "Week numbers: a column as wide as a day, each number level with its row, and the days keep their widths",
