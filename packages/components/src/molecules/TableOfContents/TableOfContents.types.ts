@@ -59,6 +59,12 @@ export interface TableOfContentsLabels {
   title: string;
   /** The `<nav>`'s accessible name when the heading is hidden (`showTitle={false}`). @default 'Table of contents' */
   navigation: string;
+  /**
+   * The accessible name of the button that opens or closes a group of entries (`collapsibleGroups`), given the group's
+   * heading as text (`"section"` when the entry's label isn't plain text). The button also says whether it is open.
+   * @default (label) => `Subsections of ${label}`
+   */
+  groupToggle: (label: string) => string;
 }
 
 export interface TableOfContentsProps
@@ -170,6 +176,36 @@ export interface TableOfContentsProps
    * @default true
    */
   highlightActive?: boolean;
+  /**
+   * Numbers the entries as an outline, "1", "1.1", "1.2", "2" …, by the levels that are drawn. The number is part of
+   * the link's text, so it is read with the label. The page's own headings are not numbered by this.
+   * @default false
+   */
+  numbered?: boolean;
+  /**
+   * How a number in the outline is written — `numbered`'s digits, in a locale's own numerals for example. Defaults to
+   * `String`. Never read from the browser's locale.
+   */
+  formatNumber?: (n: number) => string;
+  /**
+   * A single marker bar that slides to the current entry instead of the bar appearing beside it. It doesn't slide for
+   * a person who prefers reduced motion, and is drawn as a border, so it survives forced colours.
+   * @default false
+   */
+  movingMarker?: boolean;
+  /**
+   * Lets an entry that has deeper entries after it fold them away: a small button after the entry opens and closes
+   * its group. A group that holds the current entry shows the marker bar on its heading while it is closed, and one that
+   * holds keyboard focus stays open.
+   * @default false
+   */
+  collapsibleGroups?: boolean;
+  /**
+   * With `collapsibleGroups`, whether every group starts open. `false` starts them closed except the one that holds
+   * the current entry, which opens as the page is read (until a group has been opened or closed by hand).
+   * @default true
+   */
+  groupsDefaultOpen?: boolean;
   /**
    * Whether the heading above the list is shown. Hidden, the list keeps `labels.navigation` as its name.
    * @default true

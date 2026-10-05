@@ -909,3 +909,204 @@ describe("TableOfContents — folding", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 });
+
+describe("TableOfContents — numbered", () => {
+  const leveled: TableOfContentsItem[] = [
+    { id: "a", label: "Alpha" },
+    { id: "b", label: "Beta", level: 2 },
+    { id: "c", label: "Gamma", level: 2 },
+    { id: "d", label: "Delta", level: 3 },
+    { id: "e", label: "Epsilon" },
+  ];
+
+  it("is off by default", () => {
+    render(<TableOfContents items={leveled} />);
+    expect(screen.getByRole("link", { name: "Alpha" })).toBeInTheDocument();
+  });
+
+  it("numbers the entries as an outline, and the number is part of the link's name", () => {
+    render(<TableOfContents items={leveled} numbered />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["1Alpha", "1.1Beta", "1.2Gamma", "1.2.1Delta", "2Epsilon"]);
+    expect(screen.getByRole("link", { name: /1\.2\.1\s*Delta/ })).toBeInTheDocument();
+  });
+
+  it("counts a skipped level as one, and starts again under each parent", () => {
+    render(<TableOfContents items={[{ id: "a", label: "A", level: 3 }, { id: "b", label: "B" }, { id: "c", label: "C", level: 2 }]} numbered />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["1.1.1A", "2B", "2.1C"]);
+  });
+
+  it("numbers what is drawn: from minLevel, and without the levels left out", () => {
+    render(<TableOfContents items={leveled} numbered minLevel={2} maxLevel={2} />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["1Beta", "2Gamma"]);
+  });
+
+  it("writes the digits with formatNumber", () => {
+    const arabic = (n: number) => String(n).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)] as string);
+    render(<TableOfContents items={leveled.slice(0, 2)} numbered formatNumber={arabic} />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["١Alpha", "١.١Beta"]);
+  });
+
+  it("numbers headings read from the page", async () => {
+    render(
+      <>
+        <h2 id="x">X</h2>
+        <h3 id="y">Y</h3>
+        <TableOfContents numbered />
+      </>,
+    );
+    const nav = await screen.findByRole("navigation");
+    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["1X", "1.1Y"]);
+  });
+});
+
+describe("TableOfContents — collapsible groups", () => {
+  const leveled: TableOfContentsItem[] = [
+    { id: "a", label: "Alpha" },
+    { id: "b", label: "Beta", level: 2 },
+    { id: "c", label: "Gamma", level: 3 },
+    { id: "d", label: "Delta" },
+    { id: "e", label: "Epsilon", level: 2 },
+  ];
+  const toggle = (name: string) => screen.getByRole("button", { name: `Subsections of ${name}` });
+
+  it("has no buttons unless asked for", () => {
+    render(<TableOfContents items={leveled} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("puts a button only on an entry with deeper entries after it, open to start with", () => {
+    render(<TableOfContents items={leveled} collapsibleGroups />);
+    expect(screen.getAllByRole("button").map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Subsections of Alpha",
+      "Subsections of Beta",
+      "Subsections of Delta",
+    ]);
+    expect(toggle("Alpha")).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getAllByRole("link")).toHaveLength(5);
+  });
+
+  it("folds and opens a group, taking the nested groups under it with it", async () => {
+    render(<TableOfContents items={leveled} collapsibleGroups />);
+    await userEvent.click(toggle("Alpha"));
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Alpha", "Delta", "Epsilon"]);
+    expect(toggle("Alpha")).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(toggle("Alpha"));
+    expect(screen.getAllByRole("link")).toHaveLength(5);
+  });
+
+  it("starts closed with groupsDefaultOpen={false}, except for the group holding the current entry", () => {
+    render(<TableOfContents items={leveled} collapsibleGroups groupsDefaultOpen={false} defaultActiveId="c" />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Alpha", "Beta", "Gamma", "Delta"]);
+    expect(toggle("Alpha")).toHaveAttribute("aria-expanded", "true");
+    expect(toggle("Delta")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("opens the group of the entry the page moves to, until a group is opened or closed by hand", async () => {
+    const { rerender } = render(<TableOfContents items={leveled} collapsibleGroups groupsDefaultOpen={false} activeId="a" onActiveIdChange={() => {}} />);
+    expect(screen.queryByRole("link", { name: "Epsilon" })).toBeNull();
+    rerender(<TableOfContents items={leveled} collapsibleGroups groupsDefaultOpen={false} activeId="e" onActiveIdChange={() => {}} />);
+    expect(screen.getByRole("link", { name: "Epsilon" })).toBeInTheDocument();
+    // Closed by hand, it stays closed while the page is still in it.
+    await userEvent.click(toggle("Delta"));
+    expect(screen.queryByRole("link", { name: "Epsilon" })).toBeNull();
+    rerender(<TableOfContents items={leveled} collapsibleGroups groupsDefaultOpen={false} activeId="d" onActiveIdChange={() => {}} />);
+    expect(screen.queryByRole("link", { name: "Epsilon" })).toBeNull();
+  });
+
+  it("carries the marker on a closed group's heading when the current entry is inside it", async () => {
+    render(<TableOfContents items={leveled} collapsibleGroups defaultActiveId="c" />);
+    await userEvent.click(toggle("Alpha"));
+    expect(screen.queryByRole("link", { name: "Gamma" })).toBeNull();
+    const row = screen.getByRole("link", { name: "Alpha" }).closest("li");
+    expect(row).toHaveAttribute("data-toc-marked");
+    // It is not the current entry itself, so it doesn't claim aria-current.
+    expect(screen.getByRole("link", { name: "Alpha" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("keeps a group open while keyboard focus is inside it", async () => {
+    render(<TableOfContents items={leveled} collapsibleGroups groupsDefaultOpen={false} defaultActiveId="d" />);
+    // Delta is current, so Alpha's group is closed; open it by hand and focus a link in it.
+    await userEvent.click(toggle("Alpha"));
+    const link = screen.getByRole("link", { name: "Beta" });
+    act(() => link.focus());
+    // Closed from outside the focus (a click that doesn't take focus), the group stays while focus is in it.
+    fireEvent.click(toggle("Alpha"));
+    expect(screen.getByRole("link", { name: "Beta" })).toBeInTheDocument();
+    act(() => link.blur());
+    expect(screen.queryByRole("link", { name: "Beta" })).toBeNull();
+  });
+
+  it("translates the buttons' names, and names a group whose label isn't text", () => {
+    render(
+      <TableOfContents
+        collapsibleGroups
+        labels={{ groupToggle: (label) => `Sous-sections de ${label}` }}
+        items={[{ id: "a", label: "Alpha" }, { id: "b", label: "B", level: 2 }, { id: "c", label: <em>Rich</em> }, { id: "d", label: "D", level: 2 }]}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Sous-sections de Alpha" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sous-sections de section" })).toBeInTheDocument();
+  });
+
+  it("passes jest-axe", async () => {
+    const { container } = render(<TableOfContents items={leveled} collapsibleGroups groupsDefaultOpen={false} defaultActiveId="b" />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("TableOfContents — moving marker", () => {
+  const rects = () =>
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const make = (top: number, height: number) => ({ top, bottom: top + height, left: 0, right: 0, width: 0, height, x: 0, y: top, toJSON: () => ({}) });
+      if (this.hasAttribute("data-toc-marked")) return make(130, 30);
+      if (this.className.toString().includes("body")) return make(100, 200);
+      return make(0, 0);
+    });
+  const marker = () => document.querySelector<HTMLElement>('[aria-hidden="true"][data-visible]');
+
+  it("draws no marker by default", () => {
+    render(<TableOfContents items={items} defaultActiveId="setup" />);
+    expect(marker()).toBeNull();
+  });
+
+  it("lays one marker over the current entry, hidden from assistive technology", () => {
+    rects();
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(() => [{}] as unknown as DOMRectList);
+    render(<TableOfContents items={items} defaultActiveId="setup" movingMarker />);
+    expect(marker()).toHaveAttribute("data-visible", "true");
+    expect(marker()?.style.getPropertyValue("--toc-marker-y")).toBe("30px");
+    expect(marker()?.style.getPropertyValue("--toc-marker-h")).toBe("30px");
+  });
+
+  it("stays hidden while the marked entry isn't drawn (a folded list has no box to measure)", () => {
+    rects();
+    // jsdom reports no boxes unless a test says otherwise.
+    render(<TableOfContents items={items} defaultActiveId="setup" movingMarker />);
+    expect(marker()).toHaveAttribute("data-visible", "false");
+  });
+
+  it("moves to the next current entry and hides when nothing is current", () => {
+    rects();
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(() => [{}] as unknown as DOMRectList);
+    const { rerender } = render(<TableOfContents items={items} activeId="setup" onActiveIdChange={() => {}} movingMarker />);
+    expect(marker()).toHaveAttribute("data-visible", "true");
+    rerender(<TableOfContents items={items} activeId={undefined} onActiveIdChange={() => {}} movingMarker />);
+    expect(marker()).toHaveAttribute("data-visible", "false");
+  });
+
+  it("does not start sliding until it has been placed once", async () => {
+    render(<TableOfContents items={items} defaultActiveId="setup" movingMarker />);
+    expect(marker()).not.toHaveAttribute("data-animated");
+    await waitFor(() => expect(marker()).toHaveAttribute("data-animated", "true"));
+  });
+
+  it("works inside StrictMode and cleans up", async () => {
+    const { unmount } = render(
+      <StrictMode>
+        <TableOfContents items={items} defaultActiveId="setup" movingMarker />
+      </StrictMode>,
+    );
+    await waitFor(() => expect(marker()).toHaveAttribute("data-animated", "true"));
+    unmount();
+  });
+});

@@ -54,3 +54,16 @@ Six gaps named in a feature-completeness look, all built: (1) the current entry 
 **Tests:** 91 unit tests now (levels, extras, sticky, hash, scroll-in-box, folding), 8 hidden real-browser stories added or extended (a sticky outline stays at the top of its box; the current entry scrolls into view in a long outline without moving the page; fold open and `Escape`; `auto` on a phone viewport; focus holds the list open). **Mutation check:** thirteen breaks across both rounds; every one killed after one weak test (the `scrollToHash={false}` one, which rerendered with the default) was rewritten.
 
 **Not done:** a real-browser check of the hash correction (a story can't reload with an address, so only unit tests and the logic cover it); `collapse="auto"` was checked by a phone-viewport story, not on a device; the focus hand-off after a mouse click is unit-tested (jsdom focus), not tried with a screen reader.
+
+## Numbered, moving marker, collapsible groups (2026-10-04, at explicit direction)
+
+Three more from the lower-priority list.
+- **`numbered` (+ `formatNumber`):** hierarchical numbers from the drawn levels (a skipped level counts as one; `minLevel`/`maxLevel` renumber from what is left); the number is plain text inside the link, so it is in the accessible name (WCAG 2.5.3). New component token `table-of-contents.number-min-width` (`2.5ch`).
+- **`movingMarker`:** one `aria-hidden` bar in a `.body` wrapper around the list, placed over the marked row from its measured box (in a layout effect each render, plus a `ResizeObserver`), sliding with `motion.duration.moderate`; it starts placed rather than travelling (animation enabled a frame after the first placement), is hidden when the row has no box (a folded list), and is a *border* so forced colours keeps it (`Highlight`). Under reduced motion it doesn't slide. The per-entry coloured bar is switched off while it is on.
+- **`collapsibleGroups` + `groupsDefaultOpen`:** a group is an entry with deeper entries after it; its `IconButton` has `aria-expanded` and the name `labels.groupToggle(label)`. A group's openness is: the person's choice if made, else the default (`groupsDefaultOpen`, or "contains the current entry" when false); **a group holding keyboard focus is always open** (06 §9). A closed group holding the current entry carries the marker on its heading (`data-toc-marked`) and doesn't claim `aria-current`. Hidden entries are not rendered.
+
+**Tests:** 96 unit tests for the component, plus 2 more hidden real-browser stories (the marker's box equals the marked row's box before and after a scroll, and no row carries its own bar; a group folds, opens, follows the page, and shows the marker on a folded heading). **Mutation check:** nine breaks across these features; two survived (a pointless cleanup line, removed; a hidden-row guard, now tested).
+
+**Mobile recommendation (given, not a feature):** `collapse="auto"`, not sticky, `maxLevel` 2 where the outline is long; no `movingMarker` (nobody watches it on a phone), no `collapsibleGroups` inside an already-folded list.
+
+**Not done:** the moving marker with a wrapping entry in a real narrow column was measured by the geometry check but not looked at on a device; the group buttons add a tab stop each, which the docs say to weigh for short outlines.

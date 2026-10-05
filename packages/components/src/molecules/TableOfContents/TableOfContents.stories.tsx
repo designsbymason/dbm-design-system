@@ -19,6 +19,11 @@ interface PlaygroundArgs {
   size: TableOfContentsSize;
   tone: TableOfContentsTone;
   highlightActive: boolean;
+  numbered: boolean;
+  movingMarker: boolean;
+  collapsibleGroups: boolean;
+  groupsDefaultOpen: boolean;
+  formatNumber: TableOfContentsProps["formatNumber"];
   collapse: TableOfContentsCollapse;
   minLevel: 1 | 2 | 3 | 4;
   maxLevel: 1 | 2 | 3 | 4;
@@ -155,6 +160,10 @@ const noControls = {
   size: { control: false },
   tone: { control: false },
   highlightActive: { control: false },
+  numbered: { control: false },
+  movingMarker: { control: false },
+  collapsibleGroups: { control: false },
+  groupsDefaultOpen: { control: false },
   collapse: { control: false },
   minLevel: { control: false },
   maxLevel: { control: false },
@@ -197,6 +206,37 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The colour of the current entry and its marker: brand (the brand theme's accent) or neutral (primary text and a strong neutral marker). Place a brand outline on a surface, not on the canvas; neutral is safe on either.",
       table: { defaultValue: { summary: '"brand"' } },
+    },
+    numbered: {
+      control: "boolean",
+      description:
+        'Numbers the entries as an outline ("1", "1.1", "1.2", "2"), by the levels drawn. The number is part of the link\'s text, so it is read with the label. The page\'s own headings are not numbered by this.',
+      table: { defaultValue: { summary: "false" } },
+    },
+    formatNumber: {
+      control: false,
+      description:
+        "How a number in the outline is written, such as in a locale's own numerals. Never read from the browser's locale.",
+      table: { defaultValue: { summary: "" } },
+    },
+    movingMarker: {
+      control: "boolean",
+      description:
+        "One marker bar that slides to the current entry instead of appearing beside it. It doesn't slide for a person who prefers reduced motion, and survives forced colours.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    collapsibleGroups: {
+      control: "boolean",
+      description:
+        "Lets an entry that has deeper entries after it fold them away, with a small button after the entry. A closed group that holds the current entry carries the marker bar on its heading; one holding keyboard focus stays open.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    groupsDefaultOpen: {
+      control: "boolean",
+      if: { arg: "collapsibleGroups" },
+      description:
+        "With collapsibleGroups, whether every group starts open. False starts them closed except the one holding the current entry, which opens as the page is read, until a group has been opened or closed by hand.",
+      table: { defaultValue: { summary: "true" } },
     },
     minLevel: {
       control: "select",
@@ -321,6 +361,10 @@ const meta: Meta<PlaygroundArgs> = {
     size: "md",
     tone: "brand",
     highlightActive: true,
+    numbered: false,
+    movingMarker: false,
+    collapsibleGroups: false,
+    groupsDefaultOpen: true,
     collapse: "never",
     minLevel: 1,
     maxLevel: 4,
@@ -336,6 +380,10 @@ const meta: Meta<PlaygroundArgs> = {
         size: args.size,
         tone: args.tone,
         highlightActive: args.highlightActive,
+        numbered: args.numbered,
+        movingMarker: args.movingMarker,
+        collapsibleGroups: args.collapsibleGroups,
+        groupsDefaultOpen: args.groupsDefaultOpen,
         collapse: args.collapse,
         minLevel: args.minLevel,
         maxLevel: args.maxLevel,
@@ -592,6 +640,37 @@ const leveledItems: TableOfContentsItem[] = [
   { id: "lv-options", label: "Options", level: 3 },
   { id: "lv-usage", label: "Usage" },
 ];
+
+export const Numbered: Story = {
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.numbered } } },
+  render: () => (
+    <Static>
+      <TableOfContents numbered defaultActiveId="lv-setup" items={leveledItems} />
+    </Static>
+  ),
+};
+
+export const MovingMarker: Story = {
+  name: "Moving marker",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.movingMarker } } },
+  render: () => <DemoPage tocProps={{ movingMarker: true }} />,
+};
+
+export const CollapsibleGroups: Story = {
+  name: "Collapsible groups",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.groups } } },
+  render: () => <DemoPage tocProps={{ collapsibleGroups: true }} />,
+};
+
+export const GroupsStartClosed: Story = {
+  name: "Groups that start closed",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.groupsClosed } } },
+  render: () => <DemoPage tocProps={{ collapsibleGroups: true, groupsDefaultOpen: false }} />,
+};
 
 export const Levels: Story = {
   name: "Choosing the levels",
@@ -988,5 +1067,62 @@ export const FocusHoldsOpenInteraction: Story = {
     // Once focus moves on, the closed list folds away.
     link.blur();
     await waitFor(() => expect(link.getClientRects().length).toBe(0));
+  },
+};
+
+export const MovingMarkerInteraction: Story = {
+  name: "The marker bar slides to the current entry — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <DemoPage prefix="mm" tocProps={{ movingMarker: true }} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("article");
+    const nav = canvas.getByRole("navigation", { name: "On this page" });
+    const marker = nav.querySelector('[aria-hidden="true"][data-visible]') as HTMLElement;
+    const heading = (key: string) => canvasElement.querySelector<HTMLElement>(`#mm-${key}`) as HTMLElement;
+    const toTop = (key: string) => box.scrollTo({ top: box.scrollTop + heading(key).getBoundingClientRect().top - box.getBoundingClientRect().top, behavior: "instant" });
+    const rowOf = (name: string) => canvas.getByRole("link", { name }).closest("li") as HTMLElement;
+    const covers = (name: string) => {
+      const bar = marker.getBoundingClientRect();
+      const row = rowOf(name).getBoundingClientRect();
+      return Math.abs(bar.top - row.top) < 1.5 && Math.abs(bar.height - row.height) < 1.5;
+    };
+    toTop("usage");
+    await waitFor(() => expect(canvas.getByRole("link", { name: "Usage" })).toHaveAttribute("aria-current", "location"));
+    await waitFor(() => expect(marker.dataset.visible).toBe("true"));
+    await waitFor(() => expect(covers("Usage")).toBe(true), { timeout: 2000 });
+    toTop("accessibility");
+    await waitFor(() => expect(canvas.getByRole("link", { name: "Accessibility" })).toHaveAttribute("aria-current", "location"));
+    await waitFor(() => expect(covers("Accessibility")).toBe(true), { timeout: 2000 });
+    // Only the one bar is drawn: no entry carries its own coloured bar.
+    await expect(getComputedStyle(rowOf("Accessibility")).borderInlineStartColor).toBe(getComputedStyle(rowOf("Overview")).borderInlineStartColor);
+  },
+};
+
+export const GroupsInteraction: Story = {
+  name: "A group folds and opens, and the active one follows the page — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => <DemoPage prefix="grp" tocProps={{ collapsibleGroups: true, groupsDefaultOpen: false }} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByTestId("article");
+    const toggle = (name: string) => canvas.getByRole("button", { name: `Subsections of ${name}` });
+    // Nothing is current yet, so every group starts closed and the children are not in the page.
+    await expect(canvas.queryByRole("link", { name: "Requirements" })).toBeNull();
+    await expect(toggle("Installation")).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(toggle("Installation"));
+    await expect(canvas.getByRole("link", { name: "Requirements" })).toBeInTheDocument();
+    await expect(toggle("Installation")).toHaveAttribute("aria-expanded", "true");
+    // Reading into Usage's own group opens it.
+    const options = canvasElement.querySelector<HTMLElement>("#grp-options") as HTMLElement;
+    box.scrollTo({ top: box.scrollTop + options.getBoundingClientRect().top - box.getBoundingClientRect().top, behavior: "instant" });
+    await waitFor(() => expect(canvas.getByRole("link", { name: "Options" })).toHaveAttribute("aria-current", "location"));
+    await expect(toggle("Usage")).toHaveAttribute("aria-expanded", "true");
+    // Folding the group that holds the current entry puts the marker on its heading.
+    await userEvent.click(toggle("Usage"));
+    await expect(canvas.queryByRole("link", { name: "Options" })).toBeNull();
+    await expect(canvas.getByRole("link", { name: "Usage" }).closest("li")).toHaveAttribute("data-toc-marked");
   },
 };

@@ -1,0 +1,9 @@
+{
+  "table-of-contents": {
+    "number-min-width": {
+      "$type": "dimension",
+      "$value": "2.5ch",
+      "$description": "New token (2026-10-04), added for TableOfContents' `numbered` entries — the least width an entry's number takes ahead of its text, in digit widths of the outline's own font, so the labels of '1', '2' and '10' start at nearly the same place, and a longer '1.2.3' simply pushes its label along. A font-relative measure with no home on any existing primitive scale (the same reasoning as time-picker.segment-width)."
+    }
+  }
+}

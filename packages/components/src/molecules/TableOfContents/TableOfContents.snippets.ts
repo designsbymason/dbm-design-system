@@ -45,6 +45,20 @@ ${toc(['tone="neutral"'])}`,
   notHighlighted: `{/* highlightActive={false} leaves just the marker bar beside the current entry */}
 ${toc(["highlightActive={false}"])}`,
 
+  numbered: `{/* numbered writes the entries as an outline — 1, 1.1, 1.2, 2 — by the levels drawn */}
+${toc(["numbered"], nestedItems)}`,
+
+  movingMarker: `{/* movingMarker: one bar that slides to the current entry (not for a person who prefers
+    reduced motion) */}
+${toc(["movingMarker"])}`,
+
+  groups: `{/* collapsibleGroups: an entry with deeper entries after it gets a button that folds them away */}
+${toc(["collapsibleGroups"], nestedItems)}`,
+
+  groupsClosed: `{/* groupsDefaultOpen={false}: every group starts closed except the one holding the current
+    entry, which opens as the page is read */}
+${toc(["collapsibleGroups", "groupsDefaultOpen={false}"], nestedItems)}`,
+
   levels: `{/* minLevel and maxLevel (1 to 4) draw only some levels; the rest are indented from minLevel.
     They apply to items and to headings read from the page alike. */}
 ${toc(["maxLevel={1}"], nestedItems)}
@@ -122,6 +136,10 @@ export interface TableOfContentsPlaygroundSnippetArgs {
   size?: TableOfContentsSize;
   tone?: TableOfContentsTone;
   highlightActive?: boolean;
+  numbered?: boolean;
+  movingMarker?: boolean;
+  collapsibleGroups?: boolean;
+  groupsDefaultOpen?: boolean;
   collapse?: "never" | "auto" | "always";
   minLevel?: number;
   maxLevel?: number;
@@ -139,6 +157,12 @@ export function tableOfContentsPlaygroundSnippet(args: TableOfContentsPlayground
   const attributes: string[] = [];
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
+  if (args.numbered) attributes.push("numbered");
+  if (args.movingMarker) attributes.push("movingMarker");
+  if (args.collapsibleGroups) {
+    attributes.push("collapsibleGroups");
+    if (args.groupsDefaultOpen === false) attributes.push("groupsDefaultOpen={false}");
+  }
   if (args.collapse && args.collapse !== "never") attributes.push(`collapse="${args.collapse}"`);
   if (typeof args.minLevel === "number" && args.minLevel !== 1) attributes.push(`minLevel={${args.minLevel}}`);
   if (typeof args.maxLevel === "number" && args.maxLevel !== 4) attributes.push(`maxLevel={${args.maxLevel}}`);

@@ -1,10 +1,11 @@
 import { CaretDownIcon, CaretUpIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined } from "@dbm-design-system/primitives";
-import { forwardRef, useCallback, useEffect, useId, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { Affix } from "../../atoms/Affix";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
+import { IconButton } from "../../atoms/IconButton";
 import type { IconSize } from "../../atoms/Icon";
 import { Link } from "../../atoms/Link";
 import styles from "./TableOfContents.module.css";
@@ -34,7 +35,15 @@ const levelClass = [undefined, undefined, styles.level2, styles.level3, styles.l
 // One step down from the text's own size at the small end, the mapping `Breadcrumb` and `Button` use.
 const iconSizeForSize: Record<TableOfContentsSize, IconSize> = { xs: "xs", sm: "xs", md: "sm", lg: "sm", xl: "md" };
 
-const defaultLabels: TableOfContentsLabels = { title: "On this page", navigation: "Table of contents" };
+// `useLayoutEffect` on the client, `useEffect` on the server — avoids React's "does nothing on the server" warning,
+// the same as `Breadcrumb` and `Pagination`.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+const defaultLabels: TableOfContentsLabels = {
+  title: "On this page",
+  navigation: "Table of contents",
+  groupToggle: (label) => `Subsections of ${label}`,
+};
 
 /** The width below which `collapse="auto"` folds the list — the `sm` breakpoint (640px), in a form `matchMedia` takes. */
 const NARROW_QUERY = "(max-width: 639.98px)";
@@ -91,6 +100,17 @@ function scan(root: ParentNode, selector: string): Entry[] {
 const sameEntries = (a: Entry[], b: Entry[]): boolean =>
   a.length === b.length && a.every((entry, index) => entry.id === b[index]?.id && entry.label === b[index]?.label && entry.level === b[index]?.level);
 
+/** The hierarchical number of each entry ("1", "1.1", …), by the levels drawn. A skipped level counts as one. */
+function numberEntries(entries: Entry[], format: (n: number) => string): string[] {
+  const counters = [0, 0, 0, 0, 0];
+  return entries.map((entry) => {
+    counters[entry.level] = (counters[entry.level] ?? 0) + 1;
+    for (let deeper = entry.level + 1; deeper < counters.length; deeper += 1) counters[deeper] = 0;
+    for (let shallower = 1; shallower < entry.level; shallower += 1) if (!counters[shallower]) counters[shallower] = 1;
+    return counters.slice(1, entry.level + 1).map(format).join(".");
+  });
+}
+
 /** The nearest ancestor that scrolls vertically and is currently overflowing, other than the page and `except`. */
 function scrollableAncestor(element: HTMLElement, except: HTMLElement | null): HTMLElement | null {
   for (let node = element.parentElement; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
@@ -138,6 +158,11 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       size = "md",
       tone = "brand",
       highlightActive = true,
+      numbered = false,
+      formatNumber = String,
+      movingMarker = false,
+      collapsibleGroups = false,
+      groupsDefaultOpen = true,
       showTitle = true,
       labels,
       className,
@@ -201,6 +226,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
           disabled: item.disabled,
         }));
     const entries = everyEntry.filter((entry) => entry.level >= low && entry.level <= high).map((entry) => ({ ...entry, level: clampLevel(entry.level - low + 1) }));
+    const numbers = numbered ? numberEntries(entries, formatNumber) : [];
 
     // --- The current entry ---
     const isControlled = controlledActiveId !== undefined;
@@ -362,9 +388,76 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       (collapse === "auto" && typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(NARROW_QUERY).matches);
     // Focus inside the list holds it open, so a screen that narrows can't hide the control that has focus.
     const [focusInside, setFocusInside] = useState(false);
+    // The entry that has focus, so the group it sits in can't fold away under it.
+    const [focusedId, setFocusedId] = useState<string | undefined>();
     const keepOpen = (event: FocusEvent<HTMLUListElement>, inside: boolean) => {
-      if (inside || !event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusInside(inside);
+      if (inside) {
+        setFocusInside(true);
+        setFocusedId((event.target as HTMLElement).closest<HTMLElement>("li")?.dataset.tocId);
+      } else if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+        setFocusInside(false);
+        setFocusedId(undefined);
+      }
     };
+
+    // --- Groups: an entry with deeper entries after it can fold them away ---
+    const [groupOverride, setGroupOverride] = useState<Record<string, boolean>>({});
+    // The last entry of each entry's group (itself when it has none).
+    const groupEnd = entries.map((entry, index) => {
+      let end = index;
+      while (entries[end + 1] && (entries[end + 1] as Entry).level > entry.level) end += 1;
+      return end;
+    });
+    const contains = (parent: number, child: number) => child > parent && child <= (groupEnd[parent] ?? parent);
+    const activeIndex = entries.findIndex((entry) => entry.id === activeId);
+    const focusedIndex = entries.findIndex((entry) => entry.id === focusedId);
+    /** Whether the group is open as the person (or the default) left it, ignoring what holds it open. */
+    const groupOpenByHand = (index: number) => groupOverride[(entries[index] as Entry).id] ?? (groupsDefaultOpen || contains(index, activeIndex));
+    const groupIsOpen = (index: number) => groupOpenByHand(index) || contains(index, focusedIndex);
+    const isShown = (index: number) =>
+      !collapsibleGroups || entries.every((_, parent) => parent >= index || !contains(parent, index) || groupIsOpen(parent));
+    // The current entry sits in a folded group: its nearest shown ancestor carries the marker instead.
+    let containsMark = -1;
+    if (collapsibleGroups && activeIndex >= 0 && !isShown(activeIndex)) {
+      for (let parent = activeIndex - 1; parent >= 0 && containsMark < 0; parent -= 1) {
+        if (contains(parent, activeIndex) && isShown(parent)) containsMark = parent;
+      }
+    }
+
+    // --- The moving marker: one bar placed over the marked entry ---
+    const markerRef = useRef<HTMLSpanElement>(null);
+    const placeMarker = useCallback(() => {
+      const marker = markerRef.current;
+      const body = marker?.parentElement;
+      if (!marker || !body) return;
+      const row = body.querySelector<HTMLElement>("[data-toc-marked]");
+      if (!row || row.getClientRects().length === 0) {
+        marker.dataset.visible = "false";
+        return;
+      }
+      const rowBox = row.getBoundingClientRect();
+      marker.style.setProperty("--toc-marker-y", `${rowBox.top - body.getBoundingClientRect().top}px`);
+      marker.style.setProperty("--toc-marker-h", `${rowBox.height}px`);
+      marker.dataset.visible = "true";
+    }, []);
+    // After every render: what is marked, what is shown and the text's size can all move it.
+    useIsomorphicLayoutEffect(() => {
+      if (movingMarker) placeMarker();
+    });
+    useEffect(() => {
+      if (!movingMarker) return undefined;
+      const marker = markerRef.current;
+      // Slides only from the second placement on, so the bar starts where it belongs instead of travelling there.
+      const frame = requestAnimationFrame(() => {
+        if (marker) marker.dataset.animated = "true";
+      });
+      const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(placeMarker);
+      if (listRef.current) observer?.observe(listRef.current);
+      return () => {
+        cancelAnimationFrame(frame);
+        observer?.disconnect();
+      };
+    }, [movingMarker, placeMarker]);
 
     // --- Following a link ---
     const follow = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -416,6 +509,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
           sizeClass[size],
           toneClass[tone],
           highlightActive && styles.highlighted,
+          movingMarker && styles.moving,
           collapse === "always" && styles.collapseAlways,
           collapse === "auto" && styles.collapseAuto,
           folds && !isOpen && !focusInside && styles.folded,
@@ -444,37 +538,61 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
             {text.title}
           </Button>
         )}
-        {/* The roles are stated outright: Safari with VoiceOver drops list semantics once the markers are removed. */}
-        {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above. */}
-        <ul
-          role="list"
-          id={listId}
-          ref={listRef}
-          className={styles.list}
-          onFocus={(event) => keepOpen(event, true)}
-          onBlur={(event) => keepOpen(event, false)}
-        >
-          {entries.map((entry) => {
-            const isActive = entry.id === activeId;
-            return (
-              // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
-              <li key={entry.id} role="listitem" className={cx(styles.item, levelClass[entry.level], isActive && styles.itemActive)}>
-                <Link
-                  href={`#${entry.id}`}
-                  underline="none"
-                  disabled={entry.disabled}
-                  className={cx(styles.link, isActive && styles.active)}
-                  aria-current={isActive ? "location" : undefined}
-                  onClick={(event) => follow(event, entry.id)}
+        <div className={styles.body}>
+          {movingMarker && <span ref={markerRef} aria-hidden="true" className={styles.marker} data-visible="false" />}
+          {/* The roles are stated outright: Safari with VoiceOver drops list semantics once the markers are removed. */}
+          {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above. */}
+          <ul
+            role="list"
+            id={listId}
+            ref={listRef}
+            className={styles.list}
+            onFocus={(event) => keepOpen(event, true)}
+            onBlur={(event) => keepOpen(event, false)}
+          >
+            {entries.map((entry, index) => {
+              if (!isShown(index)) return null;
+              const isActive = entry.id === activeId;
+              const isGroup = collapsibleGroups && (groupEnd[index] ?? index) > index;
+              const marked = isActive || index === containsMark;
+              return (
+                // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
+                <li
+                  key={entry.id}
+                  role="listitem"
+                  data-toc-id={entry.id}
+                  data-toc-marked={marked ? "" : undefined}
+                  className={cx(styles.item, levelClass[entry.level], marked && styles.itemActive)}
                 >
-                  {entry.icon && <Icon icon={entry.icon} size={iconSizeForSize[size]} className={styles.icon} />}
-                  <span className={styles.label}>{entry.label}</span>
-                  {entry.trailing && <span className={styles.trailing}>{entry.trailing}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  <Link
+                    href={`#${entry.id}`}
+                    underline="none"
+                    disabled={entry.disabled}
+                    className={cx(styles.link, isActive && styles.active)}
+                    aria-current={isActive ? "location" : undefined}
+                    onClick={(event) => follow(event, entry.id)}
+                  >
+                    {entry.icon && <Icon icon={entry.icon} size={iconSizeForSize[size]} className={styles.icon} />}
+                    {numbered && <span className={styles.number}>{numbers[index]}</span>}
+                    <span className={styles.label}>{entry.label}</span>
+                    {entry.trailing && <span className={styles.trailing}>{entry.trailing}</span>}
+                  </Link>
+                  {isGroup && (
+                    <IconButton
+                      icon={groupIsOpen(index) ? CaretUpIcon : CaretDownIcon}
+                      size="xs"
+                      variant="ghost"
+                      className={styles.groupToggle}
+                      aria-label={text.groupToggle(typeof entry.label === "string" ? entry.label : "section")}
+                      aria-expanded={groupIsOpen(index)}
+                      onClick={() => setGroupOverride((current) => ({ ...current, [entry.id]: !groupIsOpen(index) }))}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </nav>
     );
     return sticky ? (

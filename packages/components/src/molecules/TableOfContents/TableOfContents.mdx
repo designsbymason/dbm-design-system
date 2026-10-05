@@ -15,6 +15,11 @@ export const propOrder = [
   "size",
   "tone",
   "highlightActive",
+  "movingMarker",
+  "numbered",
+  "formatNumber",
+  "collapsibleGroups",
+  "groupsDefaultOpen",
   "minLevel",
   "maxLevel",
   "sticky",
@@ -58,7 +63,9 @@ smoothly unless the reader prefers less motion. `scrollOffset` keeps a section c
 header, and `scrollContainerRef` points it at a scrolling box instead of the page. `sticky` keeps it in
 view beside long content, `collapse` folds it behind an "On this page" button on a small screen, and an
 outline that is taller than its own box keeps the current entry in view in it. `minLevel` and `maxLevel`
-choose which levels are drawn, and an entry can carry an icon, trailing content or `disabled`.
+choose which levels are drawn, `numbered` writes the entries as an outline, `movingMarker` slides one bar
+between entries, and `collapsibleGroups` lets an entry fold the deeper entries under it away. An entry can carry
+an icon, trailing content or `disabled`.
 
 ### Import
 
@@ -73,7 +80,7 @@ import { TableOfContents } from "@dbm-design-system/components";
 <Canvas of={TableOfContentsStories.Playground} />
 
 </div>
-<PlaygroundControls of={TableOfContentsStories.Playground} order={propOrder} exclude={["items", "contentRef", "selector", "sticky", "stickyOffset", "scrollToHash", "open", "defaultOpen", "onOpenChange", "activeId", "defaultActiveId", "onActiveIdChange", "scrollContainerRef", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+<PlaygroundControls of={TableOfContentsStories.Playground} order={propOrder} exclude={["formatNumber", "items", "contentRef", "selector", "sticky", "stickyOffset", "scrollToHash", "open", "defaultOpen", "onOpenChange", "activeId", "defaultActiveId", "onActiveIdChange", "scrollContainerRef", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
 
 Scroll the article, and click an entry: the outline follows the scroll and the click.
 
@@ -116,6 +123,41 @@ marker bar stays, so the background is never the only cue.
 `highlightActive={false}` leaves just the marker bar and the change of colour.
 
 <Canvas of={TableOfContentsStories.NotHighlighted} />
+
+### Numbered entries
+
+`numbered` writes the entries as an outline — 1, 1.1, 1.2, 2 — from the levels that are drawn, which suits a
+documentation page whose sections are numbered too. The number is part of the link's text, so it is read with the
+label; the page's own headings are not numbered by this. `formatNumber` writes the digits, for a locale's own
+numerals.
+
+<Canvas of={TableOfContentsStories.Numbered} />
+
+### Moving marker
+
+By default the bar appears beside the current entry. `movingMarker` draws one bar that slides from entry to entry
+as the page is read, and resizes to fit a wrapped entry. It starts where it belongs rather than travelling there,
+doesn't slide for a person who prefers reduced motion, and is a border, so forced colours keeps it. Scroll the
+article to watch it.
+
+<Canvas of={TableOfContentsStories.MovingMarker} />
+
+### Collapsible groups
+
+With `collapsibleGroups`, an entry that has deeper entries after it gets a small button that folds them away; a
+group inside a group goes with it. A closed group that holds the current entry carries the marker bar on its
+heading, so the place in the outline is never lost, and a group that holds keyboard focus stays open. Groups start
+open.
+
+<Canvas of={TableOfContentsStories.CollapsibleGroups} />
+
+### Groups that start closed
+
+`groupsDefaultOpen={false}` starts every group closed except the one holding the current entry, and that group
+opens as the page is read — the outline unfolds to show where you are. A group you have opened or closed by hand
+keeps your choice from then on. Scroll the article, and open one by hand to see both.
+
+<Canvas of={TableOfContentsStories.GroupsStartClosed} />
 
 ### Choosing the levels
 
@@ -256,6 +298,14 @@ the prop decides; while `activeId` is set, scrolling no longer changes the mark 
 - A page opened at `#section` is moved to that section by the outline, clear of a sticky header, even when
   the headings are read from the page after the first render (`scrollToHash`). Give the headings a
   `scroll-margin-top` too, so a plain link to them lands clear of the header before the outline loads.
+- Use `numbered` where the page's own headings carry the same numbers, so the outline and the page agree, and
+  not otherwise — an outline numbered differently from the page it points at is confusing.
+- `movingMarker` is the more polished look and the plainer one is the safer default: keep it for an outline that
+  stays in view (`sticky`) where the slide is seen, and leave it off where the outline scrolls out of sight.
+- `collapsibleGroups` is for outlines long enough to need it. For a short outline the buttons add a tab stop per
+  group and nothing else; `groupsDefaultOpen={false}` with `sticky` is the "unfolds as you read" pattern.
+- **On a phone**, fold the whole outline with `collapse="auto"` and leave it non-sticky (a sticky box would cover
+  the content); open it from the button, pick a section, and it closes again.
 - Use `disabled` for a section the reader can't use yet, rather than leaving it out, so the outline still
   shows the whole structure.
 - Every piece of text the component writes itself is in `labels`.
@@ -276,6 +326,12 @@ removed as one. The entry being read carries `aria-current="location"`, announce
 | `Tab` | Moves to the next link — every entry is one stop |
 | `Shift+Tab` | Moves to the previous one |
 | `Enter` | Follows the link: scrolls to the section and moves focus to it |
+
+A group button is a disclosure too: it carries `aria-expanded` and a name from `labels.groupToggle` ("Subsections of
+Setup"), and folding never takes the entry that has focus out of the page. A closed group holding the current entry
+shows the bar on its heading, and does not claim `aria-current`, which belongs to the entry itself. The moving
+marker is decorative (`aria-hidden`) — `aria-current` says it in words — and stays still for a person who prefers
+reduced motion. A number is plain text in the link, so it is part of its accessible name.
 
 When the outline is folded, the button is a disclosure: it carries `aria-expanded` and `aria-controls`, and
 closing the list — by choosing an entry or with `Escape` — never leaves focus on something that has just
@@ -357,6 +413,7 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 <TokenRow token="text.brand" usage="the current entry in the brand tone" />
 <TokenRow token="bg.brand-subtle" usage="the current entry's background with highlightActive, brand tone" />
 <TokenRow token="bg.neutral-subtle" usage="the current entry's background with highlightActive, neutral tone" />
+<TokenRow token="icon.default" usage="the buttons that open and close a group" />
 <TokenRow token="border.default" usage="the track along the start edge (decorative)" />
 <TokenRow token="border.brand" usage="the marker beside the current entry, brand tone" />
 <TokenRow token="border.neutral-strong" usage="the marker beside the current entry, neutral tone" />
@@ -374,7 +431,9 @@ only about 1.1:1 from it, which is why the bar stays the main cue. The track the
 <TokenRow token="space.3" usage="the space between the marker and an entry's text; one indent at the sm and md steps" />
 <TokenRow token="space.4" usage="one indent at the lg and xl steps" />
 <TokenRow token="space.6" usage="the shortest an entry may be (24px)" />
+<TokenRow token="table-of-contents.number-min-width" usage="the least width a number takes before an entry's text, in digit widths" />
 <TokenRow token="radius.sm" usage="the focus ring's corners" />
+<TokenRow token="motion.duration.moderate" usage="the moving marker sliding between entries" />
 <TokenRow token="motion.duration.fast" usage="the colour change on hover and when an entry becomes current" />
 <TokenRow token="motion.easing.standard" usage="the colour change on hover and when an entry becomes current" />
 

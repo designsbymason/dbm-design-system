@@ -43,6 +43,11 @@
   margin-block-end: var(--dbm-space-2);
 }
 
+/* Holds the list and, when asked for, the moving marker laid over it. */
+.body {
+  position: relative;
+}
+
 .list {
   list-style: none;
   margin: 0;
@@ -52,7 +57,9 @@
 /* Each entry draws its own piece of the track along the start edge, so the pieces meet in one line. A border,
    not a background, so forced colours keeps it. */
 .item {
+  align-items: center;
   border-inline-start: var(--dbm-border-width-2) solid var(--dbm-border-default);
+  display: flex;
   margin: 0;
 }
 
@@ -68,6 +75,8 @@
    radius is the standard focus-ring one. */
 .link {
   align-items: center;
+  flex: 1 1 auto;
+  min-inline-size: 0;
   border-radius: var(--dbm-radius-sm);
   display: flex;
   gap: var(--dbm-space-2);
@@ -93,6 +102,19 @@
   flex-shrink: 0;
   margin-inline-start: auto;
   padding-inline-start: var(--dbm-space-2);
+}
+
+/* An entry's number, in digits of the same width so a column of them lines up. */
+.number {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  min-inline-size: var(--dbm-table-of-contents-number-min-width);
+}
+
+/* The button that opens and closes a group of entries. */
+.groupToggle {
+  color: var(--dbm-icon-default);
+  flex-shrink: 0;
 }
 
 .level2 > .link {
@@ -148,7 +170,7 @@ a.link:hover {
   display: none;
 }
 
-.toggle + .list {
+.toggle + .body {
   margin-block-start: var(--dbm-space-2);
 }
 
@@ -160,7 +182,7 @@ a.link:hover {
   display: none;
 }
 
-.collapseAlways.folded .list {
+.collapseAlways.folded .body {
   display: none;
 }
 
@@ -176,9 +198,50 @@ a.link:hover {
     display: none;
   }
 
-  .collapseAuto.folded .list {
+  .collapseAuto.folded .body {
     display: none;
   }
+}
+
+/* --- The moving marker: one bar that slides to the marked entry. It is a border, so forced colours keeps it. --- */
+
+.marker {
+  block-size: var(--toc-marker-h, 0);
+  border-inline-start: var(--dbm-border-width-2) solid var(--dbm-border-brand);
+  inline-size: 0;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateY(var(--toc-marker-y, 0));
+}
+
+.toneNeutral .marker {
+  border-inline-start-color: var(--dbm-border-neutral-strong);
+}
+
+.marker[data-visible="true"] {
+  opacity: 1;
+}
+
+.marker[data-animated="true"] {
+  transition:
+    transform var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-standard),
+    block-size var(--dbm-motion-duration-moderate) var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker[data-animated="true"] {
+    transition: none;
+  }
+}
+
+/* With the moving marker the entries keep the plain track; the marker draws the mark. */
+.moving.toneBrand .itemActive,
+.moving.toneNeutral .itemActive {
+  border-inline-start-color: var(--dbm-border-default);
 }
 
 /* Forced colours replaces every colour but the system's own: the track and the marker would both be one
@@ -189,8 +252,14 @@ a.link:hover {
   }
 
   .toneBrand .itemActive,
-  .toneNeutral .itemActive {
+  .toneNeutral .itemActive,
+  .marker {
     border-inline-start-color: Highlight;
+  }
+
+  .moving.toneBrand .itemActive,
+  .moving.toneNeutral .itemActive {
+    border-inline-start-color: CanvasText;
   }
 
   a.active,
