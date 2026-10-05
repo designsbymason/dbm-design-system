@@ -81,6 +81,7 @@ export * from "./molecules/Slider";
 export * from "./molecules/Splitter";
 export * from "./molecules/Stat";
 export * from "./molecules/Table";
+export * from "./molecules/TableOfContents";
 export * from "./molecules/TableToolbar";
 export * from "./molecules/Tabs";
 export * from "./molecules/TimePicker";

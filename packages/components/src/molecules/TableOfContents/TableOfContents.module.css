@@ -1,0 +1,132 @@
+/* The outline. Every value is a token. `--toc-font` is the text's size and `--toc-indent` how far each level
+   steps in. */
+.root {
+  --toc-font: var(--dbm-font-size-base);
+  --toc-indent: var(--dbm-space-3);
+
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--toc-font);
+  line-height: var(--dbm-line-height-normal);
+  min-inline-size: 0;
+}
+
+.sizeXs {
+  --toc-font: var(--dbm-font-size-xs);
+  --toc-indent: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --toc-font: var(--dbm-font-size-sm);
+  --toc-indent: var(--dbm-space-3);
+}
+
+.sizeMd {
+  --toc-font: var(--dbm-font-size-base);
+  --toc-indent: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --toc-font: var(--dbm-font-size-md);
+  --toc-indent: var(--dbm-space-4);
+}
+
+.sizeXl {
+  --toc-font: var(--dbm-font-size-lg);
+  --toc-indent: var(--dbm-space-4);
+}
+
+.title {
+  color: var(--dbm-text-primary);
+  font-weight: var(--dbm-font-weight-semibold);
+  margin: 0;
+  margin-block-end: var(--dbm-space-2);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Each entry draws its own piece of the track along the start edge, so the pieces meet in one line. A border,
+   not a background, so forced colours keeps it. */
+.item {
+  border-inline-start: var(--dbm-border-width-2) solid var(--dbm-border-default);
+  margin: 0;
+}
+
+.toneBrand .itemActive {
+  border-inline-start-color: var(--dbm-border-brand);
+}
+
+.toneNeutral .itemActive {
+  border-inline-start-color: var(--dbm-border-neutral-strong);
+}
+
+/* The link is at least as tall as a target must be (24px), whatever the size. `Link` draws the focus ring; its
+   radius is the standard focus-ring one. */
+.link {
+  align-items: center;
+  border-radius: var(--dbm-radius-sm);
+  display: flex;
+  min-block-size: var(--dbm-space-6);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-3) var(--dbm-space-2);
+  transition: color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.level2 > .link {
+  padding-inline-start: calc(var(--dbm-space-3) + var(--toc-indent));
+}
+
+.level3 > .link {
+  padding-inline-start: calc(var(--dbm-space-3) + 2 * var(--toc-indent));
+}
+
+.level4 > .link {
+  padding-inline-start: calc(var(--dbm-space-3) + 3 * var(--toc-indent));
+}
+
+/* `a.…` (element-qualified) so each wins over `Link`'s own colour rules, `:visited` included. A long unbroken
+   word can't push the outline wider. */
+a.link,
+a.link:visited {
+  color: var(--dbm-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+a.link:hover {
+  color: var(--dbm-text-primary);
+}
+
+/* The current entry. Its weight doesn't change, so the text never reflows as the outline follows the scroll. */
+.toneBrand a.active,
+.toneBrand a.active:visited,
+.toneBrand a.active:hover {
+  color: var(--dbm-text-brand);
+}
+
+.toneNeutral a.active,
+.toneNeutral a.active:visited,
+.toneNeutral a.active:hover {
+  color: var(--dbm-text-primary);
+}
+
+/* Forced colours replaces every colour but the system's own: the track and the marker would both be one
+   colour, so the marker takes `Highlight`. */
+@media (forced-colors: active) {
+  .item {
+    border-inline-start-color: CanvasText;
+  }
+
+  .toneBrand .itemActive,
+  .toneNeutral .itemActive {
+    border-inline-start-color: Highlight;
+  }
+
+  a.active,
+  a.active:visited {
+    color: Highlight;
+  }
+}

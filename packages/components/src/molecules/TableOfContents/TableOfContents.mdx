@@ -1,0 +1,317 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Affix } from "../../atoms/Affix";
+import { Badge } from "../../atoms/Badge";
+import { Link } from "../../atoms/Link";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Breadcrumb } from "../Breadcrumb";
+import * as TableOfContentsStories from "./TableOfContents.stories";
+
+export const propOrder = [
+  "items",
+  "contentRef",
+  "selector",
+  "size",
+  "tone",
+  "showTitle",
+  "activeId",
+  "defaultActiveId",
+  "onActiveIdChange",
+  "scrollContainerRef",
+  "scrollOffset",
+  "smoothScroll",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "dir",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={TableOfContentsStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="TableOfContents" tier="Molecule" />
+
+A table of contents is an outline of the page a reader is on: a list of links to its sections, with the
+section they are reading marked as they scroll. It renders a `<nav>` around a list of links, each going
+to `#id`, so it works as plain anchor links before any script runs.
+
+Give it `items` — each an `id` to link to, a `label`, and an optional `level` (1 to 4) that indents it —
+or leave `items` out and it reads the `h2` and `h3` headings from the page (or from one element, with
+`contentRef`). The marked entry follows the scroll position, and a click scrolls to the section,
+smoothly unless the reader prefers less motion. `scrollOffset` keeps a section clear of a sticky
+header, and `scrollContainerRef` points it at a scrolling box instead of the page. It doesn't stick to
+the screen by itself: wrap it in `Affix` to keep it in view beside long content.
+
+### Import
+
+```tsx
+import { TableOfContents } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TableOfContentsStories.Playground} />
+
+</div>
+<PlaygroundControls of={TableOfContentsStories.Playground} order={propOrder} exclude={["items", "contentRef", "selector", "activeId", "defaultActiveId", "onActiveIdChange", "scrollContainerRef", "labels", "aria-labelledby", "id", "className", "style", "data-testid"]} />
+
+Scroll the article, and click an entry: the outline follows the scroll and the click.
+
+## Properties
+
+`ref` forwards to the `<nav>`. Also accepts any other native `<nav>` attribute beyond what's listed here
+(e.g. `onFocus`, `title`) — passed straight through to the root element.
+
+<PropertiesTable of={TableOfContentsStories} order={propOrder} />
+
+Each entry of `items` is an object with `id`, `label` and an optional `level`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | `string` | The id of the element the entry points at; the link goes to `#id`. |
+| `label` | `ReactNode` | The entry's text. |
+| `level` | `1` \| `2` \| `3` \| `4` | How deeply it is nested, indented one step per level. Defaults to `1`. |
+
+## Variants
+
+### All sizes
+
+<Canvas of={TableOfContentsStories.Sizes} />
+
+### Tones
+
+`"brand"` (the default) colours the current entry and its marker with the brand theme's accent;
+`"neutral"` keeps the current entry in primary text with a strong neutral marker — the one to use on
+`bg.canvas`, where brand text is under the contrast floor.
+
+<Canvas of={TableOfContentsStories.Tones} />
+
+### Nested levels
+
+`level` indents an entry, one step per level, up to four.
+
+<Canvas of={TableOfContentsStories.Nested} />
+
+### Read from the page
+
+With no `items`, the outline is read from the headings in the browser. Each needs an `id`; one without is
+skipped (with a warning in development). It is read after the first render and again whenever the
+container's content changes, so headings that arrive later join the outline. A server-rendered page has no
+outline until it loads — pass `items` where that matters. Here the article's own headings make the outline.
+
+<Canvas of={TableOfContentsStories.ReadFromPage} />
+
+### In a scrolling box
+
+When the headings live in a box that scrolls rather than the page, `scrollContainerRef` tells the outline
+which one to measure and scroll. Every other story on this page uses it for the same reason: a story must
+not scroll the whole Docs page.
+
+<Canvas of={TableOfContentsStories.InAScrollingBox} />
+
+### Under a sticky header
+
+`scrollOffset` is the height, in pixels, of a header that sits over the top of the content. A heading
+counts as reached when it gets to just under that header, and a click leaves its section there.
+
+<Canvas of={TableOfContentsStories.StickyHeader} />
+
+### Without the title
+
+<Canvas of={TableOfContentsStories.WithoutTitle} />
+
+### Controlled
+
+`activeId` and `onActiveIdChange` hand the marked entry to you. A click asks through `onActiveIdChange` and
+the prop decides; while `activeId` is set, scrolling no longer changes the mark on its own.
+
+<Canvas of={TableOfContentsStories.Controlled} />
+
+### Translated text
+
+<Canvas of={TableOfContentsStories.Translated} />
+
+### Right-to-left
+
+<Canvas of={TableOfContentsStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use an outline on a long page, or one with several sections a reader will want to jump between:
+  documentation, an article, a settings page, a policy.
+- Keep it beside the content, and wrap it in `Affix` so it stays in view while the page scrolls.
+- Point it at headings that already have `id`s, and keep the labels short — the heading's own text.
+- Use `scrollOffset` whenever a sticky header covers the top of the page, so a section isn't left under it.
+- Pass `items` for a server-rendered page, or one whose outline must be there before scripts run.
+- Name each outline with `aria-label` when a page holds more than one.
+- Put a `"brand"` outline on `bg.surface`; use `"neutral"` on `bg.canvas`.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a short page — a few sections are already visible at once.
+- Don't use it as the site's navigation, or to show the steps in a process. It outlines one page — use
+  `Tabs`, `Breadcrumb` or a stepper for those.
+- Don't nest more than two or three levels; an outline that deep is a second table of contents.
+- Don't list every heading. Pick the level (`selector`) that gives a scannable list.
+- Don't point entries at elements that aren't on the page: a link to nowhere does nothing.
+- Don't put the outline inside the scrolling content it outlines, where it scrolls away.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The marked entry is the last heading that has reached the top of the scrolling area. Above the first
+  heading nothing is marked, which is honest about an introduction that belongs to no section.
+- At the very end of the page the last entry is marked even if its heading can never reach the top, so
+  a short final section isn't unreachable.
+- Leave some room after the last section, as a long page usually does, so every section can be scrolled
+  to the top by a click.
+- A click scrolls to the section and puts `#id` in the address (without adding a history entry per
+  click); a click with a modifier key, or a middle click, is left to the browser, so "open in a new tab"
+  works.
+- After a click made with the keyboard, focus moves to the section, so the next `Tab` continues from
+  there. The heading is given `tabindex="-1"` for that, unless it already has a `tabindex`.
+- In a long outline of its own, put the list in a box with a height (such as `ScrollArea`); it doesn't
+  scroll the current entry into view by itself.
+- Every piece of text the component writes itself is in `labels`.
+
+## Accessibility
+
+<Callout tone="info" title="A named navigation landmark holding a list of links, with the section being read marked">
+
+The outline is a `<nav>` — a navigation landmark, named by its visible heading ("On this page"), or by
+`labels.navigation` when the heading is hidden, or by your own `aria-label` / `aria-labelledby`, so a
+reader who lists a page's landmarks can tell it from the main navigation. Inside is a list of links, so a
+screen reader announces how many sections there are. The list and its items state their `list` and
+`listitem` roles outright, because Safari with VoiceOver otherwise stops treating a list with its markers
+removed as one. The entry being read carries `aria-current="location"`, announced as "current location".
+
+| Key | Behaviour |
+|---|---|
+| `Tab` | Moves to the next link — every entry is one stop |
+| `Shift+Tab` | Moves to the previous one |
+| `Enter` | Follows the link: scrolls to the section and moves focus to it |
+
+A mouse click scrolls without moving focus, as a plain anchor does; a keyboard activation also moves focus
+to the section. The marker is not colour alone: the current entry also has a thicker, differently coloured
+bar beside it (a system highlight colour in forced-colours mode), and `aria-current` says it in words. Its
+text keeps the same weight as the others, so entries never reflow as it moves. Every entry is at least 24
+pixels tall at every size.
+
+**Contrast**, measured in light and dark. On `bg.surface`, an entry (`text.secondary`) is 6.88:1 and
+10.47:1, and a hovered or `"neutral"`-current entry (`text.primary`) is 14.11:1 and 13.53:1. A
+`"brand"`-current entry (`text.brand`) is 7.37:1 (Purple) or 6.08:1 (Emerald) in light, and 7.45:1 or
+6.49:1 in dark; its bar (`border.brand`) is 7.37:1 and 6.08:1 in light, 7.45:1 and 8.51:1 in dark. The
+`"neutral"` bar (`border.neutral-strong`) is 4.70:1 and 6.08:1. **Put a `"brand"` outline on
+`bg.surface`, not `bg.canvas`**, where brand text falls under the 4.5:1 floor in dark mode (3.63:1 Purple,
+3.16:1 Emerald). The `"neutral"` tone is 6.05:1 and 5.10:1 for entries and 12.41:1 and 6.59:1 for the
+current one there. The track the bars sit on (`border.default`) is a decorative line and isn't held to 3:1.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<TableOfContents
+  items={[
+    { id: "overview", label: "Overview" },
+    { id: "installation", label: "Installation" },
+    { id: "requirements", label: "Requirements", level: 2 },
+    { id: "usage", label: "Usage" },
+  ]}
+/>
+
+{/* Read the h2 and h3 headings inside an article */}
+<TableOfContents contentRef={articleRef} />
+
+{/* ...and h4 too */}
+<TableOfContents contentRef={articleRef} selector="h2, h3, h4" />
+
+{/* Beside long content, in view while the page scrolls, clear of a 56px sticky header (offset 16 is 64px) */}
+<Affix offset={16}>
+  <TableOfContents contentRef={articleRef} scrollOffset={56} />
+</Affix>
+
+{/* The headings are in a scrolling box of your own */}
+<TableOfContents contentRef={boxRef} scrollContainerRef={boxRef} />
+
+{/* You decide which entry is marked */}
+<TableOfContents items={items} activeId={active} onActiveIdChange={setActive} />
+
+{/* Neutral, with no visible heading, named for screen readers */}
+<TableOfContents items={items} tone="neutral" showTitle={false} aria-label="Chapters" />
+
+{/* A native <nav> attribute, passed straight through */}
+<TableOfContents items={items} onFocus={() => track("toc-focus")} />
+```
+
+## Design tokens used
+
+<TokenRow token="text.secondary" usage="an entry at rest" />
+<TokenRow token="text.primary" usage="the title; a hovered entry; the current entry in the neutral tone" />
+<TokenRow token="text.brand" usage="the current entry in the brand tone" />
+<TokenRow token="border.default" usage="the track along the start edge (decorative)" />
+<TokenRow token="border.brand" usage="the marker beside the current entry, brand tone" />
+<TokenRow token="border.neutral-strong" usage="the marker beside the current entry, neutral tone" />
+<TokenRow token="border-width.2" usage="the track and marker's thickness" />
+<TokenRow token="font-family.primary" usage="the outline's typography" />
+<TokenRow token="font-size.xs" usage="the text size at the xs step" />
+<TokenRow token="font-size.sm" usage="the text size at the sm step" />
+<TokenRow token="font-size.base" usage="the text size at the md step" />
+<TokenRow token="font-size.md" usage="the text size at the lg step" />
+<TokenRow token="font-size.lg" usage="the text size at the xl step" />
+<TokenRow token="font-weight.semibold" usage="the title" />
+<TokenRow token="line-height.normal" usage="the outline's line height" />
+<TokenRow token="space.1" usage="the padding above and below an entry's text" />
+<TokenRow token="space.2" usage="the space after an entry's text; the gap under the title; one indent at the xs step" />
+<TokenRow token="space.3" usage="the space between the marker and an entry's text; one indent at the sm and md steps" />
+<TokenRow token="space.4" usage="one indent at the lg and xl steps" />
+<TokenRow token="space.6" usage="the shortest an entry may be (24px)" />
+<TokenRow token="radius.sm" usage="the focus ring's corners" />
+<TokenRow token="motion.duration.fast" usage="the colour change on hover and when an entry becomes current" />
+<TokenRow token="motion.easing.standard" usage="the colour change on hover and when an entry becomes current" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Breadcrumb"
+  description="Shows where a page sits in the site, rather than outlining the page itself"
+  href="/?path=/docs/molecules-navigation-breadcrumb--docs"
+>
+  <Breadcrumb size="xs" aria-label="Example">
+    <Breadcrumb.Item>
+      <Breadcrumb.Link href="/docs">Docs</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Item>
+      <Breadcrumb.Page>Page</Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb>
+</RelatedCard>
+<RelatedCard
+  name="Affix"
+  description="Keeps the outline in view beside long content"
+  href="/?path=/docs/atoms-layout-affix--docs"
+>
+  <Badge tone="info">Sticky</Badge>
+</RelatedCard>
+<RelatedCard
+  name="Link"
+  description="The anchor each entry is built on, for a link anywhere else"
+  href="/?path=/docs/atoms-typography-link--docs"
+>
+  <Link href="/docs">Docs</Link>
+</RelatedCard>
+</div>
