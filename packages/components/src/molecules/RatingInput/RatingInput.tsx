@@ -136,10 +136,15 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       } else if (roundTo !== undefined && !readOnly) {
         console.warn("RatingInput: `roundTo` is for a read-only rating; one a person can change always uses `precision`.");
       }
+      if (!readOnly && !ariaLabel && !ariaLabelledBy) {
+        console.warn(
+          "RatingInput: a rating a person can change needs an accessible name: pass `aria-label` or `aria-labelledby`, or put it in a `FormField`. (A `<label htmlFor>` can't name it: the group is not a labelable element.)",
+        );
+      }
       if (!readOnly && (count !== undefined || suffix !== undefined)) {
         console.warn("RatingInput: `count` and `suffix` are for a read-only summary; they are ignored on a rating a person can change.");
       }
-    }, [precision, roundTo, value, defaultValue, showValueName, valueNames, readOnly, count, suffix]);
+    }, [precision, roundTo, value, defaultValue, showValueName, valueNames, readOnly, count, suffix, ariaLabel, ariaLabelledBy]);
 
     const isControlled = value !== undefined;
     const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
@@ -253,17 +258,23 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
       );
     });
 
+    // A read-only rating is named from its own text, so a `aria-labelledby` has to point at the rating itself too.
+    const groupId = id ?? (readOnly && ariaLabelledBy ? `${uid}-self` : undefined);
     const group = readOnly ? (
+      // The handlers are the consumer's own, passed through as any native prop is; the component adds none here.
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
       <div
         {...props}
         ref={ref}
-        id={id}
+        id={groupId}
+        onKeyDown={onKeyDown}
+        onPointerLeave={onPointerLeave}
         className={styles.group}
         role="img"
         aria-label={[ariaLabel, reported > 0 ? labels.valueText(reported, max) : labels.notRated, countText]
           .filter((part): part is string => Boolean(part))
           .join(", ")}
-        aria-labelledby={ariaLabelledBy ? `${ariaLabelledBy} ${id ?? `${uid}-self`}` : undefined}
+        aria-labelledby={ariaLabelledBy ? `${ariaLabelledBy} ${groupId}` : undefined}
         aria-describedby={ariaDescribedBy}
       >
         {items}
@@ -303,8 +314,8 @@ export const RatingInput = forwardRef<HTMLDivElement, RatingInputProps>(
         <span className={styles.main}>
           {showValue ? (
             // The space for the widest value is kept, so a value that changes never moves the icons.
-            <span className={styles.value} aria-hidden="true" style={{ minInlineSize: `${formatValue(max).length}ch` }}>
-              {formatValue(previewing ? shown : reported)}
+            <span className={styles.value} aria-hidden="true" style={{ minInlineSize: `${String(formatValue(max)).length}ch` }}>
+              {String(formatValue(previewing ? shown : reported))}
             </span>
           ) : null}
           {group}

@@ -59,7 +59,7 @@ export interface RatingInputProps
    */
   roundTo?: RatingInputPrecision;
   /**
-   * The icon's box, on the shared size scale. Every choice is a target of at least 24px.
+   * The icon's box, on the shared size scale. At whole steps every choice is a target of at least 24px; at half steps each half is half an icon's width.
    * @default "md"
    */
   size?: InputSize;
@@ -171,7 +171,7 @@ export interface RatingInputProps
    */
   "aria-describedby"?: string;
   /**
-   * The id of the element that carries the role, so a label's `htmlFor` or an `aria-labelledby` can point at it.
+   * The id of the element that carries the role, so an `aria-labelledby` or `aria-describedby` elsewhere can refer to it. A `<label htmlFor>` can't name the rating: the group is not a labelable element.
    */
   id?: string;
   /**

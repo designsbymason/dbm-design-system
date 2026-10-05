@@ -1,6 +1,6 @@
 # 0041 — RatingInput is a native radio group, with two radios per icon at half steps, over a slider role
 
-**Status:** Accepted · **Date:** 2026-10-04
+**Status:** Accepted · **Date:** 2026-10-04 · **Amended 2026-10-04** — the scale reads left to right by default but takes an explicit `dir`, and handles Left and Right itself in `rtl`; the decision itself is unchanged
 
 ## Context
 A rating is a short ladder of choices drawn as icons, with a value of `0` for none and an optional half-step precision. There are two honest ways to build it: a group of radios (the pattern the ARIA practices guide gives for a star rating), or one focusable element with `role="slider"`. The choice decides how much keyboard, pointer, form and screen-reader behaviour is the browser's own and how a half step is expressed.
@@ -10,7 +10,7 @@ A rating is a short ladder of choices drawn as icons, with a value of `0` for no
 - **At `precision={0.5}` each icon has two radios**, one over each half, so a half step is a real choice with its own name, reached by the arrow keys and by pressing the left half of an icon.
 - **The value is a number**, `0` for no rating; interactive values sit on a step, and a **`readOnly` rating is not a group of disabled radios but one `role="img"`** with a text alternative, drawing any value exactly (a clipped filled icon over the outline).
 - **The radios share a name even when the component has none**: a generated one, with a `form` attribute pointing at nothing so they belong to no form and submit nothing, keeps them one group (one tab stop, arrow keys) without polluting a surrounding `<form>`. An empty `name` is treated as no name.
-- **The scale always reads left to right**, like a number, whatever the page's direction.
+- **The scale reads left to right by default**, like a number, whatever the page's direction. *(Amended 2026-10-04: this originally said "always reads left to right"; a `dir` prop (`"ltr"` default, `"rtl"`) was then added, set explicitly and not read from the page, and in `rtl` the component handles Left and Right itself because browsers disagree on whether a native radio group's arrows follow the direction it is drawn in.)*
 
 ## Alternatives considered
 - **One `role="slider"` element:** handles any precision naturally, but the arrow-key, Home/End, pointer-drag and value-announcement code is hand-written, "no rating" has no natural form, and a hidden input is needed for forms. A rating isn't continuous, so the control's own semantics (a value on a range) say more than it means.

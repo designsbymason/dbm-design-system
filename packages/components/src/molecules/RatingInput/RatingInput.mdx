@@ -165,8 +165,9 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 <div className="dbm-do-dont-grid">
 <Callout tone="success" title="Do">
 
-- Give the rating a name: a visible `FieldLabel` (or a `FormField`), or `aria-label` when the text around it
-  already says what is being rated.
+- Give the rating a name: a visible label whose id you pass as `aria-labelledby` (a `FormField` does this for you),
+  or `aria-label` when the text around it already says what is being rated. A `<label htmlFor>` can't name it, since
+  the group is not a labelable element.
 - Use `readOnly` with a fractional `value` to show an average, so 4.3 reads as 4.3 and not as 4.
 - Use `precision={0.5}` when the choice itself needs finer steps, such as a review that can be 3.5 stars.
 - Set `valueNames` when the numbers need meaning ("Poor" to "Excellent"); the names are announced with each choice.
@@ -188,8 +189,9 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
 
 ## Best practices
 
-- Choose a `size` that fits the space: ten icons at `xl` are wider than a phone. Every choice is a target of at
-  least 24px at every size.
+- Choose a `size` that fits the space. A long scale that doesn't fit wraps onto a second row rather than make the page
+  scroll sideways. At whole steps every choice is a target of at least 24px at every size; at half steps each half is
+  narrower (see Accessibility).
 - Show a rating's number or name as text somewhere near it as well when it matters; the icons alone are a quick,
   approximate read.
 - A required rating that is missing should say so with `hasError` and an error message, not only by colour.
@@ -209,6 +211,11 @@ outermost box; `ref`, `id`, `data-testid` and the `aria-*` props go on the eleme
   arrow keys move and choose in one step, as in any radio group.
 - With `clearable`, Backspace, Delete and Escape take the rating back and pressing the chosen icon again does the
   same; a rating that is not clearable can't be emptied once it has a value.
+- At `precision={0.5}` each icon's two halves are separate pointer targets, so at the smaller sizes a half is narrower
+  than 24px (a half is 12px wide at `xs`, 16px at `md`, and reaches 24px only at `xl`). Prefer whole steps, or `xl`,
+  on a touch screen; the keyboard reaches every half at any size.
+- Escape clears a `clearable` rating, but inside a dialog the dialog's own Escape handling runs first and closes it,
+  so Backspace and Delete are the reliable keys there.
 - A half step has its own choice ("2.5 out of 5") and is reached by the arrow keys as well as by pressing the left
   half of an icon.
 - The hover preview is for mouse pointers only, and stops as soon as the keyboard is used; a touch tap simply
@@ -347,10 +354,10 @@ The icons are drawn by `Icon`, which lists its own colour tokens (`icon.brand`, 
 </RelatedCard>
 <RelatedCard
   name="FieldLabel"
-  description="The label atom that names this field when you are not using a FormField"
+  description="The label atom: give it an id and pass that as the rating's aria-labelledby, or use a FormField"
   href="/?path=/story/atoms-inputs-fieldlabel--playground"
 >
-  <FieldLabel htmlFor="example">Rating</FieldLabel>
+  <FieldLabel id="rating-label">Rating</FieldLabel>
 </RelatedCard>
 <RelatedCard
   name="FieldHelperText"

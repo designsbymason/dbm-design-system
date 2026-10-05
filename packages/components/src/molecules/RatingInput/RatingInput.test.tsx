@@ -590,6 +590,50 @@ describe("RatingInput", () => {
     });
   });
 
+  describe("final review probes", () => {
+    it("names a read-only rating from aria-labelledby plus its own text, with no id passed in", () => {
+      render(
+        <>
+          <span id="what">Average rating</span>
+          <RatingInput readOnly value={2} aria-labelledby="what" />
+        </>,
+      );
+      expect(screen.getByRole("img")).toHaveAccessibleName("Average rating Rated 2 out of 5");
+    });
+
+    it("calls the consumer's key and pointer-leave handlers on a read-only rating too", () => {
+      const onKeyDown = vi.fn();
+      const onPointerLeave = vi.fn();
+      render(<RatingInput aria-label="Average" readOnly value={2} onKeyDown={onKeyDown} onPointerLeave={onPointerLeave} />);
+      fireEvent.keyDown(screen.getByRole("img"), { key: "a" });
+      fireEvent.pointerLeave(screen.getByRole("img"));
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(onPointerLeave).toHaveBeenCalledTimes(1);
+    });
+
+    it("draws whatever formatValue returns, even when it is not a string", () => {
+      const { container } = render(
+        <RatingInput aria-label="Rating" readOnly showValue value={4} formatValue={((value: number) => value * 2) as unknown as (value: number) => string} />,
+      );
+      const value = container.querySelector("[class*='value']:not([class*='valueName'])") as HTMLElement;
+      expect(value).toHaveTextContent("8");
+      // The width reserved for the widest value (10, two characters) is measured on the text, not on a number.
+      expect(value).toHaveStyle({ minInlineSize: "2ch" });
+    });
+
+    it("warns in development when a rating a person can change has no accessible name", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(<RatingInput />);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("needs an accessible name"));
+      warn.mockClear();
+      render(<RatingInput aria-label="Rating" />);
+      render(<RatingInput aria-labelledby="x" />);
+      render(<RatingInput readOnly value={3} />);
+      expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("needs an accessible name"));
+      warn.mockRestore();
+    });
+  });
+
   describe("props and refs", () => {
     it("puts the ref, id, data-testid and aria props on the group, and className and style on the outer box", () => {
       const ref = createRef<HTMLDivElement>();

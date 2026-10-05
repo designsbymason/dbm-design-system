@@ -12,6 +12,7 @@
   align-items: center;
   display: inline-flex;
   gap: var(--dbm-space-2);
+  max-inline-size: 100%;
 }
 
 .value {
@@ -37,9 +38,12 @@
   line-height: var(--dbm-line-height-tight);
 }
 
+/* A long scale on a narrow screen wraps onto a second row rather than make the page scroll sideways. */
 .group {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: var(--dbm-space-1);
+  min-inline-size: 0;
 }
 
 /* Each icon, with room around it so a choice is a target of at least 24px, and the radios lying over it. */

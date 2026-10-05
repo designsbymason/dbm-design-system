@@ -65,7 +65,7 @@ const meta: Meta<typeof RatingInput> = {
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
-      description: "The icon's box, on the shared size scale. Every choice is a target of at least 24px.",
+      description: "The icon's box, on the shared size scale. At whole steps every choice is a target of at least 24px; at half steps each half is half an icon's width.",
       table: { defaultValue: { summary: "md" } },
     },
     tone: {
@@ -255,7 +255,8 @@ export const Playground: Story = {
       if: { arg: "readOnly" },
     },
   },
-  args: { icon: "Star" as never, count: 124, suffix: "None" as never, roundTo: "Exact" as never },
+  // `defaultValue` is the prop's real default (no rating) here, like every other control's value in this story.
+  args: { icon: "Star" as never, count: 124, suffix: "None" as never, roundTo: "Exact" as never, defaultValue: 0 },
 };
 
 export const AllSizes: Story = {
@@ -555,6 +556,27 @@ export const SummaryWrapsCheck: Story = {
   },
 };
 
+export const LongScaleWrapsCheck: Story = {
+  name: "Ten icons wrap onto a second row on a narrow screen instead of overflowing — interaction test",
+  tags: ["!dev"],
+  args: { max: 10, size: "lg", showValue: true, readOnly: true, defaultValue: undefined, "aria-label": "Average rating" },
+  render: (args) => (
+    <div data-box="" style={{ inlineSize: "20rem" }}>
+      <RatingInput {...args} value={4.2} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector("[data-box]") as HTMLElement;
+    await expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth);
+    const rows = new Set(items(canvasElement).map((item) => Math.round(item.getBoundingClientRect().top)));
+    await expect(rows.size).toBeGreaterThan(1);
+    // Every icon is still inside the box.
+    for (const item of items(canvasElement)) {
+      await expect(item.getBoundingClientRect().right).toBeLessThanOrEqual(box.getBoundingClientRect().right + 0.5);
+    }
+  },
+};
+
 export const HalfClickCheck: Story = {
   name: "The left half of an icon chooses the half, the right half the whole — interaction test",
   tags: ["!dev"],
@@ -576,7 +598,7 @@ export const HalfClickCheck: Story = {
 };
 
 export const TargetSizeCheck: Story = {
-  name: "Every choice is a target of at least 24px at every size — interaction test",
+  name: "Every icon is a target of at least 24px at every size (a half step is half of one) — interaction test",
   tags: ["!dev"],
   args: { precision: 0.5 },
   render: (args) => (
