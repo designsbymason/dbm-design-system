@@ -119,3 +119,24 @@ The two items asked about (whether a year/month view and a week choice are `Cale
 **Self-verification (real runs, 2026-10-05):** `pnpm lint`, `pnpm build`, `pnpm test` (122 files, 6,574 tests) and the Chromium Storybook project (146 files, 1,249 tests) pass, the bundle check is within budget with the override (10.26KB JS / 3.21KB CSS) and the Foundations check passes. One full Storybook run failed a `TimePicker` check ("Filling the field in never changes its width") that passes alone three times and on the rerun of the full suite, with no `TimePicker` file changed.
 
 **Not done:** the new grids in dark mode and Emerald by eye; a screen reader on the heading button and the grids; a decade view and other week-numbering systems (named in the ADR).
+
+## Final review before Finalizing (2026-10-05)
+
+A full `06-engineering-standards.md` §9 pass over the component as it stands, with the code read afresh, not just the tests rerun. Findings, in order, all actioned:
+
+1. **Range, multiple and week grids did not say several cells can be selected** (`aria-multiselectable` was missing from the grid of days). Added for those three modes, and not for a single date; a test for each.
+2. **A pen could start a drag**, though the decision (ADR-0046) and the docs say a drag is for a mouse. The guard now requires a mouse; a test presses with a pen and a finger and expects nothing.
+3. **`Calendar.tsx` was 1,292 lines** (`06` §1: a file hard to scan is a signal to extract). The parts that hold no state of the calendar's own were moved out: `calendarLabels.ts` (the English text and its derived labels), `calendarHelpers.ts` (constants and pure helpers), `CalendarLegend.tsx` (the key) and `CalendarPicker.tsx` (the months and years grids, which mount when opened and keep their own state). `Calendar.tsx` is 985 lines. No behaviour changed: all 309 Calendar unit tests (with the Docs guard) pass unchanged, and 22 deliberate breaks of the moved picker are all caught.
+4. **A types comment named an internal guideline document** (`05-component-api-conventions.md`). Removed.
+5. **Two gaps in the tests:** a drag's window listeners were not shown to be removed when the calendar goes away mid-drag (a test now spies on `removeEventListener`), and StrictMode and a server render had only been run with the first features (a test each now runs the newer modes and layouts).
+
+**Checked and sound (not repeated above):** every prop has a doc comment; every snippet, including the Playground builder in all four modes, typechecks as written; no hardcoded pixel, colour or time value in the stylesheet (the percentages left are layout fractions); no `any`, `@ts-` or unexplained `eslint-disable`; no reader-facing text names an internal document or a date; the Docs page has 44 props at 644px with no empty description, 24 canvases and no errors; all 32 Playground controls change the canvas when driven through the channel; contrast measured from the rendered colours in all four themes: every non-exempt text at least 4.7:1 (neighbouring days), days 9.66:1 or more, chosen days 6.08:1 or more (unavailable days are exempt); every layout (plain, fields, views, week numbers, footer and key, markers, rounded) stays inside the calendar's own box at the narrowest width, 168px; Emerald light and dark looked at.
+
+**Numbers:** `pnpm lint`, `pnpm build`, `pnpm test` (122 files, 6,579 tests) and the Chromium Storybook project (146 files, 1,250 tests) pass; the Foundations check passes; the bundle is 10.54KB JS / 3.21KB CSS against the 12KB override (the extraction added about 0.3KB of module boundaries).
+
+**Open, for the user to accept or ask for before Finalizing:**
+- No screen-reader pass (names, roles, announcements and the grids were checked by structure and by test, not by listening).
+- No real touch device: the swipe is dispatched as events, not made by a finger; the drag was tried with Playwright's mouse.
+- The slide animation and the dark and Emerald themes of the newest grids were looked at on a few stories, not all.
+- `getMarker`, `isDateDisabled` and the markers run for every day of every month on every render, and a hover over a day re-renders the calendar in range and week modes. Fine at the sizes tested; not profiled with four months on show.
+- The two `TimePicker` browser checks that fail intermittently under load are not Calendar's (see the project notes).

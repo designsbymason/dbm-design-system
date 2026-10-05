@@ -1720,6 +1720,30 @@ describe("Calendar", () => {
       await userEvent.pointer({ keys: "[/MouseLeft]", target: day("2026-10-12") });
     });
 
+    it("does not drag with a pen or a finger, only a mouse", async () => {
+      const onValueChange = vi.fn();
+      range({ onValueChange });
+      for (const pointerType of ["pen", "touch"]) {
+        fireEvent.pointerDown(day("2026-10-08"), { pointerType, button: 0, isPrimary: true });
+        fireEvent.pointerEnter(day("2026-10-12"), { pointerType });
+        fireEvent.pointerUp(day("2026-10-12"), { pointerType });
+      }
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(cell("2026-10-10").className).not.toMatch(/band/);
+    });
+
+    it("leaves nothing listening when the calendar goes away mid-drag", async () => {
+      const onValueChange = vi.fn();
+      const removed = vi.spyOn(window, "removeEventListener");
+      const { unmount } = range({ onValueChange });
+      await userEvent.pointer([{ keys: "[MouseLeft>]", target: day("2026-10-08") }, { target: day("2026-10-12") }]);
+      unmount();
+      expect(removed).toHaveBeenCalledWith("pointerup", expect.any(Function));
+      expect(removed).toHaveBeenCalledWith("pointercancel", expect.any(Function));
+      fireEvent.pointerUp(document.body, { pointerType: "mouse" });
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
     it("does not drag in single or multiple mode", async () => {
       const onValueChange = vi.fn();
       renderCalendar({ onValueChange });
@@ -2302,6 +2326,43 @@ describe("Calendar", () => {
       expect(onValueChange).toHaveBeenCalledOnce();
     });
 
+    it("works inside StrictMode with the newer features on: views, several months, a drag target and a form name", async () => {
+      const onValueChange = vi.fn();
+      render(
+        <StrictMode>
+          <Calendar
+            mode="range"
+            defaultMonth="2026-10"
+            today="2026-10-14"
+            captionLayout="dropdown"
+            numberOfMonths={2}
+            showWeekNumbers
+            showLegend
+            clearable
+            name="stay"
+            onValueChange={onValueChange}
+          />
+        </StrictMode>,
+      );
+      await userEvent.click(day("2026-10-20"));
+      await userEvent.click(day("2026-11-03"));
+      expect(onValueChange).toHaveBeenLastCalledWith(["2026-10-20", "2026-11-03"]);
+      expect(document.querySelectorAll("input[name='stay[]']")).toHaveLength(2);
+    });
+
+    it("renders each mode and layout on the server without touching the browser", () => {
+      for (const props of [
+        { mode: "range" as const, showWeekNumbers: true, numberOfMonths: 2 },
+        { mode: "multiple" as const, defaultValue: ["2026-10-06"], name: "days" },
+        { mode: "week" as const, defaultValue: "2026-10-12" },
+        { captionLayout: "dropdown" as const },
+        { captionLayout: "views" as const, showLegend: true, showTodayButton: true },
+      ]) {
+        const html = renderToString(<Calendar defaultMonth="2026-10" {...(props as CalendarProps)} />);
+        expect(html).toContain("October 2026");
+      }
+    });
+
     it("stays within the calendar's years", async () => {
       render(<Calendar defaultMonth="9999-12" today="9999-12-31" />);
       focusDay("9999-12-31");
@@ -2332,6 +2393,17 @@ describe("Calendar", () => {
   });
 
   describe("accessibility", () => {
+    it("says that several cells can be selected in range, multiple and week mode, and not in single mode", () => {
+      const grid = () => screen.getAllByRole("grid").at(-1) as HTMLElement;
+      const modes: Array<[string, boolean]> = [["single", false], ["range", true], ["multiple", true], ["week", true]];
+      for (const [mode, several] of modes) {
+        const { unmount } = render(<Calendar mode={mode as "range"} month="2026-10" today="2026-10-14" />);
+        if (several) expect(grid()).toHaveAttribute("aria-multiselectable", "true");
+        else expect(grid()).not.toHaveAttribute("aria-multiselectable");
+        unmount();
+      }
+    });
+
     it("has no axe violations as a single-date calendar", async () => {
       const { container } = renderCalendar({ defaultValue: "2026-10-06" });
       expect(await axe(container)).toHaveNoViolations();

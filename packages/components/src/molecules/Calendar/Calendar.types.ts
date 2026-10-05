@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /**
- * The size of the calendar, on the standard 5-step scale (`05-component-api-conventions.md` §2). It sets
+ * The size of the calendar, on the standard 5-step scale. It sets
  * the size of a day's square (the same step as `IconButton`, so a day is as tall as a `Button` of that size)
  * and of the text in it.
  */

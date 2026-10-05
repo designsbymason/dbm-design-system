@@ -1,5 +1,5 @@
 import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
+import { cx, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
 import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, FocusEvent, KeyboardEvent, PointerEvent } from "react";
 import { Button } from "../../atoms/Button";
@@ -10,7 +10,6 @@ import {
   addDays,
   daysBetween,
   formatDate,
-  isoWeekNumber,
   formatMonth,
   monthGrid,
   moveDate,
@@ -18,10 +17,32 @@ import {
   parseMonth,
   weekdayOf,
 } from "../../internal/date/dateValue";
-import type { CivilDate, DateMove, Weekday } from "../../internal/date/dateValue";
+import type { CivilDate, Weekday } from "../../internal/date/dateValue";
 import { Select } from "../Select";
 import styles from "./Calendar.module.css";
-import type { CalendarLabels, CalendarMarker, CalendarMarkerTone, CalendarProps, CalendarSize } from "./Calendar.types";
+import {
+  FIRST_MONTH,
+  LAST_MONTH,
+  MAX_MONTHS,
+  SCAN_DAYS,
+  SWIPE_DISTANCE,
+  SWIPE_DOMINANCE,
+  dateOrNone,
+  dayElement,
+  keyMoves,
+  monthOfIndex,
+  noClockOnTheServer,
+  noSay,
+  readClock,
+  subscribeToNothing,
+  utcMonth,
+  weekNumberOf,
+  wholeNumber,
+} from "./calendarHelpers";
+import { buildLabels } from "./calendarLabels";
+import { CalendarLegend } from "./CalendarLegend";
+import { CalendarPicker } from "./CalendarPicker";
+import type { CalendarMarker, CalendarMarkerTone, CalendarProps, CalendarSize } from "./Calendar.types";
 
 const sizeClass: Record<CalendarSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -43,146 +64,6 @@ const markerToneClass: Record<CalendarMarkerTone, string | undefined> = {
 
 // The same icon step `Button` and `Pagination` use at each size.
 const iconSize: Record<CalendarSize, IconSize> = { xs: "xs", sm: "xs", md: "sm", lg: "sm", xl: "md" };
-
-/** Months counted from year 0: January of year 1 is 12, December 9999 is 119,999. */
-const FIRST_MONTH = 12;
-const LAST_MONTH = 9999 * 12 + 11;
-/** At most this many months side by side. */
-const MAX_MONTHS = 4;
-/** How far a finger must travel sideways, in pixels, to turn the month, and how much further than it travels up or down. */
-const SWIPE_DISTANCE = 48;
-const SWIPE_DOMINANCE = 2;
-/** How far ahead of the start of a range the unavailable dates are looked for, when a range may not run over them. */
-const SCAN_DAYS = 732;
-
-const defaultMonths = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
-const defaultMonthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
-const defaultWeekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-const defaultWeekdaysShort = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const;
-
-/**
- * The English text, with the labels that depend on others (the heading and a day's name need the month
- * names) built from the names in force, so translating `months` translates them too.
- */
-function buildLabels(format: (value: number) => string, overrides: Partial<CalendarLabels> | undefined): CalendarLabels {
-  const merged = mergeDefined<CalendarLabels>(
-    {
-      calendar: "Calendar",
-      previousMonth: "Previous month",
-      nextMonth: "Next month",
-      months: defaultMonths,
-      monthsShort: defaultMonthsShort,
-      weekdays: defaultWeekdays,
-      weekdaysShort: defaultWeekdaysShort,
-      monthYear: () => "",
-      day: () => "",
-      today: "today",
-      rangeStart: "range start",
-      rangeEnd: "range end",
-      monthSelect: "Month",
-      yearSelect: "Year",
-      monthRange: (first, last) => `${first} – ${last}`,
-      todayButton: "Today",
-      clearButton: "Clear",
-      previousYear: "Previous year",
-      nextYear: "Next year",
-      previousYears: "Previous years",
-      nextYears: "Next years",
-      openMonths: () => "",
-      openYears: () => "",
-      yearsRange: (from, to) => `${from} – ${to}`,
-      monthsView: (year) => `Months of ${year}`,
-      weekChosen: (start, end) => `Week ${start} to ${end}`,
-      weekNumberShort: "Wk",
-      weekNumberColumn: "Week number",
-      weekNumber: () => "",
-      rangeStartChosen: (day) => `Range start ${day}`,
-      rangeChosen: (start, end) => `Range ${start} to ${end}`,
-      datesChosen: () => "",
-      legend: "Key",
-      legendToday: "Today",
-      legendSelected: "Selected",
-      legendRange: "In range",
-      legendUnavailable: "Unavailable",
-    },
-    overrides,
-  );
-  // A list of the wrong length can't name every month or weekday; the English one stands in (a warning says so).
-  if (merged.months.length !== 12) merged.months = defaultMonths;
-  if (merged.monthsShort.length !== 12) merged.monthsShort = defaultMonthsShort;
-  if (merged.weekdays.length !== 7) merged.weekdays = defaultWeekdays;
-  if (merged.weekdaysShort.length !== 7) merged.weekdaysShort = defaultWeekdaysShort;
-  const { months, weekdays } = merged;
-  if (overrides?.monthYear === undefined) {
-    merged.monthYear = (year, month) => `${months[month - 1] ?? ""} ${format(year)}`;
-  }
-  if (overrides?.openMonths === undefined) merged.openMonths = (heading) => `${heading}, choose a month`;
-  if (overrides?.openYears === undefined) merged.openYears = (year) => `${year}, choose a year`;
-  if (overrides?.weekNumber === undefined) merged.weekNumber = (week) => `Week ${format(week)}`;
-  if (overrides?.datesChosen === undefined) {
-    merged.datesChosen = (count) => (count === 1 ? `${format(count)} date selected` : `${format(count)} dates selected`);
-  }
-  if (overrides?.day === undefined) {
-    merged.day = ({ year, month, day, weekday }) =>
-      `${weekdays[weekday] ?? ""}, ${months[month - 1] ?? ""} ${format(day)}, ${format(year)}`;
-  }
-  return merged;
-}
-
-/** Today in the browser's own timezone, as `"YYYY-MM-DD"`. */
-function readClock(): string {
-  const now = new Date();
-  return formatDate({ year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() });
-}
-const subscribeToNothing = (): (() => void) => () => undefined;
-const noClockOnTheServer = (): undefined => undefined;
-
-/** The month a calendar shows when nothing else says: this month in UTC, which a server and a browser agree on. */
-function utcMonth(): string {
-  const now = new Date();
-  return formatMonth(now.getUTCFullYear(), now.getUTCMonth() + 1);
-}
-
-/** A string that is a real date, else `""`. */
-const dateOrNone = (value: unknown): string => (parseDate(value) ? (value as string) : "");
-
-/** The ISO week number of a row of days: that of its Thursday, which is in the same week as most of the row. */
-const weekNumberOf = (week: CivilDate[]): number =>
-  isoWeekNumber(week.find((civil) => weekdayOf(civil) === 4) ?? (week[0] as CivilDate));
-
-/** The `"YYYY-MM"` of a month index (months counted from year 0). */
-const monthOfIndex = (index: number): string => formatMonth(Math.floor(index / 12), (index % 12) + 1);
-
-/** A whole number of at least `least`, else `fallback`. */
-const wholeNumber = (value: unknown, least: number, fallback: number): number =>
-  typeof value === "number" && Number.isInteger(value) && value >= least ? value : fallback;
-
-const keyMoves: Record<string, DateMove | undefined> = {
-  ArrowLeft: "day-back",
-  ArrowRight: "day-forward",
-  ArrowUp: "week-back",
-  ArrowDown: "week-forward",
-  Home: "week-start",
-  End: "week-end",
-  PageUp: "month-back",
-  PageDown: "month-forward",
-};
-
-const dayElement = (target: EventTarget | null): HTMLButtonElement | null =>
-  target instanceof Element ? target.closest<HTMLButtonElement>("button[data-date]") : null;
 
 /**
  * A month of days to choose a date, or a range of dates, from: a heading with previous and next month
@@ -290,10 +171,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
   const [dragFrom, setDragFrom] = useState<string | null>(null);
   const swipeFrom = useRef<{ x: number; y: number } | null>(null);
   // `captionLayout="views"`: which grid is on show, the year it is looking at, and the cell that has focus in it.
-  const [view, setView] = useState<"days" | "months" | "years">("days");
-  const [pickerYear, setPickerYear] = useState(0);
-  const [pickerFocus, setPickerFocus] = useState(0);
-  const pendingPickerFocus = useRef(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const pendingHeadingFocus = useRef(false);
   const headingRef = useRef<HTMLButtonElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -351,7 +229,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
 
   // The months and years grids are only for one month on show; with more, the layout is the plain heading.
   const viewsLayout = captionLayout === "views" && count === 1;
-  const activeView = viewsLayout ? view : "days";
+  const pickerShown = viewsLayout && pickerOpen;
 
   // A change of month starts a slide in its direction. The two animations alternate (`n` odd or even) so a second
   // change restarts it without remounting the grids, which would drop keyboard focus from the buttons.
@@ -549,7 +427,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
       return;
     }
     const date = dayElement(event.target)?.dataset.date;
-    if (!isRange || event.button !== 0 || readOnly || !date || baseUnavailable(date)) return;
+    // A drag is for a mouse: a pen and a finger choose with two taps, as the keyboard does with two keys.
+    if (!isRange || event.pointerType !== "mouse" || event.button !== 0 || readOnly || !date || baseUnavailable(date)) return;
     setDragFrom(date);
   };
 
@@ -564,112 +443,15 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     stepMonth((across < 0) === (dir !== "rtl") ? 1 : -1);
   };
 
-  // ---- The months and years grids (`captionLayout="views"`) ----
-  const minYear = min !== "" ? (parseDate(min) as CivilDate).year : 1;
-  const maxYear = max !== "" ? (parseDate(max) as CivilDate).year : 9999;
-  const yearAllowed = (year: number): boolean => year >= minYear && year <= maxYear;
-  const monthAllowed = (year: number, monthNumber: number): boolean => {
-    const key = formatMonth(year, monthNumber);
-    return !((min !== "" && key < min.slice(0, 7)) || (max !== "" && key > max.slice(0, 7)));
-  };
-  // The years grid is a page of twelve, the page that holds `pickerYear`.
-  const pageFrom = pickerYear - ((pickerYear - 1) % 12);
-  const pageTo = Math.min(pageFrom + 11, 9999);
-  const clampYear = (year: number): number => Math.min(Math.max(year, 1), 9999);
-
-  const openMonths = (): void => {
-    setPickerYear(shown.year);
-    setPickerFocus(shown.month);
-    setView("months");
-    pendingPickerFocus.current = true;
-    if (announce) say(labels.monthsView(formatNumber(shown.year)));
-  };
-  const openYears = (): void => {
-    setPickerFocus(pickerYear);
-    setView("years");
-    pendingPickerFocus.current = true;
-    if (announce) say(labels.yearsRange(formatNumber(pageFrom), formatNumber(pageTo)));
-  };
-  const backToDays = (): void => {
-    setView("days");
-    pendingHeadingFocus.current = true;
-  };
-  const pickMonth = (monthNumber: number): void => {
-    if (!monthAllowed(pickerYear, monthNumber)) return;
-    goToMonth(pickerYear, monthNumber);
-    setView("days");
+  // `captionLayout="views"`: the picker has chosen a month, or been closed without a choice.
+  const choosePickerMonth = (year: number, monthNumber: number): void => {
+    goToMonth(year, monthNumber);
+    setPickerOpen(false);
     pendingFocus.current = true;
   };
-  const pickYear = (year: number): void => {
-    if (!yearAllowed(year)) return;
-    setPickerYear(year);
-    setPickerFocus(year === shown.year ? shown.month : 1);
-    setView("months");
-    pendingPickerFocus.current = true;
-    if (announce) say(labels.monthsView(formatNumber(year)));
-  };
-  /** Turns the grid: a year in the months grid, a page of twelve in the years grid. */
-  const stepPicker = (by: number): void => {
-    const next = clampYear(pickerYear + (view === "months" ? by : by * 12));
-    setPickerYear(next);
-    if (view === "years") setPickerFocus(clampYear(pickerFocus + by * 12));
-  };
-
-  const onPickerKeyDown = (event: KeyboardEvent<HTMLElement>): void => {
-    const cell = (event.target as Element).closest<HTMLButtonElement>("button[data-picker-cell]");
-    if (!cell) return;
-    if (event.key === "Escape") {
-      event.preventDefault();
-      backToDays();
-      return;
-    }
-    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
-    const current = Number(cell.dataset.pickerCell);
-    const first = view === "months" ? 1 : pageFrom;
-    const rtl = dir === "rtl";
-    let next: number;
-    switch (event.key) {
-      case "ArrowLeft":
-        next = current + (rtl ? 1 : -1);
-        break;
-      case "ArrowRight":
-        next = current + (rtl ? -1 : 1);
-        break;
-      case "ArrowUp":
-        next = current - 3;
-        break;
-      case "ArrowDown":
-        next = current + 3;
-        break;
-      case "Home":
-        next = current - ((current - first) % 3);
-        break;
-      case "End":
-        next = current - ((current - first) % 3) + 2;
-        break;
-      case "PageUp":
-      case "PageDown": {
-        event.preventDefault();
-        const by = event.key === "PageUp" ? -1 : 1;
-        // A year in the months grid, a page in the years grid; the cell that has focus stays where it is.
-        stepPicker(by);
-        pendingPickerFocus.current = true;
-        return;
-      }
-      default:
-        return;
-    }
-    event.preventDefault();
-    if (view === "months") {
-      // A move past the top, the bottom or either end of the twelve stays where it is.
-      if (next < 1 || next > 12) return;
-    } else {
-      next = clampYear(next);
-      // Moving off the page turns to the page that holds the year.
-      if (next < pageFrom || next > pageTo) setPickerYear(next);
-    }
-    setPickerFocus(next);
-    pendingPickerFocus.current = true;
+  const closePicker = (): void => {
+    setPickerOpen(false);
+    pendingHeadingFocus.current = true;
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>): void => {
@@ -707,14 +489,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     rootRef.current?.querySelector<HTMLButtonElement>(`button[data-date="${tabbable}"]`)?.focus();
   });
 
-  // Moves focus into the months or years grid when one has opened or been turned, and back to the heading button when
-  // Escape closes it.
+  // Moves focus back to the heading button when Escape closes the months or years grid.
   useEffect(() => {
-    if (pendingPickerFocus.current) {
-      pendingPickerFocus.current = false;
-      const inPage = view === "years" ? Math.min(Math.max(pickerFocus, pageFrom), pageTo) : pickerFocus;
-      rootRef.current?.querySelector<HTMLButtonElement>(`button[data-picker-cell="${inPage}"]`)?.focus();
-    }
     if (pendingHeadingFocus.current) {
       pendingHeadingFocus.current = false;
       headingRef.current?.focus();
@@ -913,94 +689,6 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     </Button>
   );
 
-  const todayParsed = parseDate(today);
-  const pickerPreviousUnavailable =
-    disabled || (activeView === "months" ? pickerYear - 1 < minYear : pageFrom - 1 < minYear || pageFrom <= 1);
-  const pickerNextUnavailable =
-    disabled || (activeView === "months" ? pickerYear + 1 > maxYear : pageTo + 1 > maxYear || pageTo >= 9999);
-  const pickerYearText = formatNumber(pickerYear);
-  const pickerTabbable = activeView === "years" ? Math.min(Math.max(pickerFocus, pageFrom), pageTo) : pickerFocus;
-  const picker = (
-    <div className={styles.month}>
-      <div className={styles.header}>
-        <Button asChild variant="tertiary" size={size} rounded={rounded} disabled={pickerPreviousUnavailable} className={styles.monthButton}>
-          <button
-            type="button"
-            aria-label={activeView === "months" ? labels.previousYear : labels.previousYears}
-            onClick={() => stepPicker(-1)}
-          >
-            <Icon icon={flipped ? CaretRightIcon : CaretLeftIcon} size={iconSize[size]} tone="brand" />
-          </button>
-        </Button>
-        {activeView === "months" ? (
-          <button
-            ref={headingRef}
-            type="button"
-            className={styles.captionButton}
-            aria-label={labels.openYears(pickerYearText)}
-            onClick={openYears}
-          >
-            {pickerYearText}
-          </button>
-        ) : (
-          <div className={styles.caption}>{labels.yearsRange(formatNumber(pageFrom), formatNumber(pageTo))}</div>
-        )}
-        <Button asChild variant="tertiary" size={size} rounded={rounded} disabled={pickerNextUnavailable} className={styles.monthButton}>
-          <button
-            type="button"
-            aria-label={activeView === "months" ? labels.nextYear : labels.nextYears}
-            onClick={() => stepPicker(1)}
-          >
-            <Icon icon={flipped ? CaretLeftIcon : CaretRightIcon} size={iconSize[size]} tone="brand" />
-          </button>
-        </Button>
-      </div>
-      {/* Roving focus, as in the grid of days: the cells inside are the tab stops, so the grid itself takes none. */}
-      {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus -- see the comment above. */}
-      <div
-        className={styles.picker}
-        role="grid"
-        aria-label={
-          activeView === "months"
-            ? labels.monthsView(pickerYearText)
-            : labels.yearsRange(formatNumber(pageFrom), formatNumber(pageTo))
-        }
-        onKeyDown={onPickerKeyDown}
-      >
-        {[0, 1, 2, 3].map((row) => (
-          <div key={row} role="row" className={styles.pickerRow}>
-            {[0, 1, 2].map((column) => {
-              const slot = row * 3 + column;
-              const value = activeView === "months" ? slot + 1 : pageFrom + slot;
-              if (activeView === "years" && value > 9999) return <div key={slot} role="gridcell" />;
-              const allowed = activeView === "months" ? monthAllowed(pickerYear, value) : yearAllowed(value);
-              const chosen = activeView === "months" ? pickerYear === shown.year && value === shown.month : value === shown.year;
-              const current =
-                todayParsed !== null &&
-                (activeView === "months" ? todayParsed.year === pickerYear && todayParsed.month === value : todayParsed.year === value);
-              return (
-                <div key={slot} role="gridcell" aria-selected={chosen} aria-disabled={!allowed || undefined} className={styles.pickerCell}>
-                  <button
-                    type="button"
-                    data-picker-cell={value}
-                    tabIndex={value === pickerTabbable ? 0 : -1}
-                    aria-label={activeView === "months" ? (labels.months[value - 1] ?? "") : undefined}
-                    aria-current={current ? "date" : undefined}
-                    className={cx(styles.day, chosen && styles.selected, current && styles.today, !allowed && styles.unavailable)}
-                    onClick={() => (activeView === "months" ? pickMonth(value) : pickYear(value))}
-                    onFocus={() => setPickerFocus(value)}
-                  >
-                    {activeView === "months" ? labels.monthsShort[value - 1] : formatNumber(value)}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   const monthOutOfRange = (monthNumber: number): boolean => {
     const key = formatMonth(shown.year, monthNumber);
     return (min !== "" && key < min.slice(0, 7)) || (max !== "" && key > max.slice(0, 7));
@@ -1037,7 +725,23 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
         data-motion={animated && motion.n > 0 ? (motion.n % 2 === 1 ? "a" : "b") : undefined}
         data-forward={motion.forward ? "" : undefined}
       >
-        {activeView !== "days" ? picker : panels.map((panel, panelIndex) => {
+        {pickerShown ? (
+          <CalendarPicker
+            shown={shown}
+            today={today}
+            min={min}
+            max={max}
+            size={size}
+            rounded={rounded}
+            disabled={disabled}
+            dir={dir}
+            labels={labels}
+            formatNumber={formatNumber}
+            say={announce ? say : noSay}
+            onChoose={choosePickerMonth}
+            onClose={closePicker}
+          />
+        ) : panels.map((panel, panelIndex) => {
           const captionId = `${idBase}-${panelIndex}`;
           const heading = labels.monthYear(panel.year, panel.month);
           const isFirst = panelIndex === 0;
@@ -1102,7 +806,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                       type="button"
                       className={styles.captionButton}
                       aria-label={labels.openMonths(heading)}
-                      onClick={openMonths}
+                      onClick={() => setPickerOpen(true)}
                     >
                       {heading}
                     </button>
@@ -1119,6 +823,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                 role="grid"
                 aria-labelledby={captionId}
                 aria-readonly={readOnly || undefined}
+                aria-multiselectable={isRange || isMultiple || isWeek || undefined}
                 aria-disabled={disabled || undefined}
                 onKeyDown={onKeyDown}
                 onPointerLeave={() => setHovered(null)}
@@ -1237,20 +942,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
           );
         })}
       </div>
-      {showLegend && (
-        // `role="list"` and `role="listitem"` are stated outright: Safari with VoiceOver stops treating a list as one
-        // once its markers are removed, as it does the other lists in this library.
-        // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
-        <ul className={styles.legend} role="list" aria-label={labels.legend}>
-          {legendItems.map(({ key, text, swatch }) => (
-            // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
-            <li key={key} className={styles.legendItem} role="listitem">
-              <span className={cx(styles.swatch, swatch)} aria-hidden="true" />
-              {text}
-            </li>
-          ))}
-        </ul>
-      )}
+      {showLegend && <CalendarLegend label={labels.legend} items={legendItems} />}
       {(showTodayButton || clearable || footer) && (
         <div className={styles.footer}>
           {(showTodayButton || clearable) && (

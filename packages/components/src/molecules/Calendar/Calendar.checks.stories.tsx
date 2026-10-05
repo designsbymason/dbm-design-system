@@ -689,3 +689,51 @@ export const WeekIsDrawnAsOneRow: Story = {
     await expect(strip("2026-10-21")).toBe(clear);
   },
 };
+
+export const EveryLayoutAtTheNarrowestWidth: Story = {
+  name: "At the narrowest width (seven 24px days) nothing in any layout runs outside the calendar's own box",
+  render: () => (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)", alignItems: "flex-start" }}>
+      {(
+        [
+          ["plain", {}],
+          ["dropdown", { captionLayout: "dropdown" }],
+          ["dropdown-xs", { captionLayout: "dropdown", size: "xs" }],
+          ["views", { captionLayout: "views" }],
+          ["weeks", { showWeekNumbers: true }],
+          ["footer", { showTodayButton: true, clearable: true, showLegend: true, mode: "range" }],
+          ["markers", { getMarker: () => ({ tone: "info" as const }) }],
+          ["rounded-lg", { rounded: true, size: "lg" }],
+        ] as const
+      ).map(([id, props]) => (
+        <div key={id} style={{ inlineSize: "10.5rem", overflow: "auto", border: "1px dashed currentColor" }} data-testid={`box-${id}`}>
+          <Calendar {...(props as object)} defaultMonth="2026-10" today="2026-10-14" aria-label={id} data-testid={`narrow-${id}`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const id of ["plain", "dropdown", "dropdown-xs", "views", "weeks", "footer", "markers", "rounded-lg"]) {
+      const calendar = canvas.getByTestId(`narrow-${id}`);
+      const bounds = box(calendar);
+      // The calendar keeps at least seven 24px targets, the least it can be.
+      await expect(bounds.width).toBeGreaterThanOrEqual((id === "weeks" ? 8 : 7) * 24 - 0.5);
+      // Every control and every day is inside its own box, on the inline axis.
+      const inside = [...calendar.querySelectorAll("button, [role='combobox'], th, td")];
+      for (const element of inside) {
+        const rect = box(element);
+        if (rect.width === 0) continue;
+        await expect(rect.left, `${id}: ${element.tagName} ${element.textContent?.slice(0, 12)} starts inside`).toBeGreaterThanOrEqual(bounds.left - 0.5);
+        await expect(rect.right, `${id}: ${element.tagName} ${element.textContent?.slice(0, 12)} ends inside`).toBeLessThanOrEqual(bounds.right + 0.5);
+      }
+    }
+    // The views grids too, once opened.
+    const views = canvas.getByTestId("narrow-views");
+    await userEvent.click(within(views).getByRole("button", { name: /choose a month/ }));
+    for (const element of views.querySelectorAll("button")) {
+      await expect(box(element).right).toBeLessThanOrEqual(box(views).right + 0.5);
+      await expect(box(element).left).toBeGreaterThanOrEqual(box(views).left - 0.5);
+    }
+  },
+};
