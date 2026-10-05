@@ -41,6 +41,18 @@ export const calendarSnippets = {
 {/* readOnly: the choice is shown but can't change; the months and the dates can still be moved through */}
 <Calendar readOnly defaultValue="2026-10-06" />`,
 
+  rounded: `{/* rounded draws the days and both month buttons round — the days, the chosen ones, today's ring and the focus
+    ring. The strip behind a range keeps its straight edges. */}
+<Calendar rounded defaultValue="2026-10-06" />`,
+
+  legend: `{/* showLegend adds a key below the calendar. It lists only the looks that are on screen: the ring around today,
+    the solid fill once a date is chosen, the soft fill of a range once one is started, and the dimmed look of an
+    unavailable date when anything can be. The words are in labels (legendToday, legendSelected, legendRange,
+    legendUnavailable). */}
+<Calendar showLegend defaultValue="2026-10-06" />
+
+<Calendar showLegend mode="range" isDateDisabled={(date) => date.endsWith("-20")} />`,
+
   controlled: `{/* const [date, setDate] = useState("2026-10-20"); */}
 {/* const [month, setMonth] = useState("2026-10"); */}
 {/* The value is a "YYYY-MM-DD" string and the month "YYYY-MM": plain text, so it compares, sorts and submits as it is. */}
@@ -83,6 +95,8 @@ export interface CalendarPlaygroundSnippetArgs {
   weekStartsOn?: CalendarWeekStart;
   showOutsideDays?: boolean;
   size?: CalendarSize;
+  rounded?: boolean;
+  showLegend?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   announce?: boolean;
@@ -107,6 +121,8 @@ export function calendarPlaygroundSnippet(args: CalendarPlaygroundSnippetArgs): 
   if (args.weekStartsOn !== undefined && Number(args.weekStartsOn) !== 0) attributes.push(`weekStartsOn={${args.weekStartsOn}}`);
   if (args.showOutsideDays === false) attributes.push("showOutsideDays={false}");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.rounded) attributes.push("rounded");
+  if (args.showLegend) attributes.push("showLegend");
   if (args.disabled) attributes.push("disabled");
   if (args.readOnly) attributes.push("readOnly");
   if (args.announce === false) attributes.push("announce={false}");

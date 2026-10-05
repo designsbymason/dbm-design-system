@@ -225,3 +225,66 @@ export const OnTheDocsPage: Story = {
     }
   },
 };
+
+export const NeverNarrowerThanSevenTargets: Story = {
+  name: "In a container narrower than seven 24px days it keeps that width and overflows, instead of squeezing the days together",
+  render: () => (
+    <div style={{ inlineSize: "6rem", overflow: "auto", border: "1px dashed currentColor" }} data-testid="tight">
+      <Calendar size="xs" defaultMonth="2026-10" today="2026-10-14" aria-label="Tight" data-testid="tight-calendar" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const container = canvas.getByTestId("tight");
+    const calendar = canvas.getByTestId("tight-calendar");
+    // Seven 24px targets, the least WCAG 2.5.8 allows.
+    await expect(box(calendar).width).toBeGreaterThanOrEqual(7 * 24 - 0.5);
+    await expect(container.scrollWidth).toBeGreaterThan(container.clientWidth);
+    for (const th of calendar.querySelectorAll("th")) await expect(box(th).width).toBeGreaterThanOrEqual(24 - 0.5);
+    for (const date of ["2026-10-14", "2026-10-15"]) await expect(box(day(calendar, date)).width).toBeGreaterThanOrEqual(24 - 0.5);
+  },
+};
+
+export const RoundedDays: Story = {
+  name: "Rounded: a day is a circle, and so are its focus ring, today's ring and the month buttons",
+  render: () => (
+    <Calendar rounded defaultMonth="2026-10" today="2026-10-14" defaultValue="2026-10-06" aria-label="rounded" data-testid="rounded" />
+  ),
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByTestId("rounded");
+    for (const date of ["2026-10-06", "2026-10-14", "2026-10-20"]) {
+      const radius = parseFloat(getComputedStyle(day(root, date)).borderTopLeftRadius);
+      await expect(radius).toBeGreaterThanOrEqual(box(day(root, date)).height / 2);
+    }
+    await userEvent.tab();
+    await userEvent.tab();
+    await userEvent.tab();
+    await expect(day(root, "2026-10-06")).toHaveFocus();
+    await expect(parseFloat(getComputedStyle(day(root, "2026-10-06")).borderTopLeftRadius)).toBeGreaterThanOrEqual(box(day(root, "2026-10-06")).height / 2);
+    const previous = within(root).getByRole("button", { name: "Previous month" });
+    await expect(parseFloat(getComputedStyle(previous).borderTopLeftRadius)).toBeGreaterThanOrEqual(box(previous).height / 2);
+  },
+};
+
+export const KeyFitsBelowTheGrid: Story = {
+  name: "The key sits below the grid, wraps in a narrow container and never moves the grid",
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-8)", alignItems: "flex-start" }}>
+      <Calendar defaultMonth="2026-10" today="2026-10-14" mode="range" isDateDisabled={(date) => date.endsWith("-20")} showLegend aria-label="with key" data-testid="with-key" />
+      <Calendar defaultMonth="2026-10" today="2026-10-14" mode="range" isDateDisabled={(date) => date.endsWith("-20")} aria-label="without key" data-testid="without-key" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const withKey = canvas.getByTestId("with-key");
+    const without = canvas.getByTestId("without-key");
+    const grid = (root: HTMLElement) => box(root.querySelector("table")!);
+    await expect(grid(withKey).y).toBe(grid(without).y);
+    await expect(grid(withKey).height).toBe(grid(without).height);
+    const list = within(withKey).getByRole("list", { name: "Key" });
+    await expect(box(list).y).toBeGreaterThanOrEqual(grid(withKey).bottom);
+    // Every entry fits within the calendar's width.
+    await expect(box(list).right).toBeLessThanOrEqual(box(withKey).right + 0.5);
+    await expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth + 1);
+  },
+};

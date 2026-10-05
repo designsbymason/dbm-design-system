@@ -84,6 +84,16 @@ export interface CalendarLabels {
   rangeStart: string;
   /** Added to the name of the last date of a range. @default "range end" */
   rangeEnd: string;
+  /** The accessible name of the key (`showLegend`). @default "Key" */
+  legend: string;
+  /** The key's text for today's date. @default "Today" */
+  legendToday: string;
+  /** The key's text for the chosen date, or the two ends of a range. @default "Selected" */
+  legendSelected: string;
+  /** The key's text for the dates between the ends of a range. @default "In range" */
+  legendRange: string;
+  /** The key's text for dates that can't be chosen. @default "Unavailable" */
+  legendUnavailable: string;
 }
 
 /** The props that single and range mode share. */
@@ -148,6 +158,21 @@ interface CalendarBaseProps
    * @default "md"
    */
   size?: CalendarSize;
+  /**
+   * Draws the days and both month buttons round: a circle for each day, the chosen days, today's ring and the focus
+   * ring, and round month buttons. The strip behind a range keeps its straight edges, so it still reads as one run.
+   * @default false
+   */
+  rounded?: boolean;
+  /**
+   * Shows a key below the calendar that says what each look means: the ring around today, the solid fill of a chosen
+   * date or the ends of a range, the soft fill between them (once a range is started) and the dimmed look of
+   * unavailable dates (when anything can be unavailable). It lists only the looks that are on screen, so with nothing
+   * chosen there is no "Selected" entry. Each entry is a small shape drawn the way the look is in the grid. The text is
+   * in `labels`. (It could not be called `key`, which React keeps for itself and never passes to a component.)
+   * @default false
+   */
+  showLegend?: boolean;
   /**
    * Makes every date and both month buttons unavailable. They stay focusable (they are `aria-disabled` rather
    * than natively disabled), so keyboard focus isn't lost.

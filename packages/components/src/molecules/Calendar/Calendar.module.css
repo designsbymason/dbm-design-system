@@ -17,7 +17,9 @@
   /* Seven squares wide, or all there is, on a screen narrower than that. */
   inline-size: calc(7 * var(--calendar-cell));
   max-inline-size: 100%;
-  min-inline-size: 0;
+  /* Never narrower than seven days of 24px, the smallest target WCAG 2.5.8 allows: in a container narrower than that
+     it overflows (and scrolls, if the container does) instead of squeezing the days into each other. */
+  min-inline-size: calc(7 * var(--dbm-space-6));
   /* The visually hidden status region (`announce`) is positioned against this. */
   position: relative;
 }
@@ -156,14 +158,13 @@
     color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
-/* Neutral, not brand-tinted, so a hovered day still differs from the brand-tinted strip of a range. */
 .day:hover {
-  background-color: var(--dbm-bg-neutral-subtle-hover);
+  background-color: var(--dbm-bg-brand-subtle);
 }
 
 /* A day of the neighbouring month: the quietest text, which is 4.70:1 on the plain surface. On a tinted fill
-   (hovered, or inside the strip of a range) that same colour drops to 4.0 to 4.15:1 in the light themes, under the
-   4.5:1 floor, so it steps up to the secondary text there. */
+   (hovered, or inside the strip of a range) that same colour drops to 4.48:1 on the hover fill and 4.12 to 4.15:1 on
+   the strip in the light themes, under the 4.5:1 floor, so it steps up to the secondary text there. */
 .outside {
   color: var(--dbm-text-tertiary);
 }
@@ -231,6 +232,73 @@
   outline-color: var(--dbm-icon-on-brand);
 }
 
+/* `rounded`: round days and, with them, the ring around today and the focus ring. The strip behind a range keeps its
+   straight edges, so it reads as one run. */
+.rounded .day,
+.rounded .day:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
+/* The key (`showLegend`): small days drawn the way they are in the grid, each with its meaning. */
+.legend {
+  align-items: center;
+  color: var(--dbm-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--dbm-font-size-xs);
+  gap: var(--dbm-space-2) var(--dbm-space-4);
+  list-style: none;
+  margin: 0;
+  /* One row's height is kept, so the first entry appearing (today waits for the clock) moves nothing. */
+  min-block-size: var(--dbm-space-6);
+  padding: 0;
+}
+
+.legendItem {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+}
+
+.swatch {
+  block-size: var(--dbm-space-6);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-disabled);
+  flex: none;
+  inline-size: var(--dbm-space-6);
+  position: relative;
+}
+
+.rounded .swatch {
+  border-radius: var(--dbm-radius-full);
+}
+
+.swatchToday {
+  box-shadow: inset 0 0 0 var(--dbm-border-width-1) var(--dbm-border-brand);
+}
+
+.swatchSelected {
+  background-color: var(--dbm-bg-brand);
+}
+
+.swatchRange {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+  border-radius: 0;
+}
+
+/* An unavailable day is shown only by its dimmed number, so its sample is a short dimmed line where the number goes. */
+.swatchUnavailable::after {
+  background-color: currentColor;
+  block-size: var(--dbm-border-width-2);
+  border-radius: var(--dbm-radius-full);
+  content: "";
+  inline-size: 50%;
+  inset-block-start: 50%;
+  inset-inline-start: 25%;
+  position: absolute;
+  translate: 0 -50%;
+}
+
 /* Forced colours replaces fills and drops shadows: the chosen days are the system's highlight, the strip
    behind a range becomes two lines, and today a one-pixel outline. */
 @media (forced-colors: active) {
@@ -249,6 +317,21 @@
     border-block: var(--dbm-border-width-1) solid Highlight;
   }
 
+  .swatchSelected {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .swatchRange {
+    background-color: transparent;
+    border-block: var(--dbm-border-width-1) solid Highlight;
+  }
+
+  .swatchUnavailable {
+    color: GrayText;
+  }
+
+  .swatchToday,
   .today {
     box-shadow: none;
     outline: var(--dbm-border-width-1) solid CanvasText;

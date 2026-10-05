@@ -23,6 +23,8 @@ interface PlaygroundArgs {
   showOutsideDays: boolean;
   today: string;
   size: CalendarSize;
+  rounded: boolean;
+  showLegend: boolean;
   disabled: boolean;
   readOnly: boolean;
   announce: boolean;
@@ -44,8 +46,17 @@ interface PlaygroundArgs {
 }
 
 const allSizes: CalendarSize[] = ["xs", "sm", "md", "lg", "xl"];
-const TODAY = "2026-10-14";
-const MONTH = "2026-10";
+
+// The stories show the real current month, with the real today marked: nothing here is fixed to a date. A demo that
+// needs a particular day names it relative to this month (`inMonth(8)` is the 8th of it). The tests that look for a
+// particular date, in the hidden stories below and in `Calendar.checks.stories.tsx`, fix theirs instead.
+const now = new Date();
+const MONTH = `${String(now.getFullYear()).padStart(4, "0")}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+const inMonth = (day: number): string => `${MONTH}-${String(day).padStart(2, "0")}`;
+
+// A fixed month for the hidden interaction tests, which name dates.
+const FIXED_MONTH = "2026-10";
+const FIXED_TODAY = "2026-10-14";
 
 const labelled: CSSProperties = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" };
 const row: CSSProperties = { display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-8)", alignItems: "flex-start" };
@@ -64,6 +75,8 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   showOutsideDays: { control: false },
   today: { control: false },
   size: { control: false },
+  rounded: { control: false },
+  showLegend: { control: false },
   disabled: { control: false },
   readOnly: { control: false },
   announce: { control: false },
@@ -164,6 +177,18 @@ const meta: Meta<PlaygroundArgs> = {
         "The size of the calendar. A day is a square as tall as an IconButton of this step, and the calendar is seven of them wide (less, on a screen narrower than that).",
       table: { defaultValue: { summary: "'md'" } },
     },
+    rounded: {
+      control: "boolean",
+      description:
+        "Draws the days and both month buttons round: a circle for each day, the chosen days, today's ring and the focus ring, and round month buttons. The strip behind a range keeps its straight edges, so it still reads as one run.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    showLegend: {
+      control: "boolean",
+      description:
+        "Shows a key below the calendar that says what each look means: the ring around today, the solid fill of a chosen date or the ends of a range, the soft fill between them (once a range is started) and the dimmed look of unavailable dates (when anything can be unavailable). It lists only the looks that are on screen, so with nothing chosen there is no Selected entry. Each entry is a small shape drawn the way the look is in the grid; the text is in labels. (Not called key, which React keeps for itself.)",
+      table: { defaultValue: { summary: "false" } },
+    },
     disabled: {
       control: "boolean",
       description:
@@ -230,14 +255,16 @@ const meta: Meta<PlaygroundArgs> = {
   },
   args: {
     mode: "single",
-    value: "2026-10-06",
+    value: inMonth(6),
     month: MONTH,
     min: "",
     max: "",
     weekStartsOn: 0,
     showOutsideDays: true,
-    today: TODAY,
+    today: "",
     size: "md",
+    rounded: false,
+    showLegend: false,
     disabled: false,
     readOnly: false,
     announce: true,
@@ -254,6 +281,8 @@ const meta: Meta<PlaygroundArgs> = {
       showOutsideDays: args.showOutsideDays,
       today: args.today || undefined,
       size: args.size,
+      rounded: args.rounded,
+      showLegend: args.showLegend,
       disabled: args.disabled,
       readOnly: args.readOnly,
       announce: args.announce,
@@ -278,7 +307,7 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Choose a date, step through the months, and drive every prop from the Controls panel. Choosing writes back to `value`. */
 export const Playground: Story = {
-  args: { start: "2026-10-08", end: "2026-10-12" },
+  args: { start: inMonth(8), end: inMonth(12) },
   // The range's two ends are Playground-only controls (in code the range is the value prop's pair), so they are
   // declared here, not on the meta, where the Properties table would list them as props.
   argTypes: {
@@ -318,7 +347,7 @@ export const Sizes: Story = {
           <Text size="sm" weight="semibold">
             size=&quot;{size}&quot;
           </Text>
-          <Calendar size={size} defaultMonth={MONTH} today={TODAY} defaultValue="2026-10-06" aria-label={`Size ${size}`} />
+          <Calendar size={size} defaultMonth={MONTH} defaultValue={inMonth(6)} aria-label={`Size ${size}`} />
         </div>
       ))}
     </div>
@@ -340,10 +369,10 @@ export const Range: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: calendarSnippets.range } } },
   render: function RangeRender() {
-    const [range, setRange] = useState<CalendarRangeValue>(["2026-10-08", "2026-10-14"]);
+    const [range, setRange] = useState<CalendarRangeValue>([inMonth(8), inMonth(14)]);
     return (
       <div style={labelled}>
-        <Calendar mode="range" defaultMonth={MONTH} today={TODAY} value={range} onValueChange={setRange} aria-label="Stay" />
+        <Calendar mode="range" defaultMonth={MONTH} value={range} onValueChange={setRange} aria-label="Stay" />
         <Text size="sm" color="secondary" data-testid="range-readout">
           {range[0] === "" ? "No dates chosen" : range[1] === "" ? `From ${range[0]}, choose the last day` : `${range[0]} to ${range[1]}`}
         </Text>
@@ -362,13 +391,13 @@ export const WeekStart: Story = {
         <Text size="sm" weight="semibold">
           weekStartsOn=&#123;0&#125; (default)
         </Text>
-        <Calendar defaultMonth={MONTH} today={TODAY} aria-label="Sunday first" />
+        <Calendar defaultMonth={MONTH} aria-label="Sunday first" />
       </div>
       <div style={labelled}>
         <Text size="sm" weight="semibold">
           weekStartsOn=&#123;1&#125;
         </Text>
-        <Calendar weekStartsOn={1} defaultMonth={MONTH} today={TODAY} aria-label="Monday first" />
+        <Calendar weekStartsOn={1} defaultMonth={MONTH} aria-label="Monday first" />
       </div>
     </div>
   ),
@@ -390,13 +419,13 @@ export const Unavailable: Story = {
         <Text size="sm" weight="semibold">
           min and max
         </Text>
-        <Calendar defaultMonth={MONTH} today={TODAY} min="2026-10-08" max="2026-10-24" aria-label="Within a window" />
+        <Calendar defaultMonth={MONTH} min={inMonth(8)} max={inMonth(24)} aria-label="Within a window" />
       </div>
       <div style={labelled}>
         <Text size="sm" weight="semibold">
           isDateDisabled: no weekends
         </Text>
-        <Calendar defaultMonth={MONTH} today={TODAY} isDateDisabled={isWeekend} aria-label="Weekdays only" />
+        <Calendar defaultMonth={MONTH} isDateDisabled={isWeekend} aria-label="Weekdays only" />
       </div>
     </div>
   ),
@@ -412,13 +441,13 @@ export const OutsideDays: Story = {
         <Text size="sm" weight="semibold">
           showOutsideDays (default)
         </Text>
-        <Calendar defaultMonth={MONTH} today={TODAY} aria-label="With neighbours" />
+        <Calendar defaultMonth={MONTH} aria-label="With neighbours" />
       </div>
       <div style={labelled}>
         <Text size="sm" weight="semibold">
           showOutsideDays=&#123;false&#125;
         </Text>
-        <Calendar showOutsideDays={false} defaultMonth={MONTH} today={TODAY} aria-label="Month only" />
+        <Calendar showOutsideDays={false} defaultMonth={MONTH} aria-label="Month only" />
       </div>
     </div>
   ),
@@ -434,13 +463,60 @@ export const States: Story = {
         <Text size="sm" weight="semibold">
           disabled
         </Text>
-        <Calendar disabled defaultMonth={MONTH} today={TODAY} defaultValue="2026-10-06" aria-label="Disabled" />
+        <Calendar disabled defaultMonth={MONTH} defaultValue={inMonth(6)} aria-label="Disabled" />
       </div>
       <div style={labelled}>
         <Text size="sm" weight="semibold">
           readOnly
         </Text>
-        <Calendar readOnly defaultMonth={MONTH} today={TODAY} defaultValue="2026-10-06" aria-label="Read only" />
+        <Calendar readOnly defaultMonth={MONTH} defaultValue={inMonth(6)} aria-label="Read only" />
+      </div>
+    </div>
+  ),
+};
+
+export const Rounded: Story = {
+  name: "Rounded",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.rounded } } },
+  render: () => (
+    <div style={row}>
+      <Calendar rounded defaultMonth={MONTH} defaultValue={inMonth(6)} aria-label="Rounded" />
+      <Calendar
+        rounded
+        mode="range"
+        defaultMonth={MONTH}
+        defaultValue={[inMonth(8), inMonth(12)]}
+        aria-label="Rounded range"
+      />
+    </div>
+  ),
+};
+
+export const Legend: Story = {
+  name: "With a key",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: calendarSnippets.legend } } },
+  render: () => (
+    <div style={row}>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          A single date
+        </Text>
+        <Calendar showLegend defaultMonth={MONTH} defaultValue={inMonth(6)} aria-label="Single, with a key" />
+      </div>
+      <div style={labelled}>
+        <Text size="sm" weight="semibold">
+          A range, with unavailable dates
+        </Text>
+        <Calendar
+          showLegend
+          mode="range"
+          defaultMonth={MONTH}
+          defaultValue={[inMonth(8), inMonth(12)]}
+          isDateDisabled={isWeekend}
+          aria-label="Range, with a key"
+        />
       </div>
     </div>
   ),
@@ -451,11 +527,11 @@ export const Controlled: Story = {
   argTypes: noControls,
   parameters: { docs: { source: { code: calendarSnippets.controlled } } },
   render: function ControlledRender() {
-    const [value, setValue] = useState("2026-10-20");
-    const [month, setMonth] = useState("2026-10");
+    const [value, setValue] = useState(inMonth(20));
+    const [month, setMonth] = useState(MONTH);
     return (
       <div style={labelled}>
-        <Calendar value={value} onValueChange={setValue} month={month} onMonthChange={setMonth} today={TODAY} aria-label="Appointment" />
+        <Calendar value={value} onValueChange={setValue} month={month} onMonthChange={setMonth} aria-label="Appointment" />
         <Text size="sm" color="secondary" data-testid="controlled-readout">
           Chosen: {value} · showing {month}
         </Text>
@@ -482,7 +558,7 @@ export const Labels: Story = {
   name: "In another language",
   argTypes: noControls,
   parameters: { docs: { source: { code: calendarSnippets.labels } } },
-  render: () => <Calendar weekStartsOn={1} defaultMonth={MONTH} today={TODAY} labels={spanishLabels} defaultValue="2026-10-06" />,
+  render: () => <Calendar weekStartsOn={1} defaultMonth={MONTH} labels={spanishLabels} defaultValue={inMonth(6)} />,
 };
 
 export const Locale: Story = {
@@ -492,8 +568,8 @@ export const Locale: Story = {
   render: () => (
     <Calendar
       defaultMonth={MONTH}
-      today={TODAY}
-      defaultValue="2026-10-06"
+     
+      defaultValue={inMonth(6)}
       formatNumber={new Intl.NumberFormat("ar-EG", { useGrouping: false }).format}
       aria-label="Arabic-Indic digits"
     />
@@ -510,8 +586,8 @@ export const RightToLeft: Story = {
       mode="range"
       weekStartsOn={6}
       defaultMonth={MONTH}
-      today={TODAY}
-      defaultValue={["2026-10-08", "2026-10-12"]}
+     
+      defaultValue={[inMonth(8), inMonth(12)]}
       labels={{
         calendar: "التقويم",
         previousMonth: "الشهر السابق",
@@ -535,7 +611,7 @@ export const ChoosingInteraction: Story = {
     const [value, setValue] = useState("");
     return (
       <div style={labelled}>
-        <Calendar defaultMonth={MONTH} today={TODAY} value={value} onValueChange={setValue} />
+        <Calendar defaultMonth={FIXED_MONTH} today={FIXED_TODAY} value={value} onValueChange={setValue} />
         <span data-testid="chosen">{value}</span>
       </div>
     );
@@ -553,7 +629,17 @@ export const RangeInteraction: Story = {
   name: "Choosing a range — interaction test",
   tags: ["!dev"],
   argTypes: noControls,
-  render: Range.render,
+  render: function RangeInteractionRender() {
+    const [range, setRange] = useState<CalendarRangeValue>(["", ""]);
+    return (
+      <div style={labelled}>
+        <Calendar mode="range" defaultMonth={FIXED_MONTH} today={FIXED_TODAY} value={range} onValueChange={setRange} aria-label="Stay" />
+        <Text size="sm" color="secondary" data-testid="range-readout">
+          {range[0] === "" ? "No dates chosen" : range[1] === "" ? `From ${range[0]}, choose the last day` : `${range[0]} to ${range[1]}`}
+        </Text>
+      </div>
+    );
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^Thursday, October 22, 2026/ }));
@@ -567,7 +653,7 @@ export const KeyboardInteraction: Story = {
   name: "Moving with the keyboard — interaction test",
   tags: ["!dev"],
   argTypes: noControls,
-  render: () => <Calendar defaultMonth={MONTH} today={TODAY} aria-label="Keyboard" />,
+  render: () => <Calendar defaultMonth={FIXED_MONTH} today={FIXED_TODAY} aria-label="Keyboard" />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.tab();

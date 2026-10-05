@@ -22,6 +22,8 @@ export const propOrder = [
   "showOutsideDays",
   "today",
   "size",
+  "rounded",
+  "showLegend",
   "disabled",
   "readOnly",
   "autoFocus",
@@ -48,6 +50,8 @@ export const playgroundPropOrder = [
   "showOutsideDays",
   "today",
   "size",
+  "rounded",
+  "showLegend",
   "disabled",
   "readOnly",
   "announce",
@@ -116,6 +120,24 @@ pointer or the keyboard focus is on.
 
 <Canvas of={CalendarStories.Range} />
 
+### Rounded
+
+`rounded` draws the days and both month buttons round: a circle for each day, the chosen days, today's ring and the
+focus ring. The strip behind a range keeps its straight edges, so it still reads as one run.
+
+<Canvas of={CalendarStories.Rounded} />
+
+### With a key
+
+`showLegend` adds a key below the calendar that says what each look means — the ring around today, the solid fill of a
+chosen date (or the ends of a range), the soft fill between them, and the dimmed look of an unavailable date. It lists
+only the looks that are on screen: with nothing chosen there is no "Selected" entry, a single date has no range entry,
+and a calendar with no rules has no "Unavailable" one, so the key comes and goes with the choice. (The prop could not
+be called `key`, which React keeps for itself.) The words are in `labels`: `legendToday`, `legendSelected`,
+`legendRange` and `legendUnavailable`, and `legend` names the list.
+
+<Canvas of={CalendarStories.Legend} />
+
 ### Weeks that start on Monday
 
 <Canvas of={CalendarStories.WeekStart} />
@@ -170,7 +192,8 @@ same function.
   in much of the Middle East. It is never read from the browser, so the page doesn't change under a reader.
 - Rule dates out with `min`, `max` and `isDateDisabled` rather than hiding them: the grid keeps its shape, and a
   person can see that the day exists but isn't available.
-- Pass `today` in tests and screenshots so the marked day doesn't change with the date they run.
+- Leave `today` out in the app: the calendar reads the real date once it has mounted. Pass it only in tests and
+  screenshots, so the marked day doesn't change with the date they run.
 - Translate the text with `labels`, and pass `dir="rtl"` for a right-to-left language — it is not read from the page.
 - Give each calendar on a page its own `aria-label` ("Departure", "Return") when there is more than one.
 
@@ -196,7 +219,14 @@ same function.
 ## Best practices
 
 - A calendar is seven days wide, so `md` is 294px wide. On a narrower container it shrinks to fit (the days stop being
-  exact squares) rather than overflowing; use `sm` or `xs` where space is tight.
+  exact squares), but never below seven 24px days (168px), the smallest target WCAG allows: narrower than that it
+  overflows its container (and scrolls, if the container does) rather than squeezing the days into each other. Use
+  `sm` or `xs` where space is tight.
+- Add `showLegend` where a person meets the calendar for the first time and has to read the fills — a booking flow, a
+  range picker — and leave it off for a familiar date field. Say what a fill *means* in your own words in `labels`
+  when the context needs it ("Your stay", "Fully booked").
+- Use `rounded` for a softer look that matches rounded buttons elsewhere on the page; leave it off beside square-cornered
+  fields.
 - In `range` mode, tell the person what to do next. After the first choice the value is `[start, ""]` — show "choose
   the last day" beside it, as the range story does — and treat a range with an empty end as not finished.
 - A range of one day is allowed: choosing the start again as the end gives `[date, date]`.
@@ -233,7 +263,12 @@ same function.
   and the range strip, and the weekday headings at least 6.88:1, in every theme; the neighbouring months' days are
   4.70:1 on the page (and step up to the secondary text on a tinted fill, where the quietest text would fall under
   4.5:1). Today's ring is at least 6.08:1 and the focus ring at least 4.16:1 against the page.
-- Every day is a target of at least 30 × 30 CSS pixels at the smallest size, above the 24px minimum.
+- Every day is a target of at least 30 × 30 CSS pixels at the smallest size, above the 24px minimum, and the calendar
+  never gets narrower than seven 24px days, however small its container.
+- The key (`showLegend`) is a list named "Key" (translatable). Its sample shapes are decorative and hidden from assistive
+  technology, so it reads as plain text — "Today", "Selected", "In range", "Unavailable" — and every look it explains
+  is also conveyed in the grid itself by `aria-current`, `aria-selected`, `aria-disabled` and the days' names, never by
+  colour alone.
 - Forced colours: a chosen day is the system highlight, the strip behind a range becomes two lines, and today an
   outline.
 
@@ -284,6 +319,12 @@ const [month, setMonth] = useState("2026-10");
 // A smaller calendar, without the neighbouring months' days
 <Calendar size="sm" showOutsideDays={false} />
 
+// Round days and month buttons
+<Calendar rounded />
+
+// A key below the calendar that explains the ring, the fills and the dimmed dates
+<Calendar mode="range" showLegend isDateDisabled={isFullyBooked} />
+
 // Fixed "today", for a test or a screenshot
 <Calendar today="2026-10-14" defaultMonth="2026-10" />
 
@@ -316,15 +357,15 @@ const [month, setMonth] = useState("2026-10");
 
 ## Design tokens used
 
-<TokenRow token="bg.brand" usage="the chosen day, and the ends of a range" />
+<TokenRow token="bg.brand" usage="the chosen day, the ends of a range, and the key's selected sample" />
 <TokenRow token="bg.brand-hover" usage="the chosen day when hovered" />
 <TokenRow token="text.on-brand" usage="the chosen day's number" />
-<TokenRow token="bg.brand-subtle-hover" usage="the strip behind the days of a range, and the day a click would end it on" />
-<TokenRow token="bg.neutral-subtle-hover" usage="the background of a hovered day" />
+<TokenRow token="bg.brand-subtle-hover" usage="the strip behind the days of a range, the day a click would end it on, and the key's range sample" />
+<TokenRow token="bg.brand-subtle" usage="the background of a hovered day" />
 <TokenRow token="text.primary" usage="the day numbers, and the month heading" />
-<TokenRow token="text.secondary" usage="the weekday headings, and a neighbouring month's day on a tinted fill" />
+<TokenRow token="text.secondary" usage="the weekday headings, the key's text, and a neighbouring month's day on a tinted fill" />
 <TokenRow token="text.tertiary" usage="a neighbouring month's day on the plain page" />
-<TokenRow token="text.disabled" usage="a day that can't be chosen" />
+<TokenRow token="text.disabled" usage="a day that can't be chosen, and the key's unavailable sample" />
 <TokenRow token="border.brand" usage="the ring marking today" />
 <TokenRow token="border.focus" usage="a focused day's outline color" />
 <TokenRow token="icon.on-brand" usage="the outline of a focused, chosen day" />
@@ -332,13 +373,14 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="border-width.2" usage="a focused day's outline width" />
 <TokenRow token="radius.md" usage="the corners of a day" />
 <TokenRow token="radius.sm" usage="the corners of a focused day's outline" />
+<TokenRow token="radius.full" usage="the corners of every day, its focus ring and the key's samples when rounded" />
 <TokenRow token="opacity.40" usage="a disabled calendar's dimmed opacity" />
 <TokenRow token="icon-button.size.xs" usage="the width and height of a day, and of the month buttons, at size xs" />
 <TokenRow token="icon-button.size.sm" usage="the width and height of a day, and of the month buttons, at size sm" />
 <TokenRow token="icon-button.size.md" usage="the width and height of a day, and of the month buttons, at size md" />
 <TokenRow token="icon-button.size.lg" usage="the width and height of a day, and of the month buttons, at size lg" />
 <TokenRow token="icon-button.size.xl" usage="the width and height of a day, and of the month buttons, at size xl" />
-<TokenRow token="font-size.xs" usage="a day and the weekday headings at xs; the weekday headings at sm" />
+<TokenRow token="font-size.xs" usage="a day and the weekday headings at xs; the weekday headings at sm; the key" />
 <TokenRow token="font-size.sm" usage="a day at sm; the weekday headings at md and lg" />
 <TokenRow token="font-size.base" usage="a day at md; the weekday headings at xl" />
 <TokenRow token="font-size.md" usage="a day and the month heading at lg" />
@@ -346,7 +388,9 @@ const [month, setMonth] = useState("2026-10");
 <TokenRow token="font-weight.medium" usage="the weekday headings" />
 <TokenRow token="font-weight.semibold" usage="the month heading, today, and the chosen days" />
 <TokenRow token="font-family.primary" usage="calendar typography" />
-<TokenRow token="space.2" usage="the gap between the heading row and the grid, and between the buttons and the heading" />
+<TokenRow token="space.2" usage="the gap between the heading row and the grid, and between the buttons and the heading, and between a key entry's sample and its text" />
+<TokenRow token="space.4" usage="the gap between the key's entries" />
+<TokenRow token="space.6" usage="the size of the key's samples, and the least width of a day — seven of them make the calendar's minimum width" />
 <TokenRow token="motion.duration.fast" usage="day hover transitions" />
 <TokenRow token="motion.easing.standard" usage="day hover transitions" />
 

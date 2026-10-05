@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import buttonStyles from "../../atoms/Button/Button.module.css";
 import { Calendar } from "./Calendar";
 import styles from "./Calendar.module.css";
 import type { CalendarProps, CalendarRangeValue } from "./Calendar.types";
@@ -609,6 +610,103 @@ describe("Calendar", () => {
       const html = renderToString(<Calendar defaultMonth="2026-10" />);
       expect(html).toContain("October 2026");
       expect(html).not.toContain("aria-current");
+    });
+  });
+
+  describe("rounded", () => {
+    it("is square-cornered by default, and rounds the days and both month buttons with rounded", () => {
+      const { rerender } = renderCalendar();
+      expect(screen.getByTestId("calendar")).not.toHaveClass(styles.rounded ?? "");
+      expect(previous()).not.toHaveClass(buttonStyles.rounded ?? "");
+      rerender(<Calendar month="2026-10" today="2026-10-14" rounded data-testid="calendar" />);
+      expect(screen.getByTestId("calendar")).toHaveClass(styles.rounded ?? "");
+      expect(previous()).toHaveClass(buttonStyles.rounded ?? "");
+      expect(next()).toHaveClass(buttonStyles.rounded ?? "");
+    });
+  });
+
+  describe("key", () => {
+    const key = () => screen.queryByRole("list", { name: "Key" });
+    const entries = () => within(key() as HTMLElement).queryAllByRole("listitem").map((item) => item.textContent);
+
+    it("is not shown unless asked for", () => {
+      renderCalendar();
+      expect(key()).toBeNull();
+    });
+
+    it("explains only the looks that are on screen: today, and the chosen date once there is one", () => {
+      const { rerender } = renderCalendar({ showLegend: true });
+      expect(entries()).toEqual(["Today"]);
+      rerender(<Calendar key="chosen" month="2026-10" today="2026-10-14" showLegend defaultValue="2026-10-06" />);
+      expect(entries()).toEqual(["Today", "Selected"]);
+    });
+
+    it("follows the choice: a date chosen adds its entry, and a controlled value cleared takes it away", async () => {
+      renderCalendar({ showLegend: true });
+      expect(entries()).toEqual(["Today"]);
+      await userEvent.click(day("2026-10-20"));
+      expect(entries()).toEqual(["Today", "Selected"]);
+      const { unmount } = render(<Calendar month="2026-10" today="2026-10-14" showLegend value="" aria-label="b" />);
+      expect(within(screen.getAllByRole("list", { name: "Key" })[1] as HTMLElement).queryAllByRole("listitem")).toHaveLength(1);
+      unmount();
+    });
+
+    it("adds the range once a range is started, and the unavailable look when anything can be unavailable", () => {
+      const { rerender } = renderCalendar({ showLegend: true, mode: "range" } as Partial<CalendarProps>);
+      expect(entries()).toEqual(["Today"]);
+      rerender(<Calendar key="started" month="2026-10" today="2026-10-14" showLegend mode="range" defaultValue={["2026-10-06", ""]} />);
+      expect(entries()).toEqual(["Today", "Selected", "In range"]);
+      rerender(<Calendar month="2026-10" today="2026-10-14" showLegend min="2026-10-02" />);
+      expect(entries()).toEqual(["Today", "Unavailable"]);
+      rerender(<Calendar month="2026-10" today="2026-10-14" showLegend isDateDisabled={() => false} />);
+      expect(entries()).toContain("Unavailable");
+      rerender(<Calendar month="2026-10" today="2026-10-14" showLegend disabled />);
+      expect(entries()).toContain("Unavailable");
+      rerender(<Calendar month="2026-10" today="2026-10-14" showLegend max="2026-10-30" />);
+      expect(entries()).toContain("Unavailable");
+    });
+
+    it("leaves today out until the clock is known, so a server render has no entry for it", () => {
+      const html = renderToString(<Calendar defaultMonth="2026-10" showLegend defaultValue="2026-10-06" />);
+      expect(html).toContain("Selected");
+      expect(html).not.toContain("Today");
+    });
+
+    it("is a real list in Safari too, and its samples are plain shapes hidden from assistive technology", () => {
+      renderCalendar({ showLegend: true, defaultValue: "2026-10-06" });
+      expect(key()).toHaveAttribute("role", "list");
+      for (const item of within(key() as HTMLElement).getAllByRole("listitem")) {
+        expect(item).toHaveAttribute("role", "listitem");
+        const sample = item.querySelector("[aria-hidden='true']");
+        expect(sample).toBeInTheDocument();
+        expect(sample?.textContent).toBe("");
+      }
+    });
+
+    it("sits below the grid", () => {
+      renderCalendar({ showLegend: true });
+      const grid = screen.getByRole("grid");
+      expect(grid.compareDocumentPosition(key() as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("uses the labels it is given, and keeps English for those left undefined", () => {
+      renderCalendar({
+        showLegend: true,
+        defaultValue: "2026-10-06",
+        labels: { legend: "Leyenda", legendToday: "Hoy", legendSelected: undefined },
+      });
+      const list = screen.getByRole("list", { name: "Leyenda" });
+      expect(within(list).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Hoy", "Selected"]);
+    });
+
+    it("has no axe violations", async () => {
+      const { container } = renderCalendar({
+        showLegend: true,
+        mode: "range",
+        defaultValue: ["2026-10-06", "2026-10-09"],
+        disabled: true,
+      } as Partial<CalendarProps>);
+      expect(await axe(container)).toHaveNoViolations();
     });
   });
 

@@ -65,6 +65,11 @@ function buildLabels(format: (value: number) => string, overrides: Partial<Calen
       today: "today",
       rangeStart: "range start",
       rangeEnd: "range end",
+      legend: "Key",
+      legendToday: "Today",
+      legendSelected: "Selected",
+      legendRange: "In range",
+      legendUnavailable: "Unavailable",
     },
     overrides,
   );
@@ -162,6 +167,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
     showOutsideDays = true,
     today: todayProp,
     size = "md",
+    rounded = false,
+    showLegend = false,
     disabled = false,
     readOnly = false,
     autoFocus = false,
@@ -392,6 +399,17 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
 
   const heading = labels.monthYear(shown.year, shown.month);
 
+  // What the key explains: the looks that are on screen, so with nothing chosen there is no "Selected" entry and a
+  // calendar with no rules has no "Unavailable" one. Today waits for the clock, which the server doesn't have.
+  const legendItems = [
+    ...(today ? [{ key: "today", text: labels.legendToday, swatch: styles.swatchToday }] : []),
+    ...(start !== "" ? [{ key: "selected", text: labels.legendSelected, swatch: styles.swatchSelected }] : []),
+    ...(isRange && start !== "" ? [{ key: "range", text: labels.legendRange, swatch: styles.swatchRange }] : []),
+    ...(disabled || min !== "" || max !== "" || isDateDisabled
+      ? [{ key: "unavailable", text: labels.legendUnavailable, swatch: styles.swatchUnavailable }]
+      : []),
+  ];
+
   return (
     <div
       {...rest}
@@ -403,12 +421,12 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
       dir={dir}
       data-testid={dataTestId}
       style={style}
-      className={cx(styles.root, sizeClass[size], disabled && styles.disabled, className)}
+      className={cx(styles.root, sizeClass[size], rounded && styles.rounded, disabled && styles.disabled, className)}
     >
       <div className={styles.header}>
         {/* Slotted onto a plain button: an unavailable month button is `aria-disabled`, not natively disabled, so
             keyboard focus is not lost when pressing it reaches the first or last month there is. */}
-        <Button asChild variant="tertiary" size={size} disabled={previousUnavailable} className={styles.monthButton}>
+        <Button asChild variant="tertiary" size={size} rounded={rounded} disabled={previousUnavailable} className={styles.monthButton}>
           <button type="button" aria-label={labels.previousMonth} onClick={() => stepMonth(-1)}>
             <Icon icon={flipped ? CaretRightIcon : CaretLeftIcon} size={iconSize[size]} tone="brand" />
           </button>
@@ -416,7 +434,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
         <div id={captionId} className={styles.caption}>
           {heading}
         </div>
-        <Button asChild variant="tertiary" size={size} disabled={nextUnavailable} className={styles.monthButton}>
+        <Button asChild variant="tertiary" size={size} rounded={rounded} disabled={nextUnavailable} className={styles.monthButton}>
           <button type="button" aria-label={labels.nextMonth} onClick={() => stepMonth(1)}>
             <Icon icon={flipped ? CaretLeftIcon : CaretRightIcon} size={iconSize[size]} tone="brand" />
           </button>
@@ -514,6 +532,20 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
           ))}
         </tbody>
       </table>
+      {showLegend && (
+        // `role="list"` and `role="listitem"` are stated outright: Safari with VoiceOver stops treating a list as one
+        // once its markers are removed, as it does the other lists in this library.
+        // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
+        <ul className={styles.legend} role="list" aria-label={labels.legend}>
+          {legendItems.map(({ key, text, swatch }) => (
+            // eslint-disable-next-line jsx-a11y/no-redundant-roles -- deliberate; see the comment above.
+            <li key={key} className={styles.legendItem} role="listitem">
+              <span className={cx(styles.swatch, swatch)} aria-hidden="true" />
+              {text}
+            </li>
+          ))}
+        </ul>
+      )}
       <VisuallyHidden role="status">{announcement}</VisuallyHidden>
     </div>
   );
