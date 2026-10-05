@@ -99,6 +99,13 @@ export interface TableOfContentsProps
    */
   tone?: TableOfContentsTone;
   /**
+   * Draws a subtle background behind the current entry, in the tone's own tint: `bg.brand-subtle` for `"brand"`,
+   * `bg.neutral-subtle` for `"neutral"`. The marker bar stays, so the current entry is never told apart by the
+   * background alone.
+   * @default false
+   */
+  highlightActive?: boolean;
+  /**
    * Whether the heading above the list is shown. Hidden, the list keeps `labels.navigation` as its name.
    * @default true
    */

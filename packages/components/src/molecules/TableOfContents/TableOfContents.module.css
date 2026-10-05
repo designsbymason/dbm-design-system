@@ -73,7 +73,9 @@
   min-block-size: var(--dbm-space-6);
   padding-block: var(--dbm-space-1);
   padding-inline: var(--dbm-space-3) var(--dbm-space-2);
-  transition: color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  transition:
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
 .level2 > .link {
@@ -111,6 +113,16 @@ a.link:hover {
 .toneNeutral a.active:visited,
 .toneNeutral a.active:hover {
   color: var(--dbm-text-primary);
+}
+
+/* `highlightActive`: the current entry sits on its tone's own subtle fill. Its text keeps the colours above,
+   measured against these fills. */
+.highlighted.toneBrand a.active {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.highlighted.toneNeutral a.active {
+  background-color: var(--dbm-bg-neutral-subtle);
 }
 
 /* Forced colours replaces every colour but the system's own: the track and the marker would both be one

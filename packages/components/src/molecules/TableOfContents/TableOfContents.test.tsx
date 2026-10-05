@@ -118,6 +118,18 @@ describe("TableOfContents — structure", () => {
   });
 });
 
+describe("TableOfContents — highlightActive", () => {
+  it("is off by default, and on adds a class to the outline that fills the current entry", () => {
+    const { rerender } = render(<TableOfContents items={items} defaultActiveId="setup" />);
+    expect(screen.getByRole("navigation").className).not.toMatch(/highlighted/);
+    rerender(<TableOfContents items={items} defaultActiveId="setup" highlightActive />);
+    expect(screen.getByRole("navigation").className).toMatch(/highlighted/);
+    // It changes how the current entry is drawn, not what is announced or which entry it is.
+    expect(screen.getByRole("link", { name: "Setup" })).toHaveAttribute("aria-current", "location");
+    expect(screen.getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
+  });
+});
+
 describe("TableOfContents — reading the headings", () => {
   it("builds the outline from the page's h2 and h3, indented by level", async () => {
     render(

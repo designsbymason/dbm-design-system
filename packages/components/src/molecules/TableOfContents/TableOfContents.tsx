@@ -103,6 +103,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
       smoothScroll = true,
       size = "md",
       tone = "brand",
+      highlightActive = false,
       showTitle = true,
       labels,
       className,
@@ -286,7 +287,7 @@ export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
         // After `...props`, so a caller's own value can't replace what the component works out.
         aria-label={ariaLabel ?? (ariaLabelledBy === undefined && !showTitle ? text.navigation : undefined)}
         aria-labelledby={ariaLabel === undefined ? (ariaLabelledBy ?? (showTitle ? titleId : undefined)) : undefined}
-        className={cx(styles.root, sizeClass[size], toneClass[tone], className)}
+        className={cx(styles.root, sizeClass[size], toneClass[tone], highlightActive && styles.highlighted, className)}
         style={style}
       >
         {showTitle && (

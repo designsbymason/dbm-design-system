@@ -14,6 +14,7 @@ export const propOrder = [
   "selector",
   "size",
   "tone",
+  "highlightActive",
   "showTitle",
   "activeId",
   "defaultActiveId",
@@ -91,6 +92,13 @@ Each entry of `items` is an object with these fields.
 `bg.canvas`, where brand text is under the contrast floor.
 
 <Canvas of={TableOfContentsStories.Tones} />
+
+### Highlighted current entry
+
+`highlightActive` draws a subtle background behind the current entry, in the tone's own tint. The
+marker bar stays, so the background is never the only cue.
+
+<Canvas of={TableOfContentsStories.Highlighted} />
 
 ### Nested levels
 
@@ -218,7 +226,10 @@ pixels tall at every size.
 `"neutral"` bar (`border.neutral-strong`) is 4.70:1 and 6.08:1. **Put a `"brand"` outline on
 `bg.surface`, not `bg.canvas`**, where brand text falls under the 4.5:1 floor in dark mode (3.63:1 Purple,
 3.16:1 Emerald). The `"neutral"` tone is 6.05:1 and 5.10:1 for entries and 12.41:1 and 6.59:1 for the
-current one there. The track the bars sit on (`border.default`) is a decorative line and isn't held to 3:1.
+current one there. With `highlightActive`, the current entry's text sits on its tone's fill: `text.brand` on `bg.brand-subtle` is
+7.03:1 (Purple) and 5.83:1 (Emerald) in light, 8.29:1 and 7.22:1 in dark; `text.primary` on
+`bg.neutral-subtle` is 13.53:1 and 9.66:1. In dark mode `bg.brand-subtle` is a step darker than the surface and
+only about 1.1:1 from it, which is why the bar stays the main cue. The track the bars sit on (`border.default`) is a decorative line and isn't held to 3:1.
 
 </Callout>
 
@@ -263,6 +274,8 @@ current one there. The track the bars sit on (`border.default`) is a decorative 
 <TokenRow token="text.secondary" usage="an entry at rest" />
 <TokenRow token="text.primary" usage="the title; a hovered entry; the current entry in the neutral tone" />
 <TokenRow token="text.brand" usage="the current entry in the brand tone" />
+<TokenRow token="bg.brand-subtle" usage="the current entry's background with highlightActive, brand tone" />
+<TokenRow token="bg.neutral-subtle" usage="the current entry's background with highlightActive, neutral tone" />
 <TokenRow token="border.default" usage="the track along the start edge (decorative)" />
 <TokenRow token="border.brand" usage="the marker beside the current entry, brand tone" />
 <TokenRow token="border.neutral-strong" usage="the marker beside the current entry, neutral tone" />

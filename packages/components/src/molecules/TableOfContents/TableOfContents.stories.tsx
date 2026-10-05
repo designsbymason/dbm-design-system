@@ -10,6 +10,7 @@ import type { TableOfContentsItem, TableOfContentsProps, TableOfContentsSize, Ta
 interface PlaygroundArgs {
   size: TableOfContentsSize;
   tone: TableOfContentsTone;
+  highlightActive: boolean;
   showTitle: boolean;
   smoothScroll: boolean;
   scrollOffset: number;
@@ -136,6 +137,7 @@ function Static({ children }: { children: ReactNode }) {
 const noControls = {
   size: { control: false },
   tone: { control: false },
+  highlightActive: { control: false },
   showTitle: { control: false },
   smoothScroll: { control: false },
   scrollOffset: { control: false },
@@ -175,6 +177,12 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The colour of the current entry and its marker: brand (the brand theme's accent) or neutral (primary text and a strong neutral marker). Place a brand outline on a surface, not on the canvas; neutral is safe on either.",
       table: { defaultValue: { summary: '"brand"' } },
+    },
+    highlightActive: {
+      control: "boolean",
+      description:
+        "Draws a subtle background behind the current entry, in the tone's own tint (bg.brand-subtle for brand, bg.neutral-subtle for neutral). The marker bar stays, so the background is never the only cue.",
+      table: { defaultValue: { summary: "false" } },
     },
     showTitle: {
       control: "boolean",
@@ -242,6 +250,7 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     size: "md",
     tone: "brand",
+    highlightActive: false,
     showTitle: true,
     smoothScroll: true,
     scrollOffset: 0,
@@ -253,6 +262,7 @@ const meta: Meta<PlaygroundArgs> = {
       tocProps={{
         size: args.size,
         tone: args.tone,
+        highlightActive: args.highlightActive,
         showTitle: args.showTitle,
         smoothScroll: args.smoothScroll,
         scrollOffset: args.scrollOffset,
@@ -325,6 +335,32 @@ export const Tones: Story = {
         />
       ))}
     </div>
+    </Static>
+  ),
+};
+
+export const Highlighted: Story = {
+  name: "Highlighted current entry",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableOfContentsSnippets.highlighted } } },
+  render: () => (
+    <Static>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-8)" }}>
+        {(["brand", "neutral"] as const).map((tone) => (
+          <TableOfContents
+            key={tone}
+            tone={tone}
+            highlightActive
+            aria-label={`Outline (${tone}, highlighted)`}
+            defaultActiveId={`hl-${tone}-b`}
+            items={[
+              { id: `hl-${tone}-a`, label: `tone="${tone}"` },
+              { id: `hl-${tone}-b`, label: "Current entry" },
+              { id: `hl-${tone}-c`, label: "Another entry" },
+            ]}
+          />
+        ))}
+      </div>
     </Static>
   ),
 };
@@ -561,6 +597,42 @@ export const ActiveDoesNotReflowInteraction: Story = {
         return [width, height];
       });
     await expect(sizes("current b")).toEqual(sizes("current a"));
+  },
+};
+
+export const HighlightInteraction: Story = {
+  name: "The highlight fills only the current entry, in its tone — interaction test",
+  tags: ["!dev"],
+  argTypes: noControls,
+  render: () => (
+    <div style={{ display: "flex", gap: "var(--dbm-space-6)" }}>
+      {(["brand", "neutral"] as const).map((tone) => (
+        <TableOfContents
+          key={tone}
+          tone={tone}
+          highlightActive
+          aria-label={tone}
+          activeId={`hi-${tone}-b`}
+          onActiveIdChange={() => {}}
+          items={[{ id: `hi-${tone}-a`, label: "Other" }, { id: `hi-${tone}-b`, label: "Current" }]}
+        />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const fill = (tone: string, name: string) =>
+      getComputedStyle(within(within(canvasElement).getByRole("navigation", { name: tone })).getByRole("link", { name })).backgroundColor;
+    const probe = document.createElement("span");
+    canvasElement.appendChild(probe);
+    const token = (name: string) => {
+      probe.style.backgroundColor = `var(--dbm-bg-${name})`;
+      return getComputedStyle(probe).backgroundColor;
+    };
+    await expect(fill("brand", "Current")).toBe(token("brand-subtle"));
+    await expect(fill("neutral", "Current")).toBe(token("neutral-subtle"));
+    await expect(fill("brand", "Other")).toBe("rgba(0, 0, 0, 0)");
+    await expect(fill("neutral", "Other")).toBe("rgba(0, 0, 0, 0)");
+    probe.remove();
   },
 };
 

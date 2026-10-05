@@ -38,6 +38,10 @@ ${toc(['size="sm"'])}`,
     use on bg.canvas, where brand text falls under the contrast floor. */}
 ${toc(['tone="neutral"'])}`,
 
+  highlighted: `{/* highlightActive adds a subtle background behind the current entry, in the tone's own
+    tint (brand-subtle for "brand", neutral-subtle for "neutral"). The marker bar stays. */}
+${toc(["highlightActive"])}`,
+
   nested: `{/* level: 1 (default) to 4 — each level is indented one step */}
 ${toc([], nestedItems)}`,
 
@@ -78,6 +82,7 @@ ${toc(['dir="rtl"'])}`,
 export interface TableOfContentsPlaygroundSnippetArgs {
   size?: TableOfContentsSize;
   tone?: TableOfContentsTone;
+  highlightActive?: boolean;
   showTitle?: boolean;
   smoothScroll?: boolean;
   scrollOffset?: number;
@@ -92,6 +97,7 @@ export function tableOfContentsPlaygroundSnippet(args: TableOfContentsPlayground
   const attributes: string[] = [];
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
+  if (args.highlightActive) attributes.push("highlightActive");
   if (args.showTitle === false) attributes.push("showTitle={false}");
   if (args.smoothScroll === false) attributes.push("smoothScroll={false}");
   if (typeof args.scrollOffset === "number" && args.scrollOffset > 0) attributes.push(`scrollOffset={${args.scrollOffset}}`);
