@@ -36,6 +36,7 @@
     "check-storybook-bundle-size": "node scripts/check-storybook-bundle-size.mjs",
     "check-component-bundle-size": "node scripts/check-component-bundle-size.mjs",
     "check-foundations-token-coverage": "node scripts/check-foundations-token-coverage.mjs",
+    "check-guidelines": "node scripts/check-guidelines.mjs",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots"
   },
