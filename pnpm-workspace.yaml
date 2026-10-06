@@ -14,6 +14,12 @@ auditConfig:
     # gets pinned via a normal override below — leaving it in place after a fix exists would mask a
     # genuine regression instead of a known, accepted gap.
     - GHSA-vfj7-8cjw-p6xm
+    # sprintf-js' unbounded-precision DoS (GHSA-hp3w-g68c-fv3c, published 2026-09-24): GitHub's own
+    # advisory data lists no patched version (`first_patched_version: null`) and 1.1.3 is the latest
+    # release, so an override has no fix to pin to. Assessed 2026-10-06 in §3.1 of
+    # guidelines/02-tech-stack-and-structure.md. Remove this entry the same day a fixed release ships
+    # and gets pinned via a normal override below.
+    - GHSA-hp3w-g68c-fv3c
 overrides:
   # GHSA-g7r4-m6w7-qqqr: esbuild dev-server arbitrary file read on Windows,
   # patched in 0.28.1. Pulled in transitively via Storybook/Vite/tsup (dev-only,
@@ -164,6 +170,13 @@ overrides:
   # vitest family in sync at the same patch release.
   "@vitest/browser": ">=4.1.11 <5.0.0"
   "@vitest/browser-playwright": ">=4.1.11 <5.0.0"
+  # GHSA-68fv-2mgg-jv7q: source-map-js event-loop DoS through indexed source-map
+  # section offsets, vulnerable `>=1.0.0 <1.2.2`, patched in 1.2.2 (the latest
+  # release). Reached only via postcss (Vite, so Storybook and Vitest's browser
+  # runner) — dev-only, never shipped. `postcss@8.5.28` declares `^1.2.1`, so the
+  # floor stays within its own major; capped at `<2.0.0` per the §3.1 rule that
+  # every override gets an upper bound. Found via `pnpm audit`, 2026-10-06.
+  source-map-js: ">=1.2.2 <2.0.0"
 patchedDependencies:
   # Bridges brace-expansion's >=2 export shape (see the brace-expansion
   # override above) so the >=5.0.8 override doesn't crash this package's
