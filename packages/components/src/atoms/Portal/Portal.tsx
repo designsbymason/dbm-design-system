@@ -15,6 +15,11 @@ import type { PortalProps } from "./Portal.types";
  * to portal the child itself instead of wrapping it in an extra `<div>` —
  * `children` must be a single valid element when set.
  *
+ * Portaled content inherits from `<body>`, not from where it is declared, and
+ * `Portal` adds no styles of its own: give the content's own root
+ * `font-family: var(--dbm-font-family-primary)` (and a `color`) or it falls
+ * back to the browser's default font on a page that sets none on `<body>`.
+ *
  * `disablePortal` renders `children` in place, with no portal and no wrapper
  * element at all — useful for print views, tests that need the DOM
  * structure kept in place, or conditionally turning portaling off without

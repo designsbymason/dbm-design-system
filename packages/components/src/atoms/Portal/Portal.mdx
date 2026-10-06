@@ -136,6 +136,10 @@ behaves correctly as this story's own, uncluttered page. See it standalone:
 - Don't rely on CSS selectors that depend on DOM ancestry (a parent's own class name, a `:has()`
   targeting a child) to style portaled content — once portaled, it's no longer a DOM descendant of
   where it's declared in JSX, only a React-tree descendant.
+- Don't expect portaled content to inherit a font or text color from where it is declared. It is
+  mounted at the end of `<body>`, so it inherits from `<body>`, not from your component, and a page
+  that sets no font on `<body>` shows it in the browser's default font. Give the content's own root
+  `font-family: var(--dbm-font-family-primary)` (and a `color` if it needs one).
 - Don't use `asChild` when `children` contains more than one top-level element, or isn't a real
   element at all (plain text) — Radix's own `Slot` requires exactly one, and throws if that's not
   what it gets.
@@ -151,6 +155,10 @@ behaves correctly as this story's own, uncluttered page. See it standalone:
 - Default to portaling into `document.body` (the default `container`) unless there's a specific
   reason to target somewhere else — a custom `container` is mainly useful for scoping portaled
   content to a specific region (e.g. keeping it inside a particular themed subtree).
+- Style the portaled content's own root with the text it needs: `font-family:
+  var(--dbm-font-family-primary)`, and a `color` from a `text.*` token. The overlay components built
+  on `Portal` (`Select`, `Popover`, `Tooltip`, `HoverCard`) each do this on their own panel; `Portal`
+  itself renders no styles, so a custom overlay has to.
 - Pair `Portal` with `FocusTrap` for a complete custom overlay — `Portal` handles *where* the
   content renders in the DOM, `FocusTrap` handles keyboard focus once it's there. Neither one does
   the other's job.
