@@ -316,11 +316,11 @@ quoted in prose elsewhere.
 and `List` are molecules) has a completed review pass and is Finalized. Per-component detail lives in
 `component-reviews/`, not here.
 
-**Next up (updated 2026-10-04):** Every atom and all 37 molecules (`Grid`, `List`, `Select`,
+**Next up (updated 2026-10-06):** Every atom and all 38 built molecules (`Grid`, `List`, `Select`,
 `CheckboxGroup`, `RadioGroup`, `FormField`, `PasswordInput`, `NumberInput`, `SearchInput`, `Slider`,
 `Popover`, `Accordion`, `Table`, `Card`, `EmptyState`, `Pagination`, `Tabs`, `Breadcrumb`, `Alert`,
 `RangeSlider`, `ButtonGroup`, `ToggleGroup`, `AvatarGroup`, `CodeBlock`, `Stat`, `DescriptionList`,
-`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`, `FieldGroup`, `Splitter`, `PinInput`, `RatingInput`, `TableOfContents`) are reviewed and Finalized — see the table above. `Calendar` (built and Finalized 2026-10-05) is the 38th, `EditableText` and `TagsInput` (added 2026-10-05) are not built, and Phase 6 (organisms, `01-vision-and-goals.md` §13) follows the order set in `04-component-inventory.md`.
+`ScrollArea`, `HoverCard`, `TimePicker`, `TimeRangePicker`, `Toolbar`, `TableToolbar`, `FieldGroup`, `Splitter`, `PinInput`, `RatingInput`, `TableOfContents`, `Calendar`) are reviewed and Finalized — see the table above. `EditableText` and `TagsInput` (added 2026-10-05) are the two molecules not built, and Phase 6 (organisms, `01-vision-and-goals.md` §13) follows the order set in `04-component-inventory.md`.
 
 **How the molecule queue works:** a Docs page is one deliverable inside each component's full
 `06-engineering-standards.md` §9 review pass, not a separate sweep, run one component at a time. The atom

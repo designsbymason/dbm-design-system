@@ -11,11 +11,12 @@ src/
 │   ├── breakpoint.json
 │   ├── motion.json
 │   └── other.json
-└── semantic/
-    ├── purple-light.json
-    ├── purple-dark.json
-    ├── emerald-light.json
-    └── emerald-dark.json
+├── semantic/
+│   ├── purple-light.json
+│   ├── purple-dark.json
+│   ├── emerald-light.json
+│   └── emerald-dark.json
+└── component/            # one file per component that needs a scale of its own (avatar.json, badge.json, ...)
 ```
 
 The Style Dictionary pipeline that builds these into CSS custom properties + typed TS constants lives at `packages/tokens/style-dictionary.config.js`, output in `packages/tokens/build/`. See `guidelines/03-token-system-spec.md` for the full spec, OKLCH color-generation methodology, and the running WCAG contrast-verification log.
