@@ -60,6 +60,17 @@ export interface TagProps extends ComponentPropsWithoutRef<"span"> {
    */
   removeLabel?: string;
   /**
+   * Whether the remove button is a tab stop. Turn it off for a parent that
+   * manages focus among several tags itself (a field of removable chips
+   * reached with the arrow keys): the button then has `tabindex="-1"`, so it
+   * is still focusable by script and by a press, and still named and read by
+   * assistive tech, but Tab passes over it. Only the real remove button is
+   * affected; a clickable or selectable tag's decorative remove glyph was
+   * never a tab stop.
+   * @default true
+   */
+  removeTabStop?: boolean;
+  /**
    * Called when the tag itself is clicked, or activated via Enter/Space
    * while focused. Passing this — or any of `selected`/`defaultSelected`/
    * `onSelectedChange` — makes the whole tag focusable and keyboard-

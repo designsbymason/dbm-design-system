@@ -128,6 +128,7 @@ export interface TagPlaygroundSnippetArgs {
   trailingIcon?: unknown;
   removable?: boolean;
   removeLabel?: string;
+  removeTabStop?: boolean;
   disabled?: boolean;
   "aria-label"?: string;
 }
@@ -152,6 +153,7 @@ export function tagPlaygroundSnippet(args: TagPlaygroundSnippetArgs): string {
   if (args.removable) {
     attributes.push("removable", "onRemove={handleRemove}");
     if (args.removeLabel && args.removeLabel !== `Remove ${label}`) attributes.push(`removeLabel="${args.removeLabel}"`);
+    if (args.removeTabStop === false) attributes.push("removeTabStop={false}");
   }
   if (args["aria-label"]) attributes.push(`aria-label="${args["aria-label"]}"`);
   if (args.disabled) attributes.push("disabled");

@@ -65,3 +65,10 @@ Two changes asked for by the user, run through the three-question test (`06` §9
 - **Semver note:** a default changing for existing callers is a breaking change; nothing is published yet.
 
 **Pre-existing, not touched:** a real remove `<button>` hover fills with `bg.neutral-subtle` for every tone, which is a very faint fill behind a solid tag's white glyph. Not changed here; flagged.
+
+## Post-Finalization addition (2026-10-10, at explicit direction) — `removeTabStop`
+
+`TagsInput` asked for its chips to be one tab stop with arrow-key movement ([ADR-0050](../adr/0050-tagsinput-chips-are-one-tab-stop-with-arrow-key-movement-and-tag-lets-its-remove-button-leave-the-tab-order.md)), which needs `Tag`'s real remove button out of the tab order.
+
+- **`removeTabStop?: boolean`** (default `true`): with `false` the real remove button has `tabindex="-1"`: still focusable by script and by a press, still named and read, not in the tab order. Only the real button is affected; the decorative glyph shown on a clickable or selectable tag was never a tab stop.
+- **Finalized status unchanged** under the three-question test: purely additive, and a default that leaves every existing caller as it was. Scoped pass: JSDoc, a Controls entry and Playground arg, the snippet builder, the Docs page's `propOrder`, and a unit test (the attribute is absent by default, `-1` when off, and the button still takes focus).

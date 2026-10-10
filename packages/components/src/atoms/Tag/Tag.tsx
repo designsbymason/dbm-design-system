@@ -134,6 +134,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
       removable = false,
       onRemove,
       removeLabel,
+      removeTabStop = true,
       onClick,
       selected,
       defaultSelected,
@@ -321,6 +322,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
             <button
               type="button"
               aria-label={removeLabel ?? `Remove ${children?.toString() ?? ""}`}
+              tabIndex={removeTabStop ? undefined : -1}
               className={cx(
                 styles.remove,
                 styles.removeButton,

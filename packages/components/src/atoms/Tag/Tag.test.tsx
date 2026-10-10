@@ -198,6 +198,24 @@ describe("Tag", () => {
     expect(subtleIcon).not.toMatch(/tone(Brand|Default|Secondary)/);
   });
 
+  it("keeps the remove button a tab stop by default, and takes it out of the tab order with removeTabStop={false}", () => {
+    const { rerender } = render(
+      <Tag removable onRemove={() => {}}>
+        Design
+      </Tag>,
+    );
+    expect(screen.getByRole("button", { name: "Remove Design" })).not.toHaveAttribute("tabindex");
+    rerender(
+      <Tag removable removeTabStop={false} onRemove={() => {}}>
+        Design
+      </Tag>,
+    );
+    const button = screen.getByRole("button", { name: "Remove Design" });
+    expect(button).toHaveAttribute("tabindex", "-1");
+    button.focus();
+    expect(button).toHaveFocus();
+  });
+
   it("applies the matching class for the outlined variant, per tone", () => {
     const { rerender } = render(
       <Tag tone="brand" variant="outlined" data-testid="tag">

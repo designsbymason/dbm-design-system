@@ -91,6 +91,12 @@ const meta: Meta<typeof Tag> = {
       description:
         "Accessible label for the remove button. Defaults to `Remove ${children}`.",
     },
+    removeTabStop: {
+      control: "boolean",
+      description:
+        "Whether the remove button is a tab stop. Turn it off for a parent that manages focus among several tags itself; the button then has tabindex -1.",
+      table: { defaultValue: { summary: "true" } },
+    },
     // `onClick`/`selected`/`defaultSelected`/`onSelectedChange` don't each
     // get their own Controls-panel widget: `onClick`/`onSelectedChange`
     // are functions (nothing to toggle), and a bare `selected` toggle
@@ -181,6 +187,7 @@ const meta: Meta<typeof Tag> = {
     leadingIcon: "None" as unknown as TagProps["leadingIcon"],
     trailingIcon: "None" as unknown as TagProps["leadingIcon"],
     removable: false,
+    removeTabStop: true,
     onRemove: fn(),
     removeLabel: "Remove Design",
     disabled: false,
