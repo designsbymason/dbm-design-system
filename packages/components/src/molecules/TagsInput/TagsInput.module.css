@@ -10,6 +10,7 @@
 .box {
   align-items: center;
   flex-wrap: wrap;
+  position: relative;
   background-color: var(--dbm-bg-surface);
   border: var(--dbm-border-width-1) solid var(--dbm-border-default);
   border-radius: var(--dbm-radius-md);
@@ -88,6 +89,33 @@
   flex: 1 1 var(--dbm-tags-input-entry-min-width);
   /* The least that is usable, but never wider than the box, however narrow the box is. */
   min-inline-size: min(var(--dbm-tags-input-entry-min-width), 100%);
+}
+
+/* `overflow="collapse"` while the field is idle: one line, never wrapping; the count of chips was worked out to
+   fit, and anything a late font or a narrower box leaves over is cut at the border rather than wrapped. */
+.oneLine {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+/* An unseen copy of every chip and of the widest "+N more" button, only to be measured: no size of its own and
+   cut to nothing, so it takes no room and can't cause a scrollbar. */
+.measurerFrame {
+  block-size: 0;
+  inline-size: 0;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
+}
+
+.measurer {
+  display: flex;
+  gap: var(--dbm-space-2);
+  inline-size: max-content;
+  white-space: nowrap;
 }
 
 /* A collapsed row is meant to be one line: the typing area gives up its minimum width so it never drops onto

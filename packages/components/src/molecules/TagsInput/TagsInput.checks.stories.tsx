@@ -464,3 +464,103 @@ export const CutChipsShowTheirWholeTextInATooltip: Story = {
     });
   },
 };
+
+const eight = ["design", "engineering", "accessibility", "urgent", "review", "qa", "launch", "marketing"];
+
+export const CollapseFollowsTheWidth: Story = {
+  name: "With overflow collapse the row stays one line and the +N more count follows the width, both ways",
+  render: function WidthStory() {
+    const [width, setWidth] = useState("34rem");
+    return (
+      <div>
+        <button type="button" onClick={() => setWidth("34rem")}>
+          wide
+        </button>
+        <button type="button" onClick={() => setWidth("14rem")}>
+          narrow
+        </button>
+        <div data-testid="frame" style={{ width, marginBlockStart: "1rem" }}>
+          <TagsInput aria-label="Labels" overflow="collapse" defaultValue={eight} />
+        </div>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = () => canvas.getByRole("group");
+    const hiddenCount = () => {
+      const more = canvas.queryByRole("button", { name: /\+\d+ more/ });
+      return more ? Number(/\+(\d+)/.exec(more.textContent ?? "")?.[1]) : 0;
+    };
+    const shown = () => canvas.getAllByRole("listitem").length;
+    const oneLine = () => {
+      const tops = new Set(canvas.getAllByRole("listitem").map((item) => Math.round(box(item).top)));
+      return tops.size === 1;
+    };
+
+    // Wide: some fit, the rest are counted, on a single line, and everything is inside the border.
+    await userEvent.click(canvas.getByRole("button", { name: "wide" }));
+    await waitFor(() => expect(shown() + hiddenCount()).toBe(8));
+    const wide = hiddenCount();
+    await expect(oneLine()).toBe(true);
+    await expect(box(canvas.getByRole("button", { name: /\+\d+ more/ })).right).toBeLessThanOrEqual(box(group()).right + 0.5);
+
+    // Narrower: fewer chips, a bigger count, still one line and still everything counted.
+    await userEvent.click(canvas.getByRole("button", { name: "narrow" }));
+    await waitFor(() => expect(hiddenCount()).toBeGreaterThan(wide));
+    await expect(shown() + hiddenCount()).toBe(8);
+    await expect(oneLine()).toBe(true);
+    await expect(group().scrollWidth).toBeLessThanOrEqual(group().clientWidth);
+
+    // Wider again: the count goes back down.
+    await userEvent.click(canvas.getByRole("button", { name: "wide" }));
+    await waitFor(() => expect(hiddenCount()).toBe(wide));
+  },
+};
+
+export const CollapseOpensWhileTheFieldIsUsed: Story = {
+  name: "With overflow collapse, focus shows and wraps every tag, and leaving the field collapses it again",
+  render: () => (
+    <div>
+      <div data-testid="frame" style={{ width: "18rem" }}>
+        <TagsInput aria-label="Labels" overflow="collapse" defaultValue={eight} />
+      </div>
+      <button type="button">Elsewhere</button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const idle = canvas.getAllByRole("listitem").length;
+    const idleHeight = box(canvas.getByRole("group")).height;
+    await expect(idle).toBeLessThan(8);
+    await userEvent.click(canvas.getByRole("textbox"));
+    await waitFor(() => expect(canvas.getAllByRole("listitem")).toHaveLength(8));
+    await expect(box(canvas.getByRole("group")).height).toBeGreaterThan(idleHeight);
+    await userEvent.click(canvas.getByRole("button", { name: "Elsewhere" }));
+    await waitFor(() => expect(canvas.getAllByRole("listitem")).toHaveLength(idle));
+    await waitFor(() => expect(box(canvas.getByRole("group")).height).toBeCloseTo(idleHeight, 0));
+  },
+};
+
+export const CollapseKeepsTheCapAndTheNoButtonCase: Story = {
+  name: "With overflow collapse, maxVisible still caps the count, and a row that fits shows no button",
+  render: () => (
+    <div style={{ width: "40rem" }}>
+      <div data-testid="capped">
+        <TagsInput aria-label="Capped" overflow="collapse" maxVisible={2} defaultValue={eight} />
+      </div>
+      <div data-testid="fits" style={{ marginBlockStart: "1rem" }}>
+        <TagsInput aria-label="Fits" overflow="collapse" defaultValue={["a", "b"]} />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const capped = within(canvas.getByTestId("capped"));
+    const fits = within(canvas.getByTestId("fits"));
+    await waitFor(() => expect(capped.getAllByRole("listitem")).toHaveLength(2));
+    await expect(capped.getByRole("button", { name: "+6 more" })).toBeInTheDocument();
+    await expect(fits.getAllByRole("listitem")).toHaveLength(2);
+    await expect(fits.queryByRole("button", { name: /more/ })).toBeNull();
+  },
+};

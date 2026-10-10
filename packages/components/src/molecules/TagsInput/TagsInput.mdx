@@ -29,6 +29,7 @@ export const propOrder = [
   "maxTags",
   "maxTagLength",
   "showCount",
+  "overflow",
   "maxVisible",
   "clearable",
   "onTagAdd",
@@ -156,6 +157,10 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 
 <Canvas of={TagsInputStories.Collapsed} />
 
+### Collapsing to fit the width
+
+<Canvas of={TagsInputStories.FitToWidth} />
+
 ### Normalizing each tag
 
 <Canvas of={TagsInputStories.Transform} />
@@ -226,6 +231,10 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 - The field is as tall as an `Input` of the same size (within a few pixels), and adding the first tag does not move
   anything below it. Chips wrap onto further lines as they are added; set `maxVisible` to keep a long list to a
   line while the field isn't in use.
+- Use `overflow="collapse"` in a field whose width changes (a column, a resizable panel, a phone turned sideways):
+  an idle row stays on one line, showing as many chips as fit with the rest counted in "+N more", and the count
+  follows the width. Use `maxVisible` on its own for a fixed number, or together with `overflow="collapse"` as an
+  upper limit.
 - Use `invalidBehavior="flag"` where a paste may hold one bad entry among many: nothing is thrown away, the bad
   one is plain to see, and a form won't send it. Keep the default `refuse` where a wrong tag should never exist.
 - `onTagAdd` and `onTagRemove` say what changed and why (a paste, a Backspace, Clear all), which `onValueChange`'s
@@ -252,7 +261,7 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 - A flagged tag (`invalidBehavior="flag"`) is drawn in the `danger` tone, its reason is read after it, the entry is
   marked `aria-invalid`, and a surrounding form will not submit until it is corrected or removed. Colour is not the
   only signal: the reason is text.
-- With `maxVisible` the row collapses only while the entry and the chips don't have focus, so what you are typing
+- With `maxVisible` or `overflow="collapse"` the row collapses only while the entry and the chips don't have focus, so what you are typing
   and removing is always in view; the "+N more" button is named by its own text and says whether it has opened the
   row (`aria-expanded`).
 - Escape clears the pending text and is handled in the field, so it does not reach a parent's handler while there is
@@ -309,8 +318,11 @@ straight through to the outer box. `className` and `style` go on the outer box; 
   validate={(tag) => (tag.includes("@") ? undefined : "Not an email address")}
 />
 
-{/* A long list on one line until the field is used */}
+{/* A long list on one line until the field is used: three chips and "+N more" */}
 <TagsInput aria-label="Labels" maxVisible={3} value={tags} onValueChange={setTags} />
+
+{/* As many chips as fit the width, following it as it changes */}
+<TagsInput aria-label="Labels" overflow="collapse" value={tags} onValueChange={setTags} />
 
 {/* Knowing what changed, and why */}
 <TagsInput

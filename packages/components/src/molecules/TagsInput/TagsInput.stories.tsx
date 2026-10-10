@@ -106,6 +106,13 @@ const meta: Meta<typeof TagsInput> = {
       description: "Shows a live count/max after the tags. Only drawn when maxTags is set.",
       table: { defaultValue: { summary: "false" } },
     },
+    overflow: {
+      control: "radio",
+      options: ["wrap", "collapse"],
+      description:
+        "What a long row does while the field is not in use: wrap onto further lines, or collapse to one line with as many chips as fit and a +N more button that follows the width. Every tag shows (and wraps) while the entry or a chip has focus.",
+      table: { defaultValue: { summary: "wrap" } },
+    },
     maxVisible: {
       control: false,
       description:
@@ -224,6 +231,7 @@ const meta: Meta<typeof TagsInput> = {
     variant: "subtle",
     addOnBlur: true,
     invalidBehavior: "refuse",
+    overflow: "wrap",
     allowDuplicates: false,
     showCount: false,
     clearable: false,
@@ -373,6 +381,32 @@ export const Collapsed: Story = {
     maxVisible: 3,
     defaultValue: ["design", "engineering", "accessibility", "urgent", "review", "qa", "launch"],
   },
+};
+
+export const FitToWidth: Story = {
+  name: "Collapsing to fit the width",
+  parameters: { docs: { source: { code: tagsInputSnippets.fitToWidth } } },
+  // `overflow` is the point of this story, and the box can be dragged narrower or wider to see the count follow.
+  argTypes: { overflow: { control: false } },
+  args: {
+    overflow: "collapse",
+    defaultValue: ["design", "engineering", "accessibility", "urgent", "review", "qa", "launch", "marketing"],
+  },
+  render: (args) => (
+    <div
+      style={{
+        width: "30rem",
+        maxWidth: "100%",
+        minWidth: "8rem",
+        resize: "horizontal",
+        overflow: "auto",
+        padding: "var(--dbm-space-2)",
+        border: "1px dashed var(--dbm-border-default)",
+      }}
+    >
+      <TagsInput {...args} />
+    </div>
+  ),
 };
 
 export const Duplicates: Story = {

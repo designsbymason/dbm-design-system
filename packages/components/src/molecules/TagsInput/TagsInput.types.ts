@@ -2,6 +2,9 @@ import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 import type { InputSize } from "../../atoms/Input";
 import type { TagTone, TagVariant } from "../../atoms/Tag";
 
+/** What a long row of chips does when the field is not in use. */
+export type TagsInputOverflow = "wrap" | "collapse";
+
 /** How `TagsInput` treats a tag that `validate` rejects. */
 export type TagsInputInvalidBehavior = "refuse" | "flag";
 
@@ -170,9 +173,17 @@ export interface TagsInputProps
    */
   showCount?: boolean;
   /**
-   * Collapses a long row: while the field isn't being used, only this many chips show, followed by a
-   * "+N more" button that shows the rest (and "Show less" to go back). The field shows every tag while the entry or
-   * a chip has focus, so what is typed is always in view. The hidden tags are still submitted under `name`.
+   * What a long row does while the field is not in use. `wrap` (the default) lets the chips wrap onto further
+   * lines. `collapse` keeps the row to one line: as many chips as fit show, and a "+N more" button stands for the
+   * rest, with the count following the field's width as it changes. The field shows (and wraps) every tag while
+   * the entry or a chip has focus, so what is typed is always in view; "+N more" opens it, "Show less" closes it.
+   * The hidden tags are still submitted under `name`.
+   * @default "wrap"
+   */
+  overflow?: TagsInputOverflow;
+  /**
+   * A fixed number of chips to show while the field is not in use, followed by "+N more": the whole rule with
+   * `overflow="wrap"`, and an upper limit on the number that fit with `overflow="collapse"`.
    */
   maxVisible?: number;
   /**

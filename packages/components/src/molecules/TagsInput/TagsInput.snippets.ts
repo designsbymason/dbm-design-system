@@ -43,6 +43,14 @@ export const tagsInputSnippets = {
   transform={(raw) => raw.trim().replace(/^#/, "").toLowerCase()}
 />`,
 
+  fitToWidth: `{/* One line: as many chips as fit, and "+N more" for the rest, following the width. */}
+<TagsInput
+  aria-label="Labels"
+  placeholder="Add a label"
+  overflow="collapse"
+  defaultValue={["design", "engineering", "accessibility", "urgent", "review", "qa", "launch", "marketing"]}
+/>`,
+
   flagging: `{/* The tag is added and drawn as invalid; a form won't submit until it is fixed or removed. */}
 <TagsInput
   aria-label="Recipients"
@@ -71,6 +79,7 @@ export interface TagsInputPlaygroundSnippetArgs {
   variant?: string;
   addOnBlur?: boolean;
   invalidBehavior?: string;
+  overflow?: string;
   allowDuplicates?: boolean;
   maxTags?: number;
   showCount?: boolean;
@@ -100,6 +109,7 @@ export function tagsInputPlaygroundSnippet(args: TagsInputPlaygroundSnippetArgs)
   if (args.variant && args.variant !== "subtle") attributes.push(`variant="${args.variant}"`);
   if (args.addOnBlur === false) attributes.push("addOnBlur={false}");
   if (args.invalidBehavior && args.invalidBehavior !== "refuse") attributes.push(`invalidBehavior="${args.invalidBehavior}"`);
+  if (args.overflow && args.overflow !== "wrap") attributes.push(`overflow="${args.overflow}"`);
   if (args.allowDuplicates) attributes.push("allowDuplicates");
   if (args.maxTags !== undefined && args.maxTags > 0) attributes.push(`maxTags={${args.maxTags}}`);
   if (args.showCount) attributes.push("showCount");

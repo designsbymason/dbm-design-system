@@ -10,6 +10,7 @@ import type { TagSize, TagTone, TagVariant } from "../../atoms/Tag";
 import { Tooltip, TooltipProvider } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./TagsInput.module.css";
+import { fitCount } from "./fitCount";
 import type { TagsInputAddSource, TagsInputLabels, TagsInputProps } from "./TagsInput.types";
 
 const sizeClass: Record<InputSize, string | undefined> = {
@@ -135,6 +136,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       maxTags,
       maxTagLength,
       showCount = false,
+      overflow = "wrap",
       maxVisible,
       onTagAdd,
       onTagRemove,
@@ -209,6 +211,10 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
     const [engaged, setEngaged] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
+    // `overflow="collapse"`: how many chips fit on the one line, measured from an unseen copy of them.
+    const [fitting, setFitting] = useState<number | null>(null);
+    const collapseMode = overflow === "collapse";
+
     const reactId = useId();
     const errorId = `${reactId}-error`;
     const hintId = `${reactId}-hint`;
@@ -217,6 +223,8 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
     const listRef = useRef<HTMLUListElement>(null);
     const entryRef = useRef<HTMLInputElement>(null);
     const validityRef = useRef<HTMLInputElement>(null);
+    const measurerRef = useRef<HTMLDivElement>(null);
+    const measureRef = useRef<() => void>(() => undefined);
     const composing = useRef(false);
     // Where focus goes once a chip is gone: never to a place the person left.
     const pendingFocus = useRef<PendingFocus>(null);
@@ -460,6 +468,38 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       entryRef.current?.focus();
     };
 
+    // Collapse mode: how many chips fit on one line beside the button. Read from an unseen copy of every chip
+    // (their natural widths, which the visible, cut ones can't give) and the "+N more" button at its widest.
+    const measure = () => {
+      const box = boxRef.current;
+      const measurer = measurerRef.current;
+      if (!collapseMode || !box || !measurer) return;
+      const items = Array.from(measurer.children) as HTMLElement[];
+      const more = items.pop();
+      const widths = items.map((item) => item.getBoundingClientRect().width);
+      const style = getComputedStyle(box);
+      const gap = parseFloat(style.columnGap) || 0;
+      const inner = box.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
+      // What else shares the line: the counter and the clear-all button; the entry gives up its room while idle.
+      const rest = Array.from(box.children).filter(
+        (child) => child instanceof HTMLElement && (child.dataset.reserve === "true"),
+      ) as HTMLElement[];
+      const reserved = rest.reduce((sum, child) => sum + child.getBoundingClientRect().width + gap, 0);
+      const count = fitCount(widths, more ? more.getBoundingClientRect().width : 0, inner - reserved, gap);
+      setFitting((current) => (current === count ? current : count));
+    };
+    useLayoutEffect(() => {
+      measureRef.current = measure;
+      measure();
+    });
+    useEffect(() => {
+      if (!collapseMode || typeof ResizeObserver === "undefined") return undefined;
+      const observer = new ResizeObserver(() => measureRef.current());
+      if (boxRef.current) observer.observe(boxRef.current);
+      if (measurerRef.current) observer.observe(measurerRef.current);
+      return () => observer.disconnect();
+    }, [collapseMode]);
+
     // Flagged tags make the field refuse a form's submit; so does no tag at all when it is required.
     const needsValidity = required || flaggedCount > 0;
     useEffect(() => {
@@ -477,8 +517,14 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
     }
 
     const invalid = hasError || Boolean(message) || flaggedCount > 0;
-    const collapsed = maxVisible !== undefined && maxVisible >= 0 && tags.length > maxVisible && !expanded && !engaged;
-    const visibleCount = collapsed ? (maxVisible as number) : tags.length;
+    // The most chips the row shows while idle: a fixed number, or as many as fit (never more than a fixed cap).
+    const cap = maxVisible !== undefined && maxVisible >= 0 ? maxVisible : tags.length;
+    const idleCount = Math.min(tags.length, cap, collapseMode ? (fitting ?? tags.length) : tags.length);
+    const overflowing = idleCount < tags.length;
+    const collapsed = overflowing && !expanded && !engaged;
+    // In collapse mode the row is one line whenever the field is idle, even when everything fits.
+    const idleLine = collapseMode && !expanded && !engaged;
+    const visibleCount = collapsed ? idleCount : tags.length;
     const hiddenCount = tags.length - visibleCount;
     const describedBy =
       [ariaDescribedBy, message ? errorId : undefined, tags.length > 0 && canEdit ? hintId : undefined]
@@ -502,7 +548,8 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
             styles.box,
             invalid && styles.invalid,
             disabled && styles.disabled,
-            collapsed && styles.collapsed,
+            (collapsed || idleLine) && styles.collapsed,
+            idleLine && styles.oneLine,
             tags.length === 0 && styles.noTags,
           )}
           onMouseDown={handleBoxMouseDown}
@@ -552,7 +599,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
               <span className={styles.chipLabel}>{labels.more(hiddenCount)}</span>
             </Tag>
           )}
-          {!collapsed && expanded && maxVisible !== undefined && tags.length > maxVisible && (
+          {!collapsed && expanded && overflowing && (
             <Tag
               className={styles.more}
               tone={tone}
@@ -598,7 +645,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
             />
           </div>
           {showCounter && (
-            <span className={styles.count}>
+            <span className={styles.count} data-reserve="true">
               {formatNumber(tags.length)}/{formatNumber(maxTags)}
             </span>
           )}
@@ -606,6 +653,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
             <button
               type="button"
               className={styles.clear}
+              data-reserve="true"
               aria-label={labels.clear}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
@@ -619,6 +667,20 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
             >
               <Icon icon={XIcon} size={iconSizeFor[size]} tone="default" />
             </button>
+          )}
+          {collapseMode && (
+            <div aria-hidden="true" className={styles.measurerFrame}>
+              <div ref={measurerRef} className={styles.measurer}>
+                {tags.map((tag, index) => (
+                  <Tag key={`${index}-${tag}`} tone={tone} variant={variant} size={tagSizeFor[size]} removable={canEdit}>
+                    {tag}
+                  </Tag>
+                ))}
+                <Tag tone={tone} variant={variant} size={tagSizeFor[size]}>
+                  {labels.more(Math.max(tags.length, 1))}
+                </Tag>
+              </div>
+            </div>
           )}
         </div>
         {message && (

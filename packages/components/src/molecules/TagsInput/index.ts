@@ -3,6 +3,7 @@ export type {
   TagsInputAddSource,
   TagsInputInvalidBehavior,
   TagsInputLabels,
+  TagsInputOverflow,
   TagsInputProps,
   TagsInputRemoveSource,
 } from "./TagsInput.types";

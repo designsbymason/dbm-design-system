@@ -668,6 +668,88 @@ describe("TagsInput", () => {
     });
   });
 
+  describe("overflow collapse", () => {
+    // jsdom lays nothing out, so the measured widths are given: every copy of a chip is 60 wide in a 200 wide row.
+    function withWidths<T>(run: () => T): T {
+      const rect = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+        const inMeasurer = Boolean(this.parentElement?.className.includes("measurer"));
+        const width = inMeasurer ? 60 : 0;
+        return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+      });
+      const client = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+        return this.getAttribute("role") === "group" ? 200 : 0;
+      });
+      try {
+        return run();
+      } finally {
+        rect.mockRestore();
+        client.mockRestore();
+      }
+    }
+
+    it("shows as many chips as fit and a +N more button for the rest", () => {
+      withWidths(() => {
+        render(<TagsInput aria-label="Labels" overflow="collapse" defaultValue={["a", "b", "c", "d"]} />);
+        expect(chips()).toEqual(["a", "b"]);
+        expect(screen.getByRole("button", { name: "+2 more" })).toBeInTheDocument();
+      });
+    });
+
+    it("shows every chip, and no button, when they all fit", () => {
+      withWidths(() => {
+        render(<TagsInput aria-label="Labels" overflow="collapse" defaultValue={["a", "b"]} />);
+        expect(chips()).toEqual(["a", "b"]);
+        expect(screen.queryByRole("button", { name: /more/ })).toBeNull();
+      });
+    });
+
+    it("never shows more than maxVisible, even when more would fit", () => {
+      withWidths(() => {
+        render(<TagsInput aria-label="Labels" overflow="collapse" maxVisible={1} defaultValue={["a", "b", "c"]} />);
+        expect(chips()).toEqual(["a"]);
+        expect(screen.getByRole("button", { name: "+2 more" })).toBeInTheDocument();
+      });
+    });
+
+    it("shows every tag while the entry has focus, and the same hidden tags are still submitted", async () => {
+      const user = userEvent.setup();
+      await withWidths(async () => {
+        const { container } = render(
+          <form>
+            <TagsInput aria-label="Labels" name="labels" overflow="collapse" defaultValue={["a", "b", "c", "d"]} />
+          </form>,
+        );
+        expect(new FormData(container.querySelector("form") as HTMLFormElement).getAll("labels")).toEqual([
+          "a",
+          "b",
+          "c",
+          "d",
+        ]);
+        await user.click(entry());
+        expect(chips()).toEqual(["a", "b", "c", "d"]);
+      });
+    });
+
+    it("keeps an unseen copy of the chips out of the accessibility tree and the tab order", () => {
+      withWidths(() => {
+        const { container } = render(
+          <TagsInput aria-label="Labels" overflow="collapse" defaultValue={["a", "b", "c", "d"]} />,
+        );
+        const frame = container.querySelector("[aria-hidden='true'][class*='measurerFrame']") as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(screen.queryAllByRole("listitem")).toHaveLength(2);
+      });
+    });
+
+    it("does not measure or collapse anything with the default overflow", () => {
+      withWidths(() => {
+        const { container } = render(<TagsInput aria-label="Labels" defaultValue={["a", "b", "c", "d"]} />);
+        expect(container.querySelector("[class*='measurerFrame']")).toBeNull();
+        expect(chips()).toEqual(["a", "b", "c", "d"]);
+      });
+    });
+  });
+
   describe("states", () => {
     it("shows chips without remove buttons or a typing caret when read-only", () => {
       render(<TagsInput aria-label="Labels" readOnly defaultValue={["one"]} />);

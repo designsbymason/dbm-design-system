@@ -104,6 +104,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0048](./0048-editabletext-swaps-a-button-for-a-field-and-reports-only-what-is-committed-over-a-live-field-or-a-controlled-value-per-keystroke.md) | `EditableText` swaps a button for a field and reports only what is committed, over an always-present field or a value reported per keystroke | Accepted |
 | [0049](./0049-tagsinput-draws-chips-and-its-own-entry-in-one-wrapping-box-and-adds-on-enter-separator-blur-or-paste-over-the-input-atom-or-a-combobox.md) | `TagsInput` draws its chips and its own entry in one wrapping box, and adds a tag on Enter, a separator, blur or paste, over the `Input` atom or a `Combobox` | Accepted |
 | [0050](./0050-tagsinput-chips-are-one-tab-stop-with-arrow-key-movement-and-tag-lets-its-remove-button-leave-the-tab-order.md) | `TagsInput`'s chips are one tab stop with arrow-key movement, and `Tag` lets its remove button leave the tab order | Accepted |
+| [0051](./0051-tagsinput-collapses-to-the-width-by-measuring-an-unseen-copy-of-its-chips-over-css-only-clipping-or-a-fixed-count.md) | `TagsInput` collapses to the width by measuring an unseen copy of its chips, over CSS-only clipping or a fixed count | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 
