@@ -265,3 +265,7 @@ files hold the entries. Not covered, and not claimed: Safari and Firefox, and re
 
 Later changes get a dated entry here, and go through `06-engineering-standards.md` §9's Finalized rules (ask first, then the
 three-question test).
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — a flaky browser check made robust
+
+`Forced colours — interaction test` failed once in CI waiting for `data-stuck` after setting `scrollTop = 200` once at the start: a scroll position set before layout settles is clamped to 0 and never retried, and the stuck state arrives later through an `IntersectionObserver`. The assignment now happens inside the `waitFor`, so it retries. Test file only; Finalized status unchanged.

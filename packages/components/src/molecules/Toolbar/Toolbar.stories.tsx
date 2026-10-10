@@ -1096,8 +1096,15 @@ export const ForcedColoursInteraction: Story = {
     const scroller = canvas.getByTestId("scroller");
     const frame = canvas.getByTestId("bar").parentElement!;
     const separator = canvas.getByRole("separator");
-    scroller.scrollTop = 200;
-    await waitFor(() => expect(frame).toHaveAttribute("data-stuck"));
+    // Set inside the wait, not once before it: a scroll position set before layout has settled is clamped to 0 and
+    // never retried, and the stuck state arrives later through an IntersectionObserver.
+    await waitFor(
+      () => {
+        scroller.scrollTop = 200;
+        expect(frame).toHaveAttribute("data-stuck");
+      },
+      { timeout: 5000 },
+    );
     const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
     await emulate("active");
     try {

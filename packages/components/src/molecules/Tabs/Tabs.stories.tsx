@@ -1148,6 +1148,17 @@ export const OverflowInteraction: Story = {
   },
 };
 
+/** Resolves once `element` has stopped scrolling: its `scrollLeft` unchanged for three checks in a row. */
+const scrollSettled = async (element: HTMLElement) => {
+  let last = Number.NaN;
+  let steady = 0;
+  for (let check = 0; check < 100 && steady < 3; check += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    steady = element.scrollLeft === last ? steady + 1 : 0;
+    last = element.scrollLeft;
+  }
+};
+
 export const OverflowFocusHoldInteraction: Story = {
   ...FullWidth,
   name: "Overflow — a scroll button holds focus instead of vanishing under it",
@@ -1175,12 +1186,15 @@ export const OverflowFocusHoldInteraction: Story = {
     startButton.focus();
     await expect(startButton).toHaveFocus();
 
-    // Click it until there is nothing left to scroll to.
+    // Click it until there is nothing left to scroll to. Each click starts a smooth scroll, so the list is let
+    // come to rest before the next one; a fixed pause between clicks ran out on a slow machine.
+    const list = canvas.getByRole("tablist");
     let guard = 0;
-    while (startButton.getAttribute("aria-disabled") !== "true" && guard++ < 10) {
+    while (startButton.getAttribute("aria-disabled") !== "true" && guard++ < 20) {
       await userEvent.click(startButton);
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await scrollSettled(list);
     }
+    await waitFor(() => expect(startButton).toHaveAttribute("aria-disabled", "true"));
     // Still in the page, still focused, now inert — not silently dropped from under the keyboard.
     await expect(canvas.getByRole("button", { name: "Scroll tabs to the start" })).toBe(startButton);
     await expect(startButton).toHaveFocus();

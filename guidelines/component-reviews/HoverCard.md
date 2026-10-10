@@ -218,3 +218,7 @@ Fix: a ref set while the provider is unmounting (reset on every mount, so Strict
 Two new tests, each shown to fail with its half of the fix removed: no timer is left after unmounting with a card open, and the cool-down still happens inside
 StrictMode (the next card waits again). A defect fix with no change to rendering, API or any existing behaviour, so the component stays Finalized.
 
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — a flaky browser check made robust
+
+`Focus that isn't keyboard focus … does not open the card` failed once in CI with focus on the body and the page showing only Storybook's loading shell, i.e. the story had been re-prepared during the check's fixed 250ms wait. The sequence (find the link, focus it, wait, assert) now retries as a whole inside `waitFor`, finding the link afresh each time. Mutation-checked: with `focusVisible: true` it still fails. Test file only; Finalized status unchanged.

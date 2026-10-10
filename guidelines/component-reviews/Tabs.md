@@ -603,3 +603,7 @@ its first and last tab, not whatever else the list holds). The behaviour is iden
 same one-pixel slack, same subscriptions); `useTabsOverflow.ts` is gone. By the three-question test nothing visible or
 behavioural changed, so it stays Finalized. Re-verified: every `Tabs` unit and browser test, including the scroll
 fade/button and keyboard-held-button stories, passes unchanged, and the hook has its own tests in `src/test/`.
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — a flaky browser check made robust
+
+`Overflow — a scroll button holds focus instead of vanishing under it` failed twice in CI (a slow runner left the button enabled when the loop ended). The check clicked "scroll to start" up to 10 times, 50ms apart, over a smooth scroll, then asserted once. It now lets the list come to rest between clicks (`scrollSettled`) and waits for `aria-disabled` rather than asserting once. Test file only: no component code, props or tokens changed, so Finalized status is unchanged.

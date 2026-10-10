@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen } from "storybook/test";
+import { expect, screen, waitFor } from "storybook/test";
 import { Link } from "../../atoms/Link";
 import { Text } from "../../atoms/Text";
 import { send } from "../CodeBlock/browserProtocol";
@@ -301,15 +301,23 @@ export const TapDoesNotOpenIt: Story = {
     </div>
   ),
   play: async () => {
-    const trigger = await screen.findByTestId("trigger-tap");
+    await screen.findByTestId("trigger-tap");
     // Focus the link the way a tap or a click does: not from the keyboard. (A real tap was tried and works
     // locally, but it needs screen coordinates, which depend on how the test page scales the story's frame
     // and so differ between machines; this asks the browser for the same kind of focus directly.)
-    trigger.focus({ focusVisible: false } as FocusOptions);
-    await settle();
-    await expect(document.activeElement).toBe(trigger);
-    // Fails loudly if the browser ignored the option and treated this as keyboard focus.
-    await expect(trigger.matches(":focus-visible")).toBe(false);
-    await expect(screen.queryByTestId("card-tap")).toBeNull();
+    // The whole sequence retries, finding the link afresh each time: the story can be re-prepared while the
+    // test waits, which leaves a trigger found earlier detached and focus back on the body.
+    await waitFor(
+      async () => {
+        const trigger = screen.getByTestId("trigger-tap");
+        trigger.focus({ focusVisible: false } as FocusOptions);
+        await settle();
+        expect(document.activeElement).toBe(trigger);
+        // Fails loudly if the browser ignored the option and treated this as keyboard focus.
+        expect(trigger.matches(":focus-visible")).toBe(false);
+        expect(screen.queryByTestId("card-tap")).toBeNull();
+      },
+      { timeout: 5000 },
+    );
   },
 };
