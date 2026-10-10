@@ -12,7 +12,8 @@
   --dialog-radius: var(--dbm-radius-lg);
   --dialog-border-width: var(--dbm-border-width-1);
   --dialog-pad: var(--dbm-space-6);
-  --dialog-close-clearance: var(--dbm-space-10);
+  /* From the end edge: the button's inset, its width, and a little air beside it. */
+  --dialog-close-clearance: calc(var(--dbm-space-3) + var(--dbm-icon-button-size-sm) + var(--dbm-space-2));
 
   background-color: var(--dbm-bg-surface);
   border: var(--dialog-border-width) solid var(--dbm-border-default);
@@ -215,18 +216,20 @@
   min-block-size: 0;
 }
 
+/* The body pads itself fully on every side. Where a header sits above it, or a footer below, that section's own
+   padding already supplies most of the gap, so the body takes less on that side. These rules read the
+   neighbouring section, not the body's position among its siblings: a visually hidden title or any other
+   element may come first without changing the spacing. */
 .bodyContent {
-  padding: var(--dbm-space-2) var(--dialog-pad);
+  padding: var(--dialog-pad);
 }
 
-/* A body with no header above it starts at the top edge, so it takes the padding the header would have. */
-.content > .body:first-child .bodyContent {
-  padding-block-start: var(--dialog-pad);
+.header + .body .bodyContent {
+  padding-block-start: var(--dbm-space-2);
 }
 
-/* The last section ends with the same padding the first one starts with. */
-.content > .body:last-of-type .bodyContent {
-  padding-block-end: var(--dialog-pad);
+.body:has(+ .footer) .bodyContent {
+  padding-block-end: var(--dbm-space-2);
 }
 
 .footer {
@@ -263,12 +266,16 @@
   padding-block-start: var(--dbm-space-4);
 }
 
-.divided > .body .bodyContent {
-  padding-block: var(--dbm-space-4);
+.divided > .header + .body .bodyContent {
+  padding-block-start: var(--dbm-space-4);
+}
+
+.divided > .body:has(+ .footer) .bodyContent {
+  padding-block-end: var(--dbm-space-4);
 }
 
 /* --- The close button: in the top-end corner, out of the flow. The header makes room for it so a long title
-   doesn't run underneath it, and a body with no header clears it with a top margin. --- */
+   doesn't run underneath it; with no header, the body keeps its text out from under it instead. --- */
 .closeButton {
   inset-block-start: var(--dbm-space-3);
   inset-inline-end: var(--dbm-space-3);
@@ -279,8 +286,8 @@
   padding-inline-end: var(--dialog-close-clearance);
 }
 
-.withCloseButton > .body:first-child {
-  margin-block-start: var(--dialog-close-clearance);
+.withCloseButton:not(:has(> .header)) > .body .bodyContent {
+  padding-inline-end: var(--dialog-close-clearance);
 }
 
 /* The default (non-`asChild`) trigger and close elements: a minimal reset of the native button, not chrome of

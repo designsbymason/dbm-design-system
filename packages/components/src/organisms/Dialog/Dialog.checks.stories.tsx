@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Popover } from "../../molecules/Popover";
 import { Select } from "../../molecules/Select";
 import { Dialog } from "./Dialog";
@@ -302,5 +303,79 @@ export const ForcedColoursAndReducedMotionRulesExist: Story = {
     const reduced = mediaRules.find((rule) => rule.conditionText.includes("prefers-reduced-motion: reduce") && /dialogFadeIn/.test(rule.cssText));
     await expect(forced).toBeDefined();
     await expect(reduced).toBeDefined();
+  },
+};
+
+// The spacing of a body with no header above it, with a visually hidden title or an `aria-label` standing in for
+// one. The hidden title is a sibling that comes first, so layout rules keyed to a body's position among its
+// siblings miss it: the text sat 8px from the top and ran under the close button.
+async function measureBodyText(dialog: HTMLElement) {
+  const body = within(dialog).getByTestId("body");
+  const textNode = Array.from(body.querySelectorAll("p")).at(0) as HTMLElement;
+  const range = document.createRange();
+  range.selectNodeContents(textNode);
+  const lines = Array.from(range.getClientRects());
+  const close = within(dialog).getByRole("button", { name: "Close" }).getBoundingClientRect();
+  const panel = dialog.getBoundingClientRect();
+  const top = Math.min(...lines.map((line) => line.top));
+  const bottom = Math.max(...lines.map((line) => line.bottom));
+  const overlapsClose = lines.some(
+    (line) => line.left < close.right && line.right > close.left && line.top < close.bottom && line.bottom > close.top,
+  );
+  return { top: top - panel.top, bottom: panel.bottom - bottom, overlapsClose, lines: lines.length };
+}
+
+export const TitlelessBodyClearsTheCloseButton: Story = {
+  name: "A body with no header keeps its spacing and stays clear of the close button",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="No title" size="xs">
+        <Dialog.Body data-testid="body">
+          <p style={{ margin: 0 }}>
+            Your changes were saved to your account and will show on every device you are signed in on.
+          </p>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const { top, bottom, overlapsClose, lines } = await measureBodyText(dialog);
+    await expect(lines).toBeGreaterThan(1);
+    await expect(overlapsClose).toBe(false);
+    // the padding token is space-6, 24px, on the top and the bottom
+    await expect(Math.round(top)).toBeGreaterThanOrEqual(24);
+    await expect(Math.round(bottom)).toBeGreaterThanOrEqual(24);
+  },
+};
+
+export const HiddenTitleBodyClearsTheCloseButton: Story = {
+  name: "With a visually hidden title first, the body is spaced the same",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content size="xs">
+        <VisuallyHidden asChild>
+          <Dialog.Title>Image preview</Dialog.Title>
+        </VisuallyHidden>
+        <Dialog.Body data-testid="body">
+          <p style={{ margin: 0 }}>
+            The dialog is named for screen readers, and the design shows no heading above this text.
+          </p>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close asChild>
+            <Button>Done</Button>
+          </Dialog.Close>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog", { name: "Image preview" });
+    await settled(dialog);
+    const { top, overlapsClose } = await measureBodyText(dialog);
+    await expect(overlapsClose).toBe(false);
+    await expect(Math.round(top)).toBeGreaterThanOrEqual(24);
   },
 };

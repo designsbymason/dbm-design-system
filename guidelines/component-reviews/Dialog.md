@@ -31,3 +31,6 @@ First organism. Built and put through the `06-engineering-standards.md` §9 chec
 ## Left for later, deliberately
 - `blur` and `opacity` of the scrim are not exposed (`Backdrop` has them); add on a concrete need.
 - `Dialog.Title`/`Description` take no `id`, since the dialog wires its ARIA to the generated ones (an exception to `05` §3, stated there).
+
+## Reported after the first build: a body with no header
+The body's spacing was keyed to `:first-child`, but a dialog named by an `aria-label` or a `VisuallyHidden` title has that title as a hidden sibling before the body, so the rules never matched: the text sat 8px from the top edge and ran under the close button. The spacing now reads the neighbouring section (`.header + .body`, `.body:has(+ .footer)`) instead of position, and a header-less body keeps its text clear of the close button with an end padding of the button's inset, width and a little air. Two real-browser checks cover it, and both fail against the old stylesheet.
