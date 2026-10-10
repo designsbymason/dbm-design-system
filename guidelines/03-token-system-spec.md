@@ -23,7 +23,7 @@ Status/neutral tokens (red, amber, green, blue, gray) are **shared across both b
 | `motion.json` | Duration scale (`instant` at 0ms through 600ms) + 5 easing curves — `standard`/`decelerate`/`accelerate`, an "emphasized" expo-out curve for premium micro-interactions, and `linear` (a cubicBezier token equal to the CSS `linear` keyword, so a constant-rate curve goes through the same build pipeline as the others instead of being hardcoded) |
 | `other.json` | Icon sizes (paired with Phosphor, 12–48px), border widths, opacity scale (`0`/`5`/`10`/`20`/`40`/`50`/`60`/`80`/`90`/`100`), z-index layering scale |
 
-**Stacking.** The z-index scale fixes the order between kinds of layer: overlay (1300, a scrim), modal (1400, a dialog panel), popover (1500), toast (1600), tooltip (1700). A popover or select opened from inside a dialog therefore sits above it, and two layers of the same kind (a dialog opened from a dialog) stack by the order they were portaled to `document.body`. There is no layer manager; none is needed while each kind has its own step.
+**Stacking.** The z-index scale fixes the order between kinds of layer: overlay (1300, a scrim), modal (1400, a dialog panel), popover (1500), toast (1600), tooltip (1700). A floating panel opened from inside a dialog (a popover, a select list) therefore sits above it: portaled panels are on the `popover` step, not `dropdown`, which is for in-flow layers such as a scrolling strip's edge fades ([ADR-0054](adr/0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md)). Two layers of the same kind (a dialog opened from a dialog) stack by the order they were portaled to `document.body`. There is no layer manager; none is needed while each kind has its own step.
 
 ### Fonts
 

@@ -23,7 +23,7 @@ First organism. Built and put through the `06-engineering-standards.md` §9 chec
 - The Docs page was opened in a running Storybook: all ten template sections, nine Properties tables with no empty description, links, Playground, long-content story and dark mode.
 
 ## Not verified, for the maintainer to decide on
-- **Mouse selection of an option in a `Select` opened from the dialog.** A synthetic pointer sequence left the list open (keyboard selection worked), so this needs a real-pointer check.
+- **Mouse selection of an option in a `Select` opened from the dialog** failed, and it was a defect in `Select`, not the dialog: its list was on the `z-index.dropdown` step (1000), below the scrim (1300), so it was drawn dimmed under it and a real click landed on the scrim. Keyboard selection worked, which is why the synthetic check looked like a harness problem. Fixed in `Select` ([ADR-0054](../adr/0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md)); `SelectChosenWithARealPointer` drives a real mouse through the Chrome DevTools Protocol and fails on the old stylesheet.
 - **Touch and iOS scroll-lock behaviour**, which neither jsdom nor desktop Chromium shows.
 - **Docs-page stale references** in finalized components (below), which need your go-ahead since they are Finalized.
 - Whether `Dialog.Header`/`Body`/`Footer` should share a surface with `Card`'s sections; `Card` has no context, but nothing was tried outside a `Card`. Revisit when `Drawer` is built (ADR-0053).

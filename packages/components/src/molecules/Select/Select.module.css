@@ -272,7 +272,9 @@
   max-width: var(--radix-select-content-available-width);
   min-width: var(--radix-select-trigger-width);
   width: max-content;
-  z-index: var(--dbm-z-index-dropdown);
+  /* On the `popover` step, not `dropdown`: a list opened from inside a `Dialog` has to be above the dialog's scrim
+     (`overlay`) and panel (`modal`), and a floating panel portaled from a Radix primitive belongs with `Popover`'s. */
+  z-index: var(--dbm-z-index-popover);
 }
 
 [data-theme$="-dark"] .content {

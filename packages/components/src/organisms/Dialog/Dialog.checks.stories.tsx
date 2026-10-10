@@ -4,6 +4,7 @@ import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Popover } from "../../molecules/Popover";
 import { Select } from "../../molecules/Select";
+import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Dialog } from "./Dialog";
 import { LongText } from "./DialogStoryKit";
 
@@ -377,5 +378,52 @@ export const HiddenTitleBodyClearsTheCloseButton: Story = {
     const { top, overlapsClose } = await measureBodyText(dialog);
     await expect(overlapsClose).toBe(false);
     await expect(Math.round(top)).toBeGreaterThanOrEqual(24);
+  },
+};
+
+// A real mouse, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events, and a Select
+// chooses on the pointer's up event, which a synthetic click left unanswered. The test page scales its iframe, so
+// a point inside the story is mapped to the page it is drawn on.
+async function realClick(element: Element) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
+}
+
+export const SelectChosenWithARealPointer: Story = {
+  name: "An option chosen with a real mouse in a Select inside the dialog",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="With a select">
+        <Dialog.Body>
+          <Select aria-label="Pick one" defaultValue="a">
+            <Select.Option value="a">Alpha</Select.Option>
+            <Select.Option value="b">Beta</Select.Option>
+          </Select>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    const body = within(document.body);
+    const combobox = await body.findByRole("combobox", { name: "Pick one" });
+    await expect(combobox).toHaveTextContent("Alpha");
+    await realClick(combobox);
+    const option = await body.findByRole("option", { name: "Beta" });
+    // the list is above the dialog and takes the pointer
+    await expect(document.elementFromPoint(option.getBoundingClientRect().left + 4, option.getBoundingClientRect().top + 4)).toBe(option);
+    await realClick(option);
+    await waitFor(() => expect(body.queryByRole("listbox")).toBeNull());
+    await expect(body.getByRole("combobox", { name: "Pick one" })).toHaveTextContent("Beta");
+    // choosing did not close the dialog
+    await expect(body.getByRole("dialog", { name: "With a select" })).toBeInTheDocument();
+    // and a real press on the scrim afterwards still does
+    await realClick(body.getByRole("dialog").parentElement as HTMLElement);
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
   },
 };

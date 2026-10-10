@@ -644,3 +644,6 @@ changes. By the three-question test it is a defect fix (a layout failure of an e
 Finalized. A hidden real-browser story ("Narrow trigger — interaction test") measures a 4.5rem trigger: the 12, 14 (checked)
 and 18 rows are the same height, the panel is at least as wide as the trigger, and no option's text overflows its row;
 it fails on the old CSS (`expected 72 to be less than or equal to 63`).
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — the list opened from a `Dialog`
+`Select`'s list was on `z-index.dropdown` (1000), below a dialog's scrim (1300), so opened from inside a `Dialog` it was drawn under the scrim and could not be chosen from with the mouse. Found by a real-mouse check on `Dialog`, which keyboard-driven and synthetic-pointer checks had missed. It is now on `z-index.popover`, the step `Popover` uses ([ADR-0054](../adr/0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md)). By the three-question test it is a defect fix (an existing requirement, that the list is usable, was not met), so **`Select` stays Finalized**; its Docs token table and the Foundations z-index table were updated to match.
