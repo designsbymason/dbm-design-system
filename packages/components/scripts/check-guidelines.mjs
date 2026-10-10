@@ -230,19 +230,24 @@ check("cited sections exist", () => {
     }
     headings.set(basename(file), found);
   }
-  const cites = /(\d\d-[a-z-]+\.md)[`'’s]*\s+§\s?(\d+(?:\.\d+)?)/g;
+  // A document name followed by one or more sections: `06-….md §9`, `06-….md` (§8 …, §9 …), `07-….md §4–§6`.
+  const cites = /(\d\d-[a-z-]+\.md)[`'’s]*\s*\(?\s*(§\s?\d+(?:\.\d+)?(?:\s*(?:,|and|&|–|-)\s*§?\s?\d+(?:\.\d+)?)*)/g;
   const files = [
     ...walk(GUIDELINES, [".md"]),
     ...walk(join(REPO, "packages"), [".md", ".mdx", ".ts", ".tsx", ".mjs", ".css"]),
     ...walk(join(REPO, ".github"), [".yml"]),
+    ...(existsSync(join(REPO, ".claude/commands")) ? walk(join(REPO, ".claude/commands"), [".md"]) : []),
     join(REPO, "CLAUDE.md"),
     join(REPO, "README.md"),
   ];
   for (const file of files) {
     lines(file).forEach((line, index) => {
-      for (const [, doc, section] of line.matchAll(cites)) {
+      for (const [, doc, run] of line.matchAll(cites)) {
         const known = headings.get(doc);
-        if (known && !known.has(section)) warn(file, index + 1, `cites ${doc} §${section}, which does not exist`);
+        if (!known) continue;
+        for (const [section] of run.matchAll(/\d+(?:\.\d+)?/g)) {
+          if (!known.has(section)) warn(file, index + 1, `cites ${doc} §${section}, which does not exist`);
+        }
       }
     });
   }

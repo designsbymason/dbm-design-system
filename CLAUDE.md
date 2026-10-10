@@ -80,6 +80,8 @@ Full rationale for each choice: `guidelines/02-tech-stack-and-structure.md`.
 | A Storybook story, Docs page, or a story's "Show code" snippet | `guidelines/07-storybook-and-documentation-standards.md` (§4 template, §4.2 snippets) |
 | Understanding *why* a past architecture/API decision was made | `guidelines/adr/` |
 
+To start a session, run `/start <task>` (`.claude/commands/start.md`): it reads only the guidelines that task needs, verifies against the repo with `pnpm check-guidelines`, and reports before any work.
+
 ## Component index (planned: auto-synced)
 Once `packages/manifest` exists and generates the JSON component manifest (see `01-vision-and-goals.md`, Phase 10), its build step should also write an up-to-date component index into this file — name, category, tier, and a one-line summary per shipped component, regenerated on every release rather than maintained by hand, so agents discover what's actually available instead of guessing or hallucinating a component that doesn't exist.
 
