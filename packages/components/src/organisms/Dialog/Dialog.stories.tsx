@@ -20,8 +20,8 @@ interface PlaygroundArgs {
   onOpenChange: (open: boolean) => void;
   size: DialogSize;
   fullScreen: boolean;
-  /** "off" | "on" | "auto", mapped to `false` | `true` | `"auto"`. */
-  divided: boolean | "auto";
+  /** The control's option; the story maps it to `false`, `true` or `"auto"` (see `dividedFromArg`). */
+  divided: "off" | "on" | "auto";
   placement: DialogPlacement;
   busy: boolean;
   keepMounted: boolean;
@@ -32,10 +32,12 @@ interface PlaygroundArgs {
   closeOnEscape: boolean;
 }
 
+const dividedFromArg = { off: false, on: true, auto: "auto" } as const;
+
 const contentFromArgs = (args: PlaygroundArgs): DialogContentProps => ({
   size: args.size,
   fullScreen: args.fullScreen,
-  divided: args.divided,
+  divided: dividedFromArg[args.divided],
   placement: args.placement,
   busy: args.busy,
   keepMounted: args.keepMounted,
@@ -82,7 +84,6 @@ const meta: Meta<PlaygroundArgs> = {
     divided: {
       control: "select",
       options: ["off", "on", "auto"],
-      mapping: { off: false, on: true, auto: "auto" },
       description:
         "Draws a line between the header and the body and between the body and the footer. \"auto\" draws each only while content is scrolled out of view on that side.",
       table: { defaultValue: { summary: "false" } },
@@ -90,7 +91,8 @@ const meta: Meta<PlaygroundArgs> = {
     placement: {
       control: "select",
       options: ["center", "top"],
-      description: "Where the panel sits vertically. \"top\" keeps a panel whose height changes from jumping.",
+      if: { arg: "fullScreen", truthy: false },
+      description: "Where the panel sits vertically. \"top\" keeps a panel whose height changes from jumping. Ignored while full screen.",
       table: { defaultValue: { summary: '"center"' } },
     },
     busy: {
@@ -107,12 +109,14 @@ const meta: Meta<PlaygroundArgs> = {
     scrimOpacity: {
       control: "select",
       options: [20, 40, 60, 80, 90],
-      description: "How opaque the scrim behind a modal dialog is, from the opacity scale.",
+      if: { arg: "modal" },
+      description: "How opaque the scrim behind a modal dialog is, from the opacity scale. Ignored while modal is off.",
       table: { defaultValue: { summary: "60" } },
     },
     scrimBlur: {
       control: "boolean",
-      description: "Blurs the page behind the scrim as well as dimming it.",
+      if: { arg: "modal" },
+      description: "Blurs the page behind the scrim as well as dimming it. Ignored while modal is off.",
       table: { defaultValue: { summary: "false" } },
     },
     showCloseButton: {
@@ -135,7 +139,7 @@ const meta: Meta<PlaygroundArgs> = {
     modal: true,
     size: "md",
     fullScreen: false,
-    divided: "off" as unknown as boolean,
+    divided: "off",
     placement: "center",
     busy: false,
     keepMounted: false,
@@ -238,7 +242,7 @@ export const LongContent: Story = {
 export const NonModal: Story = {
   name: "Non-modal, no scrim",
   parameters: { docs: { source: { code: dialogSnippets.nonModal } } },
-  argTypes: { modal: { control: false } },
+  argTypes: { modal: { control: false }, scrimOpacity: { control: false }, scrimBlur: { control: false } },
   render: (args) => (
     <DialogStage>
       {(container) => (

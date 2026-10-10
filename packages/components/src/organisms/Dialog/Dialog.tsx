@@ -369,9 +369,14 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
             <CloseButton
               size="sm"
               aria-label={labels.close}
-              disabled={busy}
               className={styles.closeButton}
-              onClick={() => dialog?.setReason("close-button")}
+              {...(busy ? { "aria-disabled": true } : {})}
+              onClick={(event) => {
+                // A busy dialog can't be left: stopping the event is what stops Radix closing it. The button
+                // stays in the tab order, so focus on it isn't lost when `busy` turns on.
+                if (busy) event.preventDefault();
+                else dialog?.setReason("close-button");
+              }}
             />
           </DialogPrimitive.Close>
         )}
@@ -410,8 +415,10 @@ DialogHeader.displayName = "Dialog.Header";
  */
 const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ level = 2, size = "xl", className, children, ...props }, ref) => {
-    const content = useContext(DialogContentContext);
-    useEffect(() => content?.registerTitle(), [content]);
+    // Depends on the stable function, not the context object: that is rebuilt whenever `busy` or `divided`
+    // changes, which would unregister and re-register the title and briefly leave the dialog unnamed.
+    const registerTitle = useContext(DialogContentContext)?.registerTitle;
+    useEffect(() => registerTitle?.(), [registerTitle]);
     return (
       <DialogPrimitive.Title asChild>
         <Heading ref={ref} level={level} size={size} className={cx(styles.title, className)} {...props}>
@@ -426,8 +433,8 @@ DialogTitle.displayName = "Dialog.Title";
 /** A sentence or two on what the dialog is for, read out after its title when it opens. */
 const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
   ({ className, children, ...props }, ref) => {
-    const content = useContext(DialogContentContext);
-    useEffect(() => content?.registerDescription(), [content]);
+    const registerDescription = useContext(DialogContentContext)?.registerDescription;
+    useEffect(() => registerDescription?.(), [registerDescription]);
     return (
       <DialogPrimitive.Description asChild>
         <Text ref={ref} size="sm" color="secondary" className={cx(styles.description, className)} {...props}>

@@ -40,7 +40,7 @@ const meta: Meta<typeof Dialog.Content> = {
     busy: {
       control: "boolean",
       description:
-        "Marks the dialog as working on something: Escape, the scrim, the close button and Dialog.Close do nothing until it is false again, the close button is disabled, and the panel is aria-busy.",
+        "Marks the dialog as working on something: Escape, the scrim, the close button and Dialog.Close do nothing until it is false again, the close button is aria-disabled (dimmed, still focusable), and the panel is aria-busy.",
       table: { defaultValue: { summary: "false" } },
     },
     keepMounted: {

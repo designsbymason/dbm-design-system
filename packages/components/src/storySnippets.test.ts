@@ -1637,6 +1637,9 @@ describe("Playground snippet for Dialog", () => {
     { modal: false, size: "xl", divided: true },
     { fullScreen: true, showCloseButton: false },
     { closeOnOutsideClick: false, closeOnEscape: false, size: "xs" },
+    { divided: "auto", placement: "top", busy: true, keepMounted: true, scrimOpacity: 80, scrimBlur: true },
+    { divided: "on" },
+    { divided: "off" },
   ] as const;
 
   it.each(dialogArgs)("Dialog %j is a real snippet", (args) => {
@@ -1658,5 +1661,16 @@ describe("Playground snippet for Dialog", () => {
     expect(dialogPlaygroundSnippet({ modal: false })).toMatch(/^<Dialog modal=\{false\}>\n/);
     expect(dialogPlaygroundSnippet({ size: "lg", divided: true })).toContain('<Dialog.Content size="lg" divided>');
     expect(dialogPlaygroundSnippet({ closeOnEscape: false })).toContain("closeOnEscape={false}");
+    expect(dialogPlaygroundSnippet({ divided: "auto" })).toContain('<Dialog.Content divided="auto">');
+    expect(dialogPlaygroundSnippet({ divided: "on" })).toContain("<Dialog.Content divided>");
+    expect(dialogPlaygroundSnippet({ divided: "off" })).toContain("<Dialog.Content>");
+    expect(dialogPlaygroundSnippet({ placement: "center" })).toContain("<Dialog.Content>");
+    expect(dialogPlaygroundSnippet({ placement: "top", busy: true, keepMounted: true })).toContain(
+      '<Dialog.Content placement="top" busy keepMounted>',
+    );
+    expect(dialogPlaygroundSnippet({ scrimOpacity: 60 })).toContain("<Dialog.Content>");
+    expect(dialogPlaygroundSnippet({ scrimOpacity: 90, scrimBlur: true })).toContain(
+      "<Dialog.Content scrimOpacity={90} scrimBlur>",
+    );
   });
 });

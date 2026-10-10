@@ -298,7 +298,8 @@ other native `<button>` attribute beyond what's listed here.
 - A press on the scrim closes the dialog; a press inside a popover or select opened from the dialog does
   not. `Escape` closes only the top-most layer, so a popover closes before the dialog behind it.
 - The close button's name is "Close"; translate it with `labels`.
-- A busy dialog is `aria-busy`, its close button is disabled and a `Dialog.Close` is `aria-disabled`; none
+- A busy dialog is `aria-busy`, and its close button and any `Dialog.Close` are `aria-disabled` (dimmed, and
+  still focusable, so keyboard focus is not dropped from them); none
   of them, Escape or the scrim closes it until `busy` is off. Announce progress yourself (a status
   message) so it isn't only visual.
 - `keepMounted` content is out of the page while closed (not displayed, not reachable by keyboard or
@@ -413,6 +414,8 @@ function Saved() {
 <TokenRow token="motion.easing.emphasized" usage="enter easing" />
 <TokenRow token="motion.easing.standard" usage="exit easing" />
 <TokenRow token="opacity.0 / opacity.100" usage="enter and exit fade endpoints" />
+<TokenRow token="opacity.40" usage="the close button while the dialog is busy" />
+<TokenRow token="motion.scale.98" usage="the size the panel starts from as it enters" />
 
 ## Related components
 

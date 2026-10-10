@@ -1,6 +1,6 @@
 import { Meta } from "@storybook/addon-docs/blocks";
 import { Callout } from "../../.storybook/blocks";
-import { MotionScale, ThemeSync } from "../../.storybook/blocks/foundations";
+import { MotionScale, ThemeSync, TokenReferenceTable } from "../../.storybook/blocks/foundations";
 import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 <Meta title="Foundations/Motion" />
@@ -11,7 +11,7 @@ import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 # Motion
 
-A duration scale (120ms–600ms) and 4 easing curves. Click **Replay** on either demo below to
+A duration scale (120ms–600ms), 4 easing curves and 2 entrance scales. Click **Replay** on either demo below to
 re-trigger the animation — numbers alone don't convey how a curve actually *feels*, especially the
 difference between `standard` and `emphasized`.
 
@@ -35,6 +35,13 @@ difference between `standard` and `emphasized`.
   { name: "emphasized", usage: "Expo-out feel for premium micro-interactions (modals/popovers entering)" },
 ]} />
 
+## Scale
+
+<TokenReferenceTable rows={[
+  { name: "motion.scale.96", value: "0.96", usage: "The size a small floating surface (a popover, a hover card, a tooltip) starts from as it enters" },
+  { name: "motion.scale.98", value: "0.98", usage: "The size a large panel (a dialog) starts from as it enters; a bigger surface needs a smaller fraction for the same travel" },
+]} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -49,8 +56,8 @@ difference between `standard` and `emphasized`.
 </Callout>
 <Callout tone="danger" title="Don't">
 
-- Don't hardcode a transition duration or easing curve — every animated CSS property traces to
-  `motion.duration.*`/`motion.easing.*`.
+- Don't hardcode a transition duration, easing curve or entrance scale — every animated CSS property
+  traces to `motion.duration.*`, `motion.easing.*` or `motion.scale.*`.
 - Don't reach for `slow`/`slower` durations for routine hover/focus feedback — sluggish micro-
   interactions read as unresponsive, not polished.
 

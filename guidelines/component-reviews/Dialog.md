@@ -46,3 +46,15 @@ Placement, a busy state, keeping the content mounted, a reason on close, an init
 - **Safe-area insets** in full screen, as padding from `env(safe-area-inset-*)` with a zero fallback. A desktop browser reports none, so the check proves the stylesheet asks for them and that nothing is added there; it could not run on a device.
 - Checks added: 10 real-browser checks (`divided="auto"` following the scroll and drawing nothing when content fits, `keepMounted` through a real close and reopen, a busy dialog ignoring Escape and a real press on the scrim, top placement on desktop and phone, scrim opacity and blur, initial focus, safe-area) and 12 unit tests.
 - Still not verified: touch and iOS behaviour, and the safe-area insets on a real device.
+
+## Final review pass
+Seven findings from the review, fixed:
+1. **The close button ignored the safe-area insets.** Full screen pads the panel, but the button is positioned from the padding box, so it still sat under a notch. Its insets now add `--dialog-safe-block-start` and `--dialog-safe-inline-end`. A browser check moves those properties and asserts the button follows, and fails on the old stylesheet.
+2. **`Dialog.Title` and `Dialog.Description` re-registered on every `busy` or `divided` change**, because their effect depended on a context object rebuilt with them. They depend on the stable register function now. The re-registration was batched by React, so no unnamed frame was observable; this is a correctness cleanup with a regression test that watches for a hidden title being added.
+3. **A busy close button was natively `disabled`**, taking it out of the tab order with focus possibly on it. It is `aria-disabled` and dimmed, with the click stopped, as `Dialog.Close` is. Tests cover focus staying on it, in jsdom and with a real mouse.
+4. **Dead Controls:** `scrimOpacity` and `scrimBlur` show only while `modal` is on, `placement` only while not `fullScreen`, and the non-modal story turns the scrim controls off.
+5. **jest-axe** now also runs busy, top-placed and auto-divided, and a kept-mounted dialog reopened with another nested in it.
+6. **Cover for the new props:** a top-placed non-modal dialog and `keepMounted` on a non-modal one in the browser, and the snippet builder across `divided`, `placement`, `busy`, `keepMounted` and the scrim args.
+7. **The Playground's `divided` cast** is gone: the control's option is typed `"off" | "on" | "auto"` and mapped in one place.
+
+The entrance scale is now `motion.scale.98` (new primitive, with `96`). `Popover`, `HoverCard` and `Tooltip` still hold `scale(0.96)` literals and are due to move to `motion.scale.96`.

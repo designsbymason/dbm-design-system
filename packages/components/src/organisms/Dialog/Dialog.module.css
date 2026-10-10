@@ -405,9 +405,22 @@
 /* --- The close button: in the top-end corner, out of the flow. The header makes room for it so a long title
    doesn't run underneath it; with no header, the body keeps its text out from under it instead. --- */
 .closeButton {
-  inset-block-start: var(--dbm-space-3);
-  inset-inline-end: var(--dbm-space-3);
+  /* From the panel's padding box, so the device's safe-area insets (the panel's padding in full screen) are
+     added: a corner button must not sit under a notch. */
+  inset-block-start: calc(var(--dbm-space-3) + var(--dialog-safe-block-start));
+  inset-inline-end: calc(var(--dbm-space-3) + var(--dialog-safe-inline-end));
   position: absolute;
+}
+
+/* A busy dialog can't be left, but its close button stays focusable (`aria-disabled`, not `disabled`), so
+   keyboard focus isn't dropped from it: it is dimmed and takes no hover fill, as a disabled button would. */
+.content .closeButton[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.content .closeButton[aria-disabled="true"]:hover {
+  background-color: transparent;
 }
 
 .withCloseButton > .slot > .header {
@@ -445,7 +458,7 @@
 @keyframes dialogIn {
   from {
     opacity: var(--dbm-opacity-0);
-    transform: translateY(var(--dbm-space-2)) scale(0.98);
+    transform: translateY(var(--dbm-space-2)) scale(var(--dbm-motion-scale-98));
   }
 
   to {

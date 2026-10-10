@@ -540,14 +540,51 @@ describe("Dialog", () => {
       render(<Basic dialog={{ defaultOpen: true, onOpenChange }} busy />);
       const dialog = screen.getByRole("dialog");
       expect(dialog).toHaveAttribute("aria-busy", "true");
-      expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+      // dimmed and inert, but still in the tab order so focus isn't dropped from it
+      expect(screen.getByRole("button", { name: "Close" })).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("button", { name: "Close" })).not.toBeDisabled();
       expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute("aria-disabled", "true");
 
       await user.keyboard("{Escape}");
       await user.click(dialog.parentElement as HTMLElement);
       await user.click(screen.getByRole("button", { name: "Cancel" }));
+      await user.click(screen.getByRole("button", { name: "Close" }));
       expect(onOpenChange).not.toHaveBeenCalled();
       expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("keeps focus on the close button when it turns busy", async () => {
+      const { rerender } = render(<Basic dialog={{ defaultOpen: true }} />);
+      const close = screen.getByRole("button", { name: "Close" });
+      close.focus();
+      expect(close).toHaveFocus();
+      rerender(<Basic dialog={{ defaultOpen: true }} busy />);
+      expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+    });
+
+    it("never drops or re-adds the dialog's name while busy changes", async () => {
+      const added: string[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          record.addedNodes.forEach((node) => {
+            if (node.textContent === "Named by a label") added.push("hidden title");
+          });
+        }
+      });
+      const named = (busy: boolean) => (
+        <Dialog defaultOpen>
+          <Dialog.Content aria-label="Named by a label" busy={busy}>
+            <Dialog.Title>Visible title</Dialog.Title>
+          </Dialog.Content>
+        </Dialog>
+      );
+      const { rerender } = render(named(false));
+      observer.observe(document.body, { childList: true, subtree: true });
+      rerender(named(true));
+      rerender(named(false));
+      observer.disconnect();
+      expect(added).toEqual([]);
+      expect(screen.getByRole("dialog", { name: "Visible title" })).toBeInTheDocument();
     });
 
     it("can be dismissed again once it is no longer busy", async () => {
@@ -702,6 +739,48 @@ describe("Dialog", () => {
   describe("accessibility", () => {
     it("has no axe violations open", async () => {
       render(<Basic dialog={{ defaultOpen: true }} />);
+      expect((await axe(document.body)).violations).toHaveLength(0);
+    });
+
+    it("has no axe violations busy, top-placed and auto-divided", async () => {
+      render(
+        <Dialog defaultOpen>
+          <Dialog.Content aria-label="Busy" busy placement="top" divided="auto" scrimBlur scrimOpacity={80}>
+            <Dialog.Header>
+              <Dialog.Title>Saving</Dialog.Title>
+              <Dialog.Description>Please wait.</Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Body>Working…</Dialog.Body>
+            <Dialog.Footer>
+              <Dialog.Close>Cancel</Dialog.Close>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog>,
+      );
+      expect((await axe(document.body)).violations).toHaveLength(0);
+    });
+
+    it("has no axe violations kept mounted and reopened, and nested", async () => {
+      const user = userEvent.setup();
+      render(
+        <Dialog>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <Dialog.Content aria-label="Outer" keepMounted>
+            <Dialog.Body>
+              <Dialog defaultOpen>
+                <Dialog.Content aria-label="Inner" size="sm">
+                  <Dialog.Body>Inner</Dialog.Body>
+                </Dialog.Content>
+              </Dialog>
+            </Dialog.Body>
+          </Dialog.Content>
+        </Dialog>,
+      );
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect((await axe(document.body)).violations).toHaveLength(0);
+      await user.keyboard("{Escape}{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
       expect((await axe(document.body)).violations).toHaveLength(0);
     });
 

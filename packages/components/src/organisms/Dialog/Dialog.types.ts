@@ -129,7 +129,7 @@ export interface DialogContentProps extends Omit<ComponentPropsWithoutRef<"div">
   placement?: DialogPlacement;
   /**
    * Marks the dialog as working on something (a form being submitted): it can't be dismissed by Escape, the scrim,
-   * the close button or a `Dialog.Close` until it is `false` again, the close button is disabled, and the panel is
+   * the close button or a `Dialog.Close` until it is `false` again, the close button is `aria-disabled` (dimmed, but still focusable), and the panel is
    * `aria-busy`. Sets what `closeOnEscape`, `closeOnOutsideClick` and `showCloseButton` would, in one place and
    * reversibly, and doesn't change those props. Show your own progress indicator: this adds none.
    * @default false

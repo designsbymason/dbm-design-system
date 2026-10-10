@@ -554,7 +554,14 @@ export const BusyCannotBeLeft: Story = {
     await realClick(body.getByRole("button", { name: "Cancel" }));
     await nextFrame();
     await expect(body.getByRole("dialog")).toBeInTheDocument();
-    await expect(body.getByRole("button", { name: "Close" })).toBeDisabled();
+    const close = body.getByRole("button", { name: "Close" });
+    await expect(close).toHaveAttribute("aria-disabled", "true");
+    // still focusable, and a real press on it does nothing
+    close.focus();
+    await expect(close).toHaveFocus();
+    await realClick(close);
+    await nextFrame();
+    await expect(body.getByRole("dialog")).toBeInTheDocument();
   },
 };
 
@@ -655,5 +662,75 @@ export const FullScreenCarriesSafeAreaInsets: Story = {
       }
     }
     await expect(sources.join("\n")).toContain("safe-area-inset-bottom");
+  },
+};
+
+export const NonModalTopPlacement: Story = {
+  name: "A non-modal dialog placed at the top sits the same distance from the top",
+  render: () => (
+    <Dialog defaultOpen modal={false}>
+      <Dialog.Content aria-label="Docked" placement="top" size="xs">
+        <Dialog.Body>Docked at the top</Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    await expect(getComputedStyle(dialog).position).toBe("fixed");
+    await expect(Math.round(dialog.getBoundingClientRect().top)).toBe(Math.round(4 * rem));
+  },
+};
+
+export const KeepMountedNonModal: Story = {
+  name: "keepMounted works on a non-modal dialog and leaves the page usable while closed",
+  render: () => (
+    <>
+      <button type="button">Behind</button>
+      <Dialog modal={false}>
+        <Dialog.Trigger asChild>
+          <Button>Open</Button>
+        </Dialog.Trigger>
+        <Dialog.Content aria-label="Docked form" keepMounted>
+          <Dialog.Body>
+            <input aria-label="Note" />
+          </Dialog.Body>
+        </Dialog.Content>
+      </Dialog>
+    </>
+  ),
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    await userEvent.type(await body.findByRole("textbox", { name: "Note" }), "kept");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await expect(body.getByRole("button", { name: "Behind" })).toBeVisible();
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    await expect(await body.findByRole("textbox", { name: "Note" })).toHaveValue("kept");
+  },
+};
+
+export const CloseButtonFollowsTheSafeAreaInset: Story = {
+  name: "The close button moves in by the device's safe-area inset",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="Inset" fullScreen data-testid="panel" />
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const close = within(dialog).getByRole("button", { name: "Close" });
+    const before = close.getBoundingClientRect();
+    // A desktop reports no inset, so stand one in the way the stylesheet reads it: through the custom
+    // properties full screen sets from `env(safe-area-inset-*)`.
+    dialog.style.setProperty("--dialog-safe-block-start", "20px");
+    dialog.style.setProperty("--dialog-safe-inline-end", "12px");
+    await nextFrame();
+    const after = close.getBoundingClientRect();
+    await expect(Math.round(after.top - before.top)).toBe(20);
+    await expect(Math.round(before.right - after.right)).toBe(12);
   },
 };
