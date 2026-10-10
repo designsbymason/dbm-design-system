@@ -49,16 +49,16 @@ export interface EditableTextProps
     | "aria-describedby"
   > {
   /**
+   * The initial value when uncontrolled.
+   * @default ""
+   */
+  defaultValue?: string;
+  /**
    * The committed value, a plain string. Passing it makes the component controlled: an edit is reported
    * through `onValueChange` when the person confirms it, and the text shown stays this value until the prop
    * changes. Pair with `onValueChange`.
    */
   value?: string;
-  /**
-   * The initial value when uncontrolled.
-   * @default ""
-   */
-  defaultValue?: string;
   /**
    * Called with the new value when an edit is committed (Enter, the confirm button, or leaving the field
    * under `blurBehavior="commit"`). It is not called for each keystroke, for a cancelled edit, or when the
@@ -66,24 +66,10 @@ export interface EditableTextProps
    */
   onValueChange?: (value: string) => void;
   /**
-   * Whether the field is showing. Passing it makes editing controlled: a gesture inside the component (a
-   * click, Enter, Escape) calls `onEditingChange` with the state it wants and leaves this alone until the
-   * prop changes, so an owner can keep the field open (to show a server error, say).
+   * Shown in place of the value while it is empty (and as the field's own placeholder). The empty text
+   * stays a button, so it can still be activated.
    */
-  editing?: boolean;
-  /**
-   * Whether the field is showing at first, when `editing` is not passed. Does not move focus on mount.
-   * @default false
-   */
-  defaultEditing?: boolean;
-  /** Called when the component wants to start or stop editing, with the state it wants. */
-  onEditingChange?: (editing: boolean) => void;
-  /**
-   * Edits a multi-line value in a `Textarea` that grows with its content. Enter then adds a line and
-   * Ctrl or Cmd + Enter commits; the text is shown with its line breaks.
-   * @default false
-   */
-  multiline?: boolean;
+  placeholder?: string;
   /**
    * The text and padding, on the shared size scale. The text and the field it becomes are the same height
    * at every step, so nothing around them moves when it is activated.
@@ -91,10 +77,17 @@ export interface EditableTextProps
    */
   size?: InputSize;
   /**
-   * Shown in place of the value while it is empty (and as the field's own placeholder). The empty text
-   * stays a button, so it can still be activated.
+   * Edits a multi-line value in a `Textarea` that grows with its content. Enter then adds a line and
+   * Ctrl or Cmd + Enter commits; the text is shown with its line breaks.
+   * @default false
    */
-  placeholder?: string;
+  multiline?: boolean;
+  /**
+   * Takes the surrounding text's font size, family and weight, for a heading or a table cell that should
+   * still read as part of its row. The padding still follows `size`.
+   * @default false
+   */
+  inheritFont?: boolean;
   /**
    * What happens to an edit when focus leaves the field by Tab or a press elsewhere: `commit` keeps it
    * (reporting it through `onValueChange`), `cancel` throws it away. A refused value (see `required` and
@@ -127,11 +120,39 @@ export interface EditableTextProps
    */
   selectOnFocus?: boolean;
   /**
-   * Takes the surrounding text's font size, family and weight, for a heading or a table cell that should
-   * still read as part of its row. The padding still follows `size`.
+   * Whether the field is showing. Passing it makes editing controlled: a gesture inside the component (a
+   * click, Enter, Escape) calls `onEditingChange` with the state it wants and leaves this alone until the
+   * prop changes, so an owner can keep the field open (to show a server error, say).
+   */
+  editing?: boolean;
+  /**
+   * Whether the field is showing at first, when `editing` is not passed. Does not move focus on mount.
    * @default false
    */
-  inheritFont?: boolean;
+  defaultEditing?: boolean;
+  /** Called when the component wants to start or stop editing, with the state it wants. */
+  onEditingChange?: (editing: boolean) => void;
+  /**
+   * Refuses to commit an empty (or all-blank) value, keeping the field open with `labels.required`. The open
+   * field takes no part in a surrounding `<form>`'s own validation, and a value that was never edited is
+   * still submitted as it is.
+   * @default false
+   */
+  required?: boolean;
+  /**
+   * Checks a draft before it is committed: return a message to refuse it (shown below the field, and the
+   * field marked invalid), or nothing to accept it. It runs on commit, not on each keystroke, and must be
+   * cheap and pure. A function that throws is ignored with a development warning.
+   */
+  validate?: (draft: string) => string | undefined | void;
+  /**
+   * When `required` and `validate` are checked. `commit` (the default) checks as the edit ends, so a message
+   * appears only when Enter or leaving was refused. `change` also checks as it is typed, showing the message
+   * while the draft is invalid and removing it as soon as it is not; a commit is refused while it shows. A
+   * check on each keystroke makes `validate` run that often, so keep it cheap and pure.
+   * @default "commit"
+   */
+  validateOn?: EditableTextValidateOn;
   /**
    * Shows the value as being saved: the field (while open) is set aside from editing without being disabled,
    * so it keeps focus and its text, a spinner is drawn after it (in place of the pencil once it has closed),
@@ -172,26 +193,6 @@ export interface EditableTextProps
    * keyboard shortcut, a row action. With `editing` controlled, ask through that prop instead.
    */
   actionRef?: Ref<EditableTextActions>;
-  /**
-   * Refuses to commit an empty (or all-blank) value, keeping the field open with `labels.required`. It
-   * does not stop a surrounding `<form>` submitting a value that was never edited.
-   * @default false
-   */
-  required?: boolean;
-  /**
-   * Checks a draft before it is committed: return a message to refuse it (shown below the field, and the
-   * field marked invalid), or nothing to accept it. It runs on commit, not on each keystroke, and must be
-   * cheap and pure. A function that throws is ignored with a development warning.
-   */
-  validate?: (draft: string) => string | undefined | void;
-  /**
-   * When `required` and `validate` are checked. `commit` (the default) checks as the edit ends, so a message
-   * appears only when Enter or leaving was refused. `change` also checks as it is typed, showing the message
-   * while the draft is invalid and removing it as soon as it is not; a commit is refused while it shows. A
-   * check on each keystroke makes `validate` run that often, so keep it cheap and pure.
-   * @default "commit"
-   */
-  validateOn?: EditableTextValidateOn;
   /**
    * Marks the value as invalid from outside, visually and (while editing) with `aria-invalid`.
    * @default false

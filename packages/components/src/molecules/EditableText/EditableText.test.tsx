@@ -738,6 +738,90 @@ describe("EditableText", () => {
     });
   });
 
+  describe("focus after a slow save, forms and read-only wiring", () => {
+    function SlowSave({ closeAfter }: { closeAfter: () => void }) {
+      const [editing, setEditing] = useState(false);
+      const [saving, setSaving] = useState(false);
+      return (
+        <>
+          <EditableText
+            aria-label="Name"
+            defaultValue="Ada"
+            editing={editing}
+            isLoading={saving}
+            onEditingChange={(next) => {
+              if (!next && saving) return;
+              setEditing(next);
+            }}
+            onValueChange={() => setSaving(true)}
+          />
+          <button type="button">Elsewhere</button>
+          <button
+            type="button"
+            onClick={() => {
+              setSaving(false);
+              setEditing(false);
+              closeAfter();
+            }}
+          >
+            Finish
+          </button>
+        </>
+      );
+    }
+
+    it("returns focus to the text when the save finishes while focus is still in the component", async () => {
+      const user = userEvent.setup();
+      render(<SlowSave closeAfter={() => {}} />);
+      await user.click(screen.getByRole("button", { name: /Name/ }));
+      await user.keyboard("B{Enter}");
+      // Finishing is done from outside the component without moving focus off it.
+      fireEvent.click(screen.getByRole("button", { name: "Finish" }));
+      await waitFor(() => expect(screen.getByRole("button", { name: /Name/ })).toHaveFocus());
+    });
+
+    it("does not pull focus back when the person has moved on before the save finishes", async () => {
+      const user = userEvent.setup();
+      render(<SlowSave closeAfter={() => {}} />);
+      await user.click(screen.getByRole("button", { name: /Name/ }));
+      await user.keyboard("B{Enter}");
+      screen.getByRole("button", { name: "Elsewhere" }).focus();
+      fireEvent.click(screen.getByRole("button", { name: "Finish" }));
+      await waitFor(() => expect(screen.getByRole("button", { name: /Name/ })).toBeInTheDocument());
+      expect(screen.getByRole("button", { name: "Elsewhere" })).toHaveFocus();
+    });
+
+    it("gives the open field no form owner, while the hidden input still joins the form", async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <form>
+          <EditableText aria-label="Name" defaultValue="Ada" name="person" required />
+        </form>,
+      );
+      await user.click(trigger());
+      expect(field().form).toBeNull();
+      const hidden = container.querySelector<HTMLInputElement>("input[type=hidden]");
+      expect(hidden?.form).toBe(container.querySelector("form"));
+    });
+
+    it("passes aria-describedby to a read-only value", () => {
+      render(
+        <>
+          <p id="help">Shown on the card</p>
+          <EditableText aria-label="Name" aria-describedby="help" defaultValue="Ada" readOnly data-testid="t" />
+        </>,
+      );
+      expect(screen.getByTestId("t")).toHaveAttribute("aria-describedby", "help");
+    });
+
+    it("sets touch-action only for double-click activation", () => {
+      const { rerender } = render(<EditableText aria-label="Name" defaultValue="Ada" />);
+      expect(screen.getByRole("button").className).not.toMatch(/doubleClick/);
+      rerender(<EditableText aria-label="Name" defaultValue="Ada" activation="doubleClick" />);
+      expect(screen.getByRole("button").className).toMatch(/doubleClick/);
+    });
+  });
+
   describe("props and wiring", () => {
     it("forwards ref to the outer box and puts className and style there", () => {
       const ref = createRef<HTMLDivElement>();
@@ -798,9 +882,25 @@ describe("EditableText", () => {
       expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
     });
 
-    it("lets a consumer's role or aria-hidden through to nothing it computes", () => {
-      render(<EditableText aria-label="Name" defaultValue="Ada" {...({ role: "presentation" } as object)} />);
-      expect(screen.getByRole("button")).toBeInTheDocument();
+    it("keeps its own computed attributes and merges className and style when a consumer passes same-named ones", async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <EditableText
+          aria-label="Name"
+          defaultValue="Ada"
+          className="mine"
+          style={{ margin: 2 }}
+          {...({ "data-editing": "nope" } as object)}
+        />,
+      );
+      const root = container.firstElementChild as HTMLElement;
+      expect(root).not.toHaveAttribute("data-editing");
+      expect(root).toHaveClass("mine");
+      expect(root.className).toMatch(/root/);
+      await user.click(screen.getByRole("button"));
+      expect(root).toHaveAttribute("data-editing", "");
+      expect(root).toHaveClass("mine");
+      expect(root).toHaveStyle({ margin: "2px" });
     });
 
     it("warns once in development when it has no accessible name", () => {

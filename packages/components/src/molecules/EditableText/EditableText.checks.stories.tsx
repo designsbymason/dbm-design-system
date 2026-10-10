@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
 import { Textarea } from "../../atoms/Textarea";
 import { send } from "../CodeBlock/browserProtocol";
+import { Table } from "../Table";
 import { EditableText } from "./EditableText";
 
 // Hidden, real-browser checks (`!dev` on the whole group, ADR-0013's way of keeping a second stories file out of
@@ -317,5 +319,168 @@ export const SavingDoesNotMoveAnything: Story = {
     const spinner = frame.querySelector("[class*='spinner']") as HTMLElement;
     await expect(spinner).not.toBeNull();
     await expect(box(spinner).width).toBeGreaterThanOrEqual(8);
+  },
+};
+
+export const FocusNotTakenAfterASlowSave: Story = {
+  name: "A save that finishes after the person has moved on does not pull focus back",
+  render: function SlowSaveStory() {
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [value, setValue] = useState("Apollo");
+    const pending = useState({ current: false })[0];
+    return (
+      <div style={{ display: "flex", gap: "var(--dbm-space-3)", alignItems: "flex-start", maxWidth: "24rem" }}>
+        <div style={{ flex: "1 1 auto" }}>
+          <EditableText
+            aria-label="Name"
+            value={value}
+            editing={editing}
+            isLoading={saving}
+            onEditingChange={(next) => {
+              if (!next && pending.current) return;
+              setEditing(next);
+            }}
+            onValueChange={(next) => {
+              pending.current = true;
+              setSaving(true);
+              setTimeout(() => {
+                pending.current = false;
+                setValue(next);
+                setSaving(false);
+                setEditing(false);
+              }, 400);
+            }}
+          />
+        </div>
+        <Button variant="secondary" size="sm">
+          Elsewhere
+        </Button>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: /Name/ }));
+    await userEvent.keyboard("Gemini{Enter}");
+    // The person moves on while the save is in flight.
+    const elsewhere = canvas.getByRole("button", { name: "Elsewhere" });
+    elsewhere.focus();
+    await waitFor(() => expect(canvas.getByRole("button", { name: /Gemini/ })).toBeInTheDocument(), { timeout: 2000 });
+    await expect(document.activeElement).toBe(elsewhere);
+  },
+};
+
+export const FocusReturnsAfterASlowSaveWhenItStayed: Story = {
+  name: "A save that finishes while focus is still there puts focus back on the text",
+  render: function StayedStory() {
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [value, setValue] = useState("Apollo");
+    const pending = useState({ current: false })[0];
+    return (
+      <EditableText
+        aria-label="Name"
+        value={value}
+        editing={editing}
+        isLoading={saving}
+        onEditingChange={(next) => {
+          if (!next && pending.current) return;
+          setEditing(next);
+        }}
+        onValueChange={(next) => {
+          pending.current = true;
+          setSaving(true);
+          setTimeout(() => {
+            pending.current = false;
+            setValue(next);
+            setSaving(false);
+            setEditing(false);
+          }, 300);
+        }}
+      />
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: /Name/ }));
+    await userEvent.keyboard("Gemini{Enter}");
+    await waitFor(() => expect(canvas.getByRole("button", { name: /Gemini/ })).toHaveFocus(), { timeout: 2000 });
+  },
+};
+
+export const FocusRingInsideATable: Story = {
+  name: "In a table cell, at every table size, the focus ring is not cut off by the scroll frame",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", maxWidth: "24rem" }}>
+      {sizes.map((size) => (
+        <div key={size} data-testid={`table-${size}`}>
+          <Table size={size} aria-label={`Projects ${size}`}>
+            <Table.Body>
+              <Table.Row>
+                <Table.Cell>
+                  <EditableText aria-label={`Name ${size}`} size="xs" defaultValue="Apollo" />
+                </Table.Cell>
+              </Table.Row>
+            </Table.Body>
+          </Table>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of sizes) {
+      const holder = canvas.getByTestId(`table-${size}`);
+      const trigger = within(holder).getByRole("button");
+      // Keyboard focus, so `:focus-visible` applies.
+      await userEvent.tab();
+      await expect(document.activeElement).toBe(trigger);
+      await expect(trigger.matches(":focus-visible")).toBe(true);
+      const style = getComputedStyle(trigger);
+      const offset = parseFloat(style.outlineOffset);
+      const width = parseFloat(style.outlineWidth);
+      const reach = Math.max(0, offset) + width;
+      const ring = box(trigger);
+      // Whichever ancestor clips (the table's scroll frame) must hold the ring: the outline reaches `reach`
+      // outside the button on every side when the offset is positive, and none when it is drawn inside.
+      let frame: HTMLElement | null = trigger.parentElement;
+      while (frame && frame !== holder && !["auto", "scroll", "hidden"].includes(getComputedStyle(frame).overflowX)) {
+        frame = frame.parentElement;
+      }
+      await expect(frame).not.toBeNull();
+      const edge = box(frame as HTMLElement);
+      await expect(ring.top - reach).toBeGreaterThanOrEqual(edge.top - 0.5);
+      await expect(ring.bottom + reach).toBeLessThanOrEqual(edge.bottom + 0.5);
+      await expect(ring.left - reach).toBeGreaterThanOrEqual(edge.left - 0.5);
+      await expect(ring.right + reach).toBeLessThanOrEqual(edge.right + 0.5);
+    }
+  },
+};
+
+export const OpenFieldIsNotThePlaceFormsAreChecked: Story = {
+  name: "An open, empty required field does not stop the surrounding form submitting its committed value",
+  render: () => (
+    <form data-testid="form">
+      <EditableText aria-label="Name" defaultValue="Apollo" name="project" required defaultEditing />
+      <button type="submit" data-testid="submit">
+        Submit
+      </button>
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const form = canvas.getByTestId("form") as HTMLFormElement;
+    let submitted: string | null = null;
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitted = String(new FormData(form).get("project"));
+    });
+    const field = canvas.getByRole("textbox") as HTMLInputElement;
+    await userEvent.clear(field);
+    // The open field is a draft, not a member of the form: its own `required` isn't the form's to enforce.
+    await expect(field.form).toBeNull();
+    form.requestSubmit();
+    await expect(submitted).toBe("Apollo");
   },
 };

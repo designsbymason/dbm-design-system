@@ -1,5 +1,5 @@
 import { CheckIcon, PencilSimpleIcon, XIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import { forwardRef, useCallback, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
@@ -152,7 +152,9 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
     const nameId = `${reactId}-name`;
     const hintId = `${reactId}-hint`;
     const errorId = `${reactId}-error`;
+    const detachedFormId = `${reactId}-no-form`;
 
+    const rootRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const setFieldRef = useCallback((element: HTMLInputElement | HTMLTextAreaElement | null) => {
@@ -242,7 +244,10 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         else field.setSelectionRange(field.value.length, field.value.length);
       } else if (returnFocusRef.current) {
         returnFocusRef.current = false;
-        triggerRef.current?.focus();
+        // Only if focus is still here or nowhere: a save that finishes after the person has moved on mustn't
+        // pull focus back from wherever they went.
+        const active = document.activeElement;
+        if (!active || active === document.body || rootRef.current?.contains(active)) triggerRef.current?.focus();
       }
     }, [editing, selectOnFocus]);
 
@@ -360,6 +365,10 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         "aria-labelledby": ariaLabelledBy,
         "aria-describedby": describedBy([ariaDescribedBy, error ? errorId : undefined]),
         "data-testid": dataTestId,
+        // The open field is a draft, not a member of the surrounding form: the committed value is what the form
+        // submits (through the hidden input), so the field is given an owner that doesn't exist, and its own
+        // `required` and `minLength` can't stop that form submitting.
+        form: detachedFormId,
         value: draft,
         onChange: handleChange,
         onKeyDown: handleKeyDown,
@@ -430,6 +439,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
           className={cx(styles.display, styles.static, hasError && styles.invalid)}
           id={id}
           data-testid={dataTestId}
+          aria-describedby={ariaDescribedBy}
         >
           <span className={cx(styles.text, empty && styles.placeholder)}>{shown === "" ? "\u00A0" : shown}</span>
         </div>
@@ -445,7 +455,13 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
             id={id}
             data-testid={dataTestId}
             disabled={disabled}
-            className={cx(styles.display, styles.trigger, hasError && styles.invalid, empty && styles.empty)}
+            className={cx(
+              styles.display,
+              styles.trigger,
+              hasError && styles.invalid,
+              empty && styles.empty,
+              activation === "doubleClick" && styles.doubleClick,
+            )}
             aria-labelledby={describedBy([nameIds || undefined, textId])}
             aria-describedby={describedBy([ariaDescribedBy, hintId])}
             aria-busy={isLoading || undefined}
@@ -470,7 +486,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
 
     return (
       <div
-        ref={ref}
+        ref={mergeRefs(ref, rootRef)}
         {...props}
         className={rootClass}
         style={style}

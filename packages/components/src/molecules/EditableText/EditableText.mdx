@@ -96,7 +96,6 @@ import { EditableText } from "@dbm-design-system/components";
     "onDraftChange",
     "renderValue",
     "actionRef",
-    "maxLength",
     "minLength",
     "inputMode",
     "autoComplete",
@@ -243,11 +242,17 @@ import { EditableText } from "@dbm-design-system/components";
 - Use `renderValue` for a currency, a date or a status that should read formatted. The field still edits the raw
   string, so keep `renderValue` a pure function of it.
 - Use `actionRef` to start an edit from a menu item or a shortcut; with `editing` controlled, set that instead.
-- A single-line value that is too wide for its box ends in an ellipsis in both the text and the field, so a long
-  value never makes the row taller when it is opened. Use `multiline` where the full value should be read.
+- A single-line value that is too wide for its box ends in an ellipsis in the text, and the field scrolls its text, so
+  a long value never makes the row taller when it is opened. Use `multiline` where the full value should be read.
 - In a heading, set `inheritFont` so the title keeps the heading's type, and pick the `size` that gives the padding
   you want.
-- In a table cell, give the cell a fixed width: the text and the field both fill it, so the columns never shift.
+- In a table cell, give the cell a fixed width: the text and the field both fill it, so the columns never shift. The
+  focus ring is drawn inside the box, so a cell's scroll frame never cuts it off.
+- `activation="doubleClick"` sets `touch-action: manipulation` on the text so a double tap raises the gesture
+  instead of zooming; where double tapping is awkward, offer F2 or a row action (`actionRef`) as well.
+- Inside a `<form>`, the open field is a draft and takes no part in the form's own checks: the form submits the
+  committed value under `name`, and `required`, `minLength` and `validate` are applied by the component when the
+  edit ends.
 - An empty value with no `placeholder` still takes up its row and still shows the pencil, so it can be found.
 
 ## Accessibility

@@ -36,11 +36,18 @@
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
-/* The standardized focus-ring radius, `sm`, over the box's own `md` (05 §6). */
+/* The standardized focus-ring radius, `sm`, over the box's own `md` (05 §6). Drawn inside the box: this text
+   lives in table cells and other scrolling frames, which clip an outside ring at their edge (05 §6), and the
+   box has padding the ring can sit over. */
 .trigger:focus-visible {
   border-radius: var(--dbm-radius-sm);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* A double tap raises `dblclick` here instead of zooming the page. */
+.doubleClick {
+  touch-action: manipulation;
 }
 
 .trigger:disabled {

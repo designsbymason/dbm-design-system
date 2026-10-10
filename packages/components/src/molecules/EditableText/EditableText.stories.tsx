@@ -137,6 +137,7 @@ const meta: Meta<typeof EditableText> = {
     },
     showCount: {
       control: "boolean",
+      if: { arg: "maxLength", truthy: true },
       description: "Shows a live current/max character count while editing. Only drawn when maxLength is set.",
       table: { defaultValue: { summary: "false" } },
     },
@@ -181,8 +182,9 @@ const meta: Meta<typeof EditableText> = {
       table: { defaultValue: { summary: "false" } },
     },
     maxLength: {
-      control: false,
-      description: "Maximum number of characters the field accepts.",
+      control: "number",
+      description:
+        "Maximum number of characters the field accepts. Needed for showCount's counter; unset, the field has no limit.",
     },
     minLength: {
       control: false,
@@ -270,6 +272,7 @@ const meta: Meta<typeof EditableText> = {
     showEditIcon: true,
     selectOnFocus: true,
     required: false,
+    maxLength: 60,
     validateOn: "commit",
     isLoading: false,
     showCount: false,
