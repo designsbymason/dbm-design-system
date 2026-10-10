@@ -1,6 +1,6 @@
 # TagsInput — build and review findings
 
-**Inputs & Forms:** TagsInput — built 2026-10-10, item 22 in the ⚪ build order and the last molecule (`04-component-inventory.md`). **Not Finalized**: the §9 pass below is the build-time pass; the user declares Finalized. Decision: [ADR-0049](../adr/0049-tagsinput-draws-chips-and-its-own-entry-in-one-wrapping-box-and-adds-on-enter-separator-blur-or-paste-over-the-input-atom-or-a-combobox.md).
+**Inputs & Forms:** TagsInput — built 2026-10-10, item 22 in the ⚪ build order and the last molecule (`04-component-inventory.md`). **Finalized 2026-10-10** by the user, after the final review recorded at the end of this file. Decision: [ADR-0049](../adr/0049-tagsinput-draws-chips-and-its-own-entry-in-one-wrapping-box-and-adds-on-enter-separator-blur-or-paste-over-the-input-atom-or-a-combobox.md).
 
 **What it is:** a field holding a list of short typed values as removable chips. Flat props, `ref`, `id`, `data-testid` and `aria-*` on the entry `<input>`; `className`/`style` on the outer box. `value`/`defaultValue`/`onValueChange` (a `string[]`, a new array each time), `inputValue`/`defaultInputValue`/`onInputValueChange` (the pending text), `placeholder`, `size`, `tone`/`variant` (Tag's own; `brand` and `subtle` by default), `separators`, `addOnBlur`, `allowDuplicates`, `maxTags`, `maxTagLength`, `transform`, `validate`, `clearable`, `required`, `hasError`/`disabled`/`readOnly`, `name`/`form` (one hidden input per tag), `autoComplete`/`inputMode`/`enterKeyHint`/`spellCheck`/`autoCapitalize`, `formatNumber`, `labels`.
 

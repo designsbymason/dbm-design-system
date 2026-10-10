@@ -263,7 +263,7 @@ Foundational components first (prove the template before mass-applying it), then
 | TableOfContents | Molecule | Navigation | ✅ | ✅ 2026-10-04 | [TableOfContents.md](component-reviews/TableOfContents.md) |
 | Calendar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-05 | [Calendar.md](component-reviews/Calendar.md) |
 | EditableText | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 | [EditableText.md](component-reviews/EditableText.md) |
-| TagsInput | Molecule | Inputs & Forms | ✅ | — (review pending) | [TagsInput.md](component-reviews/TagsInput.md) |
+| TagsInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 | [TagsInput.md](component-reviews/TagsInput.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here when a component's review pass is finalized. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 
