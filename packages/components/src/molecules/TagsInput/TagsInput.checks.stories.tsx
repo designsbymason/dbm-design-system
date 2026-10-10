@@ -359,3 +359,43 @@ export const FlaggedChipsAreDrawnAsInvalid: Story = {
     await expect(canvas.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
   },
 };
+
+export const ChipsSitEvenlyAndTextLinesUpWithInput: Story = {
+  name: "A chip is as far from the side of the box as from its top, and an empty field's text starts where an Input's does",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", maxWidth: "24rem" }}>
+      {sizes.map((size) => (
+        <div key={size} style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)" }}>
+          <div data-testid={`input-${size}`}>
+            <Input size={size} aria-label={`input-${size}`} placeholder="x" />
+          </div>
+          <div data-testid={`empty-${size}`}>
+            <TagsInput size={size} aria-label={`empty-${size}`} placeholder="x" />
+          </div>
+          <div data-testid={`chips-${size}`}>
+            <TagsInput size={size} aria-label={`chips-${size}`} defaultValue={["design", "urgent"]} />
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const size of sizes) {
+      // The chips hug the border evenly: the gap at the side is the gap at the top (one border and the padding).
+      const group = canvas.getByTestId(`chips-${size}`).querySelector("[role=group]") as HTMLElement;
+      const chip = group.querySelector("li[role=listitem]") as HTMLElement;
+      const side = box(chip).left - box(group).left;
+      const top = box(chip).top - box(group).top;
+      await expect(Math.abs(side - top)).toBeLessThan(1.5);
+      // An empty field's text starts where an `Input`'s text does.
+      const emptyGroup = canvas.getByTestId(`empty-${size}`).querySelector("[role=group]") as HTMLElement;
+      const emptyEntry = emptyGroup.querySelector("input") as HTMLElement;
+      const inputBox = canvas.getByTestId(`input-${size}`).firstElementChild as HTMLElement;
+      const inputField = inputBox.querySelector("input") as HTMLElement;
+      await expect(
+        Math.abs(box(emptyEntry).left - box(emptyGroup).left - (box(inputField).left - box(inputBox).left)),
+      ).toBeLessThan(1.5);
+    }
+  },
+};

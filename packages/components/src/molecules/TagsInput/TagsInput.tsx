@@ -448,7 +448,13 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
           aria-labelledby={ariaLabelledBy}
           aria-describedby={groupDescribedBy}
           aria-disabled={disabled || undefined}
-          className={cx(styles.box, invalid && styles.invalid, disabled && styles.disabled, collapsed && styles.collapsed)}
+          className={cx(
+            styles.box,
+            invalid && styles.invalid,
+            disabled && styles.disabled,
+            collapsed && styles.collapsed,
+            tags.length === 0 && styles.noTags,
+          )}
           onMouseDown={handleBoxMouseDown}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -489,8 +495,8 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
           {collapsed && (
             <Tag
               className={styles.more}
-              tone="neutral"
-              variant="outlined"
+              tone={tone}
+              variant={variant}
               size={tagSizeFor[size]}
               aria-expanded={false}
               onClick={() => setExpanded(true)}
@@ -501,8 +507,8 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
           {!collapsed && expanded && maxVisible !== undefined && tags.length > maxVisible && (
             <Tag
               className={styles.more}
-              tone="neutral"
-              variant="outlined"
+              tone={tone}
+              variant={variant}
               size={tagSizeFor[size]}
               aria-expanded={true}
               onClick={() => setExpanded(false)}

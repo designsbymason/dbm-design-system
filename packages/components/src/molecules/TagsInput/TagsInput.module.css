@@ -49,11 +49,13 @@
   list-style: none;
 }
 
+/* Takes no room at all: the box's `gap` follows a zero-width item like any other, so the margin cancels exactly
+   that gap and the first chip sits at the box's padding. */
 .sizer {
   block-size: auto;
   display: flex;
   inline-size: 0;
-  margin-inline-end: calc(-1 * var(--dbm-space-1));
+  margin-inline-end: calc(-1 * var(--dbm-space-2));
   overflow: hidden;
   visibility: hidden;
 }
@@ -109,6 +111,7 @@
 
 /* `count/max`, after the typing area: the same quiet treatment as `Input`'s own counter. */
 .count {
+  margin-inline-end: var(--text-inset);
   color: var(--dbm-text-tertiary);
   flex-shrink: 0;
   font-size: var(--dbm-font-size-xs);
@@ -158,35 +161,43 @@
   position: absolute;
 }
 
-/* Sizes: `Input`'s font size and inline padding step for step. The block padding is not `Input`'s: the row
-   is as tall as a chip, which is taller than `Input`'s line, so the padding is the token step that brings the
-   whole box closest to `Input`'s height at that size (within a few pixels, measured at each). */
+/* Sizes. The font size is `Input`'s. The padding is the same on all four sides, so a chip sits as far from the
+   side of the box as from its top and bottom: the block padding is the token step that brings the whole box
+   closest to `Input`'s height at that size (within a few pixels, measured at each), and the inline padding matches
+   it. `--text-inset` is how far in `Input` would put text at that size, less the padding already there: only text
+   (an empty field's placeholder and what is typed, and the counter at the far end) is given it, so it lines up
+   with an `Input`'s while chips hug the border evenly. */
 .sizeXs .box {
+  --text-inset: calc(var(--dbm-space-2) - var(--dbm-space-1));
   font-size: var(--dbm-font-size-xs);
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-2);
+  padding: var(--dbm-space-1);
 }
 
 .sizeSm .box {
+  --text-inset: calc(var(--dbm-space-3) - var(--dbm-space-2));
   font-size: var(--dbm-font-size-sm);
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-3);
+  padding: var(--dbm-space-2);
 }
 
 .sizeMd .box {
+  --text-inset: calc(var(--dbm-space-3) - var(--dbm-space-1));
   font-size: var(--dbm-font-size-base);
-  padding-block: var(--dbm-space-1);
-  padding-inline: var(--dbm-space-3);
+  padding: var(--dbm-space-1);
 }
 
 .sizeLg .box {
+  --text-inset: calc(var(--dbm-space-4) - var(--dbm-space-2));
   font-size: var(--dbm-font-size-md);
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-4);
+  padding: var(--dbm-space-2);
 }
 
 .sizeXl .box {
+  --text-inset: calc(var(--dbm-space-4) - var(--dbm-space-2));
   font-size: var(--dbm-font-size-lg);
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-4);
+  padding: var(--dbm-space-2);
+}
+
+/* With no chips the typing area is the whole field: its text starts where an `Input`'s does. */
+.noTags .entryItem {
+  padding-inline-start: var(--text-inset);
 }

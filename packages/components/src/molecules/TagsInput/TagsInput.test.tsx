@@ -615,6 +615,14 @@ describe("TagsInput", () => {
       expect(screen.getByRole("button", { name: "+2 more" })).toHaveAttribute("aria-expanded", "false");
     });
 
+    it("draws the +N more and Show less buttons in the tone and variant of the chips", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" tone="success" variant="solid" maxVisible={1} defaultValue={["a", "b", "c"]} />);
+      expect(screen.getByRole("button", { name: "+2 more" }).className).toMatch(/solidSuccess/);
+      await user.click(screen.getByRole("button", { name: "+2 more" }));
+      expect(screen.getByRole("button", { name: "Show less" }).className).toMatch(/solidSuccess/);
+    });
+
     it("shows every tag while the entry has focus, and collapses again when it leaves", async () => {
       const user = userEvent.setup();
       render(
