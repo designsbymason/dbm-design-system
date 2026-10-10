@@ -13,7 +13,14 @@ import type { DialogContentProps, DialogProps } from "./Dialog.types";
  * document, so a dialog's `position: fixed` scrim would otherwise cover the whole page. A `transform` makes the
  * box the containing block of its fixed descendants, and the dialog is portaled into it through `container`.
  */
-export function DialogStage({ children }: { children: (container: HTMLElement | null) => ReactNode }) {
+export function DialogStage({
+  children,
+  minBlockSize = "28rem",
+}: {
+  children: (container: HTMLElement | null) => ReactNode;
+  /** How tall the box is; a story about vertical placement needs more room than a form does. */
+  minBlockSize?: string;
+}) {
   const [container, setContainer] = useState<HTMLElement | null>(null);
   return (
     <div
@@ -21,7 +28,7 @@ export function DialogStage({ children }: { children: (container: HTMLElement | 
       style={{
         position: "relative",
         transform: "translateZ(0)",
-        minBlockSize: "28rem",
+        minBlockSize,
         overflow: "hidden",
         display: "grid",
         placeItems: "center",

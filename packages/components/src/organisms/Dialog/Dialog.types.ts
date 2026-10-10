@@ -16,7 +16,8 @@ export type DialogSize = "xs" | "sm" | "md" | "lg" | "xl";
 /**
  * Where the panel sits vertically. `"center"` (the default) puts it in the middle of the viewport. `"top"` puts it a
  * short way down from the top edge, which keeps a panel whose height changes (a growing list, a search with results)
- * from jumping as its content does.
+ * from jumping as its content does. The distance is fixed (the gutter on a phone, `space.16` from `sm` up), so in a
+ * viewport barely taller than the panel it sits a little lower than a centred one would.
  */
 export type DialogPlacement = "center" | "top";
 

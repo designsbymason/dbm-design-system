@@ -384,12 +384,15 @@ export const PlacedAtTheTop: Story = {
   parameters: { docs: { source: { code: dialogSnippets.placementTop } } },
   argTypes: { placement: { control: false } },
   render: (args) => (
-    <DialogStage>
+    // Taller than the other stages: a top-placed panel is a set distance below the edge, so in a box barely
+    // taller than the panel it sits lower than a centred one would, which reads as bottom-aligned.
+    <DialogStage minBlockSize="40rem">
       {(container) => (
         <ProfileDialog
           container={container}
           dialog={rootFromArgs(args)}
           content={{ ...contentFromArgs(args), placement: "top" }}
+          triggerLabel="Open at the top"
         />
       )}
     </DialogStage>
