@@ -611,8 +611,12 @@ describe("TagsInput", () => {
   describe("counter and collapse", () => {
     it("shows count/max with maxTags, written through formatNumber, and only then", async () => {
       const user = userEvent.setup();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const { rerender } = render(<TagsInput aria-label="Labels" showCount defaultValue={["a"]} />);
       expect(screen.queryByText(/\d+\/\d+/)).toBeNull();
+      // The first time this message is produced in this file, so the once-only warning is seen here.
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`showCount` has nothing to show without `maxTags`"));
+      warn.mockRestore();
       rerender(<TagsInput aria-label="Labels" showCount maxTags={5} defaultValue={["a"]} formatNumber={(n) => `#${n}`} />);
       expect(screen.getByText("#1/#5")).toBeInTheDocument();
       await user.type(entry(), "b{Enter}");
@@ -747,6 +751,112 @@ describe("TagsInput", () => {
         expect(container.querySelector("[class*='measurerFrame']")).toBeNull();
         expect(chips()).toEqual(["a", "b", "c", "d"]);
       });
+    });
+  });
+
+  describe("review fixes", () => {
+    it("ignores an empty string in separators, with a development warning, instead of splitting every character", async () => {
+      const user = userEvent.setup();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(<TagsInput aria-label="Labels" separators={["", ";"]} />);
+      await user.type(entry(), "abc");
+      expect(chips()).toEqual([]);
+      expect(entry()).toHaveValue("abc");
+      await user.type(entry(), ";");
+      expect(chips()).toEqual(["abc"]);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("an empty string was passed in `separators`"));
+      warn.mockRestore();
+    });
+
+    it("refuses a pasted or separator-ended piece longer than maxTagLength, with a message", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" maxTagLength={5} />);
+      await user.click(entry());
+      await user.paste("ok,toolong,fine");
+      expect(chips()).toEqual(["ok", "fine"]);
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("2 added, 1 not added"));
+      expect(screen.getByRole("alert")).toHaveTextContent("toolong is longer than 5 characters");
+    });
+
+    it("moves to the chips with the plain left arrow only, not with a modifier held", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" defaultValue={["one"]} />);
+      await user.click(entry());
+      await user.keyboard("{Shift>}{ArrowLeft}{/Shift}");
+      expect(entry()).toHaveFocus();
+      await user.keyboard("{Control>}{ArrowLeft}{/Control}");
+      expect(entry()).toHaveFocus();
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Remove one" })).toHaveFocus();
+    });
+
+    it("keeps Escape on a chip from reaching a surrounding handler, and returns to the entry", async () => {
+      const user = userEvent.setup();
+      const onKeyDown = vi.fn();
+      render(
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a stand-in for a surrounding surface
+        <div onKeyDown={onKeyDown}>
+          <TagsInput aria-label="Labels" defaultValue={["one"]} />
+        </div>,
+      );
+      await user.click(entry());
+      await user.keyboard("{ArrowLeft}");
+      onKeyDown.mockClear();
+      await user.keyboard("{Escape}");
+      expect(entry()).toHaveFocus();
+      expect(onKeyDown).not.toHaveBeenCalled();
+    });
+
+    it("pastes at the caret, not at the end", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" />);
+      await user.type(entry(), "ab");
+      await user.keyboard("{ArrowLeft}");
+      await user.paste("x,y");
+      expect(chips()).toEqual(["ax", "yb"]);
+      expect(entry()).toHaveValue("");
+    });
+
+    it("warns about value with defaultValue and inputValue with defaultInputValue", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <TagsInput
+          aria-label="Labels"
+          value={["a"]}
+          defaultValue={["b"]}
+          inputValue=""
+          defaultInputValue="draft"
+          onValueChange={() => undefined}
+          onInputValueChange={() => undefined}
+        />,
+      );
+      const messages = warn.mock.calls.map((call) => String(call[0]));
+      expect(messages.some((message) => message.includes("both `value` and `defaultValue`"))).toBe(true);
+      expect(messages.some((message) => message.includes("both `inputValue` and `defaultInputValue`"))).toBe(true);
+      warn.mockRestore();
+    });
+
+    it("survives StrictMode and a server render in collapse mode", async () => {
+      expect(() => renderToString(<TagsInput aria-label="Labels" overflow="collapse" defaultValue={["a", "b"]} />)).not.toThrow();
+      const rect = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+        const width = this.parentElement?.className.includes("measurer") ? 60 : 0;
+        return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+      });
+      const client = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+        return this.getAttribute("role") === "group" ? 200 : 0;
+      });
+      try {
+        render(
+          <StrictMode>
+            <TagsInput aria-label="Labels" overflow="collapse" defaultValue={["a", "b", "c", "d"]} />
+          </StrictMode>,
+        );
+        expect(chips()).toEqual(["a", "b"]);
+        expect(screen.getByRole("button", { name: "+2 more" })).toBeInTheDocument();
+      } finally {
+        rect.mockRestore();
+        client.mockRestore();
+      }
     });
   });
 

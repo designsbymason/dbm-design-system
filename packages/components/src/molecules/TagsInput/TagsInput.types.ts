@@ -27,6 +27,13 @@ export interface TagsInputLabels {
   /** The message shown, and announced, when a tag that is already there is refused. @default (tag) => `${tag} is already added` */
   duplicate: (tag: string) => string;
   /**
+   * The message shown, and announced, when a tag is longer than `maxTagLength` (a typed one is cut by the entry
+   * itself; a pasted or separator-ended one is refused). Receives the tag and the limit, a plain number; write it
+   * with `formatNumber` if you pass your own.
+   * @default (tag, max) => `${tag} is longer than ${max} characters`
+   */
+  tooLong: (tag: string, max: number) => string;
+  /**
    * The message shown, and announced, when `maxTags` has been reached. Receives the limit as a plain number;
    * write it with `formatNumber` if you pass your own.
    * @default (max) => `No more than ${max} tags`
@@ -165,7 +172,10 @@ export interface TagsInputProps
    * available for a paste that is cut short.
    */
   maxTags?: number;
-  /** The most characters a single tag may have (the entry's native `maxLength`). */
+  /**
+   * The most characters a single tag may have. Typing is cut by the entry's native `maxLength`; a piece that
+   * arrives whole (a paste, or text ended by a separator) longer than this is refused with `labels.tooLong`.
+   */
   maxTagLength?: number;
   /**
    * Shows a live `count/max` after the tags while the field has a `maxTags`. Written with `formatNumber`.

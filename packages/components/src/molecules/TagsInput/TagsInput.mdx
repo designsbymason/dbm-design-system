@@ -226,6 +226,8 @@ straight through to the outer box. `className` and `style` go on the outer box; 
   count.
 - Separators are matched as written, so `[",", ";", " "]` splits on commas, semicolons and spaces. A paste is also
   split at line breaks and tabs, so a column copied from a spreadsheet becomes a row of tags.
+- `maxTagLength` cuts what is typed; a piece that arrives whole (a paste, or text ended by a separator) longer than
+  it is refused with a message, not shortened, so nothing is saved that wasn't meant.
 - A refused tag stays in the entry with its message and is announced, so the person can correct it rather than retype
   it.
 - The field is as tall as an `Input` of the same size (within a few pixels), and adding the first tag does not move

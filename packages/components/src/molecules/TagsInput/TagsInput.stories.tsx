@@ -190,7 +190,7 @@ const meta: Meta<typeof TagsInput> = {
     labels: {
       control: false,
       description:
-        "The text the component writes itself: remove, clear, added, removed, duplicate, maxReached, pasted and required. An omitted or undefined entry keeps the English default.",
+        "The text the component writes itself: remove, clear, added, removed, duplicate, tooLong, maxReached, pasted, required, flagged, invalid, more, less and chipsHint. An omitted or undefined entry keeps the English default.",
       table: { defaultValue: { summary: "—" } },
     },
     "aria-label": {

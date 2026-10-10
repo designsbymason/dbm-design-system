@@ -564,3 +564,18 @@ export const CollapseKeepsTheCapAndTheNoButtonCase: Story = {
     await expect(fits.queryByRole("button", { name: /more/ })).toBeNull();
   },
 };
+
+export const PastedPieceOverTheLimitIsRefused: Story = {
+  name: "A pasted piece longer than maxTagLength is refused with a message, and the others are kept",
+  render: () => <TagsInput aria-label="Labels" maxTagLength={10} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const entry = canvas.getByRole("textbox") as HTMLInputElement;
+    await userEvent.click(entry);
+    const data = new DataTransfer();
+    data.setData("text", "short,this-one-is-far-too-long,fine");
+    entry.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+    await waitFor(() => expect(canvas.getAllByRole("listitem")).toHaveLength(2));
+    await expect(canvas.getByRole("alert")).toHaveTextContent("this-one-is-far-too-long is longer than 10 characters");
+  },
+};

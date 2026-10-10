@@ -173,6 +173,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       added: (tag) => `${tag} added`,
       removed: (tag) => `${tag} removed`,
       duplicate: (tag) => `${tag} is already added`,
+      tooLong: (tag, max) => `${tag} is longer than ${formatNumber(max)} characters`,
       maxReached: (max) => `No more than ${formatNumber(max)} tags`,
       pasted: (added, refused) => `${formatNumber(added)} added, ${formatNumber(refused)} not added`,
       required: "Add at least one tag",
@@ -268,6 +269,10 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
           refused.push(labels.maxReached(maxTags));
           break;
         }
+        if (maxTagLength !== undefined && tag.length > maxTagLength) {
+          refused.push(labels.tooLong(tag, maxTagLength));
+          continue;
+        }
         if (!allowDuplicates && next.includes(tag)) {
           refused.push(labels.duplicate(tag));
           continue;
@@ -332,9 +337,13 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       entryRef.current?.focus();
     }, [tags.length]);
 
-    const separatorSource = separators.map(escapeForPattern).join("|");
-    const separatorPattern = separators.length > 0 ? new RegExp(separatorSource) : null;
-    const pastePattern = new RegExp([...separators.map(escapeForPattern), "\\r?\\n", "\\t"].join("|"));
+    // An empty string would match everywhere and turn every character into a tag: it is no separator.
+    const usableSeparators = (Array.isArray(separators) ? separators : []).filter(
+      (separator): separator is string => typeof separator === "string" && separator !== "",
+    );
+    const separatorSource = usableSeparators.map(escapeForPattern).join("|");
+    const separatorPattern = usableSeparators.length > 0 ? new RegExp(separatorSource) : null;
+    const pastePattern = new RegExp([...usableSeparators.map(escapeForPattern), "\\r?\\n", "\\t"].join("|"));
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
       const next = event.target.value;
@@ -356,7 +365,11 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       const pasted = event.clipboardData.getData("text");
       if (!pastePattern.test(pasted)) return;
       event.preventDefault();
-      const pieces = (text + pasted).split(new RegExp(pastePattern.source, "g"));
+      // The pasted text goes in where the caret (or the selection) is, then everything is split.
+      const field = event.currentTarget;
+      const start = Math.min(field.selectionStart ?? text.length, text.length);
+      const end = Math.min(field.selectionEnd ?? start, text.length);
+      const pieces = (text.slice(0, start) + pasted + text.slice(end)).split(new RegExp(pastePattern.source, "g"));
       addPieces(pieces, "paste");
       setText("");
     };
@@ -382,7 +395,8 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       // Toward the chips (the left arrow in a left-to-right page), from the very start of the entry.
       const toward = isRtl() ? "ArrowRight" : "ArrowLeft";
       const field = event.currentTarget;
-      if (event.key === toward && field.selectionStart === 0 && field.selectionEnd === 0) {
+      const plain = !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey;
+      if (plain && event.key === toward && field.selectionStart === 0 && field.selectionEnd === 0) {
         const buttons = chipButtons();
         const last = buttons[buttons.length - 1];
         if (last) {
@@ -432,6 +446,9 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
         // The button's own activation removes it; this keeps the person's place along the row afterwards.
         keyboardRemoval.current = true;
       } else if (event.key === "Escape") {
+        // The key belongs to this field, not to whatever it sits in.
+        event.preventDefault();
+        event.stopPropagation();
         entryRef.current?.focus();
       }
     };
@@ -509,6 +526,21 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       else if (required && tags.length === 0) control.setCustomValidity(labels.required);
       else control.setCustomValidity("");
     });
+
+    if (process.env.NODE_ENV !== "production") {
+      if (isValueControlled && defaultValue !== undefined) {
+        warnOnce("TagsInput: both `value` and `defaultValue` were passed; `defaultValue` is ignored once the field is controlled. Pass one.");
+      }
+      if (isInputControlled && defaultInputValue !== "") {
+        warnOnce("TagsInput: both `inputValue` and `defaultInputValue` were passed; `defaultInputValue` is ignored once the typed text is controlled. Pass one.");
+      }
+      if (showCount && maxTags === undefined) {
+        warnOnce("TagsInput: `showCount` has nothing to show without `maxTags`, which gives the count its maximum. Pass `maxTags`, or remove `showCount`.");
+      }
+      if (usableSeparators.length !== separators.length) {
+        warnOnce("TagsInput: an empty string was passed in `separators`, which would match everywhere; it was ignored. Pass the characters that end a tag.");
+      }
+    }
 
     if (process.env.NODE_ENV !== "production" && !ariaLabel && !ariaLabelledBy) {
       warnOnce(
