@@ -12,6 +12,7 @@
 - **`showCount`:** `count/max` after the tags, only with `maxTags`, through `formatNumber`.
 - **Roving chip model ([ADR-0050](../adr/0050-tagsinput-chips-are-one-tab-stop-with-arrow-key-movement-and-tag-lets-its-remove-button-leave-the-tab-order.md)):** the chips leave the tab order; the arrow key toward them from the start of the entry, then arrows, Home, End, Delete/Backspace and Escape. Keys flip in right-to-left (checked in Chromium). Needed one additive `Tag` prop, `removeTabStop` (default `true`), recorded in [Tag.md](Tag.md).
 - **`maxVisible`:** collapses to that many chips and a `+N more` `Tag` button (`aria-expanded`) while neither the entry nor a chip has focus and it has not been opened; "Show less" returns. Hidden tags are still submitted. It collapses on focus leaving, so what is typed or removed is always in view.
+- **A collapsed row stays one line (found by the user in Storybook):** with `maxVisible`, a first row filled by the chips and the `+N more` button left less room than the entry's minimum width, so the empty typing area wrapped onto a row of its own. While collapsed the entry now gives up its minimum width and stays on the chips' row; it has the minimum back once the field is used and the row opens. A hidden check asserts one line and fails without the rule.
 - **Not done from the gap list:** locked or per-tag-toned tags (needs a richer value than `string[]`), asynchronous checks, editing a chip in place, suggestions, reordering.
 
 **Deviations from the approved plan:**

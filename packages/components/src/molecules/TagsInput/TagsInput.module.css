@@ -73,6 +73,13 @@
   min-inline-size: var(--dbm-tags-input-entry-min-width);
 }
 
+/* A collapsed row is meant to be one line: the typing area gives up its minimum width so it never drops onto
+   a row of its own, empty. It gets the minimum back as soon as the field is used and the row opens. */
+.collapsed .entryItem {
+  flex-basis: 0;
+  min-inline-size: 0;
+}
+
 .entry {
   appearance: none;
   background: none;

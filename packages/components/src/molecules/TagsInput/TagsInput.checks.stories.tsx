@@ -330,6 +330,10 @@ export const CollapsedRowStaysOneLine: Story = {
     const collapsed = box(group).height;
     await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
     await expect(box(more).height).toBeGreaterThanOrEqual(24);
+    // One line: the typing area sits on the chips' row, not on a row of its own beneath them.
+    const firstChip = canvas.getAllByRole("listitem")[0] as HTMLElement;
+    await expect(box(canvas.getByRole("textbox")).top).toBeLessThan(box(firstChip).bottom);
+    await expect(Math.abs(box(group).height - (box(firstChip).height + 2 * 4 + 2))).toBeLessThan(6);
     await userEvent.click(canvas.getByRole("textbox"));
     await expect(canvas.getAllByRole("listitem")).toHaveLength(7);
     await expect(box(group).height).toBeGreaterThanOrEqual(collapsed);
