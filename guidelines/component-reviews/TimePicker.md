@@ -265,3 +265,9 @@ lint, both typechecks and build clean; `pnpm audit` shows only the already-accep
 - **A picker option scroll that moves the page.** `scrollTop` is set on the column, not `scrollIntoView`, so the page
   doesn't move; not tried inside a scrolling ancestor with `hideWhenDetached`.
 - **`dir` below `body`.** The picker is portaled to `body`; same as `Popover` and `HoverCard`.
+
+## Post-Finalization defect fix (2026-10-10, at explicit direction) — a quick second key could be reverted on a busy page
+
+CI failed three times on `Open the picker, choose with the arrow keys, close with Escape` (hour 11 or 10 where 12 was expected), including after the check itself was made patient, so the cause was not test timing. It reproduces: two quick ArrowDowns at 20x CPU throttle, after other stories in the same page, reported `11:00`, then `10:00`, then `11:00`, ending an hour short. The wheel's `settle()` runs 140ms after the last scroll event; with the main thread stalled the smooth scroll toward the new row had not moved yet, so it read the row in the middle (still the old one), reported that, and `recentre()` could cancel the scroll. A second key then stepped from the reverted value.
+
+`settle()` now waits while a target is pending and the scroll position has not reached it (re-arming its timer, up to 12 times, in case something else took the scroll away), and only then reads the wheel as at rest. A new hidden check, `QuickKeysOnABusyPageNeverGoBackwards`, runs three pairs of quick ArrowDowns at 20x throttle and asserts the hour ends on +6 and the reported values only ever move forward; it fails on the previous code every time (4 of 4) and passes on the fix. A defect fix, so the three-question test (`06-engineering-standards.md` §9) keeps TimePicker Finalized.

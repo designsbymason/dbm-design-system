@@ -458,6 +458,42 @@ export const PickerKeyboard: Story = {
   },
 };
 
+/** The values the picker reported, in order, for the check below. */
+const reported: string[] = [];
+
+export const QuickKeysOnABusyPageNeverGoBackwards: Story = {
+  name: "Two quick arrow keys on a busy page move the hour on by two, and the reported value never goes back",
+  render: () => (
+    <TimePicker
+      aria-label="Start time"
+      hourCycle="24"
+      defaultValue="10:00"
+      defaultOpen
+      onValueChange={(value) => reported.push(value)}
+    />
+  ),
+  play: async () => {
+    reported.length = 0;
+    await screen.findByRole("dialog");
+    await waitFor(() => expect(wheelOf("Hour")).toHaveFocus());
+    // A busy main thread delays the scroll events that keep the wheel's settle timer waiting, so the timer can fire
+    // while a smooth scroll is still on its way and report the row the wheel has not yet left.
+    await send("Emulation.setCPUThrottlingRate", { rate: 20 });
+    try {
+      for (let round = 0; round < 3; round += 1) {
+        await userEvent.keyboard("{ArrowDown}");
+        await userEvent.keyboard("{ArrowDown}");
+        await settle(700);
+      }
+    } finally {
+      await send("Emulation.setCPUThrottlingRate", { rate: 1 });
+    }
+    const hours = reported.map((value) => Number(value.slice(0, 2)));
+    await expect(hours.at(-1)).toBe(16);
+    for (let index = 1; index < hours.length; index += 1) await expect(hours[index]).toBeGreaterThan(hours[index - 1]!);
+  },
+};
+
 export const NeighbourNumbersKeepTheirContrast: Story = {
   name: "The numbers a row from the middle, and the chosen one on its band, still read at 4.5:1 in every theme",
   render: () => <TimePicker aria-label="Start time" hourCycle="24" defaultValue="10:30" defaultOpen />,

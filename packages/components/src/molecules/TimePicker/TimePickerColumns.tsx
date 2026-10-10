@@ -60,6 +60,8 @@ function hour24Of(draft: TimeDraft, cycle: HourCycle): number | undefined {
 
 /** How long after the last scroll event a wheel is taken to have come to rest. */
 const SETTLE_MS = 140;
+/** How many times a wheel still on its way to a chosen row is waited for before it is read as at rest. */
+const MAX_SETTLE_WAITS = 12;
 /** How far, in rows, a number is from the middle at which it is no longer worth restyling. */
 const STYLED_REACH = 3;
 
@@ -98,6 +100,9 @@ function Wheel({ column, chosen, onPick, onDone, onNavigate }: WheelProps) {
   const reported = useRef(-1);
   /** The value index a programmatic scroll is heading to; commits are held while it is set. */
   const aimed = useRef<number | null>(null);
+  /** Where `aimed` is on the list's scroll axis, and how many settle checks have found the wheel still short of it. */
+  const aimedTop = useRef(0);
+  const settleWaits = useRef(0);
   const styledRows = useRef<Set<HTMLElement>>(new Set());
 
   const chosenIndex = options.findIndex((option) => option.value === chosen);
@@ -150,7 +155,11 @@ function Wheel({ column, chosen, onPick, onDone, onNavigate }: WheelProps) {
     if (!element || row <= 0) return;
     const global = loops ? nearestGlobalIndex(valueIndex, count, copies, globalIndexNow()) : valueIndex;
     const top = global * row;
-    if (Math.abs(element.scrollTop - top) >= 1) aimed.current = valueIndex;
+    if (Math.abs(element.scrollTop - top) >= 1) {
+      aimed.current = valueIndex;
+      aimedTop.current = top;
+      settleWaits.current = 0;
+    }
     scrollTo(top, smooth);
     styleRows(global);
   };
@@ -178,8 +187,17 @@ function Wheel({ column, chosen, onPick, onDone, onNavigate }: WheelProps) {
     const global = globalIndexNow();
     const valueIndex = centredValueIndex();
     if (aimed.current !== null) {
+      // Still on its way. The scroll events that keep this timer waiting arrive late on a busy page, so reading the
+      // wheel now would report the row it has not yet left and then cancel the scroll; wait for it (a bounded number
+      // of times, in case something else took the scroll from it).
+      if (Math.abs(element.scrollTop - aimedTop.current) >= 1 && settleWaits.current < MAX_SETTLE_WAITS) {
+        settleWaits.current += 1;
+        settleTimer.current = setTimeout(settle, SETTLE_MS);
+        return;
+      }
       const target = aimed.current;
       aimed.current = null;
+      settleWaits.current = 0;
       // Arrived where it was sent: nothing to report (the choice was made when it was sent).
       if (valueIndex === target) {
         recentre(global, valueIndex);
@@ -233,7 +251,11 @@ function Wheel({ column, chosen, onPick, onDone, onNavigate }: WheelProps) {
     const row = measure();
     if (row <= 0 || !list.current) return;
     const global = loops ? middleGlobalIndex(start, count, copies) : start;
-    if (Math.abs(list.current.scrollTop - global * row) >= 1) aimed.current = start;
+    if (Math.abs(list.current.scrollTop - global * row) >= 1) {
+      aimed.current = start;
+      aimedTop.current = global * row;
+      settleWaits.current = 0;
+    }
     list.current.scrollTop = global * row;
     styleRows(global);
     // On mount only: later changes of the chosen value are followed by the effect below.

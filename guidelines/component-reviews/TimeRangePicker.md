@@ -86,3 +86,7 @@ molecules, in the types, stories and Docs page; each end also takes `TimePicker`
 
 - **A narrow screen.** The row wraps (the end drops under the start); not measured in a real browser at a phone's width.
 - **A range across midnight**, by design (above).
+
+## Post-Finalization note (2026-10-10) — the wheel fix it inherits
+
+`TimeRangePicker` draws its picker with `TimePicker`'s wheels, so it takes the defect fix recorded in `TimePicker.md` (a quick second arrow key could be reverted on a busy page). No file of its own changed; its 8 browser checks and unit tests pass, and Finalized status is unchanged.
