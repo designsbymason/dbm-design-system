@@ -1,6 +1,6 @@
 # Dialog — review findings
 
-First organism. Built and put through the `06-engineering-standards.md` §9 checklist on 2026-10-10. **Not declared Finalized**: that is the maintainer's call, and the open items below are what is left for it.
+First organism. Built and put through the `06-engineering-standards.md` §9 checklist on 2026-10-10, with a second pass of additions and a final review pass the same day. **Finalized 2026-10-10**, with the items under "Not verified" below accepted as open: they need a device or a server render, and none changes the component.
 
 ## Decisions
 - Wraps Radix Dialog, composes `Backdrop` as its scrim, and pins the Radix packages to one release train: [ADR-0052](../adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md).
@@ -22,14 +22,13 @@ First organism. Built and put through the `06-engineering-standards.md` §9 chec
 - `pnpm lint`, `pnpm build`, the bundle-size check (Dialog 4.4KB JS, 2.7KB CSS gzipped; budget 10KB), `check-guidelines`, and a typecheck of every snippet against the real components.
 - The Docs page was opened in a running Storybook: all ten template sections, nine Properties tables with no empty description, links, Playground, long-content story and dark mode.
 
-## Not verified, for the maintainer to decide on
-- **Mouse selection of an option in a `Select` opened from the dialog** failed, and it was a defect in `Select`, not the dialog: its list was on the `z-index.dropdown` step (1000), below the scrim (1300), so it was drawn dimmed under it and a real click landed on the scrim. Keyboard selection worked, which is why the synthetic check looked like a harness problem. Fixed in `Select` ([ADR-0054](../adr/0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md)); `SelectChosenWithARealPointer` drives a real mouse through the Chrome DevTools Protocol and fails on the old stylesheet.
-- **Touch and iOS scroll-lock behaviour**, which neither jsdom nor desktop Chromium shows.
-- **Docs-page stale references** in finalized components (below), which need your go-ahead since they are Finalized.
-- Whether `Dialog.Header`/`Body`/`Footer` should share a surface with `Card`'s sections; `Card` has no context, but nothing was tried outside a `Card`. Revisit when `Drawer` is built (ADR-0053).
+## Open at Finalization
+- **Touch and iOS behaviour** (scroll lock, the `keepMounted` element move), which neither jsdom nor desktop Chromium shows, and **the safe-area insets on a real device**: a desktop browser reports none, so the checks prove the stylesheet asks for them and that the close button follows them.
+- **A literal server render** of a `keepMounted` or `defaultOpen` dialog. The panel is portaled and Radix renders no portal on the server, so no mismatch is expected, but it was not run.
+- Whether `Dialog.Header`/`Body`/`Footer` should share a surface with `Card`'s sections; revisit when `Drawer` is built ([ADR-0053](../adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)).
+- Fixed along the way: a `Select` list opened from a dialog was drawn under the scrim ([ADR-0054](../adr/0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md)); `SelectChosenWithARealPointer` drives a real mouse through the Chrome DevTools Protocol and fails on the old stylesheet.
 
 ## Left for later, deliberately
-- `blur` and `opacity` of the scrim are not exposed (`Backdrop` has them); add on a concrete need.
 - `Dialog.Title`/`Description` take no `id`, since the dialog wires its ARIA to the generated ones (an exception to `05` §3, stated there).
 
 ## Reported after the first build: a body with no header

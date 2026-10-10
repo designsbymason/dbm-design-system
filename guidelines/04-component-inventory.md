@@ -145,7 +145,7 @@ Content that appears above, or reveals/hides other content.
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
 | Backdrop | atom | 🟢 | Dimming scrim layer behind Dialog/Drawer/overlays |
-| Dialog | organism | 🟢 | A window that interrupts the page for focused work, compound (`Dialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Close`) over Radix Dialog, drawing its scrim with `Backdrop` ([ADR-0052](adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)). Ships as `Dialog`, per the `Tag / Chip` precedent; "Modal" is a search term, not an export (the WAI-ARIA pattern is "Dialog (Modal)", and a dialog can also be non-modal). A sibling of `AlertDialog` and `Drawer`, with no `role` or `placement` prop ([ADR-0053](adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)). Review: [Dialog.md](component-reviews/Dialog.md) |
+| Dialog | organism | 🟢 | A window that interrupts the page for focused work, compound (`Dialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Close`) over Radix Dialog, drawing its scrim with `Backdrop` ([ADR-0052](adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)). Ships as `Dialog`, per the `Tag / Chip` precedent; "Modal" is a search term, not an export (the WAI-ARIA pattern is "Dialog (Modal)", and a dialog can also be non-modal). A sibling of `AlertDialog` and `Drawer`, with no `role` or `placement` prop ([ADR-0053](adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)); `keepMounted` moves one rendered element in and out of the panel ([ADR-0055](adr/0055-dialog-keeps-its-content-mounted-by-moving-one-rendered-element-in-and-out-of-the-panel-over-radixs-forcemount.md)). Review: [Dialog.md](component-reviews/Dialog.md) |
 | Drawer / Sheet | organism | 🟢 | Side-panel variant of Dialog |
 | Popover | molecule | 🟢 | Wraps Radix Popover |
 | Tooltip | atom | 🟢 | Wraps Radix Tooltip; ships a co-located `TooltipProvider` (optional shared hover-delay/skip-delay timing across multiple tooltips) as a secondary export from the same folder, not a separate atom entry |
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` is built; the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` is built and Finalized; the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
