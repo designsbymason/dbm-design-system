@@ -1,0 +1,358 @@
+/*
+ * Dialog: a panel centred by its scrim (`Backdrop`, a fixed flex box), or, for a non-modal dialog, fixed to the
+ * middle of the viewport on its own. Its layout reads a handful of local custom properties so that `size` and a
+ * responsive `fullScreen` are only a class that sets them.
+ */
+.content {
+  --dialog-max-width: var(--dbm-dialog-max-width-md);
+  --dialog-gutter: var(--dbm-space-4);
+  --dialog-inline-size: min(var(--dialog-max-width), calc(100% - 2 * var(--dialog-gutter)));
+  --dialog-block-size-base: auto;
+  --dialog-block-size: var(--dialog-block-size-base);
+  --dialog-radius: var(--dbm-radius-lg);
+  --dialog-border-width: var(--dbm-border-width-1);
+  --dialog-pad: var(--dbm-space-6);
+  --dialog-close-clearance: var(--dbm-space-10);
+
+  background-color: var(--dbm-bg-surface);
+  border: var(--dialog-border-width) solid var(--dbm-border-default);
+  border-radius: var(--dialog-radius);
+  box-shadow: var(--dbm-shadow-light-lg);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  inline-size: var(--dialog-inline-size);
+  /* Percentages resolve against the scrim (a fixed box with all four insets zero), or the viewport for a
+     non-modal dialog, so the panel follows the visible viewport, including a phone's collapsing browser bar,
+     with no `vh` or `dvh` unit. */
+  block-size: var(--dialog-block-size);
+  max-block-size: calc(100% - 2 * var(--dialog-gutter));
+  min-inline-size: 0;
+  outline: none;
+  position: relative;
+  will-change: transform, opacity;
+  z-index: var(--dbm-z-index-modal);
+}
+
+[data-theme$="-dark"] .content {
+  box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+/* A non-modal dialog has no scrim to centre it, so it sits in the middle of the viewport itself: inset on all
+   four sides with automatic margins, which centres it in either text direction (a `translate` can't). */
+.nonModal {
+  --dialog-block-size-base: fit-content;
+
+  inset: 0;
+  margin: auto;
+  position: fixed;
+}
+
+/* --- Size: the panel's width cap. md is the default and has no class. --- */
+.sizeXs {
+  --dialog-max-width: var(--dbm-dialog-max-width-xs);
+}
+
+.sizeSm {
+  --dialog-max-width: var(--dbm-dialog-max-width-sm);
+}
+
+.sizeLg {
+  --dialog-max-width: var(--dbm-dialog-max-width-lg);
+}
+
+.sizeXl {
+  --dialog-max-width: var(--dbm-dialog-max-width-xl);
+}
+
+/* --- Full screen, per breakpoint. `full*` fills the viewport; `windowed*` puts a larger breakpoint back to the
+   panel. The thresholds are the literal values of the breakpoint tokens: custom properties can't be used in a
+   media condition (the same limitation `Card` and `Stack` note), so these blocks need updating by hand if the
+   tokens change. Declared in ascending order at the same specificity, so the larger breakpoint wins. --- */
+.fullBase {
+  --dialog-gutter: var(--dbm-space-0);
+  --dialog-inline-size: 100%;
+  --dialog-block-size: 100%;
+  --dialog-radius: var(--dbm-radius-none);
+  --dialog-border-width: var(--dbm-border-width-0);
+}
+
+/* sm = 640px */
+@media (min-width: 40rem) {
+  .fullSm {
+    --dialog-gutter: var(--dbm-space-0);
+    --dialog-inline-size: 100%;
+    --dialog-block-size: 100%;
+    --dialog-radius: var(--dbm-radius-none);
+    --dialog-border-width: var(--dbm-border-width-0);
+  }
+
+  .windowedSm {
+    --dialog-gutter: var(--dbm-space-4);
+    --dialog-inline-size: min(var(--dialog-max-width), calc(100% - 2 * var(--dialog-gutter)));
+    --dialog-block-size: var(--dialog-block-size-base);
+    --dialog-radius: var(--dbm-radius-lg);
+    --dialog-border-width: var(--dbm-border-width-1);
+  }
+}
+
+/* md = 768px */
+@media (min-width: 48rem) {
+  .fullMd {
+    --dialog-gutter: var(--dbm-space-0);
+    --dialog-inline-size: 100%;
+    --dialog-block-size: 100%;
+    --dialog-radius: var(--dbm-radius-none);
+    --dialog-border-width: var(--dbm-border-width-0);
+  }
+
+  .windowedMd {
+    --dialog-gutter: var(--dbm-space-4);
+    --dialog-inline-size: min(var(--dialog-max-width), calc(100% - 2 * var(--dialog-gutter)));
+    --dialog-block-size: var(--dialog-block-size-base);
+    --dialog-radius: var(--dbm-radius-lg);
+    --dialog-border-width: var(--dbm-border-width-1);
+  }
+}
+
+/* lg = 1024px */
+@media (min-width: 64rem) {
+  .fullLg {
+    --dialog-gutter: var(--dbm-space-0);
+    --dialog-inline-size: 100%;
+    --dialog-block-size: 100%;
+    --dialog-radius: var(--dbm-radius-none);
+    --dialog-border-width: var(--dbm-border-width-0);
+  }
+
+  .windowedLg {
+    --dialog-gutter: var(--dbm-space-4);
+    --dialog-inline-size: min(var(--dialog-max-width), calc(100% - 2 * var(--dialog-gutter)));
+    --dialog-block-size: var(--dialog-block-size-base);
+    --dialog-radius: var(--dbm-radius-lg);
+    --dialog-border-width: var(--dbm-border-width-1);
+  }
+}
+
+/* xl = 1280px */
+@media (min-width: 80rem) {
+  .fullXl {
+    --dialog-gutter: var(--dbm-space-0);
+    --dialog-inline-size: 100%;
+    --dialog-block-size: 100%;
+    --dialog-radius: var(--dbm-radius-none);
+    --dialog-border-width: var(--dbm-border-width-0);
+  }
+
+  .windowedXl {
+    --dialog-gutter: var(--dbm-space-4);
+    --dialog-inline-size: min(var(--dialog-max-width), calc(100% - 2 * var(--dialog-gutter)));
+    --dialog-block-size: var(--dialog-block-size-base);
+    --dialog-radius: var(--dbm-radius-lg);
+    --dialog-border-width: var(--dbm-border-width-1);
+  }
+}
+
+/* 2xl = 1536px */
+@media (min-width: 96rem) {
+  .full2xl {
+    --dialog-gutter: var(--dbm-space-0);
+    --dialog-inline-size: 100%;
+    --dialog-block-size: 100%;
+    --dialog-radius: var(--dbm-radius-none);
+    --dialog-border-width: var(--dbm-border-width-0);
+  }
+
+  .windowed2xl {
+    --dialog-gutter: var(--dbm-space-4);
+    --dialog-inline-size: min(var(--dialog-max-width), calc(100% - 2 * var(--dialog-gutter)));
+    --dialog-block-size: var(--dialog-block-size-base);
+    --dialog-radius: var(--dbm-radius-lg);
+    --dialog-border-width: var(--dbm-border-width-1);
+  }
+}
+
+/* 3xl = 1920px */
+@media (min-width: 120rem) {
+  .full3xl {
+    --dialog-gutter: var(--dbm-space-0);
+    --dialog-inline-size: 100%;
+    --dialog-block-size: 100%;
+    --dialog-radius: var(--dbm-radius-none);
+    --dialog-border-width: var(--dbm-border-width-0);
+  }
+
+  .windowed3xl {
+    --dialog-gutter: var(--dbm-space-4);
+    --dialog-inline-size: min(var(--dialog-max-width), calc(100% - 2 * var(--dialog-gutter)));
+    --dialog-block-size: var(--dialog-block-size-base);
+    --dialog-radius: var(--dbm-radius-lg);
+    --dialog-border-width: var(--dbm-border-width-1);
+  }
+}
+
+/* --- Sections. The panel has no padding of its own, so the body's scrollbar runs flush with its edge. --- */
+.header {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  padding: var(--dialog-pad) var(--dialog-pad) var(--dbm-space-4);
+}
+
+.title {
+  margin: 0;
+}
+
+.description {
+  margin: 0;
+}
+
+.body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+.bodyContent {
+  padding: var(--dbm-space-2) var(--dialog-pad);
+}
+
+/* A body with no header above it starts at the top edge, so it takes the padding the header would have. */
+.content > .body:first-child .bodyContent {
+  padding-block-start: var(--dialog-pad);
+}
+
+/* The last section ends with the same padding the first one starts with. */
+.content > .body:last-of-type .bodyContent {
+  padding-block-end: var(--dialog-pad);
+}
+
+.footer {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  justify-content: flex-end;
+  padding: var(--dbm-space-4) var(--dialog-pad) var(--dialog-pad);
+}
+
+.alignStart {
+  justify-content: flex-start;
+}
+
+.alignBetween {
+  justify-content: space-between;
+}
+
+.alignStretch > * {
+  flex: 1 1 0;
+}
+
+/* `divided`: a line between the sections, so a body that scrolls reads as running under them. The section that
+   follows a line takes back the padding it would otherwise have shared with its neighbour. */
+.divided > .header {
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  padding-block-end: var(--dbm-space-4);
+}
+
+.divided > .footer {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  padding-block-start: var(--dbm-space-4);
+}
+
+.divided > .body .bodyContent {
+  padding-block: var(--dbm-space-4);
+}
+
+/* --- The close button: in the top-end corner, out of the flow. The header makes room for it so a long title
+   doesn't run underneath it, and a body with no header clears it with a top margin. --- */
+.closeButton {
+  inset-block-start: var(--dbm-space-3);
+  inset-inline-end: var(--dbm-space-3);
+  position: absolute;
+}
+
+.withCloseButton > .header {
+  padding-inline-end: var(--dialog-close-clearance);
+}
+
+.withCloseButton > .body:first-child {
+  margin-block-start: var(--dialog-close-clearance);
+}
+
+/* The default (non-`asChild`) trigger and close elements: a minimal reset of the native button, not chrome of
+   their own. Reach for `asChild` with a `Button` for anything visible. */
+.trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+}
+
+/* --- Enter and exit, keyed to Radix's `data-state`. The scrim fades over `base`; the panel is quicker, so it
+   is gone by the time the scrim finishes. Reduced motion keeps the fade and drops the movement. --- */
+.content[data-state="open"] {
+  animation: dialogIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-state="closed"] {
+  animation: dialogOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: translateY(var(--dbm-space-2)) scale(0.98);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialogOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content[data-state="open"] {
+    animation-name: dialogFadeIn;
+  }
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+  }
+}
+
+/* --- Forced colours: a shadow isn't drawn, so the panel is told apart from the page by its border alone. --- */
+@media (forced-colors: active) {
+  .content {
+    border: var(--dbm-border-width-1) solid CanvasText;
+  }
+
+  .divided > .header,
+  .divided > .footer {
+    border-color: CanvasText;
+  }
+}

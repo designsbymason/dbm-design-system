@@ -62,6 +62,7 @@ import { numberInputPlaygroundSnippet } from "./molecules/NumberInput/NumberInpu
 import { paginationPlaygroundSnippet } from "./molecules/Pagination/Pagination.snippets";
 import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/PasswordInput.snippets";
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
+import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
 import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlider.snippets";
 import { scrollAreaPlaygroundSnippet } from "./molecules/ScrollArea/ScrollArea.snippets";
@@ -1627,5 +1628,35 @@ describe("Playground snippets for Stat", () => {
   it("Stat shows Stat.Trend inside Stat.Value by default, and omits it when the demo-trend control is off", () => {
     expect(statPlaygroundSnippet({})).toContain("<Stat.Trend value={4.2} />");
     expect(statPlaygroundSnippet({ trend: false })).not.toContain("Stat.Trend");
+  });
+});
+
+describe("Playground snippet for Dialog", () => {
+  const dialogArgs = [
+    {},
+    { modal: false, size: "xl", divided: true },
+    { fullScreen: true, showCloseButton: false },
+    { closeOnOutsideClick: false, closeOnEscape: false, size: "xs" },
+  ] as const;
+
+  it.each(dialogArgs)("Dialog %j is a real snippet", (args) => {
+    expect(problemsIn(dialogPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Dialog writes only what differs from the defaults", () => {
+    const plain = dialogPlaygroundSnippet({
+      modal: true,
+      size: "md",
+      fullScreen: false,
+      divided: false,
+      showCloseButton: true,
+      closeOnOutsideClick: true,
+      closeOnEscape: true,
+    });
+    expect(plain).toMatch(/^<Dialog>\n/);
+    expect(plain).toContain("<Dialog.Content>");
+    expect(dialogPlaygroundSnippet({ modal: false })).toMatch(/^<Dialog modal=\{false\}>\n/);
+    expect(dialogPlaygroundSnippet({ size: "lg", divided: true })).toContain('<Dialog.Content size="lg" divided>');
+    expect(dialogPlaygroundSnippet({ closeOnEscape: false })).toContain("closeOnEscape={false}");
   });
 });

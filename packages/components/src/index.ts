@@ -92,6 +92,8 @@ export * from "./molecules/TimeRangePicker";
 export * from "./molecules/ToggleGroup";
 export * from "./molecules/Toolbar";
 
+export * from "./organisms/Dialog";
+
 // What a consumer is meant to use from `@dbm-design-system/primitives`, re-exported so that installing only this package
 // is enough (ADR-0023, `02-tech-stack-and-structure.md` §2) — never the helpers only components use.
 //
