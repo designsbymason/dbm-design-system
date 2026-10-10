@@ -37,8 +37,8 @@ export const tagsInputSnippets = {
 
   clearable: `<TagsInput aria-label="Labels" clearable defaultValue={["design", "urgent", "review"]} />`,
 
-  tones: `{/* tone and variant are Tag's own; every chip shares them. */}
-<TagsInput aria-label="Labels" tone="brand" variant="outlined" defaultValue={["design", "urgent"]} />`,
+  tones: `{/* tone (brand by default) and variant are Tag's own; every chip shares them. */}
+<TagsInput aria-label="Labels" tone="success" variant="outlined" defaultValue={["design", "urgent"]} />`,
 
   errorState: `<TagsInput aria-label="Labels" hasError defaultValue={["design"]} />`,
 
@@ -88,7 +88,7 @@ export function tagsInputPlaygroundSnippet(args: TagsInputPlaygroundSnippetArgs)
   }
   if (args.placeholder) attributes.push(`placeholder=${quote(args.placeholder)}`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
-  if (args.tone && args.tone !== "neutral") attributes.push(`tone="${args.tone}"`);
+  if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.variant && args.variant !== "subtle") attributes.push(`variant="${args.variant}"`);
   if (args.addOnBlur === false) attributes.push("addOnBlur={false}");
   if (args.allowDuplicates) attributes.push("allowDuplicates");

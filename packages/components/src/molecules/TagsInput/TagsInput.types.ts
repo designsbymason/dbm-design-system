@@ -80,7 +80,7 @@ export interface TagsInputProps
   size?: InputSize;
   /**
    * The colour of every chip, from `Tag`'s own tones.
-   * @default "neutral"
+   * @default "brand"
    */
   tone?: TagTone;
   /**

@@ -50,9 +50,9 @@ const meta: Meta<typeof TagsInput> = {
     },
     tone: {
       control: "select",
-      options: ["neutral", "brand", "info", "success", "warning", "danger"],
+      options: ["brand", "neutral", "info", "success", "warning", "highlight", "danger"],
       description: "The colour of every chip, from Tag's own tones.",
-      table: { defaultValue: { summary: "neutral" } },
+      table: { defaultValue: { summary: "brand" } },
     },
     variant: {
       control: "select",
@@ -193,7 +193,7 @@ const meta: Meta<typeof TagsInput> = {
     defaultValue: ["design", "urgent"],
     placeholder: "Add a label",
     size: "md",
-    tone: "neutral",
+    tone: "brand",
     variant: "subtle",
     addOnBlur: true,
     allowDuplicates: false,
@@ -323,7 +323,7 @@ export const Clearable: Story = {
 export const Tones: Story = {
   name: "Tone and variant",
   parameters: { docs: { source: { code: tagsInputSnippets.tones } } },
-  args: { tone: "brand", variant: "outlined" },
+  args: { tone: "success", variant: "outlined" },
 };
 
 export const ErrorState: Story = {

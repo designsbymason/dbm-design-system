@@ -20,6 +20,13 @@ describe("TagsInput", () => {
       expect(screen.getAllByRole("textbox")).toHaveLength(1);
     });
 
+    it("draws its chips in the brand tone by default, and in the tone it is given", () => {
+      const { rerender } = render(<TagsInput aria-label="Labels" defaultValue={["one"]} />);
+      expect(screen.getByText("one").closest("span")?.className).toMatch(/subtleBrand/);
+      rerender(<TagsInput aria-label="Labels" tone="neutral" variant="solid" defaultValue={["one"]} />);
+      expect(screen.getByText("one").closest("span")?.className).toMatch(/solidNeutral/);
+    });
+
     it("gives each chip a named remove button", () => {
       render(<TagsInput aria-label="Labels" defaultValue={["one"]} />);
       expect(screen.getByRole("button", { name: "Remove one" })).toBeInTheDocument();

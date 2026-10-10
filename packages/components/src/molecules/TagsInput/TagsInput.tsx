@@ -61,7 +61,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
       onInputValueChange,
       placeholder,
       size = "md",
-      tone = "neutral",
+      tone = "brand",
       variant = "subtle",
       separators = [","],
       addOnBlur = true,
