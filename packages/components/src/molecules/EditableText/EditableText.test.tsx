@@ -667,6 +667,77 @@ describe("EditableText", () => {
     });
   });
 
+  describe("validateOn and the phone-keyboard props", () => {
+    const shortName = (draft: string) => (draft.length < 5 ? "Too short" : undefined);
+
+    it("shows no message while typing by default, only when a commit is refused", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Name" defaultValue="" validate={shortName} />);
+      await user.click(screen.getByRole("button"));
+      await user.keyboard("Ad");
+      expect(screen.queryByRole("alert")).toBeNull();
+      await user.keyboard("{Enter}");
+      expect(screen.getByRole("alert")).toHaveTextContent("Too short");
+    });
+
+    it("judges the draft as it is typed with validateOn=change, and clears the message once it is valid", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <EditableText aria-label="Name" defaultValue="" validate={shortName} validateOn="change" onValueChange={onValueChange} />,
+      );
+      await user.click(screen.getByRole("button"));
+      expect(screen.queryByRole("alert")).toBeNull();
+      await user.keyboard("Ad");
+      expect(screen.getByRole("alert")).toHaveTextContent("Too short");
+      expect(field()).toHaveAttribute("aria-invalid", "true");
+      await user.keyboard("{Enter}");
+      expect(onValueChange).not.toHaveBeenCalled();
+      await user.keyboard("a Lovelace");
+      expect(screen.queryByRole("alert")).toBeNull();
+      await user.keyboard("{Enter}");
+      expect(onValueChange).toHaveBeenCalledWith("Ada Lovelace");
+    });
+
+    it("shows required's message as soon as the draft is emptied with validateOn=change", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Name" defaultValue="Ada" required validateOn="change" />);
+      await user.click(screen.getByRole("button"));
+      await user.keyboard("{Control>}a{/Control}{Backspace}");
+      expect(screen.getByRole("alert")).toHaveTextContent("This field is required");
+    });
+
+    it("labels a single-line field's Enter key Done, and leaves a multi-line one to the browser", async () => {
+      const user = userEvent.setup();
+      const { unmount } = render(<EditableText aria-label="Name" defaultValue="Ada" />);
+      await user.click(screen.getByRole("button"));
+      expect(field()).toHaveAttribute("enterkeyhint", "done");
+      unmount();
+      render(<EditableText aria-label="Notes" multiline defaultValue="One" />);
+      await user.click(screen.getByRole("button"));
+      expect(screen.getByRole("textbox")).not.toHaveAttribute("enterkeyhint");
+    });
+
+    it("passes enterKeyHint, spellCheck and autoCapitalize to the field", async () => {
+      const user = userEvent.setup();
+      render(
+        <EditableText aria-label="Name" defaultValue="Ada" enterKeyHint="next" spellCheck={false} autoCapitalize="words" />,
+      );
+      await user.click(screen.getByRole("button"));
+      expect(field()).toHaveAttribute("enterkeyhint", "next");
+      expect(field()).toHaveAttribute("spellcheck", "false");
+      expect(field()).toHaveAttribute("autocapitalize", "words");
+    });
+
+    it("passes them to a multi-line field too", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Notes" multiline defaultValue="One" spellCheck={false} enterKeyHint="send" />);
+      await user.click(screen.getByRole("button"));
+      expect(screen.getByRole("textbox")).toHaveAttribute("spellcheck", "false");
+      expect(screen.getByRole("textbox")).toHaveAttribute("enterkeyhint", "send");
+    });
+  });
+
   describe("props and wiring", () => {
     it("forwards ref to the outer box and puts className and style there", () => {
       const ref = createRef<HTMLDivElement>();

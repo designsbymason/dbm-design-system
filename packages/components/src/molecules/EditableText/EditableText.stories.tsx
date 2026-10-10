@@ -109,6 +109,26 @@ const meta: Meta<typeof EditableText> = {
         "Refuses to commit an empty value, keeping the field open with labels.required. Does not stop a form submitting a value that was never edited.",
       table: { defaultValue: { summary: "false" } },
     },
+    validateOn: {
+      control: "radio",
+      options: ["commit", "change"],
+      description:
+        "When required and validate are checked: as the edit ends (commit), or also as it is typed (change), showing the message while the draft is invalid.",
+      table: { defaultValue: { summary: "commit" } },
+    },
+    enterKeyHint: {
+      control: false,
+      description:
+        "What a phone's Enter key is labelled while editing. Unset it is Done for a single-line value, and the browser's own for multiline.",
+    },
+    spellCheck: {
+      control: false,
+      description: "Whether the browser checks the spelling of the field while editing. Turn it off for names and identifiers.",
+    },
+    autoCapitalize: {
+      control: false,
+      description: "Whether a phone capitalizes what is typed: off, words, sentences or characters.",
+    },
     isLoading: {
       control: "boolean",
       description:
@@ -250,6 +270,7 @@ const meta: Meta<typeof EditableText> = {
     showEditIcon: true,
     selectOnFocus: true,
     required: false,
+    validateOn: "commit",
     isLoading: false,
     showCount: false,
     hasError: false,
@@ -335,6 +356,21 @@ export const Validation: Story = {
       <EditableText
         {...args}
         validate={(draft) => (draft.length > 20 ? "Keep it under 20 characters" : undefined)}
+      />
+    </div>
+  ),
+};
+
+export const ValidateOnChange: Story = {
+  name: "Validating as it is typed",
+  parameters: { docs: { source: { code: editableTextSnippets.validateOnChange } } },
+  args: { validateOn: "change", defaultValue: "ada", spellCheck: false, autoCapitalize: "off", "aria-label": "Username" },
+  argTypes: { validateOn: { control: false } },
+  render: (args) => (
+    <div style={{ maxWidth: "20rem" }}>
+      <EditableText
+        {...args}
+        validate={(draft) => (/^[a-z0-9_]{3,}$/.test(draft) ? undefined : "Use at least 3 letters, digits or underscores")}
       />
     </div>
   ),

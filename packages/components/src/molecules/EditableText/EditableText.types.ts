@@ -7,6 +7,9 @@ export type EditableTextBlurBehavior = "commit" | "cancel";
 /** The gesture that turns the text into a field. */
 export type EditableTextActivation = "click" | "doubleClick";
 
+/** When `EditableText` checks a draft: as the edit ends, or as it is typed. */
+export type EditableTextValidateOn = "commit" | "change";
+
 /** The text an `EditableText` writes itself. */
 export interface EditableTextLabels {
   /** Describes the text's button to a screen reader: what pressing it does. @default "Edit" */
@@ -182,6 +185,14 @@ export interface EditableTextProps
    */
   validate?: (draft: string) => string | undefined | void;
   /**
+   * When `required` and `validate` are checked. `commit` (the default) checks as the edit ends, so a message
+   * appears only when Enter or leaving was refused. `change` also checks as it is typed, showing the message
+   * while the draft is invalid and removing it as soon as it is not; a commit is refused while it shows. A
+   * check on each keystroke makes `validate` run that often, so keep it cheap and pure.
+   * @default "commit"
+   */
+  validateOn?: EditableTextValidateOn;
+  /**
    * Marks the value as invalid from outside, visually and (while editing) with `aria-invalid`.
    * @default false
    */
@@ -205,6 +216,22 @@ export interface EditableTextProps
   inputMode?: ComponentPropsWithoutRef<"input">["inputMode"];
   /** Hints the browser's autofill while editing, such as `"name"` or `"off"`. */
   autoComplete?: ComponentPropsWithoutRef<"input">["autoComplete"];
+  /**
+   * What a phone's Enter key is labelled while editing: `done` for a commit, `go`, `next`, `send`, `search`,
+   * or `enter`. Left unset it is `"done"` for a single-line value, where Enter commits, and the browser's own
+   * for `multiline`, where Enter adds a line.
+   */
+  enterKeyHint?: ComponentPropsWithoutRef<"input">["enterKeyHint"];
+  /**
+   * Whether the browser checks the spelling of the field while editing. Turn it off for a name, a code or an
+   * identifier, where the red underline is noise. The browser decides when unset.
+   */
+  spellCheck?: boolean;
+  /**
+   * Whether a phone capitalizes what is typed: `off` for a username or an address, `words` for a name,
+   * `sentences` for prose. The browser decides when unset.
+   */
+  autoCapitalize?: ComponentPropsWithoutRef<"input">["autoCapitalize"];
   /**
    * The fewest rows the multi-line field shows. Only used with `multiline`.
    * @default 1

@@ -5,4 +5,5 @@ export type {
   EditableTextBlurBehavior,
   EditableTextLabels,
   EditableTextProps,
+  EditableTextValidateOn,
 } from "./EditableText.types";

@@ -38,6 +38,16 @@ export const editableTextSnippets = {
   validate={(draft) => (draft.length > 20 ? "Keep it under 20 characters" : undefined)}
 />`,
 
+  validateOnChange: `{/* The message shows while the draft is invalid and goes as soon as it is not. */}
+<EditableText
+  aria-label="Username"
+  defaultValue="ada"
+  validateOn="change"
+  validate={(draft) => (/^[a-z0-9_]{3,}$/.test(draft) ? undefined : "Use at least 3 letters, digits or underscores")}
+  spellCheck={false}
+  autoCapitalize="off"
+/>`,
+
   inheritFont: `{/* Takes the heading's type, so the title still reads as a title. */}
 <h2>
   <EditableText aria-label="Page title" defaultValue="Quarterly plan" inheritFont size="lg" />
@@ -119,6 +129,7 @@ export interface EditableTextPlaygroundSnippetArgs {
   required?: boolean;
   isLoading?: boolean;
   showCount?: boolean;
+  validateOn?: string;
   hasError?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
@@ -145,6 +156,7 @@ export function editableTextPlaygroundSnippet(args: EditableTextPlaygroundSnippe
   if (args.selectOnFocus === false) attributes.push("selectOnFocus={false}");
   if (args.inheritFont) attributes.push("inheritFont");
   if (args.required) attributes.push("required");
+  if (args.validateOn && args.validateOn !== "commit") attributes.push(`validateOn="${args.validateOn}"`);
   if (args.isLoading) attributes.push("isLoading");
   if (args.showCount) attributes.push("showCount");
   if (args.hasError) attributes.push("hasError");

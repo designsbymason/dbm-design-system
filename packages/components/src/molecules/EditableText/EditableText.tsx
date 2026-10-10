@@ -92,12 +92,16 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       renderValue,
       actionRef,
       validate,
+      validateOn = "commit",
       hasError = false,
       disabled = false,
       readOnly = false,
       maxLength,
       minLength,
       inputMode,
+      enterKeyHint: enterKeyHintProp,
+      spellCheck,
+      autoCapitalize,
       autoComplete,
       minRows = 1,
       maxRows,
@@ -300,7 +304,9 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
     const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       settledRef.current = false;
       setDraft(event.target.value);
-      if (error) setError(undefined);
+      // `validateOn="change"` judges the draft as it is typed; otherwise a message waits for the next commit.
+      if (validateOn === "change") setError(validateDraft(event.target.value));
+      else if (error) setError(undefined);
       onDraftChange?.(event.target.value);
     };
 
@@ -369,6 +375,9 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         maxLength,
         minLength,
         inputMode,
+        enterKeyHint: enterKeyHintProp ?? (multiline ? undefined : "done"),
+        spellCheck,
+        autoCapitalize,
         autoComplete,
       };
       content = (

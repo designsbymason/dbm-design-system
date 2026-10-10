@@ -26,6 +26,7 @@ export const propOrder = [
   "onEditingChange",
   "required",
   "validate",
+  "validateOn",
   "isLoading",
   "showCount",
   "formatNumber",
@@ -39,6 +40,9 @@ export const propOrder = [
   "minLength",
   "inputMode",
   "autoComplete",
+  "enterKeyHint",
+  "spellCheck",
+  "autoCapitalize",
   "minRows",
   "maxRows",
   "name",
@@ -96,6 +100,9 @@ import { EditableText } from "@dbm-design-system/components";
     "minLength",
     "inputMode",
     "autoComplete",
+    "enterKeyHint",
+    "spellCheck",
+    "autoCapitalize",
     "minRows",
     "maxRows",
     "form",
@@ -145,6 +152,10 @@ import { EditableText } from "@dbm-design-system/components";
 ### Validation
 
 <Canvas of={EditableTextStories.Validation} />
+
+### Validating as it is typed
+
+<Canvas of={EditableTextStories.ValidateOnChange} />
 
 ### Inheriting the font
 
@@ -203,6 +214,9 @@ import { EditableText } from "@dbm-design-system/components";
 - Show `showControls` on screens that people use by touch, where there is no Escape key to cancel with.
 - Use `activation="doubleClick"` in a row or cell that a single click already selects.
 - Use `validate` or `required` to say why a value is refused, near the field, instead of silently ignoring it.
+  Add `validateOn="change"` where the rule is one a person can fix while typing (a username's characters).
+- On a phone, let the field say what Enter does and what to expect: the Enter key reads "Done" by default, and
+  `spellCheck={false}` and `autoCapitalize` suit a name, a code or a username.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -251,7 +265,8 @@ import { EditableText } from "@dbm-design-system/components";
   message ("Saving", translatable through `labels`) is announced; Enter, Escape, the buttons and leaving it wait for
   the answer.
 - A refused value keeps the field open, sets `aria-invalid`, and shows the message in an alert, tied to the field
-  through `aria-describedby`.
+  through `aria-describedby`. With `validateOn="change"` the message appears and goes as the draft changes, and the
+  alert is announced only when its text does.
 - `readOnly` shows plain text, not a disabled control, so it can be read and selected; `disabled` removes the button
   from the tab order and dims it.
 - Escape is handled inside the field and does not reach handlers on its parents in the page. A surrounding overlay
@@ -303,6 +318,17 @@ import { EditableText } from "@dbm-design-system/components";
   onValueChange={save}
   isLoading={saving}
   hasError={failed}
+/>
+
+{/* Checked as it is typed, with phone-keyboard hints */}
+<EditableText
+  aria-label="Username"
+  defaultValue="ada"
+  validateOn="change"
+  validate={(draft) => (draft.length < 3 ? "At least 3 characters" : undefined)}
+  spellCheck={false}
+  autoCapitalize="off"
+  enterKeyHint="done"
 />
 
 {/* A counter, and the draft as it is typed */}
