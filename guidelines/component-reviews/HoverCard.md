@@ -222,3 +222,6 @@ StrictMode (the next card waits again). A defect fix with no change to rendering
 ## Post-Finalization follow-up (2026-10-10, at explicit direction) — a flaky browser check made robust
 
 `Focus that isn't keyboard focus … does not open the card` failed once in CI with focus on the body and the page showing only Storybook's loading shell, i.e. the story had been re-prepared during the check's fixed 250ms wait. The sequence (find the link, focus it, wait, assert) now retries as a whole inside `waitFor`, finding the link afresh each time. Mutation-checked: with `focusVisible: true` it still fails. Test file only; Finalized status unchanged.
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — the entrance scale is a token
+The enter keyframes held `scale(0.96)` as a literal, the same one `Popover`, `HoverCard` and `Tooltip` shared. It is now `motion.scale.96`, a primitive added with `Dialog`'s `motion.scale.98`. The value is the same, so nothing renders differently. **Finalized status unchanged** — a CSS value moved to its token, no new props, behaviour or output. Its Docs page lists the token in "Design tokens used".

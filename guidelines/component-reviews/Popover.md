@@ -727,3 +727,6 @@ status under `06` §9's three-question test.
   the shared stylesheet). A defect against the "WCAG AA" requirement the original pass was meant to
   meet, so under the three-question test it **stays Finalized**. `Popover` itself has no
   forced-colours check of its own yet.
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — the entrance scale is a token
+The enter keyframes held `scale(0.96)` as a literal, the same one `Popover`, `HoverCard` and `Tooltip` shared. It is now `motion.scale.96`, a primitive added with `Dialog`'s `motion.scale.98`. The value is the same, so nothing renders differently. **Finalized status unchanged** — a CSS value moved to its token, no new props, behaviour or output. Its Docs page lists the token in "Design tokens used".

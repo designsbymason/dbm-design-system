@@ -238,3 +238,6 @@ Same review as the molecules' and the earlier atoms' (standard: `07-storybook-an
 ## Docs example corrected, 2026-09-26 (docs-only; stays Finalized)
 
 At explicit direction. The `TooltipProvider` code example used icons that don't exist (`BoldIcon`, `ItalicIcon`; the package has `TextBIcon` and `TextItalicIcon`) and wrapped them in a `<Toolbar>`, which is not built yet (item 27), so it could not compile. It now uses the two real icons in a `ButtonGroup`, and the example typechecks against the real components. Found by typechecking `ButtonGroup`'s snippets and then scanning every snippet and Docs page for icon names the icons package doesn't export and for unbuilt components (none left).
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — the entrance scale is a token
+The enter keyframes held `scale(0.96)` as a literal, the same one `Popover`, `HoverCard` and `Tooltip` shared. It is now `motion.scale.96`, a primitive added with `Dialog`'s `motion.scale.98`. The value is the same, so nothing renders differently. **Finalized status unchanged** — a CSS value moved to its token, no new props, behaviour or output. Its Docs page lists the token in "Design tokens used".
