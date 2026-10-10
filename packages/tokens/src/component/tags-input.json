@@ -1,0 +1,9 @@
+{
+  "tags-input": {
+    "entry-min-width": {
+      "$type": "dimension",
+      "$value": "8ch",
+      "$description": "New token (2026-10-10), added for TagsInput — the narrowest the typing area of the field gets, measured in the field's own digit widths, before it drops onto its own line beneath the chips. Without it the entry shrinks to nothing beside a long row of chips and a person can't see what they type. A text-run width with no home on any existing primitive scale (the spacing scale is not font-relative)."
+    }
+  }
+}

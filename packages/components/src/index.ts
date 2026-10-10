@@ -86,6 +86,7 @@ export * from "./molecules/Table";
 export * from "./molecules/TableOfContents";
 export * from "./molecules/TableToolbar";
 export * from "./molecules/Tabs";
+export * from "./molecules/TagsInput";
 export * from "./molecules/TimePicker";
 export * from "./molecules/TimeRangePicker";
 export * from "./molecules/ToggleGroup";

@@ -1,0 +1,349 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { Tag } from "../../atoms/Tag";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { EditableText } from "../EditableText";
+import { FormField } from "../FormField";
+import { TagsInput } from "./TagsInput";
+import * as TagsInputStories from "./TagsInput.stories";
+
+export const propOrder = [
+  "defaultValue",
+  "value",
+  "onValueChange",
+  "inputValue",
+  "defaultInputValue",
+  "onInputValueChange",
+  "placeholder",
+  "size",
+  "tone",
+  "variant",
+  "separators",
+  "addOnBlur",
+  "allowDuplicates",
+  "maxTags",
+  "maxTagLength",
+  "transform",
+  "validate",
+  "clearable",
+  "required",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "name",
+  "form",
+  "autoComplete",
+  "inputMode",
+  "enterKeyHint",
+  "spellCheck",
+  "autoCapitalize",
+  "formatNumber",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={TagsInputStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="TagsInput" tier="Molecule" />
+
+A field for a list of short values that you type yourself: email recipients, labels, keywords, topics. Type a value and
+press Enter, or type a separator such as a comma, or paste a list, and each piece becomes a removable chip; Backspace on
+an empty entry removes the last one. The value is an array of strings, and a surrounding `<form>` receives each tag as
+its own value. It does not offer a list to choose from: that is `MultiSelect`, which chooses among options rather than
+accepting whatever is typed.
+
+### Import
+
+```tsx
+import { TagsInput } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={TagsInputStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={TagsInputStories.Playground}
+  exclude={[
+    "defaultValue",
+    "value",
+    "onValueChange",
+    "inputValue",
+    "defaultInputValue",
+    "onInputValueChange",
+    "separators",
+    "maxTagLength",
+    "transform",
+    "validate",
+    "form",
+    "autoComplete",
+    "inputMode",
+    "enterKeyHint",
+    "spellCheck",
+    "autoCapitalize",
+    "formatNumber",
+    "labels",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`TagsInput` also accepts any other native `<div>` attribute beyond what is listed here (e.g. `title`, `lang`) — passed
+straight through to the outer box. `className` and `style` go on the outer box; `ref`, `id`, `data-testid` and the
+`aria-*` props go on the entry `<input>`.
+
+<PropertiesTable of={TagsInputStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={TagsInputStories.AllSizes} />
+
+### Controlled
+
+<Canvas of={TagsInputStories.Controlled} />
+
+### Other separators
+
+<Canvas of={TagsInputStories.Separators} />
+
+### Limited
+
+<Canvas of={TagsInputStories.Limit} />
+
+### Validation
+
+<Canvas of={TagsInputStories.Validation} />
+
+### Normalizing each tag
+
+<Canvas of={TagsInputStories.Transform} />
+
+### Allowing repeats
+
+<Canvas of={TagsInputStories.Duplicates} />
+
+### With a clear-all button
+
+<Canvas of={TagsInputStories.Clearable} />
+
+### Tone and variant
+
+<Canvas of={TagsInputStories.Tones} />
+
+### Error state
+
+<Canvas of={TagsInputStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={TagsInputStories.Disabled} />
+
+### Read-only
+
+<Canvas of={TagsInputStories.ReadOnly} />
+
+### In a FormField
+
+<Canvas of={TagsInputStories.InFormField} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use it where the values are free-form and a person types them: recipients, keywords, labels no list can know in
+  advance.
+- Give it a name with `aria-label` (or a `FormField`), so the group and the entry say what the tags are.
+- Say what is wrong near the field with `validate`, and keep the refused text in the entry so it can be fixed.
+- Set `maxTags` and `maxTagLength` when the receiving system has limits, so a person finds out as they type.
+- Use `transform` to normalize (trim, lower-case, strip a `#`) so equal tags compare equal.
+- Turn `spellCheck` off and set `autoCapitalize="off"` for emails and handles.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it to choose among a fixed set of options: a person should see the options, which is `MultiSelect`, or
+  `CheckboxGroup` for a handful.
+- Don't use it for one value: that is an `Input`. A tag is a short piece of text, not a sentence.
+- Don't rely on colour alone to tell tags apart: `tone` and `variant` are for the whole field, not for individual chips.
+- Don't leave off `addOnBlur` without a reason: a value typed and not confirmed would otherwise be lost silently.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The field reports a new array each time, and never changes the one you gave it. Keep the tags in your own state
+  (`value` / `onValueChange`) when a sibling needs them.
+- Keep the pending text in your own state (`inputValue` / `onInputValueChange`) to clear it after a save or to show a
+  count.
+- Separators are matched as written, so `[",", ";", " "]` splits on commas, semicolons and spaces. A paste is also
+  split at line breaks and tabs, so a column copied from a spreadsheet becomes a row of tags.
+- A refused tag stays in the entry with its message and is announced, so the person can correct it rather than retype
+  it.
+- The field is as tall as an `Input` of the same size (within a few pixels), and adding the first tag does not move
+  anything below it. Chips wrap onto further lines as they are added.
+
+## Accessibility
+
+<Callout tone="info" title="A labelled group: a list of chips, and one real text field">
+
+- The field is a `group` named by `aria-label` or `aria-labelledby`; the tags are a list with one item each, and the
+  entry is a plain native text input with the same name, so a screen reader finds one field to type in and a list to
+  read.
+- Each chip has a real remove button named "Remove" and the tag (translatable through `labels`). Tab goes through the
+  buttons, then the entry, then the clear-all button.
+- Adding, removing and refusing are announced in a status region that is in the page before it has anything to say.
+- A refused tag sets `aria-invalid` on the entry and shows the message in an alert, tied to the entry through
+  `aria-describedby`.
+- Enter and a separator typed while an input method is composing a character do not make a tag.
+- After a chip is removed with its button, focus moves to the entry, so it is never left on a chip that is gone.
+- Escape clears the pending text and is handled in the field, so it does not reach a parent's handler while there is
+  text to clear; with nothing to clear it passes through.
+- The typed text is not a member of a surrounding `<form>`: the form receives the tags under `name`, and `required`
+  stops it submitting with none.
+- Every remove and clear button is at least 24 × 24 pixels at every size.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| Enter | Adds the typed text as a tag. With nothing typed it does what Enter does in any field, so a form can submit. |
+| A separator (comma by default) | Adds the text before it as a tag. |
+| Backspace (empty entry) | Removes the last tag. |
+| Escape | Clears the typed text. |
+| Tab | Moves through each chip's remove button, then the entry, then clear-all. Leaving the field adds typed text (`addOnBlur`). |
+| Paste | Splits at the separators, line breaks and tabs, and adds each piece that is accepted. |
+
+## Code examples
+
+```tsx
+<TagsInput aria-label="Recipients" placeholder="Add an email" onValueChange={setEmails} />
+
+{/* Controlled tags and pending text */}
+<TagsInput
+  aria-label="Labels"
+  value={tags}
+  onValueChange={setTags}
+  inputValue={draft}
+  onInputValueChange={setDraft}
+/>
+
+{/* Refusing what is not an email, and normalizing what is */}
+<TagsInput
+  aria-label="Recipients"
+  transform={(raw) => raw.trim().toLowerCase()}
+  validate={(tag) => (tag.includes("@") ? undefined : "Not an email address")}
+  spellCheck={false}
+  autoCapitalize="off"
+/>
+
+{/* At most five, each at most twenty characters; a comma, a semicolon or a space ends one */}
+<TagsInput aria-label="Labels" maxTags={5} maxTagLength={20} separators={[",", ";", " "]} />
+
+{/* Submitted with a form, one value per tag, and at least one required */}
+<form onSubmit={handleSubmit}>
+  <TagsInput aria-label="Labels" name="labels" required />
+</form>
+
+{/* With a label and helper text; the wiring is done for you */}
+<FormField label="Labels" helperText="Press Enter or type a comma to add one">
+  {(fieldProps) => <TagsInput {...fieldProps} name="labels" />}
+</FormField>
+```
+
+## Design tokens used
+
+The chips are `Tag`s and the clear-all control borrows `Input`'s treatment; `Tag` lists its own tokens.
+
+<TokenRow token="bg.surface" usage="the box's fill" />
+<TokenRow token="bg.neutral-subtle" usage="the fill behind the clear-all button while the pointer is over it" />
+<TokenRow token="border.default" usage="the box's border at rest" />
+<TokenRow token="border.neutral" usage="the box's border while the pointer is over it" />
+<TokenRow token="border.focus" usage="the border and focus ring while the entry has focus" />
+<TokenRow token="border.danger" usage="the box's border when `hasError` is set or a tag was refused" />
+<TokenRow token="text.primary" usage="the typed text" />
+<TokenRow token="text.tertiary" usage="the placeholder" />
+<TokenRow token="border-width.1" usage="the box's border" />
+<TokenRow token="border-width.2" usage="the focus ring's width" />
+<TokenRow token="radius.md" usage="the box's corners" />
+<TokenRow token="radius.sm" usage="the box's corners while it has focus, the standard focus-ring radius" />
+<TokenRow token="radius.full" usage="the clear-all button's round hover fill" />
+<TokenRow token="space.1" usage="the gap between chips, the focus ring's offset, and the block padding at `xs` and `md`" />
+<TokenRow token="space.2" usage="the gap between the typing area and the clear-all button, and the padding at `xs` inline and `sm`, `lg` and `xl` block" />
+<TokenRow token="space.3" usage="the inline padding at `sm` and `md`" />
+<TokenRow token="space.4" usage="the inline padding at `lg` and `xl`" />
+<TokenRow token="space.6" usage="the least size of the clear-all button, a 24px target" />
+<TokenRow token="tags-input.entry-min-width" usage="the narrowest the typing area gets before it drops beneath the chips" />
+<TokenRow token="font-family.primary" usage="the typed text" />
+<TokenRow token="font-size.xs" usage="the typed text at `xs`" />
+<TokenRow token="font-size.sm" usage="the typed text at `sm`" />
+<TokenRow token="font-size.base" usage="the typed text at `md`" />
+<TokenRow token="font-size.md" usage="the typed text at `lg`" />
+<TokenRow token="font-size.lg" usage="the typed text at `xl`" />
+<TokenRow token="line-height.tight" usage="the typed text's line height, matching `Input`" />
+<TokenRow token="motion-duration.fast" usage="the border-colour change and the clear-all hover fill" />
+<TokenRow token="motion-easing.standard" usage="the border-colour change and the clear-all hover fill" />
+<TokenRow token="opacity.40" usage="the whole field while disabled" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Tag"
+  description="The chip each tag is drawn with, with its remove button and its tones and variants"
+  href="/?path=/docs/atoms-data-display-tag--docs"
+>
+  <Tag removable>Design</Tag>
+</RelatedCard>
+<RelatedCard
+  name="Input"
+  description="A single text field, for one value rather than a list"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Enter text" />
+</RelatedCard>
+<RelatedCard
+  name="EditableText"
+  description="One value shown as text that turns into a field when you edit it"
+  href="/?path=/docs/molecules-inputs-editabletext--docs"
+>
+  <EditableText aria-label="Name" defaultValue="Apollo" size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this with a label and helper or error text, with the id and aria wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <TagsInput aria-label="Labels" defaultValue={["a", "b"]} size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom that names this field when you are not using a FormField"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Labels</FieldLabel>
+</RelatedCard>
+</div>

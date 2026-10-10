@@ -60,7 +60,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Select | molecule | 🟢 | Native-feel, wraps Radix Select |
 | Combobox / Autocomplete | organism | 🟢 | Searchable select, async option loading |
 | MultiSelect | organism | 🟡 | Tag-based multi-value select |
-| TagsInput | molecule | ⚪ | A typeable tags field: type a value, press Enter or a separator to make a `Tag`, Backspace removes the last, paste splits. Composes `Tag` and `Input`; sits beside `MultiSelect`, which chooses from a list |
+| TagsInput | molecule | ⚪ | A typeable tags field: type a value and press Enter or a separator, or paste a list, to make removable `Tag` chips; Backspace on an empty entry removes the last. The entry is its own `<input>` in the same wrapping box as the chips, since `Input`'s one-row box can't hold chips that wrap ([ADR-0049](adr/0049-tagsinput-draws-chips-and-its-own-entry-in-one-wrapping-box-and-adds-on-enter-separator-blur-or-paste-over-the-input-atom-or-a-combobox.md)). Standalone, with no list: it sits beside `MultiSelect`, which chooses from one. Review: [TagsInput.md](component-reviews/TagsInput.md) |
 | Checkbox | atom | 🟢 | Indeterminate state support |
 | CheckboxGroup | molecule | 🟢 | |
 | Radio | atom | 🟢 | A single radio input, functioning standalone as `Checkbox` does. Atom-tier per [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md), which names this pair. Review: [Radio.md](component-reviews/Radio.md) |
@@ -210,7 +210,7 @@ This puts v1 alone in "real, comprehensive design system" territory (not a 15-co
 
 ## Sequencing recommendation for actual build order
 
-Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier except `TagsInput`; the organism tier is next.
+Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier; the organism tier is next.
 
 1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix)
 2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight, ListItem)
@@ -225,7 +225,7 @@ Not alphabetical, not category-by-category: build in **dependency order**, since
 
 ### Molecule-tier build order, itemized
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` and `Select` were built ahead of schedule and reviewed first; the items below followed one at a time (`Radio`, an atom, was built first as the prerequisite for item 2). All are built and Finalized. `Calendar`, `EditableText` and `TagsInput` joined the molecule tier later (`Calendar` and `EditableText` are built; `TagsInput` is in the organism order below).
+Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` and `Select` were built ahead of schedule and reviewed first; the items below followed one at a time (`Radio`, an atom, was built first as the prerequisite for item 2). All are built and Finalized. `Calendar`, `EditableText` and `TagsInput` joined the molecule tier later, and are built.
 
 | # | Component | Why here | Review |
 |---|---|---|---|
@@ -254,6 +254,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 | 30–33 | Splitter, PinInput, RatingInput, TableOfContents | No dependency on anything remaining | [Splitter](component-reviews/Splitter.md), [PinInput](component-reviews/PinInput.md), [RatingInput](component-reviews/RatingInput.md), [TableOfContents](component-reviews/TableOfContents.md) |
 | — | Calendar | Added when the organism order was set; built before `DatePicker`, since `DatePicker` and `DateRangePicker` wrap it | [Calendar](component-reviews/Calendar.md) |
 | — | EditableText | Added when the organism order was set; standalone, composing `Input` and `Textarea` | [EditableText](component-reviews/EditableText.md) |
+| — | TagsInput | Added when the organism order was set; standalone, composing `Tag` around its own entry field. Suggestions from `Combobox` come later, as an additive layer | [TagsInput](component-reviews/TagsInput.md) |
 
 ### Organism-tier build order
 
@@ -266,7 +267,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it
 6. Toast / Notification — independent; other organisms report results through it
 7. Form — context and validation over `FormField` and `FieldGroup`
-8. Combobox / Autocomplete — `MultiSelect`, `TagsInput` and `CommandPalette` build on it
+8. Combobox / Autocomplete — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer)
 9. Calendar (molecule, prerequisite; built), then DatePicker
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization
 11. Navbar / TopNav, 12. Sidebar / SideNav — use Menu and Drawer
@@ -276,7 +277,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 14. ContextMenu (on Menu), 15. MultiSelect (on Combobox), 16. DateRangePicker (on Calendar and DatePicker), 17. CommandPalette (Dialog plus Combobox-style search), 18. NavigationMenu (decide at `Navbar` whether it is needed), 19. Stepper, 20. Timeline, 21. Tree / TreeView
 
 **⚪ deferred**
-22. TagsInput (molecule, after MultiSelect), 23. Menubar (after Menu), 24. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 25. Carousel, 26. ImageViewer / Lightbox (Dialog, optionally Carousel), 27. ColorPicker (Popover plus Slider), 28. Tour (Popover-style cards and a spotlight)
+22. Menubar (after Menu), 23. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 24. Carousel, 25. ImageViewer / Lightbox (Dialog, optionally Carousel), 26. ColorPicker (Popover plus Slider), 27. Tour (Popover-style cards and a spotlight)
 
 **Reordering** (`EditorTabs`, `Tree`, `DataTable` column reordering): one hand-rolled sortable hook in `primitives`, single list, pointer/touch/keyboard, internal for now — [ADR-0043](adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md). Build the hook with the first component that needs it.
 
