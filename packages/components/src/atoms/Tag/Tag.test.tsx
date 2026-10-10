@@ -102,9 +102,9 @@ describe("Tag", () => {
     expect(screen.getByText("Design").closest("span")).toHaveClass("custom");
   });
 
-  it("defaults to the neutral tone and subtle variant", () => {
+  it("defaults to the brand tone and subtle variant", () => {
     render(<Tag data-testid="tag">Design</Tag>);
-    expect(screen.getByTestId("tag").className).toMatch(/subtleNeutral/);
+    expect(screen.getByTestId("tag").className).toMatch(/subtleBrand/);
   });
 
   it("applies the matching class for each tone", () => {
@@ -122,6 +122,9 @@ describe("Tag", () => {
 
     rerender(<Tag tone="warning" data-testid="tag">Design</Tag>);
     expect(screen.getByTestId("tag").className).toMatch(/subtleWarning/);
+
+    rerender(<Tag tone="highlight" data-testid="tag">Design</Tag>);
+    expect(screen.getByTestId("tag").className).toMatch(/subtleHighlight/);
 
     rerender(<Tag tone="danger" data-testid="tag">Design</Tag>);
     expect(screen.getByTestId("tag").className).toMatch(/subtleDanger/);
@@ -148,6 +151,51 @@ describe("Tag", () => {
       </Tag>,
     );
     expect(screen.getByTestId("tag").className).toMatch(/solidDanger/);
+  });
+
+  it("draws the highlight tone in every variant and state with its own tokens", () => {
+    const { rerender } = render(
+      <Tag tone="highlight" variant="subtle" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/subtleHighlight/);
+    rerender(
+      <Tag tone="highlight" variant="solid" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/solidHighlight/);
+    rerender(
+      <Tag tone="highlight" variant="outlined" data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/outlinedHighlight/);
+    rerender(
+      <Tag tone="highlight" variant="outlined" selected onSelectedChange={() => {}} data-testid="tag">
+        Design
+      </Tag>,
+    );
+    expect(screen.getByTestId("tag").className).toMatch(/selected/);
+    expect(screen.getByTestId("tag").className).toMatch(/outlinedHighlight/);
+  });
+
+  it("gives a solid highlight tag's remove glyph the on-highlight icon tone, and a subtle one the text colour", () => {
+    const { container, rerender } = render(
+      <Tag tone="highlight" variant="solid" removable onRemove={() => {}}>
+        Design
+      </Tag>,
+    );
+    expect(container.querySelector("svg")?.getAttribute("class") ?? "").toMatch(/OnHighlight/);
+    rerender(
+      <Tag tone="highlight" variant="subtle" removable onRemove={() => {}}>
+        Design
+      </Tag>,
+    );
+    const subtleIcon = container.querySelector("svg")?.getAttribute("class") ?? "";
+    expect(subtleIcon).not.toMatch(/Highlight/);
+    expect(subtleIcon).not.toMatch(/tone(Brand|Default|Secondary)/);
   });
 
   it("applies the matching class for the outlined variant, per tone", () => {

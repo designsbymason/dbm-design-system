@@ -888,7 +888,9 @@ describe("Playground snippets for the seven feedback and data-display atoms", ()
   });
 
   it("Tag writes only what differs, and gives a removable tag its onRemove", () => {
-    expect(tagPlaygroundSnippet({ children: "Design", tone: "neutral", variant: "subtle", size: "md", removable: false })).toBe("<Tag>Design</Tag>");
+    expect(tagPlaygroundSnippet({ children: "Design", tone: "brand", variant: "subtle", size: "md", removable: false })).toBe("<Tag>Design</Tag>");
+    expect(tagPlaygroundSnippet({ children: "Design", tone: "neutral" })).toBe('<Tag tone="neutral">Design</Tag>');
+    expect(tagPlaygroundSnippet({ children: "Design", tone: "highlight" })).toBe('<Tag tone="highlight">Design</Tag>');
     expect(tagPlaygroundSnippet({ children: "Design", removable: true, removeLabel: "Remove Design" })).toBe(
       "<Tag removable onRemove={handleRemove}>Design</Tag>",
     );

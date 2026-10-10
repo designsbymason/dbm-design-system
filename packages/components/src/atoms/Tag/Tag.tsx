@@ -14,6 +14,7 @@ import type { TagProps, TagSize, TagTone, TagVariant } from "./Tag.types";
 // instead.
 const onToneIcon: Record<TagTone, IconTone> = {
   brand: "on-brand",
+  highlight: "on-highlight",
   danger: "on-danger",
   warning: "on-warning",
   success: "on-success",
@@ -28,7 +29,13 @@ const onToneIcon: Record<TagTone, IconTone> = {
 // outlined's own icon was still inheriting currentColor until this pass,
 // pending back when only subtle had been fixed), renamed from
 // `subtleToneIcon` since it's no longer subtle-specific.
-const standaloneToneIcon: Record<TagTone, IconTone> = {
+// `highlight` has no entry of its own: `icon.highlight` is 2.87:1 on the
+// interactive hover fill `bg.highlight-subtle-hover` in light mode, under the
+// 3:1 non-text floor, and `03-token-system-spec.md` says an icon on that fill
+// takes `text.highlight`'s step. Left without a tone, the icon inherits the
+// tag's own `text.highlight` colour via `currentColor` (6.13:1 on that fill).
+const standaloneToneIcon: Record<TagTone, IconTone | undefined> = {
+  highlight: undefined,
   brand: "brand",
   danger: "danger",
   warning: "warning",
@@ -44,6 +51,7 @@ const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
     info: styles.subtleInfo,
     success: styles.subtleSuccess,
     warning: styles.subtleWarning,
+    highlight: styles.subtleHighlight,
     danger: styles.subtleDanger,
   },
   solid: {
@@ -52,6 +60,7 @@ const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
     info: styles.solidInfo,
     success: styles.solidSuccess,
     warning: styles.solidWarning,
+    highlight: styles.solidHighlight,
     danger: styles.solidDanger,
   },
   outlined: {
@@ -60,6 +69,7 @@ const classFor: Record<TagVariant, Record<TagTone, string | undefined>> = {
     info: styles.outlinedInfo,
     success: styles.outlinedSuccess,
     warning: styles.outlinedWarning,
+    highlight: styles.outlinedHighlight,
     danger: styles.outlinedDanger,
   },
 };
@@ -116,7 +126,7 @@ const removeButtonSizeClass: Record<"xs" | "sm" | "md", string | undefined> = {
 export const Tag = forwardRef<HTMLSpanElement, TagProps>(
   (
     {
-      tone = "neutral",
+      tone = "brand",
       variant = "subtle",
       size = "md",
       leadingIcon,

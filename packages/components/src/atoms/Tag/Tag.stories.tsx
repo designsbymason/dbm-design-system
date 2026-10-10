@@ -44,9 +44,10 @@ const meta: Meta<typeof Tag> = {
     },
     tone: {
       control: "select",
-      options: ["brand", "neutral", "info", "success", "warning", "danger"],
+      options: ["brand", "neutral", "info", "success", "warning", "highlight", "danger"],
       description:
-        "Feedback-type coloring, independent of `variant`. `brand` is the system's own identity color rather than a status.",
+        "Feedback-type coloring, independent of `variant`. `brand` and `highlight` are the system's own identity color and its general highlight and accent color, rather than statuses.",
+      table: { defaultValue: { summary: "brand" } },
     },
     variant: {
       control: "select",
@@ -174,7 +175,7 @@ const meta: Meta<typeof Tag> = {
   // story-only task).
   args: {
     children: "Design",
-    tone: "neutral",
+    tone: "brand",
     variant: "subtle",
     size: "md",
     leadingIcon: "None" as unknown as TagProps["leadingIcon"],
@@ -281,7 +282,7 @@ export const AllTones: Story = {
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
       {(
-        ["brand", "neutral", "info", "success", "warning", "danger"] as const
+        ["brand", "neutral", "info", "success", "warning", "highlight", "danger"] as const
       ).map((tone) => (
         <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
           {tone}
@@ -303,7 +304,7 @@ export const Solid: Story = {
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
       {(
-        ["brand", "neutral", "info", "success", "warning", "danger"] as const
+        ["brand", "neutral", "info", "success", "warning", "highlight", "danger"] as const
       ).map((tone) => (
         <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
           {tone}
@@ -325,7 +326,7 @@ export const Outlined: Story = {
   render: (args) => (
     <div style={{ display: "flex", gap: "var(--dbm-space-2)", flexWrap: "wrap" }}>
       {(
-        ["brand", "neutral", "info", "success", "warning", "danger"] as const
+        ["brand", "neutral", "info", "success", "warning", "highlight", "danger"] as const
       ).map((tone) => (
         <Tag key={tone} {...args} tone={tone} removeLabel={undefined}>
           {tone}

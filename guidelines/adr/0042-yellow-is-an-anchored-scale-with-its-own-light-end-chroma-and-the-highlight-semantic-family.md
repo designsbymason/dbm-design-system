@@ -1,6 +1,6 @@
 # 0042 — Yellow is an anchored scale with its own light-end chroma, and its semantic family is named `highlight`
 
-**Status:** Accepted · **Date:** 2026-10-04 · **Amended 2026-10-04** — `RatingInput`'s default tone is `brand`, not `highlight`; the decision itself is unchanged
+**Status:** Accepted · **Date:** 2026-10-04 · **Amended 2026-10-04** — `RatingInput`'s default tone is `brand`, not `highlight`; **amended 2026-10-10** — `Tag` adopts the tone; the decision itself is unchanged
 
 ## Context
 The system had no yellow. Its closest scale, `amber` (hue 75, `amber.600` = `#9C6800`), reads as brown, so a rating's stars, a text marker and a featured badge all looked muddy. The user wanted a general highlight and accent colour for `Highlight`, `Badge`, `RatingInput` and others, anchored at `#949415` as `yellow.600`, and a darker single mustard (not a bright fill plus outline) so that an icon passes the 3:1 non-text floor on its own.
@@ -24,7 +24,7 @@ Two things made this more than another scale. The shared OKLCH generator tapers 
 ## Consequences
 - The light-mode `icon.highlight` and `border.highlight` sit right at the floor (3.23:1) and fall under it on `bg.canvas` (2.84:1) and on `bg.highlight-subtle-hover` (2.87:1); they are not used there, and `03` says so.
 - A future scale with a similar gamut can reuse the tuned-chroma path in the generator.
-- Every further component that wants a `highlight` tone (`Tag`, `Alert`, `Stat`, `Card`, `EmptyState`) is an additive change to a Finalized component and gets its own scoped pass.
+- Every further component that wants a `highlight` tone (`Alert`, `Stat`, `Card`, `EmptyState`) is an additive change to a Finalized component and gets its own scoped pass. *(Amended 2026-10-10: `Tag` was in this list and has since adopted the tone, see [Tag.md](../component-reviews/Tag.md).)*
 
 ## Related
 `03-token-system-spec.md` (scale generation, the semantic tables and the notable exceptions); `packages/tokens/scripts/generate-color-scales.mjs`; [Icon.md](../component-reviews/Icon.md), [Highlight.md](../component-reviews/Highlight.md), [Badge.md](../component-reviews/Badge.md), [RatingInput.md](../component-reviews/RatingInput.md).

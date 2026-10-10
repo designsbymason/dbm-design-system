@@ -59,6 +59,12 @@
   color: var(--dbm-text-warning);
 }
 
+.subtleHighlight {
+  background-color: var(--dbm-bg-highlight-subtle);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-highlight-subtle);
+  color: var(--dbm-text-highlight);
+}
+
 .subtleDanger {
   background-color: var(--dbm-bg-danger-subtle);
   border: var(--dbm-border-width-1) solid var(--dbm-border-danger-subtle);
@@ -83,6 +89,11 @@
 .solidWarning {
   background-color: var(--dbm-bg-warning);
   color: var(--dbm-text-on-warning);
+}
+
+.solidHighlight {
+  background-color: var(--dbm-bg-highlight);
+  color: var(--dbm-text-on-highlight);
 }
 
 .solidDanger {
@@ -141,6 +152,12 @@
   background-color: transparent;
   border: var(--dbm-border-width-1) solid var(--dbm-border-warning);
   color: var(--dbm-text-warning);
+}
+
+.outlinedHighlight {
+  background-color: transparent;
+  border: var(--dbm-border-width-1) solid var(--dbm-border-highlight);
+  color: var(--dbm-text-highlight);
 }
 
 .outlinedDanger {
@@ -318,6 +335,10 @@
   background-color: var(--dbm-bg-warning-subtle-hover);
 }
 
+.interactive.subtleHighlight:hover:not(.disabled) {
+  background-color: var(--dbm-bg-highlight-subtle-hover);
+}
+
 .interactive.subtleDanger:hover:not(.disabled) {
   background-color: var(--dbm-bg-danger-subtle-hover);
 }
@@ -336,6 +357,10 @@
 
 .interactive.solidWarning:hover:not(.disabled) {
   background-color: var(--dbm-bg-warning-hover);
+}
+
+.interactive.solidHighlight:hover:not(.disabled) {
+  background-color: var(--dbm-bg-highlight-hover);
 }
 
 .interactive.solidDanger:hover:not(.disabled) {
@@ -370,6 +395,10 @@
   background-color: var(--dbm-bg-warning-subtle-hover);
 }
 
+.interactive.outlinedHighlight:hover:not(.disabled):not(.selected) {
+  background-color: var(--dbm-bg-highlight-subtle-hover);
+}
+
 .interactive.outlinedDanger:hover:not(.disabled):not(.selected) {
   background-color: var(--dbm-bg-danger-subtle-hover);
 }
@@ -399,6 +428,10 @@
 
 .interactive.selected.outlinedWarning:hover:not(.disabled) {
   background-color: var(--dbm-bg-warning-hover);
+}
+
+.interactive.selected.outlinedHighlight:hover:not(.disabled) {
+  background-color: var(--dbm-bg-highlight-hover);
 }
 
 .interactive.selected.outlinedDanger:hover:not(.disabled) {
@@ -450,6 +483,10 @@
 
 .selected.subtleWarning {
   border-color: var(--dbm-border-warning);
+}
+
+.selected.subtleHighlight {
+  border-color: var(--dbm-border-highlight);
 }
 
 .selected.subtleDanger {
@@ -528,6 +565,12 @@
     0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-warning);
 }
 
+.selected.solidHighlight {
+  box-shadow:
+    0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
+    0 0 0 calc(var(--dbm-border-width-2) * 2) var(--dbm-border-highlight);
+}
+
 .selected.solidDanger {
   box-shadow:
     0 0 0 var(--dbm-border-width-2) var(--dbm-bg-surface),
@@ -585,6 +628,11 @@
 .selected.outlinedWarning {
   background-color: var(--dbm-bg-warning);
   color: var(--dbm-text-on-warning);
+}
+
+.selected.outlinedHighlight {
+  background-color: var(--dbm-bg-highlight);
+  color: var(--dbm-text-on-highlight);
 }
 
 .selected.outlinedDanger {

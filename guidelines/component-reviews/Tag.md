@@ -45,3 +45,23 @@ clickable/selectable is not a target (it is `aria-hidden`, and the tag is the ta
 
 Under the three-question test (`06` §9) this is a defect fix confined to `Tag.module.css`, so the component stays Finalized. Verified in a real browser by `TableToolbar`'s target-size
 story (points 11px either side of the button's centre resolve to the button, at all five sizes). jsdom cannot see pseudo-elements, so there is no unit test for it.
+
+## Post-Finalization changes (2026-10-10, at explicit direction) — the `highlight` tone, and `brand` as the default tone
+
+Two changes asked for by the user, run through the three-question test (`06` §9) separately.
+
+**1. A `highlight` tone (additive).** `TagTone` gains `"highlight"` (after `warning`, as in `BadgeTone`), in every variant and state, from the existing `highlight` family ([ADR-0042](../adr/0042-yellow-is-an-anchored-scale-with-its-own-light-end-chroma-and-the-highlight-semantic-family.md)); no new token.
+- **Subtle:** `bg.highlight-subtle` / `border.highlight-subtle` / `text.highlight`; hover `bg.highlight-subtle-hover`; selected border `border.highlight`.
+- **Solid:** `bg.highlight` / `text.on-highlight`; hover `bg.highlight-hover`; selected ring `border.highlight`.
+- **Outlined:** `border.highlight` / `text.highlight`; hover `bg.highlight-subtle-hover`; selected converges to solid (`bg.highlight` / `text.on-highlight`, hover `bg.highlight-hover`).
+- **Icons:** `icon.on-highlight` on a solid fill. On the subtle and outlined fills the icon takes the tag's own `text.highlight` through `currentColor`, because `icon.highlight` is 2.87:1 on `bg.highlight-subtle-hover` in light, under the 3:1 non-text floor (`03` says an icon on that fill takes `text.highlight`'s step). `standaloneToneIcon` therefore holds `undefined` for `highlight`.
+- **Contrast, measured live from the resolved tokens (light / dark):** subtle text on fill 6.64 / 9.08, on hover 6.13 / 6.42; solid text on fill 4.67 / 6.42, on hover 6.89 / 7.63; outlined text on the surface 6.89 / 8.97, border on the surface 3.23 / 8.97; selected subtle border on the subtle fill 3.11 / 9.08; selected solid ring on the surface 3.23 / 8.97. All match `03`.
+- **Result:** purely additive (a new value of an existing prop, no change to anything that existed), so **stays Finalized**; scoped pass: types and JSDoc, stylesheet, stories (every tone grid), snippets, Docs page (tone options, nine token rows), two unit tests (classes in each variant and state; icon tone).
+
+**2. `tone` defaults to `brand` (was `neutral`).** This changes the rendered output of every `<Tag>` that passes no `tone`, so it is a preference change to existing surface, not a defect fix: step 3 of the test, **partial re-finalization**.
+- **Blast radius:** read from the repo, not assumed. `TagsInput` passes its own `tone` and `TableToolbar` passes its `tone` (default `neutral`) through, so neither depends on `Tag`'s default; `TagsInput`'s own default was then set to `brand` as well, at the same direction. The Docs-page previews that use a bare `<Tag>` (`Badge`, `Icon`, `TableToolbar`, `TagsInput` related-component cards, the `Tag` Docs page) now show a brand tag, which is what the default is.
+- **Updated:** the default in the JSDoc, the Playground's `tone` arg and its Default column, the snippet builder (omits `brand`, writes `tone="neutral"`), the Docs page's tone guidance (a tag is `brand` unless told otherwise; `neutral` for a plain label), and the tests that asserted `neutral` as the default.
+- **Re-verified:** design quality (all tones, three variants, in the live Storybook), theming (purple light, emerald dark), the Docs page (Properties: `tone` lists `highlight` and defaults to `brand`; no error display; every row described), and unit and Chromium suites in full (6,848 / 6,848 and 1,323 / 1,323). Not re-run, because nothing they cover changed: the size, target-size and keyboard checks.
+- **Semver note:** a default changing for existing callers is a breaking change; nothing is published yet.
+
+**Pre-existing, not touched:** a real remove `<button>` hover fills with `bg.neutral-subtle` for every tone, which is a very faint fill behind a solid tag's white glyph. Not changed here; flagged.

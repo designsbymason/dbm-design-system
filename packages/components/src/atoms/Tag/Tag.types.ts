@@ -1,16 +1,17 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
-/** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` is the one non-status tone — the system's own identity color, matching Badge's own tone scale (which Tag otherwise mirrors) rather than a status. */
-export type TagTone = "brand" | "neutral" | "info" | "success" | "warning" | "danger";
+/** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` and `highlight` are the non-status tones — the system's own identity color, and its general highlight and accent color — matching Badge's own tone scale (which Tag otherwise mirrors) rather than a status. */
+export type TagTone = "brand" | "neutral" | "info" | "success" | "warning" | "highlight" | "danger";
 export type TagVariant = "subtle" | "solid" | "outlined";
 export type TagSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface TagProps extends ComponentPropsWithoutRef<"span"> {
   /**
-   * Feedback-type coloring, independent of `variant`. `brand` is the
-   * system's own identity color rather than a status.
-   * @default 'neutral'
+   * Feedback-type coloring, independent of `variant`. `brand` and
+   * `highlight` are the system's own identity color and its general
+   * highlight and accent color, rather than statuses.
+   * @default 'brand'
    */
   tone?: TagTone;
   /**

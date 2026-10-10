@@ -15,7 +15,7 @@ import { CheckCircleIcon, InfoIcon, StarIcon, TagIcon } from "@dbm-design-system
 import type { TagSize, TagTone, TagVariant } from "./Tag.types";
 
 export const tagSnippets = {
-  allTones: `{/* tone: "neutral" (default) | "brand" | "info" | "success" | "warning" | "danger" */}
+  allTones: `{/* tone: "brand" (default) | "neutral" | "info" | "success" | "warning" | "highlight" | "danger" */}
 <Tag variant="subtle" tone="success">success</Tag>`,
 
   solid: `{/* variant: "subtle" (default) | "solid" | "outlined" */}
@@ -142,7 +142,7 @@ export interface TagPlaygroundSnippetArgs {
 export function tagPlaygroundSnippet(args: TagPlaygroundSnippetArgs): string {
   const label = String(args.children ?? "Design");
   const attributes: string[] = [];
-  if (args.tone && args.tone !== "neutral") attributes.push(`tone="${args.tone}"`);
+  if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.variant && args.variant !== "subtle") attributes.push(`variant="${args.variant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   const leading = iconName(args.leadingIcon);
