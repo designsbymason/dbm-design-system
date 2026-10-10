@@ -18,8 +18,13 @@ export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "mo
 export const playgroundOrder = [
   "size",
   "fullScreen",
+  "placement",
   "divided",
   "modal",
+  "busy",
+  "keepMounted",
+  "scrimOpacity",
+  "scrimBlur",
   "showCloseButton",
   "closeOnOutsideClick",
   "closeOnEscape",
@@ -31,6 +36,12 @@ export const contentPropOrder = [
   "size",
   "fullScreen",
   "divided",
+  "placement",
+  "busy",
+  "keepMounted",
+  "initialFocus",
+  "scrimOpacity",
+  "scrimBlur",
   "showCloseButton",
   "closeOnOutsideClick",
   "closeOnEscape",
@@ -184,6 +195,34 @@ other native `<button>` attribute beyond what's listed here.
 
 <Canvas of={DialogStories.Nested} />
 
+### Placed at the top
+
+<Canvas of={DialogStories.PlacedAtTheTop} />
+
+### While it is busy
+
+<Canvas of={DialogStories.WhileItIsBusy} />
+
+### Keeps its form while closed
+
+<Canvas of={DialogStories.KeepsItsForm} />
+
+### Lines only while there is more to scroll
+
+<Canvas of={DialogStories.LinesOnlyWhileScrolled} />
+
+### Knowing why it closed
+
+<Canvas of={DialogStories.KnowingWhyItClosed} />
+
+### Focus lands on a chosen field
+
+<Canvas of={DialogStories.FocusOnAChosenField} />
+
+### A heavier, blurred scrim
+
+<Canvas of={DialogStories.HeavierBlurredScrim} />
+
 ### Controlled from your own state
 
 <Canvas of={DialogStories.Controlled} />
@@ -201,6 +240,10 @@ other native `<button>` attribute beyond what's listed here.
 - Set `closeOnOutsideClick={false}` on a form with unsaved changes, so a stray click doesn't throw the
   work away, and leave the footer's own buttons as the way out.
 - Use `fullScreen={{ base: true, md: false }}` for content that needs the room on a phone.
+- Set `busy` while a form is being submitted, so the dialog can't be dismissed (and the work lost) until
+  the request settles; show your own spinner on the action.
+- Use `keepMounted` for a form someone may close by accident and come back to, and `onOpenChange`'s
+  `reason` to ask for confirmation only when the scrim or Escape closed it.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -212,6 +255,9 @@ other native `<button>` attribute beyond what's listed here.
 - Don't stack dialogs more than one deep. One confirmation opened from a dialog is fine; a third layer
   means the flow wants a page.
 - Don't turn off both the close button and the footer's close action: the only way out would be Escape.
+- Don't leave `busy` on with nothing finishing it: the dialog can't be closed while it is set, by design.
+- Don't use `keepMounted` for a dialog that should reset every time it opens, or that fetches data on
+  mount and should fetch again: it is rendered once, the first time it opens, and kept.
 
 </Callout>
 </div>
@@ -227,6 +273,12 @@ other native `<button>` attribute beyond what's listed here.
   focus has somewhere to go back to on close.
 - Use `divided` when the body is long enough to scroll, so the lines under the header and over the footer
   show that content continues past the edge.
+- Use `placement="top"` for a panel whose height changes as the person works (a list that grows, results
+  that appear), so it doesn't jump; centred suits a fixed form.
+- Use `divided="auto"` for a body that may or may not overflow: lines show only while there is content
+  to scroll to, and nothing moves when they appear.
+- Use `initialFocus` with a ref when the person came to fill in one field; it reads better than
+  preventing the default of `onOpenAutoFocus` and focusing it yourself.
 - Use `modal={false}` only for a docked tool panel the person works beside. A non-modal dialog doesn't
   dim, lock or trap anything, and an overlay that blocks nothing is usually better as a panel in the
   layout.
@@ -246,6 +298,13 @@ other native `<button>` attribute beyond what's listed here.
 - A press on the scrim closes the dialog; a press inside a popover or select opened from the dialog does
   not. `Escape` closes only the top-most layer, so a popover closes before the dialog behind it.
 - The close button's name is "Close"; translate it with `labels`.
+- A busy dialog is `aria-busy`, its close button is disabled and a `Dialog.Close` is `aria-disabled`; none
+  of them, Escape or the scrim closes it until `busy` is off. Announce progress yourself (a status
+  message) so it isn't only visual.
+- `keepMounted` content is out of the page while closed (not displayed, not reachable by keyboard or
+  screen reader), and the page behind is neither locked nor hidden.
+- In full screen the panel keeps clear of a phone's notch and home indicator, on a page that draws under
+  them.
 - The body is a scroll region. When it overflows it takes a tab stop and shows a focus ring, so a
   keyboard user can scroll it; give it a name with `aria-label` if more than one region is on screen.
 - The panel's text sits on the surface colour at the same contrast as a card. In forced-colours mode
@@ -311,6 +370,17 @@ function Saved() {
   …
 </Dialog.Content>
 
+{/* Know why it closed, and keep a half-filled form */}
+<Dialog
+  onOpenChange={(open, { reason }) => {
+    if (!open && reason === "outside") confirmDiscard();
+  }}
+>
+  <Dialog.Content keepMounted busy={saving} placement="top" divided="auto">
+    …
+  </Dialog.Content>
+</Dialog>
+
 {/* A native <div> attribute, passed straight through */}
 <Dialog.Content aria-describedby="terms-summary" dir="rtl">
   …
@@ -335,6 +405,7 @@ function Saved() {
 <TokenRow token="space.3" usage="gap between footer actions; close button inset, also kept clear of by the text" />
 <TokenRow token="space.4" usage="viewport gutter; header and footer inner padding; divided body padding next to a header or footer" />
 <TokenRow token="space.6" usage="panel padding; the body pads itself with it on every side" />
+<TokenRow token="space.16" usage="the distance from the top edge of a top-placed panel, from sm up" />
 <TokenRow token="icon-button.size.sm" usage="the close button's width, which sets the room kept for it" />
 <TokenRow token="z-index.modal" usage="panel stacking order, above the scrim and below popovers and tooltips" />
 <TokenRow token="motion.duration.base" usage="enter animation" />

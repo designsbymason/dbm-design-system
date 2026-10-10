@@ -1,4 +1,4 @@
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import type { Breakpoint, Responsive } from "@dbm-design-system/primitives";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
@@ -8,8 +8,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
+import type { RefObject } from "react";
 import { Backdrop } from "../../atoms/Backdrop";
 import { CloseButton } from "../../atoms/CloseButton";
 import { Heading } from "../../atoms/Heading";
@@ -26,6 +29,8 @@ import type {
   DialogFooterProps,
   DialogHeaderProps,
   DialogLabels,
+  DialogOpenChangeReason,
+  DialogPlacement,
   DialogProps,
   DialogSize,
   DialogTitleProps,
@@ -65,6 +70,11 @@ function fullScreenClasses(fullScreen: Responsive<boolean>): string {
   return classes.join(" ");
 }
 
+const placementClass: Record<DialogPlacement, string | undefined> = {
+  center: undefined,
+  top: styles.placementTop,
+};
+
 const footerAlignClass: Record<DialogFooterAlign, string | undefined> = {
   start: styles.alignStart,
   end: undefined,
@@ -76,6 +86,8 @@ interface DialogContextValue {
   /** The dialog's current open state, held here so the scrim can follow it (see `DialogContent`). */
   open: boolean;
   modal: boolean;
+  /** Records what is about to close or open the dialog, for `onOpenChange`'s second argument. */
+  setReason: (reason: DialogOpenChangeReason) => void;
 }
 
 const DialogContext = createContext<DialogContextValue | null>(null);
@@ -83,9 +95,21 @@ const DialogContext = createContext<DialogContextValue | null>(null);
 interface DialogContentContextValue {
   registerTitle: () => () => void;
   registerDescription: () => () => void;
+  busy: boolean;
+  /** Whether the body should watch its scroll position and report which edges have content out of view. */
+  watchScroll: boolean;
+  reportScroll: (edges: { start: boolean; end: boolean }) => void;
 }
 
 const DialogContentContext = createContext<DialogContentContextValue | null>(null);
+
+/** The element `keepMounted` renders the content into: it is the `.slot` section container itself. */
+function createHost(wanted: boolean): HTMLDivElement | null {
+  if (!wanted || typeof document === "undefined") return null;
+  const element = document.createElement("div");
+  element.className = styles.slot ?? "";
+  return element;
+}
 
 /**
  * A window that interrupts the page for focused work — a form, a detail view, a confirmation — built on Radix
@@ -144,15 +168,24 @@ function DialogRoot({
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : uncontrolledOpen;
 
+  // What is about to change the state is noted by the part that was pressed (the trigger, Escape, the scrim, a
+  // close element) just before Radix calls `onOpenChange`, which on its own doesn't say.
+  const reasonRef = useRef<DialogOpenChangeReason | null>(null);
+  const setReason = useCallback((reason: DialogOpenChangeReason) => {
+    reasonRef.current = reason;
+  }, []);
+
   const handleOpenChange = useCallback(
     (next: boolean) => {
+      const reason = reasonRef.current ?? (next ? "trigger" : "close");
+      reasonRef.current = null;
       if (!isControlled) setUncontrolledOpen(next);
-      onOpenChange?.(next);
+      onOpenChange?.(next, { reason });
     },
     [isControlled, onOpenChange],
   );
 
-  const value = useMemo(() => ({ open, modal }), [open, modal]);
+  const value = useMemo(() => ({ open, modal, setReason }), [open, modal, setReason]);
 
   return (
     <DialogContext.Provider value={value}>
@@ -168,14 +201,21 @@ function DialogRoot({
  * to use one of this system's own interactive components (`Button`, `IconButton`) instead.
  */
 const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>(
-  ({ asChild = false, className, ...props }, ref) => (
-    <DialogPrimitive.Trigger
-      ref={ref}
-      asChild={asChild}
-      className={asChild ? className : cx(styles.trigger, className)}
-      {...props}
-    />
-  ),
+  ({ asChild = false, className, onClick, ...props }, ref) => {
+    const dialog = useContext(DialogContext);
+    return (
+      <DialogPrimitive.Trigger
+        ref={ref}
+        asChild={asChild}
+        className={asChild ? className : cx(styles.trigger, className)}
+        {...props}
+        onClick={(event) => {
+          onClick?.(event);
+          if (!event.defaultPrevented) dialog?.setReason("trigger");
+        }}
+      />
+    );
+  },
 );
 DialogTrigger.displayName = "Dialog.Trigger";
 
@@ -190,6 +230,12 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
       size = "md",
       fullScreen = false,
       divided = false,
+      placement = "center",
+      busy = false,
+      keepMounted = false,
+      initialFocus,
+      scrimOpacity,
+      scrimBlur = false,
       showCloseButton = true,
       closeOnOutsideClick = true,
       closeOnEscape = true,
@@ -197,6 +243,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
       container,
       className,
       children,
+      onOpenAutoFocus,
       onEscapeKeyDown,
       onInteractOutside,
       "aria-label": ariaLabel,
@@ -223,9 +270,37 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
       setDescriptionCount((count) => count + 1);
       return () => setDescriptionCount((count) => count - 1);
     }, []);
+
+    // Which edges of the body have content out of view, reported by `Dialog.Body` for `divided="auto"`.
+    const [edges, setEdges] = useState({ start: false, end: false });
+    const reportScroll = useCallback((next: { start: boolean; end: boolean }) => {
+      setEdges((previous) => (previous.start === next.start && previous.end === next.end ? previous : next));
+    }, []);
+
     const contentContext = useMemo(
-      () => ({ registerTitle, registerDescription }),
-      [registerTitle, registerDescription],
+      () => ({ registerTitle, registerDescription, busy, watchScroll: divided === "auto", reportScroll }),
+      [registerTitle, registerDescription, busy, divided, reportScroll],
+    );
+
+    // `keepMounted`: Radix removes its content from the page on close, taking whatever is inside it, so the
+    // children are rendered once, by React, into an element of our own and that element is moved into the panel
+    // each time it opens. Moving a DOM node doesn't remount what React rendered into it. (Radix's `forceMount`
+    // keeps the panel in the page, but also keeps the scroll lock and the page's `aria-hidden` on while closed.)
+    const [host, setHost] = useState<HTMLDivElement | null>(() => createHost(keepMounted));
+    if (keepMounted && !host) {
+      // Turned on after the first render: create it now, in render, which React allows for a component's own
+      // state, rather than a commit later.
+      const created = createHost(true);
+      if (created) setHost(created);
+    }
+    const [everOpened, setEverOpened] = useState(open);
+    if (open && !everOpened) setEverOpened(true);
+    const attachHost = useCallback(
+      (element: HTMLDivElement | null) => {
+        // Before the close button and the hidden title, so Tab reaches the dialog's own controls first.
+        if (element && host) element.insertBefore(host, element.firstChild);
+      },
+      [host],
     );
 
     const describedByProps =
@@ -235,9 +310,11 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
           ? { "aria-describedby": undefined }
           : {};
 
+    const inner = <DialogContentContext.Provider value={contentContext}>{children}</DialogContentContext.Provider>;
+
     const content = (
       <DialogPrimitive.Content
-        ref={ref}
+        ref={mergeRefs(ref, attachHost)}
         {...props}
         {...describedByProps}
         aria-label={ariaLabel}
@@ -246,54 +323,76 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
         role="dialog"
         data-state={open ? "open" : "closed"}
         aria-modal={modal ? true : undefined}
+        aria-busy={busy || undefined}
+        data-overflow-start={edges.start || undefined}
+        data-overflow-end={edges.end || undefined}
+        onOpenAutoFocus={(event) => {
+          onOpenAutoFocus?.(event);
+          const target = initialFocus?.current;
+          if (!event.defaultPrevented && target) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
         onEscapeKeyDown={(event) => {
           onEscapeKeyDown?.(event);
-          if (!closeOnEscape) event.preventDefault();
+          if (!closeOnEscape || busy) event.preventDefault();
+          if (!event.defaultPrevented) dialog?.setReason("escape");
         }}
         onInteractOutside={(event) => {
           onInteractOutside?.(event);
-          if (!closeOnOutsideClick) event.preventDefault();
+          if (!closeOnOutsideClick || busy) event.preventDefault();
+          if (!event.defaultPrevented) dialog?.setReason("outside");
         }}
         className={cx(
           styles.content,
           sizeClass[size],
           fullScreenClasses(fullScreen),
-          divided && styles.divided,
+          placementClass[placement],
+          divided === true && styles.divided,
+          divided === "auto" && styles.dividedAuto,
           showCloseButton && styles.withCloseButton,
           !modal && styles.nonModal,
           className,
         )}
       >
-        <DialogContentContext.Provider value={contentContext}>
-          {ariaLabel && titleCount === 0 && (
-            <DialogPrimitive.Title asChild>
-              <VisuallyHidden>{ariaLabel}</VisuallyHidden>
-            </DialogPrimitive.Title>
-          )}
-          {children}
-        </DialogContentContext.Provider>
+        {ariaLabel && titleCount === 0 && (
+          <DialogPrimitive.Title asChild>
+            <VisuallyHidden>{ariaLabel}</VisuallyHidden>
+          </DialogPrimitive.Title>
+        )}
+        {!host && <div className={styles.slot}>{inner}</div>}
         {showCloseButton && (
-          // Last in the DOM so a body that comes first can clear it with `:first-child`, and so Tab reaches the
-          // dialog's own controls before it. It is placed in the corner by CSS, not by order.
+          // After the content in the DOM, so Tab reaches the dialog's own controls first. It is placed in the
+          // corner by CSS, not by order.
           <DialogPrimitive.Close asChild>
-            <CloseButton size="sm" aria-label={labels.close} className={styles.closeButton} />
+            <CloseButton
+              size="sm"
+              aria-label={labels.close}
+              disabled={busy}
+              className={styles.closeButton}
+              onClick={() => dialog?.setReason("close-button")}
+            />
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
     );
 
     return (
-      <DialogPrimitive.Portal container={container}>
-        {modal ? (
-          <DialogPrimitive.Overlay asChild>
-            <Backdrop inPortal={false} open={open}>
-              {content}
-            </Backdrop>
-          </DialogPrimitive.Overlay>
-        ) : (
-          content
-        )}
-      </DialogPrimitive.Portal>
+      <>
+        {host && everOpened ? createPortal(inner, host) : null}
+        <DialogPrimitive.Portal container={container}>
+          {modal ? (
+            <DialogPrimitive.Overlay asChild>
+              <Backdrop inPortal={false} open={open} opacity={scrimOpacity} blur={scrimBlur}>
+                {content}
+              </Backdrop>
+            </DialogPrimitive.Overlay>
+          ) : (
+            content
+          )}
+        </DialogPrimitive.Portal>
+      </>
     );
   },
 );
@@ -344,11 +443,43 @@ DialogDescription.displayName = "Dialog.Description";
  * The main content, a scroll region that takes whatever height is left between the header and the footer, so
  * long content scrolls inside the dialog while they stay in view.
  */
-const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ className, children, ...props }, ref) => (
-  <ScrollArea ref={ref} variant="ghost" className={cx(styles.body, className)} {...props}>
-    <div className={styles.bodyContent}>{children}</div>
-  </ScrollArea>
-));
+const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ className, children, ...props }, ref) => {
+  const content = useContext(DialogContentContext);
+  const viewportRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null);
+  const watch = content?.watchScroll ?? false;
+  const reportScroll = content?.reportScroll;
+
+  // Which sides have content out of view, read from the scroll position: `useScrollEdges` compares the first
+  // and last *item* with the box, and a body is one tall item, which is out of view on both sides always.
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!watch || !viewport || !reportScroll) return undefined;
+    const read = () => {
+      const EPSILON = 1;
+      reportScroll({
+        start: viewport.scrollTop > EPSILON,
+        end: viewport.scrollTop + viewport.clientHeight < viewport.scrollHeight - EPSILON,
+      });
+    };
+    read();
+    viewport.addEventListener("scroll", read, { passive: true });
+    // The viewport's own size changing (the panel growing or shrinking) and its content's (text added).
+    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(read);
+    observer?.observe(viewport);
+    if (viewport.firstElementChild) observer?.observe(viewport.firstElementChild);
+    return () => {
+      viewport.removeEventListener("scroll", read);
+      observer?.disconnect();
+      reportScroll({ start: false, end: false });
+    };
+  }, [watch, reportScroll]);
+
+  return (
+    <ScrollArea ref={ref} viewportRef={viewportRef} variant="ghost" className={cx(styles.body, className)} {...props}>
+      <div className={styles.bodyContent}>{children}</div>
+    </ScrollArea>
+  );
+});
 DialogBody.displayName = "Dialog.Body";
 
 /** The bottom section of the dialog: its actions, usually `Button`s. */
@@ -361,9 +492,25 @@ DialogFooter.displayName = "Dialog.Footer";
 
 /** An element that closes the dialog on click, placed anywhere inside `Dialog.Content`. */
 const DialogClose = forwardRef<HTMLButtonElement, DialogCloseProps>(
-  ({ asChild = false, className, ...props }, ref) => (
-    <DialogPrimitive.Close ref={ref} asChild={asChild} className={className} {...props} />
-  ),
+  ({ asChild = false, className, onClick, ...props }, ref) => {
+    const dialog = useContext(DialogContext);
+    const busy = useContext(DialogContentContext)?.busy ?? false;
+    return (
+      <DialogPrimitive.Close
+        ref={ref}
+        asChild={asChild}
+        className={className}
+        {...props}
+        {...(busy ? { "aria-disabled": true } : {})}
+        onClick={(event) => {
+          onClick?.(event);
+          // A busy dialog can't be left: stopping the event here is what stops Radix closing it.
+          if (busy) event.preventDefault();
+          else if (!event.defaultPrevented) dialog?.setReason("close");
+        }}
+      />
+    );
+  },
 );
 DialogClose.displayName = "Dialog.Close";
 

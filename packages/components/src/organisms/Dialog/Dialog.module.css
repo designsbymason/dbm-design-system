@@ -12,6 +12,14 @@
   --dialog-radius: var(--dbm-radius-lg);
   --dialog-border-width: var(--dbm-border-width-1);
   --dialog-pad: var(--dbm-space-6);
+  /* What `placement` asks for above the panel; `fullScreen` sets the offset itself to nothing, and a window puts
+     it back to this. */
+  --dialog-placement-offset: var(--dialog-gutter);
+  --dialog-top-offset: var(--dialog-placement-offset);
+  --dialog-safe-block-start: var(--dbm-space-0);
+  --dialog-safe-block-end: var(--dbm-space-0);
+  --dialog-safe-inline-start: var(--dbm-space-0);
+  --dialog-safe-inline-end: var(--dbm-space-0);
   /* From the end edge: the button's inset, its width, and a little air beside it. */
   --dialog-close-clearance: calc(var(--dbm-space-3) + var(--dbm-icon-button-size-sm) + var(--dbm-space-2));
 
@@ -29,9 +37,15 @@
      non-modal dialog, so the panel follows the visible viewport, including a phone's collapsing browser bar,
      with no `vh` or `dvh` unit. */
   block-size: var(--dialog-block-size);
-  max-block-size: calc(100% - 2 * var(--dialog-gutter));
+  max-block-size: calc(100% - var(--dialog-top-offset) - var(--dialog-gutter));
   min-inline-size: 0;
   outline: none;
+  /* Full screen reaches under a notch and a home indicator, so it keeps clear of them (the device's insets, which
+     are zero everywhere a page doesn't ask to draw under them). */
+  padding-block-end: var(--dialog-safe-block-end);
+  padding-block-start: var(--dialog-safe-block-start);
+  padding-inline-end: var(--dialog-safe-inline-end);
+  padding-inline-start: var(--dialog-safe-inline-start);
   position: relative;
   will-change: transform, opacity;
   z-index: var(--dbm-z-index-modal);
@@ -49,6 +63,25 @@
   inset: 0;
   margin: auto;
   position: fixed;
+}
+
+/* --- Placement `top`: a short way down from the top edge, so a panel whose height changes doesn't jump. In the
+   scrim's flex box it is pinned to the start of the block axis with a margin; a non-modal panel is fixed, so
+   its automatic block margins are taken up by the offset on top. The offset is the gutter on a phone and larger
+   from `sm` up, where there is room for it. --- */
+.placementTop {
+  align-self: flex-start;
+  margin-block-start: var(--dialog-top-offset);
+}
+
+.placementTop.nonModal {
+  margin-block-end: auto;
+}
+
+@media (min-width: 40rem) {
+  .placementTop {
+    --dialog-placement-offset: var(--dbm-space-16);
+  }
 }
 
 /* --- Size: the panel's width cap. md is the default and has no class. --- */
@@ -78,6 +111,11 @@
   --dialog-block-size: 100%;
   --dialog-radius: var(--dbm-radius-none);
   --dialog-border-width: var(--dbm-border-width-0);
+  --dialog-top-offset: var(--dbm-space-0);
+  --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+  --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+  --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+  --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
 }
 
 /* sm = 640px */
@@ -88,6 +126,11 @@
     --dialog-block-size: 100%;
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
+    --dialog-top-offset: var(--dbm-space-0);
+    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedSm {
@@ -96,6 +139,11 @@
     --dialog-block-size: var(--dialog-block-size-base);
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
+    --dialog-top-offset: var(--dialog-placement-offset);
+    --dialog-safe-block-start: var(--dbm-space-0);
+    --dialog-safe-block-end: var(--dbm-space-0);
+    --dialog-safe-inline-start: var(--dbm-space-0);
+    --dialog-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -107,6 +155,11 @@
     --dialog-block-size: 100%;
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
+    --dialog-top-offset: var(--dbm-space-0);
+    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedMd {
@@ -115,6 +168,11 @@
     --dialog-block-size: var(--dialog-block-size-base);
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
+    --dialog-top-offset: var(--dialog-placement-offset);
+    --dialog-safe-block-start: var(--dbm-space-0);
+    --dialog-safe-block-end: var(--dbm-space-0);
+    --dialog-safe-inline-start: var(--dbm-space-0);
+    --dialog-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -126,6 +184,11 @@
     --dialog-block-size: 100%;
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
+    --dialog-top-offset: var(--dbm-space-0);
+    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedLg {
@@ -134,6 +197,11 @@
     --dialog-block-size: var(--dialog-block-size-base);
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
+    --dialog-top-offset: var(--dialog-placement-offset);
+    --dialog-safe-block-start: var(--dbm-space-0);
+    --dialog-safe-block-end: var(--dbm-space-0);
+    --dialog-safe-inline-start: var(--dbm-space-0);
+    --dialog-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -145,6 +213,11 @@
     --dialog-block-size: 100%;
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
+    --dialog-top-offset: var(--dbm-space-0);
+    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedXl {
@@ -153,6 +226,11 @@
     --dialog-block-size: var(--dialog-block-size-base);
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
+    --dialog-top-offset: var(--dialog-placement-offset);
+    --dialog-safe-block-start: var(--dbm-space-0);
+    --dialog-safe-block-end: var(--dbm-space-0);
+    --dialog-safe-inline-start: var(--dbm-space-0);
+    --dialog-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -164,6 +242,11 @@
     --dialog-block-size: 100%;
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
+    --dialog-top-offset: var(--dbm-space-0);
+    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowed2xl {
@@ -172,6 +255,11 @@
     --dialog-block-size: var(--dialog-block-size-base);
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
+    --dialog-top-offset: var(--dialog-placement-offset);
+    --dialog-safe-block-start: var(--dbm-space-0);
+    --dialog-safe-block-end: var(--dbm-space-0);
+    --dialog-safe-inline-start: var(--dbm-space-0);
+    --dialog-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -183,6 +271,11 @@
     --dialog-block-size: 100%;
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
+    --dialog-top-offset: var(--dbm-space-0);
+    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowed3xl {
@@ -191,10 +284,22 @@
     --dialog-block-size: var(--dialog-block-size-base);
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
+    --dialog-top-offset: var(--dialog-placement-offset);
+    --dialog-safe-block-start: var(--dbm-space-0);
+    --dialog-safe-block-end: var(--dbm-space-0);
+    --dialog-safe-inline-start: var(--dbm-space-0);
+    --dialog-safe-inline-end: var(--dbm-space-0);
   }
 }
 
-/* --- Sections. The panel has no padding of its own, so the body's scrollbar runs flush with its edge. --- */
+/* --- Sections. The panel has no padding of its own (but a device's safe-area insets in full screen), so the
+   body's scrollbar runs flush with its edge. Every section sits in `.slot`, which is not drawn: it is the element
+   a `keepMounted` dialog moves in and out of the panel, and it keeps the sections' relation to each other and to
+   the panel the same either way. --- */
+.slot {
+  display: contents;
+}
+
 .header {
   display: flex;
   flex: 0 0 auto;
@@ -256,22 +361,45 @@
 
 /* `divided`: a line between the sections, so a body that scrolls reads as running under them. The section that
    follows a line takes back the padding it would otherwise have shared with its neighbour. */
-.divided > .header {
+.divided > .slot > .header,
+.dividedAuto > .slot > .header {
   border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
   padding-block-end: var(--dbm-space-4);
 }
 
-.divided > .footer {
+.divided > .slot > .footer,
+.dividedAuto > .slot > .footer {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
   padding-block-start: var(--dbm-space-4);
 }
 
-.divided > .header + .body .bodyContent {
+.divided > .slot > .header + .body .bodyContent,
+.dividedAuto > .slot > .header + .body .bodyContent {
   padding-block-start: var(--dbm-space-4);
 }
 
-.divided > .body:has(+ .footer) .bodyContent {
+.divided > .slot > .body:has(+ .footer) .bodyContent,
+.dividedAuto > .slot > .body:has(+ .footer) .bodyContent {
   padding-block-end: var(--dbm-space-4);
+}
+
+/* `divided="auto"` always reserves the line (transparent) so nothing moves when it shows, and shows it only on
+   the side that has content scrolled out of view: the header's once the body has scrolled, the footer's while
+   more is below. */
+.dividedAuto > .slot > .header {
+  border-block-end-color: transparent;
+}
+
+.dividedAuto > .slot > .footer {
+  border-block-start-color: transparent;
+}
+
+.dividedAuto[data-overflow-start] > .slot > .header {
+  border-block-end-color: var(--dbm-border-default);
+}
+
+.dividedAuto[data-overflow-end] > .slot > .footer {
+  border-block-start-color: var(--dbm-border-default);
 }
 
 /* --- The close button: in the top-end corner, out of the flow. The header makes room for it so a long title
@@ -282,11 +410,11 @@
   position: absolute;
 }
 
-.withCloseButton > .header {
+.withCloseButton > .slot > .header {
   padding-inline-end: var(--dialog-close-clearance);
 }
 
-.withCloseButton:not(:has(> .header)) > .body .bodyContent {
+.withCloseButton:not(:has(> .slot > .header)) > .slot > .body .bodyContent {
   padding-inline-end: var(--dialog-close-clearance);
 }
 
@@ -358,8 +486,16 @@
     border: var(--dbm-border-width-1) solid CanvasText;
   }
 
-  .divided > .header,
-  .divided > .footer {
+  .divided > .slot > .header,
+  .divided > .slot > .footer,
+  .dividedAuto[data-overflow-start] > .slot > .header,
+  .dividedAuto[data-overflow-end] > .slot > .footer {
     border-color: CanvasText;
+  }
+
+  /* A transparent border is drawn in forced colours, so the reserved line is told to match the panel. */
+  .dividedAuto:not([data-overflow-start]) > .slot > .header,
+  .dividedAuto:not([data-overflow-end]) > .slot > .footer {
+    border-color: Canvas;
   }
 }

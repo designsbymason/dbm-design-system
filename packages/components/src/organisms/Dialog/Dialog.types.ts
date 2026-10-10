@@ -1,6 +1,7 @@
 import type * as DialogPrimitive from "@radix-ui/react-dialog";
 import type { Responsive } from "@dbm-design-system/primitives";
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
+import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
 import type { HeadingLevel, HeadingSize } from "../../atoms/Heading/Heading.types";
 
 type DialogPrimitiveContentProps = ComponentPropsWithoutRef<typeof DialogPrimitive.Content>;
@@ -11,6 +12,29 @@ type DialogPrimitiveContentProps = ComponentPropsWithoutRef<typeof DialogPrimiti
  * gutter instead.
  */
 export type DialogSize = "xs" | "sm" | "md" | "lg" | "xl";
+
+/**
+ * Where the panel sits vertically. `"center"` (the default) puts it in the middle of the viewport. `"top"` puts it a
+ * short way down from the top edge, which keeps a panel whose height changes (a growing list, a search with results)
+ * from jumping as its content does.
+ */
+export type DialogPlacement = "center" | "top";
+
+/**
+ * What closed (or opened) the dialog, given as the second argument of `onOpenChange`.
+ * - `"trigger"`: a click on `Dialog.Trigger`.
+ * - `"escape"`: the Escape key.
+ * - `"outside"`: a press on the scrim, or, in a non-modal dialog, focus moving out of it.
+ * - `"close-button"`: the built-in close button in the panel's corner.
+ * - `"close"`: a `Dialog.Close` element, usually a Cancel or Done button in the footer.
+ */
+export type DialogOpenChangeReason = "trigger" | "escape" | "outside" | "close-button" | "close";
+
+/** The second argument of `onOpenChange`. */
+export interface DialogOpenChangeDetails {
+  /** What caused the change — see {@link DialogOpenChangeReason}. */
+  reason: DialogOpenChangeReason;
+}
 
 /** Where the buttons in a `Dialog.Footer` sit along its row. */
 export type DialogFooterAlign = "start" | "end" | "between" | "stretch";
@@ -36,9 +60,10 @@ export interface DialogProps {
   defaultOpen?: boolean;
   /**
    * Called with the new open state whenever it changes — a trigger click, Escape, a press on the scrim, a
-   * `Dialog.Close`, or the built-in close button.
+   * `Dialog.Close`, or the built-in close button. The second argument says which of them it was, so a form with
+   * unsaved changes can confirm on the scrim and not on its own "Cancel", and analytics can tell them apart.
    */
-  onOpenChange?: (open: boolean) => void;
+  onOpenChange?: (open: boolean, details: DialogOpenChangeDetails) => void;
   /**
    * Whether the dialog is modal. A modal dialog dims the page behind it with a scrim, locks the page's scroll,
    * traps focus inside it and makes the rest of the page inert to assistive technology. Set `false` for a docked
@@ -89,10 +114,52 @@ export interface DialogContentProps extends Omit<ComponentPropsWithoutRef<"div">
   fullScreen?: Responsive<boolean>;
   /**
    * Draws a line between the header and the body and between the body and the footer, so a body that scrolls
-   * reads as running under them. Same name and meaning as `Card`'s `divided`.
+   * reads as running under them. Same name and meaning as `Card`'s `divided`. `"auto"` draws each line only while
+   * there is content scrolled out of view on that side (the header's line once the body has scrolled, the
+   * footer's while more is below), so a dialog that fits gets no lines and a long one does; nothing moves when a
+   * line appears.
    * @default false
    */
-  divided?: boolean;
+  divided?: boolean | "auto";
+  /**
+   * Where the panel sits vertically — see {@link DialogPlacement}. Has no effect while `fullScreen`.
+   * @default 'center'
+   */
+  placement?: DialogPlacement;
+  /**
+   * Marks the dialog as working on something (a form being submitted): it can't be dismissed by Escape, the scrim,
+   * the close button or a `Dialog.Close` until it is `false` again, the close button is disabled, and the panel is
+   * `aria-busy`. Sets what `closeOnEscape`, `closeOnOutsideClick` and `showCloseButton` would, in one place and
+   * reversibly, and doesn't change those props. Show your own progress indicator: this adds none.
+   * @default false
+   */
+  busy?: boolean;
+  /**
+   * Keeps what is inside the dialog mounted while it is closed, so a half-filled form, a scroll position or a
+   * tab someone chose is still there when it reopens. Off, the content is removed on close and starts fresh.
+   * Content is first rendered the first time the dialog opens, then kept; while closed it is out of the page
+   * (not displayed and not reachable), but its effects still run. For a dialog that should reset every time, leave
+   * this off.
+   * @default false
+   */
+  keepMounted?: boolean;
+  /**
+   * An element to focus when the dialog opens, instead of the first focusable element in the panel — usually the
+   * field the person came to fill in, or a primary action. Ignored if `onOpenAutoFocus` calls
+   * `event.preventDefault()`, and if the element isn't there yet when the dialog opens.
+   */
+  initialFocus?: RefObject<HTMLElement | null>;
+  /**
+   * How opaque the scrim behind a modal dialog is, from the opacity token scale. Has no effect while
+   * `modal={false}`.
+   * @default 60
+   */
+  scrimOpacity?: BackdropOpacity;
+  /**
+   * Blurs the page behind the scrim as well as dimming it. Has no effect while `modal={false}`.
+   * @default false
+   */
+  scrimBlur?: boolean;
   /**
    * Shows a `CloseButton` in the panel's top-end corner. Unlike `Popover`'s, it is on by default: a modal needs a
    * visible way out. Turn it off only when the footer carries its own close action, and keep Escape available.

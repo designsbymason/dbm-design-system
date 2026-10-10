@@ -1,12 +1,14 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Dialog } from "./Dialog";
 import { dialogPlaygroundSnippet, dialogSnippets } from "./Dialog.snippets";
-import type { DialogContentProps, DialogProps, DialogSize } from "./Dialog.types";
+import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
+import type { DialogContentProps, DialogPlacement, DialogProps, DialogSize } from "./Dialog.types";
 import { DialogStage, LongText, ProfileDialog } from "./DialogStoryKit";
 
 // Combines Dialog's own root-level args (modal/onOpenChange) with Dialog.Content's (size/divided/…) in one
@@ -18,7 +20,13 @@ interface PlaygroundArgs {
   onOpenChange: (open: boolean) => void;
   size: DialogSize;
   fullScreen: boolean;
-  divided: boolean;
+  /** "off" | "on" | "auto", mapped to `false` | `true` | `"auto"`. */
+  divided: boolean | "auto";
+  placement: DialogPlacement;
+  busy: boolean;
+  keepMounted: boolean;
+  scrimOpacity: BackdropOpacity;
+  scrimBlur: boolean;
   showCloseButton: boolean;
   closeOnOutsideClick: boolean;
   closeOnEscape: boolean;
@@ -28,6 +36,11 @@ const contentFromArgs = (args: PlaygroundArgs): DialogContentProps => ({
   size: args.size,
   fullScreen: args.fullScreen,
   divided: args.divided,
+  placement: args.placement,
+  busy: args.busy,
+  keepMounted: args.keepMounted,
+  scrimOpacity: args.scrimOpacity,
+  scrimBlur: args.scrimBlur,
   showCloseButton: args.showCloseButton,
   closeOnOutsideClick: args.closeOnOutsideClick,
   closeOnEscape: args.closeOnEscape,
@@ -67,8 +80,39 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: "false" } },
     },
     divided: {
+      control: "select",
+      options: ["off", "on", "auto"],
+      mapping: { off: false, on: true, auto: "auto" },
+      description:
+        "Draws a line between the header and the body and between the body and the footer. \"auto\" draws each only while content is scrolled out of view on that side.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    placement: {
+      control: "select",
+      options: ["center", "top"],
+      description: "Where the panel sits vertically. \"top\" keeps a panel whose height changes from jumping.",
+      table: { defaultValue: { summary: '"center"' } },
+    },
+    busy: {
       control: "boolean",
-      description: "Draws a line between the header and the body and between the body and the footer.",
+      description:
+        "Marks the dialog as working on something: it can't be dismissed by Escape, the scrim, the close button or a Dialog.Close until it is false again.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    keepMounted: {
+      control: "boolean",
+      description: "Keeps what is inside mounted while closed, so a half-filled form is there when it reopens.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    scrimOpacity: {
+      control: "select",
+      options: [20, 40, 60, 80, 90],
+      description: "How opaque the scrim behind a modal dialog is, from the opacity scale.",
+      table: { defaultValue: { summary: "60" } },
+    },
+    scrimBlur: {
+      control: "boolean",
+      description: "Blurs the page behind the scrim as well as dimming it.",
       table: { defaultValue: { summary: "false" } },
     },
     showCloseButton: {
@@ -91,7 +135,12 @@ const meta: Meta<PlaygroundArgs> = {
     modal: true,
     size: "md",
     fullScreen: false,
-    divided: false,
+    divided: "off" as unknown as boolean,
+    placement: "center",
+    busy: false,
+    keepMounted: false,
+    scrimOpacity: 60,
+    scrimBlur: false,
     showCloseButton: true,
     closeOnOutsideClick: true,
     closeOnEscape: true,
@@ -328,6 +377,231 @@ export const Controlled: Story = {
     onOpenChange: { control: false },
   },
   render: () => <DialogStage>{(container) => <ControlledExample container={container} />}</DialogStage>,
+};
+
+export const PlacedAtTheTop: Story = {
+  name: "Placed at the top",
+  parameters: { docs: { source: { code: dialogSnippets.placementTop } } },
+  argTypes: { placement: { control: false } },
+  render: (args) => (
+    <DialogStage>
+      {(container) => (
+        <ProfileDialog
+          container={container}
+          dialog={rootFromArgs(args)}
+          content={{ ...contentFromArgs(args), placement: "top" }}
+        />
+      )}
+    </DialogStage>
+  ),
+};
+
+function BusyExample({ container }: { container: HTMLElement | null }) {
+  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
+  const save = () => {
+    setBusy(true);
+    setTimeout(() => {
+      setBusy(false);
+      setOpen(false);
+    }, 2000);
+  };
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <Button>Open dialog</Button>
+      </Dialog.Trigger>
+      <Dialog.Content container={container} busy={busy} size="sm">
+        <Dialog.Header>
+          <Dialog.Title>Save changes</Dialog.Title>
+          <Dialog.Description>
+            {busy ? "Saving… it can't be closed until this finishes." : "Press save to start a two second save."}
+          </Dialog.Description>
+        </Dialog.Header>
+        <Dialog.Footer>
+          <Dialog.Close asChild>
+            <Button variant="secondary">Cancel</Button>
+          </Dialog.Close>
+          <Button isLoading={busy} onClick={save}>
+            Save
+          </Button>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+
+export const WhileItIsBusy: Story = {
+  name: "While it is busy",
+  parameters: { docs: { source: { code: dialogSnippets.busy } } },
+  argTypes: {
+    busy: { control: false },
+    size: { control: false },
+    modal: { control: false },
+    fullScreen: { control: false },
+    divided: { control: false },
+    placement: { control: false },
+    keepMounted: { control: false },
+    showCloseButton: { control: false },
+    closeOnOutsideClick: { control: false },
+    closeOnEscape: { control: false },
+    scrimOpacity: { control: false },
+    scrimBlur: { control: false },
+    onOpenChange: { control: false },
+  },
+  render: () => <DialogStage>{(container) => <BusyExample container={container} />}</DialogStage>,
+};
+
+export const KeepsItsForm: Story = {
+  name: "Keeps its form while closed",
+  parameters: { docs: { source: { code: dialogSnippets.keepMounted } } },
+  argTypes: { keepMounted: { control: false } },
+  render: (args) => (
+    <DialogStage>
+      {(container) => (
+        <ProfileDialog
+          container={container}
+          dialog={rootFromArgs(args)}
+          content={{ ...contentFromArgs(args), keepMounted: true }}
+          triggerLabel="Open, type, close, reopen"
+        />
+      )}
+    </DialogStage>
+  ),
+};
+
+export const LinesOnlyWhileScrolled: Story = {
+  name: "Lines only while there is more to scroll",
+  parameters: { docs: { source: { code: dialogSnippets.dividedAuto } } },
+  argTypes: { divided: { control: false } },
+  render: (args) => (
+    <DialogStage>
+      {(container) => (
+        <Dialog {...rootFromArgs(args)}>
+          <Dialog.Trigger asChild>
+            <Button>Open dialog</Button>
+          </Dialog.Trigger>
+          <Dialog.Content container={container} {...contentFromArgs(args)} divided="auto">
+            <Dialog.Header>
+              <Dialog.Title>Release notes</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+              <LongText />
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Dialog.Close asChild>
+                <Button>Done</Button>
+              </Dialog.Close>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog>
+      )}
+    </DialogStage>
+  ),
+};
+
+function ReasonExample({ container }: { container: HTMLElement | null }) {
+  const [reason, setReason] = useState("nothing yet");
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", justifyItems: "center" }}>
+      <Dialog onOpenChange={(_open, details) => setReason(details.reason)}>
+        <Dialog.Trigger asChild>
+          <Button>Open dialog</Button>
+        </Dialog.Trigger>
+        <Dialog.Content container={container} size="sm">
+          <Dialog.Header>
+            <Dialog.Title>How will you leave?</Dialog.Title>
+            <Dialog.Description>Press Escape, the scrim, the corner button or Done.</Dialog.Description>
+          </Dialog.Header>
+          <Dialog.Footer>
+            <Dialog.Close asChild>
+              <Button>Done</Button>
+            </Dialog.Close>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog>
+      <Text size="sm">Last change reported: {reason}</Text>
+    </div>
+  );
+}
+
+export const KnowingWhyItClosed: Story = {
+  name: "Knowing why it closed",
+  parameters: { docs: { source: { code: dialogSnippets.closeReason } } },
+  argTypes: {
+    modal: { control: false },
+    size: { control: false },
+    fullScreen: { control: false },
+    divided: { control: false },
+    placement: { control: false },
+    busy: { control: false },
+    keepMounted: { control: false },
+    showCloseButton: { control: false },
+    closeOnOutsideClick: { control: false },
+    closeOnEscape: { control: false },
+    scrimOpacity: { control: false },
+    scrimBlur: { control: false },
+    onOpenChange: { control: false },
+  },
+  render: () => <DialogStage>{(container) => <ReasonExample container={container} />}</DialogStage>,
+};
+
+function InitialFocusExample({ container }: { container: HTMLElement | null }) {
+  const email = useRef<HTMLInputElement>(null);
+  return (
+    <Dialog>
+      <Dialog.Trigger asChild>
+        <Button>Open dialog</Button>
+      </Dialog.Trigger>
+      <Dialog.Content container={container} initialFocus={email} size="sm">
+        <Dialog.Header>
+          <Dialog.Title>Add a recipient</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <Input aria-label="Name" placeholder="Name" />
+          <Input ref={email} aria-label="Email" placeholder="Email (focused when this opens)" />
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  );
+}
+
+export const FocusOnAChosenField: Story = {
+  name: "Focus lands on a chosen field",
+  parameters: { docs: { source: { code: dialogSnippets.initialFocus } } },
+  argTypes: {
+    modal: { control: false },
+    size: { control: false },
+    fullScreen: { control: false },
+    divided: { control: false },
+    placement: { control: false },
+    busy: { control: false },
+    keepMounted: { control: false },
+    showCloseButton: { control: false },
+    closeOnOutsideClick: { control: false },
+    closeOnEscape: { control: false },
+    scrimOpacity: { control: false },
+    scrimBlur: { control: false },
+    onOpenChange: { control: false },
+  },
+  render: () => <DialogStage>{(container) => <InitialFocusExample container={container} />}</DialogStage>,
+};
+
+export const HeavierBlurredScrim: Story = {
+  name: "A heavier, blurred scrim",
+  parameters: { docs: { source: { code: dialogSnippets.scrim } } },
+  argTypes: { scrimOpacity: { control: false }, scrimBlur: { control: false } },
+  render: (args) => (
+    <DialogStage>
+      {(container) => (
+        <ProfileDialog
+          container={container}
+          dialog={rootFromArgs(args)}
+          content={{ ...contentFromArgs(args), scrimOpacity: 80, scrimBlur: true }}
+        />
+      )}
+    </DialogStage>
+  ),
 };
 
 // A hidden twin of the Playground: opening and closing change the page's state, so a shown story must not do it

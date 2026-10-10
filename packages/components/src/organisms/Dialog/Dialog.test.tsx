@@ -57,9 +57,9 @@ describe("Dialog", () => {
     const onOpenChange = vi.fn();
     render(<Basic dialog={{ onOpenChange }} />);
     await user.click(screen.getByRole("button", { name: "Open" }));
-    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+    expect(onOpenChange).toHaveBeenLastCalledWith(true, { reason: "trigger" });
     await user.keyboard("{Escape}");
-    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, { reason: "escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
@@ -68,7 +68,7 @@ describe("Dialog", () => {
     const onOpenChange = vi.fn();
     render(<Basic dialog={{ open: true, onOpenChange }} />);
     await user.keyboard("{Escape}");
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "escape" });
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
@@ -490,6 +490,212 @@ describe("Dialog", () => {
       );
       expect(container).toContainElement(screen.getByRole("dialog"));
       container.remove();
+    });
+  });
+
+  describe("why it closed", () => {
+    it("says which part closed it", async () => {
+      const user = userEvent.setup();
+      const onOpenChange = vi.fn();
+      render(<Basic dialog={{ onOpenChange }} />);
+      const reasons = () => onOpenChange.mock.calls.map(([, details]) => details.reason);
+
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click((await screen.findByRole("dialog")).parentElement as HTMLElement);
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("button", { name: "Close" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+      expect(reasons()).toEqual([
+        "trigger", "escape",
+        "trigger", "outside",
+        "trigger", "close-button",
+        "trigger", "close",
+      ]);
+    });
+
+    it("reports the reason to a controlled dialog too", async () => {
+      const user = userEvent.setup();
+      const onOpenChange = vi.fn();
+      render(<Basic dialog={{ open: true, onOpenChange }} />);
+      await user.click(screen.getByRole("button", { name: "Close" }));
+      expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "close-button" });
+    });
+  });
+
+  describe("busy", () => {
+    it("can't be dismissed by any route while busy, and says so", async () => {
+      const user = userEvent.setup();
+      const onOpenChange = vi.fn();
+      render(<Basic dialog={{ defaultOpen: true, onOpenChange }} busy />);
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toHaveAttribute("aria-busy", "true");
+      expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute("aria-disabled", "true");
+
+      await user.keyboard("{Escape}");
+      await user.click(dialog.parentElement as HTMLElement);
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("can be dismissed again once it is no longer busy", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<Basic dialog={{ defaultOpen: true }} busy />);
+      await user.keyboard("{Escape}");
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      rerender(<Basic dialog={{ defaultOpen: true }} busy={false} />);
+      expect(screen.getByRole("dialog")).not.toHaveAttribute("aria-busy");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+  });
+
+  describe("keepMounted", () => {
+    function Form({ keepMounted }: { keepMounted: boolean }) {
+      return (
+        <Dialog>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <Dialog.Content aria-label="Form" keepMounted={keepMounted}>
+            <Dialog.Body>
+              <input aria-label="Name" />
+            </Dialog.Body>
+          </Dialog.Content>
+        </Dialog>
+      );
+    }
+
+    it("keeps what was typed when it is closed and reopened", async () => {
+      const user = userEvent.setup();
+      render(<Form keepMounted />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.type(await screen.findByRole("textbox", { name: "Name" }), "Jane");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(screen.queryByRole("textbox", { name: "Name" })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("textbox", { name: "Name" })).toHaveValue("Jane");
+    });
+
+    it("starts fresh each time without it", async () => {
+      const user = userEvent.setup();
+      render(<Form keepMounted={false} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.type(await screen.findByRole("textbox", { name: "Name" }), "Jane");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("textbox", { name: "Name" })).toHaveValue("");
+    });
+
+    it("renders nothing until the first open, then leaves the page unlocked and visible while closed", async () => {
+      const user = userEvent.setup();
+      const rendered = vi.fn();
+      function Probe() {
+        rendered();
+        return <input aria-label="Probe" />;
+      }
+      render(
+        <>
+          <button type="button">Behind</button>
+          <Dialog>
+            <Dialog.Trigger>Open</Dialog.Trigger>
+            <Dialog.Content aria-label="Kept" keepMounted>
+              <Probe />
+            </Dialog.Content>
+          </Dialog>
+        </>,
+      );
+      expect(rendered).not.toHaveBeenCalled();
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("textbox", { name: "Probe" })).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(document.body).not.toHaveAttribute("data-scroll-locked");
+      expect(screen.getByRole("button", { name: "Behind" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "Open" })).not.toHaveAttribute("aria-hidden");
+    });
+
+    it("works under StrictMode", async () => {
+      const user = userEvent.setup();
+      render(
+        <StrictMode>
+          <Form keepMounted />
+        </StrictMode>,
+      );
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.type(await screen.findByRole("textbox", { name: "Name" }), "Jo");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("textbox", { name: "Name" })).toHaveValue("Jo");
+    });
+  });
+
+  describe("initialFocus", () => {
+    function Focused({ prevent = false }: { prevent?: boolean }) {
+      const second = createRef<HTMLInputElement>();
+      return (
+        <Dialog defaultOpen>
+          <Dialog.Content
+            aria-label="Focus"
+            showCloseButton={false}
+            initialFocus={second}
+            onOpenAutoFocus={prevent ? (event) => event.preventDefault() : undefined}
+          >
+            <input aria-label="first" />
+            <input aria-label="second" ref={second} />
+          </Dialog.Content>
+        </Dialog>
+      );
+    }
+
+    it("focuses the given element instead of the first focusable one", async () => {
+      render(<Focused />);
+      await waitFor(() => expect(screen.getByLabelText("second")).toHaveFocus());
+    });
+
+    it("yields to an onOpenAutoFocus that prevents the default", async () => {
+      render(<Focused prevent />);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(screen.getByLabelText("second")).not.toHaveFocus();
+    });
+  });
+
+  describe("placement, scrim and divided", () => {
+    it("applies the top placement and the divided=auto class", () => {
+      render(
+        <Dialog defaultOpen>
+          <Dialog.Content aria-label="x" placement="top" divided="auto" data-testid="panel" />
+        </Dialog>,
+      );
+      const panel = screen.getByTestId("panel");
+      expect(panel).toHaveClass(styles.placementTop ?? "");
+      expect(panel).toHaveClass(styles.dividedAuto ?? "");
+      expect(panel).not.toHaveClass(styles.divided ?? "");
+      expect(panel).not.toHaveAttribute("data-overflow-start");
+    });
+
+    it("hands the scrim its opacity and blur", () => {
+      render(
+        <Dialog defaultOpen>
+          <Dialog.Content aria-label="x" scrimOpacity={80} scrimBlur />
+        </Dialog>,
+      );
+      const scrim = screen.getByRole("dialog").parentElement as HTMLElement;
+      expect(scrim.style.getPropertyValue("--dbm-backdrop-fill-opacity")).toBe("var(--dbm-opacity-80)");
     });
   });
 

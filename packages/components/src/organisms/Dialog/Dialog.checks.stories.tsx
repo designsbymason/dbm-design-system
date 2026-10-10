@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -425,5 +426,234 @@ export const SelectChosenWithARealPointer: Story = {
     // and a real press on the scrim afterwards still does
     await realClick(body.getByRole("dialog").parentElement as HTMLElement);
     await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+function LongForm({ children, ...content }: React.ComponentProps<typeof Dialog.Content>) {
+  return (
+    <Dialog.Content aria-label="Long" {...content}>
+      <Dialog.Header data-testid="header">
+        <Dialog.Title>Terms</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body data-testid="body">{children}</Dialog.Body>
+      <Dialog.Footer data-testid="footer">
+        <Button>Accept</Button>
+      </Dialog.Footer>
+    </Dialog.Content>
+  );
+}
+
+const borderOf = (element: HTMLElement, side: "Top" | "Bottom") => {
+  const style = getComputedStyle(element);
+  return { width: style[`border${side}Width`], color: style[`border${side}Color`] };
+};
+
+export const DividedAutoFollowsTheScroll: Story = {
+  name: "divided=auto draws each line only while content is out of view, and nothing moves",
+  render: () => (
+    <Dialog defaultOpen>
+      <LongForm divided="auto">
+        <LongText />
+      </LongForm>
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const header = within(dialog).getByTestId("header");
+    const footer = within(dialog).getByTestId("footer");
+    const viewport = dialog.querySelector<HTMLElement>("[data-radix-scroll-area-viewport]") as HTMLElement;
+    const clear = "rgba(0, 0, 0, 0)";
+    // at the top: nothing above to run under the header, more below the footer
+    await waitFor(() => expect(borderOf(footer, "Top").color).not.toBe(clear));
+    await expect(borderOf(header, "Bottom").color).toBe(clear);
+    const headerBefore = header.getBoundingClientRect();
+    const footerBefore = footer.getBoundingClientRect();
+    viewport.scrollTop = 120;
+    await waitFor(() => expect(borderOf(header, "Bottom").color).not.toBe(clear));
+    // a line appearing moves nothing: the line was reserved, transparent
+    await expect(header.getBoundingClientRect().height).toBe(headerBefore.height);
+    await expect(footer.getBoundingClientRect().top).toBe(footerBefore.top);
+    viewport.scrollTop = viewport.scrollHeight;
+    await waitFor(() => expect(borderOf(footer, "Top").color).toBe(clear));
+    await expect(borderOf(header, "Bottom").width).toBe("1px");
+  },
+};
+
+export const DividedAutoDrawsNothingWhenItFits: Story = {
+  name: "divided=auto draws no line when the content fits",
+  render: () => (
+    <Dialog defaultOpen>
+      <LongForm divided="auto">
+        <p>Short.</p>
+      </LongForm>
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const clear = "rgba(0, 0, 0, 0)";
+    await expect(borderOf(within(dialog).getByTestId("header"), "Bottom").color).toBe(clear);
+    await expect(borderOf(within(dialog).getByTestId("footer"), "Top").color).toBe(clear);
+  },
+};
+
+export const KeepMountedKeepsTheState: Story = {
+  name: "keepMounted keeps what was typed through a real close and reopen",
+  render: () => (
+    <Dialog>
+      <Dialog.Trigger asChild>
+        <Button>Open</Button>
+      </Dialog.Trigger>
+      <Dialog.Content aria-label="Form" keepMounted>
+        <Dialog.Body data-testid="body">
+          <input aria-label="Name" />
+          <div style={{ blockSize: "200vh" }} />
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    const field = await body.findByRole("textbox", { name: "Name" });
+    await userEvent.type(field, "Jane");
+    const viewport = document.querySelector<HTMLElement>("[data-radix-scroll-area-viewport]") as HTMLElement;
+    viewport.scrollTop = 150;
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    // closed: the page is not locked or hidden
+    await waitFor(() => expect(document.body).not.toHaveAttribute("data-scroll-locked"));
+    await expect(body.getByRole("button", { name: "Open" })).not.toHaveAttribute("aria-hidden");
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    await expect(await body.findByRole("textbox", { name: "Name" })).toHaveValue("Jane");
+    await userEvent.keyboard("{Escape}");
+  },
+};
+
+export const BusyCannotBeLeft: Story = {
+  name: "A busy dialog ignores Escape and a real press on the scrim",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="Saving" busy>
+        <Dialog.Body>Saving…</Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close asChild>
+            <Button variant="secondary">Cancel</Button>
+          </Dialog.Close>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    const body = within(document.body);
+    const dialog = await body.findByRole("dialog");
+    await settled(dialog);
+    await userEvent.keyboard("{Escape}");
+    await realClick(dialog.parentElement as HTMLElement);
+    await realClick(body.getByRole("button", { name: "Cancel" }));
+    await nextFrame();
+    await expect(body.getByRole("dialog")).toBeInTheDocument();
+    await expect(body.getByRole("button", { name: "Close" })).toBeDisabled();
+  },
+};
+
+export const TopPlacement: Story = {
+  name: "placement=top sits a set distance from the top, and a phone's gutter on a phone",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="Top" placement="top" size="xs">
+        <Dialog.Body>Top placed</Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    await expect(Math.round(dialog.getBoundingClientRect().top)).toBe(Math.round(4 * rem));
+  },
+};
+
+export const TopPlacementOnAPhone: Story = {
+  name: "placement=top keeps to the gutter on a phone",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="Top" placement="top" size="xs">
+        <Dialog.Body>Top placed</Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(640);
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    await expect(Math.round(dialog.getBoundingClientRect().top)).toBe(16);
+  },
+};
+
+export const ScrimOpacityAndBlur: Story = {
+  name: "scrimOpacity and scrimBlur change the scrim",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="Scrim" scrimOpacity={90} scrimBlur />
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const scrim = getComputedStyle(dialog.parentElement as HTMLElement);
+    // the scrim is bg.overlay (black) at the requested alpha
+    const alpha = Number(/\/ ([0-9.]+)\)|, ([0-9.]+)\)$/.exec(scrim.backgroundColor)?.slice(1).find(Boolean));
+    await expect(alpha).toBeCloseTo(0.9, 1);
+    await expect(scrim.backdropFilter).toContain("blur");
+  },
+};
+
+export const InitialFocusByRef: Story = {
+  name: "initialFocus puts focus on the chosen element",
+  render: function Render() {
+    const second = useRef<HTMLInputElement>(null);
+    return (
+      <Dialog defaultOpen>
+        <Dialog.Content aria-label="Focus" initialFocus={second}>
+          <Dialog.Body>
+            <input aria-label="first" />
+            <input aria-label="second" ref={second} />
+          </Dialog.Body>
+        </Dialog.Content>
+      </Dialog>
+    );
+  },
+  play: async () => {
+    await waitFor(() => expect(within(document.body).getByLabelText("second")).toHaveFocus());
+  },
+};
+
+export const FullScreenCarriesSafeAreaInsets: Story = {
+  name: "full screen reserves the device's safe-area insets, and none where there are none",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="Full" fullScreen />
+    </Dialog>
+  ),
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    // a desktop browser reports no inset, so the panel adds no padding
+    const style = getComputedStyle(dialog);
+    await expect(style.paddingTop).toBe("0px");
+    await expect(style.paddingBottom).toBe("0px");
+    // and the stylesheet does ask for the device's insets in full screen
+    const sources: string[] = [];
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        sources.push(Array.from(sheet.cssRules).map((rule) => rule.cssText).join("\n"));
+      } catch {
+        // a cross-origin sheet can't be read; none of ours is one
+      }
+    }
+    await expect(sources.join("\n")).toContain("safe-area-inset-bottom");
   },
 };

@@ -24,8 +24,45 @@ const meta: Meta<typeof Dialog.Content> = {
       table: { defaultValue: { summary: "false" } },
     },
     divided: {
+      control: "select",
+      options: [false, true, "auto"],
+      description:
+        "Draws a line between the header and the body and between the body and the footer. \"auto\" draws each only while content is scrolled out of view on that side, and nothing moves when it appears.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    placement: {
+      control: "select",
+      options: ["center", "top"],
+      description:
+        "Where the panel sits vertically. \"top\" sits a set distance below the top edge, so a panel whose height changes doesn't jump. No effect while fullScreen.",
+      table: { defaultValue: { summary: '"center"' } },
+    },
+    busy: {
       control: "boolean",
-      description: "Draws a line between the header and the body and between the body and the footer.",
+      description:
+        "Marks the dialog as working on something: Escape, the scrim, the close button and Dialog.Close do nothing until it is false again, the close button is disabled, and the panel is aria-busy.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    keepMounted: {
+      control: "boolean",
+      description:
+        "Keeps what is inside mounted while the dialog is closed, so a half-filled form or a scroll position is still there when it reopens. Rendered the first time it opens, then kept.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    initialFocus: {
+      control: false,
+      description:
+        "An element to focus when the dialog opens, instead of the first focusable one. Ignored if onOpenAutoFocus prevents the default.",
+    },
+    scrimOpacity: {
+      control: "select",
+      options: [20, 40, 60, 80, 90],
+      description: "How opaque the scrim behind a modal dialog is, from the opacity scale. No effect while modal is false.",
+      table: { defaultValue: { summary: "60" } },
+    },
+    scrimBlur: {
+      control: "boolean",
+      description: "Blurs the page behind the scrim as well as dimming it. No effect while modal is false.",
       table: { defaultValue: { summary: "false" } },
     },
     showCloseButton: {

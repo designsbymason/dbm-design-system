@@ -6,7 +6,7 @@
 // exports of the package, no demo scaffolding — and `storySnippets.test.ts` checks that stays true. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { DialogSize } from "./Dialog.types";
+import type { DialogPlacement, DialogSize } from "./Dialog.types";
 
 const footer = `    <Dialog.Footer>
       <Dialog.Close asChild>
@@ -93,6 +93,81 @@ ${dialog("", "closeOnOutsideClick={false} closeOnEscape={false} showCloseButton=
   </Dialog.Content>
 </Dialog>`,
 
+  placementTop: `{/* placement: "center" (default) | "top" — a set distance below the top edge, so a panel
+    whose height changes doesn't jump. */}
+${dialog("", 'placement="top"', full)}`,
+
+  busy: `{/* const [busy, setBusy] = useState(false); */}
+{/* While busy, Escape, the scrim, the close button and Dialog.Close all do nothing. */}
+<Dialog open={open} onOpenChange={setOpen}>
+  <Dialog.Content busy={busy} size="sm">
+    <Dialog.Header>
+      <Dialog.Title>Save changes</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Dialog.Close asChild>
+        <Button variant="secondary">Cancel</Button>
+      </Dialog.Close>
+      <Button isLoading={busy} onClick={save}>
+        Save
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog>`,
+
+  keepMounted: `{/* keepMounted: what was typed is still there when the dialog reopens. It is rendered the first
+    time it opens, then kept while closed. */}
+${dialog("", "keepMounted", full)}`,
+
+  dividedAuto: `{/* divided="auto": a line under the header once the body has scrolled, and over the footer
+    while more is below. A dialog that fits gets none, and nothing moves when one appears. */}
+${dialog(
+  "",
+  'divided="auto"',
+  `${header}
+    <Dialog.Body>
+      <Text>Long content goes here…</Text>
+    </Dialog.Body>
+${footer}`,
+)}`,
+
+  closeReason: `{/* reason: "trigger" | "escape" | "outside" | "close-button" | "close". A form with unsaved
+    changes can ask for confirmation on "outside" and not on its own Cancel. */}
+<Dialog onOpenChange={(open, { reason }) => console.log(open, reason)}>
+  <Dialog.Trigger asChild>
+    <Button>Open dialog</Button>
+  </Dialog.Trigger>
+  <Dialog.Content size="sm">
+    <Dialog.Header>
+      <Dialog.Title>How will you leave?</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Dialog.Close asChild>
+        <Button>Done</Button>
+      </Dialog.Close>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog>`,
+
+  initialFocus: `{/* const emailRef = useRef<HTMLInputElement>(null); */}
+<Dialog>
+  <Dialog.Trigger asChild>
+    <Button>Open dialog</Button>
+  </Dialog.Trigger>
+  <Dialog.Content initialFocus={emailRef} size="sm">
+    <Dialog.Header>
+      <Dialog.Title>Add a recipient</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Body>
+      <Input aria-label="Name" placeholder="Name" />
+      <Input ref={emailRef} aria-label="Email" placeholder="Email" />
+    </Dialog.Body>
+  </Dialog.Content>
+</Dialog>`,
+
+  scrim: `{/* scrimOpacity: from the opacity scale (default 60); scrimBlur also blurs the page behind. */}
+${dialog("", "scrimOpacity={80} scrimBlur", full)}`,
+
   nested: `{/* A confirmation opened from inside a dialog. Escape closes the inner one first. */}
 <Dialog>
   <Dialog.Trigger asChild>
@@ -129,7 +204,13 @@ export interface DialogPlaygroundSnippetArgs {
   modal?: boolean;
   size?: DialogSize;
   fullScreen?: boolean;
-  divided?: boolean;
+  /** `false`, `true` or `"auto"`, or the Playground control's option key (`"off"`, `"on"`, `"auto"`). */
+  divided?: boolean | "auto" | "off" | "on";
+  placement?: DialogPlacement;
+  busy?: boolean;
+  keepMounted?: boolean;
+  scrimOpacity?: number;
+  scrimBlur?: boolean;
   showCloseButton?: boolean;
   closeOnOutsideClick?: boolean;
   closeOnEscape?: boolean;
@@ -147,7 +228,14 @@ export function dialogPlaygroundSnippet(args: DialogPlaygroundSnippetArgs): stri
   const contentAttributes: string[] = [];
   if (args.size && args.size !== "md") contentAttributes.push(`size="${args.size}"`);
   if (args.fullScreen) contentAttributes.push("fullScreen");
-  if (args.divided) contentAttributes.push("divided");
+  // The Playground's select hands over its option key, not the mapped value.
+  if (args.divided === true || args.divided === "on") contentAttributes.push("divided");
+  if (args.divided === "auto") contentAttributes.push('divided="auto"');
+  if (args.placement && args.placement !== "center") contentAttributes.push(`placement="${args.placement}"`);
+  if (args.busy) contentAttributes.push("busy");
+  if (args.keepMounted) contentAttributes.push("keepMounted");
+  if (args.scrimOpacity !== undefined && args.scrimOpacity !== 60) contentAttributes.push(`scrimOpacity={${args.scrimOpacity}}`);
+  if (args.scrimBlur) contentAttributes.push("scrimBlur");
   if (args.showCloseButton === false) contentAttributes.push("showCloseButton={false}");
   if (args.closeOnOutsideClick === false) contentAttributes.push("closeOnOutsideClick={false}");
   if (args.closeOnEscape === false) contentAttributes.push("closeOnEscape={false}");

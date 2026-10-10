@@ -34,3 +34,15 @@ First organism. Built and put through the `06-engineering-standards.md` §9 chec
 
 ## Reported after the first build: a body with no header
 The body's spacing was keyed to `:first-child`, but a dialog named by an `aria-label` or a `VisuallyHidden` title has that title as a hidden sibling before the body, so the rules never matched: the text sat 8px from the top edge and ran under the close button. The spacing now reads the neighbouring section (`.header + .body`, `.body:has(+ .footer)`) instead of position, and a header-less body keeps its text clear of the close button with an end padding of the button's inset, width and a little air. Two real-browser checks cover it, and both fail against the old stylesheet.
+
+## Second pass: eight additions, at explicit direction
+Placement, a busy state, keeping the content mounted, a reason on close, an initial-focus ref, scrim options, `divided="auto"` and safe-area insets in full screen. Built against the feature-gap list from the first review.
+- **A reason on close.** `onOpenChange(open, { reason })` with `"trigger" | "escape" | "outside" | "close-button" | "close"`. Radix doesn't say what caused a change, so the part pressed notes the reason just before Radix calls back; a part that is prevented (a consumer's own handler, `busy`) notes nothing.
+- **`busy`.** One boolean that blocks Escape, the scrim, the close button and `Dialog.Close`, disables the close button, and sets `aria-busy`. It leaves `closeOnEscape` and the others alone, so it is reversible.
+- **`keepMounted`.** Not Radix's `forceMount`, which keeps the lock and the page's `aria-hidden` on while closed: [ADR-0055](../adr/0055-dialog-keeps-its-content-mounted-by-moving-one-rendered-element-in-and-out-of-the-panel-over-radixs-forcemount.md).
+- **`divided="auto"`.** The first version used `useScrollEdges`, which compares a container's first and last *item* with its box; a body is one tall item, so both edges always read as overflowing and every line was always drawn. Found by the browser check, replaced by a scroll-position reading in `Dialog.Body`. The line is reserved (transparent), so nothing moves when it appears.
+- **`placement="top"`**, with an offset of the gutter on a phone and `space.16` from `sm`. Ignored while full screen.
+- **`initialFocus`** (a ref), **`scrimOpacity`** and **`scrimBlur`** (handed to `Backdrop`).
+- **Safe-area insets** in full screen, as padding from `env(safe-area-inset-*)` with a zero fallback. A desktop browser reports none, so the check proves the stylesheet asks for them and that nothing is added there; it could not run on a device.
+- Checks added: 10 real-browser checks (`divided="auto"` following the scroll and drawing nothing when content fits, `keepMounted` through a real close and reopen, a busy dialog ignoring Escape and a real press on the scrim, top placement on desktop and phone, scrim opacity and blur, initial focus, safe-area) and 12 unit tests.
+- Still not verified: touch and iOS behaviour, and the safe-area insets on a real device.
