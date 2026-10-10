@@ -75,16 +75,16 @@ export interface TagsInputProps
     | "aria-describedby"
   > {
   /**
+   * The initial tags when uncontrolled.
+   * @default []
+   */
+  defaultValue?: string[];
+  /**
    * The tags, as an array of strings (a new array on every change; never mutated). Passing it makes the field
    * controlled: a change is reported through `onValueChange` and the chips stay this array until the prop
    * changes. Pair with `onValueChange`.
    */
   value?: string[];
-  /**
-   * The initial tags when uncontrolled.
-   * @default []
-   */
-  defaultValue?: string[];
   /** Called with the new array of tags each time one is added or removed. */
   onValueChange?: (value: string[]) => void;
   /**
@@ -132,6 +132,18 @@ export interface TagsInputProps
    */
   addOnBlur?: boolean;
   /**
+   * Normalizes each piece before it is checked and added: trim, change the case, strip a prefix. A piece that
+   * comes out empty is dropped. A function that throws is ignored with a development warning.
+   * @default (raw) => raw.trim()
+   */
+  transform?: (raw: string) => string;
+  /**
+   * Checks a tag before it is added: return a message to refuse it (shown below the field, and announced), or
+   * nothing to accept it. Runs for each piece, after `transform`; keep it cheap and pure. A function that
+   * throws is ignored with a development warning.
+   */
+  validate?: (tag: string) => string | undefined | void;
+  /**
    * What happens to a tag `validate` rejects. `refuse` (the default) keeps it out and leaves the typed text in the
    * entry with the message. `flag` adds it anyway, drawn in the `danger` tone with its reason read after it, and
    * stops a surrounding `<form>` submitting until it is corrected or removed; a repeat or a tag past `maxTags` is
@@ -164,6 +176,11 @@ export interface TagsInputProps
    */
   maxVisible?: number;
   /**
+   * Shows a clear-all button after the tags once there are any.
+   * @default false
+   */
+  clearable?: boolean;
+  /**
    * Called for each tag as it is added, after `onValueChange`, with where it came from (a paste calls it once
    * for every piece that was accepted).
    */
@@ -173,23 +190,6 @@ export interface TagsInputProps
    * removed it. Clearing all calls it once for every tag.
    */
   onTagRemove?: (tag: string, details: { index: number; source: TagsInputRemoveSource }) => void;
-  /**
-   * Normalizes each piece before it is checked and added: trim, change the case, strip a prefix. A piece that
-   * comes out empty is dropped. A function that throws is ignored with a development warning.
-   * @default (raw) => raw.trim()
-   */
-  transform?: (raw: string) => string;
-  /**
-   * Checks a tag before it is added: return a message to refuse it (shown below the field, and announced), or
-   * nothing to accept it. Runs for each piece, after `transform`; keep it cheap and pure. A function that
-   * throws is ignored with a development warning.
-   */
-  validate?: (tag: string) => string | undefined | void;
-  /**
-   * Shows a clear-all button after the tags once there are any.
-   * @default false
-   */
-  clearable?: boolean;
   /**
    * Asks for at least one tag. Marks the entry `aria-required` and stops a surrounding `<form>` submitting
    * with none, through a visually hidden control.

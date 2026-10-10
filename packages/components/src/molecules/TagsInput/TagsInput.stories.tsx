@@ -71,6 +71,15 @@ const meta: Meta<typeof TagsInput> = {
       description: "Makes a tag of the typed text when focus leaves the field, so a value typed but not confirmed is not lost.",
       table: { defaultValue: { summary: "true" } },
     },
+    transform: {
+      control: false,
+      description: "Normalizes each piece before it is checked and added. A piece that comes out empty is dropped.",
+      table: { defaultValue: { summary: "(raw) => raw.trim()" } },
+    },
+    validate: {
+      control: false,
+      description: "Checks a tag before it is added: return a message to refuse it, or nothing to accept it. See the Validation story.",
+    },
     invalidBehavior: {
       control: "radio",
       options: ["refuse", "flag"],
@@ -84,8 +93,12 @@ const meta: Meta<typeof TagsInput> = {
       table: { defaultValue: { summary: "false" } },
     },
     maxTags: {
-      control: "number",
+      control: false,
       description: "The most tags the field holds. Adding more is refused with labels.maxReached.",
+    },
+    maxTagLength: {
+      control: false,
+      description: "The most characters a single tag may have (the entry's native maxLength).",
     },
     showCount: {
       control: "boolean",
@@ -94,9 +107,14 @@ const meta: Meta<typeof TagsInput> = {
       table: { defaultValue: { summary: "false" } },
     },
     maxVisible: {
-      control: "number",
+      control: false,
       description:
         "Collapses a long row while the field is not in use: only this many chips show, then a +N more button. Every tag shows while the entry or a chip has focus.",
+    },
+    clearable: {
+      control: "boolean",
+      description: "Shows a clear-all button after the tags once there are any.",
+      table: { defaultValue: { summary: "false" } },
     },
     onTagAdd: {
       control: false,
@@ -106,24 +124,6 @@ const meta: Meta<typeof TagsInput> = {
       control: false,
       description:
         "Called for each tag as it is removed, after onValueChange, with its position and what removed it: backspace, button, keyboard or clear.",
-    },
-    maxTagLength: {
-      control: false,
-      description: "The most characters a single tag may have (the entry's native maxLength).",
-    },
-    transform: {
-      control: false,
-      description: "Normalizes each piece before it is checked and added. A piece that comes out empty is dropped.",
-      table: { defaultValue: { summary: "(raw) => raw.trim()" } },
-    },
-    validate: {
-      control: false,
-      description: "Checks a tag before it is added: return a message to refuse it, or nothing to accept it. See the Validation story.",
-    },
-    clearable: {
-      control: "boolean",
-      description: "Shows a clear-all button after the tags once there are any.",
-      table: { defaultValue: { summary: "false" } },
     },
     required: {
       control: "boolean",
@@ -225,7 +225,6 @@ const meta: Meta<typeof TagsInput> = {
     addOnBlur: true,
     invalidBehavior: "refuse",
     allowDuplicates: false,
-    maxTags: 8,
     showCount: false,
     clearable: false,
     required: false,
@@ -258,6 +257,9 @@ const playgroundSource = {
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
   parameters: playgroundSource,
+  // A tag limit has no default: it is given a demo value here (and a control) so the counter can be tried.
+  args: { maxTags: 8 },
+  argTypes: { maxTags: { control: "number" } },
 };
 
 export const AllSizes: Story = {
@@ -304,6 +306,7 @@ export const Limit: Story = {
   name: "Limited",
   parameters: { docs: { source: { code: tagsInputSnippets.limit } } },
   args: { maxTags: 5, defaultValue: ["a", "b", "c", "d"], placeholder: "Up to five" },
+  argTypes: { maxTags: { control: "number" } },
   render: (args) => (
     <div style={{ maxWidth: "24rem" }}>
       <TagsInput {...args} maxTagLength={20} />
@@ -356,13 +359,16 @@ export const Flagging: Story = {
 
 export const WithCounter: Story = {
   name: "With a counter",
-  parameters: { docs: { source: { code: tagsInputSnippets.counter } } },
+  parameters: playgroundSource,
   args: { maxTags: 5, showCount: true, defaultValue: ["design", "urgent"] },
+  argTypes: { maxTags: { control: "number" } },
 };
 
 export const Collapsed: Story = {
   name: "Collapsing a long row",
-  parameters: { docs: { source: { code: tagsInputSnippets.collapsed } } },
+  parameters: playgroundSource,
+  // `maxVisible` has no value in the other stories, so its control is off there; here it is the point.
+  argTypes: { maxVisible: { control: "number" } },
   args: {
     maxVisible: 3,
     defaultValue: ["design", "engineering", "accessibility", "urgent", "review", "qa", "launch"],
@@ -371,36 +377,36 @@ export const Collapsed: Story = {
 
 export const Duplicates: Story = {
   name: "Allowing repeats",
-  parameters: { docs: { source: { code: tagsInputSnippets.duplicates } } },
+  parameters: playgroundSource,
   args: { allowDuplicates: true, defaultValue: ["egg", "egg"], "aria-label": "Ingredients" },
 };
 
 export const Clearable: Story = {
   name: "With a clear-all button",
-  parameters: { docs: { source: { code: tagsInputSnippets.clearable } } },
+  parameters: playgroundSource,
   args: { clearable: true, defaultValue: ["design", "urgent", "review"] },
 };
 
 export const Tones: Story = {
   name: "Tone and variant",
-  parameters: { docs: { source: { code: tagsInputSnippets.tones } } },
+  parameters: playgroundSource,
   args: { tone: "success", variant: "outlined" },
 };
 
 export const ErrorState: Story = {
   name: "Error state",
-  parameters: { docs: { source: { code: tagsInputSnippets.errorState } } },
+  parameters: playgroundSource,
   args: { hasError: true, defaultValue: ["design"] },
 };
 
 export const Disabled: Story = {
-  parameters: { docs: { source: { code: tagsInputSnippets.disabled } } },
+  parameters: playgroundSource,
   args: { disabled: true },
 };
 
 export const ReadOnly: Story = {
   name: "Read-only",
-  parameters: { docs: { source: { code: tagsInputSnippets.readOnly } } },
+  parameters: playgroundSource,
   args: { readOnly: true, name: "labels" },
 };
 

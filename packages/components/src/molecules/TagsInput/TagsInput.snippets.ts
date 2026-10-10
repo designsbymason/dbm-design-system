@@ -10,16 +10,22 @@ import { quote } from "../../snippetHelpers";
 
 export const tagsInputSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
-<TagsInput aria-label="Labels" size="sm" defaultValue={["design", "urgent"]} />`,
+<TagsInput aria-label="Size sm" size="sm" defaultValue={["design", "urgent"]} />`,
 
   controlled: `{/* You own the tags: const [tags, setTags] = useState(["design", "urgent"]); */}
-<TagsInput aria-label="Labels" value={tags} onValueChange={setTags} />`,
+<TagsInput aria-label="Labels" placeholder="Add a label" value={tags} onValueChange={setTags} />`,
 
   separators: `{/* Enter always adds; these end a tag when typed, and split a paste. */}
-<TagsInput aria-label="Emails" separators={[",", ";", " "]} />`,
+<TagsInput aria-label="Emails" placeholder="Type or paste emails" separators={[",", ";", " "]} />`,
 
   limit: `{/* A repeat and a sixth tag are refused, with a message that is also announced. */}
-<TagsInput aria-label="Labels" maxTags={5} maxTagLength={20} />`,
+<TagsInput
+  aria-label="Labels"
+  placeholder="Up to five"
+  defaultValue={["a", "b", "c", "d"]}
+  maxTags={5}
+  maxTagLength={20}
+/>`,
 
   validation: `{/* A message refuses the tag; the text stays in the entry so it can be fixed. */}
 <TagsInput
@@ -31,43 +37,29 @@ export const tagsInputSnippets = {
 />`,
 
   transform: `{/* Normalize each piece before it is checked: here, lower-case with no # prefix. */}
-<TagsInput aria-label="Topics" transform={(raw) => raw.trim().replace(/^#/, "").toLowerCase()} />`,
+<TagsInput
+  aria-label="Topics"
+  placeholder="Try #Design"
+  transform={(raw) => raw.trim().replace(/^#/, "").toLowerCase()}
+/>`,
 
   flagging: `{/* The tag is added and drawn as invalid; a form won't submit until it is fixed or removed. */}
 <TagsInput
   aria-label="Recipients"
+  placeholder="Add an email"
+  defaultValue={["ada@example.com", "not-an-email"]}
   invalidBehavior="flag"
   validate={(tag) => (/^\\S+@\\S+\\.\\S+$/.test(tag) ? undefined : "Not an email address")}
+  spellCheck={false}
+  autoCapitalize="off"
 />`,
 
-  counter: `{/* The count shows as count/max while there is a maxTags. */}
-<TagsInput aria-label="Labels" maxTags={5} showCount defaultValue={["design", "urgent"]} />`,
-
-  collapsed: `{/* Three chips and "+4 more" while the field is not in use; every tag while it is. */}
-<TagsInput aria-label="Labels" maxVisible={3} defaultValue={tags} />`,
-
-  duplicates: `<TagsInput aria-label="Ingredients" allowDuplicates defaultValue={["egg", "egg"]} />`,
-
-  clearable: `<TagsInput aria-label="Labels" clearable defaultValue={["design", "urgent", "review"]} />`,
-
-  tones: `{/* tone (brand by default) and variant are Tag's own; every chip shares them. */}
-<TagsInput aria-label="Labels" tone="success" variant="outlined" defaultValue={["design", "urgent"]} />`,
-
-  errorState: `<TagsInput aria-label="Labels" hasError defaultValue={["design"]} />`,
-
-  disabled: `<TagsInput aria-label="Labels" disabled defaultValue={["design", "urgent"]} />`,
-
-  readOnly: `{/* Chips with no remove buttons, same size, still submitted under name. */}
-<TagsInput aria-label="Labels" readOnly name="labels" defaultValue={["design", "urgent"]} />`,
-
   inFormField: `<FormField label="Labels" helperText="Press Enter or type a comma to add one">
-  {(fieldProps) => <TagsInput {...fieldProps} name="labels" />}
+  {(fieldProps) => (
+    <TagsInput {...fieldProps} name="labels" placeholder="Add a label" defaultValue={["design", "urgent"]} />
+  )}
 </FormField>`,
 
-  form: `{/* Each tag is submitted as its own value: new FormData(form).getAll("labels"). */}
-<form onSubmit={handleSubmit}>
-  <TagsInput aria-label="Labels" name="labels" required defaultValue={["design"]} />
-</form>`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */
@@ -82,6 +74,7 @@ export interface TagsInputPlaygroundSnippetArgs {
   allowDuplicates?: boolean;
   maxTags?: number;
   showCount?: boolean;
+  maxVisible?: number;
   clearable?: boolean;
   required?: boolean;
   hasError?: boolean;
@@ -110,6 +103,7 @@ export function tagsInputPlaygroundSnippet(args: TagsInputPlaygroundSnippetArgs)
   if (args.allowDuplicates) attributes.push("allowDuplicates");
   if (args.maxTags !== undefined && args.maxTags > 0) attributes.push(`maxTags={${args.maxTags}}`);
   if (args.showCount) attributes.push("showCount");
+  if (args.maxVisible !== undefined && args.maxVisible >= 0) attributes.push(`maxVisible={${args.maxVisible}}`);
   if (args.clearable) attributes.push("clearable");
   if (args.required) attributes.push("required");
   if (args.hasError) attributes.push("hasError");

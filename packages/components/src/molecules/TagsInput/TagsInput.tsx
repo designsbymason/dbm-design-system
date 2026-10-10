@@ -6,7 +6,8 @@ import { FieldError } from "../../atoms/FieldError";
 import { Icon } from "../../atoms/Icon";
 import type { InputSize } from "../../atoms/Input";
 import { Tag } from "../../atoms/Tag";
-import type { TagSize } from "../../atoms/Tag";
+import type { TagSize, TagTone, TagVariant } from "../../atoms/Tag";
+import { Tooltip, TooltipProvider } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./TagsInput.module.css";
 import type { TagsInputAddSource, TagsInputLabels, TagsInputProps } from "./TagsInput.types";
@@ -42,6 +43,55 @@ function runValidate(validate: TagsInputProps["validate"], tag: string): string 
     warnOnce(`TagsInput: \`validate\` threw (${String(thrown)}); the tag was accepted. Return a message instead of throwing.`);
     return undefined;
   }
+}
+
+interface ChipProps {
+  tag: string;
+  reason: string | undefined;
+  tone: TagTone;
+  variant: TagVariant;
+  size: TagSize;
+  removable: boolean;
+  removeLabel: string;
+  onRemove: () => void;
+}
+
+/**
+ * One chip. Its text ends in an ellipsis when the box is narrower than it, and then, and only then, a tooltip
+ * shows the whole tag on hover or when the chip (its remove button) has focus; a chip that fits has none.
+ */
+function Chip({ tag, reason, tone, variant, size, removable, removeLabel, onRemove }: ChipProps) {
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
+  const isCut = () => {
+    const label = labelRef.current;
+    return Boolean(label && label.scrollWidth > label.clientWidth);
+  };
+  return (
+    <Tooltip content={tag} open={open} onOpenChange={(next) => setOpen(next && isCut())}>
+      {/* The list item is the trigger, not the `Tag`: a trigger passes its own click handler to what it wraps,
+          and a `Tag` with one is a clickable tag, whose remove control is then only a decorative glyph. Focus
+          on the remove button bubbles to the item, so the tooltip opens for the keyboard as well. */}
+      {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- Safari with VoiceOver drops list semantics otherwise */}
+      <li role="listitem" className={styles.chip}>
+        <Tag
+          className={styles.chipTag}
+          tone={reason ? "danger" : tone}
+          variant={variant}
+          size={size}
+          removable={removable}
+          removeTabStop={false}
+          removeLabel={removeLabel}
+          onRemove={onRemove}
+        >
+          <span ref={labelRef} className={styles.chipLabel}>
+            {tag}
+          </span>
+          {reason ? <VisuallyHidden>{`, ${reason}`}</VisuallyHidden> : null}
+        </Tag>
+      </li>
+    </Tooltip>
+  );
 }
 
 type PendingFocus = { kind: "entry" } | { kind: "chip"; index: number } | null;
@@ -462,8 +512,9 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
           {/* The explicit roles are deliberate: Safari with VoiceOver stops treating a list as one under
               `list-style: none` (05-component-api-conventions.md §6), which the lint rule calls redundant.
               The key handler only moves focus among the chips' own buttons, which are real controls. */}
-          {/* eslint-disable-next-line jsx-a11y/no-redundant-roles, jsx-a11y/no-noninteractive-element-interactions */}
-          <ul ref={listRef} role="list" className={styles.list} onKeyDown={handleChipKeyDown}>
+          <TooltipProvider>
+            {/* eslint-disable-next-line jsx-a11y/no-redundant-roles, jsx-a11y/no-noninteractive-element-interactions */}
+            <ul ref={listRef} role="list" className={styles.list} onKeyDown={handleChipKeyDown}>
             {/* A chip drawn but never seen, so the row is as tall as a chip with none in it and adding the first
                 does not move what is below. Hidden from everything: no tab stop, no accessible name, no width. */}
             <li aria-hidden="true" className={styles.sizer}>
@@ -474,24 +525,21 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
             {tags.slice(0, visibleCount).map((tag, index) => {
               const reason = reasons[index];
               return (
-                // eslint-disable-next-line jsx-a11y/no-redundant-roles -- see the list above
-                <li key={`${index}-${tag}`} role="listitem" className={styles.chip}>
-                  <Tag
-                    tone={reason ? "danger" : tone}
-                    variant={variant}
-                    size={tagSizeFor[size]}
-                    removable={canEdit}
-                    removeTabStop={false}
-                    removeLabel={labels.remove(tag)}
-                    onRemove={() => removeFromChip(index)}
-                  >
-                    {tag}
-                    {reason ? <VisuallyHidden>{`, ${reason}`}</VisuallyHidden> : null}
-                  </Tag>
-                </li>
+                <Chip
+                  key={`${index}-${tag}`}
+                  tag={tag}
+                  reason={reason}
+                  tone={tone}
+                  variant={variant}
+                  size={tagSizeFor[size]}
+                  removable={canEdit}
+                  removeLabel={labels.remove(tag)}
+                  onRemove={() => removeFromChip(index)}
+                />
               );
             })}
-          </ul>
+            </ul>
+          </TooltipProvider>
           {collapsed && (
             <Tag
               className={styles.more}
@@ -501,7 +549,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
               aria-expanded={false}
               onClick={() => setExpanded(true)}
             >
-              {labels.more(hiddenCount)}
+              <span className={styles.chipLabel}>{labels.more(hiddenCount)}</span>
             </Tag>
           )}
           {!collapsed && expanded && maxVisible !== undefined && tags.length > maxVisible && (
@@ -513,7 +561,7 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
               aria-expanded={true}
               onClick={() => setExpanded(false)}
             >
-              {labels.less}
+              <span className={styles.chipLabel}>{labels.less}</span>
             </Tag>
           )}
           <div className={styles.entryItem}>

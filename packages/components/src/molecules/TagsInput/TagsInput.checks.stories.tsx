@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { Input } from "../../atoms/Input";
 import { send } from "../CodeBlock/browserProtocol";
 import { TagsInput } from "./TagsInput";
@@ -397,5 +397,70 @@ export const ChipsSitEvenlyAndTextLinesUpWithInput: Story = {
         Math.abs(box(emptyEntry).left - box(emptyGroup).left - (box(inputField).left - box(inputBox).left)),
       ).toBeLessThan(1.5);
     }
+  },
+};
+
+export const NarrowBoxKeepsEverythingInside: Story = {
+  name: "In a very narrow box the chips end in an ellipsis with their remove button in view, and nothing leaves the border",
+  render: () => (
+    <div data-testid="frame" style={{ width: "5.5rem" }}>
+      <TagsInput
+        aria-label="Labels"
+        clearable
+        defaultValue={["design", "a-rather-long-tag-name-indeed"]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = canvas.getByRole("group");
+    const edge = box(group).right;
+    for (const item of canvas.getAllByRole("listitem")) {
+      await expect(box(item).right).toBeLessThanOrEqual(edge + 0.5);
+      await expect(box(item).left).toBeGreaterThanOrEqual(box(group).left - 0.5);
+      // The remove button, outside the label, is always inside the box.
+      const button = within(item).getByRole("button");
+      await expect(box(button).right).toBeLessThanOrEqual(edge + 0.5);
+    }
+    const entry = canvas.getByRole("textbox").parentElement as HTMLElement;
+    await expect(box(entry).right).toBeLessThanOrEqual(edge + 0.5);
+    await expect(box(canvas.getByRole("button", { name: "Clear all" })).right).toBeLessThanOrEqual(edge + 0.5);
+    // The long one is cut with an ellipsis.
+    const label = canvas.getByText("a-rather-long-tag-name-indeed");
+    await expect(label.scrollWidth).toBeGreaterThan(label.clientWidth);
+    await expect(getComputedStyle(label).textOverflow).toBe("ellipsis");
+    await expect(group.scrollWidth).toBeLessThanOrEqual(group.clientWidth);
+  },
+};
+
+export const CutChipsShowTheirWholeTextInATooltip: Story = {
+  name: "A chip that is cut shows its whole text in a tooltip on hover and on keyboard focus; one that fits shows none",
+  render: () => (
+    <div style={{ width: "6rem" }}>
+      <TagsInput aria-label="Labels" defaultValue={["ok", "a-rather-long-tag-name-indeed"]} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cut = canvas.getByText("a-rather-long-tag-name-indeed");
+    // Hover over the cut chip: its whole text appears in a tooltip (rendered in a portal).
+    await userEvent.hover(cut);
+    await waitFor(() => expect(screen.getAllByText("a-rather-long-tag-name-indeed").length).toBeGreaterThan(1), {
+      timeout: 2000,
+    });
+    await userEvent.unhover(cut);
+    await waitFor(() => expect(screen.getAllByText("a-rather-long-tag-name-indeed")).toHaveLength(1));
+    // A chip that fits has none.
+    await userEvent.hover(canvas.getByText("ok"));
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await expect(screen.queryAllByRole("tooltip")).toHaveLength(0);
+    await userEvent.unhover(canvas.getByText("ok"));
+    // Keyboard: arrow onto the cut chip's remove button and the tooltip shows.
+    await userEvent.click(canvas.getByRole("textbox"));
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(canvas.getByRole("button", { name: "Remove a-rather-long-tag-name-indeed" })).toHaveFocus();
+    await waitFor(() => expect(screen.getAllByText("a-rather-long-tag-name-indeed").length).toBeGreaterThan(1), {
+      timeout: 2000,
+    });
   },
 };

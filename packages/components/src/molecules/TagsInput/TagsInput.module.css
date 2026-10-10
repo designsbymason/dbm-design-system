@@ -66,13 +66,28 @@
   min-inline-size: 0;
 }
 
+/* A chip never grows past the box: the tag may shrink, its label ends in an ellipsis (the whole text is in its
+   `title`), and the remove button, outside the label, always stays in view. */
+.chipTag {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.chipLabel {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* The typing area takes what the row has left and drops beneath the chips rather than shrinking past the
    least that is usable. */
 .entryItem {
   display: flex;
   margin-inline-start: 0;
   flex: 1 1 var(--dbm-tags-input-entry-min-width);
-  min-inline-size: var(--dbm-tags-input-entry-min-width);
+  /* The least that is usable, but never wider than the box, however narrow the box is. */
+  min-inline-size: min(var(--dbm-tags-input-entry-min-width), 100%);
 }
 
 /* A collapsed row is meant to be one line: the typing area gives up its minimum width so it never drops onto
@@ -106,7 +121,8 @@
 
 /* The "+N more" and "Show less" buttons, `Tag`s of their own, sit in the row after the chips. */
 .more {
-  flex-shrink: 0;
+  max-inline-size: 100%;
+  min-inline-size: 0;
 }
 
 /* `count/max`, after the typing area: the same quiet treatment as `Input`'s own counter. */

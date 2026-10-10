@@ -22,9 +22,19 @@ describe("TagsInput", () => {
 
     it("draws its chips in the brand tone by default, and in the tone it is given", () => {
       const { rerender } = render(<TagsInput aria-label="Labels" defaultValue={["one"]} />);
-      expect(screen.getByText("one").closest("span")?.className).toMatch(/subtleBrand/);
+      expect(screen.getByText("one").closest("li")?.querySelector("span")?.className).toMatch(/subtleBrand/);
       rerender(<TagsInput aria-label="Labels" tone="neutral" variant="solid" defaultValue={["one"]} />);
-      expect(screen.getByText("one").closest("span")?.className).toMatch(/solidNeutral/);
+      expect(screen.getByText("one").closest("li")?.querySelector("span")?.className).toMatch(/solidNeutral/);
+    });
+
+    it("puts each tag's text in its own label, so a narrow box can cut it, and shows no tooltip for one that fits", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" defaultValue={["a-rather-long-tag"]} />);
+      expect(screen.getByText("a-rather-long-tag").tagName).toBe("SPAN");
+      expect(screen.getByRole("button", { name: "Remove a-rather-long-tag" })).toBeInTheDocument();
+      // jsdom lays nothing out, so nothing is cut and no tooltip opens: the real-browser checks show the cut case.
+      await user.hover(screen.getByText("a-rather-long-tag"));
+      expect(screen.queryByRole("tooltip")).toBeNull();
     });
 
     it("gives each chip a named remove button", () => {
