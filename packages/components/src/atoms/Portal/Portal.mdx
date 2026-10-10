@@ -25,9 +25,10 @@ export const propOrder = [
 
 Renders its `children` into a different part of the DOM — by default, the very end of
 `<body>` — while preserving their position in the React tree for events, context, and props.
-Used internally by overlay-style components (Dialog, Popover, Tooltip, Toast) so they escape a
-parent's `overflow: hidden`, `z-index`, or `transform` stacking context, which would otherwise
-clip or misposition them; also usable directly for any custom overlay. `Portal` is a thin wrapper
+Use it so a custom overlay (or `Backdrop`, which portals through this atom) escapes a parent's
+`overflow: hidden`, `z-index`, or `transform` stacking context, which would otherwise clip or
+misposition it. Overlays built on a Radix primitive, such as `Dialog` and `Popover`, portal through
+that primitive's own `Portal` instead. `Portal` is a thin wrapper
 around Radix's own `Portal` — it renders no visual chrome of its own, and has no shared state
 between instances, so mounting more than one at once (as this Docs page itself does, in the
 Playground and Variants sections below) never causes one to interfere with another *functionally*.

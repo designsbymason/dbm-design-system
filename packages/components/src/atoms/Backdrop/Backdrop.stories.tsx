@@ -58,7 +58,7 @@ const meta: Meta<typeof Backdrop> = {
     children: {
       control: "text",
       description:
-        "Optional content rendered on top of the dimming fill, centered on both axes — e.g. a Spinner/ProgressCircle for a full-page loading overlay. Most modal/dialog composition doesn't need this.",
+        "Optional content rendered on top of the dimming fill, centered on both axes — e.g. a Spinner/ProgressCircle for a full-page loading overlay. Also how a dialog panel is centered on the scrim.",
     },
     open: {
       control: "boolean",
@@ -89,7 +89,7 @@ const meta: Meta<typeof Backdrop> = {
     // produces zero visible difference in any Canvas, in the Playground or
     // otherwise — there's no story context where a reader could observe
     // what this prop actually does. Its real purpose (skip portaling when
-    // a parent like a future `Dialog` already provides its own) is
+    // a parent like `Dialog` already provides its own) is
     // invisible by design when used correctly; still fully documented in
     // the Properties table below, just not wired to a widget that could
     // only ever look broken.

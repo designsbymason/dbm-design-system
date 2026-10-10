@@ -12,8 +12,9 @@ export interface BackdropProps extends ComponentPropsWithoutRef<"div"> {
   /**
    * Optional content rendered on top of the dimming fill, centered on
    * both axes — e.g. a `Spinner`/`ProgressCircle` for a full-page loading
-   * overlay. Most modal/dialog composition doesn't need this: a dialog's
-   * own content renders as a sibling of `Backdrop`, not inside it.
+   * overlay, or a dialog panel the scrim centers for you (`Dialog` renders
+   * its panel as the scrim's child). A panel that needs its own placement
+   * should render as a sibling of `Backdrop` instead.
    */
   children?: ReactNode;
   /**
@@ -54,9 +55,9 @@ export interface BackdropProps extends ComponentPropsWithoutRef<"div"> {
   /**
    * Renders into a portal (`document.body` by default) instead of in
    * place. Set to `false` when composing inside a parent that already
-   * provides its own portal — e.g. a future `Dialog`, which portals its
-   * backdrop and content together in one call, the same way Radix's own
-   * `Dialog.Portal` wraps `Dialog.Overlay` + `Dialog.Content` as siblings.
+   * provides its own portal — e.g. `Dialog`, which draws its scrim with this
+   * set to `false` inside Radix's `Dialog.Overlay`, so the scrim and the
+   * panel are portaled together in one call.
    * @default true
    */
   inPortal?: boolean;

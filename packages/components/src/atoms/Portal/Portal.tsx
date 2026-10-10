@@ -5,9 +5,11 @@ import type { PortalProps } from "./Portal.types";
 /**
  * Renders its children into a different part of the DOM — by default,
  * `document.body` — while preserving their position in the React tree for
- * events, context, and props. Used internally by overlay components
- * (Dialog, Popover, Tooltip, Toast) so they escape parent `overflow`,
- * `z-index`, and `transform` stacking contexts; also usable directly.
+ * events, context, and props, so a custom overlay (or `Backdrop`, which
+ * portals through this atom) escapes parent `overflow`, `z-index`, and
+ * `transform` stacking contexts. Overlays built on a Radix primitive, such
+ * as `Dialog` and `Popover`, portal through that primitive's own `Portal`
+ * instead.
  *
  * Purely structural — it renders no visual chrome of its own, so it has no
  * accompanying CSS module. Supports `asChild` (inherited from the underlying

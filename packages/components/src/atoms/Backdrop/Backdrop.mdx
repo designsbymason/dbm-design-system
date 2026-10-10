@@ -92,12 +92,13 @@ import { Backdrop } from "@dbm-design-system/components";
   (`{isOpen && <Backdrop />}`) still fades in on mount, but removes the element instantly on
   dismiss with no exit animation.
 - Pass `onClick` for click-to-dismiss, but always pair it with a real keyboard path (typically
-  Escape, handled by whichever component — a future `Dialog` — composes `Backdrop`) — a backdrop
+  Escape, handled by whichever component composes `Backdrop`, as `Dialog` does) — a backdrop
   click is a pointer convenience, never the only way to dismiss.
-- Set `inPortal={false}` when composing inside a parent that already provides its own portal (a
-  future `Dialog`, portaling backdrop and content together in one call).
-- Use `children` for a standalone full-page loading overlay (a centered `Spinner`); leave it unset
-  for modal/dialog composition, where the dialog's own content renders as a sibling instead.
+- Set `inPortal={false}` when composing inside a parent that already provides its own portal
+  (`Dialog` does: it portals its scrim and panel together, and draws the scrim with `inPortal={false}`).
+- Use `children` for content that sits on the scrim and should be centered on it: a `Spinner` for a
+  standalone full-page loading overlay, or a dialog panel (`Dialog` renders its panel as the scrim's
+  child). Leave it unset when the scrim only dims the page.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -106,9 +107,9 @@ import { Backdrop } from "@dbm-design-system/components";
   purely visual scrim; that orchestration belongs to the component composing it.
 - Don't rely on the backdrop click alone for dismissal — screen reader and keyboard-only users
   need an equivalent path that doesn't depend on it.
-- Don't nest dialog content inside `Backdrop`'s `children` — that slot is for content that sits
-  *on* the scrim itself (a loading spinner), not a dialog panel, which should render as a sibling
-  so its own stacking/positioning stays independent of the scrim's.
+- Don't expect `children` to be placed anywhere but centered on both axes — a panel that needs its
+  own placement (a side panel, a popover anchored to a control) should render as a sibling of
+  `Backdrop`, so its positioning stays independent of the scrim's.
 
 </Callout>
 </div>

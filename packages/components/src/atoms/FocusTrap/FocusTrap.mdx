@@ -30,8 +30,8 @@ optionally looping from the last focusable element back to the first (and vice v
 what receives focus on mount and unmount. This is the WAI-ARIA "modal dialog" keyboard-focus
 pattern: once a dialog, drawer, or popover is open, keyboard focus should stay inside it until the
 user closes it, rather than tabbing out into the rest of the page behind it. `FocusTrap` is a thin
-wrapper around Radix's own `FocusScope` — used internally by overlay-style components (Dialog,
-Drawer, Popover), and usable directly for any custom overlay that needs the same behavior. It
+wrapper around Radix's own `FocusScope`, the same focus scope `Dialog` and `Popover` carry inside
+them, so use it directly for a custom overlay that needs the same behavior. It
 renders a plain wrapping `<div>` by default, or merges directly onto `children` with `asChild`.
 
 ### Import
@@ -138,8 +138,7 @@ same as the code example below.
 ## Best practices
 
 - Reach for `FocusTrap` directly only when building a custom overlay that isn't already one of this
-  system's own overlay components — Dialog/Drawer/Popover (once built) will already include this
-  internally.
+  system's own overlay components — `Dialog` and `Popover` already manage focus themselves.
 - Keep `loop` on for anything that reads as a self-contained region (a dialog's own field set) —
   cycling back to the first field after the last is the expected, unsurprising behavior for a
   keyboard user working through a form inside an overlay.

@@ -287,3 +287,6 @@ Same review as the molecules' and the earlier atoms' (standard: `07-storybook-an
 ## Post-Finalization follow-up (2026-10-06, at explicit direction) — portaled content inherits no font
 
 A check of every portaled surface for its own `font-family` (`05-component-api-conventions.md` §6) found `Select`, `Tooltip`, `Popover` and `HoverCard` each set theirs, `Backdrop` portals a scrim with no text, and `Portal` itself sets none and said nothing about it, so content a consumer put in a bare `<Portal>` fell back to the browser's default font on a page with no font on `<body>`. Added one "Don't" under Usage guidelines, one Best-practices bullet, and a paragraph in the component's JSDoc, all saying the content's own root sets `font-family: var(--dbm-font-family-primary)` and a `color`. No code, props or tokens changed, so Finalized status is unchanged.
+
+## Post-Finalization follow-up (2026-10-10, at explicit direction) — stale references to `Dialog`
+Once `Dialog` was built, the Docs page and JSDoc said the `Portal` atom is "used internally" by `Dialog`, `Popover`, `Tooltip` and `Toast`. `Dialog` and `Popover` portal through Radix's own `Portal`; only `Backdrop` uses this atom. Reworded to say so. **Finalized status unchanged** — docs and comments only, no component code, props or tokens touched.
