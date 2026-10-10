@@ -1,0 +1,31 @@
+{
+  "dialog": {
+    "max-width": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "20rem",
+        "$description": "New token (2026-10-10), added for Dialog's own panel \u2014 the content-measure cap of its smallest size, a short confirmation or a single field. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "24rem",
+        "$description": "New token (2026-10-10), Dialog's `sm` panel cap: a short form of a field or two."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "32rem",
+        "$description": "New token (2026-10-10), Dialog's default panel cap \u2014 a typical form or detail view, about 60 characters of body text per line."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "42rem",
+        "$description": "New token (2026-10-10), Dialog's `lg` panel cap: a richer form or a content preview that needs two columns."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "56rem",
+        "$description": "New token (2026-10-10), Dialog's `xl` panel cap: a wide editor or a table inside a dialog."
+      }
+    }
+  }
+}
