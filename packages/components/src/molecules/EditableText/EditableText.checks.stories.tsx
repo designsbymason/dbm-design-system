@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Input } from "../../atoms/Input";
 import { Textarea } from "../../atoms/Textarea";
@@ -272,5 +273,49 @@ export const OnAPhone: Story = {
     await expect(window.innerWidth).toBeLessThan(640);
     const frame = within(canvasElement).getByTestId("frame");
     await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
+  },
+};
+
+export const SavingDoesNotMoveAnything: Story = {
+  name: "Saving puts a spinner in place without changing the height, or squeezing a long value's field",
+  render: function SavingStory() {
+    const [saving, setSaving] = useState(false);
+    return (
+      <div style={{ width: "16rem" }}>
+        <button type="button" data-testid="toggle" onClick={() => setSaving((current) => !current)}>
+          Toggle
+        </button>
+        <div data-testid="frame">
+          <EditableText
+            aria-label="Name"
+            defaultValue="A very long project name that cannot possibly fit in this column"
+            isLoading={saving}
+            showControls
+            editing
+            onEditingChange={() => {}}
+          />
+        </div>
+        <div data-testid="resting">
+          <EditableText aria-label="Other" defaultValue="Apollo" isLoading={saving} />
+        </div>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const frame = canvas.getByTestId("frame");
+    const resting = canvas.getByTestId("resting");
+    const heights = [box(frame).height, box(resting).height];
+    const fieldWidth = box(canvas.getByRole("textbox")).width;
+    await userEvent.click(canvas.getByTestId("toggle"));
+    await waitFor(() => expect(canvas.getByRole("textbox")).toHaveAttribute("aria-busy", "true"));
+    await expect(Math.abs(box(frame).height - (heights[0] as number))).toBeLessThan(1);
+    await expect(Math.abs(box(resting).height - (heights[1] as number))).toBeLessThan(1);
+    // The spinner takes its own room; the field gives way, but the column does not overflow.
+    await expect(box(canvas.getByRole("textbox")).width).toBeLessThanOrEqual(fieldWidth);
+    await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
+    const spinner = frame.querySelector("[class*='spinner']") as HTMLElement;
+    await expect(spinner).not.toBeNull();
+    await expect(box(spinner).width).toBeGreaterThanOrEqual(8);
   },
 };

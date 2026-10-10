@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref } from "react";
 import type { InputSize } from "../../atoms/Input";
 
 /** What `EditableText` does with an edit when focus leaves the field. */
@@ -17,6 +17,18 @@ export interface EditableTextLabels {
   cancel: string;
   /** The message shown when `required` refuses an empty value. @default "This field is required" */
   required: string;
+  /** Announced to screen readers when `isLoading` starts. @default "Saving" */
+  saving: string;
+}
+
+/** What `EditableText`'s `actionRef` hands you, for starting or ending an edit from outside (a menu item, a shortcut). */
+export interface EditableTextActions {
+  /** Starts editing and moves focus into the field, as a click would. Does nothing while disabled, read-only or loading. */
+  edit: () => void;
+  /** Commits the draft as Enter would: refused by `required`/`validate`, a no-op when nothing is being edited. */
+  commit: () => void;
+  /** Throws the draft away as Escape would, and returns focus to the text. A no-op when nothing is being edited. */
+  cancel: () => void;
 }
 
 export interface EditableTextProps
@@ -117,6 +129,46 @@ export interface EditableTextProps
    * @default false
    */
   inheritFont?: boolean;
+  /**
+   * Shows the value as being saved: the field (while open) is set aside from editing without being disabled,
+   * so it keeps focus and its text, a spinner is drawn after it (in place of the pencil once it has closed),
+   * Enter, Escape, the buttons and leaving the field do nothing, and `labels.saving` is announced. Set it from
+   * `onValueChange` until your request answers; with `editing` controlled, keep the field open meanwhile and
+   * close it (or set `hasError`) afterwards.
+   * @default false
+   */
+  isLoading?: boolean;
+  /**
+   * Shows a live `current/max` character count after the field, while it is editing. Only drawn when
+   * `maxLength` is also set.
+   * @default false
+   */
+  showCount?: boolean;
+  /**
+   * How the numbers in the `showCount` counter are written, for a language or region whose numerals differ
+   * from the plain `5` and `1234`: given a number, returns the text to show.
+   * @default (count) => String(count)
+   */
+  formatNumber?: (count: number) => string;
+  /**
+   * Called with the draft as it is typed, pasted or deleted, while editing. For a live counter or a live
+   * check beside the field; the value is committed, and `onValueChange` called, only when the edit ends. It
+   * is not called when the field opens or when an edit is cancelled.
+   */
+  onDraftChange?: (draft: string) => void;
+  /**
+   * Draws the resting text from the value, for a currency, a date or a status that should read formatted
+   * while the field edits the raw string. Used for a non-empty value only, in the text's button and in
+   * `readOnly`; keep it inline and non-interactive (it sits inside a button), and make it include the text
+   * a screen reader should read, since the button's name is built from it. A function that throws falls back
+   * to the raw value with a development warning.
+   */
+  renderValue?: (value: string) => ReactNode;
+  /**
+   * Receives `{ edit, commit, cancel }` for starting or ending an edit from outside: a "Rename" menu item, a
+   * keyboard shortcut, a row action. With `editing` controlled, ask through that prop instead.
+   */
+  actionRef?: Ref<EditableTextActions>;
   /**
    * Refuses to commit an empty (or all-blank) value, keeping the field open with `labels.required`. It
    * does not stop a surrounding `<form>` submitting a value that was never edited.

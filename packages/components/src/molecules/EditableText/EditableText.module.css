@@ -93,6 +93,11 @@
   }
 }
 
+/* Never squeezed by a long value. */
+.spinner {
+  flex: none;
+}
+
 /* The field, its optional controls and a message. */
 .editor {
   display: block;
@@ -107,6 +112,10 @@
 .field {
   flex: 1 1 auto;
   min-inline-size: 0;
+}
+
+.row > .spinner {
+  align-self: center;
 }
 
 .controls {

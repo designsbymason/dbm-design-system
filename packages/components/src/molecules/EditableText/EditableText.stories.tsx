@@ -1,8 +1,10 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { Button } from "../../atoms/Button";
 import { FormField } from "../FormField";
 import { EditableText } from "./EditableText";
+import type { EditableTextActions } from "./EditableText.types";
 import { editableTextPlaygroundSnippet, editableTextSnippets } from "./EditableText.snippets";
 
 const meta: Meta<typeof EditableText> = {
@@ -106,6 +108,37 @@ const meta: Meta<typeof EditableText> = {
       description:
         "Refuses to commit an empty value, keeping the field open with labels.required. Does not stop a form submitting a value that was never edited.",
       table: { defaultValue: { summary: "false" } },
+    },
+    isLoading: {
+      control: "boolean",
+      description:
+        "Shows the value as being saved: the field is set aside from editing without being disabled, a spinner shows, and Enter, Escape, the buttons and leaving do nothing. See the Saving story.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    showCount: {
+      control: "boolean",
+      description: "Shows a live current/max character count while editing. Only drawn when maxLength is set.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    formatNumber: {
+      control: false,
+      description:
+        "How the numbers in the showCount counter are written, for a language or region whose numerals differ: given a number, returns the text to show.",
+      table: { defaultValue: { summary: "(count) => String(count)" } },
+    },
+    onDraftChange: {
+      control: false,
+      description:
+        "Called with the draft as it is typed, pasted or deleted while editing. Not called when the field opens or an edit is cancelled.",
+    },
+    renderValue: {
+      control: false,
+      description:
+        "Draws the resting text from the value, for a currency, a date or a status, while the field edits the raw string. Used for a non-empty value only.",
+    },
+    actionRef: {
+      control: false,
+      description: "Receives { edit, commit, cancel } for starting or ending an edit from outside.",
     },
     validate: {
       control: false,
@@ -217,6 +250,8 @@ const meta: Meta<typeof EditableText> = {
     showEditIcon: true,
     selectOnFocus: true,
     required: false,
+    isLoading: false,
+    showCount: false,
     hasError: false,
     disabled: false,
     readOnly: false,
@@ -338,6 +373,90 @@ export const ReadOnly: Story = {
   name: "Read-only",
   parameters: { docs: { source: { code: editableTextSnippets.readOnly } } },
   args: { readOnly: true, name: "project" },
+};
+
+export const Saving: Story = {
+  parameters: { docs: { source: { code: editableTextSnippets.saving } } },
+  // This story owns the value, whether the field is open, and the saving flag.
+  argTypes: { defaultValue: { control: false }, isLoading: { control: false } },
+  render: function SavingStory(args) {
+    const [value, setValue] = useState("Apollo");
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const pending = useRef(false);
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)", maxWidth: "20rem" }}>
+        <EditableText
+          {...args}
+          defaultValue={undefined}
+          value={value}
+          editing={editing}
+          // Asked to close at the same moment as the commit: stay open until the request answers.
+          onEditingChange={(next) => {
+            if (!next && pending.current) return;
+            setEditing(next);
+          }}
+          isLoading={saving}
+          onValueChange={(next) => {
+            pending.current = true;
+            setSaving(true);
+            setTimeout(() => {
+              pending.current = false;
+              setValue(next);
+              setSaving(false);
+              setEditing(false);
+            }, 1500);
+          }}
+        />
+        <span style={{ fontSize: "var(--dbm-font-size-sm)" }}>Saved: {value}</span>
+      </div>
+    );
+  },
+};
+
+export const WithCounter: Story = {
+  name: "With a character counter and a live draft",
+  parameters: { docs: { source: { code: editableTextSnippets.counter } } },
+  args: { multiline: true, maxLength: 160, showCount: true, defaultValue: "Builds rockets.", "aria-label": "Bio" },
+  argTypes: { showCount: { control: false } },
+  render: function CounterStory(args) {
+    const [draft, setDraft] = useState("");
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)", maxWidth: "20rem" }}>
+        <EditableText {...args} onDraftChange={setDraft} />
+        <span style={{ fontSize: "var(--dbm-font-size-sm)" }}>Draft: {draft || "—"}</span>
+      </div>
+    );
+  },
+};
+
+export const FormattedValue: Story = {
+  name: "Formatted value",
+  parameters: { docs: { source: { code: editableTextSnippets.formattedValue } } },
+  args: { defaultValue: "1250", "aria-label": "Price", inputMode: "decimal" },
+  render: (args) => (
+    <div style={{ maxWidth: "20rem" }}>
+      <EditableText {...args} renderValue={(raw) => `$${Number(raw).toFixed(2)}`} />
+    </div>
+  ),
+};
+
+export const FromOutside: Story = {
+  name: "Started from outside",
+  parameters: { docs: { source: { code: editableTextSnippets.actionRef } } },
+  render: function FromOutsideStory(args) {
+    const actions = useRef<EditableTextActions>(null);
+    return (
+      <div style={{ display: "flex", gap: "var(--dbm-space-3)", alignItems: "center", maxWidth: "24rem" }}>
+        <div style={{ flex: "1 1 auto" }}>
+          <EditableText {...args} actionRef={actions} />
+        </div>
+        <Button variant="secondary" size="sm" onClick={() => actions.current?.edit()}>
+          Rename
+        </Button>
+      </div>
+    );
+  },
 };
 
 export const InFormField: Story = {

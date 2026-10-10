@@ -53,6 +53,42 @@ export const editableTextSnippets = {
   readOnly: `{/* Plain text, same size, still submitted under name. */}
 <EditableText aria-label="Project name" defaultValue="Apollo" readOnly name="project" />`,
 
+  saving: `{/* You own the request and the flags:
+    const [value, setValue] = useState("Apollo");
+    const [editing, setEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    onValueChange: setSaving(true), send the request, and on success setValue(next),
+    setSaving(false) and setEditing(false). Ignore onEditingChange(false) while saving. */}
+<EditableText
+  aria-label="Project name"
+  value={value}
+  onValueChange={save}
+  editing={editing}
+  onEditingChange={requestEditing}
+  isLoading={saving}
+/>`,
+
+  counter: `{/* The count shows beside the field while it is open; onDraftChange sees each change. */}
+<EditableText
+  aria-label="Bio"
+  multiline
+  maxLength={160}
+  showCount
+  onDraftChange={(draft) => checkAvailability(draft)}
+/>`,
+
+  formattedValue: `{/* The text reads formatted; the field edits the raw string. */}
+<EditableText
+  aria-label="Price"
+  defaultValue="1250"
+  renderValue={(raw) => \`$\${Number(raw).toFixed(2)}\`}
+  inputMode="decimal"
+/>`,
+
+  actionRef: `{/* const actions = useRef<EditableTextActions>(null);
+    <Button onClick={() => actions.current?.edit()}>Rename</Button> */}
+<EditableText aria-label="Project name" defaultValue="Apollo" actionRef={actions} />`,
+
   inFormField: `<FormField label="Project name" helperText="Shown on the dashboard">
   {(fieldProps) => <EditableText {...fieldProps} defaultValue="Apollo" />}
 </FormField>`,
@@ -81,6 +117,8 @@ export interface EditableTextPlaygroundSnippetArgs {
   selectOnFocus?: boolean;
   inheritFont?: boolean;
   required?: boolean;
+  isLoading?: boolean;
+  showCount?: boolean;
   hasError?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
@@ -107,6 +145,8 @@ export function editableTextPlaygroundSnippet(args: EditableTextPlaygroundSnippe
   if (args.selectOnFocus === false) attributes.push("selectOnFocus={false}");
   if (args.inheritFont) attributes.push("inheritFont");
   if (args.required) attributes.push("required");
+  if (args.isLoading) attributes.push("isLoading");
+  if (args.showCount) attributes.push("showCount");
   if (args.hasError) attributes.push("hasError");
   if (args.readOnly) attributes.push("readOnly");
   if (args.disabled) attributes.push("disabled");

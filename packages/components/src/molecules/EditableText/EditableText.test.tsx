@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { StrictMode, createRef, useState } from "react";
+import { StrictMode, createRef, useRef, useState } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { FormField } from "../FormField";
 import { EditableText } from "./EditableText";
+import type { EditableTextActions } from "./EditableText.types";
 
 const trigger = () => screen.getByRole("button", { name: /Name/ });
 const field = () => screen.getByRole("textbox") as HTMLInputElement;
@@ -449,6 +450,220 @@ describe("EditableText", () => {
       render(<EditableText aria-label="Name" defaultValue="Ada" defaultEditing />);
       expect(field()).toBeInTheDocument();
       expect(field()).not.toHaveFocus();
+    });
+  });
+
+  describe("saving (isLoading)", () => {
+    it("sets the open field aside from editing without disabling it, and announces", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<EditableText aria-label="Name" defaultValue="Ada" editing onEditingChange={() => {}} />);
+      await user.click(field());
+      rerender(<EditableText aria-label="Name" defaultValue="Ada" editing onEditingChange={() => {}} isLoading />);
+      expect(field()).toHaveAttribute("readonly");
+      expect(field()).toHaveAttribute("aria-busy", "true");
+      expect(field()).not.toBeDisabled();
+      expect(field()).toHaveFocus();
+      expect(screen.getByRole("status")).toHaveTextContent("Saving");
+    });
+
+    it("ignores Enter, Escape, the buttons and leaving the field while saving", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      const onEditingChange = vi.fn();
+      render(
+        <>
+          <EditableText
+            aria-label="Name"
+            defaultValue="Ada"
+            editing
+            isLoading
+            showControls
+            onValueChange={onValueChange}
+            onEditingChange={onEditingChange}
+          />
+          <button type="button">Other</button>
+        </>,
+      );
+      await user.click(field());
+      await user.keyboard("{Enter}{Escape}");
+      expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+      await user.click(screen.getByRole("button", { name: "Other" }));
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(onEditingChange).not.toHaveBeenCalled();
+      expect(field()).toBeInTheDocument();
+    });
+
+    it("adds nothing in an open multi-line field while saving, since it is read-only", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Notes" multiline defaultValue="One" editing isLoading />);
+      await user.click(screen.getByRole("textbox"));
+      await user.keyboard("{Enter}x");
+      expect(screen.getByRole("textbox")).toHaveValue("One");
+    });
+
+    it("shows a spinner and blocks activation once the field has closed", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Name" defaultValue="Ada" isLoading />);
+      expect(screen.getByRole("button")).toHaveAttribute("aria-busy", "true");
+      expect(screen.getAllByRole("status").some((region) => region.textContent === "Saving")).toBe(true);
+      await user.click(screen.getByRole("button"));
+      expect(screen.queryByRole("textbox")).toBeNull();
+    });
+
+    it("does not announce a first appearance but announces the change to loading", async () => {
+      const { rerender } = render(<EditableText aria-label="Name" defaultValue="Ada" />);
+      const region = screen.getByRole("status");
+      expect(region).toBeEmptyDOMElement();
+      rerender(<EditableText aria-label="Name" defaultValue="Ada" isLoading />);
+      expect(region).toHaveTextContent("Saving");
+    });
+
+    it("uses labels.saving, keeping the default for undefined", () => {
+      render(<EditableText aria-label="Name" defaultValue="Ada" isLoading labels={{ saving: "Guardando" }} />);
+      expect(screen.getByRole("status")).toHaveTextContent("Guardando");
+    });
+
+    it("carries a save from an uncontrolled commit: the field closes and the spinner shows", async () => {
+      const user = userEvent.setup();
+      function Saving() {
+        const [loading, setLoading] = useState(false);
+        return <EditableText aria-label="Name" defaultValue="Ada" isLoading={loading} onValueChange={() => setLoading(true)} />;
+      }
+      render(<Saving />);
+      await user.click(trigger());
+      await user.keyboard("B{Enter}");
+      expect(screen.getByRole("button")).toHaveAttribute("aria-busy", "true");
+    });
+  });
+
+  describe("draft, counter and formatted value", () => {
+    it("reports the draft as it is typed, not on open and not on cancel", async () => {
+      const user = userEvent.setup();
+      const onDraftChange = vi.fn();
+      render(<EditableText aria-label="Name" defaultValue="Ada" onDraftChange={onDraftChange} />);
+      await user.click(trigger());
+      expect(onDraftChange).not.toHaveBeenCalled();
+      await user.keyboard("Gr");
+      expect(onDraftChange).toHaveBeenNthCalledWith(1, "G");
+      expect(onDraftChange).toHaveBeenNthCalledWith(2, "Gr");
+      await user.keyboard("{Escape}");
+      expect(onDraftChange).toHaveBeenCalledTimes(2);
+    });
+
+    it("shows a live counter with maxLength, formatted by formatNumber", async () => {
+      const user = userEvent.setup();
+      render(
+        <EditableText aria-label="Name" defaultValue="Ada" maxLength={10} showCount formatNumber={(n) => `#${n}`} />,
+      );
+      await user.click(trigger());
+      expect(screen.getByText("#3/#10")).toBeInTheDocument();
+      await user.keyboard("{End}!");
+      expect(screen.getByText("#4/#10")).toBeInTheDocument();
+    });
+
+    it("counts in a multi-line field too", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Notes" multiline defaultValue="One" maxLength={20} showCount />);
+      await user.click(screen.getByRole("button"));
+      expect(screen.getByText("3/20")).toBeInTheDocument();
+    });
+
+    it("draws the resting text from renderValue, while the field edits the raw value", async () => {
+      const user = userEvent.setup();
+      render(
+        <EditableText
+          aria-label="Price"
+          defaultValue="12.5"
+          renderValue={(raw) => `$${Number(raw).toFixed(2)}`}
+        />,
+      );
+      expect(screen.getByRole("button")).toHaveAccessibleName("Price $12.50");
+      await user.click(screen.getByRole("button"));
+      expect(field()).toHaveValue("12.5");
+    });
+
+    it("does not call renderValue for an empty value, and uses it when read-only", () => {
+      const renderValue = vi.fn((raw: string) => raw.toUpperCase());
+      const { unmount } = render(<EditableText aria-label="Name" placeholder="None" renderValue={renderValue} />);
+      expect(renderValue).not.toHaveBeenCalled();
+      expect(screen.getByRole("button")).toHaveAccessibleName("Name None");
+      unmount();
+      render(<EditableText aria-label="Name" defaultValue="ada" readOnly renderValue={renderValue} />);
+      expect(screen.getByText("ADA")).toBeInTheDocument();
+    });
+
+    it("falls back to the raw value, with a development warning, when renderValue throws", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <EditableText
+          aria-label="Name"
+          defaultValue="Ada"
+          renderValue={() => {
+            throw new Error("nope");
+          }}
+        />,
+      );
+      expect(screen.getByRole("button")).toHaveAccessibleName("Name Ada");
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`renderValue` threw"));
+      warn.mockRestore();
+    });
+  });
+
+  describe("keyboard and actions", () => {
+    it("starts editing with F2 on the text", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Name" defaultValue="Ada" activation="doubleClick" />);
+      await user.tab();
+      await user.keyboard("{F2}");
+      expect(field()).toHaveFocus();
+    });
+
+    it("does not start with F2 while disabled", async () => {
+      const user = userEvent.setup();
+      render(<EditableText aria-label="Name" defaultValue="Ada" disabled />);
+      await user.keyboard("{F2}");
+      expect(screen.queryByRole("textbox")).toBeNull();
+    });
+
+    it("edits, commits and cancels from outside through actionRef", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      function Harness() {
+        const actions = useRef<EditableTextActions>(null);
+        return (
+          <>
+            <button type="button" onClick={() => actions.current?.edit()}>Rename</button>
+            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => actions.current?.commit()}>
+              Commit
+            </button>
+            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => actions.current?.cancel()}>
+              Discard
+            </button>
+            <EditableText aria-label="Name" defaultValue="Ada" actionRef={actions} onValueChange={onValueChange} />
+          </>
+        );
+      }
+      render(<Harness />);
+      await user.click(screen.getByRole("button", { name: "Rename" }));
+      expect(field()).toHaveFocus();
+      await user.keyboard("Grace");
+      await user.click(screen.getByRole("button", { name: "Commit" }));
+      expect(onValueChange).toHaveBeenCalledWith("Grace");
+      await user.click(screen.getByRole("button", { name: "Rename" }));
+      await user.keyboard("Nope");
+      await user.click(screen.getByRole("button", { name: "Discard" }));
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: /Name/ })).toHaveAccessibleName("Name Grace");
+    });
+
+    it("makes the actions no-ops when nothing is being edited", async () => {
+      const onValueChange = vi.fn();
+      const actions = createRef<EditableTextActions>();
+      render(<EditableText aria-label="Name" defaultValue="Ada" actionRef={actions} onValueChange={onValueChange} />);
+      actions.current?.commit();
+      actions.current?.cancel();
+      expect(onValueChange).not.toHaveBeenCalled();
     });
   });
 

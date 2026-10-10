@@ -1,6 +1,6 @@
 # 0048 — `EditableText` swaps a button for a field and reports only what is committed, over an always-present field or a value reported per keystroke
 
-**Status:** Accepted · **Date:** 2026-10-10
+**Status:** Accepted · **Date:** 2026-10-10 · **Amended 2026-10-10** — a save in flight has its own prop; the decision itself is unchanged
 
 ## Context
 `EditableText` is a value that reads as text and becomes a field when activated. Four things had no precedent in the
@@ -53,7 +53,7 @@ modes). A `FormField`'s render-prop spread therefore works, and a click on its l
 - An overlay that listens for Escape at the document level (a Radix dialog does, in the capture phase) still sees
   the key, because a handler on the field runs after it. The Docs page says to close such an overlay only when no field
   inside it is open.
-- A save that can fail is the owner's: keep `editing` controlled and open until the request answers.
+- A save that can fail is the owner's: keep `editing` controlled and open until the request answers, and set `isLoading` meanwhile so the field is set aside and shows a spinner. *(Amended 2026-10-10: this originally said only to keep `editing` controlled and open, because there was no busy state; `isLoading` was added in the round that followed.)*
 
 ## Related
 `05-component-api-conventions.md` §3; [ADR-0030](./0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md)

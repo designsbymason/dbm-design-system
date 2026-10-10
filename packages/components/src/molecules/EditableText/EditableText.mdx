@@ -26,6 +26,12 @@ export const propOrder = [
   "onEditingChange",
   "required",
   "validate",
+  "isLoading",
+  "showCount",
+  "formatNumber",
+  "onDraftChange",
+  "renderValue",
+  "actionRef",
   "hasError",
   "disabled",
   "readOnly",
@@ -82,6 +88,10 @@ import { EditableText } from "@dbm-design-system/components";
     "defaultEditing",
     "onEditingChange",
     "validate",
+    "formatNumber",
+    "onDraftChange",
+    "renderValue",
+    "actionRef",
     "maxLength",
     "minLength",
     "inputMode",
@@ -156,6 +166,22 @@ import { EditableText } from "@dbm-design-system/components";
 
 <Canvas of={EditableTextStories.ReadOnly} />
 
+### Saving
+
+<Canvas of={EditableTextStories.Saving} />
+
+### With a character counter and a live draft
+
+<Canvas of={EditableTextStories.WithCounter} />
+
+### Formatted value
+
+<Canvas of={EditableTextStories.FormattedValue} />
+
+### Started from outside
+
+<Canvas of={EditableTextStories.FromOutside} />
+
 ### In a FormField
 
 <Canvas of={EditableTextStories.InFormField} />
@@ -186,16 +212,23 @@ import { EditableText } from "@dbm-design-system/components";
 - Don't use it for a long document or rich text; a multi-line field here is for a note or a description.
 - Don't rely on hover to say it can be edited on a touch screen: the pencil is shown there without hover, and
   `showControls` makes the way out visible.
-- Don't read each keystroke from it: `onValueChange` is called once, with the committed value. If you need a live
-  value, use an `Input`.
+- Don't expect `onValueChange` on every keystroke: it is called once, with the committed value. A live counter or
+  check reads the draft through `onDraftChange`.
+- Don't put a link or a button in `renderValue`: the text is a button, and interactive content inside one is not
+  valid.
 
 </Callout>
 </div>
 
 ## Best practices
 
-- The committed value is yours to save: `onValueChange` is the moment to send it. For a save that can fail, keep
-  `editing` controlled and leave it open (with `hasError`) until the request answers.
+- The committed value is yours to save: `onValueChange` is the moment to send it. Set `isLoading` then, so the
+  field shows a spinner and refuses further input. For a save that can fail, also keep `editing` controlled and leave
+  it open, closing it (or setting `hasError`) when the request answers; ignore the request to close that comes with
+  the commit.
+- Use `renderValue` for a currency, a date or a status that should read formatted. The field still edits the raw
+  string, so keep `renderValue` a pure function of it.
+- Use `actionRef` to start an edit from a menu item or a shortcut; with `editing` controlled, set that instead.
 - A single-line value that is too wide for its box ends in an ellipsis in both the text and the field, so a long
   value never makes the row taller when it is opened. Use `multiline` where the full value should be read.
 - In a heading, set `inheritFont` so the title keeps the heading's type, and pick the `size` that gives the padding
@@ -214,6 +247,9 @@ import { EditableText } from "@dbm-design-system/components";
   the buttons) puts focus back on the button. Leaving by Tab or a press elsewhere leaves focus where the person put
   it.
 - Pressing Enter while an input method is composing a character does not commit.
+- While `isLoading`, the field keeps focus and its text but cannot be edited, is marked `aria-busy`, and a status
+  message ("Saving", translatable through `labels`) is announced; Enter, Escape, the buttons and leaving it wait for
+  the answer.
 - A refused value keeps the field open, sets `aria-invalid`, and shows the message in an alert, tied to the field
   through `aria-describedby`.
 - `readOnly` shows plain text, not a disabled control, so it can be read and selected; `disabled` removes the button
@@ -230,7 +266,7 @@ import { EditableText } from "@dbm-design-system/components";
 | Key | Behaviour |
 |---|---|
 | Tab | Moves between the text, or the field and its buttons; leaving the field commits or cancels (`blurBehavior`). |
-| Enter, Space (on the text) | Starts editing. |
+| Enter, Space, F2 (on the text) | Starts editing. |
 | Enter (single line) | Commits the edit. |
 | Enter (multiline) | Adds a line. |
 | Ctrl or Cmd + Enter (multiline) | Commits the edit. |
@@ -258,15 +294,25 @@ import { EditableText } from "@dbm-design-system/components";
   validate={(draft) => (draft.length > 20 ? "Keep it under 20 characters" : undefined)}
 />
 
-{/* A save that can fail: keep it open until the request answers */}
+{/* A save that can fail: spinner, and the field stays open until the request answers */}
 <EditableText
   aria-label="Project name"
   value={name}
   editing={editing}
-  onEditingChange={setEditing}
-  onValueChange={(next) => save(next).then(() => setEditing(false))}
+  onEditingChange={requestEditing}
+  onValueChange={save}
+  isLoading={saving}
   hasError={failed}
 />
+
+{/* A counter, and the draft as it is typed */}
+<EditableText aria-label="Bio" multiline maxLength={160} showCount onDraftChange={checkDraft} />
+
+{/* Formatted at rest, raw in the field */}
+<EditableText aria-label="Price" defaultValue="1250" renderValue={(raw) => `$${Number(raw).toFixed(2)}`} />
+
+{/* Started from a menu item */}
+<EditableText aria-label="Project name" defaultValue="Apollo" actionRef={actions} />
 
 {/* Submitted with a form, under `project`, as the committed value; with a field-level native attribute */}
 <form onSubmit={handleSubmit}>

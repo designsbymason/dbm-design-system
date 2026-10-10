@@ -1,12 +1,14 @@
 import { CheckIcon, PencilSimpleIcon, XIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined } from "@dbm-design-system/primitives";
-import { forwardRef, useCallback, useId, useLayoutEffect, useRef, useState } from "react";
-import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent } from "react";
+import { forwardRef, useCallback, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { FieldError } from "../../atoms/FieldError";
 import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
 import { Input } from "../../atoms/Input";
 import type { InputSize } from "../../atoms/Input";
+import { Spinner } from "../../atoms/Spinner";
 import { Textarea } from "../../atoms/Textarea";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./EditableText.module.css";
@@ -17,6 +19,7 @@ const defaultLabels: EditableTextLabels = {
   confirm: "Save",
   cancel: "Cancel",
   required: "This field is required",
+  saving: "Saving",
 };
 
 const sizeClass: Record<InputSize, string | undefined> = {
@@ -82,6 +85,12 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       selectOnFocus = true,
       inheritFont = false,
       required = false,
+      isLoading = false,
+      showCount = false,
+      formatNumber,
+      onDraftChange,
+      renderValue,
+      actionRef,
       validate,
       hasError = false,
       disabled = false,
@@ -170,6 +179,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
     };
 
     const commit = (returnFocus: boolean): void => {
+      if (!editing || isLoading) return;
       const message = validateDraft(draft);
       if (message) {
         setError(message);
@@ -185,6 +195,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
     };
 
     const cancel = (returnFocus: boolean): void => {
+      if (!editing || isLoading) return;
       settledRef.current = true;
       returnFocusRef.current = returnFocus;
       setDraft(current);
@@ -193,17 +204,23 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
     };
 
     const startEditing = () => {
-      if (disabled || readOnly) return;
+      if (disabled || readOnly || isLoading) return;
       settledRef.current = false;
       returnFocusRef.current = false;
       requestEditing(true);
     };
 
     // What an asynchronous leave (below) needs to read after the render it was scheduled in.
-    const latest = useRef({ editing, commit, cancel });
+    const latest = useRef({ editing, commit, cancel, isLoading });
     useLayoutEffect(() => {
-      latest.current = { editing, commit, cancel };
+      latest.current = { editing, commit, cancel, isLoading };
     });
+
+    useImperativeHandle(actionRef, () => ({
+      edit: startEditing,
+      commit: () => commit(true),
+      cancel: () => cancel(true),
+    }));
 
     // Moves focus across the swap. The text's button unmounts as the field mounts, so focus is put on the
     // field by hand (`autoFocus` only works on a native control as it mounts, and the field is one only
@@ -249,7 +266,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         insideRef.current = false;
         onBlur?.(event);
         const state = latest.current;
-        if (state.editing && !settledRef.current) {
+        if (state.editing && !settledRef.current && !latest.current.isLoading) {
           if (blurBehavior === "commit") state.commit(false);
           else state.cancel(false);
         }
@@ -260,6 +277,11 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (isLoading) {
+        // The edit is on its way; the keys that would end it wait for the answer.
+        if (event.key === "Escape" || (event.key === "Enter" && !multiline)) event.preventDefault();
+        return;
+      }
       if (event.key === "Escape") {
         // Only while editing: the key belongs to this field, not to whatever it sits in.
         event.preventDefault();
@@ -279,6 +301,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       settledRef.current = false;
       setDraft(event.target.value);
       if (error) setError(undefined);
+      onDraftChange?.(event.target.value);
     };
 
     // Pressing a control must not blur the field first (Safari doesn't focus a pressed button, so the
@@ -291,8 +314,25 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       if (activation === "click" || event.detail === 0) startEditing();
     };
 
+    // Formatting is the consumer's function over the value: a throw falls back to the raw text.
+    const formatted = (): ReactNode => {
+      if (!renderValue) return current;
+      try {
+        return renderValue(current);
+      } catch (thrown) {
+        warnOnce(`EditableText: \`renderValue\` threw (${String(thrown)}); the raw value was shown instead.`);
+        return current;
+      }
+    };
+    // F2 starts editing from the keyboard, as in a spreadsheet or a file list.
+    const handleTriggerKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+      if (event.key !== "F2") return;
+      event.preventDefault();
+      startEditing();
+    };
+
     const empty = current === "";
-    const shown = empty ? (placeholder ?? "") : current;
+    const shown: ReactNode = empty ? (placeholder ?? "") : formatted();
     const hasName = Boolean(ariaLabel);
     const nameIds = [ariaLabelledBy, hasName ? nameId : undefined].filter(Boolean).join(" ");
     const describedBy = (ids: Array<string | undefined>) => ids.filter(Boolean).join(" ") || undefined;
@@ -321,6 +361,10 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         size,
         hasError: invalid,
         disabled,
+        readOnly: isLoading || undefined,
+        "aria-busy": isLoading || undefined,
+        showCount,
+        formatNumber,
         required,
         maxLength,
         minLength,
@@ -344,6 +388,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
                 <Input ref={setFieldRef} {...fieldProps} />
               )}
             </div>
+            {isLoading && <Spinner size={iconSizeForSize[size]} className={styles.spinner} />}
             {showControls && (
               <div className={styles.controls}>
                 <IconButton
@@ -351,6 +396,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
                   variant="secondary"
                   size={size}
                   aria-label={labels.confirm}
+                  disabled={isLoading}
                   onMouseDown={keepFieldFocus}
                   onClick={() => commit(true)}
                 />
@@ -359,6 +405,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
                   variant="ghost"
                   size={size}
                   aria-label={labels.cancel}
+                  disabled={isLoading}
                   onMouseDown={keepFieldFocus}
                   onClick={() => cancel(true)}
                 />
@@ -375,7 +422,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
           id={id}
           data-testid={dataTestId}
         >
-          <span className={cx(styles.text, empty && styles.placeholder)}>{shown || " "}</span>
+          <span className={cx(styles.text, empty && styles.placeholder)}>{shown === "" ? "\u00A0" : shown}</span>
         </div>
       );
     } else {
@@ -392,14 +439,20 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
             className={cx(styles.display, styles.trigger, hasError && styles.invalid, empty && styles.empty)}
             aria-labelledby={describedBy([nameIds || undefined, textId])}
             aria-describedby={describedBy([ariaDescribedBy, hintId])}
+            aria-busy={isLoading || undefined}
             onClick={handleTriggerClick}
             onDoubleClick={startEditing}
+            onKeyDown={handleTriggerKeyDown}
           >
             <span id={textId} className={cx(styles.text, empty && styles.placeholder)}>
-              {shown || " "}
+              {shown === "" ? "\u00A0" : shown}
             </span>
-            {showEditIcon && (
-              <Icon className={styles.icon} icon={PencilSimpleIcon} size={iconSizeForSize[size]} tone="default" />
+            {isLoading ? (
+              <Spinner size={iconSizeForSize[size]} className={styles.spinner} />
+            ) : (
+              showEditIcon && (
+                <Icon className={styles.icon} icon={PencilSimpleIcon} size={iconSizeForSize[size]} tone="default" />
+              )
             )}
           </button>
         </>
@@ -417,6 +470,8 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         onBlur={handleBlur}
       >
         {content}
+        {/* In the page before it has anything to say, so the change is announced. */}
+        <VisuallyHidden role="status">{isLoading ? labels.saving : ""}</VisuallyHidden>
         {name && <input type="hidden" name={name} form={form} value={current} disabled={disabled} />}
       </div>
     );
