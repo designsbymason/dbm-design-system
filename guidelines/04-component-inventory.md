@@ -145,7 +145,7 @@ Content that appears above, or reveals/hides other content.
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
 | Backdrop | atom | 🟢 | Dimming scrim layer behind Dialog/Drawer/overlays |
-| Dialog / Modal | organism | 🟢 | Wraps Radix Dialog |
+| Dialog | organism | 🟢 | A window that interrupts the page for focused work, compound (`Dialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Close`) over Radix Dialog, drawing its scrim with `Backdrop` ([ADR-0052](adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)). Ships as `Dialog`, per the `Tag / Chip` precedent; "Modal" is a search term, not an export (the WAI-ARIA pattern is "Dialog (Modal)", and a dialog can also be non-modal). A sibling of `AlertDialog` and `Drawer`, with no `role` or `placement` prop ([ADR-0053](adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)). Review: [Dialog.md](component-reviews/Dialog.md) |
 | Drawer / Sheet | organism | 🟢 | Side-panel variant of Dialog |
 | Popover | molecule | 🟢 | Wraps Radix Popover |
 | Tooltip | atom | 🟢 | Wraps Radix Tooltip; ships a co-located `TooltipProvider` (optional shared hover-delay/skip-delay timing across multiple tooltips) as a secondary export from the same folder, not a separate atom entry |
@@ -175,7 +175,7 @@ Non-visual/structural helpers other components are built from.
 | ThemeProvider | atom | 🟢 | Applies brand/mode semantic token set |
 | Portal | atom | 🟢 | Wraps Radix Portal, used by overlays |
 | VisuallyHidden | atom | 🟢 | Screen-reader-only content |
-| FocusTrap | atom | 🟢 | Used internally by Dialog/Drawer |
+| FocusTrap | atom | 🟢 | Standalone focus containment for a custom overlay. `Dialog` and `Drawer` get theirs from Radix Dialog, so they do not use it ([ADR-0052](adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)) |
 | ClientOnly | atom | 🟡 | SSR-safe render guard |
 
 ---
@@ -210,7 +210,7 @@ This puts v1 alone in "real, comprehensive design system" territory (not a 15-co
 
 ## Sequencing recommendation for actual build order
 
-Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier; the organism tier is next.
+Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier; the organism tier has begun with `Dialog`.
 
 1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix)
 2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight, ListItem)
@@ -258,10 +258,10 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. Not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` is built; the rest are not started.
 
 **🟢 core**
-1. Dialog / Modal — foundation for every modal (uses `FocusTrap`, `Backdrop`, `Portal`, `CloseButton`)
+1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
 2. AlertDialog, 3. ConfirmDialog — variants and a pattern on the Dialog
 4. Drawer / Sheet — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it
