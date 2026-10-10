@@ -82,7 +82,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Form | organism | 🟢 | Context provider + validation wiring |
 | FormField | molecule | 🟢 | Label + control + helper/error text composition |
 | FieldGroup | molecule | ⚪ | Groups `FormField`s under one legend as a native `<fieldset>`/`<legend>`, distinct from `Form`'s validation role and `FormField`'s single-field scope. Hands `disabled` and `size` to the fields inside through a context ([ADR-0035](adr/0035-fieldgroup-is-a-native-fieldset-and-hands-disabled-and-size-to-formfield-through-a-context.md)); a field takes the group's size only inside a group that sets one ([ADR-0036](adr/0036-a-field-hands-its-size-to-its-control-only-inside-a-fieldgroup-that-sets-one.md)). Review: [FieldGroup.md](component-reviews/FieldGroup.md) |
-| EditableText | molecule | ⚪ | Inline click-to-edit value (display text that becomes a field on activation, with confirm and cancel by Enter and Escape), common for names and cells in enterprise tables and detail views. Composes `Input`/`Textarea` |
+| EditableText | molecule | ⚪ | A value shown as text that becomes a field when activated, committing on Enter or blur and cancelling on Escape: a native button swapped for an `Input` (or a `Textarea` with `multiline`), reporting only what is committed ([ADR-0048](adr/0048-editabletext-swaps-a-button-for-a-field-and-reports-only-what-is-committed-over-a-live-field-or-a-controlled-value-per-keystroke.md)). Review: [EditableText.md](component-reviews/EditableText.md) |
 | FieldLabel | atom | 🟢 | |
 | FieldError | atom | 🟢 | |
 | FieldHelperText | atom | 🟢 | |
@@ -210,7 +210,7 @@ This puts v1 alone in "real, comprehensive design system" territory (not a 15-co
 
 ## Sequencing recommendation for actual build order
 
-Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier except `EditableText` and `TagsInput`; the organism tier is next.
+Not alphabetical, not category-by-category: build in **dependency order**, since many components above are built on top of others. The atom tier (steps 1–3) is complete, and so is the molecule tier except `TagsInput`; the organism tier is next.
 
 1. Utility primitives (ThemeProvider, Portal, VisuallyHidden, FocusTrap, ClientOnly) + Layout primitives (Box, Stack, Container, Divider, Spacer, AspectRatio, Center, Bleed, Affix)
 2. Typography (Text, Heading, Link, Code, Blockquote, Kbd, Highlight, ListItem)
@@ -225,7 +225,7 @@ Not alphabetical, not category-by-category: build in **dependency order**, since
 
 ### Molecule-tier build order, itemized
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` and `Select` were built ahead of schedule and reviewed first; the items below followed one at a time (`Radio`, an atom, was built first as the prerequisite for item 2). All are built and Finalized. `Calendar`, `EditableText` and `TagsInput` joined the molecule tier later (`Calendar` is built; the other two are in the organism order below).
+Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` and `Select` were built ahead of schedule and reviewed first; the items below followed one at a time (`Radio`, an atom, was built first as the prerequisite for item 2). All are built and Finalized. `Calendar`, `EditableText` and `TagsInput` joined the molecule tier later (`Calendar` and `EditableText` are built; `TagsInput` is in the organism order below).
 
 | # | Component | Why here | Review |
 |---|---|---|---|
@@ -253,6 +253,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 | 29 | FieldGroup | Depends on `FormField` (3) | [FieldGroup](component-reviews/FieldGroup.md) |
 | 30–33 | Splitter, PinInput, RatingInput, TableOfContents | No dependency on anything remaining | [Splitter](component-reviews/Splitter.md), [PinInput](component-reviews/PinInput.md), [RatingInput](component-reviews/RatingInput.md), [TableOfContents](component-reviews/TableOfContents.md) |
 | — | Calendar | Added when the organism order was set; built before `DatePicker`, since `DatePicker` and `DateRangePicker` wrap it | [Calendar](component-reviews/Calendar.md) |
+| — | EditableText | Added when the organism order was set; standalone, composing `Input` and `Textarea` | [EditableText](component-reviews/EditableText.md) |
 
 ### Organism-tier build order
 
@@ -275,7 +276,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 14. ContextMenu (on Menu), 15. MultiSelect (on Combobox), 16. DateRangePicker (on Calendar and DatePicker), 17. CommandPalette (Dialog plus Combobox-style search), 18. NavigationMenu (decide at `Navbar` whether it is needed), 19. Stepper, 20. Timeline, 21. Tree / TreeView
 
 **⚪ deferred**
-22. TagsInput (molecule, after MultiSelect), 23. Menubar (after Menu), 24. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 25. EditableText (molecule, standalone), 26. Carousel, 27. ImageViewer / Lightbox (Dialog, optionally Carousel), 28. ColorPicker (Popover plus Slider), 29. Tour (Popover-style cards and a spotlight)
+22. TagsInput (molecule, after MultiSelect), 23. Menubar (after Menu), 24. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 25. Carousel, 26. ImageViewer / Lightbox (Dialog, optionally Carousel), 27. ColorPicker (Popover plus Slider), 28. Tour (Popover-style cards and a spotlight)
 
 **Reordering** (`EditorTabs`, `Tree`, `DataTable` column reordering): one hand-rolled sortable hook in `primitives`, single list, pointer/touch/keyboard, internal for now — [ADR-0043](adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md). Build the hook with the first component that needs it.
 

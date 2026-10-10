@@ -1,0 +1,342 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { Textarea } from "../../atoms/Textarea";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FormField } from "../FormField";
+import { EditableText } from "./EditableText";
+import * as EditableTextStories from "./EditableText.stories";
+
+export const propOrder = [
+  "defaultValue",
+  "value",
+  "onValueChange",
+  "placeholder",
+  "size",
+  "multiline",
+  "inheritFont",
+  "blurBehavior",
+  "activation",
+  "showControls",
+  "showEditIcon",
+  "selectOnFocus",
+  "editing",
+  "defaultEditing",
+  "onEditingChange",
+  "required",
+  "validate",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "maxLength",
+  "minLength",
+  "inputMode",
+  "autoComplete",
+  "minRows",
+  "maxRows",
+  "name",
+  "form",
+  "labels",
+  "onFocus",
+  "onBlur",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={EditableTextStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="EditableText" tier="Molecule" />
+
+A value that reads as plain text and turns into a field when you activate it: a project name, a title, a note, a
+cell in a table. Enter keeps the edit and Escape throws it away, and leaving the field does one or the other, so the
+page is never left half-edited. A single line edits in an `Input` and a `multiline` value in a `Textarea`. The text and
+the field are the same height at every size, so nothing around them moves when it opens.
+
+### Import
+
+```tsx
+import { EditableText } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={EditableTextStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={EditableTextStories.Playground}
+  exclude={[
+    "value",
+    "onValueChange",
+    "editing",
+    "defaultEditing",
+    "onEditingChange",
+    "validate",
+    "maxLength",
+    "minLength",
+    "inputMode",
+    "autoComplete",
+    "minRows",
+    "maxRows",
+    "form",
+    "labels",
+    "onFocus",
+    "onBlur",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`EditableText` also accepts any other native `<div>` attribute beyond what is listed here (e.g. `title`,
+`tabIndex`) — passed straight through to the outer box. `className` and `style` go on the outer box, and so does
+`ref`; `id`, `data-testid` and the `aria-*` props go on whichever of the text's button and the field is showing.
+
+<PropertiesTable of={EditableTextStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={EditableTextStories.AllSizes} />
+
+### Multiline
+
+<Canvas of={EditableTextStories.Multiline} />
+
+### With confirm and cancel buttons
+
+<Canvas of={EditableTextStories.WithControls} />
+
+### Double click to edit
+
+<Canvas of={EditableTextStories.DoubleClick} />
+
+### Cancel on blur
+
+<Canvas of={EditableTextStories.CancelOnBlur} />
+
+### Validation
+
+<Canvas of={EditableTextStories.Validation} />
+
+### Inheriting the font
+
+<Canvas of={EditableTextStories.InheritFont} />
+
+### Empty, with a placeholder
+
+<Canvas of={EditableTextStories.Placeholder} />
+
+### Error state
+
+<Canvas of={EditableTextStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={EditableTextStories.Disabled} />
+
+### Read-only
+
+<Canvas of={EditableTextStories.ReadOnly} />
+
+### In a FormField
+
+<Canvas of={EditableTextStories.InFormField} />
+
+### Controlled
+
+<Canvas of={EditableTextStories.Controlled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use it for a value people change now and then, where a permanent field would make the page look like a form: a
+  name in a header, a title on a card, a cell in a table.
+- Give it a name with `aria-label` (or a `FormField`), so the button and the field say what the value is.
+- Keep the default `blurBehavior="commit"` so an edit is never lost by clicking away; use `cancel` only where a
+  half-typed value must never be saved.
+- Show `showControls` on screens that people use by touch, where there is no Escape key to cancel with.
+- Use `activation="doubleClick"` in a row or cell that a single click already selects.
+- Use `validate` or `required` to say why a value is refused, near the field, instead of silently ignoring it.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a value that must be filled in to proceed: a form field that should always be visible belongs in
+  an `Input` or `Textarea`, which shows that it can be typed into.
+- Don't use it for a long document or rich text; a multi-line field here is for a note or a description.
+- Don't rely on hover to say it can be edited on a touch screen: the pencil is shown there without hover, and
+  `showControls` makes the way out visible.
+- Don't read each keystroke from it: `onValueChange` is called once, with the committed value. If you need a live
+  value, use an `Input`.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The committed value is yours to save: `onValueChange` is the moment to send it. For a save that can fail, keep
+  `editing` controlled and leave it open (with `hasError`) until the request answers.
+- A single-line value that is too wide for its box ends in an ellipsis in both the text and the field, so a long
+  value never makes the row taller when it is opened. Use `multiline` where the full value should be read.
+- In a heading, set `inheritFont` so the title keeps the heading's type, and pick the `size` that gives the padding
+  you want.
+- In a table cell, give the cell a fixed width: the text and the field both fill it, so the columns never shift.
+- An empty value with no `placeholder` still takes up its row and still shows the pencil, so it can be found.
+
+## Accessibility
+
+<Callout tone="info" title="A real button that becomes a real, labelled field">
+
+- In its resting state the value is a native `<button>`: one tab stop, activated by Enter or Space, and named by the
+  field's name and the value together (for example "Project name Apollo"), so the visible text is always part of
+  the name. It is described as "Edit" (translatable through `labels`).
+- Opening it moves focus into the field with the value selected, and closing it from the keyboard (Enter, Escape or
+  the buttons) puts focus back on the button. Leaving by Tab or a press elsewhere leaves focus where the person put
+  it.
+- Pressing Enter while an input method is composing a character does not commit.
+- A refused value keeps the field open, sets `aria-invalid`, and shows the message in an alert, tied to the field
+  through `aria-describedby`.
+- `readOnly` shows plain text, not a disabled control, so it can be read and selected; `disabled` removes the button
+  from the tab order and dims it.
+- Escape is handled inside the field and does not reach handlers on its parents in the page. A surrounding overlay
+  that listens for Escape at the document level will still see it, so close that overlay only when no field inside
+  it is open.
+- The confirm and cancel buttons are at least 24 × 24 pixels at every size. On a screen with no hover the pencil is
+  always visible, and in Windows high-contrast mode the box is drawn with a system colour when the text can be pressed
+  or has focus.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| Tab | Moves between the text, or the field and its buttons; leaving the field commits or cancels (`blurBehavior`). |
+| Enter, Space (on the text) | Starts editing. |
+| Enter (single line) | Commits the edit. |
+| Enter (multiline) | Adds a line. |
+| Ctrl or Cmd + Enter (multiline) | Commits the edit. |
+| Escape | Throws the edit away and returns to the text. |
+
+## Code examples
+
+```tsx
+<EditableText aria-label="Project name" defaultValue="Apollo" onValueChange={save} />
+
+{/* A note: Enter adds a line, Ctrl or Cmd + Enter commits */}
+<EditableText aria-label="Notes" multiline maxRows={6} placeholder="Add notes" />
+
+{/* Touch-friendly: confirm and cancel buttons beside the field */}
+<EditableText aria-label="Project name" defaultValue="Apollo" showControls />
+
+{/* A cell where a click already selects the row */}
+<EditableText aria-label="Owner" defaultValue="Ada Lovelace" activation="doubleClick" />
+
+{/* Refused with a message, kept open */}
+<EditableText
+  aria-label="Project name"
+  defaultValue="Apollo"
+  required
+  validate={(draft) => (draft.length > 20 ? "Keep it under 20 characters" : undefined)}
+/>
+
+{/* A save that can fail: keep it open until the request answers */}
+<EditableText
+  aria-label="Project name"
+  value={name}
+  editing={editing}
+  onEditingChange={setEditing}
+  onValueChange={(next) => save(next).then(() => setEditing(false))}
+  hasError={failed}
+/>
+
+{/* Submitted with a form, under `project`, as the committed value; with a field-level native attribute */}
+<form onSubmit={handleSubmit}>
+  <EditableText aria-label="Project name" defaultValue="Apollo" name="project" autoComplete="off" />
+</form>
+
+{/* With a label and helper text; the wiring is done for you */}
+<FormField label="Project name" helperText="Shown on the dashboard">
+  {(fieldProps) => <EditableText {...fieldProps} defaultValue="Apollo" />}
+</FormField>
+```
+
+## Design tokens used
+
+The field is an `Input` or a `Textarea` and the buttons are `IconButton`s, each of which lists its own tokens. The text
+itself is drawn as the same box.
+
+<TokenRow token="text.primary" usage="the value, in the text's button" />
+<TokenRow token="text.tertiary" usage="the placeholder shown for an empty value" />
+<TokenRow token="bg.neutral-subtle" usage="the fill behind the text while the pointer is over it" />
+<TokenRow token="border.danger" usage="the box's border when `hasError` is set" />
+<TokenRow token="border.focus" usage="the focus ring on the text's button" />
+<TokenRow token="border-width.1" usage="the transparent border that keeps the text as tall as the field" />
+<TokenRow token="border-width.2" usage="the focus ring's width" />
+<TokenRow token="radius.md" usage="the box's corners" />
+<TokenRow token="radius.sm" usage="the box's corners while it has focus, the standard focus-ring radius" />
+<TokenRow token="space.1" usage="the focus ring's offset, and the padding of a multi-line value at `xs` and `sm`" />
+<TokenRow token="space.2" usage="the gap between the text and the pencil, and the padding at `xs`" />
+<TokenRow token="space.3" usage="the padding at `sm` and `md`" />
+<TokenRow token="space.4" usage="the padding at `lg` and `xl`" />
+<TokenRow token="font-family.primary" usage="the value's typeface" />
+<TokenRow token="font-size.xs" usage="the value at `xs`" />
+<TokenRow token="font-size.sm" usage="the value at `sm`" />
+<TokenRow token="font-size.base" usage="the value at `md`" />
+<TokenRow token="font-size.md" usage="the value at `lg`" />
+<TokenRow token="font-size.lg" usage="the value at `xl`" />
+<TokenRow token="line-height.tight" usage="the value's line height, matching `Input`" />
+<TokenRow token="motion-duration.fast" usage="the hover fill and the pencil appearing" />
+<TokenRow token="motion-easing.standard" usage="the hover fill and the pencil appearing" />
+<TokenRow token="opacity.40" usage="the text while disabled" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Input"
+  description="The field a single-line value edits in, and the choice when a value should always be a visible field"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Enter text" />
+</RelatedCard>
+<RelatedCard
+  name="Textarea"
+  description="The field a multi-line value edits in"
+  href="/?path=/docs/atoms-inputs-textarea--docs"
+>
+  <Textarea rows={1} placeholder="Enter text" />
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this with a label and helper or error text, with the id and aria wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <EditableText aria-label="Name" defaultValue="Apollo" size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom that names this value when you are not using a FormField"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Project name</FieldLabel>
+</RelatedCard>
+</div>

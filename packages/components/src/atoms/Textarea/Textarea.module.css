@@ -74,6 +74,11 @@
      `.wrapper` has a real, resized height to fill. */
   height: 100%;
   outline: none;
+  /* The browser's own default padding on a `<textarea>` (2px on every side) is no token: left in place it
+     put the text 2px inside the padding `.wrapper`'s size classes set and made a one-row box 4px taller than
+     those tokens say. The padding lives on `.wrapper`, so none is wanted here (`.hasClear` below still adds
+     its own inline-end room, and comes later at the same specificity). */
+  padding: 0;
   /* `resize` lives on `.wrapper` now, not here — see its own comment. */
   resize: none;
   width: 100%;

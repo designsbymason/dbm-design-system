@@ -1,0 +1,209 @@
+/* The text and the field it becomes are drawn as the same box: `.display` repeats `Input`'s font size and
+   padding at each size (and `Textarea`'s for `multiline`), with a transparent border where the field has a
+   real one, so activating it changes nothing around it. */
+.root {
+  display: block;
+  font-family: var(--dbm-font-family-primary);
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.display {
+  align-items: center;
+  background-color: transparent;
+  border: var(--dbm-border-width-1) solid transparent;
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-primary);
+  display: flex;
+  font-family: inherit;
+  gap: var(--dbm-space-2);
+  inline-size: 100%;
+  line-height: var(--dbm-line-height-tight);
+  margin: 0;
+  min-inline-size: 0;
+  text-align: start;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.trigger {
+  cursor: pointer;
+}
+
+.trigger:hover:not(:disabled) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* The standardized focus-ring radius, `sm`, over the box's own `md` (05 §6). */
+.trigger:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.invalid {
+  border-color: var(--dbm-border-danger);
+}
+
+/* A single-line value stays on one line, ending in an ellipsis, so the text and the one-line field it becomes
+   are always the same height. */
+.text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.multiline .text {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: pre-wrap;
+}
+
+.placeholder {
+  color: var(--dbm-text-tertiary);
+}
+
+/* The pencil's space is always taken, so showing it never moves the text; it is revealed by hover and focus,
+   always where there is no hover, and for an empty value (which has nothing else to say it can be edited). */
+.icon {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.trigger:hover:not(:disabled) .icon,
+.trigger:focus-visible .icon,
+.trigger.empty:not(:disabled) .icon {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .trigger:not(:disabled) .icon {
+    opacity: 1;
+  }
+}
+
+/* The field, its optional controls and a message. */
+.editor {
+  display: block;
+}
+
+.row {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--dbm-space-2);
+}
+
+.field {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.controls {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--dbm-space-1);
+}
+
+.message {
+  margin-block-start: var(--dbm-space-1);
+}
+
+/* Inherits the surrounding type; the padding still follows `size`. */
+.inheritFont .display,
+.inheritFont .field > * {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* Sizes: `Input`'s font size and padding step for step, less the one-pixel border that both it and this
+   box have, so the two come out the same height. */
+.sizeXs .display {
+  font-size: var(--dbm-font-size-xs);
+  padding-block: calc(var(--dbm-space-2) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-2);
+}
+
+.sizeSm .display {
+  font-size: var(--dbm-font-size-sm);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeMd .display {
+  font-size: var(--dbm-font-size-base);
+  padding-block: calc(var(--dbm-space-3) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-3);
+}
+
+.sizeLg .display {
+  font-size: var(--dbm-font-size-md);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeXl .display {
+  font-size: var(--dbm-font-size-lg);
+  padding-block: calc(var(--dbm-space-4) - var(--dbm-border-width-1));
+  padding-inline: var(--dbm-space-4);
+}
+
+/* A multi-line value matches `Textarea`: its padding is `Textarea`'s, and its lines are the browser's own
+   `normal` height, which is what a textarea draws. */
+.multiline .display {
+  align-items: flex-start;
+  line-height: normal;
+}
+
+.multiline.sizeXs .display {
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-2);
+}
+
+.multiline.sizeSm .display {
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-3);
+}
+
+.multiline.sizeMd .display {
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+}
+
+.multiline.sizeLg .display {
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+}
+
+.multiline.sizeXl .display {
+  padding-block: var(--dbm-space-3);
+  padding-inline: var(--dbm-space-4);
+}
+
+/* Windows high contrast draws a transparent border as a solid line and removes the hover fill, so the box is
+   hidden with a system colour at rest and drawn with one when the text can be pressed or has focus. */
+@media (forced-colors: active) {
+  .display {
+    border-color: Canvas;
+  }
+
+  .invalid {
+    border-color: CanvasText;
+  }
+
+  .trigger:hover:not(:disabled),
+  .trigger:focus-visible {
+    border-color: ButtonText;
+  }
+}

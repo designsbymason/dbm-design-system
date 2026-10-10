@@ -39,7 +39,7 @@ dbm-design-system/
 │   ├── components/                # The actual DBM component library (this is the npm package)
 │   │   ├── src/
 │   │   │   ├── atoms/            # Built atoms — the list and each one's status: `04-component-inventory.md` and `07-storybook-and-documentation-standards.md` §6
-│   │   │   ├── molecules/        # Built molecules — same two places; `EditableText` and `TagsInput` are planned, not built
+│   │   │   ├── molecules/        # Built molecules — same two places; `TagsInput` is planned, not built
 │   │   │   ├── organisms/        # Not started — build order in `04-component-inventory.md`
 │   │   │   ├── templates/        # Not started yet — page-level layout scaffolds (optional, later)
 │   │   │   ├── internal/         # Pieces shared by two or more components that are not part of the public API and are not exported: `OverlayArrow` (the arrow on `Popover` and `HoverCard`), `fieldGroupContext` (the `disabled` and `size` a `FieldGroup` hands to the `FormField`s inside it), `time/` (the pure time model — parsing, drafts, stepping, digit entry — shared by `TimePicker` and `TimeRangePicker`) and `date/` (the pure date model — parsing, month grids, day and month arithmetic, key moves — behind `Calendar`, to be shared with the date pickers)

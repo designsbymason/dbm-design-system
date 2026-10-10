@@ -61,6 +61,7 @@ export * from "./molecules/CodeBlock";
 // CodeBlock's opt-in languages, on a line of their own so the size check measures the component without them.
 export * from "./molecules/CodeBlock/languages";
 export * from "./molecules/DescriptionList";
+export * from "./molecules/EditableText";
 export * from "./molecules/EmptyState";
 export * from "./molecules/FieldGroup";
 export * from "./molecules/FormField";
