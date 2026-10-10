@@ -122,13 +122,13 @@ When `pnpm audit` or a GitHub Dependabot alert flags a vulnerable package, first
 
 - **Cap the upper bound; don't only set a floor.** `undici: ">=7.29.0"` (the advisory's patched floor) let pnpm resolve `undici@8.x`, which broke every test run because `jsdom` deep-`require()`s a path that exists only in the 7.x line it declares support for. Check what major the real consumer declares (`pnpm view <consumer>@<version> dependencies`) and cap to match unless the next major is verified compatible. This applies to **every** override, including old ones: a floor-only override floats onto the next major when one ships (it moved `nanoid` onto an unsupported 6.x and `js-yaml` onto a vulnerable 5.x). Audit any floor-only override at each refresh pass.
 - **A bump can break a consumer that relies on internals or a changed export shape.** `brace-expansion` >=2 exports `{ expand }` where 1.x exported a callable default, so `minimatch@3.1.5` (hard-coded to the old shape) needs the override paired with a `patchedDependencies` entry (`patches/minimatch@3.1.5.patch`, a two-line shim accepting either shape). If a plain override breaks something, check for a compatibility-shape mismatch before assuming the override is wrong.
-- **One package can exist at several majors at once**, each wanted by a different consumer (`js-yaml` 3.x via `read-yaml-file` and 4.x via `@changesets/parse`). A single blanket key can't patch both; use parent-scoped overrides (`read-yaml-file>js-yaml: ">=3.15.2 <4.0.0"`, `"@changesets/parse>js-yaml": ">=4.3.1 <5.0.0"`).
+- **One package can exist at several majors at once**, each wanted by a different consumer (`js-yaml` was 3.x via `read-yaml-file` and 4.x via `@changesets/parse`). A single blanket key can't patch both; use a parent-scoped override, which pins one consumer's copy (`"@changesets/parse>js-yaml": ">=4.3.1 <5.0.0"`).
 
 **Always verify after any override change**, not just that `pnpm install` succeeds: `pnpm audit` (zero known vulnerabilities), then the full pipeline — `tsc --noEmit`, `eslint`, the full Vitest suite and a real `pnpm -r build` across the workspace. A broken transitive resolution surfaces as a runtime failure in tooling, not as a type or lint error.
 
 ### Advisories with no patched version
 
-An override can't fix an advisory that has no patched release. Don't trust an audit tool's own "patched in X" line: confirm against the npm registry and GitHub's advisory data (`first_patched_version`). Then assess whether the vulnerable code is reachable with this repo's real inputs, record the decision, and wait for upstream rather than hand-patching a security-critical algorithm.
+An override can't pin to a fix that doesn't exist. Don't trust an audit tool's own "patched in X" line: confirm against the npm registry and GitHub's advisory data (`first_patched_version`). **First look for a way to take the package out of the tree** (`pnpm why <package>`): a newer major of the one consumer that pulls it in may not depend on it at all (`read-yaml-file` 2 moved Changesets off `js-yaml` 3 and with it `sprintf-js`, which had no fix; the override sits in `pnpm-workspace.yaml`). Check the consumer's API is unchanged, then run the whole pipeline. Only if it can't be removed, assess whether the vulnerable code is reachable with this repo's real inputs, record the decision, and wait for upstream rather than hand-patching a security-critical algorithm.
 
 **Don't dismiss the Dependabot alert** — that is a call for whoever owns the repo's security settings. `pnpm audit` exits non-zero on any open advisory, including assessed ones, so an accepted advisory goes into `pnpm-workspace.yaml`'s `auditConfig.ignoreGhsas` with a comment (CI's audit step reads the same file, so local and CI runs agree). Ignore by specific advisory ID, never with the blanket `--ignore-unfixable`, which would silently swallow every future unfixable advisory. **Remove the entry the same day a real fix ships and is pinned by an override** — leaving it would mask the fix.
 
@@ -137,7 +137,6 @@ Currently accepted:
 | Advisory | Package | Reached through | Why accepted | Exit condition |
 |---|---|---|---|---|
 | GHSA-vfj7-8cjw-p6xm (CVE-2026-93687), stack-overflow DoS in recursive AST walkers | `braces` | `micromatch`, dev-only, through `@changesets/cli`'s `@manypkg/get-packages` → `globby` → `fast-glob`; used at release time to find this repo's own workspace packages | Never shipped in a published package. The only glob patterns it receives come from this repo's own `pnpm-workspace.yaml`, which is trusted configuration; exploiting it needs write access to that file already | A `braces` release past `3.0.3` (watch micromatch/braces#72) |
-| GHSA-hp3w-g68c-fv3c, DoS through unbounded precision specifiers | `sprintf-js` | `argparse@1.0.10` (`js-yaml` 3.x, via `read-yaml-file`), dev-only, through `@changesets/cli` | Never shipped. `argparse` formats its own help text with it; no string from outside this repo reaches a format specifier | A `sprintf-js` release past `1.1.3` |
 
 
 ## 3.2 Manual dependency-refresh pass
@@ -162,7 +161,7 @@ Dependabot version updates are off ([ADR-0022](adr/0022-dependency-updates-are-a
 
 **Scheduled maintenance:**
 - After GitHub finishes moving `ubuntu-latest` to Ubuntu 26.04 (its stated window is 2026-10-19 to 2026-11-19): drop the `ubuntu-24.04` pin and the informational `ubuntu-26.04` leg on `browser-tests`, returning it to `ubuntu-latest`, provided the 26.04 leg has stayed green. Keep the pin instead if it has flaked, and check whether GitHub has announced when the 24.04 image goes away — the announcement gave no date. Then update the CI row above.
-- The accepted advisories in §3.1 (`braces`, `sprintf-js`): at every refresh pass, check the registry for a release past the version in the table's exit condition. When one ships, add and cap the override the normal way **and remove the matching entry from `pnpm-workspace.yaml`'s `auditConfig.ignoreGhsas`**.
+- The accepted advisory in §3.1 (`braces`): at every refresh pass, check the registry for a release past the version in the table's exit condition. When one ships, add and cap the override the normal way **and remove the matching entry from `pnpm-workspace.yaml`'s `auditConfig.ignoreGhsas`**.
 - Phase 8: the release flow versus disabled pull requests — `01-vision-and-goals.md` §13.
 
 ---
