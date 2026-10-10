@@ -2,6 +2,15 @@ import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 import type { InputSize } from "../../atoms/Input";
 import type { TagTone, TagVariant } from "../../atoms/Tag";
 
+/** How `TagsInput` treats a tag that `validate` rejects. */
+export type TagsInputInvalidBehavior = "refuse" | "flag";
+
+/** Where a tag came from when it was added. */
+export type TagsInputAddSource = "enter" | "separator" | "blur" | "paste";
+
+/** What removed a tag. */
+export type TagsInputRemoveSource = "backspace" | "button" | "keyboard" | "clear";
+
 /** The text a `TagsInput` writes itself: names, announcements and messages. */
 export interface TagsInputLabels {
   /** The accessible name of a chip's remove button. @default (tag) => `Remove ${tag}` */
@@ -26,8 +35,31 @@ export interface TagsInputLabels {
    * @default (added, refused) => `${added} added, ${refused} not added`
    */
   pasted: (added: number, refused: number) => string;
-  /** The message shown when `required` is set and the form is submitted with no tags. @default "Add at least one tag" */
+  /** The message a form shows when `required` is set and it is submitted with no tags. @default "Add at least one tag" */
   required: string;
+  /**
+   * Announced when a tag is added but flagged (`invalidBehavior="flag"`), and read after the tag by a screen
+   * reader. Receives the tag and the reason `validate` gave.
+   * @default (tag, reason) => `${tag} added, not valid: ${reason}`
+   */
+  flagged: (tag: string, reason: string) => string;
+  /**
+   * The message a form shows when flagged tags are still in the field. @default "Remove or correct the tags that are not valid"
+   */
+  invalid: string;
+  /**
+   * The visible text, and the name, of the button that shows the tags collapsed by `maxVisible`. Receives how
+   * many are hidden, as a plain number; write it with `formatNumber` if you pass your own.
+   * @default (hidden) => `+${hidden} more`
+   */
+  more: (hidden: number) => string;
+  /** The text of the button that collapses the tags again after `more` was used. @default "Show less" */
+  less: string;
+  /**
+   * Describes the entry once there are tags: how to reach them with the keyboard.
+   * @default "Use the left arrow key to move to the tags"
+   */
+  chipsHint: string;
 }
 
 export interface TagsInputProps
@@ -100,6 +132,15 @@ export interface TagsInputProps
    */
   addOnBlur?: boolean;
   /**
+   * What happens to a tag `validate` rejects. `refuse` (the default) keeps it out and leaves the typed text in the
+   * entry with the message. `flag` adds it anyway, drawn in the `danger` tone with its reason read after it, and
+   * stops a surrounding `<form>` submitting until it is corrected or removed; a repeat or a tag past `maxTags` is
+   * still refused. Whether a tag is flagged is worked out from `validate` each render, so a tag passed in through
+   * `value` is flagged too.
+   * @default "refuse"
+   */
+  invalidBehavior?: TagsInputInvalidBehavior;
+  /**
    * Allows the same tag more than once. By default a repeat is refused with `labels.duplicate`.
    * @default false
    */
@@ -111,6 +152,27 @@ export interface TagsInputProps
   maxTags?: number;
   /** The most characters a single tag may have (the entry's native `maxLength`). */
   maxTagLength?: number;
+  /**
+   * Shows a live `count/max` after the tags while the field has a `maxTags`. Written with `formatNumber`.
+   * @default false
+   */
+  showCount?: boolean;
+  /**
+   * Collapses a long row: while the field isn't being used, only this many chips show, followed by a
+   * "+N more" button that shows the rest (and "Show less" to go back). The field shows every tag while the entry or
+   * a chip has focus, so what is typed is always in view. The hidden tags are still submitted under `name`.
+   */
+  maxVisible?: number;
+  /**
+   * Called for each tag as it is added, after `onValueChange`, with where it came from (a paste calls it once
+   * for every piece that was accepted).
+   */
+  onTagAdd?: (tag: string, details: { source: TagsInputAddSource }) => void;
+  /**
+   * Called for each tag as it is removed, after `onValueChange`, with its position before the removal and what
+   * removed it. Clearing all calls it once for every tag.
+   */
+  onTagRemove?: (tag: string, details: { index: number; source: TagsInputRemoveSource }) => void;
   /**
    * Normalizes each piece before it is checked and added: trim, change the case, strip a prefix. A piece that
    * comes out empty is dropped. A function that throws is ignored with a development warning.

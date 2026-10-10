@@ -179,7 +179,8 @@ describe("TagsInput", () => {
       const user = userEvent.setup();
       render(<TagsInput aria-label="Labels" defaultValue={["one"]} />);
       await user.type(entry(), "draft");
-      await user.tab({ shift: true });
+      await user.keyboard("{Home}{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Remove one" })).toHaveFocus();
       expect(chips()).toEqual(["one"]);
       expect(entry()).toHaveValue("draft");
     });
@@ -201,7 +202,7 @@ describe("TagsInput", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("design is already added");
       expect(entry()).toHaveValue("design");
       expect(entry()).toHaveAttribute("aria-invalid", "true");
-      expect(entry()).toHaveAccessibleDescription("design is already added");
+      expect(entry()).toHaveAccessibleDescription(/design is already added/);
       expect(chips()).toEqual(["design"]);
     });
 
@@ -345,8 +346,6 @@ describe("TagsInput", () => {
       render(<TagsInput aria-label="Labels" clearable defaultValue={["one", "two"]} onValueChange={onValueChange} />);
       await user.tab();
       await user.tab();
-      await user.tab();
-      await user.tab();
       expect(screen.getByRole("button", { name: "Clear all" })).toHaveFocus();
       await user.keyboard("{Enter}");
       expect(onValueChange).toHaveBeenLastCalledWith([]);
@@ -397,6 +396,257 @@ describe("TagsInput", () => {
       render(<TagsInput aria-label="Labels" defaultValue={given} />);
       await user.type(entry(), "two{Enter}");
       expect(given).toEqual(["one"]);
+    });
+  });
+
+  describe("chip keyboard model", () => {
+    it("is one tab stop for the chips and the entry, with the chips' buttons out of the tab order", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <button type="button">Before</button>
+          <TagsInput aria-label="Labels" defaultValue={["one", "two"]} />
+          <button type="button">After</button>
+        </>,
+      );
+      expect(screen.getByRole("button", { name: "Remove one" })).toHaveAttribute("tabindex", "-1");
+      await user.tab();
+      await user.tab();
+      expect(entry()).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
+      await user.tab({ shift: true });
+      expect(entry()).toHaveFocus();
+      await user.tab({ shift: true });
+      expect(screen.getByRole("button", { name: "Before" })).toHaveFocus();
+    });
+
+    it("moves from the start of the entry to the last chip with the left arrow, and not from mid-text", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" defaultValue={["one", "two"]} />);
+      await user.type(entry(), "ab");
+      await user.keyboard("{ArrowLeft}");
+      expect(entry()).toHaveFocus();
+      await user.keyboard("{ArrowLeft}");
+      expect(entry()).toHaveFocus();
+      expect((entry() as HTMLInputElement).selectionStart).toBe(0);
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Remove two" })).toHaveFocus();
+    });
+
+    it("moves along the chips with the arrow keys, Home and End, and back to the entry past the last", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" defaultValue={["one", "two", "three"]} />);
+      await user.click(entry());
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Remove three" })).toHaveFocus();
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByRole("button", { name: "Remove two" })).toHaveFocus();
+      await user.keyboard("{Home}");
+      expect(screen.getByRole("button", { name: "Remove one" })).toHaveFocus();
+      await user.keyboard("{End}");
+      expect(screen.getByRole("button", { name: "Remove three" })).toHaveFocus();
+      await user.keyboard("{ArrowRight}");
+      expect(entry()).toHaveFocus();
+    });
+
+    it("removes the focused chip with Delete and leaves focus on the one that took its place", async () => {
+      const user = userEvent.setup();
+      const onTagRemove = vi.fn();
+      render(<TagsInput aria-label="Labels" defaultValue={["one", "two", "three"]} onTagRemove={onTagRemove} />);
+      await user.click(entry());
+      await user.keyboard("{ArrowLeft}{ArrowLeft}{Delete}");
+      expect(chips()).toEqual(["one", "three"]);
+      expect(screen.getByRole("button", { name: "Remove three" })).toHaveFocus();
+      expect(onTagRemove).toHaveBeenCalledWith("two", { index: 1, source: "keyboard" });
+      await user.keyboard("{Delete}");
+      expect(chips()).toEqual(["one"]);
+      expect(screen.getByRole("button", { name: "Remove one" })).toHaveFocus();
+      await user.keyboard("{Backspace}");
+      expect(chips()).toEqual([]);
+      expect(entry()).toHaveFocus();
+    });
+
+    it("keeps the place along the row when a chip is removed with Enter, and returns to the entry for a press", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" defaultValue={["one", "two", "three"]} />);
+      await user.click(entry());
+      await user.keyboard("{ArrowLeft}{ArrowLeft}{Enter}");
+      expect(chips()).toEqual(["one", "three"]);
+      expect(screen.getByRole("button", { name: "Remove three" })).toHaveFocus();
+      await user.click(screen.getByRole("button", { name: "Remove one" }));
+      expect(entry()).toHaveFocus();
+    });
+
+    it("returns to the entry with Escape from a chip", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Labels" defaultValue={["one"]} />);
+      await user.click(entry());
+      await user.keyboard("{ArrowLeft}{Escape}");
+      expect(entry()).toHaveFocus();
+    });
+
+    it("describes the entry with how to reach the chips, only once there are some", () => {
+      const { rerender } = render(<TagsInput aria-label="Labels" />);
+      expect(entry()).not.toHaveAccessibleDescription();
+      rerender(<TagsInput aria-label="Labels" value={["one"]} />);
+      expect(entry()).toHaveAccessibleDescription("Use the left arrow key to move to the tags");
+    });
+  });
+
+  describe("flagging invalid tags", () => {
+    const email = (tag: string) => (tag.includes("@") ? undefined : "Not an email address");
+
+    it("adds a tag validate rejects, drawn in the danger tone with its reason read after it", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <TagsInput aria-label="Emails" invalidBehavior="flag" validate={email} onValueChange={onValueChange} />,
+      );
+      await user.type(entry(), "nope{Enter}");
+      expect(onValueChange).toHaveBeenLastCalledWith(["nope"]);
+      expect(entry()).toHaveValue("");
+      const chip = screen.getByRole("listitem");
+      expect(chip.querySelector("span")?.className).toMatch(/subtleDanger/);
+      expect(chip).toHaveTextContent("nope, Not an email address");
+      expect(entry()).toHaveAttribute("aria-invalid", "true");
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("nope added, not valid: Not an email address"));
+    });
+
+    it("flags a tag that arrives through value, and clears the flag once it is corrected", async () => {
+      const user = userEvent.setup();
+      function Wired() {
+        const [tags, setTags] = useState(["bad", "a@b.co"]);
+        return <TagsInput aria-label="Emails" invalidBehavior="flag" validate={email} value={tags} onValueChange={setTags} />;
+      }
+      render(<Wired />);
+      const items = screen.getAllByRole("listitem");
+      expect(items[0]?.querySelector("span")?.className).toMatch(/subtleDanger/);
+      expect(items[1]?.querySelector("span")?.className).toMatch(/subtleBrand/);
+      await user.click(screen.getByRole("button", { name: "Remove bad" }));
+      expect(entry()).not.toHaveAttribute("aria-invalid");
+    });
+
+    it("still refuses a repeat and a tag past maxTags", async () => {
+      const user = userEvent.setup();
+      render(<TagsInput aria-label="Emails" invalidBehavior="flag" validate={email} maxTags={2} defaultValue={["a@b.co"]} />);
+      await user.type(entry(), "a@b.co{Enter}");
+      expect(screen.getByRole("alert")).toHaveTextContent("already added");
+      await user.clear(entry());
+      await user.type(entry(), "x{Enter}y{Enter}");
+      expect(screen.getByRole("alert")).toHaveTextContent("No more than 2 tags");
+    });
+
+    it("stops a form submitting while a flagged tag is in the field, and lets it through once removed", async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <form>
+          <TagsInput aria-label="Emails" name="emails" invalidBehavior="flag" validate={email} defaultValue={["bad"]} />
+        </form>,
+      );
+      const form = container.querySelector("form") as HTMLFormElement;
+      expect(form.checkValidity()).toBe(false);
+      await user.click(screen.getByRole("button", { name: "Remove bad" }));
+      expect(form.checkValidity()).toBe(true);
+    });
+  });
+
+  describe("add and remove events", () => {
+    it("reports each tag added with where it came from", async () => {
+      const user = userEvent.setup();
+      const onTagAdd = vi.fn();
+      render(
+        <>
+          <TagsInput aria-label="Labels" onTagAdd={onTagAdd} />
+          <button type="button">Other</button>
+        </>,
+      );
+      await user.type(entry(), "a{Enter}b,c");
+      await user.tab();
+      await waitFor(() => expect(onTagAdd).toHaveBeenCalledTimes(3));
+      expect(onTagAdd).toHaveBeenNthCalledWith(1, "a", { source: "enter" });
+      expect(onTagAdd).toHaveBeenNthCalledWith(2, "b", { source: "separator" });
+      expect(onTagAdd).toHaveBeenNthCalledWith(3, "c", { source: "blur" });
+    });
+
+    it("reports every accepted piece of a paste, and none of the refused", async () => {
+      const user = userEvent.setup();
+      const onTagAdd = vi.fn();
+      render(<TagsInput aria-label="Labels" defaultValue={["x"]} onTagAdd={onTagAdd} />);
+      await user.click(entry());
+      await user.paste("x,y,z");
+      expect(onTagAdd.mock.calls.map((call) => [call[0], call[1].source])).toEqual([
+        ["y", "paste"],
+        ["z", "paste"],
+      ]);
+    });
+
+    it("reports a removal with its position and what removed it, and every tag on clear all", async () => {
+      const user = userEvent.setup();
+      const onTagRemove = vi.fn();
+      render(<TagsInput aria-label="Labels" clearable defaultValue={["a", "b", "c"]} onTagRemove={onTagRemove} />);
+      await user.click(screen.getByRole("button", { name: "Remove b" }));
+      expect(onTagRemove).toHaveBeenLastCalledWith("b", { index: 1, source: "button" });
+      await user.click(entry());
+      await user.keyboard("{Backspace}");
+      expect(onTagRemove).toHaveBeenLastCalledWith("c", { index: 1, source: "backspace" });
+      onTagRemove.mockClear();
+      await user.click(screen.getByRole("button", { name: "Clear all" }));
+      expect(onTagRemove.mock.calls.map((call) => [call[0], call[1].index, call[1].source])).toEqual([
+        ["a", 0, "clear"],
+      ]);
+    });
+  });
+
+  describe("counter and collapse", () => {
+    it("shows count/max with maxTags, written through formatNumber, and only then", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<TagsInput aria-label="Labels" showCount defaultValue={["a"]} />);
+      expect(screen.queryByText(/\d+\/\d+/)).toBeNull();
+      rerender(<TagsInput aria-label="Labels" showCount maxTags={5} defaultValue={["a"]} formatNumber={(n) => `#${n}`} />);
+      expect(screen.getByText("#1/#5")).toBeInTheDocument();
+      await user.type(entry(), "b{Enter}");
+      expect(screen.getByText("#2/#5")).toBeInTheDocument();
+    });
+
+    it("collapses to maxVisible chips and a +N more button while the field is not in use", () => {
+      render(<TagsInput aria-label="Labels" maxVisible={2} defaultValue={["a", "b", "c", "d"]} />);
+      expect(chips()).toEqual(["a", "b"]);
+      expect(screen.getByRole("button", { name: "+2 more" })).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("shows every tag while the entry has focus, and collapses again when it leaves", async () => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <TagsInput aria-label="Labels" maxVisible={1} defaultValue={["a", "b", "c"]} />
+          <button type="button">Other</button>
+        </>,
+      );
+      await user.click(entry());
+      expect(chips()).toEqual(["a", "b", "c"]);
+      await user.click(screen.getByRole("button", { name: "Other" }));
+      await waitFor(() => expect(chips()).toEqual(["a"]));
+    });
+
+    it("opens with +N more, offers Show less, and keeps submitting the hidden tags", async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <form>
+          <TagsInput aria-label="Labels" name="labels" maxVisible={1} defaultValue={["a", "b", "c"]} />
+        </form>,
+      );
+      expect(new FormData(container.querySelector("form") as HTMLFormElement).getAll("labels")).toEqual(["a", "b", "c"]);
+      await user.click(screen.getByRole("button", { name: "+2 more" }));
+      expect(chips()).toEqual(["a", "b", "c"]);
+      await user.click(screen.getByRole("button", { name: "Show less" }));
+      expect(chips()).toEqual(["a"]);
+    });
+
+    it("does not collapse when there are no more tags than maxVisible", () => {
+      render(<TagsInput aria-label="Labels" maxVisible={3} defaultValue={["a", "b", "c"]} />);
+      expect(chips()).toEqual(["a", "b", "c"]);
+      expect(screen.queryByRole("button", { name: /more/ })).toBeNull();
     });
   });
 
@@ -495,7 +745,7 @@ describe("TagsInput", () => {
       await user.click(screen.getByText("Labels"));
       expect(entry()).toHaveFocus();
       expect(entry()).toHaveAccessibleName("Labels");
-      expect(entry()).toHaveAccessibleDescription("Press Enter");
+      expect(entry()).toHaveAccessibleDescription(/Press Enter/);
     });
 
     it("focuses the entry when the box is pressed away from a control", async () => {

@@ -105,32 +105,38 @@ export const TextArrivingAllAtOnce: Story = {
 };
 
 export const FocusAfterRemoving: Story = {
-  name: "Removing a chip with its button puts focus in the entry, not on the page",
+  name: "Pressing a chip's button puts focus in the entry; Delete on a chip keeps the place along the row",
   render: () => <TagsInput aria-label="Labels" defaultValue={["one", "two", "three"]} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.tab();
-    await expect(canvas.getByRole("button", { name: "Remove one" })).toHaveFocus();
-    await userEvent.keyboard("{Enter}");
+    await userEvent.click(canvas.getByRole("button", { name: "Remove one" }));
     await expect(canvas.queryByText("one")).toBeNull();
     await expect(document.activeElement).toBe(canvas.getByRole("textbox"));
+    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}");
+    await expect(canvas.getByRole("button", { name: "Remove two" })).toHaveFocus();
+    await userEvent.keyboard("{Delete}");
+    await expect(canvas.queryByText("two")).toBeNull();
+    await expect(document.activeElement).toBe(canvas.getByRole("button", { name: "Remove three" }));
   },
 };
 
 export const TabOrder: Story = {
-  name: "Tab goes through each chip's remove button, then the entry, then clear-all, and back",
+  name: "The field is one tab stop for its chips and entry, then clear-all, and back",
   render: () => <TagsInput aria-label="Labels" clearable defaultValue={["one", "two"]} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.tab();
-    await expect(canvas.getByRole("button", { name: "Remove one" })).toHaveFocus();
-    await userEvent.tab();
-    await expect(canvas.getByRole("button", { name: "Remove two" })).toHaveFocus();
     await userEvent.tab();
     await expect(canvas.getByRole("textbox")).toHaveFocus();
     await userEvent.tab();
     await expect(canvas.getByRole("button", { name: "Clear all" })).toHaveFocus();
     await userEvent.tab({ shift: true });
+    await expect(canvas.getByRole("textbox")).toHaveFocus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(canvas.getByRole("button", { name: "Remove two" })).toHaveFocus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(canvas.getByRole("button", { name: "Remove one" })).toHaveFocus();
+    // Tab from a chip leaves the field's chips for the entry, then onward.
+    await userEvent.tab();
     await expect(canvas.getByRole("textbox")).toHaveFocus();
   },
 };
@@ -191,6 +197,12 @@ export const RightToLeft: Story = {
     const entry = canvas.getByRole("textbox");
     await expect(box(chips[0] as HTMLElement).left).toBeGreaterThan(box(chips[1] as HTMLElement).left);
     await expect(box(entry).right).toBeLessThanOrEqual(box(chips[1] as HTMLElement).left + 1);
+    // Toward the chips is the right arrow here.
+    await userEvent.click(entry);
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(canvas.getByRole("button", { name: "Remove اثنان" })).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(canvas.getByRole("button", { name: "Remove واحد" })).toHaveFocus();
   },
 };
 
@@ -295,5 +307,51 @@ export const PendingTextIsInTheFormWhenSubmitIsPressed: Story = {
     await userEvent.keyboard("two");
     await userEvent.click(canvas.getByRole("button", { name: "Go" }));
     await expect(submitted).toEqual(["one", "two"]);
+  },
+};
+
+export const CollapsedRowStaysOneLine: Story = {
+  name: "A collapsed row is one line with a +N more button, and shows everything while the entry has focus",
+  render: () => (
+    <div data-testid="frame" style={{ width: "20rem" }}>
+      <TagsInput
+        aria-label="Labels"
+        maxVisible={2}
+        defaultValue={["design", "engineering", "accessibility", "urgent", "review", "qa", "launch"]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const frame = canvas.getByTestId("frame");
+    const group = canvas.getByRole("group");
+    const more = canvas.getByRole("button", { name: "+5 more" });
+    await expect(canvas.getAllByRole("listitem")).toHaveLength(2);
+    const collapsed = box(group).height;
+    await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
+    await expect(box(more).height).toBeGreaterThanOrEqual(24);
+    await userEvent.click(canvas.getByRole("textbox"));
+    await expect(canvas.getAllByRole("listitem")).toHaveLength(7);
+    await expect(box(group).height).toBeGreaterThanOrEqual(collapsed);
+  },
+};
+
+export const FlaggedChipsAreDrawnAsInvalid: Story = {
+  name: "A flagged tag is drawn in the danger tone and the field's border follows",
+  render: () => (
+    <TagsInput
+      aria-label="Emails"
+      invalidBehavior="flag"
+      validate={(tag) => (tag.includes("@") ? undefined : "Not an email address")}
+      defaultValue={["a@b.co", "nope"]}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = canvas.getByRole("group");
+    const [good, bad] = canvas.getAllByRole("listitem").map((item) => item.querySelector("span") as HTMLElement);
+    await expect(getComputedStyle(bad as HTMLElement).color).not.toBe(getComputedStyle(good as HTMLElement).color);
+    await expect(getComputedStyle(group).borderTopColor).not.toBe("");
+    await expect(canvas.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
   },
 };

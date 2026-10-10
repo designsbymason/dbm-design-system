@@ -1,2 +1,8 @@
 export { TagsInput } from "./TagsInput";
-export type { TagsInputLabels, TagsInputProps } from "./TagsInput.types";
+export type {
+  TagsInputAddSource,
+  TagsInputInvalidBehavior,
+  TagsInputLabels,
+  TagsInputProps,
+  TagsInputRemoveSource,
+} from "./TagsInput.types";

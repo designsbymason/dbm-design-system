@@ -33,6 +33,19 @@ export const tagsInputSnippets = {
   transform: `{/* Normalize each piece before it is checked: here, lower-case with no # prefix. */}
 <TagsInput aria-label="Topics" transform={(raw) => raw.trim().replace(/^#/, "").toLowerCase()} />`,
 
+  flagging: `{/* The tag is added and drawn as invalid; a form won't submit until it is fixed or removed. */}
+<TagsInput
+  aria-label="Recipients"
+  invalidBehavior="flag"
+  validate={(tag) => (/^\\S+@\\S+\\.\\S+$/.test(tag) ? undefined : "Not an email address")}
+/>`,
+
+  counter: `{/* The count shows as count/max while there is a maxTags. */}
+<TagsInput aria-label="Labels" maxTags={5} showCount defaultValue={["design", "urgent"]} />`,
+
+  collapsed: `{/* Three chips and "+4 more" while the field is not in use; every tag while it is. */}
+<TagsInput aria-label="Labels" maxVisible={3} defaultValue={tags} />`,
+
   duplicates: `<TagsInput aria-label="Ingredients" allowDuplicates defaultValue={["egg", "egg"]} />`,
 
   clearable: `<TagsInput aria-label="Labels" clearable defaultValue={["design", "urgent", "review"]} />`,
@@ -65,8 +78,10 @@ export interface TagsInputPlaygroundSnippetArgs {
   tone?: string;
   variant?: string;
   addOnBlur?: boolean;
+  invalidBehavior?: string;
   allowDuplicates?: boolean;
   maxTags?: number;
+  showCount?: boolean;
   clearable?: boolean;
   required?: boolean;
   hasError?: boolean;
@@ -91,8 +106,10 @@ export function tagsInputPlaygroundSnippet(args: TagsInputPlaygroundSnippetArgs)
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.variant && args.variant !== "subtle") attributes.push(`variant="${args.variant}"`);
   if (args.addOnBlur === false) attributes.push("addOnBlur={false}");
+  if (args.invalidBehavior && args.invalidBehavior !== "refuse") attributes.push(`invalidBehavior="${args.invalidBehavior}"`);
   if (args.allowDuplicates) attributes.push("allowDuplicates");
   if (args.maxTags !== undefined && args.maxTags > 0) attributes.push(`maxTags={${args.maxTags}}`);
+  if (args.showCount) attributes.push("showCount");
   if (args.clearable) attributes.push("clearable");
   if (args.required) attributes.push("required");
   if (args.hasError) attributes.push("hasError");

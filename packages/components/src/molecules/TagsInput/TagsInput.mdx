@@ -22,9 +22,14 @@ export const propOrder = [
   "variant",
   "separators",
   "addOnBlur",
+  "invalidBehavior",
   "allowDuplicates",
   "maxTags",
+  "showCount",
+  "maxVisible",
   "maxTagLength",
+  "onTagAdd",
+  "onTagRemove",
   "transform",
   "validate",
   "clearable",
@@ -85,6 +90,9 @@ import { TagsInput } from "@dbm-design-system/components";
     "defaultInputValue",
     "onInputValueChange",
     "separators",
+    "maxVisible",
+    "onTagAdd",
+    "onTagRemove",
     "maxTagLength",
     "transform",
     "validate",
@@ -135,6 +143,18 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 ### Validation
 
 <Canvas of={TagsInputStories.Validation} />
+
+### Flagging invalid tags
+
+<Canvas of={TagsInputStories.Flagging} />
+
+### With a counter
+
+<Canvas of={TagsInputStories.WithCounter} />
+
+### Collapsing a long row
+
+<Canvas of={TagsInputStories.Collapsed} />
 
 ### Normalizing each tag
 
@@ -204,7 +224,12 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 - A refused tag stays in the entry with its message and is announced, so the person can correct it rather than retype
   it.
 - The field is as tall as an `Input` of the same size (within a few pixels), and adding the first tag does not move
-  anything below it. Chips wrap onto further lines as they are added.
+  anything below it. Chips wrap onto further lines as they are added; set `maxVisible` to keep a long list to a
+  line while the field isn't in use.
+- Use `invalidBehavior="flag"` where a paste may hold one bad entry among many: nothing is thrown away, the bad
+  one is plain to see, and a form won't send it. Keep the default `refuse` where a wrong tag should never exist.
+- `onTagAdd` and `onTagRemove` say what changed and why (a paste, a Backspace, Clear all), which `onValueChange`'s
+  array alone can't, for analytics or an undo.
 
 ## Accessibility
 
@@ -213,13 +238,23 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 - The field is a `group` named by `aria-label` or `aria-labelledby`; the tags are a list with one item each, and the
   entry is a plain native text input with the same name, so a screen reader finds one field to type in and a list to
   read.
-- Each chip has a real remove button named "Remove" and the tag (translatable through `labels`). Tab goes through the
-  buttons, then the entry, then the clear-all button.
+- Each chip has a real remove button named "Remove" and the tag (translatable through `labels`). The chips are not
+  tab stops: the field is one stop at the entry (then the clear-all button), and the left arrow key moves from the
+  start of the entry onto the chips, as the entry says in its description once there are tags. The arrow keys, Home
+  and End move among them, Delete or Backspace remove the one that has focus, and Escape or the right arrow past
+  the last chip returns to the entry. The keys swap in a right-to-left page.
 - Adding, removing and refusing are announced in a status region that is in the page before it has anything to say.
 - A refused tag sets `aria-invalid` on the entry and shows the message in an alert, tied to the entry through
   `aria-describedby`.
 - Enter and a separator typed while an input method is composing a character do not make a tag.
-- After a chip is removed with its button, focus moves to the entry, so it is never left on a chip that is gone.
+- After a chip is removed with a key, focus stays on the one that took its place; after a pointer press it moves to
+  the entry, so it is never left on a chip that is gone.
+- A flagged tag (`invalidBehavior="flag"`) is drawn in the `danger` tone, its reason is read after it, the entry is
+  marked `aria-invalid`, and a surrounding form will not submit until it is corrected or removed. Colour is not the
+  only signal: the reason is text.
+- With `maxVisible` the row collapses only while the entry and the chips don't have focus, so what you are typing
+  and removing is always in view; the "+N more" button is named by its own text and says whether it has opened the
+  row (`aria-expanded`).
 - Escape clears the pending text and is handled in the field, so it does not reach a parent's handler while there is
   text to clear; with nothing to clear it passes through.
 - The typed text is not a member of a surrounding `<form>`: the form receives the tags under `name`, and `required`
@@ -234,7 +269,11 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 | A separator (comma by default) | Adds the text before it as a tag. |
 | Backspace (empty entry) | Removes the last tag. |
 | Escape | Clears the typed text. |
-| Tab | Moves through each chip's remove button, then the entry, then clear-all. Leaving the field adds typed text (`addOnBlur`). |
+| Tab | Moves to the entry, then to the clear-all button. Leaving the field adds typed text (`addOnBlur`). |
+| Left arrow (start of the entry) | Moves onto the last chip. |
+| Left and right arrows (on a chip) | Move to the previous or next chip; the right arrow past the last returns to the entry. |
+| Home, End (on a chip) | Move to the first or last chip. |
+| Delete, Backspace (on a chip) | Remove it and move to the chip that took its place, or to the entry. |
 | Paste | Splits at the separators, line breaks and tabs, and adds each piece that is accepted. |
 
 ## Code examples
@@ -261,7 +300,24 @@ straight through to the outer box. `className` and `style` go on the outer box; 
 />
 
 {/* At most five, each at most twenty characters; a comma, a semicolon or a space ends one */}
-<TagsInput aria-label="Labels" maxTags={5} maxTagLength={20} separators={[",", ";", " "]} />
+<TagsInput aria-label="Labels" maxTags={5} maxTagLength={20} separators={[",", ";", " "]} showCount />
+
+{/* Keep a bad entry in view instead of throwing it away; the form won't submit until it is fixed */}
+<TagsInput
+  aria-label="Recipients"
+  invalidBehavior="flag"
+  validate={(tag) => (tag.includes("@") ? undefined : "Not an email address")}
+/>
+
+{/* A long list on one line until the field is used */}
+<TagsInput aria-label="Labels" maxVisible={3} value={tags} onValueChange={setTags} />
+
+{/* Knowing what changed, and why */}
+<TagsInput
+  aria-label="Labels"
+  onTagAdd={(tag, { source }) => track("tag-added", { tag, source })}
+  onTagRemove={(tag, { source }) => track("tag-removed", { tag, source })}
+/>
 
 {/* Submitted with a form, one value per tag, and at least one required */}
 <form onSubmit={handleSubmit}>

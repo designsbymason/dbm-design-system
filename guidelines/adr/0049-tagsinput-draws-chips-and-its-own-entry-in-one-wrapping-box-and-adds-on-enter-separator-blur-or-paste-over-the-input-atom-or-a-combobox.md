@@ -1,6 +1,6 @@
 # 0049 — `TagsInput` draws its chips and its own entry in one wrapping box, and adds a tag on Enter, a separator, blur or paste, over the `Input` atom or a `Combobox`
 
-**Status:** Accepted · **Date:** 2026-10-10
+**Status:** Accepted · **Date:** 2026-10-10 · the chip keyboard model (Tab through each chip's remove button) is superseded by [ADR-0050](./0050-tagsinput-chips-are-one-tab-stop-with-arrow-key-movement-and-tag-lets-its-remove-button-leave-the-tab-order.md); the rest stands
 
 ## Context
 `TagsInput` is a list of short, typed values shown as removable chips. Three things had no precedent in the

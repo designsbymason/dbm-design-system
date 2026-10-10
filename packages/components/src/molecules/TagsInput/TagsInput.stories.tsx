@@ -71,6 +71,13 @@ const meta: Meta<typeof TagsInput> = {
       description: "Makes a tag of the typed text when focus leaves the field, so a value typed but not confirmed is not lost.",
       table: { defaultValue: { summary: "true" } },
     },
+    invalidBehavior: {
+      control: "radio",
+      options: ["refuse", "flag"],
+      description:
+        "What happens to a tag validate rejects: refuse keeps it out and leaves the text in the entry; flag adds it in the danger tone and stops a form submitting until it is fixed or removed.",
+      table: { defaultValue: { summary: "refuse" } },
+    },
     allowDuplicates: {
       control: "boolean",
       description: "Allows the same tag more than once. By default a repeat is refused with labels.duplicate.",
@@ -79,6 +86,26 @@ const meta: Meta<typeof TagsInput> = {
     maxTags: {
       control: "number",
       description: "The most tags the field holds. Adding more is refused with labels.maxReached.",
+    },
+    showCount: {
+      control: "boolean",
+      if: { arg: "maxTags", truthy: true },
+      description: "Shows a live count/max after the tags. Only drawn when maxTags is set.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    maxVisible: {
+      control: "number",
+      description:
+        "Collapses a long row while the field is not in use: only this many chips show, then a +N more button. Every tag shows while the entry or a chip has focus.",
+    },
+    onTagAdd: {
+      control: false,
+      description: "Called for each tag as it is added, after onValueChange, with where it came from: enter, separator, blur or paste.",
+    },
+    onTagRemove: {
+      control: false,
+      description:
+        "Called for each tag as it is removed, after onValueChange, with its position and what removed it: backspace, button, keyboard or clear.",
     },
     maxTagLength: {
       control: false,
@@ -196,8 +223,10 @@ const meta: Meta<typeof TagsInput> = {
     tone: "brand",
     variant: "subtle",
     addOnBlur: true,
+    invalidBehavior: "refuse",
     allowDuplicates: false,
     maxTags: 8,
+    showCount: false,
     clearable: false,
     required: false,
     hasError: false,
@@ -306,6 +335,38 @@ export const Transform: Story = {
       <TagsInput {...args} transform={(raw) => raw.trim().replace(/^#/, "").toLowerCase()} />
     </div>
   ),
+};
+
+export const Flagging: Story = {
+  name: "Flagging invalid tags",
+  parameters: { docs: { source: { code: tagsInputSnippets.flagging } } },
+  args: { invalidBehavior: "flag", defaultValue: ["ada@example.com", "not-an-email"], "aria-label": "Recipients", placeholder: "Add an email" },
+  argTypes: { invalidBehavior: { control: false } },
+  render: (args) => (
+    <div style={{ maxWidth: "24rem" }}>
+      <TagsInput
+        {...args}
+        spellCheck={false}
+        autoCapitalize="off"
+        validate={(tag) => (/^\S+@\S+\.\S+$/.test(tag) ? undefined : "Not an email address")}
+      />
+    </div>
+  ),
+};
+
+export const WithCounter: Story = {
+  name: "With a counter",
+  parameters: { docs: { source: { code: tagsInputSnippets.counter } } },
+  args: { maxTags: 5, showCount: true, defaultValue: ["design", "urgent"] },
+};
+
+export const Collapsed: Story = {
+  name: "Collapsing a long row",
+  parameters: { docs: { source: { code: tagsInputSnippets.collapsed } } },
+  args: {
+    maxVisible: 3,
+    defaultValue: ["design", "engineering", "accessibility", "urgent", "review", "qa", "launch"],
+  },
 };
 
 export const Duplicates: Story = {

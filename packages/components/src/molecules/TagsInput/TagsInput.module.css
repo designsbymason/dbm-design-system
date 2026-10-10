@@ -95,6 +95,19 @@
   cursor: not-allowed;
 }
 
+/* The "+N more" and "Show less" buttons, `Tag`s of their own, sit in the row after the chips. */
+.more {
+  flex-shrink: 0;
+}
+
+/* `count/max`, after the typing area: the same quiet treatment as `Input`'s own counter. */
+.count {
+  color: var(--dbm-text-tertiary);
+  flex-shrink: 0;
+  font-size: var(--dbm-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
 /* A neutral clear-all control after the chips, in `Input`'s own treatment for its clear button. */
 .clear {
   align-items: center;
