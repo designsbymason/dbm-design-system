@@ -1,0 +1,48 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { AlertDialog } from "./AlertDialog";
+
+// Docs-only (guidelines/adr/0013): the root component's own argTypes for the main Properties table, since the
+// Playground's meta also carries `AlertDialog.Content`'s props.
+const meta: Meta<typeof AlertDialog> = {
+  title: "Organisms/Overlay/AlertDialog/Root",
+  component: AlertDialog,
+  tags: ["!dev"],
+  argTypes: {
+    children: {
+      control: false,
+      description: "AlertDialog.Trigger and AlertDialog.Content.",
+    },
+    open: {
+      control: "boolean",
+      description: "The controlled open state. Omit (along with defaultOpen) to let the alert manage its own open state.",
+    },
+    defaultOpen: {
+      control: "boolean",
+      description: "The initial open state for uncontrolled usage — ignored once open is provided.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onOpenChange: {
+      control: false,
+      description:
+        "Called with the new open state whenever it changes. The second argument, { reason }, says what caused it: \"trigger\", \"escape\", \"action\" or \"cancel\".",
+    },
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof AlertDialog>;
+
+export const Default: Story = {
+  render: (args) => (
+    <AlertDialog {...args}>
+      <AlertDialog.Trigger>Open</AlertDialog.Trigger>
+      <AlertDialog.Content>
+        <AlertDialog.Header>
+          <AlertDialog.Title>Sure?</AlertDialog.Title>
+          <AlertDialog.Description>Really.</AlertDialog.Description>
+        </AlertDialog.Header>
+      </AlertDialog.Content>
+    </AlertDialog>
+  ),
+};

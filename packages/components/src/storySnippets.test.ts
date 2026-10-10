@@ -62,6 +62,7 @@ import { numberInputPlaygroundSnippet } from "./molecules/NumberInput/NumberInpu
 import { paginationPlaygroundSnippet } from "./molecules/Pagination/Pagination.snippets";
 import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/PasswordInput.snippets";
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
+import { alertDialogPlaygroundSnippet } from "./organisms/AlertDialog/AlertDialog.snippets";
 import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
 import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlider.snippets";
@@ -1671,6 +1672,29 @@ describe("Playground snippet for Dialog", () => {
     expect(dialogPlaygroundSnippet({ scrimOpacity: 60 })).toContain("<Dialog.Content>");
     expect(dialogPlaygroundSnippet({ scrimOpacity: 90, scrimBlur: true })).toContain(
       "<Dialog.Content scrimOpacity={90} scrimBlur>",
+    );
+  });
+});
+
+describe("Playground snippet for AlertDialog", () => {
+  const alertArgs = [
+    {},
+    { tone: "danger", size: "xs", busy: true, closeOnEscape: false, scrimOpacity: 80, scrimBlur: true },
+    { tone: "neutral", size: "sm", scrimOpacity: 60 },
+  ] as const;
+
+  it.each(alertArgs)("AlertDialog %j is a real snippet", (args) => {
+    expect(problemsIn(alertDialogPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("AlertDialog writes only what differs from the defaults", () => {
+    expect(alertDialogPlaygroundSnippet({ tone: "neutral", size: "sm" })).toContain("<AlertDialog.Content>");
+    expect(alertDialogPlaygroundSnippet({ tone: "danger" })).toContain('<AlertDialog.Content tone="danger">');
+    expect(alertDialogPlaygroundSnippet({ closeOnEscape: false, busy: true })).toContain(
+      "<AlertDialog.Content busy closeOnEscape={false}>",
+    );
+    expect(alertDialogPlaygroundSnippet({ scrimOpacity: 80, scrimBlur: true })).toContain(
+      "<AlertDialog.Content scrimOpacity={80} scrimBlur>",
     );
   });
 });

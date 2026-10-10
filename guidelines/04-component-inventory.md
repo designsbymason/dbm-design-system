@@ -154,7 +154,7 @@ Content that appears above, or reveals/hides other content.
 | Accordion | molecule | 🟢 | Wraps Radix Accordion fully (`Root`/`Item`/`Header`/`Trigger`/`Content`) — does not literally reuse the `Collapse` atom's own component, see [ADR-0018](adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) |
 | Collapse | atom | 🟢 | Simple expand/collapse, building block for Accordion |
 | ContextMenu | organism | 🟡 | Right-click menu |
-| AlertDialog | organism | 🟢 | Modal variant requiring explicit acknowledgment |
+| AlertDialog | organism | 🟢 | A modal that has to be answered: `role="alertdialog"`, no dismissal by a press outside and no corner close button, focus starting on the safe choice. Compound (`AlertDialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Action`/`Cancel`) over Radix AlertDialog, with a tone icon, `busy` and a reason on close; drawn with `Dialog`'s sections and stylesheet ([ADR-0056](adr/0056-alertdialog-draws-with-dialogs-sections-and-stylesheet-and-defers-extracting-them-to-the-third-consumer.md)). `ConfirmDialog` is the prop-driven pattern on top. Review: [AlertDialog.md](component-reviews/AlertDialog.md) |
 
 ## 8. Media
 Images, icons, visual content handling.
@@ -258,11 +258,11 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` is built and Finalized; the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` is built and Finalized and `AlertDialog` is built; the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
-2. AlertDialog, 3. ConfirmDialog — variants and a pattern on the Dialog
+2. AlertDialog (built, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — variants and a pattern on the Dialog
 4. Drawer / Sheet — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it
 6. Toast / Notification — independent; other organisms report results through it

@@ -109,6 +109,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0053](./0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md) | `Dialog`, `AlertDialog` and `Drawer` are sibling components, not one `Dialog` with a `role` or `placement` prop | Accepted |
 | [0054](./0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md) | Portaled floating panels sit on the `popover` z-index step, not `dropdown` | Accepted |
 | [0055](./0055-dialog-keeps-its-content-mounted-by-moving-one-rendered-element-in-and-out-of-the-panel-over-radixs-forcemount.md) | `Dialog`'s `keepMounted` moves one rendered element in and out of the panel, over Radix's `forceMount` | Accepted |
+| [0056](./0056-alertdialog-draws-with-dialogs-sections-and-stylesheet-and-defers-extracting-them-to-the-third-consumer.md) | `AlertDialog` draws with `Dialog`'s sections and stylesheet, and extraction waits for the third consumer | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 
