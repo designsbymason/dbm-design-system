@@ -111,10 +111,9 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Called with the new open state whenever it changes.",
     },
   },
+  // The Controls panel lists props in the order of these keys (they are merged ahead of `argTypes`), so this is the
+  // order a reader sees: content and visual props first, then behaviour.
   args: {
-    defaultOpen: false,
-    modal: true,
-    dir: "ltr",
     size: "md",
     side: "bottom",
     align: "start",
@@ -123,6 +122,9 @@ const meta: Meta<PlaygroundArgs> = {
     avoidCollisions: true,
     collisionPadding: 8,
     loop: false,
+    modal: true,
+    dir: "ltr",
+    defaultOpen: false,
     onOpenChange: fn(),
   },
   render: (args) => (
