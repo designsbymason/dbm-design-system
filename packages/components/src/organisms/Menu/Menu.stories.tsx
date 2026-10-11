@@ -1,0 +1,390 @@
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
+import {
+  CopyIcon,
+  DotsThreeIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+} from "@dbm-design-system/icons";
+import { fn } from "storybook/test";
+import { Button } from "../../atoms/Button";
+import { IconButton } from "../../atoms/IconButton";
+import { Dialog } from "../Dialog";
+import { Menu } from "./Menu";
+import { menuPlaygroundSnippet, menuSnippets } from "./Menu.snippets";
+import type { MenuAlign, MenuSide, MenuSize } from "./Menu.types";
+import { countries, MenuStage, type MenuStageArgs } from "./MenuStoryKit";
+
+// Combines Menu's own root-level args (defaultOpen/modal/dir/onOpenChange) with Menu.Content's (size/side/align/…) in
+// one Playground: `meta.component` can only resolve docgen argTypes for one component, so Content's are declared by
+// hand below and threaded through `MenuStage`. Each sub-part still gets its own Properties table from a hidden,
+// docs-only stories file (guidelines/adr/0013).
+interface PlaygroundArgs {
+  defaultOpen: boolean;
+  modal: boolean;
+  dir: "ltr" | "rtl";
+  onOpenChange: (open: boolean) => void;
+  size: MenuSize;
+  side: MenuSide;
+  align: MenuAlign;
+  sideOffset: number;
+  alignOffset: number;
+  avoidCollisions: boolean;
+  collisionPadding: number;
+  loop: boolean;
+}
+
+const playgroundSource = {
+  type: "dynamic" as const,
+  transform: (_code: string, context: StoryContext) => menuPlaygroundSnippet(context.args),
+};
+
+const meta: Meta<PlaygroundArgs> = {
+  title: "Organisms/Navigation/Menu",
+  parameters: { layout: "padded" },
+  argTypes: {
+    defaultOpen: {
+      control: "boolean",
+      description: "The initial open state when uncontrolled.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    modal: {
+      control: "boolean",
+      description:
+        "Makes the rest of the page inert and locks its scroll while the menu is open, and has a press outside only close it. Turn off for a menu that leaves the page usable behind it.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    dir: {
+      control: "inline-radio",
+      options: ["ltr", "rtl"],
+      description:
+        "The reading direction, passed to the menu and its submenus: it decides which side a submenu opens on and which arrow key opens and closes it.",
+      table: { defaultValue: { summary: '"ltr"' } },
+    },
+    onOpenChange: {
+      control: false,
+      description: "Called with the new open state whenever it changes.",
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "The row height and type size of every item, label and submenu in the menu.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
+    side: {
+      // A `select` of the single-value form: `Responsive<MenuSide>` (a value, or a breakpoint-keyed map) has no
+      // single control shape, so the responsive form gets its own story below.
+      control: "select",
+      options: ["top", "right", "bottom", "left"],
+      description:
+        "Which side of the trigger the panel opens on, a single value (shown here) or a mobile-first map keyed by breakpoint, e.g. { base: 'bottom', lg: 'right' }.",
+      table: { defaultValue: { summary: '"bottom"' } },
+    },
+    align: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description: "Alignment along the chosen side. A menu belongs under the start edge of its button.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
+    sideOffset: {
+      control: "number",
+      description: "Pixel gap between the trigger and the panel along side.",
+      table: { defaultValue: { summary: "4" } },
+    },
+    alignOffset: {
+      control: "number",
+      description: "Pixel offset along align's own axis.",
+      table: { defaultValue: { summary: "0" } },
+    },
+    avoidCollisions: {
+      control: "boolean",
+      description: "Repositions the panel to stay within the viewport instead of overflowing it.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    collisionPadding: {
+      control: "number",
+      description: "Minimum distance kept from the viewport edge while repositioning.",
+      table: { defaultValue: { summary: "8" } },
+    },
+    loop: {
+      control: "boolean",
+      description: "Whether arrow-key movement wraps from the last item to the first and back.",
+      table: { defaultValue: { summary: "false" } },
+    },
+  },
+  args: {
+    defaultOpen: false,
+    modal: true,
+    dir: "ltr",
+    size: "md",
+    side: "bottom",
+    align: "start",
+    sideOffset: 4,
+    alignOffset: 0,
+    avoidCollisions: true,
+    collisionPadding: 8,
+    loop: false,
+    onOpenChange: fn(),
+  },
+  render: (args) => (
+    <MenuStage args={args}>
+      <Menu.Item icon={PencilSimpleIcon} shortcut="⌘E">
+        Edit
+      </Menu.Item>
+      <Menu.Item icon={CopyIcon} shortcut="⌘D">
+        Duplicate
+      </Menu.Item>
+      <Menu.Separator />
+      <Menu.Item icon={TrashIcon} tone="danger">
+        Delete
+      </Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export default meta;
+
+type Story = StoryObj<PlaygroundArgs>;
+
+/** Drive every prop live via the Controls panel below. */
+export const Playground: Story = {
+  parameters: { docs: { source: playgroundSource } },
+};
+
+export const IconsAndShortcuts: Story = {
+  name: "Icons, shortcut hints and a danger item",
+  parameters: { docs: { source: { code: menuSnippets.iconsAndShortcuts } } },
+};
+
+export const Sizes: Story = {
+  name: "Sizes",
+  parameters: { docs: { source: { code: menuSnippets.sizes } } },
+  // Every step is drawn side by side, so there is no one `size` a control could stand for.
+  argTypes: { size: { control: false } },
+  render: (args: MenuStageArgs) => (
+    <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-3)" }}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <MenuStage key={size} args={{ ...args, size }} label={size}>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item>Duplicate</Menu.Item>
+          <Menu.Item>Archive</Menu.Item>
+        </MenuStage>
+      ))}
+    </div>
+  ),
+};
+
+export const CheckboxItems: Story = {
+  name: "Checkbox items",
+  parameters: { docs: { source: { code: menuSnippets.checkboxItems } } },
+  render: (args) => (
+    <MenuStage args={args} label="View">
+      <Menu.CheckboxItem defaultChecked onSelect={(event) => event.preventDefault()}>
+        Show grid
+      </Menu.CheckboxItem>
+      <Menu.CheckboxItem onSelect={(event) => event.preventDefault()}>Show rulers</Menu.CheckboxItem>
+      <Menu.CheckboxItem checked="indeterminate" onSelect={(event) => event.preventDefault()}>
+        Some guides
+      </Menu.CheckboxItem>
+    </MenuStage>
+  ),
+};
+
+export const RadioGroup: Story = {
+  name: "Radio group",
+  parameters: { docs: { source: { code: menuSnippets.radioGroup } } },
+  render: (args) => (
+    <MenuStage args={args} label="Sort">
+      <Menu.RadioGroup defaultValue="name" aria-label="Sort by">
+        <Menu.RadioItem value="name" onSelect={(event) => event.preventDefault()}>
+          Name
+        </Menu.RadioItem>
+        <Menu.RadioItem value="modified" onSelect={(event) => event.preventDefault()}>
+          Date modified
+        </Menu.RadioItem>
+        <Menu.RadioItem value="size" onSelect={(event) => event.preventDefault()}>
+          Size
+        </Menu.RadioItem>
+      </Menu.RadioGroup>
+    </MenuStage>
+  ),
+};
+
+export const GroupsAndLabels: Story = {
+  name: "Groups and labels",
+  parameters: { docs: { source: { code: menuSnippets.groupsAndLabels } } },
+  render: (args) => (
+    <MenuStage args={args} label="Workspace">
+      <Menu.Group>
+        <Menu.Label>Account</Menu.Label>
+        <Menu.Item>Profile</Menu.Item>
+        <Menu.Item>Billing</Menu.Item>
+      </Menu.Group>
+      <Menu.Separator />
+      <Menu.Group>
+        <Menu.Label>Workspace</Menu.Label>
+        <Menu.Item>Members</Menu.Item>
+        <Menu.Item>Settings</Menu.Item>
+      </Menu.Group>
+    </MenuStage>
+  ),
+};
+
+export const Submenu: Story = {
+  name: "Submenus",
+  parameters: { docs: { source: { code: menuSnippets.submenu } } },
+  render: (args) => (
+    <MenuStage args={args} label="File">
+      <Menu.Item>Rename</Menu.Item>
+      <Menu.Sub>
+        <Menu.SubTrigger>Share</Menu.SubTrigger>
+        <Menu.SubContent>
+          <Menu.Item>Copy link</Menu.Item>
+          <Menu.Item>Email</Menu.Item>
+          <Menu.Sub>
+            <Menu.SubTrigger>Social</Menu.SubTrigger>
+            <Menu.SubContent>
+              <Menu.Item>Post</Menu.Item>
+              <Menu.Item>Message</Menu.Item>
+            </Menu.SubContent>
+          </Menu.Sub>
+        </Menu.SubContent>
+      </Menu.Sub>
+    </MenuStage>
+  ),
+};
+
+export const LinkItems: Story = {
+  name: "Link items",
+  parameters: { docs: { source: { code: menuSnippets.linkItems } } },
+  render: (args) => (
+    <MenuStage args={args} label="Help">
+      <Menu.Item asChild>
+        <a href="#documentation">Documentation</a>
+      </Menu.Item>
+      <Menu.Item asChild>
+        <a href="#changelog">Changelog</a>
+      </Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export const DisabledItems: Story = {
+  name: "Disabled items",
+  parameters: { docs: { source: { code: menuSnippets.disabledItems } } },
+  render: (args) => (
+    <MenuStage args={args}>
+      <Menu.Item>Edit</Menu.Item>
+      <Menu.Item disabled>Duplicate</Menu.Item>
+      <Menu.Item>Archive</Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export const RowActions: Story = {
+  name: "An icon-only trigger for row actions",
+  parameters: { docs: { source: { code: menuSnippets.rowActions } } },
+  render: (args) => (
+    <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-8)" }}>
+      <Menu defaultOpen={args.defaultOpen} modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
+        <Menu.Trigger asChild>
+          <IconButton icon={DotsThreeIcon} aria-label="Row actions" variant="ghost" />
+        </Menu.Trigger>
+        <Menu.Content align="end" size={args.size}>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item>Duplicate</Menu.Item>
+          <Menu.Separator />
+          <Menu.Item tone="danger">Delete</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </div>
+  ),
+};
+
+export const ResponsiveSide: Story = {
+  name: "Responsive side (below on mobile, beside from lg up)",
+  parameters: { docs: { source: { code: menuSnippets.responsiveSide } } },
+  // `side` is the responsive map below, which no single control can express.
+  argTypes: { side: { control: false } },
+  render: (args) => (
+    <MenuStage args={{ ...args, side: { base: "bottom", lg: "right" } }} label="Resize the viewport">
+      <Menu.Item>Edit</Menu.Item>
+      <Menu.Item>Duplicate</Menu.Item>
+      <Menu.Item>Archive</Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export const LongMenu: Story = {
+  name: "A long menu scrolls",
+  parameters: { docs: { source: { code: menuSnippets.longMenu } } },
+  render: (args) => (
+    <MenuStage args={args} label="Country">
+      {countries.map((country) => (
+        <Menu.Item key={country}>{country}</Menu.Item>
+      ))}
+    </MenuStage>
+  ),
+};
+
+export const InsideDialog: Story = {
+  name: "Opened from inside a Dialog",
+  parameters: { docs: { source: { code: menuSnippets.insideDialog } } },
+  // The menu inside the dialog is fixed content; the controls drive nothing here.
+  argTypes: {
+    defaultOpen: { control: false },
+    modal: { control: false },
+    dir: { control: false },
+    size: { control: false },
+    side: { control: false },
+    align: { control: false },
+    sideOffset: { control: false },
+    alignOffset: { control: false },
+    avoidCollisions: { control: false },
+    collisionPadding: { control: false },
+    loop: { control: false },
+  },
+  render: () => (
+    <Dialog>
+      <Dialog.Trigger asChild>
+        <Button>Open settings</Button>
+      </Dialog.Trigger>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>Settings</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <Menu>
+            <Menu.Trigger asChild>
+              <Button variant="secondary">Theme</Button>
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Light</Menu.Item>
+              <Menu.Item>Dark</Menu.Item>
+            </Menu.Content>
+          </Menu>
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+};
+
+export const RightToLeft: Story = {
+  name: "Right to left",
+  parameters: { docs: { source: { code: menuSnippets.rightToLeft } } },
+  args: { dir: "rtl" },
+  render: (args) => (
+    <div dir="rtl">
+      <MenuStage args={args}>
+        <Menu.Item>Edit</Menu.Item>
+        <Menu.Sub>
+          <Menu.SubTrigger>Share</Menu.SubTrigger>
+          <Menu.SubContent>
+            <Menu.Item>Copy link</Menu.Item>
+            <Menu.Item>Email</Menu.Item>
+          </Menu.SubContent>
+        </Menu.Sub>
+        <Menu.Item>Archive</Menu.Item>
+      </MenuStage>
+    </div>
+  ),
+};

@@ -269,6 +269,7 @@ Foundational components first (prove the template before mass-applying it), then
 | AlertDialog | Organism | Overlay | ✅ | ✅ 2026-10-11 (`onOpenChangeComplete` added 2026-10-11; re-verified: types, stories, Docs, tests) | [AlertDialog.md](component-reviews/AlertDialog.md) |
 | ConfirmDialog | Organism | Feedback | ✅ | ✅ 2026-10-11 (`onOpenChangeComplete` added 2026-10-11; re-verified: types, stories, Docs, tests) | [ConfirmDialog.md](component-reviews/ConfirmDialog.md) |
 | Drawer | Organism | Overlay | ✅ | ✅ 2026-10-11 | [Drawer.md](component-reviews/Drawer.md) |
+| Menu | Organism | Navigation | ✅ | — (built 2026-10-11, review pass pending) | [Menu.md](component-reviews/Menu.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here when a component's review pass is finalized. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 

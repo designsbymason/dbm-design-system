@@ -1,0 +1,245 @@
+/* Trigger — a native <button> reset, not real chrome of its own. Callers reach for `asChild` with `Button` or
+   `IconButton` for anything visually real; this only keeps the fallback from looking like a raw browser button. */
+.trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+}
+
+/* Sizes — set once on the panel and read by every item, label and icon inside it through these custom
+   properties, so a part needs no size class of its own. `--menu-icon-size` follows the `Icon` step each item's
+   icon is drawn at (`Select`'s in-field icons use the same steps), and is also what the leading indicator column
+   is measured from. Every step keeps `.item`'s 24px floor below. */
+.sizeXs {
+  --menu-font-size: var(--dbm-font-size-xs);
+  --menu-icon-size: var(--dbm-icon-size-xs);
+  --menu-pad-block: var(--dbm-space-1);
+  --menu-pad-inline: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --menu-font-size: var(--dbm-font-size-sm);
+  --menu-icon-size: var(--dbm-icon-size-xs);
+  --menu-pad-block: var(--dbm-space-2);
+  --menu-pad-inline: var(--dbm-space-2);
+}
+
+.sizeMd {
+  --menu-font-size: var(--dbm-font-size-base);
+  --menu-icon-size: var(--dbm-icon-size-sm);
+  --menu-pad-block: var(--dbm-space-2);
+  --menu-pad-inline: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --menu-font-size: var(--dbm-font-size-md);
+  --menu-icon-size: var(--dbm-icon-size-md);
+  --menu-pad-block: var(--dbm-space-3);
+  --menu-pad-inline: var(--dbm-space-3);
+}
+
+.sizeXl {
+  --menu-font-size: var(--dbm-font-size-lg);
+  --menu-icon-size: var(--dbm-icon-size-lg);
+  --menu-pad-block: var(--dbm-space-3);
+  --menu-pad-inline: var(--dbm-space-4);
+}
+
+/* The panel (and a submenu's). Rendered in a portal on `document.body`, outside the trigger's own tree, so it
+   sets its own `font-family`: nothing above `body` in a consuming app is guaranteed to. Shadows are a fixed
+   light/dark primitive pair, not a reactive semantic token, so the dark one is selected by the
+   `[data-theme$="-dark"]` attribute below. `z-index` is the `popover` step, not `dropdown`: a menu opened from
+   inside a `Dialog` has to sit above the dialog's scrim and panel. */
+.content {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--menu-font-size);
+  line-height: var(--dbm-line-height-snug);
+  /* Radix's own measure of the room that is left; without a cap the panel would run past the viewport, and
+     `overflow-y` is what lets a long menu scroll instead of being clipped. Wider than the trigger when its
+     longest label needs it, never wider than the room there is. */
+  max-block-size: var(--radix-dropdown-menu-content-available-height);
+  max-inline-size: min(var(--dbm-menu-max-width), var(--radix-dropdown-menu-content-available-width));
+  min-inline-size: min(var(--dbm-menu-min-width), var(--radix-dropdown-menu-content-available-width));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--dbm-space-1);
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  will-change: transform, opacity;
+  z-index: var(--dbm-z-index-popover);
+}
+
+[data-theme$="-dark"] .content {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.content[data-state="open"] {
+  animation: fadeIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-state="closed"] {
+  animation: fadeOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* Every kind of item: padding, hover and keyboard highlight, disabled colouring. `min-block-size` is the 24px
+   floor for an interactive target (WCAG 2.5.8) at every size. `outline: none` removes the browser's default ring,
+   which `:focus-visible` below replaces with the system's own, and Radix moves `data-highlighted` with focus, so a
+   pointer and the keyboard share one fill. */
+.item {
+  align-items: center;
+  border-radius: var(--dbm-radius-sm);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  cursor: pointer;
+  display: flex;
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-space-6);
+  outline: none;
+  padding-block: var(--menu-pad-block);
+  padding-inline: var(--menu-pad-inline);
+  position: relative;
+  text-decoration: none;
+  user-select: none;
+}
+
+.item[data-highlighted],
+.item[data-state="open"] {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* The highlight is a deliberately quiet tint (about 1.04:1 against the panel in light mode, as a `Select` option's
+   is), so on its own it is not enough to find the keyboard by. A ring drawn inside the item, in the focus colour
+   (3.99:1 or more against the panel and every highlight, both brands and both modes), marks where keyboard focus is.
+   It is drawn inside because the panel scrolls and clips whatever is outside it. */
+.item:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.item[data-disabled] {
+  color: var(--dbm-text-disabled);
+  cursor: not-allowed;
+}
+
+/* A destructive action reads as different before it is read. The highlight stays in the same family, so the
+   colour is not the only thing that changes under the pointer. */
+.danger {
+  color: var(--dbm-text-danger);
+}
+
+.danger[data-highlighted] {
+  background-color: var(--dbm-bg-danger-subtle);
+}
+
+.danger[data-disabled] {
+  color: var(--dbm-text-disabled);
+}
+
+/* A check or radio item keeps a leading column for its indicator, drawn in the padding. Plain items and
+   submenu triggers in a panel that has any such item take the same padding, so every label lines up. */
+.indicated,
+.content:has(.indicated) .item,
+.content:has(.indicated) .heading {
+  padding-inline-start: calc(var(--menu-pad-inline) + var(--menu-icon-size) + var(--dbm-space-2));
+}
+
+.indicator {
+  align-items: center;
+  block-size: var(--menu-icon-size);
+  display: inline-flex;
+  inline-size: var(--menu-icon-size);
+  inset-block: 0;
+  inset-inline-start: var(--menu-pad-inline);
+  justify-content: center;
+  margin-block: auto;
+  position: absolute;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+/* The label takes the room that is left, which pushes a shortcut or a caret to the end. A long label wraps
+   rather than widening the panel past its cap. */
+.label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+}
+
+.shortcut {
+  color: var(--dbm-text-secondary);
+  flex-shrink: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-xs);
+  margin-inline-start: var(--dbm-space-4);
+  white-space: nowrap;
+}
+
+.item[data-disabled] .shortcut {
+  color: var(--dbm-text-disabled);
+}
+
+.caret {
+  flex-shrink: 0;
+}
+
+/* A heading for a group of items: not an item, so never highlighted. */
+.heading {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-semibold);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--menu-pad-inline);
+}
+
+/* A line between two sets of items, drawn as a border so forced colours keeps it. */
+.separator {
+  block-size: 0;
+  border: none;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  margin-block: var(--dbm-space-1);
+}
+
+/* Forced colours draws no background, so the highlighted item gets an outline in a system colour, drawn inside
+   its own box (the panel clips anything outside it when it scrolls). */
+@media (forced-colors: active) {
+  .item[data-highlighted],
+  .item[data-state="open"] {
+    outline: var(--dbm-border-width-2) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-2));
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: scale(var(--dbm-motion-scale-96));
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
+}

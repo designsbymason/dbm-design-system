@@ -118,7 +118,7 @@ Wayfinding and app structure.
 | Tabs | molecule | 🟢 | Wraps Radix Tabs, compound (`Tabs.List`/`Trigger`/`Content`), with four variants; a list that outgrows its container scrolls and keeps the selected tab in view. Review: [Tabs.md](component-reviews/Tabs.md) |
 | EditorTabs | organism | ⚪ | Data-driven, closable/reorderable/addable tab strip (open files, records, or user-created views) — wraps `Tabs` for the underlying keyboard/ARIA mechanics; distinct from `Tabs`' fixed, author-defined set. Named as a gap in `Tabs`' own review ([Tabs.md](component-reviews/Tabs.md)) |
 | Breadcrumb | molecule | 🟢 | Compound (`Breadcrumb.Item`/`Link`/`Page`): a `<nav>` around an ordered list ending in the current page; `Breadcrumb.Link` is the `Link` atom. A long trail collapses (`maxItems`, `compact`). Review: [Breadcrumb.md](component-reviews/Breadcrumb.md) |
-| Menu (dropdown) | organism | 🟢 | Wraps Radix DropdownMenu |
+| Menu (dropdown) | organism | 🟢 | A floating list of actions opened from a trigger, compound (`Menu.Trigger`/`Content`/`Item`/`CheckboxItem`/`RadioGroup`/`RadioItem`/`Label`/`Group`/`Separator`/`Sub`/`SubTrigger`/`SubContent`) over Radix DropdownMenu, pinned on the Radix release train and modal by default ([ADR-0064](adr/0064-menu-wraps-radix-dropdown-menu-on-the-pinned-release-train-holds-its-own-open-state-is-modal-by-default-and-opens-on-arrowup.md)). Items take an icon, a shortcut hint and a `danger` tone, and `asChild` makes a link one. Ships as `Menu`, per the `Tag / Chip` precedent; "Dropdown" is a search term. Its item styles are the ones `ContextMenu` and `Menubar` import ([ADR-0065](adr/0065-menu-draws-its-item-parts-in-its-own-stylesheet-for-contextmenu-and-menubar-to-import-and-aligns-indicators-with-has.md)). Review: [Menu.md](component-reviews/Menu.md) |
 | Menubar | organism | ⚪ | A desktop-style horizontal bar of menus (File, Edit, View) with arrow-key movement between them, over Radix `Menubar`; reuses `Menu`'s items |
 | Stepper | organism | 🟡 | Multi-step flow indicator (wizards, onboarding) |
 | NavigationMenu | organism | 🟡 | The site-header navigation pattern with panels of grouped links that open under their item (a mega menu), over Radix `NavigationMenu`. Distinct from `Navbar`, which is the header shell, and `Menu`, which is a list of actions. Decide at `Navbar` whether `Navbar` alone covers the need |
@@ -258,13 +258,13 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog` and `Drawer` are built and Finalized; the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog` and `Drawer` are built and Finalized, `Menu` is built and awaiting its review pass, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
 2. AlertDialog (built and Finalized, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — the prop-driven pattern on `AlertDialog`; built and Finalized, review in [ConfirmDialog.md](component-reviews/ConfirmDialog.md)
 4. Drawer — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone; built and Finalized, review in [Drawer.md](component-reviews/Drawer.md)
-5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it
+5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it; built, review in [Menu.md](component-reviews/Menu.md)
 6. Toast / Notification — independent; other organisms report results through it
 7. Form — context and validation over `FormField` and `FieldGroup`
 8. Combobox / Autocomplete — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer)

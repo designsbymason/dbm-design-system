@@ -117,6 +117,8 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0061](./0061-drawer-is-attached-to-a-logical-side-that-can-change-with-the-screen-with-its-own-size-tokens-and-no-swipe-yet.md) | `Drawer` is attached to a logical `side` that can change with the screen, with its own size tokens, and swipe-to-dismiss waits | Accepted |
 | [0062](./0062-overlays-report-when-they-have-finished-opening-and-closing-through-onopenchangecomplete.md) | Overlays report when they have finished opening and closing through `onOpenChangeComplete` | Accepted |
 | [0063](./0063-drawer-gets-swipe-to-dismiss-from-its-handle-and-header-a-size-that-can-be-a-length-and-a-back-button-recipe.md) | `Drawer` gets swipe-to-dismiss from its handle and header, a `size` that can be a length, and a Back-button recipe | Accepted |
+| [0064](./0064-menu-wraps-radix-dropdown-menu-on-the-pinned-release-train-holds-its-own-open-state-is-modal-by-default-and-opens-on-arrowup.md) | `Menu` wraps Radix DropdownMenu on the pinned release train, holds its own open state, is modal by default and opens on ArrowUp | Accepted |
+| [0065](./0065-menu-draws-its-item-parts-in-its-own-stylesheet-for-contextmenu-and-menubar-to-import-and-aligns-indicators-with-has.md) | `Menu` draws its item parts in its own stylesheet for `ContextMenu` and `Menubar` to import, and aligns indicators with `:has()` | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

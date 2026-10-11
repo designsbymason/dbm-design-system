@@ -1,0 +1,442 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { DotsThreeIcon } from "@dbm-design-system/icons";
+import { Button } from "../../atoms/Button";
+import { IconButton } from "../../atoms/IconButton";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { Select } from "../../molecules/Select";
+import * as MenuStories from "./Menu.stories";
+import * as MenuRootStories from "./MenuRoot.stories";
+import * as MenuTriggerStories from "./MenuTrigger.stories";
+import * as MenuContentStories from "./MenuContent.stories";
+import * as MenuItemStories from "./MenuItem.stories";
+import * as MenuCheckboxItemStories from "./MenuCheckboxItem.stories";
+import * as MenuRadioGroupStories from "./MenuRadioGroup.stories";
+import * as MenuRadioItemStories from "./MenuRadioItem.stories";
+import * as MenuLabelStories from "./MenuLabel.stories";
+import * as MenuGroupStories from "./MenuGroup.stories";
+import * as MenuSeparatorStories from "./MenuSeparator.stories";
+import * as MenuSubStories from "./MenuSub.stories";
+import * as MenuSubTriggerStories from "./MenuSubTrigger.stories";
+import * as MenuSubContentStories from "./MenuSubContent.stories";
+
+export const playgroundOrder = [
+  "defaultOpen",
+  "size",
+  "side",
+  "align",
+  "sideOffset",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "loop",
+  "modal",
+  "dir",
+];
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "modal", "dir"];
+export const sharedTail = ["id", "className", "style", "data-testid"];
+export const triggerPropOrder = ["asChild", "children", "disabled", "aria-haspopup", "aria-expanded", "aria-label", "aria-labelledby", ...sharedTail];
+export const contentPropOrder = [
+  "children",
+  "size",
+  "side",
+  "align",
+  "sideOffset",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "collisionBoundary",
+  "hideWhenDetached",
+  "loop",
+  "container",
+  "onCloseAutoFocus",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
+  "aria-label",
+  "aria-labelledby",
+  ...sharedTail,
+];
+export const itemTail = ["icon", "shortcut", "disabled", "onSelect", "textValue", ...sharedTail];
+export const itemPropOrder = ["children", "tone", "asChild", ...itemTail];
+export const checkboxPropOrder = ["children", "checked", "defaultChecked", "onCheckedChange", ...itemTail];
+export const radioGroupPropOrder = ["children", "value", "defaultValue", "onValueChange", "aria-label", "aria-labelledby", ...sharedTail];
+export const radioItemPropOrder = ["children", "value", ...itemTail];
+export const labelPropOrder = ["children", ...sharedTail];
+export const groupPropOrder = ["children", "aria-label", "aria-labelledby", ...sharedTail];
+export const separatorPropOrder = sharedTail;
+export const subPropOrder = ["children", "open", "onOpenChange"];
+export const subTriggerPropOrder = ["children", "icon", "disabled", "textValue", ...sharedTail];
+export const subContentPropOrder = ["children", "size", "alignOffset", "loop", "collisionPadding", "container", "aria-label", ...sharedTail];
+
+<Meta of={MenuStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Menu" tier="Organism" />
+
+A floating list of actions opened from a trigger, built on Radix DropdownMenu. Arrow keys, typeahead,
+Home/End, Escape and focus return come with it, as do checkbox and radio items, labelled groups and
+submenus. A compound component: put `Menu.Trigger` and `Menu.Content` inside `Menu`, and the items,
+labels, groups and separators inside the content.
+
+### Import
+
+```tsx
+import { Menu } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={MenuStories.Playground} />
+
+</div>
+<PlaygroundControls of={MenuStories.Playground} order={playgroundOrder} />
+
+## Properties
+
+`Menu` itself renders no DOM element of its own: it is a plain context provider around its sub-parts,
+so it has no `className`/`style`/`id`/`data-testid`/`ref` of its own to accept.
+
+<PropertiesTable of={MenuRootStories} order={propOrder} />
+
+### Menu.Trigger properties
+
+The element that opens the menu. Also accepts any other native `<button>` attribute beyond what's
+listed here (e.g. `onFocus`, `name`), passed straight through. `aria-haspopup` and `aria-expanded` are
+kept by the menu and can't be replaced.
+
+<PropertiesTable of={MenuTriggerStories} order={triggerPropOrder} />
+
+### Menu.Content properties
+
+The floating panel, rendered in a portal on the page. Also accepts any other native `<div>` attribute
+beyond what's listed here (e.g. `onKeyDown`, `dir`), passed straight through to the panel. `role` and
+`aria-orientation` are set by the menu and can't be replaced.
+
+<PropertiesTable of={MenuContentStories} order={contentPropOrder} />
+
+### Menu.Item properties
+
+An action. Also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `title`), passed straight through. `role` and `aria-disabled` are set by the menu and can't
+be replaced.
+
+<PropertiesTable of={MenuItemStories} order={itemPropOrder} />
+
+### Menu.CheckboxItem properties
+
+An item that toggles something and shows it with a check mark. Also accepts any other native `<div>`
+attribute beyond what's listed here. `role` and `aria-checked` are set by the menu and can't be replaced.
+
+<PropertiesTable of={MenuCheckboxItemStories} order={checkboxPropOrder} />
+
+### Menu.RadioGroup properties
+
+A set of `Menu.RadioItem`s of which one is chosen. Also accepts any other native `<div>` attribute
+beyond what's listed here.
+
+<PropertiesTable of={MenuRadioGroupStories} order={radioGroupPropOrder} />
+
+### Menu.RadioItem properties
+
+One choice in a `Menu.RadioGroup`. Also accepts any other native `<div>` attribute beyond what's listed
+here. `role` and `aria-checked` are set by the menu and can't be replaced.
+
+<PropertiesTable of={MenuRadioItemStories} order={radioItemPropOrder} />
+
+### Menu.Label properties
+
+A heading for a group of items. Not an item: it can't be focused. Also accepts any other native `<div>`
+attribute beyond what's listed here.
+
+<PropertiesTable of={MenuLabelStories} order={labelPropOrder} />
+
+### Menu.Group properties
+
+A set of items that go together. Also accepts any other native `<div>` attribute beyond what's listed
+here.
+
+<PropertiesTable of={MenuGroupStories} order={groupPropOrder} />
+
+### Menu.Separator properties
+
+A line between two sets of items. Also accepts any other native `<div>` attribute beyond what's listed
+here.
+
+<PropertiesTable of={MenuSeparatorStories} order={separatorPropOrder} />
+
+### Menu.Sub properties
+
+The root of a submenu. It renders no element of its own.
+
+<PropertiesTable of={MenuSubStories} order={subPropOrder} />
+
+### Menu.SubTrigger properties
+
+The item that opens a submenu, drawn with a caret that points the way it will open. Also accepts any
+other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={MenuSubTriggerStories} order={subTriggerPropOrder} />
+
+### Menu.SubContent properties
+
+The submenu's panel. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={MenuSubContentStories} order={subContentPropOrder} />
+
+## Variants
+
+### Icons, shortcut hints and a danger item
+
+<Canvas of={MenuStories.IconsAndShortcuts} />
+
+### Sizes
+
+<Canvas of={MenuStories.Sizes} />
+
+### Checkbox items
+
+<Canvas of={MenuStories.CheckboxItems} />
+
+### Radio group
+
+<Canvas of={MenuStories.RadioGroup} />
+
+### Groups and labels
+
+<Canvas of={MenuStories.GroupsAndLabels} />
+
+### Submenus
+
+<Canvas of={MenuStories.Submenu} />
+
+### Link items
+
+<Canvas of={MenuStories.LinkItems} />
+
+### Disabled items
+
+<Canvas of={MenuStories.DisabledItems} />
+
+### An icon-only trigger for row actions
+
+<Canvas of={MenuStories.RowActions} />
+
+### Responsive side
+
+<Canvas of={MenuStories.ResponsiveSide} />
+
+### A long menu scrolls
+
+<Canvas of={MenuStories.LongMenu} />
+
+### Opened from inside a Dialog
+
+<Canvas of={MenuStories.InsideDialog} />
+
+### Right to left
+
+<Canvas of={MenuStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a `Menu` for actions on one thing (Edit, Duplicate, Delete) or a few choices that act at once (a
+  sort order, a view option), when there isn't room to show every action as a button.
+- Put the destructive action last, after a `Menu.Separator`, with `tone="danger"`, so it reads as
+  different before it is read.
+- Give an icon-only trigger an `aria-label`. The menu is named after its trigger, so the trigger's
+  name is what a screen reader announces when the menu opens.
+- Keep the labels short and start them with the verb or the thing, so typeahead finds them from their
+  first letters.
+- Call `event.preventDefault()` in a checkbox or radio item's `onSelect` when the person may flip
+  several options before they are done.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a `Menu` to choose a value for a form field: that is a `Select`, which is named, submitted
+  and announced as a field. A menu's items act when chosen.
+- Don't put a form, a heading with paragraphs or other arbitrary content in a menu. A `Popover` holds
+  that, and a menu holds `menuitem`s only.
+- Don't nest submenus more than one deep without a reason: each level is another hover and another key
+  press to reach an action.
+- Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Order the items by how often they are used, and keep a menu to about seven items before grouping them
+  with `Menu.Label` and `Menu.Separator`.
+- A leading `icon` helps recognition when most items have one; give every item in a set one, or none.
+- For a link, pass `asChild` and put the anchor (or your router's `Link`) inside, so it navigates as a
+  real link and is announced as one in the menu.
+- Open a menu from `Menu.Trigger asChild` over a `Button` or an `IconButton`: the built-in fallback has
+  no chrome of its own.
+- `align="end"` suits a trigger at the end of a row or a toolbar, so the panel doesn't run off the page.
+
+## Accessibility
+
+<Callout tone="info" title="Keyboard and ARIA state come from Radix's menu primitive">
+
+- The panel is `role="menu"`, named after its trigger, and holds `menuitem`, `menuitemcheckbox` and
+  `menuitemradio` elements. The trigger carries `aria-haspopup="menu"` and `aria-expanded`.
+- `Enter`, `Space` and `ArrowDown` on the trigger open the menu with focus on the first item; `ArrowUp`
+  opens it with focus on the last.
+- `ArrowDown` and `ArrowUp` move between items, skipping disabled ones; `Home` and `End` jump to the first
+  and last; typing letters moves to the item that starts with them. Arrow keys stop at the ends unless
+  `loop` is set.
+- `ArrowRight` opens a submenu and `ArrowLeft` closes it, swapped in right-to-left text (`dir="rtl"`).
+- `Enter` and `Space` choose the focused item. `Escape` closes the menu (one level of submenu at a time)
+  and returns focus to the trigger. `Tab` is not used inside an open menu: the arrow keys are how it is
+  navigated.
+- A `Menu.Label` inside a `Menu.Group` or `Menu.RadioGroup` names that group through
+  `aria-labelledby`, wired automatically; an explicit `aria-label` or `aria-labelledby` on the group
+  replaces it.
+- The focused item is highlighted with a quiet fill and, for the keyboard, a ring in the focus colour
+  drawn inside it. In forced-colours mode the highlighted item is drawn with an outline in a system
+  colour, since backgrounds are not drawn.
+- Every item is at least 24 × 24 CSS pixels at every size.
+- The menu is modal by default: the rest of the page is hidden from assistive technology and can't be
+  pressed while it is open. Set `modal={false}` for a menu that coexists with the page.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Menu>
+  <Menu.Trigger asChild>
+    <Button variant="secondary">Actions</Button>
+  </Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item onSelect={edit}>Edit</Menu.Item>
+    <Menu.Item onSelect={duplicate}>Duplicate</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item tone="danger" onSelect={remove}>Delete</Menu.Item>
+  </Menu.Content>
+</Menu>
+
+{/* Controlled open state */}
+function Example() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Menu open={open} onOpenChange={setOpen}>
+      <Menu.Trigger asChild>
+        <IconButton icon={DotsThreeIcon} aria-label="Row actions" variant="ghost" />
+      </Menu.Trigger>
+      <Menu.Content align="end">
+        <Menu.Item>Edit</Menu.Item>
+      </Menu.Content>
+    </Menu>
+  );
+}
+
+{/* A checkbox item that stays open, and a radio group */}
+<Menu.CheckboxItem checked={showGrid} onCheckedChange={setShowGrid} onSelect={(event) => event.preventDefault()}>
+  Show grid
+</Menu.CheckboxItem>
+<Menu.RadioGroup value={sort} onValueChange={setSort} aria-label="Sort by">
+  <Menu.RadioItem value="name">Name</Menu.RadioItem>
+  <Menu.RadioItem value="date">Date</Menu.RadioItem>
+</Menu.RadioGroup>
+
+{/* A link, with a router's Link */}
+<Menu.Item asChild>
+  <RouterLink to="/docs">Documentation</RouterLink>
+</Menu.Item>
+
+{/* A native <div> attribute on an item, passed straight through */}
+<Menu.Item title="Duplicates the row and its children">Duplicate</Menu.Item>
+
+{/* A responsive side: below the trigger on a phone, beside it from lg up */}
+<Menu.Content side={{ base: "bottom", lg: "right" }}>
+  <Menu.Item>Edit</Menu.Item>
+</Menu.Content>
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="panel background" />
+<TokenRow token="border.default" usage="panel border and the separator line" />
+<TokenRow token="border-width.1" usage="panel border and separator width" />
+<TokenRow token="border-width.2" usage="the keyboard focus ring, and the highlighted item's outline in forced-colours mode" />
+<TokenRow token="border.focus" usage="the keyboard focus ring drawn inside the focused item" />
+<TokenRow token="radius.md" usage="panel corner radius" />
+<TokenRow token="radius.sm" usage="item corner radius" />
+<TokenRow token="shadow.light.md / shadow.dark.md" usage="panel elevation" />
+<TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside this component's own tree" />
+<TokenRow token="font-size.xs" usage="extra-small item text; shortcut hint and label heading text" />
+<TokenRow token="font-size.sm" usage="small item text" />
+<TokenRow token="font-size.base" usage="medium item text" />
+<TokenRow token="font-size.md" usage="large item text" />
+<TokenRow token="font-size.lg" usage="extra-large item text" />
+<TokenRow token="font-weight.semibold" usage="label heading weight" />
+<TokenRow token="line-height.snug" usage="item and panel line height" />
+<TokenRow token="icon-size.xs" usage="item icon size at extra small and small, and the indicator column at those sizes" />
+<TokenRow token="icon-size.sm" usage="item icon size at medium, and the indicator column" />
+<TokenRow token="icon-size.md" usage="item icon size at large, and the indicator column" />
+<TokenRow token="icon-size.lg" usage="item icon size at extra large, and the indicator column" />
+<TokenRow token="space.1" usage="panel padding, separator margin, label heading padding, extra-small item vertical padding" />
+<TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes" />
+<TokenRow token="space.3" usage="item padding at medium and large sizes" />
+<TokenRow token="space.4" usage="item padding at extra large; gap before the shortcut hint" />
+<TokenRow token="space.6" usage="item minimum height (the 24px target floor)" />
+<TokenRow token="menu.min-width" usage="panel minimum width" />
+<TokenRow token="menu.max-width" usage="panel maximum width before a long label wraps" />
+<TokenRow token="text.primary" usage="item and panel text" />
+<TokenRow token="text.secondary" usage="shortcut hint and label heading text" />
+<TokenRow token="text.disabled" usage="disabled item text" />
+<TokenRow token="text.danger" usage="danger item text" />
+<TokenRow token="bg.brand-subtle" usage="highlighted item and open submenu trigger background" />
+<TokenRow token="bg.danger-subtle" usage="highlighted danger item background" />
+<TokenRow token="z-index.popover" usage="panel stacking order, above a dialog it is opened from" />
+<TokenRow token="motion.duration.fast" usage="open and close fade" />
+<TokenRow token="motion.easing.emphasized" usage="open fade-in" />
+<TokenRow token="motion.easing.standard" usage="close fade-out" />
+<TokenRow token="opacity.0 / opacity.100" usage="open and close fade endpoints" />
+<TokenRow token="motion.scale.96" usage="the size the panel starts from as it enters" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Select"
+  description="Chooses a value for a form field, named and submitted as a field. Reach for it when the choice is data, not an action"
+  href="/?path=/docs/molecules-inputs-select--docs"
+>
+  <Select aria-label="Sort by" defaultValue="name">
+    <Select.Option value="name">Name</Select.Option>
+    <Select.Option value="date">Date</Select.Option>
+  </Select>
+</RelatedCard>
+<RelatedCard
+  name="Popover"
+  description="A floating panel of arbitrary interactive content. Reach for it when what opens is a form or a card, not a list of actions"
+  href="/?path=/docs/molecules-overlay-popover--docs"
+>
+  <Button variant="secondary">Open popover</Button>
+</RelatedCard>
+<RelatedCard
+  name="IconButton"
+  description="The usual trigger for a row's actions, with an aria-label"
+  href="/?path=/docs/atoms-inputs-iconbutton--docs"
+>
+  <IconButton icon={DotsThreeIcon} aria-label="Row actions" variant="ghost" />
+</RelatedCard>
+<RelatedCard
+  name="Dialog"
+  description="A menu opened from inside a dialog is drawn above it"
+  href="/?path=/docs/organisms-overlay-dialog--docs"
+>
+  <Button>Open settings</Button>
+</RelatedCard>
+</div>

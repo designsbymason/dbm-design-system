@@ -1,0 +1,14 @@
+{
+  "menu": {
+    "min-width": {
+      "$type": "dimension",
+      "$value": "12rem",
+      "$description": "New token (2026-10-11), added for Menu's own floating panel — the least width it takes, so a menu of short labels (\"Edit\", \"Copy\") still has room for a leading icon and a shortcut hint beside the longest one without the panel reading as a thin sliver under a wide trigger. No primitive scale holds it (the spacing scale tops out at 8rem), and `select`'s list takes its width from its trigger instead."
+    },
+    "max-width": {
+      "$type": "dimension",
+      "$value": "24rem",
+      "$description": "New token (2026-10-11), added for Menu's own floating panel — the most width it takes before a long label wraps. A menu is a list of short actions, not a reading measure, but a label is consumer text and can be long; this keeps it from running the panel off a narrow screen. The same value as `popover.max-width`, kept separate because it caps a different thing and the two should be tunable apart."
+    }
+  }
+}

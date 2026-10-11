@@ -1,0 +1,233 @@
+// The code shown under each story's "Show code" button on Menu's Docs page.
+//
+// Hand-written rather than lifted from the story source: a story's own source is the story object plus demo-only
+// wiring (a stage that opens the menu for a screenshot, a state hook that logs). Each snippet here is the smallest
+// real usage of what its story shows, and `storySnippets.test.ts` checks that it uses only exports of the package.
+// See `07-storybook-and-documentation-standards.md` §4.2.
+
+import type { MenuAlign, MenuSide, MenuSize } from "./Menu.types";
+
+const menu = (rootAttributes: string, contentAttributes: string, body: string) =>
+  `<Menu${rootAttributes ? ` ${rootAttributes}` : ""}>
+  <Menu.Trigger asChild>
+    <Button variant="secondary">Actions</Button>
+  </Menu.Trigger>
+  <Menu.Content${contentAttributes ? ` ${contentAttributes}` : ""}>
+${body}
+  </Menu.Content>
+</Menu>`;
+
+const basicBody = `    <Menu.Item>Edit</Menu.Item>
+    <Menu.Item>Duplicate</Menu.Item>
+    <Menu.Item>Archive</Menu.Item>`;
+
+export const menuSnippets = {
+  iconsAndShortcuts: `{/* PencilSimpleIcon, CopyIcon and TrashIcon come from @dbm-design-system/icons.
+    A shortcut hint is only displayed: bind the keys yourself. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item icon={PencilSimpleIcon} shortcut="⌘E">Edit</Menu.Item>
+    <Menu.Item icon={CopyIcon} shortcut="⌘D">Duplicate</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item icon={TrashIcon} tone="danger">Delete</Menu.Item>`,
+)}`,
+
+  sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the row height and type size of every item. */}
+${menu("", 'size="lg"', basicBody)}`,
+
+  checkboxItems: `{/* Uncontrolled with defaultChecked, or controlled with checked and onCheckedChange. Calling
+    event.preventDefault() in onSelect keeps the menu open after a toggle. */}
+${menu(
+  "",
+  "",
+  `    <Menu.CheckboxItem defaultChecked onSelect={(event) => event.preventDefault()}>
+      Show grid
+    </Menu.CheckboxItem>
+    <Menu.CheckboxItem onSelect={(event) => event.preventDefault()}>
+      Show rulers
+    </Menu.CheckboxItem>
+    <Menu.CheckboxItem checked="indeterminate" onSelect={(event) => event.preventDefault()}>
+      Some guides
+    </Menu.CheckboxItem>`,
+)}`,
+
+  radioGroup: `{/* Uncontrolled with defaultValue, or controlled with value and onValueChange. */}
+${menu(
+  "",
+  "",
+  `    <Menu.RadioGroup defaultValue="name" aria-label="Sort by">
+      <Menu.RadioItem value="name" onSelect={(event) => event.preventDefault()}>
+        Name
+      </Menu.RadioItem>
+      <Menu.RadioItem value="modified" onSelect={(event) => event.preventDefault()}>
+        Date modified
+      </Menu.RadioItem>
+      <Menu.RadioItem value="size" onSelect={(event) => event.preventDefault()}>
+        Size
+      </Menu.RadioItem>
+    </Menu.RadioGroup>`,
+)}`,
+
+  groupsAndLabels: `{/* A Menu.Label inside a Menu.Group names the group for assistive technology. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Group>
+      <Menu.Label>Account</Menu.Label>
+      <Menu.Item>Profile</Menu.Item>
+      <Menu.Item>Billing</Menu.Item>
+    </Menu.Group>
+    <Menu.Separator />
+    <Menu.Group>
+      <Menu.Label>Workspace</Menu.Label>
+      <Menu.Item>Members</Menu.Item>
+      <Menu.Item>Settings</Menu.Item>
+    </Menu.Group>`,
+)}`,
+
+  submenu: `{/* ArrowRight opens a submenu and ArrowLeft closes it (swapped in right-to-left text). */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item>Rename</Menu.Item>
+    <Menu.Sub>
+      <Menu.SubTrigger>Share</Menu.SubTrigger>
+      <Menu.SubContent>
+        <Menu.Item>Copy link</Menu.Item>
+        <Menu.Item>Email</Menu.Item>
+        <Menu.Sub>
+          <Menu.SubTrigger>Social</Menu.SubTrigger>
+          <Menu.SubContent>
+            <Menu.Item>Post</Menu.Item>
+            <Menu.Item>Message</Menu.Item>
+          </Menu.SubContent>
+        </Menu.Sub>
+      </Menu.SubContent>
+    </Menu.Sub>`,
+)}`,
+
+  linkItems: `{/* asChild makes the anchor the menu item: it gets the role, the keyboard handling and the styles.
+    The item draws none of its own content in this mode, so an icon goes inside the link. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item asChild>
+      <a href="/docs">Documentation</a>
+    </Menu.Item>
+    <Menu.Item asChild>
+      <a href="/changelog">Changelog</a>
+    </Menu.Item>`,
+)}`,
+
+  disabledItems: `{/* A disabled item is dimmed, skipped by the arrow keys and typeahead, and can't be chosen. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item>Edit</Menu.Item>
+    <Menu.Item disabled>Duplicate</Menu.Item>
+    <Menu.Item>Archive</Menu.Item>`,
+)}`,
+
+  rowActions: `{/* DotsThreeIcon comes from @dbm-design-system/icons. The menu is named after its trigger, so an
+    icon-only trigger needs an aria-label. */}
+<Menu>
+  <Menu.Trigger asChild>
+    <IconButton icon={DotsThreeIcon} aria-label="Row actions" variant="ghost" />
+  </Menu.Trigger>
+  <Menu.Content align="end">
+    <Menu.Item>Edit</Menu.Item>
+    <Menu.Item>Duplicate</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item tone="danger">Delete</Menu.Item>
+  </Menu.Content>
+</Menu>`,
+
+  responsiveSide: `{/* side takes a mobile-first map, like Stack and Grid: below the lg breakpoint the menu opens
+    below the trigger, from lg up it opens to its right. */}
+${menu("", 'side={{ base: "bottom", lg: "right" }}', basicBody)}`,
+
+  longMenu: `{/* A menu taller than the room there is scrolls inside its own panel. */}
+${menu(
+  "",
+  "",
+  `    {countries.map((country) => (
+      <Menu.Item key={country}>{country}</Menu.Item>
+    ))}`,
+)}`,
+
+  insideDialog: `{/* The panel is portaled above a Dialog it was opened from, and choosing an item leaves the
+    dialog open. */}
+<Dialog>
+  <Dialog.Trigger asChild>
+    <Button>Open settings</Button>
+  </Dialog.Trigger>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Settings</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Body>
+      <Menu>
+        <Menu.Trigger asChild>
+          <Button variant="secondary">Theme</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Light</Menu.Item>
+          <Menu.Item>Dark</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </Dialog.Body>
+  </Dialog.Content>
+</Dialog>`,
+
+  rightToLeft: `{/* dir is passed to the menu and its submenus: they open on the start side and the keys swap. */}
+${menu("dir=\"rtl\"", "", basicBody)}`,
+} as const;
+
+/** The Playground's live controls, as far as the snippet cares. */
+export interface MenuPlaygroundSnippetArgs {
+  defaultOpen?: boolean;
+  modal?: boolean;
+  dir?: "ltr" | "rtl";
+  size?: MenuSize;
+  side?: MenuSide;
+  align?: MenuAlign;
+  sideOffset?: number;
+  alignOffset?: number;
+  avoidCollisions?: boolean;
+  collisionPadding?: number;
+  loop?: boolean;
+}
+
+/**
+ * The Playground's snippet, built from its current controls: only the props that differ from their defaults,
+ * around a small real menu.
+ */
+export function menuPlaygroundSnippet(args: MenuPlaygroundSnippetArgs): string {
+  const rootAttributes: string[] = [];
+  if (args.defaultOpen) rootAttributes.push("defaultOpen");
+  // `modal` defaults to true, so it only needs writing when it's off.
+  if (args.modal === false) rootAttributes.push("modal={false}");
+  if (args.dir && args.dir !== "ltr") rootAttributes.push(`dir="${args.dir}"`);
+
+  const contentAttributes: string[] = [];
+  if (args.size && args.size !== "md") contentAttributes.push(`size="${args.size}"`);
+  if (args.side && args.side !== "bottom") contentAttributes.push(`side="${args.side}"`);
+  if (args.align && args.align !== "start") contentAttributes.push(`align="${args.align}"`);
+  if (args.sideOffset !== undefined && args.sideOffset !== 4) contentAttributes.push(`sideOffset={${args.sideOffset}}`);
+  if (args.alignOffset !== undefined && args.alignOffset !== 0) contentAttributes.push(`alignOffset={${args.alignOffset}}`);
+  if (args.avoidCollisions === false) contentAttributes.push("avoidCollisions={false}");
+  if (args.collisionPadding !== undefined && args.collisionPadding !== 8) {
+    contentAttributes.push(`collisionPadding={${args.collisionPadding}}`);
+  }
+  if (args.loop) contentAttributes.push("loop");
+
+  return menu(
+    rootAttributes.join(" "),
+    contentAttributes.join(" "),
+    `    <Menu.Item shortcut="⌘E">Edit</Menu.Item>
+    <Menu.Item shortcut="⌘D">Duplicate</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item tone="danger">Delete</Menu.Item>`,
+  );
+}

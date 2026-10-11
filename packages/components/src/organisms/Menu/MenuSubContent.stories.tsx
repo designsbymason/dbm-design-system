@@ -1,0 +1,80 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Menu } from "./Menu";
+
+// Docs-only — see MenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
+const meta: Meta<typeof Menu.SubContent> = {
+  title: "Organisms/Navigation/Menu/SubContent",
+  component: Menu.SubContent,
+  tags: ["!dev"],
+  argTypes: {
+    children: {
+      control: false,
+      description: "The submenu's items, labels, groups and separators.",
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "The row height and type size of this submenu. By default it takes its parent menu's.",
+    },
+    alignOffset: {
+      control: "number",
+      description: "Pixel offset along the submenu's alignment axis. The default lines the first item up with its trigger by cancelling the panel's own padding and border.",
+      table: { defaultValue: { summary: "-5" } },
+    },
+    loop: {
+      control: "boolean",
+      description: "Whether arrow-key movement wraps from the last item to the first and back.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    collisionPadding: {
+      control: "number",
+      description: "Minimum distance, in pixels, kept between the submenu and the viewport's edge while repositioning.",
+      table: { defaultValue: { summary: "8" } },
+    },
+    container: {
+      control: false,
+      description: "The element the submenu is portaled into. Defaults to document.body.",
+    },
+    "aria-label": {
+      control: "text",
+      description: "An accessible name for the submenu. By default it is named after its trigger.",
+    },
+    id: {
+      control: "text",
+      description: "Standard DOM id.",
+    },
+    className: {
+      control: false,
+      description: "Additional CSS classes for customization.",
+    },
+    style: {
+      control: false,
+      description: "Inline styles, merged onto the component's own internal styles.",
+    },
+    "data-testid": {
+      control: false,
+      description:
+        "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    },
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof Menu.SubContent>;
+
+export const Default: Story = {
+  render: (args) => (
+    <Menu defaultOpen>
+      <Menu.Trigger>Actions</Menu.Trigger>
+      <Menu.Content>
+        <Menu.Sub open>
+          <Menu.SubTrigger>Share</Menu.SubTrigger>
+          <Menu.SubContent {...args}>
+            <Menu.Item>Email</Menu.Item>
+          </Menu.SubContent>
+        </Menu.Sub>
+      </Menu.Content>
+    </Menu>
+  ),
+};
