@@ -246,7 +246,7 @@ export interface AlertDialogActionProps extends Omit<ButtonProps, "asChild" | "o
   value?: string;
   /**
    * Runs before the alert closes. Call `event.preventDefault()` inside to keep it open (to wait for a request,
-   * say, together with `busy` on the content).
+   * say, together with `busy` on the content). Not called while the alert is `busy`.
    */
   onClick?: ComponentPropsWithoutRef<"button">["onClick"];
 }
@@ -256,6 +256,9 @@ export interface AlertDialogCancelProps extends Omit<ButtonProps, "asChild" | "o
   children?: ReactNode;
   /** A name for this choice, reported as `details.value` by `onOpenChange` when it closes the alert. */
   value?: string;
-  /** Runs before the alert closes. Call `event.preventDefault()` inside to keep it open. */
+  /**
+   * Runs before the alert closes. Call `event.preventDefault()` inside to keep it open. Not called while the
+   * alert is `busy`.
+   */
   onClick?: ComponentPropsWithoutRef<"button">["onClick"];
 }

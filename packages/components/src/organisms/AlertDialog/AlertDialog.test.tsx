@@ -351,6 +351,30 @@ describe("AlertDialog", () => {
       expect(onOpenChange).not.toHaveBeenCalled();
       expect(screen.getByRole("alertdialog")).toBeInTheDocument();
     });
+
+    it("does not run the caller's onClick for a press that does nothing", async () => {
+      const user = userEvent.setup();
+      const onAction = vi.fn();
+      const onCancel = vi.fn();
+      render(
+        <AlertDialog defaultOpen>
+          <AlertDialog.Content busy>
+            <AlertDialog.Header>
+              <AlertDialog.Title>Delete project?</AlertDialog.Title>
+              <AlertDialog.Description>It cannot be undone.</AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <AlertDialog.Cancel onClick={onCancel}>Keep it</AlertDialog.Cancel>
+              <AlertDialog.Action onClick={onAction}>Delete</AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog>,
+      );
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      expect(onAction).not.toHaveBeenCalled();
+      expect(onCancel).not.toHaveBeenCalled();
+    });
   });
 
   describe("tone", () => {

@@ -378,10 +378,14 @@ const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
           {...props}
           data-alert-dialog-action=""
           onClick={(event) => {
+            // A busy alert can't be answered again: the press does nothing, so the caller's handler isn't run for
+            // it, and stopping the event is what stops Radix closing the alert.
+            if (busy) {
+              event.preventDefault();
+              return;
+            }
             onClick?.(event);
-            // A busy alert can't be answered again: stopping the event is what stops Radix closing it.
-            if (busy) event.preventDefault();
-            else if (!event.defaultPrevented) dialog?.setReason("action", value);
+            if (!event.defaultPrevented) dialog?.setReason("action", value);
           }}
         >
           {children}
@@ -407,9 +411,13 @@ const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancelProps>(
           {...props}
           data-alert-dialog-cancel=""
           onClick={(event) => {
+            // As for the Action: a busy alert's Cancel does nothing, and the caller's handler isn't run.
+            if (busy) {
+              event.preventDefault();
+              return;
+            }
             onClick?.(event);
-            if (busy) event.preventDefault();
-            else if (!event.defaultPrevented) dialog?.setReason("cancel", value);
+            if (!event.defaultPrevented) dialog?.setReason("cancel", value);
           }}
         >
           {children}

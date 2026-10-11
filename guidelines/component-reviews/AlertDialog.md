@@ -39,3 +39,6 @@ Four findings from the review, fixed:
 
 ## Server render and hydration
 `AlertDialog.ssr.test.tsx` server-renders each variant with `window` and `document` removed and hydrates it, asserting no recoverable error and no warning, for every tone and option. All pass. No `keepMounted` here, which is where `Dialog`'s one mismatch was.
+
+## Fix after Finalization: a busy alert no longer runs the caller's `onClick`
+Found in `ConfirmDialog`'s final review, and made with the maintainer's go-ahead on 2026-10-11. `AlertDialog.Action` and `AlertDialog.Cancel` called the caller's `onClick` before looking at `busy`, so a press that is documented to do nothing still ran the handler (a `ConfirmDialog` with `busy` called `onConfirm`). They now return before it. **Stays Finalized**: by the three-question test it changes the output of nothing that was compliant, and it corrects behaviour that contradicted the component's own documentation of `busy`. A unit test fails without it.
