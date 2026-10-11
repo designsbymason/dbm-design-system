@@ -121,8 +121,10 @@
 /* The highlight is a deliberately quiet tint (about 1.04:1 against the panel in light mode, as a `Select` option's
    is), so on its own it is not enough to find the keyboard by. A ring drawn inside the item, in the focus colour
    (3.99:1 or more against the panel and every highlight, both brands and both modes), marks where keyboard focus is.
-   It is drawn inside because the panel scrolls and clips whatever is outside it. */
-.item:focus-visible {
+   It is drawn inside because the panel scrolls and clips whatever is outside it. Radix focuses an item as the pointer
+   passes over it, so the ring is held back while the panel's last input was a pointer (`data-input`, set by
+   `Menu.tsx`): hovering shows only the highlight, and the next key brings the ring back. */
+.content:not([data-input="pointer"]) .item:focus-visible {
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: calc(-1 * var(--dbm-border-width-2));
 }

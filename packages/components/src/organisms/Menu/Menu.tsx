@@ -10,6 +10,8 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent,
+  type PointerEvent,
   type ReactNode,
 } from "react";
 import { Icon } from "../../atoms/Icon";
@@ -40,6 +42,36 @@ import {
   useControllableState,
   type MenuGroupContextValue,
 } from "./MenuContext";
+
+/**
+ * Records on the panel which kind of input was used last (`data-input` is `"pointer"` or `"keyboard"`), without a
+ * render. Radix focuses an item as the pointer passes over it, which a browser may count as keyboard-style focus,
+ * so the focus ring is drawn only while the panel is not marked `"pointer"`: hovering shows the quiet highlight
+ * and the keyboard shows the ring.
+ */
+function trackInput<E extends HTMLElement>(own: {
+  onPointerMove?: (event: PointerEvent<E>) => void;
+  onPointerDown?: (event: PointerEvent<E>) => void;
+  onKeyDown?: (event: KeyboardEvent<E>) => void;
+}) {
+  const mark = (event: { currentTarget: E }, input: "pointer" | "keyboard") => {
+    event.currentTarget.dataset.input = input;
+  };
+  return {
+    onPointerMove: (event: PointerEvent<E>) => {
+      own.onPointerMove?.(event);
+      mark(event, "pointer");
+    },
+    onPointerDown: (event: PointerEvent<E>) => {
+      own.onPointerDown?.(event);
+      mark(event, "pointer");
+    },
+    onKeyDown: (event: KeyboardEvent<E>) => {
+      own.onKeyDown?.(event);
+      mark(event, "keyboard");
+    },
+  };
+}
 
 const sizeClass: Record<MenuSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -149,6 +181,9 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
       container,
       className,
       children,
+      onPointerMove,
+      onPointerDown,
+      onKeyDown,
       ...props
     },
     ref,
@@ -184,6 +219,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
           collisionPadding={collisionPadding}
           className={cx(styles.content, sizeClass[size], className)}
           {...props}
+          {...trackInput<HTMLDivElement>({ onPointerMove, onPointerDown, onKeyDown })}
           role="menu"
           aria-orientation="vertical"
         >
@@ -473,7 +509,21 @@ MenuSubTrigger.displayName = "Menu.SubTrigger";
  * The submenu's panel, portaled and positioned beside its trigger on the side the reading direction opens to.
  */
 const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
-  ({ size, alignOffset = -5, collisionPadding = 8, container, className, children, ...props }, ref) => {
+  (
+    {
+      size,
+      alignOffset = -5,
+      collisionPadding = 8,
+      container,
+      className,
+      children,
+      onPointerMove,
+      onPointerDown,
+      onKeyDown,
+      ...props
+    },
+    ref,
+  ) => {
     const parentSize = useContext(MenuSizeContext);
     const resolved = size ?? parentSize;
     return (
@@ -484,6 +534,7 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
           collisionPadding={collisionPadding}
           className={cx(styles.content, sizeClass[resolved], className)}
           {...props}
+          {...trackInput<HTMLDivElement>({ onPointerMove, onPointerDown, onKeyDown })}
           role="menu"
           aria-orientation="vertical"
         >

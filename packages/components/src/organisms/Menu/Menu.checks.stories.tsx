@@ -339,6 +339,43 @@ export const HighlightFollowsTheKeyboard: Story = {
   },
 };
 
+export const HoverShowsNoFocusRing: Story = {
+  name: "Hovering an item shows the highlight and no focus ring, and the next key brings the ring back",
+  render: () => (
+    <Page>
+      <Menu defaultOpen>
+        <Menu.Trigger asChild>
+          <Button variant="secondary">Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item>Duplicate</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </Page>
+  ),
+  play: async () => {
+    const menu = await openMenu();
+    const rect = within(menu).getByRole("menuitem", { name: "Duplicate" }).getBoundingClientRect();
+    const frame = window.frameElement?.getBoundingClientRect();
+    const scale = frame ? frame.width / window.innerWidth : 1;
+    // a real pointer moving over the item, which Radix answers by focusing it
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale,
+      y: (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale,
+    });
+    const hovered = within(menu).getByRole("menuitem", { name: "Duplicate" });
+    await waitFor(() => expect(hovered).toHaveAttribute("data-highlighted"));
+    await expect(menu).toHaveAttribute("data-input", "pointer");
+    await expect(getComputedStyle(hovered).outlineStyle).toBe("none");
+    await userEvent.keyboard("{ArrowUp}");
+    const edit = within(menu).getByRole("menuitem", { name: "Edit" });
+    await waitFor(() => expect(edit).toHaveFocus());
+    await expect(getComputedStyle(edit).outlineStyle).toBe("solid");
+  },
+};
+
 export const SeparatorIsDrawn: Story = {
   name: "A separator is a drawn line",
   render: () => (

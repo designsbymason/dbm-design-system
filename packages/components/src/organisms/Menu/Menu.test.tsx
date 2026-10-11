@@ -244,6 +244,21 @@ describe("Menu", () => {
       await waitFor(() => expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus());
     });
 
+    it("marks the panel with the last kind of input, and still calls the consumer's handlers", async () => {
+      const user = userEvent.setup();
+      const onKeyDown = vi.fn();
+      const onPointerMove = vi.fn();
+      render(<Basic root={{ defaultOpen: true }} content={{ onKeyDown, onPointerMove }} />);
+      const menu = screen.getByRole("menu");
+      expect(menu).not.toHaveAttribute("data-input");
+      await user.hover(screen.getByRole("menuitem", { name: "Edit" }));
+      expect(menu).toHaveAttribute("data-input", "pointer");
+      expect(onPointerMove).toHaveBeenCalled();
+      await user.keyboard("{ArrowDown}");
+      expect(menu).toHaveAttribute("data-input", "keyboard");
+      expect(onKeyDown).toHaveBeenCalled();
+    });
+
     it("keeps focus in the menu on Tab", async () => {
       const user = userEvent.setup();
       render(<Basic />);
