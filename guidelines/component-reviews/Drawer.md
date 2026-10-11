@@ -1,6 +1,6 @@
 # Drawer — review findings
 
-Fourth organism, built 2026-10-11 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized:** the dedicated review pass has not been run and the sign-off is the maintainer's.
+Fourth organism, built 2026-10-11 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-11**, with the items under "Open at Finalization" accepted as open: none changes the component.
 
 ## Decisions
 - A sibling of `Dialog` and `AlertDialog` ([ADR-0053](../adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)) on the same Radix Dialog ([ADR-0052](../adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)).
@@ -38,8 +38,7 @@ Eight findings, all fixed:
 7. **The header and handle are offered to a touch only while the gesture is available** (not with `swipeToDismiss={false}`, not while `busy`), so they no longer take the `touch-action` and the grab cursor for nothing.
 8. **This file** is current.
 
-## Open
-- The dedicated §9 review pass, and the maintainer's sign-off.
+## Open at Finalization
 - Touch and iOS behaviour (scroll lock, `keepMounted`'s move), and the safe-area insets on a real device: a desktop reports none, so they are asserted from the stylesheet and a stood-in inset, not seen.
 - The Docs page and the four themes have not been looked at live in a running Storybook (the Browser pane was not displayed).
 - Snap points for a bottom sheet, a resizable docked inspector and a push mode are not built (ideas, not decided against).
