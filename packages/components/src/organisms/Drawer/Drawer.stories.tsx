@@ -8,7 +8,7 @@ import { ConfirmDialog } from "../ConfirmDialog";
 import { Drawer } from "./Drawer";
 import { drawerPlaygroundSnippet, drawerSnippets } from "./Drawer.snippets";
 import type { DrawerContentProps, DrawerProps, DrawerSide, DrawerSize } from "./Drawer.types";
-import { DrawerStage, FiltersDrawer } from "./DrawerStoryKit";
+import { DrawerStage, DrawerViewModeContext, FiltersDrawer } from "./DrawerStoryKit";
 
 // Combines Drawer's own root-level args (modal/onOpenChange) with Drawer.Content's (side/size/divided/…) in one
 // Playground: `meta.component` can only resolve docgen argTypes for one component, so Content's are declared by
@@ -73,6 +73,14 @@ const noControls = {
 const meta: Meta<PlaygroundArgs> = {
   title: "Organisms/Overlay/Drawer",
   parameters: { layout: "padded" },
+  // Tells the demo box whether it is on a Docs page (a compact frame) or a story of its own (the whole canvas).
+  decorators: [
+    (Story, context) => (
+      <DrawerViewModeContext.Provider value={context.viewMode === "docs" ? "docs" : "story"}>
+        <Story />
+      </DrawerViewModeContext.Provider>
+    ),
+  ],
   argTypes: {
     modal: {
       control: "boolean",
