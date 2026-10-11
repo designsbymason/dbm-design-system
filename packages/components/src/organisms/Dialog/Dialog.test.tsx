@@ -7,6 +7,7 @@ import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Dialog } from "./Dialog";
 import styles from "./Dialog.module.css";
+import sections from "../../internal/overlay/OverlaySections.module.css";
 
 function Basic(props: Partial<React.ComponentProps<typeof Dialog.Content>> & { dialog?: React.ComponentProps<typeof Dialog> }) {
   return (
@@ -430,8 +431,8 @@ describe("Dialog", () => {
       const panel = screen.getByTestId("panel");
       expect(panel).toHaveClass(styles.sizeLg ?? "");
       expect(panel).toHaveClass(styles.fullBase ?? "");
-      expect(panel).toHaveClass(styles.divided ?? "");
-      expect(screen.getByTestId("footer")).toHaveClass(styles.alignBetween ?? "");
+      expect(panel).toHaveClass(sections.divided ?? "");
+      expect(screen.getByTestId("footer")).toHaveClass(sections.alignBetween ?? "");
       unmount();
 
       render(
@@ -720,8 +721,8 @@ describe("Dialog", () => {
       );
       const panel = screen.getByTestId("panel");
       expect(panel).toHaveClass(styles.placementTop ?? "");
-      expect(panel).toHaveClass(styles.dividedAuto ?? "");
-      expect(panel).not.toHaveClass(styles.divided ?? "");
+      expect(panel).toHaveClass(sections.dividedAuto ?? "");
+      expect(panel).not.toHaveClass(sections.divided ?? "");
       expect(panel).not.toHaveAttribute("data-overflow-start");
     });
 
@@ -732,8 +733,8 @@ describe("Dialog", () => {
         </Dialog>,
       );
       const byDefault = screen.getByTestId("panel");
-      expect(byDefault).toHaveClass(styles.dividedAuto ?? "");
-      expect(byDefault).not.toHaveClass(styles.divided ?? "");
+      expect(byDefault).toHaveClass(sections.dividedAuto ?? "");
+      expect(byDefault).not.toHaveClass(sections.divided ?? "");
       unmount();
       render(
         <Dialog defaultOpen>
@@ -741,8 +742,8 @@ describe("Dialog", () => {
         </Dialog>,
       );
       const off = screen.getByTestId("panel");
-      expect(off).not.toHaveClass(styles.dividedAuto ?? "");
-      expect(off).not.toHaveClass(styles.divided ?? "");
+      expect(off).not.toHaveClass(sections.dividedAuto ?? "");
+      expect(off).not.toHaveClass(sections.divided ?? "");
     });
 
     it("hands the scrim its opacity and blur", () => {

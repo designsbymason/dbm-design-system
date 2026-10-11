@@ -1,6 +1,6 @@
 # 0057 — `ConfirmDialog` is a prop-driven wrapper over `AlertDialog`, with its own trigger and a typed-confirmation field, over a compound of its own or a second consumer of `Dialog`
 
-**Status:** Accepted · **Date:** 2026-10-11 · **Amended 2026-10-11** — the bundle budget; the decision itself is unchanged
+**Status:** Accepted · **Date:** 2026-10-11 · **Amended 2026-10-11** — the bundle budget (twice); the decision itself is unchanged
 
 ## Context
 The inventory listed `ConfirmDialog` as a "destructive-action confirmation pattern (built on Dialog)", while the `AlertDialog` row called it "the prop-driven pattern on top" of `AlertDialog`. A confirmation is the most common use of an alert, and the compound `AlertDialog` makes every caller assemble nine parts, wire an open state, wire a busy state around a request, and (for a name that must be typed) hold the typed text and disable the action by hand. Three things had to be settled together: what it is built on, whether it is compound, and which of those hand-wired pieces it takes over.
@@ -22,7 +22,7 @@ The inventory listed `ConfirmDialog` as a "destructive-action confirmation patte
 
 ## Consequences
 - `ConfirmDialog`'s behaviour is `AlertDialog`'s; a defect in the alert is fixed once.
-- Its bundle includes `AlertDialog`, `Dialog`'s sections, `Input` and `FormField`, and is checked against its own 12KB budget. *(Amended 2026-10-11: this originally said "the usual JS budget"; the typed confirmation, checkbox and announcement added after the first build took it past 10KB, so it has its own entry in the bundle-size script.)*
+- Its bundle includes `AlertDialog`, `Dialog`'s sections, `Input` and `FormField`, and is checked against the usual JS budget. *(Amended 2026-10-11: this originally said "the usual JS budget"; the typed confirmation, checkbox and announcement added after the first build took it past 10KB and it was given its own 12KB entry; extracting the overlay sections ([ADR-0060](./0060-the-overlay-sections-are-extracted-to-internal-overlay-with-the-panel-staying-each-components-own.md)) took it back under 10KB and the entry was removed.)*
 - A caller who needs more than two answers has to drop to the compound, which is intended.
 
 ## Related

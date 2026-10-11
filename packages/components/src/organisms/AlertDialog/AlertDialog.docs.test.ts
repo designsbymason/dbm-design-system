@@ -6,7 +6,10 @@ import { describe, expect, it } from "vitest";
 // drawn with its own small module plus Dialog's (it imports it), so the page lists the tokens of both. A row may
 // name several tokens, separated by " / ". (The tests run from the package's own folder.)
 const read = (file: string) => readFileSync(join(process.cwd(), "src/organisms", file), "utf8");
-const css = `${read("AlertDialog/AlertDialog.module.css")}\n${read("Dialog/Dialog.module.css")}`;
+const css = `${read("AlertDialog/AlertDialog.module.css")}\n${read("Dialog/Dialog.module.css")}\n${readFileSync(
+  join(process.cwd(), "src/internal/overlay/OverlaySections.module.css"),
+  "utf8",
+)}`;
 const mdx = read("AlertDialog/AlertDialog.mdx");
 
 const usedTokens = [...new Set([...css.matchAll(/var\(--dbm-([a-z0-9-]+)/g)].map((match) => match[1] as string))];

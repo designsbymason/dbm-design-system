@@ -1,32 +1,28 @@
 import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import type { Breakpoint, Responsive } from "@dbm-design-system/primitives";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import {
-  createContext,
-  forwardRef,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { createContext, forwardRef, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { RefObject } from "react";
 import { Backdrop } from "../../atoms/Backdrop";
 import { CloseButton } from "../../atoms/CloseButton";
-import { Heading } from "../../atoms/Heading";
-import { Text } from "../../atoms/Text";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
-import { ScrollArea } from "../../molecules/ScrollArea";
+import { OverlayContentContext } from "../../internal/overlay/overlayContext";
+import { OverlayBody, OverlayDescription, OverlayFooter, OverlayHeader, OverlayTitle } from "../../internal/overlay/OverlayParts";
+import { useKeepMounted } from "../../internal/overlay/useKeepMounted";
+import {
+  describedByProps,
+  overlayCloseButtonClassName,
+  overlayPanelClassName,
+  overlaySlotClassName,
+  overlayTriggerClassName,
+  useOverlayPanel,
+} from "../../internal/overlay/useOverlayPanel";
 import styles from "./Dialog.module.css";
 import type {
   DialogBodyProps,
   DialogCloseProps,
   DialogContentProps,
   DialogDescriptionProps,
-  DialogFooterAlign,
   DialogFooterProps,
   DialogHeaderProps,
   DialogLabels,
@@ -76,13 +72,6 @@ const placementClass: Record<DialogPlacement, string | undefined> = {
   top: styles.placementTop,
 };
 
-const footerAlignClass: Record<DialogFooterAlign, string | undefined> = {
-  start: styles.alignStart,
-  end: undefined,
-  between: styles.alignBetween,
-  stretch: styles.alignStretch,
-};
-
 interface DialogContextValue {
   /** The dialog's current open state, held here so the scrim can follow it (see `DialogContent`). */
   open: boolean;
@@ -92,35 +81,6 @@ interface DialogContextValue {
 }
 
 const DialogContext = createContext<DialogContextValue | null>(null);
-
-interface DialogContentContextValue {
-  registerTitle: () => () => void;
-  registerDescription: () => () => void;
-  busy: boolean;
-  /** Whether the body should watch its scroll position and report which edges have content out of view. */
-  watchScroll: boolean;
-  reportScroll: (edges: { start: boolean; end: boolean }) => void;
-}
-
-const DialogContentContext = createContext<DialogContentContextValue | null>(null);
-
-const subscribeToNothing = () => () => {};
-
-/**
- * False on the server and while the client is hydrating, true from the first render after it: what lets a
- * component leave out anything the server couldn't have drawn, so its first client render matches the server's.
- */
-function useIsClient(): boolean {
-  return useSyncExternalStore(subscribeToNothing, () => true, () => false);
-}
-
-/** The element `keepMounted` renders the content into: it is the `.slot` section container itself. */
-function createHost(wanted: boolean): HTMLDivElement | null {
-  if (!wanted || typeof document === "undefined") return null;
-  const element = document.createElement("div");
-  element.className = styles.slot ?? "";
-  return element;
-}
 
 /**
  * A window that interrupts the page for focused work — a form, a detail view, a confirmation — built on Radix
@@ -218,7 +178,7 @@ const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>(
       <DialogPrimitive.Trigger
         ref={ref}
         asChild={asChild}
-        className={asChild ? className : cx(styles.trigger, className)}
+        className={asChild ? className : cx(overlayTriggerClassName, className)}
         {...props}
         onClick={(event) => {
           onClick?.(event);
@@ -268,70 +228,17 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     const modal = dialog?.modal ?? true;
     const labels: DialogLabels = mergeDefined(defaultLabels, labelOverrides);
 
-    // How many titles and descriptions are mounted. Radix wires `aria-labelledby`/`aria-describedby` to them by
-    // id, and reports a missing one: a dialog named only by `aria-label` still needs something for it to point
-    // at, and a dialog with no description must say so rather than have Radix warn about a dangling reference.
-    const [titleCount, setTitleCount] = useState(0);
-    const [descriptionCount, setDescriptionCount] = useState(0);
-    const registerTitle = useCallback(() => {
-      setTitleCount((count) => count + 1);
-      return () => setTitleCount((count) => count - 1);
-    }, []);
-    const registerDescription = useCallback(() => {
-      setDescriptionCount((count) => count + 1);
-      return () => setDescriptionCount((count) => count - 1);
-    }, []);
+    const { contentContext, titleCount, descriptionCount, edges } = useOverlayPanel({ divided, busy });
+    const { host, portalContent, attachHost } = useKeepMounted({ keepMounted, open });
+    const describedBy = describedByProps(ariaDescribedBy, descriptionCount);
 
-    // Which edges of the body have content out of view, reported by `Dialog.Body` for `divided="auto"`.
-    const [edges, setEdges] = useState({ start: false, end: false });
-    const reportScroll = useCallback((next: { start: boolean; end: boolean }) => {
-      setEdges((previous) => (previous.start === next.start && previous.end === next.end ? previous : next));
-    }, []);
-
-    const contentContext = useMemo(
-      () => ({ registerTitle, registerDescription, busy, watchScroll: divided === "auto", reportScroll }),
-      [registerTitle, registerDescription, busy, divided, reportScroll],
-    );
-
-    // `keepMounted`: Radix removes its content from the page on close, taking whatever is inside it, so the
-    // children are rendered once, by React, into an element of our own and that element is moved into the panel
-    // each time it opens. Moving a DOM node doesn't remount what React rendered into it. (Radix's `forceMount`
-    // keeps the panel in the page, but also keeps the scroll lock and the page's `aria-hidden` on while closed.)
-    // The element is made only once the client has rendered: a portal into it can't be hydrated against the
-    // server's HTML (the server has no document to make it in), so a first client render with one would not
-    // match. Until then a `keepMounted` dialog draws no content, which is no change in what shows, since Radix
-    // mounts the panel itself only after hydration.
-    const isClient = useIsClient();
-    const [host, setHost] = useState<HTMLDivElement | null>(null);
-    if (keepMounted && isClient && !host) {
-      // Made in render, which React allows for a component's own state, rather than a commit later.
-      const created = createHost(true);
-      if (created) setHost(created);
-    }
-    const [everOpened, setEverOpened] = useState(open);
-    if (open && !everOpened) setEverOpened(true);
-    const attachHost = useCallback(
-      (element: HTMLDivElement | null) => {
-        // Before the close button and the hidden title, so Tab reaches the dialog's own controls first.
-        if (element && host && keepMounted) element.insertBefore(host, element.firstChild);
-      },
-      [host, keepMounted],
-    );
-
-    const describedByProps =
-      ariaDescribedBy !== undefined
-        ? { "aria-describedby": ariaDescribedBy }
-        : descriptionCount === 0
-          ? { "aria-describedby": undefined }
-          : {};
-
-    const inner = <DialogContentContext.Provider value={contentContext}>{children}</DialogContentContext.Provider>;
+    const inner = <OverlayContentContext.Provider value={contentContext}>{children}</OverlayContentContext.Provider>;
 
     const content = (
       <DialogPrimitive.Content
         ref={mergeRefs(ref, attachHost)}
         {...props}
-        {...describedByProps}
+        {...describedBy}
         aria-label={ariaLabel}
         // The attributes below are computed from the dialog's own state, so they come after `{...props}`: a
         // same-named consumer prop must not replace the role or the state the exit animation is keyed to.
@@ -364,9 +271,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
           sizeClass[size],
           fullScreenClasses(fullScreen),
           placementClass[placement],
-          divided === true && styles.divided,
-          divided === "auto" && styles.dividedAuto,
-          showCloseButton && styles.withCloseButton,
+          overlayPanelClassName({ divided, showCloseButton }),
           !modal && styles.nonModal,
           className,
         )}
@@ -376,7 +281,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
             <VisuallyHidden>{ariaLabel}</VisuallyHidden>
           </DialogPrimitive.Title>
         )}
-        {!keepMounted && <div className={styles.slot}>{inner}</div>}
+        {!keepMounted && <div className={overlaySlotClassName}>{inner}</div>}
         {showCloseButton && (
           // After the content in the DOM, so Tab reaches the dialog's own controls first. It is placed in the
           // corner by CSS, not by order.
@@ -384,7 +289,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
             <CloseButton
               size="sm"
               aria-label={labels.close}
-              className={styles.closeButton}
+              className={overlayCloseButtonClassName}
               {...(busy ? { "aria-disabled": true } : {})}
               onClick={(event) => {
                 // A busy dialog can't be left: stopping the event is what stops Radix closing it. The button
@@ -400,7 +305,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
 
     return (
       <>
-        {keepMounted && host && everOpened ? createPortal(inner, host) : null}
+        {portalContent && host ? createPortal(inner, host) : null}
         <DialogPrimitive.Portal container={container}>
           {modal ? (
             <DialogPrimitive.Overlay asChild>
@@ -419,104 +324,42 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
 DialogContent.displayName = "Dialog.Content";
 
 /** The top section of the dialog: usually a `Dialog.Title` and optionally a `Dialog.Description`. */
-const DialogHeader = forwardRef<HTMLDivElement, DialogHeaderProps>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cx(styles.header, className)} {...props} />
-));
+const DialogHeader = forwardRef<HTMLDivElement, DialogHeaderProps>((props, ref) => <OverlayHeader ref={ref} {...props} />);
 DialogHeader.displayName = "Dialog.Header";
 
 /**
  * The dialog's name, announced when it opens, rendered as a heading. Every dialog should have one; use
  * `VisuallyHidden` around it when the design shows no heading.
  */
-const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
-  ({ level = 2, size = "xl", className, children, ...props }, ref) => {
-    // Depends on the stable function, not the context object: that is rebuilt whenever `busy` or `divided`
-    // changes, which would unregister and re-register the title and briefly leave the dialog unnamed.
-    const registerTitle = useContext(DialogContentContext)?.registerTitle;
-    useEffect(() => registerTitle?.(), [registerTitle]);
-    return (
-      <DialogPrimitive.Title asChild>
-        <Heading ref={ref} level={level} size={size} className={cx(styles.title, className)} {...props}>
-          {children}
-        </Heading>
-      </DialogPrimitive.Title>
-    );
-  },
-);
+const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>((props, ref) => (
+  <OverlayTitle ref={ref} {...props} />
+));
 DialogTitle.displayName = "Dialog.Title";
 
 /** A sentence or two on what the dialog is for, read out after its title when it opens. */
-const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
-  ({ className, children, ...props }, ref) => {
-    const registerDescription = useContext(DialogContentContext)?.registerDescription;
-    useEffect(() => registerDescription?.(), [registerDescription]);
-    return (
-      <DialogPrimitive.Description asChild>
-        <Text ref={ref} size="sm" color="secondary" className={cx(styles.description, className)} {...props}>
-          {children}
-        </Text>
-      </DialogPrimitive.Description>
-    );
-  },
-);
+const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>((props, ref) => (
+  <OverlayDescription ref={ref} {...props} />
+));
 DialogDescription.displayName = "Dialog.Description";
 
 /**
  * The main content, a scroll region that takes whatever height is left between the header and the footer, so
  * long content scrolls inside the dialog while they stay in view.
  */
-const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ className, children, ...props }, ref) => {
-  const content = useContext(DialogContentContext);
-  const viewportRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement>(null);
-  const watch = content?.watchScroll ?? false;
-  const reportScroll = content?.reportScroll;
-
-  // Which sides have content out of view, read from the scroll position: `useScrollEdges` compares the first
-  // and last *item* with the box, and a body is one tall item, which is out of view on both sides always.
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!watch || !viewport || !reportScroll) return undefined;
-    const read = () => {
-      const EPSILON = 1;
-      reportScroll({
-        start: viewport.scrollTop > EPSILON,
-        end: viewport.scrollTop + viewport.clientHeight < viewport.scrollHeight - EPSILON,
-      });
-    };
-    read();
-    viewport.addEventListener("scroll", read, { passive: true });
-    // The viewport's own size changing (the panel growing or shrinking) and its content's (text added).
-    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(read);
-    observer?.observe(viewport);
-    if (viewport.firstElementChild) observer?.observe(viewport.firstElementChild);
-    return () => {
-      viewport.removeEventListener("scroll", read);
-      observer?.disconnect();
-      reportScroll({ start: false, end: false });
-    };
-  }, [watch, reportScroll]);
-
-  return (
-    <ScrollArea ref={ref} viewportRef={viewportRef} variant="ghost" className={cx(styles.body, className)} {...props}>
-      <div className={styles.bodyContent}>{children}</div>
-    </ScrollArea>
-  );
-});
+const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>((props, ref) => <OverlayBody ref={ref} {...props} />);
 DialogBody.displayName = "Dialog.Body";
 
 /** The bottom section of the dialog: its actions, usually `Button`s. */
-const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(
-  ({ align = "end", className, ...props }, ref) => (
-    <div ref={ref} className={cx(styles.footer, footerAlignClass[align], className)} {...props} />
-  ),
-);
+const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>((props, ref) => (
+  <OverlayFooter ref={ref} {...props} />
+));
 DialogFooter.displayName = "Dialog.Footer";
 
 /** An element that closes the dialog on click, placed anywhere inside `Dialog.Content`. */
 const DialogClose = forwardRef<HTMLButtonElement, DialogCloseProps>(
   ({ asChild = false, className, onClick, ...props }, ref) => {
     const dialog = useContext(DialogContext);
-    const busy = useContext(DialogContentContext)?.busy ?? false;
+    const busy = useContext(OverlayContentContext)?.busy ?? false;
     return (
       <DialogPrimitive.Close
         ref={ref}

@@ -1,0 +1,213 @@
+/*
+ * The sections a modal panel is made of, shared by every overlay that draws a header, a body and a footer
+ * (`Dialog`, `AlertDialog`, `Drawer`): the header, title and description, the scrolling body, the footer and its
+ * alignment and stacking, the close button in the corner, the `divided` lines, and the reset of the default trigger.
+ * The panel itself (its size, place, corners and entrance) is each component's own. A panel applies this module's
+ * `divided`, `dividedAuto` and `withCloseButton` classes and sets four custom properties these rules read:
+ * `--overlay-pad`, `--overlay-close-clearance` and the two safe-area insets `--overlay-safe-block-start` and
+ * `--overlay-safe-inline-end` (all four insets, in practice, since the panel pads itself with them).
+ */
+
+/* --- Sections. The panel has no padding of its own (but a device's safe-area insets in full screen), so the
+   body's scrollbar runs flush with its edge. Every section sits in `.slot`, which is not drawn: it is the element
+   a `keepMounted` dialog moves in and out of the panel, and it keeps the sections' relation to each other and to
+   the panel the same either way. --- */
+.slot {
+  display: contents;
+}
+
+.header {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  padding: var(--overlay-pad) var(--overlay-pad) var(--dbm-space-4);
+}
+
+.title {
+  margin: 0;
+}
+
+.description {
+  margin: 0;
+}
+
+.body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
+/* The body pads itself fully on every side. Where a header sits above it, or a footer below, that section's own
+   padding already supplies most of the gap, so the body takes less on that side. These rules read the
+   neighbouring section, not the body's position among its siblings: a visually hidden title or any other
+   element may come first without changing the spacing. */
+.bodyContent {
+  padding: var(--overlay-pad);
+}
+
+.header + .body .bodyContent {
+  padding-block-start: var(--dbm-space-2);
+}
+
+.body:has(+ .footer) .bodyContent {
+  padding-block-end: var(--dbm-space-2);
+}
+
+.footer {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  justify-content: flex-end;
+  padding: var(--dbm-space-4) var(--overlay-pad) var(--overlay-pad);
+}
+
+.alignStart {
+  justify-content: flex-start;
+}
+
+.alignBetween {
+  justify-content: space-between;
+}
+
+.alignStretch > * {
+  flex: 1 1 0;
+}
+
+/* Below `sm` the actions stack, each as wide as the footer, so a pair of buttons doesn't wrap into a ragged,
+   end-aligned pair of different widths and each is a full-size target under a thumb. From `sm` they are a row,
+   as above. `align="stretch"` is the author asking for an equal-share row on a phone, so it stays one. The
+   threshold is the literal value of the `breakpoint.sm` token (custom properties can't be used in a media
+   condition, as `Card`, `Stack` and `AlertDialog` note). */
+.footer {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.footer > * {
+  inline-size: 100%;
+}
+
+.alignStretch {
+  align-items: center;
+  flex-direction: row;
+}
+
+.alignStretch > * {
+  inline-size: auto;
+}
+
+@media (min-width: 40rem) {
+  .footer {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .footer > * {
+    inline-size: auto;
+  }
+}
+
+/* `divided`: a line between the sections, so a body that scrolls reads as running under them. The section that
+   follows a line takes back the padding it would otherwise have shared with its neighbour. */
+.divided > .slot > .header,
+.dividedAuto > .slot > .header {
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  padding-block-end: var(--dbm-space-4);
+}
+
+.divided > .slot > .footer,
+.dividedAuto > .slot > .footer {
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  padding-block-start: var(--dbm-space-4);
+}
+
+.divided > .slot > .header + .body .bodyContent,
+.dividedAuto > .slot > .header + .body .bodyContent {
+  padding-block-start: var(--dbm-space-4);
+}
+
+.divided > .slot > .body:has(+ .footer) .bodyContent,
+.dividedAuto > .slot > .body:has(+ .footer) .bodyContent {
+  padding-block-end: var(--dbm-space-4);
+}
+
+/* `divided="auto"` always reserves the line (transparent) so nothing moves when it shows, and shows it only on
+   the side that has content scrolled out of view: the header's once the body has scrolled, the footer's while
+   more is below. */
+.dividedAuto > .slot > .header {
+  border-block-end-color: transparent;
+}
+
+.dividedAuto > .slot > .footer {
+  border-block-start-color: transparent;
+}
+
+.dividedAuto[data-overflow-start] > .slot > .header {
+  border-block-end-color: var(--dbm-border-default);
+}
+
+.dividedAuto[data-overflow-end] > .slot > .footer {
+  border-block-start-color: var(--dbm-border-default);
+}
+
+/* --- The close button: in the top-end corner, out of the flow. The header makes room for it so a long title
+   doesn't run underneath it; with no header, the body keeps its text out from under it instead. --- */
+.closeButton {
+  /* From the panel's padding box, so the device's safe-area insets (the panel's padding in full screen) are
+     added: a corner button must not sit under a notch. */
+  inset-block-start: calc(var(--dbm-space-3) + var(--overlay-safe-block-start));
+  inset-inline-end: calc(var(--dbm-space-3) + var(--overlay-safe-inline-end));
+  position: absolute;
+}
+
+/* A busy dialog can't be left, but its close button stays focusable (`aria-disabled`, not `disabled`), so
+   keyboard focus isn't dropped from it: it is dimmed and takes no hover fill, as a disabled button would. */
+.withCloseButton .closeButton[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.withCloseButton .closeButton[aria-disabled="true"]:hover {
+  background-color: transparent;
+}
+
+.withCloseButton > .slot > .header {
+  padding-inline-end: var(--overlay-close-clearance);
+}
+
+.withCloseButton:not(:has(> .slot > .header)) > .slot > .body .bodyContent {
+  padding-inline-end: var(--overlay-close-clearance);
+}
+
+/* The default (non-`asChild`) trigger and close elements: a minimal reset of the native button, not chrome of
+   their own. Reach for `asChild` with a `Button` for anything visible. */
+.trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+}
+
+/* --- Forced colours: the lines between sections are borders, which forced colours recolours, so they are told to
+   match the panel. --- */
+@media (forced-colors: active) {
+  .divided > .slot > .header,
+  .divided > .slot > .footer,
+  .dividedAuto[data-overflow-start] > .slot > .header,
+  .dividedAuto[data-overflow-end] > .slot > .footer {
+    border-color: CanvasText;
+  }
+
+  /* A transparent border is drawn in forced colours, so the reserved line is told to match the panel. */
+  .dividedAuto:not([data-overflow-start]) > .slot > .header,
+  .dividedAuto:not([data-overflow-end]) > .slot > .footer {
+    border-color: Canvas;
+  }
+}

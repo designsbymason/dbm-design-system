@@ -1,6 +1,6 @@
 # 0056 — `AlertDialog` draws with `Dialog`'s sections and stylesheet, and extraction waits for the third consumer
 
-**Status:** Accepted · **Date:** 2026-10-10
+**Status:** Superseded by [0060](./0060-the-overlay-sections-are-extracted-to-internal-overlay-with-the-panel-staying-each-components-own.md) · **Date:** 2026-10-10
 
 ## Context
 [ADR-0053](./0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md) made `Dialog`, `AlertDialog` and `Drawer` siblings and said their shared surface (header, body, footer) would be extracted "at the second use". `AlertDialog` is the second use. Two things made extraction now a poor trade:

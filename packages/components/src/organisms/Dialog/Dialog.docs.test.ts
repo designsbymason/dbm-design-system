@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 // the two together. A row may name several tokens, separated by " / ". (The tests run from the package's own
 // folder.)
 const folder = join(process.cwd(), "src/organisms/Dialog");
-const css = readFileSync(join(folder, "Dialog.module.css"), "utf8");
+// The panel is Dialog's own; its sections are drawn by the stylesheet it shares with the other overlays.
+const css = `${readFileSync(join(folder, "Dialog.module.css"), "utf8")}\n${readFileSync(join(process.cwd(), "src/internal/overlay/OverlaySections.module.css"), "utf8")}`;
 const mdx = readFileSync(join(folder, "Dialog.mdx"), "utf8");
 
 const usedTokens = [...new Set([...css.matchAll(/var\(--dbm-([a-z0-9-]+)/g)].map((match) => match[1] as string))];

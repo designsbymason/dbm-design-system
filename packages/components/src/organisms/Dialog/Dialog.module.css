@@ -11,17 +11,17 @@
   --dialog-block-size: var(--dialog-block-size-base);
   --dialog-radius: var(--dbm-radius-lg);
   --dialog-border-width: var(--dbm-border-width-1);
-  --dialog-pad: var(--dbm-space-6);
+  --overlay-pad: var(--dbm-space-6);
   /* What `placement` asks for above the panel; `fullScreen` sets the offset itself to nothing, and a window puts
      it back to this. */
   --dialog-placement-offset: var(--dialog-gutter);
   --dialog-top-offset: var(--dialog-placement-offset);
-  --dialog-safe-block-start: var(--dbm-space-0);
-  --dialog-safe-block-end: var(--dbm-space-0);
-  --dialog-safe-inline-start: var(--dbm-space-0);
-  --dialog-safe-inline-end: var(--dbm-space-0);
+  --overlay-safe-block-start: var(--dbm-space-0);
+  --overlay-safe-block-end: var(--dbm-space-0);
+  --overlay-safe-inline-start: var(--dbm-space-0);
+  --overlay-safe-inline-end: var(--dbm-space-0);
   /* From the end edge: the button's inset, its width, and a little air beside it. */
-  --dialog-close-clearance: calc(var(--dbm-space-3) + var(--dbm-icon-button-size-sm) + var(--dbm-space-2));
+  --overlay-close-clearance: calc(var(--dbm-space-3) + var(--dbm-icon-button-size-sm) + var(--dbm-space-2));
 
   background-color: var(--dbm-bg-surface);
   border: var(--dialog-border-width) solid var(--dbm-border-default);
@@ -42,10 +42,10 @@
   outline: none;
   /* Full screen reaches under a notch and a home indicator, so it keeps clear of them (the device's insets, which
      are zero everywhere a page doesn't ask to draw under them). */
-  padding-block-end: var(--dialog-safe-block-end);
-  padding-block-start: var(--dialog-safe-block-start);
-  padding-inline-end: var(--dialog-safe-inline-end);
-  padding-inline-start: var(--dialog-safe-inline-start);
+  padding-block-end: var(--overlay-safe-block-end);
+  padding-block-start: var(--overlay-safe-block-start);
+  padding-inline-end: var(--overlay-safe-inline-end);
+  padding-inline-start: var(--overlay-safe-inline-start);
   position: relative;
   will-change: transform, opacity;
   z-index: var(--dbm-z-index-modal);
@@ -112,10 +112,10 @@
   --dialog-radius: var(--dbm-radius-none);
   --dialog-border-width: var(--dbm-border-width-0);
   --dialog-top-offset: var(--dbm-space-0);
-  --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
-  --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
-  --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
-  --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+  --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+  --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+  --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
 }
 
 /* sm = 640px */
@@ -127,10 +127,10 @@
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
     --dialog-top-offset: var(--dbm-space-0);
-    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
-    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
-    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
-    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedSm {
@@ -140,10 +140,10 @@
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
     --dialog-top-offset: var(--dialog-placement-offset);
-    --dialog-safe-block-start: var(--dbm-space-0);
-    --dialog-safe-block-end: var(--dbm-space-0);
-    --dialog-safe-inline-start: var(--dbm-space-0);
-    --dialog-safe-inline-end: var(--dbm-space-0);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -156,10 +156,10 @@
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
     --dialog-top-offset: var(--dbm-space-0);
-    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
-    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
-    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
-    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedMd {
@@ -169,10 +169,10 @@
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
     --dialog-top-offset: var(--dialog-placement-offset);
-    --dialog-safe-block-start: var(--dbm-space-0);
-    --dialog-safe-block-end: var(--dbm-space-0);
-    --dialog-safe-inline-start: var(--dbm-space-0);
-    --dialog-safe-inline-end: var(--dbm-space-0);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -185,10 +185,10 @@
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
     --dialog-top-offset: var(--dbm-space-0);
-    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
-    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
-    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
-    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedLg {
@@ -198,10 +198,10 @@
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
     --dialog-top-offset: var(--dialog-placement-offset);
-    --dialog-safe-block-start: var(--dbm-space-0);
-    --dialog-safe-block-end: var(--dbm-space-0);
-    --dialog-safe-inline-start: var(--dbm-space-0);
-    --dialog-safe-inline-end: var(--dbm-space-0);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -214,10 +214,10 @@
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
     --dialog-top-offset: var(--dbm-space-0);
-    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
-    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
-    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
-    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowedXl {
@@ -227,10 +227,10 @@
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
     --dialog-top-offset: var(--dialog-placement-offset);
-    --dialog-safe-block-start: var(--dbm-space-0);
-    --dialog-safe-block-end: var(--dbm-space-0);
-    --dialog-safe-inline-start: var(--dbm-space-0);
-    --dialog-safe-inline-end: var(--dbm-space-0);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -243,10 +243,10 @@
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
     --dialog-top-offset: var(--dbm-space-0);
-    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
-    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
-    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
-    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowed2xl {
@@ -256,10 +256,10 @@
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
     --dialog-top-offset: var(--dialog-placement-offset);
-    --dialog-safe-block-start: var(--dbm-space-0);
-    --dialog-safe-block-end: var(--dbm-space-0);
-    --dialog-safe-inline-start: var(--dbm-space-0);
-    --dialog-safe-inline-end: var(--dbm-space-0);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: var(--dbm-space-0);
   }
 }
 
@@ -272,10 +272,10 @@
     --dialog-radius: var(--dbm-radius-none);
     --dialog-border-width: var(--dbm-border-width-0);
     --dialog-top-offset: var(--dbm-space-0);
-    --dialog-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
-    --dialog-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
-    --dialog-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
-    --dialog-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
   }
 
   .windowed3xl {
@@ -285,198 +285,11 @@
     --dialog-radius: var(--dbm-radius-lg);
     --dialog-border-width: var(--dbm-border-width-1);
     --dialog-top-offset: var(--dialog-placement-offset);
-    --dialog-safe-block-start: var(--dbm-space-0);
-    --dialog-safe-block-end: var(--dbm-space-0);
-    --dialog-safe-inline-start: var(--dbm-space-0);
-    --dialog-safe-inline-end: var(--dbm-space-0);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: var(--dbm-space-0);
   }
-}
-
-/* --- Sections. The panel has no padding of its own (but a device's safe-area insets in full screen), so the
-   body's scrollbar runs flush with its edge. Every section sits in `.slot`, which is not drawn: it is the element
-   a `keepMounted` dialog moves in and out of the panel, and it keeps the sections' relation to each other and to
-   the panel the same either way. --- */
-.slot {
-  display: contents;
-}
-
-.header {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  gap: var(--dbm-space-1);
-  padding: var(--dialog-pad) var(--dialog-pad) var(--dbm-space-4);
-}
-
-.title {
-  margin: 0;
-}
-
-.description {
-  margin: 0;
-}
-
-.body {
-  flex: 1 1 auto;
-  min-block-size: 0;
-}
-
-/* The body pads itself fully on every side. Where a header sits above it, or a footer below, that section's own
-   padding already supplies most of the gap, so the body takes less on that side. These rules read the
-   neighbouring section, not the body's position among its siblings: a visually hidden title or any other
-   element may come first without changing the spacing. */
-.bodyContent {
-  padding: var(--dialog-pad);
-}
-
-.header + .body .bodyContent {
-  padding-block-start: var(--dbm-space-2);
-}
-
-.body:has(+ .footer) .bodyContent {
-  padding-block-end: var(--dbm-space-2);
-}
-
-.footer {
-  align-items: center;
-  display: flex;
-  flex: 0 0 auto;
-  flex-wrap: wrap;
-  gap: var(--dbm-space-3);
-  justify-content: flex-end;
-  padding: var(--dbm-space-4) var(--dialog-pad) var(--dialog-pad);
-}
-
-.alignStart {
-  justify-content: flex-start;
-}
-
-.alignBetween {
-  justify-content: space-between;
-}
-
-.alignStretch > * {
-  flex: 1 1 0;
-}
-
-/* Below `sm` the actions stack, each as wide as the footer, so a pair of buttons doesn't wrap into a ragged,
-   end-aligned pair of different widths and each is a full-size target under a thumb. From `sm` they are a row,
-   as above. `align="stretch"` is the author asking for an equal-share row on a phone, so it stays one. The
-   threshold is the literal value of the `breakpoint.sm` token (custom properties can't be used in a media
-   condition, as `Card`, `Stack` and `AlertDialog` note). */
-.footer {
-  align-items: stretch;
-  flex-direction: column;
-}
-
-.footer > * {
-  inline-size: 100%;
-}
-
-.alignStretch {
-  align-items: center;
-  flex-direction: row;
-}
-
-.alignStretch > * {
-  inline-size: auto;
-}
-
-@media (min-width: 40rem) {
-  .footer {
-    align-items: center;
-    flex-direction: row;
-  }
-
-  .footer > * {
-    inline-size: auto;
-  }
-}
-
-/* `divided`: a line between the sections, so a body that scrolls reads as running under them. The section that
-   follows a line takes back the padding it would otherwise have shared with its neighbour. */
-.divided > .slot > .header,
-.dividedAuto > .slot > .header {
-  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
-  padding-block-end: var(--dbm-space-4);
-}
-
-.divided > .slot > .footer,
-.dividedAuto > .slot > .footer {
-  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
-  padding-block-start: var(--dbm-space-4);
-}
-
-.divided > .slot > .header + .body .bodyContent,
-.dividedAuto > .slot > .header + .body .bodyContent {
-  padding-block-start: var(--dbm-space-4);
-}
-
-.divided > .slot > .body:has(+ .footer) .bodyContent,
-.dividedAuto > .slot > .body:has(+ .footer) .bodyContent {
-  padding-block-end: var(--dbm-space-4);
-}
-
-/* `divided="auto"` always reserves the line (transparent) so nothing moves when it shows, and shows it only on
-   the side that has content scrolled out of view: the header's once the body has scrolled, the footer's while
-   more is below. */
-.dividedAuto > .slot > .header {
-  border-block-end-color: transparent;
-}
-
-.dividedAuto > .slot > .footer {
-  border-block-start-color: transparent;
-}
-
-.dividedAuto[data-overflow-start] > .slot > .header {
-  border-block-end-color: var(--dbm-border-default);
-}
-
-.dividedAuto[data-overflow-end] > .slot > .footer {
-  border-block-start-color: var(--dbm-border-default);
-}
-
-/* --- The close button: in the top-end corner, out of the flow. The header makes room for it so a long title
-   doesn't run underneath it; with no header, the body keeps its text out from under it instead. --- */
-.closeButton {
-  /* From the panel's padding box, so the device's safe-area insets (the panel's padding in full screen) are
-     added: a corner button must not sit under a notch. */
-  inset-block-start: calc(var(--dbm-space-3) + var(--dialog-safe-block-start));
-  inset-inline-end: calc(var(--dbm-space-3) + var(--dialog-safe-inline-end));
-  position: absolute;
-}
-
-/* A busy dialog can't be left, but its close button stays focusable (`aria-disabled`, not `disabled`), so
-   keyboard focus isn't dropped from it: it is dimmed and takes no hover fill, as a disabled button would. */
-.content .closeButton[aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: var(--dbm-opacity-40);
-}
-
-.content .closeButton[aria-disabled="true"]:hover {
-  background-color: transparent;
-}
-
-.withCloseButton > .slot > .header {
-  padding-inline-end: var(--dialog-close-clearance);
-}
-
-.withCloseButton:not(:has(> .slot > .header)) > .slot > .body .bodyContent {
-  padding-inline-end: var(--dialog-close-clearance);
-}
-
-/* The default (non-`asChild`) trigger and close elements: a minimal reset of the native button, not chrome of
-   their own. Reach for `asChild` with a `Button` for anything visible. */
-.trigger {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font: inherit;
-  padding: 0;
-}
-
-.trigger:disabled {
-  cursor: not-allowed;
 }
 
 /* --- Enter and exit, keyed to Radix's `data-state`. The scrim fades over `base`; the panel is quicker, so it
@@ -531,18 +344,5 @@
 @media (forced-colors: active) {
   .content {
     border: var(--dbm-border-width-1) solid CanvasText;
-  }
-
-  .divided > .slot > .header,
-  .divided > .slot > .footer,
-  .dividedAuto[data-overflow-start] > .slot > .header,
-  .dividedAuto[data-overflow-end] > .slot > .footer {
-    border-color: CanvasText;
-  }
-
-  /* A transparent border is drawn in forced colours, so the reserved line is told to match the panel. */
-  .dividedAuto:not([data-overflow-start]) > .slot > .header,
-  .dividedAuto:not([data-overflow-end]) > .slot > .footer {
-    border-color: Canvas;
   }
 }

@@ -60,10 +60,7 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   range and multiple-date choosing with drag, the footer, the markers, week numbers and the key. 9.01KB before the year
 //   and month views and the week mode, 10.26KB measured with them (10.54KB after the final review). Sized at the user's direction
 //   (2026-10-05) to about 12KB.
-//   ConfirmDialog (2026-10-11): wraps `AlertDialog` (7.0KB on its own, with `Dialog`'s sections) and, for what a caller
-//   would otherwise wire by hand, holds `Input` and `FormField` (the typed confirmation), `Checkbox` (don't ask again),
-//   `Text`, `Spinner` and `VisuallyHidden`, plus the announcement and persistent-dismiss hooks: 10.60KB measured.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, ConfirmDialog: 12, TimeRangePicker: 12 };
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, TimeRangePicker: 12 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

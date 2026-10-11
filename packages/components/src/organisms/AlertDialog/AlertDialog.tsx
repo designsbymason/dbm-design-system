@@ -24,8 +24,9 @@ import { Heading } from "../../atoms/Heading";
 import { Icon } from "../../atoms/Icon";
 import type { IconTone } from "../../atoms/Icon/Icon.types";
 import { Text } from "../../atoms/Text";
-import { Dialog } from "../Dialog";
+import { OverlayBody, OverlayFooter } from "../../internal/overlay/OverlayParts";
 import dialogStyles from "../Dialog/Dialog.module.css";
+import sections from "../../internal/overlay/OverlaySections.module.css";
 import styles from "./AlertDialog.module.css";
 import type {
   AlertDialogActionProps,
@@ -178,7 +179,7 @@ const AlertDialogTrigger = forwardRef<HTMLButtonElement, AlertDialogTriggerProps
       <AlertDialogPrimitive.Trigger
         ref={ref}
         asChild={asChild}
-        className={asChild ? className : cx(dialogStyles.trigger, className)}
+        className={asChild ? className : cx(sections.trigger, className)}
         {...props}
         onClick={(event) => {
           onClick?.(event);
@@ -270,7 +271,7 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
         )}
       >
         <AlertDialogContentContext.Provider value={context}>
-          <div className={dialogStyles.slot}>{children}</div>
+          <div className={sections.slot}>{children}</div>
         </AlertDialogContentContext.Provider>
       </AlertDialogPrimitive.Content>
     );
@@ -307,7 +308,7 @@ const AlertDialogHeader = forwardRef<HTMLDivElement, AlertDialogHeaderProps>(
     return (
       <div
         ref={ref}
-        className={cx(dialogStyles.header, glyph && styles.withMedallion, className)}
+        className={cx(sections.header, glyph && styles.withMedallion, className)}
         {...props}
       >
         {glyph && (
@@ -326,7 +327,7 @@ AlertDialogHeader.displayName = "AlertDialog.Header";
 const AlertDialogTitle = forwardRef<HTMLHeadingElement, AlertDialogTitleProps>(
   ({ level = 2, size = "xl", className, children, ...props }, ref) => (
     <AlertDialogPrimitive.Title asChild>
-      <Heading ref={ref} level={level} size={size} className={cx(dialogStyles.title, className)} {...props}>
+      <Heading ref={ref} level={level} size={size} className={cx(sections.title, className)} {...props}>
         {children}
       </Heading>
     </AlertDialogPrimitive.Title>
@@ -338,7 +339,7 @@ AlertDialogTitle.displayName = "AlertDialog.Title";
 const AlertDialogDescription = forwardRef<HTMLParagraphElement, AlertDialogDescriptionProps>(
   ({ className, children, ...props }, ref) => (
     <AlertDialogPrimitive.Description asChild>
-      <Text ref={ref} size="base" className={cx(dialogStyles.description, className)} {...props}>
+      <Text ref={ref} size="base" className={cx(sections.description, className)} {...props}>
         {children}
       </Text>
     </AlertDialogPrimitive.Description>
@@ -348,13 +349,13 @@ AlertDialogDescription.displayName = "AlertDialog.Description";
 
 /** Content between the header and the footer: a list of what is affected, say. It scrolls on its own. */
 const AlertDialogBody = forwardRef<HTMLDivElement, AlertDialogBodyProps>((props, ref) => (
-  <Dialog.Body ref={ref} {...props} />
+  <OverlayBody ref={ref} {...props} />
 ));
 AlertDialogBody.displayName = "AlertDialog.Body";
 
 /** The bottom section holding `Cancel` and `Action`; below `sm` its buttons stack full width, Action on top. */
 const AlertDialogFooter = forwardRef<HTMLDivElement, AlertDialogFooterProps>(({ className, ...props }, ref) => (
-  <Dialog.Footer ref={ref} className={cx(styles.footer, className)} {...props} />
+  <OverlayFooter ref={ref} className={cx(styles.footer, className)} {...props} />
 ));
 AlertDialogFooter.displayName = "AlertDialog.Footer";
 

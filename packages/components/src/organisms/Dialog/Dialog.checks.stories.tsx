@@ -730,8 +730,8 @@ export const CloseButtonFollowsTheSafeAreaInset: Story = {
     const before = close.getBoundingClientRect();
     // A desktop reports no inset, so stand one in the way the stylesheet reads it: through the custom
     // properties full screen sets from `env(safe-area-inset-*)`.
-    dialog.style.setProperty("--dialog-safe-block-start", "20px");
-    dialog.style.setProperty("--dialog-safe-inline-end", "12px");
+    dialog.style.setProperty("--overlay-safe-block-start", "20px");
+    dialog.style.setProperty("--overlay-safe-inline-end", "12px");
     await nextFrame();
     const after = close.getBoundingClientRect();
     await expect(Math.round(after.top - before.top)).toBe(20);
