@@ -24,8 +24,8 @@
   --alert-dialog-medallion-bg: var(--dbm-bg-danger-subtle);
 }
 
-/* The icon beside the title: a tinted disc, the width of an icon button so it lines up with the title and the
-   description to its side. */
+/* The icon beside the title: a tinted disc as tall as the title's first line (an extra-small icon button), so the
+   icon reads as part of the title and not as a second heading. */
 .withMedallion {
   align-items: flex-start;
   flex-direction: row;
@@ -35,11 +35,11 @@
 .medallion {
   align-items: center;
   background-color: var(--alert-dialog-medallion-bg);
-  block-size: var(--dbm-icon-button-size-md);
+  block-size: var(--dbm-icon-button-size-xs);
   border-radius: var(--dbm-radius-full);
   display: inline-flex;
   flex: 0 0 auto;
-  inline-size: var(--dbm-icon-button-size-md);
+  inline-size: var(--dbm-icon-button-size-xs);
   justify-content: center;
 }
 

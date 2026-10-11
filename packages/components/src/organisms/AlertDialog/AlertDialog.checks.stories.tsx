@@ -161,7 +161,7 @@ export const ToneIconContrast: Story = {
   name: "Each tone's icon clears 3:1 against its disc, in all four themes",
   render: () => (
     <>
-      {(["info", "warning", "danger"] as const).map((tone) => (
+      {(["neutral", "info", "warning", "danger"] as const).map((tone) => (
         <Delete key={tone} tone={tone} defaultOpen={false} />
       ))}
     </>
@@ -172,7 +172,7 @@ export const ToneIconContrast: Story = {
     const results: Record<string, number> = {};
     for (const theme of ["purple-light", "purple-dark", "emerald-light", "emerald-dark"]) {
       document.documentElement.dataset.theme = theme;
-      for (const [index, tone] of (["info", "warning", "danger"] as const).entries()) {
+      for (const [index, tone] of (["neutral", "info", "warning", "danger"] as const).entries()) {
         await userEvent.click(body.getAllByRole("button", { name: "Open" })[index] as HTMLElement);
         const alert = await body.findByRole("alertdialog");
         await settled(alert);

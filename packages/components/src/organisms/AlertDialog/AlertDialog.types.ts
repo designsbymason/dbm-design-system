@@ -9,9 +9,9 @@ import type { DialogBodyProps, DialogFooterProps, DialogSize } from "../Dialog/D
 type AlertDialogPrimitiveContentProps = ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>;
 
 /**
- * What the alert is about, set on `AlertDialog.Content`. It picks the icon (`info`, `warning` and `danger` have
- * one, `neutral` has none) and the look of `AlertDialog.Action` (`danger` makes it destructive). There is no
- * `success`: a success needs no answer, so it isn't an alert dialog.
+ * What the alert is about, set on `AlertDialog.Content`. It picks the icon (a note for `neutral`, and one each for
+ * `info`, `warning` and `danger`, in the tone's colour) and the look of `AlertDialog.Action` (`danger` makes it
+ * destructive). There is no `success`: a success needs no answer, so it isn't an alert dialog.
  */
 export type AlertDialogTone = "neutral" | "info" | "warning" | "danger";
 
@@ -82,7 +82,8 @@ export interface AlertDialogContentProps extends Omit<ComponentPropsWithoutRef<"
    */
   tone?: AlertDialogTone;
   /**
-   * The icon drawn beside the title: a Phosphor icon component to replace the tone's own, or `false` for none.
+   * The icon drawn beside the title: a Phosphor icon component to replace the tone's own, or `false` for none
+   * (every tone has one by default).
    * The icon is decorative; the tone is carried by the words.
    */
   icon?: PhosphorIcon | false;

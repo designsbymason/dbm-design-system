@@ -35,7 +35,8 @@ const deleteBody = body(
 );
 
 export const alertDialogSnippets = {
-  tones: `{/* tone: "neutral" (default, no icon) | "info" | "warning" | "danger". danger also makes the Action
+  tones: `{/* tone: "neutral" (default) | "info" | "warning" | "danger", each with its own icon (icon={false} removes
+    it). danger also makes the Action
     destructive. */}
 ${alert("", 'tone="warning"', body("Discard changes?", "These edits will be lost.", "Keep editing", "Discard"), "Close editor")}`,
 

@@ -15,7 +15,7 @@ const meta: Meta<typeof AlertDialog.Content> = {
     tone: {
       control: "select",
       options: ["neutral", "info", "warning", "danger"],
-      description: "What the alert is about. Chooses the icon (neutral has none) and, for danger, makes AlertDialog.Action destructive. There is no success: a success needs no answer.",
+      description: "What the alert is about. Chooses the icon (each tone has one, in its colour) and, for danger, makes AlertDialog.Action destructive. There is no success: a success needs no answer.",
       table: { defaultValue: { summary: '"neutral"' } },
     },
     icon: {

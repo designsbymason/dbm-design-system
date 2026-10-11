@@ -1,5 +1,6 @@
 import {
   InfoIcon,
+  NoteIcon,
   WarningIcon,
   WarningOctagonIcon,
 } from "@dbm-design-system/icons";
@@ -51,7 +52,9 @@ const sizeClass = {
   lg: dialogStyles.sizeLg,
 } as const;
 
-const toneIcon: Partial<Record<AlertDialogTone, PhosphorIcon>> = {
+// Every tone has an icon, as `Alert`'s do (its neutral one is the same note); `icon={false}` removes it.
+const toneIcon: Record<AlertDialogTone, PhosphorIcon> = {
+  neutral: NoteIcon,
   info: InfoIcon,
   warning: WarningIcon,
   danger: WarningOctagonIcon,
@@ -281,7 +284,7 @@ const AlertDialogHeader = forwardRef<HTMLDivElement, AlertDialogHeaderProps>(
       >
         {glyph && (
           <span className={styles.medallion} aria-hidden="true">
-            <Icon icon={glyph} size="lg" tone={toneIconColour[tone]} />
+            <Icon icon={glyph} size="md" tone={toneIconColour[tone]} />
           </span>
         )}
         {glyph ? <div className={styles.headerText}>{children}</div> : children}

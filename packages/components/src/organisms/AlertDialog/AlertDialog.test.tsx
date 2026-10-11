@@ -234,16 +234,24 @@ describe("AlertDialog", () => {
   });
 
   describe("tone", () => {
-    it("draws an icon for info, warning and danger, and none for neutral", () => {
-      const { container, rerender } = render(<Basic dialog={{ defaultOpen: true }} tone="neutral" />);
-      expect(document.querySelector(`.${styles.medallion}`)).not.toBeInTheDocument();
-      for (const tone of ["info", "warning", "danger"] as const) {
+    it("draws a decorative icon for every tone, neutral included", () => {
+      const { rerender } = render(<Basic dialog={{ defaultOpen: true }} />);
+      for (const tone of ["neutral", "info", "warning", "danger"] as const) {
         rerender(<Basic dialog={{ defaultOpen: true }} tone={tone} />);
         const medallion = document.querySelector(`.${styles.medallion}`);
         expect(medallion, tone).toBeInTheDocument();
         expect(medallion).toHaveAttribute("aria-hidden", "true");
       }
-      void container;
+    });
+
+    it("draws the neutral icon by default, with no tone given", () => {
+      render(<Basic dialog={{ defaultOpen: true }} />);
+      expect(document.querySelector(`.${styles.medallion}`)).toBeInTheDocument();
+    });
+
+    it("lets icon={false} remove the neutral icon", () => {
+      render(<Basic dialog={{ defaultOpen: true }} tone="neutral" icon={false} />);
+      expect(document.querySelector(`.${styles.medallion}`)).not.toBeInTheDocument();
     });
 
     it("lets icon={false} remove it", () => {

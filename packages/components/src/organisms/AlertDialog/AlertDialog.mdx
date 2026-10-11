@@ -185,8 +185,8 @@ also accepts every other `Button` property and any native `<button>` attribute.
   destructive action, acknowledging an error, deciding what to do with unsaved work.
 - Write the title as the question ("Delete project?") and the buttons as the answers ("Keep it",
   "Delete"), not "OK" and "Cancel", so each button says what it does on its own.
-- Set `tone="danger"` for something that can't be undone: it adds the icon and makes the action
-  destructive.
+- Set `tone="danger"` for something that can't be undone: it colours the icon and makes the action
+  destructive. Every tone has an icon (a note for `neutral`); pass `icon={false}` to remove it.
 - Keep a `Cancel` beside the action, so there is a safe way out and focus has somewhere safe to start.
 - Say in the description what can't be undone, not only that something will happen.
 
@@ -312,7 +312,7 @@ An alert is drawn with `Dialog`'s stylesheet plus a small one of its own, so the
 <TokenRow token="bg.info-subtle" usage="the info tone's icon disc" />
 <TokenRow token="bg.warning-subtle" usage="the warning tone's icon disc" />
 <TokenRow token="bg.danger-subtle" usage="the danger tone's icon disc" />
-<TokenRow token="icon-button.size.md" usage="the icon disc's diameter, so it lines up with the title and description beside it" />
+<TokenRow token="icon-button.size.xs" usage="the icon disc's diameter, as tall as the title's first line" />
 <TokenRow token="icon-button.size.sm" usage="the room the panel keeps for a corner button" />
 <TokenRow token="space.0" usage="viewport gutter when full screen" />
 <TokenRow token="space.1" usage="gap between the title and the description" />
