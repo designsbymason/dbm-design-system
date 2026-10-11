@@ -279,6 +279,8 @@ export const IndicatorColumnAlignsEveryLabel: Story = {
     ];
     const lefts = labels.map(textLeft);
     for (const left of lefts) await expect(Math.abs(left - (lefts[0] as number))).toBeLessThan(0.75);
+    // a group's label is drawn in capitals
+    await expect(getComputedStyle(labels[0] as Element).textTransform).toBe("uppercase");
     // the indicator of the checked item is drawn, and the unchecked one's column is empty
     const checked = within(menu).getByRole("menuitemcheckbox", { name: "Checked item" });
     await expect(checked.querySelector("svg")).not.toBeNull();

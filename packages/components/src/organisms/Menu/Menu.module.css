@@ -197,13 +197,15 @@
   flex-shrink: 0;
 }
 
-/* A heading for a group of items: not an item, so never highlighted. */
+/* A heading for a group of items: not an item, so never highlighted. Drawn in capitals so it reads as a heading
+   among sentence-case labels; `text-transform` changes how it is drawn, not the text a screen reader gets. */
 .heading {
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-semibold);
   padding-block: var(--dbm-space-1);
   padding-inline: var(--menu-pad-inline);
+  text-transform: uppercase;
 }
 
 /* A line between two sets of items, drawn as a border so forced colours keeps it. */
