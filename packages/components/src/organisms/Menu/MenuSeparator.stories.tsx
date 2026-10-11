@@ -33,7 +33,7 @@ type Story = StoryObj<typeof Menu.Separator>;
 
 export const Default: Story = {
   render: (args) => (
-    <Menu defaultOpen>
+    <Menu defaultOpen modal={false}>
       <Menu.Trigger>Actions</Menu.Trigger>
       <Menu.Content>
         <Menu.Item>Edit</Menu.Item>

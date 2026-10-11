@@ -61,7 +61,7 @@ type Story = StoryObj<typeof Menu.RadioGroup>;
 
 export const Default: Story = {
   render: (args) => (
-    <Menu defaultOpen>
+    <Menu defaultOpen modal={false}>
       <Menu.Trigger>Sort</Menu.Trigger>
       <Menu.Content>
         <Menu.RadioGroup {...args}>

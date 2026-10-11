@@ -29,7 +29,7 @@ type Story = StoryObj<typeof Menu.Sub>;
 
 export const Default: Story = {
   render: (args) => (
-    <Menu defaultOpen>
+    <Menu defaultOpen modal={false}>
       <Menu.Trigger>Actions</Menu.Trigger>
       <Menu.Content>
         <Menu.Sub {...args}>

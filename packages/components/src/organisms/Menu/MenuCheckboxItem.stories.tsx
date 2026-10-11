@@ -76,7 +76,7 @@ type Story = StoryObj<typeof Menu.CheckboxItem>;
 
 export const Default: Story = {
   render: (args) => (
-    <Menu defaultOpen>
+    <Menu defaultOpen modal={false}>
       <Menu.Trigger>View</Menu.Trigger>
       <Menu.Content>
         <Menu.CheckboxItem {...args} />

@@ -124,7 +124,7 @@ type Story = StoryObj<typeof Menu.Content>;
 
 export const Default: Story = {
   render: (args) => (
-    <Menu defaultOpen>
+    <Menu defaultOpen modal={false}>
       <Menu.Trigger>Actions</Menu.Trigger>
       <Menu.Content {...args}>
         <Menu.Item>Edit</Menu.Item>

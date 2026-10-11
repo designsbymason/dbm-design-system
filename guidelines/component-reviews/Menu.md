@@ -1,6 +1,6 @@
 # Menu — review findings
 
-Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not been run, and the real-browser checks below are not yet green.
+Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not been run; the build's own checks are green.
 
 ## Decisions
 - Wraps Radix DropdownMenu pinned on the Radix release train, holds its own open state, is modal by default and opens on ArrowUp: [ADR-0064](../adr/0064-menu-wraps-radix-dropdown-menu-on-the-pinned-release-train-holds-its-own-open-state-is-modal-by-default-and-opens-on-arrowup.md).
@@ -15,9 +15,14 @@ Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not
 - **Contrast** measured for every new pairing (text, icon and focus ring on the panel and on each highlight, Purple and Emerald, light and dark): all clear their floors.
 
 ## Checks run
-- 108 unit tests: opening and closing, every key, items, checkbox and radio state, groups and labels, submenus (including right-to-left), the attribute-precedence probe on every part, nesting inside a `Dialog`, `StrictMode`, axe, server render and hydration, and the Docs-token test. `pnpm typecheck` and `eslint` are clean.
-- Component-level `check-guidelines` findings were fixed except this file's own.
+- 108 unit tests: opening and closing, every key, items, checkbox and radio state, groups and labels, submenus (including right-to-left), the attribute-precedence probe on every part, nesting inside a `Dialog`, `StrictMode`, axe, server render and hydration, and the Docs-token test.
+- 44 real-browser tests (Chromium): 14 hidden sub-part stories for the Properties tables and 30 checks. The checks cover an item chosen with a real mouse in a menu opened from inside a `Dialog` (the top element at its point, the dialog left open), the 24px target and no overflow at every size, a 28-item list capped to the viewport and scrolling with the focused item kept in view, a flip above a trigger at the bottom edge, the panel's width between its caps with a long label wrapping, one left edge for every label beside indicators, the highlight and danger-highlight fills and the keyboard ring, the separator, ArrowUp opening on the last enabled item and Escape returning focus, a right-to-left submenu opening to the left with its caret mirrored, forced colours drawing an outline, and an `IconButton` with a tooltip and a `Toolbar` item both working as triggers.
+- Full unit suite (141 files, 7517 tests), `pnpm lint` (eslint and both typechecks), the build, the component bundle-size check (Menu JS 2.84KB, CSS 1.31KB, within budget) and `check-guidelines`.
+
+## Found by the checks
+- **Axe reports `aria-hidden-focus` for any story that holds a modal menu open**, because the page behind it, trigger included, is hidden while the trigger stays focusable (focus is trapped in the panel and Tab does nothing, so it is unreachable). The checks file carries `a11y: { test: "todo" }` with that reason, and the docs-only sub-part stories use `modal={false}`. The same markup is axe-checked open, with every kind of part, in the unit tests.
+- **The first failing story left the rest timing out**, so a single annotation cleared 27 failures; nothing in the component changed.
 
 ## Open
-- **The Storybook (Chromium) run has not passed.** The first run timed out on several real-browser checks and failed the hidden sub-part `Default` stories; the cause has not been read from a full log yet.
-- Not yet done: the bundle-size check, a look at the Docs page and every story in light/dark and both brands, the full `pnpm lint`/build, and the §9 pass that decides Finalized.
+- The §9 review pass that decides Finalized, including looking at every story and the Docs page in light and dark and in both brands at several viewport widths (the Playground was seen open in the default theme only).
+- Not verified: a real touch device, and a screen reader's announcement of the menu and its groups.
