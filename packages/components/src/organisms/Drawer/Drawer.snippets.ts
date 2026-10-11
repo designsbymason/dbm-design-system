@@ -49,6 +49,18 @@ ${drawer("", 'side={{ base: "bottom", md: "end" }}', full)}`,
     height it takes for top and bottom. */}
 ${drawer("", 'size="lg"', full)}`,
 
+  customSize: `{/* size takes a step, or a CSS length / a number of pixels for a size the scale doesn't have. */}
+${drawer("", 'size="min(90vw, 40rem)"', full)}`,
+
+  swipe: `{/* swipeToDismiss (on by default): a touch or a pen drags the handle or the header toward the edge; a short
+    drag settles back, a long or quick one closes with the reason "swipe". showHandle draws the grab handle
+    on a top or bottom drawer. */}
+${drawer("onOpenChange={(open, { reason }) => console.log(open, reason)}", 'side="bottom" swipeToDismiss showHandle', full)}`,
+
+  complete: `{/* onOpenChangeComplete: true once it has finished opening, false once it has finished closing and is
+    gone. onOpenChange says a change started; this says it is over. */}
+${drawer("onOpenChangeComplete={(open) => !open && resetFilters()}", "", full)}`,
+
   longContent: `{/* Drawer.Body scrolls while the header and footer stay put. divided is "auto" by default: a line
     shows only while there is content scrolled out of view on that side. */}
 ${drawer("", "", `${sections}
@@ -109,6 +121,8 @@ export interface DrawerPlaygroundSnippetArgs {
   modal?: boolean;
   side?: DrawerSide;
   size?: DrawerSize;
+  swipeToDismiss?: boolean;
+  showHandle?: boolean;
   /** `false`, `true` or `"auto"`, or the Playground control's option key (`"off"`, `"on"`, `"auto"`). */
   divided?: boolean | "auto" | "off" | "on";
   busy?: boolean;
@@ -131,6 +145,8 @@ export function drawerPlaygroundSnippet(args: DrawerPlaygroundSnippetArgs): stri
   const contentAttributes: string[] = [];
   if (args.side && args.side !== "end") contentAttributes.push(`side="${args.side}"`);
   if (args.size && args.size !== "md") contentAttributes.push(`size="${args.size}"`);
+  if (args.swipeToDismiss === false) contentAttributes.push("swipeToDismiss={false}");
+  if (args.showHandle === false) contentAttributes.push("showHandle={false}");
   // The Playground's select hands over its option key, not the mapped value; `divided` defaults to "auto".
   if (args.divided === true || args.divided === "on") contentAttributes.push("divided");
   if (args.divided === false || args.divided === "off") contentAttributes.push("divided={false}");

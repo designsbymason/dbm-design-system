@@ -1,6 +1,6 @@
 # 0061 — `Drawer` is attached to a logical `side` that can change with the screen, with its own size tokens, and swipe-to-dismiss waits
 
-**Status:** Accepted · **Date:** 2026-10-11
+**Status:** Accepted, the swipe clause superseded by [0063](./0063-drawer-gets-swipe-to-dismiss-from-its-handle-and-header-a-size-that-can-be-a-length-and-a-back-button-recipe.md) · **Date:** 2026-10-11
 
 ## Context
 `Drawer` is the third overlay on Radix Dialog ([ADR-0052](./0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md), [ADR-0053](./0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)); its sections are the shared ones from [ADR-0060](./0060-the-overlay-sections-are-extracted-to-internal-overlay-with-the-panel-staying-each-components-own.md). What is its own is the question of where the panel attaches and how big it is. `Dialog` already uses `placement` (a vertical position of a centred window) and `fullScreen`, and `Popover` uses `side` (which side of its anchor). The main consumers (`Navbar`, `Sidebar`) need a menu that is a bottom sheet on a phone and a side panel on a desktop.

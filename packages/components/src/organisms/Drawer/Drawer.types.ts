@@ -15,6 +15,13 @@ type DialogPrimitiveContentProps = ComponentPropsWithoutRef<typeof DialogPrimiti
 export type DrawerSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
+ * What `size` takes: a step of the scale, or, for the one drawer that needs a width the scale doesn't have, a CSS
+ * length (`"22rem"`, `"min(90vw, 40rem)"`) or a number of pixels. A value that isn't a step is the same extent,
+ * on the same axis, with the same sliver of the page left showing on a smaller viewport.
+ */
+export type DrawerSizeValue = DrawerSize | (string & Record<never, never>) | number;
+
+/**
  * The edge of the viewport the panel is attached to. `"start"` and `"end"` are logical: the inline start and end,
  * which are the left and right edges in left-to-right text and swap in right-to-left, so a navigation drawer opens
  * from the side a reader expects. `"top"` and `"bottom"` span the full width, and `"bottom"` is the usual shape of
@@ -29,8 +36,9 @@ export type DrawerSide = "start" | "end" | "top" | "bottom";
  * - `"outside"`: a press on the scrim, or, in a non-modal drawer, focus moving out of it.
  * - `"close-button"`: the built-in close button in the panel's corner.
  * - `"close"`: a `Drawer.Close` element, usually a Cancel or Done button in the footer.
+ * - `"swipe"`: a touch or pen drag of the panel toward its edge (see `swipeToDismiss`).
  */
-export type DrawerOpenChangeReason = "trigger" | "escape" | "outside" | "close-button" | "close";
+export type DrawerOpenChangeReason = "trigger" | "escape" | "outside" | "close-button" | "close" | "swipe";
 
 /** The second argument of `onOpenChange`. */
 export interface DrawerOpenChangeDetails {
@@ -66,6 +74,12 @@ export interface DrawerProps {
    * unsaved changes can confirm on the scrim and not on its own "Cancel", and analytics can tell them apart.
    */
   onOpenChange?: (open: boolean, details: DrawerOpenChangeDetails) => void;
+  /**
+   * Called with `true` once the drawer has finished opening (its entrance has finished) and with `false` once it has
+   * finished closing and is out of the page. `onOpenChange` says a change *started*; this says it is *over*: the place
+   * to reset a form or release something heavy without guessing the animation's length.
+   */
+  onOpenChangeComplete?: (open: boolean) => void;
   /**
    * Whether the drawer is modal. A modal drawer dims the page behind it with a scrim, locks the page's scroll,
    * traps focus inside it and makes the rest of the page inert to assistive technology. Set `false` for a docked
@@ -109,10 +123,27 @@ export interface DrawerContentProps extends Omit<ComponentPropsWithoutRef<"div">
   side?: Responsive<DrawerSide>;
   /**
    * The panel's extent — see {@link DrawerSize}: its width for `start` and `end`, the most height it takes for `top`
-   * and `bottom`. On a viewport smaller than the step the panel leaves a sliver of the page showing.
+   * and `bottom`. On a viewport smaller than the step the panel leaves a sliver of the page showing. Takes a step of
+   * the scale, or a CSS length or a number of pixels for a size the scale doesn't have; prefer a step, which every
+   * drawer in an app then shares.
    * @default 'md'
    */
-  size?: DrawerSize;
+  size?: DrawerSizeValue;
+  /**
+   * Lets a touch or a pen drag the panel toward its edge to dismiss it, by its handle or its header: a short drag
+   * settles back, and a long or quick one closes it with the reason `"swipe"`. Never given to a mouse, which has
+   * the close button, and off while `busy`. The close button, Escape and the scrim remain, so nothing needs the
+   * gesture.
+   * @default true
+   */
+  swipeToDismiss?: boolean;
+  /**
+   * Draws a small grab handle on the inner edge of a `top` or `bottom` drawer, the usual cue that a sheet can be
+   * dragged away. Decorative, and not drawn for a `start` or `end` drawer, which has none. Dragging the header works
+   * with or without it.
+   * @default true
+   */
+  showHandle?: boolean;
   /**
    * Draws a line between the header and the body and between the body and the footer, so a body that scrolls
    * reads as running under them. Same name and meaning as `Card`'s `divided`. `"auto"` draws each line only while

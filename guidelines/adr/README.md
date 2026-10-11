@@ -116,6 +116,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0060](./0060-the-overlay-sections-are-extracted-to-internal-overlay-with-the-panel-staying-each-components-own.md) | The overlay sections are extracted to `internal/overlay`, with the panel staying each component's own | Accepted |
 | [0061](./0061-drawer-is-attached-to-a-logical-side-that-can-change-with-the-screen-with-its-own-size-tokens-and-no-swipe-yet.md) | `Drawer` is attached to a logical `side` that can change with the screen, with its own size tokens, and swipe-to-dismiss waits | Accepted |
 | [0062](./0062-overlays-report-when-they-have-finished-opening-and-closing-through-onopenchangecomplete.md) | Overlays report when they have finished opening and closing through `onOpenChangeComplete` | Accepted |
+| [0063](./0063-drawer-gets-swipe-to-dismiss-from-its-handle-and-header-a-size-that-can-be-a-length-and-a-back-button-recipe.md) | `Drawer` gets swipe-to-dismiss from its handle and header, a `size` that can be a length, and a Back-button recipe | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

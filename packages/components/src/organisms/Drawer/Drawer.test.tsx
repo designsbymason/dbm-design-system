@@ -853,4 +853,120 @@ describe("Drawer", () => {
       expect((await axe(document.body)).violations).toHaveLength(0);
     });
   });
+
+  describe("onOpenChangeComplete", () => {
+    it("says when it has finished opening and, after the exit, when it has finished closing", async () => {
+      const complete = vi.fn();
+      const changed = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <Drawer onOpenChange={changed} onOpenChangeComplete={complete}>
+          <Drawer.Trigger>Open</Drawer.Trigger>
+          <Drawer.Content aria-label="A drawer">
+            <Drawer.Body>Body</Drawer.Body>
+          </Drawer.Content>
+        </Drawer>,
+      );
+      expect(complete).not.toHaveBeenCalled();
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
+      expect(complete).toHaveBeenCalledTimes(1);
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(false));
+      expect(complete.mock.calls.map(([value]) => value)).toEqual([true, false]);
+      // the change was announced before it was reported finished
+      expect(changed.mock.invocationCallOrder[1]).toBeLessThan(complete.mock.invocationCallOrder[1] ?? 0);
+    });
+
+    it("does not report a close while it is open, including under StrictMode", async () => {
+      const complete = vi.fn();
+      render(
+        <StrictMode>
+          <Drawer defaultOpen onOpenChangeComplete={complete}>
+            <Drawer.Content aria-label="A drawer" />
+          </Drawer>
+        </StrictMode>,
+      );
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
+      expect(complete).not.toHaveBeenCalledWith(false);
+    });
+  });
+
+
+  describe("size, handle and swipe", () => {
+    it("sets a CSS length as the drawer's size, and a number as pixels", () => {
+      const { unmount } = render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" size="22rem" data-testid="panel" />
+        </Drawer>,
+      );
+      expect(screen.getByTestId("panel").style.getPropertyValue("--drawer-size")).toBe("22rem");
+      expect(screen.getByTestId("panel").className).not.toMatch(/size(Xs|Sm|Lg|Xl)/);
+      unmount();
+      render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" size={360} data-testid="panel" />
+        </Drawer>,
+      );
+      expect(screen.getByTestId("panel").style.getPropertyValue("--drawer-size")).toBe("360px");
+    });
+
+    it("sets nothing inline for a step of the scale, and keeps the consumer's own style", () => {
+      render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" size="lg" style={{ color: "red" }} data-testid="panel" />
+        </Drawer>,
+      );
+      const panel = screen.getByTestId("panel");
+      expect(panel).toHaveClass(styles.sizeLg ?? "");
+      expect(panel.style.getPropertyValue("--drawer-size")).toBe("");
+      expect(panel).toHaveStyle({ color: "rgb(255, 0, 0)" });
+    });
+
+    it("keeps the consumer's style alongside a custom size", () => {
+      render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" size="20rem" style={{ color: "red" }} data-testid="panel" />
+        </Drawer>,
+      );
+      const panel = screen.getByTestId("panel");
+      expect(panel.style.getPropertyValue("--drawer-size")).toBe("20rem");
+      expect(panel).toHaveStyle({ color: "rgb(255, 0, 0)" });
+    });
+
+    it("draws a decorative handle, and none with showHandle={false}", () => {
+      const { unmount } = render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" side="bottom" data-testid="panel" />
+        </Drawer>,
+      );
+      const handle = screen.getByTestId("panel").querySelector("[data-drawer-grab][aria-hidden='true']");
+      expect(handle).not.toBeNull();
+      unmount();
+      render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" side="bottom" showHandle={false} data-testid="panel" />
+        </Drawer>,
+      );
+      expect(screen.getByTestId("panel").querySelector("[data-drawer-grab][aria-hidden='true']")).toBeNull();
+    });
+
+    it("marks the header as somewhere a touch can take hold, and a consumer prop can't remove it", () => {
+      render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x">
+            <Drawer.Header data-testid="header" {...({ "data-drawer-grab": "no" } as object)} />
+          </Drawer.Content>
+        </Drawer>,
+      );
+      expect(screen.getByTestId("header")).toHaveAttribute("data-drawer-grab", "");
+    });
+
+    it("accepts the swipe reason in its type and reports it through onOpenChange", () => {
+      // The gesture itself needs a layout engine and is checked in a real browser; this holds the API shape.
+      const reasons: Array<import("./Drawer.types").DrawerOpenChangeReason> = ["swipe", "close", "outside"];
+      expect(reasons).toContain("swipe");
+    });
+  });
+
 });

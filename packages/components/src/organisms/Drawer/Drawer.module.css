@@ -49,12 +49,52 @@
   padding-inline-end: var(--overlay-safe-inline-end);
   padding-inline-start: var(--overlay-safe-inline-start);
   position: relative;
+  /* Where a finger has dragged it (see `DrawerSwipe`): nothing at rest. */
+  transform: translate(var(--drawer-drag-x, var(--dbm-space-0)), var(--drawer-drag-y, var(--dbm-space-0)));
   will-change: transform, opacity;
   z-index: var(--dbm-z-index-modal);
 }
 
 [data-theme$="-dark"] .content {
   box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+/* --- Swipe to dismiss. While a finger holds the panel it follows it with no entrance in the way; let go short of
+   dismissing and it eases back. The handle and the header are where a touch can take hold, and are told the
+   browser should leave a pan along the drawer's own axis to the gesture. --- */
+.content[data-dragging] {
+  animation: none;
+}
+
+.content[data-settling] {
+  transition: transform var(--dbm-motion-duration-base) var(--dbm-motion-easing-emphasized);
+}
+
+.content [data-drawer-grab] {
+  touch-action: var(--drawer-touch-action, none);
+}
+
+/* The grab handle of a top or bottom drawer: a pill on its inner edge in a hit area 24px tall. Hidden for a start or
+   end drawer by the side's own `--drawer-handle-display`. */
+.handle {
+  align-items: center;
+  display: var(--drawer-handle-display, none);
+  block-size: var(--dbm-space-6);
+  inline-size: var(--dbm-space-16);
+  inset-block-end: var(--drawer-handle-block-end, auto);
+  inset-block-start: var(--drawer-handle-block-start, auto);
+  inset-inline: var(--dbm-space-0);
+  justify-content: center;
+  margin-inline: auto;
+  position: absolute;
+}
+
+.handle::after {
+  background-color: var(--dbm-border-neutral);
+  block-size: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-full);
+  content: "";
+  inline-size: var(--dbm-space-10);
 }
 
 /* A non-modal drawer has no scrim to position it, so it is fixed to the viewport itself: inset on all four sides, with
@@ -109,6 +149,10 @@
   --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
   --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
   --overlay-safe-inline-end: var(--dbm-space-0);
+  --drawer-handle-display: none;
+  --drawer-handle-block-start: auto;
+  --drawer-handle-block-end: auto;
+  --drawer-touch-action: pan-y;
 }
 
 .sideStartBase:dir(rtl) {
@@ -137,6 +181,10 @@
   --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
   --overlay-safe-inline-start: var(--dbm-space-0);
   --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  --drawer-handle-display: none;
+  --drawer-handle-block-start: auto;
+  --drawer-handle-block-end: auto;
+  --drawer-touch-action: pan-y;
 }
 
 .sideEndBase:dir(rtl) {
@@ -165,6 +213,10 @@
   --overlay-safe-block-end: var(--dbm-space-0);
   --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
   --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  --drawer-handle-display: flex;
+  --drawer-handle-block-start: auto;
+  --drawer-handle-block-end: var(--dbm-space-0);
+  --drawer-touch-action: pan-x;
 }
 
 .sideTopBase:dir(rtl) {
@@ -193,6 +245,10 @@
   --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
   --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
   --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  --drawer-handle-display: flex;
+  --drawer-handle-block-start: var(--dbm-space-0);
+  --drawer-handle-block-end: auto;
+  --drawer-touch-action: pan-x;
 }
 
 .sideBottomBase:dir(rtl) {
@@ -223,6 +279,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: var(--dbm-space-0);
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideStartSm:dir(rtl) {
@@ -251,6 +311,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: var(--dbm-space-0);
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideEndSm:dir(rtl) {
@@ -279,6 +343,10 @@
     --overlay-safe-block-end: var(--dbm-space-0);
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: var(--dbm-space-0);
+    --drawer-touch-action: pan-x;
   }
 
   .sideTopSm:dir(rtl) {
@@ -307,6 +375,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: var(--dbm-space-0);
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-x;
   }
 
   .sideBottomSm:dir(rtl) {
@@ -338,6 +410,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: var(--dbm-space-0);
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideStartMd:dir(rtl) {
@@ -366,6 +442,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: var(--dbm-space-0);
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideEndMd:dir(rtl) {
@@ -394,6 +474,10 @@
     --overlay-safe-block-end: var(--dbm-space-0);
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: var(--dbm-space-0);
+    --drawer-touch-action: pan-x;
   }
 
   .sideTopMd:dir(rtl) {
@@ -422,6 +506,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: var(--dbm-space-0);
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-x;
   }
 
   .sideBottomMd:dir(rtl) {
@@ -453,6 +541,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: var(--dbm-space-0);
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideStartLg:dir(rtl) {
@@ -481,6 +573,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: var(--dbm-space-0);
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideEndLg:dir(rtl) {
@@ -509,6 +605,10 @@
     --overlay-safe-block-end: var(--dbm-space-0);
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: var(--dbm-space-0);
+    --drawer-touch-action: pan-x;
   }
 
   .sideTopLg:dir(rtl) {
@@ -537,6 +637,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: var(--dbm-space-0);
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-x;
   }
 
   .sideBottomLg:dir(rtl) {
@@ -568,6 +672,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: var(--dbm-space-0);
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideStartXl:dir(rtl) {
@@ -596,6 +704,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: var(--dbm-space-0);
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideEndXl:dir(rtl) {
@@ -624,6 +736,10 @@
     --overlay-safe-block-end: var(--dbm-space-0);
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: var(--dbm-space-0);
+    --drawer-touch-action: pan-x;
   }
 
   .sideTopXl:dir(rtl) {
@@ -652,6 +768,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: var(--dbm-space-0);
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-x;
   }
 
   .sideBottomXl:dir(rtl) {
@@ -683,6 +803,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: var(--dbm-space-0);
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideStart2xl:dir(rtl) {
@@ -711,6 +835,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: var(--dbm-space-0);
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideEnd2xl:dir(rtl) {
@@ -739,6 +867,10 @@
     --overlay-safe-block-end: var(--dbm-space-0);
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: var(--dbm-space-0);
+    --drawer-touch-action: pan-x;
   }
 
   .sideTop2xl:dir(rtl) {
@@ -767,6 +899,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: var(--dbm-space-0);
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-x;
   }
 
   .sideBottom2xl:dir(rtl) {
@@ -798,6 +934,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: var(--dbm-space-0);
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideStart3xl:dir(rtl) {
@@ -826,6 +966,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: var(--dbm-space-0);
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: none;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-y;
   }
 
   .sideEnd3xl:dir(rtl) {
@@ -854,6 +998,10 @@
     --overlay-safe-block-end: var(--dbm-space-0);
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: auto;
+    --drawer-handle-block-end: var(--dbm-space-0);
+    --drawer-touch-action: pan-x;
   }
 
   .sideTop3xl:dir(rtl) {
@@ -882,6 +1030,10 @@
     --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
     --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
     --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+    --drawer-handle-display: flex;
+    --drawer-handle-block-start: var(--dbm-space-0);
+    --drawer-handle-block-end: auto;
+    --drawer-touch-action: pan-x;
   }
 
   .sideBottom3xl:dir(rtl) {
@@ -918,7 +1070,7 @@
 @keyframes drawerOut {
   from {
     opacity: var(--dbm-opacity-100);
-    transform: none;
+    transform: translate(var(--drawer-drag-x, var(--dbm-space-0)), var(--drawer-drag-y, var(--dbm-space-0)));
   }
 
   to {
@@ -928,6 +1080,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .content[data-settling] {
+    transition: none;
+  }
+
   .content[data-state="open"] {
     animation-name: drawerFadeIn;
   }
@@ -961,5 +1117,9 @@
 @media (forced-colors: active) {
   .content {
     border-color: CanvasText;
+  }
+
+  .handle::after {
+    background-color: CanvasText;
   }
 }

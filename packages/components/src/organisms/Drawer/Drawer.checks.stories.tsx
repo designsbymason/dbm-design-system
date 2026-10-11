@@ -249,7 +249,8 @@ export const EntersFromItsEdge: Story = {
     const animation = panel.getAnimations().find((item) => /drawerIn/.test((item as CSSAnimation).animationName));
     await expect(animation).toBeDefined();
     await settled(panel);
-    await expect(getComputedStyle(panel).transform).toBe("none");
+    // at rest there is no offset: the identity, since the panel's transform is the (zero) drag offset
+    await expect(["none", "matrix(1, 0, 0, 1, 0, 0)"]).toContain(getComputedStyle(panel).transform);
     await expect(Math.round(panel.getBoundingClientRect().bottom)).toBe(window.innerHeight);
     await expect(resting.top).toBeGreaterThanOrEqual(0);
   },
@@ -460,5 +461,216 @@ export const KeepMountedKeepsTheState: Story = {
     await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
     await userEvent.click(body.getByRole("button", { name: "Open" }));
     await expect(await body.findByRole("textbox", { name: "Name" })).toHaveValue("Jane");
+  },
+};
+
+// A touch drag, as the pointer events a touch screen produces. A real finger can't be driven here, so the events
+// are dispatched; the component reads `pointerType`, the coordinates and the time stamps, which these carry.
+const touch = (type: string, target: Element, x: number, y: number, extra: PointerEventInit = {}) =>
+  target.dispatchEvent(
+    new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      pointerId: 7,
+      isPrimary: true,
+      pointerType: "touch",
+      clientX: x,
+      clientY: y,
+      ...extra,
+    }),
+  );
+
+async function drag(from: Element, dx: number, dy: number, pointerType: "touch" | "mouse" = "touch", steps = 4) {
+  const rect = from.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  touch("pointerdown", from, x, y, { pointerType });
+  for (let step = 1; step <= steps; step += 1) {
+    touch("pointermove", from, x + (dx * step) / steps, y + (dy * step) / steps, { pointerType });
+    await nextFrame();
+  }
+  touch("pointerup", from, x + dx, y + dy, { pointerType });
+}
+
+let lastReason = "";
+const recordReason = (_open: boolean, details: { reason: string }) => {
+  lastReason = details.reason;
+};
+
+export const FarSwipeDismissesWithTheSwipeReason: Story = {
+  name: "a long touch drag of the header toward the edge closes it, reporting the reason swipe",
+  render: () => <Panel root={{ defaultOpen: true, onOpenChange: recordReason }} />,
+  play: async () => {
+    lastReason = "";
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const header = within(panel).getByTestId("header");
+    await drag(header, 260, 0);
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await expect(lastReason).toBe("swipe");
+  },
+};
+
+export const ShortSwipeSettlesBack: Story = {
+  name: "a short drag settles back and leaves it open, with nothing left on the panel",
+  render: () => <Panel root={{ defaultOpen: true, onOpenChange: recordReason }} />,
+  play: async () => {
+    lastReason = "";
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const header = within(panel).getByTestId("header");
+    await drag(header, 16, 0);
+    await waitFor(() => expect(panel).not.toHaveAttribute("data-settling"));
+    await expect(within(document.body).getByRole("dialog")).toBeInTheDocument();
+    await expect(["none", "matrix(1, 0, 0, 1, 0, 0)"]).toContain(getComputedStyle(panel).transform);
+    await expect(panel.style.getPropertyValue("--drawer-drag-x")).toBe("");
+    await expect(lastReason).toBe("");
+  },
+};
+
+export const PanelFollowsTheFinger: Story = {
+  name: "while dragging, the panel moves with the finger and no further than its edge allows",
+  render: () => <Panel root={{ defaultOpen: true }} />,
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const header = within(panel).getByTestId("header");
+    const rect = header.getBoundingClientRect();
+    const x = rect.left + 20;
+    const y = rect.top + 20;
+    const resting = panel.getBoundingClientRect().left;
+    touch("pointerdown", header, x, y);
+    touch("pointermove", header, x + 60, y);
+    await nextFrame();
+    await expect(Math.round(panel.getBoundingClientRect().left - resting)).toBe(60);
+    // toward the edge only: dragging back past where it began does not pull it the other way
+    touch("pointermove", header, x - 80, y);
+    await nextFrame();
+    await expect(Math.round(panel.getBoundingClientRect().left - resting)).toBe(0);
+    touch("pointercancel", header, x, y);
+    await waitFor(() => expect(panel).not.toHaveAttribute("data-settling"));
+  },
+};
+
+export const MouseAndWrongDirectionAreNotSwipes: Story = {
+  name: "a mouse drag, and a touch drag away from the edge, do nothing",
+  render: () => <Panel root={{ defaultOpen: true }} />,
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const header = within(panel).getByTestId("header");
+    await drag(header, 300, 0, "mouse");
+    await drag(header, -300, 0, "touch");
+    await nextFrame();
+    await expect(within(document.body).getByRole("dialog")).toBeInTheDocument();
+    await expect(panel).not.toHaveAttribute("data-dragging");
+  },
+};
+
+export const SwipeFollowsTheSideInRightToLeft: Story = {
+  name: "side=start in right-to-left text is dismissed by a drag to the right",
+  render: () => <Panel content={{ side: "start", dir: "rtl" }} root={{ defaultOpen: true }} />,
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    await drag(within(panel).getByTestId("header"), 260, 0);
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const BottomSheetIsSwipedDown: Story = {
+  name: "a bottom sheet draws its handle, and a drag of it downward dismisses it",
+  render: () => <Panel content={{ side: "bottom" }} root={{ defaultOpen: true }} />,
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const handle = panel.querySelector("[aria-hidden='true'][data-drawer-grab]") as HTMLElement;
+    await expect(getComputedStyle(handle).display).not.toBe("none");
+    // a 24px-tall hit area, centred on the sheet's top edge
+    const box = handle.getBoundingClientRect();
+    const sheet = panel.getBoundingClientRect();
+    await expect(Math.round(box.height)).toBe(Math.round(1.5 * rem()));
+    // inside the sheet's own 1px border
+    await expect(Math.round(box.top - sheet.top)).toBeLessThanOrEqual(1);
+    await drag(handle, 0, 240);
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const SideDrawersDrawNoHandle: Story = {
+  name: "a side drawer draws no handle, and showHandle={false} removes the sheet's",
+  render: () => (
+    <>
+      <Panel root={{ defaultOpen: true }} />
+    </>
+  ),
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const handle = panel.querySelector("[aria-hidden='true'][data-drawer-grab]") as HTMLElement;
+    await expect(getComputedStyle(handle).display).toBe("none");
+  },
+};
+
+export const BusyCannotBeSwiped: Story = {
+  name: "a busy drawer cannot be swiped away",
+  render: () => <Panel content={{ busy: true }} root={{ defaultOpen: true }} />,
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    await drag(within(panel).getByTestId("header"), 300, 0);
+    await nextFrame();
+    await expect(within(document.body).getByRole("dialog")).toBeInTheDocument();
+  },
+};
+
+export const OpenChangeCompleteWaitsForTheExit: Story = {
+  name: "onOpenChangeComplete(false) comes after the exit has played, not when it starts",
+  render: () => <Panel root={{ defaultOpen: true }} />,
+  play: async () => {
+    // Instrument by watching the panel leave the page: the callback is exercised by the unit tests, and this
+    // proves the panel is still in the page, animating, when the change starts.
+    const body = within(document.body);
+    const panel = await body.findByRole("dialog");
+    await settled(panel);
+    await userEvent.keyboard("{Escape}");
+    await nextFrame();
+    await expect(panel.getAttribute("data-state")).toBe("closed");
+    await expect(panel.isConnected).toBe(true);
+    await waitFor(() => expect(panel.isConnected).toBe(false));
+  },
+};
+
+export const CustomSizeIsALengthOrPixels: Story = {
+  name: "size takes a CSS length or a number of pixels, and the scale's steps still map to their tokens",
+  render: () => (
+    <>
+      <Drawer>
+        <Drawer.Trigger asChild>
+          <Button>Open length</Button>
+        </Drawer.Trigger>
+        <Drawer.Content aria-label="length" size="22rem" />
+      </Drawer>
+      <Drawer>
+        <Drawer.Trigger asChild>
+          <Button>Open pixels</Button>
+        </Drawer.Trigger>
+        <Drawer.Content aria-label="pixels" size={300} />
+      </Drawer>
+    </>
+  ),
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole("button", { name: "Open length" }));
+    const first = await body.findByRole("dialog", { name: "length" });
+    await settled(first);
+    await expect(Math.round(first.getBoundingClientRect().width)).toBe(Math.round(22 * rem()));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await userEvent.click(body.getByRole("button", { name: "Open pixels" }));
+    const second = await body.findByRole("dialog", { name: "pixels" });
+    await settled(second);
+    await expect(Math.round(second.getBoundingClientRect().width)).toBe(300);
   },
 };

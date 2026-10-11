@@ -22,8 +22,20 @@ const meta: Meta<typeof Drawer.Content> = {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
       description:
-        "The panel's extent along its axis: its width for start and end, the most height it takes for top and bottom. On a smaller viewport a sliver of the page is left showing.",
+        "The panel's extent along its axis: its width for start and end, the most height it takes for top and bottom. A step of the scale, or a CSS length or a number of pixels for a size the scale doesn't have. On a smaller viewport a sliver of the page is left showing.",
       table: { defaultValue: { summary: '"md"' } },
+    },
+    swipeToDismiss: {
+      control: "boolean",
+      description:
+        "Lets a touch or a pen drag the panel toward its edge to dismiss it, by its handle or header. A short drag settles back; a long or quick one closes it with the reason swipe. Never given to a mouse, and off while busy.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    showHandle: {
+      control: "boolean",
+      description:
+        "Draws a small grab handle on the inner edge of a top or bottom drawer. Decorative, and not drawn for a start or end drawer.",
+      table: { defaultValue: { summary: "true" } },
     },
     divided: {
       control: "select",

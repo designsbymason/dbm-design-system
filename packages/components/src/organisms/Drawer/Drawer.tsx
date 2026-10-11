@@ -1,12 +1,13 @@
 import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import type { Breakpoint, Responsive } from "@dbm-design-system/primitives";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { createContext, forwardRef, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Backdrop } from "../../atoms/Backdrop";
 import { CloseButton } from "../../atoms/CloseButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { OverlayContentContext } from "../../internal/overlay/overlayContext";
+import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import { OverlayBody, OverlayDescription, OverlayFooter, OverlayHeader, OverlayTitle } from "../../internal/overlay/OverlayParts";
 import { useKeepMounted } from "../../internal/overlay/useKeepMounted";
 import {
@@ -18,6 +19,7 @@ import {
   useOverlayPanel,
 } from "../../internal/overlay/useOverlayPanel";
 import styles from "./Drawer.module.css";
+import { DrawerSwipe } from "./DrawerSwipe";
 import type {
   DrawerBodyProps,
   DrawerCloseProps,
@@ -81,8 +83,12 @@ interface DrawerContextValue {
   /** The drawer's current open state, held here so the scrim can follow it (see `DrawerContent`). */
   open: boolean;
   modal: boolean;
+  /** Told when the drawer has finished opening and when it has finished closing. */
+  onOpenChangeComplete: ((open: boolean) => void) | undefined;
   /** Records what is about to close or open the drawer, for `onOpenChange`'s second argument. */
   setReason: (reason: DrawerOpenChangeReason) => void;
+  /** Closes the drawer from inside it (a swipe), reporting `reason`. */
+  close: (reason: DrawerOpenChangeReason) => void;
 }
 
 const DrawerContext = createContext<DrawerContextValue | null>(null);
@@ -139,6 +145,7 @@ function DrawerRoot({
   open: openProp,
   defaultOpen = false,
   onOpenChange,
+  onOpenChangeComplete,
   modal = true,
 }: DrawerProps) {
   // The open state is kept here, not left to Radix, because the scrim (`Backdrop`) draws its own fade from an
@@ -164,7 +171,18 @@ function DrawerRoot({
     [isControlled, onOpenChange],
   );
 
-  const value = useMemo(() => ({ open, modal, setReason }), [open, modal, setReason]);
+  const close = useCallback(
+    (reason: DrawerOpenChangeReason) => {
+      reasonRef.current = reason;
+      handleOpenChange(false);
+    },
+    [handleOpenChange],
+  );
+
+  const value = useMemo(
+    () => ({ open, modal, onOpenChangeComplete, setReason, close }),
+    [open, modal, onOpenChangeComplete, setReason, close],
+  );
 
   return (
     <DrawerContext.Provider value={value}>
@@ -208,6 +226,8 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
     {
       size = "md",
       side = "end",
+      swipeToDismiss = true,
+      showHandle = true,
       divided = "auto",
       busy = false,
       keepMounted = false,
@@ -220,6 +240,7 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
       labels: labelOverrides,
       container,
       className,
+      style,
       children,
       onOpenAutoFocus,
       onEscapeKeyDown,
@@ -238,12 +259,33 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
     const { contentContext, titleCount, descriptionCount, edges } = useOverlayPanel({ divided, busy });
     const { host, portalContent, attachHost } = useKeepMounted({ keepMounted, open });
     const describedBy = describedByProps(ariaDescribedBy, descriptionCount);
+    const panelRef = useRef<HTMLDivElement | null>(null);
+
+    // A step of the scale is a class; anything else is a length the panel reads through its own custom property.
+    const isStep = typeof size === "string" && Object.prototype.hasOwnProperty.call(sizeClass, size);
+    const customSize = isStep ? undefined : typeof size === "number" ? `${size}px` : size;
+    const sizeWarned = useRef(false);
+    useEffect(() => {
+      if (
+        process.env.NODE_ENV !== "production" &&
+        customSize !== undefined &&
+        !sizeWarned.current &&
+        typeof CSS !== "undefined" &&
+        typeof CSS.supports === "function" &&
+        !CSS.supports("width", customSize)
+      ) {
+        sizeWarned.current = true;
+        console.warn(
+          `Drawer: \`size\` is "${customSize}", which is neither a step (xs, sm, md, lg, xl) nor a CSS length, so the drawer keeps its default size.`,
+        );
+      }
+    }, [customSize]);
 
     const inner = <OverlayContentContext.Provider value={contentContext}>{children}</OverlayContentContext.Provider>;
 
     const content = (
       <DialogPrimitive.Content
-        ref={mergeRefs(ref, attachHost)}
+        ref={mergeRefs(ref, attachHost, panelRef)}
         {...props}
         {...describedBy}
         aria-label={ariaLabel}
@@ -253,6 +295,7 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
         data-state={open ? "open" : "closed"}
         aria-modal={modal ? true : undefined}
         aria-busy={busy || undefined}
+        style={customSize === undefined ? style : { ["--drawer-size" as string]: customSize, ...style }}
         data-overflow-start={edges.start || undefined}
         data-overflow-end={edges.end || undefined}
         onOpenAutoFocus={(event) => {
@@ -275,13 +318,20 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
         }}
         className={cx(
           styles.content,
-          sizeClass[size],
+          isStep ? sizeClass[size as DrawerSize] : undefined,
           sideClasses(side),
           overlayPanelClassName({ divided, showCloseButton }),
           !modal && styles.nonModal,
           className,
         )}
       >
+        <OverlayLifecycle open={open} panelRef={panelRef} onOpenChangeComplete={drawer?.onOpenChangeComplete} />
+        <DrawerSwipe
+          panelRef={panelRef}
+          enabled={swipeToDismiss && !busy}
+          onDismiss={() => drawer?.close("swipe")}
+        />
+        {showHandle && <span aria-hidden="true" className={styles.handle} data-drawer-grab="" />}
         {ariaLabel && titleCount === 0 && (
           <DialogPrimitive.Title asChild>
             <VisuallyHidden>{ariaLabel}</VisuallyHidden>
@@ -330,7 +380,10 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
 DrawerContent.displayName = "Drawer.Content";
 
 /** The top section of the drawer: usually a `Drawer.Title` and optionally a `Drawer.Description`. */
-const DrawerHeader = forwardRef<HTMLDivElement, DrawerHeaderProps>((props, ref) => <OverlayHeader ref={ref} {...props} />);
+const DrawerHeader = forwardRef<HTMLDivElement, DrawerHeaderProps>((props, ref) => (
+  // The header is where a touch can take hold of the panel to swipe it away (see `swipeToDismiss`).
+  <OverlayHeader ref={ref} {...props} data-drawer-grab="" />
+));
 DrawerHeader.displayName = "Drawer.Header";
 
 /**

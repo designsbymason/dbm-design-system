@@ -13,10 +13,12 @@ import * as DrawerBodyStories from "./DrawerBody.stories";
 import * as DrawerFooterStories from "./DrawerFooter.stories";
 import * as DrawerCloseStories from "./DrawerClose.stories";
 
-export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "modal"];
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "onOpenChangeComplete", "modal"];
 export const playgroundOrder = [
   "side",
   "size",
+  "swipeToDismiss",
+  "showHandle",
   "divided",
   "modal",
   "busy",
@@ -33,6 +35,8 @@ export const contentPropOrder = [
   "children",
   "side",
   "size",
+  "swipeToDismiss",
+  "showHandle",
   "divided",
   "busy",
   "keepMounted",
@@ -182,6 +186,22 @@ A mobile-first map, as `Stack` and `Grid` take: a sheet from the bottom on a pho
 
 <Canvas of={DrawerStories.Sizes} />
 
+### A size the scale doesn't have
+
+`size` takes a step of the scale. For the one drawer that needs another width, pass a CSS length or a
+number of pixels; it is the same extent on the same axis, with the same strip of the page left showing
+on a smaller screen.
+
+<Canvas of={DrawerStories.CustomSize} />
+
+### A sheet you can swipe away
+
+On a touch screen, drag the handle or the header toward the edge: a short drag settles back and a long
+or quick one closes it, with the reason `"swipe"`. A mouse isn't given the gesture. This demo is drawn
+inside a box; the close button, Escape and the scrim still work, so nothing needs the gesture.
+
+<Canvas of={DrawerStories.Swipeable} />
+
 ### Long content scrolls inside the panel
 
 <Canvas of={DrawerStories.LongContent} />
@@ -228,6 +248,10 @@ A mobile-first map, as `Stack` and `Grid` take: a sheet from the bottom on a pho
 - Give it a title, and a footer with the one primary action, so what it is for and how to finish it
   are clear.
 - Keep long content in `Drawer.Body`, which scrolls while the header and footer stay put.
+- Leave `swipeToDismiss` on for a sheet on a phone: it is what people try first. It never replaces the
+  close button, which stays.
+- Use a step of `size` where one fits, so every drawer in an app shares its widths, and a length only
+  for the odd one out.
 - Use `modal={false}` for a panel the person works beside (an inspector), and leave it modal for
   anything that should take over their attention.
 
@@ -252,6 +276,10 @@ A mobile-first map, as `Stack` and `Grid` take: a sheet from the bottom on a pho
 - On a phone a side panel leaves a strip of the page showing, so there is always something to press to
   close it. Keep its content within what fits the remaining width.
 - A `bottom` sheet is as tall as its content, up to the `size` step, and its body scrolls past that.
+- Use `onOpenChangeComplete` to reset a form or release something heavy once the drawer is gone;
+  `onOpenChange` fires when it starts closing, with the exit still to play.
+- On a phone, Back usually should close an open drawer. That is the app's router's to decide, so it is a
+  recipe (below) rather than a prop.
 - While a drawer saves (`busy`), keep it open and show your own progress; the close button stays
   focusable but does nothing until it is done.
 - Use `onOpenChange`'s `reason` to tell the person pressing outside from their pressing Cancel, so a
@@ -278,6 +306,9 @@ A mobile-first map, as `Stack` and `Grid` take: a sheet from the bottom on a pho
   `aria-disabled` and dimmed but still focusable, so focus isn't dropped from it.
 - `start` and `end` follow the text direction, so in right-to-left text a `start` drawer is on the
   right and slides in from there.
+- Swipe-to-dismiss is an extra way to close it, for a touch or a pen from the handle and the header, and
+  is never the only one: the close button, Escape and the scrim all work. The handle is decorative
+  (`aria-hidden`), and the gesture is off while the drawer is `busy`.
 - Under `prefers-reduced-motion` the panel fades instead of sliding. A device's notch and home
   indicator are kept clear on the edges the panel touches.
 - In forced-colours mode a shadow isn't drawn, so the panel is told apart by the border on its inner
@@ -327,6 +358,32 @@ A mobile-first map, as `Stack` and `Grid` take: a sheet from the bottom on a pho
   </Drawer.Content>
 </Drawer>
 
+{/* A width the scale doesn't have */}
+<Drawer.Content size="min(90vw, 40rem)" side="end">
+  …
+</Drawer.Content>
+
+{/* Do something once it is gone, not when it starts to go */}
+<Drawer onOpenChangeComplete={(open) => !open && resetFilters()}>
+  …
+</Drawer>
+
+{/* Let the browser's Back button close it on a phone: open it from your own state and keep one history
+    entry while it is open. Use your router's own API instead if you have one. */}
+const [open, setOpen] = useState(false);
+useEffect(() => {
+  if (!open) return undefined;
+  window.history.pushState({ drawer: true }, "");
+  const close = () => setOpen(false);
+  window.addEventListener("popstate", close);
+  return () => {
+    window.removeEventListener("popstate", close);
+    // closed some other way: take the entry back out so Back doesn't land on an empty step
+    if (window.history.state?.drawer) window.history.back();
+  };
+}, [open]);
+<Drawer open={open} onOpenChange={setOpen}>…</Drawer>
+
 {/* A native <div> attribute, passed straight through to the panel */}
 <Drawer.Content aria-describedby="what-this-filters" dir="rtl" side="start">
   …
@@ -340,20 +397,24 @@ drawn by a stylesheet `Dialog` and `AlertDialog` share, so the table lists both.
 
 <TokenRow token="bg.surface" usage="panel background" />
 <TokenRow token="text.primary" usage="panel text colour" />
+<TokenRow token="border.neutral" usage="the grab handle's pill" />
 <TokenRow token="border.default" usage="the border on the panel's inner edge, and the lines between sections when divided" />
 <TokenRow token="border-width.1" usage="the inner edge's border width, and the divided lines" />
 <TokenRow token="border-width.0" usage="the border width of the edges that touch the screen" />
 <TokenRow token="radius.lg" usage="the corner radius on the side facing the page" />
 <TokenRow token="radius.none" usage="the corners that touch the screen" />
+<TokenRow token="radius.full" usage="the grab handle's pill" />
 <TokenRow token="shadow.light.lg / shadow.dark.lg" usage="panel elevation" />
 <TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside this component's own tree" />
 <TokenRow token="drawer.size.xs / drawer.size.sm / drawer.size.md / drawer.size.lg / drawer.size.xl" usage="the width of a start or end panel, and the height cap of a top or bottom one, at each size" />
 <TokenRow token="space.0" usage="no margin or device inset on the edges that don't need one" />
-<TokenRow token="space.1" usage="gap between the title and the description" />
+<TokenRow token="space.1" usage="gap between the title and the description; the grab handle pill's height" />
 <TokenRow token="space.2" usage="body padding next to a header or footer; air beside the close button" />
 <TokenRow token="space.3" usage="gap between footer actions; close button inset" />
 <TokenRow token="space.4" usage="header and footer inner padding; divided body padding next to a header or footer" />
-<TokenRow token="space.6" usage="panel padding; the body pads itself with it on every side" />
+<TokenRow token="space.6" usage="panel padding; the body pads itself with it on every side; the grab handle's hit area height" />
+<TokenRow token="space.10" usage="the grab handle's pill width" />
+<TokenRow token="space.16" usage="the grab handle's hit area width" />
 <TokenRow token="space.12" usage="the strip of the page left showing beside a panel that would fill the screen" />
 <TokenRow token="icon-button.size.sm" usage="the close button's width, which sets the room kept for it" />
 <TokenRow token="z-index.modal" usage="panel stacking order, above the scrim and below popovers and tooltips" />

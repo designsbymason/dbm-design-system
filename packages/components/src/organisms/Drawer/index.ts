@@ -13,6 +13,7 @@ export type {
   DrawerProps,
   DrawerSide,
   DrawerSize,
+  DrawerSizeValue,
   DrawerTitleProps,
   DrawerTriggerProps,
 } from "./Drawer.types";

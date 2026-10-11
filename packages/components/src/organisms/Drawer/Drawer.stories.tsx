@@ -19,6 +19,8 @@ interface PlaygroundArgs {
   onOpenChange: (open: boolean) => void;
   side: DrawerSide;
   size: DrawerSize;
+  swipeToDismiss: boolean;
+  showHandle: boolean;
   /** The control's option; the story maps it to `false`, `true` or `"auto"` (see `dividedFromArg`). */
   divided: "off" | "on" | "auto";
   busy: boolean;
@@ -35,6 +37,8 @@ const dividedFromArg = { off: false, on: true, auto: "auto" } as const;
 const contentFromArgs = (args: PlaygroundArgs): DrawerContentProps => ({
   side: args.side,
   size: args.size,
+  swipeToDismiss: args.swipeToDismiss,
+  showHandle: args.showHandle,
   divided: dividedFromArg[args.divided],
   busy: args.busy,
   keepMounted: args.keepMounted,
@@ -60,6 +64,8 @@ const noControls = {
   onOpenChange: { control: false },
   side: { control: false },
   size: { control: false },
+  swipeToDismiss: { control: false },
+  showHandle: { control: false },
   divided: { control: false },
   busy: { control: false },
   keepMounted: { control: false },
@@ -91,7 +97,7 @@ const meta: Meta<PlaygroundArgs> = {
     onOpenChange: {
       control: false,
       description:
-        "Called with the new open state, and { reason }: trigger, escape, outside, close-button or close.",
+        "Called with the new open state, and { reason }: trigger, escape, outside, close-button, close or swipe.",
     },
     side: {
       control: "select",
@@ -106,6 +112,18 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The panel's extent along its axis: its width for start and end, the most height it takes for top and bottom.",
       table: { defaultValue: { summary: '"md"' } },
+    },
+    swipeToDismiss: {
+      control: "boolean",
+      description:
+        "Lets a touch or a pen drag the panel toward its edge to dismiss it, by its handle or header. A short drag settles back; a long or quick one closes it with the reason swipe. Never given to a mouse, and off while busy.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    showHandle: {
+      control: "boolean",
+      description:
+        "Draws a small grab handle on the inner edge of a top or bottom drawer. Decorative, and not drawn for a start or end drawer.",
+      table: { defaultValue: { summary: "true" } },
     },
     divided: {
       control: "select",
@@ -158,6 +176,8 @@ const meta: Meta<PlaygroundArgs> = {
     modal: true,
     side: "end",
     size: "md",
+    swipeToDismiss: true,
+    showHandle: true,
     divided: "auto",
     busy: false,
     keepMounted: false,
@@ -241,6 +261,39 @@ export const Sizes: Story = {
       )}
     </DrawerStage>
   ),
+};
+
+export const CustomSize: Story = {
+  name: "A size the scale doesn't have",
+  parameters: { docs: { source: { code: drawerSnippets.customSize } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <DrawerStage>
+      {(container) => <FiltersDrawer container={container} content={{ size: "min(90vw, 40rem)" }} triggerLabel="40rem" />}
+    </DrawerStage>
+  ),
+};
+
+function SwipeExample({ container }: { container: HTMLElement | null }) {
+  const [reason, setReason] = useState("nothing yet");
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", justifyItems: "center" }}>
+      <FiltersDrawer
+        container={container}
+        drawer={{ onOpenChange: (_open, details) => setReason(details.reason) }}
+        content={{ side: "bottom" }}
+        triggerLabel="Open the sheet"
+      />
+      <Text size="sm">Last change reported: {reason}. Drag the handle on a touch screen.</Text>
+    </div>
+  );
+}
+
+export const Swipeable: Story = {
+  name: "A sheet you can swipe away",
+  parameters: { docs: { source: { code: drawerSnippets.swipe } } },
+  argTypes: { ...noControls },
+  render: () => <DrawerStage>{(container) => <SwipeExample container={container} />}</DrawerStage>,
 };
 
 export const LongContent: Story = {
