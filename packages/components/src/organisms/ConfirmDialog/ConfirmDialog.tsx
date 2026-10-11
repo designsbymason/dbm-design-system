@@ -2,6 +2,7 @@ import { mergeDefined, useAnnouncement, usePersistentDismiss } from "@dbm-design
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, ReactNode, RefObject } from "react";
 import { Checkbox } from "../../atoms/Checkbox";
+import type { HeadingSize } from "../../atoms/Heading/Heading.types";
 import { Input } from "../../atoms/Input";
 import { Spinner } from "../../atoms/Spinner";
 import { Text } from "../../atoms/Text";
@@ -51,21 +52,24 @@ function textMatches(typed: string, required: string, mode: ConfirmDialogTextMat
   return mode === "ignore-case" ? entered.toLowerCase() === wanted.toLowerCase() : entered === wanted;
 }
 
-/** How long, in milliseconds, `confirmDelay` still has to run. It is counted from when the panel mounted. */
-function useRemainingDelay(delay: number | undefined): number {
+/**
+ * The whole seconds `confirmDelay` still has to run, rounded up, so `0` means it is over. It is counted from when
+ * the panel mounted. The timer ticks often enough to end on time, but only a change of second re-renders.
+ */
+function useRemainingSeconds(delay: number | undefined): number {
   const enabled = delay !== undefined && delay > 0;
-  const [remaining, setRemaining] = useState(enabled ? delay : 0);
+  const [seconds, setSeconds] = useState(enabled ? Math.ceil(delay / 1000) : 0);
   useEffect(() => {
     if (!enabled) return undefined;
     const startedAt = Date.now();
     const timer = window.setInterval(() => {
       const left = Math.max(0, delay - (Date.now() - startedAt));
-      setRemaining(left);
+      setSeconds(Math.ceil(left / 1000));
       if (left === 0) window.clearInterval(timer);
     }, 200);
     return () => window.clearInterval(timer);
   }, [enabled, delay]);
-  return remaining;
+  return seconds;
 }
 
 /** How an answer is being given: from the open dialog, or with no dialog shown at all (remembered). */
@@ -73,6 +77,7 @@ type AnswerMode = "dialog" | "skipped-trigger" | "skipped-open";
 
 interface ConfirmPanelProps {
   title: ReactNode;
+  titleSize: HeadingSize | undefined;
   description: ReactNode;
   children: ReactNode;
   labels: ConfirmDialogLabels;
@@ -102,6 +107,7 @@ interface ConfirmPanelProps {
  */
 function ConfirmPanel({
   title,
+  titleSize,
   description,
   children,
   labels,
@@ -123,7 +129,7 @@ function ConfirmPanel({
 }: ConfirmPanelProps) {
   const [typed, setTyped] = useState("");
   const [remember, setRemember] = useState(false);
-  const remaining = useRemainingDelay(confirmDelay);
+  const remaining = useRemainingSeconds(confirmDelay);
   const delayed = confirmDelay !== undefined && confirmDelay > 0;
   const released = delayed && remaining === 0;
   const matches = (!requireText || textMatches(typed, requireText, requireTextMatch)) && remaining === 0;
@@ -157,7 +163,7 @@ function ConfirmPanel({
   return (
     <>
       <AlertDialog.Header>
-        <AlertDialog.Title>{title}</AlertDialog.Title>
+        <AlertDialog.Title size={titleSize}>{title}</AlertDialog.Title>
         {description !== undefined && description !== null && (
           <AlertDialog.Description>{description}</AlertDialog.Description>
         )}
@@ -186,7 +192,7 @@ function ConfirmPanel({
           {delayed && (
             // One line whose words change and whose height doesn't, so nothing moves when the delay ends.
             <Text size="sm" color="secondary">
-              {released ? labels.confirmReady : labels.confirmIn(Math.ceil(remaining / 1000))}
+              {released ? labels.confirmReady : labels.confirmIn(remaining)}
             </Text>
           )}
           {showDontAskAgain && (
@@ -247,6 +253,7 @@ export const ConfirmDialog = forwardRef<HTMLDivElement, ConfirmDialogProps>(
   (
     {
       title,
+      titleSize,
       description,
       children,
       trigger,
@@ -292,7 +299,15 @@ export const ConfirmDialog = forwardRef<HTMLDivElement, ConfirmDialogProps>(
       storage: dontAskAgain?.storage,
       expiresAfter: dontAskAgain?.expiresAfter,
     });
-    const skip = Boolean(dontAskAgain) && remembered.ready && remembered.dismissed;
+    const rememberedNow = Boolean(dontAskAgain) && remembered.ready && remembered.dismissed;
+    // Judged once per opening, not while it is open: answering with the box ticked remembers the choice in the
+    // middle of an opening, and that must not turn the dialog that is on screen into one that was "asked to be
+    // open while remembered" (it would be answered a second time, and lose its exit animation). Until the browser
+    // has been asked (`ready`) there is nothing to judge, so the first client render of a hydrating page waits.
+    const [openedRemembered, setOpenedRemembered] = useState<boolean | null>(null);
+    if (open && openedRemembered === null && remembered.ready) setOpenedRemembered(rememberedNow);
+    if (!open && openedRemembered !== null) setOpenedRemembered(null);
+    const skip = open && openedRemembered !== null ? openedRemembered : rememberedNow;
 
     // The callbacks a promise settles into are the ones from the render that started it; this keeps the latest.
     const latest = useRef<{
@@ -431,6 +446,7 @@ export const ConfirmDialog = forwardRef<HTMLDivElement, ConfirmDialogProps>(
         >
           <ConfirmPanel
             title={title}
+            titleSize={titleSize}
             description={description}
             labels={labels}
             requireText={requireText}

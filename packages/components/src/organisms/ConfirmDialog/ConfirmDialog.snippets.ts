@@ -167,6 +167,7 @@ ${dialog(['tone="danger"', "confirmDelay={3000}", 'labels={{ confirm: "Delete" }
 /** The Playground's live controls, as far as the snippet cares. */
 export interface ConfirmDialogPlaygroundSnippetArgs {
   title?: string;
+  titleSize?: string;
   description?: string;
   tone?: ConfirmDialogTone;
   size?: "xs" | "sm" | "md" | "lg";
@@ -188,6 +189,7 @@ export function confirmDialogPlaygroundSnippet(args: ConfirmDialogPlaygroundSnip
   const attributes: string[] = [];
   attributes.push('trigger={<Button variant="destructive">Delete project</Button>}');
   attributes.push(`title=${quote(args.title || "Delete project?")}`);
+  if (args.titleSize && args.titleSize !== "xl") attributes.push(`titleSize="${args.titleSize}"`);
   if (args.description) attributes.push(`description=${quote(args.description)}`);
   if (args.tone && args.tone !== "neutral") attributes.push(`tone="${args.tone}"`);
   if (args.size && args.size !== "sm") attributes.push(`size="${args.size}"`);

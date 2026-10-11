@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -38,6 +38,10 @@ const variants: Array<[string, Partial<ConfirmDialogProps>]> = [
   ["danger tone, no icon", { defaultOpen: true, tone: "danger", icon: false }],
   ["with a body", { defaultOpen: true, children: <p>Three files.</p> }],
   ["type to confirm", { defaultOpen: true, requireText: "Atlas" }],
+  ["with a don't-ask-again box", { defaultOpen: true, dontAskAgain: { key: "ssr-box" } }],
+  ["held back for a moment", { defaultOpen: true, confirmDelay: 4000 }],
+  ["a larger title, focus on confirm, own buttons", { defaultOpen: true, titleSize: "3xl", initialFocus: "confirm", confirmProps: { variant: "primary" }, cancelProps: { variant: "ghost" } }],
+  ["type to confirm, any capitalisation", { defaultOpen: true, requireText: "Atlas", requireTextMatch: "ignore-case" }],
   ["busy with a scrim", { defaultOpen: true, busy: true, scrimBlur: true, scrimOpacity: 80 }],
   ["extra small, escape off, no nudge", { defaultOpen: true, size: "xs", closeOnEscape: false, nudge: false }],
 ];
@@ -88,5 +92,45 @@ describe("ConfirmDialog hydrating", () => {
     }
     error.mockRestore();
     warn.mockRestore();
+  });
+});
+
+describe("ConfirmDialog remembered, hydrating", () => {
+  afterEach(() => window.localStorage.clear());
+
+  // The server can't read the browser's storage, so it draws what it would for a first-time visitor; the browser
+  // then finds the choice remembered. Hydration must match the server's HTML, and only then answer.
+  it.each([
+    ["by default open", { defaultOpen: true }],
+    ["controlled open", { open: true }],
+  ] as const)("hydrates %s with no mismatch, then answers once and draws no dialog", async (_name, extra) => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const html = onTheServer(() =>
+      renderToString(<Tree {...extra} dontAskAgain={{ key: "ssr-remembered" }} />),
+    );
+    window.localStorage.setItem("dbm-dismissed:ssr-remembered", "0");
+    const onConfirm = vi.fn();
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    const recoverable: string[] = [];
+    let root!: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(
+        container,
+        <Tree {...extra} dontAskAgain={{ key: "ssr-remembered" }} onConfirm={onConfirm} />,
+        { onRecoverableError: (caught) => recoverable.push(String((caught as Error).message).slice(0, 400)) },
+      );
+    });
+    try {
+      await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+      expect(recoverable).toEqual([]);
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      error.mockRestore();
+    }
   });
 });

@@ -6,6 +6,7 @@ import * as ConfirmDialogStories from "./ConfirmDialog.stories";
 
 export const propOrder = [
   "title",
+  "titleSize",
   "description",
   "children",
   "trigger",
@@ -44,6 +45,7 @@ export const propOrder = [
 ];
 export const playgroundOrder = [
   "title",
+  "titleSize",
   "description",
   "tone",
   "size",
@@ -216,7 +218,9 @@ and shows a button to ask again.
 
 ## Best practices
 
-- Keep the title to a few words and the description to one or two sentences. A confirmation that needs
+- Keep the title to a few words and the description to one or two sentences. `titleSize` changes only
+  how large it is drawn (the default is `xl`); the heading level is not affected.
+- Keep the title size the same across the confirmations in an app, so they read as one family. A confirmation that needs
   a paragraph needs a `Dialog`, or a page.
 - Let the dialog own the waiting. Pass the promise from `onConfirm` rather than setting `busy`
   yourself; `busy` is for work you run elsewhere.

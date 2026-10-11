@@ -382,3 +382,77 @@ export const DontAskAgainIsRemembered: Story = {
     window.sessionStorage.removeItem("dbm-dismissed:check-remembered");
   },
 };
+
+export const TabOrderAcrossTheWholeDialog: Story = {
+  name: "Tab order across the dialog: field, checkbox, cancel, then confirm once it can be pressed, and back again",
+  render: () => <Confirm defaultOpen requireText="Atlas" dontAskAgain={{ key: "check-tab-order", storage: "session" }} />,
+  play: async () => {
+    const body = within(document.body);
+    const panel = await body.findByRole("alertdialog");
+    await settled(panel);
+    const field = body.getByRole("textbox");
+    const checkbox = body.getByRole("checkbox", { name: "Don’t ask me again" });
+    const cancel = body.getByRole("button", { name: "Keep it" });
+    const confirm = body.getByRole("button", { name: "Delete" });
+    await waitFor(() => expect(field).toHaveFocus());
+    // the confirm is disabled until the text matches, so the loop is field, checkbox, cancel
+    await userEvent.tab();
+    await expect(checkbox).toHaveFocus();
+    await userEvent.tab();
+    await expect(cancel).toHaveFocus();
+    await userEvent.tab();
+    await expect(field).toHaveFocus();
+    await send("Input.insertText", { text: "Atlas" });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    await userEvent.tab();
+    await expect(checkbox).toHaveFocus();
+    await userEvent.tab();
+    await expect(cancel).toHaveFocus();
+    await userEvent.tab();
+    await expect(confirm).toHaveFocus();
+    await userEvent.tab();
+    await expect(field).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(confirm).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(cancel).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(checkbox).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(field).toHaveFocus();
+  },
+};
+
+export const DelayLineIsOneLineOnAPhone: Story = {
+  name: "On a phone at the smallest size the delay line, at its longest, is one line, and the checkbox's label is a 24 by 24 target",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Confirm defaultOpen size="xs" confirmDelay={12000} dontAskAgain={{ key: "check-phone", storage: "session" }} />
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(640);
+    const body = within(document.body);
+    const panel = await body.findByRole("alertdialog");
+    await settled(panel);
+    // the longest words it will say: two digits of seconds
+    const line = body.getByText("You can confirm in 12 seconds.");
+    const lineHeight = parseFloat(getComputedStyle(line).lineHeight);
+    await expect(line.getBoundingClientRect().height).toBeLessThanOrEqual(lineHeight + 1);
+    // The box itself is the atom's 20px glyph; pressing its label does the same thing, and that label is the
+    // equivalent control that has to clear 24 by 24 (WCAG 2.5.8). It sits beside the box, so a press anywhere on
+    // the row toggles it.
+    const checkbox = body.getByRole("checkbox", { name: "Don’t ask me again" });
+    const label = document.querySelector(`label[for="${checkbox.id}"]`) as HTMLElement;
+    const target = label.getBoundingClientRect();
+    await expect(target.width).toBeGreaterThanOrEqual(24);
+    await expect(target.height).toBeGreaterThanOrEqual(24);
+    // pressing the middle of the label really does toggle the box
+    await expect(checkbox).toHaveAttribute("aria-checked", "false");
+    await realClick(label);
+    await waitFor(() => expect(checkbox).toHaveAttribute("aria-checked", "true"));
+    // and the panel still fits the screen
+    const rect = panel.getBoundingClientRect();
+    await expect(rect.left).toBeGreaterThanOrEqual(0);
+    await expect(rect.right).toBeLessThanOrEqual(window.innerWidth);
+  },
+};

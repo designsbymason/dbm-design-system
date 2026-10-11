@@ -27,6 +27,7 @@ const deleteWords = {
 // Every control of the real props, for a story whose fixed render uses none of them.
 const noControls = {
   title: { control: false },
+  titleSize: { control: false },
   description: { control: false },
   tone: { control: false },
   size: { control: false },
@@ -53,6 +54,12 @@ const meta: Meta<PlaygroundArgs> = {
     title: {
       control: "text",
       description: "The question, short enough to read at a glance: \"Delete project?\". Names the dialog.",
+    },
+    titleSize: {
+      control: "select",
+      options: ["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"],
+      description: "The size of the title's text, from Heading's scale. It changes only how large the title is drawn, not its heading level.",
+      table: { defaultValue: { summary: '"xl"' } },
     },
     description: {
       control: "text",
@@ -110,6 +117,8 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["exact", "ignore-case"],
       description:
         "How what is typed is judged against requireText: exact, ignore-case, or a function of the typed text and the required text. Ignored without requireText.",
+      // Shown only once there is a text to judge, so the control is never one that does nothing.
+      if: { arg: "requireText", truthy: true },
       table: { defaultValue: { summary: '"exact"' } },
     },
     dontAskAgain: {
@@ -219,6 +228,7 @@ const meta: Meta<PlaygroundArgs> = {
   },
   args: {
     title: deleteWords.title,
+    titleSize: "xl",
     description: deleteWords.description,
     tone: "danger",
     size: "sm",

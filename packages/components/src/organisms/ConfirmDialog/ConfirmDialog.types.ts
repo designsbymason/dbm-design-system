@@ -1,6 +1,7 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, RefObject } from "react";
 import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
+import type { HeadingSize } from "../../atoms/Heading/Heading.types";
 import type {
   AlertDialogActionProps,
   AlertDialogCancelProps,
@@ -113,6 +114,12 @@ type PanelProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "role" | "t
 export interface ConfirmDialogProps extends PanelProps {
   /** The question, short enough to read at a glance: "Delete project?". Names the dialog. */
   title: ReactNode;
+  /**
+   * The size of the title's text, from `Heading`'s scale. It changes only how large the title is drawn; the
+   * title stays a second-level heading.
+   * @default 'xl'
+   */
+  titleSize?: HeadingSize;
   /**
    * What will happen and what can't be undone. Read out after the title when the dialog opens, so a
    * confirmation needs one (Radix warns in development when there is none).

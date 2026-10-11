@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { createRef, StrictMode } from "react";
+import { createRef, StrictMode, useState } from "react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TrashIcon } from "@dbm-design-system/icons";
@@ -478,6 +478,18 @@ describe("ConfirmDialog", () => {
     });
   });
 
+  describe("titleSize", () => {
+    it("draws the title at the size given, and keeps it a second-level heading", async () => {
+      const { unmount } = render(<Basic defaultOpen />);
+      const normal = (await screen.findByRole("heading", { name: "Delete project?" })).className;
+      unmount();
+      render(<Basic titleSize="3xl" defaultOpen />);
+      const heading = await screen.findByRole("heading", { name: "Delete project?", level: 2 });
+      expect(heading.className).not.toBe(normal);
+      expect(heading.className).toContain("size3xl");
+    });
+  });
+
   describe("announcing", () => {
     it("has a status region in the page before anything is announced", async () => {
       render(<Basic defaultOpen />);
@@ -657,6 +669,92 @@ describe("ConfirmDialog", () => {
     });
   });
 
+  describe("remembering in the middle of an opening", () => {
+    afterEach(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+
+    // An owner that closes the dialog a little later than the answer: a transition, a store, a route change.
+    function SlowOwner({ onConfirm }: { onConfirm: () => void }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <Button onClick={() => setOpen(true)}>Open</Button>
+          <ConfirmDialog
+            open={open}
+            onOpenChange={(next) => {
+              if (next) setOpen(true);
+              else setTimeout(() => setOpen(false), 50);
+            }}
+            title="Sure?"
+            description="Really."
+            labels={{ confirm: "Yes" }}
+            dontAskAgain={{ key: "slow-owner" }}
+            onConfirm={onConfirm}
+          />
+        </>
+      );
+    }
+
+    it("answers once when the owner closes it a moment after the answer", async () => {
+      const onConfirm = vi.fn();
+      const user = userEvent.setup();
+      render(<SlowOwner onConfirm={onConfirm} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("checkbox"));
+      await user.click(screen.getByRole("button", { name: "Yes" }));
+      await act(async () => new Promise((resolve) => setTimeout(resolve, 200)));
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+      // and it is remembered for the next opening
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(2));
+    });
+
+    it("keeps the dialog on screen until it closes, not unmounting it the moment it is remembered", async () => {
+      const user = userEvent.setup();
+      render(<SlowOwner onConfirm={() => undefined} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("checkbox"));
+      await user.click(screen.getByRole("button", { name: "Yes" }));
+      expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    });
+
+    it("answers a remembered, default-open confirmation once under StrictMode", async () => {
+      window.localStorage.setItem("dbm-dismissed:strict-open", "0");
+      const onConfirm = vi.fn();
+      render(
+        <StrictMode>
+          <ConfirmDialog
+            defaultOpen
+            title="Sure?"
+            description="Really."
+            dontAskAgain={{ key: "strict-open" }}
+            onConfirm={onConfirm}
+          />
+        </StrictMode>,
+      );
+      await waitFor(() => expect(onConfirm).toHaveBeenCalled());
+      await act(async () => new Promise((resolve) => setTimeout(resolve, 50)));
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    });
+
+    it("remembers in the browser session when asked to, and for as long as expiresAfter says", async () => {
+      const user = userEvent.setup();
+      render(<Basic dontAskAgain={{ key: "where", storage: "session", expiresAfter: 60_000 }} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("checkbox"));
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      await waitFor(() => expect(window.sessionStorage.getItem("dbm-dismissed:where")).not.toBeNull());
+      expect(window.localStorage.getItem("dbm-dismissed:where")).toBeNull();
+      const endsAt = Number(window.sessionStorage.getItem("dbm-dismissed:where"));
+      expect(endsAt).toBeGreaterThan(Date.now() + 50_000);
+      expect(endsAt).toBeLessThanOrEqual(Date.now() + 60_000);
+    });
+  });
+
   describe("confirmDelay", () => {
     it("holds the confirm button back with a line that says for how long, then releases it", async () => {
       const user = userEvent.setup();
@@ -770,6 +868,20 @@ describe("ConfirmDialog", () => {
       await user.click(await screen.findByRole("button", { name: "Delete" }));
       expect((await axe(document.body)).violations).toHaveLength(0);
       await act(async () => pending.resolve());
+    });
+
+    it("has no axe violations with a don't-ask-again checkbox", async () => {
+      render(<Basic tone="warning" dontAskAgain={{ key: "axe-box" }} defaultOpen />);
+      await screen.findByRole("checkbox");
+      expect((await axe(document.body)).violations).toHaveLength(0);
+    });
+
+    it("has no axe violations while the delay holds the button back, and after", async () => {
+      render(<Basic tone="danger" confirmDelay={500} defaultOpen />);
+      await screen.findByText(/You can confirm in/);
+      expect((await axe(document.body)).violations).toHaveLength(0);
+      await screen.findByText("You can confirm now.", undefined, { timeout: 2500 });
+      expect((await axe(document.body)).violations).toHaveLength(0);
     });
 
     it("has no axe violations with a type-to-confirm field and a body", async () => {
