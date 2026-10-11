@@ -1,14 +1,26 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { CopyIcon, PencilSimpleIcon, TrashIcon } from "@dbm-design-system/icons";
 import { Menu } from "./Menu";
 
 // Docs-only — see MenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
+// `icon` takes a component reference, not a string name (05 §5), which the Controls panel can't drive, so a small
+// curated set of real icons is mapped onto string keys, as `Button`'s icon slots do. "None" is a Playground-only
+// choice that leaves the prop out.
+const iconControl = {
+  control: "select" as const,
+  options: ["None", "Copy", "Pencil", "Trash"],
+  mapping: { None: undefined, Copy: CopyIcon, Pencil: PencilSimpleIcon, Trash: TrashIcon },
+  description: "A leading icon, as a component reference (icon={CopyIcon}), drawn in icon.* colours. Decorative: the label carries the meaning.",
+};
+
 const meta: Meta<typeof Menu.Item> = {
   title: "Organisms/Navigation/Menu/Item",
   component: Menu.Item,
   tags: ["!dev"],
   argTypes: {
     asChild: {
-      control: "boolean",
+      // A single element child is what asChild needs; the story's text label can't stand in for one.
+      control: false,
       description:
         "Renders as the single child element (Radix Slot), which receives the item's role, keyboard handling and styles — how a link or a router Link becomes a menu item. In this mode the item draws none of its own content, so icon and shortcut are not rendered; put them inside the child.",
       table: { defaultValue: { summary: "false" } },
@@ -74,6 +86,8 @@ export default meta;
 type Story = StoryObj<typeof Menu.Item>;
 
 export const Default: Story = {
+  // Playground-only choices: they are not values the prop takes, so they stay off the meta-level argTypes.
+  argTypes: { icon: iconControl },
   render: (args) => (
     <Menu defaultOpen modal={false}>
       <Menu.Trigger>Actions</Menu.Trigger>

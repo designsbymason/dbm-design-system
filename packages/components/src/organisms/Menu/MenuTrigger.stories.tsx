@@ -8,7 +8,8 @@ const meta: Meta<typeof Menu.Trigger> = {
   tags: ["!dev"],
   argTypes: {
     asChild: {
-      control: "boolean",
+      // A single element child is what asChild needs; the story's text child can't stand in for one.
+      control: false,
       description:
         "Renders as a single provided child element (Radix Slot) instead of the built-in, unstyled native <button> — use one of this system's own interactive components (Button, IconButton) as the visible trigger.",
       table: { defaultValue: { summary: "false" } },

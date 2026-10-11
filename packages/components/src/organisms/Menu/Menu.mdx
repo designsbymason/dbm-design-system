@@ -21,7 +21,6 @@ import * as MenuSubTriggerStories from "./MenuSubTrigger.stories";
 import * as MenuSubContentStories from "./MenuSubContent.stories";
 
 export const playgroundOrder = [
-  "defaultOpen",
   "size",
   "side",
   "align",
@@ -32,10 +31,11 @@ export const playgroundOrder = [
   "loop",
   "modal",
   "dir",
+  "defaultOpen",
 ];
 export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "modal", "dir"];
 export const sharedTail = ["id", "className", "style", "data-testid"];
-export const triggerPropOrder = ["asChild", "children", "disabled", "aria-haspopup", "aria-expanded", "aria-label", "aria-labelledby", ...sharedTail];
+export const triggerPropOrder = ["children", "disabled", "aria-label", "aria-labelledby", "aria-haspopup", "aria-expanded", "asChild", ...sharedTail];
 export const contentPropOrder = [
   "children",
   "size",
@@ -58,11 +58,10 @@ export const contentPropOrder = [
   "aria-labelledby",
   ...sharedTail,
 ];
-export const itemTail = ["icon", "shortcut", "disabled", "onSelect", "textValue", ...sharedTail];
-export const itemPropOrder = ["children", "tone", "asChild", ...itemTail];
-export const checkboxPropOrder = ["children", "checked", "defaultChecked", "onCheckedChange", ...itemTail];
+export const itemPropOrder = ["children", "icon", "shortcut", "tone", "disabled", "onSelect", "textValue", "asChild", ...sharedTail];
+export const checkboxPropOrder = ["children", "icon", "shortcut", "checked", "defaultChecked", "onCheckedChange", "disabled", "onSelect", "textValue", ...sharedTail];
 export const radioGroupPropOrder = ["children", "value", "defaultValue", "onValueChange", "aria-label", "aria-labelledby", ...sharedTail];
-export const radioItemPropOrder = ["children", "value", ...itemTail];
+export const radioItemPropOrder = ["children", "value", "icon", "shortcut", "disabled", "onSelect", "textValue", ...sharedTail];
 export const labelPropOrder = ["children", ...sharedTail];
 export const groupPropOrder = ["children", "aria-label", "aria-labelledby", ...sharedTail];
 export const separatorPropOrder = sharedTail;

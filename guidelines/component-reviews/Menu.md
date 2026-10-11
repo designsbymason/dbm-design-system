@@ -23,6 +23,10 @@ Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not
 - **Axe reports `aria-hidden-focus` for any story that holds a modal menu open**, because the page behind it, trigger included, is hidden while the trigger stays focusable (focus is trapped in the panel and Tab does nothing, so it is unreachable). The checks file carries `a11y: { test: "todo" }` with that reason, and the docs-only sub-part stories use `modal={false}`. The same markup is axe-checked open, with every kind of part, in the unit tests.
 - **The first failing story left the rest timing out**, so a single annotation cleared 27 failures; nothing in the component changed.
 
+## Storybook controls
+- Every visible story's controls drive its canvas; a control that a story fixes is `control: false` (`Sizes`: `size` and `defaultOpen`; `Responsive side`: `side`; `Opened from inside a Dialog`: all). `RowActions` takes `align: "end"` as its own arg instead of fixing it, and `RightToLeft` follows `dir`.
+- The Playground and Properties tables follow content → visual → behavioural → advanced; a part's `asChild` goes last. Props a story can't drive show "–": handlers, `collisionBoundary`, `container`, and `asChild` on the trigger and item (a single element child is what it needs). `icon` is a select over a few real icons, on each item story's own `argTypes`, not the meta-level ones.
+
 ## Open
 - The §9 review pass that decides Finalized, including looking at every story and the Docs page in light and dark and in both brands at several viewport widths (the Playground was seen open in the default theme only).
 - Not verified: a real touch device, and a screen reader's announcement of the menu and its groups.

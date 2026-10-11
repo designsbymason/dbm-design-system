@@ -8,7 +8,7 @@ const meta: Meta<typeof Menu.Content> = {
   tags: ["!dev"],
   argTypes: {
     children: {
-      control: "text",
+      control: false,
       description: "The menu's items, labels, groups, separators and submenus.",
     },
     size: {

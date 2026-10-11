@@ -42,28 +42,6 @@ const meta: Meta<PlaygroundArgs> = {
   title: "Organisms/Navigation/Menu",
   parameters: { layout: "padded" },
   argTypes: {
-    defaultOpen: {
-      control: "boolean",
-      description: "The initial open state when uncontrolled.",
-      table: { defaultValue: { summary: "false" } },
-    },
-    modal: {
-      control: "boolean",
-      description:
-        "Makes the rest of the page inert and locks its scroll while the menu is open, and has a press outside only close it. Turn off for a menu that leaves the page usable behind it.",
-      table: { defaultValue: { summary: "true" } },
-    },
-    dir: {
-      control: "inline-radio",
-      options: ["ltr", "rtl"],
-      description:
-        "The reading direction, passed to the menu and its submenus: it decides which side a submenu opens on and which arrow key opens and closes it.",
-      table: { defaultValue: { summary: '"ltr"' } },
-    },
-    onOpenChange: {
-      control: false,
-      description: "Called with the new open state whenever it changes.",
-    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -109,6 +87,28 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description: "Whether arrow-key movement wraps from the last item to the first and back.",
       table: { defaultValue: { summary: "false" } },
+    },
+    modal: {
+      control: "boolean",
+      description:
+        "Makes the rest of the page inert and locks its scroll while the menu is open, and has a press outside only close it. Turn off for a menu that leaves the page usable behind it.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    dir: {
+      control: "inline-radio",
+      options: ["ltr", "rtl"],
+      description:
+        "The reading direction, passed to the menu and its submenus: it decides which side a submenu opens on and which arrow key opens and closes it.",
+      table: { defaultValue: { summary: '"ltr"' } },
+    },
+    defaultOpen: {
+      control: "boolean",
+      description: "The initial open state when uncontrolled.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onOpenChange: {
+      control: false,
+      description: "Called with the new open state whenever it changes.",
     },
   },
   args: {
@@ -158,8 +158,9 @@ export const IconsAndShortcuts: Story = {
 export const Sizes: Story = {
   name: "Sizes",
   parameters: { docs: { source: { code: menuSnippets.sizes } } },
-  // Every step is drawn side by side, so there is no one `size` a control could stand for.
-  argTypes: { size: { control: false } },
+  // Every step is drawn side by side, so there is no one `size` a control could stand for, and five menus held open
+  // at once is not a state.
+  argTypes: { size: { control: false }, defaultOpen: { control: false } },
   render: (args: MenuStageArgs) => (
     <div style={{ alignItems: "center", display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-3)" }}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
@@ -283,20 +284,18 @@ export const DisabledItems: Story = {
 export const RowActions: Story = {
   name: "An icon-only trigger for row actions",
   parameters: { docs: { source: { code: menuSnippets.rowActions } } },
+  // A menu at the end of a row aligns to the end of its trigger.
+  args: { align: "end" },
   render: (args) => (
-    <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-8)" }}>
-      <Menu defaultOpen={args.defaultOpen} modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
-        <Menu.Trigger asChild>
-          <IconButton icon={DotsThreeIcon} aria-label="Row actions" variant="ghost" />
-        </Menu.Trigger>
-        <Menu.Content align="end" size={args.size}>
-          <Menu.Item>Edit</Menu.Item>
-          <Menu.Item>Duplicate</Menu.Item>
-          <Menu.Separator />
-          <Menu.Item tone="danger">Delete</Menu.Item>
-        </Menu.Content>
-      </Menu>
-    </div>
+    <MenuStage
+      args={args}
+      trigger={<IconButton icon={DotsThreeIcon} aria-label="Row actions" variant="ghost" />}
+    >
+      <Menu.Item>Edit</Menu.Item>
+      <Menu.Item>Duplicate</Menu.Item>
+      <Menu.Separator />
+      <Menu.Item tone="danger">Delete</Menu.Item>
+    </MenuStage>
   ),
 };
 
@@ -373,7 +372,7 @@ export const RightToLeft: Story = {
   parameters: { docs: { source: { code: menuSnippets.rightToLeft } } },
   args: { dir: "rtl" },
   render: (args) => (
-    <div dir="rtl">
+    <div dir={args.dir}>
       <MenuStage args={args}>
         <Menu.Item>Edit</Menu.Item>
         <Menu.Sub>

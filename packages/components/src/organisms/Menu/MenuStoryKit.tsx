@@ -24,13 +24,22 @@ export interface MenuStageArgs {
 }
 
 /** A trigger and a panel driven by the Playground's args, around whatever items a story passes. */
-export function MenuStage({ args, label = "Actions", children }: { args: MenuStageArgs; label?: string; children: ReactNode }) {
+export function MenuStage({
+  args,
+  label = "Actions",
+  trigger,
+  children,
+}: {
+  args: MenuStageArgs;
+  label?: string;
+  /** A trigger of the story's own (an icon-only button), in place of the labelled `Button`. */
+  trigger?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-8)" }}>
       <Menu defaultOpen={args.defaultOpen} modal={args.modal} dir={args.dir} onOpenChange={args.onOpenChange}>
-        <Menu.Trigger asChild>
-          <Button variant="secondary">{label}</Button>
-        </Menu.Trigger>
+        <Menu.Trigger asChild>{trigger ?? <Button variant="secondary">{label}</Button>}</Menu.Trigger>
         <Menu.Content
           size={args.size}
           side={args.side}
