@@ -58,6 +58,52 @@ ${dialog(['tone="danger"', 'labels={{ confirm: "Delete" }}', "onConfirm={() => a
     ignored, case matters). Focus starts on the field, and Enter in it confirms once it matches. */}
 ${dialog(['tone="danger"', 'requireText="Atlas"', 'labels={{ confirm: "Delete project" }}', "onConfirm={() => deleteProject()}"])}`,
 
+  ignoreCase: `{/* requireTextMatch: "exact" (default) | "ignore-case" | a function of the typed text (already
+    trimmed) and the required text. */}
+${dialog(['tone="danger"', 'requireText="Atlas"', 'requireTextMatch="ignore-case"', 'labels={{ confirm: "Delete project" }}', "onConfirm={() => deleteProject()}"])}`,
+
+  dontAskAgain: `{/* dontAskAgain adds a checkbox. Once it is ticked and the person confirms, the choice is
+    remembered under this key, and from then on opening the dialog calls onConfirm at once and shows nothing.
+    For something low-stakes only. usePersistentDismiss("hide-publish-note").reset() asks again. */}
+<ConfirmDialog
+  trigger={<Button>Publish</Button>}
+  title="Publish this page?"
+  description="It will be visible to everyone with the link."
+  dontAskAgain={{ key: "hide-publish-note", storage: "session" }}
+  labels={{ confirm: "Publish" }}
+  onConfirm={() => api.publish(id)}
+/>`,
+
+  confirmDelay: `{/* confirmDelay: milliseconds the confirm button is held back after the dialog opens, with a line
+    saying how long is left. It restarts every time the dialog opens. */}
+${dialog(['tone="danger"', "confirmDelay={3000}", 'labels={{ confirm: "Delete" }}', "onConfirm={() => deleteProject()}"])}`,
+
+  confirmFirst: `{/* initialFocus: "cancel" (the safe choice) | "confirm" | a ref of your own. "confirm" is for a
+    question people answer yes to; with requireText or a confirmDelay the button can't take focus yet, so
+    it falls back to the field or to Cancel. */}
+<ConfirmDialog
+  trigger={<Button>Archive</Button>}
+  tone="info"
+  title="Archive this conversation?"
+  description="You can find it again under Archived."
+  initialFocus="confirm"
+  labels={{ confirm: "Archive" }}
+  onConfirm={archive}
+/>`,
+
+  customButtons: `{/* confirmProps and cancelProps take a Button's props, for what tone doesn't cover: another variant, an
+    icon. children, onClick and disabled are the dialog's own. */}
+<ConfirmDialog
+  trigger={<Button variant="secondary">Delete</Button>}
+  tone="warning"
+  title="Delete this draft?"
+  description="Drafts can't be recovered."
+  confirmProps={{ variant: "destructive", leadingIcon: TrashIcon }}
+  cancelProps={{ variant: "ghost" }}
+  labels={{ confirm: "Delete draft" }}
+  onConfirm={deleteDraft}
+/>`,
+
   withABody: `{/* children sit between the description and the buttons and scroll on their own. */}
 <ConfirmDialog
   trigger={<Button variant="destructive">Delete 3 files</Button>}
@@ -127,6 +173,9 @@ export interface ConfirmDialogPlaygroundSnippetArgs {
   confirmLabel?: string;
   cancelLabel?: string;
   requireText?: string;
+  requireTextMatch?: "exact" | "ignore-case";
+  confirmDelay?: number;
+  initialFocus?: "cancel" | "confirm";
   busy?: boolean;
   closeOnEscape?: boolean;
   nudge?: boolean;
@@ -146,7 +195,16 @@ export function confirmDialogPlaygroundSnippet(args: ConfirmDialogPlaygroundSnip
   if (args.confirmLabel) labels.push(`confirm: ${JSON.stringify(args.confirmLabel)}`);
   if (args.cancelLabel) labels.push(`cancel: ${JSON.stringify(args.cancelLabel)}`);
   if (labels.length > 0) attributes.push(`labels={{ ${labels.join(", ")} }}`);
-  if (args.requireText) attributes.push(`requireText=${quote(args.requireText)}`);
+  if (args.requireText) {
+    attributes.push(`requireText=${quote(args.requireText)}`);
+    if (args.requireTextMatch && args.requireTextMatch !== "exact") {
+      attributes.push(`requireTextMatch="${args.requireTextMatch}"`);
+    }
+  }
+  if (args.confirmDelay && args.confirmDelay > 0) attributes.push(`confirmDelay={${args.confirmDelay}}`);
+  if (args.initialFocus === "cancel" || args.initialFocus === "confirm") {
+    attributes.push(`initialFocus="${args.initialFocus}"`);
+  }
   if (args.busy) attributes.push("busy");
   if (args.closeOnEscape === false) attributes.push("closeOnEscape={false}");
   if (args.nudge === false) attributes.push("nudge={false}");

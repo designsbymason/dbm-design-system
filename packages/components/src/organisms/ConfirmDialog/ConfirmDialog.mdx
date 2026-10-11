@@ -18,6 +18,12 @@ export const propOrder = [
   "onConfirmError",
   "busy",
   "requireText",
+  "requireTextMatch",
+  "dontAskAgain",
+  "confirmDelay",
+  "formatNumber",
+  "confirmProps",
+  "cancelProps",
   "open",
   "defaultOpen",
   "onOpenChange",
@@ -44,6 +50,9 @@ export const playgroundOrder = [
   "confirmLabel",
   "cancelLabel",
   "requireText",
+  "requireTextMatch",
+  "confirmDelay",
+  "initialFocus",
   "busy",
   "closeOnEscape",
   "nudge",
@@ -61,8 +70,9 @@ A confirmation in one element: the question, what it will do, and the two answer
 `AlertDialog` (a modal that has to be answered: the page behind is dimmed and locked, a press on the
 **scrim**, the translucent layer over the page, does nothing, and focus starts on the safe choice)
 that you describe with props instead of composing from parts. Give it a `title`, a `description`, an
-`onConfirm` and a `trigger`. `onConfirm` can return a promise, in which case the dialog waits for it,
-and `requireText` makes the person type a name before the confirm button enables.
+`onConfirm` and a `trigger`. `onConfirm` can return a promise, in which case the dialog waits for it;
+`requireText` makes the person type a name before the confirm button enables; `confirmDelay` holds the
+button back for a moment; and `dontAskAgain` lets the person switch a low-stakes question off.
 
 ### Import
 
@@ -115,6 +125,41 @@ the error with `onConfirmError` and show a message of your own in `children`.
 
 <Canvas of={ConfirmDialogStories.TypeToConfirm} />
 
+### Any capitalisation
+
+`requireTextMatch="ignore-case"` accepts "atlas" for "Atlas". It also takes a function of the typed text
+and the required text, for anything else.
+
+<Canvas of={ConfirmDialogStories.IgnoringCase} />
+
+### Held back for a moment
+
+`confirmDelay` disables the confirm button for that many milliseconds after the dialog opens, with a
+line that counts the seconds and then says it is ready. It starts again each time the dialog opens.
+
+<Canvas of={ConfirmDialogStories.HeldBack} />
+
+### Focus starts on the confirm button
+
+For a question people answer yes to, `initialFocus="confirm"` puts focus on the confirm button. The
+default is the safe choice, cancel.
+
+<Canvas of={ConfirmDialogStories.ConfirmFirst} />
+
+### Your own confirm button
+
+`confirmProps` and `cancelProps` take a `Button`'s props, for what `tone` doesn't cover.
+
+<Canvas of={ConfirmDialogStories.CustomButtons} />
+
+### Don't ask me again
+
+`dontAskAgain` adds a checkbox. Once it is ticked and the person confirms, the question is not asked
+again: opening the dialog calls `onConfirm` straight away. This demo remembers for the browser session,
+and shows a button to ask again.
+
+<Canvas of={ConfirmDialogStories.DontAskAgain} />
+
 ### With content between the description and the buttons
 
 <Canvas of={ConfirmDialogStories.WithABody} />
@@ -142,7 +187,11 @@ the error with `onConfirmError` and show a message of your own in `children`.
 - Return the promise from `onConfirm` when the action is a request, so the dialog waits, shows
   progress, and stays open if it fails.
 - For something that can't be recovered, set `requireText` to the name, so the confirm button waits
-  for it to be typed.
+  for it to be typed, and `requireTextMatch="ignore-case"` if capitals aren't the point.
+- Use `confirmDelay` (two or three seconds) for a confirmation people tend to click through.
+- Use `initialFocus="confirm"` only for a question where yes is the likely, harmless answer.
+- Use `dontAskAgain` for a low-stakes prompt people meet often (a publish note, a leave-page warning),
+  with a `key` that names the question.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -155,6 +204,10 @@ the error with `onConfirmError` and show a message of your own in `children`.
 - Don't leave out the description: it is what a screen reader reads after the title.
 - Don't ask for confirmation of everything. A confirmation people click through without reading is
   worse than none; reserve it for actions that are hard to undo, and offer an undo for the rest.
+- Don't add `dontAskAgain` to something destructive. A confirmation that can be switched off has
+  stopped being read, and a remembered one gives the person no chance to stop.
+- Don't use `initialFocus="confirm"` for something that can't be undone: Enter or Space would answer
+  it before the person has read it.
 - Don't catch an error inside `onConfirm` and return normally: the dialog reads that as success and
   closes. Let the promise reject, or handle it in `onConfirmError`.
 
@@ -169,6 +222,8 @@ the error with `onConfirmError` and show a message of your own in `children`.
   yourself; `busy` is for work you run elsewhere.
 - Put your own error message in `children`, set from `onConfirmError`. Without a handler a rejection
   is left unhandled on purpose, so a failed answer is never lost silently.
+- Say what is happening in `labels.working` ("Deleting the project…"): it is announced to screen
+  readers, not drawn, so the button doesn't change width.
 - A controlled dialog is told to close with `onOpenChange(false, { reason: "action" })` once the
   promise resolves; set your own state then.
 - Use `onOpenChange`'s `reason` to tell a decision (`"action"`, `"cancel"`) from a dismissal
@@ -194,6 +249,16 @@ the error with `onConfirmError` and show a message of your own in `children`.
 - While an answer is pending the panel is `aria-busy` and both buttons are `aria-disabled` but still
   focusable, so focus isn't dropped from the button that was pressed. The spinner on the confirm
   button is decorative.
+- A visually hidden status region is in the panel from the moment it opens. It says `labels.working`
+  when an answer starts, `labels.failed` when it fails (the dialog stays open, and your own message in
+  `children` says why), and `labels.confirmReady` when a `confirmDelay` ends.
+- With `confirmDelay`, the confirm button is disabled until the delay passes. One line in the body
+  counts the seconds and then says it is ready, in the same place and at the same height, and the
+  change is announced once rather than every second.
+- `initialFocus="confirm"` is honoured only when the button can take focus: with `requireText` it
+  starts on the field, and with a `confirmDelay` on cancel.
+- With `dontAskAgain`, the checkbox is labelled by `labels.dontAskAgain`. A remembered question is not
+  drawn at all, and what is remembered is only a timestamp under a key you name.
 - With `requireText`, the confirm button is natively disabled until the text matches. The field is
   labelled with the words to type, turns off autocomplete, spell check and automatic capitals, and
   becomes read-only (not disabled) while an answer is pending.
@@ -237,6 +302,20 @@ const [message, setMessage] = useState<string | null>(null);
   labels={{ confirm: "Delete project" }}
   onConfirm={() => api.deleteProject(id)}
 />
+
+{/* Hold the button back, and let them switch a low-stakes question off */}
+<ConfirmDialog
+  trigger={<Button>Publish</Button>}
+  title="Publish this page?"
+  description="It will be visible to everyone with the link."
+  confirmDelay={2000}
+  dontAskAgain={{ key: "publish-note", storage: "session" }}
+  confirmProps={{ leadingIcon: UploadSimpleIcon }}
+  onConfirm={() => api.publish(id)}
+/>
+
+{/* Forget a remembered answer, from a settings page */}
+const { reset } = usePersistentDismiss("publish-note", { storage: "session" });
 
 {/* Open it from your own state, and say what answered it */}
 <ConfirmDialog

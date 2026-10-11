@@ -1,5 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { TrashIcon } from "@dbm-design-system/icons";
+import { usePersistentDismiss } from "@dbm-design-system/primitives";
 import { useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
@@ -29,6 +31,9 @@ const noControls = {
   tone: { control: false },
   size: { control: false },
   requireText: { control: false },
+  requireTextMatch: { control: false },
+  confirmDelay: { control: false },
+  initialFocus: { control: false },
   busy: { control: false },
   closeOnEscape: { control: false },
   nudge: { control: false },
@@ -100,6 +105,37 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Receives the error when onConfirm's promise rejects. The dialog stays open either way; with no handler the rejection is left unhandled so it is not lost silently.",
     },
+    requireTextMatch: {
+      control: "select",
+      options: ["exact", "ignore-case"],
+      description:
+        "How what is typed is judged against requireText: exact, ignore-case, or a function of the typed text and the required text. Ignored without requireText.",
+      table: { defaultValue: { summary: '"exact"' } },
+    },
+    dontAskAgain: {
+      control: false,
+      description:
+        "Adds a \"Don't ask me again\" checkbox. When it is ticked and the person confirms, the choice is remembered, and from then on opening the dialog calls onConfirm at once and shows nothing. Takes { key, storage, expiresAfter }. Not for something destructive.",
+    },
+    confirmDelay: {
+      control: "number",
+      description:
+        "Milliseconds to hold the confirm button back after the dialog opens, with a line saying how long is left. 0 or omitted holds nothing back.",
+    },
+    formatNumber: {
+      control: false,
+      description: "Writes the seconds shown while confirmDelay runs with your own function. labels' functions are handed the plain number.",
+      table: { defaultValue: { summary: "String" } },
+    },
+    confirmProps: {
+      control: false,
+      description:
+        "Props for the confirm button, for what tone doesn't cover: another variant, an icon. children, onClick and disabled are the dialog's own.",
+    },
+    cancelProps: {
+      control: false,
+      description: "Props for the cancel button, on the same terms as confirmProps.",
+    },
     busy: {
       control: "boolean",
       description:
@@ -137,9 +173,10 @@ const meta: Meta<PlaygroundArgs> = {
       table: { defaultValue: { summary: "true" } },
     },
     initialFocus: {
-      control: false,
+      control: "select",
+      options: ["cancel", "confirm"],
       description:
-        "An element to focus when the dialog opens. By default the cancel button gets focus (the safe choice), or the type-to-confirm field when requireText is set.",
+        "Where focus starts: cancel (the safe choice, and the default), confirm for a low-stakes question, or a ref to an element of your own. With requireText the field is where it starts by default, and confirm falls back to it.",
     },
     scrimOpacity: {
       control: "select",
@@ -186,6 +223,8 @@ const meta: Meta<PlaygroundArgs> = {
     tone: "danger",
     size: "sm",
     requireText: "",
+    requireTextMatch: "exact",
+    confirmDelay: 0,
     busy: false,
     closeOnEscape: true,
     nudge: true,
@@ -213,6 +252,13 @@ export const Playground: Story = {
   argTypes: {
     confirmLabel: { control: "text", description: "The confirm button's words (labels.confirm)." },
     cancelLabel: { control: "text", description: "The cancel button's words (labels.cancel)." },
+    initialFocus: {
+      control: "select",
+      options: ["default", "cancel", "confirm"],
+      mapping: { default: undefined, cancel: "cancel", confirm: "confirm" },
+      description:
+        "Where focus starts: default (cancel, or the field when requireText is set), cancel or confirm.",
+    },
   },
   render: ({ confirmLabel, cancelLabel, ...args }) => (
     <ConfirmStage>
@@ -310,6 +356,121 @@ export const TypeToConfirm: Story = {
       )}
     </ConfirmStage>
   ),
+};
+
+export const IgnoringCase: Story = {
+  name: "Any capitalisation",
+  parameters: { docs: { source: { code: confirmDialogSnippets.ignoreCase } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ConfirmStage>
+      {(container) => (
+        <ConfirmDialog
+          container={container}
+          trigger={deleteTrigger}
+          tone="danger"
+          title="Delete “Atlas”?"
+          description="This removes the project and everything in it for good."
+          requireText="Atlas"
+          requireTextMatch="ignore-case"
+          labels={{ confirm: "Delete project", cancel: "Keep it" }}
+        />
+      )}
+    </ConfirmStage>
+  ),
+};
+
+export const HeldBack: Story = {
+  name: "Held back for a moment",
+  parameters: { docs: { source: { code: confirmDialogSnippets.confirmDelay } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ConfirmStage>
+      {(container) => (
+        <ConfirmDialog
+          container={container}
+          trigger={deleteTrigger}
+          tone="danger"
+          title={deleteWords.title}
+          description={deleteWords.description}
+          confirmDelay={3000}
+          labels={{ confirm: "Delete", cancel: "Keep it" }}
+        />
+      )}
+    </ConfirmStage>
+  ),
+};
+
+export const ConfirmFirst: Story = {
+  name: "Focus starts on the confirm button",
+  parameters: { docs: { source: { code: confirmDialogSnippets.confirmFirst } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ConfirmStage>
+      {(container) => (
+        <ConfirmDialog
+          container={container}
+          trigger={<Button>Archive</Button>}
+          tone="info"
+          title="Archive this conversation?"
+          description="You can find it again under Archived."
+          initialFocus="confirm"
+          labels={{ confirm: "Archive" }}
+        />
+      )}
+    </ConfirmStage>
+  ),
+};
+
+export const CustomButtons: Story = {
+  name: "Your own confirm button",
+  parameters: { docs: { source: { code: confirmDialogSnippets.customButtons } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ConfirmStage>
+      {(container) => (
+        <ConfirmDialog
+          container={container}
+          trigger={<Button variant="secondary">Delete draft</Button>}
+          tone="warning"
+          title="Delete this draft?"
+          description="Drafts can't be recovered."
+          confirmProps={{ variant: "destructive", leadingIcon: TrashIcon }}
+          cancelProps={{ variant: "ghost" }}
+          labels={{ confirm: "Delete draft" }}
+        />
+      )}
+    </ConfirmStage>
+  ),
+};
+
+function DontAskAgainExample({ container }: { container: HTMLElement | null }) {
+  const [published, setPublished] = useState(0);
+  const remembered = usePersistentDismiss("storybook-confirm-dialog-publish", { storage: "session" });
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", justifyItems: "center" }}>
+      <ConfirmDialog
+        container={container}
+        trigger={<Button>Publish</Button>}
+        title="Publish this page?"
+        description="It will be visible to everyone with the link."
+        dontAskAgain={{ key: "storybook-confirm-dialog-publish", storage: "session" }}
+        labels={{ confirm: "Publish" }}
+        onConfirm={() => setPublished((count) => count + 1)}
+      />
+      <Text size="sm">Published {published} time(s). Asking again: {remembered.dismissed ? "no" : "yes"}.</Text>
+      <Button variant="tertiary" size="sm" onClick={remembered.reset}>
+        Ask again
+      </Button>
+    </div>
+  );
+}
+
+export const DontAskAgain: Story = {
+  name: "Don't ask me again",
+  parameters: { docs: { source: { code: confirmDialogSnippets.dontAskAgain } } },
+  argTypes: { ...noControls },
+  render: () => <ConfirmStage>{(container) => <DontAskAgainExample container={container} />}</ConfirmStage>,
 };
 
 export const WithABody: Story = {

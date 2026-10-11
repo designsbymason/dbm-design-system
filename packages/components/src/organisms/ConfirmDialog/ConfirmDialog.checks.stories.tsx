@@ -286,3 +286,99 @@ export const OverADialogStacksScrims: Story = {
     await waitFor(() => expect(body.getByRole("dialog", { name: "Project settings" })).toBeInTheDocument());
   },
 };
+
+export const InitialFocusOnConfirm: Story = {
+  name: "initialFocus=\"confirm\" lands on the confirm button; with a delay it falls back to Cancel, never to the page",
+  render: () => (
+    <>
+      <Confirm trigger={<Button>Open plain</Button>} initialFocus="confirm" />
+      <Confirm trigger={<Button>Open delayed</Button>} initialFocus="confirm" confirmDelay={60000} />
+    </>
+  ),
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole("button", { name: "Open plain" }));
+    await body.findByRole("alertdialog");
+    await waitFor(() => expect(body.getByRole("button", { name: "Delete" })).toHaveFocus());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("alertdialog")).toBeNull());
+    await userEvent.click(body.getByRole("button", { name: "Open delayed" }));
+    await body.findByRole("alertdialog");
+    await waitFor(() => expect(body.getByRole("button", { name: "Keep it" })).toHaveFocus());
+  },
+};
+
+export const WorkingIsAnnouncedInTheLiveRegion: Story = {
+  name: "While an answer runs, the status region (in the page beforehand) says so, and the button keeps its label",
+  render: () => <Confirm defaultOpen onConfirm={pendingAnswer} />,
+  play: async () => {
+    const body = within(document.body);
+    const panel = await body.findByRole("alertdialog");
+    await settled(panel);
+    const status = within(panel).getByRole("status");
+    await expect(status.textContent).toBe("");
+    const confirm = body.getByRole("button", { name: "Delete" });
+    const before = confirm.getBoundingClientRect();
+    await userEvent.click(confirm);
+    await waitFor(() => expect(status.textContent).toBe("Working…"));
+    // a spinner joins the label: the button grows by it, but the label itself did not change
+    await expect(confirm.textContent).toBe("Delete");
+    await expect(confirm.getBoundingClientRect().height).toBe(before.height);
+    settle?.resolve();
+    await waitFor(() => expect(body.queryByRole("alertdialog")).toBeNull());
+  },
+};
+
+export const DelayLineDoesNotMoveThePanel: Story = {
+  name: "When the delay ends only the words change: the panel and the buttons do not move or resize",
+  render: () => <Confirm defaultOpen confirmDelay={900} />,
+  play: async () => {
+    const body = within(document.body);
+    const panel = await body.findByRole("alertdialog");
+    await settled(panel);
+    const confirm = body.getByRole("button", { name: "Delete" });
+    await expect(confirm).toBeDisabled();
+    const rect = (element: Element) => {
+      const { top, left, width, height } = element.getBoundingClientRect();
+      return [top, left, width, height].map(Math.round);
+    };
+    const before = { panel: rect(panel), confirm: rect(confirm), cancel: rect(body.getByRole("button", { name: "Keep it" })) };
+    await waitFor(() => expect(confirm).toBeEnabled(), { timeout: 3000 });
+    await expect(body.getByText("You can confirm now.")).toBeInTheDocument();
+    await nextFrame();
+    await expect(rect(panel)).toEqual(before.panel);
+    await expect(rect(confirm)).toEqual(before.confirm);
+    await expect(rect(body.getByRole("button", { name: "Keep it" }))).toEqual(before.cancel);
+  },
+};
+
+let remembered = 0;
+export const DontAskAgainIsRemembered: Story = {
+  name: "Ticked and confirmed once, the next press answers with no dialog at all",
+  render: () => {
+    window.sessionStorage.removeItem("dbm-dismissed:check-remembered");
+    remembered = 0;
+    return (
+      <Confirm
+        dontAskAgain={{ key: "check-remembered", storage: "session" }}
+        onConfirm={() => {
+          remembered += 1;
+        }}
+      />
+    );
+  },
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    await body.findByRole("alertdialog");
+    await userEvent.click(body.getByRole("checkbox", { name: "Don’t ask me again" }));
+    await userEvent.click(body.getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(body.queryByRole("alertdialog")).toBeNull());
+    await expect(remembered).toBe(1);
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    await waitFor(() => expect(remembered).toBe(2));
+    await nextFrame();
+    await expect(body.queryByRole("alertdialog")).toBeNull();
+    window.sessionStorage.removeItem("dbm-dismissed:check-remembered");
+  },
+};

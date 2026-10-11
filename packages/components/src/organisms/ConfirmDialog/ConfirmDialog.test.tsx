@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { TrashIcon } from "@dbm-design-system/icons";
 import { Button } from "../../atoms/Button";
 import { Dialog } from "../Dialog";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -474,6 +475,284 @@ describe("ConfirmDialog", () => {
       await user.keyboard("{Escape}");
       await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
       expect(screen.getByRole("dialog", { name: "Settings" })).toBeInTheDocument();
+    });
+  });
+
+  describe("announcing", () => {
+    it("has a status region in the page before anything is announced", async () => {
+      render(<Basic defaultOpen />);
+      const status = await screen.findByRole("status");
+      expect(status).toBeEmptyDOMElement();
+    });
+
+    it("announces that it is working, in the words given", async () => {
+      const pending = deferred();
+      const user = userEvent.setup();
+      render(<Basic labels={{ confirm: "Delete", working: "Deleting the project…" }} onConfirm={() => pending.promise} defaultOpen />);
+      await user.click(await screen.findByRole("button", { name: "Delete" }));
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Deleting the project…"));
+      await act(async () => pending.resolve());
+    });
+
+    it("announces a failure while the dialog stays open", async () => {
+      const pending = deferred();
+      const user = userEvent.setup();
+      render(<Basic onConfirm={() => pending.promise} onConfirmError={() => undefined} defaultOpen />);
+      await user.click(await screen.findByRole("button", { name: "Delete" }));
+      await act(async () => pending.reject(new Error("no")));
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("That didn’t work. You can try again."));
+    });
+
+    it("keeps the button's label while it works, so it does not change width", async () => {
+      const pending = deferred();
+      const user = userEvent.setup();
+      render(<Basic onConfirm={() => pending.promise} defaultOpen />);
+      await user.click(await screen.findByRole("button", { name: "Delete" }));
+      expect(screen.getByRole("button", { name: "Delete" })).toHaveTextContent(/^Delete$/);
+      await act(async () => pending.resolve());
+    });
+  });
+
+  describe("initialFocus", () => {
+    it('"confirm" focuses the confirm button', async () => {
+      render(<Basic initialFocus="confirm" defaultOpen />);
+      await waitFor(() => expect(screen.getByRole("button", { name: "Delete" })).toHaveFocus());
+    });
+
+    it('"cancel" focuses cancel even with a field to type in', async () => {
+      render(<Basic initialFocus="cancel" requireText="Atlas" defaultOpen />);
+      await waitFor(() => expect(screen.getByRole("button", { name: "Keep it" })).toHaveFocus());
+    });
+
+    it('"confirm" falls back to the field when text is required', async () => {
+      render(<Basic initialFocus="confirm" requireText="Atlas" defaultOpen />);
+      await waitFor(() => expect(screen.getByRole("textbox")).toHaveFocus());
+    });
+
+    it('"confirm" falls back to cancel while a delay holds the button back', async () => {
+      render(<Basic initialFocus="confirm" confirmDelay={5000} defaultOpen />);
+      await waitFor(() => expect(screen.getByRole("button", { name: "Keep it" })).toHaveFocus());
+    });
+  });
+
+  describe("confirmProps and cancelProps", () => {
+    it("lets a variant replace the one the tone chose", async () => {
+      render(<Basic tone="danger" confirmProps={{ variant: "primary" }} cancelProps={{ variant: "ghost" }} defaultOpen />);
+      const confirm = await screen.findByRole("button", { name: "Delete" });
+      expect(confirm.className).toContain("variantPrimary");
+      expect(screen.getByRole("button", { name: "Keep it" }).className).toContain("variantGhost");
+    });
+
+    it("can add an icon and a test id to the confirm button", async () => {
+      render(<Basic confirmProps={{ leadingIcon: TrashIcon, "data-testid": "confirm" }} defaultOpen />);
+      const confirm = await screen.findByTestId("confirm");
+      expect(confirm.querySelector("svg")).not.toBeNull();
+    });
+
+    it("cannot replace what the dialog owns: the click, the label or disabled", async () => {
+      const onConfirm = vi.fn();
+      const hostile = { onClick: vi.fn(), children: "Nope", disabled: true } as unknown as Props["confirmProps"];
+      const user = userEvent.setup();
+      render(<Basic onConfirm={onConfirm} confirmProps={hostile} defaultOpen />);
+      await user.click(await screen.findByRole("button", { name: "Delete" }));
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("dontAskAgain", () => {
+    const key = (name: string) => `test-${name}`;
+    afterEach(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+
+    it("adds a labelled checkbox, unticked", async () => {
+      render(<Basic dontAskAgain={{ key: key("box") }} defaultOpen />);
+      const box = await screen.findByRole("checkbox", { name: "Don’t ask me again" });
+      expect(box).not.toBeChecked();
+    });
+
+    it("asks again when the box was left unticked", async () => {
+      const onConfirm = vi.fn();
+      const user = userEvent.setup();
+      render(<Basic dontAskAgain={{ key: key("unticked") }} onConfirm={onConfirm} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("button", { name: "Delete" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it("answers at once, with no dialog, once it was ticked and confirmed", async () => {
+      const onConfirm = vi.fn();
+      const onOpenChange = vi.fn();
+      const user = userEvent.setup();
+      render(<Basic dontAskAgain={{ key: key("ticked") }} onConfirm={onConfirm} onOpenChange={onOpenChange} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("checkbox"));
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+      onOpenChange.mockClear();
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(onConfirm).toHaveBeenCalledTimes(2);
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it("remembers only after a promise resolves, not when it rejects", async () => {
+      const first = deferred();
+      const onConfirm = vi.fn().mockReturnValueOnce(first.promise);
+      const user = userEvent.setup();
+      render(<Basic dontAskAgain={{ key: key("rejects") }} onConfirm={onConfirm} onConfirmError={() => undefined} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("checkbox"));
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      await act(async () => first.reject(new Error("no")));
+      await waitFor(() => expect(screen.getByRole("alertdialog")).not.toHaveAttribute("aria-busy"));
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
+    });
+
+    it("runs a remembered promise once, and a second press while it runs is ignored", async () => {
+      window.localStorage.setItem("dbm-dismissed:test-remembered", "0");
+      const pending = deferred();
+      const onConfirm = vi.fn(() => pending.promise);
+      const user = userEvent.setup();
+      render(<Basic dontAskAgain={{ key: key("remembered") }} onConfirm={onConfirm} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+      await act(async () => pending.resolve());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(onConfirm).toHaveBeenCalledTimes(2);
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    });
+
+    it("answers a remembered confirmation that was asked to be open, and reports it closed", async () => {
+      window.localStorage.setItem("dbm-dismissed:test-controlled", "0");
+      const onConfirm = vi.fn();
+      const onOpenChange = vi.fn();
+      render(<Basic open dontAskAgain={{ key: key("controlled") }} onConfirm={onConfirm} onOpenChange={onOpenChange} />);
+      await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
+      expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "action" });
+      expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    });
+
+    it("forgets after expiresAfter has passed", async () => {
+      window.localStorage.setItem("dbm-dismissed:test-expired", String(Date.now() - 1000));
+      const user = userEvent.setup();
+      render(<Basic dontAskAgain={{ key: key("expired"), expiresAfter: 1000 }} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("alertdialog")).toBeInTheDocument();
+    });
+
+    it("draws no checkbox without the prop", async () => {
+      render(<Basic defaultOpen />);
+      await screen.findByRole("alertdialog");
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("confirmDelay", () => {
+    it("holds the confirm button back with a line that says for how long, then releases it", async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+      render(<Basic confirmDelay={700} onConfirm={onConfirm} defaultOpen />);
+      const confirm = await screen.findByRole("button", { name: "Delete" });
+      expect(confirm).toBeDisabled();
+      expect(screen.getByText("You can confirm in 1 second.")).toBeInTheDocument();
+      await waitFor(() => expect(confirm).toBeEnabled(), { timeout: 2500 });
+      expect(screen.getByText("You can confirm now.")).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("You can confirm now."));
+      await user.click(confirm);
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it("counts whole seconds up, and writes the number with formatNumber and the label with plain ones", async () => {
+      const { unmount } = render(<Basic confirmDelay={2500} formatNumber={(value) => `#${value}`} defaultOpen />);
+      expect(await screen.findByText("You can confirm in #3 seconds.")).toBeInTheDocument();
+      unmount();
+      const confirmIn = vi.fn((seconds: number) => `Wait ${seconds}`);
+      render(<Basic confirmDelay={2500} labels={{ confirmIn }} defaultOpen />);
+      expect(await screen.findByText("Wait 3")).toBeInTheDocument();
+      expect(confirmIn).toHaveBeenCalledWith(3);
+    });
+
+    it("holds Enter in the field back too", async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+      render(<Basic confirmDelay={5000} requireText="Atlas" onConfirm={onConfirm} defaultOpen />);
+      const field = await screen.findByRole("textbox");
+      await user.type(field, "Atlas{Enter}");
+      expect(onConfirm).not.toHaveBeenCalled();
+    });
+
+    it("restarts every time it opens", async () => {
+      const user = userEvent.setup();
+      render(<Basic confirmDelay={600} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      const first = await screen.findByRole("button", { name: "Delete" });
+      await waitFor(() => expect(first).toBeEnabled(), { timeout: 2500 });
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      expect(await screen.findByRole("button", { name: "Delete" })).toBeDisabled();
+    });
+
+    it("draws no line without a delay", async () => {
+      render(<Basic defaultOpen />);
+      await screen.findByRole("alertdialog");
+      expect(screen.queryByText(/You can confirm/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("requireTextMatch", () => {
+    it("ignores case on request, and not otherwise", async () => {
+      const user = userEvent.setup();
+      const { unmount } = render(<Basic requireText="Atlas" defaultOpen />);
+      await user.type(await screen.findByRole("textbox"), "ATLAS");
+      expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+      unmount();
+      render(<Basic requireText="Atlas" requireTextMatch="ignore-case" defaultOpen />);
+      await user.type(await screen.findByRole("textbox"), "ATLAS");
+      expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+    });
+
+    it("asks a function, with the trimmed typed text and the required text", async () => {
+      const match = vi.fn((typed: string, required: string) => typed.startsWith(required.slice(0, 2)));
+      const user = userEvent.setup();
+      render(<Basic requireText="Atlas" requireTextMatch={match} defaultOpen />);
+      await user.type(await screen.findByRole("textbox"), " At");
+      expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
+      expect(match).toHaveBeenLastCalledWith("At", "Atlas");
+    });
+
+    it("treats a function that throws as not matching, with a warning", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const user = userEvent.setup();
+      render(
+        <Basic
+          requireText="Atlas"
+          requireTextMatch={() => {
+            throw new Error("boom");
+          }}
+          defaultOpen
+        />,
+      );
+      await user.type(await screen.findByRole("textbox"), "Atlas");
+      expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+      expect(warn.mock.calls.some(([message]) => String(message).includes("requireTextMatch"))).toBe(true);
+    });
+
+    it("counts composed and decomposed accents as the same", async () => {
+      const user = userEvent.setup();
+      render(<Basic requireText={"Caf\u00e9"} defaultOpen />);
+      await user.type(await screen.findByRole("textbox"), "Cafe\u0301");
+      expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
     });
   });
 
