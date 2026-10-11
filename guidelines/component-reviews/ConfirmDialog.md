@@ -1,6 +1,6 @@
 # ConfirmDialog — review findings
 
-Third organism, built 2026-10-11 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized:** the dedicated review pass has not been run and the sign-off is the maintainer's.
+Third organism, built 2026-10-11 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-11**, with the items under "Open at Finalization" accepted as open: none changes the component.
 
 ## Decisions
 - Prop-driven over `AlertDialog`, with its own `trigger` and a `requireText` field: [ADR-0057](../adr/0057-confirmdialog-is-a-prop-driven-wrapper-over-alertdialog-with-its-own-trigger-and-a-typed-confirmation-field-over-a-compound-of-its-own.md).
@@ -17,7 +17,7 @@ Third organism, built 2026-10-11 with the `06-engineering-standards.md` §9 chec
 - **Two Playground-only controls (`confirmLabel`, `cancelLabel`)** are fields of `labels`. Kept on the Playground story's args, since on the meta they leaked into the Properties table with empty descriptions.
 
 ## Second pass: six additions (2026-10-11)
-Built before sign-off, against the gaps listed after the first build; decisions in [ADR-0059](../adr/0059-confirmdialog-announces-instead-of-drawing-progress-delays-the-confirm-over-hold-to-confirm-and-remembers-through-the-dismiss-store.md).
+Built before its final review, against the gaps listed after the first build; decisions in [ADR-0059](../adr/0059-confirmdialog-announces-instead-of-drawing-progress-delays-the-confirm-over-hold-to-confirm-and-remembers-through-the-dismiss-store.md).
 - **Pending and failure are announced** through a status region in the panel (`labels.working`, `labels.failed`), not drawn as text.
 - **`initialFocus="confirm" | "cancel"`** beside a ref, with a fallback when the button can't take focus yet.
 - **`confirmProps` / `cancelProps`**, without the props the dialog owns.
@@ -46,9 +46,9 @@ Nine findings from the review, all fixed (the `AlertDialog` one with the maintai
 - 16 real-browser checks (six added after the first build: focus on the confirm and the fallback, the status region and the button's label while working, the panel and buttons unmoved when the delay ends, a remembered answer with no dialog, the tab order across the whole dialog, and the delay line on a phone at the smallest size): a real press on the scrim ignored and pulsing, focus loop and return, a pending answer ignoring a real Escape, scrim press and button presses with focus staying on the confirm and closing on resolve, a rejection staying open and retrying, a rejection with no handler reaching the page as an unhandled rejection, a whole string inserted at once enabling the field and Enter confirming, the phone stack, the row from `sm`, right-to-left, and a confirmation over a dialog.
 - Snippets typechecked against the real components (with a planted bad prop), `pnpm lint`, the build, `check-guidelines`, the bundle-size budget (10.60KB gzip JS against its own 12KB), and the Docs page looked at in a running Storybook in light and dark.
 
-## Open
-- The dedicated §9 review pass, and the maintainer's sign-off.
+## Open at Finalization
 - JS size has about 1.4KB of headroom under its 12KB budget.
 - `Checkbox`'s 20px box on its own is under the 24px target size; only its label meets it (finding 6).
 - Touch and iOS behaviour, shared with `Dialog` and `AlertDialog`.
+- The new states (the delay line, the box, the spinner on the button) were looked at live in Purple light and dark only; the Emerald themes and a real phone were not, and the layout is asserted by real-browser checks rather than seen.
 - An imperative `confirm()`, an `error` display prop and hold-to-confirm are deferred, not decided against (ADR-0057, ADR-0058, ADR-0059).
