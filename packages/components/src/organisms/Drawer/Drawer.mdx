@@ -1,0 +1,391 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as DrawerStories from "./Drawer.stories";
+import * as DrawerRootStories from "./DrawerRoot.stories";
+import * as DrawerTriggerStories from "./DrawerTrigger.stories";
+import * as DrawerContentStories from "./DrawerContent.stories";
+import * as DrawerHeaderStories from "./DrawerHeader.stories";
+import * as DrawerTitleStories from "./DrawerTitle.stories";
+import * as DrawerDescriptionStories from "./DrawerDescription.stories";
+import * as DrawerBodyStories from "./DrawerBody.stories";
+import * as DrawerFooterStories from "./DrawerFooter.stories";
+import * as DrawerCloseStories from "./DrawerClose.stories";
+
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "modal"];
+export const playgroundOrder = [
+  "side",
+  "size",
+  "divided",
+  "modal",
+  "busy",
+  "keepMounted",
+  "scrimOpacity",
+  "scrimBlur",
+  "showCloseButton",
+  "closeOnOutsideClick",
+  "closeOnEscape",
+  "onOpenChange",
+];
+export const triggerPropOrder = ["asChild", "children", "id", "className", "style", "data-testid"];
+export const contentPropOrder = [
+  "children",
+  "side",
+  "size",
+  "divided",
+  "busy",
+  "keepMounted",
+  "initialFocus",
+  "scrimOpacity",
+  "scrimBlur",
+  "showCloseButton",
+  "closeOnOutsideClick",
+  "closeOnEscape",
+  "labels",
+  "container",
+  "onOpenAutoFocus",
+  "onCloseAutoFocus",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const headerPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const titlePropOrder = ["children", "level", "size", "className", "style", "data-testid"];
+export const descriptionPropOrder = ["children", "className", "style", "data-testid"];
+export const bodyPropOrder = ["children", "dir", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const footerPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
+export const closePropOrder = ["asChild", "children", "id", "className", "style", "data-testid"];
+
+<Meta of={DrawerStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Drawer" tier="Organism" />
+
+A panel attached to one edge of the screen that slides in over the page, for work that belongs beside
+the page and not in a window over it: a set of filters, a settings or detail panel, a navigation menu on
+a phone, a form that doesn't deserve a dialog. Like a `Dialog`, the page behind it is dimmed by a
+**scrim** (a translucent layer over the page), can't be scrolled or clicked, and keyboard focus is held
+inside until it closes. A compound component, meaning it is made of named sub-parts you compose
+together: `Drawer.Trigger`, then `Drawer.Content` holding a `Header`, a `Body` that scrolls and a
+`Footer`. `side` says which edge it is attached to, and can change with the screen.
+
+### Import
+
+```tsx
+import { Drawer } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Each demo is drawn inside a dashed box so that its scrim covers the box and not this page, and the
+drawer attaches to the box's edge; in an app the scrim covers the whole window.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DrawerStories.Playground} />
+
+</div>
+<PlaygroundControls of={DrawerStories.Playground} order={playgroundOrder} />
+
+## Properties
+
+`Drawer` itself renders no DOM element of its own: it is a plain context provider around its
+sub-parts, so it has no `className`/`style`/`id`/`data-testid`/`ref` of its own to accept.
+
+<PropertiesTable of={DrawerRootStories} order={propOrder} />
+
+### Drawer.Trigger properties
+
+The element that opens the drawer on click. Also accepts any other native `<button>` attribute beyond
+what's listed here (e.g. `onFocus`, `disabled`), passed straight through.
+
+<PropertiesTable of={DrawerTriggerStories} order={triggerPropOrder} />
+
+### Drawer.Content properties
+
+The drawer panel itself, with its scrim. Also accepts any other native `<div>` attribute beyond what's
+listed here (e.g. `onKeyDown`, `dir`), passed straight through to the panel. `role`, `aria-modal` and
+`data-state` are set by the drawer and can't be replaced.
+
+<PropertiesTable of={DrawerContentStories} order={contentPropOrder} />
+
+### Drawer.Header properties
+
+The top section: usually a `Drawer.Title` and optionally a `Drawer.Description`. Also accepts any other
+native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={DrawerHeaderStories} order={headerPropOrder} />
+
+### Drawer.Title properties
+
+The drawer's name, rendered as a heading. Takes no `id`: the drawer generates one and points its
+`aria-labelledby` at it. Also accepts any other native heading attribute beyond what's listed here.
+
+<PropertiesTable of={DrawerTitleStories} order={titlePropOrder} />
+
+### Drawer.Description properties
+
+A sentence or two on what the drawer is for. Takes no `id`, for the same reason as the title. Also
+accepts any other native `<p>` attribute beyond what's listed here.
+
+<PropertiesTable of={DrawerDescriptionStories} order={descriptionPropOrder} />
+
+### Drawer.Body properties
+
+The main content: a scroll region that takes the height left between the header and the footer.
+`className`, `style` and `id` go on its outer frame. Also accepts any other native `<div>` attribute
+beyond what's listed here.
+
+<PropertiesTable of={DrawerBodyStories} order={bodyPropOrder} />
+
+### Drawer.Footer properties
+
+The bottom section: the drawer's actions. Also accepts any other native `<div>` attribute beyond what's
+listed here.
+
+<PropertiesTable of={DrawerFooterStories} order={footerPropOrder} />
+
+### Drawer.Close properties
+
+An element that closes the drawer on click, placed anywhere inside `Drawer.Content`. Also accepts any
+other native `<button>` attribute beyond what's listed here.
+
+<PropertiesTable of={DrawerCloseStories} order={closePropOrder} />
+
+## Variants
+
+### Sides
+
+`side` is `end` by default. `start` and `end` are logical: the left and right edges in left-to-right
+text, and swapped in right-to-left, so a menu opens from the side a reader expects.
+
+<Canvas of={DrawerStories.Sides} />
+
+### A side that changes with the screen
+
+A mobile-first map, as `Stack` and `Grid` take: a sheet from the bottom on a phone and a side panel from
+`md` up. This demo is drawn inside a box, so resize the window to see it change.
+
+<Canvas of={DrawerStories.ResponsiveSide} />
+
+### Sizes
+
+<Canvas of={DrawerStories.Sizes} />
+
+### Long content scrolls inside the panel
+
+<Canvas of={DrawerStories.LongContent} />
+
+### Docked, without a scrim
+
+<Canvas of={DrawerStories.NonModal} />
+
+### Controlled from your own state
+
+<Canvas of={DrawerStories.Controlled} />
+
+### While it is busy
+
+<Canvas of={DrawerStories.WhileItIsBusy} />
+
+### Keeps what was typed
+
+<Canvas of={DrawerStories.KeepsItsForm} />
+
+### Knowing why it closed
+
+<Canvas of={DrawerStories.KnowingWhyItClosed} />
+
+### Opened over by a confirmation
+
+<Canvas of={DrawerStories.WithAConfirmation} />
+
+### In right-to-left text
+
+<Canvas of={DrawerStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a `Drawer` for work that belongs beside the page: filters, a detail or settings panel, a
+  navigation menu on a phone, an inspector the person works next to.
+- Pick the edge by what it holds: `end` for details and settings, `start` for navigation, `bottom`
+  for a short sheet of actions on a phone.
+- Use a responsive `side` for something that is a sheet on a phone and a panel on a desktop
+  (`{ base: "bottom", md: "end" }`), rather than two components.
+- Give it a title, and a footer with the one primary action, so what it is for and how to finish it
+  are clear.
+- Keep long content in `Drawer.Body`, which scrolls while the header and footer stay put.
+- Use `modal={false}` for a panel the person works beside (an inspector), and leave it modal for
+  anything that should take over their attention.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a `Drawer` for a short question that must be answered: that is an `AlertDialog` or a
+  `ConfirmDialog`.
+- Don't use it for a form that deserves the centre of the screen and the person's full attention:
+  that is a `Dialog`.
+- Don't open a drawer from a drawer. Replace its content instead, or use a `Dialog` for the second step.
+- Don't turn `closeOnOutsideClick` off to keep people in: the close button stays, and work that would
+  be lost should be confirmed before it is.
+- Don't use it as a permanent navigation column. A `Sidebar` is that; it uses a drawer only for its
+  phone layout.
+
+</Callout>
+</div>
+
+## Best practices
+
+- On a phone a side panel leaves a strip of the page showing, so there is always something to press to
+  close it. Keep its content within what fits the remaining width.
+- A `bottom` sheet is as tall as its content, up to the `size` step, and its body scrolls past that.
+- While a drawer saves (`busy`), keep it open and show your own progress; the close button stays
+  focusable but does nothing until it is done.
+- Use `onOpenChange`'s `reason` to tell the person pressing outside from their pressing Cancel, so a
+  half-filled form can be confirmed on one and not the other.
+- `keepMounted` keeps a filter panel's state while it is closed, so reopening it picks up where the
+  person left off.
+- Open a `ConfirmDialog` from a drawer freely, and lighten its scrim (`scrimOpacity={40}`), since the
+  two scrims stack.
+
+## Accessibility
+
+<Callout tone="info" title="The dialog pattern: named, described, modal, with focus held inside">
+
+- The panel is `role="dialog"` with `aria-modal="true"` while modal. `Drawer.Title` names it and
+  `Drawer.Description` describes it, wired with `aria-labelledby` and `aria-describedby`
+  automatically.
+- Focus moves into the drawer when it opens and returns to the trigger when it closes. `Tab` and
+  `Shift+Tab` loop inside while it is modal, and the rest of the page is hidden from assistive
+  technology and can't be scrolled or clicked.
+- `Escape`, a press on the scrim and the close button all close it; each can be turned off, and none of
+  them works while `busy`. A non-modal drawer takes none of the page: no scrim, no scroll lock, no
+  trap.
+- The close button is a real, labelled button in the corner, at least 24 by 24 pixels. While busy it is
+  `aria-disabled` and dimmed but still focusable, so focus isn't dropped from it.
+- `start` and `end` follow the text direction, so in right-to-left text a `start` drawer is on the
+  right and slides in from there.
+- Under `prefers-reduced-motion` the panel fades instead of sliding. A device's notch and home
+  indicator are kept clear on the edges the panel touches.
+- In forced-colours mode a shadow isn't drawn, so the panel is told apart by the border on its inner
+  edge.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Drawer>
+  <Drawer.Trigger asChild>
+    <Button>Filters</Button>
+  </Drawer.Trigger>
+  <Drawer.Content>
+    <Drawer.Header>
+      <Drawer.Title>Filters</Drawer.Title>
+      <Drawer.Description>Narrow the list of results.</Drawer.Description>
+    </Drawer.Header>
+    <Drawer.Body>
+      <Checkbox>In stock</Checkbox>
+    </Drawer.Body>
+    <Drawer.Footer>
+      <Drawer.Close asChild>
+        <Button variant="secondary">Cancel</Button>
+      </Drawer.Close>
+      <Button>Apply</Button>
+    </Drawer.Footer>
+  </Drawer.Content>
+</Drawer>
+
+{/* A bottom sheet on a phone, a side panel from md up */}
+<Drawer.Content side={{ base: "bottom", md: "end" }} size="lg">
+  …
+</Drawer.Content>
+
+{/* Open it from your own state, and say why it closed */}
+<Drawer
+  open={open}
+  onOpenChange={(next, { reason }) => {
+    if (!next && reason === "outside") confirmDiscard();
+    else setOpen(next);
+  }}
+>
+  <Drawer.Content keepMounted busy={saving}>
+    …
+  </Drawer.Content>
+</Drawer>
+
+{/* A native <div> attribute, passed straight through to the panel */}
+<Drawer.Content aria-describedby="what-this-filters" dir="rtl" side="start">
+  …
+</Drawer.Content>
+```
+
+## Design tokens used
+
+The sections inside the panel (header, body, footer, close button and the lines between them) are
+drawn by a stylesheet `Dialog` and `AlertDialog` share, so the table lists both.
+
+<TokenRow token="bg.surface" usage="panel background" />
+<TokenRow token="text.primary" usage="panel text colour" />
+<TokenRow token="border.default" usage="the border on the panel's inner edge, and the lines between sections when divided" />
+<TokenRow token="border-width.1" usage="the inner edge's border width, and the divided lines" />
+<TokenRow token="border-width.0" usage="the border width of the edges that touch the screen" />
+<TokenRow token="radius.lg" usage="the corner radius on the side facing the page" />
+<TokenRow token="radius.none" usage="the corners that touch the screen" />
+<TokenRow token="shadow.light.lg / shadow.dark.lg" usage="panel elevation" />
+<TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside this component's own tree" />
+<TokenRow token="drawer.size.xs / drawer.size.sm / drawer.size.md / drawer.size.lg / drawer.size.xl" usage="the width of a start or end panel, and the height cap of a top or bottom one, at each size" />
+<TokenRow token="space.0" usage="no margin or device inset on the edges that don't need one" />
+<TokenRow token="space.1" usage="gap between the title and the description" />
+<TokenRow token="space.2" usage="body padding next to a header or footer; air beside the close button" />
+<TokenRow token="space.3" usage="gap between footer actions; close button inset" />
+<TokenRow token="space.4" usage="header and footer inner padding; divided body padding next to a header or footer" />
+<TokenRow token="space.6" usage="panel padding; the body pads itself with it on every side" />
+<TokenRow token="space.12" usage="the strip of the page left showing beside a panel that would fill the screen" />
+<TokenRow token="icon-button.size.sm" usage="the close button's width, which sets the room kept for it" />
+<TokenRow token="z-index.modal" usage="panel stacking order, above the scrim and below popovers and tooltips" />
+<TokenRow token="motion.duration.base" usage="enter animation" />
+<TokenRow token="motion.duration.fast" usage="exit animation, ahead of the scrim's own fade" />
+<TokenRow token="motion.easing.emphasized" usage="enter easing" />
+<TokenRow token="motion.easing.standard" usage="exit easing" />
+<TokenRow token="opacity.0 / opacity.100" usage="enter and exit fade endpoints" />
+<TokenRow token="opacity.40" usage="the close button while the drawer is busy" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Dialog"
+  description="A window for a form or a detail view, centred over the page and able to go full screen"
+  href="/?path=/docs/organisms-overlay-dialog--docs"
+>
+  <Button variant="secondary" size="sm">Dialog</Button>
+</RelatedCard>
+<RelatedCard
+  name="AlertDialog"
+  description="A modal that has to be answered, for a confirmation or an error"
+  href="/?path=/docs/organisms-overlay-alertdialog--docs"
+>
+  <Button variant="secondary" size="sm">AlertDialog</Button>
+</RelatedCard>
+<RelatedCard
+  name="Popover"
+  description="A small panel anchored to an element, which doesn't take over the page"
+  href="/?path=/docs/molecules-overlay-popover--docs"
+>
+  <Button variant="secondary" size="sm">Popover</Button>
+</RelatedCard>
+</div>

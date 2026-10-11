@@ -1,0 +1,31 @@
+{
+  "drawer": {
+    "size": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "20rem",
+        "$description": "New token (2026-10-11), added for Drawer's own panel \u2014 the width of a side panel (the height cap of a top or bottom one) at `xs`: a narrow list or a few settings. The same value as the matching `dialog.max-width` step, but it names the extent of an edge-attached panel, not a centred window's measure."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "24rem",
+        "$description": "New token (2026-10-11), added for Drawer's own panel \u2014 the width of a side panel (the height cap of a top or bottom one) at `sm`: a short form or a menu. The same value as the matching `dialog.max-width` step, but it names the extent of an edge-attached panel, not a centred window's measure."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "32rem",
+        "$description": "New token (2026-10-11), added for Drawer's own panel \u2014 the width of a side panel (the height cap of a top or bottom one) at `md`: a typical settings or detail panel, about 60 characters of body text per line. The same value as the matching `dialog.max-width` step, but it names the extent of an edge-attached panel, not a centred window's measure."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "42rem",
+        "$description": "New token (2026-10-11), added for Drawer's own panel \u2014 the width of a side panel (the height cap of a top or bottom one) at `lg`: a richer panel such as a filter set or a preview. The same value as the matching `dialog.max-width` step, but it names the extent of an edge-attached panel, not a centred window's measure."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "56rem",
+        "$description": "New token (2026-10-11), added for Drawer's own panel \u2014 the width of a side panel (the height cap of a top or bottom one) at `xl`: a wide editor or a table beside the page. The same value as the matching `dialog.max-width` step, but it names the extent of an edge-attached panel, not a centred window's measure."
+      }
+    }
+  }
+}

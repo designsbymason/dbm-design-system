@@ -64,6 +64,7 @@ import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/Passwo
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
 import { alertDialogPlaygroundSnippet } from "./organisms/AlertDialog/AlertDialog.snippets";
 import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
+import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
 import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlider.snippets";
 import { scrollAreaPlaygroundSnippet } from "./molecules/ScrollArea/ScrollArea.snippets";
@@ -1697,5 +1698,32 @@ describe("Playground snippet for AlertDialog", () => {
     expect(alertDialogPlaygroundSnippet({ scrimOpacity: 80, scrimBlur: true })).toContain(
       "<AlertDialog.Content scrimOpacity={80} scrimBlur>",
     );
+  });
+});
+
+describe("Playground snippet for Drawer", () => {
+  const drawerArgs = [
+    {},
+    { modal: false, size: "xl", divided: true },
+    { side: "start", showCloseButton: false },
+    { side: "bottom", closeOnOutsideClick: false, closeOnEscape: false, size: "xs" },
+    { side: "top", divided: "off", busy: true, keepMounted: true, scrimOpacity: 80, scrimBlur: true },
+    { divided: "on" },
+    { divided: "auto" },
+  ] as const;
+
+  it.each(drawerArgs)("Drawer %j is a real snippet", (args) => {
+    expect(problemsIn(drawerPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Drawer writes only what differs from the defaults", () => {
+    const plain = drawerPlaygroundSnippet({ modal: true, side: "end", size: "md", divided: "auto" });
+    expect(plain).toMatch(/^<Drawer>\n/);
+    expect(plain).toContain("<Drawer.Content>");
+    expect(drawerPlaygroundSnippet({ modal: false })).toMatch(/^<Drawer modal=\{false\}>\n/);
+    expect(drawerPlaygroundSnippet({ side: "start", size: "lg" })).toContain('<Drawer.Content side="start" size="lg">');
+    expect(drawerPlaygroundSnippet({ divided: "on" })).toContain("<Drawer.Content divided>");
+    expect(drawerPlaygroundSnippet({ divided: "off" })).toContain("<Drawer.Content divided={false}>");
+    expect(drawerPlaygroundSnippet({ closeOnEscape: false })).toContain("closeOnEscape={false}");
   });
 });

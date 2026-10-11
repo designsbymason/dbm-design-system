@@ -1,0 +1,965 @@
+/*
+ * Drawer: a panel attached to one edge, positioned by its scrim (`Backdrop`, a fixed flex box) with automatic margins,
+ * or, for a non-modal drawer, fixed to that edge on its own. Its geometry reads a handful of local custom properties
+ * so that `side` and a responsive map of it are only classes that set them, and `size` only sets one length. The
+ * sections it holds (header, body, footer, close button) are drawn by the shared overlay sections module.
+ */
+.content {
+  --drawer-size: var(--dbm-drawer-size-md);
+  /* How much of the page stays showing beside (or above) a panel that would otherwise fill the viewport, so there is
+     always something to press to close it. */
+  --drawer-sliver: var(--dbm-space-12);
+  --overlay-pad: var(--dbm-space-6);
+  /* From the end edge: the button's inset, its width, and a little air beside it. */
+  --overlay-close-clearance: calc(var(--dbm-space-3) + var(--dbm-icon-button-size-sm) + var(--dbm-space-2));
+
+  background-color: var(--dbm-bg-surface);
+  border-color: var(--dbm-border-default);
+  border-style: solid;
+  border-block-end-width: var(--drawer-border-block-end);
+  border-block-start-width: var(--drawer-border-block-start);
+  border-end-end-radius: var(--drawer-radius-end-end);
+  border-end-start-radius: var(--drawer-radius-end-start);
+  border-inline-end-width: var(--drawer-border-inline-end);
+  border-inline-start-width: var(--drawer-border-inline-start);
+  border-start-end-radius: var(--drawer-radius-start-end);
+  border-start-start-radius: var(--drawer-radius-start-start);
+  box-shadow: var(--dbm-shadow-light-lg);
+  box-sizing: border-box;
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  /* Percentages resolve against the scrim (a fixed box with all four insets zero), or the viewport for a non-modal
+     drawer, so the panel follows the visible viewport, including a phone's collapsing browser bar, with no `vh` or
+     `dvh` unit. */
+  inline-size: var(--drawer-inline-size);
+  block-size: var(--drawer-block-size);
+  max-block-size: var(--drawer-max-block-size);
+  margin-block-end: var(--drawer-margin-block-end);
+  margin-block-start: var(--drawer-margin-block-start);
+  margin-inline-end: var(--drawer-margin-inline-end);
+  margin-inline-start: var(--drawer-margin-inline-start);
+  min-inline-size: 0;
+  outline: none;
+  /* The edge it touches is under a notch or a home indicator on some devices, so it keeps clear of them (the
+     device's insets, which are zero everywhere a page doesn't ask to draw under them). */
+  padding-block-end: var(--overlay-safe-block-end);
+  padding-block-start: var(--overlay-safe-block-start);
+  padding-inline-end: var(--overlay-safe-inline-end);
+  padding-inline-start: var(--overlay-safe-inline-start);
+  position: relative;
+  will-change: transform, opacity;
+  z-index: var(--dbm-z-index-modal);
+}
+
+[data-theme$="-dark"] .content {
+  box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+/* A non-modal drawer has no scrim to position it, so it is fixed to the viewport itself: inset on all four sides, with
+   the same automatic margins and explicit sizes doing the pinning, in either text direction. */
+.nonModal {
+  inset: 0;
+  position: fixed;
+}
+
+/* --- Size: the panel's extent along its axis. md is the default and has no class. --- */
+.sizeXs {
+  --drawer-size: var(--dbm-drawer-size-xs);
+}
+
+.sizeSm {
+  --drawer-size: var(--dbm-drawer-size-sm);
+}
+
+.sizeLg {
+  --drawer-size: var(--dbm-drawer-size-lg);
+}
+
+.sizeXl {
+  --drawer-size: var(--dbm-drawer-size-xl);
+}
+
+/* --- Side, per breakpoint. Each class sets every property the geometry reads (so a larger breakpoint replaces a
+   smaller one's entirely), and its `:dir(rtl)` twin flips what is physical: the direction the panel slides from and
+   which side's device inset applies. The thresholds are the literal values of the breakpoint tokens: custom
+   properties can't be used in a media condition (the same limitation `Card`, `Stack` and `Dialog` note), so these
+   blocks need updating by hand if the tokens change. Declared in ascending order at the same specificity, so the
+   larger breakpoint wins. --- */
+
+.sideStartBase {
+  --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+  --drawer-block-size: 100%;
+  --drawer-max-block-size: 100%;
+  --drawer-margin-inline-start: var(--dbm-space-0);
+  --drawer-margin-inline-end: auto;
+  --drawer-margin-block-start: var(--dbm-space-0);
+  --drawer-margin-block-end: var(--dbm-space-0);
+  --drawer-border-inline-start: var(--dbm-border-width-0);
+  --drawer-border-inline-end: var(--dbm-border-width-1);
+  --drawer-border-block-start: var(--dbm-border-width-0);
+  --drawer-border-block-end: var(--dbm-border-width-0);
+  --drawer-radius-start-start: var(--dbm-radius-none);
+  --drawer-radius-end-start: var(--dbm-radius-none);
+  --drawer-radius-start-end: var(--dbm-radius-lg);
+  --drawer-radius-end-end: var(--dbm-radius-lg);
+  --drawer-from: translateX(-100%);
+  --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+  --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+  --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+  --overlay-safe-inline-end: var(--dbm-space-0);
+}
+
+.sideStartBase:dir(rtl) {
+  --drawer-from: translateX(100%);
+  --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+}
+
+.sideEndBase {
+  --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+  --drawer-block-size: 100%;
+  --drawer-max-block-size: 100%;
+  --drawer-margin-inline-start: auto;
+  --drawer-margin-inline-end: var(--dbm-space-0);
+  --drawer-margin-block-start: var(--dbm-space-0);
+  --drawer-margin-block-end: var(--dbm-space-0);
+  --drawer-border-inline-start: var(--dbm-border-width-1);
+  --drawer-border-inline-end: var(--dbm-border-width-0);
+  --drawer-border-block-start: var(--dbm-border-width-0);
+  --drawer-border-block-end: var(--dbm-border-width-0);
+  --drawer-radius-start-start: var(--dbm-radius-lg);
+  --drawer-radius-end-start: var(--dbm-radius-lg);
+  --drawer-radius-start-end: var(--dbm-radius-none);
+  --drawer-radius-end-end: var(--dbm-radius-none);
+  --drawer-from: translateX(100%);
+  --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+  --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+  --overlay-safe-inline-start: var(--dbm-space-0);
+  --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+}
+
+.sideEndBase:dir(rtl) {
+  --drawer-from: translateX(-100%);
+  --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+}
+
+.sideTopBase {
+  --drawer-inline-size: 100%;
+  --drawer-block-size: fit-content;
+  --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+  --drawer-margin-inline-start: var(--dbm-space-0);
+  --drawer-margin-inline-end: var(--dbm-space-0);
+  --drawer-margin-block-start: var(--dbm-space-0);
+  --drawer-margin-block-end: auto;
+  --drawer-border-inline-start: var(--dbm-border-width-0);
+  --drawer-border-inline-end: var(--dbm-border-width-0);
+  --drawer-border-block-start: var(--dbm-border-width-0);
+  --drawer-border-block-end: var(--dbm-border-width-1);
+  --drawer-radius-start-start: var(--dbm-radius-none);
+  --drawer-radius-start-end: var(--dbm-radius-none);
+  --drawer-radius-end-start: var(--dbm-radius-lg);
+  --drawer-radius-end-end: var(--dbm-radius-lg);
+  --drawer-from: translateY(-100%);
+  --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+  --overlay-safe-block-end: var(--dbm-space-0);
+  --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+  --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+}
+
+.sideTopBase:dir(rtl) {
+  --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+}
+
+.sideBottomBase {
+  --drawer-inline-size: 100%;
+  --drawer-block-size: fit-content;
+  --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+  --drawer-margin-inline-start: var(--dbm-space-0);
+  --drawer-margin-inline-end: var(--dbm-space-0);
+  --drawer-margin-block-start: auto;
+  --drawer-margin-block-end: var(--dbm-space-0);
+  --drawer-border-inline-start: var(--dbm-border-width-0);
+  --drawer-border-inline-end: var(--dbm-border-width-0);
+  --drawer-border-block-start: var(--dbm-border-width-1);
+  --drawer-border-block-end: var(--dbm-border-width-0);
+  --drawer-radius-start-start: var(--dbm-radius-lg);
+  --drawer-radius-start-end: var(--dbm-radius-lg);
+  --drawer-radius-end-start: var(--dbm-radius-none);
+  --drawer-radius-end-end: var(--dbm-radius-none);
+  --drawer-from: translateY(100%);
+  --overlay-safe-block-start: var(--dbm-space-0);
+  --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+  --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+  --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+}
+
+.sideBottomBase:dir(rtl) {
+  --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+}
+
+/* sm = 40rem */
+@media (min-width: 40rem) {
+  .sideStartSm {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: auto;
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-1);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateX(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: var(--dbm-space-0);
+  }
+
+  .sideStartSm:dir(rtl) {
+    --drawer-from: translateX(100%);
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndSm {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: auto;
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-1);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateX(100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndSm:dir(rtl) {
+    --drawer-from: translateX(-100%);
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideTopSm {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: auto;
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-1);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateY(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideTopSm:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideBottomSm {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: auto;
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-1);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateY(100%);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideBottomSm:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+}
+
+/* md = 48rem */
+@media (min-width: 48rem) {
+  .sideStartMd {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: auto;
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-1);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateX(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: var(--dbm-space-0);
+  }
+
+  .sideStartMd:dir(rtl) {
+    --drawer-from: translateX(100%);
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndMd {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: auto;
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-1);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateX(100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndMd:dir(rtl) {
+    --drawer-from: translateX(-100%);
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideTopMd {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: auto;
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-1);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateY(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideTopMd:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideBottomMd {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: auto;
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-1);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateY(100%);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideBottomMd:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+}
+
+/* lg = 64rem */
+@media (min-width: 64rem) {
+  .sideStartLg {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: auto;
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-1);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateX(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: var(--dbm-space-0);
+  }
+
+  .sideStartLg:dir(rtl) {
+    --drawer-from: translateX(100%);
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndLg {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: auto;
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-1);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateX(100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndLg:dir(rtl) {
+    --drawer-from: translateX(-100%);
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideTopLg {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: auto;
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-1);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateY(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideTopLg:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideBottomLg {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: auto;
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-1);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateY(100%);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideBottomLg:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+}
+
+/* xl = 80rem */
+@media (min-width: 80rem) {
+  .sideStartXl {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: auto;
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-1);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateX(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: var(--dbm-space-0);
+  }
+
+  .sideStartXl:dir(rtl) {
+    --drawer-from: translateX(100%);
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndXl {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: auto;
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-1);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateX(100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEndXl:dir(rtl) {
+    --drawer-from: translateX(-100%);
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideTopXl {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: auto;
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-1);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateY(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideTopXl:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideBottomXl {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: auto;
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-1);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateY(100%);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideBottomXl:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+}
+
+/* 2xl = 96rem */
+@media (min-width: 96rem) {
+  .sideStart2xl {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: auto;
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-1);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateX(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: var(--dbm-space-0);
+  }
+
+  .sideStart2xl:dir(rtl) {
+    --drawer-from: translateX(100%);
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEnd2xl {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: auto;
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-1);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateX(100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEnd2xl:dir(rtl) {
+    --drawer-from: translateX(-100%);
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideTop2xl {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: auto;
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-1);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateY(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideTop2xl:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideBottom2xl {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: auto;
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-1);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateY(100%);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideBottom2xl:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+}
+
+/* 3xl = 120rem */
+@media (min-width: 120rem) {
+  .sideStart3xl {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: auto;
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-1);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateX(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: var(--dbm-space-0);
+  }
+
+  .sideStart3xl:dir(rtl) {
+    --drawer-from: translateX(100%);
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEnd3xl {
+    --drawer-inline-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-block-size: 100%;
+    --drawer-max-block-size: 100%;
+    --drawer-margin-inline-start: auto;
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-1);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateX(100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: var(--dbm-space-0);
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideEnd3xl:dir(rtl) {
+    --drawer-from: translateX(-100%);
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideTop3xl {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: var(--dbm-space-0);
+    --drawer-margin-block-end: auto;
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-0);
+    --drawer-border-block-end: var(--dbm-border-width-1);
+    --drawer-radius-start-start: var(--dbm-radius-none);
+    --drawer-radius-start-end: var(--dbm-radius-none);
+    --drawer-radius-end-start: var(--dbm-radius-lg);
+    --drawer-radius-end-end: var(--dbm-radius-lg);
+    --drawer-from: translateY(-100%);
+    --overlay-safe-block-start: env(safe-area-inset-top, var(--dbm-space-0));
+    --overlay-safe-block-end: var(--dbm-space-0);
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideTop3xl:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+
+  .sideBottom3xl {
+    --drawer-inline-size: 100%;
+    --drawer-block-size: fit-content;
+    --drawer-max-block-size: min(var(--drawer-size), calc(100% - var(--drawer-sliver)));
+    --drawer-margin-inline-start: var(--dbm-space-0);
+    --drawer-margin-inline-end: var(--dbm-space-0);
+    --drawer-margin-block-start: auto;
+    --drawer-margin-block-end: var(--dbm-space-0);
+    --drawer-border-inline-start: var(--dbm-border-width-0);
+    --drawer-border-inline-end: var(--dbm-border-width-0);
+    --drawer-border-block-start: var(--dbm-border-width-1);
+    --drawer-border-block-end: var(--dbm-border-width-0);
+    --drawer-radius-start-start: var(--dbm-radius-lg);
+    --drawer-radius-start-end: var(--dbm-radius-lg);
+    --drawer-radius-end-start: var(--dbm-radius-none);
+    --drawer-radius-end-end: var(--dbm-radius-none);
+    --drawer-from: translateY(100%);
+    --overlay-safe-block-start: var(--dbm-space-0);
+    --overlay-safe-block-end: env(safe-area-inset-bottom, var(--dbm-space-0));
+    --overlay-safe-inline-start: env(safe-area-inset-left, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-right, var(--dbm-space-0));
+  }
+
+  .sideBottom3xl:dir(rtl) {
+    --overlay-safe-inline-start: env(safe-area-inset-right, var(--dbm-space-0));
+    --overlay-safe-inline-end: env(safe-area-inset-left, var(--dbm-space-0));
+  }
+}
+
+
+/* --- Enter and exit, keyed to Radix's `data-state`. The panel slides from its edge while it fades in over `base`,
+   and leaves quicker, so it is gone by the time the scrim finishes. `--drawer-from` is the offset of the edge it
+   is attached to, `100%` of its own size, so it travels exactly its own extent. Reduced motion keeps the fade and
+   drops the movement. --- */
+.content[data-state="open"] {
+  animation: drawerIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-emphasized);
+}
+
+.content[data-state="closed"] {
+  animation: drawerOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+@keyframes drawerIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+    transform: var(--drawer-from);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+}
+
+@keyframes drawerOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+    transform: none;
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+    transform: var(--drawer-from);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content[data-state="open"] {
+    animation-name: drawerFadeIn;
+  }
+
+  .content[data-state="closed"] {
+    animation-name: drawerFadeOut;
+  }
+}
+
+@keyframes drawerFadeIn {
+  from {
+    opacity: var(--dbm-opacity-0);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-100);
+  }
+}
+
+@keyframes drawerFadeOut {
+  from {
+    opacity: var(--dbm-opacity-100);
+  }
+
+  to {
+    opacity: var(--dbm-opacity-0);
+  }
+}
+
+/* --- Forced colours: a shadow isn't drawn, so the panel is told apart from the page by its edge alone. --- */
+@media (forced-colors: active) {
+  .content {
+    border-color: CanvasText;
+  }
+}

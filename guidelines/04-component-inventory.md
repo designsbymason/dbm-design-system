@@ -146,7 +146,7 @@ Content that appears above, or reveals/hides other content.
 |---|---|---|---|
 | Backdrop | atom | 🟢 | Dimming scrim layer behind Dialog/Drawer/overlays |
 | Dialog | organism | 🟢 | A window that interrupts the page for focused work, compound (`Dialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Close`) over Radix Dialog, drawing its scrim with `Backdrop` ([ADR-0052](adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)). Ships as `Dialog`, per the `Tag / Chip` precedent; "Modal" is a search term, not an export (the WAI-ARIA pattern is "Dialog (Modal)", and a dialog can also be non-modal). A sibling of `AlertDialog` and `Drawer`, with no `role` or `placement` prop ([ADR-0053](adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)); `keepMounted` moves one rendered element in and out of the panel ([ADR-0055](adr/0055-dialog-keeps-its-content-mounted-by-moving-one-rendered-element-in-and-out-of-the-panel-over-radixs-forcemount.md)). Review: [Dialog.md](component-reviews/Dialog.md) |
-| Drawer / Sheet | organism | 🟢 | Side-panel variant of Dialog |
+| Drawer | organism | 🟢 | A panel attached to one edge of the screen that slides in, for work that belongs beside the page: filters, a settings or detail panel, a navigation menu on a phone. Compound (`Drawer.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Close`) over Radix Dialog, a sibling of `Dialog` and `AlertDialog` ([ADR-0053](adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)) drawing the shared overlay sections ([ADR-0060](adr/0060-the-overlay-sections-are-extracted-to-internal-overlay-with-the-panel-staying-each-components-own.md)). `side` is `start`, `end`, `top` or `bottom` and can be a responsive map; `size` is its width or height cap ([ADR-0061](adr/0061-drawer-is-attached-to-a-logical-side-that-can-change-with-the-screen-with-its-own-size-tokens-and-no-swipe-yet.md)). Ships as `Drawer`, per the `Tag / Chip` precedent; "Sheet" is a search term. Review: [Drawer.md](component-reviews/Drawer.md) |
 | Popover | molecule | 🟢 | Wraps Radix Popover |
 | Tooltip | atom | 🟢 | Wraps Radix Tooltip; ships a co-located `TooltipProvider` (optional shared hover-delay/skip-delay timing across multiple tooltips) as a secondary export from the same folder, not a separate atom entry |
 | HoverCard | molecule | 🟡 | A rich preview that opens when the pointer rests on a link or keyboard focus lands on it, over Radix HoverCard; compound (`HoverCard.Trigger`/`Content`) in `Popover`'s shape. Supplementary by design: never opens on touch, no role, contents out of the tab order. Review: [HoverCard.md](component-reviews/HoverCard.md) |
@@ -258,12 +258,12 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog` and `ConfirmDialog` are built and Finalized; the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog` and `ConfirmDialog` are built and Finalized, `Drawer` is built and waiting for its sign-off; the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
 2. AlertDialog (built and Finalized, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — the prop-driven pattern on `AlertDialog`; built and Finalized, review in [ConfirmDialog.md](component-reviews/ConfirmDialog.md)
-4. Drawer / Sheet — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone
+4. Drawer — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone; built, review in [Drawer.md](component-reviews/Drawer.md)
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it
 6. Toast / Notification — independent; other organisms report results through it
 7. Form — context and validation over `FormField` and `FieldGroup`
