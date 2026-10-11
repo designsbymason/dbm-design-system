@@ -1,0 +1,190 @@
+import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, RefObject } from "react";
+import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
+import type { AlertDialogContentProps, AlertDialogTone } from "../AlertDialog/AlertDialog.types";
+
+/**
+ * What the confirmation is about. It picks the icon (a note for `neutral`, and one each for `info`, `warning` and
+ * `danger`) and the look of the confirm button (`danger` makes it destructive). The same four tones as
+ * `AlertDialog`.
+ */
+export type ConfirmDialogTone = AlertDialogTone;
+
+/**
+ * What closed (or opened) the dialog, given as the second argument of `onOpenChange`.
+ * - `"trigger"`: a click on the `trigger`.
+ * - `"escape"`: the Escape key.
+ * - `"action"`: the confirm button (or Enter in the type-to-confirm field), after `onConfirm` finished.
+ * - `"cancel"`: the cancel button.
+ */
+export type ConfirmDialogOpenChangeReason = "trigger" | "escape" | "action" | "cancel";
+
+/** The second argument of `onOpenChange`. */
+export interface ConfirmDialogOpenChangeDetails {
+  /** What caused the change: see {@link ConfirmDialogOpenChangeReason}. */
+  reason: ConfirmDialogOpenChangeReason;
+}
+
+/**
+ * The words the dialog writes itself, each with an English default. Pass the ones to replace: a label left out (or
+ * given as `undefined`) keeps its default.
+ */
+export interface ConfirmDialogLabels {
+  /**
+   * The confirm button. Name what it does ("Delete project") rather than leaving the default.
+   * @default 'Confirm'
+   */
+  confirm: string;
+  /**
+   * The cancel button, the safe way out.
+   * @default 'Cancel'
+   */
+  cancel: string;
+  /**
+   * The label of the type-to-confirm field, given the text that must be typed (see `requireText`).
+   * @default (text) => `Type “${text}” to confirm`
+   */
+  requireText: (text: string) => string;
+}
+
+type PanelProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "role" | "title" | "onCancel" | "onError">;
+
+export interface ConfirmDialogProps extends PanelProps {
+  /** The question, short enough to read at a glance: "Delete project?". Names the dialog. */
+  title: ReactNode;
+  /**
+   * What will happen and what can't be undone. Read out after the title when the dialog opens, so a
+   * confirmation needs one (Radix warns in development when there is none).
+   */
+  description?: ReactNode;
+  /**
+   * Content between the description and the buttons: a list of what is affected, or your own error message
+   * after a failed request. A scroll region that takes the height left over.
+   */
+  children?: ReactNode;
+  /**
+   * The element that opens the dialog, a single element such as a `Button` (rendered through `asChild`, so the
+   * element itself is the trigger). Leave it out to open the dialog from your own state with `open`.
+   */
+  trigger?: ReactElement;
+  /**
+   * What the confirmation is about. `danger` makes the confirm button destructive.
+   * @default 'neutral'
+   */
+  tone?: ConfirmDialogTone;
+  /**
+   * The icon drawn beside the title: a Phosphor icon component to replace the tone's own, or `false` for none
+   * (every tone has one by default).
+   */
+  icon?: PhosphorIcon | false;
+  /**
+   * The panel's maximum width, on the standard scale. A confirmation is a short message, so the default is small.
+   * @default 'sm'
+   */
+  size?: AlertDialogContentProps["size"];
+  /** The words the dialog writes itself: see {@link ConfirmDialogLabels}. */
+  labels?: Partial<ConfirmDialogLabels>;
+  /**
+   * Runs when the person confirms. Return nothing and the dialog closes at once. Return a promise and the dialog
+   * stays open and busy until it settles: it closes when it resolves, and stays open (no longer busy) when it
+   * rejects, reporting the error to `onConfirmError`. A second press while it is pending is ignored.
+   */
+  onConfirm?: () => void | Promise<unknown>;
+  /** Runs when the person cancels: the cancel button, or Escape. Not called for a confirm. */
+  onCancel?: () => void;
+  /**
+   * Receives the error when `onConfirm`'s promise rejects. The dialog stays open either way; with no handler the
+   * rejection is left unhandled so it is not lost silently. Show a message of your own in `children`.
+   */
+  onConfirmError?: (error: unknown) => void;
+  /**
+   * Marks the dialog as working on something of your own (a request you run elsewhere): Escape, cancel and
+   * confirm do nothing until it is `false` again, and the panel is `aria-busy`. Combined with the pending
+   * state of a promise returned by `onConfirm`.
+   * @default false
+   */
+  busy?: boolean;
+  /**
+   * Text the person has to type before the confirm button enables, for something that can't be recovered (the
+   * project's name). Matched exactly and case-sensitively, ignoring spaces at either end. A field labelled by
+   * `labels.requireText` appears and takes focus when the dialog opens; Enter in it confirms once it matches.
+   * Empty (or omitted) asks for nothing.
+   */
+  requireText?: string;
+  /** The controlled open state. Omit (along with `defaultOpen`) to let the dialog manage its own open state. */
+  open?: boolean;
+  /**
+   * The initial open state for uncontrolled usage; ignored once `open` is provided.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  /**
+   * Called with the new open state whenever it changes. The second argument says what caused it: a decision
+   * (`"action"` or `"cancel"`) or a dismissal (`"escape"`). With a promise from `onConfirm`, it is called with
+   * `false` and `"action"` once the promise has resolved.
+   */
+  onOpenChange?: (open: boolean, details: ConfirmDialogOpenChangeDetails) => void;
+  /**
+   * Whether Escape closes the dialog, as a cancel. A press on the scrim never does.
+   * @default true
+   */
+  closeOnEscape?: boolean;
+  /**
+   * A short pulse when something tries to dismiss the dialog and can't (a press on the scrim, Escape while it is
+   * busy), so it doesn't read as broken. Under `prefers-reduced-motion` the border flashes instead.
+   * @default true
+   */
+  nudge?: boolean;
+  /**
+   * An element to focus when the dialog opens. By default the cancel button gets focus (the safe choice), or the
+   * type-to-confirm field when `requireText` is set.
+   */
+  initialFocus?: RefObject<HTMLElement | null>;
+  /**
+   * How opaque the scrim is, from the opacity scale. Worth lightening when the dialog opens over another, since
+   * the two scrims stack.
+   * @default 60
+   */
+  scrimOpacity?: BackdropOpacity;
+  /**
+   * Blurs the page behind the scrim as well as dimming it.
+   * @default false
+   */
+  scrimBlur?: boolean;
+  /**
+   * Renders the dialog into a different DOM node than `document.body`, for a specific stacking-context
+   * requirement. Leave unset for the common case.
+   */
+  container?: HTMLElement | null;
+  /**
+   * Called when focus moves into the dialog on open. Call `event.preventDefault()` inside to choose the element
+   * to focus yourself.
+   */
+  onOpenAutoFocus?: AlertDialogContentProps["onOpenAutoFocus"];
+  /**
+   * Called when focus would return to the trigger on close. Call `event.preventDefault()` inside to send focus
+   * elsewhere instead.
+   */
+  onCloseAutoFocus?: AlertDialogContentProps["onCloseAutoFocus"];
+  /**
+   * Called when Escape is pressed while open. Call `event.preventDefault()` inside to keep the dialog open.
+   * Runs before `closeOnEscape` is applied.
+   */
+  onEscapeKeyDown?: AlertDialogContentProps["onEscapeKeyDown"];
+  /** Standard DOM id, applied to the dialog panel. */
+  id?: string;
+  /** Additional CSS classes for customization, on the dialog panel itself. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Points to the `id` of an existing element that describes the dialog. The `description` is wired in
+   * automatically, so this is only for a description that isn't one.
+   */
+  "aria-describedby"?: string;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}

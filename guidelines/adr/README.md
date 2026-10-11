@@ -110,6 +110,8 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0054](./0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md) | Portaled floating panels sit on the `popover` z-index step, not `dropdown` | Accepted |
 | [0055](./0055-dialog-keeps-its-content-mounted-by-moving-one-rendered-element-in-and-out-of-the-panel-over-radixs-forcemount.md) | `Dialog`'s `keepMounted` moves one rendered element in and out of the panel, over Radix's `forceMount` | Accepted |
 | [0056](./0056-alertdialog-draws-with-dialogs-sections-and-stylesheet-and-defers-extracting-them-to-the-third-consumer.md) | `AlertDialog` draws with `Dialog`'s sections and stylesheet, and extraction waits for the third consumer | Accepted |
+| [0057](./0057-confirmdialog-is-a-prop-driven-wrapper-over-alertdialog-with-its-own-trigger-and-a-typed-confirmation-field-over-a-compound-of-its-own.md) | `ConfirmDialog` is a prop-driven wrapper over `AlertDialog`, with its own trigger and a typed-confirmation field, over a compound of its own or a second consumer of `Dialog` | Accepted |
+| [0058](./0058-confirmdialogs-onconfirm-may-return-a-promise-that-holds-it-busy-and-a-rejection-keeps-it-open-over-a-caller-managed-busy-state.md) | `ConfirmDialog`'s `onConfirm` may return a promise that holds it busy, and a rejection keeps it open, over a caller-managed busy state | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

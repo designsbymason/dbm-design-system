@@ -1,0 +1,301 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as ConfirmDialogStories from "./ConfirmDialog.stories";
+
+export const propOrder = [
+  "title",
+  "description",
+  "children",
+  "trigger",
+  "tone",
+  "icon",
+  "size",
+  "labels",
+  "onConfirm",
+  "onCancel",
+  "onConfirmError",
+  "busy",
+  "requireText",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "closeOnEscape",
+  "nudge",
+  "initialFocus",
+  "scrimOpacity",
+  "scrimBlur",
+  "container",
+  "onOpenAutoFocus",
+  "onCloseAutoFocus",
+  "onEscapeKeyDown",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundOrder = [
+  "title",
+  "description",
+  "tone",
+  "size",
+  "confirmLabel",
+  "cancelLabel",
+  "requireText",
+  "busy",
+  "closeOnEscape",
+  "nudge",
+  "scrimOpacity",
+  "scrimBlur",
+];
+
+<Meta of={ConfirmDialogStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="ConfirmDialog" tier="Organism" />
+
+A confirmation in one element: the question, what it will do, and the two answers. It is an
+`AlertDialog` (a modal that has to be answered: the page behind is dimmed and locked, a press on the
+**scrim**, the translucent layer over the page, does nothing, and focus starts on the safe choice)
+that you describe with props instead of composing from parts. Give it a `title`, a `description`, an
+`onConfirm` and a `trigger`. `onConfirm` can return a promise, in which case the dialog waits for it,
+and `requireText` makes the person type a name before the confirm button enables.
+
+### Import
+
+```tsx
+import { ConfirmDialog } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Each demo is drawn inside a dashed box so that its scrim covers the box and not this page; in an app the
+scrim covers the whole window.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ConfirmDialogStories.Playground} />
+
+</div>
+<PlaygroundControls of={ConfirmDialogStories.Playground} order={playgroundOrder} />
+
+## Properties
+
+`ConfirmDialog` renders one `<div>` (the dialog panel), so `ref`, `className`, `style`, `id` and
+`data-testid` go there. It also accepts any other native `<div>` attribute beyond what's listed here
+(e.g. `onKeyDown`, `dir`), passed straight through to the panel. `role`, `aria-modal` and `data-state`
+are set by the dialog and can't be replaced.
+
+<PropertiesTable of={ConfirmDialogStories} order={propOrder} />
+
+## Variants
+
+### Tones
+
+<Canvas of={ConfirmDialogStories.Tones} />
+
+### Waits for a request
+
+Return a promise from `onConfirm` and the dialog stays open and busy until it settles. The confirm
+button shows a spinner, and Escape, Cancel and a second press do nothing in the meantime.
+
+<Canvas of={ConfirmDialogStories.WaitForARequest} />
+
+### When the request fails
+
+A rejected promise keeps the dialog open and stops it being busy, so the person can try again. Report
+the error with `onConfirmError` and show a message of your own in `children`.
+
+<Canvas of={ConfirmDialogStories.WhenTheRequestFails} />
+
+### Type the name to confirm
+
+<Canvas of={ConfirmDialogStories.TypeToConfirm} />
+
+### With content between the description and the buttons
+
+<Canvas of={ConfirmDialogStories.WithABody} />
+
+### Opened from your own state
+
+<Canvas of={ConfirmDialogStories.Controlled} />
+
+### Opened from inside a dialog
+
+<Canvas of={ConfirmDialogStories.OverADialog} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a `ConfirmDialog` when the person has to say yes before something happens: deleting, discarding,
+  leaving, publishing.
+- Write the title as the question ("Delete project?") and name the verbs on the buttons
+  (`labels={{ confirm: "Delete", cancel: "Keep it" }}`), not "OK" and "Cancel".
+- Set `tone="danger"` for something that can't be undone: it colours the icon and makes the confirm
+  button destructive.
+- Say in the description what can't be undone, not only that something will happen.
+- Return the promise from `onConfirm` when the action is a request, so the dialog waits, shows
+  progress, and stays open if it fails.
+- For something that can't be recovered, set `requireText` to the name, so the confirm button waits
+  for it to be typed.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a task with fields to fill in or content to read: that is a `Dialog`.
+- Don't use it for a message that needs no answer. An `Alert` or a toast says it without stopping the
+  person.
+- Don't use it for an alert with one button or with three choices: compose `AlertDialog`, whose parts
+  take a `value` each.
+- Don't leave out the description: it is what a screen reader reads after the title.
+- Don't ask for confirmation of everything. A confirmation people click through without reading is
+  worse than none; reserve it for actions that are hard to undo, and offer an undo for the rest.
+- Don't catch an error inside `onConfirm` and return normally: the dialog reads that as success and
+  closes. Let the promise reject, or handle it in `onConfirmError`.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Keep the title to a few words and the description to one or two sentences. A confirmation that needs
+  a paragraph needs a `Dialog`, or a page.
+- Let the dialog own the waiting. Pass the promise from `onConfirm` rather than setting `busy`
+  yourself; `busy` is for work you run elsewhere.
+- Put your own error message in `children`, set from `onConfirmError`. Without a handler a rejection
+  is left unhandled on purpose, so a failed answer is never lost silently.
+- A controlled dialog is told to close with `onOpenChange(false, { reason: "action" })` once the
+  promise resolves; set your own state then.
+- Use `onOpenChange`'s `reason` to tell a decision (`"action"`, `"cancel"`) from a dismissal
+  (`"escape"`), or `onCancel` to react to either way out.
+- Open one from a `Dialog` freely, and lighten its scrim (`scrimOpacity={40}`), since the two scrims
+  stack.
+
+## Accessibility
+
+<Callout tone="info" title="The alertdialog pattern: named, described, and focus on the safe choice">
+
+- The panel is `role="alertdialog"` with `aria-modal="true"`. The `title` names it and the
+  `description` describes it, wired with `aria-labelledby` and `aria-describedby` automatically, so a
+  screen reader reads the question and then what it will do.
+- Focus moves to the cancel button when the dialog opens, so Enter or Space can't confirm by accident;
+  with `requireText` it moves to the field instead, and cancel is one `Shift+Tab` away. `Tab` and
+  `Shift+Tab` loop inside, and focus returns to the trigger on close.
+- `Escape` closes the dialog as a cancel. A press on the scrim does nothing, with no prop to change
+  that, and gives the panel a short pulse so it doesn't read as broken (a border flash under
+  `prefers-reduced-motion`).
+- While the dialog is open the rest of the page is hidden from assistive technology and can't be
+  scrolled or clicked.
+- While an answer is pending the panel is `aria-busy` and both buttons are `aria-disabled` but still
+  focusable, so focus isn't dropped from the button that was pressed. The spinner on the confirm
+  button is decorative.
+- With `requireText`, the confirm button is natively disabled until the text matches. The field is
+  labelled with the words to type, turns off autocomplete, spell check and automatic capitals, and
+  becomes read-only (not disabled) while an answer is pending.
+- On a phone the buttons are full width with the confirm on top, a comfortable touch target. The tone
+  icon is decorative: the tone is carried by the words, never by the icon or colour alone.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<ConfirmDialog
+  trigger={<Button variant="destructive">Delete project</Button>}
+  tone="danger"
+  title="Delete project?"
+  description="This removes the project and all of its files for good. It cannot be undone."
+  labels={{ confirm: "Delete", cancel: "Keep it" }}
+  onConfirm={() => api.deleteProject(id)}
+/>
+
+{/* Wait for the request, and show why it failed */}
+const [message, setMessage] = useState<string | null>(null);
+<ConfirmDialog
+  trigger={<Button variant="destructive">Delete project</Button>}
+  tone="danger"
+  title="Delete project?"
+  description="This removes the project for good."
+  onConfirm={() => api.deleteProject(id)}
+  onConfirmError={(error) => setMessage(String(error))}
+>
+  {message && <Text color="danger">{message}</Text>}
+</ConfirmDialog>
+
+{/* Make them type the name */}
+<ConfirmDialog
+  trigger={<Button variant="destructive">Delete project</Button>}
+  tone="danger"
+  title="Delete “Atlas”?"
+  description="Everything in it goes too."
+  requireText="Atlas"
+  labels={{ confirm: "Delete project" }}
+  onConfirm={() => api.deleteProject(id)}
+/>
+
+{/* Open it from your own state, and say what answered it */}
+<ConfirmDialog
+  open={open}
+  onOpenChange={(next, { reason }) => {
+    setOpen(next);
+    if (!next && reason === "cancel") track("stayed");
+  }}
+  title="Leave this page?"
+  description="You have unsaved changes."
+  labels={{ confirm: "Leave", cancel: "Stay" }}
+  onConfirm={leave}
+/>
+
+{/* A native <div> attribute, passed straight through to the panel */}
+<ConfirmDialog title="Leave?" description="Unsaved changes." aria-describedby="what-is-lost" dir="rtl" />
+```
+
+## Design tokens used
+
+`ConfirmDialog` has no stylesheet of its own: it is drawn by `AlertDialog` (which draws with
+`Dialog`'s), and its type-to-confirm field and spinner come from `Input`, `FormField` and `Spinner`.
+It introduces no new tokens; these are the ones that give it its look.
+
+<TokenRow token="bg.surface" usage="panel background" />
+<TokenRow token="text.primary" usage="panel text colour" />
+<TokenRow token="border.default" usage="panel border" />
+<TokenRow token="radius.lg" usage="panel corner radius" />
+<TokenRow token="shadow.light.lg / shadow.dark.lg" usage="panel elevation" />
+<TokenRow token="bg.neutral-subtle" usage="the neutral tone's icon disc" />
+<TokenRow token="bg.info-subtle" usage="the info tone's icon disc" />
+<TokenRow token="bg.warning-subtle" usage="the warning tone's icon disc" />
+<TokenRow token="bg.danger-subtle" usage="the danger tone's icon disc" />
+<TokenRow token="space.6" usage="panel padding" />
+<TokenRow token="z-index.modal" usage="panel stacking order, above the scrim and below popovers and tooltips" />
+<TokenRow token="motion.duration.base" usage="enter animation" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="AlertDialog"
+  description="The compound this is built on; reach for it for a second choice with its own value, or an acknowledge-only alert"
+  href="/?path=/docs/organisms-overlay-alertdialog--docs"
+>
+  <Button variant="secondary" size="sm">AlertDialog</Button>
+</RelatedCard>
+<RelatedCard
+  name="Dialog"
+  description="A general-purpose modal for forms and detail views, which a press outside can dismiss"
+  href="/?path=/docs/organisms-overlay-dialog--docs"
+>
+  <Button variant="secondary" size="sm">Dialog</Button>
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="What the confirm and cancel are built from, and the usual trigger"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button>Delete</Button>
+</RelatedCard>
+</div>

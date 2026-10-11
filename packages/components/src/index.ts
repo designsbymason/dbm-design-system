@@ -93,6 +93,7 @@ export * from "./molecules/ToggleGroup";
 export * from "./molecules/Toolbar";
 
 export * from "./organisms/AlertDialog";
+export * from "./organisms/ConfirmDialog";
 export * from "./organisms/Dialog";
 
 // What a consumer is meant to use from `@dbm-design-system/primitives`, re-exported so that installing only this package

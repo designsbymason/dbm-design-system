@@ -137,7 +137,7 @@ System status communicated to the user.
 | ProgressBar | atom | 🟢 | Determinate/indeterminate |
 | ProgressCircle | atom | 🟡 | |
 | Spinner | atom | 🟢 | Loading indicator |
-| ConfirmDialog | organism | 🟢 | Destructive-action confirmation pattern (built on Dialog) |
+| ConfirmDialog | organism | 🟢 | A confirmation in one element, prop-driven over `AlertDialog` ([ADR-0057](adr/0057-confirmdialog-is-a-prop-driven-wrapper-over-alertdialog-with-its-own-trigger-and-a-typed-confirmation-field-over-a-compound-of-its-own.md)): `title`, `description`, `onConfirm`, an optional `trigger`, and `requireText` to make the person type a name. `onConfirm` may return a promise that holds it busy, and a rejection keeps it open ([ADR-0058](adr/0058-confirmdialogs-onconfirm-may-return-a-promise-that-holds-it-busy-and-a-rejection-keeps-it-open-over-a-caller-managed-busy-state.md)). No stylesheet of its own. Review: [ConfirmDialog.md](component-reviews/ConfirmDialog.md) |
 
 ## 7. Overlay & Disclosure
 Content that appears above, or reveals/hides other content.
@@ -154,7 +154,7 @@ Content that appears above, or reveals/hides other content.
 | Accordion | molecule | 🟢 | Wraps Radix Accordion fully (`Root`/`Item`/`Header`/`Trigger`/`Content`) — does not literally reuse the `Collapse` atom's own component, see [ADR-0018](adr/0018-accordion-wraps-radix-accordion-content-directly-not-the-collapse-atom.md) |
 | Collapse | atom | 🟢 | Simple expand/collapse, building block for Accordion |
 | ContextMenu | organism | 🟡 | Right-click menu |
-| AlertDialog | organism | 🟢 | A modal that has to be answered: `role="alertdialog"`, no dismissal by a press outside and no corner close button, focus starting on the safe choice. Compound (`AlertDialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Action`/`Cancel`) over Radix AlertDialog, with a tone icon, `busy` and a reason on close; drawn with `Dialog`'s sections and stylesheet ([ADR-0056](adr/0056-alertdialog-draws-with-dialogs-sections-and-stylesheet-and-defers-extracting-them-to-the-third-consumer.md)). `ConfirmDialog` is the prop-driven pattern on top. Review: [AlertDialog.md](component-reviews/AlertDialog.md) |
+| AlertDialog | organism | 🟢 | A modal that has to be answered: `role="alertdialog"`, no dismissal by a press outside and no corner close button, focus starting on the safe choice. Compound (`AlertDialog.Trigger`/`Content`/`Header`/`Title`/`Description`/`Body`/`Footer`/`Action`/`Cancel`) over Radix AlertDialog, with a tone icon, `busy` and a reason on close; drawn with `Dialog`'s sections and stylesheet ([ADR-0056](adr/0056-alertdialog-draws-with-dialogs-sections-and-stylesheet-and-defers-extracting-them-to-the-third-consumer.md)). [`ConfirmDialog`](component-reviews/ConfirmDialog.md) is the prop-driven pattern on top. Review: [AlertDialog.md](component-reviews/AlertDialog.md) |
 
 ## 8. Media
 Images, icons, visual content handling.
@@ -258,11 +258,11 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` and `AlertDialog` are built and Finalized; the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` and `AlertDialog` are built and Finalized, `ConfirmDialog` is built and waiting for its sign-off; the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
-2. AlertDialog (built and Finalized, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — variants and a pattern on the Dialog
+2. AlertDialog (built and Finalized, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — the prop-driven pattern on `AlertDialog`; built, review in [ConfirmDialog.md](component-reviews/ConfirmDialog.md)
 4. Drawer / Sheet — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it
 6. Toast / Notification — independent; other organisms report results through it
