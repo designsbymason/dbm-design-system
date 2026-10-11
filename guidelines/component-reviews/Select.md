@@ -647,3 +647,6 @@ it fails on the old CSS (`expected 72 to be less than or equal to 63`).
 
 ## Post-Finalization follow-up (2026-10-10, at explicit direction) — the list opened from a `Dialog`
 `Select`'s list was on `z-index.dropdown` (1000), below a dialog's scrim (1300), so opened from inside a `Dialog` it was drawn under the scrim and could not be chosen from with the mouse. Found by a real-mouse check on `Dialog`, which keyboard-driven and synthetic-pointer checks had missed. It is now on `z-index.popover`, the step `Popover` uses ([ADR-0054](../adr/0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md)). By the three-question test it is a defect fix (an existing requirement, that the list is usable, was not met), so **`Select` stays Finalized**; its Docs token table and the Foundations z-index table were updated to match.
+
+## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
+The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the trigger's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.

@@ -30,25 +30,19 @@
   border-color: var(--dbm-border-neutral);
 }
 
-/* `border-radius` here deliberately overrides `.wrapper`'s own
-   `--dbm-radius-md` — the standardized `sm` focus-ring radius
-   (`05-component-api-conventions.md` §6) applies to every square-ish
-   interactive element regardless of its own corner radius, so every focus
-   ring in the system reads consistently. `.wrapper` is both the visible
-   textarea box and the element the outline is drawn on (no separate,
-   invisible wrapper the way Avatar has), so — same as Input's own
-   retrofit — this does very slightly tighten the textarea's own visible
-   corners while focused (8px → 4px), accepted as a minor, deliberate
-   trade-off. */
+/* The focus ring is drawn on the box's own edge, as `Input`'s is (see its comment). */
 .wrapper:focus-within {
   border-color: var(--dbm-border-focus);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
-  border-radius: var(--dbm-radius-sm);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .wrapper.error {
   border-color: var(--dbm-border-danger);
+}
+
+.wrapper.error:focus-within {
+  outline-color: var(--dbm-border-danger);
 }
 
 .wrapper.disabled {

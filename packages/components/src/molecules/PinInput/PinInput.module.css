@@ -68,12 +68,16 @@
   border-color: var(--dbm-border-danger);
 }
 
-/* The standard focus-ring radius, as on every square-ish control. */
+/* The ring is drawn on the cell's own edge, as `Input`'s is (see its comment). */
 .cell[data-active="true"] {
   border-color: var(--dbm-border-focus);
-  border-radius: var(--dbm-radius-sm);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.error .cell[data-active="true"] {
+  border-color: var(--dbm-border-danger);
+  outline-color: var(--dbm-border-danger);
 }
 
 /* The cells give way before it does, so the spinner never gets squeezed. */

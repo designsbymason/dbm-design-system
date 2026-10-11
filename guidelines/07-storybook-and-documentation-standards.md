@@ -191,8 +191,8 @@ Foundational components first (prove the template before mass-applying it), then
 | FieldError | Atom | Inputs & Forms | ✅ | ✅ 2026-08-28 | [FieldError.md](component-reviews/FieldError.md) |
 | FieldHelperText | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 | [FieldHelperText.md](component-reviews/FieldHelperText.md) |
 | FieldLabel | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 | [FieldLabel.md](component-reviews/FieldLabel.md) |
-| Input | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 | [Input.md](component-reviews/Input.md) |
-| Textarea | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 | [Textarea.md](component-reviews/Textarea.md) |
+| Input | Atom | Inputs & Forms | ✅ | ✅ 2026-08-29 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [Input.md](component-reviews/Input.md) |
+| Textarea | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [Textarea.md](component-reviews/Textarea.md) |
 | Switch | Atom | Inputs & Forms | ✅ | ✅ 2026-08-30 (track/hover colors revised 2026-09-15) | [Switch.md](component-reviews/Switch.md) |
 | Avatar | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Avatar.md](component-reviews/Avatar.md) |
 | Badge | Atom | Data Display | ✅ | ✅ 2026-08-16 | [Badge.md](component-reviews/Badge.md) |
@@ -226,14 +226,14 @@ Foundational components first (prove the template before mass-applying it), then
 | VisuallyHidden | Atom | Utility | ✅ | ✅ 2026-09-10 | [VisuallyHidden.md](component-reviews/VisuallyHidden.md) |
 | Grid | Molecule | Layout | ✅ | ✅ 2026-09-12 | [Grid.md](component-reviews/Grid.md) |
 | List | Molecule | Typography | ✅ | ✅ 2026-09-13 | [List.md](component-reviews/List.md) |
-| Select | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [Select.md](component-reviews/Select.md) |
+| Select | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [Select.md](component-reviews/Select.md) |
 | Radio | Atom | Inputs & Forms | ✅ | ✅ 2026-09-14 | [Radio.md](component-reviews/Radio.md) |
 | RadioGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [RadioGroup.md](component-reviews/RadioGroup.md) |
 | CheckboxGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [CheckboxGroup.md](component-reviews/CheckboxGroup.md) |
 | FormField | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [FormField.md](component-reviews/FormField.md) |
-| PasswordInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [PasswordInput.md](component-reviews/PasswordInput.md) |
-| NumberInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [NumberInput.md](component-reviews/NumberInput.md) |
-| SearchInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 | [SearchInput.md](component-reviews/SearchInput.md) |
+| PasswordInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 (focus ring moved onto the field's own edge through `Input` 2026-10-11; nothing of its own changed; re-verified: functional verification) | [PasswordInput.md](component-reviews/PasswordInput.md) |
+| NumberInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 (focus ring moved onto the field's own edge through `Input` 2026-10-11; nothing of its own changed; re-verified: functional verification) | [NumberInput.md](component-reviews/NumberInput.md) |
+| SearchInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-14 (focus ring moved onto the field's own edge through `Input` 2026-10-11; nothing of its own changed; re-verified: functional verification) | [SearchInput.md](component-reviews/SearchInput.md) |
 | Slider | Molecule | Inputs & Forms | ✅ | ✅ 2026-09-15 (value-label alignment revised 2026-09-25; re-verified: design quality, responsiveness, functional verification) | [Slider.md](component-reviews/Slider.md) |
 | Popover | Molecule | Overlay | ✅ | ✅ 2026-09-17 | [Popover.md](component-reviews/Popover.md) |
 | Accordion | Molecule | Overlay | ✅ | ✅ 2026-09-18 | [Accordion.md](component-reviews/Accordion.md) |
@@ -253,18 +253,18 @@ Foundational components first (prove the template before mass-applying it), then
 | DescriptionList | Molecule | Data Display | ✅ | ✅ 2026-09-29 | [DescriptionList.md](component-reviews/DescriptionList.md) |
 | ScrollArea | Molecule | Layout | ✅ | ✅ 2026-10-02 | [ScrollArea.md](component-reviews/ScrollArea.md) |
 | HoverCard | Molecule | Overlay | ✅ | ✅ 2026-10-03 | [HoverCard.md](component-reviews/HoverCard.md) |
-| TimePicker | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-03 | [TimePicker.md](component-reviews/TimePicker.md) |
+| TimePicker | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-03 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [TimePicker.md](component-reviews/TimePicker.md) |
 | TimeRangePicker | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-03 | [TimeRangePicker.md](component-reviews/TimeRangePicker.md) |
 | Toolbar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-03 | [Toolbar.md](component-reviews/Toolbar.md) |
 | TableToolbar | Molecule | Data Display | ✅ | ✅ 2026-10-04 | [TableToolbar.md](component-reviews/TableToolbar.md) |
 | FieldGroup | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [FieldGroup.md](component-reviews/FieldGroup.md) |
 | Splitter | Molecule | Layout | ✅ | ✅ 2026-10-04 | [Splitter.md](component-reviews/Splitter.md) |
-| PinInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [PinInput.md](component-reviews/PinInput.md) |
+| PinInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [PinInput.md](component-reviews/PinInput.md) |
 | RatingInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [RatingInput.md](component-reviews/RatingInput.md) |
 | TableOfContents | Molecule | Navigation | ✅ | ✅ 2026-10-04 | [TableOfContents.md](component-reviews/TableOfContents.md) |
 | Calendar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-05 | [Calendar.md](component-reviews/Calendar.md) |
 | EditableText | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 | [EditableText.md](component-reviews/EditableText.md) |
-| TagsInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 | [TagsInput.md](component-reviews/TagsInput.md) |
+| TagsInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [TagsInput.md](component-reviews/TagsInput.md) |
 | Dialog | Organism | Overlay | ✅ | ✅ 2026-10-10 (`divided` default changed to `"auto"`, and the footer's actions stack below `sm`, 2026-10-11; re-verified: design quality, responsiveness, functional verification, Docs) | [Dialog.md](component-reviews/Dialog.md) |
 | AlertDialog | Organism | Overlay | ✅ | ✅ 2026-10-11 | [AlertDialog.md](component-reviews/AlertDialog.md) |
 | ConfirmDialog | Organism | Feedback | ✅ | ✅ 2026-10-11 | [ConfirmDialog.md](component-reviews/ConfirmDialog.md) |

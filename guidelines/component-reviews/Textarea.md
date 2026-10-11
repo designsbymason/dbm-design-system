@@ -32,3 +32,6 @@ Found while building `EditableText`, whose multi-line text is drawn as the same 
 - **Fix:** `padding: 0` on `.textarea` (the padding is the wrapper's). `.hasClear`'s own `padding-inline-end` still applies, since it comes later at the same specificity.
 - **Visible change:** text and placeholder sit 2px closer to the border on every side, and a box with `rows` is 4px shorter, at every size.
 - **Finalized status unchanged** under the §9 three-question test: it changes existing output, but corrects a violation of "every value traces to a token" and a mismatch with the documented size padding, so it is a defect fix. It touches a shared atom, so the stories that show a `Textarea` (`FormField`, `Card`) were re-run rather than assumed: unit 6,688/6,688, Chromium 1,284/1,284, no visual-regression snapshot covers it.
+
+## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
+The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the box's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.

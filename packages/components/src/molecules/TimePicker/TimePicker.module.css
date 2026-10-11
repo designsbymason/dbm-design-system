@@ -39,16 +39,19 @@
   border-color: var(--dbm-border-neutral);
 }
 
-/* The standardized `sm` focus-ring radius, as `Input`'s own `:focus-within` (see its comment). */
+/* The ring is drawn on the field's own edge, as `Input`'s is (see its comment). */
 .root:focus-within {
   border-color: var(--dbm-border-focus);
-  border-radius: var(--dbm-radius-sm);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .root.error {
   border-color: var(--dbm-border-danger);
+}
+
+.root.error:focus-within {
+  outline-color: var(--dbm-border-danger);
 }
 
 .root.disabled {

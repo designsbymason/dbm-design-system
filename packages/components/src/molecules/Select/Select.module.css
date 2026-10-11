@@ -32,14 +32,19 @@
   border-color: var(--dbm-border-neutral);
 }
 
+/* The ring is drawn on the trigger's own edge, as `Input`'s is (see its comment). */
 .trigger:focus-visible {
   border-color: var(--dbm-border-focus);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .trigger.error {
   border-color: var(--dbm-border-danger);
+}
+
+.trigger.error:focus-visible {
+  outline-color: var(--dbm-border-danger);
 }
 
 .trigger:disabled {

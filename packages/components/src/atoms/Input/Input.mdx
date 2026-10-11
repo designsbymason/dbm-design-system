@@ -200,9 +200,9 @@ usually through the browser's own `Intl.NumberFormat`. The native `maxLength` li
   form control.
 - The clear button is a real, independently-focusable `<button aria-label="Clear">`, reachable via
   `Tab` right after the input — not a decorative icon with a click handler bolted on.
-- The focus ring's `border-radius` is deliberately tightened to the standardized `sm` step while
-  focused, regardless of `size`'s own larger `md` corner radius — see
-  [Design tokens used](#design-tokens-used) below.
+- The focus ring is drawn on the box's own edge, with no gap between it and the border, and the
+  corners keep their shape while focused. While `hasError` is set the ring stays in the danger
+  colour, so a focused invalid field still reads as invalid.
 
 </Callout>
 
@@ -232,7 +232,6 @@ usually through the browser's own `Intl.NumberFormat`. The native `maxLength` li
 <TokenRow token="border-width.1" usage="wrapper border width" />
 <TokenRow token="border-width.2" usage="focus-within outline width; clear button focus-visible outline width" />
 <TokenRow token="radius.md" usage="wrapper resting corner radius" />
-<TokenRow token="radius.sm" usage="standardized focus-ring radius, overriding radius.md while focused" />
 <TokenRow token="radius.full" usage="clear button's own rounded shape" />
 <TokenRow token="icon.default" usage="clear button icon color; prefix/suffix icon color" />
 <TokenRow token="icon-size.xs–icon-size.lg" usage="clear button icon size per Input size step" />

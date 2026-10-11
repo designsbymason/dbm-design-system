@@ -26,16 +26,21 @@
   border-color: var(--dbm-border-neutral);
 }
 
-/* The standardized focus-ring radius over the box's own, as `Input` does (05 §6). */
+/* The ring is drawn on the box's own edge, as `Input`'s is (see its comment). */
 .box:focus-within {
   border-color: var(--dbm-border-focus);
-  border-radius: var(--dbm-radius-sm);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .invalid {
   border-color: var(--dbm-border-danger);
+}
+
+/* `.box:focus-within` out-ranks `.invalid` on its own, so the border has to be put back to the danger colour here. */
+.invalid:focus-within {
+  border-color: var(--dbm-border-danger);
+  outline-color: var(--dbm-border-danger);
 }
 
 .disabled {

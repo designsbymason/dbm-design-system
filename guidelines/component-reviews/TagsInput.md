@@ -59,3 +59,6 @@ A full §9 pass over the finished component. Findings, all fixed:
 8. **This file and the inventory row.** The test and size figures above; row 63 now cites ADR-0050 and ADR-0051 beside ADR-0049.
 
 **Still not run:** purple dark and emerald light by eye, the breakpoint scale beyond a phone width, `overflow="collapse"` in right-to-left, a real operating-system clipboard with line breaks (the paste tests dispatch a clipboard event), Safari, a real phone, and a screen reader.
+
+## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
+The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the box's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. Found by the check: `.box:focus-within` out-ranked `.invalid`, so an invalid box's border went to the focus colour; the invalid rule now restores the danger border while focused. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.

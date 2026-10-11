@@ -24,25 +24,24 @@
   border-color: var(--dbm-border-neutral);
 }
 
-/* `border-radius` here deliberately overrides `.wrapper`'s own
-   `--dbm-radius-md` — the standardized `sm` focus-ring radius
-   (`05-component-api-conventions.md` §6) applies to every square-ish
-   interactive element regardless of its own corner radius, so every focus
-   ring in the system reads consistently. `.wrapper` is both the visible
-   input box and the element the outline is drawn on (no separate,
-   invisible wrapper the way Avatar has), so — same as Button's own
-   retrofit — this does very slightly tighten the input's own visible
-   corners while focused (8px → 4px), accepted as a minor, deliberate
-   trade-off. */
+/* The focus ring of a field is drawn on the field's own edge, not floating off it: a 2px outline pulled inward by
+   its own width, so it covers the 1px border and the pixel beside it, and the box keeps its outer size, its
+   corners and its place (nothing outside it is cut off by a scrolling frame either). The border turns the focus
+   colour as well, which is what a forced-colours display keeps. While the field is invalid the ring stays in the
+   danger colour, or the red border it replaces would stop saying so. Buttons and everything else keep the
+   offset ring (`05-component-api-conventions.md` §6). */
 .wrapper:focus-within {
   border-color: var(--dbm-border-focus);
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
-  outline-offset: var(--dbm-space-1);
-  border-radius: var(--dbm-radius-sm);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
 }
 
 .wrapper.error {
   border-color: var(--dbm-border-danger);
+}
+
+.wrapper.error:focus-within {
+  outline-color: var(--dbm-border-danger);
 }
 
 .wrapper.disabled {

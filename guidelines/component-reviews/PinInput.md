@@ -46,3 +46,6 @@ A full `06-engineering-standards.md` §9 pass over the finished component. **Pro
 **Known and accepted:** the field doesn't reset with a native form reset (state, like the other controls here); a code longer than 32 cells falls back to 6; `text` and `alphanumeric` take letters in any script but drop characters outside the Basic Multilingual Plane; not run on a real iOS or Android device (the structure is chosen for autofill and long-press paste, but only a device shows it).
 
 **Self-verification (real runs):** `pnpm lint` clean; unit project 5,836/5,836; Storybook (Chromium) project 1,118/1,118; `pnpm build` clean; `PinInput` 4.23KB JS / 1.90KB CSS gzipped within the 10KB budget; Foundations token coverage in sync.
+
+## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
+The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the active cell's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. The cell's border and ring are the danger colour while invalid. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.
