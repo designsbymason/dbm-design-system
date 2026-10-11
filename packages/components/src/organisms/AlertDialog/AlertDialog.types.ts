@@ -50,6 +50,11 @@ export interface AlertDialogProps {
    * (`"action"` or `"cancel"`) or a dismissal (`"escape"`), so a caller can tell an answer from a walk-away.
    */
   onOpenChange?: (open: boolean, details: AlertDialogOpenChangeDetails) => void;
+  /**
+   * Called with `true` once the alert has finished opening (its entrance has finished) and with `false` once it has
+   * finished closing and is out of the page. `onOpenChange` says a change *started*; this says it is *over*.
+   */
+  onOpenChangeComplete?: (open: boolean) => void;
 }
 
 export interface AlertDialogTriggerProps extends Omit<ComponentPropsWithoutRef<"button">, "children"> {

@@ -275,6 +275,7 @@ export const ConfirmDialog = forwardRef<HTMLDivElement, ConfirmDialogProps>(
       open: openProp,
       defaultOpen = false,
       onOpenChange,
+      onOpenChangeComplete,
       initialFocus,
       ...contentProps
     },
@@ -433,7 +434,7 @@ export const ConfirmDialog = forwardRef<HTMLDivElement, ConfirmDialogProps>(
     else focusTarget = requireText ? fieldRef : undefined;
 
     return (
-      <AlertDialog open={open && !skip} onOpenChange={handleOpenChange}>
+      <AlertDialog open={open && !skip} onOpenChange={handleOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
         {trigger && <AlertDialog.Trigger asChild>{trigger}</AlertDialog.Trigger>}
         <AlertDialog.Content
           {...contentProps}

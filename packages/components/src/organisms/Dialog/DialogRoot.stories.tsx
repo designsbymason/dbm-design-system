@@ -27,6 +27,11 @@ const meta: Meta<typeof Dialog> = {
       description:
         "Called with the new open state whenever it changes — a trigger click, Escape, a press on the scrim, a Dialog.Close, or the built-in close button. The second argument, { reason }, says which: \"trigger\", \"escape\", \"outside\", \"close-button\" or \"close\".",
     },
+    onOpenChangeComplete: {
+      control: false,
+      description:
+        "Called with true once it has finished opening (its entrance has finished) and with false once it has finished closing and is out of the page. onOpenChange says a change started; this says it is over, the place to reset a form or release something heavy.",
+    },
     modal: {
       control: "boolean",
       description:

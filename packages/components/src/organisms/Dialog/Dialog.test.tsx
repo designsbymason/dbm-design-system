@@ -816,4 +816,43 @@ describe("Dialog", () => {
       expect((await axe(document.body)).violations).toHaveLength(0);
     });
   });
+
+  describe("onOpenChangeComplete", () => {
+    it("says when it has finished opening and, after the exit, when it has finished closing", async () => {
+      const complete = vi.fn();
+      const changed = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <Dialog onOpenChange={changed} onOpenChangeComplete={complete}>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <Dialog.Content aria-label="A dialog">
+            <Dialog.Body>Body</Dialog.Body>
+          </Dialog.Content>
+        </Dialog>,
+      );
+      expect(complete).not.toHaveBeenCalled();
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
+      expect(complete).toHaveBeenCalledTimes(1);
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(false));
+      expect(complete.mock.calls.map(([value]) => value)).toEqual([true, false]);
+      // the change was announced before it was reported finished
+      expect(changed.mock.invocationCallOrder[1]).toBeLessThan(complete.mock.invocationCallOrder[1] ?? 0);
+    });
+
+    it("does not report a close while it is open, including under StrictMode", async () => {
+      const complete = vi.fn();
+      render(
+        <StrictMode>
+          <Dialog defaultOpen onOpenChangeComplete={complete}>
+            <Dialog.Content aria-label="A dialog" />
+          </Dialog>
+        </StrictMode>,
+      );
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
+      expect(complete).not.toHaveBeenCalledWith(false);
+    });
+  });
+
 });

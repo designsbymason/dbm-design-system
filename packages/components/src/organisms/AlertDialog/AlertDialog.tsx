@@ -24,6 +24,7 @@ import { Heading } from "../../atoms/Heading";
 import { Icon } from "../../atoms/Icon";
 import type { IconTone } from "../../atoms/Icon/Icon.types";
 import { Text } from "../../atoms/Text";
+import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import { OverlayBody, OverlayFooter } from "../../internal/overlay/OverlayParts";
 import dialogStyles from "../Dialog/Dialog.module.css";
 import sections from "../../internal/overlay/OverlaySections.module.css";
@@ -77,6 +78,8 @@ const toneClass: Record<AlertDialogTone, string | undefined> = {
 
 interface AlertDialogContextValue {
   open: boolean;
+  /** Told when the alert has finished opening and when it has finished closing. */
+  onOpenChangeComplete: ((open: boolean) => void) | undefined;
   /** Records what is about to close or open the dialog, for `onOpenChange`'s second argument. */
   setReason: (reason: AlertDialogOpenChangeReason, value?: string) => void;
 }
@@ -139,7 +142,13 @@ function useBusyAttribute(ref: RefObject<HTMLButtonElement | null>, busy: boolea
  * </AlertDialog>
  * ```
  */
-function AlertDialogRoot({ children, open: openProp, defaultOpen = false, onOpenChange }: AlertDialogProps) {
+function AlertDialogRoot({
+  children,
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  onOpenChangeComplete,
+}: AlertDialogProps) {
   // The open state is held here so the scrim (`Backdrop`) can draw its own fade from it, as in `Dialog`.
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const isControlled = openProp !== undefined;
@@ -160,7 +169,10 @@ function AlertDialogRoot({ children, open: openProp, defaultOpen = false, onOpen
     [isControlled, onOpenChange],
   );
 
-  const value = useMemo(() => ({ open, setReason }), [open, setReason]);
+  const value = useMemo(
+    () => ({ open, onOpenChangeComplete, setReason }),
+    [open, onOpenChangeComplete, setReason],
+  );
 
   return (
     <AlertDialogContext.Provider value={value}>
@@ -270,6 +282,7 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
           className,
         )}
       >
+        <OverlayLifecycle open={open} panelRef={contentRef} onOpenChangeComplete={dialog?.onOpenChangeComplete} />
         <AlertDialogContentContext.Provider value={context}>
           <div className={sections.slot}>{children}</div>
         </AlertDialogContentContext.Provider>

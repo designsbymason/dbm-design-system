@@ -646,4 +646,18 @@ describe("AlertDialog", () => {
       expect((await axe(document.body)).violations).toHaveLength(0);
     });
   });
+
+  describe("onOpenChangeComplete", () => {
+    it("says when it has finished opening and when it has finished closing", async () => {
+      const complete = vi.fn();
+      const user = userEvent.setup();
+      render(<Basic dialog={{ onOpenChangeComplete: complete }} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(false));
+      expect(complete.mock.calls.map(([value]) => value)).toEqual([true, false]);
+    });
+  });
+
 });

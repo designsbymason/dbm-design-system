@@ -7,6 +7,7 @@ import { Backdrop } from "../../atoms/Backdrop";
 import { CloseButton } from "../../atoms/CloseButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { OverlayContentContext } from "../../internal/overlay/overlayContext";
+import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import { OverlayBody, OverlayDescription, OverlayFooter, OverlayHeader, OverlayTitle } from "../../internal/overlay/OverlayParts";
 import { useKeepMounted } from "../../internal/overlay/useKeepMounted";
 import {
@@ -76,6 +77,8 @@ interface DialogContextValue {
   /** The dialog's current open state, held here so the scrim can follow it (see `DialogContent`). */
   open: boolean;
   modal: boolean;
+  /** Told when the dialog has finished opening and when it has finished closing. */
+  onOpenChangeComplete: ((open: boolean) => void) | undefined;
   /** Records what is about to close or open the dialog, for `onOpenChange`'s second argument. */
   setReason: (reason: DialogOpenChangeReason) => void;
 }
@@ -131,6 +134,7 @@ function DialogRoot({
   open: openProp,
   defaultOpen = false,
   onOpenChange,
+  onOpenChangeComplete,
   modal = true,
 }: DialogProps) {
   // The open state is kept here, not left to Radix, because the scrim (`Backdrop`) draws its own fade from an
@@ -156,7 +160,10 @@ function DialogRoot({
     [isControlled, onOpenChange],
   );
 
-  const value = useMemo(() => ({ open, modal, setReason }), [open, modal, setReason]);
+  const value = useMemo(
+    () => ({ open, modal, onOpenChangeComplete, setReason }),
+    [open, modal, onOpenChangeComplete, setReason],
+  );
 
   return (
     <DialogContext.Provider value={value}>
@@ -231,12 +238,13 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     const { contentContext, titleCount, descriptionCount, edges } = useOverlayPanel({ divided, busy });
     const { host, portalContent, attachHost } = useKeepMounted({ keepMounted, open });
     const describedBy = describedByProps(ariaDescribedBy, descriptionCount);
+    const panelRef = useRef<HTMLDivElement | null>(null);
 
     const inner = <OverlayContentContext.Provider value={contentContext}>{children}</OverlayContentContext.Provider>;
 
     const content = (
       <DialogPrimitive.Content
-        ref={mergeRefs(ref, attachHost)}
+        ref={mergeRefs(ref, attachHost, panelRef)}
         {...props}
         {...describedBy}
         aria-label={ariaLabel}
@@ -276,6 +284,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
           className,
         )}
       >
+        <OverlayLifecycle open={open} panelRef={panelRef} onOpenChangeComplete={dialog?.onOpenChangeComplete} />
         {ariaLabel && titleCount === 0 && (
           <DialogPrimitive.Title asChild>
             <VisuallyHidden>{ariaLabel}</VisuallyHidden>

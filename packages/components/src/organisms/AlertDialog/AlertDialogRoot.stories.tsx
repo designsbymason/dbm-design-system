@@ -26,6 +26,11 @@ const meta: Meta<typeof AlertDialog> = {
       description:
         "Called with the new open state whenever it changes. The second argument, { reason, value }, says what caused it: \"trigger\", \"escape\", \"action\" or \"cancel\", and the value of the Action or Cancel pressed, when it has one.",
     },
+    onOpenChangeComplete: {
+      control: false,
+      description:
+        "Called with true once it has finished opening (its entrance has finished) and with false once it has finished closing and is out of the page. onOpenChange says a change started; this says it is over, the place to reset a form or release something heavy.",
+    },
   },
 };
 

@@ -224,6 +224,11 @@ export interface ConfirmDialogProps extends PanelProps {
    */
   onOpenChange?: (open: boolean, details: ConfirmDialogOpenChangeDetails) => void;
   /**
+   * Called with `true` once the dialog has finished opening and with `false` once it has finished closing and is out
+   * of the page: `onOpenChange` says a change *started*, this says it is *over*.
+   */
+  onOpenChangeComplete?: (open: boolean) => void;
+  /**
    * Whether Escape closes the dialog, as a cancel. A press on the scrim never does.
    * @default true
    */

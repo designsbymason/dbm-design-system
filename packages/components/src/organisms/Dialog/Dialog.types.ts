@@ -66,6 +66,12 @@ export interface DialogProps {
    */
   onOpenChange?: (open: boolean, details: DialogOpenChangeDetails) => void;
   /**
+   * Called with `true` once the dialog has finished opening (its entrance has finished) and with `false` once it has
+   * finished closing and is out of the page. `onOpenChange` says a change *started*; this says it is *over*: the place
+   * to reset a form or release something heavy without guessing the animation's length.
+   */
+  onOpenChangeComplete?: (open: boolean) => void;
+  /**
    * Whether the dialog is modal. A modal dialog dims the page behind it with a scrim, locks the page's scroll,
    * traps focus inside it and makes the rest of the page inert to assistive technology. Set `false` for a docked
    * tool panel that coexists with the page: no scrim, no scroll lock, and the page stays usable behind it.

@@ -52,3 +52,6 @@ Nine findings from the review, all fixed (the `AlertDialog` one with the maintai
 - Touch and iOS behaviour, shared with `Dialog` and `AlertDialog`.
 - The new states (the delay line, the box, the spinner on the button) were looked at live in Purple light and dark only; the Emerald themes and a real phone were not, and the layout is asserted by real-browser checks rather than seen.
 - An imperative `confirm()`, an `error` display prop and hold-to-confirm are deferred, not decided against (ADR-0057, ADR-0058, ADR-0059).
+
+## Addition after Finalization: `onOpenChangeComplete` (2026-10-11)
+A root prop reporting when the dialog (handed to the `AlertDialog` it is drawn with) has finished opening and closing ([ADR-0062](../adr/0062-overlays-report-when-they-have-finished-opening-and-closing-through-onopenchangecomplete.md)): purely additive, so by the three-question test it **stays Finalized**, with the scoped mini-pass its new surface needs (JSDoc, the Docs Properties row, the root sub-part story, unit tests for open, close and `StrictMode`). Nothing that existed changes.

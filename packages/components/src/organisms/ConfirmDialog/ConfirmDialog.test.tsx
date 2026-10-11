@@ -894,4 +894,17 @@ describe("ConfirmDialog", () => {
       expect((await axe(document.body)).violations).toHaveLength(0);
     });
   });
+
+  describe("onOpenChangeComplete", () => {
+    it("is handed to the dialog it is drawn with", async () => {
+      const complete = vi.fn();
+      const user = userEvent.setup();
+      render(<Basic onOpenChangeComplete={complete} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(true));
+      await user.click(await screen.findByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(complete).toHaveBeenCalledWith(false));
+    });
+  });
+
 });

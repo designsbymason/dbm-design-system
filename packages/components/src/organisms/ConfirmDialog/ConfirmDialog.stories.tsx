@@ -170,6 +170,11 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "Called with the new open state, and { reason }: trigger, escape, action or cancel. With a promise from onConfirm it is called with false and action once the promise has resolved.",
     },
+    onOpenChangeComplete: {
+      control: false,
+      description:
+        "Called with true once it has finished opening and with false once it has finished closing and is out of the page. onOpenChange says a change started; this says it is over.",
+    },
     closeOnEscape: {
       control: "boolean",
       description: "Whether Escape closes the dialog, as a cancel. A press on the scrim never does.",
