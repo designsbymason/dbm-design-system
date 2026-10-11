@@ -116,7 +116,7 @@ const meta: Meta<PlaygroundArgs> = {
     swipeToDismiss: {
       control: "boolean",
       description:
-        "Lets a touch or a pen drag the panel toward its edge to dismiss it, by its handle or header. A short drag settles back; a long or quick one closes it with the reason swipe. Never given to a mouse, and off while busy.",
+        "Lets a touch or a pen drag the panel toward its edge to dismiss it, by its handle or header; a mouse can drag the handle only. A short drag settles back; a long or quick one closes it with the reason swipe. Off while busy.",
       table: { defaultValue: { summary: "true" } },
     },
     showHandle: {

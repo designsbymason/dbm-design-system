@@ -131,16 +131,16 @@ export interface DrawerContentProps extends Omit<ComponentPropsWithoutRef<"div">
   size?: DrawerSizeValue;
   /**
    * Lets a touch or a pen drag the panel toward its edge to dismiss it, by its handle or its header: a short drag
-   * settles back, and a long or quick one closes it with the reason `"swipe"`. Never given to a mouse, which has
-   * the close button, and off while `busy`. The close button, Escape and the scrim remain, so nothing needs the
-   * gesture.
+   * settles back, and a long or quick one closes it with the reason `"swipe"`. A mouse is given it from the handle
+   * only (a `top` or `bottom` drawer's grab handle, which has no text to select), never the header. Off while
+   * `busy`. The close button, Escape and the scrim remain, so nothing needs the gesture.
    * @default true
    */
   swipeToDismiss?: boolean;
   /**
    * Draws a small grab handle on the inner edge of a `top` or `bottom` drawer, the usual cue that a sheet can be
-   * dragged away. Decorative, and not drawn for a `start` or `end` drawer, which has none. Dragging the header works
-   * with or without it.
+   * dragged away, by a mouse as well as a touch. Decorative, and not drawn for a `start` or `end` drawer, which has
+   * none. Dragging the header (touch and pen) works with or without it.
    * @default true
    */
   showHandle?: boolean;

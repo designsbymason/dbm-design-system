@@ -197,8 +197,9 @@ on a smaller screen.
 ### A sheet you can swipe away
 
 On a touch screen, drag the handle or the header toward the edge: a short drag settles back and a long
-or quick one closes it, with the reason `"swipe"`. A mouse isn't given the gesture. This demo is drawn
-inside a box; the close button, Escape and the scrim still work, so nothing needs the gesture.
+or quick one closes it, with the reason `"swipe"`. A mouse can drag the handle too (and only the
+handle, so a drag on the title still selects it). This demo is drawn inside a box; the close button,
+Escape and the scrim still work, so nothing needs the gesture.
 
 <Canvas of={DrawerStories.Swipeable} />
 
@@ -306,8 +307,8 @@ inside a box; the close button, Escape and the scrim still work, so nothing need
   `aria-disabled` and dimmed but still focusable, so focus isn't dropped from it.
 - `start` and `end` follow the text direction, so in right-to-left text a `start` drawer is on the
   right and slides in from there.
-- Swipe-to-dismiss is an extra way to close it, for a touch or a pen from the handle and the header, and
-  is never the only one: the close button, Escape and the scrim all work. The handle is decorative
+- Swipe-to-dismiss is an extra way to close it, for a touch or a pen from the handle and the header and
+  for a mouse from the handle alone, and is never the only one: the close button, Escape and the scrim all work. The handle is decorative
   (`aria-hidden`), and the gesture is off while the drawer is `busy`.
 - Under `prefers-reduced-motion` the panel fades instead of sliding. A device's notch and home
   indicator are kept clear on the edges the panel touches.

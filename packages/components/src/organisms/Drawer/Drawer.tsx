@@ -331,7 +331,15 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
           enabled={swipeToDismiss && !busy}
           onDismiss={() => drawer?.close("swipe")}
         />
-        {showHandle && <span aria-hidden="true" className={styles.handle} data-drawer-grab="" />}
+        {showHandle && (
+          <span
+            aria-hidden="true"
+            className={styles.handle}
+            data-drawer-grab=""
+            data-drawer-handle=""
+            data-swipeable={(swipeToDismiss && !busy) || undefined}
+          />
+        )}
         {ariaLabel && titleCount === 0 && (
           <DialogPrimitive.Title asChild>
             <VisuallyHidden>{ariaLabel}</VisuallyHidden>

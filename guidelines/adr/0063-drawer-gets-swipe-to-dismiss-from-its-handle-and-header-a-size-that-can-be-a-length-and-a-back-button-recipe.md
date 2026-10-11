@@ -8,7 +8,7 @@
 ## Decision
 - **Swipe-to-dismiss, on by default (`swipeToDismiss`).** A touch or a pen drags the panel toward its edge from its handle or its header. The panel follows the finger through two custom properties its stylesheet turns into a transform (no state, no re-render), a short drag settles back, and a drag of 40% of the panel's extent, or a flick faster than 0.5px/ms over at least 24px, closes it with the reason `"swipe"`.
   - The direction is read from the panel's own computed `--drawer-from`, so a responsive `side` and right-to-left text need no second source of truth in script.
-  - **A mouse is not given it** (a drag selects text, and it has the close button). Moving away from the edge, interactive elements inside the header, and a `busy` drawer are all ignored.
+  - **A mouse is given it from the handle only.** A drag from the header would select the title, and a mouse has the close button; the handle is a text-free pill that invites dragging, shows a `grab` cursor, and exists only on a `top` or `bottom` drawer. A touch and a pen take hold of either. Moving away from the edge, interactive elements inside the header, a non-primary button and a `busy` drawer are all ignored.
   - **Only the handle and the header take hold**, never the body: the body scrolls, and a drag in a scrolling region is the browser's. The touch action on those two is the drawer's own axis, so the other axis still pans.
   - The exit animation starts from the offset the finger left (`--drawer-drag-*`), so a swiped drawer doesn't jump back before it leaves.
 - **A grab handle (`showHandle`, default true)** on a `top` or `bottom` drawer: a decorative pill in a 24px hit area on its inner edge. A `start` or `end` drawer draws none.
@@ -17,7 +17,7 @@
 
 ## Alternatives considered
 - **A gesture anywhere on the panel.** Rejected: it competes with the body's scroll and with controls inside it, and cannot tell a scroll from a dismissal without a heuristic that is wrong half the time.
-- **Mouse drag as well.** Rejected: it selects text, and it has a visible close button.
+- **Mouse drag from anywhere, as touch has.** Rejected: it selects text, and it has a visible close button. From the handle alone it has neither problem, so that is allowed.
 - **A `closeOnBack` prop.** Rejected for now for the router reason above; a recipe leaves the decision with the app.
 - **A new set of size tokens for arbitrary widths.** Rejected: the escape hatch is for the one-off, not a second scale.
 

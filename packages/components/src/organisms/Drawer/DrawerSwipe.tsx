@@ -28,7 +28,8 @@ function exitDirection(panel: HTMLElement): { axis: "x" | "y"; sign: 1 | -1 } | 
  * stylesheet turns into a transform, so no state or re-render is involved, and the exit animation starts from where
  * the finger left it. A short drag settles back; a long or quick one closes it with the reason `"swipe"`. The
  * direction is read from the panel's own computed geometry, so a responsive `side` and right-to-left text need no
- * separate handling here. A mouse is not given the gesture: a drag with one selects text, and it has a close button.
+ * separate handling here. A mouse is given the gesture from the handle only: a drag from the header would select the
+ * title, and it has a close button.
  */
 export function DrawerSwipe({
   panelRef,
@@ -86,9 +87,12 @@ export function DrawerSwipe({
     };
 
     const onDown = (event: PointerEvent) => {
-      if (drag || event.pointerType === "mouse" || !event.isPrimary) return;
+      if (drag || !event.isPrimary) return;
       const target = event.target as Element | null;
       if (!target?.closest("[data-drawer-grab]") || target.closest(INTERACTIVE)) return;
+      // A mouse takes hold only at the handle, which has no text to select and invites dragging; a drag from the
+      // header would select the title, and it has a close button. A touch and a pen can take hold of either.
+      if (event.pointerType === "mouse" && (event.button !== 0 || !target.closest("[data-drawer-handle]"))) return;
       const direction = exitDirection(panel);
       if (!direction) return;
       drag = {

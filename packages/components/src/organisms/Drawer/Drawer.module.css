@@ -64,6 +64,12 @@
    browser should leave a pan along the drawer's own axis to the gesture. --- */
 .content[data-dragging] {
   animation: none;
+  user-select: none;
+}
+
+.content[data-dragging],
+.content[data-dragging] * {
+  cursor: grabbing;
 }
 
 .content[data-settling] {
@@ -87,6 +93,11 @@
   justify-content: center;
   margin-inline: auto;
   position: absolute;
+}
+
+/* Only a handle that can be dragged says so. */
+.handle[data-swipeable] {
+  cursor: grab;
 }
 
 .handle::after {

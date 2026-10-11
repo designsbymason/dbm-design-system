@@ -554,7 +554,7 @@ export const PanelFollowsTheFinger: Story = {
 };
 
 export const MouseAndWrongDirectionAreNotSwipes: Story = {
-  name: "a mouse drag, and a touch drag away from the edge, do nothing",
+  name: "a mouse drag of the header, and a touch drag away from the edge, do nothing",
   render: () => <Panel root={{ defaultOpen: true }} />,
   play: async () => {
     const panel = await within(document.body).findByRole("dialog");
@@ -595,6 +595,66 @@ export const BottomSheetIsSwipedDown: Story = {
     await expect(Math.round(box.top - sheet.top)).toBeLessThanOrEqual(1);
     await drag(handle, 0, 240);
     await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  },
+};
+
+// A real mouse drag through the Chrome DevTools Protocol, mapped through the test iframe's scale.
+async function realDrag(element: Element, dx: number, dy: number) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const originX = rect.left + rect.width / 2;
+  const originY = rect.top + rect.height / 2;
+  const at = (offsetX: number, offsetY: number) => ({
+    x: (frame?.left ?? 0) + (originX + offsetX) * scale,
+    y: (frame?.top ?? 0) + (originY + offsetY) * scale,
+  });
+  const start = at(0, 0);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", ...start });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", ...start, button: "left", clickCount: 1 });
+  for (let step = 1; step <= 6; step += 1) {
+    const point = at((dx * step) / 6, (dy * step) / 6);
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", ...point, button: "left", buttons: 1 });
+    await nextFrame();
+  }
+  const end = at(dx, dy);
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", ...end, button: "left", clickCount: 1 });
+}
+
+export const MouseDragsTheHandleOnly: Story = {
+  name: "a real mouse can drag a sheet's handle down to close it, with a grab cursor; the header it can not",
+  render: () => <Panel content={{ side: "bottom" }} root={{ defaultOpen: true, onOpenChange: recordReason }} />,
+  play: async () => {
+    lastReason = "";
+    const body = within(document.body);
+    const panel = await body.findByRole("dialog");
+    await settled(panel);
+    const handle = panel.querySelector("[data-drawer-handle]") as HTMLElement;
+    await expect(getComputedStyle(handle).cursor).toBe("grab");
+    // the header is not where a mouse takes hold: nothing happens, and the title stays selectable
+    await realDrag(within(panel).getByTestId("header"), 0, 240);
+    await nextFrame();
+    await expect(body.getByRole("dialog")).toBeInTheDocument();
+    await expect(lastReason).toBe("");
+    // the handle is
+    await realDrag(handle, 0, 240);
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await expect(lastReason).toBe("swipe");
+  },
+};
+
+export const HandleIsNotGrabbableWhenSwipeIsOff: Story = {
+  name: "with swipeToDismiss off the handle has no grab cursor and a mouse drag of it does nothing",
+  render: () => <Panel content={{ side: "bottom", swipeToDismiss: false }} root={{ defaultOpen: true }} />,
+  play: async () => {
+    const body = within(document.body);
+    const panel = await body.findByRole("dialog");
+    await settled(panel);
+    const handle = panel.querySelector("[data-drawer-handle]") as HTMLElement;
+    await expect(getComputedStyle(handle).cursor).not.toBe("grab");
+    await realDrag(handle, 0, 240);
+    await nextFrame();
+    await expect(body.getByRole("dialog")).toBeInTheDocument();
   },
 };
 

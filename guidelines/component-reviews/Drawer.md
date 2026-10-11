@@ -24,6 +24,7 @@ Fourth organism, built 2026-10-11 with the `06-engineering-standards.md` §9 che
 - **A Back-button recipe** in the Docs, not a prop.
 - **Found by the checks:** the settle-back left `data-settling` on the panel when it was released where it began (no transition runs, so `transitionend` never came), and reduced motion has the same shape; it now watches the panel's actual transitions. Also `CSS.supports` is absent in jsdom, so the size warning guards for it.
 - **Checks added:** 12 real-browser checks (a long drag closing with the reason, a short one settling back with nothing left on the panel, the panel following the finger and not past its edge, a mouse and a drag away from the edge doing nothing, right-to-left, the bottom sheet's handle and its drag, no handle on a side drawer, a busy drawer not swipeable, the panel still in the page when a close starts, and a length and a pixel size). The swipe check fails with dismissal disabled.
+- **A mouse can drag the handle (and only the handle)**, with a `grab` cursor and no text selection while it drags; a drag of the header stays touch and pen only. Checked with a real mouse through the Chrome DevTools Protocol, and the check fails if the header is let through.
 - **Not verified:** a real finger. The events are dispatched; the interplay with a scrolling body and the browser's own edge gestures is unseen.
 
 ## Open

@@ -52,7 +52,8 @@ ${drawer("", 'size="lg"', full)}`,
   customSize: `{/* size takes a step, or a CSS length / a number of pixels for a size the scale doesn't have. */}
 ${drawer("", 'size="min(90vw, 40rem)"', full)}`,
 
-  swipe: `{/* swipeToDismiss (on by default): a touch or a pen drags the handle or the header toward the edge; a short
+  swipe: `{/* swipeToDismiss (on by default): a touch or a pen drags the handle or the header toward the edge, and a mouse
+    the handle; a short
     drag settles back, a long or quick one closes with the reason "swipe". showHandle draws the grab handle
     on a top or bottom drawer. */}
 ${drawer("onOpenChange={(open, { reason }) => console.log(open, reason)}", 'side="bottom" swipeToDismiss showHandle', full)}`,
