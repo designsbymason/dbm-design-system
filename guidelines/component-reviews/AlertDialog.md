@@ -21,7 +21,7 @@ Second organism, built 2026-10-10 on the `06-engineering-standards.md` §9 check
 - `pnpm lint`, the build, `check-guidelines`, and the Docs-token test, which reads both stylesheets.
 
 ## Open at Finalization
-- Touch and iOS behaviour (shared with `Dialog`), and a literal server render.
+- Touch and iOS behaviour (shared with `Dialog`).
 - The Docs page has not been looked at on a real phone; its phone layout is asserted, not seen on a device.
 
 ## Second pass: the first three gaps
@@ -36,3 +36,6 @@ Four findings from the review, fixed:
 2. **The Escape nudge is proven with a real key** in the browser, not only in jsdom.
 3. **jest-axe also runs** the acknowledge-only alert, the alert after a nudge, and the type-to-confirm alert with a disabled Action.
 4. **The reduced-motion flash in forced colours.** Forced colours replaces a border's colour, so the flash is a `Highlight` outline there; a stylesheet-rule check covers it.
+
+## Server render and hydration
+`AlertDialog.ssr.test.tsx` server-renders each variant with `window` and `document` removed and hydrates it, asserting no recoverable error and no warning, for every tone and option. All pass. No `keepMounted` here, which is where `Dialog`'s one mismatch was.

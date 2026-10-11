@@ -24,7 +24,6 @@ First organism. Built and put through the `06-engineering-standards.md` §9 chec
 
 ## Open at Finalization
 - **Touch and iOS behaviour** (scroll lock, the `keepMounted` element move), which neither jsdom nor desktop Chromium shows, and **the safe-area insets on a real device**: a desktop browser reports none, so the checks prove the stylesheet asks for them and that the close button follows them.
-- **A literal server render** of a `keepMounted` or `defaultOpen` dialog. The panel is portaled and Radix renders no portal on the server, so no mismatch is expected, but it was not run.
 - Whether `Dialog.Header`/`Body`/`Footer` should share a surface with `Card`'s sections; revisit when `Drawer` is built ([ADR-0053](../adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md)).
 - Fixed along the way: a `Select` list opened from a dialog was drawn under the scrim ([ADR-0054](../adr/0054-portaled-floating-panels-sit-on-the-popover-z-index-step-not-dropdown.md)); `SelectChosenWithARealPointer` drives a real mouse through the Chrome DevTools Protocol and fails on the old stylesheet.
 
@@ -60,3 +59,6 @@ The entrance scale is now `motion.scale.98` (new primitive, with `96`). `Popover
 
 ## Follow-up (2026-10-11) — a test-only correction
 The real-browser checks pressed "the scrim" at its centre, which is where a centred panel sits, so a press on the scrim was in places a press on the panel. They now press just inside the scrim's corner (`pressScrim`); all of them pass. **Finalized status unchanged** — test files only, no component code, props or tokens touched.
+
+## Post-Finalization follow-up (2026-10-11, at explicit direction) — hydrating a kept-mounted dialog
+`Dialog.ssr.test.tsx` server-renders each variant with `window` and `document` removed, then hydrates it and asserts React reports no recoverable error. One variant failed: `keepMounted` with `defaultOpen`. The element the content is portaled into was created in the first client render, so React met a portal during hydration that the server HTML could not contain, and logged "Hydration failed… regenerated on the client" (the dialog still worked, by redrawing). The element is now created only once the client has rendered (a `useSyncExternalStore` that is false on the server and while hydrating), so the first render matches the server's. By the three-question test it is a defect fix (the SSR rule in `06` §6 was not met), so **`Dialog` stays Finalized**. The test fails on the old code.

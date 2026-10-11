@@ -10,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
 import type { RefObject } from "react";
@@ -102,6 +103,16 @@ interface DialogContentContextValue {
 }
 
 const DialogContentContext = createContext<DialogContentContextValue | null>(null);
+
+const subscribeToNothing = () => () => {};
+
+/**
+ * False on the server and while the client is hydrating, true from the first render after it: what lets a
+ * component leave out anything the server couldn't have drawn, so its first client render matches the server's.
+ */
+function useIsClient(): boolean {
+  return useSyncExternalStore(subscribeToNothing, () => true, () => false);
+}
 
 /** The element `keepMounted` renders the content into: it is the `.slot` section container itself. */
 function createHost(wanted: boolean): HTMLDivElement | null {
@@ -286,10 +297,14 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     // children are rendered once, by React, into an element of our own and that element is moved into the panel
     // each time it opens. Moving a DOM node doesn't remount what React rendered into it. (Radix's `forceMount`
     // keeps the panel in the page, but also keeps the scroll lock and the page's `aria-hidden` on while closed.)
-    const [host, setHost] = useState<HTMLDivElement | null>(() => createHost(keepMounted));
-    if (keepMounted && !host) {
-      // Turned on after the first render: create it now, in render, which React allows for a component's own
-      // state, rather than a commit later.
+    // The element is made only once the client has rendered: a portal into it can't be hydrated against the
+    // server's HTML (the server has no document to make it in), so a first client render with one would not
+    // match. Until then a `keepMounted` dialog draws no content, which is no change in what shows, since Radix
+    // mounts the panel itself only after hydration.
+    const isClient = useIsClient();
+    const [host, setHost] = useState<HTMLDivElement | null>(null);
+    if (keepMounted && isClient && !host) {
+      // Made in render, which React allows for a component's own state, rather than a commit later.
       const created = createHost(true);
       if (created) setHost(created);
     }
@@ -298,9 +313,9 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     const attachHost = useCallback(
       (element: HTMLDivElement | null) => {
         // Before the close button and the hidden title, so Tab reaches the dialog's own controls first.
-        if (element && host) element.insertBefore(host, element.firstChild);
+        if (element && host && keepMounted) element.insertBefore(host, element.firstChild);
       },
-      [host],
+      [host, keepMounted],
     );
 
     const describedByProps =
@@ -361,7 +376,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
             <VisuallyHidden>{ariaLabel}</VisuallyHidden>
           </DialogPrimitive.Title>
         )}
-        {!host && <div className={styles.slot}>{inner}</div>}
+        {!keepMounted && <div className={styles.slot}>{inner}</div>}
         {showCloseButton && (
           // After the content in the DOM, so Tab reaches the dialog's own controls first. It is placed in the
           // corner by CSS, not by order.
@@ -385,7 +400,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
 
     return (
       <>
-        {host && everOpened ? createPortal(inner, host) : null}
+        {keepMounted && host && everOpened ? createPortal(inner, host) : null}
         <DialogPrimitive.Portal container={container}>
           {modal ? (
             <DialogPrimitive.Overlay asChild>
