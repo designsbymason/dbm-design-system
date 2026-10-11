@@ -1,6 +1,6 @@
 # AlertDialog — review findings
 
-Second organism, built 2026-10-10 on the `06-engineering-standards.md` §9 checklist. **Not declared Finalized**: that is the maintainer's call, and the open items below are what is left for it.
+Second organism, built 2026-10-10 on the `06-engineering-standards.md` §9 checklist, with a second pass (three gaps) and a final review pass. **Finalized 2026-10-11**, with the items under "Open at Finalization" accepted as open: they need a device or a server render, and none changes the component.
 
 ## Decisions
 - A sibling of `Dialog`, with no `role` on `Dialog`: [ADR-0053](../adr/0053-dialog-alertdialog-and-drawer-are-sibling-components-not-one-dialog-with-a-role-or-placement-prop.md).
@@ -20,7 +20,7 @@ Second organism, built 2026-10-10 on the `06-engineering-standards.md` §9 check
 - 8 real-browser checks: a real mouse press on the scrim ignored, focus on Cancel and the Tab loop and return to the trigger, buttons stacked on a phone with the action on top and in a row from `sm`, right-to-left, each tone's icon at least 3:1 against its disc in all four themes, a busy alert ignoring Escape and real presses with its buttons focusable, and an alert over a dialog (two scrims, the alert's on top, the dialog legible under both, a real press on the alert's scrim reaching neither). The phone-stack check fails with the stacking rule removed.
 - `pnpm lint`, the build, `check-guidelines`, and the Docs-token test, which reads both stylesheets.
 
-## Open at review
+## Open at Finalization
 - Touch and iOS behaviour (shared with `Dialog`), and a literal server render.
 - The Docs page has not been looked at on a real phone; its phone layout is asserted, not seen on a device.
 

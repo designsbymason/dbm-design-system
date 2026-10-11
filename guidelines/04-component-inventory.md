@@ -258,11 +258,11 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` is built and Finalized and `AlertDialog` is built; the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog` and `AlertDialog` are built and Finalized; the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
-2. AlertDialog (built, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — variants and a pattern on the Dialog
+2. AlertDialog (built and Finalized, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — variants and a pattern on the Dialog
 4. Drawer / Sheet — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it
 6. Toast / Notification — independent; other organisms report results through it
