@@ -97,6 +97,31 @@
   }
 }
 
+/* Forced colours replaces a border's colour with a system one, so the flash would be invisible there (and the
+   panel's swell, which doesn't depend on colour, is all that is left unless motion is reduced too). A
+   `Highlight` outline stays, since system colours are what forced colours keeps. */
+@keyframes alertOutlineA {
+  40% {
+    outline: var(--dbm-border-width-2) solid Highlight;
+  }
+}
+
+@keyframes alertOutlineB {
+  40% {
+    outline: var(--dbm-border-width-2) solid Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (forced-colors: active) {
+  .root.nudgeA[data-state="open"] {
+    animation-name: alertOutlineA;
+  }
+
+  .root.nudgeB[data-state="open"] {
+    animation-name: alertOutlineB;
+  }
+}
+
 /* A busy alert can't be answered: the Cancel is dimmed like a disabled button. The Action isn't, since the caller
    shows its own progress on it (`isLoading`). Both stay in the tab order, so focus isn't dropped from them. */
 .root [data-alert-dialog-cancel][aria-disabled="true"] {

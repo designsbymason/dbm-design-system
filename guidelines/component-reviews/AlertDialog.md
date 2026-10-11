@@ -29,3 +29,10 @@ Second organism, built 2026-10-10 on the `06-engineering-standards.md` §9 check
 - **A type-to-confirm example.** No new API: an `Input` in `Body`, `initialFocus` on it, and the Action `disabled` until the name matches. A story, a snippet, a Docs section and a browser check show it.
 - **The scrim nudge.** A press on the scrim, or Escape while `closeOnEscape` is off or the alert is `busy`, pulses the panel (a `nudge` prop, on by default). Radix gives no hook for a press outside an alert, so it is read on the scrim itself, and the pulse is two identical animations under two names so switching the class restarts it on a second press. Under reduced motion the border flashes the focus colour. The swell is a new primitive, `motion.scale.102`.
 - **Found while checking it: a real press "on the scrim" at its centre lands on the panel.** The browser checks pressed the scrim's centre, which is where a centred panel sits, so "a press on the scrim does nothing" had been passing without pressing the scrim. The helper now presses just inside the scrim's corner. This applies to `Dialog`'s checks too (a tests-only change; the checks passed there with the corrected press, so the behaviour was right). The nudge check fails without the scrim handler.
+
+## Final review pass
+Four findings from the review, fixed:
+1. **A nudged alert replayed the pulse in place of its entrance when reopened.** The pulse counter lives in the content component, which stays mounted while the alert is closed, so the class was still on the panel at the next open. It is reset once the alert has closed. A unit test and a browser check (the reopened panel's animation is the entrance, not the pulse) fail without the reset.
+2. **The Escape nudge is proven with a real key** in the browser, not only in jsdom.
+3. **jest-axe also runs** the acknowledge-only alert, the alert after a nudge, and the type-to-confirm alert with a disabled Action.
+4. **The reduced-motion flash in forced colours.** Forced colours replaces a border's colour, so the flash is a `Highlight` outline there; a stylesheet-rule check covers it.

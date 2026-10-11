@@ -314,6 +314,19 @@ describe("AlertDialog", () => {
       expect(pulsing()).toBe(true);
     });
 
+    it("is not still pulsing when the alert is reopened", async () => {
+      const user = userEvent.setup();
+      render(<Basic dialog={{}} />);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click((await screen.findByRole("alertdialog")).parentElement as HTMLElement);
+      expect(pulsing()).toBe(true);
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await screen.findByRole("alertdialog");
+      expect(pulsing()).toBe(false);
+    });
+
     it("does nothing with nudge={false}", async () => {
       const user = userEvent.setup();
       render(<Basic dialog={{ defaultOpen: true }} nudge={false} closeOnEscape={false} />);
@@ -542,6 +555,47 @@ describe("AlertDialog", () => {
   describe("accessibility", () => {
     it.each(["neutral", "info", "warning", "danger"] as const)("has no axe violations (%s)", async (tone) => {
       render(<Basic dialog={{ defaultOpen: true }} tone={tone} />);
+      expect((await axe(document.body)).violations).toHaveLength(0);
+    });
+
+    it("has no axe violations acknowledge-only, and after a nudge", async () => {
+      const user = userEvent.setup();
+      render(
+        <AlertDialog defaultOpen>
+          <AlertDialog.Content tone="danger">
+            <AlertDialog.Header>
+              <AlertDialog.Title>Couldn&apos;t save</AlertDialog.Title>
+              <AlertDialog.Description>The connection dropped.</AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <AlertDialog.Action>OK</AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog>,
+      );
+      expect((await axe(document.body)).violations).toHaveLength(0);
+      await user.click(screen.getByRole("alertdialog").parentElement as HTMLElement);
+      expect((await axe(document.body)).violations).toHaveLength(0);
+    });
+
+    it("has no axe violations with a field in the body and a disabled Action", async () => {
+      render(
+        <AlertDialog defaultOpen>
+          <AlertDialog.Content tone="danger">
+            <AlertDialog.Header>
+              <AlertDialog.Title>Delete Atlas?</AlertDialog.Title>
+              <AlertDialog.Description>Type its name to confirm.</AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <input aria-label="Project name" />
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <AlertDialog.Cancel>Keep it</AlertDialog.Cancel>
+              <AlertDialog.Action disabled>Delete</AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog>,
+      );
       expect((await axe(document.body)).violations).toHaveLength(0);
     });
 

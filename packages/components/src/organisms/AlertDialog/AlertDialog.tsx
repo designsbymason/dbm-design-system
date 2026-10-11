@@ -221,6 +221,9 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
     // A pulse when something tries to dismiss the alert and can't. Two identical animations under two names:
     // switching the class restarts it even when it is pressed again before the last pulse has finished.
     const [pulses, setPulses] = useState(0);
+    // The component stays mounted while the alert is closed, so the class would still be on the panel when it
+    // reopens and its pulse would replace the entrance. Back to none once it has closed.
+    if (!open && pulses !== 0) setPulses(0);
     const pulse = useCallback(() => {
       if (nudge) setPulses((count) => count + 1);
     }, [nudge]);

@@ -110,6 +110,62 @@ export const ScrimPressPulsesThePanel: Story = {
       (rule) => rule.conditionText.includes("prefers-reduced-motion: reduce") && /alertFlash/.test(rule.cssText),
     );
     await expect(reduced).toBeDefined();
+    // under forced colours a border's colour is replaced by a system one, so the flash is an outline there
+    const forced = rules.find(
+      (rule) =>
+        rule.conditionText.includes("forced-colors: active") &&
+        rule.conditionText.includes("prefers-reduced-motion: reduce") &&
+        /alertOutline/.test(rule.cssText),
+    );
+    await expect(forced).toBeDefined();
+  },
+};
+
+export const ReopenedAlertEntersAgain: Story = {
+  name: "After a pulse and a close, the reopened alert runs its entrance, not the pulse",
+  render: () => <Delete defaultOpen={false} />,
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    let alert = await body.findByRole("alertdialog");
+    await settled(alert);
+    await pressScrim(alert.parentElement as HTMLElement);
+    await waitFor(() =>
+      expect(alert.getAnimations().some((animation) => /alertNudge/.test((animation as CSSAnimation).animationName))).toBe(true),
+    );
+    await userEvent.click(body.getByRole("button", { name: "Keep it" }));
+    await waitFor(() => expect(body.queryByRole("alertdialog")).toBeNull());
+    await userEvent.click(body.getByRole("button", { name: "Open" }));
+    alert = await body.findByRole("alertdialog");
+    const names = alert.getAnimations().map((animation) => (animation as CSSAnimation).animationName);
+    await expect(names.some((name) => /alertNudge/.test(name))).toBe(false);
+    await expect(names.some((name) => /dialogIn/.test(name))).toBe(true);
+  },
+};
+
+export const EscapeThatCannotCloseNudges: Story = {
+  name: "A real Escape on an alert that can't close pulses it and leaves it open",
+  render: () => (
+    <AlertDialog defaultOpen>
+      <AlertDialog.Content closeOnEscape={false}>
+        <AlertDialog.Header>
+          <AlertDialog.Title>Delete project?</AlertDialog.Title>
+          <AlertDialog.Description>It cannot be undone.</AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+          <AlertDialog.Cancel>Keep it</AlertDialog.Cancel>
+        </AlertDialog.Footer>
+      </AlertDialog.Content>
+    </AlertDialog>
+  ),
+  play: async () => {
+    const alert = await within(document.body).findByRole("alertdialog");
+    await settled(alert);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(alert.getAnimations().some((animation) => /alertNudge/.test((animation as CSSAnimation).animationName))).toBe(true),
+    );
+    await expect(within(document.body).getByRole("alertdialog")).toBeInTheDocument();
   },
 };
 
