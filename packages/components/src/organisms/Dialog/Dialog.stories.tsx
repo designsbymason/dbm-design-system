@@ -85,8 +85,8 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["off", "on", "auto"],
       description:
-        "Draws a line between the header and the body and between the body and the footer. \"auto\" draws each only while content is scrolled out of view on that side.",
-      table: { defaultValue: { summary: "false" } },
+        "Draws a line between the header and the body and between the body and the footer. \"auto\" draws each only while content is scrolled out of view on that side; \"on\" always, \"off\" never.",
+      table: { defaultValue: { summary: '"auto"' } },
     },
     placement: {
       control: "select",
@@ -139,7 +139,7 @@ const meta: Meta<PlaygroundArgs> = {
     modal: true,
     size: "md",
     fullScreen: false,
-    divided: "off",
+    divided: "auto",
     placement: "center",
     busy: false,
     keepMounted: false,

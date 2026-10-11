@@ -119,11 +119,12 @@ ${dialog("", 'placement="top"', full)}`,
     time it opens, then kept while closed. */}
 ${dialog("", "keepMounted", full)}`,
 
-  dividedAuto: `{/* divided="auto": a line under the header once the body has scrolled, and over the footer
-    while more is below. A dialog that fits gets none, and nothing moves when one appears. */}
+  dividedAuto: `{/* divided is "auto" by default: a line under the header once the body has scrolled, and over the
+    footer while more is below. A dialog that fits gets none, and nothing moves when one appears. divided
+    draws both always; divided={false} draws neither. */}
 ${dialog(
   "",
-  'divided="auto"',
+  "",
   `${header}
     <Dialog.Body>
       <Text>Long content goes here…</Text>
@@ -229,8 +230,9 @@ export function dialogPlaygroundSnippet(args: DialogPlaygroundSnippetArgs): stri
   if (args.size && args.size !== "md") contentAttributes.push(`size="${args.size}"`);
   if (args.fullScreen) contentAttributes.push("fullScreen");
   // The Playground's select hands over its option key, not the mapped value.
+  // `divided` defaults to "auto", so only the other two are written.
   if (args.divided === true || args.divided === "on") contentAttributes.push("divided");
-  if (args.divided === "auto") contentAttributes.push('divided="auto"');
+  if (args.divided === false || args.divided === "off") contentAttributes.push("divided={false}");
   if (args.placement && args.placement !== "center") contentAttributes.push(`placement="${args.placement}"`);
   if (args.busy) contentAttributes.push("busy");
   if (args.keepMounted) contentAttributes.push("keepMounted");

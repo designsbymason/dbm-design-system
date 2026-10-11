@@ -1652,7 +1652,7 @@ describe("Playground snippet for Dialog", () => {
       modal: true,
       size: "md",
       fullScreen: false,
-      divided: false,
+      divided: "auto",
       showCloseButton: true,
       closeOnOutsideClick: true,
       closeOnEscape: true,
@@ -1662,9 +1662,10 @@ describe("Playground snippet for Dialog", () => {
     expect(dialogPlaygroundSnippet({ modal: false })).toMatch(/^<Dialog modal=\{false\}>\n/);
     expect(dialogPlaygroundSnippet({ size: "lg", divided: true })).toContain('<Dialog.Content size="lg" divided>');
     expect(dialogPlaygroundSnippet({ closeOnEscape: false })).toContain("closeOnEscape={false}");
-    expect(dialogPlaygroundSnippet({ divided: "auto" })).toContain('<Dialog.Content divided="auto">');
+    // `divided` defaults to "auto": that is written as nothing, and the other two are written
+    expect(dialogPlaygroundSnippet({ divided: "auto" })).toContain("<Dialog.Content>");
     expect(dialogPlaygroundSnippet({ divided: "on" })).toContain("<Dialog.Content divided>");
-    expect(dialogPlaygroundSnippet({ divided: "off" })).toContain("<Dialog.Content>");
+    expect(dialogPlaygroundSnippet({ divided: "off" })).toContain("<Dialog.Content divided={false}>");
     expect(dialogPlaygroundSnippet({ placement: "center" })).toContain("<Dialog.Content>");
     expect(dialogPlaygroundSnippet({ placement: "top", busy: true, keepMounted: true })).toContain(
       '<Dialog.Content placement="top" busy keepMounted>',

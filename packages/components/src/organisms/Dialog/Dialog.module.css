@@ -359,6 +359,40 @@
   flex: 1 1 0;
 }
 
+/* Below `sm` the actions stack, each as wide as the footer, so a pair of buttons doesn't wrap into a ragged,
+   end-aligned pair of different widths and each is a full-size target under a thumb. From `sm` they are a row,
+   as above. `align="stretch"` is the author asking for an equal-share row on a phone, so it stays one. The
+   threshold is the literal value of the `breakpoint.sm` token (custom properties can't be used in a media
+   condition, as `Card`, `Stack` and `AlertDialog` note). */
+.footer {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.footer > * {
+  inline-size: 100%;
+}
+
+.alignStretch {
+  align-items: center;
+  flex-direction: row;
+}
+
+.alignStretch > * {
+  inline-size: auto;
+}
+
+@media (min-width: 40rem) {
+  .footer {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .footer > * {
+    inline-size: auto;
+  }
+}
+
 /* `divided`: a line between the sections, so a body that scrolls reads as running under them. The section that
    follows a line takes back the padding it would otherwise have shared with its neighbour. */
 .divided > .slot > .header,

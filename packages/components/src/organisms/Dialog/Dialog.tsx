@@ -240,7 +240,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     {
       size = "md",
       fullScreen = false,
-      divided = false,
+      divided = "auto",
       placement = "center",
       busy = false,
       keepMounted = false,

@@ -725,6 +725,26 @@ describe("Dialog", () => {
       expect(panel).not.toHaveAttribute("data-overflow-start");
     });
 
+    it("is divided=\"auto\" by default, and false draws neither kind of line", () => {
+      const { unmount } = render(
+        <Dialog defaultOpen>
+          <Dialog.Content aria-label="x" data-testid="panel" />
+        </Dialog>,
+      );
+      const byDefault = screen.getByTestId("panel");
+      expect(byDefault).toHaveClass(styles.dividedAuto ?? "");
+      expect(byDefault).not.toHaveClass(styles.divided ?? "");
+      unmount();
+      render(
+        <Dialog defaultOpen>
+          <Dialog.Content aria-label="x" divided={false} data-testid="panel" />
+        </Dialog>,
+      );
+      const off = screen.getByTestId("panel");
+      expect(off).not.toHaveClass(styles.dividedAuto ?? "");
+      expect(off).not.toHaveClass(styles.divided ?? "");
+    });
+
     it("hands the scrim its opacity and blur", () => {
       render(
         <Dialog defaultOpen>

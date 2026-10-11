@@ -738,3 +738,91 @@ export const CloseButtonFollowsTheSafeAreaInset: Story = {
     await expect(Math.round(before.right - after.right)).toBe(12);
   },
 };
+
+export const FooterStacksFullWidthOnAPhone: Story = {
+  name: "On a phone the footer's actions stack, each as wide as the footer, in the order written",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <Form />,
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(640);
+    const dialog = await openFrom("Open");
+    await settled(dialog);
+    const footer = within(dialog).getByTestId("footer");
+    const style = getComputedStyle(footer);
+    const box = footer.getBoundingClientRect();
+    const inner = box.width - parseFloat(style.paddingInlineStart) - parseFloat(style.paddingInlineEnd);
+    const cancel = within(footer).getByRole("button", { name: "Cancel" }).getBoundingClientRect();
+    const save = within(footer).getByRole("button", { name: "Save" }).getBoundingClientRect();
+    // one under the other, Cancel first as written, and both as wide as the footer's content box
+    await expect(cancel.bottom).toBeLessThanOrEqual(save.top + 1);
+    await expect(Math.round(cancel.width)).toBe(Math.round(inner));
+    await expect(Math.round(save.width)).toBe(Math.round(inner));
+    await expect(Math.round(save.left)).toBe(Math.round(cancel.left));
+  },
+};
+
+export const FooterIsARowFromSm: Story = {
+  name: "From sm the footer's actions are a row again, at the end, at their own width",
+  render: () => <Form />,
+  play: async () => {
+    const dialog = await openFrom("Open");
+    await settled(dialog);
+    const footer = within(dialog).getByTestId("footer");
+    const cancel = within(footer).getByRole("button", { name: "Cancel" }).getBoundingClientRect();
+    const save = within(footer).getByRole("button", { name: "Save" }).getBoundingClientRect();
+    await expect(Math.abs(cancel.top - save.top)).toBeLessThan(2);
+    await expect(cancel.right).toBeLessThanOrEqual(save.left);
+    // at the end of the row, and not stretched
+    const box = footer.getBoundingClientRect();
+    await expect(box.right - save.right).toBeLessThan(40);
+    await expect(save.width).toBeLessThan(box.width / 2);
+  },
+};
+
+export const StretchFooterStaysARowOnAPhone: Story = {
+  name: "align=stretch keeps an equal-share row on a phone",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="Stretch" data-testid="panel">
+        <Dialog.Body>
+          <p>Short body</p>
+        </Dialog.Body>
+        <Dialog.Footer align="stretch" data-testid="footer">
+          <Button variant="secondary">Cancel</Button>
+          <Button>Save</Button>
+        </Dialog.Footer>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(640);
+    const dialog = await within(document.body).findByRole("dialog");
+    await settled(dialog);
+    const footer = within(dialog).getByTestId("footer");
+    const cancel = within(footer).getByRole("button", { name: "Cancel" }).getBoundingClientRect();
+    const save = within(footer).getByRole("button", { name: "Save" }).getBoundingClientRect();
+    await expect(Math.abs(cancel.top - save.top)).toBeLessThan(2);
+    // an equal share of the row each, give or take the buttons' own borders, and together they fill it
+    await expect(Math.abs(cancel.width - save.width)).toBeLessThan(6);
+    const box = footer.getBoundingClientRect();
+    const style = getComputedStyle(footer);
+    const inner = box.width - parseFloat(style.paddingInlineStart) - parseFloat(style.paddingInlineEnd);
+    await expect(Math.round(save.right - cancel.left)).toBe(Math.round(inner));
+  },
+};
+
+export const DefaultDividedIsAutoAndDrawsNothingWhenItFits: Story = {
+  name: "With no divided prop, a dialog whose content fits draws no line",
+  render: () => <Form />,
+  play: async () => {
+    const dialog = await openFrom("Open");
+    await settled(dialog);
+    // the line is reserved, so nothing moves when it appears, and it is transparent until content is out of view
+    const transparent = "rgba(0, 0, 0, 0)";
+    await expect(getComputedStyle(within(dialog).getByTestId("header")).borderBlockEndColor).toBe(transparent);
+    await expect(getComputedStyle(within(dialog).getByTestId("footer")).borderBlockStartColor).toBe(transparent);
+    await expect(dialog).not.toHaveAttribute("data-overflow-start");
+    await expect(dialog).not.toHaveAttribute("data-overflow-end");
+  },
+};

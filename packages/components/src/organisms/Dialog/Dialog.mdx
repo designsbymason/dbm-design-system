@@ -271,12 +271,15 @@ other native `<button>` attribute beyond what's listed here.
   gutter, so you don't need to design a second layout for it.
 - Open a dialog from a real control (`Dialog.Trigger`, or your own button calling `setOpen(true)`), so
   focus has somewhere to go back to on close.
-- Use `divided` when the body is long enough to scroll, so the lines under the header and over the footer
-  show that content continues past the edge.
+- Leave `divided` at its default, `"auto"`, for a body that may or may not overflow: a line shows under
+  the header or over the footer only while there is content scrolled out of view on that side, and
+  nothing moves when one appears. Pass `divided` for lines that are always there, or `divided={false}`
+  for none.
 - Use `placement="top"` for a panel whose height changes as the person works (a list that grows, results
   that appear), so it doesn't jump; centred suits a fixed form.
-- Use `divided="auto"` for a body that may or may not overflow: lines show only while there is content
-  to scroll to, and nothing moves when they appear.
+- Put the actions in `Dialog.Footer` and let it stack them on a phone: below `sm` they sit one under the
+  other, each as wide as the dialog, and from `sm` up they are a row. `align="stretch"` keeps an
+  equal-share row on a phone instead.
 - Use `initialFocus` with a ref when the person came to fill in one field; it reads better than
   preventing the default of `onOpenAutoFocus` and focusing it yourself.
 - Use `modal={false}` only for a docked tool panel the person works beside. A non-modal dialog doesn't
@@ -377,7 +380,7 @@ function Saved() {
     if (!open && reason === "outside") confirmDiscard();
   }}
 >
-  <Dialog.Content keepMounted busy={saving} placement="top" divided="auto">
+  <Dialog.Content keepMounted busy={saving} placement="top">
     …
   </Dialog.Content>
 </Dialog>

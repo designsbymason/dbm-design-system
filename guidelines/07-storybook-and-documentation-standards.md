@@ -265,7 +265,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Calendar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-05 | [Calendar.md](component-reviews/Calendar.md) |
 | EditableText | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 | [EditableText.md](component-reviews/EditableText.md) |
 | TagsInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 | [TagsInput.md](component-reviews/TagsInput.md) |
-| Dialog | Organism | Overlay | ✅ | ✅ 2026-10-10 | [Dialog.md](component-reviews/Dialog.md) |
+| Dialog | Organism | Overlay | ✅ | ✅ 2026-10-10 (`divided` default changed to `"auto"`, and the footer's actions stack below `sm`, 2026-10-11; re-verified: design quality, responsiveness, functional verification, Docs) | [Dialog.md](component-reviews/Dialog.md) |
 | AlertDialog | Organism | Overlay | ✅ | ✅ 2026-10-11 | [AlertDialog.md](component-reviews/AlertDialog.md) |
 | ConfirmDialog | Organism | Feedback | ✅ | ✅ 2026-10-11 | [ConfirmDialog.md](component-reviews/ConfirmDialog.md) |
 

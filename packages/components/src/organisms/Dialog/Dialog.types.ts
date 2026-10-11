@@ -118,8 +118,8 @@ export interface DialogContentProps extends Omit<ComponentPropsWithoutRef<"div">
    * reads as running under them. Same name and meaning as `Card`'s `divided`. `"auto"` draws each line only while
    * there is content scrolled out of view on that side (the header's line once the body has scrolled, the
    * footer's while more is below), so a dialog that fits gets no lines and a long one does; nothing moves when a
-   * line appears.
-   * @default false
+   * line appears. `true` draws both always, and `false` draws neither.
+   * @default 'auto'
    */
   divided?: boolean | "auto";
   /**
@@ -342,6 +342,7 @@ export interface DialogFooterProps extends ComponentPropsWithoutRef<"div"> {
   children?: ReactNode;
   /**
    * Where the actions sit along the row. `"stretch"` makes each one fill an equal share, which suits a phone.
+   * Below `sm` the actions of any other alignment stack, each as wide as the footer; `"stretch"` stays a row.
    * @default 'end'
    */
   align?: DialogFooterAlign;
