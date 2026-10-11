@@ -93,6 +93,9 @@ interface DrawerContextValue {
 
 const DrawerContext = createContext<DrawerContextValue | null>(null);
 
+/** Whether a touch can take hold of the panel's header and handle: the swipe is on and the drawer isn't busy. */
+const DrawerGestureContext = createContext(false);
+
 /**
  * A panel attached to one edge of the viewport that slides in over the page, for work that belongs beside the
  * page and not in a window over it: a set of filters, a settings or detail panel, a navigation menu on a phone, a
@@ -281,7 +284,12 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
       }
     }, [customSize]);
 
-    const inner = <OverlayContentContext.Provider value={contentContext}>{children}</OverlayContentContext.Provider>;
+    const swipeable = swipeToDismiss && !busy;
+    const inner = (
+      <DrawerGestureContext.Provider value={swipeable}>
+        <OverlayContentContext.Provider value={contentContext}>{children}</OverlayContentContext.Provider>
+      </DrawerGestureContext.Provider>
+    );
 
     const content = (
       <DialogPrimitive.Content
@@ -328,16 +336,15 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
         <OverlayLifecycle open={open} panelRef={panelRef} onOpenChangeComplete={drawer?.onOpenChangeComplete} />
         <DrawerSwipe
           panelRef={panelRef}
-          enabled={swipeToDismiss && !busy}
+          enabled={swipeable}
           onDismiss={() => drawer?.close("swipe")}
         />
         {showHandle && (
           <span
             aria-hidden="true"
             className={styles.handle}
-            data-drawer-grab=""
             data-drawer-handle=""
-            data-swipeable={(swipeToDismiss && !busy) || undefined}
+            {...(swipeable ? { "data-drawer-grab": "", "data-swipeable": "" } : {})}
           />
         )}
         {ariaLabel && titleCount === 0 && (
@@ -388,10 +395,12 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
 DrawerContent.displayName = "Drawer.Content";
 
 /** The top section of the drawer: usually a `Drawer.Title` and optionally a `Drawer.Description`. */
-const DrawerHeader = forwardRef<HTMLDivElement, DrawerHeaderProps>((props, ref) => (
-  // The header is where a touch can take hold of the panel to swipe it away (see `swipeToDismiss`).
-  <OverlayHeader ref={ref} {...props} data-drawer-grab="" />
-));
+const DrawerHeader = forwardRef<HTMLDivElement, DrawerHeaderProps>((props, ref) => {
+  // The header is where a touch can take hold of the panel to swipe it away (see `swipeToDismiss`), and says so only
+  // while the gesture is available.
+  const grabbable = useContext(DrawerGestureContext);
+  return <OverlayHeader ref={ref} {...props} {...(grabbable ? { "data-drawer-grab": "" } : {})} />;
+});
 DrawerHeader.displayName = "Drawer.Header";
 
 /**

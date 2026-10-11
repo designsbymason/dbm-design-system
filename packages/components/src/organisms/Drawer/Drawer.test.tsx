@@ -962,6 +962,42 @@ describe("Drawer", () => {
       expect(screen.getByTestId("header")).toHaveAttribute("data-drawer-grab", "");
     });
 
+    it("offers the header and the handle to a touch only while the swipe is available", () => {
+      const { unmount } = render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" side="bottom" data-testid="panel">
+            <Drawer.Header data-testid="header" />
+          </Drawer.Content>
+        </Drawer>,
+      );
+      expect(screen.getByTestId("header")).toHaveAttribute("data-drawer-grab");
+      expect(screen.getByTestId("panel").querySelector("[data-drawer-handle]")).toHaveAttribute("data-swipeable");
+      unmount();
+      render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" side="bottom" swipeToDismiss={false} data-testid="panel">
+            <Drawer.Header data-testid="header" />
+          </Drawer.Content>
+        </Drawer>,
+      );
+      expect(screen.getByTestId("header")).not.toHaveAttribute("data-drawer-grab");
+      const handle = screen.getByTestId("panel").querySelector("[data-drawer-handle]");
+      expect(handle).not.toBeNull();
+      expect(handle).not.toHaveAttribute("data-drawer-grab");
+      expect(handle).not.toHaveAttribute("data-swipeable");
+    });
+
+    it("takes the swipe away from a busy drawer's header and handle too", () => {
+      render(
+        <Drawer defaultOpen>
+          <Drawer.Content aria-label="x" side="bottom" busy data-testid="panel">
+            <Drawer.Header data-testid="header" />
+          </Drawer.Content>
+        </Drawer>,
+      );
+      expect(screen.getByTestId("header")).not.toHaveAttribute("data-drawer-grab");
+    });
+
     it("accepts the swipe reason in its type and reports it through onOpenChange", () => {
       // The gesture itself needs a layout engine and is checked in a real browser; this holds the API shape.
       const reasons: Array<import("./Drawer.types").DrawerOpenChangeReason> = ["swipe", "close", "outside"];

@@ -65,6 +65,7 @@ export function DrawerSwipe({
     const reset = () => {
       panel.style.removeProperty("--drawer-drag-x");
       panel.style.removeProperty("--drawer-drag-y");
+      panel.style.removeProperty("transform");
       panel.removeAttribute("data-dragging");
     };
 
@@ -137,9 +138,10 @@ export function DrawerSwipe({
       drag.lastX = event.clientX;
       drag.lastY = event.clientY;
       drag.lastTime = event.timeStamp;
-      const offset = `${clamped * drag.sign}px`;
-      panel.style.setProperty("--drawer-drag-x", drag.axis === "x" ? offset : "0px");
-      panel.style.setProperty("--drawer-drag-y", drag.axis === "y" ? offset : "0px");
+      // The transform is written on the panel itself: an inherited custom property would have every descendant's
+      // style re-resolved on each move. The two properties the exit animation reads are set once, at release.
+      const offset = clamped * drag.sign;
+      panel.style.setProperty("transform", `translate(${drag.axis === "x" ? offset : 0}px, ${drag.axis === "y" ? offset : 0}px)`);
       event.preventDefault();
     };
 
@@ -161,9 +163,21 @@ export function DrawerSwipe({
       const farEnough = extent > 0 && travelled / extent >= DISMISS_RATIO;
       const quickEnough = finished.velocity >= DISMISS_VELOCITY && travelled >= MIN_FLICK_DISTANCE;
       if (!cancelled && (farEnough || quickEnough)) {
-        // Closing starts the exit from where it was left: the offset stays on the panel for the animation to read.
+        // Closing starts the exit from where it was left: the offset goes into the two properties the animation
+        // reads, in place of the transform that held it.
+        const offset = Math.max(0, travelled) * finished.sign;
+        panel.style.setProperty("--drawer-drag-x", finished.axis === "x" ? `${offset}px` : "0px");
+        panel.style.setProperty("--drawer-drag-y", finished.axis === "y" ? `${offset}px` : "0px");
+        panel.style.removeProperty("transform");
         panel.removeAttribute("data-dragging");
         dismiss.current();
+        // An owner can decline: a controlled drawer that stays open, a confirmation first. Then there is no exit to
+        // carry the panel away, and it is left where the finger put it, so it goes back like a short drag does.
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            if (panel.isConnected && panel.getAttribute("data-state") === "open") settleBack();
+          }),
+        );
       } else {
         settleBack();
       }

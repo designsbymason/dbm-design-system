@@ -658,6 +658,146 @@ export const HandleIsNotGrabbableWhenSwipeIsOff: Story = {
   },
 };
 
+export const SwipeTheOwnerDeclinesGoesBack: Story = {
+  name: "a swiped drawer whose owner keeps it open goes back to where it was, with nothing left on it",
+  render: () => (
+    <Drawer open onOpenChange={() => undefined}>
+      <Drawer.Content aria-label="Pinned" data-testid="panel">
+        <Drawer.Header data-testid="header">
+          <Drawer.Title>Pinned</Drawer.Title>
+        </Drawer.Header>
+      </Drawer.Content>
+    </Drawer>
+  ),
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const resting = panel.getBoundingClientRect().left;
+    await drag(within(panel).getByTestId("header"), 280, 0);
+    // it is still open, and returns to where it began once the owner has had its say
+    await waitFor(() => expect(Math.round(panel.getBoundingClientRect().left - resting)).toBe(0), { timeout: 2000 });
+    await waitFor(() => expect(panel).not.toHaveAttribute("data-settling"));
+    await expect(within(document.body).getByRole("dialog")).toBeInTheDocument();
+    await expect(panel.style.getPropertyValue("--drawer-drag-x")).toBe("");
+    await expect(panel.style.transform).toBe("");
+  },
+};
+
+// A non-modal drawer has no scrim to position it, so it is fixed to its edge with the same margins and sizes
+// doing the pinning; and the page behind it is still there to be pressed.
+let behindPressed = 0;
+const nonModal = (side: "start" | "end" | "top" | "bottom"): Story => ({
+  name: `a docked (non-modal) ${side} drawer sits flush to its edge and leaves the page pressable`,
+  render: () => {
+    behindPressed = 0;
+    // a button in the corner the panel doesn't cover, fixed so the panel can't be over it
+    const corner =
+      side === "top"
+        ? { insetBlockEnd: "8px", insetInlineStart: "8px" }
+        : side === "bottom"
+          ? { insetBlockStart: "8px", insetInlineStart: "8px" }
+          : side === "end"
+            ? { insetBlockStart: "8px", insetInlineStart: "8px" }
+            : { insetBlockStart: "8px", insetInlineEnd: "8px" };
+    return (
+      <>
+        <button type="button" style={{ position: "fixed", ...corner }} onClick={() => (behindPressed += 1)}>
+          Behind
+        </button>
+        <Drawer modal={false} defaultOpen>
+          <Drawer.Content aria-label="Docked" side={side}>
+            <Drawer.Body>Inspector</Drawer.Body>
+          </Drawer.Content>
+        </Drawer>
+      </>
+    );
+  },
+  play: async () => {
+    const body = within(document.body);
+    const panel = await body.findByRole("dialog");
+    await settled(panel);
+    await expect(getComputedStyle(panel).position).toBe("fixed");
+    // no scrim: the panel hangs straight off the body
+    await expect(panel.parentElement).toBe(document.body);
+    const box = edges(panel);
+    if (side === "end") {
+      await expect(box.right).toBe(window.innerWidth);
+      await expect(box.height).toBe(window.innerHeight);
+    } else if (side === "start") {
+      await expect(box.left).toBe(0);
+      await expect(box.height).toBe(window.innerHeight);
+    } else if (side === "top") {
+      await expect(box.top).toBe(0);
+      await expect(box.width).toBe(window.innerWidth);
+    } else {
+      await expect(box.bottom).toBe(window.innerHeight);
+      await expect(box.width).toBe(window.innerWidth);
+    }
+    await expect(panel).not.toHaveAttribute("aria-modal");
+    await realClick(body.getByRole("button", { name: "Behind" }));
+    await expect(behindPressed).toBe(1);
+  },
+});
+export const DockedEnd: Story = nonModal("end");
+export const DockedStart: Story = nonModal("start");
+export const DockedTop: Story = nonModal("top");
+export const DockedBottom: Story = nonModal("bottom");
+
+export const CloseButtonIsATarget: Story = {
+  name: "the close button is at least 24 by 24 pixels, at the smallest size as at the default",
+  render: () => (
+    <>
+      <Drawer defaultOpen>
+        <Drawer.Content aria-label="Default" />
+      </Drawer>
+    </>
+  ),
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const box = within(panel).getByRole("button", { name: "Close" }).getBoundingClientRect();
+    await expect(box.width).toBeGreaterThanOrEqual(24);
+    await expect(box.height).toBeGreaterThanOrEqual(24);
+  },
+};
+
+const channel = (value: number) => {
+  const scaled = value / 255;
+  return scaled <= 0.03928 ? scaled / 12.92 : ((scaled + 0.055) / 1.055) ** 2.4;
+};
+const luminance = ([r, g, b]: number[]) => 0.2126 * channel(r ?? 0) + 0.7152 * channel(g ?? 0) + 0.0722 * channel(b ?? 0);
+const parse = (colour: string) => (colour.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+const ratio = (a: number[], b: number[]) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+export const HandlePillIsSeenInAllFourThemes: Story = {
+  name: "the grab handle's pill is at least 3:1 against the panel in all four themes",
+  render: () => (
+    <Drawer defaultOpen>
+      <Drawer.Content aria-label="Sheet" side="bottom" />
+    </Drawer>
+  ),
+  play: async () => {
+    const panel = await within(document.body).findByRole("dialog");
+    await settled(panel);
+    const handle = panel.querySelector("[data-drawer-handle]") as HTMLElement;
+    const results: Record<string, number> = {};
+    for (const theme of ["purple-light", "purple-dark", "emerald-light", "emerald-dark"]) {
+      document.documentElement.dataset.theme = theme;
+      await nextFrame();
+      await nextFrame();
+      const pill = getComputedStyle(handle, "::after").backgroundColor;
+      const surface = getComputedStyle(panel).backgroundColor;
+      results[theme] = ratio(parse(pill), parse(surface));
+    }
+    for (const [theme, value] of Object.entries(results)) {
+      await expect(value, theme).toBeGreaterThanOrEqual(3);
+    }
+  },
+};
+
 export const SideDrawersDrawNoHandle: Story = {
   name: "a side drawer draws no handle, and showHandle={false} removes the sheet's",
   render: () => (

@@ -13,8 +13,8 @@ Fourth organism, built 2026-10-11 with the `06-engineering-standards.md` §9 che
 - **The scrim is a flex box, so the panel is pinned by automatic margins, not by `inset`.** A non-modal drawer has no scrim and is fixed to the viewport with the same margins and explicit sizes doing the pinning.
 
 ## Checks run
-- 59 unit tests, adapted from `Dialog`'s and extended for the side classes and a responsive map (role, name and description with no warning, controlled use, the close reasons, `busy`, `keepMounted`, nested overlays, `StrictMode`, a role that can't be replaced, axe), 20 server-render and hydration tests (ten variants, including `keepMounted` open and closed), and a Docs-token test that reads this stylesheet and the shared one.
-- 19 real-browser checks: each side flush to its edge at its size, rounding and border on the inner side only, right-to-left putting `start` on the right and sliding from it, a phone leaving a 3rem sliver that a real press closes, a responsive side as a bottom sheet on a phone and a side panel from `md`, the entrance moving from the edge, a real press on the scrim and focus returning, the page locked and Tab looping, a real mouse choosing a `Select` option inside it, a confirmation stacking and answering first, the lines following the scroll, the close button following a safe-area inset, the forced-colours and reduced-motion rules, `busy`, and `keepMounted` through a real close and reopen. The side-geometry check fails with the end side's margin removed.
+- 69 unit tests, adapted from `Dialog`'s and extended for the side classes and a responsive map (role, name and description with no warning, controlled use, the close reasons, `busy`, `keepMounted`, nested overlays, `StrictMode`, a role that can't be replaced, axe), 20 server-render and hydration tests (ten variants, including `keepMounted` open and closed), and a Docs-token test that reads this stylesheet and the shared one.
+- 38 real-browser checks (the first 19 from the build, then the second pass and the final review): each side flush to its edge at its size, rounding and border on the inner side only, right-to-left putting `start` on the right and sliding from it, a phone leaving a 3rem sliver that a real press closes, a responsive side as a bottom sheet on a phone and a side panel from `md`, the entrance moving from the edge, a real press on the scrim and focus returning, the page locked and Tab looping, a real mouse choosing a `Select` option inside it, a confirmation stacking and answering first, the lines following the scroll, the close button following a safe-area inset, the forced-colours and reduced-motion rules, `busy`, and `keepMounted` through a real close and reopen. The side-geometry check fails with the end side's margin removed.
 - 9 sub-part stories for the Properties tables (ADR-0013), `pnpm lint`, the build, `check-guidelines` and the bundle-size check.
 
 ## Second pass: the four named gaps (2026-10-11)
@@ -26,6 +26,17 @@ Fourth organism, built 2026-10-11 with the `06-engineering-standards.md` §9 che
 - **Checks added:** 12 real-browser checks (a long drag closing with the reason, a short one settling back with nothing left on the panel, the panel following the finger and not past its edge, a mouse and a drag away from the edge doing nothing, right-to-left, the bottom sheet's handle and its drag, no handle on a side drawer, a busy drawer not swipeable, the panel still in the page when a close starts, and a length and a pixel size). The swipe check fails with dismissal disabled.
 - **A mouse can drag the handle (and only the handle)**, with a `grab` cursor and no text selection while it drags; a drag of the header stays touch and pen only. Checked with a real mouse through the Chrome DevTools Protocol, and the check fails if the header is let through.
 - **Not verified:** a real finger. The events are dispatched; the interplay with a scrolling body and the browser's own edge gestures is unseen.
+
+## Final review pass
+Eight findings, all fixed:
+1. **A swiped drawer whose owner keeps it open was left displaced.** The offset is kept for the exit animation, but a controlled drawer that declines to close has no exit, so the panel stayed where the finger put it (280px, in the probe). It now checks, two frames after asking to close, whether the panel is still open and settles back like a short drag does. A check with a refusing owner fails without it.
+2. **The drag wrote inherited custom properties on every move,** re-resolving every descendant's style each time. The panel's own `transform` is written during the drag; the two properties the exit reads are set once, at release.
+3. **`showHandle` was a dead control** for the default side. It is offered while `side` is `bottom` (a condition takes one value; a `top` drawer takes the prop all the same).
+4. **A non-modal drawer's geometry is checked in a real browser:** each side flush to its edge, fixed with no scrim, the page behind it pressable with a real mouse.
+5. **The close button's target size is measured** (at least 24 by 24).
+6. **The handle pill measured 2.32:1 in Purple light** with `border.neutral`, under the 3:1 floor (decorative, but it is the cue for the gesture). It now uses `icon.secondary`, and a check asserts at least 3:1 against the panel in all four themes.
+7. **The header and handle are offered to a touch only while the gesture is available** (not with `swipeToDismiss={false}`, not while `busy`), so they no longer take the `touch-action` and the grab cursor for nothing.
+8. **This file** is current.
 
 ## Open
 - The dedicated §9 review pass, and the maintainer's sign-off.

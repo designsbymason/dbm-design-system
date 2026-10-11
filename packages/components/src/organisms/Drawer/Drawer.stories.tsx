@@ -121,8 +121,11 @@ const meta: Meta<PlaygroundArgs> = {
     },
     showHandle: {
       control: "boolean",
+      // The handle is drawn only on a top or bottom drawer; a condition takes one value, so it is offered for bottom
+      // (the sheet people drag), and a top drawer takes the prop all the same.
+      if: { arg: "side", eq: "bottom" },
       description:
-        "Draws a small grab handle on the inner edge of a top or bottom drawer. Decorative, and not drawn for a start or end drawer.",
+        "Draws a small grab handle on the inner edge of a top or bottom drawer. Decorative, and not drawn for a start or end drawer, so this control is offered while side is bottom.",
       table: { defaultValue: { summary: "true" } },
     },
     divided: {
