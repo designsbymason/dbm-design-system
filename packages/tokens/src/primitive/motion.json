@@ -84,6 +84,11 @@
       "$type": "number",
       "$value": 0.98,
       "$description": "The size a large panel (a dialog) starts from as it enters, scaling up to 1. A bigger surface moves a smaller fraction of its size for the same visual travel, so it takes a step closer to 1 than the small floating surfaces."
+    },
+    "102": {
+      "$type": "number",
+      "$value": 1.02,
+      "$description": "How far a panel swells at the peak of a brief attention pulse (an alert dialog pressed outside, when it can't be dismissed), before settling back to 1. New token (2026-10-11)."
     }
   }
 }

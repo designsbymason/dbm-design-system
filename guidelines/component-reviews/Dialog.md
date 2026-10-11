@@ -57,3 +57,6 @@ Seven findings from the review, fixed:
 7. **The Playground's `divided` cast** is gone: the control's option is typed `"off" | "on" | "auto"` and mapped in one place.
 
 The entrance scale is now `motion.scale.98` (new primitive, with `96`). `Popover`, `HoverCard` and `Tooltip` still hold `scale(0.96)` literals and are due to move to `motion.scale.96`.
+
+## Follow-up (2026-10-11) — a test-only correction
+The real-browser checks pressed "the scrim" at its centre, which is where a centred panel sits, so a press on the scrim was in places a press on the panel. They now press just inside the scrim's corner (`pressScrim`); all of them pass. **Finalized status unchanged** — test files only, no component code, props or tokens touched.

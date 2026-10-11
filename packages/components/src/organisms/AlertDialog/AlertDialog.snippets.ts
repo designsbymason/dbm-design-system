@@ -109,6 +109,56 @@ ${body("Leave this page?", "You have unsaved changes.", "Stay", "Leave")}
   </AlertDialog.Content>
 </AlertDialog>`,
 
+  threeChoices: `{/* Three answers: give each Action a value, which onOpenChange reports as details.value.
+    Cancel first and the main choice last: on a phone they stack with the last one on top. */}
+<AlertDialog onOpenChange={(open, { reason, value }) => !open && reason === "action" && finish(value)}>
+  <AlertDialog.Trigger asChild>
+    <Button>Close editor</Button>
+  </AlertDialog.Trigger>
+  <AlertDialog.Content tone="warning">
+    <AlertDialog.Header>
+      <AlertDialog.Title>Save changes?</AlertDialog.Title>
+      <AlertDialog.Description>Your edits will be lost if you don't save them.</AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel>Keep editing</AlertDialog.Cancel>
+      <AlertDialog.Action value="discard" variant="tertiary">
+        Don't save
+      </AlertDialog.Action>
+      <AlertDialog.Action value="save" variant="primary">
+        Save
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog>`,
+
+  typeToConfirm: `{/* const [typed, setTyped] = useState(""); const nameRef = useRef<HTMLInputElement>(null);
+    The Action stays disabled until the name is typed, and focus lands on the field. */}
+<AlertDialog>
+  <AlertDialog.Trigger asChild>
+    <Button variant="destructive">Delete project</Button>
+  </AlertDialog.Trigger>
+  <AlertDialog.Content tone="danger" initialFocus={nameRef}>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete "Atlas"?</AlertDialog.Title>
+      <AlertDialog.Description>
+        This removes the project and everything in it for good. Type its name to confirm.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Body>
+      <Input ref={nameRef} aria-label="Project name" value={typed} onChange={(event) => setTyped(event.target.value)} />
+    </AlertDialog.Body>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel>Keep it</AlertDialog.Cancel>
+      <AlertDialog.Action disabled={typed !== "Atlas"}>Delete project</AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog>`,
+
+  nudge: `{/* A press on the scrim, or Escape while closeOnEscape is off, gives the panel a short pulse so the alert
+    doesn't read as broken. nudge={false} turns it off. */}
+${alert("", "closeOnEscape={false}", deleteBody)}`,
+
   overADialog: `{/* An alert opened from inside a dialog. Escape answers the alert first; lighten its scrim, since
     the two stack. */}
 <Dialog>
@@ -139,6 +189,7 @@ export interface AlertDialogPlaygroundSnippetArgs {
   size?: "xs" | "sm" | "md" | "lg";
   busy?: boolean;
   closeOnEscape?: boolean;
+  nudge?: boolean;
   scrimOpacity?: number;
   scrimBlur?: boolean;
 }
@@ -150,6 +201,7 @@ export function alertDialogPlaygroundSnippet(args: AlertDialogPlaygroundSnippetA
   if (args.size && args.size !== "sm") contentAttributes.push(`size="${args.size}"`);
   if (args.busy) contentAttributes.push("busy");
   if (args.closeOnEscape === false) contentAttributes.push("closeOnEscape={false}");
+  if (args.nudge === false) contentAttributes.push("nudge={false}");
   if (args.scrimOpacity !== undefined && args.scrimOpacity !== 60) {
     contentAttributes.push(`scrimOpacity={${args.scrimOpacity}}`);
   }

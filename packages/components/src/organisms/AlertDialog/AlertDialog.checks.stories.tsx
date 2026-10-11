@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { useRef, useState } from "react";
 import { Button } from "../../atoms/Button";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Dialog } from "../Dialog";
@@ -28,16 +29,20 @@ const settled = async (alert: HTMLElement) => {
 };
 
 // A real mouse through the Chrome DevTools Protocol, mapped through the test iframe's scale.
-async function realClick(element: Element) {
+async function realClick(element: Element, inset?: { x: number; y: number }) {
   const rect = element.getBoundingClientRect();
   const frame = window.frameElement?.getBoundingClientRect();
   const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
-  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  const x = (frame?.left ?? 0) + (inset ? rect.left + inset.x : rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (inset ? rect.top + inset.y : rect.top + rect.height / 2) * scale;
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
   await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
 }
+
+// The scrim's centre is where a centred panel sits, so a press "on the scrim" has to be somewhere else: just inside
+// its top-left corner, which is clear of the panel at every size.
+const pressScrim = (scrim: Element) => realClick(scrim, { x: 12, y: 12 });
 
 function Delete({
   tone = "danger",
@@ -75,9 +80,75 @@ export const ScrimPressIsIgnored: Story = {
   play: async () => {
     const alert = await within(document.body).findByRole("alertdialog");
     await settled(alert);
-    await realClick(alert.parentElement as HTMLElement);
+    await pressScrim(alert.parentElement as HTMLElement);
     await nextFrame();
     await expect(within(document.body).getByRole("alertdialog")).toBeInTheDocument();
+  },
+};
+
+export const ScrimPressPulsesThePanel: Story = {
+  name: "A real press on the scrim pulses the panel, and a reduced-motion rule exists",
+  render: () => <Delete />,
+  play: async () => {
+    const alert = await within(document.body).findByRole("alertdialog");
+    await settled(alert);
+    await expect(alert.getAnimations().length).toBe(0);
+    await pressScrim(alert.parentElement as HTMLElement);
+    await waitFor(() =>
+      expect(alert.getAnimations().some((animation) => (animation as CSSAnimation).animationName.startsWith("_alertNudge") || /alertNudge/.test((animation as CSSAnimation).animationName))).toBe(true),
+    );
+    // jsdom can't evaluate the media query and a story can't switch it on, so prove the rule from the stylesheet
+    const rules: CSSMediaRule[] = [];
+    for (const sheet of Array.from(document.styleSheets)) {
+      try {
+        for (const rule of Array.from(sheet.cssRules)) if (rule instanceof CSSMediaRule) rules.push(rule);
+      } catch {
+        // a cross-origin sheet can't be read; none of ours is one
+      }
+    }
+    const reduced = rules.find(
+      (rule) => rule.conditionText.includes("prefers-reduced-motion: reduce") && /alertFlash/.test(rule.cssText),
+    );
+    await expect(reduced).toBeDefined();
+  },
+};
+
+export const TypeToConfirmFlow: Story = {
+  name: "Type-to-confirm: focus lands on the field and the action waits for the name",
+  render: () => {
+    function Flow() {
+      const [typed, setTyped] = useState("");
+      const field = useRef<HTMLInputElement>(null);
+      return (
+        <AlertDialog defaultOpen>
+          <AlertDialog.Content tone="danger" initialFocus={field}>
+            <AlertDialog.Header>
+              <AlertDialog.Title>Delete Atlas?</AlertDialog.Title>
+              <AlertDialog.Description>Type its name to confirm.</AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <input ref={field} aria-label="Project name" value={typed} onChange={(event) => setTyped(event.target.value)} />
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <AlertDialog.Cancel>Keep it</AlertDialog.Cancel>
+              <AlertDialog.Action disabled={typed !== "Atlas"}>Delete</AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog>
+      );
+    }
+    return <Flow />;
+  },
+  play: async () => {
+    const body = within(document.body);
+    const field = await body.findByRole("textbox", { name: "Project name" });
+    await waitFor(() => expect(field).toHaveFocus());
+    const action = body.getByRole("button", { name: "Delete" });
+    await expect(action).toBeDisabled();
+    await userEvent.type(field, "Atl");
+    await expect(action).toBeDisabled();
+    await userEvent.type(field, "as");
+    await waitFor(() => expect(action).toBeEnabled());
   },
 };
 
@@ -201,7 +272,7 @@ export const BusyAlertCannotBeLeft: Story = {
     cancel.focus();
     await expect(cancel).toHaveFocus();
     await userEvent.keyboard("{Escape}");
-    await realClick(alert.parentElement as HTMLElement);
+    await pressScrim(alert.parentElement as HTMLElement);
     await realClick(body.getByRole("button", { name: "Delete" }));
     await realClick(cancel);
     await nextFrame();
@@ -244,7 +315,7 @@ export const OverADialogStacksScrims: Story = {
     const dim = (colour: number[]) => colour.map((value) => value * 0.4);
     await expect(ratio(dim(parse(style.color)), dim(parse(style.backgroundColor)))).toBeGreaterThanOrEqual(3);
     // a real press on the alert's scrim reaches neither
-    await realClick(alertScrim);
+    await pressScrim(alertScrim);
     await nextFrame();
     await expect(body.getByRole("alertdialog")).toBeInTheDocument();
     await userEvent.keyboard("{Escape}");

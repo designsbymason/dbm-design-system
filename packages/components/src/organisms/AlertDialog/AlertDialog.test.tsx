@@ -216,6 +216,113 @@ describe("AlertDialog", () => {
     });
   });
 
+  describe("value of a choice", () => {
+    it("reports the value of the Action that closed it, and of a Cancel", async () => {
+      const user = userEvent.setup();
+      const onOpenChange = vi.fn();
+      render(
+        <AlertDialog onOpenChange={onOpenChange}>
+          <AlertDialog.Trigger>Open</AlertDialog.Trigger>
+          <AlertDialog.Content>
+            <AlertDialog.Header>
+              <AlertDialog.Title>Save changes?</AlertDialog.Title>
+              <AlertDialog.Description>They will be lost.</AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <AlertDialog.Cancel value="stay">Keep editing</AlertDialog.Cancel>
+              <AlertDialog.Action value="discard">Don&apos;t save</AlertDialog.Action>
+              <AlertDialog.Action value="save">Save</AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog>,
+      );
+      const answers = () => onOpenChange.mock.calls.filter(([open]) => open === false).map(([, details]) => details);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("button", { name: "Save" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("button", { name: "Don't save" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      await user.click(await screen.findByRole("button", { name: "Keep editing" }));
+      expect(answers()).toEqual([
+        { reason: "action", value: "save" },
+        { reason: "action", value: "discard" },
+        { reason: "cancel", value: "stay" },
+      ]);
+    });
+
+    it("leaves value out when the choice has none", async () => {
+      const user = userEvent.setup();
+      const onOpenChange = vi.fn();
+      render(<Basic dialog={{ defaultOpen: true, onOpenChange }} />);
+      await user.click(screen.getByRole("button", { name: "Delete" }));
+      expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "action" });
+    });
+
+    it("does not put the value on the button as an attribute", () => {
+      render(
+        <AlertDialog defaultOpen>
+          <AlertDialog.Content>
+            <AlertDialog.Header>
+              <AlertDialog.Title>T</AlertDialog.Title>
+              <AlertDialog.Description>D</AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+              <AlertDialog.Action value="go">Go</AlertDialog.Action>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog>,
+      );
+      expect(screen.getByRole("button", { name: "Go" })).not.toHaveAttribute("value");
+    });
+  });
+
+  describe("nudge", () => {
+    const pulsing = () =>
+      screen.getByRole("alertdialog").className.includes(styles.nudgeA ?? "?") ||
+      screen.getByRole("alertdialog").className.includes(styles.nudgeB ?? "?");
+
+    it("pulses when the scrim is pressed, and not when the panel is", async () => {
+      const user = userEvent.setup();
+      render(<Basic dialog={{ defaultOpen: true }} />);
+      expect(pulsing()).toBe(false);
+      await user.click(screen.getByRole("heading", { name: "Delete project?" }));
+      expect(pulsing()).toBe(false);
+      await user.click(screen.getByRole("alertdialog").parentElement as HTMLElement);
+      expect(pulsing()).toBe(true);
+    });
+
+    it("alternates between two classes so a second press restarts it", async () => {
+      const user = userEvent.setup();
+      render(<Basic dialog={{ defaultOpen: true }} />);
+      const scrim = screen.getByRole("alertdialog").parentElement as HTMLElement;
+      await user.click(scrim);
+      const first = screen.getByRole("alertdialog").className;
+      await user.click(scrim);
+      expect(screen.getByRole("alertdialog").className).not.toBe(first);
+    });
+
+    it("pulses when Escape can't close it, because of closeOnEscape or busy", async () => {
+      const user = userEvent.setup();
+      const { unmount } = render(<Basic dialog={{ defaultOpen: true }} closeOnEscape={false} />);
+      await user.keyboard("{Escape}");
+      expect(pulsing()).toBe(true);
+      unmount();
+      render(<Basic dialog={{ defaultOpen: true }} busy />);
+      await user.keyboard("{Escape}");
+      expect(pulsing()).toBe(true);
+    });
+
+    it("does nothing with nudge={false}", async () => {
+      const user = userEvent.setup();
+      render(<Basic dialog={{ defaultOpen: true }} nudge={false} closeOnEscape={false} />);
+      await user.click(screen.getByRole("alertdialog").parentElement as HTMLElement);
+      await user.keyboard("{Escape}");
+      expect(pulsing()).toBe(false);
+    });
+  });
+
   describe("busy", () => {
     it("can't be answered or dismissed while busy", async () => {
       const user = userEvent.setup();

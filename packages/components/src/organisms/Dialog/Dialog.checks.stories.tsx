@@ -385,16 +385,20 @@ export const HiddenTitleBodyClearsTheCloseButton: Story = {
 // A real mouse, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events, and a Select
 // chooses on the pointer's up event, which a synthetic click left unanswered. The test page scales its iframe, so
 // a point inside the story is mapped to the page it is drawn on.
-async function realClick(element: Element) {
+async function realClick(element: Element, inset?: { x: number; y: number }) {
   const rect = element.getBoundingClientRect();
   const frame = window.frameElement?.getBoundingClientRect();
   const scale = frame ? frame.width / window.innerWidth : 1;
-  const x = (frame?.left ?? 0) + (rect.left + rect.width / 2) * scale;
-  const y = (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale;
+  const x = (frame?.left ?? 0) + (inset ? rect.left + inset.x : rect.left + rect.width / 2) * scale;
+  const y = (frame?.top ?? 0) + (inset ? rect.top + inset.y : rect.top + rect.height / 2) * scale;
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
   await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
 }
+
+// The scrim's centre is where a centred panel sits, so a press "on the scrim" has to be somewhere else: just inside
+// its top-left corner, which is clear of the panel at every size.
+const pressScrim = (scrim: Element) => realClick(scrim, { x: 12, y: 12 });
 
 export const SelectChosenWithARealPointer: Story = {
   name: "An option chosen with a real mouse in a Select inside the dialog",
@@ -424,7 +428,7 @@ export const SelectChosenWithARealPointer: Story = {
     // choosing did not close the dialog
     await expect(body.getByRole("dialog", { name: "With a select" })).toBeInTheDocument();
     // and a real press on the scrim afterwards still does
-    await realClick(body.getByRole("dialog").parentElement as HTMLElement);
+    await pressScrim(body.getByRole("dialog").parentElement as HTMLElement);
     await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
   },
 };
@@ -550,7 +554,7 @@ export const BusyCannotBeLeft: Story = {
     const dialog = await body.findByRole("dialog");
     await settled(dialog);
     await userEvent.keyboard("{Escape}");
-    await realClick(dialog.parentElement as HTMLElement);
+    await pressScrim(dialog.parentElement as HTMLElement);
     await realClick(body.getByRole("button", { name: "Cancel" }));
     await nextFrame();
     await expect(body.getByRole("dialog")).toBeInTheDocument();

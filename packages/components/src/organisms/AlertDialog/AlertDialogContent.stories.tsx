@@ -38,6 +38,12 @@ const meta: Meta<typeof AlertDialog.Content> = {
       description: "Whether Escape closes the alert, as a cancel. A press on the scrim never closes it, and there is no prop to change that.",
       table: { defaultValue: { summary: "true" } },
     },
+    nudge: {
+      control: "boolean",
+      description:
+        "A short pulse when something tries to dismiss the alert and can't (a press on the scrim, or Escape while closeOnEscape is off or the alert is busy). Under reduced motion the border flashes instead.",
+      table: { defaultValue: { summary: "true" } },
+    },
     initialFocus: {
       control: false,
       description: "An element to focus on open instead of the Cancel (or the Action when there is no Cancel). Ignored if onOpenAutoFocus prevents the default.",

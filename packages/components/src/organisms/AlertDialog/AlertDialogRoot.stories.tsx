@@ -24,7 +24,7 @@ const meta: Meta<typeof AlertDialog> = {
     onOpenChange: {
       control: false,
       description:
-        "Called with the new open state whenever it changes. The second argument, { reason }, says what caused it: \"trigger\", \"escape\", \"action\" or \"cancel\".",
+        "Called with the new open state whenever it changes. The second argument, { reason, value }, says what caused it: \"trigger\", \"escape\", \"action\" or \"cancel\", and the value of the Action or Cancel pressed, when it has one.",
     },
   },
 };

@@ -51,6 +51,52 @@
   min-inline-size: 0;
 }
 
+/* The pulse when something tries to dismiss the alert and can't: the panel swells a little and settles. Two
+   identical animations under two names, so that switching the class restarts it. They replace the entrance
+   animation, which has long finished by the time anyone presses outside. Under reduced motion the border flashes
+   the focus colour instead of the panel moving. */
+.root.nudgeA[data-state="open"] {
+  animation: alertNudgeA var(--dbm-motion-duration-base) var(--dbm-motion-easing-emphasized);
+}
+
+.root.nudgeB[data-state="open"] {
+  animation: alertNudgeB var(--dbm-motion-duration-base) var(--dbm-motion-easing-emphasized);
+}
+
+@keyframes alertNudgeA {
+  40% {
+    transform: scale(var(--dbm-motion-scale-102));
+  }
+}
+
+@keyframes alertNudgeB {
+  40% {
+    transform: scale(var(--dbm-motion-scale-102));
+  }
+}
+
+@keyframes alertFlashA {
+  40% {
+    border-color: var(--dbm-border-focus);
+  }
+}
+
+@keyframes alertFlashB {
+  40% {
+    border-color: var(--dbm-border-focus);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root.nudgeA[data-state="open"] {
+    animation-name: alertFlashA;
+  }
+
+  .root.nudgeB[data-state="open"] {
+    animation-name: alertFlashB;
+  }
+}
+
 /* A busy alert can't be answered: the Cancel is dimmed like a disabled button. The Action isn't, since the caller
    shows its own progress on it (`isLoading`). Both stay in the tab order, so focus isn't dropped from them. */
 .root [data-alert-dialog-cancel][aria-disabled="true"] {

@@ -1,7 +1,8 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";
 import { Dialog } from "../Dialog";
 import { AlertDialog } from "./AlertDialog";
@@ -19,6 +20,7 @@ interface PlaygroundArgs {
   size: "xs" | "sm" | "md" | "lg";
   busy: boolean;
   closeOnEscape: boolean;
+  nudge: boolean;
   scrimOpacity: BackdropOpacity;
   scrimBlur: boolean;
 }
@@ -28,6 +30,7 @@ const contentFromArgs = (args: PlaygroundArgs): AlertDialogContentProps => ({
   size: args.size,
   busy: args.busy,
   closeOnEscape: args.closeOnEscape,
+  nudge: args.nudge,
   scrimOpacity: args.scrimOpacity,
   scrimBlur: args.scrimBlur,
 });
@@ -42,6 +45,7 @@ const allControlsOff = {
   size: { control: false },
   busy: { control: false },
   closeOnEscape: { control: false },
+  nudge: { control: false },
   scrimOpacity: { control: false },
   scrimBlur: { control: false },
 } as const;
@@ -76,6 +80,12 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Whether Escape closes the alert, as a cancel. A press on the scrim never does.",
       table: { defaultValue: { summary: "true" } },
     },
+    nudge: {
+      control: "boolean",
+      description:
+        "A short pulse when something tries to dismiss the alert and can't: a press on the scrim, or Escape while it can't close. Press the scrim to see it.",
+      table: { defaultValue: { summary: "true" } },
+    },
     scrimOpacity: {
       control: "select",
       options: [20, 40, 60, 80, 90],
@@ -93,6 +103,7 @@ const meta: Meta<PlaygroundArgs> = {
     size: "sm",
     busy: false,
     closeOnEscape: true,
+    nudge: true,
     scrimOpacity: 60,
     scrimBlur: false,
     onOpenChange: fn(),
@@ -193,6 +204,103 @@ export const WithABody: Story = {
             </AlertDialog.Footer>
           </AlertDialog.Content>
         </AlertDialog>
+      )}
+    </AlertStage>
+  ),
+};
+
+function ThreeChoicesExample({ container }: { container: HTMLElement | null }) {
+  const [answer, setAnswer] = useState("nothing yet");
+  return (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", justifyItems: "center" }}>
+      <AlertDialog
+        onOpenChange={(open, details) => {
+          if (!open) setAnswer(details.value ?? details.reason);
+        }}
+      >
+        <AlertDialog.Trigger asChild>
+          <Button>Close editor</Button>
+        </AlertDialog.Trigger>
+        <AlertDialog.Content container={container} tone="warning">
+          <AlertDialog.Header>
+            <AlertDialog.Title>Save changes?</AlertDialog.Title>
+            <AlertDialog.Description>Your edits will be lost if you don&apos;t save them.</AlertDialog.Description>
+          </AlertDialog.Header>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel>Keep editing</AlertDialog.Cancel>
+            <AlertDialog.Action value="discard" variant="tertiary">
+              Don&apos;t save
+            </AlertDialog.Action>
+            <AlertDialog.Action value="save" variant="primary">
+              Save
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog>
+      <Text size="sm">Answered: {answer}</Text>
+    </div>
+  );
+}
+
+export const ThreeChoices: Story = {
+  name: "Three choices",
+  parameters: { docs: { source: { code: alertDialogSnippets.threeChoices } } },
+  argTypes: allControlsOff,
+  render: () => <AlertStage>{(container) => <ThreeChoicesExample container={container} />}</AlertStage>,
+};
+
+function TypeToConfirmExample({ container }: { container: HTMLElement | null }) {
+  const [typed, setTyped] = useState("");
+  const nameRef = useRef<HTMLInputElement>(null);
+  return (
+    <AlertDialog onOpenChange={(open) => open && setTyped("")}>
+      <AlertDialog.Trigger asChild>
+        <Button variant="destructive">Delete project</Button>
+      </AlertDialog.Trigger>
+      <AlertDialog.Content container={container} tone="danger" initialFocus={nameRef}>
+        <AlertDialog.Header>
+          <AlertDialog.Title>Delete &quot;Atlas&quot;?</AlertDialog.Title>
+          <AlertDialog.Description>
+            This removes the project and everything in it for good. Type its name to confirm.
+          </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Body>
+          <Input
+            ref={nameRef}
+            aria-label="Project name"
+            value={typed}
+            onChange={(event) => setTyped(event.target.value)}
+          />
+        </AlertDialog.Body>
+        <AlertDialog.Footer>
+          <AlertDialog.Cancel>Keep it</AlertDialog.Cancel>
+          <AlertDialog.Action disabled={typed !== "Atlas"}>Delete project</AlertDialog.Action>
+        </AlertDialog.Footer>
+      </AlertDialog.Content>
+    </AlertDialog>
+  );
+}
+
+export const TypeToConfirm: Story = {
+  name: "Type the name to confirm",
+  parameters: { docs: { source: { code: alertDialogSnippets.typeToConfirm } } },
+  argTypes: allControlsOff,
+  render: () => <AlertStage>{(container) => <TypeToConfirmExample container={container} />}</AlertStage>,
+};
+
+export const PressTheScrim: Story = {
+  name: "Press the scrim: it pulses",
+  parameters: { docs: { source: { code: alertDialogSnippets.nudge } } },
+  argTypes: { closeOnEscape: { control: false }, nudge: { control: false } },
+  render: (args) => (
+    <AlertStage>
+      {(container) => (
+        <DeleteAlert
+          container={container}
+          dialog={rootFromArgs(args)}
+          content={{ ...contentFromArgs(args), closeOnEscape: false, nudge: true }}
+          triggerLabel="Open, then press the scrim or Escape"
+        />
       )}
     </AlertStage>
   ),

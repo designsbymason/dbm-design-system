@@ -12,6 +12,11 @@ const meta: Meta<typeof AlertDialog.Action> = {
       control: "text",
       description: "The label of the choice the alert exists to ask for.",
     },
+    value: {
+      control: "text",
+      description:
+        "A name for this choice, reported as details.value by onOpenChange when it closes the alert. Give each Action one when there are two.",
+    },
     variant: {
       control: "select",
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],

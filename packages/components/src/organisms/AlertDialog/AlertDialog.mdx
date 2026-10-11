@@ -15,7 +15,7 @@ import * as AlertDialogActionStories from "./AlertDialogAction.stories";
 import * as AlertDialogCancelStories from "./AlertDialogCancel.stories";
 
 export const propOrder = ["children", "open", "defaultOpen", "onOpenChange"];
-export const playgroundOrder = ["tone", "size", "busy", "closeOnEscape", "scrimOpacity", "scrimBlur", "onOpenChange"];
+export const playgroundOrder = ["tone", "size", "busy", "closeOnEscape", "nudge", "scrimOpacity", "scrimBlur", "onOpenChange"];
 export const triggerPropOrder = ["asChild", "children", "id", "className", "style", "data-testid"];
 export const contentPropOrder = [
   "children",
@@ -24,6 +24,7 @@ export const contentPropOrder = [
   "size",
   "busy",
   "closeOnEscape",
+  "nudge",
   "initialFocus",
   "scrimOpacity",
   "scrimBlur",
@@ -42,7 +43,7 @@ export const titlePropOrder = ["children", "level", "size", "className", "style"
 export const descriptionPropOrder = ["children", "className", "style", "data-testid"];
 export const bodyPropOrder = ["children", "dir", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const footerPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
-export const buttonPropOrder = ["children", "variant", "size", "isLoading", "disabled", "onClick", "id", "className", "style", "data-testid"];
+export const buttonPropOrder = ["children", "value", "variant", "size", "isLoading", "disabled", "onClick", "id", "className", "style", "data-testid"];
 
 <Meta of={AlertDialogStories} />
 
@@ -164,6 +165,18 @@ also accepts every other `Button` property and any native `<button>` attribute.
 
 <Canvas of={AlertDialogStories.WithABody} />
 
+### Three choices
+
+<Canvas of={AlertDialogStories.ThreeChoices} />
+
+### Type the name to confirm
+
+<Canvas of={AlertDialogStories.TypeToConfirm} />
+
+### Press the scrim: it pulses
+
+<Canvas of={AlertDialogStories.PressTheScrim} />
+
 ### While it is busy
 
 <Canvas of={AlertDialogStories.WhileItIsBusy} />
@@ -189,6 +202,10 @@ also accepts every other `Button` property and any native `<button>` attribute.
   destructive. Every tone has an icon (a note for `neutral`); pass `icon={false}` to remove it.
 - Keep a `Cancel` beside the action, so there is a safe way out and focus has somewhere safe to start.
 - Say in the description what can't be undone, not only that something will happen.
+- For an unsaved-changes alert with three answers, give each `Action` a `value` ("save", "discard")
+  and read it from `onOpenChange`'s `details.value`; put Cancel first and the main choice last.
+- For something that can't be recovered, make the person type the name before the action enables, and
+  point `initialFocus` at the field.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -202,6 +219,10 @@ also accepts every other `Button` property and any native `<button>` attribute.
 - Don't turn `closeOnEscape` off to make the alert harder to leave. Escape is a cancel; turn it off
   only when closing without an answer would leave the app in a state it can't handle.
 - Don't stack alerts: one confirmation opened from a dialog is fine, a second from the first is not.
+- Don't turn `nudge` off to hide that a press did nothing: it is the only sign the alert is waiting for
+  an answer. Turn it off only where a pulse would be noise (a screenshot test, say).
+- Don't add a third choice that closes the alert without a clear label: "Don't save" says what it does,
+  "Other" does not.
 
 </Callout>
 </div>
@@ -238,6 +259,10 @@ also accepts every other `Button` property and any native `<button>` attribute.
   focus isn't dropped from them.
 - The tone icon is decorative (`aria-hidden`): the tone is carried by the words, never by the icon or
   colour alone. Each icon is at least 3:1 against its disc in every theme.
+- A press on the scrim, or Escape while the alert can't close, gives the panel a short pulse so the
+  alert doesn't read as broken. Under `prefers-reduced-motion` the border flashes the focus colour
+  instead of the panel moving; the pulse is not announced (the alert is already announced), and turns
+  off with `nudge={false}`.
 - On a phone the buttons are full width, a comfortable touch target. Under `prefers-reduced-motion`
   the alert fades without moving.
 
@@ -262,6 +287,16 @@ also accepts every other `Button` property and any native `<button>` attribute.
       <AlertDialog.Action>Delete</AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>
+</AlertDialog>
+
+{/* Three answers: each Action reports its own value */}
+<AlertDialog onOpenChange={(open, { reason, value }) => !open && reason === "action" && finish(value)}>
+  …
+  <AlertDialog.Footer>
+    <AlertDialog.Cancel>Keep editing</AlertDialog.Cancel>
+    <AlertDialog.Action value="discard" variant="tertiary">Don't save</AlertDialog.Action>
+    <AlertDialog.Action value="save">Save</AlertDialog.Action>
+  </AlertDialog.Footer>
 </AlertDialog>
 
 {/* Wait for a request: the alert stays open while it runs */}
@@ -327,6 +362,8 @@ An alert is drawn with `Dialog`'s stylesheet plus a small one of its own, so the
 <TokenRow token="motion.easing.emphasized" usage="enter easing" />
 <TokenRow token="motion.easing.standard" usage="exit easing" />
 <TokenRow token="motion.scale.98" usage="the size the panel starts from as it enters" />
+<TokenRow token="motion.scale.102" usage="how far the panel swells at the peak of the pulse" />
+<TokenRow token="border.focus" usage="the border's colour at the peak of the pulse, under reduced motion" />
 <TokenRow token="opacity.0 / opacity.100" usage="enter and exit fade endpoints" />
 <TokenRow token="opacity.40" usage="a busy alert's Cancel" />
 

@@ -77,7 +77,7 @@ const toneClass: Record<AlertDialogTone, string | undefined> = {
 interface AlertDialogContextValue {
   open: boolean;
   /** Records what is about to close or open the dialog, for `onOpenChange`'s second argument. */
-  setReason: (reason: AlertDialogOpenChangeReason) => void;
+  setReason: (reason: AlertDialogOpenChangeReason, value?: string) => void;
 }
 
 const AlertDialogContext = createContext<AlertDialogContextValue | null>(null);
@@ -144,17 +144,17 @@ function AlertDialogRoot({ children, open: openProp, defaultOpen = false, onOpen
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : uncontrolledOpen;
 
-  const reasonRef = useRef<AlertDialogOpenChangeReason | null>(null);
-  const setReason = useCallback((reason: AlertDialogOpenChangeReason) => {
-    reasonRef.current = reason;
+  const reasonRef = useRef<{ reason: AlertDialogOpenChangeReason; value?: string } | null>(null);
+  const setReason = useCallback((reason: AlertDialogOpenChangeReason, value?: string) => {
+    reasonRef.current = { reason, value };
   }, []);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      const reason = reasonRef.current ?? (next ? "trigger" : "cancel");
+      const noted = reasonRef.current ?? { reason: next ? ("trigger" as const) : ("cancel" as const) };
       reasonRef.current = null;
       if (!isControlled) setUncontrolledOpen(next);
-      onOpenChange?.(next, { reason });
+      onOpenChange?.(next, noted.value === undefined ? { reason: noted.reason } : noted);
     },
     [isControlled, onOpenChange],
   );
@@ -202,6 +202,7 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
       size = "sm",
       busy = false,
       closeOnEscape = true,
+      nudge = true,
       initialFocus,
       scrimOpacity,
       scrimBlur = false,
@@ -217,6 +218,12 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
     const dialog = useContext(AlertDialogContext);
     const open = dialog?.open ?? true;
     const contentRef = useRef<HTMLDivElement | null>(null);
+    // A pulse when something tries to dismiss the alert and can't. Two identical animations under two names:
+    // switching the class restarts it even when it is pressed again before the last pulse has finished.
+    const [pulses, setPulses] = useState(0);
+    const pulse = useCallback(() => {
+      if (nudge) setPulses((count) => count + 1);
+    }, [nudge]);
     const context = useMemo(() => ({ tone, icon, busy }), [tone, icon, busy]);
 
     const content = (
@@ -247,9 +254,17 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
         onEscapeKeyDown={(event) => {
           onEscapeKeyDown?.(event);
           if (!closeOnEscape || busy) event.preventDefault();
-          if (!event.defaultPrevented) dialog?.setReason("escape");
+          if (event.defaultPrevented) pulse();
+          else dialog?.setReason("escape");
         }}
-        className={cx(dialogStyles.content, styles.root, sizeClass[size], toneClass[tone], className)}
+        className={cx(
+          dialogStyles.content,
+          styles.root,
+          sizeClass[size],
+          toneClass[tone],
+          pulses > 0 && (pulses % 2 === 1 ? styles.nudgeA : styles.nudgeB),
+          className,
+        )}
       >
         <AlertDialogContentContext.Provider value={context}>
           <div className={dialogStyles.slot}>{children}</div>
@@ -260,7 +275,17 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
     return (
       <AlertDialogPrimitive.Portal container={container}>
         <AlertDialogPrimitive.Overlay asChild>
-          <Backdrop inPortal={false} open={open} opacity={scrimOpacity} blur={scrimBlur}>
+          <Backdrop
+            inPortal={false}
+            open={open}
+            opacity={scrimOpacity}
+            blur={scrimBlur}
+            // Radix keeps an alert from being dismissed by a press outside and gives no hook for one, so the
+            // press is read on the scrim itself (not on the panel, which is its child).
+            onPointerDown={(event) => {
+              if (event.target === event.currentTarget) pulse();
+            }}
+          >
             {content}
           </Backdrop>
         </AlertDialogPrimitive.Overlay>
@@ -335,7 +360,7 @@ AlertDialogFooter.displayName = "AlertDialog.Footer";
  * `event.preventDefault()`. Its look follows the content's `tone` (`danger` is destructive); `variant` overrides.
  */
 const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
-  ({ variant, onClick, children, ...props }, ref) => {
+  ({ variant, value, onClick, children, ...props }, ref) => {
     const dialog = useContext(AlertDialogContext);
     const context = useContext(AlertDialogContentContext);
     const busy = context?.busy ?? false;
@@ -353,7 +378,7 @@ const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
             onClick?.(event);
             // A busy alert can't be answered again: stopping the event is what stops Radix closing it.
             if (busy) event.preventDefault();
-            else if (!event.defaultPrevented) dialog?.setReason("action");
+            else if (!event.defaultPrevented) dialog?.setReason("action", value);
           }}
         >
           {children}
@@ -366,7 +391,7 @@ AlertDialogAction.displayName = "AlertDialog.Action";
 
 /** The safe way out. It takes focus when the alert opens, and closes the alert as a cancel. */
 const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancelProps>(
-  ({ variant = "secondary", onClick, children, ...props }, ref) => {
+  ({ variant = "secondary", value, onClick, children, ...props }, ref) => {
     const dialog = useContext(AlertDialogContext);
     const busy = useContext(AlertDialogContentContext)?.busy ?? false;
     const elementRef = useRef<HTMLButtonElement | null>(null);
@@ -381,7 +406,7 @@ const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancelProps>(
           onClick={(event) => {
             onClick?.(event);
             if (busy) event.preventDefault();
-            else if (!event.defaultPrevented) dialog?.setReason("cancel");
+            else if (!event.defaultPrevented) dialog?.setReason("cancel", value);
           }}
         >
           {children}

@@ -28,6 +28,11 @@ export type AlertDialogOpenChangeReason = "trigger" | "escape" | "action" | "can
 export interface AlertDialogOpenChangeDetails {
   /** What caused the change — see {@link AlertDialogOpenChangeReason}. */
   reason: AlertDialogOpenChangeReason;
+  /**
+   * The `value` of the `AlertDialog.Action` or `AlertDialog.Cancel` that closed it, when it has one. What tells
+   * apart the answers of an alert with more than one: "Save", "Don't save" and Cancel.
+   */
+  value?: string;
 }
 
 export interface AlertDialogProps {
@@ -106,6 +111,13 @@ export interface AlertDialogContentProps extends Omit<ComponentPropsWithoutRef<"
    * @default true
    */
   closeOnEscape?: boolean;
+  /**
+   * Gives a short pulse when something tries to dismiss the alert and can't (a press on the scrim, Escape while
+   * `closeOnEscape` is off or the alert is `busy`), so it doesn't read as broken. Under
+   * `prefers-reduced-motion` the border flashes instead of the panel swelling. Set `false` to turn it off.
+   * @default true
+   */
+  nudge?: boolean;
   /**
    * An element to focus when the alert opens. By default `AlertDialog.Cancel` gets focus (the safe choice), and
    * `AlertDialog.Action` when there is no Cancel. Ignored if `onOpenAutoFocus` calls `event.preventDefault()`.
@@ -228,6 +240,11 @@ export interface AlertDialogActionProps extends Omit<ButtonProps, "asChild" | "o
   /** The label of the choice the alert exists to ask for: "Delete", "Discard changes". */
   children?: ReactNode;
   /**
+   * A name for this choice, reported as `details.value` by `onOpenChange` when it closes the alert. Give each
+   * `Action` one when there are two ("save", "discard"), since both report the reason `"action"`.
+   */
+  value?: string;
+  /**
    * Runs before the alert closes. Call `event.preventDefault()` inside to keep it open (to wait for a request,
    * say, together with `busy` on the content).
    */
@@ -237,6 +254,8 @@ export interface AlertDialogActionProps extends Omit<ButtonProps, "asChild" | "o
 export interface AlertDialogCancelProps extends Omit<ButtonProps, "asChild" | "onClick"> {
   /** The label of the safe way out: "Cancel", "Keep it". */
   children?: ReactNode;
+  /** A name for this choice, reported as `details.value` by `onOpenChange` when it closes the alert. */
+  value?: string;
   /** Runs before the alert closes. Call `event.preventDefault()` inside to keep it open. */
   onClick?: ComponentPropsWithoutRef<"button">["onClick"];
 }

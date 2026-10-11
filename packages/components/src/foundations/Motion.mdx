@@ -11,7 +11,7 @@ import { VisuallyHidden } from "../atoms/VisuallyHidden";
 
 # Motion
 
-A duration scale (120ms–600ms), 4 easing curves and 2 entrance scales. Click **Replay** on either demo below to
+A duration scale (120ms–600ms), 4 easing curves and 3 scales (two for entering, one for a pulse). Click **Replay** on either demo below to
 re-trigger the animation — numbers alone don't convey how a curve actually *feels*, especially the
 difference between `standard` and `emphasized`.
 
@@ -40,6 +40,7 @@ difference between `standard` and `emphasized`.
 <TokenReferenceTable rows={[
   { name: "motion.scale.96", value: "0.96", usage: "The size a small floating surface (a popover, a hover card, a tooltip) starts from as it enters" },
   { name: "motion.scale.98", value: "0.98", usage: "The size a large panel (a dialog) starts from as it enters; a bigger surface needs a smaller fraction for the same travel" },
+  { name: "motion.scale.102", value: "1.02", usage: "How far a panel swells at the peak of a brief attention pulse (an alert dialog pressed outside), before settling back to 1" },
 ]} />
 
 ## Usage guidelines
