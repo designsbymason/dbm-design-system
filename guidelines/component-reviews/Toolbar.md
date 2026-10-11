@@ -269,3 +269,6 @@ three-question test).
 ## Post-Finalization follow-up (2026-10-10, at explicit direction) — a flaky browser check made robust
 
 `Forced colours — interaction test` failed once in CI waiting for `data-stuck` after setting `scrollTop = 200` once at the start: a scroll position set before layout settles is clamped to 0 and never retried, and the stuck state arrives later through an `IntersectionObserver`. The assignment now happens inside the `waitFor`, so it retries. Test file only; Finalized status unchanged.
+
+## Post-Finalization follow-up (2026-10-11, at explicit direction) — the same check failed again
+`Forced colours — interaction test` timed out in CI a second time (ubuntu-24.04 only, the other image passed; not reproducible locally in ten runs, plain and under load), after the 2026-10-10 change had moved the `scrollTop` assignment inside the wait. That change repeated the *same* assignment, which makes no scroll and so no new `IntersectionObserver` entry once a first reading has been taken before layout settled. Each attempt now returns to the top and scrolls down again (up to four, about a second each), and the final assertion still fails loudly: with `sticky` turned off the test fails in about five seconds with the `data-stuck` assertion. Test file only; Finalized status unchanged.

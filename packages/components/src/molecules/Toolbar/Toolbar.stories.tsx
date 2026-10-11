@@ -1096,15 +1096,23 @@ export const ForcedColoursInteraction: Story = {
     const scroller = canvas.getByTestId("scroller");
     const frame = canvas.getByTestId("bar").parentElement!;
     const separator = canvas.getByRole("separator");
-    // Set inside the wait, not once before it: a scroll position set before layout has settled is clamped to 0 and
-    // never retried, and the stuck state arrives later through an IntersectionObserver.
-    await waitFor(
-      () => {
-        scroller.scrollTop = 200;
-        expect(frame).toHaveAttribute("data-stuck");
-      },
-      { timeout: 5000 },
-    );
+    // The stuck state arrives through an IntersectionObserver, which reports a *change*. Assigning the same
+    // `scrollTop` again produces none, so a first reading taken before layout had settled would never be followed
+    // by another. Each attempt therefore goes back to the top and down again, a real scroll every time, and waits a
+    // moment for the report; the last attempt asserts, so a real failure still fails loudly.
+    const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    for (let attempt = 0; attempt < 4 && !frame.hasAttribute("data-stuck"); attempt += 1) {
+      scroller.scrollTop = 0;
+      await nextFrame();
+      await nextFrame();
+      scroller.scrollTop = 200;
+      try {
+        await waitFor(() => expect(frame).toHaveAttribute("data-stuck"), { timeout: 1200 });
+      } catch {
+        // not reported yet: the next attempt scrolls again, and the assertion below is what fails the test
+      }
+    }
+    await expect(frame).toHaveAttribute("data-stuck");
     const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
     await emulate("active");
     try {
