@@ -1,6 +1,6 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { Responsive } from "@dbm-design-system/primitives";
-import type { ComponentPropsWithoutRef, CSSProperties, MouseEventHandler, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent, ReactNode } from "react";
 import type { ButtonProps } from "../../atoms/Button";
 
 /**
@@ -80,6 +80,17 @@ export interface ToastLabels {
    * @default 'Notification'
    */
   notification: string;
+  /**
+   * The label of the button that closes every toast, drawn once more than one is showing.
+   * @default 'Clear all'
+   */
+  clearAll: string;
+  /**
+   * What is drawn after a message that was raised again while it was still showing, from how many times it has been
+   * raised. Gets the plain number: write it with `formatNumber` yourself, as the default does.
+   * @default (count) => `×${formatNumber(count)}`
+   */
+  repeated: (count: number) => string;
 }
 
 /** What `Toast.Action` is told and given by a toast. */
@@ -95,8 +106,17 @@ export interface ToastActionOptions {
    * the button, and **required**: a toast goes away by itself, so the action must never be the only way.
    */
   altText: string;
-  /** Called when the button is pressed. The toast closes afterwards. */
-  onClick?: MouseEventHandler<HTMLButtonElement>;
+  /**
+   * Called when the button is pressed. Returning nothing closes the toast at once. Returning a promise holds it open
+   * while it runs: the button shows a spinner and is pressed no more than once, the toast does not time out, and it
+   * closes (with the reason `"action"`) when the promise resolves. A rejection keeps it open and the button
+   * available again, and goes to `onError` — or, with none, is rethrown so it surfaces as an unhandled rejection
+   * rather than being dropped. The toast says nothing about the failure itself: update it with `update()` from
+   * `onError` if it should.
+   */
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<unknown>;
+  /** Called with what a promise returned by `onClick` rejected with. */
+  onError?: (error: unknown) => void;
   /**
    * How prominent it is.
    * @default 'primary'
@@ -202,6 +222,17 @@ export interface ToastApi {
   dismissAll: () => void;
 }
 
+/**
+ * A queue of toasts made outside React, for code that has no component to call `useToast()` from (an API client's error
+ * handler, a service module). It is the same `{ toast, update, dismiss, dismissAll }` as `useToast()` gives, and does
+ * nothing visible until it is handed to one `Toast.Provider` as its `toaster`; toasts raised before then wait in it.
+ * Give each toaster to one provider only.
+ */
+export interface Toaster extends ToastApi {
+  /** Marks it as made by `createToaster()`. */
+  readonly isToaster: true;
+}
+
 export interface ToastProviderProps
   extends Omit<ComponentPropsWithoutRef<"ol">, "className" | "style" | "id" | "children" | "dir"> {
   /**
@@ -238,6 +269,28 @@ export interface ToastProviderProps
    * @default 'subtle'
    */
   variant?: ToastVariant;
+  /**
+   * Draws a button that closes every toast (and drops the ones waiting) once more than one is showing.
+   * @default true
+   */
+  clearAll?: boolean;
+  /**
+   * Raising a plain message again while it is still showing (the same tone, title and description, with no `id`, no
+   * action and no callbacks) shows it once, with a count, and starts its time again, instead of stacking copies. A
+   * toast with an action or a callback is never merged, since the second call's would be lost.
+   * @default true
+   */
+  mergeDuplicates?: boolean;
+  /**
+   * Writes the numbers the toasts show (the count of a repeated message). Defaults to `String`, never to the browser's
+   * locale (`05-component-api-conventions.md` §3, ADR-0021).
+   */
+  formatNumber?: (value: number) => string;
+  /**
+   * A queue made with `createToaster()`, so toasts can be raised from outside React. The provider makes its own when
+   * left out. One provider per toaster.
+   */
+  toaster?: Toaster;
   /**
    * The keys that move focus to the toasts, held together, as `KeyboardEvent` property or `code` names
    * (`["altKey", "KeyT"]`). The region's accessible name names it.
@@ -374,7 +427,7 @@ export interface ToastDescriptionProps extends Omit<ComponentPropsWithoutRef<"di
   "data-testid"?: string;
 }
 
-export interface ToastActionProps extends Omit<ButtonProps, "variant" | "size"> {
+export interface ToastActionProps extends Omit<ButtonProps, "variant" | "size" | "onClick"> {
   /** The action's label (or, with `asChild`, the element it is drawn onto). */
   children?: ButtonProps["children"];
   /**
@@ -389,4 +442,15 @@ export interface ToastActionProps extends Omit<ButtonProps, "variant" | "size"> 
    * @default 'primary'
    */
   variant?: ToastActionVariant;
+  /**
+   * Called when it is pressed, and then the toast closes. Returning a promise holds the toast open while it runs
+   * (a spinner on the button, no second press, no timeout) and closes it when it resolves; a rejection keeps it open
+   * and goes to `onClickError`.
+   */
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void | Promise<unknown>;
+  /**
+   * Called with what a promise returned by `onClick` rejected with. With none, the rejection is rethrown so it
+   * surfaces as an unhandled rejection rather than being dropped.
+   */
+  onClickError?: (error: unknown) => void;
 }

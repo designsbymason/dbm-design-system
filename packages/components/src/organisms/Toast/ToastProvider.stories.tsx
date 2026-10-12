@@ -46,6 +46,28 @@ const meta: Meta<typeof Toast.Provider> = {
       description: "How every toast is drawn, unless one says otherwise.",
       table: { defaultValue: { summary: '"subtle"' } },
     },
+    clearAll: {
+      control: "boolean",
+      description:
+        "Draws a button that closes every toast, and drops the ones waiting, once more than one is showing. It is in the region's tab order. labels.clearAll renames it.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    mergeDuplicates: {
+      control: "boolean",
+      description:
+        "Raising a plain message again while it is still showing (the same tone, title and description, with no id, no action and no callbacks) shows it once, with a count, and starts its time again, instead of stacking copies. A toast with an action or a callback is never merged.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    formatNumber: {
+      control: false,
+      description:
+        "Writes the numbers the toasts show: the count of a repeated message. Defaults to String, never to the browser's locale.",
+    },
+    toaster: {
+      control: false,
+      description:
+        "A queue made with createToaster(), so toasts can be raised from outside React (an API client, a service module). The provider makes its own when left out. One provider per toaster.",
+    },
     hotkey: {
       control: false,
       description:
@@ -67,7 +89,7 @@ const meta: Meta<typeof Toast.Provider> = {
     labels: {
       control: false,
       description:
-        "The text the component supplies itself, each part replaceable: dismiss (the dismiss button's name), viewport (the region's name, {hotkey} replaced by the shortcut) and notification (read before each toast).",
+        "The text the component supplies itself, each part replaceable: dismiss (the dismiss button's name), viewport (the region's name, {hotkey} replaced by the shortcut), notification (read before each toast), clearAll (the Clear all button) and repeated (a function of the plain count, written with formatNumber by default).",
     },
     className: {
       control: false,

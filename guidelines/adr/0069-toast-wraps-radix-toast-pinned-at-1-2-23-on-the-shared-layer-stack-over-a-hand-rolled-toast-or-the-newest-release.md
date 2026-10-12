@@ -1,6 +1,6 @@
 # 0069 — `Toast` wraps Radix Toast pinned at 1.2.23, on the shared layer stack, over a hand-rolled toast or the newest release
 
-**Status:** Accepted · **Date:** 2026-10-12
+**Status:** Accepted · **Date:** 2026-10-12 · **Amended 2026-10-12** — the size figure under Consequences; the decision itself is unchanged
 
 ## Context
 `Toast` has to announce a message without taking focus, pause its own time while the pointer is over it or focus is inside it, close on a swipe, give keyboard users a way into it, and keep working above an open modal dialog. Radix Toast does all of that, and the project's own rule is that this kind of behaviour is where a primitive earns its place ([ADR-0004](./0004-radix-ui-primitives-for-accessibility-logic.md)). Hand-rolling it is realistic (`Splitter` and `PinInput` were), but the parts that are easy to get subtly wrong are the ones Radix already solved: a live region that exists before its text changes, a pause that survives focus moving between toasts, a swipe threshold, and a skip-to-region key.
@@ -19,7 +19,7 @@ The registry showed what a new Radix package costs this repository. `@radix-ui/r
 - **A caret range, `^1.2.23`.** Rejected: a range would let a refresh resolve 1.3.0 without anyone looking, which is the failure above.
 
 ## Consequences
-- `Toast` carries about 4.8KB gzipped JS and 2.7KB CSS against the 10KB budget.
+- `Toast` carries about 5.9KB gzipped JS and 2.9KB CSS against the 10KB budget. *(Amended 2026-10-12: this originally said about 4.8KB and 2.7KB, before the follow-ups of [ADR-0071](./0071-toast-actions-may-take-a-promise-a-repeated-or-replaced-toast-is-drawn-afresh-and-clear-all-is-a-toast-of-its-own-over-a-plain-button-or-a-timer-nudge.md) were built.)*
 - A toast closes on `Escape` when focus is anywhere in a page whose newest layer is a toast, including inside a dialog, which is Radix's behaviour and is documented rather than changed: the newest toast closes first and the dialog on the next press.
 - A modal dialog hides the rest of the page from assistive technology, the toasts' region included, so a toast's action cannot be reached with a screen reader or the keyboard while a modal is open; its `altText` (required) is the other way, and the announcement is made separately and is unaffected.
 

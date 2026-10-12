@@ -89,6 +89,44 @@ ${provider("limit={2}", button("Send five", "sendFive()"))}`,
   Sync
 </Button>`,
 
+  promiseAction: `${hook}
+{/* onClick may return a promise: the toast stays open with a spinner on the button (past its time, and against
+    Escape, a swipe and the dismiss button) until it resolves, and then closes. A rejection keeps it open and
+    goes to onError; with none it is left unhandled, so it is never lost. */}
+<Button
+  onClick={() =>
+    toast({
+      title: "Conversation deleted",
+      action: {
+        label: "Undo",
+        altText: "Restore it from Trash",
+        onClick: () => restoreConversation(),
+        onError: () => toast({ tone: "danger", title: "Could not restore it" }),
+      },
+    })
+  }
+>
+  Delete
+</Button>`,
+
+  merged: `${hook}
+{/* The same plain message raised again while it is showing is one toast with a count, and its time starts
+    again. A message with an id, an action or a callback is never merged. */}
+<Button onClick={() => toast({ tone: "neutral", title: "Link copied" })}>Copy link</Button>
+
+{/* Turn it off for every toast */}
+<Toast.Provider mergeDuplicates={false}>{/* your app */}</Toast.Provider>`,
+
+  outside: `{/* In a module, anywhere:
+    export const toaster = createToaster();
+    toaster.toast({ tone: "danger", title: "Could not reach the server" });
+    Toasts raised before the provider mounts wait for it. One provider per toaster. */}
+<Toast.Provider toaster={toaster}>{/* your app */}</Toast.Provider>`,
+
+  clearAll: `{/* clearAll (on by default) draws a "Clear all" button once more than one toast is showing; it also
+    drops the ones waiting. labels.clearAll renames it. */}
+<Toast.Provider clearAll={false}>{/* your app */}</Toast.Provider>`,
+
   declared: `{/* const [open, setOpen] = useState(false); */}
 <Toast.Provider>
   <Toast tone="success" open={open} onOpenChange={setOpen}>

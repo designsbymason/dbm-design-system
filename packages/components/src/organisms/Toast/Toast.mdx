@@ -32,6 +32,10 @@ export const providerPropOrder = [
   "duration",
   "size",
   "variant",
+  "clearAll",
+  "mergeDuplicates",
+  "formatNumber",
+  "toaster",
   "hotkey",
   "dir",
   "container",
@@ -65,7 +69,7 @@ export const rootPropOrder = [
 ];
 export const titlePropOrder = ["children", "id", "className", "style", "data-testid"];
 export const descriptionPropOrder = ["children", "id", "className", "style", "data-testid"];
-export const actionPropOrder = ["children", "altText", "variant", "onClick", "disabled", "asChild", "id", "className", "style", "data-testid"];
+export const actionPropOrder = ["children", "altText", "variant", "onClick", "onClickError", "disabled", "asChild", "id", "className", "style", "data-testid"];
 
 <Meta of={ToastStories} />
 
@@ -78,13 +82,14 @@ away by itself: "Saved", "Link copied", "Conversation archived · Undo". It neve
 blocks the page, so it is for news that can wait, not for a decision. A toast is raised from code: put
 a `Toast.Provider` once near the root of the app, and call `toast()` from `useToast()` anywhere under
 it. Toasts queue (`limit` show at once, the rest wait their turn), pause while the pointer is over them
-or focus is inside them, and can be swiped away or dismissed. The same thing can be drawn as parts
+or focus is inside them, can be swiped away or dismissed, and offer "Clear all" once there are several; a
+message raised again while it shows is merged into one with a count. The same thing can be drawn as parts
 (`Toast`, `Toast.Title`, `Toast.Description`, `Toast.Action`) when the message belongs to your own state.
 
 ### Import
 
 ```tsx
-import { Toast, useToast } from "@dbm-design-system/components";
+import { createToaster, Toast, useToast } from "@dbm-design-system/components";
 ```
 
 ## Playground
@@ -167,6 +172,15 @@ itself.
 
 <Canvas of={ToastStories.WithAction} />
 
+### An action that takes a promise
+
+Return a promise from `onClick` and the toast stays open while it runs: the button shows a spinner and
+can be pressed once, the toast doesn't time out (and Escape, a swipe and the dismiss button do nothing),
+and it closes when the promise resolves. A rejection keeps it open and the button available again, and
+goes to `onError` (`onClickError` on `Toast.Action`); with none it is left unhandled so it is never lost.
+
+<Canvas of={ToastStories.PromiseAction} />
+
 ### Placements
 
 `start` and `end` are logical: the left and right in left-to-right text, swapped in right-to-left.
@@ -207,9 +221,34 @@ time when it appears.
 ### Updated in place
 
 Calling `toast()` again with the same `id` replaces what is showing instead of adding another, and
-`update()` changes some of it and keeps the rest.
+`update()` changes some of it and keeps the rest. A replacement is drawn afresh, so its time starts
+again and a screen reader reads the new text; `update()` changes it without either.
 
 <Canvas of={ToastStories.Updating} />
+
+### The same message, once, with a count
+
+A plain message raised again while it is still showing (the same tone, title and description, with no
+`id`, no action and no callbacks) is one toast with a count, and its time starts again. A toast with an
+action or a callback is never merged, since the second call's would be lost. `mergeDuplicates={false}`
+turns it off.
+
+<Canvas of={ToastStories.Merged} />
+
+### Clear all
+
+Once more than one toast is showing, a "Clear all" button appears at the edge of the stack. It closes
+every toast and drops the ones waiting. It is in the region's tab order like a toast of its own, so F8
+and `Tab` reach it.
+
+<Canvas of={ToastStories.ClearAll} />
+
+### Raised from plain code
+
+`createToaster()` makes a queue outside React, for an API client's error handler or a service module.
+Give it to one provider as its `toaster`; what is raised before the provider mounts waits for it.
+
+<Canvas of={ToastStories.FromOutsideReact} />
 
 ### Declared as parts
 
@@ -245,6 +284,8 @@ When the message belongs to your own state, draw it as parts with `open` and `on
 - Don't use it for a message that belongs in the page (a form's error, a plan's expiry): that is an
   `Alert`, which stays.
 - Don't raise a toast for every small thing, or several at once: a person can read about three.
+- Don't catch a failure inside an action's `onClick` and return normally: the toast reads that as success
+  and closes. Let the promise reject, or handle it in `onError`.
 - Don't put a long message, a form or a link list in one. If it needs more than a sentence and one
   action, it is not a toast.
 
@@ -262,6 +303,12 @@ When the message belongs to your own state, draw it as parts with `open` and `on
   since the person's eyes are on the thing that moved.
 - Report the outcome with `toast.promise()` or `update()` rather than a second toast, so one piece of
   work is one message.
+- Hovering one toast holds the time of all of them, so the stack doesn't change under a pointer that is
+  moving between them. Leaving the toasts (and focus leaving them) lets every time carry on.
+- A message that is raised again from a button pressed twice becomes one toast with a count. Give a toast
+  an `id` when it must not merge, or when it should be replaced with something else instead.
+- In a module that has no component to call `useToast()` from, make one `createToaster()` and give it to
+  the provider; keep one provider per toaster.
 - `onOpenChangeComplete` says it is gone (its exit has finished); `onOpenChange` says it started to go,
   with the reason: `timeout`, `dismiss`, `action`, `swipe`, `escape` or `programmatic`.
 - A toast sits above a modal dialog's scrim and answers a click, whether it was raised before the
@@ -284,6 +331,10 @@ When the message belongs to your own state, draw it as parts with `open` and `on
   When the toasts are gone, focus goes back to where it was before it entered the region, if it is still
   there.
 - A toast never takes focus when it appears, and never moves it when it closes while focus is elsewhere.
+- "Clear all" is in the same tab order as the toasts, so F8 and `Tab` reach it; it is announced when it
+  appears with the second toast, and a screen reader reads a replaced toast's new text again.
+- While an action's promise runs, its button is marked `aria-busy` and `aria-disabled` and stays
+  focusable, so focus isn't lost from a button the person has just pressed.
 - The time is paused while the pointer is over the toasts, while focus is inside them and while the
   window is in the background, and a toast can be kept until it is dismissed (`duration: null`).
 - The dismiss button and the action are at least 24 by 24 pixels at every size.
@@ -328,6 +379,24 @@ toast.promise(saveChanges(), {
 {/* Until it is dismissed */}
 toast({ tone: "warning", title: "You are offline", duration: null });
 
+{/* An action that takes a promise: the toast waits for it, and a failure keeps it open */}
+toast({
+  title: "Conversation deleted",
+  action: {
+    label: "Undo",
+    altText: "Restore it from Trash",
+    onClick: () => restoreConversation(),
+    onError: () => toast({ tone: "danger", title: "Could not restore it" }),
+  },
+});
+
+{/* From plain code, with no component: make a toaster and hand it to the provider */}
+export const toaster = createToaster();
+toaster.toast({ tone: "danger", title: "Could not reach the server" });
+<Toast.Provider toaster={toaster} clearAll mergeDuplicates>
+  <App />
+</Toast.Provider>
+
 {/* Declared as parts, from your own state */}
 <Toast tone="success" open={open} onOpenChange={setOpen}>
   <Toast.Title>Saved</Toast.Title>
@@ -363,6 +432,7 @@ tone and variant match.
 <TokenRow token="font-family.primary" usage="the toasts' typography — set explicitly since the region is drawn in a portal outside this component's own tree" />
 <TokenRow token="font-size.xs / font-size.sm / font-size.base / font-size.md / font-size.lg" usage="the title and message across the five size steps" />
 <TokenRow token="font-weight.semibold" usage="the title" />
+<TokenRow token="font-weight.regular" usage="the count after a repeated message" />
 <TokenRow token="line-height.normal" usage="the toast's line height" />
 <TokenRow token="space.0" usage="the region's safe-area fallback" />
 <TokenRow token="space.1 / space.2 / space.3 / space.4 / space.5 / space.6" usage="padding, the gap between the icon and the text, between toasts (space.3) and around the region (space.4); the dismiss button's minimum size (space.6)" />
@@ -380,6 +450,7 @@ tone and variant match.
 <TokenRow token="motion.easing.accelerate" usage="leaving" />
 <TokenRow token="motion.easing.standard" usage="springing back from a swipe, the dismiss button's hover fill" />
 <TokenRow token="motion.scale.96" usage="the size a toast starts from as it enters" />
+<TokenRow token="motion.scale.102" usage="the swell of a toast that is raised again while it is showing" />
 
 ## Related components
 

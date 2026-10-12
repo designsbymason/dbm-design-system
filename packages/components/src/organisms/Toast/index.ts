@@ -1,4 +1,4 @@
-export { Toast, useToast } from "./Toast";
+export { createToaster, Toast, useToast } from "./Toast";
 export type {
   ToastActionOptions,
   ToastActionProps,
@@ -16,6 +16,7 @@ export type {
   ToastRole,
   ToastSize,
   ToastTitleProps,
+  Toaster,
   ToastTone,
   ToastVariant,
 } from "./Toast.types";

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useEffect, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Toast, useToast } from "./Toast";
+import { createToaster, Toast, useToast } from "./Toast";
 import styles from "./Toast.module.css";
 import type { ToastApi, ToastProviderProps } from "./Toast.types";
 
@@ -165,7 +165,8 @@ describe("toast()", () => {
       api.toast({ id: "b", title: "B" });
       api.toast({ id: "c", title: "C" });
     });
-    expect(toasts().map((item) => item.textContent)).toEqual([expect.stringContaining("A"), expect.stringContaining("B")]);
+    const shown = () => toasts().map((item) => item.textContent ?? "").filter((text) => !text.includes("Clear all"));
+    expect(shown()).toEqual([expect.stringContaining("A"), expect.stringContaining("B")]);
     act(() => api.dismiss("a"));
     animationEnd(screen.queryByText("A")?.closest("li") ?? null);
     await waitFor(() => expect(screen.queryByText("C")).toBeInTheDocument());
@@ -194,16 +195,17 @@ describe("a toast's announcement", () => {
       api.toast({ title: "Saved", tone: "success" });
     });
     // The text goes into the live regions a frame after they are in the page, which is what makes it a change.
-    await waitFor(() => expect(document.querySelectorAll("[aria-live]")).toHaveLength(3));
+    // three toasts, and the "Clear all" bar that appears with the second
+    await waitFor(() => expect(document.querySelectorAll("[aria-live]")).toHaveLength(4));
     await waitFor(() => expect(document.querySelector("[aria-live]")?.textContent).not.toBe(""));
     const live = Array.from(document.querySelectorAll("[aria-live]"));
     expect(live.filter((node) => node.getAttribute("aria-live") === "assertive").map((node) => node.textContent)).toEqual([
       expect.stringContaining("Failed"),
       expect.stringContaining("Heads up"),
     ]);
-    expect(live.filter((node) => node.getAttribute("aria-live") === "polite").map((node) => node.textContent)).toEqual([
-      expect.stringContaining("Saved"),
-    ]);
+    expect(
+      live.filter((node) => node.getAttribute("aria-live") === "polite").map((node) => node.textContent),
+    ).toEqual([expect.stringContaining("Saved"), expect.stringContaining("Clear all")]);
   });
 
   it("takes the role it is given over the tone's", async () => {
@@ -606,5 +608,306 @@ describe("accessibility", () => {
       api.toast({ title: "Saved" });
     });
     expect(await axe(document.body)).toHaveNoViolations();
+  });
+});
+
+describe("an action that returns a promise", () => {
+  function deferred() {
+    let resolve: () => void = () => undefined;
+    let reject: (reason: unknown) => void = () => undefined;
+    const promise = new Promise<void>((done, fail) => {
+      resolve = done;
+      reject = fail;
+    });
+    return { promise, resolve, reject };
+  }
+
+  it("holds the toast open with a spinner, presses once, and closes with the reason 'action' when it resolves", async () => {
+    const user = userEvent.setup();
+    const work = deferred();
+    const onClick = vi.fn(() => work.promise);
+    const onOpenChange = vi.fn();
+    render(<Provider duration={1000} />);
+    act(() => {
+      api.toast({ title: "Deleted", onOpenChange, action: { label: "Undo", altText: "Undo from the Edit menu", onClick } });
+    });
+    const button = screen.getByRole("button", { name: "Undo" });
+    await user.click(button);
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toBeDisabled();
+    expect(button.querySelector("svg, span[aria-hidden]")).not.toBeNull();
+    await user.click(button);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    await act(async () => {
+      work.resolve();
+      await work.promise;
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "action" });
+  });
+
+  it("does not time out, be dismissed or be swiped away while it runs", async () => {
+    vi.useFakeTimers();
+    const work = deferred();
+    const onOpenChange = vi.fn();
+    render(<Provider duration={500} />);
+    act(() => {
+      api.toast({ title: "Deleted", onOpenChange, action: { label: "Undo", altText: "Undo", onClick: () => work.promise } });
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(toasts().length).toBeGreaterThan(0);
+    await act(async () => {
+      work.resolve();
+      await work.promise;
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "action" });
+  });
+
+  it("stays open and available again on a rejection, and hands the error to onError", async () => {
+    const user = userEvent.setup();
+    const failure = new Error("offline");
+    const onError = vi.fn();
+    const onOpenChange = vi.fn();
+    let attempt = 0;
+    render(<Provider />);
+    act(() => {
+      api.toast({
+        title: "Deleted",
+        onOpenChange,
+        action: {
+          label: "Undo",
+          altText: "Undo from the Edit menu",
+          onError,
+          onClick: () => (attempt++ === 0 ? Promise.reject(failure) : undefined),
+        },
+      });
+    });
+    const button = screen.getByRole("button", { name: "Undo" });
+    await user.click(button);
+    await waitFor(() => expect(onError).toHaveBeenCalledWith(failure));
+    await waitFor(() => expect(button).not.toHaveAttribute("aria-busy"));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    await user.click(button);
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "action" });
+  });
+});
+
+describe("a message raised again while it is showing", () => {
+  it("is shown once, with a count, and starts its time again", () => {
+    vi.useFakeTimers();
+    render(<Provider duration={1000} />);
+    act(() => {
+      api.toast({ title: "Saved", description: "Your changes are live." });
+    });
+    act(() => {
+      vi.advanceTimersByTime(800);
+    });
+    act(() => {
+      api.toast({ title: "Saved", description: "Your changes are live." });
+    });
+    expect(toasts().filter((item) => item.textContent?.includes("Saved"))).toHaveLength(1);
+    expect(screen.getByText("×2")).toBeInTheDocument();
+    // 800ms of the first one's time has passed; a restart means it is still here 800ms later
+    act(() => {
+      vi.advanceTimersByTime(800);
+    });
+    expect(toasts().some((item) => item.getAttribute("data-state") === "open")).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(toasts().every((item) => item.getAttribute("data-state") === "closed")).toBe(true);
+  });
+
+  it("is not merged when it has an id, an action or a callback, or says something else", () => {
+    render(<Provider limit={9} />);
+    act(() => {
+      api.toast({ id: "a", title: "Saved" });
+      api.toast({ id: "b", title: "Saved" });
+      api.toast({ title: "Saved", onOpenChange: () => undefined });
+      api.toast({ title: "Saved", onOpenChange: () => undefined });
+      api.toast({ title: "Saved", action: { label: "Undo", altText: "Undo" } });
+      api.toast({ title: "Saved", action: { label: "Undo", altText: "Undo" } });
+      api.toast({ title: "Saved", tone: "success" });
+    });
+    expect(toasts().filter((item) => item.textContent?.includes("Saved"))).toHaveLength(7);
+    expect(screen.queryByText(/×/)).not.toBeInTheDocument();
+  });
+
+  it("can be turned off", () => {
+    render(<Provider mergeDuplicates={false} limit={5} />);
+    act(() => {
+      api.toast({ title: "Saved" });
+      api.toast({ title: "Saved" });
+    });
+    expect(toasts().filter((item) => item.textContent?.includes("Saved"))).toHaveLength(2);
+  });
+
+  it("writes its count with formatNumber", () => {
+    render(<Provider formatNumber={(value) => `#${value}`} />);
+    act(() => {
+      api.toast({ title: "Copied" });
+      api.toast({ title: "Copied" });
+    });
+    expect(screen.getByText("×#2")).toBeInTheDocument();
+  });
+
+  it("writes its count with `labels.repeated` when given one", () => {
+    render(<Provider labels={{ repeated: (count) => `(${count} fois)` }} />);
+    act(() => {
+      api.toast({ title: "Copié" });
+      api.toast({ title: "Copié" });
+    });
+    expect(screen.getByText("(2 fois)")).toBeInTheDocument();
+  });
+
+  it("is told apart from one that has left, which is raised afresh", async () => {
+    render(<Provider />);
+    act(() => {
+      api.toast({ title: "Saved" });
+    });
+    act(() => api.dismissAll());
+    animationEnd(screen.queryByText("Saved")?.closest("li") ?? null);
+    await waitFor(() => expect(toasts()).toHaveLength(0));
+    act(() => {
+      api.toast({ title: "Saved" });
+    });
+    expect(screen.queryByText(/×/)).not.toBeInTheDocument();
+  });
+});
+
+describe("a toast replaced under the same id", () => {
+  it("starts its time again and takes the new content", () => {
+    vi.useFakeTimers();
+    const onOpenChange = vi.fn();
+    render(<Provider duration={1000} />);
+    act(() => {
+      api.toast({ id: "sync", title: "Syncing", onOpenChange });
+    });
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+    act(() => {
+      api.toast({ id: "sync", title: "Synced", onOpenChange });
+    });
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(toasts()[0]).toHaveTextContent("Synced");
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "timeout" });
+  });
+
+  it("is not drawn afresh by update()", () => {
+    render(<Provider />);
+    let id = "";
+    act(() => {
+      id = api.toast({ title: "Uploading" });
+    });
+    const before = toasts()[0];
+    act(() => api.update(id, { title: "Uploaded" }));
+    expect(toasts()[0]).toBe(before);
+  });
+
+  it("is read again: a replaced toast announces its new text", async () => {
+    render(<Provider />);
+    act(() => {
+      api.toast({ id: "save", title: "Saving…", loading: true });
+    });
+    await waitFor(() => expect(document.querySelector("[aria-live]")?.textContent).toContain("Saving"));
+    act(() => {
+      api.toast({ id: "save", title: "Saved", tone: "success" });
+    });
+    await waitFor(() => expect(Array.from(document.querySelectorAll("[aria-live]")).some((node) => node.textContent?.includes("Saved"))).toBe(true));
+  });
+});
+
+describe("Clear all", () => {
+  it("is drawn once more than one toast is showing, and closes them all and the ones waiting", async () => {
+    const user = userEvent.setup();
+    render(<Provider limit={2} />);
+    act(() => {
+      api.toast({ id: "a", title: "A" });
+    });
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+    act(() => {
+      api.toast({ id: "b", title: "B" });
+      api.toast({ id: "c", title: "C" });
+    });
+    await user.click(screen.getByRole("button", { name: "Clear all" }));
+    await waitFor(() => expect(toasts()).toHaveLength(0));
+    expect(screen.queryByText("C")).not.toBeInTheDocument();
+  });
+
+  it("goes away again when only one is left, and can be turned off or renamed", async () => {
+    const { unmount } = render(<Provider />);
+    let first = "";
+    act(() => {
+      first = api.toast({ title: "A" });
+      api.toast({ title: "B" });
+    });
+    expect(screen.getByRole("button", { name: "Clear all" })).toBeInTheDocument();
+    act(() => api.dismiss(first));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument());
+    unmount();
+
+    const off = render(<Provider clearAll={false} />);
+    act(() => {
+      api.toast({ title: "A" });
+      api.toast({ title: "B" });
+    });
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+    off.unmount();
+
+    render(<Provider labels={{ clearAll: "Tout effacer" }} />);
+    act(() => {
+      api.toast({ title: "A" });
+      api.toast({ title: "B" });
+    });
+    expect(screen.getByRole("button", { name: "Tout effacer" })).toBeInTheDocument();
+  });
+});
+
+describe("createToaster()", () => {
+  it("raises toasts from outside React, which wait for a provider and show when it mounts", () => {
+    const toaster = createToaster();
+    const id = toaster.toast({ title: "Raised early" });
+    expect(id).not.toBe("");
+    render(<Toast.Provider toaster={toaster} />);
+    expect(toasts()[0]).toHaveTextContent("Raised early");
+    act(() => {
+      toaster.toast({ tone: "danger", title: "Later" });
+    });
+    expect(toasts().filter((item) => !item.textContent?.includes("Clear all"))).toHaveLength(2);
+    act(() => toaster.dismiss(id));
+    expect(
+      toasts().filter((item) => item.getAttribute("data-state") === "open" && !item.textContent?.includes("Clear all")),
+    ).toHaveLength(1);
+  });
+
+  it("is what useToast() hands out under its provider", () => {
+    const toaster = createToaster();
+    render(
+      <Toast.Provider toaster={toaster}>
+        <Capture />
+      </Toast.Provider>,
+    );
+    expect(captured.api.toast).toBe(toaster.toast);
+  });
+
+  it("keeps two toasters apart", () => {
+    const one = createToaster();
+    const other = createToaster();
+    one.toast({ title: "Only in one" });
+    render(<Toast.Provider toaster={other} />);
+    expect(toasts()).toHaveLength(0);
   });
 });

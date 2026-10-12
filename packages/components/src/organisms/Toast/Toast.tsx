@@ -15,12 +15,13 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
-import type { FocusEvent, ReactNode } from "react";
+import type { FocusEvent, MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize, IconTone } from "../../atoms/Icon";
@@ -46,6 +47,7 @@ import type {
   ToastSize,
   ToastTitleProps,
   ToastTone,
+  Toaster,
   ToastVariant,
 } from "./Toast.types";
 import { ToastStore } from "./ToastStore";
@@ -122,7 +124,12 @@ const defaultLabels: ToastLabels = {
   dismiss: "Dismiss",
   viewport: "Notifications ({hotkey})",
   notification: "Notification",
+  clearAll: "Clear all",
+  repeated: (count) => `×${count}`,
 };
+
+// `useLayoutEffect` on the client, `useEffect` on the server — avoids React's "does nothing on the server" warning.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const DEFAULT_LIMIT = 3;
 const DEFAULT_DURATION = 5000;
@@ -144,7 +151,11 @@ const ToastSystemContext = createContext<ToastSystemValue | null>(null);
 interface ToastItemValue {
   variant: ToastVariant;
   size: ToastSize;
-  markReason: (reason: ToastOpenChangeReason) => void;
+  markReason: (reason: ToastOpenChangeReason | null) => void;
+  /** Holds the toast open (no timeout, dismiss, swipe or Escape) while its action's promise runs. */
+  setBusy: (busy: boolean) => void;
+  /** Closes the toast from inside it, for an action that finished. */
+  close: (reason: ToastOpenChangeReason) => void;
 }
 const ToastItemContext = createContext<ToastItemValue | null>(null);
 
@@ -160,7 +171,7 @@ function normalise(options: string | ToastOptions): ToastOptions {
 }
 
 function createApi(store: ToastStore): ToastApi {
-  const toast = Object.assign((options: string | ToastOptions) => store.add(normalise(options)), {
+  const toast = Object.assign((options: string | ToastOptions) => store.raise(normalise(options)), {
     promise: <Value,>(promise: Promise<Value>, options: ToastPromiseOptions<Value>) => {
       const loading = normalise(options.loading);
       const id = store.add({
@@ -191,6 +202,27 @@ function createApi(store: ToastStore): ToastApi {
     },
     dismissAll: () => store.closeAll(),
   };
+}
+
+const toasterStores = new WeakMap<object, ToastStore>();
+
+/**
+ * Makes a queue of toasts outside React, for code that has no component to call `useToast()` from: an API client's
+ * error handler, a service module. Give it to one `Toast.Provider` as its `toaster`; what is raised before the
+ * provider mounts waits in it and shows then. It holds its own state, so nothing is shared between two of them.
+ *
+ * @example
+ * ```tsx
+ * export const toaster = createToaster();
+ * // anywhere: toaster.toast({ tone: "danger", title: "Could not reach the server" });
+ * // once:     <Toast.Provider toaster={toaster}><App /></Toast.Provider>
+ * ```
+ */
+export function createToaster(): Toaster {
+  const store = new ToastStore();
+  const toaster: Toaster = { ...createApi(store), isToaster: true };
+  toasterStores.set(toaster, store);
+  return toaster;
 }
 
 /**
@@ -231,14 +263,27 @@ ToastDescription.displayName = "Toast.Description";
 
 /**
  * One thing the person can do about the message — a `Button` that takes its colours (and its size) from the toast
- * around it, so it reads against any tone and variant. Pressing it closes the toast after its own `onClick` has run.
- * `altText` is required: a toast goes away by itself, so say how to do the same thing without it.
+ * around it, so it reads against any tone and variant. Pressing it closes the toast after its own `onClick` has run;
+ * if `onClick` returns a promise the toast stays open, with a spinner on the button, until it resolves, and a
+ * rejection keeps it open and goes to `onClickError`. `altText` is required: a toast goes away by itself, so say how
+ * to do the same thing without it.
  */
 const ToastAction = forwardRef<HTMLButtonElement, ToastActionProps>(
-  ({ variant = "primary", altText, className, onClickCapture, ...props }, ref) => {
+  ({ variant = "primary", altText, className, onClick, onClickError, onClickCapture, children, ...props }, ref) => {
     const item = useContext(ToastItemContext);
     const known = variant in actionVariantClass;
     const resolved: ToastActionVariant = known ? variant : "primary";
+    const [busy, setBusy] = useState(false);
+    // A ref as well as the state, so a second press in the same tick is ignored before the state has updated.
+    const busyRef = useRef(false);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
+    const mounted = useRef(true);
+    useEffect(() => {
+      mounted.current = true;
+      return () => {
+        mounted.current = false;
+      };
+    }, []);
     useEffect(() => {
       if (process.env.NODE_ENV !== "production" && !known) {
         console.warn(
@@ -246,20 +291,72 @@ const ToastAction = forwardRef<HTMLButtonElement, ToastActionProps>(
         );
       }
     }, [known, variant]);
+
+    // `Button` writes `aria-busy` and `aria-disabled` itself, after the props it is given, and from `isLoading`, which also
+    // sets the native `disabled` and would drop the focus of the person who just pressed it. They are set on the element.
+    useEffect(() => {
+      const node = buttonRef.current;
+      if (!node) return;
+      if (busy) {
+        node.setAttribute("aria-busy", "true");
+        node.setAttribute("aria-disabled", "true");
+      } else {
+        node.removeAttribute("aria-busy");
+        node.removeAttribute("aria-disabled");
+      }
+    }, [busy]);
+
+    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+      if (busyRef.current) {
+        event.preventDefault();
+        return;
+      }
+      const result = onClick?.(event);
+      if (!result || typeof (result as Promise<unknown>).then !== "function") return;
+      // A promise: not closing at once is what keeps the toast open, so the close Radix attaches to the press is cancelled
+      // (and the reason the press marked is taken back, or a later timeout would be read as the action).
+      event.preventDefault();
+      item?.markReason(null);
+      busyRef.current = true;
+      setBusy(true);
+      item?.setBusy(true);
+      const settle = () => {
+        busyRef.current = false;
+        item?.setBusy(false);
+        if (mounted.current) setBusy(false);
+      };
+      (result as Promise<unknown>).then(
+        () => {
+          settle();
+          item?.close("action");
+        },
+        (error: unknown) => {
+          settle();
+          // Never dropped (`06` §3): the caller's handler, or left unhandled so it surfaces where it can be seen.
+          if (onClickError) onClickError(error);
+          else throw error;
+        },
+      );
+    };
+
     return (
       <ToastPrimitive.Action asChild altText={altText}>
         <Button
           {...props}
-          ref={ref}
+          ref={mergeRefs(ref, buttonRef)}
           // After `...props`: the size is the toast's, and the variant is one of ours, whatever a caller passes.
           variant={resolved}
           size={item?.size ?? "md"}
           className={cx(styles.action, actionVariantClass[resolved], className)}
+          onClick={handleClick}
           onClickCapture={(event) => {
-            item?.markReason("action");
+            if (!busyRef.current) item?.markReason("action");
             onClickCapture?.(event);
           }}
-        />
+        >
+          {busy && <Spinner size="xs" />}
+          {children}
+        </Button>
       </ToastPrimitive.Action>
     );
   },
@@ -324,19 +421,37 @@ const ToastRoot = forwardRef<HTMLLIElement, ToastProps>(
       }
     }, [isControlled, defaultOpen]);
 
-    const markReason = useCallback((next: ToastOpenChangeReason) => {
+    const busy = useRef(false);
+    const markReason = useCallback((next: ToastOpenChangeReason | null) => {
       reason.current = next;
     }, []);
-    const contextValue = useMemo<ToastItemValue>(() => ({ variant, size, markReason }), [variant, size, markReason]);
 
     // What Radix reports is only that it closed; the reason was written down by whatever caused it, and a close nothing
-    // marked is the timer.
+    // marked is the timer. While an action's promise runs nothing closes it but that action finishing.
     const handleOpenChange = (next: boolean) => {
       const why = reason.current ?? "timeout";
       reason.current = null;
+      if (!next && busy.current && why !== "action") return;
       if (!isControlled) setUncontrolledOpen(next);
       onOpenChange?.(next, { reason: why });
     };
+    const latestClose = useRef(handleOpenChange);
+    useEffect(() => {
+      latestClose.current = handleOpenChange;
+    });
+    const setBusy = useCallback((next: boolean) => {
+      busy.current = next;
+    }, []);
+    const close = useCallback((why: ToastOpenChangeReason) => {
+      reason.current = why;
+      latestClose.current(false);
+    }, []);
+    const contextValue = useMemo<ToastItemValue>(
+      () => ({ variant, size, markReason, setBusy, close }),
+      [variant, size, markReason, setBusy, close],
+    );
+
+    useKeepHeight(panelRef, open);
 
     const resolvedRole = role ?? (loading ? "status" : defaultRole[tone]);
     const glyph = icon === false ? undefined : (icon ?? toneIcon[tone]);
@@ -388,6 +503,23 @@ const ToastRoot = forwardRef<HTMLLIElement, ToastProps>(
 );
 ToastRoot.displayName = "Toast";
 
+/**
+ * Keeps an element's height in a custom property while it is open, so that leaving can collapse the room it took by
+ * exactly that much and the toasts beside it close the gap instead of jumping (Toast.module.css, `toastOut`).
+ */
+function useKeepHeight(ref: RefObject<HTMLElement | null>, open: boolean) {
+  useIsomorphicLayoutEffect(() => {
+    const node = ref.current;
+    if (!node || !open) return undefined;
+    const write = () => node.style.setProperty("--toast-height", `${node.offsetHeight}px`);
+    write();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(write);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [ref, open]);
+}
+
 /** A toast the provider holds, drawn from its options. */
 function ToastEntryView({ entry }: { entry: ToastEntry }) {
   const system = useContext(ToastSystemContext);
@@ -425,8 +557,13 @@ function ToastEntryView({ entry }: { entry: ToastEntry }) {
   }, [open, id, store]);
 
   const action: ToastActionOptions | undefined = options.action;
+  const labels = system?.labels ?? defaultLabels;
+  const repeated = entry.count > 1 ? <span className={styles.count}>{labels.repeated(entry.count)}</span> : null;
   return (
     <ToastRoot
+      // Drawn afresh when it is replaced or raised again: its time starts again and it is read again.
+      key={entry.revision}
+      data-revised={entry.revision > 0 ? "" : undefined}
       ref={(node) => {
         if (node) shown.current = true;
       }}
@@ -445,14 +582,53 @@ function ToastEntryView({ entry }: { entry: ToastEntry }) {
         if (!next) store?.remove(id);
       }}
     >
-      {options.title !== undefined && <ToastTitle>{options.title}</ToastTitle>}
-      {options.description !== undefined && <ToastDescription>{options.description}</ToastDescription>}
+      {options.title !== undefined && (
+        <ToastTitle>
+          {options.title}
+          {repeated}
+        </ToastTitle>
+      )}
+      {options.description !== undefined && (
+        <ToastDescription>
+          {options.description}
+          {options.title === undefined && repeated}
+        </ToastDescription>
+      )}
       {action && (
-        <ToastAction altText={action.altText} variant={action.variant} onClick={action.onClick}>
+        <ToastAction altText={action.altText} variant={action.variant} onClick={action.onClick} onClickError={action.onError}>
           {action.label}
         </ToastAction>
       )}
     </ToastRoot>
+  );
+}
+
+/**
+ * The "Clear all" button, drawn once more than one toast is open. It is a toast of its own as far as Radix is concerned
+ * (so it is in the region's tab order and F8 reaches it, which a plain button among the list's children would not be),
+ * kept open by the count and not by a timer, and put last in the stack by CSS `order`.
+ */
+function ToastClearAll({ show }: { show: boolean }) {
+  const system = useContext(ToastSystemContext);
+  const ref = useRef<HTMLLIElement | null>(null);
+  useKeepHeight(ref, show);
+  return (
+    <ToastPrimitive.Root
+      ref={ref}
+      open={show}
+      duration={Infinity}
+      type="background"
+      // Nothing closes it but there being fewer than two toasts: Escape or a swipe on it are ignored.
+      onOpenChange={noop}
+      className={styles.clearAll}
+      data-clear-all=""
+      data-state={show ? "open" : "closed"}
+      data-swipe-direction={system?.swipeDirection ?? "right"}
+    >
+      <Button variant="tertiary" size="sm" onClick={() => system?.api.dismissAll()}>
+        {system?.labels.clearAll}
+      </Button>
+    </ToastPrimitive.Root>
   );
 }
 
@@ -487,6 +663,10 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
       duration = DEFAULT_DURATION,
       size = "md",
       variant = "subtle",
+      clearAll = true,
+      mergeDuplicates = true,
+      formatNumber = String,
+      toaster,
       hotkey,
       dir = "ltr",
       container,
@@ -498,7 +678,10 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
     },
     ref,
   ) => {
-    const [store] = useState(() => new ToastStore());
+    const [ownStore] = useState(() => new ToastStore());
+    // A toaster made with `createToaster()` brings its own store, and is the api `useToast()` hands out.
+    const givenStore = toaster ? toasterStores.get(toaster) : undefined;
+    const store = givenStore ?? ownStore;
 
     const entries = useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);
     const showing = Math.max(1, Math.floor(limit));
@@ -507,16 +690,23 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
     useEffect(() => {
       store.setShowing(showing);
     }, [store, showing]);
+    useEffect(() => {
+      store.setMerging(mergeDuplicates);
+    }, [store, mergeDuplicates]);
 
-    const api = useMemo(() => createApi(store), [store]);
-    const labels: ToastLabels = mergeDefined(defaultLabels, labelOverrides);
+    const api = useMemo<ToastApi>(() => (givenStore && toaster ? toaster : createApi(store)), [store, givenStore, toaster]);
+    // The count is written with `formatNumber`, not the browser's locale (ADR-0021).
+    const labels: ToastLabels = mergeDefined(
+      { ...defaultLabels, repeated: (count: number) => `×${formatNumber(count)}` },
+      labelOverrides,
+    );
     const resolvedPlacement = useResolvedResponsiveValue<ToastPlacement>(placement, DEFAULT_PLACEMENT);
     const swipeDirection = swipeDirectionFor(resolvedPlacement, dir);
     const value = useMemo<ToastSystemValue>(
       () => ({ store, variant, size, labels, api, swipeDirection }),
       // `labels` is rebuilt every render; its pieces are what matter.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [store, variant, size, labels.dismiss, labels.viewport, labels.notification, api, swipeDirection],
+      [store, variant, size, labels.dismiss, labels.viewport, labels.notification, labels.clearAll, labels.repeated, api, swipeDirection],
     );
 
     // Focus. A toast never takes it, but a person can move into the region (the hotkey, Tab) and press its action;
@@ -540,6 +730,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
       }
       onBlur?.(event);
     };
+    const openCount = entries.filter((entry) => entry.open).length;
     const empty = entries.length === 0;
     useEffect(() => {
       if (!empty || !focusWithin.current) return;
@@ -562,6 +753,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
           {visible.map((entry) => (
             <ToastEntryView key={entry.id} entry={entry} />
           ))}
+          {clearAll && <ToastClearAll show={openCount >= 2} />}
           <Portal container={container}>
             <ToastPrimitive.Viewport
               {...props}

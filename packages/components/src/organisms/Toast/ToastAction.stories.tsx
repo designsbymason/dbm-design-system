@@ -22,7 +22,13 @@ const meta: Meta<typeof Toast.Action> = {
     },
     onClick: {
       control: false,
-      description: "Called when it is pressed. The toast closes afterwards.",
+      description:
+        "Called when it is pressed, and then the toast closes. Returning a promise holds the toast open while it runs (a spinner on the button, no second press, no timeout) and closes it when it resolves; a rejection keeps it open and goes to onClickError.",
+    },
+    onClickError: {
+      control: false,
+      description:
+        "Called with what a promise returned by onClick rejected with. With none, the rejection is left unhandled so it surfaces where it can be seen rather than being dropped.",
     },
     asChild: {
       control: false,

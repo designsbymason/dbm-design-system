@@ -335,6 +335,14 @@
 
 .root[data-state="closed"] {
   animation: toastOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-accelerate) forwards;
+  /* Clipping is only for the collapse: the toast is going, and what it overflows by (its shadow) goes with it. */
+  overflow: hidden;
+}
+
+/* Raised again, or replaced, while it is here: it is drawn afresh (so its time starts again and it is read again), and
+   a short swell stands in for the entrance so it reads as the same toast having something new to say. */
+.root[data-revised][data-state="open"] {
+  animation: toastRepeat var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
 .root[data-swipe="move"] {
@@ -362,28 +370,61 @@
   }
 }
 
+/* Leaving: it fades while the room it took collapses to nothing, gap included (half of the list's gap off each side,
+   so the same in a list that runs either way), so the toasts beside it glide into the space instead of jumping.
+   `--toast-height` is kept by the toast while it is open; `100%` is only the fallback. */
 @keyframes toastOut {
   from {
+    max-block-size: var(--toast-height, 100%);
     opacity: 1;
   }
 
   to {
+    border-block-width: 0;
+    margin-block: calc(var(--dbm-space-3) * -0.5);
+    max-block-size: 0;
     opacity: 0;
+    padding-block: 0;
   }
 }
 
 @keyframes toastSwipeOut {
   from {
+    max-block-size: var(--toast-height, 100%);
     opacity: 1;
     transform: translate(var(--radix-toast-swipe-end-x, 0), var(--radix-toast-swipe-end-y, 0));
   }
 
   to {
+    border-block-width: 0;
+    margin-block: calc(var(--dbm-space-3) * -0.5);
+    max-block-size: 0;
     opacity: 0;
+    padding-block: 0;
     transform: translate(
       calc(var(--radix-toast-swipe-end-x, 0px) * 3),
       calc(var(--radix-toast-swipe-end-y, 0px) * 3)
     );
+  }
+}
+
+@keyframes toastRepeat {
+  from {
+    transform: scale(var(--dbm-motion-scale-102));
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 
@@ -398,8 +439,13 @@
     transition: none;
   }
 
+  .root[data-state="closed"],
   .root[data-state="closed"][data-swipe="end"] {
-    animation: toastOut var(--dbm-motion-duration-fast) linear forwards;
+    animation: toastFadeOut var(--dbm-motion-duration-fast) linear forwards;
+  }
+
+  .root[data-revised][data-state="open"] {
+    animation: none;
   }
 }
 
@@ -410,6 +456,66 @@
 
   to {
     opacity: 1;
+  }
+}
+
+/* The count after a message that was raised again while it was showing. */
+.count {
+  color: var(--toast-icon);
+  font-weight: var(--dbm-font-weight-regular);
+  margin-inline-start: var(--dbm-space-2);
+}
+
+/* --- Clear all. ---
+   A toast as far as the list is concerned, drawn as a small bar: the page's own surface, the toast's elevation, last in
+   the stack (so nearest the edge the list is against) and at the end of the row. */
+.clearAll {
+  align-self: flex-end;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-lg);
+  box-sizing: border-box;
+  inline-size: auto;
+  list-style: none;
+  margin: 0;
+  order: 1;
+  padding: var(--dbm-space-1);
+  pointer-events: auto !important;
+}
+
+[data-theme$="-dark"] .clearAll {
+  box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+.clearAll[data-state="open"] {
+  animation: toastIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
+}
+
+.clearAll[data-state="closed"] {
+  animation: toastOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-accelerate) forwards;
+  overflow: hidden;
+}
+
+.clearAll:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clearAll[data-state="open"] {
+    animation: toastFadeIn var(--dbm-motion-duration-fast) linear;
+  }
+
+  .clearAll[data-state="closed"] {
+    animation: toastFadeOut var(--dbm-motion-duration-fast) linear forwards;
+  }
+}
+
+@media (forced-colors: active) {
+  .clearAll {
+    border-color: CanvasText;
   }
 }
 

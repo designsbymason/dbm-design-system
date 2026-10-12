@@ -4,7 +4,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Dialog } from "../Dialog";
-import { Toast, useToast } from "./Toast";
+import { createToaster, Toast, useToast } from "./Toast";
 import type { ToastOptions, ToastProviderProps } from "./Toast.types";
 
 // Real-browser checks for what jsdom can't evaluate: where the region sits, a swipe with a real pointer, a toast above a
@@ -29,7 +29,7 @@ const settled = async (element: HTMLElement) => {
   await nextFrame();
 };
 const rem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
-const toastItems = () => Array.from(document.querySelectorAll<HTMLElement>("li[data-state]"));
+const toastItems = () => Array.from(document.querySelectorAll<HTMLElement>("li[data-state]:not([data-clear-all])"));
 const firstToast = async () => {
   await waitFor(() => expect(toastItems().length).toBeGreaterThan(0));
   const item = toastItems()[0] as HTMLElement;
@@ -120,7 +120,7 @@ export const PlacementTopStartRightToLeft: Story = {
 
 export const NewerStackNearestTheEdge: Story = {
   name: "A newer toast sits nearer the edge the list is against",
-  render: () => <App provider={{ placement: "bottom" }} />,
+  render: () => <App provider={{ placement: "bottom", mergeDuplicates: false }} />,
   play: async ({ canvasElement }) => {
     const raise = within(canvasElement).getByRole("button", { name: "Raise" });
     await userEvent.click(raise);
@@ -470,5 +470,204 @@ export const ReducedMotionIsAFade: Story = {
     } finally {
       await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "no-preference" }] });
     }
+  },
+};
+
+// Raises a numbered toast each time, so no two are alike.
+function RaiseNumbered({ extra }: { extra?: Partial<ToastOptions> }) {
+  const { toast } = useToast();
+  const [count, setCount] = useState(0);
+  return (
+    <Button
+      onClick={() => {
+        const next = count + 1;
+        setCount(next);
+        toast({ title: `Message ${next}`, description: "A line of detail.", ...extra });
+      }}
+    >
+      Raise
+    </Button>
+  );
+}
+
+function NumberedApp({ provider, extra }: { provider?: Omit<ToastProviderProps, "children">; extra?: Partial<ToastOptions> }) {
+  return (
+    <Toast.Provider {...provider}>
+      <div style={{ padding: "var(--dbm-space-4)" }}>
+        <RaiseNumbered extra={extra} />
+      </div>
+    </Toast.Provider>
+  );
+}
+
+export const NeighboursGlideIntoTheGap: Story = {
+  name: "When a toast leaves, the ones beside it glide into its place instead of jumping",
+  render: () => <NumberedApp provider={{ duration: null, clearAll: false }} />,
+  play: async ({ canvasElement }) => {
+    const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    await waitFor(() => expect(toastItems()).toHaveLength(2));
+    await settled(toastItems()[1] as HTMLElement);
+    const [older, newer] = toastItems() as [HTMLElement, HTMLElement];
+    const start = older.getBoundingClientRect().top;
+    const room = newer.getBoundingClientRect().height + 12;
+    // the newer one is the lower one (the list is against the bottom): when it goes, the older one drops into its room
+    within(newer).getByRole("button", { name: "Dismiss" }).click();
+    const seen: number[] = [];
+    for (let frame = 0; frame < 40; frame += 1) {
+      await nextFrame();
+      seen.push(older.getBoundingClientRect().top);
+    }
+    const end = seen[seen.length - 1] as number;
+    await expect(Math.round(end - start)).toBe(Math.round(room));
+    // it was somewhere between at some frame: a jump would have gone from `start` straight to `end`
+    await expect(seen.some((top) => top > start + 1 && top < end - 1)).toBe(true);
+  },
+};
+
+export const HoveringOneHoldsAll: Story = {
+  name: "A real pointer over one toast holds the time of all of them",
+  render: () => <NumberedApp provider={{ duration: 800, clearAll: false }} />,
+  play: async ({ canvasElement }) => {
+    const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    await waitFor(() => expect(toastItems()).toHaveLength(2));
+    const [first, second] = toastItems() as [HTMLElement, HTMLElement];
+    await settled(second);
+    await realMoveTo(first);
+    await new Promise((resolve) => setTimeout(resolve, 1600));
+    await expect(first).toHaveAttribute("data-state", "open");
+    await expect(second).toHaveAttribute("data-state", "open");
+    await realMoveTo(raise);
+    await waitFor(() => expect(toastItems()).toHaveLength(0), { timeout: 4000 });
+  },
+};
+
+export const RepeatedMessagesMerge: Story = {
+  name: "The same message raised three times is one toast with a count",
+  render: () => <App provider={{ duration: null }} options={{ title: "Link copied" }} />,
+  play: async ({ canvasElement }) => {
+    const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    await waitFor(() => expect(within(document.body).getByText("×3")).toBeInTheDocument());
+    await expect(toastItems()).toHaveLength(1);
+    await expect(document.querySelector("[data-clear-all]")).toBeNull();
+  },
+};
+
+export const ClearAllIsInTheKeyboardOrder: Story = {
+  name: "Clear all is reached from the region with the keyboard, and closes everything",
+  render: () => <NumberedApp provider={{ duration: null, limit: 2 }} />,
+  play: async ({ canvasElement }) => {
+    const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    await waitFor(() => expect(toastItems()).toHaveLength(2));
+    const clear = await within(document.body).findByRole("button", { name: "Clear all" });
+    await settled(clear.closest("li") as HTMLElement);
+    raise.focus();
+    await pressKey("F8", "F8", 119);
+    for (let presses = 0; presses < 8 && document.activeElement !== clear; presses += 1) await pressKey("Tab", "Tab", 9);
+    await expect(document.activeElement).toBe(clear);
+    await pressKey("Enter", "Enter", 13, "\r");
+    await waitFor(() => expect(document.querySelectorAll("li[data-state]")).toHaveLength(0));
+    await waitFor(() => expect(document.activeElement).toBe(raise));
+  },
+};
+
+function PromiseActionApp({ outcome }: { outcome: "resolve" | "reject" }) {
+  const { toast } = useToast();
+  return (
+    <Button
+      onClick={() =>
+        toast({
+          title: "Deleted",
+          duration: 600,
+          action: {
+            label: "Undo",
+            altText: "Undo from the Edit menu",
+            onClick: () =>
+              new Promise<void>((resolve, reject) => {
+                setTimeout(() => (outcome === "resolve" ? resolve() : reject(new Error("offline"))), 1500);
+              }),
+          },
+        })
+      }
+    >
+      Raise
+    </Button>
+  );
+}
+
+export const PromiseActionHoldsTheToast: Story = {
+  name: "An action that takes a promise holds the toast past its time, then closes it",
+  render: () => (
+    <Toast.Provider>
+      <PromiseActionApp outcome="resolve" />
+    </Toast.Provider>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Raise" }));
+    const item = await firstToast();
+    const undo = within(item).getByRole("button", { name: "Undo" });
+    await userEvent.click(undo);
+    await expect(undo).toHaveAttribute("aria-busy", "true");
+    // past the toast's own 600ms, and still here, with its button still focusable
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    await expect(document.body.contains(item)).toBe(true);
+    await expect(item).toHaveAttribute("data-state", "open");
+    await expect(undo).not.toBeDisabled();
+    await waitFor(() => expect(document.body.contains(item)).toBe(false), { timeout: 4000 });
+  },
+};
+
+export const PromiseActionRejectionIsNotDropped: Story = {
+  name: "A rejection with no handler surfaces as an unhandled rejection, and the toast stays",
+  render: () => (
+    <Toast.Provider>
+      <PromiseActionApp outcome="reject" />
+    </Toast.Provider>
+  ),
+  play: async ({ canvasElement }) => {
+    const seen: unknown[] = [];
+    const listener = (event: PromiseRejectionEvent) => {
+      seen.push(event.reason);
+      event.preventDefault();
+    };
+    window.addEventListener("unhandledrejection", listener);
+    try {
+      await userEvent.click(within(canvasElement).getByRole("button", { name: "Raise" }));
+      const item = await firstToast();
+      const undo = within(item).getByRole("button", { name: "Undo" });
+      await userEvent.click(undo);
+      await waitFor(() => expect(seen).toHaveLength(1), { timeout: 4000 });
+      await expect((seen[0] as Error).message).toBe("offline");
+      await expect(item).toHaveAttribute("data-state", "open");
+      await expect(undo).not.toHaveAttribute("aria-busy");
+    } finally {
+      window.removeEventListener("unhandledrejection", listener);
+    }
+  },
+};
+
+export const ToasterRaisesFromOutsideReact: Story = {
+  name: "A toaster made with createToaster() raises toasts from plain code",
+  render: function Outside() {
+    const [toaster] = useState(() => {
+      const made = createToaster();
+      // before any provider exists: it waits
+      made.toast({ title: "Raised before the app mounted" });
+      return made;
+    });
+    return <Toast.Provider toaster={toaster} duration={null} />;
+  },
+  play: async () => {
+    const item = await firstToast();
+    await expect(item).toHaveTextContent("Raised before the app mounted");
   },
 };

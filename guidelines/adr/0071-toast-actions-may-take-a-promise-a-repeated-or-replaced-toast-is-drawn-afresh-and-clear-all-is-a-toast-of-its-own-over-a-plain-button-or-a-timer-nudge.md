@@ -1,0 +1,31 @@
+# 0071 — A toast's action may take a promise, a repeated or replaced toast is drawn afresh, and "Clear all" is a toast of its own, over a plain button or a timer nudge
+
+**Status:** Accepted · **Date:** 2026-10-12
+
+## Context
+The first version of `Toast` ([ADR-0069](./0069-toast-wraps-radix-toast-pinned-at-1-2-23-on-the-shared-layer-stack-over-a-hand-rolled-toast-or-the-newest-release.md), [ADR-0070](./0070-toast-is-raised-from-code-through-a-provider-and-a-hook-with-a-declarative-toast-beside-it-over-a-module-level-function-or-component-only-use.md)) left seven gaps that a person would hit: an "Undo" that calls a request closed the toast at once and said nothing if it failed; a repeated message kept its old countdown and vanished early; a replaced toast (a `toast.promise` result) was never read out; the toasts beside one that left jumped; there was no way to clear a stack; identical messages stacked as copies; and a module with no component could not raise one. Each had a small, separable fix, and three of them (the redraw, the clear-all bar, the promise action) turned on a choice that other components will meet.
+
+## Decision
+- **`action.onClick` / `Toast.Action`'s `onClick` may return a promise, in the shape [ADR-0058](./0058-confirmdialogs-onconfirm-may-return-a-promise-that-holds-it-busy-and-a-rejection-keeps-it-open-over-a-caller-managed-busy-state.md) gave `ConfirmDialog`.** A promise holds the toast open (no timeout, dismiss, swipe or Escape; a second press is ignored by a ref) with a spinner in the button's label, and closes it with the reason `"action"` when it resolves. A rejection keeps it open and the button available again, and goes to `onError` (`onClickError` on the part); with none it is left unhandled, never swallowed (`06` §3). The busy state is `aria-busy` and `aria-disabled` set on the element, not `isLoading`, which would set the native `disabled` and drop the focus of the person who just pressed it, and not as props, since `Button` writes both itself after the props it is given.
+- **A toast that is replaced under its id, or raised again as a merge, is drawn afresh** (its entry's `revision` is its React key), in place, with a short swell in place of the entrance. That is what starts its time again and has a screen reader read it again, which also makes a `toast.promise` outcome heard. `update()` changes a toast without either.
+- **Identical plain messages merge**: the same tone, title and description (text only), with no `id`, action or callback, raised while one is open, becomes one toast with a count, written by `labels.repeated` and `formatNumber` ([ADR-0021](./0021-labels-object-and-optional-formatnumber-over-an-implicit-intl-default.md)). `mergeDuplicates` turns it off.
+- **"Clear all" is drawn once more than one toast is open, as a toast of its own to Radix**, so it is in the region's tab order and F8 reaches it. A plain button among the list's children is not: Radix manages Tab among its own items and skips anything else, which left it unreachable by keyboard. It is kept open by the count, not a timer, ignores Escape and a swipe, and sits last in the stack by CSS `order`. `clearAll` turns it off and `labels.clearAll` renames it; it closes everything and drops the queue.
+- **A toast that leaves collapses the room it took**, its height kept in a custom property while it is open (a `ResizeObserver`), so the toasts beside it glide into the gap instead of jumping. Reduced motion is a fade.
+- **`createToaster()` makes a queue outside React** and `Toast.Provider`'s `toaster` prop takes it; toasts raised before the provider mounts wait in it. Its store is held in a `WeakMap`, not in module state. One provider per toaster.
+- **Pausing is region-wide, and stays so** (Radix's): hovering one toast, or focus inside any, holds the time of all of them, so a stack does not change under a pointer moving between toasts.
+
+## Alternatives considered
+- **Nudge `duration` by a millisecond to restart Radix's timer without redrawing.** Rejected: it restarts the time but not the announcement, and it is a trick that only works because of how an effect's dependencies are written.
+- **A "Clear all" button as a child of the list.** Rejected for the tab order above; a portal into the region around the list was rejected as well, since it has to be positioned against the stack by hand.
+- **`Escape` clears everything.** Rejected: `Escape` closing the focused toast, and the newest from inside a dialog, is Radix's and is what people expect; a second meaning would only be reached by accident.
+- **Per-toast pausing.** Rejected: the stack would move under the pointer as other toasts expired.
+- **A module-level `toast()`.** Still rejected ([ADR-0070](./0070-toast-is-raised-from-code-through-a-provider-and-a-hook-with-a-declarative-toast-beside-it-over-a-module-level-function-or-component-only-use.md)); `createToaster()` gives the callers outside React what they need without a global.
+
+## Consequences
+- A caller who catches inside an action's `onClick` and returns normally tells the toast it succeeded: the Docs page says to let it reject or use `onError`.
+- "Clear all" is announced when it appears with the second toast ("Notification, Clear all"): Radix always reads a toast's label, and the button's text is the only content.
+- A merged or replaced toast loses focus that was inside it, since it is drawn afresh; a toast with an action or a callback is never merged, and a replacement is the caller's own act.
+- `ToastEntry` gains `revision`, `count` and `generated`; a merge needs the id to have been made up here, so a caller's id is never merged into.
+
+## Related
+`05-component-api-conventions.md` §3, `06-engineering-standards.md` §3 and §9, ADR-0008, ADR-0010, ADR-0058, ADR-0066 (a promise from an item), ADR-0069, ADR-0070; `component-reviews/Toast.md`.

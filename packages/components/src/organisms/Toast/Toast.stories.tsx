@@ -3,7 +3,7 @@ import { fn } from "storybook/test";
 import { useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
-import { Toast, useToast } from "./Toast";
+import { createToaster, Toast, useToast } from "./Toast";
 import { toastPlaygroundSnippet, toastSnippets } from "./Toast.snippets";
 import type {
   ToastOptions,
@@ -458,6 +458,104 @@ export const Updating: Story = {
       {(container) => (
         <Toast.Provider container={container}>
           <SyncButton />
+        </Toast.Provider>
+      )}
+    </ToastStage>
+  ),
+};
+
+function PromiseActionButton() {
+  const { toast } = useToast();
+  return (
+    <Button
+      variant="secondary"
+      onClick={() =>
+        toast({
+          title: "Conversation deleted",
+          action: {
+            label: "Undo",
+            altText: "Restore it from Trash",
+            onClick: () => new Promise<void>((resolve) => setTimeout(resolve, 1600)),
+          },
+        })
+      }
+    >
+      Delete
+    </Button>
+  );
+}
+
+export const PromiseAction: Story = {
+  name: "An action that takes a promise",
+  parameters: { docs: { source: { code: toastSnippets.promiseAction } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ToastStage>
+      {(container) => (
+        <Toast.Provider container={container}>
+          <PromiseActionButton />
+        </Toast.Provider>
+      )}
+    </ToastStage>
+  ),
+};
+
+function CopyButton() {
+  const { toast } = useToast();
+  return (
+    <Button variant="secondary" onClick={() => toast({ tone: "neutral", title: "Link copied" })}>
+      Copy link
+    </Button>
+  );
+}
+
+export const Merged: Story = {
+  name: "The same message, once, with a count",
+  parameters: { docs: { source: { code: toastSnippets.merged } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ToastStage>
+      {(container) => (
+        <Toast.Provider container={container}>
+          <CopyButton />
+        </Toast.Provider>
+      )}
+    </ToastStage>
+  ),
+};
+
+export const ClearAll: Story = {
+  name: "Clear all",
+  parameters: { docs: { source: { code: toastSnippets.clearAll } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ToastStage minBlockSize="24rem">
+      {(container) => (
+        <Toast.Provider container={container} limit={2} duration={null}>
+          <QueueButton />
+        </Toast.Provider>
+      )}
+    </ToastStage>
+  ),
+};
+
+// Made once, here, the way an app's module would; the button below raises through it and not through a hook.
+const storyToaster = createToaster();
+
+export const FromOutsideReact: Story = {
+  name: "Raised from plain code",
+  parameters: { docs: { source: { code: toastSnippets.outside } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <ToastStage>
+      {(container) => (
+        <Toast.Provider container={container} toaster={storyToaster}>
+          <Button
+            variant="secondary"
+            onClick={() => storyToaster.toast({ tone: "danger", title: "Could not reach the server", description: "Check your connection." })}
+          >
+            Fail a request
+          </Button>
         </Toast.Provider>
       )}
     </ToastStage>
