@@ -1,0 +1,498 @@
+/* The message. Every value is a token. A tone class (`.toneInfo`…) names that tone's colours as `--t-*`, a variant class
+   (`.variantSubtle`…) picks from them as `--toast-*`, and a size class sets the padding and type. The colours and
+   pairings are `Alert`'s, so the contrast checked there holds here: a toast has its own opaque surface and is read against
+   that, not the page behind it. */
+
+.toneInfo {
+  --t-subtle-bg: var(--dbm-bg-info-subtle);
+  --t-subtle-border: var(--dbm-border-info-subtle);
+  --t-subtle-hover: var(--dbm-bg-info-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-info);
+  --t-solid-hover: var(--dbm-bg-info-hover);
+  --t-on: var(--dbm-text-on-info);
+  --t-on-icon: var(--dbm-icon-on-info);
+  --t-line: var(--dbm-border-info);
+  --t-icon: var(--dbm-icon-info);
+  --t-fill: var(--dbm-bg-on-info);
+  --t-fill-line: var(--dbm-border-on-info);
+  --t-label: var(--dbm-text-info);
+}
+
+.toneSuccess {
+  --t-subtle-bg: var(--dbm-bg-success-subtle);
+  --t-subtle-border: var(--dbm-border-success-subtle);
+  --t-subtle-hover: var(--dbm-bg-success-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-success);
+  --t-solid-hover: var(--dbm-bg-success-hover);
+  --t-on: var(--dbm-text-on-success);
+  --t-on-icon: var(--dbm-icon-on-success);
+  --t-line: var(--dbm-border-success);
+  --t-icon: var(--dbm-icon-success);
+  --t-fill: var(--dbm-bg-on-success);
+  --t-fill-line: var(--dbm-border-on-success);
+  --t-label: var(--dbm-text-success);
+}
+
+.toneWarning {
+  --t-subtle-bg: var(--dbm-bg-warning-subtle);
+  --t-subtle-border: var(--dbm-border-warning-subtle);
+  --t-subtle-hover: var(--dbm-bg-warning-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-warning);
+  --t-solid-hover: var(--dbm-bg-warning-hover);
+  --t-on: var(--dbm-text-on-warning);
+  --t-on-icon: var(--dbm-icon-on-warning);
+  --t-line: var(--dbm-border-warning);
+  --t-icon: var(--dbm-icon-warning);
+  --t-fill: var(--dbm-bg-on-warning);
+  --t-fill-line: var(--dbm-border-on-warning);
+  --t-label: var(--dbm-text-warning);
+}
+
+.toneDanger {
+  --t-subtle-bg: var(--dbm-bg-danger-subtle);
+  --t-subtle-border: var(--dbm-border-danger-subtle);
+  --t-subtle-hover: var(--dbm-bg-danger-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-danger);
+  --t-solid-hover: var(--dbm-bg-danger-hover);
+  --t-on: var(--dbm-text-on-danger);
+  --t-on-icon: var(--dbm-icon-on-danger);
+  --t-line: var(--dbm-border-danger);
+  --t-icon: var(--dbm-icon-danger);
+  --t-fill: var(--dbm-bg-on-danger);
+  --t-fill-line: var(--dbm-border-on-danger);
+  --t-label: var(--dbm-text-danger);
+}
+
+.toneNeutral {
+  --t-subtle-bg: var(--dbm-bg-neutral-subtle);
+  --t-subtle-border: var(--dbm-border-default);
+  --t-subtle-hover: var(--dbm-bg-neutral-subtle-hover);
+  --t-solid-bg: var(--dbm-bg-neutral);
+  --t-solid-hover: var(--dbm-bg-neutral-hover);
+  --t-on: var(--dbm-text-on-neutral);
+  --t-on-icon: var(--dbm-icon-on-neutral);
+  --t-line: var(--dbm-border-neutral-strong);
+  --t-icon: var(--dbm-icon-default);
+  --t-fill: var(--dbm-bg-on-neutral);
+  --t-fill-line: var(--dbm-border-on-neutral);
+  --t-label: var(--dbm-text-secondary);
+}
+
+/* What each variant draws with. `--toast-hover` is the dismiss button's fill while hovered; `--toast-ring` the focus
+   ring, which on a solid fill has to be a colour that contrasts with it (`border.focus` is unreadable there). */
+.variantSubtle {
+  --toast-bg: var(--t-subtle-bg);
+  --toast-border: var(--t-subtle-border);
+  --toast-title: var(--dbm-text-primary);
+  --toast-text: var(--dbm-text-secondary);
+  --toast-icon: var(--t-icon);
+  --toast-hover: var(--t-subtle-hover);
+  --toast-ring: var(--dbm-border-focus);
+}
+
+.variantOutlined {
+  --toast-bg: var(--dbm-bg-surface);
+  --toast-border: var(--t-line);
+  --toast-title: var(--dbm-text-primary);
+  --toast-text: var(--dbm-text-secondary);
+  --toast-icon: var(--t-icon);
+  --toast-hover: var(--dbm-bg-neutral-subtle);
+  --toast-ring: var(--dbm-border-focus);
+}
+
+.variantSolid {
+  --toast-bg: var(--t-solid-bg);
+  --toast-border: var(--t-solid-bg);
+  --toast-title: var(--t-on);
+  --toast-text: var(--t-on);
+  --toast-icon: var(--t-on-icon);
+  --toast-hover: var(--t-solid-hover);
+  --toast-ring: var(--t-on-icon);
+}
+
+.sizeXs {
+  --toast-pad-block: var(--dbm-space-2);
+  --toast-pad-inline: var(--dbm-space-3);
+  --toast-gap: var(--dbm-space-2);
+  --toast-title-font: var(--dbm-font-size-xs);
+  --toast-text-font: var(--dbm-font-size-xs);
+  --toast-actions-space: var(--dbm-space-2);
+}
+
+.sizeSm {
+  --toast-pad-block: var(--dbm-space-3);
+  --toast-pad-inline: var(--dbm-space-3);
+  --toast-gap: var(--dbm-space-2);
+  --toast-title-font: var(--dbm-font-size-sm);
+  --toast-text-font: var(--dbm-font-size-xs);
+  --toast-actions-space: var(--dbm-space-3);
+}
+
+.sizeMd {
+  --toast-pad-block: var(--dbm-space-3);
+  --toast-pad-inline: var(--dbm-space-4);
+  --toast-gap: var(--dbm-space-3);
+  --toast-title-font: var(--dbm-font-size-base);
+  --toast-text-font: var(--dbm-font-size-sm);
+  --toast-actions-space: var(--dbm-space-4);
+}
+
+.sizeLg {
+  --toast-pad-block: var(--dbm-space-4);
+  --toast-pad-inline: var(--dbm-space-5);
+  --toast-gap: var(--dbm-space-3);
+  --toast-title-font: var(--dbm-font-size-md);
+  --toast-text-font: var(--dbm-font-size-base);
+  --toast-actions-space: var(--dbm-space-4);
+}
+
+.sizeXl {
+  --toast-pad-block: var(--dbm-space-5);
+  --toast-pad-inline: var(--dbm-space-6);
+  --toast-gap: var(--dbm-space-4);
+  --toast-title-font: var(--dbm-font-size-lg);
+  --toast-text-font: var(--dbm-font-size-md);
+  --toast-actions-space: var(--dbm-space-5);
+}
+
+
+/* --- The region the toasts are in. ---
+   A fixed list against one edge or corner, above everything else on the toast step of the z-index scale. It takes no
+   pointer events itself (the gutter around the toasts is the page's), and each toast takes its own. Phones first: below
+   the `sm` breakpoint (40rem; `@media` can't read a custom property) a toast spans the screen less the gutter, whatever
+   its horizontal placement. Newer toasts stack nearest the edge the list is against. The safe-area insets keep it clear
+   of a notch or a home indicator. */
+.viewport {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-3);
+  inline-size: 100%;
+  inset-inline: 0;
+  list-style: none;
+  margin: 0;
+  max-block-size: 100%;
+  padding-block: var(--dbm-space-4);
+  padding-inline: calc(
+    var(--dbm-space-4) + max(env(safe-area-inset-left, var(--dbm-space-0)), env(safe-area-inset-right, var(--dbm-space-0)))
+  );
+  pointer-events: none;
+  position: fixed;
+  z-index: var(--dbm-z-index-toast);
+}
+
+.viewport[data-placement^="top"] {
+  --toast-from-y: calc(var(--dbm-space-4) * -1);
+
+  flex-direction: column-reverse;
+  inset-block-start: 0;
+  padding-block-start: calc(var(--dbm-space-4) + env(safe-area-inset-top, var(--dbm-space-0)));
+}
+
+.viewport[data-placement^="bottom"] {
+  --toast-from-y: var(--dbm-space-4);
+
+  inset-block-end: 0;
+  padding-block-end: calc(var(--dbm-space-4) + env(safe-area-inset-bottom, var(--dbm-space-0)));
+}
+
+@media (min-width: 40rem) {
+  .viewport {
+    inline-size: calc(var(--dbm-toast-width) + 2 * var(--dbm-space-4));
+    max-inline-size: 100%;
+  }
+
+  .viewport[data-placement$="-start"] {
+    inset-inline: 0 auto;
+  }
+
+  .viewport[data-placement$="-end"] {
+    inset-inline: auto 0;
+  }
+
+  .viewport[data-placement="top"],
+  .viewport[data-placement="bottom"] {
+    inset-inline: 0;
+    margin-inline: auto;
+  }
+}
+
+/* --- One toast. --- */
+.root {
+  align-items: flex-start;
+  background-color: var(--toast-bg);
+  border: var(--dbm-border-width-1) solid var(--toast-border);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-lg);
+  box-sizing: border-box;
+  color: var(--toast-text);
+  display: flex;
+  font-size: var(--toast-title-font);
+  gap: var(--toast-gap);
+  inline-size: 100%;
+  line-height: var(--dbm-line-height-normal);
+  list-style: none;
+  margin: 0;
+  padding: var(--toast-pad-block) var(--toast-pad-inline);
+  /* `!important` because Radix writes `pointer-events` inline on each toast: it turns every layer below an open modal
+     dialog's off, which includes a toast that was already showing when the dialog opened. That toast is drawn above the
+     dialog's scrim (the toast step of the z-index scale), so it must answer a press like one raised afterwards does. */
+  pointer-events: auto !important;
+  position: relative;
+}
+
+/* Shadows aren't a reactive semantic token, so the light/dark pair is swapped per theme, as `Card` and `Alert` do. */
+[data-theme$="-dark"] .root {
+  box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+/* A toast takes focus from the keyboard only (the region, then Tab): the ring is the standard one, in a colour that
+   reads against the fill. */
+.root:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--toast-ring);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* The icon sits in a box one line of the title tall, so it centres on the first line however tall the rest is. */
+.icon {
+  align-items: center;
+  block-size: 1lh;
+  color: var(--toast-icon);
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  min-inline-size: 0;
+}
+
+.title {
+  color: var(--toast-title);
+  font-weight: var(--dbm-font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.description {
+  color: var(--toast-text);
+  font-size: var(--toast-text-font);
+  overflow-wrap: anywhere;
+}
+
+/* A toast with a description and no title still reads at the message's own size. */
+.body > :not(.title, .description, .action) {
+  font-size: var(--toast-text-font);
+}
+
+.action {
+  align-self: flex-start;
+  margin-block-start: calc(var(--toast-actions-space) - var(--dbm-space-1));
+}
+
+/* Locally built, not the shared `CloseButton`: this must take the tone's own colour (`05-component-api-conventions.md`
+   §10). A neutral padding around the glyph makes a comfortable target, pulled back with a negative margin so the glyph
+   lines up with the text's edge. */
+.dismiss {
+  align-items: center;
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--dbm-radius-full);
+  color: var(--toast-icon);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  margin-block: calc(var(--dbm-space-1) * -1);
+  margin-inline: 0 calc(var(--dbm-space-1) * -1);
+  /* At least 24 × 24 at every size (WCAG 2.5.8): the two smallest sizes' glyph plus padding is only 20. */
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding: var(--dbm-space-1);
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.dismiss:hover {
+  background-color: var(--toast-hover);
+}
+
+.dismiss:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--toast-ring);
+  outline-offset: var(--dbm-space-1);
+}
+
+/* --- Motion. ---
+   It slides a short way in from the edge it is against while it fades, and fades out. A toast that is swiped follows
+   the pointer (Radix writes the distance to `--radix-toast-swipe-move-*`), springs back when let go early and carries
+   on out when let go past the threshold. */
+.root[data-state="open"] {
+  animation: toastIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
+}
+
+.root[data-state="closed"] {
+  animation: toastOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-accelerate) forwards;
+}
+
+.root[data-swipe="move"] {
+  transform: translate(var(--radix-toast-swipe-move-x, 0), var(--radix-toast-swipe-move-y, 0));
+}
+
+.root[data-swipe="cancel"] {
+  transform: translate(0, 0);
+  transition: transform var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.root[data-state="closed"][data-swipe="end"] {
+  animation: toastSwipeOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-accelerate) forwards;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--toast-from-y, 0)) scale(var(--dbm-motion-scale-96));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes toastSwipeOut {
+  from {
+    opacity: 1;
+    transform: translate(var(--radix-toast-swipe-end-x, 0), var(--radix-toast-swipe-end-y, 0));
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(
+      calc(var(--radix-toast-swipe-end-x, 0px) * 3),
+      calc(var(--radix-toast-swipe-end-y, 0px) * 3)
+    );
+  }
+}
+
+/* Reduced motion: no slide or scale, only a short fade; the swipe still follows the pointer, which is the person's own
+   movement, but springs back and leaves without travelling. */
+@media (prefers-reduced-motion: reduce) {
+  .root[data-state="open"] {
+    animation: toastFadeIn var(--dbm-motion-duration-fast) linear;
+  }
+
+  .root[data-swipe="cancel"] {
+    transition: none;
+  }
+
+  .root[data-state="closed"][data-swipe="end"] {
+    animation: toastOut var(--dbm-motion-duration-fast) linear forwards;
+  }
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* --- Toast.Action: a `Button` that takes its colours from the toast. ---
+   `Button`'s own rules are one class deep (its hover rules are five selectors deep), so these are written one selector
+   deeper and win whichever stylesheet loads last. The colours are, per toast variant, `Alert.Action`'s: on a solid
+   toast the primary is an inverted fill with the tone's own colour as the label; on a subtle or outlined one it is the
+   tone's solid fill, the secondary the tone's border with its own label colour, and the tertiary the label colour
+   alone. */
+
+/* Icons inside the button take the label's colour, not the tone `Button` locks to its own variant. */
+.action svg {
+  color: inherit;
+}
+
+.variantSolid .actionPrimary {
+  background-color: var(--t-fill);
+  color: var(--t-label);
+}
+
+.variantSolid .actionPrimary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-subtle-bg);
+}
+
+.variantSolid .actionSecondary {
+  background-color: transparent;
+  border-color: var(--t-fill-line);
+  color: var(--t-on);
+}
+
+.variantSolid .actionTertiary {
+  background-color: transparent;
+  color: var(--t-on);
+}
+
+.variantSolid .actionSecondary:not(:disabled):not(.disabled):hover,
+.variantSolid .actionTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-solid-hover);
+}
+
+/* Where `border.focus` would be unreadable (on the tone's own solid fill), the ring is the on-fill colour. */
+.variantSolid .action:focus-visible {
+  outline-color: var(--t-on-icon);
+}
+
+.variantSubtle .actionPrimary,
+.variantOutlined .actionPrimary {
+  background-color: var(--t-solid-bg);
+  color: var(--t-on);
+}
+
+.variantSubtle .actionPrimary:not(:disabled):not(.disabled):hover,
+.variantOutlined .actionPrimary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-solid-hover);
+}
+
+.variantSubtle .actionSecondary,
+.variantOutlined .actionSecondary {
+  background-color: transparent;
+  border-color: var(--t-line);
+  color: var(--t-label);
+}
+
+.variantSubtle .actionTertiary,
+.variantOutlined .actionTertiary {
+  background-color: transparent;
+  color: var(--t-label);
+}
+
+.variantSubtle .actionSecondary:not(:disabled):not(.disabled):hover,
+.variantSubtle .actionTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-surface);
+}
+
+.variantOutlined .actionSecondary:not(:disabled):not(.disabled):hover,
+.variantOutlined .actionTertiary:not(:disabled):not(.disabled):hover {
+  background-color: var(--t-subtle-bg);
+}
+
+/* Forced colours keeps borders (as system colours) and drops shadows, so the edge a shadow gave a toast against the page
+   is its border, in the text colour; every variant has one, including the solid, whose border is its own fill. */
+@media (forced-colors: active) {
+  .root {
+    border-color: CanvasText;
+  }
+}

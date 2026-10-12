@@ -1,0 +1,408 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as ToastStories from "./Toast.stories";
+import * as ToastRootStories from "./ToastRoot.stories";
+import * as ToastProviderStories from "./ToastProvider.stories";
+import * as ToastTitleStories from "./ToastTitle.stories";
+import * as ToastDescriptionStories from "./ToastDescription.stories";
+import * as ToastActionStories from "./ToastAction.stories";
+
+export const playgroundOrder = [
+  "tone",
+  "title",
+  "description",
+  "showAction",
+  "loading",
+  "dismissible",
+  "role",
+  "placement",
+  "limit",
+  "duration",
+  "size",
+  "variant",
+  "dir",
+  "onOpenChange",
+];
+export const providerPropOrder = [
+  "children",
+  "placement",
+  "limit",
+  "duration",
+  "size",
+  "variant",
+  "hotkey",
+  "dir",
+  "container",
+  "labels",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const rootPropOrder = [
+  "children",
+  "tone",
+  "variant",
+  "size",
+  "icon",
+  "loading",
+  "dismissible",
+  "duration",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "onOpenChangeComplete",
+  "role",
+  "dismissLabel",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const titlePropOrder = ["children", "id", "className", "style", "data-testid"];
+export const descriptionPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const actionPropOrder = ["children", "altText", "variant", "onClick", "disabled", "asChild", "id", "className", "style", "data-testid"];
+
+<Meta of={ToastStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Toast" tier="Organism" />
+
+A short message that appears at the edge of the screen, tells the person something happened, and goes
+away by itself: "Saved", "Link copied", "Conversation archived · Undo". It never takes focus and never
+blocks the page, so it is for news that can wait, not for a decision. A toast is raised from code: put
+a `Toast.Provider` once near the root of the app, and call `toast()` from `useToast()` anywhere under
+it. Toasts queue (`limit` show at once, the rest wait their turn), pause while the pointer is over them
+or focus is inside them, and can be swiped away or dismissed. The same thing can be drawn as parts
+(`Toast`, `Toast.Title`, `Toast.Description`, `Toast.Action`) when the message belongs to your own state.
+
+### Import
+
+```tsx
+import { Toast, useToast } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Each demo is drawn inside a dashed box so that the toasts stay in the box and not this page's corner;
+in an app they sit against the window. Press the button to raise a toast, more than once to see them queue.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ToastStories.Playground} />
+
+</div>
+<PlaygroundControls of={ToastStories.Playground} order={playgroundOrder} exclude={["onOpenChange"]} />
+
+## Properties
+
+`Toast.Provider` holds the toasts and draws their region. A single `Toast` takes the same options
+that `toast()` does (as props, with its parts as children), so the two tables below cover both.
+
+### Toast.Provider properties
+
+Also accepts any other native `<ol>` attribute beyond what's listed here (e.g. `onFocus`, `aria-label`),
+passed straight through to the list the toasts are in. `data-placement` and `dir` are set by the
+provider and can't be replaced.
+
+<PropertiesTable of={ToastProviderStories} order={providerPropOrder} />
+
+### Toast properties
+
+Also accepts any other native `<li>` attribute beyond what's listed here (e.g. `onClick`, `title`),
+passed straight through to the toast. `data-state` and `data-swipe-direction` are set by the toast and
+can't be replaced. `ref` forwards to the `<li>`.
+
+<PropertiesTable of={ToastRootStories} order={rootPropOrder} />
+
+### Toast.Title properties
+
+The headline, in a few words. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={ToastTitleStories} order={titlePropOrder} />
+
+### Toast.Description properties
+
+The message itself. Also accepts any other native `<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={ToastDescriptionStories} order={descriptionPropOrder} />
+
+### Toast.Action properties
+
+One thing the person can do about the message. A `Button` that takes the toast's colours and size.
+Also accepts any other native `<button>` attribute beyond what's listed here (e.g. `onFocus`,
+`aria-describedby`).
+
+<PropertiesTable of={ToastActionStories} order={actionPropOrder} />
+
+## Variants
+
+### Tones
+
+Each tone has its own icon and colours. `danger` and `warning` interrupt a screen reader; the others
+wait for a pause (`role` overrides this).
+
+<Canvas of={ToastStories.Tones} />
+
+### Variants
+
+The same three treatments `Alert` has. Set `variant` on the provider for every toast, or on one toast.
+
+<Canvas of={ToastStories.Variants} />
+
+### Sizes
+
+<Canvas of={ToastStories.Sizes} />
+
+### With an action
+
+The action runs its handler and then closes the toast. `altText` is required: it is read out in place
+of the button and says how to do the same thing without the toast, because a toast goes away by
+itself.
+
+<Canvas of={ToastStories.WithAction} />
+
+### Placements
+
+`start` and `end` are logical: the left and right in left-to-right text, swapped in right-to-left.
+Newer toasts stack nearest the edge the list is against.
+
+<Canvas of={ToastStories.Placements} />
+
+### A placement that changes with the screen
+
+A mobile-first map, as `Stack` and `Grid` take. Below the `sm` breakpoint a toast spans the screen less a
+gutter whatever its horizontal placement, so only whether it is at the top or the bottom matters there.
+This demo is drawn inside a box, so resize the window to see it change.
+
+<Canvas of={ToastStories.ResponsivePlacement} />
+
+### Following a promise
+
+`toast.promise()` shows a loading toast, then replaces it, in the same place, with the success or the
+error one. It returns the promise itself, so it can still be awaited, and a rejection is still yours
+to handle: the toast only reports it.
+
+<Canvas of={ToastStories.Promise_} />
+
+### Kept until it is dismissed
+
+`duration: null` keeps a toast until it is dismissed. Use it for a state that is still true, such as
+being offline, and not for something that happened once.
+
+<Canvas of={ToastStories.Persistent} />
+
+### A limit, with the rest waiting
+
+`limit` is the most showing at once. The rest wait and appear as room is made, each starting its own
+time when it appears.
+
+<Canvas of={ToastStories.Queue} />
+
+### Updated in place
+
+Calling `toast()` again with the same `id` replaces what is showing instead of adding another, and
+`update()` changes some of it and keeps the rest.
+
+<Canvas of={ToastStories.Updating} />
+
+### Declared as parts
+
+When the message belongs to your own state, draw it as parts with `open` and `onOpenChange`.
+
+<Canvas of={ToastStories.Declared} />
+
+### In right-to-left text
+
+<Canvas of={ToastStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use a toast to confirm something the person just did, or to report something that finished in the
+  background: "Saved", "Copied", "Export ready".
+- Say what happened in a few words, and put detail in `description` only when it helps.
+- Pair a destructive action with an `Undo` action and its `altText`, so a mistake is cheap.
+- Use `toast.promise()` for work the person started and is waiting on, so the same toast shows the
+  outcome.
+- Give a repeated message an `id` so it stays one toast.
+- Put one `Toast.Provider` near the root of the app, around everything that may raise a toast.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a toast for something the person must answer, or that blocks their work: that is an
+  `AlertDialog` or a `ConfirmDialog`.
+- Don't make a toast the only place something can be done or read. It goes away by itself, and a person
+  using a screen reader or a keyboard may never reach it in time.
+- Don't use it for a message that belongs in the page (a form's error, a plan's expiry): that is an
+  `Alert`, which stays.
+- Don't raise a toast for every small thing, or several at once: a person can read about three.
+- Don't put a long message, a form or a link list in one. If it needs more than a sentence and one
+  action, it is not a toast.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Leave `duration` at its default unless there is a reason. Time is paused while the pointer is over the
+  toasts or focus is inside them, and while the window is in the background, so a person who is reading
+  is never raced.
+- Use `duration: null` sparingly, with a way to dismiss it, for a state that stays true.
+- Keep `limit` low. Past about three, toasts hide the page; raise fewer rather than more.
+- A toast raised from a handler that also changes the page (archiving a row) should say what changed,
+  since the person's eyes are on the thing that moved.
+- Report the outcome with `toast.promise()` or `update()` rather than a second toast, so one piece of
+  work is one message.
+- `onOpenChangeComplete` says it is gone (its exit has finished); `onOpenChange` says it started to go,
+  with the reason: `timeout`, `dismiss`, `action`, `swipe`, `escape` or `programmatic`.
+- A toast sits above a modal dialog's scrim and answers a click, whether it was raised before the
+  dialog opened or after. The dialog still holds keyboard focus, so a keyboard user can't tab to the
+  toast's action while it is open: keep the action available in the dialog's own flow too, and say how
+  in `altText`. With focus inside the dialog, `Escape` closes the newest toast first and the dialog on
+  the next press.
+
+## Accessibility
+
+<Callout tone="info" title="A live region, not a dialog: announced, never given focus">
+
+- Each toast is announced through a live region that is already in the page when its text arrives.
+  `danger` and `warning` use an assertive announcement that interrupts; the other tones are polite and
+  wait for a pause. `role="alert"` or `role="status"` overrides the tone.
+- The text read out is the notification label, the title and description, and, in place of the action
+  button, its `altText`.
+- The toasts live in a region named "Notifications (F8)". F8 (the `hotkey` prop) moves focus into it;
+  `Tab` then moves through each toast and its buttons, and `Escape` dismisses the toast that has focus.
+  When the toasts are gone, focus goes back to where it was before it entered the region, if it is still
+  there.
+- A toast never takes focus when it appears, and never moves it when it closes while focus is elsewhere.
+- The time is paused while the pointer is over the toasts, while focus is inside them and while the
+  window is in the background, and a toast can be kept until it is dismissed (`duration: null`).
+- The dismiss button and the action are at least 24 by 24 pixels at every size.
+- A swipe toward the edge the toast sits against dismisses it; it is a convenience, and the dismiss
+  button and `Escape` always work.
+- Under `prefers-reduced-motion` a toast fades in and out instead of sliding. In forced-colours mode,
+  where a shadow isn't drawn, every toast keeps a border in a system colour.
+- The tone is never conveyed by colour or icon alone: put what matters in the text.
+
+</Callout>
+
+## Code examples
+
+```tsx
+// Once, near the root of the app
+<Toast.Provider placement="bottom-end" limit={3}>
+  <App />
+</Toast.Provider>
+
+// Anywhere under it
+const { toast, update, dismiss } = useToast();
+
+toast({ tone: "success", title: "Saved", description: "Your changes are live." });
+
+{/* An action, with how to do the same thing without it */}
+toast({
+  title: "Conversation archived",
+  action: { label: "Undo", altText: "Undo from the Edit menu", onClick: undoArchive },
+});
+
+{/* The same toast again replaces it; update() changes part of it */}
+const id = toast({ id: "sync", title: "Syncing…", loading: true });
+update(id, { loading: false, tone: "success", title: "Up to date", duration: 3000 });
+
+{/* Follow a promise. It is returned, so it can still be awaited. */}
+toast.promise(saveChanges(), {
+  loading: "Saving…",
+  success: (file) => ({ title: "Saved", description: file.name }),
+  error: "Could not save",
+});
+
+{/* Until it is dismissed */}
+toast({ tone: "warning", title: "You are offline", duration: null });
+
+{/* Declared as parts, from your own state */}
+<Toast tone="success" open={open} onOpenChange={setOpen}>
+  <Toast.Title>Saved</Toast.Title>
+  <Toast.Action altText="Open the file from your recent files">View</Toast.Action>
+</Toast>
+
+{/* Right to left, and a native attribute passed straight through to the toast */}
+<Toast.Provider dir="rtl" placement="bottom-start" />
+<Toast aria-describedby="what-was-saved" title="Saved" />
+```
+
+## Design tokens used
+
+The tones' colours and pairings are the ones `Alert` draws with, so a toast and an alert of the same
+tone and variant match.
+
+<TokenRow token="bg.info-subtle / bg.success-subtle / bg.warning-subtle / bg.danger-subtle / bg.neutral-subtle" usage="the subtle variant's fill, per tone; the dismiss button's hover on the outlined variant (neutral)" />
+<TokenRow token="border.info-subtle / border.success-subtle / border.warning-subtle / border.danger-subtle / border.default" usage="the subtle variant's border (border.default for neutral)" />
+<TokenRow token="bg.info-subtle-hover / bg.success-subtle-hover / bg.warning-subtle-hover / bg.danger-subtle-hover / bg.neutral-subtle-hover" usage="the dismiss button while hovered on the subtle variant, and the hover fill of a secondary or tertiary action on an outlined toast" />
+<TokenRow token="bg.surface" usage="the outlined variant's fill; a secondary or tertiary action while hovered, on a subtle toast" />
+<TokenRow token="border.info / border.success / border.warning / border.danger / border.neutral-strong" usage="the outlined variant's border, and a secondary action's outline on a subtle or outlined toast" />
+<TokenRow token="bg.info / bg.success / bg.warning / bg.danger / bg.neutral" usage="the solid variant's fill, and the primary action's fill on a subtle or outlined toast" />
+<TokenRow token="bg.info-hover / bg.success-hover / bg.warning-hover / bg.danger-hover / bg.neutral-hover" usage="the dismiss button while hovered on the solid variant, and the primary action's hover fill" />
+<TokenRow token="text.on-info / text.on-success / text.on-warning / text.on-danger / text.on-neutral" usage="the solid variant's text" />
+<TokenRow token="text.primary" usage="the title on the subtle and outlined variants" />
+<TokenRow token="text.secondary" usage="the message on the subtle and outlined variants; a neutral toast's action label" />
+<TokenRow token="text.info / text.success / text.warning / text.danger" usage="the primary action's label on a solid toast, and the secondary and tertiary actions' label on a subtle or outlined one" />
+<TokenRow token="icon.info / icon.success / icon.warning / icon.danger / icon.default" usage="the icon and the dismiss button on the subtle and outlined variants (icon.default for neutral)" />
+<TokenRow token="icon.on-info / icon.on-success / icon.on-warning / icon.on-danger / icon.on-neutral" usage="the icon on the solid variant; the focus ring on it" />
+<TokenRow token="bg.on-info / bg.on-success / bg.on-warning / bg.on-danger / bg.on-neutral" usage="the primary action's fill on a solid toast" />
+<TokenRow token="border.on-info / border.on-success / border.on-warning / border.on-danger / border.on-neutral" usage="the secondary action's outline on a solid toast" />
+<TokenRow token="border.focus" usage="the focus ring on the subtle and outlined variants" />
+<TokenRow token="font-family.primary" usage="the toasts' typography — set explicitly since the region is drawn in a portal outside this component's own tree" />
+<TokenRow token="font-size.xs / font-size.sm / font-size.base / font-size.md / font-size.lg" usage="the title and message across the five size steps" />
+<TokenRow token="font-weight.semibold" usage="the title" />
+<TokenRow token="line-height.normal" usage="the toast's line height" />
+<TokenRow token="space.0" usage="the region's safe-area fallback" />
+<TokenRow token="space.1 / space.2 / space.3 / space.4 / space.5 / space.6" usage="padding, the gap between the icon and the text, between toasts (space.3) and around the region (space.4); the dismiss button's minimum size (space.6)" />
+<TokenRow token="toast.width" usage="the width of a toast on a screen wide enough for a corner" />
+<TokenRow token="radius.md" usage="the toast's corners" />
+<TokenRow token="radius.sm" usage="the toast's focus ring" />
+<TokenRow token="radius.full" usage="the dismiss button" />
+<TokenRow token="border-width.1" usage="the toast's border" />
+<TokenRow token="border-width.2" usage="the focus rings" />
+<TokenRow token="shadow.light.lg / shadow.dark.lg" usage="the toast's elevation" />
+<TokenRow token="z-index.toast" usage="the region's stacking order, above dialogs and popovers and below tooltips" />
+<TokenRow token="motion.duration.base" usage="entering" />
+<TokenRow token="motion.duration.fast" usage="leaving, springing back from a swipe, the dismiss button's hover fill" />
+<TokenRow token="motion.easing.decelerate" usage="entering" />
+<TokenRow token="motion.easing.accelerate" usage="leaving" />
+<TokenRow token="motion.easing.standard" usage="springing back from a swipe, the dismiss button's hover fill" />
+<TokenRow token="motion.scale.96" usage="the size a toast starts from as it enters" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Alert"
+  description="A message that stays in the page, inline or as a banner"
+  href="/?path=/docs/molecules-feedback-alert--docs"
+>
+  <Button variant="secondary" size="sm">Alert</Button>
+</RelatedCard>
+<RelatedCard
+  name="ConfirmDialog"
+  description="A confirmation in one element, for something that has to be answered"
+  href="/?path=/docs/organisms-overlay-confirmdialog--docs"
+>
+  <Button variant="secondary" size="sm">ConfirmDialog</Button>
+</RelatedCard>
+<RelatedCard
+  name="Tooltip"
+  description="A short label on hover or focus, for a control that needs naming"
+  href="/?path=/docs/atoms-overlay-tooltip--docs"
+>
+  <Button variant="secondary" size="sm">Tooltip</Button>
+</RelatedCard>
+</div>

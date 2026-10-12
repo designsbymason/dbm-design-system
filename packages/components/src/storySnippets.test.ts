@@ -65,6 +65,7 @@ import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
 import { alertDialogPlaygroundSnippet } from "./organisms/AlertDialog/AlertDialog.snippets";
 import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
+import { toastPlaygroundSnippet } from "./organisms/Toast/Toast.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
 import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlider.snippets";
 import { scrollAreaPlaygroundSnippet } from "./molecules/ScrollArea/ScrollArea.snippets";
@@ -1725,5 +1726,41 @@ describe("Playground snippet for Drawer", () => {
     expect(drawerPlaygroundSnippet({ divided: "on" })).toContain("<Drawer.Content divided>");
     expect(drawerPlaygroundSnippet({ divided: "off" })).toContain("<Drawer.Content divided={false}>");
     expect(drawerPlaygroundSnippet({ closeOnEscape: false })).toContain("closeOnEscape={false}");
+  });
+});
+
+describe("Playground snippet for Toast", () => {
+  const toastArgs = [
+    {},
+    { placement: "top", limit: 1, size: "xs", variant: "solid" },
+    { duration: 2000, tone: "danger", title: "Failed", description: "Try again." },
+    { duration: "never", loading: true, title: "Saving…" },
+    { duration: null, showAction: true, dismissible: false, dir: "rtl", placement: "bottom-start" },
+    { title: 'He said "hi" & left', description: "a < b {c}" },
+  ] as const;
+
+  it.each(toastArgs)("Toast %j is a real snippet", (args) => {
+    expect(problemsIn(toastPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Toast writes only what differs from the defaults", () => {
+    const plain = toastPlaygroundSnippet({ placement: "bottom-end", limit: 3, duration: 5000, size: "md", variant: "subtle", tone: "info" });
+    expect(plain).toContain("<Toast.Provider>");
+    expect(plain).toContain('toast({ title: "Saved" })');
+    expect(toastPlaygroundSnippet({ placement: "top" })).toContain('<Toast.Provider placement="top">');
+    expect(toastPlaygroundSnippet({ limit: 1 })).toContain("<Toast.Provider limit={1}>");
+    expect(toastPlaygroundSnippet({ tone: "danger", title: "Failed" })).toContain('toast({ tone: "danger", title: "Failed" })');
+    expect(toastPlaygroundSnippet({ dismissible: false, title: "x" })).toContain("dismissible: false");
+  });
+
+  it("Toast accepts the control's option key for an until-dismissed duration", () => {
+    expect(toastPlaygroundSnippet({ duration: "never" })).toContain("duration={null}");
+    expect(toastPlaygroundSnippet({ duration: null })).toContain("duration={null}");
+    expect(toastPlaygroundSnippet({ duration: 10000 })).toContain("duration={10000}");
+  });
+
+  it("Toast writes the reader's text safely", () => {
+    const snippet = toastPlaygroundSnippet({ title: 'say "hi"' });
+    expect(snippet).toContain('title: "say \\"hi\\""');
   });
 });

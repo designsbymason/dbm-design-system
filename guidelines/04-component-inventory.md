@@ -133,7 +133,7 @@ System status communicated to the user.
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
 | Alert | molecule | 🟢 | One component for an inline message and a page-level banner ([ADR-0023](adr/0023-one-alert-with-banner-and-sticky-options-and-a-separate-persistence-hook.md)). Compound; status tones, dismissible, optional inline actions ([ADR-0024](adr/0024-alert-action-reads-the-alerts-colours-over-tone-props-on-button-or-unrestricted-children.md)). Review: [Alert.md](component-reviews/Alert.md) |
-| Toast / Notification | organism | 🟢 | Queue-managed, auto-dismiss, action button |
+| Toast | organism | 🟢 | A transient, non-blocking message raised from code: a `Toast.Provider` near the root and `useToast()` (`toast()`, `toast.promise()`, `update`, `dismiss`), or declared as parts (`Toast` + `Toast.Title`/`Description`/`Action`) over Radix Toast, pinned on the Radix release train ([ADR-0069](adr/0069-toast-wraps-radix-toast-pinned-at-1-2-23-on-the-shared-layer-stack-over-a-hand-rolled-toast-or-the-newest-release.md)). Queued with a `limit`, auto-dismissing with the time paused while read, an action with a required `altText`, swipe to dismiss, six logical placements ([ADR-0070](adr/0070-toast-is-raised-from-code-through-a-provider-and-a-hook-with-a-declarative-toast-beside-it-over-a-module-level-function-or-component-only-use.md)). Ships as `Toast`, per the `Tag / Chip` precedent; "Notification" is a search term. Not `Alert`, which stays in the page ([ADR-0023](adr/0023-one-alert-with-banner-and-sticky-options-and-a-separate-persistence-hook.md)) |
 | ProgressBar | atom | 🟢 | Determinate/indeterminate |
 | ProgressCircle | atom | 🟡 | |
 | Spinner | atom | 🟢 | Loading indicator |
@@ -258,14 +258,14 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer` and `Menu` are built and Finalized, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer` and `Menu` are built and Finalized, `Toast` is built and awaiting its review pass, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
 2. AlertDialog (built and Finalized, review in [AlertDialog.md](component-reviews/AlertDialog.md)), 3. ConfirmDialog — the prop-driven pattern on `AlertDialog`; built and Finalized, review in [ConfirmDialog.md](component-reviews/ConfirmDialog.md)
 4. Drawer — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone; built and Finalized, review in [Drawer.md](component-reviews/Drawer.md)
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it; built and Finalized, review in [Menu.md](component-reviews/Menu.md)
-6. Toast / Notification — independent; other organisms report results through it
+6. Toast — independent; other organisms report results through it; built, review in [Toast.md](component-reviews/Toast.md) once the pass is done
 7. Form — context and validation over `FormField` and `FieldGroup`
 8. Combobox / Autocomplete — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer)
 9. Calendar (molecule, prerequisite; built), then DatePicker

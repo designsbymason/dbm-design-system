@@ -1,0 +1,9 @@
+{
+  "toast": {
+    "width": {
+      "$type": "dimension",
+      "$value": "24rem",
+      "$description": "The width a toast takes in the viewport on a screen wide enough for a corner: about 45 characters of body text per line, narrow enough to leave the page readable beside it, wide enough for a title, a sentence and one action. On a screen narrower than it, a toast spans the viewport less its gutter instead. A content-measure constraint with no home on any primitive scale (the spacing scale tops out at 8rem), so it is a component token, like tooltip.max-width."
+    }
+  }
+}

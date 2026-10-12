@@ -1,0 +1,392 @@
+import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Responsive } from "@dbm-design-system/primitives";
+import type { ComponentPropsWithoutRef, CSSProperties, MouseEventHandler, ReactNode } from "react";
+import type { ButtonProps } from "../../atoms/Button";
+
+/**
+ * What the message is about, on the standard tone scale (`05-component-api-conventions.md` §2): `"info"` (the
+ * default) is neutral news, `"success"` something that worked, `"warning"` something that needs attention, `"danger"`
+ * something that went wrong, and `"neutral"` a plain notice with no meaning attached. The status colours are fixed;
+ * they don't change with the brand.
+ */
+export type ToastTone = "info" | "success" | "warning" | "danger" | "neutral";
+
+/**
+ * How a toast is drawn, with the same names `Alert` uses for the same three treatments.
+ *
+ * - `"subtle"` (the default) — a soft tint of the tone's colour with a faint border.
+ * - `"outlined"` — the page's own surface with a border in the tone's colour.
+ * - `"solid"` — the tone's full colour, with light or dark text to suit.
+ */
+export type ToastVariant = "subtle" | "outlined" | "solid";
+
+/**
+ * Padding and type size, on the standard 5-step scale (`05-component-api-conventions.md` §2) — never a
+ * component-specific scale.
+ */
+export type ToastSize = "xs" | "sm" | "md" | "lg" | "xl";
+
+/**
+ * The corner or edge of the screen the toasts stack against. `"start"` and `"end"` are logical: the inline start and
+ * end, which are the left and right in left-to-right text and swap in right-to-left, so a toast in the `"bottom-end"`
+ * corner is in the same corner as the page's own end. `"top"` and `"bottom"` are centred. Newer toasts stack nearest
+ * the edge they are placed against.
+ */
+export type ToastPlacement = "top-start" | "top" | "top-end" | "bottom-start" | "bottom" | "bottom-end";
+
+/**
+ * How a toast is announced to assistive technology.
+ *
+ * - `"alert"` — interrupts: read at once, even mid-sentence. For something that needs attention now.
+ * - `"status"` — waits for a pause. For news that can wait a moment.
+ *
+ * Left out, it follows the tone: `"alert"` for `"danger"` and `"warning"`, `"status"` for the rest. A toast is always
+ * news, so there is no `"none"`, as there is on `Alert`: if it should not be announced, it is not a toast.
+ */
+export type ToastRole = "alert" | "status";
+
+/**
+ * What closed a toast, given as the second argument of `onOpenChange`.
+ * - `"timeout"`: its time ran out.
+ * - `"dismiss"`: the built-in dismiss button.
+ * - `"action"`: its action button was pressed.
+ * - `"swipe"`: a touch, pen or mouse drag of it toward the edge.
+ * - `"escape"`: the Escape key.
+ * - `"programmatic"`: `dismiss()` or `dismissAll()` from `useToast`, or the provider removing it.
+ */
+export type ToastOpenChangeReason = "timeout" | "dismiss" | "action" | "swipe" | "escape" | "programmatic";
+
+/** The second argument of `onOpenChange`. */
+export interface ToastOpenChangeDetails {
+  /** What caused the change — see {@link ToastOpenChangeReason}. */
+  reason: ToastOpenChangeReason;
+}
+
+/**
+ * The text the toast system supplies itself, translatable through the `labels` prop on `Toast.Provider` (`ADR-0021`).
+ * Nothing here needs a number, so there is no `formatNumber`.
+ */
+export interface ToastLabels {
+  /** The accessible name of the dismiss button. @default 'Dismiss' */
+  dismiss: string;
+  /**
+   * The name of the region the toasts live in, for a screen reader reading the page's landmarks. `{hotkey}` is
+   * replaced by the shortcut that moves focus there.
+   * @default 'Notifications ({hotkey})'
+   */
+  viewport: string;
+  /**
+   * Read before each toast's text, so a screen reader user knows an interruption is a notification.
+   * @default 'Notification'
+   */
+  notification: string;
+}
+
+/** What `Toast.Action` is told and given by a toast. */
+export type ToastActionVariant = "primary" | "secondary" | "tertiary";
+
+/** One thing the person can do about a toast, in the options of `toast()`. */
+export interface ToastActionOptions {
+  /** The button's label. */
+  label: ReactNode;
+  /**
+   * How to do the same thing without the toast, for a screen reader user or a keyboard user who will not reach it in
+   * time ("Undo from the Edit menu", "Open Settings to change this"). It is read out with the toast, in place of
+   * the button, and **required**: a toast goes away by itself, so the action must never be the only way.
+   */
+  altText: string;
+  /** Called when the button is pressed. The toast closes afterwards. */
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  /**
+   * How prominent it is.
+   * @default 'primary'
+   */
+  variant?: ToastActionVariant;
+}
+
+/**
+ * The options of `toast()` — everything a toast can be, as data. The same thing as the `Toast` component with its
+ * parts, for a message raised from code.
+ */
+export interface ToastOptions {
+  /**
+   * An identifier. Calling `toast()` with the id of a toast that is still showing or waiting updates it in place
+   * instead of adding another, which is how a repeated message is kept to one. Made up when left out.
+   */
+  id?: string;
+  /** The headline, in a few words. */
+  title?: ReactNode;
+  /** The message itself. */
+  description?: ReactNode;
+  /**
+   * What the message is about — see {@link ToastTone}. A loading toast with no tone is `"neutral"`.
+   * @default 'info'
+   */
+  tone?: ToastTone;
+  /** How it is drawn. The provider's `variant` when left out. */
+  variant?: ToastVariant;
+  /** Padding and type size. The provider's `size` when left out. */
+  size?: ToastSize;
+  /**
+   * The icon before the message — a component reference from `@dbm-design-system/icons`, not a string name. Each tone
+   * has its own; pass another to replace it, or `false` for none. Decorative: the tone is not conveyed by the icon
+   * alone, so put what matters in the text.
+   */
+  icon?: PhosphorIcon | false;
+  /**
+   * Shows a spinner in place of the icon and keeps the toast open until it is updated. What `toast.promise` uses
+   * for its pending state.
+   * @default false
+   */
+  loading?: boolean;
+  /** One thing the person can do about it. See {@link ToastActionOptions}. */
+  action?: ToastActionOptions;
+  /**
+   * How long it stays, in milliseconds, before it closes by itself — paused while the pointer is over the toasts or
+   * focus is inside them, and while the window is in the background. `null` keeps it until it is dismissed. Left
+   * out, the provider's `duration` applies. Changing it on an update starts the time again.
+   */
+  duration?: number | null;
+  /**
+   * How it is announced — see {@link ToastRole}. Follows the tone when left out.
+   */
+  role?: ToastRole;
+  /**
+   * Adds a button that dismisses it.
+   * @default true
+   */
+  dismissible?: boolean;
+  /**
+   * Called with `false` when it closes, and the reason. It never calls with `true`: a toast that is shown is
+   * already open.
+   */
+  onOpenChange?: (open: boolean, details: ToastOpenChangeDetails) => void;
+  /**
+   * Called with `true` once it has finished arriving and with `false` once it has finished leaving and is out of the
+   * page. `onOpenChange` says a change *started*; this says it is *over* (`ADR-0062`).
+   */
+  onOpenChangeComplete?: (open: boolean) => void;
+}
+
+/** What `toast.promise` shows for each state of the promise. */
+export interface ToastPromiseOptions<Value> {
+  /** Shown while the promise is pending: a toast with a spinner, kept until the promise settles. */
+  loading: string | ToastOptions;
+  /** Shown when it resolves, in place of the loading toast. A function gets the resolved value. */
+  success: string | ToastOptions | ((value: Value) => string | ToastOptions);
+  /** Shown when it rejects, in place of the loading toast. A function gets the rejection. */
+  error: string | ToastOptions | ((reason: unknown) => string | ToastOptions);
+  /** The id the toast takes. Made up when left out. */
+  id?: string;
+}
+
+/** What `useToast()` gives back to raise and manage toasts from code. */
+export interface ToastApi {
+  /**
+   * Shows a toast, or updates the one with the same `id`, and returns its id. A string is the same as
+   * `{ title: string }`. It is queued if the provider's `limit` of toasts are already showing.
+   */
+  toast: ((options: string | ToastOptions) => string) & {
+    /**
+     * Shows a loading toast, then replaces it with the success or error toast when the promise settles, and returns
+     * the promise itself, so it can still be awaited. A rejection is still the caller's to handle: it is only
+     * reported on screen, not caught.
+     */
+    promise: <Value>(promise: Promise<Value>, options: ToastPromiseOptions<Value>) => Promise<Value>;
+  };
+  /** Changes a toast that is showing or waiting. An id that is not there is ignored. */
+  update: (id: string, options: Partial<ToastOptions>) => void;
+  /** Closes the toast with this id, with the exit animation. An id that is not there is ignored. */
+  dismiss: (id: string) => void;
+  /** Closes every toast, and drops the ones still waiting their turn. */
+  dismissAll: () => void;
+}
+
+export interface ToastProviderProps
+  extends Omit<ComponentPropsWithoutRef<"ol">, "className" | "style" | "id" | "children" | "dir"> {
+  /**
+   * The part of the page the toasts are for — usually the whole app — and any declarative `Toast`s. The provider
+   * renders nothing of its own here; the toasts are drawn in a region of their own, at the end of the page.
+   */
+  children?: ReactNode;
+  /**
+   * The corner or edge the toasts stack against — see {@link ToastPlacement}. A responsive map, mobile-first, gives
+   * a phone one placement and a desktop another. Below the `sm` breakpoint a toast spans the screen less a
+   * gutter whatever the horizontal placement, so only whether it is at the top or the bottom matters there.
+   * @default 'bottom-end'
+   */
+  placement?: Responsive<ToastPlacement>;
+  /**
+   * The most toasts showing at once. Those past it wait, and appear as room is made, each starting its own time when
+   * it appears.
+   * @default 3
+   */
+  limit?: number;
+  /**
+   * How long a toast stays, in milliseconds, unless it says otherwise. `null` keeps toasts until they are dismissed.
+   * Paused while the pointer is over the toasts or focus is inside them, and while the window is in the background.
+   * @default 5000
+   */
+  duration?: number | null;
+  /**
+   * Padding and type size of every toast, unless one says otherwise.
+   * @default 'md'
+   */
+  size?: ToastSize;
+  /**
+   * How every toast is drawn, unless one says otherwise — see {@link ToastVariant}.
+   * @default 'subtle'
+   */
+  variant?: ToastVariant;
+  /**
+   * The keys that move focus to the toasts, held together, as `KeyboardEvent` property or `code` names
+   * (`["altKey", "KeyT"]`). The region's accessible name names it.
+   * @default ['F8']
+   */
+  hotkey?: string[];
+  /**
+   * Text direction, which sets which way a swipe closes a toast. Left to right unless told otherwise, and not read
+   * from the page, as for the Radix-based components (`05-component-api-conventions.md` §3).
+   * @default 'ltr'
+   */
+  dir?: "ltr" | "rtl";
+  /**
+   * The element the toasts' region is drawn into. The page's body when left out. For a demo that has to stay inside
+   * a box (a Docs page, a preview pane): give it an element that is a containing block for `position: fixed`.
+   */
+  container?: HTMLElement | null;
+  /** The text the component supplies itself, each part replaceable. See {@link ToastLabels}. */
+  labels?: Partial<ToastLabels>;
+  /** Standard DOM id, on the list the toasts are in. */
+  id?: string;
+  /** Additional CSS classes for customization, on the list the toasts are in. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface ToastProps extends Omit<ComponentPropsWithoutRef<"li">, "className" | "style" | "id" | "role" | "children" | "onPause" | "onResume"> {
+  /**
+   * The message: `Toast.Title`, `Toast.Description` and `Toast.Action` in any order, any of them optional.
+   */
+  children?: ReactNode;
+  /**
+   * What the message is about — see {@link ToastTone}.
+   * @default 'info'
+   */
+  tone?: ToastTone;
+  /**
+   * How it is drawn. The provider's `variant` when left out.
+   */
+  variant?: ToastVariant;
+  /**
+   * Padding and type size. The provider's `size` when left out.
+   */
+  size?: ToastSize;
+  /**
+   * The icon before the message — a component reference from `@dbm-design-system/icons`. Each tone has its own;
+   * pass another to replace it, or `false` for none.
+   */
+  icon?: PhosphorIcon | false;
+  /**
+   * Shows a spinner in place of the icon.
+   * @default false
+   */
+  loading?: boolean;
+  /**
+   * Adds a button that dismisses it.
+   * @default true
+   */
+  dismissible?: boolean;
+  /**
+   * How long it stays, in milliseconds. `null` keeps it until it is dismissed. The provider's `duration` when left
+   * out.
+   */
+  duration?: number | null;
+  /** Whether it is showing, when controlled. Pair with `onOpenChange`. */
+  open?: boolean;
+  /**
+   * Whether it starts out showing, when uncontrolled.
+   * @default true
+   */
+  defaultOpen?: boolean;
+  /**
+   * Called with `false` when it closes, and the reason (`details.reason`). It never calls with `true`: nothing inside
+   * it can reopen it.
+   */
+  onOpenChange?: (open: boolean, details: ToastOpenChangeDetails) => void;
+  /**
+   * Called with `true` once it has finished arriving and with `false` once it has finished leaving and is out of the
+   * page (`ADR-0062`).
+   */
+  onOpenChangeComplete?: (open: boolean) => void;
+  /**
+   * How it is announced — see {@link ToastRole}. Follows the tone when left out.
+   */
+  role?: ToastRole;
+  /** The accessible name of the dismiss button, for this toast only. The provider's `labels.dismiss` when left out. */
+  dismissLabel?: string;
+  /** The id of an element that names the toast. */
+  "aria-labelledby"?: string;
+  /** The id of an element that describes it. */
+  "aria-describedby"?: string;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface ToastTitleProps extends Omit<ComponentPropsWithoutRef<"div">, "className" | "style" | "id"> {
+  /** The headline of the message — a few words. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /** Test identifier for automated testing. Rendered as the DOM `data-testid` attribute. */
+  "data-testid"?: string;
+}
+
+export interface ToastDescriptionProps extends Omit<ComponentPropsWithoutRef<"div">, "className" | "style" | "id"> {
+  /** The message itself — text, or anything a message can hold, such as a link. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /** Test identifier for automated testing. Rendered as the DOM `data-testid` attribute. */
+  "data-testid"?: string;
+}
+
+export interface ToastActionProps extends Omit<ButtonProps, "variant" | "size"> {
+  /** The action's label (or, with `asChild`, the element it is drawn onto). */
+  children?: ButtonProps["children"];
+  /**
+   * How to do the same thing without the toast — **required**. A toast goes away by itself, and a screen reader user
+   * or a keyboard user may never reach it in time, so this is read out with the toast in place of the button
+   * ("Undo from the Edit menu"). The action must never be the only way.
+   */
+  altText: string;
+  /**
+   * How prominent it is, using the names `Button` uses for the same three treatments. How each looks depends on the
+   * toast it sits in — its tone and variant — so that it always reads against it.
+   * @default 'primary'
+   */
+  variant?: ToastActionVariant;
+}
