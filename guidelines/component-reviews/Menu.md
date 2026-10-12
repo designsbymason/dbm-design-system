@@ -1,6 +1,6 @@
 # Menu — review findings
 
-Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not been run; the build's own checks are green.
+Fifth organism, built 2026-10-11 with the `06-engineering-standards.md` §9 checklist applied as it was written, then a full review pass. **Finalized 2026-10-12**, with the items under "Open at Finalization" accepted as open: none changes the component.
 
 ## Decisions
 - Wraps Radix DropdownMenu pinned on the Radix release train, holds its own open state, is modal by default and opens on ArrowUp: [ADR-0064](../adr/0064-menu-wraps-radix-dropdown-menu-on-the-pinned-release-train-holds-its-own-open-state-is-modal-by-default-and-opens-on-arrowup.md).
@@ -58,6 +58,7 @@ The §9 checklist run against the finished component, with its findings fixed:
 - **`Menu.Separator` does not compose the `Divider` atom, deliberately.** `Divider` draws its line as a background, which forced colours replaces with the page's colour (measured: `rgb(222, 221, 229)` becomes `rgb(255, 255, 255)`, invisible on a white page); the menu's separator is a border, which forced colours keeps (`05` §6). Recorded as a finding on `Divider`, not fixed here.
 - **Arrowing through every item of a 28-item menu in a 420px-tall viewport** kept each focused item clear of the fades (the viewport's `scroll-padding`), and a menu inside a `Popover` and one on a 375px phone stay inside the viewport.
 
-## Open
-- The §9 review pass that decides Finalized, including looking at every story and the Docs page in light and dark and in both brands at several viewport widths (the Playground was seen open in the default theme only).
-- Not verified: a real touch device, and a screen reader's announcement of the menu and its groups.
+## Open at Finalization
+- **Themes looked at live:** the default (Purple, light) and Emerald dark, by computed values; Purple dark and Emerald light are covered by the contrast measurements (every pairing clears its floor in all four) and by the tokens, not by a look.
+- **Not verified:** a real touch device (submenu hover-intent has no equivalent there), a screen reader's announcement of the menu, its groups, the checked state and a busy item, Safari and Firefox (`focus({ focusVisible: false })` falls back to the ringed focus where unsupported), and Windows high contrast on a real machine (forced colours was emulated).
+- **Known gaps, named and not built:** a phone presentation as a bottom sheet, and the submenu's `defaultOpen`, which Radix's submenu closes on focus outside (ADR-0064).
