@@ -1,5 +1,5 @@
 import { addons } from "storybook/manager-api";
-import { SET_GLOBALS, UPDATE_GLOBALS } from "storybook/internal/core-events";
+import { DOCS_RENDERED, SET_GLOBALS, UPDATE_GLOBALS } from "storybook/internal/core-events";
 import { primitives } from "@dbm-design-system/tokens";
 import { getSemanticTokens, getStorybookTheme } from "./theme";
 
@@ -418,5 +418,18 @@ addons.ready().then((channel) => {
   channel.on(UPDATE_GLOBALS, (payload) => {
     hasReceivedInitialSync = true;
     applyTheme(payload?.globals);
+  });
+});
+
+// Opening the bare URL (`/`) makes Storybook redirect to the first entry as `?path=/story/<id>`, whatever the entry's
+// type. For a docs entry (Foundations → Overview) that leaves the manager in "story" view mode over a docs page, so
+// the Controls/Actions/Interactions panel is shown on a page with nothing to control, and it goes away only after
+// navigating elsewhere (which uses `/docs/<id>`). Once a docs entry has rendered under a story URL, move to its own.
+addons.register("dbm/docs-entry-view-mode", (api) => {
+  api.on(DOCS_RENDERED, () => {
+    const { viewMode, storyId } = api.getUrlState();
+    if (viewMode !== "story" || !storyId) return;
+    if (api.getData(storyId)?.type !== "docs") return;
+    api.selectStory(storyId);
   });
 });
