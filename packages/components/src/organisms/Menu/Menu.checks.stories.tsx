@@ -5,7 +5,7 @@ import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Toolbar } from "../../molecules/Toolbar";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Dialog } from "../Dialog";
 import { Menu } from "./Menu";
@@ -628,14 +628,11 @@ export const InsideAToolbar: Story = {
 function DeleteFlow() {
   const [confirming, setConfirming] = useState(false);
   const [deleted, setDeleted] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   return (
     <Page>
       <Menu>
         <Menu.Trigger asChild>
-          <Button ref={triggerRef} variant="secondary">
-            Actions
-          </Button>
+          <Button variant="secondary">Actions</Button>
         </Menu.Trigger>
         <Menu.Content>
           <Menu.Item>Edit</Menu.Item>
@@ -652,11 +649,6 @@ function DeleteFlow() {
         labels={{ confirm: "Delete" }}
         tone="danger"
         onConfirm={() => setDeleted(true)}
-        // A dialog without a trigger of its own returns focus to nothing; give it the menu's.
-        onCloseAutoFocus={(event) => {
-          event.preventDefault();
-          triggerRef.current?.focus();
-        }}
       />
       <p data-testid="result">{deleted ? "deleted" : "kept"}</p>
     </Page>

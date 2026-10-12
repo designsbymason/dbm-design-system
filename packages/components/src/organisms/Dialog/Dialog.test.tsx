@@ -855,4 +855,43 @@ describe("Dialog", () => {
     });
   });
 
+  describe("returning focus", () => {
+    // A Dialog opened from state has no trigger of its own for Radix to return focus to, so it returns it to
+    // whatever had focus when it opened.
+    function FromState({ onCloseAutoFocus }: { onCloseAutoFocus?: (event: Event) => void }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open from state
+          </button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog.Content aria-label="From state" onCloseAutoFocus={onCloseAutoFocus}>
+              <Dialog.Body>Body</Dialog.Body>
+            </Dialog.Content>
+          </Dialog>
+        </>
+      );
+    }
+
+    it("returns focus to the element that was focused when it opened", async () => {
+      const user = userEvent.setup();
+      render(<FromState />);
+      await user.click(screen.getByRole("button", { name: "Open from state" }));
+      await screen.findByRole("dialog");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(screen.getByRole("button", { name: "Open from state" })).toHaveFocus());
+    });
+
+    it("leaves focus where the caller put it when onCloseAutoFocus was prevented", async () => {
+      const user = userEvent.setup();
+      render(<FromState onCloseAutoFocus={(event) => event.preventDefault()} />);
+      await user.click(screen.getByRole("button", { name: "Open from state" }));
+      await screen.findByRole("dialog");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("button", { name: "Open from state" })).not.toHaveFocus();
+    });
+  });
 });

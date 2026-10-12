@@ -907,4 +907,46 @@ describe("ConfirmDialog", () => {
     });
   });
 
+  describe("returning focus", () => {
+    // A ConfirmDialog opened from state has no trigger of its own for Radix to return focus to, so it returns it to
+    // whatever had focus when it opened.
+    function FromState({ onCloseAutoFocus }: { onCloseAutoFocus?: (event: Event) => void }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open from state
+          </button>
+          <ConfirmDialog
+            open={open}
+            onOpenChange={setOpen}
+            title="Delete?"
+            description="Sure?"
+            labels={{ cancel: "Keep it" }}
+            onCloseAutoFocus={onCloseAutoFocus}
+          />
+        </>
+      );
+    }
+
+    it("returns focus to the element that was focused when it opened", async () => {
+      const user = userEvent.setup();
+      render(<FromState />);
+      await user.click(screen.getByRole("button", { name: "Open from state" }));
+      await screen.findByRole("alertdialog");
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(screen.getByRole("button", { name: "Open from state" })).toHaveFocus());
+    });
+
+    it("leaves focus where the caller put it when onCloseAutoFocus was prevented", async () => {
+      const user = userEvent.setup();
+      render(<FromState onCloseAutoFocus={(event) => event.preventDefault()} />);
+      await user.click(screen.getByRole("button", { name: "Open from state" }));
+      await screen.findByRole("alertdialog");
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("button", { name: "Open from state" })).not.toHaveFocus();
+    });
+  });
 });

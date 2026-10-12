@@ -202,8 +202,8 @@ export interface DialogContentProps extends Omit<ComponentPropsWithoutRef<"div">
    */
   onOpenAutoFocus?: DialogPrimitiveContentProps["onOpenAutoFocus"];
   /**
-   * Called when focus would return to the trigger on close. Call `event.preventDefault()` inside to send focus
-   * elsewhere instead.
+   * Called when focus is about to return on close: to the trigger, or, for one opened from state with no trigger, to
+   * the element that had focus when it opened. Call `event.preventDefault()` inside to send focus elsewhere instead.
    */
   onCloseAutoFocus?: DialogPrimitiveContentProps["onCloseAutoFocus"];
   /**

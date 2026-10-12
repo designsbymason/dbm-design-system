@@ -120,6 +120,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0064](./0064-menu-wraps-radix-dropdown-menu-on-the-pinned-release-train-holds-its-own-open-state-is-modal-by-default-and-opens-on-arrowup.md) | `Menu` wraps Radix DropdownMenu on the pinned release train, holds its own open state, is modal by default and opens on ArrowUp | Accepted |
 | [0065](./0065-menu-draws-its-item-parts-in-its-own-stylesheet-for-contextmenu-and-menubar-to-import-and-aligns-indicators-with-has.md) | `Menu` draws its item parts in its own stylesheet for `ContextMenu` and `Menubar` to import, and aligns indicators with `:has()` | Accepted |
 | [0066](./0066-menu-items-take-a-promise-a-close-on-select-setting-a-reason-for-being-disabled-and-a-description-and-a-menu-reports-when-it-has-closed.md) | `Menu` items take a promise, a `closeOnSelect` setting, a reason for being disabled and a description, and the menu reports when it has closed | Accepted |
+| [0067](./0067-overlays-return-focus-to-the-element-that-opened-them-when-they-have-no-trigger-and-a-closing-scrim-lets-presses-through.md) | Overlays return focus to the element that opened them when they have no trigger, and a closing scrim lets presses through | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

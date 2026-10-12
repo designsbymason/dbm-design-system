@@ -42,3 +42,6 @@ Eight findings, all fixed:
 - Touch and iOS behaviour (scroll lock, `keepMounted`'s move), and the safe-area insets on a real device: a desktop reports none, so they are asserted from the stylesheet and a stood-in inset, not seen.
 - The Docs page and the four themes have not been looked at live in a running Storybook (the Browser pane was not displayed).
 - Snap points for a bottom sheet, a resizable docked inspector and a push mode are not built (ideas, not decided against).
+
+## Post-Finalization follow-up (2026-10-11, at explicit direction) — focus returns to what opened it
+A Drawer opened from state (`open`, with no `Drawer.Trigger`) closed with focus on the page's `body`, because Radix returns focus only to its own trigger. It now remembers the element that had focus as it opened and returns it there on close, unless the caller prevented `onCloseAutoFocus` or the element is gone ([ADR-0067](../adr/0067-overlays-return-focus-to-the-element-that-opened-them-when-they-have-no-trigger-and-a-closing-scrim-lets-presses-through.md)). A defect fix under the finalization test (it violated the return-focus guidance, and changes nothing for a dialog with a trigger); re-verified: accessibility and functional verification. Tests: two unit tests (returns it; a prevented `onCloseAutoFocus` is left alone).

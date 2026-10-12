@@ -660,4 +660,49 @@ describe("AlertDialog", () => {
     });
   });
 
+  describe("returning focus", () => {
+    // A AlertDialog opened from state has no trigger of its own for Radix to return focus to, so it returns it to
+    // whatever had focus when it opened.
+    function FromState({ onCloseAutoFocus }: { onCloseAutoFocus?: (event: Event) => void }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open from state
+          </button>
+          <AlertDialog open={open} onOpenChange={setOpen}>
+            <AlertDialog.Content onCloseAutoFocus={onCloseAutoFocus}>
+              <AlertDialog.Header>
+                <AlertDialog.Title>Delete?</AlertDialog.Title>
+                <AlertDialog.Description>Sure?</AlertDialog.Description>
+              </AlertDialog.Header>
+              <AlertDialog.Footer>
+                <AlertDialog.Cancel>Keep it</AlertDialog.Cancel>
+              </AlertDialog.Footer>
+            </AlertDialog.Content>
+          </AlertDialog>
+        </>
+      );
+    }
+
+    it("returns focus to the element that was focused when it opened", async () => {
+      const user = userEvent.setup();
+      render(<FromState />);
+      await user.click(screen.getByRole("button", { name: "Open from state" }));
+      await screen.findByRole("alertdialog");
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(screen.getByRole("button", { name: "Open from state" })).toHaveFocus());
+    });
+
+    it("leaves focus where the caller put it when onCloseAutoFocus was prevented", async () => {
+      const user = userEvent.setup();
+      render(<FromState onCloseAutoFocus={(event) => event.preventDefault()} />);
+      await user.click(screen.getByRole("button", { name: "Open from state" }));
+      await screen.findByRole("alertdialog");
+      await user.click(screen.getByRole("button", { name: "Keep it" }));
+      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("button", { name: "Open from state" })).not.toHaveFocus();
+    });
+  });
 });

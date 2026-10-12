@@ -7,6 +7,7 @@ import { Backdrop } from "../../atoms/Backdrop";
 import { CloseButton } from "../../atoms/CloseButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { OverlayContentContext } from "../../internal/overlay/overlayContext";
+import { useReturnFocus } from "../../internal/overlay/useReturnFocus";
 import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import { OverlayBody, OverlayDescription, OverlayFooter, OverlayHeader, OverlayTitle } from "../../internal/overlay/OverlayParts";
 import { useKeepMounted } from "../../internal/overlay/useKeepMounted";
@@ -222,6 +223,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
       className,
       children,
       onOpenAutoFocus,
+      onCloseAutoFocus,
       onEscapeKeyDown,
       onInteractOutside,
       "aria-label": ariaLabel,
@@ -236,6 +238,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     const labels: DialogLabels = mergeDefined(defaultLabels, labelOverrides);
 
     const { contentContext, titleCount, descriptionCount, edges } = useOverlayPanel({ divided, busy });
+    const returnFocus = useReturnFocus();
     const { host, portalContent, attachHost } = useKeepMounted({ keepMounted, open });
     const describedBy = describedByProps(ariaDescribedBy, descriptionCount);
     const panelRef = useRef<HTMLDivElement | null>(null);
@@ -256,7 +259,12 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
         aria-busy={busy || undefined}
         data-overflow-start={edges.start || undefined}
         data-overflow-end={edges.end || undefined}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          returnFocus.restore(event);
+        }}
         onOpenAutoFocus={(event) => {
+          returnFocus.remember();
           onOpenAutoFocus?.(event);
           const target = initialFocus?.current;
           if (!event.defaultPrevented && target) {

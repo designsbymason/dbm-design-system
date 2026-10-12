@@ -7,7 +7,7 @@ import {
   TrashIcon,
 } from "@dbm-design-system/icons";
 import { fn } from "storybook/test";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
@@ -384,15 +384,12 @@ export const DisabledReason: Story = {
 
 function DeleteRow({ args }: { args: MenuStageArgs }) {
   const [confirming, setConfirming] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   return (
     <>
       <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-8)" }}>
         <Menu modal={args.modal} dir={args.dir}>
           <Menu.Trigger asChild>
-            <Button ref={triggerRef} variant="secondary">
-              Actions
-            </Button>
+            <Button variant="secondary">Actions</Button>
           </Menu.Trigger>
           <Menu.Content size={args.size}>
             <Menu.Item>Edit</Menu.Item>
@@ -408,11 +405,6 @@ function DeleteRow({ args }: { args: MenuStageArgs }) {
         title="Delete this row?"
         description="This can't be undone."
         labels={{ confirm: "Delete" }}
-        // A dialog with no trigger of its own returns focus to nothing when it closes, so it is given the menu's.
-        onCloseAutoFocus={(event) => {
-          event.preventDefault();
-          triggerRef.current?.focus();
-        }}
       />
     </>
   );

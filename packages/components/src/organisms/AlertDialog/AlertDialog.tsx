@@ -24,6 +24,7 @@ import { Heading } from "../../atoms/Heading";
 import { Icon } from "../../atoms/Icon";
 import type { IconTone } from "../../atoms/Icon/Icon.types";
 import { Text } from "../../atoms/Text";
+import { useReturnFocus } from "../../internal/overlay/useReturnFocus";
 import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import { OverlayBody, OverlayFooter } from "../../internal/overlay/OverlayParts";
 import dialogStyles from "../Dialog/Dialog.module.css";
@@ -223,6 +224,7 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
       className,
       children,
       onOpenAutoFocus,
+      onCloseAutoFocus,
       onEscapeKeyDown,
       ...props
     },
@@ -231,6 +233,7 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
     const dialog = useContext(AlertDialogContext);
     const open = dialog?.open ?? true;
     const contentRef = useRef<HTMLDivElement | null>(null);
+    const returnFocus = useReturnFocus();
     // A pulse when something tries to dismiss the alert and can't. Two identical animations under two names:
     // switching the class restarts it even when it is pressed again before the last pulse has finished.
     const [pulses, setPulses] = useState(0);
@@ -252,7 +255,12 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
         data-state={open ? "open" : "closed"}
         aria-modal
         aria-busy={busy || undefined}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          returnFocus.restore(event);
+        }}
         onOpenAutoFocus={(event) => {
+          returnFocus.remember();
           onOpenAutoFocus?.(event);
           if (event.defaultPrevented) return;
           const root = contentRef.current;

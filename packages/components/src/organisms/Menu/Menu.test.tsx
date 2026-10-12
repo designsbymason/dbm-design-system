@@ -964,6 +964,35 @@ describe("Menu", () => {
   });
 
   describe("inside other overlays", () => {
+    it("returns focus to the trigger when a dialog an item opened closes, with nothing more asked of the caller", async () => {
+      const user = userEvent.setup();
+      function Flow() {
+        const [open, setOpen] = useState(false);
+        return (
+          <>
+            <Menu>
+              <Menu.Trigger>Actions</Menu.Trigger>
+              <Menu.Content>
+                <Menu.Item onSelect={() => setOpen(true)}>Delete</Menu.Item>
+              </Menu.Content>
+            </Menu>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog.Content aria-label="Confirm">
+                <Dialog.Body>Sure?</Dialog.Body>
+              </Dialog.Content>
+            </Dialog>
+          </>
+        );
+      }
+      render(<Flow />);
+      await user.click(trigger());
+      await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+      await screen.findByRole("dialog", { name: "Confirm" });
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(trigger()).toHaveFocus());
+    });
+
     it("opens from inside a Dialog and choosing an item leaves the dialog open", async () => {
       const user = userEvent.setup();
       const onSelect = vi.fn();

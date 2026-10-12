@@ -295,7 +295,7 @@ other native `<button>` attribute beyond what's listed here.
   dialog with only an `aria-label` still gets a hidden title so the wiring has something to point at.
 - Focus moves into the dialog on open (to its first focusable element, or choose one with
   `onOpenAutoFocus`), `Tab` and `Shift+Tab` loop inside it, and `Escape` closes it and returns focus to
-  the trigger.
+  the trigger, or, for a dialog opened from state with no trigger, to the element that had focus when it opened.
 - While a modal dialog is open the rest of the page is hidden from assistive technology and can't be
   scrolled or clicked.
 - A press on the scrim closes the dialog; a press inside a popover or select opened from the dialog does

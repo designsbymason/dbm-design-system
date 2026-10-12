@@ -337,7 +337,7 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
   press to reach an action.
 - Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
 - Don't put the `Dialog` an item opens inside the menu's content: it unmounts with the menu. Keep it beside the
-  menu, opened from state, and give it the trigger to return focus to (see Code examples).
+  menu, opened from state (see Code examples).
 - Don't use a `description` for text a person must read to choose: it is read as a description, not as part
   of the name, and it makes every row taller.
 
@@ -439,15 +439,14 @@ function Example() {
 <Menu.Item disabled disabledReason="You need the admin role to delete">Delete</Menu.Item>
 <Menu.Item description="Plan and invoices" trailing={<Badge tone="info">New</Badge>}>Billing</Menu.Item>
 
-{/* An item that opens a confirmation: the dialog sits beside the menu, and is given the trigger to return focus to */}
+{/* An item that opens a confirmation: the dialog sits beside the menu, opened from state, and focus goes back to the trigger when it closes */}
 function Row() {
   const [confirming, setConfirming] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   return (
     <>
       <Menu>
         <Menu.Trigger asChild>
-          <Button ref={triggerRef}>Actions</Button>
+          <Button>Actions</Button>
         </Menu.Trigger>
         <Menu.Content>
           <Menu.Item tone="danger" onSelect={() => setConfirming(true)}>Delete</Menu.Item>
@@ -458,10 +457,6 @@ function Row() {
         onOpenChange={setConfirming}
         title="Delete this row?"
         onConfirm={deleteRow}
-        onCloseAutoFocus={(event) => {
-          event.preventDefault();
-          triggerRef.current?.focus();
-        }}
       />
     </>
   );

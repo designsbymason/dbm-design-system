@@ -162,11 +162,11 @@ ${menu(
     <Menu.Item disabled>Archive</Menu.Item>`,
 )}`,
 
-  opensADialog: `{/* The dialog is a sibling of the menu, opened from state. A dialog with no trigger of its own returns
-    focus to nothing when it closes, so give it the menu's trigger. */}
+  opensADialog: `{/* The dialog is a sibling of the menu, opened from state. When it closes, focus goes back to the
+    menu's trigger on its own. */}
 <Menu>
   <Menu.Trigger asChild>
-    <Button ref={triggerRef} variant="secondary">Actions</Button>
+    <Button variant="secondary">Actions</Button>
   </Menu.Trigger>
   <Menu.Content>
     <Menu.Item>Edit</Menu.Item>
@@ -180,10 +180,6 @@ ${menu(
   description="This can't be undone."
   labels={{ confirm: "Delete" }}
   onConfirm={deleteRow}
-  onCloseAutoFocus={(event) => {
-    event.preventDefault();
-    triggerRef.current?.focus();
-  }}
 />`,
 
   disabledItems: `{/* A disabled item is dimmed, skipped by the arrow keys and typeahead, and can't be chosen. */}

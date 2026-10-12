@@ -245,7 +245,7 @@ and shows a button to ask again.
   screen reader reads the question and then what it will do.
 - Focus moves to the cancel button when the dialog opens, so Enter or Space can't confirm by accident;
   with `requireText` it moves to the field instead, and cancel is one `Shift+Tab` away. `Tab` and
-  `Shift+Tab` loop inside, and focus returns to the trigger on close.
+  `Shift+Tab` loop inside, and focus returns to the trigger on close (to the element that had focus when it opened, for one opened from state).
 - `Escape` closes the dialog as a cancel. A press on the scrim does nothing, with no prop to change
   that, and gives the panel a short pulse so it doesn't read as broken (a border flash under
   `prefers-reduced-motion`).

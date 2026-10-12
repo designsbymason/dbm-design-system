@@ -31,7 +31,7 @@ Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not
 
 ## Feature pass: five gaps (2026-10-11)
 Decisions and alternatives are in [ADR-0066](../adr/0066-menu-items-take-a-promise-a-close-on-select-setting-a-reason-for-being-disabled-and-a-description-and-a-menu-reports-when-it-has-closed.md).
-- **An item that opens a confirmation** is a recipe: the dialog beside the menu, opened from state, handed the trigger through its `onCloseAutoFocus`. Run with a real mouse and with the keyboard. A dialog with no trigger of its own returned focus to `body`, and a real press 150ms after it closed landed on its fading scrim; both are the dialog's, not the menu's.
+- **An item that opens a confirmation** is a recipe: the dialog beside the menu, opened from state. Run with a real mouse and with the keyboard. It exposed two things in the dialogs, both fixed there ([ADR-0067](../adr/0067-overlays-return-focus-to-the-element-that-opened-them-when-they-have-no-trigger-and-a-closing-scrim-lets-presses-through.md)): a dialog with no trigger returned focus to `body`, and a press just after one closed landed on its fading scrim.
 - **`closeOnSelect`**, false by default for checkbox and radio items.
 - **A promise from `onSelect`:** busy item, spinner, no layout shift (checked by measuring the row), the menu closes when it resolves; `onSelectError`.
 - **`disabledReason`:** focusable, `aria-disabled`, tooltip above the menu, announced as a description.

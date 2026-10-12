@@ -250,7 +250,7 @@ also accepts every other `Button` property and any native `<button>` attribute.
   automatically, so a screen reader reads the question and then what it will do.
 - Focus moves to `AlertDialog.Cancel` when the alert opens (to the `Action` when there is no Cancel;
   choose another element with `initialFocus`), so Enter or Space can't confirm by accident.
-  `Tab` and `Shift+Tab` loop inside, and focus returns to the trigger on close.
+  `Tab` and `Shift+Tab` loop inside, and focus returns to the trigger on close (to the element that had focus when it opened, for one opened from state).
 - `Escape` closes the alert as a cancel. A press on the scrim does nothing, with no prop to change that.
 - While the alert is open the rest of the page is hidden from assistive technology and can't be
   scrolled or clicked. An alert opened from a dialog hides that dialog too, and `Escape` answers only
