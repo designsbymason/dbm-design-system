@@ -172,12 +172,44 @@
   flex-shrink: 0;
 }
 
-/* The label takes the room that is left, which pushes a shortcut or a caret to the end. A long label wraps
-   rather than widening the panel past its cap. */
-.label {
+/* The label (and a description under it) take the room that is left, which pushes trailing content, a shortcut or a
+   caret to the end. A long label wraps rather than widening the panel past its cap. */
+.text {
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
   min-inline-size: 0;
+}
+
+.label {
   overflow-wrap: break-word;
+}
+
+.description {
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  overflow-wrap: break-word;
+}
+
+.item[data-disabled] .description {
+  color: var(--dbm-text-disabled);
+}
+
+.trailing {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-inline-start: var(--dbm-space-2);
+}
+
+.spinner {
+  flex-shrink: 0;
+  margin-inline-start: var(--dbm-space-2);
+}
+
+/* An item whose action is pending ignores presses, which the cursor says. */
+.item[aria-busy="true"] {
+  cursor: progress;
 }
 
 .shortcut {

@@ -39,6 +39,31 @@ const meta: Meta<typeof Menu.Item> = {
       control: false,
       description: "A leading icon, as a component reference (icon={CopyIcon}), drawn in icon.* colours. Decorative: the label carries the meaning.",
     },
+    description: {
+      control: "text",
+      description:
+        "A second line under the label, in quiet text. It describes the item for assistive technology rather than becoming part of its name.",
+    },
+    trailing: {
+      control: false,
+      description: "Content at the item's end, before a shortcut hint: a count, a Badge, \"New\".",
+    },
+    disabledReason: {
+      control: "text",
+      description:
+        "Why the item is disabled, shown in a tooltip and announced as its description. Only with disabled. An item with a reason stays focusable (and aria-disabled) so the reason can be reached and heard.",
+    },
+    closeOnSelect: {
+      control: "boolean",
+      description:
+        "Whether choosing the item closes the menu. An action closes it; a checkbox or radio item stays open by default. onSelect's event.preventDefault() still keeps it open.",
+      table: { defaultValue: { summary: "true (false for CheckboxItem and RadioItem)" } },
+    },
+    onSelectError: {
+      control: false,
+      description:
+        "Receives the error when a promise returned by onSelect rejects. The menu stays open either way; with no handler the rejection is left unhandled so it is not lost silently.",
+    },
     shortcut: {
       control: "text",
       description:
@@ -52,7 +77,7 @@ const meta: Meta<typeof Menu.Item> = {
     onSelect: {
       control: false,
       description:
-        "Called when the item is chosen, by a click, Enter or Space. Call event.preventDefault() to keep the menu open after it.",
+        "Called when the item is chosen, by a click, Enter or Space. Call event.preventDefault() to keep the menu open after it. Return a promise for an action that takes time: the item shows a spinner and ignores presses while it is pending, the menu stays open, and it closes when the promise resolves.",
     },
     textValue: {
       control: "text",

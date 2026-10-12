@@ -33,7 +33,7 @@ export const playgroundOrder = [
   "dir",
   "defaultOpen",
 ];
-export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "modal", "dir"];
+export const propOrder = ["children", "open", "defaultOpen", "onOpenChange", "onOpenChangeComplete", "modal", "dir"];
 export const sharedTail = ["id", "className", "style", "data-testid"];
 export const triggerPropOrder = ["children", "disabled", "aria-label", "aria-labelledby", "aria-haspopup", "aria-expanded", "asChild", ...sharedTail];
 export const contentPropOrder = [
@@ -58,10 +58,55 @@ export const contentPropOrder = [
   "aria-labelledby",
   ...sharedTail,
 ];
-export const itemPropOrder = ["children", "icon", "shortcut", "tone", "disabled", "onSelect", "textValue", "asChild", ...sharedTail];
-export const checkboxPropOrder = ["children", "icon", "shortcut", "checked", "defaultChecked", "onCheckedChange", "disabled", "onSelect", "textValue", ...sharedTail];
+export const itemPropOrder = [
+  "children",
+  "icon",
+  "description",
+  "trailing",
+  "shortcut",
+  "tone",
+  "disabled",
+  "disabledReason",
+  "closeOnSelect",
+  "onSelect",
+  "onSelectError",
+  "textValue",
+  "asChild",
+  ...sharedTail,
+];
+export const checkboxPropOrder = [
+  "children",
+  "icon",
+  "description",
+  "trailing",
+  "shortcut",
+  "checked",
+  "defaultChecked",
+  "onCheckedChange",
+  "disabled",
+  "disabledReason",
+  "closeOnSelect",
+  "onSelect",
+  "onSelectError",
+  "textValue",
+  ...sharedTail,
+];
 export const radioGroupPropOrder = ["children", "value", "defaultValue", "onValueChange", "aria-label", "aria-labelledby", ...sharedTail];
-export const radioItemPropOrder = ["children", "value", "icon", "shortcut", "disabled", "onSelect", "textValue", ...sharedTail];
+export const radioItemPropOrder = [
+  "children",
+  "value",
+  "icon",
+  "description",
+  "trailing",
+  "shortcut",
+  "disabled",
+  "disabledReason",
+  "closeOnSelect",
+  "onSelect",
+  "onSelectError",
+  "textValue",
+  ...sharedTail,
+];
 export const labelPropOrder = ["children", ...sharedTail];
 export const groupPropOrder = ["children", "aria-label", "aria-labelledby", ...sharedTail];
 export const separatorPropOrder = sharedTail;
@@ -217,9 +262,29 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 
 <Canvas of={MenuStories.LinkItems} />
 
+### Descriptions and trailing content
+
+<Canvas of={MenuStories.DescriptionsAndTrailing} />
+
+### An action that takes time
+
+<Canvas of={MenuStories.AsyncAction} />
+
+### An action that keeps the menu open
+
+<Canvas of={MenuStories.StayOpen} />
+
 ### Disabled items
 
 <Canvas of={MenuStories.DisabledItems} />
+
+### A disabled item that says why
+
+<Canvas of={MenuStories.DisabledReason} />
+
+### An item that opens a confirmation
+
+<Canvas of={MenuStories.OpensADialog} />
 
 ### An icon-only trigger for row actions
 
@@ -254,8 +319,12 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
   name is what a screen reader announces when the menu opens.
 - Keep the labels short and start them with the verb or the thing, so typeahead finds them from their
   first letters.
-- Call `event.preventDefault()` in a checkbox or radio item's `onSelect` when the person may flip
-  several options before they are done.
+- Let a checkbox or radio item leave the menu open (it does by default), so the person can flip several
+  options before they are done; set `closeOnSelect` on an action that should keep the menu open too.
+- Return a promise from `onSelect` for an action that takes time (an export, a save): the item shows a
+  spinner and ignores further presses, and the menu closes when it resolves.
+- Give a disabled item a `disabledReason` when the person can do something about it (ask for a role, finish a
+  step), so they can reach it, see why, and hear it.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -267,6 +336,10 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 - Don't nest submenus more than one deep without a reason: each level is another hover and another key
   press to reach an action.
 - Don't rely on a `shortcut` hint to make a key work. It only displays the key; bind it yourself.
+- Don't put the `Dialog` an item opens inside the menu's content: it unmounts with the menu. Keep it beside the
+  menu, opened from state, and give it the trigger to return focus to (see Code examples).
+- Don't use a `description` for text a person must read to choose: it is read as a description, not as part
+  of the name, and it makes every row taller.
 
 </Callout>
 </div>
@@ -297,6 +370,10 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 - `Enter` and `Space` choose the focused item. `Escape` closes the menu (one level of submenu at a time)
   and returns focus to the trigger. `Tab` is not used inside an open menu: the arrow keys are how it is
   navigated.
+- A `description` is announced as the item's description, not as part of its name. A `disabledReason`
+  keeps the item focusable and `aria-disabled`, shows the reason in a tooltip and announces it as the
+  description. An item with a pending action is `aria-busy` and `aria-disabled`, and ignores presses until it
+  settles.
 - A `Menu.Label` inside a `Menu.Group` or `Menu.RadioGroup` names that group through
   `aria-labelledby`, wired automatically; an explicit `aria-label` or `aria-labelledby` on the group
   replaces it.
@@ -339,8 +416,8 @@ function Example() {
   );
 }
 
-{/* A checkbox item that stays open, and a radio group */}
-<Menu.CheckboxItem checked={showGrid} onCheckedChange={setShowGrid} onSelect={(event) => event.preventDefault()}>
+{/* A checkbox item leaves the menu open, and a radio group does too */}
+<Menu.CheckboxItem checked={showGrid} onCheckedChange={setShowGrid}>
   Show grid
 </Menu.CheckboxItem>
 <Menu.RadioGroup value={sort} onValueChange={setSort} aria-label="Sort by">
@@ -352,6 +429,43 @@ function Example() {
 <Menu.Item asChild>
   <RouterLink to="/docs">Documentation</RouterLink>
 </Menu.Item>
+
+{/* An action that takes time: a spinner shows and the menu closes when the promise resolves */}
+<Menu.Item onSelect={() => exportRows()} onSelectError={(error) => showError(error)}>
+  Export as CSV
+</Menu.Item>
+
+{/* A disabled item that says why, and an item with a second line and a badge */}
+<Menu.Item disabled disabledReason="You need the admin role to delete">Delete</Menu.Item>
+<Menu.Item description="Plan and invoices" trailing={<Badge tone="info">New</Badge>}>Billing</Menu.Item>
+
+{/* An item that opens a confirmation: the dialog sits beside the menu, and is given the trigger to return focus to */}
+function Row() {
+  const [confirming, setConfirming] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <Menu>
+        <Menu.Trigger asChild>
+          <Button ref={triggerRef}>Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item tone="danger" onSelect={() => setConfirming(true)}>Delete</Menu.Item>
+        </Menu.Content>
+      </Menu>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Delete this row?"
+        onConfirm={deleteRow}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          triggerRef.current?.focus();
+        }}
+      />
+    </>
+  );
+}
 
 {/* A native <div> attribute on an item, passed straight through */}
 <Menu.Item title="Duplicates the row and its children">Duplicate</Menu.Item>
@@ -373,7 +487,7 @@ function Example() {
 <TokenRow token="radius.sm" usage="item corner radius" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="panel elevation" />
 <TokenRow token="font-family.primary" usage="panel typography — set explicitly since the panel renders in a portal outside this component's own tree" />
-<TokenRow token="font-size.xs" usage="extra-small item text; shortcut hint and label heading text" />
+<TokenRow token="font-size.xs" usage="extra-small item text; shortcut hint, item description and label heading text" />
 <TokenRow token="font-size.sm" usage="small item text" />
 <TokenRow token="font-size.base" usage="medium item text" />
 <TokenRow token="font-size.md" usage="large item text" />
@@ -385,14 +499,14 @@ function Example() {
 <TokenRow token="icon-size.md" usage="item icon size at large, and the indicator column" />
 <TokenRow token="icon-size.lg" usage="item icon size at extra large, and the indicator column" />
 <TokenRow token="space.1" usage="panel padding, separator margin, label heading padding below it, extra-small item vertical padding" />
-<TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes; label heading padding above it" />
+<TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes; label heading padding above it; space before trailing content and a spinner" />
 <TokenRow token="space.3" usage="item padding at medium and large sizes" />
 <TokenRow token="space.4" usage="item padding at extra large; gap before the shortcut hint" />
 <TokenRow token="space.6" usage="item minimum height (the 24px target floor)" />
 <TokenRow token="menu.min-width" usage="panel minimum width" />
 <TokenRow token="menu.max-width" usage="panel maximum width before a long label wraps" />
 <TokenRow token="text.primary" usage="item and panel text" />
-<TokenRow token="text.secondary" usage="shortcut hint and label heading text" />
+<TokenRow token="text.secondary" usage="shortcut hint, item description and label heading text" />
 <TokenRow token="text.disabled" usage="disabled item text" />
 <TokenRow token="text.danger" usage="danger item text" />
 <TokenRow token="bg.brand-subtle" usage="highlighted item and open submenu trigger background" />

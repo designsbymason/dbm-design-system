@@ -5,6 +5,8 @@ import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Toolbar } from "../../molecules/Toolbar";
+import { useRef, useState } from "react";
+import { ConfirmDialog } from "../ConfirmDialog";
 import { Dialog } from "../Dialog";
 import { Menu } from "./Menu";
 import type { MenuSize } from "./Menu.types";
@@ -620,5 +622,196 @@ export const InsideAToolbar: Story = {
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
     await waitFor(() => expect(button).toHaveFocus());
+  },
+};
+
+function DeleteFlow() {
+  const [confirming, setConfirming] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  return (
+    <Page>
+      <Menu>
+        <Menu.Trigger asChild>
+          <Button ref={triggerRef} variant="secondary">
+            Actions
+          </Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item tone="danger" onSelect={() => setConfirming(true)}>
+            Delete
+          </Menu.Item>
+        </Menu.Content>
+      </Menu>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Delete this row?"
+        description="This can't be undone."
+        labels={{ confirm: "Delete" }}
+        tone="danger"
+        onConfirm={() => setDeleted(true)}
+        // A dialog without a trigger of its own returns focus to nothing; give it the menu's.
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          triggerRef.current?.focus();
+        }}
+      />
+      <p data-testid="result">{deleted ? "deleted" : "kept"}</p>
+    </Page>
+  );
+}
+
+export const OpensAConfirmDialogFromAnItem: Story = {
+  name: "An item that opens a ConfirmDialog: focus moves into it, it is pressable, and focus returns to the trigger",
+  render: () => <DeleteFlow />,
+  play: async () => {
+    const button = trigger("Actions");
+    await realClick(button);
+    const menu = await openMenu();
+    await realClick(within(menu).getByRole("menuitem", { name: "Delete" }));
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    const dialog = await body.findByRole("alertdialog", { name: "Delete this row?" });
+    await settled(dialog);
+    await expect(dialog.contains(document.activeElement)).toBe(true);
+    // the confirm button takes a real press
+    await realClick(within(dialog).getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(body.queryByRole("alertdialog")).toBeNull());
+    await expect(body.getByTestId("result")).toHaveTextContent("deleted");
+    // focus is back on the menu's trigger, which is the element the dialog was opened from, and it works again
+    await waitFor(() => expect(button).toHaveFocus());
+    await waitFor(() => expect(document.body.style.pointerEvents).not.toBe("none"));
+    // the scrim fades out after the panel is gone; the trigger takes a press once it has
+    await waitFor(() => {
+      const at = button.getBoundingClientRect();
+      expect(document.elementFromPoint(at.left + at.width / 2, at.top + at.height / 2)?.closest("button")).toBe(button);
+    });
+    await realClick(button);
+    await openMenu();
+  },
+};
+
+export const CancellingTheDialogReturnsFocusToTheTrigger: Story = {
+  name: "Cancelling a dialog an item opened returns focus to the menu's trigger",
+  render: () => <DeleteFlow />,
+  play: async () => {
+    const button = trigger("Actions");
+    button.focus();
+    await userEvent.keyboard("{Enter}");
+    await openMenu();
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+    const dialog = await body.findByRole("alertdialog", { name: "Delete this row?" });
+    await settled(dialog);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("alertdialog")).toBeNull());
+    await waitFor(() => expect(button).toHaveFocus());
+    await expect(body.getByTestId("result")).toHaveTextContent("kept");
+  },
+};
+
+export const AnItemShowsADescriptionAndATrailingBadge: Story = {
+  name: "An item's description sits under its label and its trailing content at the end, on one row",
+  render: () => (
+    <Page>
+      <Menu defaultOpen>
+        <Menu.Trigger asChild>
+          <Button variant="secondary">Account</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Profile</Menu.Item>
+          <Menu.Item description="Plan and invoices" trailing={<span data-testid="badge">New</span>} shortcut="⌘B">
+            Billing
+          </Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </Page>
+  ),
+  play: async () => {
+    const menu = await openMenu();
+    const items = within(menu).getAllByRole("menuitem");
+    const plain = items[0] as HTMLElement;
+    const rich = items[1] as HTMLElement;
+    await expect(rich.getBoundingClientRect().height).toBeGreaterThan(plain.getBoundingClientRect().height);
+    const label = within(rich).getByText("Billing");
+    const description = within(rich).getByText("Plan and invoices");
+    // under the label, starting at the same edge
+    await expect(description.getBoundingClientRect().top).toBeGreaterThanOrEqual(label.getBoundingClientRect().bottom - 1);
+    await expect(Math.abs(textLeft(description) - textLeft(label))).toBeLessThan(1);
+    // the badge and the shortcut are at the end, the badge first
+    const badge = within(rich).getByTestId("badge").getBoundingClientRect();
+    const shortcut = rich.querySelector("kbd")!.getBoundingClientRect();
+    await expect(badge.right).toBeLessThanOrEqual(shortcut.left + 1);
+    await expect(rich.scrollWidth).toBeLessThanOrEqual(rich.clientWidth);
+  },
+};
+
+export const ABusyItemShowsASpinner: Story = {
+  name: "An item whose action is pending shows a spinner and keeps the menu open until it resolves",
+  render: () => {
+    function Slow() {
+      return (
+        <Page>
+          <Menu>
+            <Menu.Trigger asChild>
+              <Button variant="secondary">Actions</Button>
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item onSelect={() => new Promise((resolve) => setTimeout(resolve, 900))} shortcut="⌘E">
+                Export
+              </Menu.Item>
+            </Menu.Content>
+          </Menu>
+        </Page>
+      );
+    }
+    return <Slow />;
+  },
+  play: async () => {
+    await realClick(trigger("Actions"));
+    const menu = await openMenu();
+    const item = within(menu).getByRole("menuitem", { name: /Export/ });
+    const before = item.getBoundingClientRect();
+    await realClick(item);
+    await waitFor(() => expect(item).toHaveAttribute("aria-busy", "true"));
+    await expect(item.querySelector('[class*="spinner"]')).not.toBeNull();
+    // nothing moved: the spinner took the place of the shortcut
+    const during = item.getBoundingClientRect();
+    await expect(Math.abs(during.height - before.height)).toBeLessThan(1);
+    await expect(Math.abs(during.width - before.width)).toBeLessThan(1);
+    await expect(body.getByRole("menu")).toBeInTheDocument();
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull(), { timeout: 4000 });
+  },
+};
+
+export const ADisabledReasonIsShownOnHoverAndFocus: Story = {
+  name: "A disabled item with a reason is reachable by keyboard, and its reason shows in a tooltip",
+  render: () => (
+    <Page>
+      <Menu defaultOpen>
+        <Menu.Trigger asChild>
+          <Button variant="secondary">Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item disabled disabledReason="You need the admin role to delete">
+            Delete
+          </Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </Page>
+  ),
+  play: async () => {
+    const menu = await openMenu();
+    menu.focus();
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+    const item = within(menu).getByRole("menuitem", { name: "Delete" });
+    await waitFor(() => expect(item).toHaveFocus());
+    const tip = await body.findByRole("tooltip");
+    await expect(tip).toHaveTextContent("You need the admin role to delete");
+    // the tooltip is above the menu, not under it
+    const at = tip.getBoundingClientRect();
+    await expect(document.elementFromPoint(at.left + at.width / 2, at.top + at.height / 2)?.closest('[role="tooltip"]')).not.toBeNull();
+    await expect(getComputedStyle(item).cursor).toBe("not-allowed");
   },
 };

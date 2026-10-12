@@ -36,20 +36,14 @@ ${menu(
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the row height and type size of every item. */}
 ${menu("", 'size="lg"', basicBody)}`,
 
-  checkboxItems: `{/* Uncontrolled with defaultChecked, or controlled with checked and onCheckedChange. Calling
-    event.preventDefault() in onSelect keeps the menu open after a toggle. */}
+  checkboxItems: `{/* Uncontrolled with defaultChecked, or controlled with checked and onCheckedChange. A checkbox
+    item leaves the menu open when it is chosen; closeOnSelect closes it. */}
 ${menu(
   "",
   "",
-  `    <Menu.CheckboxItem defaultChecked onSelect={(event) => event.preventDefault()}>
-      Show grid
-    </Menu.CheckboxItem>
-    <Menu.CheckboxItem onSelect={(event) => event.preventDefault()}>
-      Show rulers
-    </Menu.CheckboxItem>
-    <Menu.CheckboxItem checked="indeterminate" onSelect={(event) => event.preventDefault()}>
-      Some guides
-    </Menu.CheckboxItem>`,
+  `    <Menu.CheckboxItem defaultChecked>Show grid</Menu.CheckboxItem>
+    <Menu.CheckboxItem>Show rulers</Menu.CheckboxItem>
+    <Menu.CheckboxItem checked="indeterminate">Some guides</Menu.CheckboxItem>`,
 )}`,
 
   radioGroup: `{/* Uncontrolled with defaultValue, or controlled with value and onValueChange. */}
@@ -57,15 +51,9 @@ ${menu(
   "",
   "",
   `    <Menu.RadioGroup defaultValue="name" aria-label="Sort by">
-      <Menu.RadioItem value="name" onSelect={(event) => event.preventDefault()}>
-        Name
-      </Menu.RadioItem>
-      <Menu.RadioItem value="modified" onSelect={(event) => event.preventDefault()}>
-        Date modified
-      </Menu.RadioItem>
-      <Menu.RadioItem value="size" onSelect={(event) => event.preventDefault()}>
-        Size
-      </Menu.RadioItem>
+      <Menu.RadioItem value="name">Name</Menu.RadioItem>
+      <Menu.RadioItem value="modified">Date modified</Menu.RadioItem>
+      <Menu.RadioItem value="size">Size</Menu.RadioItem>
     </Menu.RadioGroup>`,
 )}`,
 
@@ -119,6 +107,84 @@ ${menu(
       <a href="/changelog">Changelog</a>
     </Menu.Item>`,
 )}`,
+
+  descriptions: `{/* description is a second line, read as the item's description rather than its name; trailing
+    is content at the end (a count, a Badge), before a shortcut hint. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item description="Plan and invoices" trailing={<Badge tone="info">New</Badge>}>
+      Billing
+    </Menu.Item>
+    <Menu.Item description="People with access" trailing="12">
+      Members
+    </Menu.Item>
+    <Menu.Item description="Keys and webhooks" shortcut="⌘.">
+      Developer
+    </Menu.Item>`,
+)}`,
+
+  asyncAction: `{/* Return a promise from onSelect: the item shows a spinner and ignores presses while it is pending, the
+    menu stays open, and it closes when the promise resolves. onSelectError gets a rejection (the menu stays
+    open); closeOnSelect={false} keeps it open after a success too. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item
+      icon={DownloadSimpleIcon}
+      onSelect={() => exportRows()}
+      onSelectError={(error) => showError(error)}
+    >
+      Export as CSV
+    </Menu.Item>`,
+)}`,
+
+  closeOnSelect: `{/* closeOnSelect={false} keeps the menu open after an action; the item's onSelect still runs. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item closeOnSelect={false} onSelect={refresh}>
+      Refresh
+    </Menu.Item>
+    <Menu.Item>Close</Menu.Item>`,
+)}`,
+
+  disabledReason: `{/* A disabled item with a reason stays focusable and aria-disabled, so a keyboard user reaches it,
+    sees the reason in a tooltip and hears it as the item's description. It still can't be chosen. Without a
+    reason a disabled item is dimmed and skipped. */}
+${menu(
+  "",
+  "",
+  `    <Menu.Item>Edit</Menu.Item>
+    <Menu.Item disabled disabledReason="You need the admin role to delete">
+      Delete
+    </Menu.Item>
+    <Menu.Item disabled>Archive</Menu.Item>`,
+)}`,
+
+  opensADialog: `{/* The dialog is a sibling of the menu, opened from state. A dialog with no trigger of its own returns
+    focus to nothing when it closes, so give it the menu's trigger. */}
+<Menu>
+  <Menu.Trigger asChild>
+    <Button ref={triggerRef} variant="secondary">Actions</Button>
+  </Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item>Edit</Menu.Item>
+    <Menu.Item tone="danger" onSelect={() => setConfirming(true)}>Delete</Menu.Item>
+  </Menu.Content>
+</Menu>
+<ConfirmDialog
+  open={confirming}
+  onOpenChange={setConfirming}
+  title="Delete this row?"
+  description="This can't be undone."
+  labels={{ confirm: "Delete" }}
+  onConfirm={deleteRow}
+  onCloseAutoFocus={(event) => {
+    event.preventDefault();
+    triggerRef.current?.focus();
+  }}
+/>`,
 
   disabledItems: `{/* A disabled item is dimmed, skipped by the arrow keys and typeahead, and can't be chosen. */}
 ${menu(

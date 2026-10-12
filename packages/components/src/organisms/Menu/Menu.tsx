@@ -10,9 +10,14 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from "react";
 import { Icon } from "../../atoms/Icon";
+import { Spinner } from "../../atoms/Spinner";
+import { Tooltip } from "../../atoms/Tooltip";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import type { IconSize, IconTone } from "../../atoms/Icon/Icon.types";
 import styles from "./Menu.module.css";
 import type {
@@ -85,18 +90,46 @@ const dotSizeFor: Record<MenuSize, IconSize> = { xs: "xs", sm: "xs", md: "xs", l
  * </Menu>
  * ```
  */
-function MenuRoot({ children, open, defaultOpen = false, onOpenChange, modal = true, dir = "ltr" }: MenuProps) {
+function MenuRoot({
+  children,
+  open,
+  defaultOpen = false,
+  onOpenChange,
+  onOpenChangeComplete,
+  modal = true,
+  dir = "ltr",
+}: MenuProps) {
   const [isOpen, setOpen] = useControllableState(open, defaultOpen, onOpenChange);
   const focusLastRef = useRef(false);
   const inputRef = useRef<"pointer" | "keyboard" | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const latest = useRef({ open: isOpen, onOpenChangeComplete });
+  useEffect(() => {
+    latest.current = { open: isOpen, onOpenChangeComplete };
+  });
   const openToLast = useCallback(() => {
     focusLastRef.current = true;
     setOpen(true);
   }, [setOpen]);
+  const close = useCallback(() => {
+    // An async item can resolve after the menu was dismissed another way; it has nothing left to close.
+    if (latest.current.open) setOpen(false);
+  }, [setOpen]);
+  const reportClosed = useCallback(() => latest.current.onOpenChangeComplete?.(false), []);
+  const reportOpened = useCallback(() => latest.current.onOpenChangeComplete?.(true), []);
   const value = useMemo(
-    () => ({ open: isOpen, dir, openToLast, focusLastRef, inputRef, triggerRef }),
-    [isOpen, dir, openToLast],
+    () => ({
+      open: isOpen,
+      dir,
+      openToLast,
+      focusLastRef,
+      inputRef,
+      triggerRef,
+      close,
+      reportClosed,
+      reportOpened,
+    }),
+    [isOpen, dir, openToLast, close, reportClosed, reportOpened],
   );
   return (
     <MenuRootContext.Provider value={value}>
@@ -169,7 +202,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
     },
     ref,
   ) => {
-    const { open, focusLastRef, inputRef, triggerRef } = useContext(MenuRootContext);
+    const { open, focusLastRef, inputRef, triggerRef, reportClosed, reportOpened } = useContext(MenuRootContext);
     const contentRef = useRef<HTMLDivElement | null>(null);
     const mergedRef = useMemo(() => mergeRefs(ref, contentRef), [ref]);
     // Opened with ArrowUp: once Radix has put focus on its first item, move it to the last one that can have it.
@@ -227,13 +260,27 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
             // Radix hands focus back to the trigger with a plain `focus()`, which a browser may draw a ring for even
             // though the person only used a pointer. After a pointer, give it back without the ring; after the
             // keyboard, leave Radix's own focus (and the ring that tells the keyboard where it is).
-            if (event.defaultPrevented || inputRef.current !== "pointer") return;
-            event.preventDefault();
-            triggerRef.current?.focus({ focusVisible: false } as FocusOptions);
+            if (!event.defaultPrevented && inputRef.current === "pointer") {
+              event.preventDefault();
+              triggerRef.current?.focus({ focusVisible: false } as FocusOptions);
+            }
+            // The menu has closed and focus is going back to the trigger (Radix does it after this handler returns,
+            // so report from a microtask): the moment `onOpenChangeComplete` is waiting for. A close that React's
+            // StrictMode only simulates happens while still open, and is skipped.
+            if (!open) queueMicrotask(reportClosed);
           }}
           role="menu"
           aria-orientation="vertical"
         >
+          <OverlayLifecycle
+            open={open}
+            panelRef={contentRef}
+            // Only the entrance is read from the lifecycle: its close report fires when the panel unmounts, which
+            // can be before Radix has put focus back, so the close is reported from `onCloseAutoFocus` above.
+            onOpenChangeComplete={(done) => {
+              if (done) reportOpened();
+            }}
+          />
           <MenuSizeContext.Provider value={size}>{children}</MenuSizeContext.Provider>
         </MenuPrimitive.Content>
       </MenuPrimitive.Portal>
@@ -245,25 +292,175 @@ MenuContent.displayName = "Menu.Content";
 interface ItemBodyProps {
   icon: MenuItemProps["icon"];
   shortcut: MenuItemProps["shortcut"];
+  description?: MenuItemProps["description"];
+  descriptionId?: string;
+  trailing?: MenuItemProps["trailing"];
+  busy?: boolean;
   size: MenuSize;
   iconTone: IconTone;
   children: ReactNode;
 }
 
-/** What every item draws: an optional leading icon, the label, and an optional shortcut hint at the end. */
-function ItemBody({ icon, shortcut, size, iconTone, children }: ItemBodyProps) {
+// The spinner's step for each menu size: the same `icon-size` step an item's icon is drawn at.
+const spinnerSizeFor = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" } as const;
+
+/**
+ * What every item draws: an optional leading icon, the label with an optional second line, and at the end optional
+ * trailing content, a shortcut hint, or a spinner while the item's action is pending.
+ */
+function ItemBody({
+  icon,
+  shortcut,
+  description,
+  descriptionId,
+  trailing,
+  busy = false,
+  size,
+  iconTone,
+  children,
+}: ItemBodyProps) {
+  const hasDescription = description !== undefined && description !== null;
   return (
     <>
       {icon && <Icon icon={icon} size={iconSizeFor[size]} tone={iconTone} className={styles.icon} />}
-      <span className={styles.label}>{children}</span>
-      {shortcut !== undefined && shortcut !== null && <kbd className={styles.shortcut}>{shortcut}</kbd>}
+      <span className={styles.text}>
+        <span className={styles.label}>{children}</span>
+        {hasDescription && (
+          // Hidden from the item's name and read as its description (`aria-describedby` on the item), so the label
+          // stays what the item is called and typeahead and a screen reader's list stay short.
+          <span id={descriptionId} className={styles.description} aria-hidden="true">
+            {description}
+          </span>
+        )}
+      </span>
+      {busy && <Spinner size={spinnerSizeFor[size]} className={styles.spinner} />}
+      {!busy && trailing !== undefined && trailing !== null && <span className={styles.trailing}>{trailing}</span>}
+      {!busy && shortcut !== undefined && shortcut !== null && <kbd className={styles.shortcut}>{shortcut}</kbd>}
     </>
   );
 }
 
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return typeof (value as { then?: unknown } | null | undefined)?.then === "function";
+}
+
+/**
+ * What choosing an item does, shared by every kind of item: the action may return a promise (the item is busy and the
+ * menu waits), `closeOnSelect` decides whether the menu closes, and an item that can't be chosen (disabled with a reason, or busy) swallows the press.
+ */
+function useItemSelect({
+  onSelect,
+  closeOnSelect,
+  onSelectError,
+  inert,
+}: {
+  onSelect: ((event: Event) => void | Promise<unknown>) | undefined;
+  closeOnSelect: boolean;
+  onSelectError: ((error: unknown) => void) | undefined;
+  inert: boolean;
+}) {
+  const { close } = useContext(MenuRootContext);
+  const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
+  const handleSelect = (event: Event) => {
+    if (inert || pending.current) {
+      event.preventDefault();
+      return;
+    }
+    const result = onSelect?.(event);
+    const staysOpen = event.defaultPrevented || !closeOnSelect;
+    if (isThenable(result)) {
+      // The menu waits for the action: it stays open, and closes when the promise resolves.
+      event.preventDefault();
+      pending.current = true;
+      setBusy(true);
+      void result.then(
+        () => {
+          pending.current = false;
+          if (alive.current) setBusy(false);
+          if (!staysOpen) close();
+        },
+        (error: unknown) => {
+          pending.current = false;
+          if (alive.current) setBusy(false);
+          // The menu stays open. With a handler the caller has it; without one the rejection is left unhandled, so
+          // it surfaces where the caller can see it instead of being lost.
+          if (onSelectError) onSelectError(error);
+          else throw error;
+        },
+      );
+      return;
+    }
+    if (staysOpen) event.preventDefault();
+  };
+
+  return { busy, handleSelect };
+}
+
+/**
+ * The parts of an item beyond its own element, shared by every kind: its pending state and select handler, the
+ * description and the reason that assistive technology reads, and the tooltip a reason is shown in.
+ */
+function useItemChrome({
+  disabled,
+  disabledReason,
+  description,
+  ariaDescribedBy,
+  describesInside,
+  onSelect,
+  closeOnSelect,
+  onSelectError,
+}: {
+  disabled: boolean;
+  disabledReason: ReactNode;
+  description: ReactNode;
+  ariaDescribedBy: string | undefined;
+  /** False for an `asChild` item, which draws none of its own content, so there is no description to point at. */
+  describesInside: boolean;
+  onSelect: ((event: Event) => void | Promise<unknown>) | undefined;
+  closeOnSelect: boolean;
+  onSelectError: ((error: unknown) => void) | undefined;
+}) {
+  const { dir } = useContext(MenuRootContext);
+  const descriptionId = useId();
+  const reasonId = useId();
+  // A disabled item with a reason stays reachable (focusable, `aria-disabled`) so the reason can be heard and seen;
+  // with no reason it is Radix's own skipped-and-dimmed.
+  const hasReason = disabled && disabledReason !== undefined && disabledReason !== null;
+  const { busy, handleSelect } = useItemSelect({ onSelect, closeOnSelect, onSelectError, inert: disabled });
+  const hasDescription = description !== undefined && description !== null;
+  const describedBy =
+    [ariaDescribedBy, hasDescription && describesInside ? descriptionId : undefined, hasReason ? reasonId : undefined]
+      .filter(Boolean)
+      .join(" ") || undefined;
+  const reason = hasReason ? (
+    <VisuallyHidden id={reasonId} aria-hidden="true">
+      {disabledReason}
+    </VisuallyHidden>
+  ) : null;
+  const withReason = (item: ReactElement) =>
+    hasReason ? (
+      <Tooltip content={disabledReason} side={dir === "rtl" ? "left" : "right"}>
+        {item}
+      </Tooltip>
+    ) : (
+      item
+    );
+  return { busy, handleSelect, descriptionId, hasReason, describedBy, reason, withReason };
+}
+
 /**
  * An action. `onSelect` runs when it is chosen, by a click, Enter or Space, and the menu closes afterwards unless
- * the handler calls `event.preventDefault()`. Pass `asChild` with a link to make a navigation item.
+ * the handler calls `event.preventDefault()` or `closeOnSelect` is `false`. Return a promise from `onSelect` for an
+ * action that takes time. Pass `asChild` with a link to make a navigation item.
  */
 const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
   (
@@ -271,41 +468,76 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
       asChild = false,
       icon,
       shortcut,
+      description,
+      trailing,
       tone = "neutral",
       disabled = false,
+      disabledReason,
+      closeOnSelect = true,
+      onSelect,
+      onSelectError,
+      textValue,
       className,
       children,
+      "aria-describedby": ariaDescribedBy,
       ...props
     },
     ref,
   ) => {
     const size = useContext(MenuSizeContext);
-    const ignoresContent = asChild && Boolean(icon || shortcut);
+    const ignoresContent = asChild && Boolean(icon || shortcut || description || trailing);
     useEffect(() => {
       if (process.env.NODE_ENV === "production" || !ignoresContent) return;
       console.warn(
-        "Menu.Item: `icon` and `shortcut` have no effect when `asChild` is set — the item draws none of its own content in that mode, since Radix `Slot` requires exactly one child. Put the icon and the hint inside the child, or remove `asChild`.",
+        "Menu.Item: `icon`, `shortcut`, `description` and `trailing` have no effect when `asChild` is set — the item draws none of its own content in that mode, since Radix `Slot` requires exactly one child. Put them inside the child, or remove `asChild`.",
       );
     }, [ignoresContent]);
+    const chrome = useItemChrome({
+      disabled,
+      disabledReason,
+      description,
+      ariaDescribedBy,
+      describesInside: !asChild,
+      onSelect,
+      closeOnSelect,
+      onSelectError,
+    });
     const iconTone: IconTone = disabled ? "disabled" : tone === "danger" ? "danger" : "default";
-    return (
+    return chrome.withReason(
       <MenuPrimitive.Item
         ref={ref}
         asChild={asChild}
-        disabled={disabled}
+        disabled={disabled && !chrome.hasReason}
+        textValue={textValue ?? (typeof children === "string" ? children : undefined)}
+        onSelect={chrome.handleSelect}
         className={cx(styles.item, tone === "danger" && styles.danger, className)}
         {...props}
+        data-disabled={disabled ? "" : undefined}
         role="menuitem"
-        aria-disabled={disabled || undefined}
+        aria-disabled={disabled || chrome.busy || undefined}
+        aria-busy={chrome.busy || undefined}
+        aria-describedby={chrome.describedBy}
       >
         {asChild ? (
           children
         ) : (
-          <ItemBody icon={icon} shortcut={shortcut} size={size} iconTone={iconTone}>
-            {children}
-          </ItemBody>
+          <>
+            <ItemBody
+              icon={icon}
+              shortcut={shortcut}
+              description={description}
+              descriptionId={chrome.descriptionId}
+              trailing={trailing}
+              busy={chrome.busy}
+              size={size}
+              iconTone={iconTone}
+            >
+              {children}
+            </ItemBody>
+            {chrome.reason}
+          </>
         )}
-      </MenuPrimitive.Item>
+      </MenuPrimitive.Item>,
     );
   },
 );
@@ -323,9 +555,17 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
       onCheckedChange,
       icon,
       shortcut,
+      description,
+      trailing,
       disabled = false,
+      disabledReason,
+      closeOnSelect = false,
+      onSelect,
+      onSelectError,
+      textValue,
       className,
       children,
+      "aria-describedby": ariaDescribedBy,
       ...props
     },
     ref,
@@ -334,25 +574,53 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
     const [value, setValue] = useControllableState<boolean | "indeterminate">(checked, defaultChecked, (next) =>
       onCheckedChange?.(next === true),
     );
-    return (
+    const chrome = useItemChrome({
+      disabled,
+      disabledReason,
+      description,
+      ariaDescribedBy,
+      describesInside: true,
+      onSelect,
+      closeOnSelect,
+      onSelectError,
+    });
+    return chrome.withReason(
       <MenuPrimitive.CheckboxItem
         ref={ref}
         checked={value}
-        onCheckedChange={(next) => setValue(next)}
-        disabled={disabled}
+        // An item that can't be chosen (disabled with a reason, or busy) must not flip either.
+        onCheckedChange={(next) => {
+          if (!disabled && !chrome.busy) setValue(next);
+        }}
+        disabled={disabled && !chrome.hasReason}
+        textValue={textValue ?? (typeof children === "string" ? children : undefined)}
+        onSelect={chrome.handleSelect}
         className={cx(styles.item, styles.indicated, className)}
         {...props}
+        data-disabled={disabled ? "" : undefined}
         role="menuitemcheckbox"
         aria-checked={value === "indeterminate" ? "mixed" : value}
-        aria-disabled={disabled || undefined}
+        aria-disabled={disabled || chrome.busy || undefined}
+        aria-busy={chrome.busy || undefined}
+        aria-describedby={chrome.describedBy}
       >
         <MenuPrimitive.ItemIndicator className={styles.indicator}>
           <Icon icon={value === "indeterminate" ? MinusIcon : CheckIcon} size={iconSizeFor[size]} tone="brand" />
         </MenuPrimitive.ItemIndicator>
-        <ItemBody icon={icon} shortcut={shortcut} size={size} iconTone={disabled ? "disabled" : "default"}>
+        <ItemBody
+          icon={icon}
+          shortcut={shortcut}
+          description={description}
+          descriptionId={chrome.descriptionId}
+          trailing={trailing}
+          busy={chrome.busy}
+          size={size}
+          iconTone={disabled ? "disabled" : "default"}
+        >
           {children}
         </ItemBody>
-      </MenuPrimitive.CheckboxItem>
+        {chrome.reason}
+      </MenuPrimitive.CheckboxItem>,
     );
   },
 );
@@ -416,27 +684,71 @@ MenuRadioGroup.displayName = "Menu.RadioGroup";
  * One choice in a `Menu.RadioGroup`, shown with a dot in its leading column while it is the chosen one.
  */
 const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
-  ({ icon, shortcut, disabled = false, className, children, value, ...props }, ref) => {
+  (
+    {
+      icon,
+      shortcut,
+      description,
+      trailing,
+      disabled = false,
+      disabledReason,
+      closeOnSelect = false,
+      onSelect,
+      onSelectError,
+      textValue,
+      className,
+      children,
+      value,
+      "aria-describedby": ariaDescribedBy,
+      ...props
+    },
+    ref,
+  ) => {
     const size = useContext(MenuSizeContext);
     const chosen = useContext(MenuRadioValueContext);
-    return (
+    const chrome = useItemChrome({
+      disabled,
+      disabledReason,
+      description,
+      ariaDescribedBy,
+      describesInside: true,
+      onSelect,
+      closeOnSelect,
+      onSelectError,
+    });
+    return chrome.withReason(
       <MenuPrimitive.RadioItem
         ref={ref}
         value={value}
-        disabled={disabled}
+        disabled={disabled && !chrome.hasReason}
+        textValue={textValue ?? (typeof children === "string" ? children : undefined)}
+        onSelect={chrome.handleSelect}
         className={cx(styles.item, styles.indicated, className)}
         {...props}
+        data-disabled={disabled ? "" : undefined}
         role="menuitemradio"
         aria-checked={chosen === value}
-        aria-disabled={disabled || undefined}
+        aria-disabled={disabled || chrome.busy || undefined}
+        aria-busy={chrome.busy || undefined}
+        aria-describedby={chrome.describedBy}
       >
         <MenuPrimitive.ItemIndicator className={styles.indicator}>
           <Icon icon={CircleIcon} weight="fill" size={dotSizeFor[size]} tone="brand" />
         </MenuPrimitive.ItemIndicator>
-        <ItemBody icon={icon} shortcut={shortcut} size={size} iconTone={disabled ? "disabled" : "default"}>
+        <ItemBody
+          icon={icon}
+          shortcut={shortcut}
+          description={description}
+          descriptionId={chrome.descriptionId}
+          trailing={trailing}
+          busy={chrome.busy}
+          size={size}
+          iconTone={disabled ? "disabled" : "default"}
+        >
           {children}
         </ItemBody>
-      </MenuPrimitive.RadioItem>
+        {chrome.reason}
+      </MenuPrimitive.RadioItem>,
     );
   },
 );

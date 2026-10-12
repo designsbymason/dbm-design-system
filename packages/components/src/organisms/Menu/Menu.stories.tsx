@@ -2,12 +2,16 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import {
   CopyIcon,
   DotsThreeIcon,
+  DownloadSimpleIcon,
   PencilSimpleIcon,
   TrashIcon,
 } from "@dbm-design-system/icons";
 import { fn } from "storybook/test";
+import { useRef, useState } from "react";
+import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
+import { ConfirmDialog } from "../ConfirmDialog";
 import { Dialog } from "../Dialog";
 import { Menu } from "./Menu";
 import { menuPlaygroundSnippet, menuSnippets } from "./Menu.snippets";
@@ -181,13 +185,9 @@ export const CheckboxItems: Story = {
   parameters: { docs: { source: { code: menuSnippets.checkboxItems } } },
   render: (args) => (
     <MenuStage args={args} label="View">
-      <Menu.CheckboxItem defaultChecked onSelect={(event) => event.preventDefault()}>
-        Show grid
-      </Menu.CheckboxItem>
-      <Menu.CheckboxItem onSelect={(event) => event.preventDefault()}>Show rulers</Menu.CheckboxItem>
-      <Menu.CheckboxItem checked="indeterminate" onSelect={(event) => event.preventDefault()}>
-        Some guides
-      </Menu.CheckboxItem>
+      <Menu.CheckboxItem defaultChecked>Show grid</Menu.CheckboxItem>
+      <Menu.CheckboxItem>Show rulers</Menu.CheckboxItem>
+      <Menu.CheckboxItem checked="indeterminate">Some guides</Menu.CheckboxItem>
     </MenuStage>
   ),
 };
@@ -198,15 +198,9 @@ export const RadioGroup: Story = {
   render: (args) => (
     <MenuStage args={args} label="Sort">
       <Menu.RadioGroup defaultValue="name" aria-label="Sort by">
-        <Menu.RadioItem value="name" onSelect={(event) => event.preventDefault()}>
-          Name
-        </Menu.RadioItem>
-        <Menu.RadioItem value="modified" onSelect={(event) => event.preventDefault()}>
-          Date modified
-        </Menu.RadioItem>
-        <Menu.RadioItem value="size" onSelect={(event) => event.preventDefault()}>
-          Size
-        </Menu.RadioItem>
+        <Menu.RadioItem value="name">Name</Menu.RadioItem>
+        <Menu.RadioItem value="modified">Date modified</Menu.RadioItem>
+        <Menu.RadioItem value="size">Size</Menu.RadioItem>
       </Menu.RadioGroup>
     </MenuStage>
   ),
@@ -325,6 +319,120 @@ export const LongMenu: Story = {
       ))}
     </MenuStage>
   ),
+};
+
+export const DescriptionsAndTrailing: Story = {
+  name: "Descriptions and trailing content",
+  parameters: { docs: { source: { code: menuSnippets.descriptions } } },
+  render: (args) => (
+    <MenuStage args={args} label="Account">
+      <Menu.Item description="Plan and invoices" trailing={<Badge tone="info">New</Badge>}>
+        Billing
+      </Menu.Item>
+      <Menu.Item description="People with access" trailing="12">
+        Members
+      </Menu.Item>
+      <Menu.Item description="Keys and webhooks" shortcut="⌘.">
+        Developer
+      </Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export const AsyncAction: Story = {
+  name: "An action that takes time",
+  parameters: { docs: { source: { code: menuSnippets.asyncAction } } },
+  render: (args) => (
+    <MenuStage args={args} label="Export">
+      <Menu.Item
+        icon={DownloadSimpleIcon}
+        onSelect={() => new Promise((resolve) => setTimeout(resolve, 1500))}
+      >
+        Export as CSV
+      </Menu.Item>
+      <Menu.Item icon={CopyIcon}>Copy link</Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export const StayOpen: Story = {
+  name: "An action that keeps the menu open",
+  parameters: { docs: { source: { code: menuSnippets.closeOnSelect } } },
+  render: (args) => (
+    <MenuStage args={args} label="Data">
+      <Menu.Item closeOnSelect={false} onSelect={fn()}>
+        Refresh
+      </Menu.Item>
+      <Menu.Item>Close</Menu.Item>
+    </MenuStage>
+  ),
+};
+
+export const DisabledReason: Story = {
+  name: "A disabled item that says why",
+  parameters: { docs: { source: { code: menuSnippets.disabledReason } } },
+  render: (args) => (
+    <MenuStage args={args}>
+      <Menu.Item>Edit</Menu.Item>
+      <Menu.Item disabled disabledReason="You need the admin role to delete">
+        Delete
+      </Menu.Item>
+      <Menu.Item disabled>Archive</Menu.Item>
+    </MenuStage>
+  ),
+};
+
+function DeleteRow({ args }: { args: MenuStageArgs }) {
+  const [confirming, setConfirming] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "center", paddingBlock: "var(--dbm-space-8)" }}>
+        <Menu modal={args.modal} dir={args.dir}>
+          <Menu.Trigger asChild>
+            <Button ref={triggerRef} variant="secondary">
+              Actions
+            </Button>
+          </Menu.Trigger>
+          <Menu.Content size={args.size}>
+            <Menu.Item>Edit</Menu.Item>
+            <Menu.Item tone="danger" onSelect={() => setConfirming(true)}>
+              Delete
+            </Menu.Item>
+          </Menu.Content>
+        </Menu>
+      </div>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Delete this row?"
+        description="This can't be undone."
+        labels={{ confirm: "Delete" }}
+        // A dialog with no trigger of its own returns focus to nothing when it closes, so it is given the menu's.
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          triggerRef.current?.focus();
+        }}
+      />
+    </>
+  );
+}
+
+export const OpensADialog: Story = {
+  name: "An item that opens a confirmation",
+  parameters: { docs: { source: { code: menuSnippets.opensADialog } } },
+  // The menu is a fixed trigger and two items; only the settings the story passes through are live.
+  argTypes: {
+    defaultOpen: { control: false },
+    side: { control: false },
+    align: { control: false },
+    sideOffset: { control: false },
+    alignOffset: { control: false },
+    avoidCollisions: { control: false },
+    collisionPadding: { control: false },
+    loop: { control: false },
+  },
+  render: (args) => <DeleteRow args={args} />,
 };
 
 export const InsideDialog: Story = {

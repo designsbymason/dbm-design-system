@@ -15,8 +15,8 @@ Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not
 - **Contrast** measured for every new pairing (text, icon and focus ring on the panel and on each highlight, Purple and Emerald, light and dark): all clear their floors.
 
 ## Checks run
-- 109 unit tests: opening and closing, every key, items, checkbox and radio state, groups and labels, submenus (including right-to-left), the attribute-precedence probe on every part, nesting inside a `Dialog`, `StrictMode`, axe, server render and hydration, and the Docs-token test.
-- 46 real-browser tests (Chromium): 14 hidden sub-part stories for the Properties tables and 32 checks. The checks cover an item chosen with a real mouse in a menu opened from inside a `Dialog` (the top element at its point, the dialog left open), the 24px target and no overflow at every size, a 28-item list capped to the viewport and scrolling with the focused item kept in view, a flip above a trigger at the bottom edge, the panel's width between its caps with a long label wrapping, one left edge for every label beside indicators, the highlight and danger-highlight fills and the keyboard ring, the separator, ArrowUp opening on the last enabled item and Escape returning focus, a right-to-left submenu opening to the left with its caret mirrored, forced colours drawing an outline, and an `IconButton` with a tooltip and a `Toolbar` item both working as triggers.
+- 120 unit tests: opening and closing, every key, items, checkbox and radio state, groups and labels, submenus (including right-to-left), the attribute-precedence probe on every part, nesting inside a `Dialog`, `StrictMode`, axe, server render and hydration, and the Docs-token test.
+- 56 real-browser tests (Chromium): 14 hidden sub-part stories for the Properties tables and 42 checks. The checks cover an item chosen with a real mouse in a menu opened from inside a `Dialog` (the top element at its point, the dialog left open), the 24px target and no overflow at every size, a 28-item list capped to the viewport and scrolling with the focused item kept in view, a flip above a trigger at the bottom edge, the panel's width between its caps with a long label wrapping, one left edge for every label beside indicators, the highlight and danger-highlight fills and the keyboard ring, the separator, ArrowUp opening on the last enabled item and Escape returning focus, a right-to-left submenu opening to the left with its caret mirrored, forced colours drawing an outline, and an `IconButton` with a tooltip and a `Toolbar` item both working as triggers.
 - Full unit suite (141 files, 7517 tests), `pnpm lint` (eslint and both typechecks), the build, the component bundle-size check (Menu JS 2.84KB, CSS 1.31KB, within budget) and `check-guidelines`.
 
 ## Found by the checks
@@ -28,6 +28,16 @@ Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not
 - The Playground and Properties tables follow content → visual → behavioural → advanced; a part's `asChild` goes last. Props a story can't drive show "–": handlers, `collisionBoundary`, `container`, and `asChild` on the trigger and item (a single element child is what it needs). `icon` is a select over a few real icons, on each item story's own `argTypes`, not the meta-level ones.
 
 - **Closing with the mouse showed a focus ring on the trigger.** Radix gives focus back with a plain `focus()`, which Chromium drew a ring for after a pointer. The root now records the last input (trigger, panel and an outside press) and, after a pointer, returns focus with `focus({ focusVisible: false })`; after the keyboard it leaves Radix's own focus and its ring. Checked with a real mouse and a real keyboard, and the check fails without the fix.
+
+## Feature pass: five gaps (2026-10-11)
+Decisions and alternatives are in [ADR-0066](../adr/0066-menu-items-take-a-promise-a-close-on-select-setting-a-reason-for-being-disabled-and-a-description-and-a-menu-reports-when-it-has-closed.md).
+- **An item that opens a confirmation** is a recipe: the dialog beside the menu, opened from state, handed the trigger through its `onCloseAutoFocus`. Run with a real mouse and with the keyboard. A dialog with no trigger of its own returned focus to `body`, and a real press 150ms after it closed landed on its fading scrim; both are the dialog's, not the menu's.
+- **`closeOnSelect`**, false by default for checkbox and radio items.
+- **A promise from `onSelect`:** busy item, spinner, no layout shift (checked by measuring the row), the menu closes when it resolves; `onSelectError`.
+- **`disabledReason`:** focusable, `aria-disabled`, tooltip above the menu, announced as a description.
+- **`description` and `trailing`**, and **`onOpenChangeComplete`**.
+- Built and removed: `onSelectAfterClose`, which the real-browser flow showed was not needed.
+- Checks added: 17 unit tests and 5 real-browser checks.
 
 ## Open
 - The §9 review pass that decides Finalized, including looking at every story and the Docs page in light and dark and in both brands at several viewport widths (the Playground was seen open in the default theme only).

@@ -26,6 +26,11 @@ const meta: Meta<typeof Menu> = {
       control: false,
       description: "Called with the new open state whenever it changes: a trigger press, Escape, a press outside, or an item chosen.",
     },
+    onOpenChangeComplete: {
+      control: false,
+      description:
+        "Called with true once the menu has finished opening and with false once it has finished closing, its focus is back on the trigger and it is out of the page. onOpenChange says a change started; this says it is over.",
+    },
     modal: {
       control: "boolean",
       description:

@@ -39,6 +39,12 @@ export interface MenuProps {
    */
   onOpenChange?: (open: boolean) => void;
   /**
+   * Called with `true` once the menu has finished opening and with `false` once it has finished closing, its focus
+   * is back on the trigger and it is out of the page. `onOpenChange` says a change *started*; this says it is over:
+   * the place to release something heavy, or to start something that should wait for the menu to be gone.
+   */
+  onOpenChangeComplete?: (open: boolean) => void;
+  /**
    * Whether the menu is modal. A modal menu makes the rest of the page inert and locks its scroll while open, and a
    * press outside only closes it (it doesn't also activate what was under the pointer), as a native menu does. Set
    * `false` for a menu that leaves the page usable behind it.
@@ -186,15 +192,46 @@ interface MenuItemBaseProps
    */
   shortcut?: ReactNode;
   /**
-   * A disabled item is dimmed, skipped by the arrow keys and typeahead, and can't be chosen.
+   * A disabled item is dimmed and can't be chosen. Without a `disabledReason` it is also skipped by the arrow keys
+   * and typeahead.
    * @default false
    */
   disabled?: boolean;
   /**
    * Called when the item is chosen, by a click, Enter or Space. Call `event.preventDefault()` to keep the menu open
-   * after it (a toggle the person may flip several times).
+   * after it. **Return a promise for an action that takes time:** the item shows a spinner and ignores further
+   * presses while it is pending, the menu stays open, and it closes when the promise resolves (unless
+   * `closeOnSelect` is `false`). A rejection ends the pending state and leaves the menu open (see
+   * `onSelectError`).
    */
-  onSelect?: (event: Event) => void;
+  onSelect?: (event: Event) => void | Promise<unknown>;
+  /**
+   * Receives the error when a promise returned by `onSelect` rejects. The menu stays open either way; with no handler
+   * the rejection is left unhandled so it is not lost silently.
+   */
+  onSelectError?: (error: unknown) => void;
+  /**
+   * Whether choosing the item closes the menu. An action closes it; a toggle the person may flip several times
+   * (a checkbox or radio item) stays open by default. `onSelect`'s `event.preventDefault()` still keeps it open.
+   * @default true (false for `Menu.CheckboxItem` and `Menu.RadioItem`)
+   */
+  closeOnSelect?: boolean;
+  /**
+   * A second line under the label, in quiet text (`Billing` — "Plan and invoices"). It describes the item for
+   * assistive technology rather than becoming part of its name.
+   */
+  description?: ReactNode;
+  /**
+   * Content at the item's end, before a shortcut hint: a count, a `Badge`, "New". Unlike `shortcut` it is not
+   * quiet text; style it as you would anywhere.
+   */
+  trailing?: ReactNode;
+  /**
+   * Why the item is `disabled`, shown in a tooltip and announced as its description. Only with `disabled`. A
+   * disabled item that has a reason stays focusable (and `aria-disabled`) so a keyboard user can reach it and
+   * hear why, instead of being skipped; it still can't be chosen.
+   */
+  disabledReason?: ReactNode;
   /**
    * The text typeahead matches, when it isn't the item's own text (an item whose label is an icon and a visually
    * hidden name, say).

@@ -336,7 +336,7 @@ describe("Menu", () => {
           </Menu.Item>
         </Basic>,
       );
-      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`icon` and `shortcut` have no effect"));
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("have no effect when `asChild` is set"));
       expect(screen.getByRole("menuitem").querySelector("svg")).not.toBeInTheDocument();
     });
   });
@@ -442,6 +442,209 @@ describe("Menu", () => {
       await user.click(screen.getByRole("menuitemradio", { name: "Date" }));
       expect(onValueChange).toHaveBeenLastCalledWith("date");
       expect(screen.getByRole("menuitemradio", { name: "Name" })).toHaveAttribute("aria-checked", "true");
+    });
+  });
+
+  describe("closeOnSelect", () => {
+    it("keeps a checkbox and a radio item open by default, and closes them with closeOnSelect", async () => {
+      const user = userEvent.setup();
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.CheckboxItem>Show grid</Menu.CheckboxItem>
+          <Menu.CheckboxItem closeOnSelect>Show rulers</Menu.CheckboxItem>
+          <Menu.RadioGroup defaultValue="a" aria-label="Sort by">
+            <Menu.RadioItem value="a">Name</Menu.RadioItem>
+            <Menu.RadioItem value="b">Date</Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Basic>,
+      );
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Show grid" }));
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+      expect(screen.getByRole("menuitemcheckbox", { name: "Show grid" })).toHaveAttribute("aria-checked", "true");
+      await user.click(screen.getByRole("menuitemradio", { name: "Date" }));
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Show rulers" }));
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    });
+
+    it("keeps an action open with closeOnSelect={false}, and still reports the choice", async () => {
+      const user = userEvent.setup();
+      const onSelect = vi.fn();
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item closeOnSelect={false} onSelect={onSelect}>
+            Refresh
+          </Menu.Item>
+        </Basic>,
+      );
+      await user.click(screen.getByRole("menuitem", { name: "Refresh" }));
+      await user.click(screen.getByRole("menuitem", { name: "Refresh" }));
+      expect(onSelect).toHaveBeenCalledTimes(2);
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+  });
+
+  describe("an action that takes time", () => {
+    it("is busy while its promise is pending, ignores presses, and closes the menu when it resolves", async () => {
+      const user = userEvent.setup();
+      let finish!: () => void;
+      const onSelect = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item onSelect={onSelect}>Export</Menu.Item>
+        </Basic>,
+      );
+      const item = screen.getByRole("menuitem", { name: "Export" });
+      await user.click(item);
+      expect(item).toHaveAttribute("aria-busy", "true");
+      expect(item).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+      await user.click(item);
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      finish();
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    });
+
+    it("stays open and stops being busy when the promise rejects, handing the error over", async () => {
+      const user = userEvent.setup();
+      const error = new Error("no connection");
+      const onSelectError = vi.fn();
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item onSelect={() => Promise.reject(error)} onSelectError={onSelectError}>
+            Export
+          </Menu.Item>
+        </Basic>,
+      );
+      const item = screen.getByRole("menuitem", { name: "Export" });
+      await user.click(item);
+      await waitFor(() => expect(onSelectError).toHaveBeenCalledWith(error));
+      expect(item).not.toHaveAttribute("aria-busy");
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+
+    it("stays open after resolving when the handler prevented the close", async () => {
+      const user = userEvent.setup();
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item
+            onSelect={(event) => {
+              event.preventDefault();
+              return Promise.resolve();
+            }}
+          >
+            Sync now
+          </Menu.Item>
+        </Basic>,
+      );
+      await user.click(screen.getByRole("menuitem", { name: "Sync now" }));
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Sync now" })).not.toHaveAttribute("aria-busy"));
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+  });
+
+  describe("a disabled item with a reason", () => {
+    it("stays focusable, is described by its reason and can't be chosen", async () => {
+      const user = userEvent.setup();
+      const onSelect = vi.fn();
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item disabled disabledReason="You need the admin role" onSelect={onSelect}>
+            Delete
+          </Menu.Item>
+        </Basic>,
+      );
+      const item = screen.getByRole("menuitem", { name: "Delete" });
+      expect(item).toHaveAttribute("aria-disabled", "true");
+      expect(item).toHaveAccessibleDescription("You need the admin role");
+      screen.getByRole("menuitem", { name: "Edit" }).focus();
+      await user.keyboard("{ArrowDown}");
+      expect(item).toHaveFocus();
+      await user.keyboard("{Enter}");
+      await user.click(item);
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+
+    it("is still skipped without a reason", async () => {
+      const user = userEvent.setup();
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item disabled>Delete</Menu.Item>
+          <Menu.Item>Archive</Menu.Item>
+        </Basic>,
+      );
+      screen.getByRole("menuitem", { name: "Edit" }).focus();
+      await user.keyboard("{ArrowDown}");
+      expect(screen.getByRole("menuitem", { name: "Archive" })).toHaveFocus();
+    });
+
+    it("does not flip a disabled checkbox item that has a reason", async () => {
+      const user = userEvent.setup();
+      const onCheckedChange = vi.fn();
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.CheckboxItem disabled disabledReason="Locked by an admin" onCheckedChange={onCheckedChange}>
+            Show grid
+          </Menu.CheckboxItem>
+        </Basic>,
+      );
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Show grid" }));
+      expect(onCheckedChange).not.toHaveBeenCalled();
+      expect(screen.getByRole("menuitemcheckbox")).toHaveAttribute("aria-checked", "false");
+    });
+  });
+
+  describe("a description and trailing content", () => {
+    it("draws a second line that describes the item without becoming its name", () => {
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item description="Plan and invoices" trailing={<span data-testid="badge">New</span>}>
+            Billing
+          </Menu.Item>
+        </Basic>,
+      );
+      // the trailing content is part of the name; the description line is not
+      const item = screen.getByRole("menuitem", { name: "Billing New" });
+      expect(item).toHaveAccessibleDescription("Plan and invoices");
+      expect(item).toHaveTextContent("Plan and invoices");
+      expect(within(item).getByTestId("badge")).toBeInTheDocument();
+    });
+
+    it("works on a checkbox and a radio item, and keeps the consumer's aria-describedby", () => {
+      render(
+        <>
+          <span id="extra">Extra note</span>
+          <Basic root={{ defaultOpen: true }}>
+            <Menu.CheckboxItem description="Shows guides" aria-describedby="extra">
+              Grid
+            </Menu.CheckboxItem>
+            <Menu.RadioGroup value="a" aria-label="Mode">
+              <Menu.RadioItem value="a" description="The default view">
+                Standard
+              </Menu.RadioItem>
+            </Menu.RadioGroup>
+          </Basic>
+        </>,
+      );
+      expect(screen.getByRole("menuitemcheckbox", { name: "Grid" })).toHaveAccessibleDescription("Extra note Shows guides");
+      expect(screen.getByRole("menuitemradio", { name: "Standard" })).toHaveAccessibleDescription("The default view");
+    });
+  });
+
+  describe("after the menu has closed", () => {
+    it("reports open and close completion, with focus already on the trigger", async () => {
+      const user = userEvent.setup();
+      const onOpenChangeComplete = vi.fn((open: boolean) => (open ? undefined : document.activeElement));
+      render(<Basic root={{ onOpenChangeComplete }} />);
+      await user.click(trigger());
+      await waitFor(() => expect(onOpenChangeComplete).toHaveBeenCalledWith(true));
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(onOpenChangeComplete).toHaveBeenCalledWith(false));
+      const closed = onOpenChangeComplete.mock.results[onOpenChangeComplete.mock.results.length - 1]?.value;
+      expect(closed).toBe(trigger());
     });
   });
 

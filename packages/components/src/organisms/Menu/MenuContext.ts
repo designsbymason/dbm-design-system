@@ -13,6 +13,12 @@ export interface MenuRootContextValue {
   inputRef: MutableRefObject<"pointer" | "keyboard" | null>;
   /** The trigger element, which the panel returns focus to on close. */
   triggerRef: MutableRefObject<HTMLElement | null>;
+  /** Closes the menu. Does nothing if the menu is not open. */
+  close: () => void;
+  /** Called by the panel when it has taken its focus back to the trigger on closing. */
+  reportClosed: () => void;
+  /** Called by the panel when its entrance has finished. */
+  reportOpened: () => void;
 }
 
 export const MenuRootContext = createContext<MenuRootContextValue>({
@@ -22,6 +28,9 @@ export const MenuRootContext = createContext<MenuRootContextValue>({
   focusLastRef: { current: false },
   inputRef: { current: null },
   triggerRef: { current: null },
+  close: () => undefined,
+  reportClosed: () => undefined,
+  reportOpened: () => undefined,
 });
 
 /** What a submenu root shares with its trigger. `null` outside any `Menu.Sub`. */
