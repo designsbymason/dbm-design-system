@@ -59,6 +59,10 @@ export const Backdrop = forwardRef<HTMLDivElement, BackdropProps>(
             {
               "--dbm-backdrop-fill-opacity": `var(--dbm-opacity-${opacity})`,
               ...style,
+              // A scrim that is fading out is already closed: it must not take a press meant for the page it
+              // covered. Inline, after `style`, because the overlay primitive it is drawn through sets
+              // `pointer-events: auto` inline on its own element, which a stylesheet rule could not beat.
+              ...(open ? null : { pointerEvents: "none" }),
             } as CSSProperties
           }
           {...props}

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
@@ -433,6 +433,62 @@ export const SelectChosenWithARealPointer: Story = {
   },
 };
 
+export const ClosingScrimLetsPressesThrough: Story = {
+  name: "A scrim that is fading out lets a press through to the page, and focus returns to what opened the dialog",
+  render: () => {
+    function Page() {
+      const [open, setOpen] = useState(false);
+      const [presses, setPresses] = useState(0);
+      return (
+        <div style={{ minBlockSize: "100vh", padding: "var(--dbm-space-4)" }}>
+          <Button onClick={() => setOpen(true)}>Open from state</Button>
+          <Button variant="secondary" onClick={() => setPresses((count) => count + 1)}>
+            Behind the scrim
+          </Button>
+          <p data-testid="presses">{presses}</p>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog.Content aria-label="From state">
+              <Dialog.Body>Body</Dialog.Body>
+            </Dialog.Content>
+          </Dialog>
+        </div>
+      );
+    }
+    return <Page />;
+  },
+  play: async () => {
+    const body = within(document.body);
+    await userEvent.click(body.getByRole("button", { name: "Open from state" }));
+    const dialog = await body.findByRole("dialog");
+    await settled(dialog);
+    // An Escape starts the exit. Radix lifts its pointer lock when the panel leaves, and the scrim, which fades for
+    // longer, is still drawn for a few frames after that: a press then is the page's, so whatever is at the button's
+    // point must be the button, not the fading scrim. Sampled every frame, since the window is short.
+    const behind = body.getByRole("button", { name: "Behind the scrim", hidden: true });
+    const at = behind.getBoundingClientRect();
+    const samples: string[] = [];
+    await userEvent.keyboard("{Escape}");
+    const deadline = performance.now() + 1500;
+    while (performance.now() < deadline) {
+      await nextFrame();
+      const scrimStillDrawn = document.querySelector('[data-state="closed"]') !== null;
+      const lockLifted = document.body.style.pointerEvents !== "none";
+      if (scrimStillDrawn && lockLifted) {
+        const top = document.elementFromPoint(at.left + at.width / 2, at.top + at.height / 2);
+        samples.push(top?.closest("button") === behind ? "page" : `scrim:${top?.tagName}`);
+      }
+      if (!scrimStillDrawn && lockLifted) break;
+    }
+    await expect(samples.length).toBeGreaterThan(0);
+    await expect(samples.filter((sample) => sample !== "page")).toEqual([]);
+    // focus is back on the button that opened it, which has no Dialog.Trigger to return to
+    await waitFor(() => expect(body.getByRole("button", { name: "Open from state" })).toHaveFocus());
+    // and the press on the page behind lands
+    await realClick(behind);
+    await waitFor(() => expect(body.getByTestId("presses")).toHaveTextContent("1"));
+  },
+};
+
 function LongForm({ children, ...content }: React.ComponentProps<typeof Dialog.Content>) {
   return (
     <Dialog.Content aria-label="Long" {...content}>
@@ -826,3 +882,48 @@ export const DefaultDividedIsAutoAndDrawsNothingWhenItFits: Story = {
     await expect(dialog).not.toHaveAttribute("data-overflow-end");
   },
 };
+
+// Many of these stories end by closing the dialog. The accessibility check that runs after a story reads the page
+// while the exit is still playing, when the page behind is still hidden from assistive technology and the fading
+// scrim no longer takes pointer events, so it can't tell a modal is open and reports the trigger behind it. Each
+// play waits for the exit to finish first, so what is read is the settled page. (A story-level `afterEach` runs
+// after that check, not before it.)
+for (const story of [
+  ScrimAndLayout,
+  LockedPage,
+  PressesInPortaledChildren,
+  ExitFades,
+  LongContentScrollsInside,
+  FullScreenOnAPhone,
+  GutterOnANarrowScreen,
+  CloseButtonTarget,
+  RightToLeft,
+  FocusLoopsInTheBrowser,
+  ForcedColoursAndReducedMotionRulesExist,
+  TitlelessBodyClearsTheCloseButton,
+  HiddenTitleBodyClearsTheCloseButton,
+  SelectChosenWithARealPointer,
+  ClosingScrimLetsPressesThrough,
+  DividedAutoFollowsTheScroll,
+  DividedAutoDrawsNothingWhenItFits,
+  KeepMountedKeepsTheState,
+  BusyCannotBeLeft,
+  TopPlacement,
+  TopPlacementOnAPhone,
+  ScrimOpacityAndBlur,
+  InitialFocusByRef,
+  FullScreenCarriesSafeAreaInsets,
+  NonModalTopPlacement,
+  KeepMountedNonModal,
+  CloseButtonFollowsTheSafeAreaInset,
+  FooterStacksFullWidthOnAPhone,
+  FooterIsARowFromSm,
+  StretchFooterStaysARowOnAPhone,
+  DefaultDividedIsAutoAndDrawsNothingWhenItFits,
+]) {
+  const play = story.play;
+  story.play = async (context) => {
+    await play?.(context);
+    await waitFor(() => expect(document.querySelector('[role="dialog"][data-state="closed"]')).toBeNull());
+  };
+}
