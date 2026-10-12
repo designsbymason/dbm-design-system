@@ -203,7 +203,9 @@
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-semibold);
-  padding-block: var(--dbm-space-1);
+  /* More room above than below: the heading belongs to the items under it, and sat too close to the panel's top
+     edge for the first group and to the separator line above every later one. */
+  padding-block: var(--dbm-space-2) var(--dbm-space-1);
   padding-inline: var(--menu-pad-inline);
   text-transform: uppercase;
 }
