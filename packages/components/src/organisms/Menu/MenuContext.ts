@@ -9,6 +9,10 @@ export interface MenuRootContextValue {
   openToLast: () => void;
   /** Set by `openToLast` and read, once, by the content as it takes focus. */
   focusLastRef: MutableRefObject<boolean>;
+  /** What the person last used on the trigger or the panel, so a close by pointer can return focus without a ring. */
+  inputRef: MutableRefObject<"pointer" | "keyboard" | null>;
+  /** The trigger element, which the panel returns focus to on close. */
+  triggerRef: MutableRefObject<HTMLElement | null>;
 }
 
 export const MenuRootContext = createContext<MenuRootContextValue>({
@@ -16,6 +20,8 @@ export const MenuRootContext = createContext<MenuRootContextValue>({
   dir: "ltr",
   openToLast: () => undefined,
   focusLastRef: { current: false },
+  inputRef: { current: null },
+  triggerRef: { current: null },
 });
 
 /** What a submenu root shares with its trigger. `null` outside any `Menu.Sub`. */

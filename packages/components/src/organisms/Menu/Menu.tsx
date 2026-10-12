@@ -10,8 +10,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type KeyboardEvent,
-  type PointerEvent,
   type ReactNode,
 } from "react";
 import { Icon } from "../../atoms/Icon";
@@ -42,36 +40,6 @@ import {
   useControllableState,
   type MenuGroupContextValue,
 } from "./MenuContext";
-
-/**
- * Records on the panel which kind of input was used last (`data-input` is `"pointer"` or `"keyboard"`), without a
- * render. Radix focuses an item as the pointer passes over it, which a browser may count as keyboard-style focus,
- * so the focus ring is drawn only while the panel is not marked `"pointer"`: hovering shows the quiet highlight
- * and the keyboard shows the ring.
- */
-function trackInput<E extends HTMLElement>(own: {
-  onPointerMove?: (event: PointerEvent<E>) => void;
-  onPointerDown?: (event: PointerEvent<E>) => void;
-  onKeyDown?: (event: KeyboardEvent<E>) => void;
-}) {
-  const mark = (event: { currentTarget: E }, input: "pointer" | "keyboard") => {
-    event.currentTarget.dataset.input = input;
-  };
-  return {
-    onPointerMove: (event: PointerEvent<E>) => {
-      own.onPointerMove?.(event);
-      mark(event, "pointer");
-    },
-    onPointerDown: (event: PointerEvent<E>) => {
-      own.onPointerDown?.(event);
-      mark(event, "pointer");
-    },
-    onKeyDown: (event: KeyboardEvent<E>) => {
-      own.onKeyDown?.(event);
-      mark(event, "keyboard");
-    },
-  };
-}
 
 const sizeClass: Record<MenuSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -120,11 +88,16 @@ const dotSizeFor: Record<MenuSize, IconSize> = { xs: "xs", sm: "xs", md: "xs", l
 function MenuRoot({ children, open, defaultOpen = false, onOpenChange, modal = true, dir = "ltr" }: MenuProps) {
   const [isOpen, setOpen] = useControllableState(open, defaultOpen, onOpenChange);
   const focusLastRef = useRef(false);
+  const inputRef = useRef<"pointer" | "keyboard" | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
   const openToLast = useCallback(() => {
     focusLastRef.current = true;
     setOpen(true);
   }, [setOpen]);
-  const value = useMemo(() => ({ open: isOpen, dir, openToLast, focusLastRef }), [isOpen, dir, openToLast]);
+  const value = useMemo(
+    () => ({ open: isOpen, dir, openToLast, focusLastRef, inputRef, triggerRef }),
+    [isOpen, dir, openToLast],
+  );
   return (
     <MenuRootContext.Provider value={value}>
       <MenuPrimitive.Root open={isOpen} onOpenChange={setOpen} modal={modal} dir={dir}>
@@ -140,16 +113,22 @@ function MenuRoot({ children, open, defaultOpen = false, onOpenChange, modal = t
  * the first or last item.
  */
 const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>(
-  ({ asChild = false, className, onKeyDown, ...props }, ref) => {
-    const { open, openToLast } = useContext(MenuRootContext);
+  ({ asChild = false, className, onKeyDown, onPointerDown, ...props }, ref) => {
+    const { open, openToLast, inputRef, triggerRef } = useContext(MenuRootContext);
+    const mergedRef = useMemo(() => mergeRefs(ref, triggerRef), [ref, triggerRef]);
     return (
       <MenuPrimitive.Trigger
-        ref={ref}
+        ref={mergedRef}
         asChild={asChild}
         className={asChild ? className : cx(styles.trigger, className)}
         {...props}
+        onPointerDown={(event) => {
+          onPointerDown?.(event);
+          inputRef.current = "pointer";
+        }}
         onKeyDown={(event) => {
           onKeyDown?.(event);
+          inputRef.current = "keyboard";
           // ArrowDown, Enter and Space are Radix's. ArrowUp opens too, onto the last item, as the menu-button
           // pattern allows and a person who came from the bottom of a list expects.
           if (event.defaultPrevented || event.key !== "ArrowUp" || props.disabled) return;
@@ -184,11 +163,13 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
       onPointerMove,
       onPointerDown,
       onKeyDown,
+      onPointerDownOutside,
+      onCloseAutoFocus,
       ...props
     },
     ref,
   ) => {
-    const { open, focusLastRef } = useContext(MenuRootContext);
+    const { open, focusLastRef, inputRef, triggerRef } = useContext(MenuRootContext);
     const contentRef = useRef<HTMLDivElement | null>(null);
     const mergedRef = useMemo(() => mergeRefs(ref, contentRef), [ref]);
     // Opened with ArrowUp: once Radix has put focus on its first item, move it to the last one that can have it.
@@ -219,7 +200,37 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
           collisionPadding={collisionPadding}
           className={cx(styles.content, sizeClass[size], className)}
           {...props}
-          {...trackInput<HTMLDivElement>({ onPointerMove, onPointerDown, onKeyDown })}
+          // Which kind of input was used last is recorded on the panel (`data-input`, read by the stylesheet to hold
+          // the focus ring back while it is `"pointer"`) and on the root (read as the panel closes, below). Radix
+          // focuses an item as the pointer passes over it, which a browser may count as keyboard-style focus.
+          onPointerMove={(event) => {
+            onPointerMove?.(event);
+            event.currentTarget.dataset.input = "pointer";
+            inputRef.current = "pointer";
+          }}
+          onPointerDown={(event) => {
+            onPointerDown?.(event);
+            event.currentTarget.dataset.input = "pointer";
+            inputRef.current = "pointer";
+          }}
+          onKeyDown={(event) => {
+            onKeyDown?.(event);
+            event.currentTarget.dataset.input = "keyboard";
+            inputRef.current = "keyboard";
+          }}
+          onPointerDownOutside={(event) => {
+            onPointerDownOutside?.(event);
+            inputRef.current = "pointer";
+          }}
+          onCloseAutoFocus={(event) => {
+            onCloseAutoFocus?.(event);
+            // Radix hands focus back to the trigger with a plain `focus()`, which a browser may draw a ring for even
+            // though the person only used a pointer. After a pointer, give it back without the ring; after the
+            // keyboard, leave Radix's own focus (and the ring that tells the keyboard where it is).
+            if (event.defaultPrevented || inputRef.current !== "pointer") return;
+            event.preventDefault();
+            triggerRef.current?.focus({ focusVisible: false } as FocusOptions);
+          }}
           role="menu"
           aria-orientation="vertical"
         >
@@ -525,6 +536,7 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
     ref,
   ) => {
     const parentSize = useContext(MenuSizeContext);
+    const { inputRef } = useContext(MenuRootContext);
     const resolved = size ?? parentSize;
     return (
       <MenuPrimitive.Portal container={container}>
@@ -534,7 +546,24 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
           collisionPadding={collisionPadding}
           className={cx(styles.content, sizeClass[resolved], className)}
           {...props}
-          {...trackInput<HTMLDivElement>({ onPointerMove, onPointerDown, onKeyDown })}
+          // Which kind of input was used last is recorded on the panel (`data-input`, read by the stylesheet to hold
+          // the focus ring back while it is `"pointer"`) and on the root (read as the panel closes, below). Radix
+          // focuses an item as the pointer passes over it, which a browser may count as keyboard-style focus.
+          onPointerMove={(event) => {
+            onPointerMove?.(event);
+            event.currentTarget.dataset.input = "pointer";
+            inputRef.current = "pointer";
+          }}
+          onPointerDown={(event) => {
+            onPointerDown?.(event);
+            event.currentTarget.dataset.input = "pointer";
+            inputRef.current = "pointer";
+          }}
+          onKeyDown={(event) => {
+            onKeyDown?.(event);
+            event.currentTarget.dataset.input = "keyboard";
+            inputRef.current = "keyboard";
+          }}
           role="menu"
           aria-orientation="vertical"
         >

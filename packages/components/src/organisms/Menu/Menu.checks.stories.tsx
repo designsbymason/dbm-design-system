@@ -381,6 +381,56 @@ export const HoverShowsNoFocusRing: Story = {
   },
 };
 
+export const PointerCloseReturnsFocusWithoutARing: Story = {
+  name: "Closing with the mouse returns focus to the trigger without a focus ring",
+  render: () => (
+    <Page>
+      <Menu>
+        <Menu.Trigger asChild>
+          <Button variant="secondary">Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item>Duplicate</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </Page>
+  ),
+  play: async () => {
+    const button = trigger("Actions");
+    const outside = async () => {
+      // a point well clear of the trigger and the panel
+      const probe = document.createElement("div");
+      probe.style.cssText = "position:fixed;inset-block-start:70vh;inset-inline-start:60vw;inline-size:24px;block-size:24px";
+      document.body.appendChild(probe);
+      await realClick(probe);
+      probe.remove();
+    };
+    // opened and closed with the mouse, by a press outside
+    await realClick(button);
+    await openMenu();
+    await outside();
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await waitFor(() => expect(button).toHaveFocus());
+    await expect(button.matches(":focus-visible")).toBe(false);
+    // opened with the mouse, an item chosen with the mouse
+    await realClick(button);
+    const menu = await openMenu();
+    await realClick(within(menu).getByRole("menuitem", { name: "Edit" }));
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await waitFor(() => expect(button).toHaveFocus());
+    await expect(button.matches(":focus-visible")).toBe(false);
+    // opened and closed with the keyboard keeps the ring that tells the keyboard where it is
+    button.focus();
+    await userEvent.keyboard("{Enter}");
+    await openMenu();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await waitFor(() => expect(button).toHaveFocus());
+    await expect(button.matches(":focus-visible")).toBe(true);
+  },
+};
+
 export const SeparatorIsDrawn: Story = {
   name: "A separator is a drawn line",
   render: () => (
