@@ -1355,5 +1355,11 @@ export const OverflowMenuInteraction: Story = {
     await waitFor(() => expect(more).toHaveAttribute("data-overflowed"));
     await expect(bar.querySelectorAll("[data-overflowed]").length).toBe(1);
     await expect(getComputedStyle(more).display).toBe("none");
+    // with room to spare the bar is only as wide as its items, as it is in every other mode (fullWidth is what fills)
+    const frame = canvas.getByTestId("frame").getBoundingClientRect();
+    await expect(bar.getBoundingClientRect().width).toBeLessThan(frame.width - 40);
+    // and shrinking the container takes items into the menu again
+    await userEvent.click(canvas.getByRole("button", { name: "Toggle width" }));
+    await waitFor(() => expect(more).not.toHaveAttribute("data-overflowed"));
   },
 };

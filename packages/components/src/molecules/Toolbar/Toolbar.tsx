@@ -190,8 +190,11 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       const bar = barRef.current;
       if (!isMenu || !bar) return undefined;
       const relayout = () => applyOverflow(bar);
+      // The bar is only as wide as what it shows (up to its container), so growing the container changes the container
+      // and not the bar: it has to be watched too, or items that were hidden would never come back.
       const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(relayout) : null;
       observer?.observe(bar);
+      if (bar.parentElement) observer?.observe(bar.parentElement);
       bar.addEventListener("focusout", relayout);
       return () => {
         observer?.disconnect();

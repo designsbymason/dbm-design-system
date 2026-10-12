@@ -95,13 +95,12 @@
   flex-wrap: wrap;
 }
 
-/* `overflow="menu"`: one line that fills its container, and what doesn't fit is hidden (`data-overflowed`, set by the
-   bar's own layout pass) and offered in the "more" menu, so nothing is ever left to spill or to scroll. Items keep their
-   own width (they would otherwise shrink below their content) and the bar clips what the pass has not yet hidden. */
+/* `overflow="menu"`: one line, as wide as its items up to its container (the `.root` rule above), and what doesn't fit is
+   hidden (`data-overflowed`, set by the bar's own layout pass) and offered in the "more" menu, so nothing is ever left
+   to spill or to scroll. `fullWidth` still makes it fill the container. Items keep their own width (they would otherwise
+   shrink below their content) and the bar clips what the pass has not yet hidden. */
 .collapse {
-  display: flex;
   flex-wrap: nowrap;
-  inline-size: 100%;
   min-inline-size: 0;
   overflow: hidden;
 }

@@ -97,7 +97,7 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
    * don't fit, from the end, into a "more" menu at its end: `Toolbar.Button`, `Toolbar.IconButton`, `Toolbar.Group` and
    * `Toolbar.ToggleGroup` become menu items (a pressed icon button a checkbox item, a single toggle group a radio group, a
    * multiple one checkbox items); `Toolbar.Item`, whatever it holds, and anything marked `pinned` always stay on the bar.
-   * The bar fills its container in this mode, and it is for a horizontal bar (a vertical one scrolls). A scrolling column needs a height of its own to respond to (a
+   * The bar is as wide as its items, up to its container (`fullWidth` fills it), and this mode is for a horizontal bar (a vertical one scrolls). A scrolling column needs a height of its own to respond to (a
    * bar in a box with a fixed or maximum height). While it scrolls, the bar sits in a frame that carries its surface, and
    * the focus ring is drawn inside each item, since a scrolling box would cut off one drawn outside it.
    * @default 'scroll'

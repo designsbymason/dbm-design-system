@@ -228,7 +228,7 @@ written in. `overflow="visible"` lets them spill past the container, with nothin
 end. A `Toolbar.Button` or `Toolbar.IconButton` becomes a menu item (a pressed icon button a checkbox item), a
 `Toolbar.Group` a labelled group, a single `Toolbar.ToggleGroup` a radio group and a multiple one checkbox items;
 choosing one presses the real item, so its own handler runs. `pinned` keeps an item on the bar, and a `Toolbar.Item`
-always stays. The bar fills its container and relays itself as the container is resized (drag the corner of the one
+always stays. The bar is as wide as its items up to its container (`fullWidth` fills it), and relays itself as the container is resized (drag the corner of the one
 below). It is for a horizontal bar: a vertical one scrolls instead.
 
 <Canvas of={ToolbarStories.OverflowMenu} />
