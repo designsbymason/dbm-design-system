@@ -16,10 +16,52 @@ const meta: Meta<typeof Menu.SubContent> = {
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "The row height and type size of this submenu. By default it takes its parent menu's.",
     },
+    sideOffset: {
+      control: "number",
+      description: "Pixel gap between the trigger and the submenu along the side it opens on.",
+      table: { defaultValue: { summary: "0" } },
+    },
     alignOffset: {
       control: "number",
       description: "Pixel offset along the submenu's alignment axis. The default lines the first item up with its trigger by cancelling the panel's own padding and border.",
       table: { defaultValue: { summary: "-5" } },
+    },
+    avoidCollisions: {
+      control: "boolean",
+      description: "Whether the submenu repositions itself (flips to the other side, or shifts) to stay inside the viewport instead of overflowing it.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    collisionBoundary: {
+      control: false,
+      description: "Element(s) to use as the collision boundary instead of the viewport, such as a scrolling container the menu should stay inside.",
+      table: { defaultValue: { summary: "[]" } },
+    },
+    hideWhenDetached: {
+      control: "boolean",
+      description: "Hides the submenu when its trigger scrolls fully out of view, instead of leaving it floating.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    sticky: {
+      control: "select",
+      options: ["partial", "always"],
+      description: "Whether the submenu stays in the viewport on the alignment axis once its trigger has gone past an edge: partial lets it leave with its trigger, always keeps it fully on screen.",
+      table: { defaultValue: { summary: '"partial"' } },
+    },
+    onEscapeKeyDown: {
+      control: false,
+      description: "Called when Escape is pressed while the submenu is open. Call event.preventDefault() to keep it open.",
+    },
+    onPointerDownOutside: {
+      control: false,
+      description: "Called on a pointer press outside the submenu. Call event.preventDefault() to keep it open.",
+    },
+    onFocusOutside: {
+      control: false,
+      description: "Called when focus moves outside the submenu. Call event.preventDefault() to keep it open.",
+    },
+    onInteractOutside: {
+      control: false,
+      description: "Called on any interaction outside the submenu. Call event.preventDefault() to keep it open.",
     },
     loop: {
       control: "boolean",

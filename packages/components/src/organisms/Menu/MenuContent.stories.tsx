@@ -61,6 +61,12 @@ const meta: Meta<typeof Menu.Content> = {
       description: "Hides the panel when its trigger scrolls fully out of view, instead of leaving it floating.",
       table: { defaultValue: { summary: "false" } },
     },
+    sticky: {
+      control: "select",
+      options: ["partial", "always"],
+      description: "Whether the panel stays in the viewport on the alignment axis once the trigger has gone past an edge: partial lets it leave with its trigger, always keeps it fully on screen.",
+      table: { defaultValue: { summary: '"partial"' } },
+    },
     loop: {
       control: "boolean",
       description: "Whether arrow-key movement wraps from the last item to the first and back.",

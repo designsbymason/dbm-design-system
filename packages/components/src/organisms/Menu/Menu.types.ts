@@ -144,6 +144,12 @@ export interface MenuContentProps extends Omit<ComponentPropsWithoutRef<"div">, 
    */
   hideWhenDetached?: MenuPrimitiveContentProps["hideWhenDetached"];
   /**
+   * Whether the panel stays in the viewport on the alignment axis once the trigger has gone past an edge:
+   * `"partial"` lets it leave with its trigger, `"always"` keeps it fully on screen.
+   * @default 'partial'
+   */
+  sticky?: "partial" | "always";
+  /**
    * Whether arrow-key movement wraps from the last item to the first and back.
    * @default false
    */
@@ -237,6 +243,16 @@ interface MenuItemBaseProps
    * hidden name, say).
    */
   textValue?: string;
+  /**
+   * The keys that do the same as choosing this item from elsewhere in the page (`"Meta+E"`), announced with it. The
+   * `shortcut` hint only displays a key; this says it exists, so set both together and bind the key yourself.
+   */
+  "aria-keyshortcuts"?: string;
+  /**
+   * The id(s) of elements that describe the item, in addition to its `description` and `disabledReason`, which are
+   * added to it.
+   */
+  "aria-describedby"?: string;
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */
@@ -390,11 +406,47 @@ export interface MenuSubContentProps extends Omit<ComponentPropsWithoutRef<"div"
    */
   size?: MenuSize;
   /**
+   * Pixel gap between the trigger and the submenu along the side it opens on.
+   * @default 0
+   */
+  sideOffset?: number;
+  /**
    * Pixel offset along the submenu's alignment axis. The default lines the first item up with its trigger by
    * cancelling the panel's own padding and border.
    * @default -5
    */
   alignOffset?: number;
+  /**
+   * Whether the submenu repositions itself (flips to the other side, or shifts) to stay inside the viewport instead
+   * of overflowing it.
+   * @default true
+   */
+  avoidCollisions?: boolean;
+  /**
+   * Element(s) to use as the collision boundary instead of the viewport, such as a scrolling container the menu
+   * should stay inside.
+   * @default []
+   */
+  collisionBoundary?: MenuPrimitiveSubContentProps["collisionBoundary"];
+  /**
+   * Hides the submenu when its trigger scrolls fully out of view, instead of leaving it floating.
+   * @default false
+   */
+  hideWhenDetached?: MenuPrimitiveSubContentProps["hideWhenDetached"];
+  /**
+   * Whether the submenu stays in the viewport on the alignment axis once its trigger has gone past an edge:
+   * `"partial"` lets it leave with its trigger, `"always"` keeps it fully on screen.
+   * @default 'partial'
+   */
+  sticky?: "partial" | "always";
+  /** Called when Escape is pressed while the submenu is open. Call `event.preventDefault()` to keep it open. */
+  onEscapeKeyDown?: MenuPrimitiveSubContentProps["onEscapeKeyDown"];
+  /** Called on a pointer press outside the submenu. Call `event.preventDefault()` to keep it open. */
+  onPointerDownOutside?: MenuPrimitiveSubContentProps["onPointerDownOutside"];
+  /** Called when focus moves outside the submenu. Call `event.preventDefault()` to keep it open. */
+  onFocusOutside?: MenuPrimitiveSubContentProps["onFocusOutside"];
+  /** Called on any interaction outside the submenu. Call `event.preventDefault()` to keep it open. */
+  onInteractOutside?: MenuPrimitiveSubContentProps["onInteractOutside"];
   /**
    * Whether arrow-key movement wraps from the last item to the first and back.
    * @default false

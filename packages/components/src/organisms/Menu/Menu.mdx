@@ -47,6 +47,7 @@ export const contentPropOrder = [
   "collisionPadding",
   "collisionBoundary",
   "hideWhenDetached",
+  "sticky",
   "loop",
   "container",
   "onCloseAutoFocus",
@@ -71,6 +72,8 @@ export const itemPropOrder = [
   "onSelect",
   "onSelectError",
   "textValue",
+  "aria-keyshortcuts",
+  "aria-describedby",
   "asChild",
   ...sharedTail,
 ];
@@ -89,6 +92,8 @@ export const checkboxPropOrder = [
   "onSelect",
   "onSelectError",
   "textValue",
+  "aria-keyshortcuts",
+  "aria-describedby",
   ...sharedTail,
 ];
 export const radioGroupPropOrder = ["children", "value", "defaultValue", "onValueChange", "aria-label", "aria-labelledby", ...sharedTail];
@@ -105,6 +110,8 @@ export const radioItemPropOrder = [
   "onSelect",
   "onSelectError",
   "textValue",
+  "aria-keyshortcuts",
+  "aria-describedby",
   ...sharedTail,
 ];
 export const labelPropOrder = ["children", ...sharedTail];
@@ -112,7 +119,25 @@ export const groupPropOrder = ["children", "aria-label", "aria-labelledby", ...s
 export const separatorPropOrder = sharedTail;
 export const subPropOrder = ["children", "open", "onOpenChange"];
 export const subTriggerPropOrder = ["children", "icon", "disabled", "textValue", ...sharedTail];
-export const subContentPropOrder = ["children", "size", "alignOffset", "loop", "collisionPadding", "container", "aria-label", ...sharedTail];
+export const subContentPropOrder = [
+  "children",
+  "size",
+  "sideOffset",
+  "alignOffset",
+  "avoidCollisions",
+  "collisionPadding",
+  "collisionBoundary",
+  "hideWhenDetached",
+  "sticky",
+  "loop",
+  "container",
+  "onEscapeKeyDown",
+  "onPointerDownOutside",
+  "onFocusOutside",
+  "onInteractOutside",
+  "aria-label",
+  ...sharedTail,
+];
 
 <Meta of={MenuStories} />
 
@@ -158,7 +183,8 @@ kept by the menu and can't be replaced.
 ### Menu.Content properties
 
 The floating panel, rendered in a portal on the page. Also accepts any other native `<div>` attribute
-beyond what's listed here (e.g. `onKeyDown`, `dir`), passed straight through to the panel. `role` and
+beyond what's listed here (e.g. `onFocus`, `title`), passed straight through to the panel. The reading direction is
+set on `Menu`, not here. `role` and
 `aria-orientation` are set by the menu and can't be replaced.
 
 <PropertiesTable of={MenuContentStories} order={contentPropOrder} />

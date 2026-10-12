@@ -4,6 +4,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { Popover } from "../../molecules/Popover";
 import { Toolbar } from "../../molecules/Toolbar";
 import { useState } from "react";
 import { ConfirmDialog } from "../ConfirmDialog";
@@ -790,7 +791,7 @@ export const AnItemShowsADescriptionAndATrailingBadge: Story = {
 };
 
 export const ABusyItemShowsASpinner: Story = {
-  name: "An item whose action is pending shows a spinner and keeps the menu open until it resolves",
+  name: "An item whose action is pending shows a spinner without moving anything, and the menu stays open until it resolves",
   render: () => {
     function Slow() {
       return (
@@ -800,8 +801,11 @@ export const ABusyItemShowsASpinner: Story = {
               <Button variant="secondary">Actions</Button>
             </Menu.Trigger>
             <Menu.Content>
-              <Menu.Item onSelect={() => new Promise((resolve) => setTimeout(resolve, 900))} shortcut="⌘E">
+              <Menu.Item icon={DotsThreeIcon} onSelect={() => new Promise((resolve) => setTimeout(resolve, 1200))} shortcut="⌘E">
                 Export
+              </Menu.Item>
+              <Menu.Item onSelect={() => new Promise((resolve) => setTimeout(resolve, 1200))}>
+                Export the whole workspace as CSV
               </Menu.Item>
             </Menu.Content>
           </Menu>
@@ -813,17 +817,81 @@ export const ABusyItemShowsASpinner: Story = {
   play: async () => {
     await realClick(trigger("Actions"));
     const menu = await openMenu();
-    const item = within(menu).getByRole("menuitem", { name: /Export/ });
-    const before = item.getBoundingClientRect();
-    await realClick(item);
-    await waitFor(() => expect(item).toHaveAttribute("aria-busy", "true"));
-    await expect(item.querySelector('[class*="spinner"]')).not.toBeNull();
-    // nothing moved: the spinner took the place of the shortcut
-    const during = item.getBoundingClientRect();
-    await expect(Math.abs(during.height - before.height)).toBeLessThan(1);
-    await expect(Math.abs(during.width - before.width)).toBeLessThan(1);
+    const withIcon = within(menu).getByRole("menuitem", { name: /^Export\s*⌘E/ });
+    const widest = within(menu).getByRole("menuitem", { name: /whole workspace/ });
+    const panelBefore = menu.getBoundingClientRect();
+    const iconBox = withIcon.querySelector("span")!.getBoundingClientRect();
+    const labelLeft = textLeft(within(withIcon).getByText("Export"));
+    const widestBefore = widest.getBoundingClientRect();
+
+    // an item with an icon: the spinner takes the icon's own box, and the label does not move
+    await realClick(withIcon);
+    await waitFor(() => expect(withIcon).toHaveAttribute("aria-busy", "true"));
+    // the icon is gone from its slot and the spinner (a span, drawn in CSS) is in it
+    await expect(withIcon.querySelector("span svg")).toBeNull();
+    await expect(withIcon.querySelector("span > span[aria-hidden]")).not.toBeNull();
+    const slotAfter = withIcon.querySelector("span")!.getBoundingClientRect();
+    await expect(Math.abs(slotAfter.width - iconBox.width)).toBeLessThan(0.5);
+    await expect(Math.abs(slotAfter.height - iconBox.height)).toBeLessThan(0.5);
+    await expect(Math.abs(textLeft(within(withIcon).getByText("Export")) - labelLeft)).toBeLessThan(0.5);
     await expect(body.getByRole("menu")).toBeInTheDocument();
     await waitFor(() => expect(body.queryByRole("menu")).toBeNull(), { timeout: 4000 });
+
+    // the item that sets the panel's width, with no icon and no shortcut: the panel and the row keep their size
+    await realClick(trigger("Actions"));
+    const again = await openMenu();
+    const long = within(again).getByRole("menuitem", { name: /whole workspace/ });
+    const panelWide = again.getBoundingClientRect();
+    await realClick(long);
+    await waitFor(() => expect(long).toHaveAttribute("aria-busy", "true"));
+    await expect(Math.abs(again.getBoundingClientRect().width - panelWide.width)).toBeLessThan(0.5);
+    await expect(Math.abs(long.getBoundingClientRect().height - widestBefore.height)).toBeLessThan(0.5);
+    await expect(Math.abs(panelBefore.width - panelWide.width)).toBeLessThan(0.5);
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull(), { timeout: 4000 });
+  },
+};
+
+export const MenuOpensFromInsideAPopover: Story = {
+  name: "An item chosen with a real mouse in a menu opened from inside a Popover, which stays open",
+  render: () => {
+    function Host() {
+      const [picked, setPicked] = useState("none");
+      return (
+        <Page>
+          <Popover defaultOpen>
+            <Popover.Trigger asChild>
+              <Button>Settings</Button>
+            </Popover.Trigger>
+            <Popover.Content aria-label="Settings">
+              <Menu>
+                <Menu.Trigger asChild>
+                  <Button variant="secondary">Theme</Button>
+                </Menu.Trigger>
+                <Menu.Content>
+                  <Menu.Item onSelect={() => setPicked("Dark")}>Dark</Menu.Item>
+                  <Menu.Item onSelect={() => setPicked("Light")}>Light</Menu.Item>
+                </Menu.Content>
+              </Menu>
+              <p data-testid="picked">{picked}</p>
+            </Popover.Content>
+          </Popover>
+        </Page>
+      );
+    }
+    return <Host />;
+  },
+  play: async () => {
+    await realClick(await body.findByRole("button", { name: "Theme" }));
+    const menu = await openMenu();
+    const item = within(menu).getByRole("menuitem", { name: "Dark" });
+    const { left, top } = item.getBoundingClientRect();
+    // the list is above the popover and takes the pointer
+    await expect(document.elementFromPoint(left + 6, top + 6)?.closest('[role="menuitem"]')).toBe(item);
+    await realClick(item);
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await expect(body.getByTestId("picked")).toHaveTextContent("Dark");
+    // choosing did not close the popover
+    await expect(body.getByRole("dialog", { name: "Settings" })).toBeInTheDocument();
   },
 };
 

@@ -206,8 +206,13 @@
   position: absolute;
 }
 
-.icon {
+.iconSlot {
+  align-items: center;
+  block-size: var(--menu-icon-size);
+  display: inline-flex;
   flex-shrink: 0;
+  inline-size: var(--menu-icon-size);
+  justify-content: center;
 }
 
 /* The label (and a description under it) take the room that is left, which pushes trailing content, a shortcut or a
@@ -240,9 +245,18 @@
   margin-inline-start: var(--dbm-space-2);
 }
 
-.spinner {
-  flex-shrink: 0;
-  margin-inline-start: var(--dbm-space-2);
+/* A pending item with no icon shows its spinner over the end of the row, outside the layout, where the trailing
+   content and shortcut are hidden but keep their room (`.underSpinner`): nothing moves, and a panel whose width this
+   item sets does not grow. With an icon, the spinner takes the icon's own place. */
+.spinnerAtEnd {
+  inset-block: 0;
+  inset-inline-end: var(--menu-pad-inline);
+  margin-block: auto;
+  position: absolute;
+}
+
+.underSpinner {
+  visibility: hidden;
 }
 
 /* An item whose action is pending ignores presses, which the cursor says. */

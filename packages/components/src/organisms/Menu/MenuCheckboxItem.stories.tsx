@@ -79,6 +79,16 @@ const meta: Meta<typeof Menu.CheckboxItem> = {
       description:
         "Called when the item is chosen, by a click, Enter or Space. Call event.preventDefault() to keep the menu open after it. Return a promise for an action that takes time: the item shows a spinner and ignores presses while it is pending, the menu stays open, and it closes when the promise resolves.",
     },
+    "aria-keyshortcuts": {
+      control: "text",
+      description:
+        "The keys that do the same as choosing this item from elsewhere in the page (\"Meta+E\"), announced with it. The shortcut hint only displays a key; this says it exists, so set both together and bind the key yourself.",
+    },
+    "aria-describedby": {
+      control: false,
+      description:
+        "The id(s) of elements that describe the item, in addition to its description and disabledReason, which are added to it.",
+    },
     textValue: {
       control: "text",
       description: "The text typeahead matches, when it isn't the item's own text.",

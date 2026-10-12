@@ -25,6 +25,13 @@ function Tree({ root, content }: { root?: Omit<MenuProps, "children">; content?:
         <Menu.Group>
           <Menu.Label>Edit</Menu.Label>
           <Menu.Item shortcut="⌘C">Copy</Menu.Item>
+          <Menu.Item description="Plan and invoices" trailing="New">
+            Billing
+          </Menu.Item>
+          <Menu.Item disabled disabledReason="Admins only">
+            Delete
+          </Menu.Item>
+          <Menu.Item onSelect={() => new Promise<void>(() => undefined)}>Export</Menu.Item>
         </Menu.Group>
         <Menu.Separator />
         <Menu.CheckboxItem defaultChecked>Show grid</Menu.CheckboxItem>

@@ -15,8 +15,8 @@ Fifth organism, built 2026-10-11. **Not Finalized**: the §9 review pass has not
 - **Contrast** measured for every new pairing (text, icon and focus ring on the panel and on each highlight, Purple and Emerald, light and dark): all clear their floors.
 
 ## Checks run
-- 120 unit tests: opening and closing, every key, items, checkbox and radio state, groups and labels, submenus (including right-to-left), the attribute-precedence probe on every part, nesting inside a `Dialog`, `StrictMode`, axe, server render and hydration, and the Docs-token test.
-- 56 real-browser tests (Chromium): 14 hidden sub-part stories for the Properties tables and 42 checks. The checks cover an item chosen with a real mouse in a menu opened from inside a `Dialog` (the top element at its point, the dialog left open), the 24px target and no overflow at every size, a 28-item list capped to the viewport and scrolling with the focused item kept in view, a flip above a trigger at the bottom edge, the panel's width between its caps with a long label wrapping, one left edge for every label beside indicators, the highlight and danger-highlight fills and the keyboard ring, the separator, ArrowUp opening on the last enabled item and Escape returning focus, a right-to-left submenu opening to the left with its caret mirrored, forced colours drawing an outline, and an `IconButton` with a tooltip and a `Toolbar` item both working as triggers.
+- 124 unit tests: opening and closing, every key, items, checkbox and radio state, groups and labels, submenus (including right-to-left), the attribute-precedence probe on every part, nesting inside a `Dialog`, `StrictMode`, axe, server render and hydration, and the Docs-token test.
+- 58 real-browser tests (Chromium): 14 hidden sub-part stories for the Properties tables and 44 checks. The checks cover an item chosen with a real mouse in a menu opened from inside a `Dialog` (the top element at its point, the dialog left open), the 24px target and no overflow at every size, a 28-item list capped to the viewport and scrolling with the focused item kept in view, a flip above a trigger at the bottom edge, the panel's width between its caps with a long label wrapping, one left edge for every label beside indicators, the highlight and danger-highlight fills and the keyboard ring, the separator, ArrowUp opening on the last enabled item and Escape returning focus, a right-to-left submenu opening to the left with its caret mirrored, forced colours drawing an outline, and an `IconButton` with a tooltip and a `Toolbar` item both working as triggers.
 - Full unit suite (141 files, 7517 tests), `pnpm lint` (eslint and both typechecks), the build, the component bundle-size check (Menu JS 2.84KB, CSS 1.31KB, within budget) and `check-guidelines`.
 
 ## Found by the checks
@@ -44,6 +44,19 @@ A menu taller than the room there is scrolled with no sign of more (the scrollba
 
 ## Used by `Toolbar` (2026-10-12)
 `Toolbar`'s `overflow="menu"` draws what doesn't fit as a `Menu` ([ADR-0068](../adr/0068-toolbar-moves-what-doesnt-fit-into-a-menu-reading-its-parts-as-they-register-over-a-data-driven-item-list.md)): checkbox, radio and plain items and labelled groups, opened from a button that is itself an item in the bar's arrow-key order. Nothing in `Menu` changed for it.
+
+## Final review pass (2026-10-12)
+The §9 checklist run against the finished component, with its findings fixed:
+- **`Menu.Separator`'s role and orientation could be replaced by a same-named prop** (Radix spreads what it is given after its own); restated after the spread, and the probe now covers the separator and the submenu panel.
+- **An `asChild` item with a `disabledReason` pointed `aria-describedby` at an element it never drew;** the reference is dropped there, and development warns that the reason is shown but not announced.
+- **A pending item widened the panel** when it was the one that set its width and had nothing for the spinner to replace (284 to 315px measured). The spinner now takes the icon's own box when there is an icon, and sits over the end of the row, outside the layout, when there is none, with the trailing content and shortcut hidden but still taking their room. The check measures the panel, the row and the label, and fails without the change.
+- **The Docs page said `Menu.Content` took `dir` as a native attribute,** which its type omits; the direction is set on `Menu`.
+- **Radix props were not redeclared on `Menu.SubContent`** (`sideOffset`, `avoidCollisions`, `collisionBoundary`, `hideWhenDetached`, `sticky` and the four dismissal callbacks) **and `Menu.Content` lacked `sticky`;** declared, documented and ordered.
+- **`aria-keyshortcuts` and `aria-describedby` are redeclared on items,** as the docs already told the reader to pass them.
+- **`disabledReason` without `disabled` now warns in development** instead of doing nothing silently.
+- **A real-pointer check with a `Popover` as the host** (the checklist names it beside `Dialog`) and **the server-render tree covers a description, trailing content, a reason and an async item.**
+- **`Menu.Separator` does not compose the `Divider` atom, deliberately.** `Divider` draws its line as a background, which forced colours replaces with the page's colour (measured: `rgb(222, 221, 229)` becomes `rgb(255, 255, 255)`, invisible on a white page); the menu's separator is a border, which forced colours keeps (`05` §6). Recorded as a finding on `Divider`, not fixed here.
+- **Arrowing through every item of a 28-item menu in a 420px-tall viewport** kept each focused item clear of the fades (the viewport's `scroll-padding`), and a menu inside a `Popover` and one on a 375px phone stay inside the viewport.
 
 ## Open
 - The §9 review pass that decides Finalized, including looking at every story and the Docs page in light and dark and in both brands at several viewport widths (the Playground was seen open in the default theme only).

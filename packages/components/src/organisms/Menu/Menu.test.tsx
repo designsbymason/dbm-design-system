@@ -597,6 +597,44 @@ describe("Menu", () => {
     });
   });
 
+  describe("a reason in the wrong place", () => {
+    it("does not point aria-describedby at a hidden reason an asChild item never draws", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item asChild disabled disabledReason="Admins only">
+            <a href="#delete">Delete</a>
+          </Menu.Item>
+        </Basic>,
+      );
+      const link = screen.getByRole("menuitem", { name: "Delete" });
+      expect(link).not.toHaveAttribute("aria-describedby");
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("not announced as the item's description"));
+    });
+
+    it("warns, once per item, that a reason without disabled does nothing", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item disabledReason="Admins only">Delete</Menu.Item>
+        </Basic>,
+      );
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("`disabledReason` has no effect on an item that is not `disabled`"));
+      expect(screen.getByRole("menuitem", { name: "Delete" })).not.toHaveAttribute("aria-disabled");
+    });
+
+    it("passes aria-keyshortcuts through to the item", () => {
+      render(
+        <Basic root={{ defaultOpen: true }}>
+          <Menu.Item shortcut="⌘E" aria-keyshortcuts="Meta+E">
+            Edit
+          </Menu.Item>
+        </Basic>,
+      );
+      expect(screen.getByRole("menuitem", { name: /Edit/ })).toHaveAttribute("aria-keyshortcuts", "Meta+E");
+    });
+  });
+
   describe("a description and trailing content", () => {
     it("draws a second line that describes the item without becoming its name", () => {
       render(
@@ -934,11 +972,12 @@ describe("Menu", () => {
             <Menu.Group role="list" data-testid="group">
               <Menu.Item>Inside</Menu.Item>
             </Menu.Group>
-            <Menu.Sub>
+            <Menu.Separator role="presentation" data-testid="separator" />
+            <Menu.Sub open>
               <Menu.SubTrigger role="button" aria-haspopup="dialog" aria-expanded data-testid="subTrigger">
                 More
               </Menu.SubTrigger>
-              <Menu.SubContent>
+              <Menu.SubContent role="listbox" aria-orientation="horizontal" data-testid="subContent">
                 <Menu.Item>Inside</Menu.Item>
               </Menu.SubContent>
             </Menu.Sub>
@@ -959,7 +998,11 @@ describe("Menu", () => {
       expect(screen.getByTestId("group")).toHaveAttribute("role", "group");
       expect(screen.getByTestId("subTrigger")).toHaveAttribute("role", "menuitem");
       expect(screen.getByTestId("subTrigger")).toHaveAttribute("aria-haspopup", "menu");
-      expect(screen.getByTestId("subTrigger")).toHaveAttribute("aria-expanded", "false");
+      expect(screen.getByTestId("subTrigger")).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByTestId("subContent")).toHaveAttribute("role", "menu");
+      expect(screen.getByTestId("subContent")).toHaveAttribute("aria-orientation", "vertical");
+      expect(screen.getByTestId("separator")).toHaveAttribute("role", "separator");
+      expect(screen.getByTestId("separator")).toHaveAttribute("aria-orientation", "horizontal");
     });
   });
 

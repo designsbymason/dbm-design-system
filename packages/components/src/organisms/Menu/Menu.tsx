@@ -327,7 +327,7 @@ const spinnerSizeFor = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" } as c
 
 /**
  * What every item draws: an optional leading icon, the label with an optional second line, and at the end optional
- * trailing content, a shortcut hint, or a spinner while the item's action is pending.
+ * trailing content and a shortcut hint. A spinner shows while the item's action is pending, without moving the rest.
  */
 function ItemBody({
   icon,
@@ -341,9 +341,22 @@ function ItemBody({
   children,
 }: ItemBodyProps) {
   const hasDescription = description !== undefined && description !== null;
+  // A pending item shows its spinner without moving anything: in the place of its icon when it has one, and otherwise
+  // over the end of the row, where the trailing content and shortcut stay (hidden, still taking their room) so the row
+  // and the panel it widens keep their size.
+  const spinnerAtEnd = busy && !icon;
   return (
     <>
-      {icon && <Icon icon={icon} size={iconSizeFor[size]} tone={iconTone} className={styles.icon} />}
+      {icon && (
+        // A box of the icon's size, so the spinner (a pixel or so off the icon's own size) takes its place exactly.
+        <span className={styles.iconSlot}>
+          {busy ? (
+            <Spinner size={spinnerSizeFor[size]} />
+          ) : (
+            <Icon icon={icon} size={iconSizeFor[size]} tone={iconTone} />
+          )}
+        </span>
+      )}
       <span className={styles.text}>
         <span className={styles.label}>{children}</span>
         {hasDescription && (
@@ -354,9 +367,13 @@ function ItemBody({
           </span>
         )}
       </span>
-      {busy && <Spinner size={spinnerSizeFor[size]} className={styles.spinner} />}
-      {!busy && trailing !== undefined && trailing !== null && <span className={styles.trailing}>{trailing}</span>}
-      {!busy && shortcut !== undefined && shortcut !== null && <kbd className={styles.shortcut}>{shortcut}</kbd>}
+      {trailing !== undefined && trailing !== null && (
+        <span className={cx(styles.trailing, spinnerAtEnd && styles.underSpinner)}>{trailing}</span>
+      )}
+      {shortcut !== undefined && shortcut !== null && (
+        <kbd className={cx(styles.shortcut, spinnerAtEnd && styles.underSpinner)}>{shortcut}</kbd>
+      )}
+      {spinnerAtEnd && <Spinner size={spinnerSizeFor[size]} className={styles.spinnerAtEnd} />}
     </>
   );
 }
@@ -456,13 +473,30 @@ function useItemChrome({
   // A disabled item with a reason stays reachable (focusable, `aria-disabled`) so the reason can be heard and seen;
   // with no reason it is Radix's own skipped-and-dimmed.
   const hasReason = disabled && disabledReason !== undefined && disabledReason !== null;
+  // The reason is announced through a hidden element the item draws itself, which an `asChild` item doesn't.
+  const announcesReason = hasReason && describesInside;
+  const reasonWithoutDisabled = !disabled && disabledReason !== undefined && disabledReason !== null;
+  const reasonNotAnnounced = hasReason && !describesInside;
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    if (reasonWithoutDisabled) {
+      console.warn(
+        "Menu: `disabledReason` has no effect on an item that is not `disabled` — it explains why an item can't be chosen. Add `disabled`, or remove `disabledReason`.",
+      );
+    }
+    if (reasonNotAnnounced) {
+      console.warn(
+        "Menu.Item: with `asChild`, `disabledReason` is shown in a tooltip but not announced as the item's description, since the item draws none of its own content. Put the reason in the child (and `aria-describedby`), or remove `asChild`.",
+      );
+    }
+  }, [reasonWithoutDisabled, reasonNotAnnounced]);
   const { busy, handleSelect } = useItemSelect({ onSelect, closeOnSelect, onSelectError, inert: disabled });
   const hasDescription = description !== undefined && description !== null;
   const describedBy =
-    [ariaDescribedBy, hasDescription && describesInside ? descriptionId : undefined, hasReason ? reasonId : undefined]
+    [ariaDescribedBy, hasDescription && describesInside ? descriptionId : undefined, announcesReason ? reasonId : undefined]
       .filter(Boolean)
       .join(" ") || undefined;
-  const reason = hasReason ? (
+  const reason = announcesReason ? (
     <VisuallyHidden id={reasonId} aria-hidden="true">
       {disabledReason}
     </VisuallyHidden>
@@ -793,7 +827,15 @@ MenuLabel.displayName = "Menu.Label";
 
 /** A line between two sets of items. */
 const MenuSeparator = forwardRef<HTMLDivElement, MenuSeparatorProps>(({ className, ...props }, ref) => (
-  <MenuPrimitive.Separator ref={ref} className={cx(styles.separator, className)} {...props} />
+  // Radix sets the role and orientation first and spreads what it is given after, so a same-named consumer prop would
+  // replace them: they are stated again here, after `{...props}` (05-component-api-conventions.md §3).
+  <MenuPrimitive.Separator
+    ref={ref}
+    className={cx(styles.separator, className)}
+    {...props}
+    role="separator"
+    aria-orientation="horizontal"
+  />
 ));
 MenuSeparator.displayName = "Menu.Separator";
 
