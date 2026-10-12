@@ -14,6 +14,12 @@ const meta: Meta<typeof Toolbar.Group> = {
         "Fuses the group's buttons into one segmented control: square corners where they meet, one separator between them, no gap (it renders a ButtonGroup), with every item still in the toolbar's arrow-key order. Off, the items sit apart by the bar's own gap.",
       table: { defaultValue: { summary: "false" } },
     },
+    pinned: {
+      control: "boolean",
+      description:
+        "Keeps the group on the bar when the toolbar's overflow is \"menu\", however little room there is: the items that may move into the menu are taken from the end, and a pinned one is passed over. No effect in the other modes.",
+      table: { defaultValue: { summary: "false" } },
+    },
     "aria-label": {
       control: "text",
       description:

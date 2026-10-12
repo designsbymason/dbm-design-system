@@ -129,6 +129,21 @@ ${demo()}
   <Toolbar.Button>Delete</Toolbar.Button>
 </Toolbar>`,
 
+  overflowMenu: `{/* overflow="menu" keeps one line and moves the items that don't fit, from the end, into a "more" menu.
+    Buttons, icon buttons, groups and toggle groups become menu items (a pressed icon button a checkbox item, a single
+    toggle group a radio group); pinned keeps an item on the bar, and Toolbar.Item always stays. */}
+<Toolbar aria-label="Document actions" overflow="menu" surface="outlined" variant="secondary">
+  <Toolbar.Button pinned>Save</Toolbar.Button>
+  <Toolbar.Separator />
+  <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" pressed />
+  <Toolbar.ToggleGroup type="single" aria-label="Alignment" defaultValue="left">
+    <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Left" />
+    <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Centre" />
+  </Toolbar.ToggleGroup>
+  <Toolbar.Button leadingIcon={LinkIcon}>Link</Toolbar.Button>
+  <Toolbar.Button leadingIcon={TrashIcon} variant="destructive">Delete</Toolbar.Button>
+</Toolbar>`,
+
   scrollColumn: `{/* A scrolling column needs a height of its own to respond to (here, a container 10rem tall) */}
 <Toolbar aria-label="Tools" surface="outlined" orientation="vertical">
   <Toolbar.IconButton icon={CursorIcon} aria-label="Select" />

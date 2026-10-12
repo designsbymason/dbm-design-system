@@ -8,8 +8,17 @@ export type ToolbarOrientation = "horizontal" | "vertical";
 export type ToolbarSurface = "ghost" | "outlined" | "filled";
 export type ToolbarDirection = "ltr" | "rtl";
 export type ToolbarAlign = "start" | "center" | "end";
-/** What a bar does when its items don't fit: `visible` (overflow the container), `wrap` onto more lines, or `scroll`. */
-export type ToolbarOverflow = "visible" | "wrap" | "scroll";
+/**
+ * What a bar does when its items don't fit: `visible` (overflow the container), `wrap` onto more lines, `scroll`, or
+ * `menu` (the ones that don't fit move into a "more" menu at the end of the bar).
+ */
+export type ToolbarOverflow = "visible" | "wrap" | "scroll" | "menu";
+
+/** The text a toolbar supplies itself, translatable through `labels`. */
+export interface ToolbarLabels {
+  /** The accessible name of the "more" button when `overflow` is `"menu"`. @default 'More actions' */
+  overflow: string;
+}
 
 export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "dir"> {
   /**
@@ -84,12 +93,21 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
    * What a bar does when its items are more than fit. `scroll` (the default) keeps one line (or one column) and scrolls it
    * along its own axis: an edge fade and a button show at whichever end has more, and the item that takes focus is scrolled
    * fully into view. `wrap` wraps a horizontal bar's items onto more lines (arrow keys still follow the order they are
-   * written in). `visible` lets them overflow the container. A scrolling column needs a height of its own to respond to (a
+   * written in). `visible` lets them overflow the container. `menu` keeps the bar on one line and moves the items that
+   * don't fit, from the end, into a "more" menu at its end: `Toolbar.Button`, `Toolbar.IconButton`, `Toolbar.Group` and
+   * `Toolbar.ToggleGroup` become menu items (a pressed icon button a checkbox item, a single toggle group a radio group, a
+   * multiple one checkbox items); `Toolbar.Item`, whatever it holds, and anything marked `pinned` always stay on the bar.
+   * The bar fills its container in this mode, and it is for a horizontal bar (a vertical one scrolls). A scrolling column needs a height of its own to respond to (a
    * bar in a box with a fixed or maximum height). While it scrolls, the bar sits in a frame that carries its surface, and
    * the focus ring is drawn inside each item, since a scrolling box would cut off one drawn outside it.
    * @default 'scroll'
    */
   overflow?: ToolbarOverflow;
+  /**
+   * The text the toolbar supplies itself, with English defaults: the name of the "more" button of
+   * `overflow="menu"`.
+   */
+  labels?: Partial<ToolbarLabels>;
   /**
    * Keeps the bar at the top of the page (or of `scrollContainerRef`) as the reader scrolls, with a surface behind
    * it and a shadow while it is stuck. Built on `Affix`, the same as `Alert`'s `sticky`.
@@ -132,6 +150,16 @@ export interface ToolbarProps extends Omit<ComponentPropsWithoutRef<"div">, "rol
   "data-testid"?: string;
 }
 
+/** What a `Toolbar.Button` and a `Toolbar.IconButton` take beyond the atom they draw. */
+export interface ToolbarPinnedProps {
+  /**
+   * Keeps the item on the bar when `overflow` is `"menu"`, however little room there is: the items that may move into the
+   * menu are taken from the end, and a pinned one is passed over. Has no effect in the other overflow modes.
+   * @default false
+   */
+  pinned?: boolean;
+}
+
 export interface ToolbarItemProps {
   /**
    * The one focusable element to put in the toolbar's arrow-key order, as a single element that takes the props
@@ -158,6 +186,12 @@ export interface ToolbarGroupProps extends Omit<ComponentPropsWithoutRef<"div">,
    * @default false
    */
   attached?: boolean;
+  /**
+   * Keeps the item on the bar when `overflow` is `"menu"`, however little room there is: the items that may move into the
+   * menu are taken from the end, and a pinned one is passed over. Has no effect in the other overflow modes.
+   * @default false
+   */
+  pinned?: boolean;
   /**
    * Names the group for assistive tech ("Text style"). Required unless `aria-labelledby` points at a visible label:
    * a group with no name is just a set of items.
@@ -196,6 +230,13 @@ export type ToolbarToggleGroupProps =
   | (Omit<ToggleGroupMultipleProps, "loop" | "rovingFocus" | "variant"> & ToolbarToggleGroupVariantProp);
 
 interface ToolbarToggleGroupVariantProp {
+  /**
+   * Keeps the item on the bar when `overflow` is `"menu"`, however little room there is: the items that may move into the
+   * menu are taken from the end, and a pinned one is passed over. Has no effect in the other overflow modes.
+   * @default false
+   */
+  pinned?: boolean;
+
   /**
    * How the chosen item is marked: `subtle` (borderless, a soft brand tint), `outlined` or `solid`. Here the default is
    * `subtle`, not `ToggleGroup`'s `outlined`, so the group sits quietly among a bar's ghost items.

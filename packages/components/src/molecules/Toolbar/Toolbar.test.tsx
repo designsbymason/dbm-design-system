@@ -1,9 +1,9 @@
-import { TextBIcon, TextItalicIcon } from "@dbm-design-system/icons";
+import { CopyIcon, TextBIcon, TextItalicIcon } from "@dbm-design-system/icons";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
 import buttonStyles from "../../atoms/Button/Button.module.css";
 import iconButtonStyles from "../../atoms/IconButton/IconButton.module.css";
@@ -926,5 +926,224 @@ describe("Toolbar", () => {
       );
       expect(await axe(container)).toHaveNoViolations();
     });
+  });
+});
+
+describe("Toolbar overflow menu", () => {
+  // jsdom lays nothing out, so the bar's width and each part's width are given: every part is 100px wide, and the bar
+  // is as wide as the test says.
+  let barWidth = 1000;
+  beforeEach(() => {
+    barWidth = 1000;
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute("role") === "toolbar" ? barWidth : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const sized = this.hasAttribute("data-toolbar-part") || this.hasAttribute("data-toolbar-overflow");
+      // a separator is a thin line
+      const width = this.getAttribute("data-toolbar-part") === "separator" ? 1 : 100;
+      return { width: sized ? width : 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) };
+    });
+  });
+
+  // A part that is hidden has no accessible name to a query (it is `display: none`), so they are found by their text.
+  const more = () => screen.getByLabelText("More actions");
+  const item = (name: string) => screen.getByText(name).closest("button") as HTMLElement;
+  const hidden = (name: string) => item(name).hasAttribute("data-overflowed");
+
+  function MenuBar({ children, ...props }: Partial<React.ComponentProps<typeof Toolbar>>) {
+    return (
+      <Toolbar aria-label="Actions" overflow="menu" {...props}>
+        {children}
+      </Toolbar>
+    );
+  }
+
+  it("shows every item and hides the more button while they fit", () => {
+    render(
+      <MenuBar>
+        <Toolbar.Button>One</Toolbar.Button>
+        <Toolbar.Button>Two</Toolbar.Button>
+      </MenuBar>,
+    );
+    expect(hidden("One")).toBe(false);
+    expect(hidden("Two")).toBe(false);
+    expect(more()).toHaveAttribute("data-overflowed");
+  });
+
+  it("moves items from the end into the menu when they don't fit, and shows the more button", () => {
+    barWidth = 350;
+    render(
+      <MenuBar>
+        <Toolbar.Button>One</Toolbar.Button>
+        <Toolbar.Button>Two</Toolbar.Button>
+        <Toolbar.Button>Three</Toolbar.Button>
+        <Toolbar.Button>Four</Toolbar.Button>
+      </MenuBar>,
+    );
+    expect(hidden("One")).toBe(false);
+    expect(hidden("Two")).toBe(false);
+    expect(hidden("Three")).toBe(true);
+    expect(hidden("Four")).toBe(true);
+    expect(more()).not.toHaveAttribute("data-overflowed");
+  });
+
+  it("lists the hidden items in the menu, and choosing one presses the real item", async () => {
+    barWidth = 250;
+    const user = userEvent.setup();
+    const onThree = vi.fn();
+    render(
+      <MenuBar>
+        <Toolbar.Button>One</Toolbar.Button>
+        <Toolbar.Button>Two</Toolbar.Button>
+        <Toolbar.Button onClick={onThree}>Three</Toolbar.Button>
+      </MenuBar>,
+    );
+    await user.click(more());
+    const menu = await screen.findByRole("menu");
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Two", "Three"]);
+    await user.click(within(menu).getByRole("menuitem", { name: "Three" }));
+    expect(onThree).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a pinned item and an arbitrary Toolbar.Item on the bar", () => {
+    barWidth = 250;
+    render(
+      <MenuBar>
+        <Toolbar.Button>One</Toolbar.Button>
+        <Toolbar.Button pinned>Two</Toolbar.Button>
+        <Toolbar.Item>
+          <button type="button">Plain</button>
+        </Toolbar.Item>
+      </MenuBar>,
+    );
+    expect(hidden("One")).toBe(true);
+    expect(hidden("Two")).toBe(false);
+    expect(item("Plain")).not.toHaveAttribute("data-overflowed");
+  });
+
+  it("draws a pressed icon button as a checkbox item and a toggle group as a radio group", async () => {
+    barWidth = 120;
+    const user = userEvent.setup();
+    const onBold = vi.fn();
+    render(
+      <MenuBar>
+        <Toolbar.Button pinned>Keep</Toolbar.Button>
+        <Toolbar.IconButton icon={CopyIcon} aria-label="Bold" pressed onClick={onBold} />
+        <Toolbar.ToggleGroup type="single" aria-label="Alignment" defaultValue="left">
+          <Toolbar.ToggleItem value="left" aria-label="Left" />
+          <Toolbar.ToggleItem value="right" aria-label="Right" />
+        </Toolbar.ToggleGroup>
+      </MenuBar>,
+    );
+    await user.click(more());
+    const menu = await screen.findByRole("menu");
+    const bold = within(menu).getByRole("menuitemcheckbox", { name: "Bold" });
+    expect(bold).toHaveAttribute("aria-checked", "true");
+    expect(within(menu).getByRole("menuitemradio", { name: "Left" })).toHaveAttribute("aria-checked", "true");
+    await user.click(within(menu).getByRole("menuitemradio", { name: "Right" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("Right")).toHaveAttribute("data-state", "on"),
+    );
+    await user.click(bold);
+    expect(onBold).toHaveBeenCalled();
+  });
+
+  it("names a group in the menu after its label", async () => {
+    barWidth = 120;
+    const user = userEvent.setup();
+    render(
+      <MenuBar>
+        <Toolbar.Button pinned>Keep</Toolbar.Button>
+        <Toolbar.Group aria-label="Style">
+          <Toolbar.Button>Bold</Toolbar.Button>
+          <Toolbar.Button>Italic</Toolbar.Button>
+        </Toolbar.Group>
+      </MenuBar>,
+    );
+    await user.click(more());
+    const menu = await screen.findByRole("menu");
+    await waitFor(() => expect(within(menu).getByRole("group", { name: "Style" })).toBeInTheDocument());
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Bold", "Italic"]);
+  });
+
+  it("keeps a separator between shown items and before the more button, and hides one with nothing shown after it", () => {
+    barWidth = 350;
+    render(
+      <MenuBar>
+        <Toolbar.Button>One</Toolbar.Button>
+        <Toolbar.Separator data-testid="between" />
+        <Toolbar.Button>Two</Toolbar.Button>
+        <Toolbar.Separator data-testid="before-more" />
+        <Toolbar.Button>Three</Toolbar.Button>
+        <Toolbar.Separator data-testid="after-hidden" />
+        <Toolbar.Button>Four</Toolbar.Button>
+      </MenuBar>,
+    );
+    expect(hidden("Three")).toBe(true);
+    expect(hidden("Four")).toBe(true);
+    // separates "Two" from the more button
+    expect(screen.getByTestId("between")).not.toHaveAttribute("data-overflowed");
+    expect(screen.getByTestId("before-more")).not.toHaveAttribute("data-overflowed");
+    // two separators in a row would draw a double line; the second goes
+    expect(screen.getByTestId("after-hidden")).toHaveAttribute("data-overflowed");
+  });
+
+  it("does not take an item from a person who is on it", () => {
+    barWidth = 250;
+    const { rerender } = render(
+      <MenuBar>
+        <Toolbar.Button>One</Toolbar.Button>
+        <Toolbar.Button>Two</Toolbar.Button>
+        <Toolbar.Button>Three</Toolbar.Button>
+      </MenuBar>,
+    );
+    expect(hidden("Three")).toBe(true);
+    item("Three").removeAttribute("data-overflowed");
+    item("Three").focus();
+    rerender(
+      <MenuBar>
+        <Toolbar.Button>One</Toolbar.Button>
+        <Toolbar.Button>Two</Toolbar.Button>
+        <Toolbar.Button>Three</Toolbar.Button>
+      </MenuBar>,
+    );
+    expect(hidden("Three")).toBe(false);
+    expect(hidden("Two")).toBe(true);
+  });
+
+  it("takes the more button's name from labels", () => {
+    render(
+      <MenuBar labels={{ overflow: "Weitere Aktionen" }}>
+        <Toolbar.Button>One</Toolbar.Button>
+      </MenuBar>,
+    );
+    expect(screen.getByLabelText("Weitere Aktionen")).toBeInTheDocument();
+  });
+
+  it("falls back to scrolling for a vertical bar, with a development warning", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(
+      <MenuBar orientation="vertical" aria-label="Column">
+        <Toolbar.Button>One</Toolbar.Button>
+      </MenuBar>,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('overflow="menu" is for a horizontal bar'));
+    expect(screen.queryByLabelText("More actions")).not.toBeInTheDocument();
+  });
+
+  it("has no axe violations with the menu open", async () => {
+    barWidth = 120;
+    const user = userEvent.setup();
+    render(
+      <MenuBar>
+        <Toolbar.Button pinned>Keep</Toolbar.Button>
+        <Toolbar.IconButton icon={CopyIcon} aria-label="Copy" />
+        <Toolbar.Button>Share</Toolbar.Button>
+      </MenuBar>,
+    );
+    await user.click(more());
+    await screen.findByRole("menu");
+    expect((await axe(document.body, { rules: { region: { enabled: false } } })).violations).toHaveLength(0);
   });
 });

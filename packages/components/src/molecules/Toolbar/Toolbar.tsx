@@ -1,7 +1,7 @@
 import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-design-system/primitives";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
-import { createContext, forwardRef, useCallback, useContext, useMemo, useRef } from "react";
+import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import type { Ref } from "react";
 import { Affix } from "../../atoms/Affix";
 import { Button } from "../../atoms/Button";
@@ -17,12 +17,24 @@ import { ButtonGroup } from "../ButtonGroup";
 import { ToggleGroup } from "../ToggleGroup";
 import type { ToggleGroupItemProps, ToggleGroupProps } from "../ToggleGroup";
 import styles from "./Toolbar.module.css";
+import {
+  applyOverflow,
+  overflowPartProps,
+  ToolbarOverflowContext,
+  ToolbarOverflowMenu,
+  useIsomorphicLayoutEffect,
+  useOverflowEntry,
+  type OverflowEntry,
+  type OverflowRegistry,
+} from "./ToolbarOverflow";
 import type {
   ToolbarAlign,
   ToolbarDirection,
   ToolbarGroupProps,
   ToolbarItemProps,
+  ToolbarLabels,
   ToolbarOrientation,
+  ToolbarPinnedProps,
   ToolbarProps,
   ToolbarSeparatorProps,
   ToolbarSpacerProps,
@@ -51,6 +63,8 @@ const ToolbarContext = createContext<ToolbarContextValue>({
 const ToggleGroupDisabledContext = createContext(false);
 
 const alignValues: ToolbarAlign[] = ["start", "center", "end"];
+
+const defaultLabels: ToolbarLabels = { overflow: "More actions" };
 
 /**
  * Scrolls a scrolling bar just far enough to show an item in full, clear of the edge fades. A browser scrolls a focused
@@ -134,6 +148,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
       sticky = false,
       stickyOffset = 0,
       scrollContainerRef,
+      labels: labelOverrides,
       className,
       style,
       onFocus,
@@ -144,12 +159,55 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
     ref,
   ) => {
     const resolvedOrientation = useResolvedResponsiveValue<ToolbarOrientation>(orientation, "horizontal");
-    const isScroller = overflow === "scroll";
+    // The "more" menu is for a row: a column has no width to run out of, so it scrolls as it would without it.
+    const isMenu = overflow === "menu" && resolvedOrientation === "horizontal";
+    const isScroller = overflow === "scroll" || (overflow === "menu" && !isMenu);
+    const labels: ToolbarLabels = mergeDefined(defaultLabels, labelOverrides);
     const barRef = useRef<HTMLDivElement>(null);
+    const registry = useRef<OverflowRegistry>(new Map());
+    const overflowContext = useMemo(
+      () =>
+        isMenu
+          ? {
+              register: (node: HTMLElement, entry: () => OverflowEntry) => {
+                registry.current.set(node, entry);
+                return () => {
+                  registry.current.delete(node);
+                };
+              },
+            }
+          : null,
+      [isMenu],
+    );
     const { overflowStart, overflowEnd } = useScrollEdges(barRef, resolvedOrientation, { enabled: isScroller });
 
+    // Lay the bar out for the room it has, on every commit (the items or their sizes may have changed) and whenever the
+    // bar's own width changes or focus moves off an item that was kept visible because it had it.
+    useIsomorphicLayoutEffect(() => {
+      if (isMenu && barRef.current) applyOverflow(barRef.current);
+    });
+    useEffect(() => {
+      const bar = barRef.current;
+      if (!isMenu || !bar) return undefined;
+      const relayout = () => applyOverflow(bar);
+      const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(relayout) : null;
+      observer?.observe(bar);
+      bar.addEventListener("focusout", relayout);
+      return () => {
+        observer?.disconnect();
+        bar.removeEventListener("focusout", relayout);
+      };
+    }, [isMenu]);
+
     const hasWarnedNoAccessibleNameRef = useRef(false);
+    const hasWarnedVerticalMenuRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
+      if (overflow === "menu" && !isMenu && !hasWarnedVerticalMenuRef.current) {
+        hasWarnedVerticalMenuRef.current = true;
+        console.warn(
+          '`Toolbar` overflow="menu" is for a horizontal bar: a vertical one has no width to run out of, so it scrolls instead.',
+        );
+      }
       if (!ariaLabel && !ariaLabelledBy && !hasWarnedNoAccessibleNameRef.current) {
         hasWarnedNoAccessibleNameRef.current = true;
         console.warn(
@@ -236,11 +294,24 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
           surface === "ghost" && styles.ghost,
           isScroller ? styles.scroller : surfaceClasses,
           overflow === "wrap" && styles.wrap,
+          isMenu && styles.collapse,
           !isScroller && className,
         )}
         style={isScroller ? undefined : style}
       >
         {children}
+        {isMenu && (
+          <ToolbarOverflowMenu
+            barRef={barRef}
+            registry={registry}
+            label={labels.overflow}
+            size={size}
+            variant={variant}
+            rounded={Boolean(buttonSettings.rounded)}
+            disabled={Boolean(buttonSettings.disabled)}
+            dir={dir}
+          />
+        )}
       </ToolbarPrimitive.Root>
     );
 
@@ -308,15 +379,17 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarProps>(
 
     return (
       <ToolbarContext.Provider value={toolbarSettings}>
-        <ButtonGroupProvider value={buttonSettings}>
-          {hasAmbientTooltipProvider ? (
-            stuckOrPlain
-          ) : (
-            <TooltipProvider delayDuration={700} skipDelayDuration={300}>
-              {stuckOrPlain}
-            </TooltipProvider>
-          )}
-        </ButtonGroupProvider>
+        <ToolbarOverflowContext.Provider value={overflowContext}>
+          <ButtonGroupProvider value={buttonSettings}>
+            {hasAmbientTooltipProvider ? (
+              stuckOrPlain
+            ) : (
+              <TooltipProvider delayDuration={700} skipDelayDuration={300}>
+                {stuckOrPlain}
+              </TooltipProvider>
+            )}
+          </ButtonGroupProvider>
+        </ToolbarOverflowContext.Provider>
       </ToolbarContext.Provider>
     );
   },
@@ -327,12 +400,22 @@ ToolbarRoot.displayName = "Toolbar";
  * A `Button` in the toolbar's arrow-key order. Takes every `Button` prop; its `variant`, `size`, `rounded` and
  * `disabled` default to the toolbar's.
  */
-const ToolbarButton = forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
+const ToolbarButton = forwardRef<HTMLButtonElement, ButtonProps & ToolbarPinnedProps>(({ pinned = false, ...props }, ref) => {
   const toolbar = useContext(ToolbarContext);
+  const overflow = useContext(ToolbarOverflowContext);
   const disabled = Boolean(props.disabled) || toolbar.disabled || Boolean(props.isLoading);
+  const nodeRef = useRef<HTMLButtonElement | null>(null);
+  const mergedRef = useMemo(() => mergeRefs(ref, nodeRef), [ref]);
+  useOverflowEntry(nodeRef, () => ({
+    kind: "button",
+    label: props.children,
+    icon: props.leadingIcon,
+    disabled,
+    danger: props.variant === "destructive",
+  }));
   return (
     <ToolbarPrimitive.Button asChild disabled={disabled}>
-      <Button ref={ref} {...props} />
+      <Button ref={mergedRef} {...props} {...overflowPartProps(overflow, "button", pinned)} />
     </ToolbarPrimitive.Button>
   );
 });
@@ -342,12 +425,23 @@ ToolbarButton.displayName = "Toolbar.Button";
  * An `IconButton` in the toolbar's arrow-key order. Takes every `IconButton` prop, including `pressed` for a toggle
  * and `tooltip` for a hover and focus label; its `variant`, `size`, `rounded` and `disabled` default to the toolbar's.
  */
-const ToolbarIconButton = forwardRef<HTMLButtonElement, IconButtonProps>((props, ref) => {
+const ToolbarIconButton = forwardRef<HTMLButtonElement, IconButtonProps & ToolbarPinnedProps>(({ pinned = false, ...props }, ref) => {
   const toolbar = useContext(ToolbarContext);
+  const overflow = useContext(ToolbarOverflowContext);
   const disabled = Boolean(props.disabled) || toolbar.disabled || Boolean(props.isLoading);
+  const nodeRef = useRef<HTMLButtonElement | null>(null);
+  const mergedRef = useMemo(() => mergeRefs(ref, nodeRef), [ref]);
+  useOverflowEntry(nodeRef, () => ({
+    kind: "icon-button",
+    label: String(props["aria-label"] ?? ""),
+    icon: props.icon,
+    disabled,
+    danger: props.variant === "destructive",
+    pressed: props.pressed,
+  }));
   return (
     <ToolbarPrimitive.Button asChild disabled={disabled}>
-      <IconButton ref={ref} {...props} />
+      <IconButton ref={mergedRef} {...props} {...overflowPartProps(overflow, "icon-button", pinned)} />
     </ToolbarPrimitive.Button>
   );
 });
@@ -359,8 +453,15 @@ ToolbarIconButton.displayName = "Toolbar.IconButton";
  */
 const ToolbarItem = forwardRef<HTMLElement, ToolbarItemProps>(({ children, disabled = false }, ref) => {
   const toolbar = useContext(ToolbarContext);
+  const overflow = useContext(ToolbarOverflowContext);
   return (
-    <ToolbarPrimitive.Button asChild ref={ref as Ref<HTMLButtonElement>} disabled={disabled || toolbar.disabled}>
+    <ToolbarPrimitive.Button
+      asChild
+      ref={ref as Ref<HTMLButtonElement>}
+      disabled={disabled || toolbar.disabled}
+      // An arbitrary element can't be drawn as a menu item, so it is always kept on the bar.
+      {...overflowPartProps(overflow, "item", true)}
+    >
       {children}
     </ToolbarPrimitive.Button>
   );
@@ -372,8 +473,12 @@ ToolbarItem.displayName = "Toolbar.Item";
  * segmented control (it then renders a `ButtonGroup`, whose settings it shares with the bar).
  */
 const ToolbarGroup = forwardRef<HTMLDivElement, ToolbarGroupProps>(
-  ({ children, attached = false, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+  ({ children, attached = false, pinned = false, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
     const toolbar = useContext(ToolbarContext);
+    const overflow = useContext(ToolbarOverflowContext);
+    const nodeRef = useRef<HTMLDivElement | null>(null);
+    const mergedRef = useMemo(() => mergeRefs(ref, nodeRef), [ref]);
+    useOverflowEntry(nodeRef, () => ({ kind: "group", label: ariaLabel }));
     const hasWarnedNoAccessibleNameRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       // An attached group is a `ButtonGroup`, which warns about a missing name itself.
@@ -387,8 +492,9 @@ const ToolbarGroup = forwardRef<HTMLDivElement, ToolbarGroupProps>(
     if (attached) {
       return (
         <ButtonGroup
-          ref={ref}
+          ref={mergedRef}
           {...props}
+          {...overflowPartProps(overflow, "group", pinned)}
           orientation={toolbar.orientation}
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledBy}
@@ -400,8 +506,9 @@ const ToolbarGroup = forwardRef<HTMLDivElement, ToolbarGroupProps>(
     }
     return (
       <div
-        ref={ref}
+        ref={mergedRef}
         {...props}
+        {...overflowPartProps(overflow, "group", pinned)}
         role="group"
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
@@ -422,16 +529,26 @@ ToolbarGroup.displayName = "Toolbar.Group";
  * `disabled`, `orientation` and `dir` default to the toolbar's, and its `variant` to `subtle` (borderless, to sit quietly
  * among the bar's ghost items) rather than `ToggleGroup`'s own `outlined`.
  */
-const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, ref) => {
+const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(({ pinned = false, ...props }, ref) => {
   const toolbar = useContext(ToolbarContext);
+  const overflow = useContext(ToolbarOverflowContext);
   const group = props as ToggleGroupProps;
   // Disabled by the bar or by the group: a group's own `disabled={false}` can't undo the bar's.
   const disabled = Boolean(group.disabled) || toolbar.disabled;
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  const mergedRef = useMemo(() => mergeRefs(ref, nodeRef), [ref]);
+  useOverflowEntry(nodeRef, () => ({
+    kind: "toggle-group",
+    label: group["aria-label"],
+    multiple: group.type === "multiple",
+    disabled,
+  }));
   return (
     <ToggleGroupDisabledContext.Provider value={disabled}>
       <ToggleGroup
-        ref={ref}
+        ref={mergedRef}
         {...group}
+        {...overflowPartProps(overflow, "toggle-group", pinned)}
         rovingFocus={false}
         variant={group.variant ?? "subtle"}
         size={group.size ?? toolbar.size}
@@ -450,9 +567,18 @@ const ToolbarToggleItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>((p
   const toolbar = useContext(ToolbarContext);
   const groupDisabled = useContext(ToggleGroupDisabledContext);
   const disabled = Boolean(props.disabled) || groupDisabled || toolbar.disabled;
+  const nodeRef = useRef<HTMLButtonElement | null>(null);
+  const mergedRef = useMemo(() => mergeRefs(ref, nodeRef), [ref]);
+  useOverflowEntry(nodeRef, () => ({
+    kind: "toggle-item",
+    value: props.value,
+    label: props.children ?? props["aria-label"],
+    icon: props.icon,
+    disabled,
+  }));
   return (
     <ToolbarPrimitive.Button asChild disabled={disabled}>
-      <ToggleGroup.Item ref={ref} {...props} />
+      <ToggleGroup.Item ref={mergedRef} {...props} />
     </ToolbarPrimitive.Button>
   );
 });
@@ -461,6 +587,7 @@ ToolbarToggleItem.displayName = "Toolbar.ToggleItem";
 /** A line between items, across the toolbar's own direction (a vertical rule in a row). Announced as a separator. */
 const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(({ className, ...props }, ref) => {
   const toolbar = useContext(ToolbarContext);
+  const overflow = useContext(ToolbarOverflowContext);
   // Across the bar's own direction. Radix computes this too, but before spreading whatever else it is given, so a
   // consumer's `role` or `aria-orientation` would replace it; set here, after `props`, they can't
   // (05-component-api-conventions.md §3). A horizontal separator leaves `aria-orientation` off, as it is the ARIA default.
@@ -469,6 +596,7 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(({ cl
     <ToolbarPrimitive.Separator
       ref={ref}
       {...props}
+      {...overflowPartProps(overflow, "separator")}
       role="separator"
       aria-orientation={orientation === "vertical" ? "vertical" : undefined}
       data-orientation={orientation}
@@ -479,7 +607,10 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(({ cl
 ToolbarSeparator.displayName = "Toolbar.Separator";
 
 /** Flexible empty space that pushes whatever follows it to the far end of the toolbar. Hidden from assistive tech. */
-const ToolbarSpacer = forwardRef<HTMLDivElement, ToolbarSpacerProps>((props, ref) => <Spacer ref={ref} {...props} />);
+const ToolbarSpacer = forwardRef<HTMLDivElement, ToolbarSpacerProps>((props, ref) => {
+  const overflow = useContext(ToolbarOverflowContext);
+  return <Spacer ref={ref} {...props} {...overflowPartProps(overflow, "spacer")} />;
+});
 ToolbarSpacer.displayName = "Toolbar.Spacer";
 
 type ToolbarComponent = typeof ToolbarRoot & {

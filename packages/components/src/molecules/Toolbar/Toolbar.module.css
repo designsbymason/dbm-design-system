@@ -95,6 +95,31 @@
   flex-wrap: wrap;
 }
 
+/* `overflow="menu"`: one line that fills its container, and what doesn't fit is hidden (`data-overflowed`, set by the
+   bar's own layout pass) and offered in the "more" menu, so nothing is ever left to spill or to scroll. Items keep their
+   own width (they would otherwise shrink below their content) and the bar clips what the pass has not yet hidden. */
+.collapse {
+  display: flex;
+  flex-wrap: nowrap;
+  inline-size: 100%;
+  min-inline-size: 0;
+  overflow: hidden;
+}
+
+.collapse > * {
+  flex-shrink: 0;
+}
+
+.collapse > [data-overflowed] {
+  display: none;
+}
+
+/* Inside a box that clips, the focus ring is drawn inside the control: an outline outside it would be cut off at the
+   bar's edge (`05-component-api-conventions.md` §6). */
+.collapse :focus-visible {
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
 /* The focused item's ring is drawn over its neighbours, not under them. Flex items paint one after another in
    source order, so a later item's background would otherwise cover the ring's side that overlaps it; a positioned
    element paints above the static siblings around it whatever its order, so the base layer is all it needs. */

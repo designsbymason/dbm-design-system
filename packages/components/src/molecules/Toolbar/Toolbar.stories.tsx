@@ -111,10 +111,15 @@ const meta: Meta<ToolbarProps> = {
     },
     overflow: {
       control: "select",
-      options: ["visible", "wrap", "scroll"],
+      options: ["visible", "wrap", "scroll", "menu"],
       description:
-        "What a bar does when its items are more than fit. scroll (the default) keeps one line (or column) and scrolls it, with an edge fade and a button at whichever end has more; wrap wraps a horizontal bar's items onto more lines; visible lets them overflow the container. A scrolling column needs a height of its own.",
+        "What a bar does when its items are more than fit. scroll (the default) keeps one line (or column) and scrolls it, with an edge fade and a button at whichever end has more; wrap wraps a horizontal bar's items onto more lines; visible lets them overflow the container; menu keeps one line and moves the items that don't fit, from the end, into a \"more\" menu. A scrolling column needs a height of its own, and menu is for a horizontal bar.",
       table: { defaultValue: { summary: "scroll" } },
+    },
+    labels: {
+      ...noControls,
+      description:
+        "The text the toolbar supplies itself, with English defaults: the name of the \"more\" button of overflow=\"menu\" ({ overflow: \"More actions\" }).",
     },
     sticky: {
       ...noControls,
@@ -356,6 +361,34 @@ export const Wrapping: Story = {
         <Toolbar.Button>Share</Toolbar.Button>
         <Toolbar.Button>Export</Toolbar.Button>
         <Toolbar.Button>Archive</Toolbar.Button>
+      </Toolbar>
+    </div>
+  ),
+};
+
+export const OverflowMenu: Story = {
+  name: "Overflowing into a menu",
+  parameters: { docs: { source: { code: toolbarSnippets.overflowMenu } } },
+  args: { overflow: "menu", surface: "outlined", variant: "secondary", "aria-label": "Document actions" },
+  argTypes: { overflow: noControls, variant: noControls, "aria-label": noControls },
+  render: (args) => (
+    <div style={{ maxWidth: "24rem", minWidth: "10rem", resize: "horizontal", overflow: "hidden", padding: "var(--dbm-space-1)" }}>
+      <Toolbar {...args}>
+        <Toolbar.Button pinned>Save</Toolbar.Button>
+        <Toolbar.Separator />
+        <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" pressed />
+        <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />
+        <Toolbar.ToggleGroup type="single" aria-label="Alignment" defaultValue="left">
+          <Toolbar.ToggleItem value="left" icon={TextAlignLeftIcon} aria-label="Left" />
+          <Toolbar.ToggleItem value="center" icon={TextAlignCenterIcon} aria-label="Centre" />
+          <Toolbar.ToggleItem value="right" icon={TextAlignRightIcon} aria-label="Right" />
+        </Toolbar.ToggleGroup>
+        <Toolbar.Separator />
+        <Toolbar.Button leadingIcon={LinkIcon}>Link</Toolbar.Button>
+        <Toolbar.Button leadingIcon={ImageIcon}>Image</Toolbar.Button>
+        <Toolbar.Button leadingIcon={TrashIcon} variant="destructive">
+          Delete
+        </Toolbar.Button>
       </Toolbar>
     </div>
   ),
@@ -1256,5 +1289,71 @@ export const PressedInteraction: Story = {
     // A pressed toggle is announced, not only coloured.
     await expect(canvas.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "true");
     await expect(getComputedStyle(canvas.getByTestId("rule")).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+  },
+};
+
+export const OverflowMenuInteraction: Story = {
+  ...hidden,
+  tags: ["!dev"],
+  name: "Overflow menu — interaction test",
+  args: { overflow: "menu", surface: "outlined", variant: "secondary" },
+  render: function Render(args) {
+    const [wide, setWide] = useState(false);
+    const [presses, setPresses] = useState<string[]>([]);
+    return (
+      <>
+        <button type="button" onClick={() => setWide((value) => !value)}>
+          Toggle width
+        </button>
+        <p data-testid="presses">{presses.join(",")}</p>
+        <div data-testid="frame" style={{ width: wide ? "40rem" : "17rem" }}>
+          <Toolbar {...args} aria-label="Actions" data-testid="bar">
+            <Toolbar.Button pinned onClick={() => setPresses((value) => [...value, "save"])}>
+              Save
+            </Toolbar.Button>
+            <Toolbar.Separator />
+            <Toolbar.Button onClick={() => setPresses((value) => [...value, "link"])}>Link</Toolbar.Button>
+            <Toolbar.Button onClick={() => setPresses((value) => [...value, "image"])}>Image</Toolbar.Button>
+            <Toolbar.Button onClick={() => setPresses((value) => [...value, "export"])}>Export</Toolbar.Button>
+            <Toolbar.Button onClick={() => setPresses((value) => [...value, "archive"])}>Archive</Toolbar.Button>
+          </Toolbar>
+        </div>
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const bar = canvas.getByTestId("bar");
+    const more = canvas.getByLabelText("More actions");
+    // narrow: something is in the menu, nothing spills, the pinned item and the more button are on the bar
+    await waitFor(() => expect(more).not.toHaveAttribute("data-overflowed"));
+    await expect(getComputedStyle(more).display).not.toBe("none");
+    const hiddenItems = [...bar.querySelectorAll("[data-overflowed]")].filter((node) => node !== more);
+    await expect(hiddenItems.length).toBeGreaterThan(0);
+    for (const node of hiddenItems) await expect(getComputedStyle(node).display).toBe("none");
+    await expect(bar.scrollWidth).toBeLessThanOrEqual(bar.clientWidth);
+    const box = bar.getBoundingClientRect();
+    const trigger = more.getBoundingClientRect();
+    await expect(trigger.right).toBeLessThanOrEqual(box.right + 0.5);
+    await expect(getComputedStyle(canvas.getByText("Save").closest("button") as HTMLElement).display).not.toBe("none");
+    // the keyboard goes to the more button after the last item that is shown, and then Home returns
+    const visibleButtons = [...bar.querySelectorAll<HTMLElement>("button")].filter((node) => getComputedStyle(node).display !== "none");
+    const lastShown = visibleButtons[visibleButtons.length - 2] as HTMLElement;
+    lastShown.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(more).toHaveFocus();
+    // choosing a hidden item in the menu runs that item's own handler
+    await userEvent.keyboard("{Enter}");
+    const menu = await within(document.body).findByRole("menu");
+    const names = within(menu).getAllByRole("menuitem").map((item) => item.textContent);
+    await expect(names).toContain("Archive");
+    await userEvent.click(within(menu).getByRole("menuitem", { name: "Archive" }));
+    await waitFor(() => expect(canvas.getByTestId("presses")).toHaveTextContent("archive"));
+    await waitFor(() => expect(more).toHaveFocus());
+    // wide: everything is back on the bar and the more button goes
+    await userEvent.click(canvas.getByRole("button", { name: "Toggle width" }));
+    await waitFor(() => expect(more).toHaveAttribute("data-overflowed"));
+    await expect(bar.querySelectorAll("[data-overflowed]").length).toBe(1);
+    await expect(getComputedStyle(more).display).toBe("none");
   },
 };

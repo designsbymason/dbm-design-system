@@ -60,7 +60,10 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   range and multiple-date choosing with drag, the footer, the markers, week numbers and the key. 9.01KB before the year
 //   and month views and the week mode, 10.26KB measured with them (10.54KB after the final review). Sized at the user's direction
 //   (2026-10-05) to about 12KB.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, TimeRangePicker: 12 };
+//   Toolbar (2026-10-12): `overflow="menu"` draws the items that don't fit as a `Menu` (the panel, the item kinds, the
+//   scroll fades, and the tooltip and spinner an item can carry), 5.7KB before it and 11.12KB with it. A molecule
+//   holding an organism is the cost of the feature (ADR-0068), paid by every bar whether or not it uses the mode.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, TimeRangePicker: 12, Toolbar: 12 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

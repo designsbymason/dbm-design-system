@@ -25,6 +25,7 @@ export const propOrder = [
   "fullWidth",
   "align",
   "overflow",
+  "labels",
   "sticky",
   "stickyOffset",
   "scrollContainerRef",
@@ -39,7 +40,7 @@ export const propOrder = [
 
 export const itemPropOrder = ["children", "disabled"];
 
-export const groupPropOrder = ["children", "attached", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["children", "attached", "pinned", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 
 <Meta of={ToolbarStories} />
 
@@ -104,7 +105,10 @@ The parts of a toolbar:
 - **`Toolbar.ToggleGroup`** and **`Toolbar.ToggleItem`** are a `ToggleGroup` and its `ToggleGroup.Item`s in the arrow-key
   order, for choosing one option (alignment) or several (text style). They take every `ToggleGroup` prop except `loop` and
   `rovingFocus`, which the toolbar owns; `size`, `rounded`, `disabled`, `orientation` and `dir` default to the toolbar's, and `variant` to `subtle`.
+- **`pinned`** on a `Toolbar.Button`, `Toolbar.IconButton`, `Toolbar.Group` or `Toolbar.ToggleGroup` keeps that item on the bar when
+  `overflow` is `"menu"`, however little room there is; it does nothing in the other modes.
 - **`Toolbar.Item`** puts any other single focusable element in the order: a `Select`, a popover or menu trigger, a link.
+  In `overflow="menu"` it always stays on the bar, since an arbitrary element can't be drawn as a menu item.
 - **`Toolbar.Group`** is a named cluster; **`Toolbar.Separator`** is a line between items, across the bar's own direction,
   announced as a separator (it takes `className`, `style`, `id` and `data-testid`); **`Toolbar.Spacer`** is flexible empty
   space that pushes whatever follows it to the far end, hidden from assistive tech (it takes the `Spacer` props).
@@ -218,6 +222,17 @@ written in. `overflow="visible"` lets them spill past the container, with nothin
 
 <Canvas of={ToolbarStories.Wrapping} />
 
+### Overflowing into a menu
+
+`overflow="menu"` keeps the bar on one line and moves the items that don't fit, from the end, into a "more" menu at its
+end. A `Toolbar.Button` or `Toolbar.IconButton` becomes a menu item (a pressed icon button a checkbox item), a
+`Toolbar.Group` a labelled group, a single `Toolbar.ToggleGroup` a radio group and a multiple one checkbox items;
+choosing one presses the real item, so its own handler runs. `pinned` keeps an item on the bar, and a `Toolbar.Item`
+always stays. The bar fills its container and relays itself as the container is resized (drag the corner of the one
+below). It is for a horizontal bar: a vertical one scrolls instead.
+
+<Canvas of={ToolbarStories.OverflowMenu} />
+
 ### Scrolling in a column
 
 A vertical bar scrolls the same way once it has a height of its own to respond to — here a container 10rem tall.
@@ -303,7 +318,8 @@ forwards in the page does so in the toolbar too.
   they used when they tab back.
 - Prefer `ghost` items on a ghost or filled bar and `secondary` on an outlined one, and keep `primary` for the one command
   the bar exists for — usually last, pushed to the end with a `Toolbar.Spacer`.
-- A long bar scrolls on a narrow screen by default; stack it with an `orientation` map, or give it `overflow="wrap"`, when every item should stay in view.
+- A long bar scrolls on a narrow screen by default; stack it with an `orientation` map, give it `overflow="wrap"` when every item should stay in view, or `overflow="menu"` when the bar must keep to one line and the less-used commands can sit one press away.
+- With `overflow="menu"`, put the commands that must always be reachable first or `pinned`: items are taken from the end.
 - Use `sticky` for a bar that has to stay in reach of a long page or editor, and give the scrolling box to `scrollContainerRef` when the page itself isn't what scrolls.
 - Give an icon button a `tooltip` where the icon alone is not clear — it also shows on keyboard focus.
 - Keep related toggles together in a `Toolbar.Group`, and set each one's `pressed` from the state it controls so the bar
@@ -325,6 +341,9 @@ forwards in the page does so in the toolbar too.
 - A `Select` or popover trigger in `Toolbar.Item` keeps its own keyboard behaviour: it opens with `Enter` or `Space`, and focus returns to it when it closes.
 - By default (`overflow="scroll"`) the scroll buttons are `aria-hidden` and out of the tab order (the arrow keys already move along the bar, and the bar scrolls the focused item fully into view, clear of the edge fade: a browser does that only for an item that is completely hidden, so a partly visible one is brought in by the bar itself), so a keyboard or screen reader user meets the same one tab stop. The focus ring is drawn inside each item while the bar scrolls, since a scrolling box would cut off a ring drawn outside it; with `overflow` set to `wrap` or `visible` it is drawn outside, like every other control's.
 - A `tooltip` on an icon button opens on hover and keyboard focus and closes with `Escape`; the button is named by its `aria-label`, so the tooltip is never the only name. The bar's tooltips share one provider, so moving from one icon to the next opens the next at once; an app's own `TooltipProvider` is used instead when there is one.
+- With `overflow="menu"`, the "more" button is a `Toolbar.Item` in the arrow-key order, named "More actions" (`labels.overflow`)
+  and hidden (not removed) while everything fits. The menu is a `Menu`: `Escape` closes it and focus returns to the button.
+  A control that has keyboard focus is never taken from the person: it stays on the bar until focus moves on.
 - In Windows high contrast (forced colours) the separator is drawn in the system text colour, a filled bar and a stuck sticky bar get a one-pixel outline in place of their fill and shadow, and the edge fades are dropped (the scroll buttons remain).
 - A disabled item is not focusable, so the arrow keys skip it; the toolbar's `disabled` disables every item natively.
 - A toggle (`pressed`) is announced with `aria-pressed`; its pressed look is a filled icon as well as a colour, so the state
