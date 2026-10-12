@@ -179,6 +179,9 @@ Drive every prop live.
   `orientation` is a responsive map, so it's never stuck reporting only the `base` value.
 - When `label` is a plain string, it's used automatically as the accessible name (`aria-label`) —
   pass `aria-label` explicitly to override it, or when `label` is a non-string `ReactNode`.
+- In Windows high contrast (forced colours) the line is drawn in the system text colour, whatever `tone` and
+  `thickness` say, so it stays visible: a line drawn as a background colour would otherwise take the page's colour
+  and disappear. Dashed and dotted lines are borders, which that mode already keeps.
 - No keyboard interaction — a separator that isn't also a resize handle or similar control isn't
   focusable, per the WAI-ARIA `separator` role's own default behavior.
 

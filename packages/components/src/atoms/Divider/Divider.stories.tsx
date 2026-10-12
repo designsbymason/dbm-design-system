@@ -1,4 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
+import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Stack } from "../Stack";
 import { Divider } from "./Divider";
 import { dividerPlaygroundSnippet, dividerSnippets } from "./Divider.snippets";
@@ -465,4 +467,72 @@ export const ResponsiveOrientation: Story = {
       <span>Section B</span>
     </Stack>
   ),
+};
+
+// A line drawn as a background is replaced with the page's colour in forced colours (Windows high contrast) and
+// disappears; each kind of line has to differ from the page. Emulated through the Chrome DevTools Protocol: jsdom
+// has no forced colours.
+export const ForcedColoursInteraction: Story = {
+  tags: ["!dev"],
+  name: "Forced colours — interaction test",
+  argTypes: {
+    orientation: { control: false },
+    variant: { control: false },
+    thickness: { control: false },
+    emphasis: { control: false },
+    tone: { control: false },
+    label: { control: false },
+    align: { control: false },
+    "aria-label": { control: false },
+  },
+  render: () => (
+    <Stack gap={4} style={{ color: "var(--dbm-text-primary)", width: "var(--dbm-space-32)" }}>
+      <Divider data-testid="solid" />
+      <Divider data-testid="toned" tone="brand" thickness="thick" />
+      <Divider data-testid="double" variant="double" />
+      <Divider data-testid="dashed" variant="dashed" />
+      <Divider data-testid="dotted" variant="dotted" />
+      <div style={{ blockSize: "var(--dbm-space-12)", display: "flex" }}>
+        <Divider data-testid="vertical" orientation="vertical" />
+      </div>
+    </Stack>
+  ),
+  play: async ({ canvasElement }) => {
+    const lines = (testId: string) =>
+      Array.from(canvasElement.querySelectorAll(`[data-testid="${testId}"] > span, [data-testid="${testId}"] > span > span`)).filter(
+        // the bars themselves: the group a double line sits in has them as children and draws nothing of its own
+        (element) => element.children.length === 0 && !element.textContent,
+      ) as HTMLElement[];
+    const emulate = (value: "active" | "none") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
+      // what the page is drawn in: the `Canvas` system colour, which forced colours puts behind everything
+      const probe = document.createElement("span");
+      probe.style.backgroundColor = "Canvas";
+      document.body.appendChild(probe);
+      const page = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      for (const id of ["solid", "toned", "double", "vertical"]) {
+        const drawn = lines(id);
+        await expect(drawn.length, `${id} draws a line`).toBeGreaterThan(0);
+        for (const line of drawn) {
+          const style = getComputedStyle(line);
+          // a filled line is drawn in a colour that is not the page's, and not transparent
+          await expect(style.backgroundColor, `${id} is not the page colour`).not.toBe(page);
+          await expect(style.backgroundColor, `${id} is not transparent`).not.toBe("rgba(0, 0, 0, 0)");
+        }
+      }
+      // dashed and dotted are borders, which forced colours keeps
+      for (const id of ["dashed", "dotted"]) {
+        const [line] = lines(id);
+        await expect(getComputedStyle(line as HTMLElement).borderBlockEndStyle).not.toBe("none");
+        await expect(getComputedStyle(line as HTMLElement).borderBlockEndColor).not.toBe(page);
+      }
+    } finally {
+      await emulate("none");
+    }
+  },
 };

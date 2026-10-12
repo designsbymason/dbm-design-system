@@ -315,3 +315,18 @@
 .lineShort {
   flex: 0 0 var(--dbm-space-6);
 }
+
+/*
+ * Forced colours (Windows high contrast) replaces every background colour with the page's, so a line drawn as a
+ * background would vanish: measured, `rgb(222, 221, 229)` became white on a white page. A system colour is the one
+ * thing it keeps, so the solid line and the bars of a double line are given `CanvasText`. `!important` because the
+ * colour of a solid line and of the double bars is also set inline (the `tone` and the per-bar thickness), which a
+ * class rule would otherwise lose to. Dashed and dotted lines are borders, which forced colours already keeps.
+ */
+@media (forced-colors: active) {
+  .line,
+  .doubleBarHorizontal,
+  .doubleBarVertical {
+    background-color: CanvasText !important;
+  }
+}
