@@ -150,7 +150,7 @@ export const TargetSizeLg: Story = sizeCheck("lg");
 export const TargetSizeXl: Story = sizeCheck("xl");
 
 export const LongMenuScrollsInsideItsPanel: Story = {
-  name: "A long menu is capped to the viewport, scrolls, and keeps the focused item in view",
+  name: "A long menu is capped to the viewport, scrolls inside the panel, fades where there is more, and keeps the focused item in view",
   render: () => (
     <Page>
       <Menu defaultOpen>
@@ -167,19 +167,70 @@ export const LongMenuScrollsInsideItsPanel: Story = {
   ),
   play: async () => {
     const menu = await openMenu();
+    const port = menu.querySelector<HTMLElement>("[data-scrollport]") as HTMLElement;
+    const fades = [...menu.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((el) => el.className.includes("fade"));
+    const [fadeStart, fadeEnd] = fades as [HTMLElement, HTMLElement];
     const rect = menu.getBoundingClientRect();
     await expect(rect.top).toBeGreaterThanOrEqual(0);
     await expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight);
-    await expect(menu.scrollHeight).toBeGreaterThan(menu.clientHeight);
+    // the panel itself is still; what scrolls is inside it
+    await expect(port.scrollHeight).toBeGreaterThan(port.clientHeight);
+    await expect(menu.scrollHeight).toBeLessThanOrEqual(menu.clientHeight + 1);
+    // at the top there is more below and nothing above
+    await waitFor(() => expect(fadeEnd).toHaveAttribute("data-visible"));
+    await expect(fadeStart).not.toHaveAttribute("data-visible");
+    await waitFor(() => expect(getComputedStyle(fadeEnd).opacity).toBe("1"));
+    await expect(getComputedStyle(fadeStart).opacity).toBe("0");
+    // a fade takes no presses
+    await expect(getComputedStyle(fadeEnd).pointerEvents).toBe("none");
     menu.focus();
     await userEvent.keyboard("{ArrowDown}");
     await userEvent.keyboard("{End}");
     const last = within(menu).getByRole("menuitem", { name: countries[countries.length - 1] as string });
     await waitFor(() => expect(last).toHaveFocus());
-    const panel = menu.getBoundingClientRect();
+    // at the bottom the fades swap
+    await waitFor(() => expect(fadeStart).toHaveAttribute("data-visible"));
+    await expect(fadeEnd).not.toHaveAttribute("data-visible");
+    // the focused item is fully in view, clear of the fade drawn over the end
+    const panel = port.getBoundingClientRect();
     const target = last.getBoundingClientRect();
     await expect(target.top).toBeGreaterThanOrEqual(panel.top - 1);
-    await expect(target.bottom).toBeLessThanOrEqual(panel.bottom + 1);
+    await expect(target.bottom).toBeLessThanOrEqual(panel.bottom - 1);
+  },
+};
+
+export const ShortMenuHasNoFades: Story = {
+  name: "A menu that fits draws no fade, and in forced colours the fades are not drawn at all",
+  render: () => (
+    <Page>
+      <Menu defaultOpen>
+        <Menu.Trigger asChild>
+          <Button variant="secondary">Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Edit</Menu.Item>
+          <Menu.Item>Duplicate</Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </Page>
+  ),
+  play: async () => {
+    const menu = await openMenu();
+    const fades = [...menu.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter((el) => el.className.includes("fade"));
+    await expect(fades).toHaveLength(2);
+    for (const fade of fades) {
+      await expect(fade).not.toHaveAttribute("data-visible");
+      await expect(getComputedStyle(fade).opacity).toBe("0");
+    }
+    const emulate = (value: "active" | "none") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      for (const fade of fades) await expect(getComputedStyle(fade).display).toBe("none");
+    } finally {
+      await emulate("none");
+    }
   },
 };
 

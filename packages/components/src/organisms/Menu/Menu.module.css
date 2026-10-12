@@ -66,15 +66,16 @@
   font-family: var(--dbm-font-family-primary);
   font-size: var(--menu-font-size);
   line-height: var(--dbm-line-height-snug);
-  /* Radix's own measure of the room that is left; without a cap the panel would run past the viewport, and
-     `overflow-y` is what lets a long menu scroll instead of being clipped. Wider than the trigger when its
-     longest label needs it, never wider than the room there is. */
+  /* Radix's own measure of the room that is left; without a cap the panel would run past the viewport. The items
+     scroll inside `.viewport`, so the panel's own border, surface and corners stay still. Wider than the trigger when
+     its longest label needs it, never wider than the room there is. */
+  display: flex;
+  flex-direction: column;
   max-block-size: var(--radix-dropdown-menu-content-available-height);
   max-inline-size: min(var(--dbm-menu-max-width), var(--radix-dropdown-menu-content-available-width));
   min-inline-size: min(var(--dbm-menu-min-width), var(--radix-dropdown-menu-content-available-width));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: var(--dbm-space-1);
+  overflow: hidden;
+  position: relative;
   transform-origin: var(--radix-dropdown-menu-content-transform-origin);
   will-change: transform, opacity;
   z-index: var(--dbm-z-index-popover);
@@ -82,6 +83,43 @@
 
 [data-theme$="-dark"] .content {
   box-shadow: var(--dbm-shadow-dark-md);
+}
+
+/* The scrolling part of the panel: the panel's padding is its own, so the items clear the panel's edge as they did
+   when the panel itself scrolled. `scroll-padding` keeps a focused item clear of a fade. */
+.viewport {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--dbm-space-1);
+  scroll-padding-block: var(--dbm-space-6);
+}
+
+/* A fade at each end that has more items behind it, in the panel's own surface colour so the items appear to run out
+   under it. It takes no pointer events, so an item under it is still pressed. */
+.fade {
+  block-size: var(--dbm-space-6);
+  inset-inline: 0;
+  opacity: var(--dbm-opacity-0);
+  pointer-events: none;
+  position: absolute;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: 1;
+}
+
+.fade[data-visible] {
+  opacity: var(--dbm-opacity-100);
+}
+
+.fadeStart {
+  background: linear-gradient(to bottom, var(--dbm-bg-surface), transparent);
+  inset-block-start: 0;
+}
+
+.fadeEnd {
+  background: linear-gradient(to top, var(--dbm-bg-surface), transparent);
+  inset-block-end: 0;
 }
 
 .content[data-state="open"] {
@@ -253,6 +291,11 @@
 /* Forced colours draws no background, so the highlighted item gets an outline in a system colour, drawn inside
    its own box (the panel clips anything outside it when it scrolls). */
 @media (forced-colors: active) {
+  /* The fades are backgrounds, which forced colours does not draw. */
+  .fade {
+    display: none;
+  }
+
   .item[data-highlighted],
   .item[data-state="open"] {
     outline: var(--dbm-border-width-2) solid Highlight;

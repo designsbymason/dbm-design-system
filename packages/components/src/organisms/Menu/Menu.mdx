@@ -354,6 +354,8 @@ The submenu's panel. Also accepts any other native `<div>` attribute beyond what
 - Open a menu from `Menu.Trigger asChild` over a `Button` or an `IconButton`: the built-in fallback has
   no chrome of its own.
 - `align="end"` suits a trigger at the end of a row or a toolbar, so the panel doesn't run off the page.
+- A menu taller than the room there is scrolls inside its panel, with a fade at each end that has more behind it
+  (and none where the list fits). Keep a long list searchable elsewhere (`Combobox`) rather than relying on it.
 
 ## Accessibility
 
@@ -473,7 +475,7 @@ function Row() {
 
 ## Design tokens used
 
-<TokenRow token="bg.surface" usage="panel background" />
+<TokenRow token="bg.surface" usage="panel background, and the colour the scroll fades run out into" />
 <TokenRow token="border.default" usage="panel border and the separator line" />
 <TokenRow token="border-width.1" usage="panel border and separator width" />
 <TokenRow token="border-width.2" usage="the keyboard focus ring, and the highlighted item's outline in forced-colours mode" />
@@ -497,7 +499,7 @@ function Row() {
 <TokenRow token="space.2" usage="gap between an item's icon, label and hint; item padding at small sizes; label heading padding above it; space before trailing content and a spinner" />
 <TokenRow token="space.3" usage="item padding at medium and large sizes" />
 <TokenRow token="space.4" usage="item padding at extra large; gap before the shortcut hint" />
-<TokenRow token="space.6" usage="item minimum height (the 24px target floor)" />
+<TokenRow token="space.6" usage="item minimum height (the 24px target floor); the height of a scroll fade" />
 <TokenRow token="menu.min-width" usage="panel minimum width" />
 <TokenRow token="menu.max-width" usage="panel maximum width before a long label wraps" />
 <TokenRow token="text.primary" usage="item and panel text" />
@@ -510,7 +512,7 @@ function Row() {
 <TokenRow token="motion.duration.fast" usage="open and close fade" />
 <TokenRow token="motion.easing.emphasized" usage="open fade-in" />
 <TokenRow token="motion.easing.standard" usage="close fade-out" />
-<TokenRow token="opacity.0 / opacity.100" usage="open and close fade endpoints" />
+<TokenRow token="opacity.0 / opacity.100" usage="open and close fade endpoints; a scroll fade shown or hidden" />
 <TokenRow token="motion.scale.96" usage="the size the panel starts from as it enters" />
 
 ## Related components

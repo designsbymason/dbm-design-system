@@ -39,6 +39,9 @@ Decisions and alternatives are in [ADR-0066](../adr/0066-menu-items-take-a-promi
 - Built and removed: `onSelectAfterClose`, which the real-browser flow showed was not needed.
 - Checks added: 17 unit tests and 5 real-browser checks.
 
+## Scroll affordance (2026-10-11)
+A menu taller than the room there is scrolled with no sign of more (the scrollbar is overlay-only on some platforms). The panel keeps its border, surface and corners still and the items scroll in an inner viewport, with a fade in the panel's surface colour at each end that has more behind it (`useScrollEdges`, as `Tabs` and `Toolbar` do), dropped in forced colours. The fades take no pointer events. Real-browser checks: top and bottom fades swap as the list is scrolled to its end, nothing shows on a short list, the focused item ends fully in view, and the fades are not drawn in forced colours.
+
 ## Open
 - The §9 review pass that decides Finalized, including looking at every story and the Docs page in light and dark and in both brands at several viewport widths (the Playground was seen open in the default theme only).
 - Not verified: a real touch device, and a screen reader's announcement of the menu and its groups.

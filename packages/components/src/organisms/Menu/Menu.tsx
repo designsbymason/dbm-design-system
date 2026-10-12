@@ -1,5 +1,5 @@
 import { CaretRightIcon, CheckIcon, CircleIcon, MinusIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-design-system/primitives";
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import {
   forwardRef,
@@ -177,6 +177,25 @@ const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>(
 MenuTrigger.displayName = "Menu.Trigger";
 
 /**
+ * What scrolls inside the panel, with a fade at each end that has more behind it. The panel keeps its border, surface and
+ * rounded corners still while the items move; the fades say there is more (and which way), where a scrollbar that only
+ * shows on scrolling does not. Rendered inside the panel, so it mounts and unmounts with it.
+ */
+function MenuViewport({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { overflowStart, overflowEnd } = useScrollEdges(ref, "vertical");
+  return (
+    <>
+      <div className={cx(styles.fade, styles.fadeStart)} data-visible={overflowStart || undefined} aria-hidden="true" />
+      <div ref={ref} className={styles.viewport} data-scrollport="">
+        {children}
+      </div>
+      <div className={cx(styles.fade, styles.fadeEnd)} data-visible={overflowEnd || undefined} aria-hidden="true" />
+    </>
+  );
+}
+
+/**
  * The floating panel, rendered in a portal on the document body. It scrolls when taller than the room there is, is
  * named after its trigger, and takes the row size for every item inside it.
  */
@@ -281,7 +300,9 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
               if (done) reportOpened();
             }}
           />
-          <MenuSizeContext.Provider value={size}>{children}</MenuSizeContext.Provider>
+          <MenuSizeContext.Provider value={size}>
+            <MenuViewport>{children}</MenuViewport>
+          </MenuSizeContext.Provider>
         </MenuPrimitive.Content>
       </MenuPrimitive.Portal>
     );
@@ -879,7 +900,9 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
           role="menu"
           aria-orientation="vertical"
         >
-          <MenuSizeContext.Provider value={resolved}>{children}</MenuSizeContext.Provider>
+          <MenuSizeContext.Provider value={resolved}>
+            <MenuViewport>{children}</MenuViewport>
+          </MenuSizeContext.Provider>
         </MenuPrimitive.SubContent>
       </MenuPrimitive.Portal>
     );
