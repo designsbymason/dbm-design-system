@@ -676,7 +676,7 @@ function useFanLayout(list: HTMLOListElement | null, enabled: boolean, atTop: bo
 /**
  * The "Clear all" button, drawn once more than one toast is open. It is a toast of its own as far as Radix is concerned
  * (so it is in the region's tab order and F8 reaches it, which a plain button among the list's children would not be),
- * kept open by the count and not by a timer, and put last in the stack by CSS `order`.
+ * kept open by the count and not by a timer, and put last in the stack, at the bottom, by CSS `order`.
  */
 function ToastClearAll({ show }: { show: boolean }) {
   const system = useContext(ToastSystemContext);
@@ -695,9 +695,11 @@ function ToastClearAll({ show }: { show: boolean }) {
       data-state={show ? "open" : "closed"}
       data-swipe-direction={system?.swipeDirection ?? "right"}
     >
-      <Button variant="tertiary" size="sm" onClick={() => system?.api.dismissAll()}>
-        {system?.labels.clearAll}
-      </Button>
+      <div className={styles.clearAllInner}>
+        <Button variant="ghost" size="sm" className={styles.clearAllButton} onClick={() => system?.api.dismissAll()}>
+          {system?.labels.clearAll}
+        </Button>
+      </div>
     </ToastPrimitive.Root>
   );
 }

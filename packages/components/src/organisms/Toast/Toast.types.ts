@@ -39,8 +39,9 @@ export type ToastSize = "xs" | "sm" | "md" | "lg" | "xl";
 /**
  * The corner or edge of the screen the toasts stack against. `"start"` and `"end"` are logical: the inline start and
  * end, which are the left and right in left-to-right text and swap in right-to-left, so a toast in the `"bottom-end"`
- * corner is in the same corner as the page's own end. `"top"` and `"bottom"` are centred. Newer toasts stack nearest
- * the edge they are placed against.
+ * corner is in the same corner as the page's own end. `"top"` and `"bottom"` are centred. In the list the newest toast
+ * is at the top and "Clear all" at the bottom, whichever edge it is against; a fan puts the newest in front, at the
+ * edge.
  */
 export type ToastPlacement = "top-start" | "top" | "top-end" | "bottom-start" | "bottom" | "bottom-end";
 

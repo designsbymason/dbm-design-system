@@ -213,8 +213,12 @@ goes to `onError` (`onClickError` on `Toast.Action`); with none it is left unhan
 
 ### Placements
 
-`start` and `end` are logical: the left and right in left-to-right text, swapped in right-to-left.
-Newer toasts stack nearest the edge the list is against.
+`start` and `end` are logical: the left and right in left-to-right text, swapped in right-to-left. In the
+list the newest toast is at the top and "Clear all" at the bottom, whichever edge it is against. A list
+against the top edge grows downward, so a toast that leaves lets the ones below it move up; against the
+bottom edge it grows upward, so a new toast appears above the others, and one that leaves lets the ones
+above it glide down to the edge. "Clear all", below the oldest, opens and closes its own room the same
+way, so the toasts above it move by that room when it comes and goes.
 
 <Canvas of={ToastStories.Placements} />
 
@@ -277,8 +281,8 @@ call is a different function and keeps the toasts apart. `mergeDuplicates={false
 
 ### Clear all
 
-Once more than one toast is showing, a "Clear all" button appears at the edge of the stack. It closes
-every toast and drops the ones waiting. It is in the region's tab order like a toast of its own, so F8
+Once more than one toast is showing, a "Clear all" button appears at the bottom of the list, drawn as a
+small ghost button. It closes every toast and drops the ones waiting. It is in the region's tab order like a toast of its own, so F8
 and `Tab` reach it.
 
 <Canvas of={ToastStories.ClearAll} />

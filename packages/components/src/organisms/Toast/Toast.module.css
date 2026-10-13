@@ -160,12 +160,14 @@
    A fixed list against one edge or corner, above everything else on the toast step of the z-index scale. It takes no
    pointer events itself (the gutter around the toasts is the page's), and each toast takes its own. Phones first: below
    the `sm` breakpoint (40rem; `@media` can't read a custom property) a toast spans the screen less the gutter, whatever
-   its horizontal placement. Newer toasts stack nearest the edge the list is against. The safe-area insets keep it clear
-   of a notch or a home indicator. */
+   its horizontal placement. In the list the newest toast is at the top and "Clear all" at the bottom, whichever edge the
+   list is against: it runs bottom to top (`column-reverse`) over the toasts' mount order. A list against the top edge
+   grows downward, so a toast that leaves lets the ones below it move up; against the bottom edge it grows upward, so a new
+   toast is added above the others without moving them. The safe-area insets keep it clear of a notch or a home indicator. */
 .viewport {
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   font-family: var(--dbm-font-family-primary);
   gap: var(--dbm-space-3);
   inline-size: 100%;
@@ -185,7 +187,6 @@
 .viewport[data-placement^="top"] {
   --toast-from-y: calc(var(--dbm-space-4) * -1);
 
-  flex-direction: column-reverse;
   inset-block-start: 0;
   padding-block-start: calc(var(--dbm-space-4) + env(safe-area-inset-top, var(--dbm-space-0)));
 }
@@ -219,6 +220,8 @@
 }
 
 /* --- A fanned stack (`stack="fan"`). ---
+   Its front toast is the newest and sits against the edge the list is against, so a fan against the bottom edge runs
+   the other way from the list's top-to-bottom newest first.
    Collapsed, the newest toast is in full at the edge and each older one is pulled onto it, peeking out by `--dbm-toast-stack-peek`
    per step of depth and drawn `--dbm-toast-stack-scale-step` smaller, three layers at most. The pull is the individual
    `translate` and `scale` properties, which compose with the `transform` the entrance, the swipe and the exit use, so
@@ -232,6 +235,10 @@
 
 .viewport[data-stack="fan"][data-placement^="top"] {
   --toast-fan-sign: 1;
+}
+
+.viewport[data-stack="fan"][data-placement^="bottom"] {
+  flex-direction: column;
 }
 
 .viewport[data-stack="fan"] .root {
@@ -510,29 +517,71 @@
 }
 
 /* --- Clear all. ---
-   A toast as far as the list is concerned, drawn as a small bar: the page's own surface, the toast's elevation, last in
-   the stack (so nearest the edge the list is against) and at the end of the row. */
+   A toast as far as the list is concerned (so it is in the region's tab order), drawn as a ghost button: no border and
+   no shadow, on the page's own surface so its label stays readable over whatever is behind it, and with less room around
+   the label than a `Button` of that size has (the label's size is the button's own). Last in the list, at the bottom,
+   at the end of the row; in a fan that runs against the bottom edge the list's own order already puts it there. */
 .clearAll {
   align-self: flex-end;
   background-color: var(--dbm-bg-surface);
-  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
   border-radius: var(--dbm-radius-md);
-  box-shadow: var(--dbm-shadow-light-lg);
   box-sizing: border-box;
+  display: grid;
+  grid-template-rows: 1fr;
   inline-size: auto;
   list-style: none;
   margin: 0;
-  order: 1;
-  padding: var(--dbm-space-1);
+  order: -1;
+  padding: 0;
   pointer-events: auto !important;
 }
 
-[data-theme$="-dark"] .clearAll {
-  box-shadow: var(--dbm-shadow-dark-lg);
+.viewport[data-stack="fan"][data-placement^="bottom"] .clearAll {
+  order: 1;
 }
 
+/* One class deeper than `Button`'s own size rules, so they lose to this whichever stylesheet loads last. At least 24 by
+   24 (WCAG 2.5.8) whatever the padding. */
+.clearAll .clearAllButton {
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--dbm-space-2);
+}
+
+.clearAllInner {
+  min-block-size: 0;
+}
+
+/* Coming in it opens up the room it takes (the row grows from nothing, the gap with it), so the toast above it glides
+   instead of being pushed by a bar that appears all at once. It clips only while that runs, so it never cuts a focus ring. */
 .clearAll[data-state="open"] {
-  animation: toastIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
+  animation: clearAllIn var(--dbm-motion-duration-base) var(--dbm-motion-easing-decelerate);
+}
+
+.clearAll[data-state="open"] .clearAllInner {
+  animation: clearAllClip var(--dbm-motion-duration-base) linear;
+}
+
+@keyframes clearAllIn {
+  from {
+    grid-template-rows: 0fr;
+    margin-block: calc(var(--dbm-space-3) * -0.5);
+    opacity: 0;
+  }
+
+  to {
+    grid-template-rows: 1fr;
+    margin-block: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes clearAllClip {
+  from,
+  to {
+    overflow: hidden;
+  }
 }
 
 .clearAll[data-state="closed"] {
@@ -551,14 +600,12 @@
     animation: toastFadeIn var(--dbm-motion-duration-fast) linear;
   }
 
+  .clearAll[data-state="open"] .clearAllInner {
+    animation: none;
+  }
+
   .clearAll[data-state="closed"] {
     animation: toastFadeOut var(--dbm-motion-duration-fast) linear forwards;
-  }
-}
-
-@media (forced-colors: active) {
-  .clearAll {
-    border-color: CanvasText;
   }
 }
 

@@ -118,8 +118,8 @@ export const PlacementTopStartRightToLeft: Story = {
   },
 };
 
-export const NewerStackNearestTheEdge: Story = {
-  name: "A newer toast sits nearer the edge the list is against",
+export const NewestOnTopAndClearAllLast: Story = {
+  name: "The newest toast is at the top and Clear all at the bottom, at both edges",
   render: () => <App provider={{ placement: "bottom", mergeDuplicates: false }} />,
   play: async ({ canvasElement }) => {
     const raise = within(canvasElement).getByRole("button", { name: "Raise" });
@@ -128,7 +128,12 @@ export const NewerStackNearestTheEdge: Story = {
     await waitFor(() => expect(toastItems()).toHaveLength(2));
     await settled(toastItems()[1] as HTMLElement);
     const [older, newer] = toastItems() as [HTMLElement, HTMLElement];
-    await expect(newer.getBoundingClientRect().top).toBeGreaterThan(older.getBoundingClientRect().top);
+    await expect(newer.getBoundingClientRect().top).toBeLessThan(older.getBoundingClientRect().top);
+    // Clear all is below the oldest, at the very bottom, and the list is against the bottom edge
+    const clear = within(document.body).getByRole("button", { name: "Clear all" }).closest("li") as HTMLElement;
+    await settled(clear);
+    await expect(clear.getBoundingClientRect().top).toBeGreaterThanOrEqual(older.getBoundingClientRect().bottom);
+    await expect(Math.round(clear.getBoundingClientRect().bottom)).toBe(window.innerHeight - Math.round(rem()));
     // centred
     const centre = (element: HTMLElement) => element.getBoundingClientRect().left + element.getBoundingClientRect().width / 2;
     await expect(Math.abs(centre(newer) - window.innerWidth / 2)).toBeLessThan(1);
@@ -501,8 +506,8 @@ function NumberedApp({ provider, extra }: { provider?: Omit<ToastProviderProps, 
 }
 
 export const NeighboursGlideIntoTheGap: Story = {
-  name: "When a toast leaves, the ones beside it glide into its place instead of jumping",
-  render: () => <NumberedApp provider={{ duration: null, clearAll: false }} />,
+  name: "When a toast leaves, the ones below it glide up into its place instead of jumping",
+  render: () => <NumberedApp provider={{ duration: null, clearAll: false, placement: "top" }} />,
   play: async ({ canvasElement }) => {
     const raise = within(canvasElement).getByRole("button", { name: "Raise" });
     await userEvent.click(raise);
@@ -512,7 +517,7 @@ export const NeighboursGlideIntoTheGap: Story = {
     const [older, newer] = toastItems() as [HTMLElement, HTMLElement];
     const start = older.getBoundingClientRect().top;
     const room = newer.getBoundingClientRect().height + 12;
-    // the newer one is the lower one (the list is against the bottom): when it goes, the older one drops into its room
+    // the newer one is the top one (the list is against the top edge): when it goes, the older one moves up into its room
     within(newer).getByRole("button", { name: "Dismiss" }).click();
     const seen: number[] = [];
     for (let frame = 0; frame < 40; frame += 1) {
@@ -520,9 +525,9 @@ export const NeighboursGlideIntoTheGap: Story = {
       seen.push(older.getBoundingClientRect().top);
     }
     const end = seen[seen.length - 1] as number;
-    await expect(Math.round(end - start)).toBe(Math.round(room));
+    await expect(Math.round(start - end)).toBe(Math.round(room));
     // it was somewhere between at some frame: a jump would have gone from `start` straight to `end`
-    await expect(seen.some((top) => top > start + 1 && top < end - 1)).toBe(true);
+    await expect(seen.some((top) => top < start - 1 && top > end + 1)).toBe(true);
   },
 };
 
@@ -841,8 +846,95 @@ export const ListStaysTheList: Story = {
     await expect(list).toHaveAttribute("data-stack", "list");
     const f = front.getBoundingClientRect();
     const m = middle.getBoundingClientRect();
-    await expect(Math.abs(f.top - m.bottom - 12)).toBeLessThan(1.5);
+    // the newest is the top one: each older toast is one gap below it
+    await expect(Math.abs(m.top - f.bottom - 12)).toBeLessThan(1.5);
     await expect(Math.abs(oldest.getBoundingClientRect().width - f.width)).toBeLessThan(1.5);
     await expect(getComputedStyle(front).translate).toBe("none");
+  },
+};
+
+export const ClearAllIsAGhostButton: Story = {
+  name: "Clear all is a ghost button with little padding, on the page's surface with no border or shadow",
+  render: () => (
+    <>
+      <NumberedApp provider={{ duration: null }} />
+      {/* a real ghost button, to compare against */}
+      <Button variant="ghost" size="sm" data-testid="ghost-probe">
+        Probe
+      </Button>
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    const button = await within(document.body).findByRole("button", { name: "Clear all" });
+    const probe = getComputedStyle(within(canvasElement).getByTestId("ghost-probe"));
+    const bar = button.closest("li") as HTMLElement;
+    await settled(bar);
+    const bar_ = getComputedStyle(bar);
+    await expect(parseFloat(bar_.borderTopWidth)).toBe(0);
+    await expect(bar_.boxShadow).toBe("none");
+    const style = getComputedStyle(button);
+    // the ghost button's own colours, and the label is the small button's size
+    await expect(style.backgroundColor).toBe(probe.backgroundColor);
+    await expect(style.color).toBe(probe.color);
+    await expect(style.fontSize).toBe(probe.fontSize);
+    // little padding, and still at least 24 by 24
+    await expect(parseFloat(style.paddingTop)).toBeLessThanOrEqual(0.25 * rem() + 0.5);
+    await expect(parseFloat(style.paddingLeft)).toBeLessThanOrEqual(0.5 * rem() + 0.5);
+    const rect = button.getBoundingClientRect();
+    await expect(rect.height).toBeGreaterThanOrEqual(24);
+    await expect(rect.width).toBeGreaterThanOrEqual(24);
+  },
+};
+
+export const BottomListGrowsUpAndSettlesDown: Story = {
+  name: "At the bottom a new toast is added above the others, and when one leaves the ones above glide down",
+  render: () => <NumberedApp provider={{ duration: null, placement: "bottom-end" }} />,
+  play: async ({ canvasElement }) => {
+    const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+    await realMoveTo(raise);
+    await userEvent.click(raise);
+    await waitFor(() => expect(toastItems()).toHaveLength(1));
+    const [first] = toastItems() as [HTMLElement];
+    await settled(first);
+    const firstTop = first.getBoundingClientRect().top;
+    // a second toast is added above the first; Clear all comes in below it, and the first glides up by its room
+    await userEvent.click(raise);
+    const seenFirst: number[] = [];
+    for (let frame = 0; frame < 40; frame += 1) {
+      await nextFrame();
+      seenFirst.push(first.getBoundingClientRect().top);
+    }
+    await waitFor(() => expect(toastItems()).toHaveLength(2));
+    const second = toastItems()[1] as HTMLElement;
+    await settled(second);
+    await expect(second.getBoundingClientRect().bottom).toBeLessThanOrEqual(first.getBoundingClientRect().top);
+    // Clear all is below both, at the very bottom, a gap under the first
+    const clear = (await within(document.body).findByRole("button", { name: "Clear all" })).closest("li") as HTMLElement;
+    await settled(clear);
+    await expect(Math.abs(clear.getBoundingClientRect().top - first.getBoundingClientRect().bottom - 12)).toBeLessThan(1.5);
+    await expect(Math.round(clear.getBoundingClientRect().bottom)).toBe(window.innerHeight - Math.round(rem()));
+    // the first moved up by the bar's room, over several frames and not at once
+    let biggest = 0;
+    for (let index = 1; index < seenFirst.length; index += 1) {
+      biggest = Math.max(biggest, Math.abs((seenFirst[index] as number) - (seenFirst[index - 1] as number)));
+    }
+    await expect(firstTop - (seenFirst[seenFirst.length - 1] as number)).toBeGreaterThan(20);
+    await expect(biggest).toBeLessThan(0.6 * (firstTop - (seenFirst[seenFirst.length - 1] as number)));
+    // the oldest leaves, from the bottom: the one above glides down into its room, with no jump
+    const start = second.getBoundingClientRect().top;
+    // its room, and the room of Clear all, which goes with the second-to-last toast
+    const room = first.getBoundingClientRect().height + 12 + clear.getBoundingClientRect().height + 12;
+    within(first).getByRole("button", { name: "Dismiss" }).click();
+    const seen: number[] = [];
+    for (let frame = 0; frame < 60; frame += 1) {
+      await nextFrame();
+      seen.push(second.getBoundingClientRect().top);
+    }
+    const end = seen[seen.length - 1] as number;
+    await expect(Math.abs(Math.round(end - start) - Math.round(room))).toBeLessThanOrEqual(2);
+    await expect(seen.some((top) => top > start + 1 && top < end - 1)).toBe(true);
   },
 };

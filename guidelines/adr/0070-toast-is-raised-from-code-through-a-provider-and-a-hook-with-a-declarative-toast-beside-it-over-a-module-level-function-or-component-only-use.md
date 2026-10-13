@@ -1,6 +1,6 @@
 # 0070 — `Toast` is raised from code through a provider and a hook, with a declarative `Toast` beside it, over a module-level function or component-only use
 
-**Status:** Accepted · **Date:** 2026-10-12
+**Status:** Accepted, the order of the list superseded by [0073](./0073-toast-list-puts-the-newest-on-top-and-clear-all-at-the-bottom-at-every-edge-over-the-newest-against-the-edge.md) · **Date:** 2026-10-12
 
 ## Context
 Most components in this system are drawn where they are written. A toast is not: it is raised from an event, an effect or a settled request, shown in a region at the edge of the screen, queued, and gone by itself. `05-component-api-conventions.md` had no pattern for a component with an app-wide, imperative surface, so this is the first, and it constrains later ones. Four things had to be decided together: where the queue lives, how it is called, what it shows at once, and how long it stays.
