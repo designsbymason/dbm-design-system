@@ -218,6 +218,49 @@
   }
 }
 
+/* --- A fanned stack (`stack="fan"`). ---
+   Collapsed, the newest toast is in full at the edge and each older one is pulled onto it, peeking out by `--dbm-toast-stack-peek`
+   per step of depth and drawn `--dbm-toast-stack-scale-step` smaller, three layers at most. The pull is the individual
+   `translate` and `scale` properties, which compose with the `transform` the entrance, the swipe and the exit use, so
+   none of those is touched; the list's own layout stays as it is. The provider writes `--toast-depth` (0 to 2),
+   `--toast-fan-delta` (how far to the front toast's place) and `--toast-layer` on each toast. While the pointer is over the
+   toasts or focus is in them the region is `data-expanded` and every toast goes back to its place in the list. While one
+   is leaving the region is `data-settling`, and the transitions are off so the toasts follow the list as it reflows. */
+.viewport[data-stack="fan"] {
+  --toast-fan-sign: -1;
+}
+
+.viewport[data-stack="fan"][data-placement^="top"] {
+  --toast-fan-sign: 1;
+}
+
+.viewport[data-stack="fan"] .root {
+  transform-origin: 50% 100%;
+  transition:
+    translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    scale var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.viewport[data-stack="fan"][data-placement^="top"] .root {
+  transform-origin: 50% 0;
+}
+
+.viewport[data-stack="fan"]:not([data-expanded]) .root[data-state="open"] {
+  scale: calc(1 - var(--toast-depth, 0) * var(--dbm-toast-stack-scale-step));
+  translate: 0 calc(var(--toast-fan-delta, 0px) + var(--toast-depth, 0) * var(--dbm-toast-stack-peek) * var(--toast-fan-sign));
+  z-index: var(--toast-layer, 0);
+}
+
+.viewport[data-stack="fan"][data-settling] .root {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport[data-stack="fan"] .root {
+    transition: none;
+  }
+}
+
 /* --- One toast. --- */
 .root {
   align-items: flex-start;

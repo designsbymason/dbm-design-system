@@ -12,6 +12,16 @@ import type { ButtonProps } from "../../atoms/Button";
 export type ToastTone = "info" | "success" | "warning" | "danger" | "neutral";
 
 /**
+ * How the toasts sit in the region.
+ *
+ * - `"list"` (the default) — each toast in full, one under another.
+ * - `"fan"` — the newest toast in full at the edge with the older ones peeking out behind it, up to three layers,
+ *   spread out into the list while the pointer is over the toasts or focus is inside them. For an app whose toasts
+ *   would otherwise take a good share of a small screen.
+ */
+export type ToastStack = "list" | "fan";
+
+/**
  * How a toast is drawn, with the same names `Alert` uses for the same three treatments.
  *
  * - `"subtle"` (the default) — a soft tint of the tone's colour with a faint border.
@@ -247,6 +257,12 @@ export interface ToastProviderProps
    * @default 'bottom-end'
    */
   placement?: Responsive<ToastPlacement>;
+  /**
+   * How the toasts sit in the region — see {@link ToastStack}. A responsive map, mobile-first, gives a phone a fan and
+   * a desktop the list. Time is held and the stack is spread out while the toasts are being read, as it is in the list.
+   * @default 'list'
+   */
+  stack?: Responsive<ToastStack>;
   /**
    * The most toasts showing at once. Those past it wait, and appear as room is made, each starting its own time when
    * it appears.

@@ -8,6 +8,7 @@ import {
 } from "@dbm-design-system/icons";
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-design-system/primitives";
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import {
   createContext,
@@ -21,7 +22,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type { FocusEvent, MouseEvent, ReactNode, RefObject } from "react";
+import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
 import type { IconSize, IconTone } from "../../atoms/Icon";
@@ -45,6 +46,7 @@ import type {
   ToastProviderProps,
   ToastRole,
   ToastSize,
+  ToastStack,
   ToastTitleProps,
   ToastTone,
   Toaster,
@@ -603,6 +605,74 @@ function ToastEntryView({ entry }: { entry: ToastEntry }) {
   );
 }
 
+/** A CSS duration token (`"200ms"`, `"0.2s"`) as milliseconds, read from the element it is inherited by. */
+function tokenDuration(element: Element, token: string): number {
+  const raw = getComputedStyle(element).getPropertyValue(token).trim();
+  const value = parseFloat(raw);
+  if (Number.isNaN(value)) return 0;
+  return raw.endsWith("ms") ? value : value * 1000;
+}
+
+/**
+ * What a fanned stack needs from the toasts' real positions: each open toast's depth behind the front one, and how far
+ * it has to move to sit on it. Written as custom properties on the toasts (`--toast-depth`, `--toast-fan-delta`,
+ * `--toast-layer`), which the stylesheet turns into a `translate` and a `scale`, so the list's own layout, its exit
+ * collapse and the tab order are untouched. The front toast is the one nearest the edge the list is against, which is
+ * the last open one in the document, whichever way the list runs.
+ *
+ * It measures after every change to the list's children or to a toast's state, and on every frame while one is on its
+ * way out (the list is still reflowing as it collapses, and a transition would lag the positions it has to follow), when
+ * the region says it is settling so the stylesheet turns the transitions off.
+ */
+function useFanLayout(list: HTMLOListElement | null, enabled: boolean, atTop: boolean) {
+  useIsomorphicLayoutEffect(() => {
+    if (!list || !enabled) return undefined;
+    let frame = 0;
+    const measure = () => {
+      const items = Array.from(list.children).filter(
+        (node): node is HTMLElement => node instanceof HTMLElement && node.tagName === "LI" && !node.hasAttribute("data-clear-all"),
+      );
+      const open = items.filter((item) => item.getAttribute("data-state") === "open");
+      const front = open[open.length - 1];
+      if (front) {
+        const frontEdge = atTop ? front.offsetTop : front.offsetTop + front.offsetHeight;
+        open.forEach((item, index) => {
+          const depth = open.length - 1 - index;
+          const edge = atTop ? item.offsetTop : item.offsetTop + item.offsetHeight;
+          // At most three layers: a deeper one is drawn on the third's place.
+          item.style.setProperty("--toast-depth", String(Math.min(depth, 2)));
+          item.style.setProperty("--toast-fan-delta", `${frontEdge - edge}px`);
+          item.style.setProperty("--toast-layer", String(open.length - depth));
+        });
+      }
+      const leaving = items.some((item) => item.getAttribute("data-state") !== "open");
+      if (leaving) list.setAttribute("data-settling", "");
+      else list.removeAttribute("data-settling");
+      if (leaving) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    const mutations = new MutationObserver(() => {
+      cancelAnimationFrame(frame);
+      measure();
+    });
+    mutations.observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-state"] });
+    const sizes = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    Array.from(list.children).forEach((child) => sizes?.observe(child));
+    const watchNew = new MutationObserver(() => {
+      sizes?.disconnect();
+      Array.from(list.children).forEach((child) => sizes?.observe(child));
+    });
+    watchNew.observe(list, { childList: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      mutations.disconnect();
+      watchNew.disconnect();
+      sizes?.disconnect();
+      list.removeAttribute("data-settling");
+    };
+  }, [list, enabled, atTop]);
+}
+
 /**
  * The "Clear all" button, drawn once more than one toast is open. It is a toast of its own as far as Radix is concerned
  * (so it is in the region's tab order and F8 reaches it, which a plain button among the list's children would not be),
@@ -659,6 +729,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
     {
       children,
       placement = DEFAULT_PLACEMENT,
+      stack = "list" as Responsive<ToastStack>,
       limit = DEFAULT_LIMIT,
       duration = DEFAULT_DURATION,
       size = "md",
@@ -678,6 +749,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
     },
     ref,
   ) => {
+    const viewportRef = useRef<HTMLOListElement | null>(null);
     const [ownStore] = useState(() => new ToastStore());
     // A toaster made with `createToaster()` brings its own store, and is the api `useToast()` hands out.
     const givenStore = toaster ? toasterStores.get(toaster) : undefined;
@@ -712,24 +784,70 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
     // Focus. A toast never takes it, but a person can move into the region (the hotkey, Tab) and press its action;
     // when the toasts are gone by then, focus goes back to where they came from rather than dropping to the top of the
     // page. Worked out while focus is still there, since by the time it is gone there is nothing to ask.
-    const viewportRef = useRef<HTMLOListElement | null>(null);
     const focusWithin = useRef(false);
     const returnTarget = useRef<HTMLElement | null>(null);
-    const handleFocus = (event: FocusEvent<HTMLOListElement>) => {
-      const from = event.relatedTarget;
-      if (!focusWithin.current && from instanceof HTMLElement && from !== document.body && !event.currentTarget.contains(from)) {
-        returnTarget.current = from;
-      }
-      focusWithin.current = true;
-      onFocus?.(event);
-    };
-    const handleBlur = (event: FocusEvent<HTMLOListElement>) => {
-      // Focus moving somewhere outside. Focus leaving because the element was removed has no `relatedTarget`.
-      if (event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) {
-        focusWithin.current = false;
-      }
-      onBlur?.(event);
-    };
+    const resolvedStack = useResolvedResponsiveValue<ToastStack>(stack, "list");
+    const fan = resolvedStack === "fan";
+    // The person is reading the toasts (the pointer over them, or focus in them): the same condition that holds their
+    // time. A fan spreads out while it holds, and folds back a moment after it stops, so crossing the gap between two
+    // toasts doesn't make it flicker.
+    const [expanded, setExpanded] = useState(false);
+    // The list is drawn in a portal after the first render, so it is held as state for the layout hook to find.
+    const [listElement, setListElement] = useState<HTMLOListElement | null>(null);
+    useFanLayout(listElement, fan, resolvedPlacement.startsWith("top"));
+
+    // Native listeners on the list, not React's: the toasts are drawn into it through a portal, so their events bubble
+    // through the React tree to the provider and never pass through the list's own props.
+    useEffect(() => {
+      const list = listElement;
+      if (!list) return undefined;
+      // Spread at once when being read starts; folded back a moment (a motion duration) after both stop.
+      let hovering = false;
+      let focusing = false;
+      let timer = 0;
+      const settle = () => {
+        window.clearTimeout(timer);
+        if (hovering || focusing) setExpanded(true);
+        else timer = window.setTimeout(() => setExpanded(false), tokenDuration(list, "--dbm-motion-duration-base"));
+      };
+      const over = () => {
+        hovering = true;
+        settle();
+      };
+      const out = (event: PointerEvent) => {
+        if (event.relatedTarget instanceof Node && list.contains(event.relatedTarget)) return;
+        hovering = false;
+        settle();
+      };
+      const focusIn = (event: FocusEvent) => {
+        focusing = true;
+        settle();
+        const from = event.relatedTarget;
+        if (!focusWithin.current && from instanceof HTMLElement && from !== document.body && !list.contains(from)) {
+          returnTarget.current = from;
+        }
+        focusWithin.current = true;
+      };
+      const focusOut = (event: FocusEvent) => {
+        const next = event.relatedTarget;
+        if (next instanceof Node && list.contains(next)) return;
+        focusing = false;
+        settle();
+        // Focus moving somewhere outside. Focus leaving because the element was removed has no `relatedTarget`.
+        if (next instanceof Node) focusWithin.current = false;
+      };
+      list.addEventListener("pointerover", over);
+      list.addEventListener("pointerout", out);
+      list.addEventListener("focusin", focusIn);
+      list.addEventListener("focusout", focusOut);
+      return () => {
+        window.clearTimeout(timer);
+        list.removeEventListener("pointerover", over);
+        list.removeEventListener("pointerout", out);
+        list.removeEventListener("focusin", focusIn);
+        list.removeEventListener("focusout", focusOut);
+      };
+    }, [listElement]);
     const openCount = entries.filter((entry) => entry.open).length;
     const empty = entries.length === 0;
     useEffect(() => {
@@ -753,18 +871,20 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
           {visible.map((entry) => (
             <ToastEntryView key={entry.id} entry={entry} />
           ))}
-          {clearAll && <ToastClearAll show={openCount >= 2} />}
+          {clearAll && <ToastClearAll show={openCount >= 2 && (!fan || expanded)} />}
           <Portal container={container}>
             <ToastPrimitive.Viewport
               {...props}
-              ref={mergeRefs(ref, viewportRef)}
+              ref={mergeRefs(ref, viewportRef, setListElement)}
               label={labels.viewport}
               hotkey={hotkey}
               // After `...props`: the direction and the placement are the ones in effect, whatever a caller passes.
               dir={dir}
               data-placement={resolvedPlacement}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
+              data-stack={resolvedStack}
+              data-expanded={fan && expanded ? "" : undefined}
+              onFocus={onFocus}
+              onBlur={onBlur}
               className={cx(styles.viewport, className)}
             />
           </Portal>

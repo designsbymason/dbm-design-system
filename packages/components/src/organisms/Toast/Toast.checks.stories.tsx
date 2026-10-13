@@ -671,3 +671,178 @@ export const ToasterRaisesFromOutsideReact: Story = {
     await expect(item).toHaveTextContent("Raised before the app mounted");
   },
 };
+
+// A fan with three numbered toasts, each with an id of its own so one can be taken away from code.
+function FanApp({ provider }: { provider?: Omit<ToastProviderProps, "children"> }) {
+  return (
+    <Toast.Provider stack="fan" duration={null} {...provider}>
+      <FanButtons />
+    </Toast.Provider>
+  );
+}
+function FanButtons() {
+  const { toast, dismiss } = useToast();
+  const [count, setCount] = useState(0);
+  return (
+    <div style={{ padding: "var(--dbm-space-4)", display: "flex", gap: "var(--dbm-space-3)" }}>
+      <Button
+        onClick={() => {
+          const next = count + 1;
+          setCount(next);
+          toast({ id: `n${next}`, title: `Message ${next}`, description: "A line of detail." });
+        }}
+      >
+        Raise
+      </Button>
+      <Button variant="secondary" onClick={() => dismiss("n2")}>
+        Take away the second
+      </Button>
+    </div>
+  );
+}
+
+const raiseThree = async (canvasElement: HTMLElement) => {
+  const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+  // The real pointer stays where an earlier check left it, and a fan spreads out under it: put it on the page's button.
+  await realMoveTo(raise);
+  await userEvent.click(raise);
+  await userEvent.click(raise);
+  await userEvent.click(raise);
+  await waitFor(() => expect(toastItems()).toHaveLength(3));
+  await settled(toastItems()[2] as HTMLElement);
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  return raise;
+};
+const peek = () => 0.75 * rem();
+
+export const FanCollapsed: Story = {
+  name: "A collapsed fan shows the newest in full and the older ones peeking out behind it",
+  render: () => <FanApp />,
+  play: async ({ canvasElement }) => {
+    await raiseThree(canvasElement);
+    const [oldest, middle, front] = toastItems() as [HTMLElement, HTMLElement, HTMLElement];
+    const list = document.querySelector("ol[data-placement]") as HTMLElement;
+    await expect(list).toHaveAttribute("data-stack", "fan");
+    await expect(list).not.toHaveAttribute("data-expanded");
+    const f = front.getBoundingClientRect();
+    // the front one is where a single toast would be: one gutter in from the corner
+    await expect(Math.round(f.bottom)).toBe(window.innerHeight - Math.round(rem()));
+    for (const [item, depth] of [[middle, 1], [oldest, 2]] as const) {
+      const rect = item.getBoundingClientRect();
+      // each step back is one peek higher at the same bottom edge's origin, and a little narrower
+      await expect(Math.abs(rect.bottom - (f.bottom - depth * peek()))).toBeLessThan(1.5);
+      await expect(Math.abs(rect.width - f.width * (1 - depth * 0.04))).toBeLessThan(1.5);
+      await expect(getComputedStyle(item).zIndex).toBe(String(3 - depth));
+    }
+    // and the stack is about one toast tall, not three
+    await expect(f.top - oldest.getBoundingClientRect().top).toBeLessThan(2 * peek() + 2);
+  },
+};
+
+export const FanExpandsOnAPointerAndFoldsBack: Story = {
+  name: "A real pointer over the fan spreads it into the list, and leaving folds it back",
+  render: () => <FanApp />,
+  play: async ({ canvasElement }) => {
+    const raise = await raiseThree(canvasElement);
+    const list = document.querySelector("ol[data-placement]") as HTMLElement;
+    const [oldest, middle, front] = toastItems() as [HTMLElement, HTMLElement, HTMLElement];
+    const collapsedTop = oldest.getBoundingClientRect().top;
+    await realMoveTo(front);
+    await waitFor(() => expect(list).toHaveAttribute("data-expanded"));
+    // the toasts move to their places over a motion duration: wait for their transitions, not a guessed time
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    for (const item of [oldest, middle, front]) await settled(item);
+    const f = front.getBoundingClientRect();
+    const m = middle.getBoundingClientRect();
+    const o = oldest.getBoundingClientRect();
+    // the list: each in full, one gap (space-3) between them, all the same width
+    await expect(Math.abs(f.top - m.bottom - 12)).toBeLessThan(1.5);
+    await expect(Math.abs(m.top - o.bottom - 12)).toBeLessThan(1.5);
+    await expect(Math.abs(o.width - f.width)).toBeLessThan(1.5);
+    await expect(o.top).toBeLessThan(collapsedTop);
+    await realMoveTo(raise);
+    await waitFor(() => expect(list).not.toHaveAttribute("data-expanded"), { timeout: 3000 });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    for (const item of [oldest, middle, front]) await settled(item);
+    await expect(Math.abs(oldest.getBoundingClientRect().top - collapsedTop)).toBeLessThan(1.5);
+  },
+};
+
+export const FanExpandsOnFocusAndShowsClearAll: Story = {
+  name: "Focus in the fan spreads it out and brings in Clear all; collapsed, there is none",
+  render: () => <FanApp />,
+  play: async ({ canvasElement }) => {
+    const raise = await raiseThree(canvasElement);
+    const list = document.querySelector("ol[data-placement]") as HTMLElement;
+    await expect(within(document.body).queryByRole("button", { name: "Clear all" })).toBeNull();
+    raise.focus();
+    await pressKey("F8", "F8", 119);
+    await waitFor(() => expect(list).toHaveAttribute("data-expanded"));
+    await expect(await within(document.body).findByRole("button", { name: "Clear all" })).toBeInTheDocument();
+    // every toast is reached by Tab, as in the list
+    const seen = new Set<Element | null>();
+    for (let presses = 0; presses < 8; presses += 1) {
+      await pressKey("Tab", "Tab", 9);
+      seen.add(document.activeElement?.closest("li") ?? null);
+    }
+    await expect(toastItems().every((item) => seen.has(item))).toBe(true);
+  },
+};
+
+export const FanFromTheTop: Story = {
+  name: "At the top the fan grows downward from the edge",
+  render: () => <FanApp provider={{ placement: "top" }} />,
+  play: async ({ canvasElement }) => {
+    await raiseThree(canvasElement);
+    const [oldest, middle, front] = toastItems() as [HTMLElement, HTMLElement, HTMLElement];
+    const f = front.getBoundingClientRect();
+    await expect(Math.round(f.top)).toBe(Math.round(rem()));
+    await expect(Math.abs(middle.getBoundingClientRect().top - (f.top + peek()))).toBeLessThan(1.5);
+    await expect(Math.abs(oldest.getBoundingClientRect().top - (f.top + 2 * peek()))).toBeLessThan(1.5);
+  },
+};
+
+export const FanNeighboursDoNotJump: Story = {
+  name: "Taking one away from the middle of a fan does not make the others jump",
+  render: () => <FanApp />,
+  play: async ({ canvasElement }) => {
+    await raiseThree(canvasElement);
+    const [oldest, , front] = toastItems() as [HTMLElement, HTMLElement, HTMLElement];
+    const height = front.getBoundingClientRect().height;
+    const take = within(canvasElement).getByRole("button", { name: "Take away the second" });
+    const before = oldest.getBoundingClientRect().top;
+    take.click();
+    const seen: number[] = [];
+    for (let frame = 0; frame < 60; frame += 1) {
+      await nextFrame();
+      seen.push(oldest.getBoundingClientRect().top);
+    }
+    // no single frame moves it by anything like a toast's height (it is a short, smooth move of one peek)
+    let biggest = Math.abs((seen[0] as number) - before);
+    for (let index = 1; index < seen.length; index += 1) {
+      biggest = Math.max(biggest, Math.abs((seen[index] as number) - (seen[index - 1] as number)));
+    }
+    await expect(biggest).toBeLessThan(height / 2);
+    // it ends one layer back, now that there are two toasts
+    await waitFor(() => expect(toastItems()).toHaveLength(2));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const f = (toastItems()[1] as HTMLElement).getBoundingClientRect();
+    await expect(Math.abs(oldest.getBoundingClientRect().top + oldest.getBoundingClientRect().height - (f.bottom - peek()))).toBeLessThan(1.5);
+  },
+};
+
+export const ListStaysTheList: Story = {
+  name: "Without stack the toasts are the list: nothing is pulled together",
+  render: () => <FanApp provider={{ stack: "list" }} />,
+  play: async ({ canvasElement }) => {
+    await raiseThree(canvasElement);
+    const [oldest, middle, front] = toastItems() as [HTMLElement, HTMLElement, HTMLElement];
+    const list = document.querySelector("ol[data-placement]") as HTMLElement;
+    await expect(list).toHaveAttribute("data-stack", "list");
+    const f = front.getBoundingClientRect();
+    const m = middle.getBoundingClientRect();
+    await expect(Math.abs(f.top - m.bottom - 12)).toBeLessThan(1.5);
+    await expect(Math.abs(oldest.getBoundingClientRect().width - f.width)).toBeLessThan(1.5);
+    await expect(getComputedStyle(front).translate).toBe("none");
+  },
+};

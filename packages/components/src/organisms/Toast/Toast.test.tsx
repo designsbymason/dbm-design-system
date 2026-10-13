@@ -951,3 +951,106 @@ describe("createToaster()", () => {
     expect(toasts()).toHaveLength(0);
   });
 });
+
+describe("a fanned stack", () => {
+  const list = () => document.querySelector("ol[data-placement]") as HTMLElement;
+  const raise = (count: number) =>
+    act(() => {
+      for (let index = 1; index <= count; index += 1) api.toast({ title: `Message ${index}` });
+    });
+
+  it("is the list unless it is asked for, and takes a responsive map", () => {
+    const { unmount } = render(<Provider />);
+    expect(list()).toHaveAttribute("data-stack", "list");
+    unmount();
+    const fan = render(<Provider stack="fan" />);
+    expect(list()).toHaveAttribute("data-stack", "fan");
+    fan.unmount();
+    render(<Provider stack={{ base: "fan", md: "list" }} />);
+    expect(list()).toHaveAttribute("data-stack", "fan");
+  });
+
+  it("gives each open toast its depth behind the newest, at most two layers back, and a layer to sit on", async () => {
+    render(<Provider stack="fan" limit={5} />);
+    raise(4);
+    // measured as the list changes, from what the browser has laid out
+    await waitFor(() => expect(toasts()[3]?.style.getPropertyValue("--toast-depth")).toBe("0"));
+    const depths = toasts()
+      .filter((item) => !item.hasAttribute("data-clear-all"))
+      .map((item) => item.style.getPropertyValue("--toast-depth"));
+    expect(depths).toEqual(["2", "2", "1", "0"]);
+    const layers = toasts().map((item) => item.style.getPropertyValue("--toast-layer"));
+    expect(layers).toEqual(["1", "2", "3", "4"]);
+  });
+
+  it("is spread out while the pointer is over the toasts, and folds back after it leaves", () => {
+    vi.useFakeTimers();
+    render(<Provider stack="fan" limit={5} />);
+    raise(3);
+    expect(list()).not.toHaveAttribute("data-expanded");
+    fireEvent.pointerOver(toasts()[0] as HTMLElement);
+    expect(list()).toHaveAttribute("data-expanded");
+    fireEvent.pointerOut(toasts()[0] as HTMLElement, { relatedTarget: document.body });
+    expect(list()).toHaveAttribute("data-expanded");
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(list()).not.toHaveAttribute("data-expanded");
+  });
+
+  it("stays spread out while the pointer only moves between its toasts", () => {
+    vi.useFakeTimers();
+    render(<Provider stack="fan" limit={5} />);
+    raise(2);
+    const [first, second] = toasts() as [HTMLElement, HTMLElement];
+    fireEvent.pointerOver(first);
+    fireEvent.pointerOut(first, { relatedTarget: second });
+    fireEvent.pointerOver(second);
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(list()).toHaveAttribute("data-expanded");
+  });
+
+  it("is spread out while focus is inside it", () => {
+    vi.useFakeTimers();
+    render(<Provider stack="fan" limit={5} />);
+    raise(2);
+    act(() => {
+      screen.getAllByRole("button", { name: "Dismiss" })[0]?.focus();
+    });
+    expect(list()).toHaveAttribute("data-expanded");
+    act(() => {
+      (document.activeElement as HTMLElement).blur();
+      vi.advanceTimersByTime(300);
+    });
+    expect(list()).not.toHaveAttribute("data-expanded");
+  });
+
+  it("draws Clear all only while it is spread out", () => {
+    vi.useFakeTimers();
+    render(<Provider stack="fan" limit={5} />);
+    raise(2);
+    expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument();
+    fireEvent.pointerOver(toasts()[0] as HTMLElement);
+    expect(screen.getByRole("button", { name: "Clear all" })).toBeInTheDocument();
+  });
+
+  it("changes nothing in the list: no expansion, and Clear all is there at once", () => {
+    render(<Provider limit={5} />);
+    raise(2);
+    fireEvent.pointerOver(toasts()[0] as HTMLElement);
+    expect(list()).not.toHaveAttribute("data-expanded");
+    expect(screen.getByRole("button", { name: "Clear all" })).toBeInTheDocument();
+  });
+
+  it("keeps every toast in the page's order and tab order", () => {
+    render(<Provider stack="fan" limit={5} />);
+    raise(3);
+    const titles = toasts()
+      .filter((item) => !item.hasAttribute("data-clear-all"))
+      .map((item) => item.textContent);
+    expect(titles).toEqual([expect.stringContaining("Message 1"), expect.stringContaining("Message 2"), expect.stringContaining("Message 3")]);
+    for (const item of toasts()) expect(item).toHaveAttribute("tabindex", "0");
+  });
+});

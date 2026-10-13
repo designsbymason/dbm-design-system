@@ -22,6 +22,13 @@ const meta: Meta<typeof Toast.Provider> = {
         "The corner or edge the toasts stack against. start and end are logical: the left and right in left-to-right text, swapped in right-to-left. A mobile-first map such as { base: \"bottom\", md: \"top-end\" } switches it at a breakpoint. Below the sm breakpoint a toast spans the screen less a gutter, so only top versus bottom matters there.",
       table: { defaultValue: { summary: '"bottom-end"' } },
     },
+    stack: {
+      control: "select",
+      options: ["list", "fan"],
+      description:
+        "How the toasts sit in the region. list shows each in full, one under another; fan shows the newest in full with the older ones peeking out behind it, up to three layers, spread out into the list while the pointer is over the toasts or focus is inside them and folded back a moment after both go. A mobile-first map such as { base: \"fan\", md: \"list\" } switches it at a breakpoint.",
+      table: { defaultValue: { summary: '"list"' } },
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],

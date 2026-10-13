@@ -8,7 +8,7 @@
 // A snippet is JSX only, so it can't call a hook: the `useToast()` line is a comment above the handler that uses it,
 // and `toast` is the function it returns.
 
-import type { ToastPlacement, ToastSize, ToastTone, ToastVariant } from "./Toast.types";
+import type { ToastPlacement, ToastSize, ToastStack, ToastTone, ToastVariant } from "./Toast.types";
 
 const hook = `{/* const { toast } = useToast(); — in a component rendered inside the provider */}`;
 
@@ -89,6 +89,11 @@ ${provider("limit={2}", button("Send five", "sendFive()"))}`,
   Sync
 </Button>`,
 
+  fan: `{/* stack: "list" (default) | "fan". The newest toast in full at the edge, the older ones peeking out behind it,
+    three layers at most; the pointer over the toasts or focus in them spreads it into the list, and it folds back
+    a moment after both go. A mobile-first map, like placement: a fan on a phone, the list from md. */}
+<Toast.Provider stack={{ base: "fan", md: "list" }}>{/* your app */}</Toast.Provider>`,
+
   promiseAction: `${hook}
 {/* onClick may return a promise: the toast stays open with a spinner on the button (past its time, and against
     Escape, a swipe and the dismiss button) until it resolves, and then closes. A rejection keeps it open and
@@ -160,6 +165,7 @@ export interface ToastPlaygroundSnippetArgs {
   /** Milliseconds, `null` for until dismissed, or the Playground control's option key `"Until dismissed"` / `"never"`. */
   duration?: number | null | "never" | "Until dismissed";
   placement?: ToastPlacement;
+  stack?: ToastStack;
   limit?: number;
   clearAll?: boolean;
   mergeDuplicates?: boolean;
@@ -179,6 +185,7 @@ const iconNames: Record<string, string> = { Star: "StarIcon", Heart: "HeartIcon"
 export function toastPlaygroundSnippet(args: ToastPlaygroundSnippetArgs): string {
   const providerAttributes: string[] = [];
   if (args.placement && args.placement !== "bottom-end") providerAttributes.push(`placement="${args.placement}"`);
+  if (args.stack === "fan") providerAttributes.push('stack="fan"');
   if (args.size && args.size !== "md") providerAttributes.push(`size="${args.size}"`);
   if (args.variant && args.variant !== "subtle") providerAttributes.push(`variant="${args.variant}"`);
   if (args.limit !== undefined && args.limit !== 3) providerAttributes.push(`limit={${args.limit}}`);

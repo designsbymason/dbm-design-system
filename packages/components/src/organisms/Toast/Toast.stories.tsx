@@ -13,6 +13,7 @@ import type {
   ToastPlacement,
   ToastRole,
   ToastSize,
+  ToastStack,
   ToastTone,
   ToastVariant,
 } from "./Toast.types";
@@ -43,6 +44,7 @@ interface PlaygroundArgs {
   /** Milliseconds, or `null` for until it is dismissed (the Playground maps its "Until dismissed" choice to it). */
   duration: number | null;
   placement: ToastPlacement;
+  stack: ToastStack;
   limit: number;
   clearAll: boolean;
   mergeDuplicates: boolean;
@@ -92,6 +94,7 @@ const noControls = {
   toastId: { control: false },
   duration: { control: false },
   placement: { control: false },
+  stack: { control: false },
   limit: { control: false },
   clearAll: { control: false },
   mergeDuplicates: { control: false },
@@ -189,6 +192,13 @@ const meta: Meta<PlaygroundArgs> = {
         "The corner or edge the toasts stack against. start and end are logical: the left and right in left-to-right text, swapped in right-to-left. A mobile-first map switches it at a breakpoint.",
       table: { defaultValue: { summary: '"bottom-end"' } },
     },
+    stack: {
+      control: "select",
+      options: ["list", "fan"],
+      description:
+        "How the toasts sit in the region. list shows each in full, one under another; fan shows the newest in full with the older ones peeking out behind it, spread out into the list while the pointer is over the toasts or focus is inside them. A mobile-first map switches it at a breakpoint. Raise a few to see it.",
+      table: { defaultValue: { summary: '"list"' } },
+    },
     limit: {
       control: { type: "number", min: 1, max: 6 },
       description: "The most toasts showing at once. The rest wait, and each starts its own time when it appears.",
@@ -260,6 +270,7 @@ const meta: Meta<PlaygroundArgs> = {
     toastId: "",
     duration: 5000,
     placement: "bottom-end",
+    stack: "list",
     limit: 3,
     clearAll: true,
     mergeDuplicates: true,
@@ -278,6 +289,7 @@ const meta: Meta<PlaygroundArgs> = {
         <Toast.Provider
           container={container}
           placement={args.placement}
+          stack={args.stack}
           limit={args.limit}
           duration={args.duration}
           size={args.size}
@@ -600,6 +612,45 @@ export const Updating: Story = {
       )}
     </ToastStage>
   ),
+};
+
+function FanStory({ container }: { container: HTMLElement | null }) {
+  return (
+    <Toast.Provider container={container} stack="fan" duration={null} limit={4}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-3)", justifyContent: "center" }}>
+        <FanRaise />
+      </div>
+    </Toast.Provider>
+  );
+}
+
+function FanRaise() {
+  const { toast, dismissAll } = useToast();
+  const [count, setCount] = useState(0);
+  return (
+    <>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          const next = count + 1;
+          setCount(next);
+          toast({ tone: "info", title: `Message ${next}`, description: "A line of detail." });
+        }}
+      >
+        Raise a toast
+      </Button>
+      <Button variant="tertiary" onClick={() => dismissAll()}>
+        Clear
+      </Button>
+    </>
+  );
+}
+
+export const Fan: Story = {
+  name: "A fanned stack",
+  parameters: { docs: { source: { code: toastSnippets.fan } } },
+  argTypes: { ...noControls },
+  render: () => <ToastStage minBlockSize="24rem">{(container) => <FanStory container={container} />}</ToastStage>,
 };
 
 function PromiseActionButton() {

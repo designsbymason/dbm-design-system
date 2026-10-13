@@ -15,6 +15,7 @@ export type {
   ToastProviderProps,
   ToastRole,
   ToastSize,
+  ToastStack,
   ToastTitleProps,
   Toaster,
   ToastTone,

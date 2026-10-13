@@ -24,6 +24,7 @@ export const playgroundOrder = [
   "toastId",
   "duration",
   "placement",
+  "stack",
   "limit",
   "clearAll",
   "mergeDuplicates",
@@ -35,6 +36,7 @@ export const playgroundOrder = [
 export const providerPropOrder = [
   "children",
   "placement",
+  "stack",
   "size",
   "variant",
   "limit",
@@ -239,6 +241,16 @@ being offline, and not for something that happened once.
 
 <Canvas of={ToastStories.Persistent} />
 
+### A fanned stack
+
+`stack="fan"` shows the newest toast in full at the edge with the older ones peeking out behind it, up to
+three layers, so a handful of toasts take about one toast's height. The pointer over the toasts, or focus
+in them, spreads it into the list (and holds the time, as it does in the list); it folds back a moment
+after both go. A mobile-first map such as `{ base: "fan", md: "list" }` gives a phone the fan and a
+desktop the list. "Clear all" is drawn only while it is spread out.
+
+<Canvas of={ToastStories.Fan} />
+
 ### A limit, with the rest waiting
 
 `limit` is the most showing at once. The rest wait and appear as room is made, each starting its own
@@ -331,6 +343,8 @@ When the message belongs to your own state, draw it as parts with `open` and `on
   since the person's eyes are on the thing that moved.
 - Report the outcome with `toast.promise()` or `update()` rather than a second toast, so one piece of
   work is one message.
+- A fan is for a small screen, or an app whose toasts are short. Keep the list for toasts that carry an
+  action or a sentence of detail, since an older toast is only half visible until the stack is spread out.
 - Hovering one toast holds the time of all of them, so the stack doesn't change under a pointer that is
   moving between them. Leaving the toasts (and focus leaving them) lets every time carry on.
 - A message that is raised again from a button pressed twice becomes one toast with a count. Give a toast
@@ -360,6 +374,9 @@ When the message belongs to your own state, draw it as parts with `open` and `on
   When the toasts are gone, focus goes back to where it was before it entered the region, if it is still
   there.
 - A toast never takes focus when it appears, and never moves it when it closes while focus is elsewhere.
+- In a fan the toasts are in the same document and tab order as in the list, and focus in the region
+  spreads it out, so a toast that has focus is whole and its buttons are reachable. A toast behind
+  another still announces itself when it appears.
 - "Clear all" is in the same tab order as the toasts, so F8 and `Tab` reach it; it is announced when it
   appears with the second toast, and a screen reader reads a replaced toast's new text again.
 - While an action's promise runs, its button is marked `aria-busy` and `aria-disabled` and stays
@@ -466,6 +483,8 @@ tone and variant match.
 <TokenRow token="space.0" usage="the region's safe-area fallback" />
 <TokenRow token="space.1 / space.2 / space.3 / space.4 / space.5 / space.6" usage="padding, the gap between the icon and the text, between toasts (space.3) and around the region (space.4); the dismiss button's minimum size (space.6)" />
 <TokenRow token="toast.width" usage="the width of a toast on a screen wide enough for a corner" />
+<TokenRow token="toast.stack.peek" usage="how far each older toast shows beyond the one in front, in a collapsed fan" />
+<TokenRow token="toast.stack.scale-step" usage="how much smaller each older toast is drawn, per step of depth, in a collapsed fan" />
 <TokenRow token="radius.md" usage="the toast's corners" />
 <TokenRow token="radius.sm" usage="the toast's focus ring" />
 <TokenRow token="radius.full" usage="the dismiss button" />
