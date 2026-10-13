@@ -20,6 +20,25 @@ const meta: Meta<typeof Toast.Action> = {
         "How prominent it is, using the names Button uses for the same three treatments. How each looks depends on the toast's tone and variant, so that it always reads against it.",
       table: { defaultValue: { summary: '"primary"' } },
     },
+    leadingIcon: {
+      control: false,
+      description:
+        "An icon before the label, a component reference from @dbm-design-system/icons, not a string name. Takes the label's colour.",
+    },
+    trailingIcon: {
+      control: false,
+      description: "An icon after the label, a component reference from @dbm-design-system/icons. Takes the label's colour.",
+    },
+    rounded: {
+      control: "boolean",
+      description: "Draws it fully round-ended, like a pill.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    fullWidth: {
+      control: "boolean",
+      description: "Stretches it to the full width of its container.",
+      table: { defaultValue: { summary: "false" } },
+    },
     onClick: {
       control: false,
       description:
@@ -35,11 +54,32 @@ const meta: Meta<typeof Toast.Action> = {
       description: "Renders the action onto your own single child element instead of a button, a link to the page it belongs to, say.",
       table: { defaultValue: { summary: "false" } },
     },
-    disabled: {
+    isLoading: {
       control: "boolean",
-      description: "Disables it, as Button does: it stays focusable and does nothing.",
+      description:
+        "Shows a spinner in place of the icons and disables the action while true, as Button does. A promise returned from onClick holds the toast with its own spinner and does not need it.",
       table: { defaultValue: { summary: "false" } },
     },
+    loadingText: {
+      control: "text",
+      description: "Replaces the label while isLoading is true.",
+    },
+    disabled: {
+      control: "boolean",
+      description: "Disables the action: it is dimmed, and cannot be activated.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    type: {
+      control: "select",
+      options: ["button", "submit", "reset"],
+      description: "The native button type.",
+      table: { defaultValue: { summary: '"button"' } },
+    },
+    "aria-label": {
+      control: "text",
+      description: "Accessible name override, for an action whose visible content isn't readable text on its own.",
+    },
+    "aria-labelledby": { control: false, description: "The id of an element that labels this action." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
     id: { control: false, description: "Standard DOM id." },

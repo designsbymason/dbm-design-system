@@ -22,18 +22,6 @@ const meta: Meta<typeof Toast.Provider> = {
         "The corner or edge the toasts stack against. start and end are logical: the left and right in left-to-right text, swapped in right-to-left. A mobile-first map such as { base: \"bottom\", md: \"top-end\" } switches it at a breakpoint. Below the sm breakpoint a toast spans the screen less a gutter, so only top versus bottom matters there.",
       table: { defaultValue: { summary: '"bottom-end"' } },
     },
-    limit: {
-      control: "number",
-      description:
-        "The most toasts showing at once. Those past it wait, and appear as room is made, each starting its own time when it appears.",
-      table: { defaultValue: { summary: "3" } },
-    },
-    duration: {
-      control: false,
-      description:
-        "How long a toast stays, in milliseconds, unless it says otherwise. null keeps toasts until they are dismissed. Paused while the pointer is over the toasts or focus is inside them, and while the window is in the background.",
-      table: { defaultValue: { summary: "5000" } },
-    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -46,6 +34,18 @@ const meta: Meta<typeof Toast.Provider> = {
       description: "How every toast is drawn, unless one says otherwise.",
       table: { defaultValue: { summary: '"subtle"' } },
     },
+    limit: {
+      control: "number",
+      description:
+        "The most toasts showing at once. Those past it wait, and appear as room is made, each starting its own time when it appears.",
+      table: { defaultValue: { summary: "3" } },
+    },
+    duration: {
+      control: false,
+      description:
+        "How long a toast stays, in milliseconds, unless it says otherwise. null keeps toasts until they are dismissed. Paused while the pointer is over the toasts or focus is inside them, and while the window is in the background.",
+      table: { defaultValue: { summary: "5000" } },
+    },
     clearAll: {
       control: "boolean",
       description:
@@ -55,18 +55,8 @@ const meta: Meta<typeof Toast.Provider> = {
     mergeDuplicates: {
       control: "boolean",
       description:
-        "Raising a plain message again while it is still showing (the same tone, title and description, with no id, no action and no callbacks) shows it once, with a count, and starts its time again, instead of stacking copies. A toast with an action or a callback is never merged.",
+        "Raising a plain message again while it is still showing (the same tone, title and description, with no id) shows it once, with a count, and starts its time again, instead of stacking copies. An action and callbacks must be the very same functions to merge; a handler written inline at each call is a different function and keeps the toasts apart.",
       table: { defaultValue: { summary: "true" } },
-    },
-    formatNumber: {
-      control: false,
-      description:
-        "Writes the numbers the toasts show: the count of a repeated message. Defaults to String, never to the browser's locale.",
-    },
-    toaster: {
-      control: false,
-      description:
-        "A queue made with createToaster(), so toasts can be raised from outside React (an API client, a service module). The provider makes its own when left out. One provider per toaster.",
     },
     hotkey: {
       control: false,
@@ -81,15 +71,29 @@ const meta: Meta<typeof Toast.Provider> = {
         "Text direction, which sets which way a swipe closes a toast. Left to right unless told otherwise, and not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
-    container: {
+    formatNumber: {
       control: false,
       description:
-        "The element the toasts' region is drawn into: the page's body when left out. For a demo that has to stay inside a box, give it an element that is a containing block for position: fixed.",
+        "Writes the numbers the toasts show: the count of a repeated message. Defaults to String, never to the browser's locale.",
     },
     labels: {
       control: false,
       description:
         "The text the component supplies itself, each part replaceable: dismiss (the dismiss button's name), viewport (the region's name, {hotkey} replaced by the shortcut), notification (read before each toast), clearAll (the Clear all button) and repeated (a function of the plain count, written with formatNumber by default).",
+    },
+    toaster: {
+      control: false,
+      description:
+        "A queue made with createToaster(), so toasts can be raised from outside React (an API client, a service module). The provider makes its own when left out. One provider per toaster.",
+    },
+    container: {
+      control: false,
+      description:
+        "The element the toasts' region is drawn into: the page's body when left out. For a demo that has to stay inside a box, give it an element that is a containing block for position: fixed.",
+    },
+    id: {
+      control: false,
+      description: "Standard DOM id, on the list the toasts are in.",
     },
     className: {
       control: false,
@@ -98,10 +102,6 @@ const meta: Meta<typeof Toast.Provider> = {
     style: {
       control: false,
       description: "Inline styles, merged onto the component's own internal styles.",
-    },
-    id: {
-      control: false,
-      description: "Standard DOM id, on the list the toasts are in.",
     },
     "data-testid": {
       control: false,

@@ -111,7 +111,7 @@ ${provider("limit={2}", button("Send five", "sendFive()"))}`,
 
   merged: `${hook}
 {/* The same plain message raised again while it is showing is one toast with a count, and its time starts
-    again. A message with an id, an action or a callback is never merged. */}
+    again. A message with an id never merges, nor does one whose action or callbacks are different functions. */}
 <Button onClick={() => toast({ tone: "neutral", title: "Link copied" })}>Copy link</Button>
 
 {/* Turn it off for every toast */}
@@ -142,22 +142,35 @@ ${provider('dir="rtl" placement="bottom-start"', button("حفظ", 'toast({ tone:
 
 /** The Playground's live controls, as far as the snippet cares. */
 export interface ToastPlaygroundSnippetArgs {
-  placement?: ToastPlacement;
-  limit?: number;
-  /** Milliseconds, `null` for until dismissed, or the Playground control's option key `"never"`. */
-  duration?: number | null | "never";
-  size?: ToastSize;
-  variant?: ToastVariant;
-  dir?: "ltr" | "rtl";
-  tone?: ToastTone;
   title?: string;
   description?: string;
-  showAction?: boolean;
-  dismissible?: boolean;
+  tone?: ToastTone;
+  variant?: ToastVariant;
+  size?: ToastSize;
+  /** `false`, a component, or the Playground control's option key (`"Default"`, `"None"`, `"Star"`, `"Heart"`). */
+  icon?: unknown;
   loading?: boolean;
+  showAction?: boolean;
+  actionVariant?: "primary" | "secondary" | "tertiary";
+  dismissible?: boolean;
+  /** `"alert"`, `"status"`, or the Playground control's `"Default"` (the tone's own). */
+  role?: "alert" | "status" | "Default";
+  /** The toast's own identifier (the `id` option), from the Playground's `toastId` control. */
+  toastId?: string;
+  /** Milliseconds, `null` for until dismissed, or the Playground control's option key `"Until dismissed"` / `"never"`. */
+  duration?: number | null | "never" | "Until dismissed";
+  placement?: ToastPlacement;
+  limit?: number;
+  clearAll?: boolean;
+  mergeDuplicates?: boolean;
+  /** The keys as an array, or the Playground control's option key (`"F8"`, `"Alt + T"`). */
+  hotkey?: string[] | "F8" | "Alt + T";
+  dir?: "ltr" | "rtl";
 }
 
 const quoteText = (value: string) => JSON.stringify(value);
+
+const iconNames: Record<string, string> = { Star: "StarIcon", Heart: "HeartIcon" };
 
 /**
  * The Playground's snippet, built from its current controls: only the props that differ from their defaults, around a
@@ -166,25 +179,47 @@ const quoteText = (value: string) => JSON.stringify(value);
 export function toastPlaygroundSnippet(args: ToastPlaygroundSnippetArgs): string {
   const providerAttributes: string[] = [];
   if (args.placement && args.placement !== "bottom-end") providerAttributes.push(`placement="${args.placement}"`);
-  if (args.limit !== undefined && args.limit !== 3) providerAttributes.push(`limit={${args.limit}}`);
-  // The Playground's select hands over its option key, not the mapped value.
-  if (args.duration === null || args.duration === "never") providerAttributes.push("duration={null}");
-  else if (args.duration !== undefined && args.duration !== 5000) providerAttributes.push(`duration={${args.duration}}`);
   if (args.size && args.size !== "md") providerAttributes.push(`size="${args.size}"`);
   if (args.variant && args.variant !== "subtle") providerAttributes.push(`variant="${args.variant}"`);
+  if (args.limit !== undefined && args.limit !== 3) providerAttributes.push(`limit={${args.limit}}`);
+  // The Playground's select hands over its option key, not the mapped value.
+  if (args.duration === null || args.duration === "never" || args.duration === "Until dismissed") providerAttributes.push("duration={null}");
+  else if (args.duration !== undefined && args.duration !== 5000) providerAttributes.push(`duration={${args.duration}}`);
+  if (args.clearAll === false) providerAttributes.push("clearAll={false}");
+  if (args.mergeDuplicates === false) providerAttributes.push("mergeDuplicates={false}");
+  if (args.hotkey === "Alt + T" || (Array.isArray(args.hotkey) && args.hotkey.join("+") === "altKey+KeyT")) {
+    providerAttributes.push('hotkey={["altKey", "KeyT"]}');
+  }
   if (args.dir === "rtl") providerAttributes.push('dir="rtl"');
 
+  // A custom icon is written by name, from the control's option key or from the component it resolved to.
+  const iconKey =
+    typeof args.icon === "string"
+      ? args.icon
+      : args.icon === false
+        ? "None"
+        : args.icon === undefined
+          ? "Default"
+          : "custom";
+  const iconName = iconNames[iconKey];
+
   const fields: string[] = [];
-  if (args.tone && args.tone !== "info") fields.push(`tone: "${args.tone}"`);
-  if (args.loading) fields.push("loading: true");
+  if (args.toastId) fields.push(`id: ${quoteText(args.toastId)}`);
   if (args.title) fields.push(`title: ${quoteText(args.title)}`);
   if (args.description) fields.push(`description: ${quoteText(args.description)}`);
+  if (args.tone && args.tone !== "info") fields.push(`tone: "${args.tone}"`);
+  if (iconKey === "None") fields.push("icon: false");
+  else if (iconName) fields.push(`icon: ${iconName}`);
+  if (args.loading) fields.push("loading: true");
   if (args.showAction) {
-    fields.push('action: { label: "Undo", altText: "Undo from the Edit menu", onClick: undo }');
+    const variant = args.actionVariant && args.actionVariant !== "primary" ? `, variant: "${args.actionVariant}"` : "";
+    fields.push(`action: { label: "Undo", altText: "Undo from the Edit menu", onClick: undo${variant} }`);
   }
   if (args.dismissible === false) fields.push("dismissible: false");
+  if (args.role === "alert" || args.role === "status") fields.push(`role: "${args.role}"`);
 
   const call = fields.length > 0 ? `toast({ ${fields.join(", ")} })` : `toast({ title: "Saved" })`;
-  return `${hook}
+  const icon = iconName ? `{/* ${iconName} comes from @dbm-design-system/icons */}\n` : "";
+  return `${icon}${hook}
 ${provider(providerAttributes.join(" "), `  <Button onClick={() => ${call}}>Show toast</Button>`)}`;
 }

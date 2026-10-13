@@ -1,4 +1,4 @@
-import type { ToastOpenChangeReason, ToastOptions } from "./Toast.types";
+import type { ToastActionOptions, ToastOpenChangeReason, ToastOptions } from "./Toast.types";
 
 /** One toast the provider holds: what it was asked to show, and whether it is open or on its way out. */
 export interface ToastEntry {
@@ -22,22 +22,32 @@ type Listener = () => void;
 const isPlainText = (value: unknown) => value === undefined || typeof value === "string" || typeof value === "number";
 
 /**
- * A message that can be told from another by what it says: plain text, no action, no callbacks (a second call's
- * would be lost in a merge), no id of its own, and not a loading state that something else will update.
+ * A message that can be told from another by what it says: plain text, no id of its own, and not a loading state
+ * that something else will update.
  */
 function isMergeable(options: ToastOptions): boolean {
-  return (
-    options.id === undefined &&
-    options.action === undefined &&
-    options.onOpenChange === undefined &&
-    options.onOpenChangeComplete === undefined &&
-    !options.loading &&
-    isPlainText(options.title) &&
-    isPlainText(options.description)
-  );
+  return options.id === undefined && !options.loading && isPlainText(options.title) && isPlainText(options.description);
 }
 
+const sameAction = (a: ToastActionOptions | undefined, b: ToastActionOptions | undefined) =>
+  a === b ||
+  (a !== undefined &&
+    b !== undefined &&
+    a.label === b.label &&
+    a.altText === b.altText &&
+    a.variant === b.variant &&
+    a.onClick === b.onClick &&
+    a.onError === b.onError);
+
+/**
+ * Whether two calls mean the same toast. Functions are compared by identity: a second call's handler would be lost in
+ * a merge, so two toasts merge only when theirs are the very same functions (a handler declared once and reused),
+ * and an inline arrow written at each call is a different function and never merges.
+ */
 const sameMessage = (a: ToastOptions, b: ToastOptions) =>
+  sameAction(a.action, b.action) &&
+  a.onOpenChange === b.onOpenChange &&
+  a.onOpenChangeComplete === b.onOpenChangeComplete &&
   a.title === b.title &&
   a.description === b.description &&
   a.tone === b.tone &&

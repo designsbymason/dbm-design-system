@@ -1,11 +1,14 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
+import { HeartIcon, StarIcon } from "@dbm-design-system/icons";
 import { fn } from "storybook/test";
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { createToaster, Toast, useToast } from "./Toast";
 import { toastPlaygroundSnippet, toastSnippets } from "./Toast.snippets";
 import type {
+  ToastActionVariant,
   ToastOptions,
   ToastPlacement,
   ToastRole,
@@ -19,35 +22,54 @@ import { ButtonRow, RaiseButton, sampleOptions, ToastStage } from "./ToastStoryK
 // …) in one Playground: `meta.component` can only resolve docgen argTypes for one component, so the others are
 // declared by hand below and threaded through `render`. The provider and the single toast each get their own
 // Properties table from a hidden, docs-only stories file (guidelines/adr/0013).
+//
+// The order here is the order of the Controls panel: what the toast says, how it looks, what it does, and then the
+// provider's settings, and last the callbacks.
 interface PlaygroundArgs {
-  placement: ToastPlacement;
-  limit: number;
-  /** The control's option; the story maps `"never"` to `null`. */
-  duration: 2000 | 5000 | 10000 | "never";
-  size: ToastSize;
-  variant: ToastVariant;
-  dir: "ltr" | "rtl";
-  tone: ToastTone;
   title: string;
   description: string;
-  showAction: boolean;
-  dismissible: boolean;
+  tone: ToastTone;
+  variant: ToastVariant;
+  size: ToastSize;
+  /** The Playground's choice, mapped to the tone's own icon (`undefined`), none (`false`) or a custom one. */
+  icon: ToastOptions["icon"];
   loading: boolean;
-  role: ToastRole | "auto";
+  showAction: boolean;
+  actionVariant: ToastActionVariant;
+  dismissible: boolean;
+  role: ToastRole | undefined;
+  /** Text; empty leaves it out. The same id raised again replaces the toast instead of adding another. */
+  toastId: string;
+  /** Milliseconds, or `null` for until it is dismissed (the Playground maps its "Until dismissed" choice to it). */
+  duration: number | null;
+  placement: ToastPlacement;
+  limit: number;
+  clearAll: boolean;
+  mergeDuplicates: boolean;
+  /** The keys that move focus into the toasts (the Playground maps its choices to the arrays). */
+  hotkey: string[];
+  dir: "ltr" | "rtl";
   onOpenChange: (open: boolean) => void;
+  onOpenChangeComplete: (open: boolean) => void;
+  /** The list the toasts are in: native pass-throughs, shown for the Properties list and not editable here. */
+  id: string | undefined;
+  className: string | undefined;
+  style: CSSProperties | undefined;
+  "data-testid": string | undefined;
 }
 
-const durationFromArg = (duration: PlaygroundArgs["duration"]) => (duration === "never" ? null : duration);
-
 const optionsFromArgs = (args: PlaygroundArgs): ToastOptions => ({
-  tone: args.tone,
+  id: args.toastId || undefined,
   title: args.title || undefined,
   description: args.description || undefined,
+  tone: args.tone,
+  icon: args.icon,
   loading: args.loading,
   dismissible: args.dismissible,
-  role: args.role === "auto" ? undefined : args.role,
-  action: args.showAction ? { label: "Undo", altText: "Undo from the Edit menu" } : undefined,
+  role: args.role,
+  action: args.showAction ? { label: "Undo", altText: "Undo from the Edit menu", variant: args.actionVariant } : undefined,
   onOpenChange: args.onOpenChange,
+  onOpenChangeComplete: args.onOpenChangeComplete,
 });
 
 const playgroundSource = {
@@ -56,26 +78,110 @@ const playgroundSource = {
 };
 
 const noControls = {
-  placement: { control: false },
-  limit: { control: false },
-  duration: { control: false },
-  size: { control: false },
-  variant: { control: false },
-  dir: { control: false },
-  tone: { control: false },
   title: { control: false },
   description: { control: false },
-  showAction: { control: false },
-  dismissible: { control: false },
+  tone: { control: false },
+  variant: { control: false },
+  size: { control: false },
+  icon: { control: false },
   loading: { control: false },
+  showAction: { control: false },
+  actionVariant: { control: false },
+  dismissible: { control: false },
   role: { control: false },
+  toastId: { control: false },
+  duration: { control: false },
+  placement: { control: false },
+  limit: { control: false },
+  clearAll: { control: false },
+  mergeDuplicates: { control: false },
+  hotkey: { control: false },
+  dir: { control: false },
   onOpenChange: { control: false },
+  onOpenChangeComplete: { control: false },
+  id: { control: false },
+  className: { control: false },
+  style: { control: false },
+  "data-testid": { control: false },
 } as const;
 
 const meta: Meta<PlaygroundArgs> = {
   title: "Organisms/Feedback/Toast",
   parameters: { layout: "padded" },
   argTypes: {
+    title: {
+      control: "text",
+      description: "The headline, in a few words.",
+    },
+    description: {
+      control: "text",
+      description: "The message itself.",
+    },
+    tone: {
+      control: "select",
+      options: ["info", "success", "warning", "danger", "neutral"],
+      description: "What the message is about, on the standard tone scale. Each has its own icon and colours.",
+      table: { defaultValue: { summary: '"info"' } },
+    },
+    variant: {
+      control: "select",
+      options: ["subtle", "outlined", "solid"],
+      description: "How every toast is drawn.",
+      table: { defaultValue: { summary: '"subtle"' } },
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "Padding and type size of every toast.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
+    icon: {
+      control: false,
+      description:
+        "The icon before the message, a component reference from @dbm-design-system/icons. Each tone has its own; pass another to replace it, or false for none.",
+    },
+    loading: {
+      control: "boolean",
+      description: "Shows a spinner in place of the icon and keeps the toast until it is updated or dismissed.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    showAction: {
+      control: "boolean",
+      description:
+        "Adds an action button with an alternative for a person who won't reach it in time (altText, required).",
+      table: { defaultValue: { summary: "false" } },
+    },
+    actionVariant: {
+      control: "select",
+      options: ["primary", "secondary", "tertiary"],
+      if: { arg: "showAction" },
+      description:
+        "How prominent the action is, using Button's names. How each looks depends on the toast's tone and variant. Offered while showAction is on.",
+      table: { defaultValue: { summary: '"primary"' } },
+    },
+    dismissible: {
+      control: "boolean",
+      description: "Adds a button that dismisses it.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    role: {
+      control: "select",
+      options: ["alert", "status"],
+      description:
+        "How it is announced. alert interrupts, status waits for a pause. Left out, it follows the tone: alert for danger and warning, status for the rest.",
+    },
+    toastId: {
+      control: "text",
+      description:
+        "The toast's own identifier (the id option of toast()), not a DOM id. Raising a toast with the id of one that is still showing replaces it in place, drawn afresh, instead of adding another. Left empty, one is made up and identical plain messages merge.",
+    },
+    duration: {
+      control: "select",
+      options: [2000, 5000, 10000],
+      description:
+        "How long a toast stays, in milliseconds. Paused while the pointer is over the toasts or focus is inside them. null keeps it until it is dismissed.",
+      table: { defaultValue: { summary: "5000" } },
+    },
     placement: {
       control: "select",
       options: ["bottom-end", "bottom", "bottom-start", "top-end", "top", "top-start"],
@@ -88,24 +194,23 @@ const meta: Meta<PlaygroundArgs> = {
       description: "The most toasts showing at once. The rest wait, and each starts its own time when it appears.",
       table: { defaultValue: { summary: "3" } },
     },
-    duration: {
-      control: "select",
-      options: [2000, 5000, 10000, "never"],
+    clearAll: {
+      control: "boolean",
       description:
-        "How long a toast stays, in milliseconds. \"never\" is null: until it is dismissed. Paused while the pointer is over the toasts or focus is inside them.",
-      table: { defaultValue: { summary: "5000" } },
+        "Draws a button that closes every toast, and drops the ones waiting, once more than one is showing. Raise a few to see it.",
+      table: { defaultValue: { summary: "true" } },
     },
-    size: {
-      control: "select",
-      options: ["xs", "sm", "md", "lg", "xl"],
-      description: "Padding and type size of every toast.",
-      table: { defaultValue: { summary: '"md"' } },
+    mergeDuplicates: {
+      control: "boolean",
+      description:
+        "Raising the same plain message again while it is showing (no id) shows it once, with a count, and starts its time again. An action and callbacks must be the same functions to merge.",
+      table: { defaultValue: { summary: "true" } },
     },
-    variant: {
-      control: "select",
-      options: ["subtle", "outlined", "solid"],
-      description: "How every toast is drawn.",
-      table: { defaultValue: { summary: '"subtle"' } },
+    hotkey: {
+      control: false,
+      description:
+        "The keys that move focus into the toasts' region, held together, as KeyboardEvent property or code names. The region's accessible name says which.",
+      table: { defaultValue: { summary: '["F8"]' } },
     },
     dir: {
       control: "select",
@@ -113,62 +218,59 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Text direction, which sets which way a swipe closes a toast.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
-    tone: {
-      control: "select",
-      options: ["info", "success", "warning", "danger", "neutral"],
-      description: "What the message is about, on the standard tone scale. Each has its own icon and colours.",
-      table: { defaultValue: { summary: '"info"' } },
-    },
-    title: {
-      control: "text",
-      description: "The headline, in a few words.",
-    },
-    description: {
-      control: "text",
-      description: "The message itself.",
-    },
-    showAction: {
-      control: "boolean",
-      description:
-        "Adds an action button with an alternative for a person who won't reach it in time (altText, required).",
-      table: { defaultValue: { summary: "false" } },
-    },
-    dismissible: {
-      control: "boolean",
-      description: "Adds a button that dismisses it.",
-      table: { defaultValue: { summary: "true" } },
-    },
-    loading: {
-      control: "boolean",
-      description: "Shows a spinner in place of the icon and keeps the toast until it is updated or dismissed.",
-      table: { defaultValue: { summary: "false" } },
-    },
-    role: {
-      control: "select",
-      options: ["auto", "alert", "status"],
-      description:
-        "How it is announced. alert interrupts, status waits for a pause. Left out (auto), it follows the tone: alert for danger and warning, status for the rest.",
-    },
     onOpenChange: {
       control: false,
       description: "Called with false when it closes, and { reason }: timeout, dismiss, action, swipe, escape or programmatic.",
     },
+    onOpenChangeComplete: {
+      control: false,
+      description:
+        "Called with true once it has finished arriving and with false once it has finished leaving and is out of the page.",
+    },
+    id: {
+      control: false,
+      description: "Standard DOM id, on the list the toasts are in.",
+    },
+    className: {
+      control: false,
+      description: "Additional CSS classes for customization, on the list the toasts are in.",
+    },
+    style: {
+      control: false,
+      description: "Inline styles, merged onto the component's own internal styles.",
+    },
+    "data-testid": {
+      control: false,
+      description:
+        "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    },
   },
   args: {
-    placement: "bottom-end",
-    limit: 3,
-    duration: 5000,
-    size: "md",
-    variant: "subtle",
-    dir: "ltr",
-    tone: "success",
     title: "Saved",
     description: "Your changes are live.",
-    showAction: false,
-    dismissible: true,
+    tone: "success",
+    variant: "subtle",
+    size: "md",
+    icon: undefined,
     loading: false,
-    role: "auto",
+    showAction: false,
+    actionVariant: "primary",
+    dismissible: true,
+    role: undefined,
+    toastId: "",
+    duration: 5000,
+    placement: "bottom-end",
+    limit: 3,
+    clearAll: true,
+    mergeDuplicates: true,
+    hotkey: ["F8"],
+    dir: "ltr",
     onOpenChange: fn(),
+    onOpenChangeComplete: fn(),
+    id: undefined,
+    className: undefined,
+    style: undefined,
+    "data-testid": undefined,
   },
   render: (args) => (
     <ToastStage>
@@ -177,9 +279,12 @@ const meta: Meta<PlaygroundArgs> = {
           container={container}
           placement={args.placement}
           limit={args.limit}
-          duration={durationFromArg(args.duration)}
+          duration={args.duration}
           size={args.size}
           variant={args.variant}
+          clearAll={args.clearAll}
+          mergeDuplicates={args.mergeDuplicates}
+          hotkey={args.hotkey}
           dir={args.dir}
         >
           <RaiseButton label="Show toast" options={() => optionsFromArgs(args)} />
@@ -195,17 +300,50 @@ type Story = StoryObj<PlaygroundArgs>;
 
 /** Drive every prop live via the Controls panel below, and press the button to raise a toast. */
 export const Playground: Story = {
+  // The Playground's own controls add a way to leave `icon` and `role` out ("Default"), a custom icon to try, an
+  // until-dismissed duration and a second hotkey: choices, not values the props take, so they stay out of the
+  // meta-level argTypes the Properties table reads.
+  argTypes: {
+    icon: {
+      control: "select",
+      options: ["Default", "None", "Star", "Heart"],
+      mapping: { Default: undefined, None: false, Star: StarIcon, Heart: HeartIcon },
+      description:
+        "The icon before the message, a component reference from @dbm-design-system/icons. Default is the tone's own; None is false; the others are custom ones to try.",
+    },
+    role: {
+      control: "select",
+      options: ["Default", "alert", "status"],
+      mapping: { Default: undefined, alert: "alert", status: "status" },
+      description:
+        "How it is announced. alert interrupts, status waits for a pause. Default follows the tone: alert for danger and warning, status for the rest.",
+    },
+    duration: {
+      control: "select",
+      options: [2000, 5000, 10000, "Until dismissed"],
+      mapping: { 2000: 2000, 5000: 5000, 10000: 10000, "Until dismissed": null },
+      description:
+        "How long a toast stays, in milliseconds. Paused while the pointer is over the toasts or focus is inside them. \"Until dismissed\" is null.",
+    },
+    hotkey: {
+      control: "select",
+      options: ["F8", "Alt + T"],
+      mapping: { F8: ["F8"], "Alt + T": ["altKey", "KeyT"] },
+      description:
+        "The keys that move focus into the toasts' region, held together. The region's accessible name says which.",
+    },
+  },
   parameters: { docs: { source: playgroundSource } },
 };
 
 export const Tones: Story = {
   name: "Tones",
   parameters: { docs: { source: { code: toastSnippets.tones } } },
-  argTypes: { ...noControls, tone: { control: false } },
-  render: (args) => (
+  argTypes: { ...noControls },
+  render: () => (
     <ToastStage minBlockSize="26rem">
       {(container) => (
-        <Toast.Provider container={container} size={args.size} variant={args.variant} limit={5}>
+        <Toast.Provider container={container} limit={5}>
           <ButtonRow>
             {(["info", "success", "warning", "danger", "neutral"] as const).map((tone) => (
               <RaiseButton key={tone} label={tone} options={sampleOptions[tone]} />

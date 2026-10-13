@@ -1734,29 +1734,64 @@ describe("Playground snippet for Toast", () => {
     {},
     { placement: "top", limit: 1, size: "xs", variant: "solid" },
     { duration: 2000, tone: "danger", title: "Failed", description: "Try again." },
-    { duration: "never", loading: true, title: "Saving…" },
-    { duration: null, showAction: true, dismissible: false, dir: "rtl", placement: "bottom-start" },
+    { duration: "Until dismissed", loading: true, title: "Saving…" },
+    { duration: null, showAction: true, actionVariant: "tertiary", dismissible: false, dir: "rtl", placement: "bottom-start" },
     { title: 'He said "hi" & left', description: "a < b {c}" },
+    { icon: "Star", title: "Starred" },
+    { icon: false, role: "alert", toastId: "sync", title: "Syncing" },
+    { clearAll: false, mergeDuplicates: false, hotkey: "Alt + T" },
+    { hotkey: ["altKey", "KeyT"], role: "Default", icon: "Default" },
   ] as const;
 
   it.each(toastArgs)("Toast %j is a real snippet", (args) => {
-    expect(problemsIn(toastPlaygroundSnippet(args))).toEqual([]);
+    expect(problemsIn(toastPlaygroundSnippet(args as never))).toEqual([]);
   });
 
   it("Toast writes only what differs from the defaults", () => {
-    const plain = toastPlaygroundSnippet({ placement: "bottom-end", limit: 3, duration: 5000, size: "md", variant: "subtle", tone: "info" });
+    const plain = toastPlaygroundSnippet({
+      placement: "bottom-end",
+      limit: 3,
+      duration: 5000,
+      size: "md",
+      variant: "subtle",
+      tone: "info",
+      clearAll: true,
+      mergeDuplicates: true,
+      hotkey: ["F8"],
+      dir: "ltr",
+      icon: undefined,
+      role: "Default",
+    });
     expect(plain).toContain("<Toast.Provider>");
     expect(plain).toContain('toast({ title: "Saved" })');
     expect(toastPlaygroundSnippet({ placement: "top" })).toContain('<Toast.Provider placement="top">');
     expect(toastPlaygroundSnippet({ limit: 1 })).toContain("<Toast.Provider limit={1}>");
-    expect(toastPlaygroundSnippet({ tone: "danger", title: "Failed" })).toContain('toast({ tone: "danger", title: "Failed" })');
+    expect(toastPlaygroundSnippet({ tone: "danger", title: "Failed" })).toContain('toast({ title: "Failed", tone: "danger" })');
     expect(toastPlaygroundSnippet({ dismissible: false, title: "x" })).toContain("dismissible: false");
+    expect(toastPlaygroundSnippet({ clearAll: false })).toContain("clearAll={false}");
+    expect(toastPlaygroundSnippet({ mergeDuplicates: false })).toContain("mergeDuplicates={false}");
+    expect(toastPlaygroundSnippet({ role: "status", title: "x" })).toContain('role: "status"');
   });
 
-  it("Toast accepts the control's option key for an until-dismissed duration", () => {
+  it("Toast accepts the control's option keys and the values they map to", () => {
+    expect(toastPlaygroundSnippet({ duration: "Until dismissed" })).toContain("duration={null}");
     expect(toastPlaygroundSnippet({ duration: "never" })).toContain("duration={null}");
     expect(toastPlaygroundSnippet({ duration: null })).toContain("duration={null}");
     expect(toastPlaygroundSnippet({ duration: 10000 })).toContain("duration={10000}");
+    expect(toastPlaygroundSnippet({ hotkey: "Alt + T" })).toContain('hotkey={["altKey", "KeyT"]}');
+    expect(toastPlaygroundSnippet({ hotkey: ["altKey", "KeyT"] })).toContain('hotkey={["altKey", "KeyT"]}');
+    expect(toastPlaygroundSnippet({ hotkey: "F8" })).not.toContain("hotkey");
+    expect(toastPlaygroundSnippet({ icon: "Star" })).toContain("icon: StarIcon");
+    expect(toastPlaygroundSnippet({ icon: "Star" })).toContain("StarIcon comes from @dbm-design-system/icons");
+    expect(toastPlaygroundSnippet({ icon: "None" })).toContain("icon: false");
+    expect(toastPlaygroundSnippet({ icon: false })).toContain("icon: false");
+    expect(toastPlaygroundSnippet({ icon: "Default" })).not.toContain("icon:");
+  });
+
+  it("Toast writes the action's variant and an id only when they differ", () => {
+    expect(toastPlaygroundSnippet({ showAction: true })).not.toContain("variant:");
+    expect(toastPlaygroundSnippet({ showAction: true, actionVariant: "secondary" })).toContain('variant: "secondary"');
+    expect(toastPlaygroundSnippet({ toastId: "sync" })).toContain('id: "sync"');
   });
 
   it("Toast writes the reader's text safely", () => {

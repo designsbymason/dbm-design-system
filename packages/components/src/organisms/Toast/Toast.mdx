@@ -10,36 +10,43 @@ import * as ToastDescriptionStories from "./ToastDescription.stories";
 import * as ToastActionStories from "./ToastAction.stories";
 
 export const playgroundOrder = [
-  "tone",
   "title",
   "description",
-  "showAction",
+  "tone",
+  "variant",
+  "size",
+  "icon",
   "loading",
+  "showAction",
+  "actionVariant",
   "dismissible",
   "role",
+  "toastId",
+  "duration",
   "placement",
   "limit",
-  "duration",
-  "size",
-  "variant",
+  "clearAll",
+  "mergeDuplicates",
+  "hotkey",
   "dir",
   "onOpenChange",
+  "onOpenChangeComplete",
 ];
 export const providerPropOrder = [
   "children",
   "placement",
-  "limit",
-  "duration",
   "size",
   "variant",
+  "limit",
+  "duration",
   "clearAll",
   "mergeDuplicates",
-  "formatNumber",
-  "toaster",
   "hotkey",
   "dir",
-  "container",
+  "formatNumber",
   "labels",
+  "toaster",
+  "container",
   "id",
   "className",
   "style",
@@ -69,7 +76,28 @@ export const rootPropOrder = [
 ];
 export const titlePropOrder = ["children", "id", "className", "style", "data-testid"];
 export const descriptionPropOrder = ["children", "id", "className", "style", "data-testid"];
-export const actionPropOrder = ["children", "altText", "variant", "onClick", "onClickError", "disabled", "asChild", "id", "className", "style", "data-testid"];
+export const actionPropOrder = [
+  "children",
+  "altText",
+  "variant",
+  "leadingIcon",
+  "trailingIcon",
+  "rounded",
+  "fullWidth",
+  "onClick",
+  "onClickError",
+  "isLoading",
+  "loadingText",
+  "disabled",
+  "type",
+  "asChild",
+  "aria-label",
+  "aria-labelledby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
 
 <Meta of={ToastStories} />
 
@@ -102,7 +130,7 @@ in an app they sit against the window. Press the button to raise a toast, more t
 <Canvas of={ToastStories.Playground} />
 
 </div>
-<PlaygroundControls of={ToastStories.Playground} order={playgroundOrder} exclude={["onOpenChange"]} />
+<PlaygroundControls of={ToastStories.Playground} order={playgroundOrder} exclude={["onOpenChange", "onOpenChangeComplete", "id", "className", "style", "data-testid"]} />
 
 ## Properties
 
@@ -229,9 +257,9 @@ again and a screen reader reads the new text; `update()` changes it without eith
 ### The same message, once, with a count
 
 A plain message raised again while it is still showing (the same tone, title and description, with no
-`id`, no action and no callbacks) is one toast with a count, and its time starts again. A toast with an
-action or a callback is never merged, since the second call's would be lost. `mergeDuplicates={false}`
-turns it off.
+`id`) is one toast with a count, and its time starts again. An action and callbacks have to be the very
+same functions to merge, since the second call's own would be lost: a handler written inline at each
+call is a different function and keeps the toasts apart. `mergeDuplicates={false}` turns it off.
 
 <Canvas of={ToastStories.Merged} />
 
@@ -306,7 +334,8 @@ When the message belongs to your own state, draw it as parts with `open` and `on
 - Hovering one toast holds the time of all of them, so the stack doesn't change under a pointer that is
   moving between them. Leaving the toasts (and focus leaving them) lets every time carry on.
 - A message that is raised again from a button pressed twice becomes one toast with a count. Give a toast
-  an `id` when it must not merge, or when it should be replaced with something else instead.
+  an `id` when it must not merge, or when it should be replaced with something else instead. Declare a
+  handler once and reuse it if a toast with an action should merge too.
 - In a module that has no component to call `useToast()` from, make one `createToaster()` and give it to
   the provider; keep one provider per toaster.
 - `onOpenChangeComplete` says it is gone (its exit has finished); `onOpenChange` says it started to go,

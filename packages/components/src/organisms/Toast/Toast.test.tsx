@@ -532,6 +532,34 @@ describe("Toast, declared as parts", () => {
     expect(item).toHaveAttribute("id", "t");
   });
 
+  it("passes className, style, id and data-testid through on every part", () => {
+    const extra = { className: "mine", style: { color: "red" }, id: "p" } as const;
+    render(
+      <Toast.Provider>
+        <Toast>
+          <Toast.Title {...extra} id="title" data-testid="title">
+            Saved
+          </Toast.Title>
+          <Toast.Description {...extra} id="description" data-testid="description">
+            Live
+          </Toast.Description>
+          <Toast.Action {...extra} id="action" data-testid="action" altText="Open it">
+            View
+          </Toast.Action>
+        </Toast>
+      </Toast.Provider>,
+    );
+    for (const name of ["title", "description", "action"]) {
+      const element = screen.getByTestId(name);
+      expect(element).toHaveClass("mine");
+      expect(element).toHaveStyle({ color: "rgb(255, 0, 0)" });
+      expect(element).toHaveAttribute("id", name);
+    }
+    // the part's own class is kept beside the caller's
+    expect(screen.getByTestId("title")).toHaveClass(styles.title as string);
+    expect(screen.getByTestId("action")).toHaveClass(styles.action as string);
+  });
+
   it("keeps a same-named prop from replacing the part's own class", () => {
     render(
       <Toast.Provider>
@@ -724,19 +752,31 @@ describe("a message raised again while it is showing", () => {
     expect(toasts().every((item) => item.getAttribute("data-state") === "closed")).toBe(true);
   });
 
-  it("is not merged when it has an id, an action or a callback, or says something else", () => {
+  it("is not merged when it has an id, a different handler, or says something else", () => {
     render(<Provider limit={9} />);
     act(() => {
       api.toast({ id: "a", title: "Saved" });
       api.toast({ id: "b", title: "Saved" });
       api.toast({ title: "Saved", onOpenChange: () => undefined });
       api.toast({ title: "Saved", onOpenChange: () => undefined });
-      api.toast({ title: "Saved", action: { label: "Undo", altText: "Undo" } });
-      api.toast({ title: "Saved", action: { label: "Undo", altText: "Undo" } });
+      api.toast({ title: "Saved", action: { label: "Undo", altText: "Undo", onClick: () => undefined } });
+      api.toast({ title: "Saved", action: { label: "Undo", altText: "Undo", onClick: () => undefined } });
       api.toast({ title: "Saved", tone: "success" });
     });
     expect(toasts().filter((item) => item.textContent?.includes("Saved"))).toHaveLength(7);
     expect(screen.queryByText(/×/)).not.toBeInTheDocument();
+  });
+
+  it("is merged when its action and callbacks are the very same functions", () => {
+    const undo = vi.fn();
+    const onOpenChange = vi.fn();
+    render(<Provider limit={9} />);
+    act(() => {
+      api.toast({ title: "Archived", onOpenChange, action: { label: "Undo", altText: "Undo", onClick: undo } });
+      api.toast({ title: "Archived", onOpenChange, action: { label: "Undo", altText: "Undo", onClick: undo } });
+    });
+    expect(toasts().filter((item) => item.textContent?.includes("Archived"))).toHaveLength(1);
+    expect(screen.getByText("×2")).toBeInTheDocument();
   });
 
   it("can be turned off", () => {

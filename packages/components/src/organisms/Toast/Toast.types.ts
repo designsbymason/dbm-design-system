@@ -275,9 +275,10 @@ export interface ToastProviderProps
    */
   clearAll?: boolean;
   /**
-   * Raising a plain message again while it is still showing (the same tone, title and description, with no `id`, no
-   * action and no callbacks) shows it once, with a count, and starts its time again, instead of stacking copies. A
-   * toast with an action or a callback is never merged, since the second call's would be lost.
+   * Raising a plain message again while it is still showing (the same tone, title and description, with no `id`) shows
+   * it once, with a count, and starts its time again, instead of stacking copies. An action and callbacks must be the
+   * very same functions to merge, since a second call's own would be lost: a handler written inline at each call is a
+   * different function and keeps the toasts apart.
    * @default true
    */
   mergeDuplicates?: boolean;
