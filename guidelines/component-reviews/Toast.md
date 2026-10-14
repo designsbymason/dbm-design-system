@@ -1,6 +1,6 @@
 # Toast — review findings
 
-Sixth organism, built 2026-10-12 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not yet Finalized:** the full review pass (`/review-component Toast`) has not been run, and the declaration is the maintainer's. What follows is what the build itself found and checked.
+Sixth organism, built 2026-10-12 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-13**, after the full review pass (`/review-component Toast`) and its fixes, with the items under "Open at Finalization" accepted as open: none changes the component. What follows is what the build found and checked, then the follow-ups and the review.
 
 ## Decisions
 - Wraps Radix Toast, pinned exactly at 1.2.23 so the layer stack stays one copy: [ADR-0069](../adr/0069-toast-wraps-radix-toast-pinned-at-1-2-23-on-the-shared-layer-stack-over-a-hand-rolled-toast-or-the-newest-release.md).
@@ -61,7 +61,10 @@ Found by a read-and-verify pass over every part, run and fixed the same day.
 - **Radix prop audit, decided:** `swipeThreshold` is exposed on the provider (50 px by default; a control in the Playground, a row in the table, a snippet). `announcerContainer`, `onSwipeStart`/`Move`/`Cancel`/`End`, `onPause`/`onResume` and `forceMount` are audited and left out: the announcements are made in the page's body whatever the `container`, which is where they have to be to be heard above a modal, and the swipe and pause callbacks have no use that `onOpenChange`'s `reason` does not already serve.
 - **The warning for a missing provider** is once per component that calls `useToast()` there, not once; the comment says so.
 
-## Open for the review pass
-- The full §9 checklist and the feature-completeness pass, including the four themes in a running Storybook and the sizes with realistic content.
-- Not verified: a real finger on a touch screen (the swipe is driven by a real mouse through the Chrome DevTools Protocol), a screen reader reading the announcement, and Safari.
-- "Clear all" is read out when it appears ("Notification, Clear all"), which is Radix always reading a toast's label.
+## Open at Finalization
+Accepted as open; none changes the component.
+- **Not verified:** a real finger on a touch screen (the swipe and the fan are driven by a real mouse through the Chrome DevTools Protocol), a screen reader reading the announcements, and Safari. Only Chromium ran.
+- **The four themes were measured, not looked at one by one:** contrast was computed from the resolved tokens in all four (the lowest text pairing is 4.5 or more, 5.86 in the dark themes), and the toast and the fan were looked at in one theme.
+- **Forced colours** is asserted by a real-browser check (a system-colour border on every toast, none left to a shadow) and was not looked at.
+- **"Clear all" is read out when it appears** ("Notification, Clear all"), which is Radix always reading a toast's label.
+- **An action's size follows the toast's** and cannot be set on its own, as `Alert.Action`'s does.
