@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { FieldLabelSize } from "../../atoms/FieldLabel";
+import type { FieldValidator } from "../../internal/formContext";
 
 /**
  * The props `FormField` computes and hands to its `children` render
@@ -30,6 +31,11 @@ export interface FormFieldControlProps {
    * a native `<input>` would read it as its own, different `size` attribute.
    */
   size?: FieldLabelSize;
+  /**
+   * The field's `name`, present only when `FormField`'s own `name` is set. Spread it onto the control so the value
+   * is submitted under it, which is also the key a surrounding `Form` stores the field's error under.
+   */
+  name?: string;
 }
 
 export interface FormFieldProps
@@ -89,6 +95,18 @@ export interface FormFieldProps
    * @default 'md'
    */
   size?: FieldLabelSize;
+  /**
+   * The name this field's value is submitted under, which is the key a surrounding `Form` finds its error, rule
+   * and summary link by. Handed back in `fieldProps.name`, so spreading `{...fieldProps}` names the control.
+   * Without a `Form` around it, a name does nothing beyond that.
+   */
+  name?: string;
+  /**
+   * This field's own rule, run by a surrounding `Form` when it is submitted (and as the field is edited, once a
+   * submit has been refused): receives the field's value and all the form's values, and returns the message to
+   * show, or nothing when the value is fine. Needs `name`. Does nothing outside a `Form`.
+   */
+  validate?: FieldValidator;
   /**
    * Overrides the auto-generated base id (`useId()` otherwise) used to
    * derive the control's, label's, helper text's, and error message's own

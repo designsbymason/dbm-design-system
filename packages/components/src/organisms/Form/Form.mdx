@@ -1,0 +1,310 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FieldGroup } from "../../molecules/FieldGroup";
+import { FormField } from "../../molecules/FormField";
+import * as FormStories from "./Form.stories";
+import * as FormActionsStories from "./FormActions.stories";
+import * as FormSubmitStories from "./FormSubmit.stories";
+import * as FormSummaryStories from "./FormSummary.stories";
+
+export const propOrder = [
+  "children",
+  "onSubmit",
+  "onSubmitError",
+  "onInvalidSubmit",
+  "validate",
+  "errors",
+  "onErrorsChange",
+  "validateOn",
+  "focusTarget",
+  "disabled",
+  "size",
+  "gap",
+  "noValidate",
+  "labels",
+  "formatNumber",
+  "action",
+  "method",
+  "autoComplete",
+  "name",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+export const summaryPropOrder = ["title", "id", "className", "style", "data-testid"];
+export const actionsPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
+export const submitPropOrder = ["children", "isLoading", "loadingText", "disabled", "variant", "size", "id", "className", "style", "data-testid"];
+
+<Meta of={FormStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Form" tier="Organism" />
+
+A form is the page's way of asking for several things at once and handing them over together. `Form` is the
+native `<form>` with the wiring that makes the fields inside it behave as one thing: on submit it checks every
+control, shows each message in that field's own error slot, moves focus to the first one that is wrong and says
+how many there are; when everything is valid it gives `onSubmit` what the form holds, and while a promise it
+returned is running the form is busy and cannot be submitted twice.
+
+It owns no values: each control keeps its own, so it works with any control in the system and with a plain
+`<input>`. It runs no rules of its own either: it reads the browser's (`required`, `type="email"`, `pattern`,
+`minLength`…) and calls the ones you write.
+
+### Import
+
+```tsx
+import { Form, FormField, Input } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FormStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={FormStories.Playground}
+  exclude={[
+    "children",
+    "onSubmit",
+    "onSubmitError",
+    "onInvalidSubmit",
+    "validate",
+    "errors",
+    "onErrorsChange",
+    "labels",
+    "formatNumber",
+    "action",
+    "method",
+    "autoComplete",
+    "name",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={[...propOrder, "summary"]}
+/>
+
+## Properties
+
+`Form` also accepts any other native `<form>` attribute beyond what's listed here (e.g. `target`, `encType`) —
+passed straight through to the form. Its `aria-busy`, `novalidate` and handlers are the form's to compute: a
+`onChange`, `onBlur` or `onReset` you pass is called in addition to the form's own.
+
+<PropertiesTable of={FormStories} order={propOrder} />
+
+### Form.Summary properties
+
+A list of everything wrong with the form, as links that move focus to each control. It is drawn as a danger
+alert and shown only while there is something to list. It also accepts any native `<div>` attribute.
+
+<PropertiesTable of={FormSummaryStories} order={summaryPropOrder} />
+
+### Form.Actions properties
+
+A row for the form's buttons. It also accepts any native `<div>` attribute.
+
+<PropertiesTable of={FormActionsStories} order={actionsPropOrder} />
+
+### Form.Submit properties
+
+A `Button` with `type="submit"` that is loading while the form's `onSubmit` is running and disabled while the
+form is. It takes every `Button` prop except `type` and `asChild`.
+
+<PropertiesTable of={FormSubmitStories} order={submitPropOrder} />
+
+## Variants
+
+### Submitting
+
+<Canvas of={FormStories.Basic} />
+
+### Rules for a field and for the form
+
+<Canvas of={FormStories.Validation} />
+
+### An error summary
+
+<Canvas of={FormStories.Summary} />
+
+### When a field is checked
+
+<Canvas of={FormStories.ValidateOn} />
+
+### A submit that takes time
+
+<Canvas of={FormStories.Async} />
+
+### Errors from the server
+
+<Canvas of={FormStories.ServerErrors} />
+
+### Groups, size and gap
+
+<Canvas of={FormStories.Layout} />
+
+### Disabled
+
+<Canvas of={FormStories.Disabled} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Give every `FormField` a `name` and spread `{...field}` onto its control, so the value is submitted under it and
+  its error finds it.
+- Give the form an accessible name (`aria-label`, or `aria-labelledby` pointing at its heading): a form is a
+  landmark only once it has one.
+- Put a rule about one field in that field's `validate`, and a rule that compares fields in the form's `validate`.
+- Return a promise from `onSubmit` for anything that takes time, so the form is busy and can't be sent twice.
+- Add `Form.Summary` to a long form: it gives a keyboard or screen-reader user the whole list in one place.
+- Pass the server's answer to `errors` and wire `onErrorsChange` to the same state, so an error clears when the
+  person edits the field it is about.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't put the value of every control into state to build a submit: the form already reads what it holds.
+- Don't write "Required" or "Invalid" as a message; say what to do ("Enter an email address").
+- Don't hide the submit button until the form is valid: a person can't learn what is missing from a button that
+  isn't there. Leave it enabled and let the form say.
+- Don't nest a form inside a form in the page. A form drawn in a dialog is fine: it belongs to the dialog.
+- Don't use `disabled` to mean "saving": while an `onSubmit` promise runs the form is already busy and disabled.
+
+</Callout>
+</div>
+
+## Best practices
+
+- **A message is an instruction, not a verdict.** "Use 3 or more characters" is something a person can act on;
+  "Invalid username" is not.
+- **Reward early, punish late.** The default waits for the first submit before showing anything, so a person who is
+  still typing isn't told they're wrong. After a refused submit every field is checked as it is edited, so an error
+  disappears the moment the value is right. Choose `validateOn="blur"` only where a field's rule is worth knowing
+  as soon as the person leaves it.
+- **The browser's rules come first.** A field that is `required` says so before a rule of your own says more.
+  Write your `validate` as if the value is present.
+- **Say what the server said.** Anything the browser can't know (an email already registered, a code that expired)
+  belongs in `errors`, keyed by the field's name; the form shows it in the same place as its own messages.
+- **Use `formnovalidate` for "Save draft".** A submit button with `formNoValidate` skips the checks and calls
+  `onSubmit`.
+- Values arrive as the browser reports them: strings, or an array when a name repeats (a set of checkboxes with
+  two or more ticked). Convert and type them where you receive them.
+
+## Accessibility
+
+<Callout tone="info" title="Errors are announced once, focus does the rest">
+
+- The form is a native `<form>`; with an accessible name it is a `form` landmark.
+- When a submit is refused, focus moves to the first invalid control in page order, so its name and its message
+  (through `aria-describedby`) are read. A live region that was already in the page announces the count
+  ("2 errors."). With `focusTarget="summary"` focus lands on the summary instead, and each entry is a link to its
+  control.
+- The summary is not itself a live region, so nothing is read twice.
+- While a promise is running the form is `aria-busy`, every field is disabled and the submit button shows its
+  loading state. When it finishes, focus goes back to where it was if nothing else has it, since disabling a
+  control makes the browser drop focus.
+- The browser's own validation bubbles are held back (`noValidate`) so the message can sit in the page, next
+  to the field and read by assistive technology. The browser's rules still apply: the form reads each control's
+  constraint state and message.
+- A control found invalid that has no `FormField` is reported in the summary and focused, but has no error slot of
+  its own to put a message in.
+- Right-to-left needs nothing from the form: the summary's indent and the actions' alignment are logical.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| `Enter` in a single-line field | Submits the form (the browser's own implicit submission); a refused submit leaves focus on the first invalid control |
+| `Tab` | The form adds no tab stop of its own; the summary is reached by focus, not by tabbing |
+| `Space` / `Enter` on a summary link | Moves focus to that control |
+
+## Code examples
+
+```tsx
+<Form aria-label="Create account" onSubmit={(values) => createAccount(values)}>
+  <FormField label="Email" name="email" required>
+    {(field) => <Input {...field} type="email" />}
+  </FormField>
+  <FormField
+    label="Username"
+    name="username"
+    validate={(value) => (String(value).length < 3 ? "Use 3 or more characters" : undefined)}
+  >
+    {(field) => <Input {...field} />}
+  </FormField>
+  <Form.Summary />
+  <Form.Actions>
+    <Form.Submit>Create account</Form.Submit>
+  </Form.Actions>
+</Form>
+
+{/* A rule across fields */}
+<Form
+  aria-label="Change password"
+  validate={(values) => (values.password !== values.confirm ? { confirm: "The passwords don't match" } : undefined)}
+>
+  …
+</Form>
+
+{/* Without onSubmit, a valid submit goes to the browser: a plain form with an action works, and still
+    refuses to send while a field is wrong. `action` and `method` are native form attributes. */}
+<Form aria-label="Search" action="/search" method="get">
+  <FormField label="Query" name="q" required>
+    {(field) => <Input {...field} type="search" />}
+  </FormField>
+  <Form.Submit>Search</Form.Submit>
+</Form>
+```
+
+## Design tokens used
+
+<TokenRow token="space.1" usage="gap between summary entries, and the summary's focus ring offset" />
+<TokenRow token="space.3" usage="gap between the buttons in Form.Actions" />
+<TokenRow token="space.4" usage="default gap between the form's children" />
+<TokenRow token="space.5" usage="the summary list's indent" />
+<TokenRow token="radius.sm" usage="the summary's focus ring corners" />
+<TokenRow token="border-width.2" usage="the summary's focus ring width" />
+<TokenRow token="border.focus" usage="the summary's focus ring colour" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="FormField"
+  description="One label, one control and its message — what a form is made of"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <FormField label="Email">{(field) => <Input {...field} />}</FormField>
+</RelatedCard>
+<RelatedCard
+  name="FieldGroup"
+  description="Several fields under one legend, handing disabled and size down to them"
+  href="/?path=/docs/molecules-inputs-fieldgroup--docs"
+>
+  <FieldGroup legend="Address">
+    <FormField label="Street">{(field) => <Input {...field} />}</FormField>
+  </FieldGroup>
+</RelatedCard>
+<RelatedCard
+  name="Button"
+  description="The submit button is one, with its loading state"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button>Save</Button>
+</RelatedCard>
+</div>

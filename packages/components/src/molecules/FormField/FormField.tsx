@@ -1,9 +1,10 @@
 import { cx } from "@dbm-design-system/primitives";
-import { forwardRef, useId } from "react";
+import { forwardRef, useEffect, useId } from "react";
 import { FieldError } from "../../atoms/FieldError";
 import { FieldHelperText } from "../../atoms/FieldHelperText";
 import { FieldLabel } from "../../atoms/FieldLabel";
 import { useFieldGroup } from "../../internal/fieldGroupContext";
+import { useForm } from "../../internal/formContext";
 import styles from "./FormField.module.css";
 import type { FormFieldProps } from "./FormField.types";
 
@@ -43,7 +44,9 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
       label,
       children,
       helperText,
-      error,
+      error: errorProp,
+      name,
+      validate,
       required = false,
       disabled: disabledProp = false,
       size: sizeProp,
@@ -68,6 +71,17 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
     const helperId = `${baseId}-helper`;
     const errorId = `${baseId}-error`;
 
+    // Inside a `Form`, the error stored under this field's name (or control id, with no name) is the one to show
+    // when none is passed. The `Form` also reads this field's rule and label through the registration.
+    const form = useForm();
+    const fieldKey = name ?? controlId;
+    const error = errorProp || form?.errors[fieldKey];
+    const registerField = form?.registerField;
+    useEffect(() => {
+      if (!registerField) return undefined;
+      return registerField({ key: fieldKey, name, controlId, label, validate });
+    }, [registerField, fieldKey, name, controlId, label, validate]);
+
     const hasError = Boolean(error);
     const describedBy = hasError ? errorId : helperText ? helperId : undefined;
 
@@ -90,6 +104,7 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
           disabled,
           required,
           ...(controlSize ? { size: controlSize } : {}),
+          ...(name ? { name } : {}),
         })}
         {hasError ? (
           <FieldError id={errorId} disabled={disabled}>

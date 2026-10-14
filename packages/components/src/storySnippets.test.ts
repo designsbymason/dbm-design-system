@@ -65,6 +65,7 @@ import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
 import { alertDialogPlaygroundSnippet } from "./organisms/AlertDialog/AlertDialog.snippets";
 import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
+import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
 import { toastPlaygroundSnippet } from "./organisms/Toast/Toast.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
 import { rangeSliderPlaygroundSnippet } from "./molecules/RangeSlider/RangeSlider.snippets";
@@ -1802,5 +1803,29 @@ describe("Playground snippet for Toast", () => {
   it("Toast writes the reader's text safely", () => {
     const snippet = toastPlaygroundSnippet({ title: 'say "hi"' });
     expect(snippet).toContain('title: "say \\"hi\\""');
+  });
+});
+
+describe("Playground snippet for Form", () => {
+  const formArgs = [
+    {},
+    { validateOn: "blur", focusTarget: "summary", summary: true },
+    { disabled: true, size: "lg", gap: 6, noValidate: false },
+    { focusTarget: false, size: "default" },
+  ] as const;
+
+  it.each(formArgs)("Form %j is a real snippet", (args) => {
+    expect(problemsIn(formPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("writes only what differs from the defaults, and the choice that isn't a size isn't written", () => {
+    expect(formPlaygroundSnippet({ validateOn: "submit", focusTarget: "field", gap: 4, size: "default" })).toMatch(
+      /^<Form aria-label="Create account" onSubmit=/,
+    );
+    expect(formPlaygroundSnippet({ validateOn: "blur" })).toContain('validateOn="blur"');
+    expect(formPlaygroundSnippet({ focusTarget: false })).toContain("focusTarget={false}");
+    expect(formPlaygroundSnippet({ noValidate: false })).toContain("noValidate={false}");
+    expect(formPlaygroundSnippet({ summary: true })).toContain("<Form.Summary />");
+    expect(formPlaygroundSnippet({})).not.toContain("<Form.Summary />");
   });
 });

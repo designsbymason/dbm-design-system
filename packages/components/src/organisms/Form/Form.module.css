@@ -1,0 +1,53 @@
+/* The form lays its children out as a column; the gap is a step on the spacing scale, set from the `gap` prop. */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-gap, var(--dbm-space-4));
+  min-inline-size: 0;
+}
+
+/* The summary is focused by script when a submit is refused, so it takes a ring of its own. */
+.summary:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+}
+
+.summaryList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  margin: 0;
+  padding-inline-start: var(--dbm-space-5);
+}
+
+/* The links take the alert's own text colour: the link colour is 4.49:1 on the danger tint, under the AA floor,
+   and every entry is a link, so the underline alone says which is which. */
+.summaryList a,
+.summaryList a:visited {
+  color: inherit;
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+  justify-content: flex-start;
+}
+
+.alignEnd {
+  justify-content: flex-end;
+}
+
+.alignBetween {
+  justify-content: space-between;
+}
+
+/* On a phone the buttons take a row each, so the targets are wide and nothing wraps awkwardly. 40rem is
+   `breakpoint.sm`; a media query can't read a custom property. */
+@media (max-width: 39.99rem) {
+  .actions > * {
+    flex: 1 1 100%;
+  }
+}

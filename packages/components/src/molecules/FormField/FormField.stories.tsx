@@ -60,6 +60,16 @@ const meta: Meta<typeof FormField> = {
       description: "Font size for the FieldLabel, matching the control's own size scale. Inside a FieldGroup, defaults to the group's size.",
       table: { defaultValue: { summary: '"md"' } },
     },
+    name: {
+      control: false,
+      description:
+        "The name this field's value is submitted under, and the key a surrounding Form finds its error, rule and summary link by. Handed back in fieldProps.name.",
+    },
+    validate: {
+      control: false,
+      description:
+        "This field's own rule, run by a surrounding Form on submit: receives the field's value and all the form's values, and returns the message to show. Needs name. Does nothing outside a Form.",
+    },
     id: {
       control: false,
       description: "Overrides the auto-generated base id used to derive every sub-part's own id.",

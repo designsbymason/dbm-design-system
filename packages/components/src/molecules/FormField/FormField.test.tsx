@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Checkbox } from "../../atoms/Checkbox";
 import fieldLabelStyles from "../../atoms/FieldLabel/FieldLabel.module.css";
 import { Input } from "../../atoms/Input";
@@ -300,5 +300,24 @@ describe("FormField's handed-back size inside a FieldGroup", () => {
     );
     expect(inGroup && "size" in inGroup).toBe(false);
     expect(alone && "size" in alone).toBe(false);
+  });
+
+  it("hands the control its name only when it has one, and ignores a rule outside a form", () => {
+    let named: FormFieldControlProps | undefined;
+    let plain: FormFieldControlProps | undefined;
+    const validate = vi.fn(() => "never shown");
+    render(
+      <>
+        <FormField label="A" name="who" validate={validate}>
+          {(field) => { named = field; return <Input {...field} />; }}
+        </FormField>
+        <FormField label="B">{(field) => { plain = field; return <Input {...field} />; }}</FormField>
+      </>,
+    );
+    expect(named?.name).toBe("who");
+    expect(plain && "name" in plain).toBe(false);
+    expect(screen.getByRole("textbox", { name: "A" })).toHaveAttribute("name", "who");
+    expect(validate).not.toHaveBeenCalled();
+    expect(screen.queryByText("never shown")).toBeNull();
   });
 });

@@ -1,0 +1,344 @@
+import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
+import { useState, type ReactNode } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
+import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
+import { FieldGroup } from "../../molecules/FieldGroup";
+import { FormField } from "../../molecules/FormField";
+import { PasswordInput } from "../../molecules/PasswordInput";
+import { Form } from "./Form";
+import { formPlaygroundSnippet, formSnippets } from "./Form.snippets";
+import { EmailAndUsername, Stage, Submitted, useSubmitted } from "./FormStoryKit";
+import type { FormErrors, FormProps, FormValues } from "./Form.types";
+
+const meta: Meta<typeof Form> = {
+  title: "Organisms/Inputs/Form",
+  component: Form,
+  parameters: { layout: "padded" },
+  // Keys follow the component's own `FormProps` declaration order (07 §4 item 3).
+  argTypes: {
+    children: { control: false, description: "The form's content: fields, groups, a Form.Summary, Form.Actions." },
+    onSubmit: {
+      control: false,
+      description:
+        "Called when the form is submitted and valid, with the values (by field name), the FormData and the event. May return a promise: the form is busy until it settles.",
+    },
+    onSubmitError: { control: false, description: "Called when an onSubmit promise rejects." },
+    onInvalidSubmit: { control: false, description: "Called when a submit is refused because of errors, with every error found." },
+    validate: {
+      control: false,
+      description: "A rule for the whole form, run after each field's own: receives every value and returns messages by field name.",
+    },
+    errors: {
+      control: false,
+      description:
+        "Errors set from outside (a server's answer), by field name. Shown beside the form's own and over them for the same field.",
+    },
+    onErrorsChange: {
+      control: false,
+      description: "Called with the errors to use instead when an edit makes one of the outside errors out of date, or on reset.",
+    },
+    validateOn: {
+      control: "select",
+      options: ["submit", "blur", "change"],
+      description: "When a field is checked as it is edited, before a submit has been refused. After one, every field is checked as it is edited.",
+      table: { defaultValue: { summary: '"submit"' } },
+    },
+    focusTarget: {
+      control: "select",
+      options: ["field", "summary", false],
+      description: "Where focus goes when a submit is refused: the first invalid control, the summary, or nowhere (false).",
+      table: { defaultValue: { summary: '"field"' } },
+    },
+    disabled: {
+      description: "Disables the whole form: every FormField inside and the submit button, and a submit does nothing.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    // No value of its own by default, so its live control is on the Playground alone, with a "default" choice that
+    // isn't a real value.
+    size: {
+      control: false,
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "The size handed to every FormField inside as its default (its label and the control it hands its size to).",
+    },
+    gap: {
+      control: "select",
+      options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16],
+      description: "The space between the form's children, as a step on the spacing scale — a single value or a breakpoint map.",
+      table: { defaultValue: { summary: "4" } },
+    },
+    noValidate: {
+      description:
+        "Holds back the browser's own validation bubbles so the form can show errors in the page. The browser's rules still apply: the form reads them.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    labels: {
+      control: false,
+      description: "Text the form writes itself: summaryTitle(count), errorCount(count) and invalidValue.",
+    },
+    formatNumber: {
+      control: false,
+      description: "Writes the counts in labels; digits for a script that doesn't use ASCII ones.",
+      table: { defaultValue: { summary: "String" } },
+    },
+    action: { control: false, description: "Where the form is sent when it is submitted without an onSubmit — a URL, or a function that receives the FormData." },
+    method: { control: false, description: "How the form is sent without an onSubmit." },
+    autoComplete: { control: false, description: "Lets the browser fill the form's fields in (on, off, or an autofill token)." },
+    name: { control: false, description: "The form's name in document.forms." },
+    "aria-label": { control: "text", description: "The form's accessible name; a form is only a landmark once it has one." },
+    "aria-labelledby": { control: false, description: "Points at an element that names the form." },
+    "aria-describedby": { control: false, description: "Points at an element that describes the form." },
+    id: { control: false, description: "Standard DOM id." },
+    className: { control: false, description: "Additional CSS classes for the form." },
+    style: { control: false, description: "Inline styles for the form." },
+    "data-testid": { control: false, description: "Test identifier for automated testing." },
+    // Storybook only: not a prop. It puts a Form.Summary in the demo.
+    summary: {
+      control: "boolean",
+      description: "Storybook only — not a Form prop: draws a Form.Summary above the fields.",
+      table: { category: "Storybook only" },
+    },
+  } as Meta<typeof Form>["argTypes"],
+  // Every controllable prop gets an explicit value, matching its real default (07 §5).
+  args: {
+    "aria-label": "Create account",
+    validateOn: "submit",
+    focusTarget: "field",
+    disabled: false,
+    gap: 4,
+    noValidate: true,
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof Form>;
+
+/** The demo form: two fields and a submit, with what was submitted written under it. */
+function Demo({
+  summary = false,
+  fields,
+  actions,
+  ...props
+}: FormProps & { summary?: boolean; fields?: ReactNode; actions?: ReactNode }) {
+  const { values, setValues } = useSubmitted();
+  return (
+    <Stage>
+      <Form onSubmit={(submitted) => setValues(submitted)} {...props}>
+        {summary && <Form.Summary />}
+        {fields ?? EmailAndUsername}
+        {actions ?? (
+          <Form.Actions>
+            <Form.Submit>Create account</Form.Submit>
+          </Form.Actions>
+        )}
+      </Form>
+      <Submitted values={values} />
+    </Stage>
+  );
+}
+
+/** The Playground's "default" choice isn't a real size; turn it back into "leave the prop out". */
+const fromPlayground = (args: Record<string, unknown>) => {
+  const { size, ...rest } = args as { size?: string };
+  return { ...rest, size: size === "default" || size === undefined ? undefined : size } as FormProps & { summary?: boolean };
+};
+
+/** Drive every prop live via the Controls panel below. */
+export const Playground: Story = {
+  args: { size: "default", summary: false } as unknown as Story["args"],
+  argTypes: { size: { control: "select", options: ["default", "xs", "sm", "md", "lg", "xl"] } },
+  render: (args) => <Demo {...fromPlayground(args as unknown as Record<string, unknown>)} />,
+  parameters: {
+    docs: {
+      source: {
+        type: "dynamic",
+        transform: (_code: string, context: StoryContext) =>
+          formPlaygroundSnippet(context.args as Parameters<typeof formPlaygroundSnippet>[0]),
+      },
+    },
+  },
+};
+
+export const Basic: Story = {
+  name: "Submitting",
+  parameters: { docs: { source: { code: formSnippets.basic } } },
+  argTypes: { validateOn: { control: false }, focusTarget: { control: false }, size: { control: false } },
+  render: (args) => <Demo {...fromPlayground(args as unknown as Record<string, unknown>)} />,
+};
+
+export const Validation: Story = {
+  name: "Rules for a field and for the form",
+  parameters: { docs: { source: { code: formSnippets.validation } } },
+  argTypes: { validate: { control: false }, validateOn: { control: false } },
+  render: (args) => (
+    <Demo
+      {...fromPlayground(args as unknown as Record<string, unknown>)}
+      aria-label="Create account with a password"
+      validate={(values) => (values.password !== values.confirm ? { confirm: "The passwords don't match" } : undefined)}
+      fields={
+        <>
+          <FormField
+            label="Username"
+            name="username"
+            validate={(value) => (String(value ?? "").length < 3 ? "Use 3 or more characters" : undefined)}
+          >
+            {(field) => <Input {...field} />}
+          </FormField>
+          <FormField label="Password" name="password" required>
+            {(field) => <PasswordInput {...field} />}
+          </FormField>
+          <FormField label="Confirm password" name="confirm" required>
+            {(field) => <PasswordInput {...field} />}
+          </FormField>
+        </>
+      }
+    />
+  ),
+};
+
+export const Summary: Story = {
+  name: "An error summary",
+  parameters: { docs: { source: { code: formSnippets.summary } } },
+  argTypes: { focusTarget: { control: false } },
+  render: (args) => <Demo {...fromPlayground(args as unknown as Record<string, unknown>)} summary focusTarget="summary" />,
+};
+
+export const ValidateOn: Story = {
+  name: "When a field is checked",
+  parameters: { docs: { source: { code: formSnippets.validateOn } } },
+  argTypes: { validateOn: { control: false } },
+  render: (args) => (
+    <Demo {...fromPlayground(args as unknown as Record<string, unknown>)} aria-label="Create account" validateOn="blur" />
+  ),
+};
+
+export const Async: Story = {
+  name: "A submit that takes time",
+  parameters: { docs: { source: { code: formSnippets.async } } },
+  argTypes: { onSubmit: { control: false } },
+  render: function Render(args) {
+    const { values, setValues } = useSubmitted();
+    return (
+      <Stage>
+        <Form
+          {...fromPlayground(args as unknown as Record<string, unknown>)}
+          onSubmit={async (submitted) => {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+            setValues(submitted);
+          }}
+        >
+          <FormField label="Email" name="email" required>
+            {(field) => <Input {...field} type="email" placeholder="you@example.com" />}
+          </FormField>
+          <Form.Actions>
+            <Form.Submit loadingText="Creating…">Create account</Form.Submit>
+          </Form.Actions>
+        </Form>
+        <Submitted values={values} />
+      </Stage>
+    );
+  },
+};
+
+export const ServerErrors: Story = {
+  name: "Errors from the server",
+  parameters: { docs: { source: { code: formSnippets.serverErrors } } },
+  argTypes: { errors: { control: false }, onErrorsChange: { control: false } },
+  render: function Render(args) {
+    const [errors, setErrors] = useState<FormErrors>({});
+    const { values, setValues } = useSubmitted();
+    return (
+      <Stage>
+        <Form
+          {...fromPlayground(args as unknown as Record<string, unknown>)}
+          errors={errors}
+          onErrorsChange={setErrors}
+          onSubmit={async (submitted: FormValues) => {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            if (submitted.email === "taken@example.com") {
+              setErrors({ email: "That email address is already registered" });
+              return;
+            }
+            setValues(submitted);
+          }}
+        >
+          <FormField label="Email" name="email" required helperText="Try taken@example.com">
+            {(field) => <Input {...field} type="email" />}
+          </FormField>
+          <Form.Actions>
+            <Form.Submit loadingText="Checking…">Create account</Form.Submit>
+          </Form.Actions>
+        </Form>
+        <Submitted values={values} />
+      </Stage>
+    );
+  },
+};
+
+export const Layout: Story = {
+  name: "Groups, size and gap",
+  parameters: { docs: { source: { code: formSnippets.layout } } },
+  argTypes: { size: { control: false }, gap: { control: false } },
+  render: (args) => (
+    <Demo
+      {...fromPlayground(args as unknown as Record<string, unknown>)}
+      aria-label="Delivery"
+      size="lg"
+      gap={6}
+      fields={
+        <FieldGroup legend="Address" columns={{ base: 1, md: 3 }}>
+          <FieldGroup.Item span={{ base: 1, md: 3 }}>
+            <FormField label="Street" name="street" required>
+              {(field) => <Input {...field} />}
+            </FormField>
+          </FieldGroup.Item>
+          <FieldGroup.Item span={{ base: 1, md: 2 }}>
+            <FormField label="City" name="city" required>
+              {(field) => <Input {...field} />}
+            </FormField>
+          </FieldGroup.Item>
+          <FieldGroup.Item>
+            <FormField label="Postcode" name="postcode" required>
+              {(field) => <Input {...field} />}
+            </FormField>
+          </FieldGroup.Item>
+        </FieldGroup>
+      }
+      actions={
+        <Form.Actions align="end">
+          <Button type="reset" variant="ghost">
+            Reset
+          </Button>
+          <Form.Submit>Save address</Form.Submit>
+        </Form.Actions>
+      }
+    />
+  ),
+};
+
+export const Disabled: Story = {
+  // A disabled field's helper text is `text.disabled`, 2.32:1 on the page: the already-accepted exemption (WCAG's
+  // contrast rule excludes inactive components), the same annotation `FormField`'s own States story carries.
+  parameters: { a11y: { test: "todo" }, docs: { source: { code: formSnippets.disabled } } },
+  argTypes: { disabled: { control: false } },
+  render: (args) => <Demo {...fromPlayground(args as unknown as Record<string, unknown>)} disabled />,
+};
+
+// --- Hidden tests (kept out of the sidebar and the Docs page) --------------------------------------------
+
+export const RefusedSubmitInteraction: Story = {
+  name: "A refused submit — interaction test",
+  tags: ["!dev"],
+  render: () => <Demo summary />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Create account" }));
+    await waitFor(() => expect(canvas.getByRole("textbox", { name: "Email" })).toHaveFocus());
+    await expect(canvas.getByText("There is 1 problem with this form")).toBeInTheDocument();
+
+    await userEvent.type(canvas.getByRole("textbox", { name: "Email" }), "ada@example.com");
+    await userEvent.click(canvas.getByRole("button", { name: "Create account" }));
+    await waitFor(() => expect(canvas.getByText(/Submitted:/)).toHaveTextContent("ada@example.com"));
+  },
+};

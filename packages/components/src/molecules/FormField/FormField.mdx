@@ -17,6 +17,8 @@ export const propOrder = [
   "required",
   "disabled",
   "size",
+  "name",
+  "validate",
   "id",
   "className",
   "style",
@@ -55,7 +57,7 @@ import { FormField, Input } from "@dbm-design-system/components";
 </div>
 <PlaygroundControls
   of={FormFieldStories.Playground}
-  exclude={["children", "id", "className", "style", "data-testid"]}
+  exclude={["children", "name", "validate", "id", "className", "style", "data-testid"]}
   order={propOrder}
 />
 
@@ -65,6 +67,11 @@ import { FormField, Input } from "@dbm-design-system/components";
 `onFocus`, `onKeyDown`) — passed straight through to the outer wrapper.
 
 <PropertiesTable of={FormFieldStories} order={propOrder} />
+
+Inside a `Form`, a field's `name` is the key its value is submitted under and its error is stored under, so the form
+can show that error here, run the field's `validate` rule on submit and focus the control when it is wrong. The
+`name` is handed back in `fieldProps`: spread `{...fieldProps}` and the control is named. Outside a `Form` a
+`name` only names the control.
 
 ## Variants
 

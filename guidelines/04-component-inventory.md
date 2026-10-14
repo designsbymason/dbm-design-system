@@ -79,8 +79,8 @@ Anything that captures user input. Largest category by necessity — this is whe
 | ColorPicker | organism | ⚪ | Given token-driven theming, likely low-usage but completes the set |
 | RatingInput | molecule | ⚪ | A rating field: icons (stars by default) over native radios, so the arrow keys, one tab stop, form submission and `required` are the browser's own. Two radios per icon give half steps ([ADR-0041](adr/0041-ratinginput-is-a-native-radio-group-with-two-radios-per-icon-at-half-steps-over-a-slider-role.md)). Review: [RatingInput.md](component-reviews/RatingInput.md) |
 | ToggleGroup | molecule | 🟡 | A segmented control over Radix `ToggleGroup` (`ToggleGroup` + `ToggleGroup.Item`): `single` (a `radiogroup`) or `multiple` (a `toolbar` of toggles), with its own looks and sizes matched to `Button`'s heights. Review: [ToggleGroup.md](component-reviews/ToggleGroup.md) |
-| Form | organism | 🟢 | Context provider + validation wiring |
-| FormField | molecule | 🟢 | Label + control + helper/error text composition |
+| Form | organism | 🟢 | The native `<form>` plus the wiring that makes its fields one thing, compound (`Form.Summary`/`Actions`/`Submit`): on submit it reads the browser's rules and the caller's own (a `FormField`'s `validate`, the form's), shows each message in that field's error slot, focuses the first invalid control and announces the count; `onSubmit` may return a promise that holds the form busy. Owns no values and takes no library ([ADR-0074](adr/0074-form-reads-the-dom-for-values-and-the-browsers-rules-and-calls-the-rules-you-write-over-a-value-store-or-a-schema-library.md)); shows its own messages instead of the browser's bubbles ([ADR-0075](adr/0075-form-shows-its-own-messages-and-moves-focus-to-the-first-invalid-control-and-announces-the-count-over-the-browsers-bubbles.md)). Review: [Form.md](component-reviews/Form.md) |
+| FormField | molecule | 🟢 | Label + control + helper/error text composition; inside a `Form`, a `name` and a `validate` rule tie it to the form's errors ([ADR-0074](adr/0074-form-reads-the-dom-for-values-and-the-browsers-rules-and-calls-the-rules-you-write-over-a-value-store-or-a-schema-library.md)) |
 | FieldGroup | molecule | ⚪ | Groups `FormField`s under one legend as a native `<fieldset>`/`<legend>`, distinct from `Form`'s validation role and `FormField`'s single-field scope. Hands `disabled` and `size` to the fields inside through a context ([ADR-0035](adr/0035-fieldgroup-is-a-native-fieldset-and-hands-disabled-and-size-to-formfield-through-a-context.md)); a field takes the group's size only inside a group that sets one ([ADR-0036](adr/0036-a-field-hands-its-size-to-its-control-only-inside-a-fieldgroup-that-sets-one.md)). Review: [FieldGroup.md](component-reviews/FieldGroup.md) |
 | EditableText | molecule | ⚪ | A value shown as text that becomes a field when activated, committing on Enter or blur and cancelling on Escape: a native button swapped for an `Input` (or a `Textarea` with `multiline`), reporting only what is committed ([ADR-0048](adr/0048-editabletext-swaps-a-button-for-a-field-and-reports-only-what-is-committed-over-a-live-field-or-a-controlled-value-per-keystroke.md)). Review: [EditableText.md](component-reviews/EditableText.md) |
 | FieldLabel | atom | 🟢 | |
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu` and `Toast` are built and Finalized, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu` and `Toast` are built and Finalized, `Form` is built and awaiting Finalization, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -266,7 +266,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 4. Drawer — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone; built and Finalized, review in [Drawer.md](component-reviews/Drawer.md)
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it; built and Finalized, review in [Menu.md](component-reviews/Menu.md)
 6. Toast — independent; other organisms report results through it; built and Finalized, review in [Toast.md](component-reviews/Toast.md)
-7. Form — context and validation over `FormField` and `FieldGroup`
+7. Form — context and validation over `FormField` and `FieldGroup`; built, review in [Form.md](component-reviews/Form.md)
 8. Combobox / Autocomplete — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer)
 9. Calendar (molecule, prerequisite; built), then DatePicker
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization
