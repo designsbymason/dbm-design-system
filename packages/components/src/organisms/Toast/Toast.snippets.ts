@@ -41,6 +41,7 @@ ${provider('size="lg"', button("Save", 'toast({ tone: "success", title: "Saved",
 <Button
   onClick={() =>
     toast({
+      tone: "neutral",
       title: "Conversation archived",
       action: { label: "Undo", altText: "Undo from the Edit menu", onClick: undoArchive },
     })
@@ -58,14 +59,17 @@ ${provider('placement={{ base: "bottom", md: "top-end" }}', button("Save", 'toas
 
   promise: `${hook}
 {/* The loading toast stays until the promise settles, then becomes the success or the error one, in the same
-    place. The promise itself is returned, so it can still be awaited and its rejection handled. */}
+    place. The promise itself is returned, so it can still be awaited, and its rejection is still yours to handle:
+    the toast only reports it. */}
 <Button
   onClick={() =>
-    toast.promise(saveChanges(), {
-      loading: "Saving…",
-      success: (file) => ({ title: "Saved", description: file.name }),
-      error: "Could not save",
-    })
+    toast
+      .promise(saveChanges(), {
+        loading: "Saving…",
+        success: (file) => ({ title: "Saved", description: file.name }),
+        error: "Could not save",
+      })
+      .catch(() => undefined)
   }
 >
   Save
@@ -74,30 +78,60 @@ ${provider('placement={{ base: "bottom", md: "top-end" }}', button("Save", 'toas
   persistent: `${hook}
 {/* duration: milliseconds, or null to keep it until it is dismissed. Left out, the provider's applies
     (5000). It pauses while the pointer is over the toasts or focus is inside them. */}
-<Button onClick={() => toast({ tone: "warning", title: "You are offline", duration: null })}>
+<Button
+  onClick={() =>
+    toast({
+      tone: "warning",
+      title: "You are offline",
+      description: "Changes are saved here and sync later.",
+      duration: null,
+    })
+  }
+>
   Go offline
 </Button>`,
 
-  queue: `{/* limit: the most showing at once (3 by default). The rest wait, and each starts its own time when it
+  queue: `${hook}
+{/* limit: the most showing at once (3 by default). The rest wait, and each starts its own time when it
     appears. */}
-${provider("limit={2}", button("Send five", "sendFive()"))}`,
+<Toast.Provider limit={2} duration={3000}>
+  <Button
+    onClick={() => {
+      for (let index = 1; index <= 5; index += 1) toast({ tone: "info", title: \`Message \${index}\` });
+    }}
+  >
+    Send five
+  </Button>
+</Toast.Provider>`,
 
-  update: `${hook}
+  update: `{/* const { toast, update } = useToast(); — in a component rendered inside the provider */}
 {/* The same id again replaces what is showing in place, so a repeated message stays one toast. update()
     changes some of it and keeps the rest. */}
-<Button onClick={() => toast({ id: "sync", tone: "info", title: "Syncing…", loading: true })}>
+<Button
+  onClick={() => {
+    toast({ id: "sync", tone: "info", title: "Syncing…", loading: true });
+    // when the work is done:
+    update("sync", { loading: false, tone: "success", title: "Up to date", duration: 3000 });
+  }}
+>
   Sync
 </Button>`,
 
-  fan: `{/* stack: "list" (default) | "fan". The newest toast in full at the edge, the older ones peeking out behind it,
+  fan: `${hook}
+{/* stack: "list" (default) | "fan". The newest toast in full at the edge, the older ones peeking out behind it,
     three layers at most; the pointer over the toasts or focus in them spreads it into the list, and it folds back
-    a moment after both go. A mobile-first map, like placement: a fan on a phone, the list from md. */}
-<Toast.Provider stack={{ base: "fan", md: "list" }}>{/* your app */}</Toast.Provider>`,
+    a moment after both go. A mobile-first map works like placement's: stack={{ base: "fan", md: "list" }} is a
+    fan on a phone and the list from md. */}
+<Toast.Provider stack="fan" limit={4}>
+  <Button onClick={() => toast({ tone: "info", title: "Message", description: "A line of detail." })}>
+    Raise a toast
+  </Button>
+</Toast.Provider>`,
 
   promiseAction: `${hook}
 {/* onClick may return a promise: the toast stays open with a spinner on the button (past its time, and against
     Escape, a swipe and the dismiss button) until it resolves, and then closes. A rejection keeps it open and
-    goes to onError; with none it is left unhandled, so it is never lost. */}
+    goes to the action's onError; with none it is left unhandled, so it is never lost. */}
 <Button
   onClick={() =>
     toast({
@@ -105,8 +139,8 @@ ${provider("limit={2}", button("Send five", "sendFive()"))}`,
       action: {
         label: "Undo",
         altText: "Restore it from Trash",
+        // returns a promise: the toast waits for it
         onClick: () => restoreConversation(),
-        onError: () => toast({ tone: "danger", title: "Could not restore it" }),
       },
     })
   }
@@ -122,18 +156,35 @@ ${provider("limit={2}", button("Send five", "sendFive()"))}`,
 {/* Turn it off for every toast */}
 <Toast.Provider mergeDuplicates={false}>{/* your app */}</Toast.Provider>`,
 
-  outside: `{/* In a module, anywhere:
-    export const toaster = createToaster();
-    toaster.toast({ tone: "danger", title: "Could not reach the server" });
-    Toasts raised before the provider mounts wait for it. One provider per toaster. */}
-<Toast.Provider toaster={toaster}>{/* your app */}</Toast.Provider>`,
+  outside: `{/* In a module, once: export const toaster = createToaster();
+    Then from anywhere, with no component: toaster.toast({ ... }). Toasts raised before the provider mounts wait
+    for it. One provider per toaster. */}
+<Toast.Provider toaster={toaster}>
+  <Button
+    onClick={() =>
+      toaster.toast({ tone: "danger", title: "Could not reach the server", description: "Check your connection." })
+    }
+  >
+    Fail a request
+  </Button>
+</Toast.Provider>`,
 
-  clearAll: `{/* clearAll (on by default) draws a "Clear all" button once more than one toast is showing; it also
-    drops the ones waiting. labels.clearAll renames it. */}
-<Toast.Provider clearAll={false}>{/* your app */}</Toast.Provider>`,
+  clearAll: `${hook}
+{/* "Clear all" is drawn by default once more than one toast is showing, and closes them all and drops the ones
+    waiting. clearAll={false} turns it off; labels={{ clearAll: "…" }} renames it. */}
+<Toast.Provider limit={2} duration={null}>
+  <Button
+    onClick={() => {
+      for (let index = 1; index <= 5; index += 1) toast({ tone: "info", title: \`Message \${index}\` });
+    }}
+  >
+    Send five
+  </Button>
+</Toast.Provider>`,
 
   declared: `{/* const [open, setOpen] = useState(false); */}
 <Toast.Provider>
+  <Button onClick={() => setOpen(true)}>Save</Button>
   <Toast tone="success" open={open} onOpenChange={setOpen}>
     <Toast.Title>Saved</Toast.Title>
     <Toast.Description>Your changes are live.</Toast.Description>
@@ -142,7 +193,7 @@ ${provider("limit={2}", button("Send five", "sendFive()"))}`,
 </Toast.Provider>`,
 
   rightToLeft: `{/* dir="rtl": placement="bottom-start" is the bottom-right corner, and a swipe toward it closes a toast. */}
-${provider('dir="rtl" placement="bottom-start"', button("حفظ", 'toast({ tone: "success", title: "تم الحفظ" })'))}`,
+${provider('dir="rtl" placement="bottom-start"', button("حفظ", 'toast({ tone: "success", title: "تم الحفظ", description: "التغييرات منشورة الآن." })'))}`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */
