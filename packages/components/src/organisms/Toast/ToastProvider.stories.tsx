@@ -17,10 +17,10 @@ const meta: Meta<typeof Toast.Provider> = {
     },
     placement: {
       control: "select",
-      options: ["bottom-end", "bottom", "bottom-start", "top-end", "top", "top-start"],
+      options: ["top-end", "top", "top-start", "bottom-end", "bottom", "bottom-start"],
       description:
         "The corner or edge the toasts stack against. start and end are logical: the left and right in left-to-right text, swapped in right-to-left. A mobile-first map such as { base: \"bottom\", md: \"top-end\" } switches it at a breakpoint. Below the sm breakpoint a toast spans the screen less a gutter, so only top versus bottom matters there.",
-      table: { defaultValue: { summary: '"bottom-end"' } },
+      table: { defaultValue: { summary: '"top-end"' } },
     },
     stack: {
       control: "select",

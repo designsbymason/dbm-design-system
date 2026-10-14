@@ -187,10 +187,10 @@ const meta: Meta<PlaygroundArgs> = {
     },
     placement: {
       control: "select",
-      options: ["bottom-end", "bottom", "bottom-start", "top-end", "top", "top-start"],
+      options: ["top-end", "top", "top-start", "bottom-end", "bottom", "bottom-start"],
       description:
         "The corner or edge the toasts stack against. start and end are logical: the left and right in left-to-right text, swapped in right-to-left. A mobile-first map switches it at a breakpoint.",
-      table: { defaultValue: { summary: '"bottom-end"' } },
+      table: { defaultValue: { summary: '"top-end"' } },
     },
     stack: {
       control: "select",
@@ -269,7 +269,7 @@ const meta: Meta<PlaygroundArgs> = {
     role: undefined,
     toastId: "",
     duration: 5000,
-    placement: "bottom-end",
+    placement: "top-end",
     stack: "list",
     limit: 3,
     clearAll: true,
@@ -444,7 +444,7 @@ export const WithAction: Story = {
 };
 
 function PlacementExample({ container }: { container: HTMLElement | null }) {
-  const [placement, setPlacement] = useState<ToastPlacement>("bottom-end");
+  const [placement, setPlacement] = useState<ToastPlacement>("top-end");
   return (
     <Toast.Provider container={container} placement={placement}>
       <ButtonRow>

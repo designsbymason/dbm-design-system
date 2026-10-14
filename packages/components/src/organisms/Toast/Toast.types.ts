@@ -255,7 +255,7 @@ export interface ToastProviderProps
    * The corner or edge the toasts stack against — see {@link ToastPlacement}. A responsive map, mobile-first, gives
    * a phone one placement and a desktop another. Below the `sm` breakpoint a toast spans the screen less a
    * gutter whatever the horizontal placement, so only whether it is at the top or the bottom matters there.
-   * @default 'bottom-end'
+   * @default 'top-end'
    */
   placement?: Responsive<ToastPlacement>;
   /**

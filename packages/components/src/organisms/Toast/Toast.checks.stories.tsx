@@ -91,7 +91,7 @@ const pressKey = async (key: string, code: string, windowsVirtualKeyCode: number
 
 export const PlacementBottomEnd: Story = {
   name: "Bottom end sits against the corner, one gutter in, at the toast width",
-  render: () => <App />,
+  render: () => <App provider={{ placement: "bottom-end" }} />,
   play: async ({ canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole("button", { name: "Raise" }));
     const item = await firstToast();
@@ -680,7 +680,7 @@ export const ToasterRaisesFromOutsideReact: Story = {
 // A fan with three numbered toasts, each with an id of its own so one can be taken away from code.
 function FanApp({ provider }: { provider?: Omit<ToastProviderProps, "children"> }) {
   return (
-    <Toast.Provider stack="fan" duration={null} {...provider}>
+    <Toast.Provider stack="fan" duration={null} placement="bottom-end" {...provider}>
       <FanButtons />
     </Toast.Provider>
   );
@@ -936,5 +936,18 @@ export const BottomListGrowsUpAndSettlesDown: Story = {
     const end = seen[seen.length - 1] as number;
     await expect(Math.abs(Math.round(end - start) - Math.round(room))).toBeLessThanOrEqual(2);
     await expect(seen.some((top) => top > start + 1 && top < end - 1)).toBe(true);
+  },
+};
+
+export const DefaultPlacementIsTheTopEndCorner: Story = {
+  name: "With no placement the toasts sit in the top-end corner, one gutter in",
+  render: () => <App />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Raise" }));
+    const item = await firstToast();
+    const rect = item.getBoundingClientRect();
+    await expect(document.querySelector("ol[data-placement]")).toHaveAttribute("data-placement", "top-end");
+    await expect(Math.round(rect.top)).toBe(Math.round(rem()));
+    await expect(Math.round(rect.right)).toBe(window.innerWidth - Math.round(rem()));
   },
 };

@@ -85,9 +85,9 @@ describe("Toast.Provider", () => {
     expect(screen.getByTestId("viewport")).toHaveAttribute("dir", "rtl");
   });
 
-  it("is placed at the bottom end by default, and takes a responsive map", () => {
+  it("is placed at the top end by default, and takes a responsive map", () => {
     const { unmount } = render(<Provider data-testid="viewport" />);
-    expect(screen.getByTestId("viewport")).toHaveAttribute("data-placement", "bottom-end");
+    expect(screen.getByTestId("viewport")).toHaveAttribute("data-placement", "top-end");
     unmount();
     render(<Provider data-testid="viewport" placement={{ base: "top", md: "bottom-start" }} />);
     expect(screen.getByTestId("viewport")).toHaveAttribute("data-placement", "top");

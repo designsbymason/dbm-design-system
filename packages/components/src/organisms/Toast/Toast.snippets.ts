@@ -49,7 +49,7 @@ ${provider('size="lg"', button("Save", 'toast({ tone: "success", title: "Saved",
   Archive
 </Button>`,
 
-  placement: `{/* placement: "bottom-end" (default) | "bottom" | "bottom-start" | "top-end" | "top" | "top-start".
+  placement: `{/* placement: "top-end" (default) | "top" | "top-start" | "bottom-end" | "bottom" | "bottom-start".
     start and end are logical: the left and right in left-to-right text, swapped in right-to-left. */}
 ${provider('placement="top"', button("Save", 'toast({ tone: "success", title: "Saved" })'))}`,
 
@@ -184,7 +184,7 @@ const iconNames: Record<string, string> = { Star: "StarIcon", Heart: "HeartIcon"
  */
 export function toastPlaygroundSnippet(args: ToastPlaygroundSnippetArgs): string {
   const providerAttributes: string[] = [];
-  if (args.placement && args.placement !== "bottom-end") providerAttributes.push(`placement="${args.placement}"`);
+  if (args.placement && args.placement !== "top-end") providerAttributes.push(`placement="${args.placement}"`);
   if (args.stack === "fan") providerAttributes.push('stack="fan"');
   if (args.size && args.size !== "md") providerAttributes.push(`size="${args.size}"`);
   if (args.variant && args.variant !== "subtle") providerAttributes.push(`variant="${args.variant}"`);

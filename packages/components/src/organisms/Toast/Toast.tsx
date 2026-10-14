@@ -135,7 +135,7 @@ const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffec
 
 const DEFAULT_LIMIT = 3;
 const DEFAULT_DURATION = 5000;
-const DEFAULT_PLACEMENT: ToastPlacement = "bottom-end";
+const DEFAULT_PLACEMENT: ToastPlacement = "top-end";
 
 /** What a toast reads from the provider around it. */
 interface ToastSystemValue {
@@ -721,7 +721,7 @@ function swipeDirectionFor(placement: ToastPlacement, dir: "ltr" | "rtl"): "up" 
  *
  * @example
  * ```tsx
- * <Toast.Provider placement="bottom-end" limit={3}>
+ * <Toast.Provider placement="top-end" limit={3}>
  *   <App />
  * </Toast.Provider>
  * ```

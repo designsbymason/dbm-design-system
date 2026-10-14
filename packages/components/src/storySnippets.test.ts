@@ -1749,7 +1749,7 @@ describe("Playground snippet for Toast", () => {
 
   it("Toast writes only what differs from the defaults", () => {
     const plain = toastPlaygroundSnippet({
-      placement: "bottom-end",
+      placement: "top-end",
       limit: 3,
       duration: 5000,
       size: "md",
@@ -1765,6 +1765,7 @@ describe("Playground snippet for Toast", () => {
     expect(plain).toContain("<Toast.Provider>");
     expect(plain).toContain('toast({ title: "Saved" })');
     expect(toastPlaygroundSnippet({ placement: "top" })).toContain('<Toast.Provider placement="top">');
+    expect(toastPlaygroundSnippet({ placement: "bottom-end" })).toContain('<Toast.Provider placement="bottom-end">');
     expect(toastPlaygroundSnippet({ limit: 1 })).toContain("<Toast.Provider limit={1}>");
     expect(toastPlaygroundSnippet({ stack: "fan" })).toContain('<Toast.Provider stack="fan">');
     expect(toastPlaygroundSnippet({ stack: "list" })).toContain("<Toast.Provider>");
