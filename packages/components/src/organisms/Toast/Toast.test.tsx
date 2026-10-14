@@ -1054,3 +1054,110 @@ describe("a fanned stack", () => {
     for (const item of toasts()) expect(item).toHaveAttribute("tabindex", "0");
   });
 });
+
+describe("Toast.Action drawn onto your own element", () => {
+  it("is the link you gave it, with the action's class, and closes the toast when pressed", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(
+      <Toast.Provider>
+        <Toast onOpenChange={onOpenChange}>
+          <Toast.Title>Saved</Toast.Title>
+          <Toast.Action asChild altText="Open it from the list">
+            <a href="#files">View</a>
+          </Toast.Action>
+        </Toast>
+      </Toast.Provider>,
+    );
+    const link = screen.getByRole("link", { name: "View" });
+    expect(link).toHaveAttribute("href", "#files");
+    expect(link).toHaveClass(styles.action as string);
+    await user.click(link);
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "action" });
+  });
+
+  it("holds the toast open while a promise runs, saying so on the element and with no spinner beside it", async () => {
+    const user = userEvent.setup();
+    let resolve: () => void = () => undefined;
+    const work = new Promise<void>((done) => {
+      resolve = done;
+    });
+    const onOpenChange = vi.fn();
+    render(
+      <Toast.Provider>
+        <Toast onOpenChange={onOpenChange}>
+          <Toast.Title>Deleted</Toast.Title>
+          <Toast.Action asChild altText="Restore it from Trash" onClick={() => work}>
+            <a href="#trash">Undo</a>
+          </Toast.Action>
+        </Toast>
+      </Toast.Provider>,
+    );
+    const link = screen.getByRole("link", { name: "Undo" });
+    await user.click(link);
+    expect(link).toHaveAttribute("aria-busy", "true");
+    expect(onOpenChange).not.toHaveBeenCalled();
+    await act(async () => {
+      resolve();
+      await work;
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "action" });
+  });
+});
+
+describe("Clear all while it has focus", () => {
+  it("hands focus to the toast that is left when it goes, instead of dropping it to the page", async () => {
+    render(<Provider />);
+    let first = "";
+    act(() => {
+      first = api.toast({ title: "A" });
+      api.toast({ title: "B" });
+    });
+    const clear = screen.getByRole("button", { name: "Clear all" });
+    act(() => clear.focus());
+    act(() => api.dismiss(first));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument());
+    const left = toasts().find((item) => item.getAttribute("data-state") === "open" && !item.hasAttribute("data-clear-all"));
+    expect(left).toBeDefined();
+    expect(document.activeElement).toBe(left);
+  });
+
+  it("leaves focus alone when it was not on it", async () => {
+    render(
+      <Provider>
+        <button type="button">Elsewhere</button>
+      </Provider>,
+    );
+    let first = "";
+    act(() => {
+      first = api.toast({ title: "A" });
+      api.toast({ title: "B" });
+    });
+    const elsewhere = screen.getByRole("button", { name: "Elsewhere" });
+    act(() => elsewhere.focus());
+    act(() => api.dismiss(first));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Clear all" })).not.toBeInTheDocument());
+    expect(document.activeElement).toBe(elsewhere);
+  });
+});
+
+describe("swipeThreshold", () => {
+  const drag = (item: HTMLElement, distance: number) => {
+    fireEvent.pointerDown(item, { clientX: 100, clientY: 10, button: 0, pointerId: 1 });
+    fireEvent.pointerMove(item, { clientX: 100 + distance, clientY: 10, pointerId: 1 });
+    fireEvent.pointerUp(item, { clientX: 100 + distance, clientY: 10, pointerId: 1 });
+  };
+
+  it("closes the toast on a drag past it, and springs back on a shorter one", () => {
+    const onOpenChange = vi.fn();
+    render(<Provider swipeThreshold={80} />);
+    act(() => {
+      api.toast({ title: "Saved", duration: null, onOpenChange });
+    });
+    const item = toasts()[0] as HTMLElement;
+    act(() => drag(item, 40));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    act(() => drag(item, 120));
+    expect(onOpenChange).toHaveBeenCalledWith(false, { reason: "swipe" });
+  });
+});

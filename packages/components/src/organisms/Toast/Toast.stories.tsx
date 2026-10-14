@@ -50,6 +50,7 @@ interface PlaygroundArgs {
   mergeDuplicates: boolean;
   /** The keys that move focus into the toasts (the Playground maps its choices to the arrays). */
   hotkey: string[];
+  swipeThreshold: number;
   dir: "ltr" | "rtl";
   onOpenChange: (open: boolean) => void;
   onOpenChangeComplete: (open: boolean) => void;
@@ -99,6 +100,7 @@ const noControls = {
   clearAll: { control: false },
   mergeDuplicates: { control: false },
   hotkey: { control: false },
+  swipeThreshold: { control: false },
   dir: { control: false },
   onOpenChange: { control: false },
   onOpenChangeComplete: { control: false },
@@ -222,6 +224,12 @@ const meta: Meta<PlaygroundArgs> = {
         "The keys that move focus into the toasts' region, held together, as KeyboardEvent property or code names. The region's accessible name says which.",
       table: { defaultValue: { summary: '["F8"]' } },
     },
+    swipeThreshold: {
+      control: { type: "number", min: 10, max: 300 },
+      description:
+        "How far, in pixels, a toast has to be dragged toward the edge before letting go closes it. A shorter drag springs back.",
+      table: { defaultValue: { summary: "50" } },
+    },
     dir: {
       control: "select",
       options: ["ltr", "rtl"],
@@ -275,6 +283,7 @@ const meta: Meta<PlaygroundArgs> = {
     clearAll: true,
     mergeDuplicates: true,
     hotkey: ["F8"],
+    swipeThreshold: 50,
     dir: "ltr",
     onOpenChange: fn(),
     onOpenChangeComplete: fn(),
@@ -297,6 +306,7 @@ const meta: Meta<PlaygroundArgs> = {
           clearAll={args.clearAll}
           mergeDuplicates={args.mergeDuplicates}
           hotkey={args.hotkey}
+          swipeThreshold={args.swipeThreshold}
           dir={args.dir}
         >
           <RaiseButton label="Show toast" options={() => optionsFromArgs(args)} />

@@ -71,6 +71,12 @@ const meta: Meta<typeof Toast.Provider> = {
         "The keys that move focus into the toasts' region, held together, as KeyboardEvent property or code names (altKey, KeyT). The region's accessible name says which.",
       table: { defaultValue: { summary: '["F8"]' } },
     },
+    swipeThreshold: {
+      control: { type: "number", min: 10, max: 300 },
+      description:
+        "How far, in pixels, a toast has to be dragged toward the edge before letting go closes it. A shorter drag springs back. Raise it where toasts sit under a thumb that scrolls, lower it for an easier swipe.",
+      table: { defaultValue: { summary: "50" } },
+    },
     dir: {
       control: "select",
       options: ["ltr", "rtl"],

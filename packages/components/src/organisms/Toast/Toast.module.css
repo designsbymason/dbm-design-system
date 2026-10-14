@@ -511,7 +511,7 @@
 
 /* The count after a message that was raised again while it was showing. */
 .count {
-  color: var(--toast-icon);
+  color: var(--toast-text);
   font-weight: var(--dbm-font-weight-regular);
   margin-inline-start: var(--dbm-space-2);
 }

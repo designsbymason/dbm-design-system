@@ -951,3 +951,55 @@ export const DefaultPlacementIsTheTopEndCorner: Story = {
     await expect(Math.round(rect.right)).toBe(window.innerWidth - Math.round(rem()));
   },
 };
+
+export const ActionDrawnOntoALink: Story = {
+  name: "An action drawn onto a link is that link, and pressing it closes the toast",
+  render: () => (
+    <Toast.Provider duration={null}>
+      <Toast data-testid="declared">
+        <Toast.Title>Saved</Toast.Title>
+        <Toast.Action asChild altText="Open it from the list">
+          <a href="#files">View</a>
+        </Toast.Action>
+      </Toast>
+    </Toast.Provider>
+  ),
+  play: async () => {
+    const item = await within(document.body).findByTestId("declared");
+    await settled(item);
+    const link = within(item).getByRole("link", { name: "View" });
+    await expect(link.tagName).toBe("A");
+    const rect = link.getBoundingClientRect();
+    await expect(rect.height).toBeGreaterThanOrEqual(24);
+    // A real press on a real link would navigate the test page. Cancelling it at the document runs after the toast's own
+    // handlers (which read `defaultPrevented`), so the toast still closes as it would for a router's link.
+    const stop = (event: Event) => event.preventDefault();
+    document.addEventListener("click", stop);
+    try {
+      await realClick(link);
+      await waitFor(() => expect(document.body.contains(item)).toBe(false));
+    } finally {
+      document.removeEventListener("click", stop);
+    }
+  },
+};
+
+export const FocusOnClearAllStaysInTheToasts: Story = {
+  name: "When Clear all goes while it has focus, focus lands on the toast that is left",
+  render: () => <FanApp provider={{ stack: "list" }} />,
+  play: async ({ canvasElement }) => {
+    const raise = within(canvasElement).getByRole("button", { name: "Raise" });
+    await realMoveTo(raise);
+    await userEvent.click(raise);
+    await userEvent.click(raise);
+    await waitFor(() => expect(toastItems()).toHaveLength(2));
+    const clear = await within(document.body).findByRole("button", { name: "Clear all" });
+    await settled(clear.closest("li") as HTMLElement);
+    clear.focus();
+    // take the first away from code, as a request finishing would
+    within(canvasElement).getByRole("button", { name: "Take away the second" }).click();
+    await waitFor(() => expect(within(document.body).queryByRole("button", { name: "Clear all" })).toBeNull());
+    await expect(document.activeElement).not.toBe(document.body);
+    await expect(document.activeElement?.closest("li")).toBe(toastItems().find((item) => item.getAttribute("data-state") === "open"));
+  },
+};

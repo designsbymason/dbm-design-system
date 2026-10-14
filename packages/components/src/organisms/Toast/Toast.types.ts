@@ -316,6 +316,12 @@ export interface ToastProviderProps
    */
   hotkey?: string[];
   /**
+   * How far, in pixels, a toast has to be dragged toward the edge before letting go closes it. A shorter drag springs
+   * back. Raise it where toasts sit under a thumb that scrolls, lower it for an easier swipe.
+   * @default 50
+   */
+  swipeThreshold?: number;
+  /**
    * Text direction, which sets which way a swipe closes a toast. Left to right unless told otherwise, and not read
    * from the page, as for the Radix-based components (`05-component-api-conventions.md` §3).
    * @default 'ltr'

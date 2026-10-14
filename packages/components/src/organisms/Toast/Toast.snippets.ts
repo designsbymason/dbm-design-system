@@ -171,6 +171,7 @@ export interface ToastPlaygroundSnippetArgs {
   mergeDuplicates?: boolean;
   /** The keys as an array, or the Playground control's option key (`"F8"`, `"Alt + T"`). */
   hotkey?: string[] | "F8" | "Alt + T";
+  swipeThreshold?: number;
   dir?: "ltr" | "rtl";
 }
 
@@ -196,6 +197,9 @@ export function toastPlaygroundSnippet(args: ToastPlaygroundSnippetArgs): string
   if (args.mergeDuplicates === false) providerAttributes.push("mergeDuplicates={false}");
   if (args.hotkey === "Alt + T" || (Array.isArray(args.hotkey) && args.hotkey.join("+") === "altKey+KeyT")) {
     providerAttributes.push('hotkey={["altKey", "KeyT"]}');
+  }
+  if (args.swipeThreshold !== undefined && args.swipeThreshold !== 50) {
+    providerAttributes.push(`swipeThreshold={${args.swipeThreshold}}`);
   }
   if (args.dir === "rtl") providerAttributes.push('dir="rtl"');
 

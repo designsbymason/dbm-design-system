@@ -161,7 +161,8 @@ interface ToastItemValue {
 }
 const ToastItemContext = createContext<ToastItemValue | null>(null);
 
-// `toast.promise` and friends do nothing outside a provider; `useToast()` warns about it once.
+// `toast.promise` and friends do nothing outside a provider; `useToast()` warns about it, once for each component that
+// calls it there.
 const noop = () => undefined;
 const noopToast = Object.assign(() => "", {
   promise: <Value,>(promise: Promise<Value>) => promise,
@@ -271,7 +272,7 @@ ToastDescription.displayName = "Toast.Description";
  * to do the same thing without it.
  */
 const ToastAction = forwardRef<HTMLButtonElement, ToastActionProps>(
-  ({ variant = "primary", altText, className, onClick, onClickError, onClickCapture, children, ...props }, ref) => {
+  ({ variant = "primary", altText, asChild = false, className, onClick, onClickError, onClickCapture, children, ...props }, ref) => {
     const item = useContext(ToastItemContext);
     const known = variant in actionVariantClass;
     const resolved: ToastActionVariant = known ? variant : "primary";
@@ -345,6 +346,7 @@ const ToastAction = forwardRef<HTMLButtonElement, ToastActionProps>(
       <ToastPrimitive.Action asChild altText={altText}>
         <Button
           {...props}
+          asChild={asChild}
           ref={mergeRefs(ref, buttonRef)}
           // After `...props`: the size is the toast's, and the variant is one of ours, whatever a caller passes.
           variant={resolved}
@@ -356,8 +358,16 @@ const ToastAction = forwardRef<HTMLButtonElement, ToastActionProps>(
             onClickCapture?.(event);
           }}
         >
-          {busy && <Spinner size="xs" />}
-          {children}
+          {/* `asChild` slots onto the one element it is given, so there is nothing to put a spinner beside: a busy action
+              says so with `aria-busy` and `aria-disabled` alone. */}
+          {asChild ? (
+            children
+          ) : (
+            <>
+              {busy && <Spinner size="xs" />}
+              {children}
+            </>
+          )}
         </Button>
       </ToastPrimitive.Action>
     );
@@ -682,6 +692,16 @@ function ToastClearAll({ show }: { show: boolean }) {
   const system = useContext(ToastSystemContext);
   const ref = useRef<HTMLLIElement | null>(null);
   useKeepHeight(ref, show);
+  // The bar goes when there are fewer than two toasts. If focus is on it then, it would drop to the top of the page: it
+  // moves to the toast that is left, the one right above the bar, and to the list when none is.
+  useEffect(() => {
+    if (show) return;
+    const bar = ref.current;
+    if (!bar || !bar.contains(document.activeElement)) return;
+    const list = bar.parentElement;
+    const remaining = list?.querySelector<HTMLElement>('li[data-state="open"]:not([data-clear-all])');
+    (remaining ?? list)?.focus();
+  }, [show]);
   return (
     <ToastPrimitive.Root
       ref={ref}
@@ -741,6 +761,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
       formatNumber = String,
       toaster,
       hotkey,
+      swipeThreshold,
       dir = "ltr",
       container,
       labels: labelOverrides,
@@ -868,6 +889,7 @@ const ToastProvider = forwardRef<HTMLOListElement, ToastProviderProps>(
           label={labels.notification}
           duration={duration === null ? Infinity : duration}
           swipeDirection={swipeDirection}
+          swipeThreshold={swipeThreshold}
         >
           {children}
           {visible.map((entry) => (

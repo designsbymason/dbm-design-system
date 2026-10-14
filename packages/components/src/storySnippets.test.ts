@@ -1768,6 +1768,8 @@ describe("Playground snippet for Toast", () => {
     expect(toastPlaygroundSnippet({ placement: "bottom-end" })).toContain('<Toast.Provider placement="bottom-end">');
     expect(toastPlaygroundSnippet({ limit: 1 })).toContain("<Toast.Provider limit={1}>");
     expect(toastPlaygroundSnippet({ stack: "fan" })).toContain('<Toast.Provider stack="fan">');
+    expect(toastPlaygroundSnippet({ swipeThreshold: 120 })).toContain("<Toast.Provider swipeThreshold={120}>");
+    expect(toastPlaygroundSnippet({ swipeThreshold: 50 })).toContain("<Toast.Provider>");
     expect(toastPlaygroundSnippet({ stack: "list" })).toContain("<Toast.Provider>");
     expect(toastPlaygroundSnippet({ tone: "danger", title: "Failed" })).toContain('toast({ title: "Failed", tone: "danger" })');
     expect(toastPlaygroundSnippet({ dismissible: false, title: "x" })).toContain("dismissible: false");

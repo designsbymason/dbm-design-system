@@ -29,6 +29,7 @@ export const playgroundOrder = [
   "clearAll",
   "mergeDuplicates",
   "hotkey",
+  "swipeThreshold",
   "dir",
   "onOpenChange",
   "onOpenChangeComplete",
@@ -44,6 +45,7 @@ export const providerPropOrder = [
   "clearAll",
   "mergeDuplicates",
   "hotkey",
+  "swipeThreshold",
   "dir",
   "formatNumber",
   "labels",
@@ -439,6 +441,11 @@ toast({
     onError: () => toast({ tone: "danger", title: "Could not restore it" }),
   },
 });
+
+{/* An action drawn onto your own link (a router's), with the toast's colours and size */}
+<Toast.Action asChild altText="Open the file from your recent files">
+  <a href="/files/report">View</a>
+</Toast.Action>
 
 {/* From plain code, with no component: make a toaster and hand it to the provider */}
 export const toaster = createToaster();
