@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode } from "react";
 
 /**
  * What a `<form>` submits, read from the browser's own `FormData`: one entry per `name`, and an array when a name
@@ -12,12 +12,53 @@ export type FormErrors = Record<string, ReactNode>;
 
 /**
  * A rule for one field: given the field's submitted value (and all the form's values, for a rule that compares
- * fields), return the message to show, or nothing when the value is fine.
+ * fields), return the message to show, or nothing when the value is fine. It may return a promise (a check that
+ * asks the server): the form waits for it on submit, and applies the answer of the latest check as the field is
+ * edited.
  */
 export type FieldValidator = (
   value: FormDataEntryValue | FormDataEntryValue[] | undefined,
   values: FormValues,
-) => ReactNode;
+) => ReactNode | PromiseLike<ReactNode>;
+
+/**
+ * The form's controls from outside it: what a toolbar button, a keyboard shortcut or a parent component needs
+ * that a prop can't say. Stable for the form's life, so it is safe in a dependency list. Every method does
+ * nothing until the form has mounted.
+ */
+export interface FormController {
+  /** The `<form>` element, or `null` before it has mounted. */
+  readonly form: HTMLFormElement | null;
+  /** Submits as a click on a submit button does: the checks run and `onSubmit` is called when they pass. */
+  submit: () => void;
+  /** Resets the controls to their initial values, and clears the form's own errors. */
+  reset: () => void;
+  /** Moves focus to the control of the field with this `name`. */
+  focusField: (name: string) => void;
+  /**
+   * Runs every rule as a submit would, shows the errors and focuses the first, without calling `onSubmit`.
+   * Resolves to whether the form is valid.
+   */
+  validate: () => Promise<boolean>;
+  /** Shows these errors, by field `name`, beside any the form has found; they are replaced by the next check of a field. */
+  setErrors: (errors: FormErrors) => void;
+  /** Takes away every error the form itself has found (errors passed in as `errors` stay until the caller changes them). */
+  clearErrors: () => void;
+}
+
+/** What the form is doing and what it has found, for a part of your own that needs to show it. */
+export interface FormState {
+  /** Whether an `onSubmit` promise is still running. */
+  pending: boolean;
+  /** Whether a submit is waiting for an asynchronous rule. */
+  validating: boolean;
+  /** Whether the form is disabled, by its own prop or because it is pending. */
+  disabled: boolean;
+  /** The errors showing, by field name. */
+  errors: FormErrors;
+  /** Whether the last submit's `onSubmit` rejected. */
+  submitFailed: boolean;
+}
 
 /** What a `FormField` tells the `Form` around it about itself. Read at the moment of validation. */
 export interface FormFieldRegistration {
@@ -51,10 +92,22 @@ export interface FormContextValue {
   summaryTitle: (count: number) => string;
   /** Whether an `onSubmit` is still running. */
   pending: boolean;
+  /** Whether a submit is waiting for an asynchronous rule. */
+  validating: boolean;
+  /** Keys whose asynchronous rule is running now, for the field to say so. */
+  validatingKeys: ReadonlySet<string>;
   /** Whether the form is disabled, by its own prop or because it is pending. */
   disabled: boolean;
-  /** Where `Form.Summary` puts its element, so a refused submit can move focus to it. */
-  summaryRef: RefObject<HTMLElement | null>;
+  /** Whether the last submit's `onSubmit` rejected. */
+  submitFailed: boolean;
+  /** The form-level message: the `error` prop, or the fallback after a rejected `onSubmit`. `null` when none. */
+  formError: ReactNode;
+  /** Tells the form a `Form.Error` is mounted, so a rejection is shown there rather than left unhandled. */
+  registerErrorSlot: () => () => void;
+  /** The controls from outside, the same object `controllerRef` gets. */
+  controller: FormController;
+  /** How `Form.Summary` hands the form its element, so a refused submit can move focus to it. */
+  setSummaryElement: (element: HTMLElement | null) => void;
 }
 
 const FormContext = createContext<FormContextValue | null>(null);

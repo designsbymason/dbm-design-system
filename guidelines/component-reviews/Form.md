@@ -30,3 +30,19 @@
 **Not done, for the user to look at:** a visual look at the Docs page and the stories in all four themes (the preview pane was not on screen for this session, so no screenshot was taken); the Docs page and stories were read and measured but not looked at.
 
 **Known and accepted:** values are what the browser reports (a single ticked checkbox of a group is a string, a repeated name an array); an invalid control with no `FormField` has no error slot, so its message is in the summary only; dirty/touched tracking is not here (it needs a value snapshot, which pulls the form toward owning state).
+
+## Second round: the page's words, asking rules, a form-level error and a controller (2026-10-14, at the user's request)
+
+A feature-completeness pass named four gaps, all built the same day ([ADR-0076](../adr/0076-form-rules-may-return-promises-and-the-form-is-reached-from-outside-by-a-controller-and-two-hooks-over-synchronous-rules-or-an-imperative-ref.md)):
+1. **The browser's rules in the page's words.** `labels` has a message per validity state (`valueMissing`, `typeMismatch(type)`, `patternMismatch`, `tooShort(n)`, `tooLong(n)`, `rangeUnderflow(min)`, `rangeOverflow(max)`, `stepMismatch`, `badInput`), with the numbers through `formatNumber`; a message a control wrote itself is kept.
+2. **Rules that ask.** A field's and the form's rule may return a promise: submit waits (the form `aria-busy`, `Form.Submit` loading, nothing disabled, so focus stays), live checks keep the latest answer and drop a stale one, a field is `aria-busy` while one is out, and a rule that throws shows `labels.validationFailed`.
+3. **`Form.Error`** and an `error` prop: the slot for a rejected `onSubmit` or a message the server sent about the whole form.
+4. **A controller:** `controllerRef`, `useFormController()` and `useFormState()`.
+
+**Found by running it:**
+- **The new code was the first the React compiler lint could analyse.** The earlier `Form.tsx` passed lint because the compiler bailed out on it; once it compiled, reading a warn-once ref during render and writing a ref through a context value were reported. The warnings moved to effects, and the summary hands its element up through a callback in the context instead of a ref object.
+- **`validate()` from a button outside the form** had to focus the first invalid field after the click: a real-browser check.
+- **A stale answer** to an earlier check of a field replaced the newer one until a token per field was added; a test fails if the token is removed.
+
+**Verification (real runs):** `tsc` and `eslint --max-warnings 0` clean; unit tests for Form (94, with the new groups for the page's words, asking rules, `Form.Error` and the controller); Storybook (Chromium) 27 for Form, with a check that a waiting submit keeps focus in the field and one that `validate()` from outside focuses the field.
+

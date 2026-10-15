@@ -7,6 +7,7 @@ import { FieldGroup } from "../../molecules/FieldGroup";
 import { FormField } from "../../molecules/FormField";
 import * as FormStories from "./Form.stories";
 import * as FormActionsStories from "./FormActions.stories";
+import * as FormErrorStories from "./FormError.stories";
 import * as FormSubmitStories from "./FormSubmit.stories";
 import * as FormSummaryStories from "./FormSummary.stories";
 
@@ -18,6 +19,7 @@ export const propOrder = [
   "validate",
   "errors",
   "onErrorsChange",
+  "error",
   "validateOn",
   "focusTarget",
   "disabled",
@@ -26,6 +28,7 @@ export const propOrder = [
   "noValidate",
   "labels",
   "formatNumber",
+  "controllerRef",
   "action",
   "method",
   "autoComplete",
@@ -39,6 +42,7 @@ export const propOrder = [
   "data-testid",
 ];
 
+export const errorPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const summaryPropOrder = ["title", "id", "className", "style", "data-testid"];
 export const actionsPropOrder = ["children", "align", "id", "className", "style", "data-testid"];
 export const submitPropOrder = ["children", "isLoading", "loadingText", "disabled", "variant", "size", "id", "className", "style", "data-testid"];
@@ -57,7 +61,8 @@ returned is running the form is busy and cannot be submitted twice.
 
 It owns no values: each control keeps its own, so it works with any control in the system and with a plain
 `<input>`. It runs no rules of its own either: it reads the browser's (`required`, `type="email"`, `pattern`,
-`minLength`…) and calls the ones you write.
+`minLength`…) and calls the ones you write, which may ask the server and return a promise. The browser's rules are
+shown in the page's own words (`labels`), not in whatever language the browser happens to speak.
 
 ### Import
 
@@ -82,8 +87,10 @@ import { Form, FormField, Input } from "@dbm-design-system/components";
     "validate",
     "errors",
     "onErrorsChange",
+    "error",
     "labels",
     "formatNumber",
+    "controllerRef",
     "action",
     "method",
     "autoComplete",
@@ -125,6 +132,14 @@ alert and shown only while there is something to list. It also accepts any nativ
 
 <PropertiesTable of={FormSummaryStories} order={summaryPropOrder} />
 
+### Form.Error properties
+
+A message about the form as a whole, for a failure no field owns. It shows the form's `error`, or the form's
+`labels.submitFailed` after an `onSubmit` promise rejects, as a danger alert that is announced when it appears, and
+nothing while there is no error. It also accepts any native `<div>` attribute.
+
+<PropertiesTable of={FormErrorStories} order={errorPropOrder} />
+
 ### Form.Actions properties
 
 A row for the form's buttons. It also accepts any native `<div>` attribute.
@@ -164,6 +179,22 @@ form is. It takes every `Button` prop except `type` and `asChild`.
 
 <Canvas of={FormStories.ServerErrors} />
 
+### A rule that asks the server
+
+<Canvas of={FormStories.AsyncRule} />
+
+### A message about the whole form
+
+<Canvas of={FormStories.WholeFormError} />
+
+### Controlling it from outside
+
+<Canvas of={FormStories.Controller} />
+
+### In another language
+
+<Canvas of={FormStories.Labels} />
+
 ### Groups, size and gap
 
 <Canvas of={FormStories.Layout} />
@@ -184,6 +215,10 @@ form is. It takes every `Button` prop except `type` and `asChild`.
 - Put a rule about one field in that field's `validate`, and a rule that compares fields in the form's `validate`.
 - Return a promise from `onSubmit` for anything that takes time, so the form is busy and can't be sent twice.
 - Add `Form.Summary` to a long form: it gives a keyboard or screen-reader user the whole list in one place.
+- Return a promise from a rule that has to ask something (a name's availability); the form waits for it on submit
+  and shows the latest answer as the field is edited.
+- Put `Form.Error` where a failure that belongs to no field should appear, so a rejected `onSubmit` is shown
+  and not left for the page to report.
 - Pass the server's answer to `errors` and wire `onErrorsChange` to the same state, so an error clears when the
   person edits the field it is about.
 
@@ -214,6 +249,16 @@ form is. It takes every `Button` prop except `type` and `asChild`.
   belongs in `errors`, keyed by the field's name; the form shows it in the same place as its own messages.
 - **Use `formnovalidate` for "Save draft".** A submit button with `formNoValidate` skips the checks and calls
   `onSubmit`.
+- **Keep an asynchronous rule cheap and idempotent.** It runs on submit and, once a field is being checked as it is
+  edited, on every edit of that field: a late answer to an earlier check is dropped, but the request still goes
+  out, so debounce it in the rule if it is expensive. The form-level `validate` runs on each of those checks too.
+- **Write the browser's rules in your words.** Set `labels` once for the page's language (`valueMissing`,
+  `typeMismatch`, `tooShort`…); a message a control wrote itself (a time picker's "incomplete") is kept as the
+  control wrote it.
+- **Reach the form from elsewhere with the controller.** `controllerRef`, or `useFormController()` inside the
+  form, gives `submit()`, `reset()`, `validate()`, `focusField(name)`, `setErrors()` and `clearErrors()`; the
+  methods do nothing until the form has mounted. `useFormState()` reads `pending`, `validating`, `errors` and
+  `submitFailed` for a part of your own.
 - Values arrive as the browser reports them: strings, or an array when a name repeats (a set of checkboxes with
   two or more ticked). Convert and type them where you receive them.
 
@@ -227,6 +272,9 @@ form is. It takes every `Button` prop except `type` and `asChild`.
   ("2 errors."). With `focusTarget="summary"` focus lands on the summary instead, and each entry is a link to its
   control.
 - The summary is not itself a live region, so nothing is read twice.
+- While a submit is waiting for an asynchronous rule the form is `aria-busy` and `Form.Submit` is loading, but the
+  fields stay editable and keep focus. A field whose rule is running is `aria-busy` too.
+- `Form.Error` is announced when it appears (it is an alert), and nothing else is announced for it.
 - While a promise is running the form is `aria-busy`, every field is disabled and the submit button shows its
   loading state. When it finishes, focus goes back to where it was if nothing else has it, since disabling a
   control makes the browser drop focus.
@@ -264,6 +312,18 @@ form is. It takes every `Button` prop except `type` and `asChild`.
     <Form.Submit>Create account</Form.Submit>
   </Form.Actions>
 </Form>
+
+{/* A rule that asks the server: the form waits for it on submit */}
+<FormField label="Username" name="username" validate={async (value) => ((await isTaken(String(value))) ? "That username is taken" : undefined)}>
+  {(field) => <Input {...field} />}
+</FormField>
+
+{/* From a part of your own inside the form */}
+function SaveShortcut() {
+  const form = useFormController();
+  const { pending } = useFormState();
+  return <Button disabled={pending} onClick={() => form.submit()}>Save</Button>;
+}
 
 {/* A rule across fields */}
 <Form

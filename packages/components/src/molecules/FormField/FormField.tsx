@@ -82,11 +82,19 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
       return registerField({ key: fieldKey, name, controlId, label, validate });
     }, [registerField, fieldKey, name, controlId, label, validate]);
 
+    // An asynchronous rule for this field is running: say so to assistive technology without moving anything.
+    const validating = Boolean(form?.validatingKeys.has(fieldKey));
+
     const hasError = Boolean(error);
     const describedBy = hasError ? errorId : helperText ? helperId : undefined;
 
     return (
-      <div ref={ref} {...props} className={cx(styles.root, className)}>
+      <div
+        ref={ref}
+        {...props}
+        {...(validating ? { "aria-busy": true } : {})}
+        className={cx(styles.root, className)}
+      >
         <FieldLabel
           id={labelId}
           htmlFor={controlId}

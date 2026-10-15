@@ -5,8 +5,10 @@ import { FormField } from "../../molecules/FormField";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Select } from "../../molecules/Select";
 import { TimePicker } from "../../molecules/TimePicker";
+import { useRef } from "react";
 import { Button } from "../../atoms/Button";
 import { Form } from "./Form";
+import type { FormController } from "./Form.types";
 
 // Real-browser checks for what jsdom can't evaluate: where focus really lands (a disabled control drops it, a hidden
 // validity control must never take it), a live region read from the accessibility tree, the summary's focus ring,
@@ -205,5 +207,59 @@ export const RightToLeft: Story = {
     const style = getComputedStyle(list);
     await expect(parseFloat(style.paddingRight)).toBeGreaterThan(0);
     await expect(parseFloat(style.paddingLeft)).toBe(0);
+  },
+};
+
+export const WaitingForARuleKeepsFocusInPlace: Story = {
+  name: "A submit waiting on a rule keeps focus in the field, then lands on the one that is wrong",
+  render: () =>
+    frame(
+      <Form aria-label="Sign up" onSubmit={() => undefined}>
+        <FormField label="Username" name="username" validate={() => new Promise((resolve) => setTimeout(() => resolve("That username is taken"), 400))}>
+          {(field) => <Input {...field} />}
+        </FormField>
+        <FormField label="Email" name="email">
+          {(field) => <Input {...field} type="email" />}
+        </FormField>
+        <Form.Submit>Create account</Form.Submit>
+      </Form>,
+    ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const email = canvas.getByRole("textbox", { name: "Email" });
+    email.focus();
+    await userEvent.keyboard("a@b.co");
+    await pressEnter();
+    await waitFor(() => expect(canvas.getByRole("form", { name: "Sign up" })).toHaveAttribute("aria-busy", "true"));
+    // nothing was disabled, so focus never left the field being typed in
+    await expect(email).toBeEnabled();
+    await expect(email).toHaveFocus();
+    await waitFor(() => expect(canvas.getByRole("textbox", { name: "Username" })).toHaveFocus(), { timeout: 3000 });
+    await expect(canvas.getByRole("textbox", { name: "Username" })).toHaveAccessibleDescription("That username is taken");
+  },
+};
+
+function OutsideButtons() {
+  const controller = useRef<FormController>(null);
+  return (
+    <div style={{ maxInlineSize: "28rem" }}>
+      <Button onClick={() => void controller.current?.validate()}>Check from outside</Button>
+      <Form aria-label="Sign up" controllerRef={controller}>
+        <FormField label="Email" name="email" required>
+          {(field) => <Input {...field} type="email" />}
+        </FormField>
+      </Form>
+    </div>
+  );
+}
+
+export const ValidateFromOutsideFocusesTheField: Story = {
+  name: "Checking from a button outside the form focuses the first invalid field",
+  render: () => <OutsideButtons />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Check from outside" }));
+    await waitFor(() => expect(canvas.getByRole("textbox", { name: "Email" })).toHaveFocus());
+    await expect(canvas.getByRole("textbox", { name: "Email" })).toHaveAccessibleDescription("Fill out this field.");
   },
 };

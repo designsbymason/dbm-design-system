@@ -7,9 +7,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Input } from "../../atoms/Input";
 import { FieldGroup } from "../../molecules/FieldGroup";
 import { FormField } from "../../molecules/FormField";
-import { Form } from "./Form";
+import { Form, useFormController, useFormState } from "./Form";
 import styles from "./Form.module.css";
-import type { FormErrors, FormProps } from "./Form.types";
+import type { FormController, FormErrors, FormProps } from "./Form.types";
 
 const shortUsername = (value: unknown) => {
   const text = String(value ?? "");
@@ -89,7 +89,7 @@ describe("Form", () => {
     expect(onInvalidSubmit).toHaveBeenCalledTimes(1);
     expect(Object.keys(onInvalidSubmit.mock.calls[0]?.[0] as FormErrors)).toEqual(["email"]);
     const email = screen.getByRole("textbox", { name: "Email" });
-    expect(email).toHaveAccessibleDescription(/Constraints not satisfied|not valid/i);
+    expect(email).toHaveAccessibleDescription("Fill out this field.");
     expect(email).toHaveAttribute("aria-invalid", "true");
   });
 
@@ -139,7 +139,7 @@ describe("Form", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Go" }));
     expect(screen.getByRole("textbox", { name: "Name" })).not.toHaveAccessibleDescription("custom");
-    expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription(/Constraints not satisfied|not valid/i);
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("Fill out this field.");
   });
 
   it("runs the form's own rule, keeping a field's own message for the same field", async () => {
@@ -179,7 +179,7 @@ describe("Form", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Go" }));
     expect(screen.getByLabelText("plain")).toHaveFocus();
-    expect(screen.getByText(/Constraints not satisfied|not valid/i)).toBeInTheDocument();
+    expect(screen.getByText("Fill out this field.")).toBeInTheDocument();
   });
 
   it("skips validation for a submitter marked formnovalidate", async () => {
@@ -356,9 +356,9 @@ describe("Form", () => {
         />,
       );
       await submit();
-      expect(screen.getByRole("textbox", { name: "Email" })).toHaveAccessibleDescription(/Constraints not satisfied|not valid/i);
+      expect(screen.getByRole("textbox", { name: "Email" })).toHaveAccessibleDescription("Fill out this field.");
       await userEvent.click(screen.getByRole("button", { name: "Reset" }));
-      expect(screen.getByRole("textbox", { name: "Email" })).not.toHaveAccessibleDescription(/Constraints not satisfied|not valid/i);
+      expect(screen.getByRole("textbox", { name: "Email" })).not.toHaveAccessibleDescription("Fill out this field.");
       expect(onErrorsChange).toHaveBeenCalledWith({});
     });
   });
@@ -632,3 +632,384 @@ describe("Form", () => {
     });
   });
 });
+
+describe("Form, the page's own words for the browser's rules", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  function Field(props: { inputProps: Record<string, unknown>; label?: string }) {
+    return (
+      <FormField label={props.label ?? "Field"} name="f">
+        {(field) => <Input {...field} {...props.inputProps} />}
+      </FormField>
+    );
+  }
+  const refused = async (ui: ReactNode, formProps: Partial<FormProps> = {}) => {
+    render(
+      <Form aria-label="F" onSubmit={vi.fn()} {...formProps}>
+        {ui}
+        <Form.Submit>Go</Form.Submit>
+      </Form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+  };
+
+  it("says a required control is empty in its own words, not the browser's", async () => {
+    await refused(<Field inputProps={{ required: true }} />);
+    expect(screen.getByRole("textbox")).toHaveAccessibleDescription("Fill out this field.");
+  });
+
+  it("says what kind of value was wanted", async () => {
+    await refused(<Field inputProps={{ type: "email", defaultValue: "nope" }} />);
+    expect(screen.getByRole("textbox")).toHaveAccessibleDescription("Enter an email address.");
+  });
+
+  it("says a pattern, a minimum length and a range in the page's words, with the numbers through formatNumber", async () => {
+    render(
+      <Form aria-label="F" onSubmit={vi.fn()} formatNumber={(value) => `<${value}>`}>
+        <FormField label="Code" name="code">
+          {(field) => <Input {...field} pattern="[0-9]+" defaultValue="abc" />}
+        </FormField>
+        <FormField label="Age" name="age">
+          {(field) => <Input {...field} type="number" min={18} defaultValue="5" />}
+        </FormField>
+        <Form.Submit>Go</Form.Submit>
+      </Form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    expect(screen.getByRole("textbox", { name: "Code" })).toHaveAccessibleDescription("Use the format that was asked for.");
+    expect(screen.getByRole("spinbutton", { name: "Age" })).toHaveAccessibleDescription("Choose <18> or more.");
+  });
+
+  it("uses the labels it is given for each way a value can be wrong, ignoring an undefined entry", async () => {
+    await refused(<Field inputProps={{ required: true }} />, {
+      labels: { valueMissing: "Remplissez ce champ.", typeMismatch: undefined },
+    });
+    expect(screen.getByRole("textbox")).toHaveAccessibleDescription("Remplissez ce champ.");
+  });
+
+  it("keeps a message the control wrote itself", async () => {
+    function Custom() {
+      return (
+        <FormField label="Time" name="t">
+          {(field) => (
+            <input
+              id={field.id}
+              name={field.name}
+              aria-labelledby={field["aria-labelledby"]}
+              aria-describedby={field["aria-describedby"]}
+              ref={(node) => node?.setCustomValidity("Pick a time in the future")}
+            />
+          )}
+        </FormField>
+      );
+    }
+    await refused(<Custom />);
+    expect(screen.getByRole("textbox")).toHaveAccessibleDescription("Pick a time in the future");
+  });
+});
+
+describe("Form, rules that ask something", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  function deferred<T>() {
+    let resolve!: (value: T) => void;
+    let reject!: (error: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  }
+
+  function Asking({ rule, ...props }: FormProps & { rule: (value: unknown) => PromiseLike<React.ReactNode> }) {
+    return (
+      <Form aria-label="F" {...props}>
+        <FormField label="Name" name="name" validate={rule}>
+          {(field) => <Input {...field} defaultValue="ada" />}
+        </FormField>
+        <Form.Submit>Go</Form.Submit>
+      </Form>
+    );
+  }
+
+  it("holds the submit until the answer is in, then refuses on a message", async () => {
+    const gate = deferred<string | undefined>();
+    const onSubmit = vi.fn();
+    render(<Asking rule={() => gate.promise} onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.getByRole("form", { name: "F" })).toHaveAttribute("aria-busy", "true"));
+    expect(screen.getByRole("textbox", { name: "Name" })).toBeEnabled();
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await act(async () => gate.resolve("That name is taken"));
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("That name is taken"));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole("form", { name: "F" })).not.toHaveAttribute("aria-busy");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveFocus();
+  });
+
+  it("calls onSubmit once the answer is no message, and ignores a second submit meanwhile", async () => {
+    const gate = deferred<undefined>();
+    const onSubmit = vi.fn();
+    render(<Asking rule={() => gate.promise} onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    fireEvent.submit(screen.getByRole("form", { name: "F" }));
+    await act(async () => gate.resolve(undefined));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]?.[0]).toEqual({ name: "ada" });
+  });
+
+  it("shows a field as not checked when its rule rejects, and says so in development", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(<Asking rule={() => Promise.reject(new Error("network"))} onSubmit={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("This couldn't be checked. Try again."),
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("a validation rule threw or rejected"), expect.any(Error));
+  });
+
+  it("lets the browser send a valid form after waiting, when there is no onSubmit", async () => {
+    const gate = deferred<undefined>();
+    render(<Asking rule={() => gate.promise} />);
+    const form = screen.getByRole("form", { name: "F" }) as HTMLFormElement;
+    // jsdom has no navigation: stop the re-sent submit there, having seen it reach the document uncancelled.
+    const seen: boolean[] = [];
+    document.addEventListener("submit", (event) => {
+      seen.push(event.defaultPrevented);
+      event.preventDefault();
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await act(async () => gate.resolve(undefined));
+    await waitFor(() => expect(seen).toContain(false));
+    expect(form).not.toHaveAttribute("aria-busy");
+  });
+
+  it("checks one field as it is edited, marks it busy, and drops an answer an edit has made old", async () => {
+    const first = deferred<string>();
+    const second = deferred<string | undefined>();
+    const rule = vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    render(
+      <Form aria-label="F" validateOn="change">
+        <FormField label="Name" name="name" validate={rule} data-testid="field">
+          {(field) => <Input {...field} />}
+        </FormField>
+      </Form>,
+    );
+    const input = screen.getByRole("textbox", { name: "Name" });
+    await userEvent.type(input, "a");
+    expect(screen.getByTestId("field")).toHaveAttribute("aria-busy", "true");
+    await userEvent.type(input, "b");
+    // the answer to the first check arrives after the second was asked for: it is dropped
+    await act(async () => first.resolve("old answer"));
+    expect(input).not.toHaveAccessibleDescription("old answer");
+    expect(screen.getByTestId("field")).toHaveAttribute("aria-busy", "true");
+    await act(async () => second.resolve("That name is taken"));
+    await waitFor(() => expect(input).toHaveAccessibleDescription("That name is taken"));
+    expect(screen.getByTestId("field")).not.toHaveAttribute("aria-busy");
+  });
+
+  it("runs the form's own rule when it returns a promise", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <Form aria-label="F" onSubmit={onSubmit} validate={async () => ({ name: "Not allowed" })}>
+        <FormField label="Name" name="name">
+          {(field) => <Input {...field} />}
+        </FormField>
+        <Form.Submit>Go</Form.Submit>
+      </Form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("Not allowed"));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("shows Form.Submit as loading while it waits", async () => {
+    const gate = deferred<undefined>();
+    render(<Asking rule={() => gate.promise} onSubmit={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /Go/ })).toBeDisabled());
+    await act(async () => gate.resolve(undefined));
+  });
+});
+
+describe("Form.Error", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("shows nothing until the form has an error, and then the message, announced", () => {
+    const { rerender } = render(
+      <Form aria-label="F">
+        <Form.Error />
+      </Form>,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    rerender(
+      <Form aria-label="F" error="We couldn't reach the server">
+        <Form.Error />
+      </Form>,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent("We couldn't reach the server");
+  });
+
+  it("shows the fallback after a rejected onSubmit, hands the rejection on, and clears on the next submit", async () => {
+    const failure = new Error("nope");
+    const onSubmit = vi.fn().mockRejectedValueOnce(failure).mockResolvedValueOnce(undefined);
+    const onSubmitError = vi.fn();
+    render(
+      <Form aria-label="F" onSubmit={onSubmit} onSubmitError={onSubmitError}>
+        <Form.Error />
+        <Form.Submit>Go</Form.Submit>
+      </Form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong"));
+    expect(onSubmitError).toHaveBeenCalledWith(failure);
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  });
+
+  it("is where a rejection is handled when there is no onSubmitError", async () => {
+    render(
+      <Form aria-label="F" onSubmit={() => Promise.reject(new Error("nope"))}>
+        <Form.Error>Custom words</Form.Error>
+        <Form.Submit>Go</Form.Submit>
+      </Form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Custom words"));
+  });
+
+  it("renders nothing, with a warning, outside a form", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { container } = render(<Form.Error />);
+    expect(container).toBeEmptyDOMElement();
+    await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.stringContaining("Form.Error: rendered outside a <Form>")));
+  });
+});
+
+describe("Form's controller and state", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  function Probe({ onController }: { onController: (controller: FormController) => void }) {
+    const controller = useFormController();
+    onController(controller);
+    return null;
+  }
+
+  function Harness(props: FormProps & { controllerRef: React.Ref<FormController> }) {
+    return (
+      <Form aria-label="F" {...props}>
+        <FormField label="Email" name="email" required>
+          {(field) => <Input {...field} type="email" />}
+        </FormField>
+        <FormField label="Name" name="name">
+          {(field) => <Input {...field} />}
+        </FormField>
+      </Form>
+    );
+  }
+
+  it("hands one object through controllerRef, with the form element", async () => {
+    const ref = createRef<FormController>();
+    render(<Harness controllerRef={ref} />);
+    const controller = ref.current as FormController;
+    expect(controller.form).toBe(screen.getByRole("form", { name: "F" }));
+    // the same object after a re-render
+    await userEvent.type(screen.getByRole("textbox", { name: "Name" }), "a");
+    expect(ref.current).toBe(controller);
+  });
+
+  it("validate() shows the errors, focuses the first, and resolves to whether the form is valid", async () => {
+    const ref = createRef<FormController>();
+    const onSubmit = vi.fn();
+    render(<Harness controllerRef={ref} onSubmit={onSubmit} />);
+    let valid: boolean | undefined;
+    await act(async () => {
+      valid = await ref.current?.validate();
+    });
+    expect(valid).toBe(false);
+    expect(screen.getByRole("textbox", { name: "Email" })).toHaveAccessibleDescription("Fill out this field.");
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Email" })).toHaveFocus());
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    await userEvent.type(screen.getByRole("textbox", { name: "Email" }), "a@b.co");
+    await act(async () => {
+      valid = await ref.current?.validate();
+    });
+    expect(valid).toBe(true);
+    expect(screen.getByRole("textbox", { name: "Email" })).not.toHaveAccessibleDescription("Fill out this field.");
+  });
+
+  it("submit() runs the checks and onSubmit, as a button does", async () => {
+    const ref = createRef<FormController>();
+    const onSubmit = vi.fn();
+    render(<Harness controllerRef={ref} onSubmit={onSubmit} />);
+    await userEvent.type(screen.getByRole("textbox", { name: "Email" }), "a@b.co");
+    act(() => ref.current?.submit());
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  });
+
+  it("setErrors() shows messages by name, focusField() focuses, clearErrors() takes the form's own away", async () => {
+    const ref = createRef<FormController>();
+    render(<Harness controllerRef={ref} />);
+    act(() => ref.current?.setErrors({ name: "Reserved" }));
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("Reserved");
+    act(() => ref.current?.focusField("name"));
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveFocus();
+    act(() => ref.current?.clearErrors());
+    expect(screen.getByRole("textbox", { name: "Name" })).not.toHaveAccessibleDescription("Reserved");
+  });
+
+  it("reset() clears the controls and the form's own errors", async () => {
+    const ref = createRef<FormController>();
+    render(<Harness controllerRef={ref} />);
+    await userEvent.type(screen.getByRole("textbox", { name: "Name" }), "ada");
+    act(() => ref.current?.setErrors({ name: "Reserved" }));
+    act(() => ref.current?.reset());
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Name" })).not.toHaveAccessibleDescription("Reserved");
+  });
+
+  it("useFormController() returns the same object inside the form", () => {
+    const ref = createRef<FormController>();
+    let inside: FormController | undefined;
+    render(
+      <Form aria-label="F" controllerRef={ref}>
+        <Probe onController={(controller) => (inside = controller)} />
+      </Form>,
+    );
+    expect(inside).toBe(ref.current);
+  });
+
+  it("useFormState() reports what the form is doing, and an idle form outside one", async () => {
+    function Status() {
+      const state = useFormState();
+      return <p>{`pending:${state.pending} errors:${Object.keys(state.errors).length}`}</p>;
+    }
+    const { unmount } = render(<Status />);
+    expect(screen.getByText("pending:false errors:0")).toBeInTheDocument();
+    unmount();
+
+    let release!: () => void;
+    render(
+      <Form aria-label="F" onSubmit={() => new Promise<void>((resolve) => (release = resolve))}>
+        <Status />
+        <Form.Submit>Go</Form.Submit>
+      </Form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.getByText("pending:true errors:0")).toBeInTheDocument());
+    await act(async () => release());
+    await waitFor(() => expect(screen.getByText("pending:false errors:0")).toBeInTheDocument());
+  });
+
+  it("does nothing outside a form, with a warning", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    let outside: FormController | undefined;
+    render(<Probe onController={(controller) => (outside = controller)} />);
+    expect(outside?.form).toBeNull();
+    await expect(outside?.validate()).resolves.toBe(true);
+    await waitFor(() => expect(warn).toHaveBeenCalledWith(expect.stringContaining("useFormController: called outside")));
+  });
+});
+

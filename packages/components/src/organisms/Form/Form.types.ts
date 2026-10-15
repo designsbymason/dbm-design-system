@@ -1,17 +1,26 @@
 import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
-import type { ComponentPropsWithoutRef, CSSProperties, FormEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, FormEvent, ReactNode, Ref } from "react";
 import type { ButtonProps } from "../../atoms/Button";
 import type { FieldLabelSize } from "../../atoms/FieldLabel";
-import type { FormErrors, FormValues } from "../../internal/formContext";
+import type { FormController, FormErrors, FormValues } from "../../internal/formContext";
 
-export type { FieldValidator, FormErrors, FormValues } from "../../internal/formContext";
+export type {
+  FieldValidator,
+  FormController,
+  FormErrors,
+  FormState,
+  FormValues,
+} from "../../internal/formContext";
 
 /**
  * A rule for the whole form: receives every submitted value and returns the messages to show, by field `name`
- * (a key that matches no field is shown in the summary alone), or nothing when the form is fine. Use it for a rule
- * that spans fields; a rule about one field is that `FormField`'s own `validate`.
+ * (a key that matches no field is shown in the summary alone), or nothing when the form is fine. It may return a
+ * promise. Use it for a rule that spans fields; a rule about one field is that `FormField`'s own `validate`. It is
+ * also run as a field is edited (only that field's message is taken), so keep it cheap.
  */
-export type FormValidator = (values: FormValues) => FormErrors | null | undefined | void;
+export type FormValidator = (
+  values: FormValues,
+) => FormErrors | null | undefined | void | PromiseLike<FormErrors | null | undefined | void>;
 
 /**
  * When a field's error is worked out as it is edited, before any submit has been refused. `"submit"` (the
@@ -38,6 +47,28 @@ export interface FormLabels {
   errorCount: (count: number) => string;
   /** The message for a control the browser calls invalid but gives no message of its own for. */
   invalidValue: string;
+  /** A required control with nothing in it. */
+  valueMissing: string;
+  /** A value that is the wrong kind for the control: `type` is `"email"`, `"url"` or another input type. */
+  typeMismatch: (type: string) => string;
+  /** A value that doesn't match the control's `pattern`. */
+  patternMismatch: string;
+  /** A value shorter than `minLength`. */
+  tooShort: (minimum: number) => string;
+  /** A value longer than `maxLength`. */
+  tooLong: (maximum: number) => string;
+  /** A value below `min`; `minimum` is the attribute as written (a number, a date). */
+  rangeUnderflow: (minimum: string) => string;
+  /** A value above `max`; `maximum` is the attribute as written. */
+  rangeOverflow: (maximum: string) => string;
+  /** A number that isn't a multiple of `step`. */
+  stepMismatch: string;
+  /** Something the control can't read as a value (text in a number field). */
+  badInput: string;
+  /** What `Form.Error` says when an `onSubmit` promise rejects and no `error` was given. */
+  submitFailed: string;
+  /** What a field shows when its asynchronous rule couldn't run (it threw or rejected). */
+  validationFailed: string;
 }
 
 export interface FormProps
@@ -55,7 +86,10 @@ export interface FormProps
    * @param event The submit event, already stopped from reloading the page.
    */
   onSubmit?: (values: FormValues, formData: FormData, event: FormEvent<HTMLFormElement>) => void | Promise<unknown>;
-  /** Called when an `onSubmit` promise rejects. Without it, the rejection is left for the page to report. */
+  /**
+   * Called when an `onSubmit` promise rejects. Without it, a rejection is shown by a `Form.Error` when there is
+   * one in the form, and otherwise left for the page to report.
+   */
   onSubmitError?: (error: unknown) => void;
   /** Called when a submit is refused because of errors, with every error found, by field name. */
   onInvalidSubmit?: (errors: FormErrors) => void;
@@ -73,6 +107,12 @@ export interface FormProps
   errors?: FormErrors;
   /** Called with the `errors` to use instead, when an edit makes one of them out of date, or on reset. */
   onErrorsChange?: (errors: FormErrors) => void;
+  /**
+   * A message about the form as a whole, for a `Form.Error` to show: "We couldn't reach the server". Controlled:
+   * clear it from `onSubmit` or `onErrorsChange` when it no longer applies. Without it, `Form.Error` shows
+   * `labels.submitFailed` after a rejected `onSubmit`.
+   */
+  error?: ReactNode;
   /**
    * When a field is checked as it is edited, before any submit has been refused — see {@link FormValidateOn}.
    * @default "submit"
@@ -108,7 +148,9 @@ export interface FormProps
    */
   noValidate?: boolean;
   /**
-   * Text the form writes itself.
+   * Text the form writes itself: the summary's heading and the count it announces, and a message for each way the
+   * browser can call a value wrong (`valueMissing`, `typeMismatch`, `tooShort`…), so a page in any language
+   * isn't shown the browser's own wording.
    */
   labels?: Partial<FormLabels>;
   /**
@@ -117,6 +159,11 @@ export interface FormProps
    * @default String
    */
   formatNumber?: (value: number) => string;
+  /**
+   * Hands the form's controls — `submit`, `reset`, `focusField`, `validate`, `setErrors`, `clearErrors` — to code
+   * outside it, such as a toolbar button. Inside the form, `useFormController()` returns the same object.
+   */
+  controllerRef?: Ref<FormController>;
   /** Where the form is sent when it is submitted without an `onSubmit` — a URL, or a function that receives the `FormData`. */
   action?: ComponentPropsWithoutRef<"form">["action"];
   /** How the form is sent without an `onSubmit` (`"get"` or `"post"`). */
@@ -149,6 +196,19 @@ export interface FormSummaryProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** Additional CSS classes for the summary's outer element. */
   className?: string;
   /** Inline styles for the summary's outer element. */
+  style?: CSSProperties;
+  /** Test identifier for automated testing. */
+  "data-testid"?: string;
+}
+
+export interface FormErrorProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  /** Replaces the message: the form's `error`, or `labels.submitFailed`. Shown only while the form has an error. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for the outer element. */
+  className?: string;
+  /** Inline styles for the outer element. */
   style?: CSSProperties;
   /** Test identifier for automated testing. */
   "data-testid"?: string;

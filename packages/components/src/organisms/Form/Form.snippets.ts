@@ -101,6 +101,61 @@ ${email}
 ${actions}
 </Form>`,
 
+  asyncRule: `{/* A rule may return a promise: submit waits for the answer (the form is aria-busy and Form.Submit
+    loading, the fields stay editable), and as the field is edited the latest answer wins. */}
+<Form aria-label="Create account" onSubmit={(values) => createAccount(values)}>
+  <FormField
+    label="Username"
+    name="username"
+    validate={async (value) => ((await isTaken(String(value))) ? "That username is taken" : undefined)}
+  >
+    {(field) => <Input {...field} />}
+  </FormField>
+  <Form.Actions>
+    <Form.Submit>Create account</Form.Submit>
+  </Form.Actions>
+</Form>`,
+
+  formError: `{/* Form.Error shows the form's error prop, or labels.submitFailed after an onSubmit promise rejects, and
+    nothing while there is no error. Its being in the form is also what handles the rejection. */}
+<Form
+  aria-label="Create account"
+  error={serverMessage}
+  onSubmit={async (values) => {
+    await createAccount(values);
+  }}
+>
+  <Form.Error />
+${email}
+  <Form.Actions>
+    <Form.Submit loadingText="Creating…">Create account</Form.Submit>
+  </Form.Actions>
+</Form>`,
+
+  controller: `{/* const formRef = useRef(null);  — a FormController: submit, reset, validate, focusField, setErrors, clearErrors
+    A part inside the form gets the same object from useFormController(); useFormState() reads pending, errors… */}
+<Button onClick={() => formRef.current?.submit()}>Save from the toolbar</Button>
+<Form aria-label="Create account" controllerRef={formRef} onSubmit={(values) => createAccount(values)}>
+${email}
+</Form>`,
+
+  labels: `{/* labels writes the form's own words: the summary heading and the count it announces, and one message for each
+    way the browser can call a value wrong. Numbers go through formatNumber. */}
+<Form
+  aria-label="Créer un compte"
+  onSubmit={(values) => createAccount(values)}
+  labels={{
+    valueMissing: "Remplissez ce champ.",
+    typeMismatch: (type) => (type === "email" ? "Saisissez une adresse e-mail." : "Le format est incorrect."),
+    tooShort: (minimum) => \`Utilisez au moins \${minimum} caractères.\`,
+    errorCount: (count) => \`\${count} erreurs.\`,
+    summaryTitle: (count) => \`\${count} problèmes dans ce formulaire\`,
+  }}
+>
+${email}
+${actions}
+</Form>`,
+
   layout: `{/* Form lays its children out as a column (gap is a step on the spacing scale, or a breakpoint map).
     Group related fields with FieldGroup: it hands disabled and size to the fields inside, and the form's
     own disabled and size reach them the same way. */}

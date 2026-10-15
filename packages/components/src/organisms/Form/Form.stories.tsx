@@ -1,15 +1,15 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { Input } from "../../atoms/Input";
 import { FieldGroup } from "../../molecules/FieldGroup";
 import { FormField } from "../../molecules/FormField";
 import { PasswordInput } from "../../molecules/PasswordInput";
-import { Form } from "./Form";
+import { Form, useFormController, useFormState } from "./Form";
 import { formPlaygroundSnippet, formSnippets } from "./Form.snippets";
 import { EmailAndUsername, Stage, Submitted, useSubmitted } from "./FormStoryKit";
-import type { FormErrors, FormProps, FormValues } from "./Form.types";
+import type { FormController, FormErrors, FormProps, FormValues } from "./Form.types";
 
 const meta: Meta<typeof Form> = {
   title: "Organisms/Inputs/Form",
@@ -37,6 +37,11 @@ const meta: Meta<typeof Form> = {
     onErrorsChange: {
       control: false,
       description: "Called with the errors to use instead when an edit makes one of the outside errors out of date, or on reset.",
+    },
+    error: {
+      control: false,
+      description:
+        "A message about the form as a whole, for a Form.Error to show. Without it, Form.Error shows labels.submitFailed after an onSubmit promise rejects.",
     },
     validateOn: {
       control: "select",
@@ -74,12 +79,18 @@ const meta: Meta<typeof Form> = {
     },
     labels: {
       control: false,
-      description: "Text the form writes itself: summaryTitle(count), errorCount(count) and invalidValue.",
+      description:
+        "Text the form writes itself: the summary's heading and the count it announces, a message for each way the browser can call a value wrong (valueMissing, typeMismatch, tooShort…), submitFailed and validationFailed.",
     },
     formatNumber: {
       control: false,
       description: "Writes the counts in labels; digits for a script that doesn't use ASCII ones.",
       table: { defaultValue: { summary: "String" } },
+    },
+    controllerRef: {
+      control: false,
+      description:
+        "Hands the form's controls (submit, reset, focusField, validate, setErrors, clearErrors) to code outside it. Inside the form, useFormController() returns the same object.",
     },
     action: { control: false, description: "Where the form is sent when it is submitted without an onSubmit — a URL, or a function that receives the FormData." },
     method: { control: false, description: "How the form is sent without an onSubmit." },
@@ -274,6 +285,150 @@ export const ServerErrors: Story = {
       </Stage>
     );
   },
+};
+
+export const AsyncRule: Story = {
+  name: "A rule that asks the server",
+  parameters: { docs: { source: { code: formSnippets.asyncRule } } },
+  argTypes: { validate: { control: false }, validateOn: { control: false } },
+  render: function Render(args) {
+    const { values, setValues } = useSubmitted();
+    return (
+      <Stage>
+        <Form
+          {...fromPlayground(args as unknown as Record<string, unknown>)}
+          aria-label="Create account"
+          validateOn="blur"
+          onSubmit={(submitted) => setValues(submitted)}
+        >
+          <FormField
+            label="Username"
+            name="username"
+            helperText="Try ada or grace — both are taken"
+            validate={async (value) => {
+              await new Promise((resolve) => setTimeout(resolve, 700));
+              return ["ada", "grace"].includes(String(value).toLowerCase()) ? "That username is taken" : undefined;
+            }}
+          >
+            {(field) => <Input {...field} />}
+          </FormField>
+          <Form.Actions>
+            <Form.Submit>Create account</Form.Submit>
+          </Form.Actions>
+        </Form>
+        <Submitted values={values} />
+      </Stage>
+    );
+  },
+};
+
+export const WholeFormError: Story = {
+  name: "A message about the whole form",
+  parameters: { docs: { source: { code: formSnippets.formError } } },
+  argTypes: { error: { control: false } },
+  render: function Render(args) {
+    const { values, setValues } = useSubmitted();
+    return (
+      <Stage>
+        <Form
+          {...fromPlayground(args as unknown as Record<string, unknown>)}
+          aria-label="Create account"
+          onSubmit={async (submitted) => {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            if (submitted.email === "offline@example.com") throw new Error("offline");
+            setValues(submitted);
+          }}
+        >
+          <Form.Error />
+          <FormField label="Email" name="email" required helperText="Try offline@example.com">
+            {(field) => <Input {...field} type="email" />}
+          </FormField>
+          <Form.Actions>
+            <Form.Submit loadingText="Creating…">Create account</Form.Submit>
+          </Form.Actions>
+        </Form>
+        <Submitted values={values} />
+      </Stage>
+    );
+  },
+};
+
+function Counter() {
+  const { errors, pending } = useFormState();
+  const count = Object.keys(errors).length;
+  return (
+    <p style={{ margin: 0, fontFamily: "var(--dbm-font-family-primary)", color: "var(--dbm-text-secondary)" }}>
+      {pending ? "Saving…" : count === 0 ? "No problems found." : `${count} problem${count === 1 ? "" : "s"} found.`}
+    </p>
+  );
+}
+
+function FocusEmailButton() {
+  const controller = useFormController();
+  return (
+    <Button type="button" variant="ghost" onClick={() => controller.focusField("email")}>
+      Jump to email
+    </Button>
+  );
+}
+
+export const Controller: Story = {
+  name: "Controlling it from outside",
+  parameters: { docs: { source: { code: formSnippets.controller } } },
+  argTypes: { controllerRef: { control: false } },
+  render: function Render(args) {
+    const controllerRef = useRef<FormController>(null);
+    const { values, setValues } = useSubmitted();
+    return (
+      <Stage>
+        <div style={{ display: "flex", gap: "var(--dbm-space-3)", marginBlockEnd: "var(--dbm-space-4)", flexWrap: "wrap" }}>
+          <Button variant="secondary" onClick={() => controllerRef.current?.submit()}>
+            Save from outside
+          </Button>
+          <Button variant="ghost" onClick={() => void controllerRef.current?.validate()}>
+            Check only
+          </Button>
+          <Button variant="ghost" onClick={() => controllerRef.current?.reset()}>
+            Reset
+          </Button>
+        </div>
+        <Form
+          {...fromPlayground(args as unknown as Record<string, unknown>)}
+          aria-label="Create account"
+          controllerRef={controllerRef}
+          onSubmit={(submitted) => setValues(submitted)}
+        >
+          {EmailAndUsername}
+          <Counter />
+          <Form.Actions>
+            <FocusEmailButton />
+            <Form.Submit>Create account</Form.Submit>
+          </Form.Actions>
+        </Form>
+        <Submitted values={values} />
+      </Stage>
+    );
+  },
+};
+
+export const Labels: Story = {
+  name: "In another language",
+  parameters: { docs: { source: { code: formSnippets.labels } } },
+  argTypes: { labels: { control: false } },
+  render: (args) => (
+    <Demo
+      {...fromPlayground(args as unknown as Record<string, unknown>)}
+      aria-label="Créer un compte"
+      summary
+      labels={{
+        valueMissing: "Remplissez ce champ.",
+        typeMismatch: (type) => (type === "email" ? "Saisissez une adresse e-mail." : "Le format est incorrect."),
+        tooShort: (minimum) => `Utilisez au moins ${minimum} caractères.`,
+        errorCount: (count) => `${count} erreurs.`,
+        summaryTitle: (count) => `${count} problème${count === 1 ? "" : "s"} dans ce formulaire`,
+      }}
+    />
+  ),
 };
 
 export const Layout: Story = {
