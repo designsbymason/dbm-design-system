@@ -156,7 +156,7 @@ export interface FormSummaryProps extends Omit<ComponentPropsWithoutRef<"div">, 
 
 export type FormActionsAlign = "start" | "end" | "between";
 
-export interface FormActionsProps extends ComponentPropsWithoutRef<"div"> {
+export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /** The buttons. */
   children?: ReactNode;
   /**
@@ -174,5 +174,57 @@ export interface FormActionsProps extends ComponentPropsWithoutRef<"div"> {
   "data-testid"?: string;
 }
 
-/** `Form.Submit` takes every `Button` prop except `type` (always `submit`) and `asChild`. */
-export type FormSubmitProps = Omit<ButtonProps, "type" | "asChild">;
+/**
+ * `Form.Submit` takes every `Button` prop except `type` (always `submit`) and `asChild`. The ones listed here are
+ * redeclared, in the order a reader meets them, so the Properties table and the Controls panel read the same way.
+ */
+export interface FormSubmitProps
+  extends Omit<
+    ButtonProps,
+    | "type"
+    | "asChild"
+    | "children"
+    | "isLoading"
+    | "loadingText"
+    | "disabled"
+    | "variant"
+    | "size"
+    | "id"
+    | "className"
+    | "style"
+    | "data-testid"
+  > {
+  /** The button's label. */
+  children?: ButtonProps["children"];
+  /**
+   * Shows the loading state: the spinner, `loadingText` and a disabled button. Follows the form while its
+   * `onSubmit` promise is running; set it to take over.
+   * @default "follows the form"
+   */
+  isLoading?: boolean;
+  /** Text shown in place of the label while loading. */
+  loadingText?: string;
+  /**
+   * Disables the button. It is also disabled while the form is.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * The button's style, as on `Button`.
+   * @default "primary"
+   */
+  variant?: ButtonProps["variant"];
+  /**
+   * The button's size, as on `Button`.
+   * @default "md"
+   */
+  size?: ButtonProps["size"];
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes. */
+  className?: string;
+  /** Inline styles. */
+  style?: CSSProperties;
+  /** Test identifier for automated testing. */
+  "data-testid"?: string;
+}

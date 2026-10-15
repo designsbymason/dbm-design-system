@@ -98,6 +98,18 @@ import { Form, FormField, Input } from "@dbm-design-system/components";
   order={[...propOrder, "summary"]}
 />
 
+<div style={{ marginBlockStart: "var(--dbm-space-6)" }}>
+
+<Callout tone="info" title="About the summary control">
+
+`summary` is not a `Form` prop, so it isn't in the Properties table. It only decides whether this demo draws a
+`Form.Summary` above the fields, so you can see the list of problems and try `focusTarget="summary"` with it. In
+your own form you add the summary yourself, by placing `<Form.Summary />` where you want it.
+
+</Callout>
+
+</div>
+
 ## Properties
 
 `Form` also accepts any other native `<form>` attribute beyond what's listed here (e.g. `target`, `encType`) —

@@ -96,7 +96,7 @@ const meta: Meta<typeof Form> = {
     summary: {
       control: "boolean",
       description: "Storybook only — not a Form prop: draws a Form.Summary above the fields.",
-      table: { category: "Storybook only" },
+      table: { disable: true },
     },
   } as Meta<typeof Form>["argTypes"],
   // Every controllable prop gets an explicit value, matching its real default (07 §5).
