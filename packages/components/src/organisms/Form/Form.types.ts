@@ -65,6 +65,8 @@ export interface FormLabels {
   stepMismatch: string;
   /** Something the control can't read as a value (text in a number field). */
   badInput: string;
+  /** What the required-fields legend says beside its asterisk: "Required fields". */
+  requiredLegend: string;
   /** What `Form.Error` says when an `onSubmit` promise rejects and no `error` was given. */
   submitFailed: string;
   /** What a field shows when its asynchronous rule couldn't run (it threw or rejected). */
@@ -147,6 +149,13 @@ export interface FormProps
    * @default true
    */
   noValidate?: boolean;
+  /**
+   * Explains the asterisk on a required field's label, as a line above the fields: `true` writes the asterisk and
+   * `labels.requiredLegend` ("Required fields"); content of your own is shown as it is, in place of that. Shown only
+   * while at least one `FormField` in the form is required, so it never explains a mark that isn't there.
+   * @default false
+   */
+  requiredLegend?: boolean | ReactNode;
   /**
    * Text the form writes itself: the summary's heading and the count it announces, and a message for each way the
    * browser can call a value wrong (`valueMissing`, `typeMismatch`, `tooShort`…), so a page in any language

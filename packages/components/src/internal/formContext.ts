@@ -72,6 +72,8 @@ export interface FormFieldRegistration {
   label: ReactNode;
   /** Its own rule, if any. */
   validate: FieldValidator | undefined;
+  /** Whether the field is marked required, which is what a form's required-fields legend is shown for. */
+  required: boolean;
 }
 
 /**

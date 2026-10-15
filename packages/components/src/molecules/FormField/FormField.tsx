@@ -79,8 +79,8 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
     const registerField = form?.registerField;
     useEffect(() => {
       if (!registerField) return undefined;
-      return registerField({ key: fieldKey, name, controlId, label, validate });
-    }, [registerField, fieldKey, name, controlId, label, validate]);
+      return registerField({ key: fieldKey, name, controlId, label, validate, required });
+    }, [registerField, fieldKey, name, controlId, label, validate, required]);
 
     // An asynchronous rule for this field is running: say so to assistive technology without moving anything.
     const validating = Boolean(form?.validatingKeys.has(fieldKey));

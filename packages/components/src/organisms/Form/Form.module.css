@@ -13,6 +13,21 @@
   outline-offset: var(--dbm-space-1);
 }
 
+/* A line above the fields that says what the asterisk on a label means, at the end of the row: the right in
+   left-to-right text, the left in right-to-left. */
+.requiredLegend {
+  text-align: end;
+  color: var(--dbm-text-secondary);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-normal);
+  margin: 0;
+}
+
+.requiredMark {
+  color: var(--dbm-text-danger);
+}
+
 .summaryList {
   display: flex;
   flex-direction: column;

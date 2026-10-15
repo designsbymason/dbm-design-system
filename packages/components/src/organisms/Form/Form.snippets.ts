@@ -156,6 +156,37 @@ ${email}
 ${actions}
 </Form>`,
 
+  requiredLegend: `{/* requiredLegend explains the asterisk on a required field's label, as a line above the fields. true writes
+    the asterisk and labels.requiredLegend ("Required fields"); your own content is shown as it is. It shows only while
+    a FormField in the form is required. */}
+<Form aria-label="Create account" requiredLegend onSubmit={(values) => createAccount(values)}>
+${email}
+${username}
+${actions}
+</Form>
+
+{/* Your own words */}
+<Form aria-label="Create account" requiredLegend="All fields are required unless marked optional.">
+${email}
+</Form>`,
+
+  toast: `{/* Form hands the outcome to your code, so a toast is two calls to useToast(): success when onSubmit resolves,
+    failure in onSubmitError. Toast.Provider sits near the root of the app. */}
+{/* const { toast } = useToast(); — in a component rendered inside the Toast.Provider */}
+<Form
+  aria-label="Create account"
+  onSubmit={async (values) => {
+    await createAccount(values);
+    toast({ tone: "success", title: "Account created", description: "You can sign in now." });
+  }}
+  onSubmitError={() => toast({ tone: "danger", title: "We couldn't create the account", description: "Try again in a moment." })}
+>
+${email}
+  <Form.Actions>
+    <Form.Submit loadingText="Creating…">Create account</Form.Submit>
+  </Form.Actions>
+</Form>`,
+
   layout: `{/* Form lays its children out as a column (gap is a step on the spacing scale, or a breakpoint map).
     Group related fields with FieldGroup: it hands disabled and size to the fields inside, and the form's
     own disabled and size reach them the same way. */}
@@ -197,6 +228,7 @@ export interface FormPlaygroundSnippetArgs {
   size?: string;
   gap?: number | string;
   noValidate?: boolean;
+  requiredLegend?: boolean;
   summary?: boolean;
 }
 
@@ -213,6 +245,7 @@ export function formPlaygroundSnippet(args: FormPlaygroundSnippetArgs): string {
   if (args.size && args.size !== "default") attributes.push(`size="${args.size}"`);
   if (args.gap !== undefined && Number(args.gap) !== 4) attributes.push(`gap={${Number(args.gap)}}`);
   if (args.noValidate === false) attributes.push("noValidate={false}");
+  if (args.requiredLegend) attributes.push("requiredLegend");
   attributes.push("onSubmit={(values) => createAccount(values)}");
   const children = [args.summary ? "  <Form.Summary />" : undefined, email, username, actions].filter(Boolean).join("\n");
   return form(attributes.join(" "), children);

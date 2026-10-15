@@ -263,3 +263,38 @@ export const ValidateFromOutsideFocusesTheField: Story = {
     await expect(canvas.getByRole("textbox", { name: "Email" })).toHaveAccessibleDescription("Fill out this field.");
   },
 };
+
+export const LegendSitsAtTheEnd: Story = {
+  name: "The required-fields legend is at the end of the row, in both directions",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-6)", maxInlineSize: "28rem" }}>
+      {(["ltr", "rtl"] as const).map((dir) => (
+        <div key={dir} dir={dir} data-testid={dir}>
+          <Form aria-label={`Sign up ${dir}`} requiredLegend>
+            <FormField label="Email" name={`email-${dir}`} required>
+              {(field) => <Input {...field} />}
+            </FormField>
+          </Form>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const dir of ["ltr", "rtl"] as const) {
+      const host = within(canvasElement).getByTestId(dir);
+      const legend = await waitFor(() => {
+        const found = host.querySelector<HTMLElement>("form > p");
+        expect(found).not.toBeNull();
+        return found as HTMLElement;
+      });
+      const form = host.querySelector("form") as HTMLElement;
+      const text = document.createRange();
+      text.selectNodeContents(legend);
+      const textBox = text.getBoundingClientRect();
+      const formBox = form.getBoundingClientRect();
+      // the text's own box touches the end edge of the form: right in ltr, left in rtl
+      if (dir === "ltr") await expect(Math.round(textBox.right)).toBe(Math.round(formBox.right));
+      else await expect(Math.round(textBox.left)).toBe(Math.round(formBox.left));
+    }
+  },
+};

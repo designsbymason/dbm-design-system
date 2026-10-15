@@ -26,6 +26,7 @@ export const propOrder = [
   "size",
   "gap",
   "noValidate",
+  "requiredLegend",
   "labels",
   "formatNumber",
   "controllerRef",
@@ -195,6 +196,14 @@ form is. It takes every `Button` prop except `type` and `asChild`.
 
 <Canvas of={FormStories.Labels} />
 
+### Explaining the asterisk
+
+<Canvas of={FormStories.RequiredLegend} />
+
+### Saved with a toast
+
+<Canvas of={FormStories.WithAToast} />
+
 ### Groups, size and gap
 
 <Canvas of={FormStories.Layout} />
@@ -217,6 +226,8 @@ form is. It takes every `Button` prop except `type` and `asChild`.
 - Add `Form.Summary` to a long form: it gives a keyboard or screen-reader user the whole list in one place.
 - Return a promise from a rule that has to ask something (a name's availability); the form waits for it on submit
   and shows the latest answer as the field is edited.
+- Turn on `requiredLegend` when any field shows the asterisk, so the mark is explained once, above the fields,
+  instead of left to be guessed.
 - Put `Form.Error` where a failure that belongs to no field should appear, so a rejected `onSubmit` is shown
   and not left for the page to report.
 - Pass the server's answer to `errors` and wire `onErrorsChange` to the same state, so an error clears when the
@@ -261,6 +272,22 @@ form is. It takes every `Button` prop except `type` and `asChild`.
   `submitFailed` for a part of your own.
 - Values arrive as the browser reports them: strings, or an array when a name repeats (a set of checkboxes with
   two or more ticked). Convert and type them where you receive them.
+
+### What Form leaves to you
+
+Some things are deliberately not here, so a form stays something you can read in one sitting:
+
+- **Dirty and touched state, and an unsaved-changes guard.** The form owns no values, so it has no snapshot to
+  compare against. Track what you need from your own state, and use `useFormState()` for what the form does know.
+- **Resetting controls you drive with state.** A native reset restores uncontrolled controls only; a control whose
+  `value` is your state ignores it. Clear that state from `onReset`.
+- **Announcing success.** The form announces problems. Say that a save worked from `onSubmit`, with a `Toast` or a
+  message of your own.
+- **Disabling controls that aren't in a `FormField`.** `disabled` and the busy state reach each `FormField` and,
+  through it, the control it hands its props to; a bare `<input>` stays editable.
+- **A group's own error.** A `FieldGroup`'s `error` is its own message; it isn't added to the summary or the count.
+- **A single ticked checkbox as a list.** A name that appears once is a string; only a repeated name is an array.
+- **Steps.** A multi-step flow is a `Stepper` over forms, not a mode of this one.
 
 ## Accessibility
 
@@ -349,6 +376,11 @@ function SaveShortcut() {
 <TokenRow token="space.3" usage="gap between the buttons in Form.Actions" />
 <TokenRow token="space.4" usage="default gap between the form's children" />
 <TokenRow token="space.5" usage="the summary list's indent" />
+<TokenRow token="text.secondary" usage="the required-fields legend's text" />
+<TokenRow token="text.danger" usage="the asterisk in the required-fields legend" />
+<TokenRow token="font-family.primary" usage="the required-fields legend's typeface" />
+<TokenRow token="font-size.sm" usage="the required-fields legend's size" />
+<TokenRow token="line-height.normal" usage="the required-fields legend's line height" />
 <TokenRow token="radius.sm" usage="the summary's focus ring corners" />
 <TokenRow token="border-width.2" usage="the summary's focus ring width" />
 <TokenRow token="border.focus" usage="the summary's focus ring colour" />

@@ -46,3 +46,11 @@ A feature-completeness pass named four gaps, all built the same day ([ADR-0076](
 
 **Verification (real runs):** `tsc` and `eslint --max-warnings 0` clean; unit tests for Form (94, with the new groups for the page's words, asking rules, `Form.Error` and the controller); Storybook (Chromium) 27 for Form, with a check that a waiting submit keeps focus in the field and one that `validate()` from outside focuses the field.
 
+## Third round: a required-fields legend, a toast recipe, and what is left to the caller (2026-10-14, at the user's request)
+
+- **`requiredLegend`** (a prop, not a part, so the common case is one word): `true` writes the asterisk, drawn as `FieldLabel` draws it and hidden from assistive technology, and `labels.requiredLegend`; content of your own is shown as it is. It is drawn above the fields and only while a `FormField` in the form is required (a field's registration carries `required`), so it never explains a mark that isn't there. Named `requiredLegend`, not `legend`, because `legend` already means a group's name on `FieldGroup`. It adds two tokens to the Docs table (`text.secondary`, `text.danger`) and no new one.
+- **"Saved with a toast"** story and snippet: `useToast()` called from `onSubmit` and `onSubmitError`. No coupling in the component (a built-in handoff would have made `Form` import `Toast` and need its provider, with the bundle already near its budget). Found while building it: helper text is `text.tertiary`, which the token spec forbids on `bg.canvas`, and the Toast stage is the canvas, so the demo form sits on a surface.
+- **What `Form` leaves to the caller**, written on the Docs page so it is a decision and not a surprise: dirty and touched state and an unsaved-changes guard (the form owns no values), resetting state-driven controls, announcing success, disabling controls outside a `FormField`, a `FieldGroup`'s own error not joining the summary, a single ticked checkbox arriving as a string, and multi-step flows (`Stepper`).
+
+**Verification (real runs):** lint and both typechecks clean; unit 7,909; Storybook Form 29/29; build clean; `Form` 8.50KB JS / 2.73KB CSS gzipped against a 10KB budget; `check-guidelines` 0 warnings.
+

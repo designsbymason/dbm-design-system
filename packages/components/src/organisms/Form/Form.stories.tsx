@@ -6,6 +6,8 @@ import { Input } from "../../atoms/Input";
 import { FieldGroup } from "../../molecules/FieldGroup";
 import { FormField } from "../../molecules/FormField";
 import { PasswordInput } from "../../molecules/PasswordInput";
+import { Toast, useToast } from "../Toast";
+import { ToastStage } from "../Toast/ToastStoryKit";
 import { Form, useFormController, useFormState } from "./Form";
 import { formPlaygroundSnippet, formSnippets } from "./Form.snippets";
 import { EmailAndUsername, Stage, Submitted, useSubmitted } from "./FormStoryKit";
@@ -77,6 +79,12 @@ const meta: Meta<typeof Form> = {
         "Holds back the browser's own validation bubbles so the form can show errors in the page. The browser's rules still apply: the form reads them.",
       table: { defaultValue: { summary: "true" } },
     },
+    requiredLegend: {
+      control: "boolean",
+      description:
+        "Explains the asterisk on a required field's label, as a line above the fields: true writes the asterisk and labels.requiredLegend; content of your own is shown as it is. Shown only while a FormField in the form is required.",
+      table: { defaultValue: { summary: "false" } },
+    },
     labels: {
       control: false,
       description:
@@ -118,6 +126,7 @@ const meta: Meta<typeof Form> = {
     disabled: false,
     gap: 4,
     noValidate: true,
+    requiredLegend: false,
   },
 };
 
@@ -428,6 +437,64 @@ export const Labels: Story = {
         summaryTitle: (count) => `${count} problème${count === 1 ? "" : "s"} dans ce formulaire`,
       }}
     />
+  ),
+};
+
+export const RequiredLegend: Story = {
+  name: "Explaining the asterisk",
+  parameters: { docs: { source: { code: formSnippets.requiredLegend } } },
+  argTypes: { requiredLegend: { control: false } },
+  render: (args) => <Demo {...fromPlayground(args as unknown as Record<string, unknown>)} requiredLegend />,
+};
+
+function ToastDemo({ args }: { args: Record<string, unknown> }) {
+  const { toast } = useToast();
+  return (
+    <div
+      style={{
+        inlineSize: "100%",
+        maxInlineSize: "24rem",
+        padding: "var(--dbm-space-4)",
+        // The stage is the page's canvas, where helper text (tertiary) isn't allowed; a form sits on a surface.
+        background: "var(--dbm-bg-surface)",
+        borderRadius: "var(--dbm-radius-lg)",
+      }}
+    >
+      <Form
+        {...fromPlayground(args)}
+        aria-label="Create account"
+        onSubmit={async (submitted) => {
+          await new Promise((resolve) => setTimeout(resolve, 600));
+          if (submitted.email === "offline@example.com") throw new Error("offline");
+          toast({ tone: "success", title: "Account created", description: "You can sign in now." });
+        }}
+        onSubmitError={() =>
+          toast({ tone: "danger", title: "We couldn't create the account", description: "Try again in a moment." })
+        }
+      >
+        <FormField label="Email" name="email" required helperText="Try offline@example.com to see a failure">
+          {(field) => <Input {...field} type="email" />}
+        </FormField>
+        <Form.Actions>
+          <Form.Submit loadingText="Creating…">Create account</Form.Submit>
+        </Form.Actions>
+      </Form>
+    </div>
+  );
+}
+
+export const WithAToast: Story = {
+  name: "Saved with a toast",
+  parameters: { docs: { source: { code: formSnippets.toast } } },
+  argTypes: { onSubmit: { control: false }, onSubmitError: { control: false } },
+  render: (args) => (
+    <ToastStage minBlockSize="24rem">
+      {(container) => (
+        <Toast.Provider container={container}>
+          <ToastDemo args={args as unknown as Record<string, unknown>} />
+        </Toast.Provider>
+      )}
+    </ToastStage>
   ),
 };
 

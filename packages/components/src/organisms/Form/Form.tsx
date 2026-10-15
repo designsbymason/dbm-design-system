@@ -53,6 +53,7 @@ const makeDefaultLabels = (formatNumber: (value: number) => string): FormLabels 
       count === 1 ? "There is 1 problem with this form" : `There are ${formatNumber(count)} problems with this form`,
     errorCount: (count) => (count === 1 ? "1 error." : `${formatNumber(count)} errors.`),
     invalidValue: "This value is not valid.",
+    requiredLegend: "Required fields",
     valueMissing: "Fill out this field.",
     typeMismatch: (type) =>
       type === "email" ? "Enter an email address." : type === "url" ? "Enter a web address." : "Use the right format for this field.",
@@ -205,6 +206,7 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
       size,
       gap = 4,
       noValidate = true,
+      requiredLegend = false,
       labels: labelOverrides,
       formatNumber = String,
       controllerRef,
@@ -243,6 +245,9 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
     const [validating, setValidating] = useState(false);
     const [validatingKeys, setValidatingKeys] = useState<ReadonlySet<string>>(() => new Set());
     const [submitFailed, setSubmitFailed] = useState(false);
+    // The control ids of the fields marked required, so the required-fields legend shows only while one exists.
+    const requiredIdsRef = useRef(new Set<string>());
+    const [hasRequired, setHasRequired] = useState(false);
     const [focusRequest, setFocusRequest] = useState<{ id: number; key: string } | null>(null);
 
     const { message, announce } = useAnnouncement();
@@ -259,8 +264,17 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
     const registerField = useCallback(
       (registration: FormFieldRegistration) => {
         fields.set(registration.controlId, registration);
+        const requiredIds = requiredIdsRef.current;
+        if (registration.required) {
+          requiredIds.add(registration.controlId);
+          setHasRequired(true);
+        }
         return () => {
           if (fields.get(registration.controlId) === registration) fields.delete(registration.controlId);
+          if (registration.required) {
+            requiredIds.delete(registration.controlId);
+            setHasRequired(requiredIds.size > 0);
+          }
         };
       },
       [fields],
@@ -722,6 +736,8 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
       });
     };
 
+    const showLegend = hasRequired && hasMessage(requiredLegend) && requiredLegend !== false;
+
     return (
       // `{...props}` first, so the computed `noValidate`, handlers, `aria-busy` and `className` can't be replaced by
       // a same-named prop a caller passes (05-component-api-conventions.md §3).
@@ -738,6 +754,20 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
         className={cx(styles.root, className)}
         style={{ "--form-gap": `var(--dbm-space-${resolvedGap})`, ...style } as CSSProperties}
       >
+        {showLegend && (
+          <p className={styles.requiredLegend}>
+            {requiredLegend === true ? (
+              <>
+                <span className={styles.requiredMark} aria-hidden="true">
+                  *
+                </span>{" "}
+                {labels.requiredLegend}
+              </>
+            ) : (
+              requiredLegend
+            )}
+          </p>
+        )}
         <FormProvider value={contextValue}>
           <FieldGroupProvider value={groupSettings}>{children}</FieldGroupProvider>
         </FormProvider>

@@ -1013,3 +1013,44 @@ describe("Form's controller and state", () => {
   });
 });
 
+describe("Form's required-fields legend", () => {
+  const withFields = (props: FormProps, required = true) => (
+    <Form aria-label="F" {...props}>
+      <FormField label="Name" name="name" required={required}>
+        {(field) => <Input {...field} />}
+      </FormField>
+    </Form>
+  );
+
+  it("is not drawn by default, even with a required field", () => {
+    render(withFields({}));
+    expect(screen.queryByText("Required fields")).toBeNull();
+  });
+
+  it("explains the asterisk above the fields, hiding the mark itself from assistive technology", async () => {
+    render(withFields({ requiredLegend: true }));
+    const legend = await screen.findByText("Required fields");
+    const paragraph = legend.closest("p") as HTMLElement;
+    expect(paragraph.querySelector('[aria-hidden="true"]')).toHaveTextContent("*");
+    // before the first field in the page
+    const field = screen.getByRole("textbox", { name: "Name" });
+    expect(paragraph.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("shows only while a field is required, and goes when none is", async () => {
+    const { rerender } = render(withFields({ requiredLegend: true }, false));
+    expect(screen.queryByText("Required fields")).toBeNull();
+    rerender(withFields({ requiredLegend: true }, true));
+    expect(await screen.findByText("Required fields")).toBeInTheDocument();
+    rerender(withFields({ requiredLegend: true }, false));
+    await waitFor(() => expect(screen.queryByText("Required fields")).toBeNull());
+  });
+
+  it("writes content of its own as it is, and the label from labels", async () => {
+    const { rerender } = render(withFields({ requiredLegend: "Everything here is needed." }));
+    expect(await screen.findByText("Everything here is needed.")).toBeInTheDocument();
+    rerender(withFields({ requiredLegend: true, labels: { requiredLegend: "Champs obligatoires" } }));
+    expect(await screen.findByText("Champs obligatoires")).toBeInTheDocument();
+  });
+});
+
