@@ -68,3 +68,12 @@ A full §9 pass over the finished component (reads, the live checks the repo can
 **Self-verification (real runs):** `pnpm lint` clean; unit project 6,721/6,721; Storybook (Chromium) project 1,294/1,294; `pnpm check-guidelines` clean.
 
 **Still not run:** Safari and a real phone (the pressed-button focus handling, `relatedTarget`, `enterKeyHint`, double-tap, the no-hover pencil), and a walk through the whole breakpoint scale (only the phone-width story).
+
+## Post-Finalization: a form refuses a required field with nothing committed (2026-10-14, authorised by the user)
+
+Found while reviewing `Form`: a required `EditableText` whose committed value was empty (never edited, `defaultValue=""`) was submitted as `""` by a surrounding form, because the committed value went through `<input type="hidden">`, which a browser never validates, and `required` was applied only as an edit ended. Reproduced in a real browser first (`requestSubmit()` handed `onSubmit` `{"project":""}`).
+
+The hidden input is now a text input that is only hidden from sight (`aria-hidden`, out of the tab order, `autocomplete="off"`, no size or paint), as `TimePicker`'s is ([ADR-0030](../adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md)). It carries `name`, `form`, the committed value and `required`, with a custom validity of `labels.required` for an all-blank value so the browser and the open field say the same thing. It is drawn with a `name` or with `required`, so a required field with no name is still checked and submits nothing; a read-only or disabled field is not validated, as a native one isn't. When a browser focuses it to report, focus goes to the open field, or to the text. The open draft is still detached from the form, so an emptied draft never blocks a submit of the committed value (a real-browser check in `Form`).
+
+By the three-question test: it changes the DOM an existing prop produces (1: yes), and corrects a field that did not do what `required` says on a form (2: a genuine defect), so `EditableText` stays Finalized, with its own files the whole blast radius. Re-verified: functional verification (seven new unit tests, two real-browser checks in `Form.checks.stories.tsx`) and Docs.
+

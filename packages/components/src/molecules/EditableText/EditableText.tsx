@@ -366,7 +366,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         "aria-describedby": describedBy([ariaDescribedBy, error ? errorId : undefined]),
         "data-testid": dataTestId,
         // The open field is a draft, not a member of the surrounding form: the committed value is what the form
-        // submits (through the hidden input), so the field is given an owner that doesn't exist, and its own
+        // submits (through the input drawn below), so the field is given an owner that doesn't exist, and its own
         // `required` and `minLength` can't stop that form submitting.
         form: detachedFormId,
         value: draft,
@@ -497,7 +497,32 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         {content}
         {/* In the page before it has anything to say, so the change is announced. */}
         <VisuallyHidden role="status">{isLoading ? labels.saving : ""}</VisuallyHidden>
-        {name && <input type="hidden" name={name} form={form} value={current} disabled={disabled} />}
+        {/* The value a surrounding form submits and validates. A hidden input is never validated, so this is a text
+            input that is only hidden from sight (and from assistive technology, which has the button and the
+            field): `required` gives a form its native check of the committed value, and an all-blank one is
+            refused with the same message the open field shows. It is there with a `name` (to submit) or with
+            `required` (to be checked), and nothing is submitted without a name. A read-only or disabled field is
+            not validated, as a native one isn't. Arriving on it, which a browser does to show its message, sends
+            focus to the field or the text. */}
+        {(name || required) && (
+          <input
+            ref={(node) =>
+              node?.setCustomValidity(required && !readOnly && current.trim() === "" ? labels.required : "")
+            }
+            type="text"
+            tabIndex={-1}
+            aria-hidden="true"
+            autoComplete="off"
+            className={styles.proxy}
+            name={name}
+            form={form}
+            value={current}
+            required={required && !readOnly}
+            disabled={disabled}
+            onChange={() => {}}
+            onFocus={() => (editing ? fieldRef.current : triggerRef.current)?.focus()}
+          />
+        )}
       </div>
     );
   },

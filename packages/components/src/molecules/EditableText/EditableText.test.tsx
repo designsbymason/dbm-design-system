@@ -45,11 +45,18 @@ describe("EditableText", () => {
       expect(screen.queryByRole("textbox")).toBeNull();
     });
 
-    it("draws the form value in a hidden input under name", () => {
+    it("draws the form value in an input hidden from sight, under name", () => {
       const { container } = render(<EditableText aria-label="Name" defaultValue="Ada" name="person" />);
-      const hidden = container.querySelector<HTMLInputElement>("input[type=hidden]");
-      expect(hidden).toHaveAttribute("name", "person");
+      const hidden = container.querySelector<HTMLInputElement>("input[name=person]");
       expect(hidden).toHaveValue("Ada");
+      expect(hidden).toHaveAttribute("aria-hidden", "true");
+      expect(hidden).toHaveAttribute("tabindex", "-1");
+      expect(hidden).toHaveAttribute("autocomplete", "off");
+    });
+
+    it("draws no form input when it has neither a name nor `required`", () => {
+      const { container } = render(<EditableText aria-label="Name" defaultValue="Ada" />);
+      expect(container.querySelector("input")).toBeNull();
     });
 
     it("reads a non-string value as empty without throwing", () => {
@@ -800,7 +807,7 @@ describe("EditableText", () => {
       );
       await user.click(trigger());
       expect(field().form).toBeNull();
-      const hidden = container.querySelector<HTMLInputElement>("input[type=hidden]");
+      const hidden = container.querySelector<HTMLInputElement>("input[name=person]");
       expect(hidden?.form).toBe(container.querySelector("form"));
     });
 
@@ -948,3 +955,89 @@ describe("EditableText", () => {
     });
   });
 });
+
+describe("EditableText in a form: required is checked on the committed value", () => {
+  const formOf = (container: HTMLElement) => container.querySelector("form") as HTMLFormElement;
+
+  it("makes a form refuse a required field with nothing committed, with the field's own message", () => {
+    const { container } = render(
+      <form>
+        <EditableText aria-label="Name" defaultValue="" name="person" required />
+      </form>,
+    );
+    expect(formOf(container).checkValidity()).toBe(false);
+    const proxy = container.querySelector<HTMLInputElement>("input[name=person]") as HTMLInputElement;
+    expect(proxy.validity.valueMissing).toBe(true);
+    expect(proxy.validationMessage).toBe("This field is required");
+  });
+
+  it("refuses an all-blank committed value too, as the open field does", () => {
+    const { container } = render(
+      <form>
+        <EditableText aria-label="Name" defaultValue="   " name="person" required labels={{ required: "Needed" }} />
+      </form>,
+    );
+    expect(formOf(container).checkValidity()).toBe(false);
+    expect((container.querySelector("input[name=person]") as HTMLInputElement).validationMessage).toBe("Needed");
+  });
+
+  it("accepts a form once something is committed, and not before a draft is committed", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <form>
+        <EditableText aria-label="Name" defaultValue="" name="person" required />
+      </form>,
+    );
+    await user.click(trigger());
+    await user.type(field(), "Ada");
+    // typed but not committed: the committed value is still empty
+    expect(formOf(container).checkValidity()).toBe(false);
+    await user.keyboard("{Enter}");
+    expect(formOf(container).checkValidity()).toBe(true);
+    expect(new FormData(formOf(container)).get("person")).toBe("Ada");
+  });
+
+  it("is not blocked by an open, emptied draft when the committed value is fine", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <form>
+        <EditableText aria-label="Name" defaultValue="Ada" name="person" required />
+      </form>,
+    );
+    await user.click(trigger());
+    await user.clear(field());
+    expect(formOf(container).checkValidity()).toBe(true);
+    expect(new FormData(formOf(container)).get("person")).toBe("Ada");
+  });
+
+  it("does not check a read-only or disabled field, as a native one isn't", () => {
+    const { container } = render(
+      <form>
+        <EditableText aria-label="A" defaultValue="" name="a" required readOnly />
+        <EditableText aria-label="B" defaultValue="" name="b" required disabled />
+      </form>,
+    );
+    expect(formOf(container).checkValidity()).toBe(true);
+  });
+
+  it("checks a required field that has no name, submitting nothing for it", () => {
+    const { container } = render(
+      <form>
+        <EditableText aria-label="Name" defaultValue="" required />
+      </form>,
+    );
+    expect(formOf(container).checkValidity()).toBe(false);
+    expect(Array.from(new FormData(formOf(container)).keys())).toEqual([]);
+  });
+
+  it("sends focus to the field when the browser focuses the input to report on it", async () => {
+    const { container } = render(
+      <form>
+        <EditableText aria-label="Name" defaultValue="" name="person" required />
+      </form>,
+    );
+    (container.querySelector("input[name=person]") as HTMLInputElement).focus();
+    expect(trigger()).toHaveFocus();
+  });
+});
+

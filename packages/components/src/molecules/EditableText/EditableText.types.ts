@@ -242,7 +242,8 @@ export interface EditableTextProps
   maxRows?: number;
   /**
    * Form field name. The committed value (never the draft) is submitted under it in a surrounding
-   * `<form>`, through a hidden input.
+   * `<form>`, through an input that is hidden from sight but not from the form: with `required` a form refuses
+   * a field whose committed value is empty or all blank, with `labels.required`, as it would a native one.
    */
   name?: string;
   /** Associates the submitted value with a `<form>` by `id`, outside that form's own subtree. */

@@ -3,9 +3,10 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Input } from "../../atoms/Input";
 import { FormField } from "../../molecules/FormField";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { EditableText } from "../../molecules/EditableText";
 import { Select } from "../../molecules/Select";
 import { TimePicker } from "../../molecules/TimePicker";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Form } from "./Form";
 import type { FormController } from "./Form.types";
@@ -298,3 +299,61 @@ export const LegendSitsAtTheEnd: Story = {
     }
   },
 };
+
+// An EditableText shows its value as text and opens a draft field; the draft is detached from the form and the
+// committed value is submitted through a hidden input (06 §9, "an editable draft is not a control of the form").
+const submittedBy = (output: HTMLElement) => output.textContent ?? "";
+
+function EditableInAForm({ committed }: { committed: string }) {
+  const [submitted, setSubmitted] = useState("nothing submitted");
+  return (
+    <div style={{ maxInlineSize: "28rem" }}>
+      <Form aria-label="Project" onSubmit={(values) => setSubmitted(JSON.stringify(values))}>
+        <FormField label="Project name" name="project" required>
+          {(field) => <EditableText {...field} defaultValue={committed} />}
+        </FormField>
+        <FormField label="Owner" name="owner">
+          {(field) => <Input {...field} defaultValue="Ada" />}
+        </FormField>
+        <Form.Submit>Save</Form.Submit>
+      </Form>
+      <output data-testid="submitted">{submitted}</output>
+    </div>
+  );
+}
+
+export const OpenEmptyDraftDoesNotBlockTheForm: Story = {
+  name: "An open, emptied required draft doesn't block a submit of the committed value",
+  render: () => <EditableInAForm committed="Apollo" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // open the draft and empty it, leaving it open
+    await userEvent.click(canvas.getByRole("button", { name: /Apollo/ }));
+    const draft = await waitFor(() => canvas.getByRole("textbox", { name: "Project name" }));
+    await userEvent.clear(draft);
+    await expect(draft).toHaveValue("");
+    // a real submit through the form's own API, as a keyboard shortcut would
+    const form = canvas.getByRole("form", { name: "Project" }) as HTMLFormElement;
+    form.requestSubmit();
+    await waitFor(() => expect(submittedBy(canvas.getByTestId("submitted"))).toContain("Apollo"));
+    // the committed value went, not the draft, and nothing was marked invalid by the open field
+    await expect(submittedBy(canvas.getByTestId("submitted"))).toContain('"project":"Apollo"');
+    await expect(draft).not.toHaveAttribute("aria-invalid", "true");
+  },
+};
+
+export const RequiredEditableTextWithNothingCommitted: Story = {
+  name: "A required EditableText with nothing committed is refused by the form",
+  render: () => <EditableInAForm committed="" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const form = canvas.getByRole("form", { name: "Project" }) as HTMLFormElement;
+    form.requestSubmit();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    // refused: nothing was submitted, the field is shown as the one that is wrong, and focus is on it
+    await expect(submittedBy(canvas.getByTestId("submitted"))).toBe("nothing submitted");
+    await waitFor(() => expect(canvas.getByRole("button", { name: /Project name/ })).toHaveFocus());
+    await expect(canvas.getByText("This field is required")).toBeInTheDocument();
+  },
+};
+

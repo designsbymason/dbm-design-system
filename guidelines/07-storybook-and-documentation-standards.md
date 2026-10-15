@@ -263,7 +263,7 @@ Foundational components first (prove the template before mass-applying it), then
 | RatingInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-04 | [RatingInput.md](component-reviews/RatingInput.md) |
 | TableOfContents | Molecule | Navigation | ✅ | ✅ 2026-10-04 | [TableOfContents.md](component-reviews/TableOfContents.md) |
 | Calendar | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-05 | [Calendar.md](component-reviews/Calendar.md) |
-| EditableText | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 | [EditableText.md](component-reviews/EditableText.md) |
+| EditableText | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 (a form refuses a required field with nothing committed 2026-10-14; re-verified: functional verification, Docs) | [EditableText.md](component-reviews/EditableText.md) |
 | TagsInput | Molecule | Inputs & Forms | ✅ | ✅ 2026-10-10 (focus ring moved onto the field's own edge 2026-10-11; re-verified: functional verification, Docs) | [TagsInput.md](component-reviews/TagsInput.md) |
 | Dialog | Organism | Overlay | ✅ | ✅ 2026-10-10 (`divided` default changed to `"auto"`, and the footer's actions stack below `sm`, 2026-10-11; re-verified: design quality, responsiveness, functional verification, Docs; `onOpenChangeComplete` added 2026-10-11; re-verified: types, stories, Docs, tests) | [Dialog.md](component-reviews/Dialog.md) |
 | AlertDialog | Organism | Overlay | ✅ | ✅ 2026-10-11 (`onOpenChangeComplete` added 2026-10-11; re-verified: types, stories, Docs, tests) | [AlertDialog.md](component-reviews/AlertDialog.md) |

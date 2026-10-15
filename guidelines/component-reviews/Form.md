@@ -69,3 +69,5 @@ A full `06-engineering-standards.md` §9 pass over the finished component, three
 
 **Not run:** the four themes by eye, a visual look at the Docs page and stories (the preview pane was not on screen, so DOM only), a tablet and desktop width pass, `EditableText` inside a form with a draft open, and a screen-reader pass.
 
+**`EditableText` inside a form (checked 2026-10-14):** an open, emptied required draft does not block a submit of the committed value, but a required field with nothing committed was submitted as `""`, since its committed value went through a hidden input no browser validates. Fixed at its source with the authorised post-Finalization change recorded in [EditableText.md](EditableText.md); both cases are real-browser checks in `Form.checks.stories.tsx`.
+
