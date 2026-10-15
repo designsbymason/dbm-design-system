@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu` and `Toast` are built and Finalized, `Form` is built and awaiting Finalization, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast` and `Form` are built and Finalized, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -266,7 +266,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 4. Drawer — a side-panel Dialog; `Navbar` and `Sidebar` need it on a phone; built and Finalized, review in [Drawer.md](component-reviews/Drawer.md)
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it; built and Finalized, review in [Menu.md](component-reviews/Menu.md)
 6. Toast — independent; other organisms report results through it; built and Finalized, review in [Toast.md](component-reviews/Toast.md)
-7. Form — context and validation over `FormField` and `FieldGroup`; built, review in [Form.md](component-reviews/Form.md)
+7. Form — context and validation over `FormField` and `FieldGroup`; built and Finalized, review in [Form.md](component-reviews/Form.md)
 8. Combobox / Autocomplete — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer)
 9. Calendar (molecule, prerequisite; built), then DatePicker
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization

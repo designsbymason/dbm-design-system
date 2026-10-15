@@ -1,6 +1,6 @@
 # Form — build and review findings
 
-**Inputs & Forms:** Form — built 2026-10-13, item 7 in the organism build order (`04-component-inventory.md`). **Not yet Finalized:** only the user declares that. Decisions: [ADR-0074](../adr/0074-form-reads-the-dom-for-values-and-the-browsers-rules-and-calls-the-rules-you-write-over-a-value-store-or-a-schema-library.md) (what the form knows, and where a rule comes from) and [ADR-0075](../adr/0075-form-shows-its-own-messages-and-moves-focus-to-the-first-invalid-control-and-announces-the-count-over-the-browsers-bubbles.md) (its own messages, focus, announcement).
+**Inputs & Forms:** Form — built 2026-10-13, item 7 in the organism build order (`04-component-inventory.md`). **Finalized 2026-10-14** by the user, after the final review recorded at the end of this file. Decisions: [ADR-0074](../adr/0074-form-reads-the-dom-for-values-and-the-browsers-rules-and-calls-the-rules-you-write-over-a-value-store-or-a-schema-library.md) (what the form knows, and where a rule comes from) and [ADR-0075](../adr/0075-form-shows-its-own-messages-and-moves-focus-to-the-first-invalid-control-and-announces-the-count-over-the-browsers-bubbles.md) (its own messages, focus, announcement).
 
 **What it is:** the native `<form>` plus the wiring that makes its fields one thing. Compound: `Form`, `Form.Summary` (a danger `Alert` of links to each problem), `Form.Actions` (a wrapping row, a row each on a phone) and `Form.Submit` (a `Button` that follows the form's busy state). `ref` to the `<form>`.
 
@@ -70,4 +70,6 @@ A full `06-engineering-standards.md` §9 pass over the finished component, three
 **Not run:** the four themes by eye, a visual look at the Docs page and stories (the preview pane was not on screen, so DOM only), a tablet and desktop width pass, `EditableText` inside a form with a draft open, and a screen-reader pass.
 
 **`EditableText` inside a form (checked 2026-10-14):** an open, emptied required draft does not block a submit of the committed value, but a required field with nothing committed was submitted as `""`, since its committed value went through a hidden input no browser validates. Fixed at its source with the authorised post-Finalization change recorded in [EditableText.md](EditableText.md); both cases are real-browser checks in `Form.checks.stories.tsx`.
+
+**Finalized 2026-10-14, at explicit user direction**, after the final review pass above and the `EditableText` check. Per `06-engineering-standards.md` §9's own rule, no further changes to `Form` (code, stories, docs, or tokens it alone drives) without asking first, even for something that would otherwise be an obvious, in-scope fix. Still not run, and open for a later look: the four themes by eye, a tablet and desktop width pass, and a screen-reader pass.
 
