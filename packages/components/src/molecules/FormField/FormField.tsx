@@ -17,13 +17,18 @@ import type { FormFieldProps } from "./FormField.types";
  * `Textarea`, `Checkbox`, `RadioGroup`, `Select`, etc. — could share). Spread
  * the received `FormFieldControlProps` directly onto whatever control is
  * being labeled; every field-control atom in this system already accepts
- * that exact shape, so none of them need any change to work here. `ref`
- * forwards to the outer wrapper `<div>`.
+ * that exact shape, so none of them need any change to work here. Inside a
+ * `Form`, its `name` is the key the form finds its value, error and rule by
+ * (`validate` is the field's own rule). `ref` forwards to the outer wrapper
+ * `<div>`.
  *
  * @example
  * ```tsx
  * <FormField label="Email address" helperText="We'll never share this">
  *   {(fieldProps) => <Input {...fieldProps} type="email" />}
+ * </FormField>
+ * <FormField label="Username" name="username" validate={(value) => (String(value).length < 3 ? "Use 3 or more characters" : undefined)}>
+ *   {(fieldProps) => <Input {...fieldProps} />}
  * </FormField>
  * <FormField label="Password" error={errors.password} required>
  *   {(fieldProps) => <Input {...fieldProps} type="password" />}

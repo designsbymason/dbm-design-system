@@ -1,5 +1,14 @@
 import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
-import type { ComponentPropsWithoutRef, CSSProperties, FormEvent, ReactNode, Ref } from "react";
+import type {
+  ChangeEventHandler,
+  ComponentPropsWithoutRef,
+  CSSProperties,
+  FocusEventHandler,
+  FormEvent,
+  FormEventHandler,
+  ReactNode,
+  Ref,
+} from "react";
 import type { ButtonProps } from "../../atoms/Button";
 import type { FieldLabelSize } from "../../atoms/FieldLabel";
 import type { FormController, FormErrors, FormValues } from "../../internal/formContext";
@@ -74,7 +83,21 @@ export interface FormLabels {
 }
 
 export interface FormProps
-  extends Omit<ComponentPropsWithoutRef<"form">, "onSubmit" | "children" | "action" | "method" | "noValidate"> {
+  extends Omit<
+    ComponentPropsWithoutRef<"form">,
+    | "onSubmit"
+    | "children"
+    | "action"
+    | "method"
+    | "noValidate"
+    | "encType"
+    | "target"
+    | "autoComplete"
+    | "name"
+    | "onChange"
+    | "onBlur"
+    | "onReset"
+  > {
   /** The form's content: fields, groups, a `Form.Summary`, `Form.Actions`. */
   children?: ReactNode;
   /**
@@ -177,10 +200,29 @@ export interface FormProps
   action?: ComponentPropsWithoutRef<"form">["action"];
   /** How the form is sent without an `onSubmit` (`"get"` or `"post"`). */
   method?: "get" | "post" | "dialog";
+  /** How a `post` is encoded: `"multipart/form-data"` when the form has a file input. */
+  encType?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
+  /** Where the response to a native submit is shown: `"_self"` (the default), `"_blank"`, or a frame's name. */
+  target?: string;
   /** Lets the browser fill the form's fields in (`"on"`, `"off"`, or an autofill token). */
   autoComplete?: string;
   /** The form's name in `document.forms`. */
   name?: string;
+  /**
+   * Called when a control inside the form changes, **in addition to** the form's own handling of it (the live check
+   * of a field, clearing an outside error). Not called for a change from a form portaled inside this one.
+   */
+  onChange?: ChangeEventHandler<HTMLFormElement>;
+  /**
+   * Called when focus leaves a control inside the form, **in addition to** the form's own handling of it (the
+   * check of a field when `validateOn` asks for one).
+   */
+  onBlur?: FocusEventHandler<HTMLFormElement>;
+  /**
+   * Called when the form is reset, **in addition to** the form's own handling of it (clearing its errors). A
+   * control you drive with state is not reset by the browser: clear that state here.
+   */
+  onReset?: FormEventHandler<HTMLFormElement>;
   /** The form's accessible name; a form is only a landmark once it has one. */
   "aria-label"?: string;
   /** Points at an element that names the form (a heading). */

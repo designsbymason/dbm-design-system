@@ -1054,3 +1054,86 @@ describe("Form's required-fields legend", () => {
   });
 });
 
+describe("Form, hardening", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("does not leave validation switched off when a re-sent submit is refused by the browser", async () => {
+    // A browser that refuses the re-send fires no submit event, so nothing clears the form's bypass flag.
+    vi.spyOn(HTMLFormElement.prototype, "requestSubmit").mockImplementation(() => undefined);
+    render(
+      <Form aria-label="F" noValidate={false}>
+        <FormField label="Name" name="name" validate={() => Promise.resolve(undefined)}>
+          {(field) => <Input {...field} defaultValue="ada" />}
+        </FormField>
+        <FormField label="City" name="city" required>
+          {(field) => <Input {...field} defaultValue="Leeds" />}
+        </FormField>
+        <Form.Submit>Go</Form.Submit>
+      </Form>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Go" }));
+    await waitFor(() => expect(screen.getByRole("form", { name: "F" })).not.toHaveAttribute("aria-busy"));
+
+    // the person empties a required field and submits again: it must be checked, and refused
+    await userEvent.clear(screen.getByRole("textbox", { name: "City" }));
+    // (a click would stop at the browser's own validation, which this form turned back on; the event is the form's)
+    fireEvent.submit(screen.getByRole("form", { name: "F" }));
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: "City" })).toHaveAccessibleDescription("Fill out this field."),
+    );
+  });
+
+  it("names the summary as a group by its heading, so focus on it is announced", async () => {
+    render(<Signup onSubmit={vi.fn()} focusTarget="summary" />);
+    await submit();
+    const group = screen.getByRole("group", { name: "There is 1 problem with this form" });
+    expect(group).toHaveFocus();
+    expect(group).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("passes target and encType through to the form", () => {
+    render(<Form aria-label="Upload" target="_blank" encType="multipart/form-data" method="post" />);
+    expect(formElementByName("Upload")).toHaveAttribute("target", "_blank");
+    expect(formElementByName("Upload")).toHaveAttribute("enctype", "multipart/form-data");
+  });
+
+  it("is disabled inside a disabled form drawn around it, however it got there", () => {
+    render(
+      <Form aria-label="Outer" disabled>
+        {createPortal(
+          <Form aria-label="Inner">
+            <FormField label="Inner field" name="i">
+              {(field) => <Input {...field} />}
+            </FormField>
+          </Form>,
+          document.body,
+        )}
+      </Form>,
+    );
+    expect(screen.getByRole("textbox", { name: "Inner field" })).toBeDisabled();
+  });
+
+  it("keeps the legend up while a field re-registers on every keystroke with a new rule", async () => {
+    // The legend's "is anything required" answer is only set when it changes, so an inline `validate` (a new
+    // function on every parent render) neither flickers it nor costs the form a render of its own.
+    function Parent() {
+      const [value, setValue] = useState("");
+      return (
+        <Form aria-label="F" requiredLegend>
+          <FormField label="Name" name="name" required validate={(v) => (v ? undefined : "x")}>
+            {(field) => <Input {...field} value={value} onChange={(event) => setValue(event.target.value)} />}
+          </FormField>
+        </Form>
+      );
+    }
+    render(<Parent />);
+    expect(await screen.findByText("Required fields")).toBeInTheDocument();
+    await userEvent.type(screen.getByRole("textbox", { name: "Name" }), "abc");
+    expect(screen.getByText("Required fields")).toBeInTheDocument();
+  });
+});
+
+function formElementByName(name: string) {
+  return screen.getByRole("form", { name });
+}
+

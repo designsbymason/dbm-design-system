@@ -20,145 +20,31 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { Button } from "../../atoms/Button";
-import { Link } from "../../atoms/Link";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { FieldGroupProvider, useFieldGroup } from "../../internal/fieldGroupContext";
 import {
   FormProvider,
-  useForm,
   type FormContextValue,
   type FormController,
   type FormErrors,
   type FormFieldRegistration,
-  type FormState,
-  type FormValues,
 } from "../../internal/formContext";
-import { Alert } from "../../molecules/Alert";
 import styles from "./Form.module.css";
-import type {
-  FormActionsProps,
-  FormErrorProps,
-  FormLabels,
-  FormProps,
-  FormSubmitProps,
-  FormSummaryProps,
-} from "./Form.types";
-
-const makeDefaultLabels = (formatNumber: (value: number) => string): FormLabels => {
-  const shown = (value: string) =>
-    value !== "" && !Number.isNaN(Number(value)) ? formatNumber(Number(value)) : value;
-  return {
-    summaryTitle: (count) =>
-      count === 1 ? "There is 1 problem with this form" : `There are ${formatNumber(count)} problems with this form`,
-    errorCount: (count) => (count === 1 ? "1 error." : `${formatNumber(count)} errors.`),
-    invalidValue: "This value is not valid.",
-    requiredLegend: "Required fields",
-    valueMissing: "Fill out this field.",
-    typeMismatch: (type) =>
-      type === "email" ? "Enter an email address." : type === "url" ? "Enter a web address." : "Use the right format for this field.",
-    patternMismatch: "Use the format that was asked for.",
-    tooShort: (minimum) =>
-      minimum === 1 ? "Use at least 1 character." : `Use at least ${formatNumber(minimum)} characters.`,
-    tooLong: (maximum) =>
-      maximum === 1 ? "Use 1 character or fewer." : `Use ${formatNumber(maximum)} characters or fewer.`,
-    rangeUnderflow: (minimum) => `Choose ${shown(minimum)} or more.`,
-    rangeOverflow: (maximum) => `Choose ${shown(maximum)} or less.`,
-    stepMismatch: "Choose one of the values that is allowed.",
-    badInput: "Enter a value this field can read.",
-    submitFailed: "Something went wrong, so nothing was sent. Try again.",
-    validationFailed: "This couldn't be checked. Try again.",
-  };
-};
-
-// What a person can put focus on: the control itself, or the first of them inside a container (a radio group's
-// `div` is the control's id, and the thing to focus is the radio in it).
-const FOCUSABLE =
-  'input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), [tabindex]:not([tabindex="-1"])';
-
-function focusWithin(element: Element) {
-  const target = element.matches(FOCUSABLE) ? element : element.querySelector(FOCUSABLE);
-  if (target instanceof HTMLElement) target.focus();
-}
-
-// What a browser calls a form control that takes part in constraint validation.
-type ConstraintControl = Element & {
-  name: string;
-  validity: ValidityState;
-  validationMessage: string;
-  willValidate: boolean;
-};
-
-function isConstraintControl(element: Element): element is ConstraintControl {
-  return "validity" in element && "willValidate" in element;
-}
-
-function readValues(formData: FormData): FormValues {
-  const values: FormValues = {};
-  for (const [key, value] of formData.entries()) {
-    const existing = values[key];
-    if (existing === undefined) values[key] = value;
-    else values[key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
-  }
-  return values;
-}
-
-function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
-  return typeof value === "object" && value !== null && typeof (value as PromiseLike<unknown>).then === "function";
-}
-
-function hasKeys(errors: FormErrors) {
-  return Object.keys(errors).length > 0;
-}
-
-function hasMessage(message: ReactNode) {
-  return message !== null && message !== undefined && message !== false && message !== "";
-}
-
-/**
- * Whether an event came from this form's own controls. React sends an event from a portaled child (a dialog with a
- * form of its own, rendered inside this one) up to this form's handlers through the React tree, though its DOM is
- * elsewhere, so a handler that acts on anything it hears would validate or submit the wrong form.
- */
-function belongsTo(form: HTMLFormElement, target: EventTarget | null) {
-  if (!(target instanceof Element)) return false;
-  const owner = "form" in target ? (target as { form: HTMLFormElement | null }).form : null;
-  return (owner ?? target.closest("form")) === form;
-}
-
-// The message for a control the browser calls invalid, in the page's words for the way it is wrong. A message the
-// control wrote itself (a custom validity) is the control's own and is kept as it is.
-function messageFor(element: ConstraintControl, labels: FormLabels): string {
-  const validity = element.validity;
-  const input = element as unknown as HTMLInputElement;
-  if (validity.customError && element.validationMessage) return element.validationMessage;
-  if (validity.valueMissing) return labels.valueMissing;
-  if (validity.typeMismatch) return labels.typeMismatch(input.type || "text");
-  if (validity.patternMismatch) return labels.patternMismatch;
-  if (validity.tooShort) return labels.tooShort(input.minLength);
-  if (validity.tooLong) return labels.tooLong(input.maxLength);
-  if (validity.rangeUnderflow) return labels.rangeUnderflow(input.min);
-  if (validity.rangeOverflow) return labels.rangeOverflow(input.max);
-  if (validity.stepMismatch) return labels.stepMismatch;
-  if (validity.badInput) return labels.badInput;
-  return element.validationMessage || labels.invalidValue;
-}
-
-// What running the rules found: the answers that were ready at once, and a promise for the ones that weren't.
-interface Checks {
-  found: FormErrors;
-  later: PromiseLike<FormErrors> | null;
-}
-
-const INERT_CONTROLLER: FormController = {
-  form: null,
-  submit: () => undefined,
-  reset: () => undefined,
-  focusField: () => undefined,
-  validate: () => Promise.resolve(true),
-  setErrors: () => undefined,
-  clearErrors: () => undefined,
-};
+import { FormActions } from "./FormActions";
+import { runFormChecks, settleChecks, type Checks } from "./formChecks";
+import { FormError } from "./FormError";
+import {
+  belongsTo,
+  focusWithin,
+  hasKeys,
+  hasMessage,
+  isPromiseLike,
+  makeDefaultLabels,
+  readValues,
+} from "./formHelpers";
+import { FormSubmit } from "./FormSubmit";
+import { FormSummary } from "./FormSummary";
+import type { FormProps } from "./Form.types";
 
 /**
  * A form: the native `<form>` plus the wiring that makes the fields inside it one thing. On submit it checks every
@@ -248,6 +134,7 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
     // The control ids of the fields marked required, so the required-fields legend shows only while one exists.
     const requiredIdsRef = useRef(new Set<string>());
     const [hasRequired, setHasRequired] = useState(false);
+    const hasRequiredRef = useRef(false);
     const [focusRequest, setFocusRequest] = useState<{ id: number; key: string } | null>(null);
 
     const { message, announce } = useAnnouncement();
@@ -265,15 +152,26 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
       (registration: FormFieldRegistration) => {
         fields.set(registration.controlId, registration);
         const requiredIds = requiredIdsRef.current;
+        // Sets the state only when the answer to "is any field required" changes. A field that registers again
+        // with a new `validate` (every parent render) leaves it as it was, so it costs the form no render.
+        const syncHasRequired = () => {
+          const next = requiredIds.size > 0;
+          if (hasRequiredRef.current === next) return;
+          hasRequiredRef.current = next;
+          setHasRequired(next);
+        };
         if (registration.required) {
           requiredIds.add(registration.controlId);
-          setHasRequired(true);
+          syncHasRequired();
         }
         return () => {
           if (fields.get(registration.controlId) === registration) fields.delete(registration.controlId);
           if (registration.required) {
             requiredIds.delete(registration.controlId);
-            setHasRequired(requiredIds.size > 0);
+            // After the field's next registration, if it is coming, so a re-register doesn't flicker the answer.
+            queueMicrotask(() => {
+              if (mountedRef.current) syncHasRequired();
+            });
           }
         };
       },
@@ -344,93 +242,8 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
       [resolveTarget],
     );
 
-    const warnRuleFailed = (error: unknown) => {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("Form: a validation rule threw or rejected, so its field is shown as not checked.", error);
-      }
-    };
-
-    // Everything wrong with the form right now: the browser's own rules first, then each field's rule, then the
-    // form's. The first message for a key wins, so a `required` field says so before a pattern rule says more.
-    // `only` limits it to one field, for a check as that field is edited.
-    const runChecks = (form: HTMLFormElement, only?: string): Checks => {
-      const found: FormErrors = {};
-      const tasks: Array<PromiseLike<FormErrors>> = [];
-      const loose = looseTargetsRef.current;
-      if (only === undefined) loose.clear();
-      const values = readValues(new FormData(form));
-      const byControlId = new Map<string, FormFieldRegistration>();
-      for (const field of fields.values()) byControlId.set(field.controlId, field);
-
-      Array.from(form.elements).forEach((element, index) => {
-        if (!isConstraintControl(element) || !element.willValidate || element.validity.valid) return;
-        const key = byControlId.get(element.id)?.key || element.name || element.id || `field-${index}`;
-        if (only !== undefined && key !== only) return;
-        if (key in found) return;
-        found[key] = messageFor(element, labels);
-        if (!byControlId.has(element.id)) loose.set(key, element);
-      });
-
-      for (const field of fields.values()) {
-        if (!field.validate || !field.name || field.key in found) continue;
-        if (only !== undefined && field.key !== only) continue;
-        const key = field.key;
-        const result = field.validate(values[field.name], values);
-        if (isPromiseLike(result)) {
-          tasks.push(
-            Promise.resolve(result).then(
-              (answer): FormErrors => (hasMessage(answer) ? { [key]: answer } : {}),
-              (error: unknown): FormErrors => {
-                warnRuleFailed(error);
-                return { [key]: labels.validationFailed };
-              },
-            ),
-          );
-        } else if (hasMessage(result)) {
-          found[key] = result;
-        }
-      }
-
-      const keep = (answers: FormErrors | null | undefined | void): FormErrors => {
-        const kept: FormErrors = {};
-        if (!answers) return kept;
-        for (const [key, answer] of Object.entries(answers)) {
-          if (hasMessage(answer) && (only === undefined || key === only)) kept[key] = answer;
-        }
-        return kept;
-      };
-      const formLevel = validate?.(values);
-      if (isPromiseLike(formLevel)) {
-        tasks.push(
-          Promise.resolve(formLevel).then(
-            (answers) => keep(answers),
-            (error: unknown): FormErrors => {
-              warnRuleFailed(error);
-              return only === undefined || only === "form" ? { form: labels.validationFailed } : {};
-            },
-          ),
-        );
-      } else {
-        for (const [key, answer] of Object.entries(keep(formLevel))) {
-          if (!(key in found)) found[key] = answer;
-        }
-      }
-
-      const later = tasks.length
-        ? Promise.all(tasks).then((lists) => {
-            const merged: FormErrors = {};
-            for (const list of lists) for (const [key, answer] of Object.entries(list)) if (!(key in merged)) merged[key] = answer;
-            return merged;
-          })
-        : null;
-      return { found, later };
-    };
-
-    // What the sync answers and the late ones add up to: the sync ones win for a key, as they came first.
-    const settle = (checks: Checks): PromiseLike<FormErrors> =>
-      checks.later
-        ? Promise.resolve(checks.later).then((extra) => ({ ...extra, ...checks.found }))
-        : Promise.resolve(checks.found);
+    const runChecks = (form: HTMLFormElement, only?: string): Checks =>
+      runFormChecks({ form, fields, validate, labels, only, looseTargets: looseTargetsRef.current });
 
     const applyRefused = (errors: FormErrors) => {
       refusedRef.current = true;
@@ -491,7 +304,7 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
         validate: async () => {
           const form = formRef.current;
           if (!form) return true;
-          const found = await settle(runChecks(form));
+          const found = await settleChecks(runChecks(form));
           if (!mountedRef.current) return !hasKeys(found);
           if (hasKeys(found)) {
             applyRefused(found);
@@ -702,8 +515,15 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
             runSubmit(form, event);
           }
         } else if (resend) {
+          // The submit event this causes is heard by `handleSubmit`, which clears the flag. If the browser's own
+          // validation (`noValidate={false}`) refuses the re-send, no event comes, so clear it here: left set, it
+          // would let the person's next real submit through unchecked.
           bypassRef.current = true;
-          form.requestSubmit(submitter && submitter.closest("form") === form ? (submitter as HTMLElement) : undefined);
+          try {
+            form.requestSubmit(submitter && submitter.closest("form") === form ? (submitter as HTMLElement) : undefined);
+          } finally {
+            bypassRef.current = false;
+          }
         }
       };
 
@@ -727,7 +547,7 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
       event.preventDefault();
       busyRef.current = true;
       setValidating(true);
-      settle(checks).then((all) => {
+      settleChecks(checks).then((all) => {
         busyRef.current = false;
         if (!mountedRef.current) return;
         setValidating(false);
@@ -778,158 +598,6 @@ const FormRoot = forwardRef<HTMLFormElement, FormProps>(
 );
 FormRoot.displayName = "Form";
 
-/**
- * A list of everything wrong with the form, as links that move focus to each control. Drawn as a danger `Alert`,
- * and shown only while there is something to list. Put it at the top of the form (or near its actions) and set the
- * form's `focusTarget="summary"` to have focus land on it when a submit is refused. It is not announced as it
- * appears: the form announces the count, and focus does the rest.
- *
- * @example
- * ```tsx
- * <Form focusTarget="summary" onSubmit={save}>
- *   <Form.Summary />
- *   …fields…
- * </Form>
- * ```
- */
-const FormSummary = forwardRef<HTMLDivElement, FormSummaryProps>(
-  ({ title, className, ...props }, ref) => {
-    const form = useForm();
-    const outsideForm = form === null;
-    useEffect(() => {
-      if (process.env.NODE_ENV !== "production" && outsideForm) {
-        console.warn("Form.Summary: rendered outside a <Form>, so there are no errors to list. Put it inside the form.");
-      }
-    }, [outsideForm]);
-    if (!form) return null;
-    const entries = Object.entries(form.errors).filter(([, error]) => Boolean(error));
-    if (entries.length === 0) return null;
-
-    return (
-      <div {...props} ref={mergeRefs(ref, form.setSummaryElement)} tabIndex={-1} className={cx(styles.summary, className)}>
-        <Alert tone="danger" role="none">
-          <Alert.Title>{title ?? form.summaryTitle(entries.length)}</Alert.Title>
-          <Alert.Description>
-            <ul className={styles.summaryList}>
-              {entries.map(([key, error]) => {
-                const field = form.getField(key);
-                return (
-                  <li key={key}>
-                    {field ? (
-                      <Link
-                        href={`#${field.controlId}`}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          form.focusField(key);
-                        }}
-                      >
-                        {field.label}: {error as ReactNode}
-                      </Link>
-                    ) : (
-                      (error as ReactNode)
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </Alert.Description>
-        </Alert>
-      </div>
-    );
-  },
-);
-FormSummary.displayName = "Form.Summary";
-
-/**
- * A message about the form as a whole, for a failure no field owns: the request didn't reach the server, a
- * permission was refused. It shows the form's `error` prop, or `labels.submitFailed` after an `onSubmit` promise
- * rejects, as a danger `Alert` that is announced when it appears, and shows nothing while there is no error. Its
- * being in the form is also what keeps a rejection from being left for the page to report.
- *
- * @example
- * ```tsx
- * <Form error={serverMessage} onSubmit={save}>
- *   <Form.Error />
- *   …
- * </Form>
- * ```
- */
-const FormError = forwardRef<HTMLDivElement, FormErrorProps>(({ children, className, ...props }, ref) => {
-  const form = useForm();
-  const registerErrorSlot = form?.registerErrorSlot;
-  useEffect(() => registerErrorSlot?.(), [registerErrorSlot]);
-
-  const outsideForm = form === null;
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "production" && outsideForm) {
-      console.warn("Form.Error: rendered outside a <Form>, so there is no form error to show. Put it inside the form.");
-    }
-  }, [outsideForm]);
-  if (!form || !hasMessage(form.formError)) return null;
-  return (
-    <div {...props} ref={ref} className={className}>
-      <Alert tone="danger">
-        <Alert.Description>{children ?? form.formError}</Alert.Description>
-      </Alert>
-    </div>
-  );
-});
-FormError.displayName = "Form.Error";
-
-/**
- * A row for the form's buttons: they wrap when they don't fit and take a row each on a phone. Pair it with
- * `Form.Submit`.
- *
- * @example
- * ```tsx
- * <Form.Actions align="end">
- *   <Button variant="ghost" type="reset">Reset</Button>
- *   <Form.Submit>Save</Form.Submit>
- * </Form.Actions>
- * ```
- */
-const FormActions = forwardRef<HTMLDivElement, FormActionsProps>(
-  ({ align = "start", className, ...props }, ref) => (
-    <div
-      {...props}
-      ref={ref}
-      className={cx(
-        styles.actions,
-        align === "end" && styles.alignEnd,
-        align === "between" && styles.alignBetween,
-        className,
-      )}
-    />
-  ),
-);
-FormActions.displayName = "Form.Actions";
-
-/**
- * The form's submit button: a `Button` with `type="submit"` that shows its loading state while the form's
- * `onSubmit` is running or a rule is being waited for, and is disabled while the form is. Takes every other
- * `Button` prop.
- *
- * @example
- * ```tsx
- * <Form.Submit loadingText="Saving…">Save</Form.Submit>
- * ```
- */
-const FormSubmit = forwardRef<HTMLButtonElement, FormSubmitProps>(
-  ({ isLoading, disabled, ...props }, ref) => {
-    const form = useForm();
-    return (
-      <Button
-        {...props}
-        ref={ref}
-        type="submit"
-        isLoading={isLoading ?? Boolean(form?.pending || form?.validating)}
-        disabled={disabled || form?.disabled}
-      />
-    );
-  },
-);
-FormSubmit.displayName = "Form.Submit";
-
 type FormComponent = typeof FormRoot & {
   Summary: typeof FormSummary;
   Error: typeof FormError;
@@ -944,59 +612,4 @@ export const Form: FormComponent = Object.assign(FormRoot, {
   Submit: FormSubmit,
 });
 
-/**
- * The form's controls, from a part of your own inside it: `submit()`, `reset()`, `validate()`, `focusField(name)`,
- * `setErrors()` and `clearErrors()`. One object for the form's life. Outside a `Form` it does nothing, with a
- * development warning.
- *
- * @example
- * ```tsx
- * function SaveShortcut() {
- *   const form = useFormController();
- *   useHotkey("mod+s", () => form.submit());
- *   return null;
- * }
- * ```
- */
-export function useFormController(): FormController {
-  const form = useForm();
-  const outsideForm = form === null;
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "production" && outsideForm) {
-      console.warn("useFormController: called outside a <Form>, so it controls nothing. Call it from a component rendered inside the form.");
-    }
-  }, [outsideForm]);
-  return form?.controller ?? INERT_CONTROLLER;
-}
-
-const IDLE_STATE: FormState = { pending: false, validating: false, disabled: false, errors: {}, submitFailed: false };
-
-/**
- * What the form is doing and what it has found — `pending`, `validating`, `disabled`, `errors`, `submitFailed` — for
- * a part of your own that shows it (a "Saving…" label, a count in a tab). Outside a `Form` it reports an idle,
- * error-free form.
- *
- * @example
- * ```tsx
- * function ErrorCount() {
- *   const { errors } = useFormState();
- *   return <Badge tone="danger">{Object.keys(errors).length}</Badge>;
- * }
- * ```
- */
-export function useFormState(): FormState {
-  const form = useForm();
-  return useMemo(
-    () =>
-      form
-        ? {
-            pending: form.pending,
-            validating: form.validating,
-            disabled: form.disabled,
-            errors: form.errors,
-            submitFailed: form.submitFailed,
-          }
-        : IDLE_STATE,
-    [form],
-  );
-}
+export { useFormController, useFormState } from "./formHooks";

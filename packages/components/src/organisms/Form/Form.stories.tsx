@@ -102,8 +102,22 @@ const meta: Meta<typeof Form> = {
     },
     action: { control: false, description: "Where the form is sent when it is submitted without an onSubmit — a URL, or a function that receives the FormData." },
     method: { control: false, description: "How the form is sent without an onSubmit." },
+    encType: { control: false, description: "How a native post is encoded; multipart/form-data when the form has a file input." },
+    target: { control: false, description: "Where the response to a native submit is shown: _self, _blank, or a frame's name." },
     autoComplete: { control: false, description: "Lets the browser fill the form's fields in (on, off, or an autofill token)." },
     name: { control: false, description: "The form's name in document.forms." },
+    onChange: {
+      control: false,
+      description: "Called when a control inside the form changes, in addition to the form's own handling of it.",
+    },
+    onBlur: {
+      control: false,
+      description: "Called when focus leaves a control inside the form, in addition to the form's own handling of it.",
+    },
+    onReset: {
+      control: false,
+      description: "Called when the form is reset, in addition to clearing its errors. A control driven by state isn't reset by the browser: clear it here.",
+    },
     "aria-label": { control: "text", description: "The form's accessible name; a form is only a landmark once it has one." },
     "aria-labelledby": { control: false, description: "Points at an element that names the form." },
     "aria-describedby": { control: false, description: "Points at an element that describes the form." },
@@ -190,7 +204,7 @@ export const Basic: Story = {
 export const Validation: Story = {
   name: "Rules for a field and for the form",
   parameters: { docs: { source: { code: formSnippets.validation } } },
-  argTypes: { validate: { control: false }, validateOn: { control: false } },
+  argTypes: { "aria-label": { control: false }, validate: { control: false }, validateOn: { control: false } },
   render: (args) => (
     <Demo
       {...fromPlayground(args as unknown as Record<string, unknown>)}
@@ -227,7 +241,7 @@ export const Summary: Story = {
 export const ValidateOn: Story = {
   name: "When a field is checked",
   parameters: { docs: { source: { code: formSnippets.validateOn } } },
-  argTypes: { validateOn: { control: false } },
+  argTypes: { "aria-label": { control: false }, validateOn: { control: false } },
   render: (args) => (
     <Demo {...fromPlayground(args as unknown as Record<string, unknown>)} aria-label="Create account" validateOn="blur" />
   ),
@@ -299,7 +313,7 @@ export const ServerErrors: Story = {
 export const AsyncRule: Story = {
   name: "A rule that asks the server",
   parameters: { docs: { source: { code: formSnippets.asyncRule } } },
-  argTypes: { validate: { control: false }, validateOn: { control: false } },
+  argTypes: { "aria-label": { control: false }, validate: { control: false }, validateOn: { control: false } },
   render: function Render(args) {
     const { values, setValues } = useSubmitted();
     return (
@@ -334,7 +348,7 @@ export const AsyncRule: Story = {
 export const WholeFormError: Story = {
   name: "A message about the whole form",
   parameters: { docs: { source: { code: formSnippets.formError } } },
-  argTypes: { error: { control: false } },
+  argTypes: { "aria-label": { control: false }, error: { control: false } },
   render: function Render(args) {
     const { values, setValues } = useSubmitted();
     return (
@@ -384,7 +398,7 @@ function FocusEmailButton() {
 export const Controller: Story = {
   name: "Controlling it from outside",
   parameters: { docs: { source: { code: formSnippets.controller } } },
-  argTypes: { controllerRef: { control: false } },
+  argTypes: { "aria-label": { control: false }, controllerRef: { control: false } },
   render: function Render(args) {
     const controllerRef = useRef<FormController>(null);
     const { values, setValues } = useSubmitted();
@@ -423,7 +437,7 @@ export const Controller: Story = {
 export const Labels: Story = {
   name: "In another language",
   parameters: { docs: { source: { code: formSnippets.labels } } },
-  argTypes: { labels: { control: false } },
+  argTypes: { "aria-label": { control: false }, labels: { control: false } },
   render: (args) => (
     <Demo
       {...fromPlayground(args as unknown as Record<string, unknown>)}
@@ -486,7 +500,7 @@ function ToastDemo({ args }: { args: Record<string, unknown> }) {
 export const WithAToast: Story = {
   name: "Saved with a toast",
   parameters: { docs: { source: { code: formSnippets.toast } } },
-  argTypes: { onSubmit: { control: false }, onSubmitError: { control: false } },
+  argTypes: { "aria-label": { control: false }, onSubmit: { control: false }, onSubmitError: { control: false } },
   render: (args) => (
     <ToastStage minBlockSize="24rem">
       {(container) => (
@@ -501,7 +515,7 @@ export const WithAToast: Story = {
 export const Layout: Story = {
   name: "Groups, size and gap",
   parameters: { docs: { source: { code: formSnippets.layout } } },
-  argTypes: { size: { control: false }, gap: { control: false } },
+  argTypes: { "aria-label": { control: false }, size: { control: false }, gap: { control: false } },
   render: (args) => (
     <Demo
       {...fromPlayground(args as unknown as Record<string, unknown>)}

@@ -32,8 +32,13 @@ export const propOrder = [
   "controllerRef",
   "action",
   "method",
+  "encType",
+  "target",
   "autoComplete",
   "name",
+  "onChange",
+  "onBlur",
+  "onReset",
   "aria-label",
   "aria-labelledby",
   "aria-describedby",
@@ -94,8 +99,13 @@ import { Form, FormField, Input } from "@dbm-design-system/components";
     "controllerRef",
     "action",
     "method",
+    "encType",
+    "target",
     "autoComplete",
     "name",
+    "onChange",
+    "onBlur",
+    "onReset",
     "aria-labelledby",
     "aria-describedby",
     "id",
@@ -120,9 +130,9 @@ your own form you add the summary yourself, by placing `<Form.Summary />` where 
 
 ## Properties
 
-`Form` also accepts any other native `<form>` attribute beyond what's listed here (e.g. `target`, `encType`) —
-passed straight through to the form. Its `aria-busy`, `novalidate` and handlers are the form's to compute: a
-`onChange`, `onBlur` or `onReset` you pass is called in addition to the form's own.
+`Form` also accepts any other native `<form>` attribute beyond what's listed here (e.g. `rel`, `acceptCharset`) —
+passed straight through to the form. Its `aria-busy`, `novalidate` and submit handling are the form's to compute: the
+`onChange`, `onBlur` and `onReset` you pass are called in addition to the form's own.
 
 <PropertiesTable of={FormStories} order={propOrder} />
 

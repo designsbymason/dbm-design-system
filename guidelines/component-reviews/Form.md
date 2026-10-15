@@ -23,11 +23,9 @@
 
 **Tokens:** none new. It reads `space.1`, `space.3`, `space.4`, `space.5`, `radius.sm`, `border-width.2` and `border.focus`, and the gap steps. No contrast pairing of its own: messages are `FieldError`'s and the summary is an `Alert`.
 
-**Tests:** 45 unit (submit and values, refusal and focus order, field rule and form rule and their precedence, an invalid control with no field, `formnovalidate`, native submit with no `onSubmit`, the summary, the announcement, `validateOn` in all three, outside errors wired to state, busy and rejection and unmount, disabled and `FieldGroup` merge, size, a portaled form, the unmatched-name warning, spread order, caller handlers, `labels` with `undefined`, StrictMode, jest-axe valid/invalid/busy), 10 server-render and hydration, a Docs-page token guard (`Form.docs.test.ts`), and 7 hidden real-browser stories plus a play-function story.
+**Tests:** unit tests for submit and values, refusal and focus order, both kinds of rule and their precedence, an invalid control with no field, `formnovalidate`, native submit with no `onSubmit`, the summary, the announcement, `validateOn`, outside errors, busy and rejection, disabled and nested providers, a portaled form, the unmatched-name warning, spread order, caller handlers, `labels`, StrictMode and jest-axe; server-render and hydration checks; a Docs-page token guard (`Form.docs.test.ts`); and hidden real-browser stories for what jsdom can't see (the counts are in the last section).
 
 **Self-verification (real runs):** `tsc` (package and `.storybook`) and `eslint --max-warnings 0` clean; unit 7,865 (70 in Form's folder, with the token guard and the server-render checks); Storybook (Chromium) 1,671/1,671; `build` clean; `Form` 6.81KB JS / 2.70KB CSS gzipped, within the default budget (it holds `Alert`, `Button` and `Link`); the Docs page opened in a running Storybook: every template section, all four Properties tables with a description in every row, nine "Show code" buttons, no console errors.
-
-**Not done, for the user to look at:** a visual look at the Docs page and the stories in all four themes (the preview pane was not on screen for this session, so no screenshot was taken); the Docs page and stories were read and measured but not looked at.
 
 **Known and accepted:** values are what the browser reports (a single ticked checkbox of a group is a string, a repeated name an array); an invalid control with no `FormField` has no error slot, so its message is in the summary only; dirty/touched tracking is not here (it needs a value snapshot, which pulls the form toward owning state).
 
@@ -53,4 +51,21 @@ A feature-completeness pass named four gaps, all built the same day ([ADR-0076](
 - **What `Form` leaves to the caller**, written on the Docs page so it is a decision and not a surprise: dirty and touched state and an unsaved-changes guard (the form owns no values), resetting state-driven controls, announcing success, disabling controls outside a `FormField`, a `FieldGroup`'s own error not joining the summary, a single ticked checkbox arriving as a string, and multi-step flows (`Stepper`).
 
 **Verification (real runs):** lint and both typechecks clean; unit 7,909; Storybook Form 29/29; build clean; `Form` 8.50KB JS / 2.73KB CSS gzipped against a 10KB budget; `check-guidelines` 0 warnings.
+
+## Final review before Finalization (2026-10-14)
+
+A full `06-engineering-standards.md` §9 pass over the finished component, three rounds of features on. Findings, all fixed:
+
+1. **A re-sent submit could leave validation switched off.** After waiting on an asynchronous rule the form re-sends itself with a flag that the next `submit` event clears; a browser that refuses the re-send (`noValidate={false}`) fires none, so the person's next real submit went through unchecked. The flag is cleared in a `finally`; a test stubs `requestSubmit` to do nothing and fails if the `finally` is removed.
+2. **The summary's focus target was a nameless `div`.** It is a `role="group"` named by its heading, so focus on it is announced as "3 problems with this form, group".
+3. **Eight stories had a dead `aria-label` control** (the story set its own after spreading the args). Each has `control: false` for it.
+4. **The native-props audit missed `target` and `encType`**, which matter for the no-`onSubmit` native post, and `onChange`, `onBlur` and `onReset` were composed with the form's own but undeclared. All five are redeclared with JSDoc, controls, and Docs rows.
+5. **`Form.tsx` was about 1,000 lines.** Split into the root, `formChecks.ts` (the rule runner, pure), `formHelpers.ts`, `FormSummary.tsx`, `FormError.tsx`, `FormActions.tsx`, `FormSubmit.tsx` and `formHooks.ts`; behaviour unchanged, the root is about 600 lines.
+6. **A wasted render of the form per field render.** Measured first: 20 renders for 10 keystrokes in a controlled form with an inline `validate`, from the legend's "is anything required" state being set false then true on every re-registration. It is now set only when the answer changes (10 renders for 10 keystrokes).
+7. **Test gaps closed:** a disabled outer form reaching an inner form's fields, the server render and hydration of the legend, `Form.Error`, an outside `error`, a `controllerRef` and the native post attributes, the summary's group name, and `target`/`encType` pass-through.
+8. **Documentation currency:** this file's test list and "not done" note, and `FormField`'s JSDoc example (it now shows `name` and `validate`).
+
+**Verification (real runs):** `tsc` (package and `.storybook`) and `eslint --max-warnings 0` clean; unit 7,922/7,922 (121 in Form's folder); Storybook (Chromium) 1,681/1,681; `build` clean; `Form` 8.65KB JS / 2.73KB CSS gzipped against the 10KB budget; `check-guidelines` 0 warnings. The Docs page opened in a running Storybook after a server restart: every template section, five Properties tables with a description in every row, 15 "Show code" buttons, and the Controls and Docs prop orders both reading `children, onSubmit, … data-testid` as declared.
+
+**Not run:** the four themes by eye, a visual look at the Docs page and stories (the preview pane was not on screen, so DOM only), a tablet and desktop width pass, `EditableText` inside a form with a draft open, and a screen-reader pass.
 

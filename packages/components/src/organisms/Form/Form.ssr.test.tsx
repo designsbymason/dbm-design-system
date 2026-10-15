@@ -1,11 +1,12 @@
 import { act, screen } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
+import { createRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Input } from "../../atoms/Input";
 import { FormField } from "../../molecules/FormField";
 import { Form } from "./Form";
-import type { FormProps } from "./Form.types";
+import type { FormController, FormProps } from "./Form.types";
 
 // Server rendering and hydration. The unit project runs in jsdom, where `window` and `document` exist, so the
 // server render is done with both removed: what it proves is that nothing touches them while rendering.
@@ -26,6 +27,7 @@ function Tree(props: Omit<FormProps, "children">) {
         {(field) => <Input {...field} type="email" />}
       </FormField>
       <Form.Summary />
+      <Form.Error />
       <Form.Actions align="end">
         <Form.Submit>Create account</Form.Submit>
       </Form.Actions>
@@ -39,6 +41,10 @@ const variants: Array<[string, Omit<FormProps, "children">]> = [
   ["a disabled form", { disabled: true }],
   ["errors set from outside", { errors: { email: "That email is taken" } }],
   ["a form that validates on blur", { validateOn: "blur", focusTarget: "summary" }],
+  ["a required-fields legend", { requiredLegend: true }],
+  ["a form-level error", { error: "We couldn't reach the server" }],
+  ["a controller ref", { controllerRef: createRef<FormController>() }],
+  ["every native post attribute", { action: "/sign-up", method: "post", encType: "multipart/form-data", target: "_blank" }],
 ];
 
 afterEach(() => {
@@ -53,6 +59,7 @@ describe("Form on the server", () => {
     expect(html).toContain("Create account");
     // the registration happens in an effect, so the server draws no field's error from a name it hasn't met
     if (props.errors) expect(html).toContain("That email is taken");
+    if (props.error) expect(html).toContain("We couldn&#x27;t reach the server");
   });
 });
 
