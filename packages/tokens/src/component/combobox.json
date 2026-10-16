@@ -1,0 +1,63 @@
+{
+  "combobox": {
+    "list-max-height": {
+      "$type": "dimension",
+      "$value": "18rem",
+      "$description": "Combobox's own floating list \u2014 the most height it takes before it scrolls. The list is also limited to the room left on the screen, so this only decides how tall a long list is allowed to get on a large one; no spacing step is large enough to name it."
+    },
+    "option-height": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "1.75rem",
+        "$description": "The fixed height of a one-line option row at this size step. A long list draws only the rows in view, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height. Never below 1.5rem (WCAG 2.5.8) at any step."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "2rem",
+        "$description": "The fixed height of a one-line option row at this size step. A long list draws only the rows in view, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height. Never below 1.5rem (WCAG 2.5.8) at any step."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "2.25rem",
+        "$description": "The fixed height of a one-line option row at this size step. A long list draws only the rows in view, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height. Never below 1.5rem (WCAG 2.5.8) at any step."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "2.5rem",
+        "$description": "The fixed height of a one-line option row at this size step. A long list draws only the rows in view, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height. Never below 1.5rem (WCAG 2.5.8) at any step."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "2.75rem",
+        "$description": "The fixed height of a one-line option row at this size step. A long list draws only the rows in view, which needs every row's height known without measuring it, so the height is a token rather than the sum of padding and line height. Never below 1.5rem (WCAG 2.5.8) at any step."
+      }
+    },
+    "option-height-described": {
+      "xs": {
+        "$type": "dimension",
+        "$value": "2.75rem",
+        "$description": "The fixed height of an option row that also shows a description line, at this size step: the one-line height plus a second, smaller line. Rows with and without a description are the two heights a long list is drawn from."
+      },
+      "sm": {
+        "$type": "dimension",
+        "$value": "3rem",
+        "$description": "The fixed height of an option row that also shows a description line, at this size step: the one-line height plus a second, smaller line. Rows with and without a description are the two heights a long list is drawn from."
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "3.25rem",
+        "$description": "The fixed height of an option row that also shows a description line, at this size step: the one-line height plus a second, smaller line. Rows with and without a description are the two heights a long list is drawn from."
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "3.5rem",
+        "$description": "The fixed height of an option row that also shows a description line, at this size step: the one-line height plus a second, smaller line. Rows with and without a description are the two heights a long list is drawn from."
+      },
+      "xl": {
+        "$type": "dimension",
+        "$value": "3.75rem",
+        "$description": "The fixed height of an option row that also shows a description line, at this size step: the one-line height plus a second, smaller line. Rows with and without a description are the two heights a long list is drawn from."
+      }
+    }
+  }
+}

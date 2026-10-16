@@ -8,3 +8,4 @@ export * from "./utils/mergeDefined";
 export * from "./utils/mergeRefs";
 export * from "./utils/responsiveStyle";
 export type { Breakpoint, Responsive, SpaceValue } from "./types/tokens";
+export * from "./hooks/useWindowedList";

@@ -1,0 +1,415 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { FieldLabel } from "../../atoms/FieldLabel";
+import { Input } from "../../atoms/Input";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FormField } from "../../molecules/FormField";
+import { Select } from "../../molecules/Select";
+import { TagsInput } from "../../molecules/TagsInput";
+import { Combobox } from "./Combobox";
+import * as ComboboxStories from "./Combobox.stories";
+import { countries } from "./ComboboxStoryKit";
+
+export const propOrder = [
+  "options",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "inputValue",
+  "defaultInputValue",
+  "onInputValueChange",
+  "placeholder",
+  "size",
+  "allowCustomValue",
+  "filter",
+  "autoHighlight",
+  "loading",
+  "error",
+  "emptyContent",
+  "renderOption",
+  "clearable",
+  "onClear",
+  "open",
+  "defaultOpen",
+  "onOpenChange",
+  "openOnFocus",
+  "prefix",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "required",
+  "name",
+  "form",
+  "autoFocus",
+  "maxLength",
+  "inputMode",
+  "enterKeyHint",
+  "spellCheck",
+  "autoComplete",
+  "side",
+  "align",
+  "dir",
+  "formatNumber",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={ComboboxStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Combobox" tier="Organism" />
+
+A text field with a list of options under it. Type to narrow the list, then choose one with the arrow keys and Enter, a
+mouse or a finger. The value is the chosen option's `value`, and the field shows its label. Use it where a person picks
+one item from a list too long to scan, a country, a person, a record, and where the list may be fetched as they type.
+"Autocomplete" is the same control. It differs from `Select`, which has no typing and suits a short list, and from
+`TagsInput`, which makes chips out of whatever is typed. Focus stays in the field the whole time; the highlighted option
+is pointed at rather than focused (a *combobox* in the WAI-ARIA sense).
+
+### Import
+
+```tsx
+import { Combobox } from "@dbm-design-system/components";
+```
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={ComboboxStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={ComboboxStories.Playground}
+  exclude={[
+    "options",
+    "value",
+    "defaultValue",
+    "onValueChange",
+    "inputValue",
+    "defaultInputValue",
+    "onInputValueChange",
+    "filter",
+    "autoHighlight",
+    "emptyContent",
+    "renderOption",
+    "onClear",
+    "open",
+    "defaultOpen",
+    "onOpenChange",
+    "prefix",
+    "form",
+    "autoFocus",
+    "maxLength",
+    "inputMode",
+    "enterKeyHint",
+    "spellCheck",
+    "autoComplete",
+    "formatNumber",
+    "labels",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`Combobox` also accepts any other native `<input>` attribute beyond what is listed here (e.g. `title`, `lang`,
+`onPaste`, `onKeyDown`) — passed straight through to the text field. `className` and `style` go on the outer box; `ref`,
+`id`, `data-testid` and the `aria-*` props go on the `<input>`.
+
+<PropertiesTable of={ComboboxStories} order={propOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={ComboboxStories.AllSizes} />
+
+### Controlled
+
+<Canvas of={ComboboxStories.Controlled} />
+
+### Groups
+
+<Canvas of={ComboboxStories.Groups} />
+
+### Descriptions, icons and unavailable options
+
+<Canvas of={ComboboxStories.Rich} />
+
+### A row of your own
+
+<Canvas of={ComboboxStories.CustomRow} />
+
+### Options fetched as you type
+
+<Canvas of={ComboboxStories.Async} />
+
+### Free text as well
+
+<Canvas of={ComboboxStories.CustomValue} />
+
+### With a clear button
+
+<Canvas of={ComboboxStories.Clearable} />
+
+### Loading, error and empty
+
+<Canvas of={ComboboxStories.States} />
+
+### A long list
+
+<Canvas of={ComboboxStories.LongList} />
+
+### Opening on focus
+
+<Canvas of={ComboboxStories.OpenOnFocus} />
+
+### Error state
+
+<Canvas of={ComboboxStories.ErrorState} />
+
+### Disabled
+
+<Canvas of={ComboboxStories.Disabled} />
+
+### In a FormField
+
+<Canvas of={ComboboxStories.InFormField} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use it to choose one item from a list long enough that scanning it is slow: a country, a person, a project.
+- Give it a name with `aria-label` or a `FormField`, so the field and its list both say what is being chosen.
+- Pass `filter={false}` and fetch the options yourself when the list lives on a server, and show `loading` while you wait.
+- Give each option a short, distinct `label`; put the detail in `description` and the id people also search by in `textValue`.
+- Say why an option can't be chosen with `disabled="reason"`, rather than leaving it dimmed and unexplained.
+- Use `allowCustomValue` when the list is only a suggestion and any text is acceptable.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a handful of options: a `Select`, or a `RadioGroup`, shows them without typing.
+- Don't use it to collect several values: that is `TagsInput` for free text, or `MultiSelect` for a list.
+- Don't fetch on every change of text: search only on `reason === "input"`, since a pick, a clear and a reset write a label, not a query.
+- Don't put interactive controls inside a row: a row is chosen as a whole, and focus never enters it.
+- Don't rely on a placeholder as the name; it goes as soon as there is text.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The value is always one of the options unless `allowCustomValue` is set. Text that matches nothing is put back to the
+  last choice when the field is left, so what is shown and what is submitted never disagree.
+- `value` and `inputValue` are two things. `value` is the chosen option's id; `inputValue` is the text in the field. Keep
+  just `value` in your state in the usual case. Pass `inputValue` as well when you need to show a label for a value
+  whose option has not loaded yet (a saved id, a record fetched later).
+- Rows have a fixed height, set by `size` (and taller for an option with a `description`), so a list of thousands draws
+  only the rows in view. A custom `renderOption` must fit its row; long text is cut with an ellipsis.
+- The list is not narrowed by the label of a chosen option shown unedited: opening a field that already holds a value
+  shows every option, with the chosen one marked.
+- A reply to an older search can arrive after a newer one. Keep a request counter in your own code and drop what is
+  stale, as the "fetched as you type" story does.
+- `autoHighlight` makes Enter choose the first match while typing. Turn it off (it is already off with
+  `allowCustomValue`) when Enter should commit exactly what was typed.
+- Inside a `Form`, a hidden input carries `name` and `required` and the chosen value, so the form refuses a field with
+  nothing chosen and focuses the field you can see. A form with only a combobox and no submit button doesn't submit on
+  Enter, because a browser needs one text-only field for that; give the form a submit button.
+- Once a list holds more than a hundred rows, group headings are drawn as plain rows rather than as grouped regions, so
+  a screen reader still reads every option but not the group name.
+
+## Accessibility
+
+<Callout tone="info" title="A combobox whose focus never leaves the text field">
+
+- The field is a native text input with `role="combobox"`, `aria-expanded`, `aria-controls` (while open),
+  `aria-autocomplete="list"` and `aria-haspopup="listbox"`. Focus stays in it while the list is open; the highlighted
+  option is named by `aria-activedescendant`, so a screen reader reads each option as the arrow keys reach it.
+- The list is a `listbox` named like the field (from `aria-label`, `aria-labelledby` or the field's visible label). Each row is
+  an `option` with `aria-selected`; one that can't be chosen has `aria-disabled`, and its reason is read after its name.
+  Groups are `group`s named by their heading.
+- "No results" and "Loading…" are rows in the list that can't be chosen, so a list is never empty to assistive technology.
+  A loading list is `aria-busy`.
+- The number of matches is announced in a status region that was already in the page, only as the person types and the
+  count changes, never when the list merely opens. An error is announced when it appears.
+- The caret and clear buttons are for the pointer and are not tab stops; the keyboard has the arrow keys, Escape and
+  Alt+Down. Each is at least 24 × 24 pixels at every size.
+- Enter while an input method is composing a character does nothing. Pressing a row never moves focus, so a touch
+  keyboard stays up.
+- Escape closes the list and puts back the label of the last choice. With the list closed it passes through, so a
+  `Dialog` around the field still closes.
+- The matched text in a label is marked with `Highlight`; the row is also told apart from its neighbours by its
+  background, so the mark is never the only cue.
+- In Windows high contrast, the highlighted row is outlined and the list keeps its border.
+
+</Callout>
+
+| Key | Behaviour |
+|---|---|
+| Down arrow | Opens the list and highlights the chosen option, or the first; when open, highlights the next option and wraps. |
+| Up arrow | Opens the list and highlights the last option; when open, the previous one, wrapping. |
+| Alt + Down, Alt + Up | Opens or closes the list without moving the highlight. |
+| Page Down, Page Up | Move the highlight ten options (while open). |
+| Enter | Chooses the highlighted option. With none highlighted it commits what was typed (`allowCustomValue`) or puts back the last choice, and closes the list. With the list closed it does what Enter does in any field. |
+| Escape | Closes the list and puts back the last choice's label. |
+| Tab | Leaves the field. Text that names an option exactly chooses it; other text is put back (or committed, with `allowCustomValue`). |
+| Home, End, Left, Right | Move the caret in the text, as in any field. |
+| Typing | Opens the list and narrows it; the first match is highlighted. |
+
+## Code examples
+
+```tsx
+{/* countries: [{ value: "ca", label: "Canada" }, { value: "mx", label: "Mexico" }, …] */}
+<Combobox aria-label="Country" options={countries} onValueChange={(value) => setCountry(value)} />
+
+{/* Native input props pass through: a numeric keyboard on a phone, no spell checking */}
+<Combobox aria-label="Postcode area" options={areas} inputMode="numeric" spellCheck={false} maxLength={5} />
+
+{/* Options fetched as the person types: search only for typing, and drop stale replies */}
+<Combobox
+  aria-label="Search countries"
+  options={results}
+  filter={false}
+  loading={isFetching}
+  onInputValueChange={(text, reason) => reason === "input" && search(text)}
+/>
+
+{/* Show a saved choice before its option has loaded */}
+<Combobox aria-label="Assignee" options={people} value={assigneeId} inputValue={assigneeName} />
+
+{/* Choosing in a Dialog: the list sits above the dialog, takes the mouse, and leaves the dialog open */}
+<Dialog>
+  <Dialog.Trigger asChild>
+    <Button>Ship to…</Button>
+  </Dialog.Trigger>
+  <Dialog.Content aria-label="Ship to">
+    <Dialog.Body>
+      <Combobox aria-label="Country" options={countries} />
+    </Dialog.Body>
+  </Dialog.Content>
+</Dialog>
+
+{/* Words in another language, and numerals that differ */}
+<Combobox
+  aria-label="País"
+  options={paises}
+  formatNumber={new Intl.NumberFormat("ar-EG").format}
+  labels={{ noResults: "Sin resultados", clear: "Borrar", results: (n) => `${n} resultados` }}
+/>
+
+{/* With a label and helper text; the wiring is done for you */}
+<FormField label="Country" helperText="Where the order ships" required>
+  {(fieldProps) => <Combobox {...fieldProps} name="country" options={countries} />}
+</FormField>
+```
+
+## Design tokens used
+
+The field itself is an `Input`, which lists its own tokens; the list below is what the floating list and its rows add.
+
+<TokenRow token="bg.surface" usage="the list's fill" />
+<TokenRow token="bg.brand-subtle" usage="the highlighted row" />
+<TokenRow token="bg.neutral-subtle" usage="the fill behind the caret or clear button while the pointer is over it" />
+<TokenRow token="border.default" usage="the list's border, and the line above the loading and error notes" />
+<TokenRow token="text.primary" usage="the option text" />
+<TokenRow token="text.tertiary" usage="the description, group headings, the No results row and the notes" />
+<TokenRow token="text.brand" usage="the chosen option" />
+<TokenRow token="text.disabled" usage="an option that can't be chosen" />
+<TokenRow token="border-width.1" usage="the list's border" />
+<TokenRow token="border-width.2" usage="the highlighted row's outline in Windows high contrast" />
+<TokenRow token="combobox.list-max-height" usage="the most height the list takes before it scrolls" />
+<TokenRow token="combobox.option-height.xs" usage="the height of a one-line row at `xs`, shared by group headings" />
+<TokenRow token="combobox.option-height.sm" usage="the height of a one-line row at `sm`" />
+<TokenRow token="combobox.option-height.md" usage="the height of a one-line row at `md`" />
+<TokenRow token="combobox.option-height.lg" usage="the height of a one-line row at `lg`" />
+<TokenRow token="combobox.option-height.xl" usage="the height of a one-line row at `xl`" />
+<TokenRow token="combobox.option-height-described.xs" usage="the height of a row with a description at `xs`" />
+<TokenRow token="combobox.option-height-described.sm" usage="the height of a row with a description at `sm`" />
+<TokenRow token="combobox.option-height-described.md" usage="the height of a row with a description at `md`" />
+<TokenRow token="combobox.option-height-described.lg" usage="the height of a row with a description at `lg`" />
+<TokenRow token="combobox.option-height-described.xl" usage="the height of a row with a description at `xl`" />
+<TokenRow token="radius.md" usage="the list's corners" />
+<TokenRow token="radius.sm" usage="a row's corners" />
+<TokenRow token="radius.full" usage="the round hover fill of the caret and clear buttons" />
+<TokenRow token="shadow.light-md" usage="the list's elevation in a light theme" />
+<TokenRow token="shadow.dark-md" usage="the list's elevation in a dark theme" />
+<TokenRow token="z-index.popover" usage="the list's layer, above a Dialog's scrim and panel so it works inside one" />
+<TokenRow token="space.1" usage="the list's padding, the gap between the caret and clear buttons, and the button padding at `xs`" />
+<TokenRow token="space.2" usage="the gap inside a row, and the button padding at `sm` and `md`" />
+<TokenRow token="space.3" usage="the inset of a row's content, and the button padding at `lg` and `xl`" />
+<TokenRow token="space.6" usage="the least size of the caret and clear buttons, a 24px target" />
+<TokenRow token="icon-size.xs" usage="the caret and clear icons at `xs` and `sm`" />
+<TokenRow token="icon-size.sm" usage="the caret and clear icons at `md`" />
+<TokenRow token="icon-size.md" usage="the caret and clear icons at `lg`" />
+<TokenRow token="icon-size.lg" usage="the caret and clear icons at `xl`" />
+<TokenRow token="font-family.primary" usage="the list's text, which is drawn outside the field and sets its own" />
+<TokenRow token="font-size.xs" usage="the row text at `xs`, and descriptions and headings" />
+<TokenRow token="font-size.sm" usage="the row text at `sm`" />
+<TokenRow token="font-size.base" usage="the row text at `md`" />
+<TokenRow token="font-size.md" usage="the row text at `lg`" />
+<TokenRow token="font-size.lg" usage="the row text at `xl`" />
+<TokenRow token="font-weight.regular" usage="a description" />
+<TokenRow token="font-weight.semibold" usage="the chosen option and group headings" />
+<TokenRow token="line-height.tight" usage="the row text and the buttons' height arithmetic, matching `Input`" />
+<TokenRow token="motion-duration.fast" usage="the list's fade and the buttons' hover fill" />
+<TokenRow token="motion-easing.emphasized" usage="the list fading in" />
+<TokenRow token="motion-easing.standard" usage="the list fading out and the buttons' hover fill" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Select"
+  description="Choose from a short list with no typing"
+  href="/?path=/docs/molecules-inputs-select--docs"
+>
+  <Select aria-label="Size" defaultValue="a" size="sm">
+    <Select.Option value="a">Small</Select.Option>
+  </Select>
+</RelatedCard>
+<RelatedCard
+  name="Input"
+  description="The text field the combobox is drawn with, for a value that is not chosen from a list"
+  href="/?path=/docs/atoms-inputs-input--docs"
+>
+  <Input placeholder="Enter text" />
+</RelatedCard>
+<RelatedCard
+  name="TagsInput"
+  description="Free text made into removable chips, for a list of typed values"
+  href="/?path=/docs/molecules-inputs-tagsinput--docs"
+>
+  <TagsInput aria-label="Labels" defaultValue={["a", "b"]} size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Composes this with a label and helper or error text, with the id and aria wiring done for you"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <Combobox aria-label="Country" options={countries} size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="FieldLabel"
+  description="The label atom that names this field when you are not using a FormField"
+  href="/?path=/story/atoms-inputs-fieldlabel--playground"
+>
+  <FieldLabel htmlFor="example">Country</FieldLabel>
+</RelatedCard>
+</div>

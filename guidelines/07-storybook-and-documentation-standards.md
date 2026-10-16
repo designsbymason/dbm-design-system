@@ -272,6 +272,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Menu | Organism | Navigation | ✅ | ✅ 2026-10-12 | [Menu.md](component-reviews/Menu.md) |
 | Toast | Organism | Feedback | ✅ | ✅ 2026-10-13 | [Toast.md](component-reviews/Toast.md) |
 | Form | Organism | Inputs & Forms | ✅ | ✅ 2026-10-14 | [Form.md](component-reviews/Form.md) |
+| Combobox | Organism | Inputs & Forms | ✅ | Not yet: built 2026-10-16, review pass pending | [Combobox.md](component-reviews/Combobox.md) |
 
 Components not yet built are listed in `04-component-inventory.md`'s build orders, and a row is added here when a component's review pass is finalized. A Docs page is one deliverable inside each component's full `06-engineering-standards.md` §9 review pass, not a separate sweep; components are reviewed one at a time. Tier membership follows [ADR-0012](adr/0012-item-components-are-atom-tier-even-when-their-container-is-a-molecule.md) (`GridItem` and `ListItem` are atoms, `Grid` and `List` are molecules).
 

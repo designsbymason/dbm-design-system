@@ -1,6 +1,6 @@
 # DBM Design System
 
-> **Status: in active development, not yet published.** The component library is substantial — 95 of a planned 115 components (all 48 atoms and 40 of 40 molecules) are built, with the first seven organisms, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast` and `Form`, among them; every one is reviewed and Finalized — but nothing has shipped to npm yet; the API can still change before the first publish.
+> **Status: in active development, not yet published.** The component library is substantial — 96 of a planned 115 components (all 48 atoms and 40 of 40 molecules) are built, with the first eight organisms, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form` and `Combobox`, among them; every one but the newest, `Combobox`, is reviewed and Finalized — but nothing has shipped to npm yet; the API can still change before the first publish.
 
 An agentic, standalone React component library built for both AI coding agents and human developers to compose web and enterprise applications quickly, consistently, and accessibly. Token-driven, multi-brand, multi-theme (light/dark), and built with a strong TypeScript + JSDoc contract so AI agents can work against a structured, predictable API.
 

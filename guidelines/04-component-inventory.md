@@ -58,7 +58,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | Textarea | atom | 🟢 | Auto-resize option |
 | NumberInput | molecule | 🟢 | Stepper controls, min/max/step, wraps Input |
 | Select | molecule | 🟢 | Native-feel, wraps Radix Select |
-| Combobox / Autocomplete | organism | 🟢 | Searchable select, async option loading |
+| Combobox | organism | 🟢 | A single-select text field with a floating list of options: type to narrow it, then choose with the keyboard, a mouse or a finger. Options are an `options` array ([ADR-0078](adr/0078-combobox-takes-its-options-as-data-over-option-parts-mounted-as-children.md)), filtered on the client or fetched by the caller as the person types, grouped, described, and drawn a window at a time when long ([ADR-0080](adr/0080-long-option-lists-are-drawn-a-window-at-a-time-by-a-hand-rolled-hook-with-fixed-row-heights-from-tokens-over-a-virtualization-dependency-or-measured-rows.md)). The list floats from a trigger-less Radix Popover anchor and works inside a `Dialog` ([ADR-0077](adr/0077-combobox-floats-its-list-with-a-radix-popover-anchor-and-no-trigger-over-popover-popper-and-a-dismissable-layer-or-a-bare-portal.md)). Must-pick by default, with a hidden validated input for forms ([ADR-0079](adr/0079-combobox-must-pick-by-default-keeps-the-chosen-value-apart-from-the-typed-text-and-submits-through-a-hidden-validated-input.md)). Ships as `Combobox`, per the `Tag / Chip` precedent; "Autocomplete" is a search term. Review: [Combobox.md](component-reviews/Combobox.md) |
 | MultiSelect | organism | 🟡 | Tag-based multi-value select |
 | TagsInput | molecule | ⚪ | A typeable tags field: type a value and press Enter or a separator, or paste a list, to make removable `Tag` chips; Backspace on an empty entry removes the last. The entry is its own `<input>` in the same wrapping box as the chips, since `Input`'s one-row box can't hold chips that wrap ([ADR-0049](adr/0049-tagsinput-draws-chips-and-its-own-entry-in-one-wrapping-box-and-adds-on-enter-separator-blur-or-paste-over-the-input-atom-or-a-combobox.md); the chip keyboard model is [ADR-0050](adr/0050-tagsinput-chips-are-one-tab-stop-with-arrow-key-movement-and-tag-lets-its-remove-button-leave-the-tab-order.md) and the width-driven collapse [ADR-0051](adr/0051-tagsinput-collapses-to-the-width-by-measuring-an-unseen-copy-of-its-chips-over-css-only-clipping-or-a-fixed-count.md)). Standalone, with no list: it sits beside `MultiSelect`, which chooses from one. Review: [TagsInput.md](component-reviews/TagsInput.md) |
 | Checkbox | atom | 🟢 | Indeterminate state support |
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast` and `Form` are built and Finalized, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast` and `Form` are built and Finalized, `Combobox` is built and awaiting its review pass, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -267,7 +267,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it; built and Finalized, review in [Menu.md](component-reviews/Menu.md)
 6. Toast — independent; other organisms report results through it; built and Finalized, review in [Toast.md](component-reviews/Toast.md)
 7. Form — context and validation over `FormField` and `FieldGroup`; built and Finalized, review in [Form.md](component-reviews/Form.md)
-8. Combobox / Autocomplete — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer)
+8. Combobox — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer); built, review in [Combobox.md](component-reviews/Combobox.md)
 9. Calendar (molecule, prerequisite; built), then DatePicker
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization
 11. Navbar / TopNav, 12. Sidebar / SideNav — use Menu and Drawer
